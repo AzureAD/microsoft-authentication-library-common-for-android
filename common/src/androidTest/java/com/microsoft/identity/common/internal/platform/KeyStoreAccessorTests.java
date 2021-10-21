@@ -27,11 +27,11 @@ import android.os.Build;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.microsoft.identity.common.java.crypto.IDevicePopManager;
 import com.microsoft.identity.common.java.crypto.IKeyAccessor;
 import com.microsoft.identity.common.java.crypto.SecureHardwareState;
 import com.microsoft.identity.common.java.crypto.SigningAlgorithm;
 import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.java.crypto.IDevicePopManager;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -43,7 +43,8 @@ public class KeyStoreAccessorTests {
 
     @Test
     public void testSymmetricBasicFunctionalitySuccessfulRawKey() throws Exception {
-        final IKeyAccessor accessor = KeyStoreAccessor.newInstance(SymmetricCipher.AES_GCM_NONE_HMACSHA256, true);
+        final IKeyAccessor accessor =
+                KeyStoreAccessor.newInstance(SymmetricCipher.AES_GCM_NONE_HMACSHA256, true);
         final byte[] in = new byte[1024];
         RANDOM.nextBytes(in);
         final byte[] out = accessor.encrypt(in);
@@ -55,7 +56,8 @@ public class KeyStoreAccessorTests {
 
     @Test
     public void testSymmetricBasicFunctionalitySuccessful() throws Exception {
-        final IKeyAccessor accessor = KeyStoreAccessor.newInstance(SymmetricCipher.AES_GCM_NONE_HMACSHA256, false);
+        final IKeyAccessor accessor =
+                KeyStoreAccessor.newInstance(SymmetricCipher.AES_GCM_NONE_HMACSHA256, false);
         final byte[] in = new byte[1024];
         RANDOM.nextBytes(in);
         final byte[] out = accessor.encrypt(in);
@@ -68,7 +70,11 @@ public class KeyStoreAccessorTests {
     @Test
     public void testAsymmetricBasicFunctionalitySuccessful() throws Exception {
         final Context context = ApplicationProvider.getApplicationContext();
-        final IKeyAccessor accessor = KeyStoreAccessor.newInstance(context, IDevicePopManager.Cipher.RSA_ECB_PKCS1_PADDING, SigningAlgorithm.SHA_256_WITH_RSA);
+        final IKeyAccessor accessor =
+                KeyStoreAccessor.newInstance(
+                        context,
+                        IDevicePopManager.Cipher.RSA_ECB_PKCS1_PADDING,
+                        SigningAlgorithm.SHA_256_WITH_RSA);
         final byte[] in = new byte[245];
         RANDOM.nextBytes(in);
         final byte[] out = accessor.encrypt(in);
@@ -80,11 +86,12 @@ public class KeyStoreAccessorTests {
 
     @Test(expected = ClientException.class)
     public void testBasicFunctionalityDecryptDoesSomething() throws Exception {
-        final IKeyAccessor accessor = KeyStoreAccessor.newInstance(SymmetricCipher.AES_GCM_NONE_HMACSHA256, false);
+        final IKeyAccessor accessor =
+                KeyStoreAccessor.newInstance(SymmetricCipher.AES_GCM_NONE_HMACSHA256, false);
         final byte[] in = new byte[1024];
         RANDOM.nextBytes(in);
         final byte[] out = accessor.encrypt(in);
-        out[700] ^= out[700]; //I don't care what value it is as long as it's changed.
+        out[700] ^= out[700]; // I don't care what value it is as long as it's changed.
         final byte[] around = accessor.decrypt(out);
     }
 
@@ -92,7 +99,8 @@ public class KeyStoreAccessorTests {
     public void testBasicFunctionalityUnsupportedSign() throws Exception {
         boolean exception = false;
         try {
-            final IKeyAccessor accessor = KeyStoreAccessor.newInstance(SymmetricCipher.AES_GCM_NONE_HMACSHA256, false);
+            final IKeyAccessor accessor =
+                    KeyStoreAccessor.newInstance(SymmetricCipher.AES_GCM_NONE_HMACSHA256, false);
             final byte[] in = new byte[1024];
             RANDOM.nextBytes(in);
             final byte[] out = accessor.sign(in);
@@ -103,7 +111,9 @@ public class KeyStoreAccessorTests {
             }
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !exception) {
-            throw new AssertionError("Expected the sign operation to be unsupported in this API level: " + Build.VERSION.SDK_INT);
+            throw new AssertionError(
+                    "Expected the sign operation to be unsupported in this API level: "
+                            + Build.VERSION.SDK_INT);
         }
     }
 
@@ -111,7 +121,8 @@ public class KeyStoreAccessorTests {
     public void testBasicFunctionalityUnsupportedVerify() throws Exception {
         boolean exception = false;
         try {
-            final IKeyAccessor accessor = KeyStoreAccessor.newInstance(SymmetricCipher.AES_GCM_NONE_HMACSHA256, false);
+            final IKeyAccessor accessor =
+                    KeyStoreAccessor.newInstance(SymmetricCipher.AES_GCM_NONE_HMACSHA256, false);
             final byte[] in = new byte[1024];
             RANDOM.nextBytes(in);
             accessor.verify(in, in);
@@ -122,16 +133,19 @@ public class KeyStoreAccessorTests {
             }
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !exception) {
-            throw new AssertionError("Expected the verify operation to be unsupported in this API level: " + Build.VERSION.SDK_INT);
+            throw new AssertionError(
+                    "Expected the verify operation to be unsupported in this API level: "
+                            + Build.VERSION.SDK_INT);
         }
     }
+
     @Test
     public void testBasicFunctionalitySignAndVerifySupportedIfRaw() throws Exception {
-        final IKeyAccessor accessor = KeyStoreAccessor.newInstance(SymmetricCipher.AES_GCM_NONE_HMACSHA256, true);
+        final IKeyAccessor accessor =
+                KeyStoreAccessor.newInstance(SymmetricCipher.AES_GCM_NONE_HMACSHA256, true);
         final byte[] in = new byte[1024];
         RANDOM.nextBytes(in);
         final byte[] out = accessor.sign(in);
         Assert.assertTrue(accessor.verify(in, out));
     }
-
 }

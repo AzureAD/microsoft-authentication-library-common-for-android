@@ -47,7 +47,6 @@ public class TokenResult implements IResult {
         this(response, null);
     }
 
-
     /**
      * Constructor of TokenResult.
      *
@@ -81,7 +80,9 @@ public class TokenResult implements IResult {
         return mTokenResponse;
     }
 
-    public TokenResponse getSuccessResponse() { return mTokenResponse; }
+    public TokenResponse getSuccessResponse() {
+        return mTokenResponse;
+    }
 
     /**
      * Returns the TokenErrorResponse associated with the request.
@@ -128,16 +129,18 @@ public class TokenResult implements IResult {
         mSuccess = success;
     }
 
-
-    //CHECKSTYLE:OFF
+    // CHECKSTYLE:OFF
     @Override
     public String toString() {
-        return "TokenResult{" +
-                "mTokenResponse=" + mTokenResponse +
-                ", mTokenErrorResponse=" + mTokenErrorResponse +
-                ", mSuccess=" + mSuccess +
-                '}';
+        return "TokenResult{"
+                + "mTokenResponse="
+                + mTokenResponse
+                + ", mTokenErrorResponse="
+                + mTokenErrorResponse
+                + ", mSuccess="
+                + mSuccess
+                + '}';
     }
-    //CHECKSTYLE:ON
+    // CHECKSTYLE:ON
 
 }

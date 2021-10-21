@@ -1,4 +1,3 @@
-
 //  Copyright (c) Microsoft Corporation.
 //  All rights reserved.
 //
@@ -26,6 +25,7 @@ package com.microsoft.identity.common.java.util;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 import lombok.NonNull;
 
 import java.util.ArrayList;
@@ -36,8 +36,10 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-@SuppressFBWarnings(value = "IS2_INCONSISTENT_SYNC",
-        justification = "get() invokes await and is a blocking call. making it synchronized will create a deadlock.")
+@SuppressFBWarnings(
+        value = "IS2_INCONSISTENT_SYNC",
+        justification =
+                "get() invokes await and is a blocking call. making it synchronized will create a deadlock.")
 public class ResultFuture<T> implements Future<T> {
 
     private final CountDownLatch mCountDownLatch = new CountDownLatch(1);
@@ -72,7 +74,8 @@ public class ResultFuture<T> implements Future<T> {
     }
 
     @Override
-    public T get(final long l, @NonNull final TimeUnit timeUnit) throws InterruptedException, TimeoutException, ExecutionException {
+    public T get(final long l, @NonNull final TimeUnit timeUnit)
+            throws InterruptedException, TimeoutException, ExecutionException {
         if (mCountDownLatch.await(l, timeUnit)) {
             if (null != mException) {
                 throw new ExecutionException(mException);
@@ -84,7 +87,7 @@ public class ResultFuture<T> implements Future<T> {
                     "Timed out waiting for: "
                             + l // duration
                             + timeUnit.name() // units
-            );
+                    );
         }
     }
 

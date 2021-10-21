@@ -22,6 +22,11 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.broker;
 
+import static androidx.test.platform.app.InstrumentationRegistry.getInstrumentation;
+
+import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT;
+import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.getResourceId;
+
 import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
@@ -46,16 +51,12 @@ import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
 import org.junit.Assert;
 
-import static androidx.test.platform.app.InstrumentationRegistry.getInstrumentation;
-import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT;
-import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.getResourceId;
-
 /**
  * A model for interacting with a Broker App during UI Test.
  */
 public abstract class AbstractTestBroker extends App implements ITestBroker {
 
-    private final static String TAG = AbstractTestBroker.class.getSimpleName();
+    private static final String TAG = AbstractTestBroker.class.getSimpleName();
 
     @Override
     public void uninstall() {
@@ -65,8 +66,12 @@ public abstract class AbstractTestBroker extends App implements ITestBroker {
             // The broker app will still be installed on the device if it is enabled
             // as a device admin. In this case, we need to disable the admin and then
             // uninstall.
-            Logger.w(TAG, "Unable to uninstall broker " + getAppName() + " from device..." +
-                    "the broker is potentially enabled as an active device admin.");
+            Logger.w(
+                    TAG,
+                    "Unable to uninstall broker "
+                            + getAppName()
+                            + " from device..."
+                            + "the broker is potentially enabled as an active device admin.");
             Logger.i(TAG, "Disabling admin for " + getAppName());
             TestContext.getTestContext().getTestDevice().getSettings().disableAdmin(getAdminName());
             Logger.i(TAG, "Reattempting uninstall for " + getAppName());
@@ -74,33 +79,45 @@ public abstract class AbstractTestBroker extends App implements ITestBroker {
         }
     }
 
-    public AbstractTestBroker(@NonNull final String packageName,
-                              @NonNull final String appName) {
-        super(packageName, appName, BuildConfig.INSTALL_SOURCE_LOCAL_APK
-                .equalsIgnoreCase(BuildConfig.BROKER_INSTALL_SOURCE)
-                ? new LocalApkInstaller() : new PlayStore());
+    public AbstractTestBroker(@NonNull final String packageName, @NonNull final String appName) {
+        super(
+                packageName,
+                appName,
+                BuildConfig.INSTALL_SOURCE_LOCAL_APK.equalsIgnoreCase(
+                                BuildConfig.BROKER_INSTALL_SOURCE)
+                        ? new LocalApkInstaller()
+                        : new PlayStore());
     }
 
-    public AbstractTestBroker(@NonNull final String packageName,
-                              @NonNull final String appName,
-                              @NonNull final IAppInstaller appInstaller) {
+    public AbstractTestBroker(
+            @NonNull final String packageName,
+            @NonNull final String appName,
+            @NonNull final IAppInstaller appInstaller) {
         super(packageName, appName, appInstaller);
     }
 
     @Override
     public void handleAccountPicker(@Nullable final String username) {
-        Logger.i(TAG, "Pick account associated with given username, otherwise choose \"Use Another account\"..");
+        Logger.i(
+                TAG,
+                "Pick account associated with given username, otherwise choose \"Use Another account\"..");
         final UiDevice device = UiDevice.getInstance(getInstrumentation());
 
         // find the object associated to this username in account picker.
         // if the username is not provided, then click on the "Use another account" option
-        final UiObject accountSelected = device.findObject(new UiSelector().resourceId(
-                getResourceId(getPackageName(), "account_chooser_listView")
-        ).childSelector(new UiSelector().textContains(
-                // This String is pulled from
-                // R.string.broker_account_chooser_choose_another_account
-                TextUtils.isEmpty(username) ? "Use another account" : username
-        )));
+        final UiObject accountSelected =
+                device.findObject(
+                        new UiSelector()
+                                .resourceId(
+                                        getResourceId(getPackageName(), "account_chooser_listView"))
+                                .childSelector(
+                                        new UiSelector()
+                                                .textContains(
+                                                        // This String is pulled from
+                                                        // R.string.broker_account_chooser_choose_another_account
+                                                        TextUtils.isEmpty(username)
+                                                                ? "Use another account"
+                                                                : username)));
 
         try {
             accountSelected.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
@@ -111,30 +128,24 @@ public abstract class AbstractTestBroker extends App implements ITestBroker {
     }
 
     @Override
-    public void performJoinViaJoinActivity(@NonNull final String username,
-                                           @NonNull final String password) {
+    public void performJoinViaJoinActivity(
+            @NonNull final String username, @NonNull final String password) {
         Logger.i(TAG, "Perform Join Via Join Activity for the given account..");
         // Enter username
         UiAutomatorUtils.handleInput(
-                CommonUtils.getResourceId(
-                        getPackageName(), "UsernameET"
-                ),
-                username
-        );
+                CommonUtils.getResourceId(getPackageName(), "UsernameET"), username);
 
         // Click Join
         UiAutomatorUtils.handleButtonClick(
-                CommonUtils.getResourceId(
-                        getPackageName(), "JoinButton"
-                )
-        );
+                CommonUtils.getResourceId(getPackageName(), "JoinButton"));
 
-        final PromptHandlerParameters promptHandlerParameters = PromptHandlerParameters.builder()
-                .broker(this)
-                .prompt(PromptParameter.SELECT_ACCOUNT)
-                .loginHint(username)
-                .sessionExpected(false)
-                .build();
+        final PromptHandlerParameters promptHandlerParameters =
+                PromptHandlerParameters.builder()
+                        .broker(this)
+                        .prompt(PromptParameter.SELECT_ACCOUNT)
+                        .loginHint(username)
+                        .sessionExpected(false)
+                        .build();
 
         final AadPromptHandler aadPromptHandler = new AadPromptHandler(promptHandlerParameters);
 
@@ -146,16 +157,12 @@ public abstract class AbstractTestBroker extends App implements ITestBroker {
     @Override
     public void confirmJoinInJoinActivity(@NonNull final String username) {
         Logger.i(TAG, "Confirm Join Via Join Activity for the given account..");
-        final UiObject joinConfirmation = UiAutomatorUtils.obtainUiObjectWithText(
-                "Workplace Joined to " + username
-        );
+        final UiObject joinConfirmation =
+                UiAutomatorUtils.obtainUiObjectWithText("Workplace Joined to " + username);
 
         Assert.assertTrue(joinConfirmation.exists());
 
-        UiAutomatorUtils.handleButtonClick(getResourceId(
-                getPackageName(),
-                "JoinButton"
-        ));
+        UiAutomatorUtils.handleButtonClick(getResourceId(getPackageName(), "JoinButton"));
     }
 
     @Override

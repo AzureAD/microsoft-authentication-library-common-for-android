@@ -22,6 +22,10 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2;
 
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentAction.REDIRECT_RETURNED_ACTION;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.AUTH_INTENT;
+import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.APP_LINK_KEY;
+
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
@@ -39,13 +43,9 @@ import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.java.util.UrlUtil;
 import com.microsoft.identity.common.logging.Logger;
 
-import java.util.Map;
-
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentAction.REDIRECT_RETURNED_ACTION;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.AUTH_INTENT;
-import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.APP_LINK_KEY;
+import java.util.Map;
 
 /**
  * Authorization fragment with customTabs or browsers.
@@ -73,12 +73,15 @@ public class CurrentTaskBrowserAuthorizationFragment extends CurrentTaskAuthoriz
      * @param responseUri the response URI, which carries the parameters describing the response.
      */
     @Nullable
-    public static Intent createCustomTabResponseIntent(@NonNull final Context context,
-                                                       @NonNull final String responseUri) {
+    public static Intent createCustomTabResponseIntent(
+            @NonNull final Context context, @NonNull final String responseUri) {
 
         final Intent intent = new Intent(context, CurrentTaskAuthorizationActivity.class);
         intent.setAction(REDIRECT_RETURNED_ACTION);
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_NO_HISTORY);
+        intent.addFlags(
+                Intent.FLAG_ACTIVITY_CLEAR_TOP
+                        | Intent.FLAG_ACTIVITY_SINGLE_TOP
+                        | Intent.FLAG_ACTIVITY_NO_HISTORY);
         intent.putExtra("RESPONSE_URI", responseUri);
         return intent;
     }
@@ -88,7 +91,7 @@ public class CurrentTaskBrowserAuthorizationFragment extends CurrentTaskAuthoriz
     public void onCreate(final @Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Bundle arguments = this.getArguments();
-        if(arguments != null){
+        if (arguments != null) {
             mResponseReceived = arguments.getBoolean("RESPONSE", false);
         }
     }
@@ -127,17 +130,19 @@ public class CurrentTaskBrowserAuthorizationFragment extends CurrentTaskAuthoriz
          * In the first case, generate the authorization result from the response uri.
          * In the second case, set the activity result intent with AUTH_CODE_CANCEL code.
          */
-        //This check is needed when using customTabs or browser flow.
+        // This check is needed when using customTabs or browser flow.
         if (!mBrowserFlowStarted) {
             mBrowserFlowStarted = true;
             if (mAuthIntent != null) {
                 // We cannot start browser activity inside OnCreate().
-                // Because the life cycle of the current activity will continue and onResume will be called before finishing the login in browser.
+                // Because the life cycle of the current activity will continue and onResume will be
+                // called before finishing the login in browser.
                 // This is by design of Android OS.
                 startActivity(mAuthIntent);
             } else {
-                sendResult(RawAuthorizationResult.fromException(
-                        new ClientException(ErrorStrings.AUTHORIZATION_INTENT_IS_NULL)));
+                sendResult(
+                        RawAuthorizationResult.fromException(
+                                new ClientException(ErrorStrings.AUTHORIZATION_INTENT_IS_NULL)));
                 finish();
             }
         } else {
@@ -148,10 +153,12 @@ public class CurrentTaskBrowserAuthorizationFragment extends CurrentTaskAuthoriz
     public void completeAuthorizationInBrowserFlow(@NonNull final String customTabResponseUri) {
         Logger.info(TAG, null, "Received redirect from customTab/browser.");
 
-        final RawAuthorizationResult data = RawAuthorizationResult.fromRedirectUri(customTabResponseUri);
-        switch (data.getResultCode()){
+        final RawAuthorizationResult data =
+                RawAuthorizationResult.fromRedirectUri(customTabResponseUri);
+        switch (data.getResultCode()) {
             case BROKER_INSTALLATION_TRIGGERED:
-                final Map<String, String> urlQueryParameters = UrlUtil.getParameters(data.getAuthorizationFinalUri());
+                final Map<String, String> urlQueryParameters =
+                        UrlUtil.getParameters(data.getAuthorizationFinalUri());
                 final String appLink = urlQueryParameters.get(APP_LINK_KEY);
                 final Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(appLink));
                 startActivity(browserIntent);

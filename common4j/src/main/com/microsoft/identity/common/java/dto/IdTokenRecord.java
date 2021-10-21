@@ -22,10 +22,10 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.dto;
 
-import com.google.gson.annotations.SerializedName;
-
 import static com.microsoft.identity.common.java.dto.IdTokenRecord.SerializedNames.AUTHORITY;
 import static com.microsoft.identity.common.java.dto.IdTokenRecord.SerializedNames.REALM;
+
+import com.google.gson.annotations.SerializedName;
 
 public class IdTokenRecord extends Credential {
 
@@ -93,7 +93,7 @@ public class IdTokenRecord extends Credential {
         return false;
     }
 
-    //CHECKSTYLE:OFF
+    // CHECKSTYLE:OFF
     // This method is generated. Checkstyle and/or PMD has been disabled.
     // This method *must* be regenerated if the class' structural definition changes through the
     // addition/subtraction of fields.
@@ -107,11 +107,13 @@ public class IdTokenRecord extends Credential {
         IdTokenRecord idToken = (IdTokenRecord) o;
 
         if (mRealm != null ? !mRealm.equals(idToken.mRealm) : idToken.mRealm != null) return false;
-        return mAuthority != null ? mAuthority.equals(idToken.mAuthority) : idToken.mAuthority == null;
+        return mAuthority != null
+                ? mAuthority.equals(idToken.mAuthority)
+                : idToken.mAuthority == null;
     }
-    //CHECKSTYLE:ON
+    // CHECKSTYLE:ON
 
-    //CHECKSTYLE:OFF
+    // CHECKSTYLE:OFF
     // This method is generated. Checkstyle and/or PMD has been disabled.
     // This method *must* be regenerated if the class' structural definition changes through the
     // addition/subtraction of fields.
@@ -122,6 +124,6 @@ public class IdTokenRecord extends Credential {
         result = 31 * result + (mAuthority != null ? mAuthority.hashCode() : 0);
         return result;
     }
-    //CHECKSTYLE:ON
+    // CHECKSTYLE:ON
 
 }

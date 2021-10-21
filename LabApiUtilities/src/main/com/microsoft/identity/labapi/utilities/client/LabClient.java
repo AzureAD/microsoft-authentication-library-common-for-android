@@ -36,13 +36,13 @@ import com.microsoft.identity.labapi.utilities.constants.UserType;
 import com.microsoft.identity.labapi.utilities.exception.LabApiException;
 import com.microsoft.identity.labapi.utilities.exception.LabError;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @AllArgsConstructor(access = AccessLevel.PUBLIC)
 public class LabClient implements ILabClient {
@@ -66,7 +66,8 @@ public class LabClient implements ILabClient {
     }
 
     @Override
-    public List<LabAccount> getLabAccounts(@NonNull final LabQuery labQuery) throws LabApiException {
+    public List<LabAccount> getLabAccounts(@NonNull final LabQuery labQuery)
+            throws LabApiException {
         final List<ConfigInfo> configInfos = fetchConfigsFromLab(labQuery);
 
         final List<LabAccount> labAccounts = new ArrayList<>(configInfos.size());
@@ -78,7 +79,8 @@ public class LabClient implements ILabClient {
         return labAccounts;
     }
 
-    private LabAccount getLabAccountObject(@NonNull final ConfigInfo configInfo) throws LabApiException {
+    private LabAccount getLabAccountObject(@NonNull final ConfigInfo configInfo)
+            throws LabApiException {
         // for guest accounts the UPN is located under homeUpn field
         String username = configInfo.getUserInfo().getHomeUPN();
         if (username == null || username.equals("") || username.equalsIgnoreCase("None")) {
@@ -92,14 +94,13 @@ public class LabClient implements ILabClient {
                 username,
                 password,
                 UserType.fromName(configInfo.getUserInfo().getUserType()),
-                configInfo.getUserInfo().getHomeTenantID()
-        );
+                configInfo.getUserInfo().getHomeTenantID());
     }
 
-    private List<ConfigInfo> fetchConfigsFromLab(@NonNull final LabQuery query) throws LabApiException {
-        Configuration.getDefaultApiClient().setAccessToken(
-                mLabApiAuthenticationClient.getAccessToken()
-        );
+    private List<ConfigInfo> fetchConfigsFromLab(@NonNull final LabQuery query)
+            throws LabApiException {
+        Configuration.getDefaultApiClient()
+                .setAccessToken(mLabApiAuthenticationClient.getAccessToken());
         try {
             final ConfigApi api = new ConfigApi();
             return api.apiConfigGet(
@@ -124,8 +125,7 @@ public class LabClient implements ILabClient {
                     valueOf(query.getPasswordPolicyNotificationDays()),
                     valueOf(query.getTokenLifetimePolicy()),
                     valueOf(query.getTokenType()),
-                    valueOf(query.getTokenLifetime())
-            );
+                    valueOf(query.getTokenLifetime()));
         } catch (final com.microsoft.identity.internal.test.labapi.ApiException ex) {
             throw new LabApiException(LabError.FAILED_TO_GET_ACCOUNT_FROM_LAB, ex);
         }
@@ -136,10 +136,10 @@ public class LabClient implements ILabClient {
     }
 
     @Override
-    public LabAccount createTempAccount(@NonNull final TempUserType tempUserType) throws LabApiException {
-        Configuration.getDefaultApiClient().setAccessToken(
-                mLabApiAuthenticationClient.getAccessToken()
-        );
+    public LabAccount createTempAccount(@NonNull final TempUserType tempUserType)
+            throws LabApiException {
+        Configuration.getDefaultApiClient()
+                .setAccessToken(mLabApiAuthenticationClient.getAccessToken());
         final CreateTempUserApi createTempUserApi = new CreateTempUserApi();
         createTempUserApi.getApiClient().setReadTimeout(TEMP_USER_API_READ_TIMEOUT);
         final TempUser tempUser;
@@ -158,9 +158,8 @@ public class LabClient implements ILabClient {
 
     @Override
     public String getSecret(@NonNull final String secretName) throws LabApiException {
-        Configuration.getDefaultApiClient().setAccessToken(
-                mLabApiAuthenticationClient.getAccessToken()
-        );
+        Configuration.getDefaultApiClient()
+                .setAccessToken(mLabApiAuthenticationClient.getAccessToken());
         final LabSecretApi labSecretApi = new LabSecretApi();
 
         try {

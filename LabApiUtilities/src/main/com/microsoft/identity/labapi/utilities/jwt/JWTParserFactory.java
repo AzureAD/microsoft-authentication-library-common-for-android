@@ -27,7 +27,6 @@ package com.microsoft.identity.labapi.utilities.jwt;
  * Currently it only returns a default implementation that is using Nimbus.
  */
 public enum JWTParserFactory implements IJWTParserFactory {
-
     INSTANCE;
 
     @Override

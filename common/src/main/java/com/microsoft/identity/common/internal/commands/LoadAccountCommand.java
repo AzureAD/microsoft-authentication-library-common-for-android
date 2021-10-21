@@ -31,10 +31,10 @@ import com.microsoft.identity.common.java.commands.CommandCallback;
 import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.java.controllers.BaseController;
 
+import lombok.EqualsAndHashCode;
+
 import java.util.ArrayList;
 import java.util.List;
-
-import lombok.EqualsAndHashCode;
 
 /**
  * Command class to call controllers to load accounts and return the account list to
@@ -44,17 +44,19 @@ import lombok.EqualsAndHashCode;
 public class LoadAccountCommand extends BaseCommand<List<ICacheRecord>> {
     private static final String TAG = LoadAccountCommand.class.getSimpleName();
 
-    public LoadAccountCommand(@NonNull CommandParameters parameters,
-                              @NonNull BaseController controller,
-                              @SuppressWarnings(WarningType.rawtype_warning) @NonNull CommandCallback callback,
-                              @NonNull String publicApiId) {
+    public LoadAccountCommand(
+            @NonNull CommandParameters parameters,
+            @NonNull BaseController controller,
+            @SuppressWarnings(WarningType.rawtype_warning) @NonNull CommandCallback callback,
+            @NonNull String publicApiId) {
         super(parameters, controller, callback, publicApiId);
     }
 
-    public LoadAccountCommand(@NonNull CommandParameters parameters,
-                              @NonNull List<BaseController> controllers,
-                              @SuppressWarnings(WarningType.rawtype_warning) @NonNull CommandCallback callback,
-                              @NonNull String publicApiId) {
+    public LoadAccountCommand(
+            @NonNull CommandParameters parameters,
+            @NonNull List<BaseController> controllers,
+            @SuppressWarnings(WarningType.rawtype_warning) @NonNull CommandCallback callback,
+            @NonNull String publicApiId) {
         super(parameters, controllers, callback, publicApiId);
     }
 
@@ -68,9 +70,7 @@ public class LoadAccountCommand extends BaseCommand<List<ICacheRecord>> {
             final BaseController controller = getControllers().get(ii);
             com.microsoft.identity.common.internal.logging.Logger.verbose(
                     TAG + methodName,
-                    "Executing with controller: "
-                            + controller.getClass().getSimpleName()
-            );
+                    "Executing with controller: " + controller.getClass().getSimpleName());
 
             result.addAll(controller.getAccounts(getParameters()));
         }

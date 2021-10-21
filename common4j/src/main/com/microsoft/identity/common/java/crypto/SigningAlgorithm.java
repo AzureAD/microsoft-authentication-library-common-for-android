@@ -34,12 +34,12 @@ import lombok.NonNull;
  */
 public enum SigningAlgorithm {
 
-    //@RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
+    // @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
     NONE_WITH_RSA("NONEwithRSA"),
 
     SHA_1_WITH_RSA("SHA1withRSA"),
 
-    //@RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
+    // @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
     SHA_256_WITH_RSA("SHA256withRSA");
 
     private final String mValue;

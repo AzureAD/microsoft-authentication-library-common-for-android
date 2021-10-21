@@ -39,8 +39,10 @@ public interface IBrokerResultAdapter {
      * @param authenticationResult
      * @return {@link Bundle}
      */
-    @NonNull Bundle bundleFromAuthenticationResult(@NonNull final ILocalAuthenticationResult authenticationResult,
-                                                   @Nullable final String negotiatedBrokerProtocolVersion);
+    @NonNull
+    Bundle bundleFromAuthenticationResult(
+            @NonNull final ILocalAuthenticationResult authenticationResult,
+            @Nullable final String negotiatedBrokerProtocolVersion);
 
     /**
      * Returns an error bundle with properties from Exception.
@@ -48,8 +50,10 @@ public interface IBrokerResultAdapter {
      * @param exception
      * @return {@link Bundle}
      */
-    @NonNull Bundle bundleFromBaseException(@NonNull BaseException exception,
-                                            @Nullable final String negotiatedBrokerProtocolVersion);
+    @NonNull
+    Bundle bundleFromBaseException(
+            @NonNull BaseException exception,
+            @Nullable final String negotiatedBrokerProtocolVersion);
 
     /**
      * Returns authentication result from Broker result bundle
@@ -57,7 +61,9 @@ public interface IBrokerResultAdapter {
      * @param resultBundle
      * @return {@link ILocalAuthenticationResult}
      */
-    @NonNull ILocalAuthenticationResult authenticationResultFromBundle(Bundle resultBundle) throws BaseException;
+    @NonNull
+    ILocalAuthenticationResult authenticationResultFromBundle(Bundle resultBundle)
+            throws BaseException;
 
     /**
      * Returns a BaseException from Broker result bundle.The exception
@@ -66,7 +72,8 @@ public interface IBrokerResultAdapter {
      * @param resultBundle
      * @return {@link BaseException}
      */
-    @NonNull BaseException getBaseExceptionFromBundle(Bundle resultBundle);
+    @NonNull
+    BaseException getBaseExceptionFromBundle(Bundle resultBundle);
 
     /**
      * Returns a new AcquirePrtSsoCookieResult from the bundle.

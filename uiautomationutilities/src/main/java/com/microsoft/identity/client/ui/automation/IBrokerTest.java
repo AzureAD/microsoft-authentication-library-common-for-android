@@ -33,5 +33,4 @@ public interface IBrokerTest {
 
     @NonNull
     ITestBroker getBroker();
-
 }

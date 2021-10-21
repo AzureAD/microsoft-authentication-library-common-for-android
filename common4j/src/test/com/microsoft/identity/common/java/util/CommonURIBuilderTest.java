@@ -23,6 +23,8 @@
 
 package com.microsoft.identity.common.java.util;
 
+import cz.msebera.android.httpclient.NameValuePair;
+
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -34,27 +36,24 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import cz.msebera.android.httpclient.NameValuePair;
-
 @RunWith(JUnit4.class)
 public class CommonURIBuilderTest {
 
     @Test(expected = UnsupportedOperationException.class)
-    public void testCallingAddParameter(){
-        final CommonURIBuilder builder = new CommonURIBuilder()
-                .addParameter("test", "test");
+    public void testCallingAddParameter() {
+        final CommonURIBuilder builder = new CommonURIBuilder().addParameter("test", "test");
     }
 
     @Test(expected = UnsupportedOperationException.class)
-    public void testCallingAddParameters(){
-        final CommonURIBuilder builder = new CommonURIBuilder()
-                .addParameters(new ArrayList<NameValuePair>());
+    public void testCallingAddParameters() {
+        final CommonURIBuilder builder =
+                new CommonURIBuilder().addParameters(new ArrayList<NameValuePair>());
     }
 
     @Test
-    public void testCallingAddParametersIfAbsent(){
-        final CommonURIBuilder builder = new CommonURIBuilder()
-                .addParameterIfAbsent("Test1", "Value1");
+    public void testCallingAddParametersIfAbsent() {
+        final CommonURIBuilder builder =
+                new CommonURIBuilder().addParameterIfAbsent("Test1", "Value1");
 
         Assert.assertEquals(1, builder.getQueryParams().size());
         Assert.assertEquals("Test1", builder.getQueryParams().get(0).getName());
@@ -70,10 +69,11 @@ public class CommonURIBuilderTest {
     }
 
     @Test
-    public void testCallingAddParametersIfAbsent_ValueAlreadyExists(){
-        final CommonURIBuilder builder = new CommonURIBuilder()
-                .setParameter("Test1", "Value1")
-                .addParameterIfAbsent("Test1", "Value2");
+    public void testCallingAddParametersIfAbsent_ValueAlreadyExists() {
+        final CommonURIBuilder builder =
+                new CommonURIBuilder()
+                        .setParameter("Test1", "Value1")
+                        .addParameterIfAbsent("Test1", "Value2");
 
         Assert.assertEquals(1, builder.getQueryParams().size());
         Assert.assertEquals("Test1", builder.getQueryParams().get(0).getName());
@@ -81,7 +81,7 @@ public class CommonURIBuilderTest {
     }
 
     @Test
-    public void testCallingAddParametersIfAbsent_WithMap(){
+    public void testCallingAddParametersIfAbsent_WithMap() {
         final Map<String, String> map = new HashMap<>();
         map.put("Test1", "Value1");
         map.put("Test2", "Value2");
@@ -96,9 +96,8 @@ public class CommonURIBuilderTest {
     }
 
     @Test
-    public void testCallingAddParametersIfAbsent_WithMap_ValueAlreadyExists(){
-        final CommonURIBuilder builder = new CommonURIBuilder()
-                .setParameter("Test1", "Value1");
+    public void testCallingAddParametersIfAbsent_WithMap_ValueAlreadyExists() {
+        final CommonURIBuilder builder = new CommonURIBuilder().setParameter("Test1", "Value1");
 
         final Map<String, String> map = new HashMap<>();
         map.put("Test1", "Value2");
@@ -111,13 +110,12 @@ public class CommonURIBuilderTest {
     }
 
     @Test
-    public void testCallingAddParametersIfAbsent_WithMapEntryList(){
+    public void testCallingAddParametersIfAbsent_WithMapEntryList() {
         final List<Map.Entry<String, String>> map = new ArrayList<>();
         map.add(new AbstractMap.SimpleEntry<String, String>("Test1", "Value1"));
         map.add(new AbstractMap.SimpleEntry<String, String>("Test2", "Value2"));
 
-        final CommonURIBuilder builder = new
-                CommonURIBuilder().addParametersIfAbsent(map);
+        final CommonURIBuilder builder = new CommonURIBuilder().addParametersIfAbsent(map);
 
         Assert.assertEquals(2, builder.getQueryParams().size());
         Assert.assertEquals("Test1", builder.getQueryParams().get(0).getName());
@@ -127,9 +125,8 @@ public class CommonURIBuilderTest {
     }
 
     @Test
-    public void testCallingAddParametersIfAbsent_WithMapEntryList_ValueAlreadyExists(){
-        final CommonURIBuilder builder = new CommonURIBuilder()
-                .setParameter("Test1", "Value1");
+    public void testCallingAddParametersIfAbsent_WithMapEntryList_ValueAlreadyExists() {
+        final CommonURIBuilder builder = new CommonURIBuilder().setParameter("Test1", "Value1");
 
         final List<Map.Entry<String, String>> map = new ArrayList<>();
         map.add(new AbstractMap.SimpleEntry<String, String>("Test1", "Value1"));

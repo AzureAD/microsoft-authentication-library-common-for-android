@@ -32,9 +32,8 @@ import edu.umd.cs.findbugs.annotations.Nullable;
  */
 public final class ObjectUtils {
 
-    //Private constructor to discourage instantiation.
-    private ObjectUtils() {
-    }
+    // Private constructor to discourage instantiation.
+    private ObjectUtils() {}
 
     /**
      * This is a local implementation of Objects.equals.  It is a null-safe equals execution.
@@ -47,5 +46,4 @@ public final class ObjectUtils {
     public static boolean equals(@Nullable final Object o1, @Nullable final Object o2) {
         return (o1 == o2) || (o1 != null && o1.equals(o2));
     }
-
 }

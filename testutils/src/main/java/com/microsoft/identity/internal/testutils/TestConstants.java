@@ -26,31 +26,53 @@ public class TestConstants {
 
     public static class Configurations {
         private static final String CONFIG_FILE_PATH_PREFIX = "src/test/res/raw/";
-        public static final String B2C_GLOBAL_DOMAIN_CONFIG_FILE_PATH = CONFIG_FILE_PATH_PREFIX + "b2c_global_domain_test_config.json";
-        public static final String B2C_CUSTOM_DOMAIN_CONFIG_FILE_PATH = CONFIG_FILE_PATH_PREFIX + "b2c_custom_domain_test_config.json";
-        public static final String MULTIPLE_ACCOUNT_MODE_AAD_CONFIG_FILE_PATH = CONFIG_FILE_PATH_PREFIX + "multiple_account_aad_test_config.json";
-        public static final String SINGLE_ACCOUNT_MODE_AAD_CONFIG_FILE_PATH = CONFIG_FILE_PATH_PREFIX + "single_account_aad_test_config.json";
-        public static final String MULTIPLE_ACCOUNT_MODE_AAD_MOONCAKE_CONFIG_FILE_PATH = CONFIG_FILE_PATH_PREFIX + "msal_mooncake_config.json";
-        public static final String MULTIPLE_ACCOUNT_MODE_MOCK_TEST_CONFIG_FILE_PATH = CONFIG_FILE_PATH_PREFIX + "multiple_account_mock_test_config.json";
-        public static final String SINGLE_ACCOUNT_MODE_MOCK_TEST_CONFIG_FILE_PATH = CONFIG_FILE_PATH_PREFIX + "single_account_mock_test_config.json";
-        public static final String SINGLE_ACCOUNT_DCF_TEST_CONFIG_FILE_PATH = CONFIG_FILE_PATH_PREFIX + "single_account_dcf_test_config.json";
+        public static final String B2C_GLOBAL_DOMAIN_CONFIG_FILE_PATH =
+                CONFIG_FILE_PATH_PREFIX + "b2c_global_domain_test_config.json";
+        public static final String B2C_CUSTOM_DOMAIN_CONFIG_FILE_PATH =
+                CONFIG_FILE_PATH_PREFIX + "b2c_custom_domain_test_config.json";
+        public static final String MULTIPLE_ACCOUNT_MODE_AAD_CONFIG_FILE_PATH =
+                CONFIG_FILE_PATH_PREFIX + "multiple_account_aad_test_config.json";
+        public static final String SINGLE_ACCOUNT_MODE_AAD_CONFIG_FILE_PATH =
+                CONFIG_FILE_PATH_PREFIX + "single_account_aad_test_config.json";
+        public static final String MULTIPLE_ACCOUNT_MODE_AAD_MOONCAKE_CONFIG_FILE_PATH =
+                CONFIG_FILE_PATH_PREFIX + "msal_mooncake_config.json";
+        public static final String MULTIPLE_ACCOUNT_MODE_MOCK_TEST_CONFIG_FILE_PATH =
+                CONFIG_FILE_PATH_PREFIX + "multiple_account_mock_test_config.json";
+        public static final String SINGLE_ACCOUNT_MODE_MOCK_TEST_CONFIG_FILE_PATH =
+                CONFIG_FILE_PATH_PREFIX + "single_account_mock_test_config.json";
+        public static final String SINGLE_ACCOUNT_DCF_TEST_CONFIG_FILE_PATH =
+                CONFIG_FILE_PATH_PREFIX + "single_account_dcf_test_config.json";
     }
 
     public static class Scopes {
         public static final String[] USER_READ_SCOPE = {"user.read"};
-        public static final String[] MS_GRAPH_USER_READ_SCOPE = {"https://graph.microsoft.com/user.read"};
-        public static final String[] AD_GRAPH_USER_READ_SCOPE = {"https://graph.windows.net/user.read"};
-        public static final String[] OFFICE_USER_READ_SCOPE = {"https://outlook.office.com/user.read"};
-        public static final String[] B2C_READ_SCOPE = {"https://msidlabb2c.onmicrosoft.com/msidlabb2capi/read"};
-        public static final String[] B2C_USER_IMPERSONATION_SCOPE = {"https://msidlabb2c.onmicrosoft.com/msidlabb2capi/user_impersonation"};
+        public static final String[] MS_GRAPH_USER_READ_SCOPE = {
+            "https://graph.microsoft.com/user.read"
+        };
+        public static final String[] AD_GRAPH_USER_READ_SCOPE = {
+            "https://graph.windows.net/user.read"
+        };
+        public static final String[] OFFICE_USER_READ_SCOPE = {
+            "https://outlook.office.com/user.read"
+        };
+        public static final String[] B2C_READ_SCOPE = {
+            "https://msidlabb2c.onmicrosoft.com/msidlabb2capi/read"
+        };
+        public static final String[] B2C_USER_IMPERSONATION_SCOPE = {
+            "https://msidlabb2c.onmicrosoft.com/msidlabb2capi/user_impersonation"
+        };
     }
 
     public static class Authorities {
-        public static final String AAD_MOCK_AUTHORITY_TENANT = "61137f02-8854-4e46-8813-664098dc9f91";
-        public static final String AAD_MOCK_HTTP_RESPONSE_AUTHORITY_TENANT = "3596542e-1e0b-4c8c-9b34-b83fdd052990";
-        public static final String AAD_MOCK_AUTHORITY = "https://login.microsoftonline.com/" + AAD_MOCK_AUTHORITY_TENANT;
-        public static final String AAD_MOCK_DELAYED_RESPONSE_AUTHORITY = "https://test.authority/mock_with_delays";
-        public static final String AAD_MOCK_AUTHORITY_HTTP_RESPONSE = "https://login.microsoftonline.com/" + AAD_MOCK_HTTP_RESPONSE_AUTHORITY_TENANT;
+        public static final String AAD_MOCK_AUTHORITY_TENANT =
+                "61137f02-8854-4e46-8813-664098dc9f91";
+        public static final String AAD_MOCK_HTTP_RESPONSE_AUTHORITY_TENANT =
+                "3596542e-1e0b-4c8c-9b34-b83fdd052990";
+        public static final String AAD_MOCK_AUTHORITY =
+                "https://login.microsoftonline.com/" + AAD_MOCK_AUTHORITY_TENANT;
+        public static final String AAD_MOCK_DELAYED_RESPONSE_AUTHORITY =
+                "https://test.authority/mock_with_delays";
+        public static final String AAD_MOCK_AUTHORITY_HTTP_RESPONSE =
+                "https://login.microsoftonline.com/" + AAD_MOCK_HTTP_RESPONSE_AUTHORITY_TENANT;
     }
-
 }

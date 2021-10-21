@@ -39,28 +39,39 @@ import java.util.concurrent.TimeUnit;
 @Implements(AccountManager.class)
 public class ShadowAccountManagerAddAccountConnectionFailed {
 
-    public AccountManagerFuture<Bundle> addAccount(final String accountType,
-                                                   final String authTokenType, final String[] requiredFeatures,
-                                                   final Bundle addAccountOptions,
-                                                   final Activity activity, AccountManagerCallback<Bundle> callback, Handler handler) {
+    public AccountManagerFuture<Bundle> addAccount(
+            final String accountType,
+            final String authTokenType,
+            final String[] requiredFeatures,
+            final Bundle addAccountOptions,
+            final Activity activity,
+            AccountManagerCallback<Bundle> callback,
+            Handler handler) {
         return new AccountManagerFuture<Bundle>() {
-            @Override public boolean cancel(boolean mayInterruptIfRunning) {
+            @Override
+            public boolean cancel(boolean mayInterruptIfRunning) {
                 return false;
             }
 
-            @Override public boolean isCancelled() {
+            @Override
+            public boolean isCancelled() {
                 return true;
             }
 
-            @Override public boolean isDone() {
+            @Override
+            public boolean isDone() {
                 return false;
             }
 
-            @Override public Bundle getResult() throws AuthenticatorException, IOException, OperationCanceledException {
+            @Override
+            public Bundle getResult()
+                    throws AuthenticatorException, IOException, OperationCanceledException {
                 throw new AuthenticatorException("Failed to bind");
             }
 
-            @Override public Bundle getResult(long timeout, TimeUnit unit) throws AuthenticatorException, IOException, OperationCanceledException {
+            @Override
+            public Bundle getResult(long timeout, TimeUnit unit)
+                    throws AuthenticatorException, IOException, OperationCanceledException {
                 throw new AuthenticatorException("Failed to bind");
             }
         };

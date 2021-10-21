@@ -22,29 +22,30 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.authorities;
 
-import lombok.NonNull;
+import static com.microsoft.identity.common.java.authorities.AllAccounts.ALL_ACCOUNTS_TENANT_ID;
 
 import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ServiceException;
+import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
 import com.microsoft.identity.common.java.providers.oauth2.OpenIdProviderConfiguration;
 import com.microsoft.identity.common.java.providers.oauth2.OpenIdProviderConfigurationClient;
-import com.microsoft.identity.common.java.util.StringUtil;
-import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.util.CommonURIBuilder;
+import com.microsoft.identity.common.java.util.StringUtil;
+
+import lombok.NonNull;
 
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Locale;
-
-import static com.microsoft.identity.common.java.authorities.AllAccounts.ALL_ACCOUNTS_TENANT_ID;
 
 public abstract class AzureActiveDirectoryAudience {
 
     private static final String TAG = AzureActiveDirectoryAudience.class.getSimpleName();
 
     private String mCloudUrl;
+
     @SerializedName("tenant_id")
     private String mTenantId;
 
@@ -54,9 +55,9 @@ public abstract class AzureActiveDirectoryAudience {
     public static final String MSA_MEGA_TENANT_ID = "9188040d-6c67-4c5b-b112-36a304b66dad";
 
     public String getCloudUrl() {
-        if(mCloudUrl == null){
+        if (mCloudUrl == null) {
             return AzureActiveDirectory.getDefaultCloudUrl();
-        }else {
+        } else {
             return mCloudUrl;
         }
     }
@@ -68,7 +69,6 @@ public abstract class AzureActiveDirectoryAudience {
     public String getTenantId() {
         return mTenantId;
     }
-
 
     /**
      *
@@ -82,7 +82,7 @@ public abstract class AzureActiveDirectoryAudience {
      * @throws ClientException
      * @throws URISyntaxException
      */
-    //@WorkerThread
+    // @WorkerThread
     public String getTenantUuidForAlias(@NonNull final String authority)
             throws ServiceException, ClientException {
         // if the tenant id is already a UUID, return
@@ -98,19 +98,15 @@ public abstract class AzureActiveDirectoryAudience {
         try {
             issuerUri = new CommonURIBuilder(issuer);
         } catch (final URISyntaxException e) {
-            throw new ClientException(ClientException.MALFORMED_URL,
-                    "Failed to construct issuerUri", e);
+            throw new ClientException(
+                    ClientException.MALFORMED_URL, "Failed to construct issuerUri", e);
         }
         final List<String> paths = issuerUri.getPathSegments();
 
         if (paths.isEmpty()) {
             final String errMsg = "OpenId Metadata did not contain a path to the tenant";
 
-            Logger.error(
-                    TAG,
-                    errMsg,
-                    null
-            );
+            Logger.error(TAG, errMsg, null);
 
             throw new ClientException(errMsg);
         }
@@ -118,11 +114,7 @@ public abstract class AzureActiveDirectoryAudience {
 
         if (!StringUtil.isUuid(tenantUUID)) {
             final String errMsg = "OpenId Metadata did not contain UUID in the path ";
-            Logger.error(
-                    TAG,
-                    errMsg,
-                    null
-            );
+            Logger.error(TAG, errMsg, null);
 
             throw new ClientException(errMsg);
         }
@@ -141,22 +133,21 @@ public abstract class AzureActiveDirectoryAudience {
                 || tenantId.equalsIgnoreCase(ORGANIZATIONS);
     }
 
-    private static OpenIdProviderConfiguration  loadOpenIdProviderConfigurationMetadata(
+    private static OpenIdProviderConfiguration loadOpenIdProviderConfigurationMetadata(
             @NonNull final String requestAuthority) throws ServiceException, ClientException {
         final String methodName = ":loadOpenIdProviderConfigurationMetadata";
 
-        Logger.info(
-                TAG + methodName,
-                "Loading OpenId Provider Metadata..."
-        );
+        Logger.info(TAG + methodName, "Loading OpenId Provider Metadata...");
 
         try {
             final OpenIdProviderConfigurationClient client =
                     new OpenIdProviderConfigurationClient(requestAuthority);
             return client.loadOpenIdProviderConfiguration();
         } catch (final URISyntaxException e) {
-            throw new ClientException(ClientException.MALFORMED_URL,
-                    "Failed to construct OpenIdProviderConfigurationClient", e);
+            throw new ClientException(
+                    ClientException.MALFORMED_URL,
+                    "Failed to construct OpenIdProviderConfigurationClient",
+                    e);
         }
     }
 
@@ -164,42 +155,29 @@ public abstract class AzureActiveDirectoryAudience {
         mTenantId = tenantId;
     }
 
-    public static AzureActiveDirectoryAudience getAzureActiveDirectoryAudience(final String cloudUrl,
-                                                                               final String tenantId) {
+    public static AzureActiveDirectoryAudience getAzureActiveDirectoryAudience(
+            final String cloudUrl, final String tenantId) {
         final String methodName = ":getAzureActiveDirectoryAudience";
         AzureActiveDirectoryAudience audience = null;
 
         switch (tenantId.toLowerCase(Locale.ROOT)) {
             case ORGANIZATIONS:
-                Logger.verbose(
-                        TAG + methodName,
-                        "Audience: AnyOrganizationalAccount"
-                );
+                Logger.verbose(TAG + methodName, "Audience: AnyOrganizationalAccount");
                 audience = new AnyOrganizationalAccount(cloudUrl);
                 break;
             case CONSUMERS:
-                Logger.verbose(
-                        TAG + methodName,
-                        "Audience: AnyPersonalAccount"
-                );
+                Logger.verbose(TAG + methodName, "Audience: AnyPersonalAccount");
                 audience = new AnyPersonalAccount(cloudUrl);
                 break;
             case ALL:
-                Logger.verbose(
-                        TAG + methodName,
-                        "Audience: AllAccounts"
-                );
+                Logger.verbose(TAG + methodName, "Audience: AllAccounts");
                 audience = new AllAccounts(cloudUrl);
                 break;
             default:
-                Logger.verbose(
-                        TAG + methodName,
-                        "Audience: AccountsInOneOrganization"
-                );
+                Logger.verbose(TAG + methodName, "Audience: AccountsInOneOrganization");
                 audience = new AccountsInOneOrganization(cloudUrl, tenantId);
         }
 
         return audience;
     }
-
 }

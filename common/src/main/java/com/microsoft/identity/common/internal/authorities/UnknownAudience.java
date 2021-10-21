@@ -24,5 +24,4 @@ package com.microsoft.identity.common.internal.authorities;
 
 import com.microsoft.identity.common.java.authorities.AzureActiveDirectoryAudience;
 
-public class UnknownAudience extends AzureActiveDirectoryAudience {
-}
+public class UnknownAudience extends AzureActiveDirectoryAudience {}

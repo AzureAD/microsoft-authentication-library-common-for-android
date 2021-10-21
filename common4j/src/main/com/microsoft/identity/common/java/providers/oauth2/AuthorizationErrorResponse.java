@@ -34,19 +34,17 @@ import lombok.experimental.Accessors;
 @Getter
 @Setter
 @Accessors(prefix = "m")
-public class AuthorizationErrorResponse implements IErrorResponse{
+public class AuthorizationErrorResponse implements IErrorResponse {
 
     /**
      * Error returned due to Authorization request failure.
      */
-    @Expose()
-    private String mError;
+    @Expose() private String mError;
 
     /**
      * Error description returned due to Authorization request failure
      * */
-    @Expose()
-    private String mErrorDescription;
+    @Expose() private String mErrorDescription;
 
     /**
      * Set when the account needs to be workplace joined to access the resource.
@@ -65,7 +63,7 @@ public class AuthorizationErrorResponse implements IErrorResponse{
     }
 
     public static class Fields {
-        public final static String ERROR = "error";
-        public final static String ERROR_DESCRIPTION = "error_description";
+        public static final String ERROR = "error";
+        public static final String ERROR_DESCRIPTION = "error_description";
     }
 }

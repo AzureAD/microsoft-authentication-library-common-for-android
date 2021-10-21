@@ -32,7 +32,7 @@ import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
  */
 public class B2CIdLabLocalLoginComponentHandler extends AbstractB2CLoginComponentHandler {
 
-    private final static String TAG = B2CIdLabLocalLoginComponentHandler.class.getSimpleName();
+    private static final String TAG = B2CIdLabLocalLoginComponentHandler.class.getSimpleName();
 
     @Override
     protected String getHandlerName() {

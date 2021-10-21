@@ -27,16 +27,19 @@ import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthoriza
 /**
  * Active Directory Federation Services Authorization Request.
  */
-public class ActiveDirectoryFederationServicesAuthorizationRequest extends MicrosoftAuthorizationRequest<ActiveDirectoryFederationServicesAuthorizationRequest> {
+public class ActiveDirectoryFederationServicesAuthorizationRequest
+        extends MicrosoftAuthorizationRequest<
+                ActiveDirectoryFederationServicesAuthorizationRequest> {
     private static final long serialVersionUID = -3028954460087575031L;
 
     private ActiveDirectoryFederationServicesAuthorizationRequest(final Builder builder) {
         super(builder);
     }
 
-    public static final class Builder extends MicrosoftAuthorizationRequest.Builder<ActiveDirectoryFederationServicesAuthorizationRequest.Builder> {
-        public Builder() {
-        }
+    public static final class Builder
+            extends MicrosoftAuthorizationRequest.Builder<
+                    ActiveDirectoryFederationServicesAuthorizationRequest.Builder> {
+        public Builder() {}
 
         public ActiveDirectoryFederationServicesAuthorizationRequest build() {
             return new ActiveDirectoryFederationServicesAuthorizationRequest(this);
@@ -53,4 +56,3 @@ public class ActiveDirectoryFederationServicesAuthorizationRequest extends Micro
         throw new UnsupportedOperationException("Not implemented.");
     }
 }
-

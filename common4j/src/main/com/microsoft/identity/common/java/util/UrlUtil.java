@@ -25,6 +25,10 @@ package com.microsoft.identity.common.java.util;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.logging.Logger;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
+
+import lombok.NonNull;
+
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -37,9 +41,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
 
-import edu.umd.cs.findbugs.annotations.Nullable;
-import lombok.NonNull;
-
 public class UrlUtil {
     private static final String TAG = UrlUtil.class.getSimpleName();
 
@@ -50,8 +51,8 @@ public class UrlUtil {
      * @param pathString  a string containing path segments to be appended to the URL.
      * @return appended URL
      */
-    public static URL appendPathToURL(@NonNull final URL urlToAppend,
-                                      @Nullable final String pathString)
+    public static URL appendPathToURL(
+            @NonNull final URL urlToAppend, @Nullable final String pathString)
             throws URISyntaxException, MalformedURLException {
 
         if (StringUtil.isNullOrEmpty(pathString)) {
@@ -87,16 +88,18 @@ public class UrlUtil {
     @NonNull
     public static Map<String, String> getParameters(@Nullable final String urlString)
             throws ClientException {
-        if (StringUtil.isNullOrEmpty(urlString)){
+        if (StringUtil.isNullOrEmpty(urlString)) {
             Logger.warn(TAG, "url string is null.");
             return Collections.emptyMap();
         }
 
         try {
             return getParameters(new URI(urlString));
-        } catch (final URISyntaxException e){
-            throw new ClientException(ClientException.MALFORMED_URL,
-                    "Cannot extract parameter from a malformed URL string.", e);
+        } catch (final URISyntaxException e) {
+            throw new ClientException(
+                    ClientException.MALFORMED_URL,
+                    "Cannot extract parameter from a malformed URL string.",
+                    e);
         }
     }
     /**
@@ -106,20 +109,23 @@ public class UrlUtil {
      * @return a map of url parameters.
      */
     @NonNull
-    public static Map<String, String> getParameters(@Nullable final URI uri){
+    public static Map<String, String> getParameters(@Nullable final URI uri) {
         final String methodName = ":getUrlParameters";
 
-        if (uri == null){
+        if (uri == null) {
             Logger.warn(TAG, "uri is null.");
             return Collections.emptyMap();
         }
 
-        if (uri.isOpaque()){
-            // Opaque URI *might* have query params, but Java's URI would just treat the whole URL as
+        if (uri.isOpaque()) {
+            // Opaque URI *might* have query params, but Java's URI would just treat the whole URL
+            // as
             // [scheme:]scheme-specific-part[#fragment]
             //
-            // Since we want to try extracting query params from it (and we don't care about other parts of the URI),
-            // we're going to prepend a scheme so that Java's URI recognizes this as a hierarchical one.
+            // Since we want to try extracting query params from it (and we don't care about other
+            // parts of the URI),
+            // we're going to prepend a scheme so that Java's URI recognizes this as a hierarchical
+            // one.
             // [scheme:][//authority][path][?query][#fragment]
             //
             // See: https://docs.oracle.com/javase/8/docs/api/java/net/URI.html
@@ -132,17 +138,13 @@ public class UrlUtil {
         }
 
         final String fragment = uri.getFragment();
-        if (!StringUtil.isNullOrEmpty(fragment) &&
-                !urlFormDecode(fragment).isEmpty()) {
+        if (!StringUtil.isNullOrEmpty(fragment) && !urlFormDecode(fragment).isEmpty()) {
             Logger.warn(TAG, "Received url contains unexpected fragment parameters.");
             Logger.warnPII(TAG, "Unexpected fragment: " + uri.getFragment());
         }
 
         if (StringUtil.isNullOrEmpty(uri.getQuery())) {
-            Logger.info(
-                    TAG + methodName,
-                    "URL does not contain query parameter"
-            );
+            Logger.info(TAG + methodName, "URL does not contain query parameter");
             return Collections.emptyMap();
         }
 
@@ -169,8 +171,8 @@ public class UrlUtil {
      * @return Map key value pairs
      */
     @NonNull
-    static Map<String, String> urlFormDecodeData(@NonNull final String urlParameter,
-                                                 @NonNull final String delimiter) {
+    static Map<String, String> urlFormDecodeData(
+            @NonNull final String urlParameter, @NonNull final String delimiter) {
         final String methodName = ":urlFormDecodeData";
         final Map<String, String> result = new HashMap<>();
 
@@ -188,11 +190,7 @@ public class UrlUtil {
                         key = StringUtil.urlFormDecode(elements[0].trim());
                         value = StringUtil.urlFormDecode(elements[1].trim());
                     } catch (UnsupportedEncodingException e) {
-                        Logger.errorPII(
-                                TAG + methodName,
-                                "Encoding format is not supported",
-                                e
-                        );
+                        Logger.errorPII(TAG + methodName, "Encoding format is not supported", e);
                         continue;
                     }
                 } else if (elements.length == 1) {
@@ -200,11 +198,7 @@ public class UrlUtil {
                         key = StringUtil.urlFormDecode(elements[0].trim());
                         value = "";
                     } catch (UnsupportedEncodingException e) {
-                        Logger.errorPII(
-                                TAG + methodName,
-                                "Encoding format is not supported",
-                                e
-                        );
+                        Logger.errorPII(TAG + methodName, "Encoding format is not supported", e);
                         continue;
                     }
                 }

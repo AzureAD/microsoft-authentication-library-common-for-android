@@ -22,6 +22,11 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.net;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
+
+import lombok.NonNull;
+import lombok.experimental.Accessors;
+
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
@@ -35,14 +40,6 @@ import javax.net.ssl.HandshakeCompletedListener;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 
-import edu.umd.cs.findbugs.annotations.Nullable;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.Setter;
-import lombok.Synchronized;
-import lombok.experimental.Accessors;
-
 /**
  * This class is a SSLSocketFactory wrapper that supports Higher TLS by default.
  * In Android, the default socket would return one that only supports up to TLSv1.1 if API<20
@@ -55,17 +52,18 @@ public class SSLSocketFactoryWrapper extends SSLSocketFactory {
      * SSL Protocols that our library supports.
      */
     public static final List<String> SUPPORTED_SSL_PROTOCOLS =
-            Collections.unmodifiableList(Arrays.asList("SSLv2Hello", "SSLv3", "TLSv1", "TLSv1.1", "TLSv1.2", "TLSv1.3"));
+            Collections.unmodifiableList(
+                    Arrays.asList("SSLv2Hello", "SSLv3", "TLSv1", "TLSv1.1", "TLSv1.2", "TLSv1.3"));
 
     // Gets TLS version of the latest-established socket connection. For testing only.
     @Accessors(prefix = "s")
     private static String sLastHandshakeTLSversion = "";
 
-    static void setLastHandshakeTLSversion(@Nullable final String lastHandshakeTLSversion){
+    static void setLastHandshakeTLSversion(@Nullable final String lastHandshakeTLSversion) {
         sLastHandshakeTLSversion = lastHandshakeTLSversion;
     }
 
-    static synchronized String getLastHandshakeTLSversion(){
+    static synchronized String getLastHandshakeTLSversion() {
         return sLastHandshakeTLSversion;
     }
 
@@ -78,10 +76,12 @@ public class SSLSocketFactoryWrapper extends SSLSocketFactory {
     private final List<String> mEnabledSSLProtocol;
     private final SSLSocketFactory mBaseSocketFactory;
 
-    public SSLSocketFactoryWrapper(@NonNull final SSLSocketFactory baseSocketFactory,
-                                   @Nullable List<String> enabledSSLProtocol) {
+    public SSLSocketFactoryWrapper(
+            @NonNull final SSLSocketFactory baseSocketFactory,
+            @Nullable List<String> enabledSSLProtocol) {
         mBaseSocketFactory = baseSocketFactory;
-        mEnabledSSLProtocol = enabledSSLProtocol == null ? SUPPORTED_SSL_PROTOCOLS : enabledSSLProtocol;
+        mEnabledSSLProtocol =
+                enabledSSLProtocol == null ? SUPPORTED_SSL_PROTOCOLS : enabledSSLProtocol;
     }
 
     @Override
@@ -95,7 +95,8 @@ public class SSLSocketFactoryWrapper extends SSLSocketFactory {
     }
 
     @Override
-    public Socket createSocket(Socket s, String host, int port, boolean autoClose) throws IOException {
+    public Socket createSocket(Socket s, String host, int port, boolean autoClose)
+            throws IOException {
         return modifyEnabledSockets(mBaseSocketFactory.createSocket(s, host, port, autoClose));
     }
 
@@ -105,8 +106,10 @@ public class SSLSocketFactoryWrapper extends SSLSocketFactory {
     }
 
     @Override
-    public Socket createSocket(String host, int port, InetAddress localHost, int localPort) throws IOException {
-        return modifyEnabledSockets(mBaseSocketFactory.createSocket(host, port, localHost, localPort));
+    public Socket createSocket(String host, int port, InetAddress localHost, int localPort)
+            throws IOException {
+        return modifyEnabledSockets(
+                mBaseSocketFactory.createSocket(host, port, localHost, localPort));
     }
 
     @Override
@@ -115,8 +118,11 @@ public class SSLSocketFactoryWrapper extends SSLSocketFactory {
     }
 
     @Override
-    public Socket createSocket(InetAddress address, int port, InetAddress localAddress, int localPort) throws IOException {
-        return modifyEnabledSockets(mBaseSocketFactory.createSocket(address, port, localAddress, localPort));
+    public Socket createSocket(
+            InetAddress address, int port, InetAddress localAddress, int localPort)
+            throws IOException {
+        return modifyEnabledSockets(
+                mBaseSocketFactory.createSocket(address, port, localAddress, localPort));
     }
 
     /**
@@ -130,12 +136,13 @@ public class SSLSocketFactoryWrapper extends SSLSocketFactory {
             final SSLSocket sslSocket = (SSLSocket) socket;
             sslSocket.setEnabledProtocols(getEnabledProtocols(sslSocket));
             sslSocket.setEnabledCipherSuites(getEnabledCipherSuites(sslSocket));
-            sslSocket.addHandshakeCompletedListener(new HandshakeCompletedListener() {
-                @Override
-                public void handshakeCompleted(final HandshakeCompletedEvent event) {
-                    setLastHandshakeTLSversion(event.getSession().getProtocol());
-                }
-            });
+            sslSocket.addHandshakeCompletedListener(
+                    new HandshakeCompletedListener() {
+                        @Override
+                        public void handshakeCompleted(final HandshakeCompletedEvent event) {
+                            setLastHandshakeTLSversion(event.getSession().getProtocol());
+                        }
+                    });
         }
         return socket;
     }
@@ -148,8 +155,8 @@ public class SSLSocketFactoryWrapper extends SSLSocketFactory {
         final List<String> enabledProtocols = new ArrayList<>();
 
         final List<String> supportedProtocols = Arrays.asList(sslSocket.getSupportedProtocols());
-        for (final String protocol: mEnabledSSLProtocol){
-            if (supportedProtocols.contains(protocol)){
+        for (final String protocol : mEnabledSSLProtocol) {
+            if (supportedProtocols.contains(protocol)) {
                 enabledProtocols.add(protocol);
             }
         }
@@ -167,7 +174,8 @@ public class SSLSocketFactoryWrapper extends SSLSocketFactory {
         final List<String> enabledCipherSuites = new ArrayList<>();
         Collections.addAll(enabledCipherSuites, sslSocket.getEnabledCipherSuites());
 
-        final List<String> supportedCipherSuites = Arrays.asList(sslSocket.getSupportedCipherSuites());
+        final List<String> supportedCipherSuites =
+                Arrays.asList(sslSocket.getSupportedCipherSuites());
         if (supportedCipherSuites.contains(TLS_AES_128_GCM_SHA256)) {
             enabledCipherSuites.add(TLS_AES_128_GCM_SHA256);
         }

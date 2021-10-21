@@ -51,8 +51,9 @@ public interface IWebRequestHandler {
      * @return {@link HttpWebResponse} containing the status code and response header.
      * @throws IOException when error occurs on reading the http response.
      */
-    HttpWebResponse sendPost(URL url, Map<String, String> headers, byte[] content,
-                             String contentType) throws IOException;
+    HttpWebResponse sendPost(
+            URL url, Map<String, String> headers, byte[] content, String contentType)
+            throws IOException;
 
     /**
      * Set the correlation id for the web request.

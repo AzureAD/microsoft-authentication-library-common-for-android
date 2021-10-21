@@ -46,10 +46,10 @@ import java.util.concurrent.TimeUnit;
 
 public class CommonUtils {
 
-    private final static String TAG = CommonUtils.class.getSimpleName();
-    public final static long FIND_UI_ELEMENT_TIMEOUT = TimeUnit.SECONDS.toMillis(30);
+    private static final String TAG = CommonUtils.class.getSimpleName();
+    public static final long FIND_UI_ELEMENT_TIMEOUT = TimeUnit.SECONDS.toMillis(30);
 
-    private final static String SD_CARD = "/sdcard";
+    private static final String SD_CARD = "/sdcard";
 
     /**
      * Launch (open) the supplied package on the device.
@@ -59,8 +59,14 @@ public class CommonUtils {
     public static void launchApp(@NonNull final String packageName) {
         Logger.i(TAG, "Launch/Open " + packageName + " App..");
         final Context context = ApplicationProvider.getApplicationContext();
-        final Intent intent = context.getPackageManager().getLaunchIntentForPackage(packageName);  //sets the intent to start your app
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);  //clear out any previous task, i.e., make sure it starts on the initial screen
+        final Intent intent =
+                context.getPackageManager()
+                        .getLaunchIntentForPackage(
+                                packageName); // sets the intent to start your app
+        intent.addFlags(
+                Intent
+                        .FLAG_ACTIVITY_CLEAR_TASK); // clear out any previous task, i.e., make sure
+                                                    // it starts on the initial screen
         context.startActivity(intent);
     }
 
@@ -73,11 +79,15 @@ public class CommonUtils {
      * just responds to that by accepting that permission.
      */
     public static void grantPackagePermission() {
-        Logger.i(TAG, "Granting the requested permission to the package by handling allow permission dialog..");
+        Logger.i(
+                TAG,
+                "Granting the requested permission to the package by handling allow permission dialog..");
         if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
-            UiAutomatorUtils.handleButtonClick("com.android.packageinstaller:id/permission_allow_button");
+            UiAutomatorUtils.handleButtonClick(
+                    "com.android.packageinstaller:id/permission_allow_button");
         } else {
-            UiAutomatorUtils.handleButtonClick("com.android.permissioncontroller:id/permission_allow_button");
+            UiAutomatorUtils.handleButtonClick(
+                    "com.android.permissioncontroller:id/permission_allow_button");
         }
     }
 
@@ -88,14 +98,19 @@ public class CommonUtils {
      * @param permission  the permission which to check for
      * @return a boolean indicating whether permission was already granted or not
      */
-    public static boolean hasPermission(@NonNull final String packageName, @NonNull final String permission) {
-        Logger.i(TAG, "Check if given permission:" + permission + " for " + packageName + " has been granted or not..");
+    public static boolean hasPermission(
+            @NonNull final String packageName, @NonNull final String permission) {
+        Logger.i(
+                TAG,
+                "Check if given permission:"
+                        + permission
+                        + " for "
+                        + packageName
+                        + " has been granted or not..");
         final Context context = ApplicationProvider.getApplicationContext();
         final PackageManager packageManager = context.getPackageManager();
-        return PackageManager.PERMISSION_GRANTED == packageManager.checkPermission(
-                permission,
-                packageName
-        );
+        return PackageManager.PERMISSION_GRANTED
+                == packageManager.checkPermission(permission, packageName);
     }
 
     /**
@@ -105,7 +120,8 @@ public class CommonUtils {
      * @param internalResourceId the resource id for the element
      * @return
      */
-    public static String getResourceId(@NonNull final String appPackageName, @NonNull final String internalResourceId) {
+    public static String getResourceId(
+            @NonNull final String appPackageName, @NonNull final String internalResourceId) {
         return appPackageName + ":id/" + internalResourceId;
     }
 
@@ -132,8 +148,7 @@ public class CommonUtils {
         final List<ApplicationInfo> packages = packageManager.getInstalledApplications(0);
 
         for (final ApplicationInfo applicationInfo : packages) {
-            if (applicationInfo.packageName.equals(packageName))
-                return true;
+            if (applicationInfo.packageName.equals(packageName)) return true;
         }
 
         return false;
@@ -148,12 +163,9 @@ public class CommonUtils {
     public static List<ITestBroker> getAllPossibleTestBrokers() {
         Logger.i(TAG, "Get the List of all Possible Test Brokers..");
         return Arrays.asList(
-                new ITestBroker[]{
-                        new BrokerCompanyPortal(),
-                        new BrokerMicrosoftAuthenticator(),
-                        new BrokerHost()
-                }
-        );
+                new ITestBroker[] {
+                    new BrokerCompanyPortal(), new BrokerMicrosoftAuthenticator(), new BrokerHost()
+                });
     }
 
     /**
@@ -164,7 +176,11 @@ public class CommonUtils {
      * @param folder the folder inside sdcard where to copy the file
      */
     public static void copyFileToFolderInSdCard(final File file, @Nullable final String folder) {
-        Logger.i(TAG, "Copy the provided file object to " + folder + " inside sdcard directory on the device..");
+        Logger.i(
+                TAG,
+                "Copy the provided file object to "
+                        + folder
+                        + " inside sdcard directory on the device..");
         final String filePath = file.getAbsolutePath();
         final String destinationPath = SD_CARD + ((folder == null) ? "" : ("/" + folder));
         final File dir = new File(destinationPath);

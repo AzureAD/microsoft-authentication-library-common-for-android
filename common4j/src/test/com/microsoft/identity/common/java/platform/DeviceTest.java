@@ -40,7 +40,7 @@ public class DeviceTest {
     final String NOT_SET = "NOT_SET";
     final String TEST_VERSION = "TEST_VERSION";
 
-    final static String METADATA_SEPARATOR = ":";
+    static final String METADATA_SEPARATOR = ":";
 
     @After
     public void tearDown() {
@@ -48,12 +48,14 @@ public class DeviceTest {
     }
 
     @Test
-    public void testGetDataWhenMetadataIsNotSet(){
+    public void testGetDataWhenMetadataIsNotSet() {
         // Shouldn't crash.
         final Map<String, String> platformParameter = Device.getPlatformIdParameters();
         Assert.assertEquals(3, platformParameter.size());
-        Assert.assertEquals(NOT_SET, platformParameter.get(Device.PlatformIdParameters.CPU_PLATFORM));
-        Assert.assertEquals(NOT_SET, platformParameter.get(Device.PlatformIdParameters.DEVICE_MODEL));
+        Assert.assertEquals(
+                NOT_SET, platformParameter.get(Device.PlatformIdParameters.CPU_PLATFORM));
+        Assert.assertEquals(
+                NOT_SET, platformParameter.get(Device.PlatformIdParameters.DEVICE_MODEL));
         Assert.assertEquals(NOT_SET, platformParameter.get(Device.PlatformIdParameters.OS));
 
         Assert.assertEquals(NOT_SET, Device.getManufacturer());
@@ -62,76 +64,87 @@ public class DeviceTest {
     }
 
     @Test
-    public void testGetPlatformIdParameters(){
+    public void testGetPlatformIdParameters() {
         Device.setDeviceMetadata(new MockDeviceMetadata());
 
         final Map<String, String> platformParameter = Device.getPlatformIdParameters();
         Assert.assertEquals(3, platformParameter.size());
-        Assert.assertEquals(MockDeviceMetadata.TEST_CPU, platformParameter.get(Device.PlatformIdParameters.CPU_PLATFORM));
-        Assert.assertEquals(MockDeviceMetadata.TEST_DEVICE_MODEL, platformParameter.get(Device.PlatformIdParameters.DEVICE_MODEL));
-        Assert.assertEquals(MockDeviceMetadata.TEST_OS_ESTS, platformParameter.get(Device.PlatformIdParameters.OS));
+        Assert.assertEquals(
+                MockDeviceMetadata.TEST_CPU,
+                platformParameter.get(Device.PlatformIdParameters.CPU_PLATFORM));
+        Assert.assertEquals(
+                MockDeviceMetadata.TEST_DEVICE_MODEL,
+                platformParameter.get(Device.PlatformIdParameters.DEVICE_MODEL));
+        Assert.assertEquals(
+                MockDeviceMetadata.TEST_OS_ESTS,
+                platformParameter.get(Device.PlatformIdParameters.OS));
     }
 
     @Test
-    public void testGetDeviceType(){
+    public void testGetDeviceType() {
         Device.setDeviceMetadata(new MockDeviceMetadata());
         Assert.assertEquals(MockDeviceMetadata.TEST_DEVICE_TYPE, Device.getDeviceType());
     }
 
     @Test
-    public void testGetCpu(){
+    public void testGetCpu() {
         Device.setDeviceMetadata(new MockDeviceMetadata());
         Assert.assertEquals(MockDeviceMetadata.TEST_CPU, Device.getCpu());
     }
 
     @Test
-    public void testGetOs(){
+    public void testGetOs() {
         Device.setDeviceMetadata(new MockDeviceMetadata());
         Assert.assertEquals(MockDeviceMetadata.TEST_OS_ESTS, Device.getOsForEsts());
         Assert.assertEquals(MockDeviceMetadata.TEST_OS_DRS, Device.getOsForDrs());
     }
 
     @Test
-    public void testGetProductVersion_DiagContextNotSet(){
+    public void testGetProductVersion_DiagContextNotSet() {
         Assert.assertEquals(NOT_SET, Device.getProductVersion());
     }
 
     @Test
-    public void testGetProductVersion(){
-        DiagnosticContext.INSTANCE.getRequestContext().put(AuthenticationConstants.SdkPlatformFields.VERSION, TEST_VERSION);
+    public void testGetProductVersion() {
+        DiagnosticContext.INSTANCE
+                .getRequestContext()
+                .put(AuthenticationConstants.SdkPlatformFields.VERSION, TEST_VERSION);
         Assert.assertEquals(TEST_VERSION, Device.getProductVersion());
-
     }
 
     @Test
-    public void testGetManufacturer(){
+    public void testGetManufacturer() {
         Device.setDeviceMetadata(new MockDeviceMetadata());
         Assert.assertEquals(MockDeviceMetadata.TEST_MANUFACTURER, Device.getManufacturer());
     }
 
     @Test
-    public void testGetModel(){
+    public void testGetModel() {
         Device.setDeviceMetadata(new MockDeviceMetadata());
         Assert.assertEquals(MockDeviceMetadata.TEST_DEVICE_MODEL, Device.getModel());
     }
 
     @Test
-    public void testGetDisplayName(){
+    public void testGetDisplayName() {
         Device.setDeviceMetadata(new MockDeviceMetadata());
-        Assert.assertEquals(MockDeviceMetadata.TEST_MANUFACTURER + MockDeviceMetadata.TEST_DEVICE_MODEL,
+        Assert.assertEquals(
+                MockDeviceMetadata.TEST_MANUFACTURER + MockDeviceMetadata.TEST_DEVICE_MODEL,
                 Device.getDeviceDisplayName());
     }
 
-
     @Test
-    public void testGetAllMetadata(){
+    public void testGetAllMetadata() {
         final AbstractDeviceMetadata deviceMetadata = new MockDeviceMetadata();
-        final String expectedResult = MockDeviceMetadata.TEST_DEVICE_MODEL + METADATA_SEPARATOR +
-                MockDeviceMetadata.TEST_MANUFACTURER + METADATA_SEPARATOR +
-                MockDeviceMetadata.TEST_CPU + METADATA_SEPARATOR +
-                MockDeviceMetadata.TEST_OS_ESTS + METADATA_SEPARATOR +
-                MockDeviceMetadata.TEST_OS_DRS;
+        final String expectedResult =
+                MockDeviceMetadata.TEST_DEVICE_MODEL
+                        + METADATA_SEPARATOR
+                        + MockDeviceMetadata.TEST_MANUFACTURER
+                        + METADATA_SEPARATOR
+                        + MockDeviceMetadata.TEST_CPU
+                        + METADATA_SEPARATOR
+                        + MockDeviceMetadata.TEST_OS_ESTS
+                        + METADATA_SEPARATOR
+                        + MockDeviceMetadata.TEST_OS_DRS;
         Assert.assertEquals(expectedResult, deviceMetadata.getAllMetadata());
     }
 }
-

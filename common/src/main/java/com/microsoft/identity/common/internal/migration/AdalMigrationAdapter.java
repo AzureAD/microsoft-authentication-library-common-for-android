@@ -22,6 +22,8 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.migration;
 
+import static com.microsoft.identity.common.internal.migration.TokenCacheItemMigrationAdapter.migrateTokens;
+
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -35,8 +37,8 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
-import com.microsoft.identity.common.java.exception.ServiceException;
 import com.microsoft.identity.common.adal.internal.cache.ADALTokenCacheItem;
+import com.microsoft.identity.common.java.exception.ServiceException;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAccount;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftRefreshToken;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
@@ -54,12 +56,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.microsoft.identity.common.internal.migration.TokenCacheItemMigrationAdapter.migrateTokens;
-
 /**
  * Adapts tokens from the ADAL cache format to the MSAL (common schema) format.
  */
-public class AdalMigrationAdapter implements IMigrationAdapter<MicrosoftAccount, MicrosoftRefreshToken> {
+public class AdalMigrationAdapter
+        implements IMigrationAdapter<MicrosoftAccount, MicrosoftRefreshToken> {
 
     /**
      * Object lock to prevent multiple threads from running migration simultaneously.
@@ -100,32 +101,34 @@ public class AdalMigrationAdapter implements IMigrationAdapter<MicrosoftAccount,
      * @param context Context used to track migration state.
      * @param force   Force migration to occur, even if it has run before.
      */
-    public AdalMigrationAdapter(final Context context,
-                                final Map<String, String> redirects,
-                                final boolean force) {
-        mSharedPrefs = context.getSharedPreferences(MIGRATION_STATUS_SHARED_PREFERENCES, Context.MODE_PRIVATE);
+    public AdalMigrationAdapter(
+            final Context context, final Map<String, String> redirects, final boolean force) {
+        mSharedPrefs =
+                context.getSharedPreferences(
+                        MIGRATION_STATUS_SHARED_PREFERENCES, Context.MODE_PRIVATE);
         mRedirectsMap = redirects;
         mForceMigration = force;
     }
 
     @Override
-    public List<Map.Entry<MicrosoftAccount, MicrosoftRefreshToken>> adapt(Map<String, String> cacheItems) {
+    public List<Map.Entry<MicrosoftAccount, MicrosoftRefreshToken>> adapt(
+            Map<String, String> cacheItems) {
         final List<Map.Entry<MicrosoftAccount, MicrosoftRefreshToken>> result = new ArrayList<>();
 
         synchronized (sLock) { // To prevent multiple threads from potentially running migration
             final boolean hasMigrated = getMigrationStatus();
 
             if (!hasMigrated && !mForceMigration) {
-                // Initialize the InstanceDiscoveryMetadata so we know about all the clouds and possible /common endpoints
+                // Initialize the InstanceDiscoveryMetadata so we know about all the clouds and
+                // possible /common endpoints
                 final boolean cloudMetadataLoaded = loadCloudDiscoveryMetadata();
 
                 if (cloudMetadataLoaded) {
-                    // Convert the JSON to native ADALTokenCacheItem representation, original keys used to key the Map
+                    // Convert the JSON to native ADALTokenCacheItem representation, original keys
+                    // used to key the Map
                     Map<String, ADALTokenCacheItem> nativeCacheItems = deserialize(cacheItems);
 
-                    result.addAll(
-                            migrateTokens(mRedirectsMap, nativeCacheItems.values())
-                    );
+                    result.addAll(migrateTokens(mRedirectsMap, nativeCacheItems.values()));
 
                     setMigrationStatus(true);
                 }
@@ -174,27 +177,24 @@ public class AdalMigrationAdapter implements IMigrationAdapter<MicrosoftAccount,
             clientInfo.addProperty("utid", utid);
 
             final String clientInfoJson = clientInfo.toString();
-            final String base64EncodedClientInfo = new String(Base64.encode(clientInfoJson.getBytes(AuthenticationConstants.CHARSET_UTF8), 0),
-                    AuthenticationConstants.CHARSET_UTF8);
+            final String base64EncodedClientInfo =
+                    new String(
+                            Base64.encode(
+                                    clientInfoJson.getBytes(AuthenticationConstants.CHARSET_UTF8),
+                                    0),
+                            AuthenticationConstants.CHARSET_UTF8);
             final ClientInfo clientInfoObj = new ClientInfo(base64EncodedClientInfo);
             final IDToken idToken = new IDToken(rawIdToken);
 
-            AzureActiveDirectoryAccount account = new AzureActiveDirectoryAccount(idToken, clientInfoObj);
+            AzureActiveDirectoryAccount account =
+                    new AzureActiveDirectoryAccount(idToken, clientInfoObj);
             account.setEnvironment(environment);
 
             return account;
         } catch (MalformedURLException | ServiceException e) {
             final String errorMsg = "Failed to create Account";
-            Logger.error(
-                    TAG + methodName,
-                    errorMsg,
-                    null
-            );
-            Logger.errorPII(
-                    TAG + methodName,
-                    errorMsg,
-                    e
-            );
+            Logger.error(TAG + methodName, errorMsg, null);
+            Logger.errorPII(TAG + methodName, errorMsg, e);
             return null;
         }
     }
@@ -213,14 +213,9 @@ public class AdalMigrationAdapter implements IMigrationAdapter<MicrosoftAccount,
         for (final Map.Entry<String, String> entry : tokenCacheItems.entrySet()) {
             try {
                 result.put(
-                        entry.getKey(),
-                        gson.fromJson(entry.getValue(), ADALTokenCacheItem.class)
-                );
+                        entry.getKey(), gson.fromJson(entry.getValue(), ADALTokenCacheItem.class));
             } catch (final JsonSyntaxException e) {
-                Logger.warn(
-                        TAG,
-                        "Failed to deserialize ADAL cache entry. Skipping."
-                );
+                Logger.warn(TAG, "Failed to deserialize ADAL cache entry. Skipping.");
             }
         }
 
@@ -239,11 +234,7 @@ public class AdalMigrationAdapter implements IMigrationAdapter<MicrosoftAccount,
             try {
                 AzureActiveDirectory.performCloudDiscovery();
             } catch (final IOException | URISyntaxException e) {
-                Logger.error(
-                        TAG + methodName,
-                        "Failed to load instance discovery metadata",
-                        e
-                );
+                Logger.error(TAG + methodName, "Failed to load instance discovery metadata", e);
             }
         }
 

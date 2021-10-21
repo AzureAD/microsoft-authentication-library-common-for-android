@@ -27,19 +27,20 @@ import static com.microsoft.identity.common.java.AuthenticationConstants.ENCODIN
 
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
-import com.microsoft.identity.common.java.crypto.ISigner;
 import com.microsoft.identity.common.java.crypto.BasicSigner;
+import com.microsoft.identity.common.java.crypto.ISigner;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.logging.Logger;
+
+import cz.msebera.android.httpclient.extras.Base64;
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
-
-import cz.msebera.android.httpclient.extras.Base64;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /**
  * JWS response builder for certificate challenge response.
@@ -79,8 +80,7 @@ public class JWSBuilder {
          * No args constructor for use in serialization for Gson to prevent usage of sun.misc.Unsafe.
          */
         @SuppressWarnings("unused")
-        private Claims() {
-        }
+        private Claims() {}
     }
 
     /**
@@ -101,15 +101,19 @@ public class JWSBuilder {
          * No args constructor for use in serialization for Gson to prevent usage of sun.misc.Unsafe.
          */
         @SuppressWarnings("unused")
-        private JwsHeader() {
-        }
+        private JwsHeader() {}
     }
 
     /**
      * Generate the signed JWT.
      */
-    public String generateSignedJWT(String nonce, String audience, PrivateKey privateKey,
-                                    PublicKey pubKey, X509Certificate cert) throws ClientException {
+    public String generateSignedJWT(
+            String nonce,
+            String audience,
+            PrivateKey privateKey,
+            PublicKey pubKey,
+            X509Certificate cert)
+            throws ClientException {
         // http://tools.ietf.org/html/draft-ietf-jose-json-web-signature-25
         // In the JWS Compact Serialization, a JWS object is represented as the
         // combination of these three string values,
@@ -161,15 +165,22 @@ public class JWSBuilder {
             // redundant but current ADFS code base is looking for
             String headerJsonString = gson.toJson(header);
             String claimsJsonString = gson.toJson(claims);
-            Logger.verbose(TAG + methodName, "Generate client certificate challenge response JWS Header. ");
-            signingInput = StringUtil.encodeUrlSafeString(headerJsonString)
-                    + "."
-                    + StringUtil.encodeUrlSafeString(claimsJsonString);
-            signature = StringUtil.encodeUrlSafeString(
-                    sSigner.sign(privateKey, SIGNING_ALGORITHM, signingInput.getBytes(ENCODING_UTF8)));
+            Logger.verbose(
+                    TAG + methodName,
+                    "Generate client certificate challenge response JWS Header. ");
+            signingInput =
+                    StringUtil.encodeUrlSafeString(headerJsonString)
+                            + "."
+                            + StringUtil.encodeUrlSafeString(claimsJsonString);
+            signature =
+                    StringUtil.encodeUrlSafeString(
+                            sSigner.sign(
+                                    privateKey,
+                                    SIGNING_ALGORITHM,
+                                    signingInput.getBytes(ENCODING_UTF8)));
         } catch (final CertificateEncodingException e) {
-            throw new ClientException(ErrorStrings.CERTIFICATE_ENCODING_ERROR,
-                    "Certificate encoding error", e);
+            throw new ClientException(
+                    ErrorStrings.CERTIFICATE_ENCODING_ERROR, "Certificate encoding error", e);
         }
         return signingInput + "." + signature;
     }

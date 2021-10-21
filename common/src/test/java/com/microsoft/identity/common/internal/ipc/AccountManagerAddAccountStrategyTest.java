@@ -22,6 +22,16 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.ipc;
 
+import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.BROKER_GET_KEY_FROM_INACTIVE_BROKER;
+import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_ACQUIRE_TOKEN_SILENT;
+import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_GET_ACCOUNTS;
+import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_GET_CURRENT_ACCOUNT_IN_SHARED_DEVICE;
+import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_GET_DEVICE_MODE;
+import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_GET_INTENT_FOR_INTERACTIVE_REQUEST;
+import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_HELLO;
+import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_REMOVE_ACCOUNT;
+import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_SIGN_OUT_FROM_SHARED_DEVICE;
+
 import android.os.Build;
 
 import androidx.test.core.app.ApplicationProvider;
@@ -36,20 +46,13 @@ import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
-import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.BROKER_GET_KEY_FROM_INACTIVE_BROKER;
-import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_ACQUIRE_TOKEN_SILENT;
-import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_GET_ACCOUNTS;
-import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_GET_CURRENT_ACCOUNT_IN_SHARED_DEVICE;
-import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_GET_DEVICE_MODE;
-import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_GET_INTENT_FOR_INTERACTIVE_REQUEST;
-import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_HELLO;
-import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_REMOVE_ACCOUNT;
-import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_SIGN_OUT_FROM_SHARED_DEVICE;
-
 @RunWith(RobolectricTestRunner.class)
-@Config(sdk = {Build.VERSION_CODES.N}, shadows = {ShadowAccountManagerAddAccountWithSuccessResult.class})
+@Config(
+        sdk = {Build.VERSION_CODES.N},
+        shadows = {ShadowAccountManagerAddAccountWithSuccessResult.class})
 public class AccountManagerAddAccountStrategyTest extends IpcStrategyTests {
-    @Override IIpcStrategy getStrategy() {
+    @Override
+    IIpcStrategy getStrategy() {
         return new AccountManagerAddAccountStrategy(ApplicationProvider.getApplicationContext());
     }
 
@@ -104,7 +107,8 @@ public class AccountManagerAddAccountStrategyTest extends IpcStrategyTests {
     @Test
     @Override
     public void testBrokerGetKeyFromInactiveBroker() {
-        testOperationNotSupportedOnClientSide(getMockRequestBundle(BROKER_GET_KEY_FROM_INACTIVE_BROKER));
+        testOperationNotSupportedOnClientSide(
+                getMockRequestBundle(BROKER_GET_KEY_FROM_INACTIVE_BROKER));
     }
 
     @Test
@@ -114,4 +118,3 @@ public class AccountManagerAddAccountStrategyTest extends IpcStrategyTests {
         testIpcConnectionFailed(getMockRequestBundle(MSAL_HELLO));
     }
 }
-

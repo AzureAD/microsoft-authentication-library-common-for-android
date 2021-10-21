@@ -22,13 +22,13 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.telemetry;
 
-import lombok.NonNull;
-
-import java.util.TimeZone;
-
 import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.App;
 import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Device;
 import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Os;
+
+import lombok.NonNull;
+
+import java.util.TimeZone;
 
 /**
  * TelemetryContext is a dictionary of information about the state of the device.
@@ -37,31 +37,29 @@ import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings
 public abstract class AbstractTelemetryContext extends Properties {
     private TelemetryPropertiesCache mTelemetryPropsCache;
 
-    protected AbstractTelemetryContext(@NonNull final TelemetryPropertiesCache telemetryPropertiesCache) {
+    protected AbstractTelemetryContext(
+            @NonNull final TelemetryPropertiesCache telemetryPropertiesCache) {
         super();
         mTelemetryPropsCache = telemetryPropertiesCache;
         put(Device.ID, mTelemetryPropsCache.getOrCreateRandomStableDeviceId());
         put(Device.TIMEZONE, TimeZone.getDefault().getID());
     }
 
-    protected void addApplicationInfo(final String appName,
-                                      final String appVersion,
-                                      final String appBuildCode){
+    protected void addApplicationInfo(
+            final String appName, final String appVersion, final String appBuildCode) {
         put(App.NAME, appName);
         put(App.VERSION, appVersion);
         put(App.BUILD, appBuildCode);
     }
 
-    protected void addDeviceInfo(final String manufacturer,
-                                 final String model,
-                                 final String device) {
+    protected void addDeviceInfo(
+            final String manufacturer, final String model, final String device) {
         put(Device.MANUFACTURER, manufacturer);
         put(Device.MODEL, model);
         put(Device.NAME, device);
     }
 
-    protected void addOsInfo(final String osName,
-                             final String osVersion) {
+    protected void addOsInfo(final String osName, final String osVersion) {
         put(Os.NAME, osName);
         put(Os.VERSION, osVersion);
     }

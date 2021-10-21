@@ -23,6 +23,11 @@
 
 package com.microsoft.identity.common.java.net;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import com.microsoft.identity.common.java.net.util.MockConnection;
 import com.microsoft.identity.common.java.net.util.ResponseBody;
 
@@ -44,7 +49,6 @@ import java.nio.charset.StandardCharsets;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -53,11 +57,6 @@ import java.util.UUID;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLHandshakeException;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 /**
  * Tests for {@link UrlConnectionHttpClient}.
@@ -73,9 +72,8 @@ public final class UrlConnectionHttpClientTest {
 
     // The UrlConnectionHttpClient.getDefaultInstance() comes with a retry logic.
     // For non-retry scenario, we need to create a separate client.
-    private static final UrlConnectionHttpClient sNoRetryClient = UrlConnectionHttpClient.builder()
-            .retryPolicy(new NoRetryPolicy())
-            .build();
+    private static final UrlConnectionHttpClient sNoRetryClient =
+            UrlConnectionHttpClient.builder().retryPolicy(new NoRetryPolicy()).build();
 
     @After
     public void tearDown() {
@@ -380,7 +378,7 @@ public final class UrlConnectionHttpClientTest {
     public void testHttpPatchSucceed_WithMethod() throws Exception {
         testHttpMethodSucceed(HttpTestMethod.PATCH, false, true);
     }
-    
+
     /**
      * Verify that HTTP PATCH succeeds
      * - via {@link UrlConnectionHttpClient#patch(URL, Map, byte[], SSLContext)}}
@@ -414,9 +412,11 @@ public final class UrlConnectionHttpClientTest {
     /**
      * Verify that when an HTTP method succeeds, no retry happens.
      */
-    private void testHttpMethodSucceed(HttpTestMethod method, boolean specific, boolean retries) throws Exception {
+    private void testHttpMethodSucceed(HttpTestMethod method, boolean specific, boolean retries)
+            throws Exception {
         // prepare the connection, only one connection will be made.
-        final HttpURLConnection mockedSuccessConnection = MockConnection.getMockedConnectionWithSuccessResponse();
+        final HttpURLConnection mockedSuccessConnection =
+                MockConnection.getMockedConnectionWithSuccessResponse();
         mockRequestBody(mockedSuccessConnection);
         HttpUrlConnectionFactory.addMockedConnection(mockedSuccessConnection);
 
@@ -442,7 +442,8 @@ public final class UrlConnectionHttpClientTest {
      * Verify the correct response is returned if first network call fails with internal error,
      * and retry succeeds.
      */
-    private void testHttpMethodFailedWithStatusCodeRetrySucceed(HttpTestMethod method, int code) throws Exception {
+    private void testHttpMethodFailedWithStatusCodeRetrySucceed(HttpTestMethod method, int code)
+            throws Exception {
         // Set up two connections, the first is failed with 500, the second one succeeds.
         final HttpURLConnection firstConnection =
                 MockConnection.getMockedConnectionWithFailureResponse(code);
@@ -527,7 +528,8 @@ public final class UrlConnectionHttpClientTest {
         }
     }
 
-    private void testHttpMethodFailedWithStatusCodeWithoutRetryNoRetryHappens(HttpTestMethod method, int code) throws Exception {
+    private void testHttpMethodFailedWithStatusCodeWithoutRetryNoRetryHappens(
+            HttpTestMethod method, int code) throws Exception {
         // Set up two connections, the first is failed with 500, the second one does not occur.
         final HttpURLConnection firstConnection =
                 MockConnection.getMockedConnectionWithFailureResponse(code);
@@ -630,12 +632,15 @@ public final class UrlConnectionHttpClientTest {
      * Verify that the initial post request failed with {@link SocketTimeoutException} and retry
      * succeeds.
      */
-    private void testHttpMethodFailedWithSocketTimeoutRetrySucceed(HttpTestMethod method) throws Exception {
+    private void testHttpMethodFailedWithSocketTimeoutRetrySucceed(HttpTestMethod method)
+            throws Exception {
         // Set up two connections, the first is failed with SocketTimeout, the second one succeeds.
-        final HttpURLConnection firstConnection = MockConnection.getMockedConnectionWithSocketTimeout();
+        final HttpURLConnection firstConnection =
+                MockConnection.getMockedConnectionWithSocketTimeout();
         mockRequestBody(firstConnection);
 
-        final HttpURLConnection secondConnection = MockConnection.getMockedConnectionWithSuccessResponse();
+        final HttpURLConnection secondConnection =
+                MockConnection.getMockedConnectionWithSuccessResponse();
         mockRequestBody(secondConnection);
 
         HttpUrlConnectionFactory.addMockedConnection(firstConnection);
@@ -750,7 +755,8 @@ public final class UrlConnectionHttpClientTest {
      */
     public void testHttpMethodFailedNoRetryNoResponseBody(HttpTestMethod method) throws Exception {
         final HttpURLConnection mockedFailureConnection =
-                MockConnection.getMockedConnectionWithFailureResponse(HttpURLConnection.HTTP_BAD_METHOD, null);
+                MockConnection.getMockedConnectionWithFailureResponse(
+                        HttpURLConnection.HTTP_BAD_METHOD, null);
         HttpUrlConnectionFactory.addMockedConnection(mockedFailureConnection);
 
         try {
@@ -787,64 +793,65 @@ public final class UrlConnectionHttpClientTest {
      * 500/503/504), retry fails with {@link HttpURLConnection#HTTP_UNAUTHORIZED}(non retryable status code).
      */
     @Test
-    public void testHttpPostFailedWithRetryableStatusCodeRetryFailsWithNonRetryableCode() throws Exception {
+    public void testHttpPostFailedWithRetryableStatusCodeRetryFailsWithNonRetryableCode()
+            throws Exception {
         sendMethodWithRetryableStatusCodeRetryFailsWithNonRetryableCode(HttpTestMethod.POST);
-
     }
 
     @Test
-    public void testHttpPutFailedWithRetryableStatusCodeRetryFailsWithNonRetryableCode() throws Exception {
+    public void testHttpPutFailedWithRetryableStatusCodeRetryFailsWithNonRetryableCode()
+            throws Exception {
         sendMethodWithRetryableStatusCodeRetryFailsWithNonRetryableCode(HttpTestMethod.PUT);
-
     }
 
     @Test
-    public void testHttpPatchFailedWithRetryableStatusCodeRetryFailsWithNonRetryableCode() throws Exception {
+    public void testHttpPatchFailedWithRetryableStatusCodeRetryFailsWithNonRetryableCode()
+            throws Exception {
         sendMethodWithRetryableStatusCodeRetryFailsWithNonRetryableCode(HttpTestMethod.PATCH);
-
     }
 
     @Test
-    public void testHttpOptionsFailedWithRetryableStatusCodeRetryFailsWithNonRetryableCode() throws Exception {
+    public void testHttpOptionsFailedWithRetryableStatusCodeRetryFailsWithNonRetryableCode()
+            throws Exception {
         sendMethodWithRetryableStatusCodeRetryFailsWithNonRetryableCode(HttpTestMethod.OPTIONS);
-
     }
 
     @Test
-    public void testHttpTraceFailedWithRetryableStatusCodeRetryFailsWithNonRetryableCode() throws Exception {
+    public void testHttpTraceFailedWithRetryableStatusCodeRetryFailsWithNonRetryableCode()
+            throws Exception {
         sendMethodWithRetryableStatusCodeRetryFailsWithNonRetryableCode(HttpTestMethod.TRACE);
-
     }
 
     @Test
-    public void testHttpGetFailedWithRetryableStatusCodeRetryFailsWithNonRetryableCode() throws Exception {
+    public void testHttpGetFailedWithRetryableStatusCodeRetryFailsWithNonRetryableCode()
+            throws Exception {
         sendMethodWithRetryableStatusCodeRetryFailsWithNonRetryableCode(HttpTestMethod.GET);
-
     }
 
     @Test
-    public void testHttpHeadFailedWithRetryableStatusCodeRetryFailsWithNonRetryableCode() throws Exception {
+    public void testHttpHeadFailedWithRetryableStatusCodeRetryFailsWithNonRetryableCode()
+            throws Exception {
         sendMethodWithRetryableStatusCodeRetryFailsWithNonRetryableCode(HttpTestMethod.HEAD);
     }
 
     @Test
-    public void testHttpDeleteFailedWithRetryableStatusCodeRetryFailsWithNonRetryableCode() throws Exception {
+    public void testHttpDeleteFailedWithRetryableStatusCodeRetryFailsWithNonRetryableCode()
+            throws Exception {
         sendMethodWithRetryableStatusCodeRetryFailsWithNonRetryableCode(HttpTestMethod.DELETE);
-
     }
 
-    private void sendMethodWithRetryableStatusCodeRetryFailsWithNonRetryableCode(HttpTestMethod method) throws Exception {
-        // The first connection fails with retryable status code 500, the retry connection fails with 401.
+    private void sendMethodWithRetryableStatusCodeRetryFailsWithNonRetryableCode(
+            HttpTestMethod method) throws Exception {
+        // The first connection fails with retryable status code 500, the retry connection fails
+        // with 401.
         final HttpURLConnection firstConnection =
                 MockConnection.getMockedConnectionWithFailureResponse(
-                        HttpURLConnection.HTTP_INTERNAL_ERROR
-                );
+                        HttpURLConnection.HTTP_INTERNAL_ERROR);
         mockRequestBody(firstConnection);
 
         final HttpURLConnection secondConnection =
                 MockConnection.getMockedConnectionWithFailureResponse(
-                        HttpURLConnection.HTTP_UNAUTHORIZED
-                );
+                        HttpURLConnection.HTTP_UNAUTHORIZED);
         mockRequestBody(secondConnection);
 
         HttpUrlConnectionFactory.addMockedConnection(firstConnection);
@@ -880,14 +887,17 @@ public final class UrlConnectionHttpClientTest {
      * {@link HttpURLConnection#HTTP_BAD_REQUEST}(non retryable status code).
      */
     @Test
-    public void testHttpPostFailedWithSocketTimeoutRetryFailedWithNonRetryableCode() throws Exception {
-        // The first connection fails with retryable SocketTimeout, the retry connection fails with 400.
-        final HttpURLConnection firstConnection = MockConnection.getMockedConnectionWithSocketTimeout();
+    public void testHttpPostFailedWithSocketTimeoutRetryFailedWithNonRetryableCode()
+            throws Exception {
+        // The first connection fails with retryable SocketTimeout, the retry connection fails with
+        // 400.
+        final HttpURLConnection firstConnection =
+                MockConnection.getMockedConnectionWithSocketTimeout();
         mockRequestBody(firstConnection);
 
-        final HttpURLConnection secondConnection = MockConnection.getMockedConnectionWithFailureResponse(
-                HttpURLConnection.HTTP_BAD_REQUEST
-        );
+        final HttpURLConnection secondConnection =
+                MockConnection.getMockedConnectionWithFailureResponse(
+                        HttpURLConnection.HTTP_BAD_REQUEST);
         mockRequestBody(secondConnection);
 
         HttpUrlConnectionFactory.addMockedConnection(firstConnection);
@@ -923,11 +933,14 @@ public final class UrlConnectionHttpClientTest {
      */
     @Test(expected = SocketTimeoutException.class)
     public void testHttpPostFailedWithSocketTimeoutNoRetriesDoesNotRetry() throws Exception {
-        // The first connection fails with retryable SocketTimeout, the retry connection fails with 400.
-        final HttpURLConnection firstConnection = MockConnection.getMockedConnectionWithSocketTimeout();
+        // The first connection fails with retryable SocketTimeout, the retry connection fails with
+        // 400.
+        final HttpURLConnection firstConnection =
+                MockConnection.getMockedConnectionWithSocketTimeout();
         mockRequestBody(firstConnection);
 
-        final HttpURLConnection secondConnection = MockConnection.getMockedConnectionWithSocketTimeout();
+        final HttpURLConnection secondConnection =
+                MockConnection.getMockedConnectionWithSocketTimeout();
         mockRequestBody(secondConnection);
 
         HttpUrlConnectionFactory.addMockedConnection(firstConnection);
@@ -957,11 +970,13 @@ public final class UrlConnectionHttpClientTest {
                 return false;
             }
 
-            HttpResponse specific(URL url, Map<String, String> headers, byte[] body) throws Exception {
+            HttpResponse specific(URL url, Map<String, String> headers, byte[] body)
+                    throws Exception {
                 return UrlConnectionHttpClient.getDefaultInstance().get(url, headers, null);
             }
 
-            HttpResponse specificNoRetry(URL url, Map<String, String> headers, byte[] body) throws Exception {
+            HttpResponse specificNoRetry(URL url, Map<String, String> headers, byte[] body)
+                    throws Exception {
                 return sNoRetryClient.get(url, headers, null);
             }
         },
@@ -970,38 +985,46 @@ public final class UrlConnectionHttpClientTest {
                 return false;
             }
 
-            HttpResponse specific(URL url, Map<String, String> headers, byte[] body) throws Exception {
+            HttpResponse specific(URL url, Map<String, String> headers, byte[] body)
+                    throws Exception {
                 return UrlConnectionHttpClient.getDefaultInstance().head(url, headers, null);
             }
 
-            HttpResponse specificNoRetry(URL url, Map<String, String> headers, byte[] body) throws Exception {
+            HttpResponse specificNoRetry(URL url, Map<String, String> headers, byte[] body)
+                    throws Exception {
                 return sNoRetryClient.head(url, headers, null);
             }
         },
         PUT {
-            HttpResponse specific(URL url, Map<String, String> headers, byte[] body) throws Exception {
+            HttpResponse specific(URL url, Map<String, String> headers, byte[] body)
+                    throws Exception {
                 return UrlConnectionHttpClient.getDefaultInstance().put(url, headers, body, null);
             }
 
-            HttpResponse specificNoRetry(URL url, Map<String, String> headers, byte[] body) throws Exception {
+            HttpResponse specificNoRetry(URL url, Map<String, String> headers, byte[] body)
+                    throws Exception {
                 return sNoRetryClient.put(url, headers, body, null);
             }
         },
         POST {
-            HttpResponse specific(URL url, Map<String, String> headers, byte[] body) throws Exception {
+            HttpResponse specific(URL url, Map<String, String> headers, byte[] body)
+                    throws Exception {
                 return UrlConnectionHttpClient.getDefaultInstance().post(url, headers, body, null);
             }
 
-            HttpResponse specificNoRetry(URL url, Map<String, String> headers, byte[] body) throws Exception {
+            HttpResponse specificNoRetry(URL url, Map<String, String> headers, byte[] body)
+                    throws Exception {
                 return sNoRetryClient.post(url, headers, body, null);
             }
         },
         OPTIONS {
-            HttpResponse specific(URL url, Map<String, String> headers, byte[] body) throws Exception {
+            HttpResponse specific(URL url, Map<String, String> headers, byte[] body)
+                    throws Exception {
                 return UrlConnectionHttpClient.getDefaultInstance().options(url, headers, null);
             }
 
-            HttpResponse specificNoRetry(URL url, Map<String, String> headers, byte[] body) throws Exception {
+            HttpResponse specificNoRetry(URL url, Map<String, String> headers, byte[] body)
+                    throws Exception {
                 return sNoRetryClient.options(url, headers, null);
             }
         },
@@ -1010,44 +1033,54 @@ public final class UrlConnectionHttpClientTest {
                 return false;
             }
 
-            HttpResponse specific(URL url, Map<String, String> headers, byte[] body) throws Exception {
+            HttpResponse specific(URL url, Map<String, String> headers, byte[] body)
+                    throws Exception {
                 return UrlConnectionHttpClient.getDefaultInstance().trace(url, headers, null);
             }
 
-            HttpResponse specificNoRetry(URL url, Map<String, String> headers, byte[] body) throws Exception {
+            HttpResponse specificNoRetry(URL url, Map<String, String> headers, byte[] body)
+                    throws Exception {
                 return sNoRetryClient.trace(url, headers, null);
             }
         },
         PATCH {
-            HttpResponse specific(URL url, Map<String, String> headers, byte[] body) throws Exception {
+            HttpResponse specific(URL url, Map<String, String> headers, byte[] body)
+                    throws Exception {
                 return UrlConnectionHttpClient.getDefaultInstance().patch(url, headers, body, null);
             }
 
-            HttpResponse specificNoRetry(URL url, Map<String, String> headers, byte[] body) throws Exception {
+            HttpResponse specificNoRetry(URL url, Map<String, String> headers, byte[] body)
+                    throws Exception {
                 return sNoRetryClient.patch(url, headers, body, null);
             }
         },
         DELETE {
-            HttpResponse specific(URL url, Map<String, String> headers, byte[] body) throws Exception {
-                return UrlConnectionHttpClient.getDefaultInstance().delete(url, headers, body, null);
+            HttpResponse specific(URL url, Map<String, String> headers, byte[] body)
+                    throws Exception {
+                return UrlConnectionHttpClient.getDefaultInstance()
+                        .delete(url, headers, body, null);
             }
 
-            HttpResponse specificNoRetry(URL url, Map<String, String> headers, byte[] body) throws Exception {
+            HttpResponse specificNoRetry(URL url, Map<String, String> headers, byte[] body)
+                    throws Exception {
                 return sNoRetryClient.delete(url, headers, body, null);
             }
         };
 
-        abstract HttpResponse specific(URL url, Map<String, String> headers, byte[] body) throws Exception;
+        abstract HttpResponse specific(URL url, Map<String, String> headers, byte[] body)
+                throws Exception;
 
-        abstract HttpResponse specificNoRetry(URL url, Map<String, String> headers, byte[] body) throws Exception;
+        abstract HttpResponse specificNoRetry(URL url, Map<String, String> headers, byte[] body)
+                throws Exception;
 
         boolean canHaveBody() {
             return true;
         }
     }
 
-    private HttpResponse sendMethod(final HttpTestMethod method, boolean specific, boolean retries) throws Exception {
-        if (specific){
+    private HttpResponse sendMethod(final HttpTestMethod method, boolean specific, boolean retries)
+            throws Exception {
+        if (specific) {
             if (retries) {
                 return sendSpecific(method);
             } else {
@@ -1066,27 +1099,49 @@ public final class UrlConnectionHttpClientTest {
         URL validRequestUrl = getRequestUrl();
         return method.specific(
                 validRequestUrl,
-                method.canHaveBody() ? Collections.singletonMap(CONTENT_TYPE_KEY, CONTENT_TYPE_VALUE) : Collections.<String, String>emptyMap(),
-                method.canHaveBody() ? UUID.nameUUIDFromBytes((validRequestUrl.toString() + method).getBytes(UTF8)).toString().getBytes(UTF8) : null);
+                method.canHaveBody()
+                        ? Collections.singletonMap(CONTENT_TYPE_KEY, CONTENT_TYPE_VALUE)
+                        : Collections.<String, String>emptyMap(),
+                method.canHaveBody()
+                        ? UUID.nameUUIDFromBytes(
+                                        (validRequestUrl.toString() + method).getBytes(UTF8))
+                                .toString()
+                                .getBytes(UTF8)
+                        : null);
     }
 
     private HttpResponse sendSpecificWithoutRetry(final HttpTestMethod method) throws Exception {
         URL validRequestUrl = getRequestUrl();
         return method.specificNoRetry(
                 validRequestUrl,
-                method.canHaveBody() ? Collections.singletonMap(CONTENT_TYPE_KEY, CONTENT_TYPE_VALUE) : Collections.<String, String>emptyMap(),
-                method.canHaveBody() ? UUID.nameUUIDFromBytes((validRequestUrl.toString() + method).getBytes(UTF8)).toString().getBytes(UTF8) : null);
+                method.canHaveBody()
+                        ? Collections.singletonMap(CONTENT_TYPE_KEY, CONTENT_TYPE_VALUE)
+                        : Collections.<String, String>emptyMap(),
+                method.canHaveBody()
+                        ? UUID.nameUUIDFromBytes(
+                                        (validRequestUrl.toString() + method).getBytes(UTF8))
+                                .toString()
+                                .getBytes(UTF8)
+                        : null);
     }
 
     private HttpResponse sendWithMethod(final HttpTestMethod method) throws Exception {
         URL validRequestUrl = getRequestUrl();
-        return UrlConnectionHttpClient.getDefaultInstance().method(
-                method.name(),
-                validRequestUrl,
-                method.canHaveBody() ? Collections.singletonMap(CONTENT_TYPE_KEY, CONTENT_TYPE_VALUE) : Collections.<String, String>emptyMap(),
-                method.canHaveBody() ? UUID.nameUUIDFromBytes((validRequestUrl.toString() + method).getBytes(UTF8)).toString().getBytes(UTF8) : null,
-                null
-        );
+        return UrlConnectionHttpClient.getDefaultInstance()
+                .method(
+                        method.name(),
+                        validRequestUrl,
+                        method.canHaveBody()
+                                ? Collections.singletonMap(CONTENT_TYPE_KEY, CONTENT_TYPE_VALUE)
+                                : Collections.<String, String>emptyMap(),
+                        method.canHaveBody()
+                                ? UUID.nameUUIDFromBytes(
+                                                (validRequestUrl.toString() + method)
+                                                        .getBytes(UTF8))
+                                        .toString()
+                                        .getBytes(UTF8)
+                                : null,
+                        null);
     }
 
     private HttpResponse sendWithMethodWithoutRetry(final HttpTestMethod method) throws Exception {
@@ -1094,10 +1149,16 @@ public final class UrlConnectionHttpClientTest {
         return sNoRetryClient.method(
                 method.name(),
                 validRequestUrl,
-                method.canHaveBody() ? Collections.singletonMap(CONTENT_TYPE_KEY, CONTENT_TYPE_VALUE) : Collections.<String, String>emptyMap(),
-                method.canHaveBody() ? UUID.nameUUIDFromBytes((validRequestUrl.toString() + method).getBytes(UTF8)).toString().getBytes(UTF8) : null,
-                null
-        );
+                method.canHaveBody()
+                        ? Collections.singletonMap(CONTENT_TYPE_KEY, CONTENT_TYPE_VALUE)
+                        : Collections.<String, String>emptyMap(),
+                method.canHaveBody()
+                        ? UUID.nameUUIDFromBytes(
+                                        (validRequestUrl.toString() + method).getBytes(UTF8))
+                                .toString()
+                                .getBytes(UTF8)
+                        : null,
+                null);
     }
 
     private void mockRequestBody(final HttpURLConnection mockedConnection) throws IOException {
@@ -1114,46 +1175,47 @@ public final class UrlConnectionHttpClientTest {
      *       and they could change the URL/configuration at any time.
      *       If these test fails, check the website first.
      */
-
     @Test
     public void testNoSSL() throws IOException {
-        final HttpResponse response = sNoRetryClient.method(
-                HttpClient.HttpMethod.GET,
-                new URL("http://http.badssl.com/"),
-                new LinkedHashMap<String, String>(),
-                null,
-                null
-        );
+        final HttpResponse response =
+                sNoRetryClient.method(
+                        HttpClient.HttpMethod.GET,
+                        new URL("http://http.badssl.com/"),
+                        new LinkedHashMap<String, String>(),
+                        null,
+                        null);
 
-        Assert.assertEquals(200,response.getStatusCode());
+        Assert.assertEquals(200, response.getStatusCode());
         Assert.assertEquals("", SSLSocketFactoryWrapper.getLastHandshakeTLSversion());
     }
 
     @Test
-    @Ignore("Ignored because our pipeline doesn't support TLS1.0 and TLS1.1. This still can be run locally.")
+    @Ignore(
+            "Ignored because our pipeline doesn't support TLS1.0 and TLS1.1. This still can be run locally.")
     public void testTLS1() throws IOException {
-        final HttpResponse response = sNoRetryClient.method(
-                HttpClient.HttpMethod.GET,
-                new URL("https://tls-v1-0.badssl.com:1010/"),
-                new LinkedHashMap<String, String>(),
-                null,
-                null
-        );
+        final HttpResponse response =
+                sNoRetryClient.method(
+                        HttpClient.HttpMethod.GET,
+                        new URL("https://tls-v1-0.badssl.com:1010/"),
+                        new LinkedHashMap<String, String>(),
+                        null,
+                        null);
 
         Assert.assertEquals(200, response.getStatusCode());
         Assert.assertEquals("TLSv1", SSLSocketFactoryWrapper.getLastHandshakeTLSversion());
     }
 
     @Test
-    @Ignore("Ignored because our pipeline doesn't support TLS1.0 and TLS1.1. This still can be run locally.")
+    @Ignore(
+            "Ignored because our pipeline doesn't support TLS1.0 and TLS1.1. This still can be run locally.")
     public void testTLS11() throws IOException, NoSuchAlgorithmException, KeyManagementException {
-        final HttpResponse response = sNoRetryClient.method(
-                HttpClient.HttpMethod.GET,
-                new URL("https://tls-v1-1.badssl.com:1011/"),
-                new LinkedHashMap<String, String>(),
-                null,
-                null
-        );
+        final HttpResponse response =
+                sNoRetryClient.method(
+                        HttpClient.HttpMethod.GET,
+                        new URL("https://tls-v1-1.badssl.com:1011/"),
+                        new LinkedHashMap<String, String>(),
+                        null,
+                        null);
 
         Assert.assertEquals(200, response.getStatusCode());
         Assert.assertEquals("TLSv1.1", SSLSocketFactoryWrapper.getLastHandshakeTLSversion());
@@ -1161,32 +1223,33 @@ public final class UrlConnectionHttpClientTest {
 
     @Test
     public void testTLS12() throws IOException {
-        final HttpResponse response = sNoRetryClient.method(
-                HttpClient.HttpMethod.GET,
-                new URL("https://tls-v1-2.badssl.com:1012/"),
-                new LinkedHashMap<String, String>(),
-                null,
-                null
-        );
+        final HttpResponse response =
+                sNoRetryClient.method(
+                        HttpClient.HttpMethod.GET,
+                        new URL("https://tls-v1-2.badssl.com:1012/"),
+                        new LinkedHashMap<String, String>(),
+                        null,
+                        null);
 
         Assert.assertEquals(200, response.getStatusCode());
         Assert.assertEquals("TLSv1.2", SSLSocketFactoryWrapper.getLastHandshakeTLSversion());
     }
 
     @Test
-    public void testTLSWithTLS11Context() throws IOException, NoSuchAlgorithmException, KeyManagementException {
+    public void testTLSWithTLS11Context()
+            throws IOException, NoSuchAlgorithmException, KeyManagementException {
         final SSLContext context = SSLContext.getInstance("TLSv1.1");
         context.init(null, null, new SecureRandom());
 
         // Microsoft.com supports TLS 1.3
         // https://www.ssllabs.com/ssltest/analyze.html?d=www.microsoft.com&s=2600%3a1406%3a1400%3a69d%3a0%3a0%3a0%3a356e&hideResults=on&ignoreMismatch=on
-        final HttpResponse response = sNoRetryClient.method(
-                HttpClient.HttpMethod.GET,
-                new URL("https://www.microsoft.com/"),
-                new LinkedHashMap<String, String>(),
-                null,
-                context
-        );
+        final HttpResponse response =
+                sNoRetryClient.method(
+                        HttpClient.HttpMethod.GET,
+                        new URL("https://www.microsoft.com/"),
+                        new LinkedHashMap<String, String>(),
+                        null,
+                        context);
 
         Assert.assertEquals(200, response.getStatusCode());
 
@@ -1200,13 +1263,13 @@ public final class UrlConnectionHttpClientTest {
     public void testPickHighestTLS() throws IOException {
         // Microsoft.com supports TLS 1.3
         // https://www.ssllabs.com/ssltest/analyze.html?d=www.microsoft.com&s=2600%3a1406%3a1400%3a69d%3a0%3a0%3a0%3a356e&hideResults=on&ignoreMismatch=on
-        final HttpResponse response = sNoRetryClient.method(
-                HttpClient.HttpMethod.GET,
-                new URL("https://www.microsoft.com/"),
-                new LinkedHashMap<String, String>(),
-                null,
-                null
-        );
+        final HttpResponse response =
+                sNoRetryClient.method(
+                        HttpClient.HttpMethod.GET,
+                        new URL("https://www.microsoft.com/"),
+                        new LinkedHashMap<String, String>(),
+                        null,
+                        null);
 
         Assert.assertEquals(200, response.getStatusCode());
         Assert.assertEquals("TLSv1.3", SSLSocketFactoryWrapper.getLastHandshakeTLSversion());
@@ -1214,36 +1277,38 @@ public final class UrlConnectionHttpClientTest {
 
     @Test(expected = SSLHandshakeException.class)
     public void testConnectingToTLS13ServerWhileEnforcing12OnClientSide() throws IOException {
-        final UrlConnectionHttpClient client = UrlConnectionHttpClient.builder()
-                .supportedSslProtocol(Arrays.asList("TLSv1.3"))
-                .build();
+        final UrlConnectionHttpClient client =
+                UrlConnectionHttpClient.builder()
+                        .supportedSslProtocol(Arrays.asList("TLSv1.3"))
+                        .build();
 
-        final HttpResponse response = client.method(
-                HttpClient.HttpMethod.GET,
-                new URL("https://tls-v1-2.badssl.com:1012/"),
-                new LinkedHashMap<String, String>(),
-                null,
-                null
-        );
+        final HttpResponse response =
+                client.method(
+                        HttpClient.HttpMethod.GET,
+                        new URL("https://tls-v1-2.badssl.com:1012/"),
+                        new LinkedHashMap<String, String>(),
+                        null,
+                        null);
 
         Assert.fail();
     }
 
     @Test
     public void testSpecifyingSupportedSSLVersion() throws IOException {
-        final UrlConnectionHttpClient client = UrlConnectionHttpClient.builder()
-                .supportedSslProtocol(Arrays.asList("TLSv1.2"))
-                .build();
+        final UrlConnectionHttpClient client =
+                UrlConnectionHttpClient.builder()
+                        .supportedSslProtocol(Arrays.asList("TLSv1.2"))
+                        .build();
 
         // Microsoft.com supports TLS 1.3
         // https://www.ssllabs.com/ssltest/analyze.html?d=www.microsoft.com&s=2600%3a1406%3a1400%3a69d%3a0%3a0%3a0%3a356e&hideResults=on&ignoreMismatch=on
-        final HttpResponse response = client.method(
-                HttpClient.HttpMethod.GET,
-                new URL("https://www.microsoft.com/"),
-                new LinkedHashMap<String, String>(),
-                null,
-                null
-        );
+        final HttpResponse response =
+                client.method(
+                        HttpClient.HttpMethod.GET,
+                        new URL("https://www.microsoft.com/"),
+                        new LinkedHashMap<String, String>(),
+                        null,
+                        null);
 
         Assert.assertEquals(200, response.getStatusCode());
         Assert.assertEquals("TLSv1.2", SSLSocketFactoryWrapper.getLastHandshakeTLSversion());
@@ -1252,13 +1317,13 @@ public final class UrlConnectionHttpClientTest {
     @Test(expected = IllegalStateException.class)
     public void testConnectingToHttpsButGetHttpUrlConnection() throws IOException {
         HttpUrlConnectionFactory.addMockedConnection(MockConnection.getMockedHttpConnection());
-        final HttpResponse response = sNoRetryClient.method(
-                HttpClient.HttpMethod.GET,
-                new URL("https://www.microsoft.com/"),
-                new LinkedHashMap<String, String>(),
-                null,
-                null
-        );
+        final HttpResponse response =
+                sNoRetryClient.method(
+                        HttpClient.HttpMethod.GET,
+                        new URL("https://www.microsoft.com/"),
+                        new LinkedHashMap<String, String>(),
+                        null,
+                        null);
 
         Assert.fail();
     }
@@ -1266,13 +1331,13 @@ public final class UrlConnectionHttpClientTest {
     @Test
     public void testConnectingToHttp() throws IOException {
         HttpUrlConnectionFactory.addMockedConnection(MockConnection.getMockedHttpConnection());
-        final HttpResponse response = sNoRetryClient.method(
-                HttpClient.HttpMethod.GET,
-                new URL("http://www.somewebsite.com/"),
-                new LinkedHashMap<String, String>(),
-                null,
-                null
-        );
+        final HttpResponse response =
+                sNoRetryClient.method(
+                        HttpClient.HttpMethod.GET,
+                        new URL("http://www.somewebsite.com/"),
+                        new LinkedHashMap<String, String>(),
+                        null,
+                        null);
 
         Assert.assertEquals(200, response.getStatusCode());
     }

@@ -24,8 +24,6 @@ package com.microsoft.identity.common.java.providers.keys;
 
 import com.microsoft.identity.common.java.util.CopyUtil;
 
-import java.util.Arrays;
-
 /**
  * Class holds information necessary to instantiate a keystore in order to retrieve and access
  * a ClientCertificateConfiguration and the private key associated with that ClientCertificateConfiguration.
@@ -44,7 +42,8 @@ public class KeyStoreConfiguration {
      * @param keyStoreProvider String
      * @param keyStorePassword char[]
      */
-    public KeyStoreConfiguration(String keyStoreType, String keyStoreProvider, char[] keyStorePassword) {
+    public KeyStoreConfiguration(
+            String keyStoreType, String keyStoreProvider, char[] keyStorePassword) {
         mKeyStoreType = keyStoreType;
         mKeyStoreProvider = keyStoreProvider;
         mKeyStorePassword = CopyUtil.copyIfNotNull(keyStorePassword);

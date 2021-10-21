@@ -43,12 +43,13 @@ import java.security.cert.CertificateException;
 
 class KeyVaultAuthHelper extends ConfidentialClientHelper {
 
-    private final static String CLIENT_ID = "4bc6e96f-bd23-408f-8ecb-a7a7145463f9";
-    private final static String SCOPE = "https://vault.azure.net/.default";
-    private final static String CERTIFICATE_ALIAS = "AutomationRunner";
-    private final static String KEYSTORE_TYPE = "Windows-MY";
-    private final static String KEYSTORE_PROVIDER = "SunMSCAPI";
-    private final static String MSSTS_CLIENT_ASSERTION_AUDIENCE = "https://login.microsoftonline.com/microsoft.com/oauth2/v2.0/token";
+    private static final String CLIENT_ID = "4bc6e96f-bd23-408f-8ecb-a7a7145463f9";
+    private static final String SCOPE = "https://vault.azure.net/.default";
+    private static final String CERTIFICATE_ALIAS = "AutomationRunner";
+    private static final String KEYSTORE_TYPE = "Windows-MY";
+    private static final String KEYSTORE_PROVIDER = "SunMSCAPI";
+    private static final String MSSTS_CLIENT_ASSERTION_AUDIENCE =
+            "https://login.microsoftonline.com/microsoft.com/oauth2/v2.0/token";
 
     private static KeyVaultAuthHelper sKeyVaultAuthHelper;
     private final String mSecret;
@@ -58,7 +59,8 @@ class KeyVaultAuthHelper extends ConfidentialClientHelper {
     }
 
     private KeyVaultAuthHelper() {
-        final String secret = com.microsoft.identity.internal.testutils.BuildConfig.LAB_CLIENT_SECRET;
+        final String secret =
+                com.microsoft.identity.internal.testutils.BuildConfig.LAB_CLIENT_SECRET;
         mSecret = secret;
     }
 
@@ -83,7 +85,9 @@ class KeyVaultAuthHelper extends ConfidentialClientHelper {
     }
 
     @Override
-    public TokenRequest createTokenRequest() throws CertificateException, UnrecoverableKeyException, NoSuchAlgorithmException, KeyStoreException, NoSuchProviderException, IOException {
+    public TokenRequest createTokenRequest()
+            throws CertificateException, UnrecoverableKeyException, NoSuchAlgorithmException,
+                    KeyStoreException, NoSuchProviderException, IOException {
         if (TextUtils.isEmpty(mSecret)) {
             return createTokenRequestWithClientAssertion();
         } else {
@@ -109,13 +113,20 @@ class KeyVaultAuthHelper extends ConfidentialClientHelper {
         return tr;
     }
 
-    private TokenRequest createTokenRequestWithClientAssertion() throws CertificateException, UnrecoverableKeyException, NoSuchAlgorithmException, KeyStoreException, NoSuchProviderException, IOException {
-        CertificateCredential certificateCredential = new CertificateCredential.CertificateCredentialBuilder(CLIENT_ID)
-                .clientCertificateMetadata(new ClientCertificateMetadata(CERTIFICATE_ALIAS, null))
-                .keyStoreConfiguration(new KeyStoreConfiguration(KEYSTORE_TYPE, KEYSTORE_PROVIDER, null))
-                .build();
+    private TokenRequest createTokenRequestWithClientAssertion()
+            throws CertificateException, UnrecoverableKeyException, NoSuchAlgorithmException,
+                    KeyStoreException, NoSuchProviderException, IOException {
+        CertificateCredential certificateCredential =
+                new CertificateCredential.CertificateCredentialBuilder(CLIENT_ID)
+                        .clientCertificateMetadata(
+                                new ClientCertificateMetadata(CERTIFICATE_ALIAS, null))
+                        .keyStoreConfiguration(
+                                new KeyStoreConfiguration(KEYSTORE_TYPE, KEYSTORE_PROVIDER, null))
+                        .build();
 
-        MicrosoftClientAssertion assertion = new MicrosoftClientAssertion(MSSTS_CLIENT_ASSERTION_AUDIENCE, certificateCredential);
+        MicrosoftClientAssertion assertion =
+                new MicrosoftClientAssertion(
+                        MSSTS_CLIENT_ASSERTION_AUDIENCE, certificateCredential);
 
         TokenRequest tr = new MicrosoftStsTokenRequest();
 

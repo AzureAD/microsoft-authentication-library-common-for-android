@@ -22,6 +22,8 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.ipc;
 
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY;
+
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Build;
@@ -32,14 +34,14 @@ import androidx.annotation.Nullable;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.microsoft.identity.common.AndroidPlatformComponents;
-import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.exception.BrokerCommunicationException;
 import com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle;
 import com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy;
 import com.microsoft.identity.common.internal.cache.HelloCache;
-import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.internal.controllers.BrokerMsalController;
 import com.microsoft.identity.common.internal.util.StringUtil;
+import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
+import com.microsoft.identity.common.java.exception.BaseException;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -47,8 +49,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
-
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY;
 
 @RunWith(RobolectricTestRunner.class)
 @Config(sdk = {Build.VERSION_CODES.N})
@@ -76,7 +76,8 @@ public class HelloCacheTests {
         final String negotiatedVer = "2.0";
 
         cacheWrite.saveNegotiatedProtocolVersion(minimumVer, maximumVer, negotiatedVer);
-        Assert.assertEquals(cacheRead.tryGetNegotiatedProtocolVersion(minimumVer, maximumVer), negotiatedVer);
+        Assert.assertEquals(
+                cacheRead.tryGetNegotiatedProtocolVersion(minimumVer, maximumVer), negotiatedVer);
     }
 
     @Test
@@ -122,14 +123,26 @@ public class HelloCacheTests {
         final String maximumVerProtocolB = "200.5";
         final String negotiatedVerProtocolB = "200.0";
 
-        cacheProtocolA.saveNegotiatedProtocolVersion(minimumVerProtocolA, maximumVerProtocolA, negotiatedVerProtocolA);
-        cacheProtocolB.saveNegotiatedProtocolVersion(minimumVerProtocolB, maximumVerProtocolB, negotiatedVerProtocolB);
+        cacheProtocolA.saveNegotiatedProtocolVersion(
+                minimumVerProtocolA, maximumVerProtocolA, negotiatedVerProtocolA);
+        cacheProtocolB.saveNegotiatedProtocolVersion(
+                minimumVerProtocolB, maximumVerProtocolB, negotiatedVerProtocolB);
 
-        Assert.assertEquals(cacheProtocolA.tryGetNegotiatedProtocolVersion(minimumVerProtocolA, maximumVerProtocolA), negotiatedVerProtocolA);
-        Assert.assertNull(cacheProtocolA.tryGetNegotiatedProtocolVersion(minimumVerProtocolB, maximumVerProtocolB));
+        Assert.assertEquals(
+                cacheProtocolA.tryGetNegotiatedProtocolVersion(
+                        minimumVerProtocolA, maximumVerProtocolA),
+                negotiatedVerProtocolA);
+        Assert.assertNull(
+                cacheProtocolA.tryGetNegotiatedProtocolVersion(
+                        minimumVerProtocolB, maximumVerProtocolB));
 
-        Assert.assertEquals(cacheProtocolB.tryGetNegotiatedProtocolVersion(minimumVerProtocolB, maximumVerProtocolB), negotiatedVerProtocolB);
-        Assert.assertNull(cacheProtocolB.tryGetNegotiatedProtocolVersion(minimumVerProtocolA, maximumVerProtocolA));
+        Assert.assertEquals(
+                cacheProtocolB.tryGetNegotiatedProtocolVersion(
+                        minimumVerProtocolB, maximumVerProtocolB),
+                negotiatedVerProtocolB);
+        Assert.assertNull(
+                cacheProtocolB.tryGetNegotiatedProtocolVersion(
+                        minimumVerProtocolA, maximumVerProtocolA));
     }
 
     @Test
@@ -155,7 +168,8 @@ public class HelloCacheTests {
         cacheBeforeUninstall.saveNegotiatedProtocolVersion(minimumVer, maximumVer, negotiatedVer);
 
         final HelloCache cacheAfterUninstall = getHelloCache(protocolA, null);
-        Assert.assertNull(cacheAfterUninstall.tryGetNegotiatedProtocolVersion(minimumVer, maximumVer));
+        Assert.assertNull(
+                cacheAfterUninstall.tryGetNegotiatedProtocolVersion(minimumVer, maximumVer));
     }
 
     @Test
@@ -167,7 +181,10 @@ public class HelloCacheTests {
         class MockStrategy implements IIpcStrategy {
             int triggered = 0;
 
-            @Nullable @Override public Bundle communicateToBroker(@NonNull BrokerOperationBundle bundle) throws BrokerCommunicationException {
+            @Nullable
+            @Override
+            public Bundle communicateToBroker(@NonNull BrokerOperationBundle bundle)
+                    throws BrokerCommunicationException {
                 triggered += 1;
                 if (triggered == 2) {
                     Assert.fail("Should never be triggered");
@@ -178,7 +195,8 @@ public class HelloCacheTests {
                 return resultBundle;
             }
 
-            @Override public Type getType() {
+            @Override
+            public Type getType() {
                 return Type.CONTENT_PROVIDER;
             }
         }
@@ -193,20 +211,28 @@ public class HelloCacheTests {
                 return HelloCacheTests.this.getHelloCache(protocolA);
             }
 
-            @Override public String getActiveBrokerPackageName() {
+            @Override
+            public String getActiveBrokerPackageName() {
                 return brokerAppName;
             }
         }
 
-        final MockController controller = new MockController(ApplicationProvider.getApplicationContext());
+        final MockController controller =
+                new MockController(ApplicationProvider.getApplicationContext());
         final MockStrategy strategy = new MockStrategy();
-        final CommandParameters parameters = CommandParameters.builder()
-                .platformComponents(AndroidPlatformComponents.createFromContext(ApplicationProvider.getApplicationContext()))
-                .requiredBrokerProtocolVersion(minimumVer).build();
+        final CommandParameters parameters =
+                CommandParameters.builder()
+                        .platformComponents(
+                                AndroidPlatformComponents.createFromContext(
+                                        ApplicationProvider.getApplicationContext()))
+                        .requiredBrokerProtocolVersion(minimumVer)
+                        .build();
 
         try {
-            final String negotiatedProtocolVersion = controller.hello(strategy, parameters.getRequiredBrokerProtocolVersion());
-            final String negotiatedProtocolVersion2 = controller.hello(strategy, parameters.getRequiredBrokerProtocolVersion());
+            final String negotiatedProtocolVersion =
+                    controller.hello(strategy, parameters.getRequiredBrokerProtocolVersion());
+            final String negotiatedProtocolVersion2 =
+                    controller.hello(strategy, parameters.getRequiredBrokerProtocolVersion());
             Assert.assertEquals(negotiatedProtocolVersion, negotiatedProtocolVersion2);
         } catch (BaseException e) {
             Assert.fail();
@@ -217,15 +243,24 @@ public class HelloCacheTests {
         return getHelloCache(protocol, appVersion);
     }
 
-    private HelloCache getHelloCache(@NonNull final String protocol,
-                                     @Nullable final String appVersionCode) {
+    private HelloCache getHelloCache(
+            @NonNull final String protocol, @Nullable final String appVersionCode) {
 
         class HelloCacheMock extends HelloCache {
-            public HelloCacheMock(@NonNull Context context, @NonNull String protocolName, @NonNull String targetAppPackageName) {
-                super(context, protocolName, targetAppPackageName, AndroidPlatformComponents.createFromContext(context));
+            public HelloCacheMock(
+                    @NonNull Context context,
+                    @NonNull String protocolName,
+                    @NonNull String targetAppPackageName) {
+                super(
+                        context,
+                        protocolName,
+                        targetAppPackageName,
+                        AndroidPlatformComponents.createFromContext(context));
             }
 
-            @NonNull @Override public String getVersionCode() throws PackageManager.NameNotFoundException {
+            @NonNull
+            @Override
+            public String getVersionCode() throws PackageManager.NameNotFoundException {
                 if (StringUtil.isEmpty(appVersionCode)) {
                     throw new PackageManager.NameNotFoundException("error!");
                 }
@@ -233,6 +268,7 @@ public class HelloCacheTests {
             }
         }
 
-        return new HelloCacheMock(ApplicationProvider.getApplicationContext(), protocol, brokerAppName);
+        return new HelloCacheMock(
+                ApplicationProvider.getApplicationContext(), protocol, brokerAppName);
     }
 }

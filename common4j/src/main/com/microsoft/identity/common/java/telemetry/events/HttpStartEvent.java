@@ -22,11 +22,11 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.telemetry.events;
 
-import java.net.URL;
-
 import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Event;
 import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.EventType;
 import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Key;
+
+import java.net.URL;
 
 public class HttpStartEvent extends BaseEvent {
     public HttpStartEvent() {

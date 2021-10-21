@@ -56,76 +56,110 @@ import javax.net.ssl.SSLContext;
  */
 @Implements(AbstractHttpClient.class)
 public class ShadowHttpClient {
-    public HttpResponse method(@NonNull HttpClient.HttpMethod httpMethod,
-                                  @NonNull URL requestUrl,
-                                  @NonNull Map<String, String> requestHeaders,
-                                  @Nullable byte[] requestContent,
-                                  @Nullable final SSLContext sslContext) throws IOException {
-        final HttpRequestInterceptor interceptor = MockHttpClient.getInterceptor(httpMethod, requestUrl, requestHeaders, requestContent);
+    public HttpResponse method(
+            @NonNull HttpClient.HttpMethod httpMethod,
+            @NonNull URL requestUrl,
+            @NonNull Map<String, String> requestHeaders,
+            @Nullable byte[] requestContent,
+            @Nullable final SSLContext sslContext)
+            throws IOException {
+        final HttpRequestInterceptor interceptor =
+                MockHttpClient.getInterceptor(
+                        httpMethod, requestUrl, requestHeaders, requestContent);
         if (interceptor == null) {
-            return UrlConnectionHttpClient.getDefaultInstance().method(httpMethod, requestUrl, requestHeaders, requestContent, sslContext);
+            return UrlConnectionHttpClient.getDefaultInstance()
+                    .method(httpMethod, requestUrl, requestHeaders, requestContent, sslContext);
         } else {
-            return interceptor.performIntercept(httpMethod, requestUrl, requestHeaders, requestContent);
+            return interceptor.performIntercept(
+                    httpMethod, requestUrl, requestHeaders, requestContent);
         }
     }
 
     @Implementation
-    public HttpResponse put(@NonNull URL requestUrl,
-                            @NonNull Map<String, String> requestHeaders,
-                            @Nullable byte[] requestContent,
-                            @Nullable final SSLContext sslContext) throws IOException {
-        return method(HttpClient.HttpMethod.PUT, requestUrl, requestHeaders, requestContent, sslContext);
+    public HttpResponse put(
+            @NonNull URL requestUrl,
+            @NonNull Map<String, String> requestHeaders,
+            @Nullable byte[] requestContent,
+            @Nullable final SSLContext sslContext)
+            throws IOException {
+        return method(
+                HttpClient.HttpMethod.PUT, requestUrl, requestHeaders, requestContent, sslContext);
     }
 
     @Implementation
-    public HttpResponse patch(@NonNull URL requestUrl,
-                              @NonNull Map<String, String> requestHeaders,
-                              @Nullable byte[] requestContent,
-                              @Nullable final SSLContext sslContext) throws IOException {
-        return method(HttpClient.HttpMethod.PATCH, requestUrl, requestHeaders, requestContent, sslContext);
+    public HttpResponse patch(
+            @NonNull URL requestUrl,
+            @NonNull Map<String, String> requestHeaders,
+            @Nullable byte[] requestContent,
+            @Nullable final SSLContext sslContext)
+            throws IOException {
+        return method(
+                HttpClient.HttpMethod.PATCH,
+                requestUrl,
+                requestHeaders,
+                requestContent,
+                sslContext);
     }
 
     @Implementation
-    public HttpResponse options(@NonNull URL requestUrl,
-                                @NonNull Map<String, String> requestHeaders,
-                                @Nullable final SSLContext sslContext) throws IOException {
+    public HttpResponse options(
+            @NonNull URL requestUrl,
+            @NonNull Map<String, String> requestHeaders,
+            @Nullable final SSLContext sslContext)
+            throws IOException {
         return method(HttpClient.HttpMethod.OPTIONS, requestUrl, requestHeaders, null, sslContext);
     }
 
     @Implementation
-    protected HttpResponse post(@NonNull URL requestUrl,
-                                @NonNull Map<String, String> requestHeaders,
-                                @Nullable byte[] requestContent,
-                                @Nullable final SSLContext sslContext) throws IOException {
-        return method(HttpClient.HttpMethod.POST, requestUrl, requestHeaders, requestContent, sslContext);
+    protected HttpResponse post(
+            @NonNull URL requestUrl,
+            @NonNull Map<String, String> requestHeaders,
+            @Nullable byte[] requestContent,
+            @Nullable final SSLContext sslContext)
+            throws IOException {
+        return method(
+                HttpClient.HttpMethod.POST, requestUrl, requestHeaders, requestContent, sslContext);
     }
 
     @Implementation
-    public HttpResponse delete(@NonNull URL requestUrl,
-                               @NonNull Map<String, String> requestHeaders,
-                               @Nullable byte[] requestContent,
-                               @Nullable final SSLContext sslContext) throws IOException {
-        return method(HttpClient.HttpMethod.DELETE, requestUrl, requestHeaders, requestContent, sslContext);
+    public HttpResponse delete(
+            @NonNull URL requestUrl,
+            @NonNull Map<String, String> requestHeaders,
+            @Nullable byte[] requestContent,
+            @Nullable final SSLContext sslContext)
+            throws IOException {
+        return method(
+                HttpClient.HttpMethod.DELETE,
+                requestUrl,
+                requestHeaders,
+                requestContent,
+                sslContext);
     }
 
     @Implementation
-    public HttpResponse get(@NonNull URL requestUrl,
-                            @NonNull Map<String, String> requestHeaders,
-                            @Nullable final SSLContext sslContext) throws IOException {
+    public HttpResponse get(
+            @NonNull URL requestUrl,
+            @NonNull Map<String, String> requestHeaders,
+            @Nullable final SSLContext sslContext)
+            throws IOException {
         return method(HttpClient.HttpMethod.GET, requestUrl, requestHeaders, null, sslContext);
     }
 
     @Implementation
-    public HttpResponse head(@NonNull URL requestUrl,
-                             @NonNull Map<String, String> requestHeaders,
-                             @Nullable final SSLContext sslContext) throws IOException {
+    public HttpResponse head(
+            @NonNull URL requestUrl,
+            @NonNull Map<String, String> requestHeaders,
+            @Nullable final SSLContext sslContext)
+            throws IOException {
         return method(HttpClient.HttpMethod.HEAD, requestUrl, requestHeaders, null, sslContext);
     }
 
     @Implementation
-    public HttpResponse trace(@NonNull URL requestUrl,
-                              @NonNull Map<String, String> requestHeaders,
-                              @Nullable final SSLContext sslContext) throws IOException {
+    public HttpResponse trace(
+            @NonNull URL requestUrl,
+            @NonNull Map<String, String> requestHeaders,
+            @Nullable final SSLContext sslContext)
+            throws IOException {
         return method(HttpClient.HttpMethod.TRACE, requestUrl, requestHeaders, null, sslContext);
     }
 }

@@ -22,6 +22,13 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.ui.webview;
 
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.AUTHENTICATOR_MFA_LINKING_PREFIX;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.PLAY_STORE_INSTALL_PREFIX;
+
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import android.app.Activity;
 import android.content.Context;
 import android.webkit.WebView;
@@ -30,21 +37,14 @@ import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
-import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
+import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.Robolectric;
 import org.robolectric.RobolectricTestRunner;
-
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.AUTHENTICATOR_MFA_LINKING_PREFIX;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.PLAY_STORE_INSTALL_PREFIX;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
 
 @RunWith(RobolectricTestRunner.class)
 public class AzureActiveDirectoryWebViewClientTest {
@@ -56,7 +56,8 @@ public class AzureActiveDirectoryWebViewClientTest {
 
     // Test strings initialized.
     private static final String TEST_PLAY_STORE_INSTALL_AUTH_APP_URL =
-            PLAY_STORE_INSTALL_PREFIX + AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME;
+            PLAY_STORE_INSTALL_PREFIX
+                    + AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME;
     private static final String TEST_PLAY_STORE_INSTALL_CP_URL =
             PLAY_STORE_INSTALL_PREFIX + COMPANY_PORTAL_APP_PACKAGE_NAME;
     private static final String TEST_PLAY_STORE_INSTALL_INVALID_APP =
@@ -67,39 +68,43 @@ public class AzureActiveDirectoryWebViewClientTest {
     private static final String TEST_SSL_PROTECTION_FTP_URL = "ftp://foo";
     private static final String TEST_REDIRECT_URL = "ABC12/xyz";
     private static final String TEST_WEBSITE_REQUEST_URL = "browser://abcxyz/a";
-    private static final String TEST_BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER = "browser://abcxyz/xyz&ismdmurl=1";
-    private static final String TEST_INSTALL_REQUEST_URL = "msauth://wpj/?username=someusername%somedomain.onmicrosoft.com&app_link=https%3a%2f%2fplay.google.com%2fstore%2fapps%2fdetails%3fid%3dcom.azure.authenticator%26referrer%3dcom.msft.identity.client.sample.local";
-    private static final String TEST_DEVICE_REGISTRATION_URL = "msauth://wpj/?username=someusername%somedomain.onmicrosoft.com";
+    private static final String TEST_BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER =
+            "browser://abcxyz/xyz&ismdmurl=1";
+    private static final String TEST_INSTALL_REQUEST_URL =
+            "msauth://wpj/?username=someusername%somedomain.onmicrosoft.com&app_link=https%3a%2f%2fplay.google.com%2fstore%2fapps%2fdetails%3fid%3dcom.azure.authenticator%26referrer%3dcom.msft.identity.client.sample.local";
+    private static final String TEST_DEVICE_REGISTRATION_URL =
+            "msauth://wpj/?username=someusername%somedomain.onmicrosoft.com";
     private static final String TEST_BLANK_PAGE_REQUEST_URL = "about:blank";
     private static final String TEST_PKEY_AUTH_URL = "urn:http-auth:PKeyAuth/xyz";
     private static final String TEST_WEB_CP_URL = "companyportal://abc/123";
-    private static final String TEST_INVALID_URL = "https://play.google.com/store/apps/details?id=com.azure.authenticator";
+    private static final String TEST_INVALID_URL =
+            "https://play.google.com/store/apps/details?id=com.azure.authenticator";
 
     @Before
     public void setup() {
         mContext = ApplicationProvider.getApplicationContext();
         mMockWebView = new WebView(mContext);
         mActivity = Robolectric.buildActivity(Activity.class).get();
-        mWebViewClient = new AzureActiveDirectoryWebViewClient(
-                mActivity,
-                new IAuthorizationCompletionCallback() {
-                    @Override
-                    public void onChallengeResponseReceived(@NonNull RawAuthorizationResult response) {
+        mWebViewClient =
+                new AzureActiveDirectoryWebViewClient(
+                        mActivity,
+                        new IAuthorizationCompletionCallback() {
+                            @Override
+                            public void onChallengeResponseReceived(
+                                    @NonNull RawAuthorizationResult response) {}
 
-                    }
-
-                    @Override
-                    public void setPKeyAuthStatus(boolean status) {
-                        return;
-                    }
-                },
-                new OnPageLoadedCallback() {
-                    @Override
-                    public void onPageLoaded(final String url) {
-                        return;
-                    }
-                },
-                TEST_REDIRECT_URI);
+                            @Override
+                            public void setPKeyAuthStatus(boolean status) {
+                                return;
+                            }
+                        },
+                        new OnPageLoadedCallback() {
+                            @Override
+                            public void onPageLoaded(final String url) {
+                                return;
+                            }
+                        },
+                        TEST_REDIRECT_URI);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -120,7 +125,9 @@ public class AzureActiveDirectoryWebViewClientTest {
     @Test
     public void testUrlOverrideHandlesWebsiteRequestUrl() {
         assertTrue(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_WEBSITE_REQUEST_URL));
-        assertTrue(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER));
+        assertTrue(
+                mWebViewClient.shouldOverrideUrlLoading(
+                        mMockWebView, TEST_BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER));
     }
 
     @Test
@@ -130,7 +137,9 @@ public class AzureActiveDirectoryWebViewClientTest {
 
     @Test
     public void testUrlOverrideHandlesDeviceRegistrationRequest() {
-        assertTrue(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_DEVICE_REGISTRATION_URL));
+        assertTrue(
+                mWebViewClient.shouldOverrideUrlLoading(
+                        mMockWebView, TEST_DEVICE_REGISTRATION_URL));
     }
 
     @Test
@@ -145,31 +154,41 @@ public class AzureActiveDirectoryWebViewClientTest {
 
     @Test
     public void testUrlOverrideHandlesPlayStoreRedirect() {
-        assertTrue(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_PLAY_STORE_INSTALL_AUTH_APP_URL));
-        assertTrue(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_PLAY_STORE_INSTALL_CP_URL));
-        assertFalse(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_PLAY_STORE_INSTALL_INVALID_APP));
+        assertTrue(
+                mWebViewClient.shouldOverrideUrlLoading(
+                        mMockWebView, TEST_PLAY_STORE_INSTALL_AUTH_APP_URL));
+        assertTrue(
+                mWebViewClient.shouldOverrideUrlLoading(
+                        mMockWebView, TEST_PLAY_STORE_INSTALL_CP_URL));
+        assertFalse(
+                mWebViewClient.shouldOverrideUrlLoading(
+                        mMockWebView, TEST_PLAY_STORE_INSTALL_INVALID_APP));
     }
 
     @Test
     public void testUrlOverrideHandlesAuthAppMFAUrl() {
-        assertTrue(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, AUTHENTICATOR_MFA_LINKING_INVALID_URI));
+        assertTrue(
+                mWebViewClient.shouldOverrideUrlLoading(
+                        mMockWebView, AUTHENTICATOR_MFA_LINKING_INVALID_URI));
     }
 
     @Test
     public void testUrlOverrideHandlesSSLProtectionCheck() {
-        assertTrue(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_SSL_PROTECTION_HTTP_URL));
-        assertTrue(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_SSL_PROTECTION_FTP_URL));
+        assertTrue(
+                mWebViewClient.shouldOverrideUrlLoading(
+                        mMockWebView, TEST_SSL_PROTECTION_HTTP_URL));
+        assertTrue(
+                mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_SSL_PROTECTION_FTP_URL));
     }
 
     @Test
     public void testUrlOverrideHandlesBlankPageRequest() {
-        assertTrue(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_BLANK_PAGE_REQUEST_URL));
+        assertTrue(
+                mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_BLANK_PAGE_REQUEST_URL));
     }
 
     @Test
     public void testUrlOverrideHandlesInvalidUrl() {
         assertFalse(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_INVALID_URL));
     }
-
-
 }

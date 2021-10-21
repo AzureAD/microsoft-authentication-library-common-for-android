@@ -31,14 +31,14 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.microsoft.identity.common.java.broker.IBrokerAccount;
 
+import lombok.NonNull;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
-
-import lombok.NonNull;
 
 /**
  * Tests for {@link AndroidBrokerAccount} class.
@@ -74,27 +74,19 @@ public class AndroidBrokerAccountTest {
 
     @Test
     public void testCanAdaptAccountManagerAccountWhenAccountNameAndTypeProvided() {
-        final AndroidBrokerAccount androidBrokerAccount = AndroidBrokerAccount.create(
-                ACCOUNT_MANAGER,
-                TEST_ACCOUNT_NAME,
-                ACCOUNT_TYPE
-        );
+        final AndroidBrokerAccount androidBrokerAccount =
+                AndroidBrokerAccount.create(ACCOUNT_MANAGER, TEST_ACCOUNT_NAME, ACCOUNT_TYPE);
 
         Assert.assertNotNull(androidBrokerAccount);
         Assert.assertEquals(TEST_ACCOUNT_NAME, androidBrokerAccount.getUsername());
         Assert.assertEquals(
-                new Account(TEST_ACCOUNT_NAME, ACCOUNT_TYPE),
-                androidBrokerAccount.getAccount()
-        );
+                new Account(TEST_ACCOUNT_NAME, ACCOUNT_TYPE), androidBrokerAccount.getAccount());
     }
 
     @Test
     public void testCanCastBrokerAccountToAndroidBrokerAccountWhenPossible() {
-        final IBrokerAccount brokerAccount = AndroidBrokerAccount.create(
-                ACCOUNT_MANAGER,
-                TEST_ACCOUNT_NAME,
-                ACCOUNT_TYPE
-        );
+        final IBrokerAccount brokerAccount =
+                AndroidBrokerAccount.create(ACCOUNT_MANAGER, TEST_ACCOUNT_NAME, ACCOUNT_TYPE);
 
         final AndroidBrokerAccount androidBrokerAccount = AndroidBrokerAccount.cast(brokerAccount);
         Assert.assertNotNull(androidBrokerAccount);
@@ -103,12 +95,13 @@ public class AndroidBrokerAccountTest {
 
     @Test(expected = ClassCastException.class)
     public void testCannotCastBrokerAccountToAndroidBrokerAccountWhenNotPossible() {
-        final IBrokerAccount brokerAccount = new IBrokerAccount() {
-            @Override
-            public @NonNull String getUsername() {
-                return TEST_ACCOUNT_NAME;
-            }
-        };
+        final IBrokerAccount brokerAccount =
+                new IBrokerAccount() {
+                    @Override
+                    public @NonNull String getUsername() {
+                        return TEST_ACCOUNT_NAME;
+                    }
+                };
 
         AndroidBrokerAccount.cast(brokerAccount);
         Assert.fail("Unexpected Success :(");

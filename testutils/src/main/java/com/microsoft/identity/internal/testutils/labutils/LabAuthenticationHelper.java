@@ -24,19 +24,19 @@ package com.microsoft.identity.internal.testutils.labutils;
 
 import androidx.annotation.Nullable;
 
-import com.microsoft.identity.common.java.util.ported.ObjectUtils;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenRequest;
 import com.microsoft.identity.common.java.providers.oauth2.TokenRequest;
+import com.microsoft.identity.common.java.util.ported.ObjectUtils;
 import com.microsoft.identity.internal.test.keyvault.ApiException;
 import com.microsoft.identity.internal.test.keyvault.api.SecretsApi;
 import com.microsoft.identity.internal.test.keyvault.model.SecretBundle;
 import com.microsoft.identity.internal.test.labapi.Configuration;
 
 class LabAuthenticationHelper extends ConfidentialClientHelper {
-    private final static String SECRET_NAME_LAB_APP_ID = "LabVaultAppID";
-    private final static String SECRET_NAME_LAB_APP_SECRET = "LabVaultAppSecret";
-    private final static String KEY_VAULT_API_VERSION = "2016-10-01";
-    private final static String SCOPE = "https://msidlab.com/.default";
+    private static final String SECRET_NAME_LAB_APP_ID = "LabVaultAppID";
+    private static final String SECRET_NAME_LAB_APP_SECRET = "LabVaultAppSecret";
+    private static final String KEY_VAULT_API_VERSION = "2016-10-01";
+    private static final String SCOPE = "https://msidlab.com/.default";
 
     private String mAppId;
     private String mAppSecret;
@@ -57,7 +57,8 @@ class LabAuthenticationHelper extends ConfidentialClientHelper {
     }
 
     public static synchronized ConfidentialClientHelper getInstance(String keyVaultSecret) {
-        if (sLabAuthHelper == null || !ObjectUtils.equals(sLabAuthHelper.mKeyVaultSecret, keyVaultSecret)) {
+        if (sLabAuthHelper == null
+                || !ObjectUtils.equals(sLabAuthHelper.mKeyVaultSecret, keyVaultSecret)) {
             sLabAuthHelper = new LabAuthenticationHelper(keyVaultSecret);
         }
 

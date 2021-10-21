@@ -22,10 +22,10 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.util;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
+
 import java.util.Arrays;
 import java.util.Date;
-
-import edu.umd.cs.findbugs.annotations.Nullable;
 
 /**
  * For making copies of mutable objects - if not null

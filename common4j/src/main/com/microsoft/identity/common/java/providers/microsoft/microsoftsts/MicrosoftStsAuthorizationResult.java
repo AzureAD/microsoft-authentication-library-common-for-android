@@ -32,7 +32,8 @@ import com.microsoft.identity.common.java.providers.oauth2.AuthorizationStatus;
  * Encapsulates Microsoft Authorization Response and additional MicrosoftSTS specific parameters and errors.
  */
 public class MicrosoftStsAuthorizationResult
-        extends MicrosoftAuthorizationResult<MicrosoftStsAuthorizationResponse, MicrosoftStsAuthorizationErrorResponse> {
+        extends MicrosoftAuthorizationResult<
+                MicrosoftStsAuthorizationResponse, MicrosoftStsAuthorizationErrorResponse> {
 
     /**
      * Constructor of {@link MicrosoftStsAuthorizationResult}.
@@ -40,7 +41,9 @@ public class MicrosoftStsAuthorizationResult
      * @param authStatus   {@link AuthorizationStatus}
      * @param authResponse {@link AuthorizationResponse}
      */
-    public MicrosoftStsAuthorizationResult(final AuthorizationStatus authStatus, final MicrosoftStsAuthorizationResponse authResponse) {
+    public MicrosoftStsAuthorizationResult(
+            final AuthorizationStatus authStatus,
+            final MicrosoftStsAuthorizationResponse authResponse) {
         super(authStatus, authResponse);
     }
 
@@ -50,8 +53,9 @@ public class MicrosoftStsAuthorizationResult
      * @param authStatus    {@link AuthorizationStatus}
      * @param errorResponse {@link AuthorizationErrorResponse}
      */
-    public MicrosoftStsAuthorizationResult(final AuthorizationStatus authStatus, final MicrosoftStsAuthorizationErrorResponse errorResponse) {
+    public MicrosoftStsAuthorizationResult(
+            final AuthorizationStatus authStatus,
+            final MicrosoftStsAuthorizationErrorResponse errorResponse) {
         super(authStatus, errorResponse);
     }
-
 }

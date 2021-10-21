@@ -27,4 +27,3 @@ import com.microsoft.identity.common.java.util.TaskCompletedCallbackWithError;
 public interface CommandCallback<T, U> extends TaskCompletedCallbackWithError<T, U> {
     void onCancel();
 }
-

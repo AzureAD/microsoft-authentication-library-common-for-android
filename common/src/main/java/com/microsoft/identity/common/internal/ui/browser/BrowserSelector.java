@@ -32,12 +32,12 @@ import android.os.Build;
 
 import androidx.annotation.NonNull;
 
+import com.microsoft.identity.common.internal.broker.PackageHelper;
 import com.microsoft.identity.common.internal.util.StringUtil;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.ui.BrowserDescriptor;
 import com.microsoft.identity.common.logging.Logger;
-import com.microsoft.identity.common.internal.broker.PackageHelper;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -57,7 +57,9 @@ public class BrowserSelector {
      * @param context {@link Context} to use for accessing {@link PackageManager}.
      * @return Browser selected to use.
      */
-    public static Browser select(final Context context, final List<BrowserDescriptor> browserSafeList) throws ClientException {
+    public static Browser select(
+            final Context context, final List<BrowserDescriptor> browserSafeList)
+            throws ClientException {
         final List<Browser> allBrowsers = getAllBrowsers(context);
         Logger.verbose(TAG, "Select the browser to launch.");
 
@@ -76,18 +78,21 @@ public class BrowserSelector {
         }
 
         Logger.error(TAG, "No available browser installed on the device.", null);
-        throw new ClientException(ErrorStrings.NO_AVAILABLE_BROWSER_FOUND, "No available browser installed on the device.");
+        throw new ClientException(
+                ErrorStrings.NO_AVAILABLE_BROWSER_FOUND,
+                "No available browser installed on the device.");
     }
 
-    private static boolean matches(@NonNull final BrowserDescriptor browserDescriptor,
-                                   @NonNull Browser browser) {
+    private static boolean matches(
+            @NonNull final BrowserDescriptor browserDescriptor, @NonNull Browser browser) {
         final String methodName = ":matches";
 
         final BrowserDescriptor descriptor;
         try {
             descriptor = (BrowserDescriptor) browserDescriptor;
         } catch (final ClassCastException e) {
-            Logger.error(TAG + methodName, "Cannot cast IBrowserDescriptor to BrowserDescriptor", e);
+            Logger.error(
+                    TAG + methodName, "Cannot cast IBrowserDescriptor to BrowserDescriptor", e);
             return false;
         }
 
@@ -100,12 +105,16 @@ public class BrowserSelector {
         }
 
         if (!StringUtil.isEmpty(descriptor.getVersionLowerBound())
-                && StringUtil.compareSemanticVersion(browser.getVersion(), descriptor.getVersionLowerBound()) == -1) {
+                && StringUtil.compareSemanticVersion(
+                                browser.getVersion(), descriptor.getVersionLowerBound())
+                        == -1) {
             return false;
         }
 
         if (!StringUtil.isEmpty(descriptor.getVersionUpperBound())
-                && StringUtil.compareSemanticVersion(browser.getVersion(), descriptor.getVersionUpperBound()) == 1) {
+                && StringUtil.compareSemanticVersion(
+                                browser.getVersion(), descriptor.getVersionUpperBound())
+                        == 1) {
             return false;
         }
 
@@ -120,10 +129,9 @@ public class BrowserSelector {
      * (i.e. their default browser, if set, should be the first entry in the list).
      */
     public static List<Browser> getAllBrowsers(final Context context) {
-        //get the list of browsers
-        final Intent BROWSER_INTENT = new Intent(
-                Intent.ACTION_VIEW,
-                Uri.parse("http://www.example.com"));
+        // get the list of browsers
+        final Intent BROWSER_INTENT =
+                new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.example.com"));
 
         List<Browser> browserList = new ArrayList<>();
         PackageManager pm = context.getPackageManager();
@@ -143,10 +151,12 @@ public class BrowserSelector {
             }
 
             try {
-                final PackageInfo packageInfo = PackageHelper.getPackageInfo(pm, info.activityInfo.packageName);
-                //TODO if the browser is in the block list, do not add it into the return browserList.
+                final PackageInfo packageInfo =
+                        PackageHelper.getPackageInfo(pm, info.activityInfo.packageName);
+                // TODO if the browser is in the block list, do not add it into the return
+                // browserList.
                 if (isCustomTabsServiceSupported(context, packageInfo)) {
-                    //if the browser has custom tab enabled, set the custom tab support as true.
+                    // if the browser has custom tab enabled, set the custom tab support as true.
                     browserList.add(new Browser(packageInfo, true));
                 } else {
                     browserList.add(new Browser(packageInfo, false));
@@ -160,12 +170,19 @@ public class BrowserSelector {
         return browserList;
     }
 
-    private static boolean isCustomTabsServiceSupported(@NonNull final Context context, @NonNull final PackageInfo packageInfo) {
+    private static boolean isCustomTabsServiceSupported(
+            @NonNull final Context context, @NonNull final PackageInfo packageInfo) {
         // https://issuetracker.google.com/issues/119183822
-        // When above AndroidX issue is fixed, switch back to CustomTabsService.ACTION_CUSTOM_TABS_CONNECTION
-        Intent serviceIntent = new Intent(new StringBuilder("android").append(".support.customtabs.action.CustomTabsService").toString());
+        // When above AndroidX issue is fixed, switch back to
+        // CustomTabsService.ACTION_CUSTOM_TABS_CONNECTION
+        Intent serviceIntent =
+                new Intent(
+                        new StringBuilder("android")
+                                .append(".support.customtabs.action.CustomTabsService")
+                                .toString());
         serviceIntent.setPackage(packageInfo.packageName);
-        List<ResolveInfo> resolveInfos = context.getPackageManager().queryIntentServices(serviceIntent, 0);
+        List<ResolveInfo> resolveInfos =
+                context.getPackageManager().queryIntentServices(serviceIntent, 0);
         return !(resolveInfos == null || resolveInfos.isEmpty());
     }
 

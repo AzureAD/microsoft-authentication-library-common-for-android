@@ -24,10 +24,10 @@ package com.microsoft.identity.common.java.util;
 
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 
+import lombok.NonNull;
+
 import java.util.Calendar;
 import java.util.Date;
-
-import lombok.NonNull;
 
 public class ClockSkewManager implements IClockSkewManager {
 
@@ -73,4 +73,3 @@ public class ClockSkewManager implements IClockSkewManager {
         return toReferenceTime(getCurrentClientTime().getTime());
     }
 }
-

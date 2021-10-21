@@ -59,12 +59,25 @@ public class CacheKey implements Serializable {
     public String toString() {
         // only family token cache item will have the family client id as the key
         if (StringUtil.isNullOrEmpty(mFamilyClientId)) {
-            return String.format(Locale.US, "%s$%s$%s$%s$%s", mAuthority, mResource, mClientId,
-                    (mIsMultipleResourceRefreshToken ? "y" : "n"), mUserId);
+            return String.format(
+                    Locale.US,
+                    "%s$%s$%s$%s$%s",
+                    mAuthority,
+                    mResource,
+                    mClientId,
+                    (mIsMultipleResourceRefreshToken ? "y" : "n"),
+                    mUserId);
         }
 
-        return String.format(Locale.US, "%s$%s$%s$%s$%s$%s", mAuthority, mResource, mClientId,
-                (mIsMultipleResourceRefreshToken ? "y" : "n"), mUserId, mFamilyClientId);
+        return String.format(
+                Locale.US,
+                "%s$%s$%s$%s$%s$%s",
+                mAuthority,
+                mResource,
+                mClientId,
+                (mIsMultipleResourceRefreshToken ? "y" : "n"),
+                mUserId,
+                mFamilyClientId);
     }
 
     /**
@@ -77,12 +90,13 @@ public class CacheKey implements Serializable {
      *                                    apps now, by default the id will be "1".
      * @return CacheKey to use in saving token
      */
-    public static String createCacheKey(final String authority,
-                                        final String resource,
-                                        final String clientId,
-                                        final boolean isMultiResourceRefreshToken,
-                                        final String userId,
-                                        final String familyClientId) {
+    public static String createCacheKey(
+            final String authority,
+            final String resource,
+            final String clientId,
+            final boolean isMultiResourceRefreshToken,
+            final String userId,
+            final String familyClientId) {
 
         if (authority == null) {
             throw new IllegalArgumentException("authority");
@@ -132,7 +146,6 @@ public class CacheKey implements Serializable {
         return key.toString();
     }
 
-
     /**
      * Create cache key for regular RT entry.
      *
@@ -142,10 +155,11 @@ public class CacheKey implements Serializable {
      * @param userId    User id for the key to store regular RT entry.
      * @return The cache key for regular RT entry.
      */
-    public static String createCacheKeyForRTEntry(final String authority,
-                                                  final String resource,
-                                                  final String clientId,
-                                                  final String userId) {
+    public static String createCacheKeyForRTEntry(
+            final String authority,
+            final String resource,
+            final String clientId,
+            final String userId) {
         return createCacheKey(
                 authority,
                 resource,
@@ -153,7 +167,7 @@ public class CacheKey implements Serializable {
                 false, // isMrrt
                 userId,
                 null // foci
-        );
+                );
     }
 
     /**
@@ -164,9 +178,8 @@ public class CacheKey implements Serializable {
      * @param userId    The user id used to create the cache key.
      * @return The cache key for MRRT entry.
      */
-    public static String createCacheKeyForMRRT(final String authority,
-                                               final String clientId,
-                                               final String userId) {
+    public static String createCacheKeyForMRRT(
+            final String authority, final String clientId, final String userId) {
         return createCacheKey(
                 authority,
                 null, // resource
@@ -174,7 +187,7 @@ public class CacheKey implements Serializable {
                 true, // isMrrt
                 userId,
                 null // foci
-        );
+                );
     }
 
     /**
@@ -185,17 +198,9 @@ public class CacheKey implements Serializable {
      * @param userId         The user id of the cache key.
      * @return The cache key for FRT entry.
      */
-    public static String createCacheKeyForFRT(final String authority,
-                                              final String familyClientId,
-                                              final String userId) {
-        return createCacheKey(
-                authority,
-                null,
-                null,
-                true,
-                userId,
-                familyClientId
-        );
+    public static String createCacheKeyForFRT(
+            final String authority, final String familyClientId, final String userId) {
+        return createCacheKey(authority, null, null, true, userId, familyClientId);
     }
 
     /**
@@ -243,4 +248,3 @@ public class CacheKey implements Serializable {
         return mIsMultipleResourceRefreshToken;
     }
 }
-

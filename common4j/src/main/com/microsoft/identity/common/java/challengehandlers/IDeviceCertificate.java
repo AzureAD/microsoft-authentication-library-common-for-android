@@ -25,8 +25,6 @@ package com.microsoft.identity.common.java.challengehandlers;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.cert.X509Certificate;
-import java.security.interfaces.RSAPrivateKey;
-import java.security.interfaces.RSAPublicKey;
 import java.util.List;
 
 /**
@@ -70,4 +68,3 @@ public interface IDeviceCertificate {
      */
     String getThumbPrint();
 }
-

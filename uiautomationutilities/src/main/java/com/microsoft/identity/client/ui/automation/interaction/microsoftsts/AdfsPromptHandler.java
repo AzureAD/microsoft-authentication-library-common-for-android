@@ -32,7 +32,7 @@ import com.microsoft.identity.client.ui.automation.logging.Logger;
  */
 public class AdfsPromptHandler extends MicrosoftStsPromptHandler {
 
-    private final static String TAG = AdfsPromptHandler.class.getSimpleName();
+    private static final String TAG = AdfsPromptHandler.class.getSimpleName();
 
     public AdfsPromptHandler(@NonNull final PromptHandlerParameters parameters) {
         super(new AdfsLoginComponentHandler(), parameters);

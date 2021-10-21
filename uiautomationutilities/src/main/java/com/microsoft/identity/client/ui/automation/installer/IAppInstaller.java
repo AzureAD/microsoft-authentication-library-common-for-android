@@ -33,5 +33,4 @@ public interface IAppInstaller {
      * @param appHint The app name or the package name of the app to install
      */
     void installApp(final String appHint);
-
 }

@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.ui.browser;
 
+import static com.microsoft.identity.common.java.AuthenticationConstants.UIRequest.BROWSER_FLOW;
+
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -33,13 +35,13 @@ import androidx.fragment.app.Fragment;
 
 import com.microsoft.identity.common.internal.providers.oauth2.AndroidAuthorizationStrategy;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivityFactory;
-import com.microsoft.identity.common.java.ui.AuthorizationAgent;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
+import com.microsoft.identity.common.java.ui.AuthorizationAgent;
 import com.microsoft.identity.common.java.ui.BrowserDescriptor;
 import com.microsoft.identity.common.java.util.ResultFuture;
 import com.microsoft.identity.common.logging.Logger;
@@ -48,27 +50,27 @@ import java.net.URI;
 import java.util.List;
 import java.util.concurrent.Future;
 
-import static com.microsoft.identity.common.java.AuthenticationConstants.UIRequest.BROWSER_FLOW;
-
-// Suppressing rawtype warnings due to the generic types OAuth2Strategy, AuthorizationRequest and AuthorizationResult
+// Suppressing rawtype warnings due to the generic types OAuth2Strategy, AuthorizationRequest and
+// AuthorizationResult
 @SuppressWarnings(WarningType.rawtype_warning)
 public abstract class BrowserAuthorizationStrategy<
-        GenericOAuth2Strategy extends OAuth2Strategy,
-        GenericAuthorizationRequest extends AuthorizationRequest>
+                GenericOAuth2Strategy extends OAuth2Strategy,
+                GenericAuthorizationRequest extends AuthorizationRequest>
         extends AndroidAuthorizationStrategy<GenericOAuth2Strategy, GenericAuthorizationRequest> {
 
-    private final static String TAG = BrowserAuthorizationStrategy.class.getSimpleName();
+    private static final String TAG = BrowserAuthorizationStrategy.class.getSimpleName();
 
     private CustomTabsManager mCustomTabManager;
     private ResultFuture<AuthorizationResult> mAuthorizationResultFuture;
     private List<BrowserDescriptor> mBrowserSafeList;
     private boolean mDisposed;
-    private GenericOAuth2Strategy mOAuth2Strategy; //NOPMD
-    private GenericAuthorizationRequest mAuthorizationRequest; //NOPMD
+    private GenericOAuth2Strategy mOAuth2Strategy; // NOPMD
+    private GenericAuthorizationRequest mAuthorizationRequest; // NOPMD
 
-    public BrowserAuthorizationStrategy(@NonNull Context applicationContext,
-                                        @NonNull Activity activity,
-                                        @Nullable Fragment fragment) {
+    public BrowserAuthorizationStrategy(
+            @NonNull Context applicationContext,
+            @NonNull Activity activity,
+            @Nullable Fragment fragment) {
         super(applicationContext, activity, fragment);
     }
 
@@ -78,8 +80,7 @@ public abstract class BrowserAuthorizationStrategy<
 
     @Override
     public Future<AuthorizationResult> requestAuthorization(
-            GenericAuthorizationRequest authorizationRequest,
-            GenericOAuth2Strategy oAuth2Strategy)
+            GenericAuthorizationRequest authorizationRequest, GenericOAuth2Strategy oAuth2Strategy)
             throws ClientException {
         final String methodName = ":requestAuthorization";
         checkNotDisposed();
@@ -89,27 +90,21 @@ public abstract class BrowserAuthorizationStrategy<
         mAuthorizationResultFuture = new ResultFuture<>();
         final Browser browser = BrowserSelector.select(context, mBrowserSafeList);
 
-        //ClientException will be thrown if no browser found.
+        // ClientException will be thrown if no browser found.
         Intent authIntent;
         if (browser.isCustomTabsServiceSupported()) {
-            Logger.info(
-                    TAG + methodName,
-                    "CustomTabsService is supported."
-            );
-            //create customTabsIntent
+            Logger.info(TAG + methodName, "CustomTabsService is supported.");
+            // create customTabsIntent
             mCustomTabManager = new CustomTabsManager(context);
             if (!mCustomTabManager.bind(context, browser.getPackageName())) {
-                //create browser auth intent
+                // create browser auth intent
                 authIntent = new Intent(Intent.ACTION_VIEW);
             } else {
                 authIntent = mCustomTabManager.getCustomTabsIntent().intent;
             }
         } else {
-            Logger.warn(
-                    TAG + methodName,
-                    "CustomTabsService is NOT supported"
-            );
-            //create browser auth intent
+            Logger.warn(TAG + methodName, "CustomTabsService is NOT supported");
+            // create browser auth intent
             authIntent = new Intent(Intent.ACTION_VIEW);
         }
 
@@ -124,18 +119,20 @@ public abstract class BrowserAuthorizationStrategy<
         return mAuthorizationResultFuture;
     }
 
-    // Suppressing unchecked warnings during casting to HashMap<String,String> due to no generic type with mAuthorizationRequest
+    // Suppressing unchecked warnings during casting to HashMap<String,String> due to no generic
+    // type with mAuthorizationRequest
     @SuppressWarnings(WarningType.unchecked_warning)
     private Intent buildAuthorizationActivityStartIntent(Intent authIntent, URI requestUrl) {
-        final Intent intent = AuthorizationActivityFactory.getAuthorizationActivityIntent(
-                getApplicationContext(),
-                authIntent,
-                requestUrl.toString(),
-                mAuthorizationRequest.getRedirectUri(),
-                mAuthorizationRequest.getRequestHeaders(),
-                AuthorizationAgent.BROWSER,
-                true,
-                true);
+        final Intent intent =
+                AuthorizationActivityFactory.getAuthorizationActivityIntent(
+                        getApplicationContext(),
+                        authIntent,
+                        requestUrl.toString(),
+                        mAuthorizationRequest.getRedirectUri(),
+                        mAuthorizationRequest.getRequestHeaders(),
+                        AuthorizationAgent.BROWSER,
+                        true,
+                        true);
         setIntentFlag(intent);
         return intent;
     }
@@ -148,18 +145,18 @@ public abstract class BrowserAuthorizationStrategy<
         }
     }
 
-
     @Override
     public void completeAuthorization(int requestCode, @NonNull final RawAuthorizationResult data) {
         if (requestCode == BROWSER_FLOW) {
             dispose();
 
-            //Suppressing unchecked warnings due to method createAuthorizationResult being a member of the raw type AuthorizationResultFactory
-            @SuppressWarnings(WarningType.unchecked_warning) final AuthorizationResult result = mOAuth2Strategy
-                    .getAuthorizationResultFactory().createAuthorizationResult(
-                            data,
-                            mAuthorizationRequest
-                    );
+            // Suppressing unchecked warnings due to method createAuthorizationResult being a member
+            // of the raw type AuthorizationResultFactory
+            @SuppressWarnings(WarningType.unchecked_warning)
+            final AuthorizationResult result =
+                    mOAuth2Strategy
+                            .getAuthorizationResultFactory()
+                            .createAuthorizationResult(data, mAuthorizationRequest);
             mAuthorizationResultFuture.setResult(result);
         } else {
             Logger.warnPII(TAG, "Unknown request code " + requestCode);

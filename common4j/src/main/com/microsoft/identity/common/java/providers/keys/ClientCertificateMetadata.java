@@ -24,9 +24,6 @@ package com.microsoft.identity.common.java.providers.keys;
 
 import com.microsoft.identity.common.java.util.CopyUtil;
 
-import java.util.Arrays;
-import java.util.Collections;
-
 /**
  * Configuration information for the client certificate to be used.
  */
@@ -62,5 +59,4 @@ public class ClientCertificateMetadata {
     public char[] getPassword() {
         return CopyUtil.copyIfNotNull(mPassword);
     }
-
 }

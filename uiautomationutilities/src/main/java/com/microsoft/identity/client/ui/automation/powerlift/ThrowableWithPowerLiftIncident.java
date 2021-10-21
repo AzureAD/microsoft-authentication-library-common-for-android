@@ -40,25 +40,27 @@ public class ThrowableWithPowerLiftIncident extends Throwable {
     private final String mIncidentId;
     private final Throwable mOriginalThrowable;
 
-    public ThrowableWithPowerLiftIncident(@NonNull final IPowerLiftIntegratedApp powerLiftIntegratedApp,
-                                          @NonNull final String incidentId,
-                                          @NonNull final Throwable throwable
-    ) {
+    public ThrowableWithPowerLiftIncident(
+            @NonNull final IPowerLiftIntegratedApp powerLiftIntegratedApp,
+            @NonNull final String incidentId,
+            @NonNull final Throwable throwable) {
         super(
                 createMessageWithIncidentId(powerLiftIntegratedApp, incidentId, throwable),
-                throwable
-        );
+                throwable);
         mPowerLiftIntegratedApp = powerLiftIntegratedApp;
         mIncidentId = incidentId;
         mOriginalThrowable = throwable;
     }
 
-    private static String createMessageWithIncidentId(@NonNull final IPowerLiftIntegratedApp powerLiftIntegratedApp,
-                                                      @NonNull final String incidentId,
-                                                      @NonNull final Throwable throwable) {
-        return throwable.getMessage() + "\n" +
-                "PowerLift Incident Created via " +
-                ((App) powerLiftIntegratedApp).getAppName() +
-                " - " + incidentId.trim();
+    private static String createMessageWithIncidentId(
+            @NonNull final IPowerLiftIntegratedApp powerLiftIntegratedApp,
+            @NonNull final String incidentId,
+            @NonNull final Throwable throwable) {
+        return throwable.getMessage()
+                + "\n"
+                + "PowerLift Incident Created via "
+                + ((App) powerLiftIntegratedApp).getAppName()
+                + " - "
+                + incidentId.trim();
     }
 }

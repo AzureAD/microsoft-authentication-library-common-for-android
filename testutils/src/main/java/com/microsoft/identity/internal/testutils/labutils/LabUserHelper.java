@@ -43,7 +43,8 @@ import java.util.concurrent.TimeUnit;
 public class LabUserHelper {
 
     private static final Map<LabUserQuery, LabConfig> sLabConfigCache = new HashMap<>();
-    private volatile static ConfidentialClientHelper instance = LabAuthenticationHelper.getInstance();
+    private static volatile ConfidentialClientHelper instance =
+            LabAuthenticationHelper.getInstance();
 
     private static final int TEMP_USER_API_READ_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(15);
 
@@ -63,29 +64,30 @@ public class LabUserHelper {
         List<ConfigInfo> configInfos;
 
         try {
-            configInfos = api.apiConfigGet(
-                    query.userType,
-                    query.userRole,
-                    query.mfa,
-                    query.protectionPolicy,
-                    query.homeDomain,
-                    query.homeUpn,
-                    query.b2cProvider,
-                    query.federationProvider,
-                    query.azureEnvironment,
-                    query.guestHomeAzureEnvironment,
-                    query.appType,
-                    query.publicClient,
-                    query.signInAudience,
-                    query.guestHomedIn,
-                    query.hasAltId,
-                    query.altIdSource,
-                    query.altIdType,
-                    query.passwordPolicyValidityPeriod,
-                    query.passwordPolicyNotificationDays,
-                    query.tokenLifetimePolicy,
-                    query.tokenType,
-                    query.tokenLifetime);
+            configInfos =
+                    api.apiConfigGet(
+                            query.userType,
+                            query.userRole,
+                            query.mfa,
+                            query.protectionPolicy,
+                            query.homeDomain,
+                            query.homeUpn,
+                            query.b2cProvider,
+                            query.federationProvider,
+                            query.azureEnvironment,
+                            query.guestHomeAzureEnvironment,
+                            query.appType,
+                            query.publicClient,
+                            query.signInAudience,
+                            query.guestHomedIn,
+                            query.hasAltId,
+                            query.altIdSource,
+                            query.altIdType,
+                            query.passwordPolicyValidityPeriod,
+                            query.passwordPolicyNotificationDays,
+                            query.tokenLifetimePolicy,
+                            query.tokenType,
+                            query.tokenLifetime);
 
         } catch (com.microsoft.identity.internal.test.labapi.ApiException ex) {
             throw new RuntimeException("Error retrieving lab user", ex);
@@ -110,11 +112,11 @@ public class LabUserHelper {
         String getValue() {
             return constant;
         }
-
     }
 
     public enum SignInAudience {
-        AZURE_AD_AND_PERSONAL_MICROSOFT_ACCOUNT(LabConstants.SignInAudience.AZURE_AD_AND_PERSONAL_MICROSOFT_ACCOUNT),
+        AZURE_AD_AND_PERSONAL_MICROSOFT_ACCOUNT(
+                LabConstants.SignInAudience.AZURE_AD_AND_PERSONAL_MICROSOFT_ACCOUNT),
         AZURE_AD_MULTIPLE_ORGS(LabConstants.SignInAudience.AZURE_AD_MULTIPLE_ORGS),
         AZURE_AD_MY_ORG(LabConstants.SignInAudience.AZURE_AD_MY_ORG),
         ;
@@ -127,7 +129,6 @@ public class LabUserHelper {
         String getValue() {
             return constant;
         }
-
     }
 
     public enum AzureEnvironment {
@@ -189,7 +190,6 @@ public class LabUserHelper {
         LabConfig.setCurrentLabConfig(labConfig);
 
         return labConfig.getConfigInfo();
-
     }
 
     public static ConfigInfo getConfigInfoFromUpn(final String upn) {
@@ -217,7 +217,9 @@ public class LabUserHelper {
         List<LabConfig> labConfigs = new ArrayList<>();
         final List<ConfigInfo> configInfos = getConfigInfos(query);
         for (ConfigInfo configInfo : configInfos) {
-            final String password = LabHelper.getPasswordForLab(configInfo.getLabInfo().getCredentialVaultKeyName());
+            final String password =
+                    LabHelper.getPasswordForLab(
+                            configInfo.getLabInfo().getCredentialVaultKeyName());
             labConfigs.add(new LabConfig(configInfo, password));
         }
 
@@ -253,7 +255,8 @@ public class LabUserHelper {
 
         try {
             tempUser = createTempUserApi.apiCreateTempUserPost(userType);
-            final String password = LabHelper.getPasswordForLab(tempUser.getCredentialVaultKeyName());
+            final String password =
+                    LabHelper.getPasswordForLab(tempUser.getCredentialVaultKeyName());
             LabConfig labConfig = new LabConfig(tempUser, password);
             LabConfig.setCurrentLabConfig(labConfig);
         } catch (ApiException e) {
@@ -306,17 +309,30 @@ public class LabUserHelper {
 
     public static AppInfo getDefaultAppInfo() {
         instance.setupApiClientWithAccessToken();
-        return getAppInfo(UserType.CLOUD, AzureEnvironment.AZURE_CLOUD, SignInAudience.AZURE_AD_MULTIPLE_ORGS,
-                IsAdminConsented.YES, PublicClient.YES);
+        return getAppInfo(
+                UserType.CLOUD,
+                AzureEnvironment.AZURE_CLOUD,
+                SignInAudience.AZURE_AD_MULTIPLE_ORGS,
+                IsAdminConsented.YES,
+                PublicClient.YES);
     }
 
-    public static AppInfo getAppInfo(UserType userType, AzureEnvironment azureEnvironment, SignInAudience audience,
-                                     IsAdminConsented isAdminConsented, PublicClient publicClient) {
+    public static AppInfo getAppInfo(
+            UserType userType,
+            AzureEnvironment azureEnvironment,
+            SignInAudience audience,
+            IsAdminConsented isAdminConsented,
+            PublicClient publicClient) {
         instance.setupApiClientWithAccessToken();
         AppApi api = new AppApi();
         try {
-            return api.apiAppGet(userType.getValue(), azureEnvironment.getValue(), audience.getValue(),
-                    isAdminConsented.getValue(), publicClient.getValue()).get(0);
+            return api.apiAppGet(
+                            userType.getValue(),
+                            azureEnvironment.getValue(),
+                            audience.getValue(),
+                            isAdminConsented.getValue(),
+                            publicClient.getValue())
+                    .get(0);
         } catch (ApiException e) {
             throw new RuntimeException(e);
         }
@@ -331,5 +347,4 @@ public class LabUserHelper {
             throw new RuntimeException("Error resetting lab user password", e);
         }
     }
-
 }

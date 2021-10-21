@@ -46,5 +46,4 @@ public enum UserType {
     public static UserType fromName(@NonNull final String name) {
         return valueOf(UserType.class, name.toUpperCase());
     }
-
 }

@@ -22,17 +22,18 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.interfaces;
 
+import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.cache.IMultiTypeNameValueStorage;
 import com.microsoft.identity.common.java.crypto.IDevicePopManager;
 import com.microsoft.identity.common.java.crypto.IKeyAccessor;
 import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.providers.oauth2.IStateGenerator;
+import com.microsoft.identity.common.java.strategies.IAuthorizationStrategyFactory;
 import com.microsoft.identity.common.java.util.IClockSkewManager;
 import com.microsoft.identity.common.java.util.IPlatformUtil;
-import com.microsoft.identity.common.java.strategies.IAuthorizationStrategyFactory;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
+
 import lombok.NonNull;
 
 /**
@@ -85,7 +86,8 @@ public interface IPlatformComponents {
      * @param clazz     The class of values in the name value store. May not be null.
      * @return a INameValueStorage instance based around data stored with the same storeName.
      */
-    <T> INameValueStorage<T> getEncryptedNameValueStore(String storeName, IKeyAccessor helper, Class<T> clazz);
+    <T> INameValueStorage<T> getEncryptedNameValueStore(
+            String storeName, IKeyAccessor helper, Class<T> clazz);
 
     /**
      * Get a generic encrypted IMultiTypeNameValueStorage with a given identifier.

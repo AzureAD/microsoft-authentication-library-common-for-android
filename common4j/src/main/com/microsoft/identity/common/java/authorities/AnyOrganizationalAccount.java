@@ -32,6 +32,4 @@ public class AnyOrganizationalAccount extends AzureActiveDirectoryAudience {
         this.setCloudUrl(cloudUrl);
         this.setTenantId(AzureActiveDirectoryAudience.ORGANIZATIONS);
     }
-
-
 }

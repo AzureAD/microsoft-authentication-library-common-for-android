@@ -32,11 +32,12 @@ import com.microsoft.identity.common.java.crypto.key.PredefinedKeyLoader;
 import com.microsoft.identity.common.java.telemetry.ITelemetryCallback;
 import com.microsoft.identity.common.logging.Logger;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
+
+import lombok.NonNull;
+
 import java.util.Collections;
 import java.util.List;
-
-import edu.umd.cs.findbugs.annotations.Nullable;
-import lombok.NonNull;
 
 /**
  * Key Encryption Manager for ADAL & MSAL.
@@ -52,16 +53,18 @@ public class AndroidAuthSdkStorageEncryptionManager extends StorageEncryptionMan
     private final PredefinedKeyLoader mPredefinedKeyLoader;
     private final AndroidWrappedKeyLoader mKeyStoreKeyLoader;
 
-    public AndroidAuthSdkStorageEncryptionManager(@NonNull final Context context,
-                                                  @Nullable final ITelemetryCallback telemetryCallback) {
+    public AndroidAuthSdkStorageEncryptionManager(
+            @NonNull final Context context, @Nullable final ITelemetryCallback telemetryCallback) {
         if (AuthenticationSettings.INSTANCE.getSecretKeyData() == null) {
             mPredefinedKeyLoader = null;
         } else {
-            mPredefinedKeyLoader = new PredefinedKeyLoader("USER_DEFINED_KEY",
-                    AuthenticationSettings.INSTANCE.getSecretKeyData());
+            mPredefinedKeyLoader =
+                    new PredefinedKeyLoader(
+                            "USER_DEFINED_KEY", AuthenticationSettings.INSTANCE.getSecretKeyData());
         }
 
-        mKeyStoreKeyLoader = new AndroidWrappedKeyLoader(KEY_STORE_ALIAS, context, telemetryCallback);
+        mKeyStoreKeyLoader =
+                new AndroidWrappedKeyLoader(KEY_STORE_ALIAS, context, telemetryCallback);
     }
 
     @Override
@@ -74,10 +77,12 @@ public class AndroidAuthSdkStorageEncryptionManager extends StorageEncryptionMan
     }
 
     @Override
-    public @NonNull List<AbstractSecretKeyLoader> getKeyLoaderForDecryption(@NonNull byte[] cipherText) {
+    public @NonNull List<AbstractSecretKeyLoader> getKeyLoaderForDecryption(
+            @NonNull byte[] cipherText) {
         final String methodName = "getKeyLoaderForDecryption";
-        if (mPredefinedKeyLoader != null &&
-                isEncryptedByThisKeyIdentifier(cipherText, PredefinedKeyLoader.USER_PROVIDED_KEY_IDENTIFIER)) {
+        if (mPredefinedKeyLoader != null
+                && isEncryptedByThisKeyIdentifier(
+                        cipherText, PredefinedKeyLoader.USER_PROVIDED_KEY_IDENTIFIER)) {
             return Collections.<AbstractSecretKeyLoader>singletonList(mPredefinedKeyLoader);
         }
 

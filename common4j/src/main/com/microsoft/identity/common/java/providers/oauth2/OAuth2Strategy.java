@@ -22,6 +22,10 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.providers.oauth2;
 
+import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.CLIENT_REQUEST_ID;
+import static com.microsoft.identity.common.java.AuthenticationConstants.OAuth2.ERROR;
+import static com.microsoft.identity.common.java.AuthenticationConstants.OAuth2.ERROR_DESCRIPTION;
+
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.microsoft.identity.common.java.AuthenticationConstants;
@@ -49,10 +53,12 @@ import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.Micro
 import com.microsoft.identity.common.java.telemetry.Telemetry;
 import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings;
 import com.microsoft.identity.common.java.telemetry.events.UiShownEvent;
+import com.microsoft.identity.common.java.util.CommonURIBuilder;
 import com.microsoft.identity.common.java.util.IClockSkewManager;
 import com.microsoft.identity.common.java.util.ObjectMapper;
 import com.microsoft.identity.common.java.util.StringUtil;
-import com.microsoft.identity.common.java.util.CommonURIBuilder;
+
+import lombok.NonNull;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -67,32 +73,28 @@ import java.util.concurrent.Future;
 
 import javax.net.ssl.HttpsURLConnection;
 
-import lombok.NonNull;
-
-import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.CLIENT_REQUEST_ID;
-import static com.microsoft.identity.common.java.AuthenticationConstants.OAuth2.ERROR;
-import static com.microsoft.identity.common.java.AuthenticationConstants.OAuth2.ERROR_DESCRIPTION;
-
 /**
  * Serves as the abstract base class for an oAuth2 client implementation; The base class should be extended
  * by Identity Provider specific implementations; For example: Azure Active Directory, ADFS, Microsoft STS, Etc...
  */
-// Suppressing rawtype warnings due to generic types AuthorizationRequest, AuthorizationReuest.Builder, AuthorizationStrategy, AuthorizationResult and AuthorizationResultFactory
+// Suppressing rawtype warnings due to generic types AuthorizationRequest,
+// AuthorizationReuest.Builder, AuthorizationStrategy, AuthorizationResult and
+// AuthorizationResultFactory
 @SuppressWarnings(WarningType.rawtype_warning)
-public abstract class OAuth2Strategy
-        <GenericAccessToken extends AccessToken,
-                GenericAccount extends BaseAccount,
-                GenericAuthorizationRequest extends AuthorizationRequest,
-                GenericAuthorizationRequestBuilder extends AuthorizationRequest.Builder,
-                GenericAuthorizationStrategy extends IAuthorizationStrategy,
-                GenericOAuth2Configuration extends OAuth2Configuration,
-                GenericOAuth2StrategyParameters extends OAuth2StrategyParameters,
-                GenericAuthorizationResponse extends AuthorizationResponse,
-                GenericRefreshToken extends RefreshToken,
-                GenericTokenRequest extends TokenRequest,
-                GenericTokenResponse extends TokenResponse,
-                GenericTokenResult extends TokenResult,
-                GenericAuthorizationResult extends AuthorizationResult> {
+public abstract class OAuth2Strategy<
+        GenericAccessToken extends AccessToken,
+        GenericAccount extends BaseAccount,
+        GenericAuthorizationRequest extends AuthorizationRequest,
+        GenericAuthorizationRequestBuilder extends AuthorizationRequest.Builder,
+        GenericAuthorizationStrategy extends IAuthorizationStrategy,
+        GenericOAuth2Configuration extends OAuth2Configuration,
+        GenericOAuth2StrategyParameters extends OAuth2StrategyParameters,
+        GenericAuthorizationResponse extends AuthorizationResponse,
+        GenericRefreshToken extends RefreshToken,
+        GenericTokenRequest extends TokenRequest,
+        GenericTokenResponse extends TokenResponse,
+        GenericTokenResult extends TokenResult,
+        GenericAuthorizationResult extends AuthorizationResult> {
 
     private static final String TAG = OAuth2Strategy.class.getSimpleName();
 
@@ -113,8 +115,8 @@ public abstract class OAuth2Strategy
      *
      * @param config generic OAuth2 configuration
      */
-    public OAuth2Strategy(GenericOAuth2Configuration config,
-                          GenericOAuth2StrategyParameters strategyParameters) {
+    public OAuth2Strategy(
+            GenericOAuth2Configuration config, GenericOAuth2StrategyParameters strategyParameters) {
         mConfig = config;
         mStrategyParameters = strategyParameters;
 
@@ -140,8 +142,10 @@ public abstract class OAuth2Strategy
             throws ClientException {
         validateAuthorizationRequest(request);
 
-        // Suppressing unchecked warnings due to casting an object in reference of current class to the child class GenericOAuth2Strategy while calling method requestAuthorization()
-        @SuppressWarnings(WarningType.unchecked_warning) final Future<AuthorizationResult> authorizationFuture =
+        // Suppressing unchecked warnings due to casting an object in reference of current class to
+        // the child class GenericOAuth2Strategy while calling method requestAuthorization()
+        @SuppressWarnings(WarningType.unchecked_warning)
+        final Future<AuthorizationResult> authorizationFuture =
                 authorizationStrategy.requestAuthorization(request, this);
         Telemetry.emit(new UiShownEvent().putVisible(TelemetryEventStrings.Value.TRUE));
 
@@ -155,13 +159,11 @@ public abstract class OAuth2Strategy
      * @return GenericTokenResult
      * @throws IOException thrown when failed or interrupted I/O operations occur.
      */
-    public GenericTokenResult requestToken(final GenericTokenRequest request) throws IOException, ClientException {
+    public GenericTokenResult requestToken(final GenericTokenRequest request)
+            throws IOException, ClientException {
         final String methodName = ":requestToken";
 
-        Logger.verbose(
-                TAG + methodName,
-                "Requesting token..."
-        );
+        Logger.verbose(TAG + methodName, "Requesting token...");
 
         validateTokenRequest(request);
 
@@ -176,37 +178,41 @@ public abstract class OAuth2Strategy
         return result;
     }
 
-    // Suppressing unchecked warnings due to casting from TokenResponse to GenericTokenResponse in arguments in the call to method validateTokenResponse()
+    // Suppressing unchecked warnings due to casting from TokenResponse to GenericTokenResponse in
+    // arguments in the call to method validateTokenResponse()
     @SuppressWarnings(WarningType.unchecked_warning)
-    private void validateTokenResponse(GenericTokenRequest request, GenericTokenResult result) throws ClientException {
-        validateTokenResponse(
-                request,
-                (GenericTokenResponse) result.getSuccessResponse()
-        );
+    private void validateTokenResponse(GenericTokenRequest request, GenericTokenResult result)
+            throws ClientException {
+        validateTokenResponse(request, (GenericTokenResponse) result.getSuccessResponse());
     }
 
-    protected HttpResponse performTokenRequest(final GenericTokenRequest request) throws IOException, ClientException {
+    protected HttpResponse performTokenRequest(final GenericTokenRequest request)
+            throws IOException, ClientException {
         final String methodName = ":performTokenRequest";
 
-        Logger.verbose(
-                TAG + methodName,
-                "Performing token request..."
-        );
+        Logger.verbose(TAG + methodName, "Performing token request...");
 
         final String requestBody = getRequestBody(request);
         final Map<String, String> headers = new TreeMap<>();
-        headers.put(CLIENT_REQUEST_ID, DiagnosticContext.INSTANCE.getRequestContext().get(DiagnosticContext.CORRELATION_ID));
+        headers.put(
+                CLIENT_REQUEST_ID,
+                DiagnosticContext.INSTANCE
+                        .getRequestContext()
+                        .get(DiagnosticContext.CORRELATION_ID));
 
-        if (request instanceof MicrosoftTokenRequest &&
-                !StringUtil.isNullOrEmpty(((MicrosoftTokenRequest) request).getBrokerVersion())) {
+        if (request instanceof MicrosoftTokenRequest
+                && !StringUtil.isNullOrEmpty(
+                        ((MicrosoftTokenRequest) request).getBrokerVersion())) {
             headers.put(
                     Device.PlatformIdParameters.BROKER_VERSION,
-                    ((MicrosoftTokenRequest) request).getBrokerVersion()
-            );
+                    ((MicrosoftTokenRequest) request).getBrokerVersion());
         }
         headers.putAll(Device.getPlatformIdParameters());
-        headers.put(AuthenticationConstants.SdkPlatformFields.PRODUCT,
-                DiagnosticContext.INSTANCE.getRequestContext().get(AuthenticationConstants.SdkPlatformFields.PRODUCT));
+        headers.put(
+                AuthenticationConstants.SdkPlatformFields.PRODUCT,
+                DiagnosticContext.INSTANCE
+                        .getRequestContext()
+                        .get(AuthenticationConstants.SdkPlatformFields.PRODUCT));
         headers.put(AuthenticationConstants.SdkPlatformFields.VERSION, Device.getProductVersion());
         headers.putAll(EstsTelemetry.getInstance().getTelemetryHeaders());
         headers.put(HttpConstants.HeaderField.CONTENT_TYPE, TOKEN_REQUEST_CONTENT_TYPE);
@@ -214,21 +220,19 @@ public abstract class OAuth2Strategy
         if (request instanceof MicrosoftTokenRequest) {
             headers.put(
                     AuthenticationConstants.AAD.APP_PACKAGE_NAME,
-                    ((MicrosoftTokenRequest) request).getClientAppName()
-            );
+                    ((MicrosoftTokenRequest) request).getClientAppName());
             headers.put(
                     AuthenticationConstants.AAD.APP_VERSION,
-                    ((MicrosoftTokenRequest) request).getClientAppVersion()
-            );
+                    ((MicrosoftTokenRequest) request).getClientAppVersion());
         }
 
         final URL requestUrl = new URL(getTokenEndpoint());
-        final HttpResponse response = httpClient.post(
-                requestUrl,
-                headers,
-                requestBody.getBytes(ObjectMapper.ENCODING_SCHEME),
-                null
-        );
+        final HttpResponse response =
+                httpClient.post(
+                        requestUrl,
+                        headers,
+                        requestBody.getBytes(ObjectMapper.ENCODING_SCHEME),
+                        null);
 
         // Record the clock skew between *this device* and EVO...
         if (null != response.getDate()) {
@@ -241,7 +245,8 @@ public abstract class OAuth2Strategy
         return mTokenEndpoint;
     }
 
-    protected String getRequestBody(final GenericTokenRequest request) throws UnsupportedEncodingException, ClientException {
+    protected String getRequestBody(final GenericTokenRequest request)
+            throws UnsupportedEncodingException, ClientException {
         return ObjectMapper.serializeObjectToFormUrlEncoded(request);
     }
 
@@ -265,10 +270,12 @@ public abstract class OAuth2Strategy
                 try {
                     final CommonURIBuilder commonUriBuilder = new CommonURIBuilder(mTokenEndpoint);
                     if (!StringUtil.isNullOrEmpty(slice.getSlice())) {
-                        commonUriBuilder.setParameter(AzureActiveDirectorySlice.SLICE_PARAMETER, slice.getSlice());
+                        commonUriBuilder.setParameter(
+                                AzureActiveDirectorySlice.SLICE_PARAMETER, slice.getSlice());
                     }
                     if (!StringUtil.isNullOrEmpty(slice.getDataCenter())) {
-                        commonUriBuilder.setParameter(AzureActiveDirectorySlice.DC_PARAMETER, slice.getDataCenter());
+                        commonUriBuilder.setParameter(
+                                AzureActiveDirectorySlice.DC_PARAMETER, slice.getDataCenter());
                     }
                     mTokenEndpoint = commonUriBuilder.build().toString();
                 } catch (final URISyntaxException e) {
@@ -286,22 +293,30 @@ public abstract class OAuth2Strategy
         mAuthorizationEndpoint = authorizationEndpoint;
     }
 
-    public AuthorizationResult getDeviceCode(@NonNull final MicrosoftStsAuthorizationRequest authorizationRequest) throws IOException {
+    public AuthorizationResult getDeviceCode(
+            @NonNull final MicrosoftStsAuthorizationRequest authorizationRequest)
+            throws IOException {
         final String methodName = ":getDeviceCode";
 
         // Set up headers and request body
-        final String requestBody = ObjectMapper.serializeObjectToFormUrlEncoded(authorizationRequest);
+        final String requestBody =
+                ObjectMapper.serializeObjectToFormUrlEncoded(authorizationRequest);
         final Map<String, String> headers = new TreeMap<>();
-        headers.put(CLIENT_REQUEST_ID, DiagnosticContext.INSTANCE.getRequestContext().get(DiagnosticContext.CORRELATION_ID));
+        headers.put(
+                CLIENT_REQUEST_ID,
+                DiagnosticContext.INSTANCE
+                        .getRequestContext()
+                        .get(DiagnosticContext.CORRELATION_ID));
         headers.putAll(EstsTelemetry.getInstance().getTelemetryHeaders());
         headers.put(HttpConstants.HeaderField.CONTENT_TYPE, DEVICE_CODE_CONTENT_TYPE);
 
-        final HttpResponse response = httpClient.post(
-                ((MicrosoftStsOAuth2Configuration) mConfig).getDeviceAuthorizationEndpoint(),
-                headers,
-                requestBody.getBytes(ObjectMapper.ENCODING_SCHEME),
-                null
-        );
+        final HttpResponse response =
+                httpClient.post(
+                        ((MicrosoftStsOAuth2Configuration) mConfig)
+                                .getDeviceAuthorizationEndpoint(),
+                        headers,
+                        requestBody.getBytes(ObjectMapper.ENCODING_SCHEME),
+                        null);
 
         // Create the authorization result
 
@@ -309,24 +324,26 @@ public abstract class OAuth2Strategy
         // Any code below 300 (HTTP_MULT_CHOICE) is considered a success
         if (response.getStatusCode() < HttpsURLConnection.HTTP_MULT_CHOICE) {
             // Get and parse response body
-            final HashMap<String, String> parsedResponseBody = new Gson().fromJson(
-                    response.getBody(),
-                    TypeToken.getParameterized(HashMap.class, String.class, String.class)
-                            .getType()
-            );
+            final HashMap<String, String> parsedResponseBody =
+                    new Gson()
+                            .fromJson(
+                                    response.getBody(),
+                                    TypeToken.getParameterized(
+                                                    HashMap.class, String.class, String.class)
+                                            .getType());
 
             // Create response and result objects
             // "code" can be left null since it's DCF
             final MicrosoftStsAuthorizationResponse authorizationResponse =
-                    new MicrosoftStsAuthorizationResponse(null, authorizationRequest.getState(), parsedResponseBody);
+                    new MicrosoftStsAuthorizationResponse(
+                            null, authorizationRequest.getState(), parsedResponseBody);
 
             // MicrosoftSTAuthorizationResultFactory not used since no Intent is being created
-            final AuthorizationResult authorizationResult = new MicrosoftStsAuthorizationResult(AuthorizationStatus.SUCCESS, authorizationResponse);
+            final AuthorizationResult authorizationResult =
+                    new MicrosoftStsAuthorizationResult(
+                            AuthorizationStatus.SUCCESS, authorizationResponse);
 
-            Logger.verbose(
-                    TAG + methodName,
-                    "Device Code Flow authorization successful..."
-            );
+            Logger.verbose(TAG + methodName, "Device Code Flow authorization successful...");
 
             return authorizationResult;
         }
@@ -334,11 +351,13 @@ public abstract class OAuth2Strategy
         // Request failed
         else {
             // Get and parse response body
-            final HashMap<String, Object> parsedResponseBody = new Gson().fromJson(
-                    response.getBody(),
-                    TypeToken.getParameterized(HashMap.class, String.class, Object.class)
-                            .getType()
-            );
+            final HashMap<String, Object> parsedResponseBody =
+                    new Gson()
+                            .fromJson(
+                                    response.getBody(),
+                                    TypeToken.getParameterized(
+                                                    HashMap.class, String.class, Object.class)
+                                            .getType());
 
             // Create response and result objects
             final MicrosoftStsAuthorizationErrorResponse authorizationErrorResponse =
@@ -347,12 +366,11 @@ public abstract class OAuth2Strategy
                             (String) parsedResponseBody.get(ERROR_DESCRIPTION));
 
             // MicrosoftSTAuthorizationResultFactory not used since no Intent is being created
-            final AuthorizationResult authorizationResult = new MicrosoftStsAuthorizationResult(AuthorizationStatus.FAIL, authorizationErrorResponse);
+            final AuthorizationResult authorizationResult =
+                    new MicrosoftStsAuthorizationResult(
+                            AuthorizationStatus.FAIL, authorizationErrorResponse);
 
-            Logger.verbose(
-                    TAG + methodName,
-                    "Device Code Flow authorization failure..."
-            );
+            Logger.verbose(TAG + methodName, "Device Code Flow authorization failure...");
 
             return authorizationResult;
         }
@@ -376,7 +394,8 @@ public abstract class OAuth2Strategy
      * @param request generic token request.
      * @return String of issuer cache identifier.
      */
-    public abstract String getIssuerCacheIdentifier(GenericAuthorizationRequest request) throws ClientException;
+    public abstract String getIssuerCacheIdentifier(GenericAuthorizationRequest request)
+            throws ClientException;
 
     /**
      * @param response generic token response.
@@ -415,16 +434,18 @@ public abstract class OAuth2Strategy
      * @param account The IAccount available to this strategy.
      * @return AuthorizationRequest.
      */
-    public abstract GenericAuthorizationRequestBuilder createAuthorizationRequestBuilder(IAccountRecord account);
+    public abstract GenericAuthorizationRequestBuilder createAuthorizationRequestBuilder(
+            IAccountRecord account);
 
     /**
      * Abstract method for creating the token request.  In the case of AAD this is the method
      *
      * @return TokenRequest.
      */
-    public abstract GenericTokenRequest createTokenRequest(GenericAuthorizationRequest request,
-                                                           GenericAuthorizationResponse response,
-                                                           AbstractAuthenticationScheme authScheme)
+    public abstract GenericTokenRequest createTokenRequest(
+            GenericAuthorizationRequest request,
+            GenericAuthorizationResponse response,
+            AbstractAuthenticationScheme authScheme)
             throws ClientException;
 
     /**
@@ -432,7 +453,8 @@ public abstract class OAuth2Strategy
      *
      * @return TokenRequest.
      */
-    public abstract GenericTokenRequest createRefreshTokenRequest(AbstractAuthenticationScheme authScheme) throws ClientException;
+    public abstract GenericTokenRequest createRefreshTokenRequest(
+            AbstractAuthenticationScheme authScheme) throws ClientException;
 
     /**
      * Abstract method for validating the authorization request.  In the case of AAD this is the method
@@ -455,12 +477,15 @@ public abstract class OAuth2Strategy
      *
      * @param response Http response.
      */
-    protected abstract GenericTokenResult getTokenResultFromHttpResponse(HttpResponse response) throws ClientException;
+    protected abstract GenericTokenResult getTokenResultFromHttpResponse(HttpResponse response)
+            throws ClientException;
 
     // TODO
-//    protected abstract void validateAuthorizationResponse(GenericAuthorizationResponse response);
+    //    protected abstract void validateAuthorizationResponse(GenericAuthorizationResponse
+    // response);
 
-    protected abstract void validateTokenResponse(GenericTokenRequest request, GenericTokenResponse response) throws ClientException;
+    protected abstract void validateTokenResponse(
+            GenericTokenRequest request, GenericTokenResponse response) throws ClientException;
 
     /**
      * Validate the result yielded from the cache prior to returning it to the caller.
@@ -468,13 +493,15 @@ public abstract class OAuth2Strategy
      * @param cacheRecord The {@link ICacheRecord} to validate.
      * @return True if the CacheRecord checks out. False otherwise.
      */
-    public boolean validateCachedResult(@NonNull final AbstractAuthenticationScheme authScheme,
-                                        @NonNull final ICacheRecord cacheRecord) {
+    public boolean validateCachedResult(
+            @NonNull final AbstractAuthenticationScheme authScheme,
+            @NonNull final ICacheRecord cacheRecord) {
         // TODO Perform validations on the CacheRecord prior to returning result...
 
         // TODO Ideally, we would check the expiry, completeness of record, etc here...
         // TODO This requires refactoring the controllers to relocate logic to here.
-        // TODO Broker looks to need a bit extra refactoring as its less integrated with the strategy model
+        // TODO Broker looks to need a bit extra refactoring as its less integrated with the
+        // strategy model
         return true;
     }
 }

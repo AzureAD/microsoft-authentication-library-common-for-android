@@ -41,49 +41,44 @@ import org.junit.runners.JUnit4;
 public class AudienceDefaultPreProductionCloudUrlTest {
 
     @Before
-    public void init(){
+    public void init() {
         AzureActiveDirectory.setEnvironment(Environment.PreProduction);
     }
 
     @After
-    public void finalize(){
+    public void finalize() {
         AzureActiveDirectory.setEnvironment(Environment.Production);
     }
 
     @Test
-    public void test_AccountsInOneOrganizationDefaultCloudUrl()  {
+    public void test_AccountsInOneOrganizationDefaultCloudUrl() {
 
         AzureActiveDirectoryAudience audience = new AccountsInOneOrganization();
-        Assert.assertEquals(AzureActiveDirectoryEnvironment.PREPRODUCTION_CLOUD_URL, audience.getCloudUrl());
-
+        Assert.assertEquals(
+                AzureActiveDirectoryEnvironment.PREPRODUCTION_CLOUD_URL, audience.getCloudUrl());
     }
 
     @Test
-    public void test_AllAccountsDefaultCloudUrl()  {
+    public void test_AllAccountsDefaultCloudUrl() {
 
         AzureActiveDirectoryAudience audience = new AllAccounts();
-        Assert.assertEquals(AzureActiveDirectoryEnvironment.PREPRODUCTION_CLOUD_URL, audience.getCloudUrl());
-
+        Assert.assertEquals(
+                AzureActiveDirectoryEnvironment.PREPRODUCTION_CLOUD_URL, audience.getCloudUrl());
     }
 
     @Test
     public void test_AnyOrganizationAccountDefaultCloudUrl() {
 
         AzureActiveDirectoryAudience audience = new AllAccounts();
-        Assert.assertEquals(AzureActiveDirectoryEnvironment.PREPRODUCTION_CLOUD_URL, audience.getCloudUrl());
-
+        Assert.assertEquals(
+                AzureActiveDirectoryEnvironment.PREPRODUCTION_CLOUD_URL, audience.getCloudUrl());
     }
 
     @Test
-    public void test_AnyPerosnalAccountDefaultCloudUrl()  {
+    public void test_AnyPerosnalAccountDefaultCloudUrl() {
 
         AzureActiveDirectoryAudience audience = new AllAccounts();
-        Assert.assertEquals(AzureActiveDirectoryEnvironment.PREPRODUCTION_CLOUD_URL, audience.getCloudUrl());
-
+        Assert.assertEquals(
+                AzureActiveDirectoryEnvironment.PREPRODUCTION_CLOUD_URL, audience.getCloudUrl());
     }
-
-
-
-
-
 }

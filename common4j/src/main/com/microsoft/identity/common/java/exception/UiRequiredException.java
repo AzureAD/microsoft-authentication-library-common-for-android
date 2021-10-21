@@ -26,7 +26,6 @@ package com.microsoft.identity.common.java.exception;
 /**
  * This exception indicates that UI is required for authentication to succeed.
  */
-
 public final class UiRequiredException extends ServiceException {
 
     public static final String sName = UiRequiredException.class.getName();
@@ -36,13 +35,13 @@ public final class UiRequiredException extends ServiceException {
         super(errorCode, errorMessage, null);
     }
 
-    public UiRequiredException(final String errorCode, final String errorMessage, final Throwable throwable) {
+    public UiRequiredException(
+            final String errorCode, final String errorMessage, final Throwable throwable) {
         super(errorCode, errorMessage, throwable);
     }
 
     @Override
-    public String getExceptionName(){
+    public String getExceptionName() {
         return sName;
     }
-
 }

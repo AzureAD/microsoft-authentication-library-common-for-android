@@ -22,13 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.cache;
 
-
-import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
-import com.microsoft.identity.common.java.interfaces.INameValueStorage;
-import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
-import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
-import com.microsoft.identity.common.java.providers.oauth2.OAuth2TokenCache;
 import com.microsoft.identity.common.java.WarningType;
+import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.java.dto.AccessTokenRecord;
 import com.microsoft.identity.common.java.dto.AccountRecord;
 import com.microsoft.identity.common.java.dto.Credential;
@@ -36,12 +31,21 @@ import com.microsoft.identity.common.java.dto.CredentialType;
 import com.microsoft.identity.common.java.dto.IdTokenRecord;
 import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.interfaces.INameValueStorage;
+import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
+import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAccount;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftRefreshToken;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenResponse;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
-import com.microsoft.identity.common.java.logging.Logger;
+import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
+import com.microsoft.identity.common.java.providers.oauth2.OAuth2TokenCache;
 import com.microsoft.identity.common.java.util.StringUtil;
+
+import edu.umd.cs.findbugs.annotations.Nullable;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
+import lombok.NonNull;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -49,10 +53,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-
-import edu.umd.cs.findbugs.annotations.Nullable;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import lombok.NonNull;
 
 /**
  * "Combined" cache implementation to cache tokens inside of the broker.
@@ -81,16 +81,21 @@ import lombok.NonNull;
  * @param <GenericAccount>              The Account type to use.
  * @param <GenericRefreshToken>         The RefreshToken type to use.
  */
-// Suppressing rawtype warnings due to the generic type OAuth2Strategy, AuthorizationRequest, MicrosoftFamilyOAuth2TokenCache, MsalOAuth2TokenCache and OAuth2TokenCache
-@SuppressFBWarnings({"RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE", "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE"})
+// Suppressing rawtype warnings due to the generic type OAuth2Strategy, AuthorizationRequest,
+// MicrosoftFamilyOAuth2TokenCache, MsalOAuth2TokenCache and OAuth2TokenCache
+@SuppressFBWarnings({
+    "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE",
+    "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE"
+})
 @SuppressWarnings({"PMD.AvoidDuplicateLiterals", WarningType.rawtype_warning})
-public class BrokerOAuth2TokenCache
-        <GenericOAuth2Strategy extends OAuth2Strategy,
+public class BrokerOAuth2TokenCache<
+                GenericOAuth2Strategy extends OAuth2Strategy,
                 GenericAuthorizationRequest extends AuthorizationRequest,
                 GenericTokenResponse extends MicrosoftTokenResponse,
                 GenericAccount extends MicrosoftAccount,
                 GenericRefreshToken extends MicrosoftRefreshToken>
-        extends OAuth2TokenCache<GenericOAuth2Strategy, GenericAuthorizationRequest, GenericTokenResponse> {
+        extends OAuth2TokenCache<
+                GenericOAuth2Strategy, GenericAuthorizationRequest, GenericTokenResponse> {
 
     private static final String TAG = BrokerOAuth2TokenCache.class.getSimpleName();
 
@@ -108,15 +113,13 @@ public class BrokerOAuth2TokenCache
      * @param uid                      UID of the current unix user.
      * @param applicationMetadataCache The metadata cache to use.
      */
-    public BrokerOAuth2TokenCache(@NonNull final IPlatformComponents components,
-                                  int uid,
-                                  @NonNull IBrokerApplicationMetadataCache applicationMetadataCache) {
+    public BrokerOAuth2TokenCache(
+            @NonNull final IPlatformComponents components,
+            int uid,
+            @NonNull IBrokerApplicationMetadataCache applicationMetadataCache) {
         super(components);
 
-        Logger.verbose(
-                TAG + "ctor",
-                "Init::" + TAG
-        );
+        Logger.verbose(TAG + "ctor", "Init::" + TAG);
 
         mUid = uid;
         mFociCache = initializeFociCache(getComponents());
@@ -126,7 +129,7 @@ public class BrokerOAuth2TokenCache
     /**
      * Interface used to inject process-uid based caches into the broker.
      */
-    //@VisibleForTesting
+    // @VisibleForTesting
     public interface ProcessUidCacheFactory {
 
         /**
@@ -148,20 +151,18 @@ public class BrokerOAuth2TokenCache
      * @param applicationMetadataCache The metadata cache to use.
      * @param fociCache                The FOCI cache implementation to use.
      */
-    //@VisibleForTesting
-    public BrokerOAuth2TokenCache(@NonNull IPlatformComponents components,
-                                  final int uid,
-                                  @NonNull IBrokerApplicationMetadataCache applicationMetadataCache,
-                                  @NonNull ProcessUidCacheFactory delegate,
-                                  @NonNull final MicrosoftFamilyOAuth2TokenCache fociCache) {
+    // @VisibleForTesting
+    public BrokerOAuth2TokenCache(
+            @NonNull IPlatformComponents components,
+            final int uid,
+            @NonNull IBrokerApplicationMetadataCache applicationMetadataCache,
+            @NonNull ProcessUidCacheFactory delegate,
+            @NonNull final MicrosoftFamilyOAuth2TokenCache fociCache) {
         // This cannot call the other constructors, since they unconditionally initialize
         // the foci cache, and this one uses the value passed in for testing.
         super(components);
 
-        Logger.verbose(
-                TAG + "ctor",
-                "Init::" + TAG
-        );
+        Logger.verbose(TAG + "ctor", "Init::" + TAG);
 
         mApplicationMetadataCache = applicationMetadataCache;
         mUid = uid;
@@ -180,63 +181,44 @@ public class BrokerOAuth2TokenCache
      * @throws ClientException If the supplied Accounts or Credentials are schema invalid.
      */
     @Deprecated
-    public ICacheRecord save(final @NonNull AccountRecord accountRecord,
-                             final @NonNull IdTokenRecord idTokenRecord,
-                             final @NonNull AccessTokenRecord accessTokenRecord,
-                             final @Nullable String familyId) throws ClientException {
+    public ICacheRecord save(
+            final @NonNull AccountRecord accountRecord,
+            final @NonNull IdTokenRecord idTokenRecord,
+            final @NonNull AccessTokenRecord accessTokenRecord,
+            final @Nullable String familyId)
+            throws ClientException {
         final String methodName = ":save (4 args)";
 
         final ICacheRecord result;
 
         final boolean isFoci = !StringUtil.isNullOrEmpty(familyId);
 
-        Logger.info(
-                TAG + methodName,
-                "Saving to FOCI cache? ["
-                        + isFoci
-                        + "]"
-        );
+        Logger.info(TAG + methodName, "Saving to FOCI cache? [" + isFoci + "]");
 
         if (isFoci) {
             // Save to the foci cache....
-            result = mFociCache.save(
-                    accountRecord,
-                    idTokenRecord,
-                    accessTokenRecord
-            );
+            result = mFociCache.save(accountRecord, idTokenRecord, accessTokenRecord);
         } else {
             // Save to the processUid cache... or create a new one
-            MsalOAuth2TokenCache targetCache = getTokenCacheForClient(
-                    idTokenRecord.getClientId(),
-                    idTokenRecord.getEnvironment(),
-                    mUid
-            );
+            MsalOAuth2TokenCache targetCache =
+                    getTokenCacheForClient(
+                            idTokenRecord.getClientId(), idTokenRecord.getEnvironment(), mUid);
 
             if (null == targetCache) {
                 Logger.warn(
-                        TAG + methodName,
-                        "Existing cache not found. A new one will be created."
-                );
+                        TAG + methodName, "Existing cache not found. A new one will be created.");
 
-                targetCache = initializeProcessUidCache(
-                        getComponents(),
-                        mUid
-                );
+                targetCache = initializeProcessUidCache(getComponents(), mUid);
             }
 
-            result = targetCache.save(
-                    accountRecord,
-                    idTokenRecord,
-                    accessTokenRecord
-            );
+            result = targetCache.save(accountRecord, idTokenRecord, accessTokenRecord);
         }
 
         updateApplicationMetadataCache(
                 result.getAccessToken().getClientId(),
                 result.getAccessToken().getEnvironment(),
                 familyId,
-                mUid
-        );
+                mUid);
 
         return result;
     }
@@ -252,53 +234,41 @@ public class BrokerOAuth2TokenCache
      * @return The {@link ICacheRecord} result of this save action.
      * @throws ClientException If the supplied Accounts or Credentials are schema invalid.
      */
-    public ICacheRecord save(@NonNull AccountRecord accountRecord,
-                             @NonNull IdTokenRecord idTokenRecord,
-                             @NonNull AccessTokenRecord accessTokenRecord,
-                             @Nullable RefreshTokenRecord refreshTokenRecord,
-                             @Nullable String familyId) throws ClientException {
+    public ICacheRecord save(
+            @NonNull AccountRecord accountRecord,
+            @NonNull IdTokenRecord idTokenRecord,
+            @NonNull AccessTokenRecord accessTokenRecord,
+            @Nullable RefreshTokenRecord refreshTokenRecord,
+            @Nullable String familyId)
+            throws ClientException {
         final String methodName = ":save (5 args)";
 
         final ICacheRecord result;
 
         final boolean isFoci = !StringUtil.isNullOrEmpty(familyId);
 
-        Logger.info(
-                TAG + methodName,
-                "Saving to FOCI cache? ["
-                        + isFoci
-                        + "]"
-        );
+        Logger.info(TAG + methodName, "Saving to FOCI cache? [" + isFoci + "]");
 
         if (isFoci) {
             // Save to the foci cache....
-            result = mFociCache.save(
-                    accountRecord,
-                    idTokenRecord,
-                    accessTokenRecord,
-                    refreshTokenRecord
-            );
+            result =
+                    mFociCache.save(
+                            accountRecord, idTokenRecord, accessTokenRecord, refreshTokenRecord);
         } else {
             // Save to the processUid cache... or create a new one
-            final MsalOAuth2TokenCache targetCache = initializeProcessUidCache(
-                    getComponents(),
-                    mUid
-            );
+            final MsalOAuth2TokenCache targetCache =
+                    initializeProcessUidCache(getComponents(), mUid);
 
-            result = targetCache.save(
-                    accountRecord,
-                    idTokenRecord,
-                    accessTokenRecord,
-                    refreshTokenRecord
-            );
+            result =
+                    targetCache.save(
+                            accountRecord, idTokenRecord, accessTokenRecord, refreshTokenRecord);
         }
 
         updateApplicationMetadataCache(
                 result.getAccessToken().getClientId(),
                 result.getAccessToken().getEnvironment(),
                 familyId,
-                mUid
-        );
+                mUid);
 
         return result;
     }
@@ -309,14 +279,11 @@ public class BrokerOAuth2TokenCache
             @NonNull final IdTokenRecord idTokenRecord,
             @NonNull final AccessTokenRecord accessTokenRecord,
             @Nullable final String familyId,
-            @NonNull final AbstractAuthenticationScheme authScheme) throws ClientException {
+            @NonNull final AbstractAuthenticationScheme authScheme)
+            throws ClientException {
         synchronized (this) {
-            final ICacheRecord cacheRecord = save(
-                    accountRecord,
-                    idTokenRecord,
-                    accessTokenRecord,
-                    familyId
-            );
+            final ICacheRecord cacheRecord =
+                    save(accountRecord, idTokenRecord, accessTokenRecord, familyId);
 
             return loadAggregatedAccountData(authScheme, cacheRecord);
         }
@@ -328,73 +295,65 @@ public class BrokerOAuth2TokenCache
             final @NonNull AccessTokenRecord accessTokenRecord,
             final @Nullable RefreshTokenRecord refreshTokenRecord,
             final @Nullable String familyId,
-            final @NonNull AbstractAuthenticationScheme authScheme) throws ClientException {
+            final @NonNull AbstractAuthenticationScheme authScheme)
+            throws ClientException {
         synchronized (this) {
-            final ICacheRecord cacheRecord = save(
-                    accountRecord,
-                    idTokenRecord,
-                    accessTokenRecord,
-                    refreshTokenRecord,
-                    familyId
-            );
+            final ICacheRecord cacheRecord =
+                    save(
+                            accountRecord,
+                            idTokenRecord,
+                            accessTokenRecord,
+                            refreshTokenRecord,
+                            familyId);
 
             return loadAggregatedAccountData(authScheme, cacheRecord);
         }
     }
 
     @SuppressWarnings("unchecked")
-    private List<ICacheRecord> loadAggregatedAccountData(final @NonNull AbstractAuthenticationScheme authScheme,
-                                                         final @NonNull ICacheRecord cacheRecord) {
+    private List<ICacheRecord> loadAggregatedAccountData(
+            final @NonNull AbstractAuthenticationScheme authScheme,
+            final @NonNull ICacheRecord cacheRecord) {
         final String methodName = ":loadAggregatedAccountData";
 
         final String clientId = cacheRecord.getAccessToken().getClientId();
         final String target = cacheRecord.getAccessToken().getTarget();
         final String environment = cacheRecord.getAccessToken().getEnvironment();
 
-        final MsalOAuth2TokenCache cache = getTokenCacheForClient(
-                clientId,
-                environment,
-                mUid
-        );
+        final MsalOAuth2TokenCache cache = getTokenCacheForClient(clientId, environment, mUid);
 
-        if (cache == null){
-            Logger.warn(TAG + methodName, "Cache not found for clientid: " + clientId +
-                    "environment:" + environment +
-                    "processUid: " + mUid);
+        if (cache == null) {
+            Logger.warn(
+                    TAG + methodName,
+                    "Cache not found for clientid: "
+                            + clientId
+                            + "environment:"
+                            + environment
+                            + "processUid: "
+                            + mUid);
             return null;
         }
 
         return cache.loadWithAggregatedAccountData(
-                clientId,
-                target,
-                cacheRecord.getAccount(),
-                authScheme
-        );
+                clientId, target, cacheRecord.getAccount(), authScheme);
     }
 
     @Override
-    public ICacheRecord save(@NonNull final GenericOAuth2Strategy oAuth2Strategy,
-                             @NonNull final GenericAuthorizationRequest request,
-                             @NonNull final GenericTokenResponse response) throws ClientException {
+    public ICacheRecord save(
+            @NonNull final GenericOAuth2Strategy oAuth2Strategy,
+            @NonNull final GenericAuthorizationRequest request,
+            @NonNull final GenericTokenResponse response)
+            throws ClientException {
         final String methodName = ":save";
 
         final boolean isFoci = !StringUtil.isNullOrEmpty(response.getFamilyId());
 
         if (isFoci) {
             Logger.verbose(
-                    TAG + methodName,
-                    "Received FOCI value: ["
-                            + response.getFamilyId()
-                            + "]"
-            );
+                    TAG + methodName, "Received FOCI value: [" + response.getFamilyId() + "]");
         }
 
-        Logger.info(
-                TAG + methodName,
-                "Saving to FOCI cache? ["
-                        + isFoci
-                        + "]"
-        );
+        Logger.info(TAG + methodName, "Saving to FOCI cache? [" + isFoci + "]");
 
         final OAuth2TokenCache targetCache;
 
@@ -405,19 +364,16 @@ public class BrokerOAuth2TokenCache
             targetCache = initializeProcessUidCache(getComponents(), mUid);
         }
 
-        // Suppressing unchecked warnings due to casting of rawtypes to generic types of OAuth2TokenCache's instance targetCache while calling method save
-        @SuppressWarnings(WarningType.unchecked_warning) final ICacheRecord result = targetCache.save(
-                oAuth2Strategy,
-                request,
-                response
-        );
+        // Suppressing unchecked warnings due to casting of rawtypes to generic types of
+        // OAuth2TokenCache's instance targetCache while calling method save
+        @SuppressWarnings(WarningType.unchecked_warning)
+        final ICacheRecord result = targetCache.save(oAuth2Strategy, request, response);
 
         updateApplicationMetadataCache(
                 result.getRefreshToken().getClientId(),
                 result.getRefreshToken().getEnvironment(),
                 result.getRefreshToken().getFamilyId(),
-                mUid
-        );
+                mUid);
 
         return result;
     }
@@ -427,7 +383,8 @@ public class BrokerOAuth2TokenCache
     public List<ICacheRecord> saveAndLoadAggregatedAccountData(
             @NonNull final GenericOAuth2Strategy oAuth2Strategy,
             @NonNull final GenericAuthorizationRequest request,
-            @NonNull final GenericTokenResponse response) throws ClientException {
+            @NonNull final GenericTokenResponse response)
+            throws ClientException {
         synchronized (this) {
             final String methodName = ":saveAndLoadAggregatedAccountData";
 
@@ -435,12 +392,7 @@ public class BrokerOAuth2TokenCache
 
             OAuth2TokenCache targetCache;
 
-            Logger.info(
-                    TAG + methodName,
-                    "Saving to FOCI cache? ["
-                            + isFoci
-                            + "]"
-            );
+            Logger.info(TAG + methodName, "Saving to FOCI cache? [" + isFoci + "]");
 
             if (isFoci) {
                 targetCache = mFociCache;
@@ -448,30 +400,28 @@ public class BrokerOAuth2TokenCache
                 targetCache = initializeProcessUidCache(getComponents(), mUid);
             }
 
-            final List<ICacheRecord> result = targetCache.saveAndLoadAggregatedAccountData(
-                    oAuth2Strategy,
-                    request,
-                    response
-            );
+            final List<ICacheRecord> result =
+                    targetCache.saveAndLoadAggregatedAccountData(oAuth2Strategy, request, response);
 
-            // The 0th element contains the record we *just* saved. Other records are corollary data.
+            // The 0th element contains the record we *just* saved. Other records are corollary
+            // data.
             final ICacheRecord justSavedRecord = result.get(0);
 
             updateApplicationMetadataCache(
                     justSavedRecord.getRefreshToken().getClientId(),
                     justSavedRecord.getRefreshToken().getEnvironment(),
                     justSavedRecord.getRefreshToken().getFamilyId(),
-                    mUid
-            );
+                    mUid);
 
             return result;
         }
     }
 
-    private void updateApplicationMetadataCache(@NonNull final String clientId,
-                                                @NonNull final String environment,
-                                                @Nullable final String familyId,
-                                                int uid) {
+    private void updateApplicationMetadataCache(
+            @NonNull final String clientId,
+            @NonNull final String environment,
+            @Nullable final String familyId,
+            int uid) {
         final String methodName = ":updateApplicationMetadataCache";
 
         final BrokerApplicationMetadata applicationMetadata = new BrokerApplicationMetadata();
@@ -480,29 +430,18 @@ public class BrokerOAuth2TokenCache
         applicationMetadata.setFoci(familyId);
         applicationMetadata.setUid(uid);
 
-        Logger.verbose(
-                TAG + methodName,
-                "Adding cache entry for clientId: ["
-                        + clientId
-                        + "]"
-        );
+        Logger.verbose(TAG + methodName, "Adding cache entry for clientId: [" + clientId + "]");
 
         final boolean success = mApplicationMetadataCache.insert(applicationMetadata);
 
-        Logger.info(
-                TAG + methodName,
-                "Cache updated successfully? ["
-                        + success
-                        + "]"
-        );
+        Logger.info(TAG + methodName, "Cache updated successfully? [" + success + "]");
     }
 
     @Override
-    public ICacheRecord save(@NonNull final AccountRecord accountRecord,
-                             @NonNull final IdTokenRecord idTokenRecord) {
-        throw new UnsupportedOperationException(
-                OAuth2TokenCache.ERR_UNSUPPORTED_OPERATION
-        );
+    public ICacheRecord save(
+            @NonNull final AccountRecord accountRecord,
+            @NonNull final IdTokenRecord idTokenRecord) {
+        throw new UnsupportedOperationException(OAuth2TokenCache.ERR_UNSUPPORTED_OPERATION);
     }
 
     /**
@@ -527,75 +466,44 @@ public class BrokerOAuth2TokenCache
      * @return
      */
     @Override
-    public ICacheRecord load(@NonNull final String clientId,
-                             @Nullable final String target,
-                             @NonNull final AccountRecord account,
-                             @NonNull final AbstractAuthenticationScheme authScheme) {
+    public ICacheRecord load(
+            @NonNull final String clientId,
+            @Nullable final String target,
+            @NonNull final AccountRecord account,
+            @NonNull final AbstractAuthenticationScheme authScheme) {
         final String methodName = ":load";
 
-        Logger.verbose(
-                TAG + methodName,
-                "Performing lookup in app-specific cache."
-        );
+        Logger.verbose(TAG + methodName, "Performing lookup in app-specific cache.");
 
-        final BrokerApplicationMetadata appMetadata = mApplicationMetadataCache.getMetadata(
-                clientId,
-                account.getEnvironment(),
-                mUid
-        );
+        final BrokerApplicationMetadata appMetadata =
+                mApplicationMetadataCache.getMetadata(clientId, account.getEnvironment(), mUid);
 
         boolean isKnownFoci = false;
 
         if (null != appMetadata) {
             isKnownFoci = null != appMetadata.getFoci();
 
-            Logger.info(
-                    TAG + methodName,
-                    "App is known foci? " + isKnownFoci
-            );
+            Logger.info(TAG + methodName, "App is known foci? " + isKnownFoci);
         }
 
-        final OAuth2TokenCache targetCache = getTokenCacheForClient(
-                clientId,
-                account.getEnvironment(),
-                mUid
-        );
+        final OAuth2TokenCache targetCache =
+                getTokenCacheForClient(clientId, account.getEnvironment(), mUid);
 
         final boolean shouldUseFociCache = null == targetCache || isKnownFoci;
 
-        Logger.info(
-                TAG + methodName,
-                "Loading from FOCI cache? ["
-                        + shouldUseFociCache
-                        + "]"
-        );
+        Logger.info(TAG + methodName, "Loading from FOCI cache? [" + shouldUseFociCache + "]");
 
         ICacheRecord resultRecord;
 
         if (shouldUseFociCache) {
-            resultRecord = mFociCache.loadByFamilyId(
-                    clientId,
-                    target,
-                    account,
-                    authScheme
-            );
+            resultRecord = mFociCache.loadByFamilyId(clientId, target, account, authScheme);
         } else {
-            resultRecord = targetCache.load(
-                    clientId,
-                    target,
-                    account,
-                    authScheme
-            );
+            resultRecord = targetCache.load(clientId, target, account, authScheme);
         }
 
         final boolean resultFound = null != resultRecord.getRefreshToken();
 
-        Logger.verbose(
-                TAG + methodName,
-                "Result found? ["
-                        + resultFound
-                        + "]"
-        );
+        Logger.verbose(TAG + methodName, "Result found? [" + resultFound + "]");
 
         return resultRecord;
     }
@@ -627,28 +535,23 @@ public class BrokerOAuth2TokenCache
      */
     @SuppressWarnings(UNCHECKED)
     @Override
-    public List<ICacheRecord> loadWithAggregatedAccountData(@NonNull final String clientId,
-                                                            @Nullable final String target,
-                                                            @NonNull final AccountRecord account,
-                                                            @NonNull final AbstractAuthenticationScheme authScheme) {
+    public List<ICacheRecord> loadWithAggregatedAccountData(
+            @NonNull final String clientId,
+            @Nullable final String target,
+            @NonNull final AccountRecord account,
+            @NonNull final AbstractAuthenticationScheme authScheme) {
         synchronized (this) {
             final String methodName = ":loadWithAggregatedAccountData";
 
-            final BrokerApplicationMetadata appMetadata = mApplicationMetadataCache.getMetadata(
-                    clientId,
-                    account.getEnvironment(),
-                    mUid
-            );
+            final BrokerApplicationMetadata appMetadata =
+                    mApplicationMetadataCache.getMetadata(clientId, account.getEnvironment(), mUid);
 
             boolean isKnownFoci = false;
 
             if (null != appMetadata) {
                 isKnownFoci = null != appMetadata.getFoci();
 
-                Logger.info(
-                        TAG + methodName,
-                        "App is known foci? " + isKnownFoci
-                );
+                Logger.info(TAG + methodName, "App is known foci? " + isKnownFoci);
             }
 
             final OAuth2TokenCache targetCache = getTokenCacheForClient(appMetadata);
@@ -661,50 +564,31 @@ public class BrokerOAuth2TokenCache
                     TAG + methodName,
                     "Loading from FOCI cache? ["
                             + (isKnownFoci || appIsUnknownUseFociAsFallback)
-                            + "]"
-            );
+                            + "]");
 
             if (appIsUnknownUseFociAsFallback) {
-                // We do not have a cache for this app or it is not yet known to be a member of the family
+                // We do not have a cache for this app or it is not yet known to be a member of the
+                // family
                 // use the foci cache....
 
                 // Load a sparse-record (if available) containing only the desired account and a
                 // refresh token if available...
                 resultRecords = new ArrayList<>();
-                resultRecords.add(
-                        mFociCache.loadByFamilyId(
-                                clientId,
-                                target,
-                                account,
-                                authScheme
-                        )
-                );
+                resultRecords.add(mFociCache.loadByFamilyId(clientId, target, account, authScheme));
             } else if (isKnownFoci) {
                 resultRecords =
                         mFociCache.loadByFamilyIdWithAggregatedAccountData(
-                                clientId,
-                                target,
-                                account,
-                                authScheme
-                        );
+                                clientId, target, account, authScheme);
             } else {
-                resultRecords = targetCache.loadWithAggregatedAccountData(
-                        clientId,
-                        target,
-                        account,
-                        authScheme
-                );
+                resultRecords =
+                        targetCache.loadWithAggregatedAccountData(
+                                clientId, target, account, authScheme);
             }
 
-            final boolean resultFound = !resultRecords.isEmpty()
-                    && null != resultRecords.get(0).getRefreshToken();
+            final boolean resultFound =
+                    !resultRecords.isEmpty() && null != resultRecords.get(0).getRefreshToken();
 
-            Logger.verbose(
-                    TAG + methodName,
-                    "Result found? ["
-                            + resultFound
-                            + "]"
-            );
+            Logger.verbose(TAG + methodName, "Result found? [" + resultFound + "]");
 
             return resultRecords;
         }
@@ -714,39 +598,29 @@ public class BrokerOAuth2TokenCache
     public boolean removeCredential(@NonNull final Credential credential) {
         final String methodName = ":removeCredential";
 
-        final OAuth2TokenCache targetCache = getTokenCacheForClient(
-                credential.getClientId(),
-                credential.getEnvironment(),
-                mUid
-        );
+        final OAuth2TokenCache targetCache =
+                getTokenCacheForClient(credential.getClientId(), credential.getEnvironment(), mUid);
 
         boolean removed = false;
 
         if (null != targetCache) {
             removed = targetCache.removeCredential(credential);
         } else {
-            Logger.warn(
-                    TAG + methodName,
-                    "Could not remove credential. Cache not found."
-            );
+            Logger.warn(TAG + methodName, "Could not remove credential. Cache not found.");
         }
 
-        Logger.verbose(
-                TAG + methodName,
-                "Credential removed? ["
-                        + removed
-                        + "]"
-        );
+        Logger.verbose(TAG + methodName, "Credential removed? [" + removed + "]");
 
         return removed;
     }
 
     @Override
     @Nullable
-    public AccountRecord getAccount(@Nullable final String environment,
-                                    @NonNull final String clientId,
-                                    @NonNull final String homeAccountId,
-                                    @Nullable final String realm) {
+    public AccountRecord getAccount(
+            @Nullable final String environment,
+            @NonNull final String clientId,
+            @NonNull final String homeAccountId,
+            @Nullable final String realm) {
         final String methodName = ":getAccount";
 
         OAuth2TokenCache targetCache = null;
@@ -754,45 +628,24 @@ public class BrokerOAuth2TokenCache
         AccountRecord result = null;
 
         if (null != environment) {
-            targetCache = getTokenCacheForClient(
-                    clientId,
-                    environment,
-                    mUid
-            );
+            targetCache = getTokenCacheForClient(clientId, environment, mUid);
 
             if (null == targetCache) {
-                Logger.verbose(
-                        TAG + methodName,
-                        "Target cache was null. Using FOCI cache."
-                );
+                Logger.verbose(TAG + methodName, "Target cache was null. Using FOCI cache.");
 
                 targetCache = mFociCache;
             }
 
-            result = targetCache.getAccount(
-                    environment,
-                    clientId,
-                    homeAccountId,
-                    realm
-            );
+            result = targetCache.getAccount(environment, clientId, homeAccountId, realm);
         } else {
             // We need to check all of the caches that match the supplied client id
             // If none match, return null...
-            final List<OAuth2TokenCache> clientIdTokenCaches = getTokenCachesForClientId(
-                    clientId
-            );
+            final List<OAuth2TokenCache> clientIdTokenCaches = getTokenCachesForClientId(clientId);
 
             final Iterator<OAuth2TokenCache> cacheIterator = clientIdTokenCaches.iterator();
 
             while (null == result && cacheIterator.hasNext()) {
-                result = cacheIterator
-                        .next()
-                        .getAccount(
-                                null,
-                                clientId,
-                                homeAccountId,
-                                realm
-                        );
+                result = cacheIterator.next().getAccount(null, clientId, homeAccountId, realm);
             }
         }
 
@@ -810,28 +663,21 @@ public class BrokerOAuth2TokenCache
         OAuth2TokenCache targetCache;
 
         if (null != environment) {
-            targetCache = getTokenCacheForClient(
-                    clientId,
-                    environment,
-                    mUid
-            );
+            targetCache = getTokenCacheForClient(clientId, environment, mUid);
 
             if (null == targetCache) {
-                Logger.verbose(
-                        TAG + methodName,
-                        "Falling back to FoCI cache..."
-                );
+                Logger.verbose(TAG + methodName, "Falling back to FoCI cache...");
 
                 targetCache = mFociCache;
             }
 
-            // Suppressing unchecked warnings due to casting of rawtypes to generic types of OAuth2TokenCache's instance targetCache while calling method getAccountsWithAggregatedAccountData
+            // Suppressing unchecked warnings due to casting of rawtypes to generic types of
+            // OAuth2TokenCache's instance targetCache while calling method
+            // getAccountsWithAggregatedAccountData
             @SuppressWarnings(WarningType.unchecked_warning)
-            List<ICacheRecord> resultByAggregatedAccountData = targetCache.getAccountsWithAggregatedAccountData(
-                    environment,
-                    clientId,
-                    homeAccountId
-            );
+            List<ICacheRecord> resultByAggregatedAccountData =
+                    targetCache.getAccountsWithAggregatedAccountData(
+                            environment, clientId, homeAccountId);
 
             result = resultByAggregatedAccountData;
         } else {
@@ -846,15 +692,10 @@ public class BrokerOAuth2TokenCache
 
                 // Suppressing unchecked warning as the generic type was not provided for cache
                 @SuppressWarnings(WarningType.unchecked_warning)
-                List<ICacheRecord> accountsWithAggregatedAccountData = cache.getAccountsWithAggregatedAccountData(
-                        null,
-                        clientId,
-                        homeAccountId
-                );
+                List<ICacheRecord> accountsWithAggregatedAccountData =
+                        cache.getAccountsWithAggregatedAccountData(null, clientId, homeAccountId);
 
-                result.addAll(
-                        accountsWithAggregatedAccountData
-                );
+                result.addAll(accountsWithAggregatedAccountData);
             }
         }
 
@@ -875,7 +716,8 @@ public class BrokerOAuth2TokenCache
                     containsFoci = true;
                 } else if (!processUidCacheInitialized) {
                     // App is not foci, see if we can find its real cache...
-                    final OAuth2TokenCache candidateCache = initializeProcessUidCache(getComponents(), mUid);
+                    final OAuth2TokenCache candidateCache =
+                            initializeProcessUidCache(getComponents(), mUid);
 
                     if (null != candidateCache) {
                         result.add(candidateCache);
@@ -890,42 +732,25 @@ public class BrokerOAuth2TokenCache
 
     @Override
     @Nullable
-    public AccountRecord getAccountByLocalAccountId(@Nullable final String environment,
-                                                    @NonNull final String clientId,
-                                                    @NonNull final String localAccountId) {
+    public AccountRecord getAccountByLocalAccountId(
+            @Nullable final String environment,
+            @NonNull final String clientId,
+            @NonNull final String localAccountId) {
         final String methodName = ":getAccountByLocalAccountId";
 
-        Logger.verbose(
-                TAG + methodName,
-                "Loading account by local account id."
-        );
+        Logger.verbose(TAG + methodName, "Loading account by local account id.");
 
         if (null != environment) {
-            OAuth2TokenCache targetCache = getTokenCacheForClient(
-                    clientId,
-                    environment,
-                    mUid
-            );
+            OAuth2TokenCache targetCache = getTokenCacheForClient(clientId, environment, mUid);
 
             Logger.info(
-                    TAG + methodName,
-                    "Loading from FOCI cache? ["
-                            + (targetCache == null)
-                            + "]"
-            );
+                    TAG + methodName, "Loading from FOCI cache? [" + (targetCache == null) + "]");
 
             if (null != targetCache) {
                 return targetCache.getAccountByLocalAccountId(
-                        environment,
-                        clientId,
-                        localAccountId
-                );
+                        environment, clientId, localAccountId);
             } else {
-                return mFociCache.getAccountByLocalAccountId(
-                        environment,
-                        clientId,
-                        localAccountId
-                );
+                return mFociCache.getAccountByLocalAccountId(environment, clientId, localAccountId);
             }
         } else {
             AccountRecord result = null;
@@ -934,13 +759,10 @@ public class BrokerOAuth2TokenCache
             final Iterator<OAuth2TokenCache> cacheIterator = cachesToInspect.iterator();
 
             while (null == result && cacheIterator.hasNext()) {
-                result = cacheIterator
-                        .next()
-                        .getAccountByLocalAccountId(
-                                null,
-                                clientId,
-                                localAccountId
-                        );
+                result =
+                        cacheIterator
+                                .next()
+                                .getAccountByLocalAccountId(null, clientId, localAccountId);
             }
 
             return result;
@@ -955,31 +777,17 @@ public class BrokerOAuth2TokenCache
             @NonNull final String localAccountId) {
         final String methodName = ":getAccountWithAggregatedAccountDataByLocalAccountId";
         if (null != environment) {
-            OAuth2TokenCache targetCache = getTokenCacheForClient(
-                    clientId,
-                    environment,
-                    mUid
-            );
+            OAuth2TokenCache targetCache = getTokenCacheForClient(clientId, environment, mUid);
 
             Logger.info(
-                    TAG + methodName,
-                    "Loading from FOCI cache? ["
-                            + (targetCache == null)
-                            + "]"
-            );
+                    TAG + methodName, "Loading from FOCI cache? [" + (targetCache == null) + "]");
 
             if (null != targetCache) {
                 return targetCache.getAccountWithAggregatedAccountDataByLocalAccountId(
-                        environment,
-                        clientId,
-                        localAccountId
-                );
+                        environment, clientId, localAccountId);
             } else {
                 return mFociCache.getAccountWithAggregatedAccountDataByLocalAccountId(
-                        environment,
-                        clientId,
-                        localAccountId
-                );
+                        environment, clientId, localAccountId);
             }
         } else {
             ICacheRecord result = null;
@@ -988,13 +796,11 @@ public class BrokerOAuth2TokenCache
             final Iterator<OAuth2TokenCache> cacheIterator = cachesToInspect.iterator();
 
             while (null == result && cacheIterator.hasNext()) {
-                result = cacheIterator
-                        .next()
-                        .getAccountWithAggregatedAccountDataByLocalAccountId(
-                                null,
-                                clientId,
-                                localAccountId
-                        );
+                result =
+                        cacheIterator
+                                .next()
+                                .getAccountWithAggregatedAccountDataByLocalAccountId(
+                                        null, clientId, localAccountId);
             }
 
             return result;
@@ -1003,105 +809,83 @@ public class BrokerOAuth2TokenCache
 
     @SuppressWarnings(UNCHECKED)
     @Override
-    public List<AccountRecord> getAccounts(@Nullable final String environment,
-                                           @NonNull final String clientId) {
+    public List<AccountRecord> getAccounts(
+            @Nullable final String environment, @NonNull final String clientId) {
         final String methodName = ":getAccounts (2 param)";
         final List<AccountRecord> result = new ArrayList<>();
 
         if (null != environment) {
-            OAuth2TokenCache targetCache = getTokenCacheForClient(
-                    clientId,
-                    environment,
-                    mUid
-            );
+            OAuth2TokenCache targetCache = getTokenCacheForClient(clientId, environment, mUid);
 
             if (null != targetCache) {
                 result.addAll(targetCache.getAccounts(environment, clientId));
             } else {
-                Logger.warn(
-                        TAG + methodName,
-                        "No caches to inspect."
-                );
+                Logger.warn(TAG + methodName, "No caches to inspect.");
             }
         } else {
             final List<OAuth2TokenCache> cachesToInspect = getTokenCachesForClientId(clientId);
 
             for (final OAuth2TokenCache cache : cachesToInspect) {
                 if (cache != null) {
-                    result.addAll(
-                            cache.getAccounts(
-                                    null,
-                                    clientId
-                            )
-                    );
+                    result.addAll(cache.getAccounts(null, clientId));
                 }
             }
 
-            Logger.verbose(
-                    TAG + methodName,
-                    "Found ["
-                            + result.size()
-                            + "] accounts."
-            );
+            Logger.verbose(TAG + methodName, "Found [" + result.size() + "] accounts.");
         }
 
         return result;
     }
 
     @Override
-    public List<AccountRecord> getAllTenantAccountsForAccountByClientId(@NonNull final String clientId,
-                                                                        @NonNull final AccountRecord accountRecord) {
+    public List<AccountRecord> getAllTenantAccountsForAccountByClientId(
+            @NonNull final String clientId, @NonNull final AccountRecord accountRecord) {
         final String methodName = ":getAllTenantAccountsForAccountByClientId";
-        final OAuth2TokenCache cache = getTokenCacheForClient(
-                clientId,
-                accountRecord.getEnvironment(),
-                mUid
-        );
+        final OAuth2TokenCache cache =
+                getTokenCacheForClient(clientId, accountRecord.getEnvironment(), mUid);
 
         if (cache == null) {
-            Logger.warn(TAG + methodName, "Cache not found for clientid: " + clientId +
-                    "environment:" + accountRecord.getEnvironment() +
-                    "processUid: " + mUid);
+            Logger.warn(
+                    TAG + methodName,
+                    "Cache not found for clientid: "
+                            + clientId
+                            + "environment:"
+                            + accountRecord.getEnvironment()
+                            + "processUid: "
+                            + mUid);
             return Collections.emptyList();
         }
 
-        // Suppressing unchecked warnings due to casting List to List<AccountRecord> as the generic type for cache was not provided
+        // Suppressing unchecked warnings due to casting List to List<AccountRecord> as the generic
+        // type for cache was not provided
         @SuppressWarnings(WarningType.unchecked_warning)
-        List<AccountRecord> tenantAccountsForAccountByClientId = cache.getAllTenantAccountsForAccountByClientId(
-                clientId,
-                accountRecord
-        );
+        List<AccountRecord> tenantAccountsForAccountByClientId =
+                cache.getAllTenantAccountsForAccountByClientId(clientId, accountRecord);
 
         return tenantAccountsForAccountByClientId;
     }
 
     @Override
-    public List<ICacheRecord> getAccountsWithAggregatedAccountData(@Nullable String environment,
-                                                                   @NonNull String clientId) {
+    public List<ICacheRecord> getAccountsWithAggregatedAccountData(
+            @Nullable String environment, @NonNull String clientId) {
         final String methodName = ":getAccountsWithAggregatedAccountData";
 
         final List<ICacheRecord> result;
         OAuth2TokenCache targetCache;
 
         if (null != environment) {
-            targetCache = getTokenCacheForClient(
-                    clientId,
-                    environment,
-                    mUid
-            );
+            targetCache = getTokenCacheForClient(clientId, environment, mUid);
 
             if (null == targetCache) {
-                Logger.verbose(
-                        TAG + methodName,
-                        "Falling back to FoCI cache..."
-                );
+                Logger.verbose(TAG + methodName, "Falling back to FoCI cache...");
 
                 targetCache = mFociCache;
             }
 
             // Suppressing unchecked warning as the generic type was not provided for targetCache
             @SuppressWarnings(WarningType.unchecked_warning)
-            List<ICacheRecord> targetCacheAccountsWithAggregatedAccountData = targetCache.getAccountsWithAggregatedAccountData(environment, clientId);
+            List<ICacheRecord> targetCacheAccountsWithAggregatedAccountData =
+                    targetCache.getAccountsWithAggregatedAccountData(environment, clientId);
 
             result = targetCacheAccountsWithAggregatedAccountData;
         } else {
@@ -1116,7 +900,8 @@ public class BrokerOAuth2TokenCache
 
                 // Suppressing unchecked warning as the generic type was not provided for cache
                 @SuppressWarnings(WarningType.unchecked_warning)
-                List<ICacheRecord> cacheAccountsWithAggregatedAccountData = cache.getAccountsWithAggregatedAccountData(null, clientId);
+                List<ICacheRecord> cacheAccountsWithAggregatedAccountData =
+                        cache.getAccountsWithAggregatedAccountData(null, clientId);
 
                 result.addAll(cacheAccountsWithAggregatedAccountData);
             }
@@ -1126,39 +911,38 @@ public class BrokerOAuth2TokenCache
     }
 
     @Override
-    public List<IdTokenRecord> getIdTokensForAccountRecord(@NonNull final String clientId,
-                                                           @NonNull final AccountRecord accountRecord) {
+    public List<IdTokenRecord> getIdTokensForAccountRecord(
+            @NonNull final String clientId, @NonNull final AccountRecord accountRecord) {
         final String methodName = ":getIdTokensForAccountRecord";
         final List<IdTokenRecord> result;
         final String accountEnv = accountRecord.getEnvironment();
 
         if (null == clientId) {
             // If the client id was null... then presumably we want to aggregate the IdTokens across
-            // apps... why would you want that? For now, throw an Exception and see if anyone requests
+            // apps... why would you want that? For now, throw an Exception and see if anyone
+            // requests
             // this feature...
             throw new UnsupportedOperationException(
-                    "Aggregating IdTokens across ClientIds is not supported - do you have a feature request?"
-            );
+                    "Aggregating IdTokens across ClientIds is not supported - do you have a feature request?");
         } else {
-            final OAuth2TokenCache cache = getTokenCacheForClient(
-                    clientId,
-                    accountEnv,
-                    mUid
-            );
+            final OAuth2TokenCache cache = getTokenCacheForClient(clientId, accountEnv, mUid);
 
             if (cache == null) {
-                Logger.warn(TAG + methodName, "Cache not found for clientid: " + clientId +
-                        "environment:" + accountRecord.getEnvironment() +
-                        "processUid: " + mUid);
+                Logger.warn(
+                        TAG + methodName,
+                        "Cache not found for clientid: "
+                                + clientId
+                                + "environment:"
+                                + accountRecord.getEnvironment()
+                                + "processUid: "
+                                + mUid);
                 return Collections.emptyList();
             }
 
             // Suppressing unchecked warning as the generic type was not provided for cache
             @SuppressWarnings(WarningType.unchecked_warning)
-            List<IdTokenRecord> cacheIdTokensForAccountRecord = cache.getIdTokensForAccountRecord(
-                    clientId,
-                    accountRecord
-            );
+            List<IdTokenRecord> cacheIdTokensForAccountRecord =
+                    cache.getIdTokensForAccountRecord(clientId, accountRecord);
 
             result = cacheIdTokensForAccountRecord;
         }
@@ -1187,8 +971,7 @@ public class BrokerOAuth2TokenCache
                 allAccounts.addAll(
                         ((MsalOAuth2TokenCache) candidateCache)
                                 .getAccountCredentialCache()
-                                .getAccounts()
-                );
+                                .getAccounts());
             }
         }
 
@@ -1197,12 +980,7 @@ public class BrokerOAuth2TokenCache
 
         final List<AccountRecord> allAccountsResult = new ArrayList<>(allAccounts);
 
-        Logger.verbose(
-                TAG + methodName,
-                "Found ["
-                        + allAccountsResult.size()
-                        + "] accounts."
-        );
+        Logger.verbose(TAG + methodName, "Found [" + allAccountsResult.size() + "] accounts.");
 
         return allAccountsResult;
     }
@@ -1215,20 +993,17 @@ public class BrokerOAuth2TokenCache
      * @param accountRecord The AccountRecord to remove.
      * @return An {@link AccountDeletionRecord} indicating which AccountRecords were removed, if any.
      */
-    @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE",
-                        justification = "Lombok inserts null checks that may be redundant")
+    @SuppressFBWarnings(
+            value = "RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE",
+            justification = "Lombok inserts null checks that may be redundant")
     @SuppressWarnings(UNCHECKED)
-    public AccountDeletionRecord removeAccountFromDevice(@NonNull final AccountRecord accountRecord) {
+    public AccountDeletionRecord removeAccountFromDevice(
+            @NonNull final AccountRecord accountRecord) {
         final String methodName = ":removeAccountFromDevice";
 
         final Set<String> allClientIds = mApplicationMetadataCache.getAllClientIds();
 
-        Logger.info(
-                TAG + methodName,
-                "Found ["
-                        + allClientIds.size()
-                        + "] client ids."
-        );
+        Logger.info(TAG + methodName, "Found [" + allClientIds.size() + "] client ids.");
 
         final List<AccountDeletionRecord> deletionRecordList = new ArrayList<>();
 
@@ -1239,9 +1014,7 @@ public class BrokerOAuth2TokenCache
                             clientId,
                             accountRecord.getHomeAccountId(),
                             null,
-                            true
-                    )
-            );
+                            true));
         }
 
         // Create a List of the deleted AccountRecords...
@@ -1252,11 +1025,7 @@ public class BrokerOAuth2TokenCache
         }
 
         Logger.info(
-                TAG + methodName,
-                "Deleted ["
-                        + deletedAccountRecords.size()
-                        + "] AccountRecords."
-        );
+                TAG + methodName, "Deleted [" + deletedAccountRecords.size() + "] AccountRecords.");
 
         return new AccountDeletionRecord(deletedAccountRecords);
     }
@@ -1277,25 +1046,21 @@ public class BrokerOAuth2TokenCache
      * @see #removeAccountFromDevice(AccountRecord).
      */
     @Override
-    public AccountDeletionRecord removeAccount(@Nullable final String environment,
-                                               @Nullable final String clientId,
-                                               @Nullable final String homeAccountId,
-                                               @Nullable final String realm) {
-        return removeAccountInternal(
-                environment,
-                clientId,
-                homeAccountId,
-                realm,
-                false
-        );
+    public AccountDeletionRecord removeAccount(
+            @Nullable final String environment,
+            @Nullable final String clientId,
+            @Nullable final String homeAccountId,
+            @Nullable final String realm) {
+        return removeAccountInternal(environment, clientId, homeAccountId, realm, false);
     }
 
     @Override
-    public AccountDeletionRecord removeAccount(String environment,
-                                               String clientId,
-                                               String homeAccountId,
-                                               String realm,
-                                               CredentialType... typesToRemove) {
+    public AccountDeletionRecord removeAccount(
+            String environment,
+            String clientId,
+            String homeAccountId,
+            String realm,
+            CredentialType... typesToRemove) {
         // This API not needed for now...
         throw new UnsupportedOperationException(OAuth2TokenCache.ERR_UNSUPPORTED_OPERATION);
     }
@@ -1338,10 +1103,9 @@ public class BrokerOAuth2TokenCache
 
         for (final BrokerApplicationMetadata fociAppMetadata : allFociApplicationMetadata) {
             // Load all the accounts
-            final List<AccountRecord> accounts = mFociCache.getAccounts(
-                    fociAppMetadata.getEnvironment(),
-                    fociAppMetadata.getClientId()
-            );
+            final List<AccountRecord> accounts =
+                    mFociCache.getAccounts(
+                            fociAppMetadata.getEnvironment(), fociAppMetadata.getClientId());
 
             // For each account, load the RT
             for (final AccountRecord account : accounts) {
@@ -1362,7 +1126,7 @@ public class BrokerOAuth2TokenCache
                                         null, // wildcard (*)
                                         null, // wildcard (*)
                                         null // Not applicable
-                                );
+                                        );
 
                 // Load the V1IdToken (v1 if adal used)
                 final List<Credential> v1IdTokens =
@@ -1376,7 +1140,7 @@ public class BrokerOAuth2TokenCache
                                         realm,
                                         null,
                                         null // Not applicable
-                                );
+                                        );
 
                 // Load the IdToken
                 final List<Credential> idTokens =
@@ -1390,7 +1154,7 @@ public class BrokerOAuth2TokenCache
                                         realm,
                                         null,
                                         null // not applicable
-                                );
+                                        );
 
                 // Construct the ICacheRecord
                 if (!refreshTokens.isEmpty()) {
@@ -1401,35 +1165,21 @@ public class BrokerOAuth2TokenCache
                     // Add the V1IdToken (if exists, should have 1 if ADAL used)
                     if (!v1IdTokens.isEmpty()) {
                         Logger.verbose(
-                                TAG + methodName,
-                                "Found ["
-                                        + v1IdTokens.size()
-                                        + "] V1IdTokens"
-                        );
+                                TAG + methodName, "Found [" + v1IdTokens.size() + "] V1IdTokens");
 
                         cacheRecord.v1IdToken((IdTokenRecord) v1IdTokens.get(0));
                     } else {
-                        Logger.warn(
-                                TAG + methodName,
-                                "No V1IdTokens exist for this account."
-                        );
+                        Logger.warn(TAG + methodName, "No V1IdTokens exist for this account.");
                     }
 
                     // Add the IdTokens (if exists, should have 1 if MSAL used)
                     if (!idTokens.isEmpty()) {
                         Logger.verbose(
-                                TAG + methodName,
-                                "Found ["
-                                        + idTokens.size()
-                                        + "] IdTokens"
-                        );
+                                TAG + methodName, "Found [" + idTokens.size() + "] IdTokens");
 
                         cacheRecord.idToken((IdTokenRecord) idTokens.get(0));
                     } else {
-                        Logger.warn(
-                                TAG + methodName,
-                                "No IdTokens exist for this account."
-                        );
+                        Logger.warn(TAG + methodName, "No IdTokens exist for this account.");
                     }
 
                     // Add it to the result
@@ -1441,34 +1191,31 @@ public class BrokerOAuth2TokenCache
         return result;
     }
 
-    private AccountDeletionRecord removeAccountInternal(@Nullable final String environment,
-                                                        @Nullable final String clientId,
-                                                        @Nullable final String homeAccountId,
-                                                        @Nullable final String realm,
-                                                        boolean deviceWide) {
+    private AccountDeletionRecord removeAccountInternal(
+            @Nullable final String environment,
+            @Nullable final String clientId,
+            @Nullable final String homeAccountId,
+            @Nullable final String realm,
+            boolean deviceWide) {
         final String methodName = ":removeAccountInternal";
 
         final List<BrokerApplicationMetadata> allMetadata = mApplicationMetadataCache.getAll();
         final List<AccountDeletionRecord> deletionRecordList = new ArrayList<>();
 
         for (final BrokerApplicationMetadata metadata : allMetadata) {
-            final OAuth2TokenCache candidateCache = getTokenCacheForClient(
-                    metadata.getClientId(),
-                    metadata.getEnvironment(),
-                    deviceWide
-                            ? metadata.getUid() // Supports the removeAccountFromDevice() function
-                            : mUid
-            );
+            final OAuth2TokenCache candidateCache =
+                    getTokenCacheForClient(
+                            metadata.getClientId(),
+                            metadata.getEnvironment(),
+                            deviceWide
+                                    ? metadata
+                                            .getUid() // Supports the removeAccountFromDevice()
+                                                      // function
+                                    : mUid);
 
             if (null != candidateCache) {
                 deletionRecordList.add(
-                        candidateCache.removeAccount(
-                                environment,
-                                clientId,
-                                homeAccountId,
-                                realm
-                        )
-                );
+                        candidateCache.removeAccount(environment, clientId, homeAccountId, realm));
             }
         }
 
@@ -1480,11 +1227,7 @@ public class BrokerOAuth2TokenCache
         }
 
         Logger.info(
-                TAG + methodName,
-                "Deleted ["
-                        + deletedAccountRecords.size()
-                        + "] AccountRecords."
-        );
+                TAG + methodName, "Deleted [" + deletedAccountRecords.size() + "] AccountRecords.");
 
         return new AccountDeletionRecord(deletedAccountRecords);
     }
@@ -1496,42 +1239,24 @@ public class BrokerOAuth2TokenCache
     }
 
     @Override
-    public AccountRecord getAccountByHomeAccountId(@Nullable final String environment,
-                                                   @NonNull final String clientId,
-                                                   @NonNull final String homeAccountId) {
+    public AccountRecord getAccountByHomeAccountId(
+            @Nullable final String environment,
+            @NonNull final String clientId,
+            @NonNull final String homeAccountId) {
         final String methodName = "getAccountByHomeAccountId";
 
-        Logger.verbose(
-                TAG + methodName,
-                "Loading account by home account id."
-        );
+        Logger.verbose(TAG + methodName, "Loading account by home account id.");
 
         if (null != environment) {
-            OAuth2TokenCache targetCache = getTokenCacheForClient(
-                    clientId,
-                    environment,
-                    mUid
-            );
+            OAuth2TokenCache targetCache = getTokenCacheForClient(clientId, environment, mUid);
 
             Logger.info(
-                    TAG + methodName,
-                    "Loading from FOCI cache? ["
-                            + (targetCache == null)
-                            + "]"
-            );
+                    TAG + methodName, "Loading from FOCI cache? [" + (targetCache == null) + "]");
 
             if (null != targetCache) {
-                return targetCache.getAccountByHomeAccountId(
-                        environment,
-                        clientId,
-                        homeAccountId
-                );
+                return targetCache.getAccountByHomeAccountId(environment, clientId, homeAccountId);
             } else {
-                return mFociCache.getAccountByHomeAccountId(
-                        environment,
-                        clientId,
-                        homeAccountId
-                );
+                return mFociCache.getAccountByHomeAccountId(environment, clientId, homeAccountId);
             }
         } else {
             AccountRecord result = null;
@@ -1540,97 +1265,76 @@ public class BrokerOAuth2TokenCache
             final Iterator<OAuth2TokenCache> cacheIterator = cachesToInspect.iterator();
 
             while (null == result && cacheIterator.hasNext()) {
-                result = cacheIterator
-                        .next()
-                        .getAccountByHomeAccountId(
-                                null,
-                                clientId,
-                                homeAccountId
-                        );
+                result =
+                        cacheIterator
+                                .next()
+                                .getAccountByHomeAccountId(null, clientId, homeAccountId);
             }
 
             return result;
         }
     }
 
-    private MsalOAuth2TokenCache initializeProcessUidCache(@NonNull final IPlatformComponents components,
-                                                           final int uid) {
+    private MsalOAuth2TokenCache initializeProcessUidCache(
+            @NonNull final IPlatformComponents components, final int uid) {
         final String methodName = ":initializeProcessUidCache";
 
-        Logger.verbose(
-                TAG + methodName,
-                "Initializing uid cache."
-        );
+        Logger.verbose(TAG + methodName, "Initializing uid cache.");
 
         if (null != mDelegate) {
-            Logger.warn(
-                    TAG + methodName,
-                    "Using swapped delegate cache."
-            );
+            Logger.warn(TAG + methodName, "Using swapped delegate cache.");
 
             return mDelegate.getTokenCache(components, uid);
         }
 
         final INameValueStorage<String> sharedPreferencesFileManager =
                 components.getEncryptedNameValueStore(
-                        SharedPreferencesAccountCredentialCache
-                                .getBrokerUidSequesteredFilename(uid),
-                        components.
-                                getStorageEncryptionManager(),
-                        String.class
-                );
+                        SharedPreferencesAccountCredentialCache.getBrokerUidSequesteredFilename(
+                                uid),
+                        components.getStorageEncryptionManager(),
+                        String.class);
 
         return getTokenCache(components, sharedPreferencesFileManager, false);
     }
 
-    private static MicrosoftFamilyOAuth2TokenCache initializeFociCache(@NonNull final IPlatformComponents components) {
+    private static MicrosoftFamilyOAuth2TokenCache initializeFociCache(
+            @NonNull final IPlatformComponents components) {
         final String methodName = ":initializeFociCache";
-        Logger.verbose(
-                TAG + methodName,
-                "Initializing foci cache"
-        );
+        Logger.verbose(TAG + methodName, "Initializing foci cache");
 
         final INameValueStorage<String> sharedPreferencesFileManager =
                 components.getEncryptedNameValueStore(
-                        SharedPreferencesAccountCredentialCache.BROKER_FOCI_ACCOUNT_CREDENTIAL_SHARED_PREFERENCES,
+                        SharedPreferencesAccountCredentialCache
+                                .BROKER_FOCI_ACCOUNT_CREDENTIAL_SHARED_PREFERENCES,
                         components.getStorageEncryptionManager(),
-                        String.class
-                );
+                        String.class);
 
         return getTokenCache(components, sharedPreferencesFileManager, true);
     }
 
     @SuppressWarnings(UNCHECKED)
-    private static <T extends MsalOAuth2TokenCache> T getTokenCache(@NonNull final IPlatformComponents components,
-                                                                    @NonNull final INameValueStorage<String> spfm,
-                                                                    boolean isFoci) {
+    private static <T extends MsalOAuth2TokenCache> T getTokenCache(
+            @NonNull final IPlatformComponents components,
+            @NonNull final INameValueStorage<String> spfm,
+            boolean isFoci) {
         final ICacheKeyValueDelegate cacheKeyValueDelegate = new CacheKeyValueDelegate();
         final IAccountCredentialCache accountCredentialCache =
-                new SharedPreferencesAccountCredentialCache(
-                        cacheKeyValueDelegate,
-                        spfm
-                );
+                new SharedPreferencesAccountCredentialCache(cacheKeyValueDelegate, spfm);
         final MicrosoftStsAccountCredentialAdapter accountCredentialAdapter =
                 new MicrosoftStsAccountCredentialAdapter();
 
         return (T)
-                (isFoci ? // Decide which cache type to create
+                (isFoci
+                        ? // Decide which cache type to create
                         new MicrosoftFamilyOAuth2TokenCache<>(
-                                components,
-                                accountCredentialCache,
-                                accountCredentialAdapter
-                        )
-                        :
-                        new MsalOAuth2TokenCache<>(
-                                components,
-                                accountCredentialCache,
-                                accountCredentialAdapter
-                        )
-                );
+                                components, accountCredentialCache, accountCredentialAdapter)
+                        : new MsalOAuth2TokenCache<>(
+                                components, accountCredentialCache, accountCredentialAdapter));
     }
 
     @Nullable
-    private MsalOAuth2TokenCache getTokenCacheForClient(@Nullable final BrokerApplicationMetadata metadata) {
+    private MsalOAuth2TokenCache getTokenCacheForClient(
+            @Nullable final BrokerApplicationMetadata metadata) {
         final String methodName = ":getTokenCacheForClient(bam)";
 
         MsalOAuth2TokenCache targetCache = null;
@@ -1638,12 +1342,7 @@ public class BrokerOAuth2TokenCache
         if (null != metadata) {
             final boolean isFoci = null != metadata.getFoci();
 
-            Logger.verbose(
-                    TAG + methodName,
-                    "is Foci? ["
-                            + isFoci
-                            + "]"
-            );
+            Logger.verbose(TAG + methodName, "is Foci? [" + isFoci + "]");
 
             if (isFoci) {
                 targetCache = mFociCache;
@@ -1653,10 +1352,7 @@ public class BrokerOAuth2TokenCache
         }
 
         if (null == targetCache) {
-            Logger.warn(
-                    TAG + methodName,
-                    "Could not locate a cache for this app."
-            );
+            Logger.warn(TAG + methodName, "Could not locate a cache for this app.");
         }
 
         return targetCache;
@@ -1672,16 +1368,12 @@ public class BrokerOAuth2TokenCache
      * cache was found.
      */
     @Nullable
-    private MsalOAuth2TokenCache getTokenCacheForClient(@NonNull final String clientId,
-                                                        @NonNull final String environment,
-                                                        final int uid) {
+    private MsalOAuth2TokenCache getTokenCacheForClient(
+            @NonNull final String clientId, @NonNull final String environment, final int uid) {
         final String methodName = ":getTokenCacheForClient(id, env, uid)";
 
-        final BrokerApplicationMetadata metadata = mApplicationMetadataCache.getMetadata(
-                clientId,
-                environment,
-                uid
-        );
+        final BrokerApplicationMetadata metadata =
+                mApplicationMetadataCache.getMetadata(clientId, environment, uid);
 
         Logger.info(TAG + methodName, "Found metadata? " + (null != metadata));
 
@@ -1695,9 +1387,10 @@ public class BrokerOAuth2TokenCache
      * @param account      The account for which the supplied token is being inserted.
      * @param refreshToken The token to insert.
      */
-    public void setSingleSignOnState(@NonNull final String uidStr,
-                                     @NonNull final GenericAccount account,
-                                     @NonNull final GenericRefreshToken refreshToken) {
+    public void setSingleSignOnState(
+            @NonNull final String uidStr,
+            @NonNull final GenericAccount account,
+            @NonNull final GenericRefreshToken refreshToken) {
         final String methodName = ":setSingleSignOnState";
 
         final boolean isFrt = refreshToken.getIsFamilyRefreshToken();
@@ -1721,19 +1414,19 @@ public class BrokerOAuth2TokenCache
                     refreshToken.getClientId(),
                     refreshToken.getEnvironment(),
                     refreshToken.getFamilyId(),
-                    uid
-            );
+                    uid);
         } catch (ClientException e) {
-            Logger.warn(
-                    TAG + methodName,
-                    "Failed to save account/refresh token. Skipping."
-            );
+            Logger.warn(TAG + methodName, "Failed to save account/refresh token. Skipping.");
         }
     }
 
     // Suppressing unchecked warning as the generic type was not provided for targetCache
     @SuppressWarnings(WarningType.unchecked_warning)
-    private void targetCacheSetSingleSignOnState(@NonNull GenericAccount account, @NonNull GenericRefreshToken refreshToken, MsalOAuth2TokenCache targetCache) throws ClientException {
+    private void targetCacheSetSingleSignOnState(
+            @NonNull GenericAccount account,
+            @NonNull GenericRefreshToken refreshToken,
+            MsalOAuth2TokenCache targetCache)
+            throws ClientException {
         targetCache.setSingleSignOnState(account, refreshToken);
     }
 }

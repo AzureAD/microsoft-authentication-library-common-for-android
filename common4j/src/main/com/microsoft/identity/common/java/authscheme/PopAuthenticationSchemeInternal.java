@@ -32,13 +32,14 @@ import com.microsoft.identity.common.java.crypto.IDevicePopManager;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.util.IClockSkewManager;
 
-import java.net.URL;
-
 import edu.umd.cs.findbugs.annotations.Nullable;
+
 import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 import lombok.experimental.Accessors;
 import lombok.experimental.SuperBuilder;
+
+import java.net.URL;
 
 /**
  * Internal representation of PoP Authentication Scheme.
@@ -46,8 +47,7 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder(toBuilder = true)
 @EqualsAndHashCode(callSuper = true)
 @Accessors(prefix = "m")
-public class PopAuthenticationSchemeInternal
-        extends TokenAuthenticationScheme
+public class PopAuthenticationSchemeInternal extends TokenAuthenticationScheme
         implements IPoPAuthenticationSchemeParams {
 
     private static final long serialVersionUID = 788393037295696358L;
@@ -100,12 +100,13 @@ public class PopAuthenticationSchemeInternal
      * @param clientClaims     Optional claims provided by the caller to embed in the client_claims
      *                         property of the resulting SHR.
      */
-    public PopAuthenticationSchemeInternal(@NonNull final IClockSkewManager clockSkewManager,
-                                           @NonNull final IDevicePopManager popManager,
-                                           @Nullable final String httpMethod,
-                                           @NonNull final URL url,
-                                           @Nullable final String nonce,
-                                           @Nullable final String clientClaims) {
+    public PopAuthenticationSchemeInternal(
+            @NonNull final IClockSkewManager clockSkewManager,
+            @NonNull final IDevicePopManager popManager,
+            @Nullable final String httpMethod,
+            @NonNull final URL url,
+            @Nullable final String nonce,
+            @Nullable final String clientClaims) {
         super(SCHEME_POP);
         mClockSkewManager = clockSkewManager;
         mPopManager = popManager;
@@ -127,11 +128,12 @@ public class PopAuthenticationSchemeInternal
      * @param clientClaims Optional claims provided by the caller to embed in the client_claims
      *                     property of the resulting SHR.
      */
-    public PopAuthenticationSchemeInternal(@NonNull final IDevicePopManager popManager,
-                                           @Nullable final String httpMethod,
-                                           @NonNull final URL url,
-                                           @Nullable final String nonce,
-                                           @Nullable final String clientClaims) {
+    public PopAuthenticationSchemeInternal(
+            @NonNull final IDevicePopManager popManager,
+            @Nullable final String httpMethod,
+            @NonNull final URL url,
+            @Nullable final String nonce,
+            @Nullable final String clientClaims) {
         super(SCHEME_POP);
         mClockSkewManager = null;
         mPopManager = popManager;
@@ -142,7 +144,8 @@ public class PopAuthenticationSchemeInternal
     }
 
     @Override
-    public String getAccessTokenForScheme(@NonNull final String accessToken) throws ClientException {
+    public String getAccessTokenForScheme(@NonNull final String accessToken)
+            throws ClientException {
         if (null == mClockSkewManager) {
             // Shouldn't happen, would indicate a development-time bug.
             throw new RuntimeException("IClockSkewManager not initialized.");
@@ -157,8 +160,7 @@ public class PopAuthenticationSchemeInternal
                 getUrl(),
                 accessToken,
                 getNonce(),
-                getClientClaims()
-        );
+                getClientClaims());
     }
 
     public void setClockSkewManager(@NonNull final IClockSkewManager clockSkewManager) {

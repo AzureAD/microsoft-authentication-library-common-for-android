@@ -22,6 +22,9 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.unit;
 
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.when;
+
 import com.microsoft.identity.common.java.providers.keys.CertificateCredential;
 import com.microsoft.identity.common.java.providers.keys.ClientCertificateMetadata;
 import com.microsoft.identity.common.java.providers.keys.KeyStoreConfiguration;
@@ -64,327 +67,333 @@ import java.util.Date;
 import java.util.Enumeration;
 import java.util.Set;
 
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.when;
-
-//Test Broken.  Ignoring for now
+// Test Broken.  Ignoring for now
 @Ignore
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({KeyStore.class, CertificateCredential.class, CertificateCredential.CertificateCredentialBuilder.class})
+@PrepareForTest({
+    KeyStore.class,
+    CertificateCredential.class,
+    CertificateCredential.CertificateCredentialBuilder.class
+})
 public class CertificateCredentialBuilder {
 
     public static final String WINDOWS_MY_KEYSTORE = "Windows-MY";
     public static final String WINDOWS_ROOT_KEYSTORE = "Windows-ROOT";
     public static final String CERTIFICATE_ALIAS = "AutomationCertificate";
-    public static final char[] CERTIFICATE_PASSWORD = new char[]{'P', 'a', 's', 's'};
+    public static final char[] CERTIFICATE_PASSWORD = new char[] {'P', 'a', 's', 's'};
     public static final String CERTIFICATE_SUBJECT = "AutomationApp";
     public static final String WINDOWS_KEYSTORE_PROVIDER = "SunMSCAPI";
     public static final String CLIENT_ID = "ASDF";
 
+    private Key privateKey =
+            new RSAPrivateKey() {
+                @Override
+                public BigInteger getPrivateExponent() {
+                    return null;
+                }
 
-    private Key privateKey = new RSAPrivateKey() {
-        @Override
-        public BigInteger getPrivateExponent() {
-            return null;
-        }
+                @Override
+                public String getAlgorithm() {
+                    return null;
+                }
 
-        @Override
-        public String getAlgorithm() {
-            return null;
-        }
+                @Override
+                public String getFormat() {
+                    return null;
+                }
 
-        @Override
-        public String getFormat() {
-            return null;
-        }
+                @Override
+                public byte[] getEncoded() {
+                    return new byte[0];
+                }
 
-        @Override
-        public byte[] getEncoded() {
-            return new byte[0];
-        }
+                @Override
+                public BigInteger getModulus() {
+                    return null;
+                }
+            };
 
-        @Override
-        public BigInteger getModulus() {
-            return null;
-        }
-    };
+    private Certificate certificate =
+            new X509Certificate() {
+                @Override
+                public void checkValidity()
+                        throws CertificateExpiredException, CertificateNotYetValidException {}
 
-    private Certificate certificate = new X509Certificate() {
-        @Override
-        public void checkValidity() throws CertificateExpiredException, CertificateNotYetValidException {
+                @Override
+                public void checkValidity(Date date)
+                        throws CertificateExpiredException, CertificateNotYetValidException {}
 
-        }
+                @Override
+                public int getVersion() {
+                    return 0;
+                }
 
-        @Override
-        public void checkValidity(Date date) throws CertificateExpiredException, CertificateNotYetValidException {
+                @Override
+                public BigInteger getSerialNumber() {
+                    return null;
+                }
 
-        }
+                @Override
+                public Principal getIssuerDN() {
+                    return null;
+                }
 
-        @Override
-        public int getVersion() {
-            return 0;
-        }
+                @Override
+                public Principal getSubjectDN() {
+                    return null;
+                }
 
-        @Override
-        public BigInteger getSerialNumber() {
-            return null;
-        }
+                @Override
+                public Date getNotBefore() {
+                    return null;
+                }
 
-        @Override
-        public Principal getIssuerDN() {
-            return null;
-        }
+                @Override
+                public Date getNotAfter() {
+                    return null;
+                }
 
-        @Override
-        public Principal getSubjectDN() {
-            return null;
-        }
+                @Override
+                public byte[] getTBSCertificate() throws CertificateEncodingException {
+                    return new byte[0];
+                }
 
-        @Override
-        public Date getNotBefore() {
-            return null;
-        }
+                @Override
+                public byte[] getSignature() {
+                    return new byte[0];
+                }
 
-        @Override
-        public Date getNotAfter() {
-            return null;
-        }
+                @Override
+                public String getSigAlgName() {
+                    return null;
+                }
 
-        @Override
-        public byte[] getTBSCertificate() throws CertificateEncodingException {
-            return new byte[0];
-        }
+                @Override
+                public String getSigAlgOID() {
+                    return null;
+                }
 
-        @Override
-        public byte[] getSignature() {
-            return new byte[0];
-        }
+                @Override
+                public byte[] getSigAlgParams() {
+                    return new byte[0];
+                }
 
-        @Override
-        public String getSigAlgName() {
-            return null;
-        }
+                @Override
+                public boolean[] getIssuerUniqueID() {
+                    return new boolean[0];
+                }
 
-        @Override
-        public String getSigAlgOID() {
-            return null;
-        }
+                @Override
+                public boolean[] getSubjectUniqueID() {
+                    return new boolean[0];
+                }
 
-        @Override
-        public byte[] getSigAlgParams() {
-            return new byte[0];
-        }
+                @Override
+                public boolean[] getKeyUsage() {
+                    return new boolean[0];
+                }
 
-        @Override
-        public boolean[] getIssuerUniqueID() {
-            return new boolean[0];
-        }
+                @Override
+                public int getBasicConstraints() {
+                    return 0;
+                }
 
-        @Override
-        public boolean[] getSubjectUniqueID() {
-            return new boolean[0];
-        }
+                @Override
+                public byte[] getEncoded() throws CertificateEncodingException {
+                    return new byte[0];
+                }
 
-        @Override
-        public boolean[] getKeyUsage() {
-            return new boolean[0];
-        }
+                @Override
+                public void verify(PublicKey publicKey)
+                        throws CertificateException, NoSuchAlgorithmException, InvalidKeyException,
+                                NoSuchProviderException, SignatureException {}
 
-        @Override
-        public int getBasicConstraints() {
-            return 0;
-        }
+                @Override
+                public void verify(PublicKey publicKey, String s)
+                        throws CertificateException, NoSuchAlgorithmException, InvalidKeyException,
+                                NoSuchProviderException, SignatureException {}
 
-        @Override
-        public byte[] getEncoded() throws CertificateEncodingException {
-            return new byte[0];
-        }
+                @Override
+                public String toString() {
+                    return CERTIFICATE_SUBJECT;
+                }
 
-        @Override
-        public void verify(PublicKey publicKey) throws CertificateException, NoSuchAlgorithmException, InvalidKeyException, NoSuchProviderException, SignatureException {
+                @Override
+                public PublicKey getPublicKey() {
+                    return null;
+                }
 
-        }
+                @Override
+                public boolean hasUnsupportedCriticalExtension() {
+                    return false;
+                }
 
-        @Override
-        public void verify(PublicKey publicKey, String s) throws CertificateException, NoSuchAlgorithmException, InvalidKeyException, NoSuchProviderException, SignatureException {
+                @Override
+                public Set<String> getCriticalExtensionOIDs() {
+                    return null;
+                }
 
-        }
+                @Override
+                public Set<String> getNonCriticalExtensionOIDs() {
+                    return null;
+                }
 
-        @Override
-        public String toString() {
-            return CERTIFICATE_SUBJECT;
-        }
+                @Override
+                public byte[] getExtensionValue(String s) {
+                    return new byte[0];
+                }
+            };
 
-        @Override
-        public PublicKey getPublicKey() {
-            return null;
-        }
-
-        @Override
-        public boolean hasUnsupportedCriticalExtension() {
-            return false;
-        }
-
-        @Override
-        public Set<String> getCriticalExtensionOIDs() {
-            return null;
-        }
-
-        @Override
-        public Set<String> getNonCriticalExtensionOIDs() {
-            return null;
-        }
-
-        @Override
-        public byte[] getExtensionValue(String s) {
-            return new byte[0];
-        }
-    };
-
-
-    @Mock
-    private KeyStore keyStoreMock;
+    @Mock private KeyStore keyStoreMock;
 
     @InjectMocks
-    private KeyStoreSpi keyStoreSpiMock = new KeyStoreSpi() {
-        @Override
-        public Key engineGetKey(String s, char[] chars) throws NoSuchAlgorithmException, UnrecoverableKeyException {
-            return privateKey;
-        }
+    private KeyStoreSpi keyStoreSpiMock =
+            new KeyStoreSpi() {
+                @Override
+                public Key engineGetKey(String s, char[] chars)
+                        throws NoSuchAlgorithmException, UnrecoverableKeyException {
+                    return privateKey;
+                }
 
-        @Override
-        public Certificate[] engineGetCertificateChain(String s) {
-            return new Certificate[0];
-        }
+                @Override
+                public Certificate[] engineGetCertificateChain(String s) {
+                    return new Certificate[0];
+                }
 
-        @Override
-        public Certificate engineGetCertificate(String s) {
-            return null;
-        }
+                @Override
+                public Certificate engineGetCertificate(String s) {
+                    return null;
+                }
 
-        @Override
-        public Date engineGetCreationDate(String s) {
-            return null;
-        }
+                @Override
+                public Date engineGetCreationDate(String s) {
+                    return null;
+                }
 
-        @Override
-        public void engineSetKeyEntry(String s, Key key, char[] chars, Certificate[] certificates) throws KeyStoreException {
+                @Override
+                public void engineSetKeyEntry(
+                        String s, Key key, char[] chars, Certificate[] certificates)
+                        throws KeyStoreException {}
 
-        }
+                @Override
+                public void engineSetKeyEntry(String s, byte[] bytes, Certificate[] certificates)
+                        throws KeyStoreException {}
 
-        @Override
-        public void engineSetKeyEntry(String s, byte[] bytes, Certificate[] certificates) throws KeyStoreException {
+                @Override
+                public void engineSetCertificateEntry(String s, Certificate certificate)
+                        throws KeyStoreException {}
 
-        }
+                @Override
+                public void engineDeleteEntry(String s) throws KeyStoreException {}
 
-        @Override
-        public void engineSetCertificateEntry(String s, Certificate certificate) throws KeyStoreException {
+                @Override
+                public Enumeration<String> engineAliases() {
+                    return null;
+                }
 
-        }
+                @Override
+                public boolean engineContainsAlias(String s) {
+                    return false;
+                }
 
-        @Override
-        public void engineDeleteEntry(String s) throws KeyStoreException {
+                @Override
+                public int engineSize() {
+                    return 0;
+                }
 
-        }
+                @Override
+                public boolean engineIsKeyEntry(String s) {
+                    return false;
+                }
 
-        @Override
-        public Enumeration<String> engineAliases() {
-            return null;
-        }
+                @Override
+                public boolean engineIsCertificateEntry(String s) {
+                    return false;
+                }
 
-        @Override
-        public boolean engineContainsAlias(String s) {
-            return false;
-        }
+                @Override
+                public String engineGetCertificateAlias(Certificate certificate) {
+                    return null;
+                }
 
-        @Override
-        public int engineSize() {
-            return 0;
-        }
+                @Override
+                public void engineStore(OutputStream outputStream, char[] chars)
+                        throws IOException, NoSuchAlgorithmException, CertificateException {}
 
-        @Override
-        public boolean engineIsKeyEntry(String s) {
-            return false;
-        }
-
-        @Override
-        public boolean engineIsCertificateEntry(String s) {
-            return false;
-        }
-
-        @Override
-        public String engineGetCertificateAlias(Certificate certificate) {
-            return null;
-        }
-
-        @Override
-        public void engineStore(OutputStream outputStream, char[] chars) throws IOException, NoSuchAlgorithmException, CertificateException {
-
-        }
-
-        @Override
-        public void engineLoad(InputStream inputStream, char[] chars) throws IOException, NoSuchAlgorithmException, CertificateException {
-
-        }
-    };
-
+                @Override
+                public void engineLoad(InputStream inputStream, char[] chars)
+                        throws IOException, NoSuchAlgorithmException, CertificateException {}
+            };
 
     @Before
-    public void setup() throws Exception, KeyStoreException, IOException, CertificateException, NoSuchAlgorithmException, UnrecoverableKeyException {
+    public void setup()
+            throws Exception, KeyStoreException, IOException, CertificateException,
+                    NoSuchAlgorithmException, UnrecoverableKeyException {
 
         Whitebox.setInternalState(keyStoreMock, "initialized", true);
         Whitebox.setInternalState(keyStoreMock, "keyStoreSpi", keyStoreSpiMock);
         when(keyStoreMock.getKey(CERTIFICATE_ALIAS, null)).thenReturn(privateKey);
         when(keyStoreMock.getKey(CERTIFICATE_ALIAS, CERTIFICATE_PASSWORD)).thenReturn(privateKey);
         when(keyStoreMock.getCertificate(CERTIFICATE_ALIAS)).thenReturn(certificate);
-
     }
 
     @Test
-    public void test_CertificateBuilder_LookupCertificate_IsCorrect() throws
-            KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException, NoSuchProviderException,
-            IOException, CertificateException {
+    public void test_CertificateBuilder_LookupCertificate_IsCorrect()
+            throws KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException,
+                    NoSuchProviderException, IOException, CertificateException {
 
         PowerMockito.mockStatic(KeyStore.class);
-        when(KeyStore.getInstance(WINDOWS_MY_KEYSTORE, WINDOWS_KEYSTORE_PROVIDER)).thenReturn(keyStoreMock);
+        when(KeyStore.getInstance(WINDOWS_MY_KEYSTORE, WINDOWS_KEYSTORE_PROVIDER))
+                .thenReturn(keyStoreMock);
 
-        CertificateCredential cred = new CertificateCredential.CertificateCredentialBuilder(CLIENT_ID)
-                .keyStoreConfiguration(new KeyStoreConfiguration(WINDOWS_MY_KEYSTORE, WINDOWS_KEYSTORE_PROVIDER, null))
-                .clientCertificateMetadata(new ClientCertificateMetadata(CERTIFICATE_ALIAS, null))
-                .build();
+        CertificateCredential cred =
+                new CertificateCredential.CertificateCredentialBuilder(CLIENT_ID)
+                        .keyStoreConfiguration(
+                                new KeyStoreConfiguration(
+                                        WINDOWS_MY_KEYSTORE, WINDOWS_KEYSTORE_PROVIDER, null))
+                        .clientCertificateMetadata(
+                                new ClientCertificateMetadata(CERTIFICATE_ALIAS, null))
+                        .build();
 
         assertEquals(privateKey, cred.getPrivateKey());
         assertEquals(certificate, cred.getPublicCertificate());
         assertEquals(CLIENT_ID, cred.getClientId());
-
     }
 
     @Test
-    public void test_CertificateBuilder_LookupCertificateWithPassword_IsCorrect() throws
-            KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException, NoSuchProviderException,
-            IOException, CertificateException {
+    public void test_CertificateBuilder_LookupCertificateWithPassword_IsCorrect()
+            throws KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException,
+                    NoSuchProviderException, IOException, CertificateException {
 
         PowerMockito.mockStatic(KeyStore.class);
-        when(KeyStore.getInstance(WINDOWS_MY_KEYSTORE, WINDOWS_KEYSTORE_PROVIDER)).thenReturn(keyStoreMock);
+        when(KeyStore.getInstance(WINDOWS_MY_KEYSTORE, WINDOWS_KEYSTORE_PROVIDER))
+                .thenReturn(keyStoreMock);
 
-        CertificateCredential cred = new CertificateCredential.CertificateCredentialBuilder(CLIENT_ID)
-                .keyStoreConfiguration(new KeyStoreConfiguration(WINDOWS_MY_KEYSTORE, WINDOWS_KEYSTORE_PROVIDER, null))
-                .clientCertificateMetadata(new ClientCertificateMetadata(CERTIFICATE_ALIAS, CERTIFICATE_PASSWORD))
-                .build();
+        CertificateCredential cred =
+                new CertificateCredential.CertificateCredentialBuilder(CLIENT_ID)
+                        .keyStoreConfiguration(
+                                new KeyStoreConfiguration(
+                                        WINDOWS_MY_KEYSTORE, WINDOWS_KEYSTORE_PROVIDER, null))
+                        .clientCertificateMetadata(
+                                new ClientCertificateMetadata(
+                                        CERTIFICATE_ALIAS, CERTIFICATE_PASSWORD))
+                        .build();
 
         assertEquals(privateKey, cred.getPrivateKey());
         assertEquals(certificate, cred.getPublicCertificate());
         assertEquals(CLIENT_ID, cred.getClientId());
-
     }
 
     @Test
-    public void test_CertificateBuilder_ProvideCertificate_IsCorrect() throws CertificateException, UnrecoverableKeyException, NoSuchAlgorithmException, KeyStoreException, NoSuchProviderException, IOException {
+    public void test_CertificateBuilder_ProvideCertificate_IsCorrect()
+            throws CertificateException, UnrecoverableKeyException, NoSuchAlgorithmException,
+                    KeyStoreException, NoSuchProviderException, IOException {
 
-        CertificateCredential credential = new CertificateCredential.CertificateCredentialBuilder(CLIENT_ID)
-                .certificate((X509Certificate) certificate)
-                .privateKey((PrivateKey) privateKey)
-                .build();
+        CertificateCredential credential =
+                new CertificateCredential.CertificateCredentialBuilder(CLIENT_ID)
+                        .certificate((X509Certificate) certificate)
+                        .privateKey((PrivateKey) privateKey)
+                        .build();
 
         assertEquals(privateKey, credential.getPrivateKey());
         assertEquals(certificate, credential.getPublicCertificate());
@@ -392,46 +401,64 @@ public class CertificateCredentialBuilder {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void test_CertificateBuilder_ClientIdNull_ExpectException() throws CertificateException, UnrecoverableKeyException, NoSuchAlgorithmException, KeyStoreException, NoSuchProviderException, IOException {
-        CertificateCredential credential = new CertificateCredential.CertificateCredentialBuilder(null)
-                .certificate((X509Certificate) certificate)
-                .build();
+    public void test_CertificateBuilder_ClientIdNull_ExpectException()
+            throws CertificateException, UnrecoverableKeyException, NoSuchAlgorithmException,
+                    KeyStoreException, NoSuchProviderException, IOException {
+        CertificateCredential credential =
+                new CertificateCredential.CertificateCredentialBuilder(null)
+                        .certificate((X509Certificate) certificate)
+                        .build();
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void test_CertificateBuilder_NoPrivateKey_ExpectException() throws CertificateException, UnrecoverableKeyException, NoSuchAlgorithmException, KeyStoreException, NoSuchProviderException, IOException {
-        CertificateCredential credential = new CertificateCredential.CertificateCredentialBuilder(CLIENT_ID)
-                .certificate((X509Certificate) certificate)
-                .build();
+    public void test_CertificateBuilder_NoPrivateKey_ExpectException()
+            throws CertificateException, UnrecoverableKeyException, NoSuchAlgorithmException,
+                    KeyStoreException, NoSuchProviderException, IOException {
+        CertificateCredential credential =
+                new CertificateCredential.CertificateCredentialBuilder(CLIENT_ID)
+                        .certificate((X509Certificate) certificate)
+                        .build();
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void test_CertificateBuilder_NoCertificate_ExpectException() throws CertificateException, UnrecoverableKeyException, NoSuchAlgorithmException, KeyStoreException, NoSuchProviderException, IOException {
-        CertificateCredential credential = new CertificateCredential.CertificateCredentialBuilder(CLIENT_ID)
-                .privateKey((PrivateKey) privateKey)
-                .build();
+    public void test_CertificateBuilder_NoCertificate_ExpectException()
+            throws CertificateException, UnrecoverableKeyException, NoSuchAlgorithmException,
+                    KeyStoreException, NoSuchProviderException, IOException {
+        CertificateCredential credential =
+                new CertificateCredential.CertificateCredentialBuilder(CLIENT_ID)
+                        .privateKey((PrivateKey) privateKey)
+                        .build();
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void test_CertificateBuilder_NoCertificateMetadata_ExpectException() throws CertificateException, UnrecoverableKeyException, NoSuchAlgorithmException, KeyStoreException, NoSuchProviderException, IOException {
+    public void test_CertificateBuilder_NoCertificateMetadata_ExpectException()
+            throws CertificateException, UnrecoverableKeyException, NoSuchAlgorithmException,
+                    KeyStoreException, NoSuchProviderException, IOException {
         PowerMockito.mockStatic(KeyStore.class);
-        when(KeyStore.getInstance(WINDOWS_MY_KEYSTORE, WINDOWS_KEYSTORE_PROVIDER)).thenReturn(keyStoreMock);
+        when(KeyStore.getInstance(WINDOWS_MY_KEYSTORE, WINDOWS_KEYSTORE_PROVIDER))
+                .thenReturn(keyStoreMock);
 
-        CertificateCredential cred = new CertificateCredential.CertificateCredentialBuilder(CLIENT_ID)
-                .keyStoreConfiguration(new KeyStoreConfiguration(WINDOWS_MY_KEYSTORE, WINDOWS_KEYSTORE_PROVIDER, null))
-                .build();
-
+        CertificateCredential cred =
+                new CertificateCredential.CertificateCredentialBuilder(CLIENT_ID)
+                        .keyStoreConfiguration(
+                                new KeyStoreConfiguration(
+                                        WINDOWS_MY_KEYSTORE, WINDOWS_KEYSTORE_PROVIDER, null))
+                        .build();
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void test_CertificateBuilder_NoKeyStoreConfiguration_ExpectException() throws CertificateException, UnrecoverableKeyException, NoSuchAlgorithmException, KeyStoreException, NoSuchProviderException, IOException {
+    public void test_CertificateBuilder_NoKeyStoreConfiguration_ExpectException()
+            throws CertificateException, UnrecoverableKeyException, NoSuchAlgorithmException,
+                    KeyStoreException, NoSuchProviderException, IOException {
         PowerMockito.mockStatic(KeyStore.class);
-        when(KeyStore.getInstance(WINDOWS_MY_KEYSTORE, WINDOWS_KEYSTORE_PROVIDER)).thenReturn(keyStoreMock);
+        when(KeyStore.getInstance(WINDOWS_MY_KEYSTORE, WINDOWS_KEYSTORE_PROVIDER))
+                .thenReturn(keyStoreMock);
 
-        CertificateCredential cred = new CertificateCredential.CertificateCredentialBuilder(CLIENT_ID)
-                .keyStoreConfiguration(new KeyStoreConfiguration(WINDOWS_MY_KEYSTORE, WINDOWS_KEYSTORE_PROVIDER, null))
-                .build();
-
+        CertificateCredential cred =
+                new CertificateCredential.CertificateCredentialBuilder(CLIENT_ID)
+                        .keyStoreConfiguration(
+                                new KeyStoreConfiguration(
+                                        WINDOWS_MY_KEYSTORE, WINDOWS_KEYSTORE_PROVIDER, null))
+                        .build();
     }
-
 }

@@ -22,11 +22,28 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.util;
 
+import static com.microsoft.identity.common.java.exception.ClientException.ANDROID_KEYSTORE_UNAVAILABLE;
+import static com.microsoft.identity.common.java.exception.ClientException.CERTIFICATE_LOAD_FAILURE;
+import static com.microsoft.identity.common.java.exception.ClientException.INVALID_ALG_PARAMETER;
+import static com.microsoft.identity.common.java.exception.ClientException.INVALID_BLOCK_SIZE;
+import static com.microsoft.identity.common.java.exception.ClientException.INVALID_KEY;
+import static com.microsoft.identity.common.java.exception.ClientException.INVALID_KEY_MISSING;
+import static com.microsoft.identity.common.java.exception.ClientException.IO_ERROR;
+import static com.microsoft.identity.common.java.exception.ClientException.NO_SUCH_ALGORITHM;
+import static com.microsoft.identity.common.java.exception.ClientException.NO_SUCH_PADDING;
+import static com.microsoft.identity.common.java.exception.ClientException.NO_SUCH_PROVIDER;
+import static com.microsoft.identity.common.java.util.ported.DateUtilities.LOCALE_CHANGE_LOCK;
+import static com.microsoft.identity.common.java.util.ported.DateUtilities.isLocaleCalendarNonGregorian;
+
 import android.os.Build;
 
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.util.ported.DateUtilities;
+
+import edu.umd.cs.findbugs.annotations.Nullable;
+
+import lombok.NonNull;
 
 import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
@@ -50,22 +67,6 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 
-import edu.umd.cs.findbugs.annotations.Nullable;
-import lombok.NonNull;
-
-import static com.microsoft.identity.common.java.util.ported.DateUtilities.LOCALE_CHANGE_LOCK;
-import static com.microsoft.identity.common.java.util.ported.DateUtilities.isLocaleCalendarNonGregorian;
-import static com.microsoft.identity.common.java.exception.ClientException.ANDROID_KEYSTORE_UNAVAILABLE;
-import static com.microsoft.identity.common.java.exception.ClientException.CERTIFICATE_LOAD_FAILURE;
-import static com.microsoft.identity.common.java.exception.ClientException.INVALID_ALG_PARAMETER;
-import static com.microsoft.identity.common.java.exception.ClientException.INVALID_BLOCK_SIZE;
-import static com.microsoft.identity.common.java.exception.ClientException.INVALID_KEY;
-import static com.microsoft.identity.common.java.exception.ClientException.INVALID_KEY_MISSING;
-import static com.microsoft.identity.common.java.exception.ClientException.IO_ERROR;
-import static com.microsoft.identity.common.java.exception.ClientException.NO_SUCH_ALGORITHM;
-import static com.microsoft.identity.common.java.exception.ClientException.NO_SUCH_PADDING;
-import static com.microsoft.identity.common.java.exception.ClientException.NO_SUCH_PROVIDER;
-
 /**
  * Utility class for Key operations in Android.
  */
@@ -78,14 +79,13 @@ public class AndroidKeyStoreUtil {
      */
     private static final String ANDROID_KEY_STORE_TYPE = "AndroidKeyStore";
 
-    private AndroidKeyStoreUtil() {
-    }
+    private AndroidKeyStoreUtil() {}
 
     private static KeyStore mKeyStore;
 
     private static synchronized KeyStore getKeyStore()
             throws KeyStoreException, CertificateException, NoSuchAlgorithmException, IOException {
-        if (mKeyStore == null){
+        if (mKeyStore == null) {
             mKeyStore = KeyStore.getInstance(ANDROID_KEY_STORE_TYPE);
             mKeyStore.load(null);
         }
@@ -102,11 +102,14 @@ public class AndroidKeyStoreUtil {
      */
     @NonNull
     public static synchronized KeyPair generateKeyPair(
-            @NonNull final String algorithm,
-            @NonNull final AlgorithmParameterSpec algorithmSpec) throws ClientException {
+            @NonNull final String algorithm, @NonNull final AlgorithmParameterSpec algorithmSpec)
+            throws ClientException {
         final String methodName = ":generateKeyPair";
 
-        synchronized (isLocaleCalendarNonGregorian(Locale.getDefault()) ? LOCALE_CHANGE_LOCK : new Object()) {
+        synchronized (
+                isLocaleCalendarNonGregorian(Locale.getDefault())
+                        ? LOCALE_CHANGE_LOCK
+                        : new Object()) {
             final Exception exception;
             final String errCode;
 
@@ -120,13 +123,17 @@ public class AndroidKeyStoreUtil {
                 Logger.verbose(TAG + methodName, "Generating KeyPair from KeyStore");
 
                 // Generate a key with the given algorithm spec
-                final KeyPairGenerator generator = KeyPairGenerator.getInstance(algorithm, ANDROID_KEY_STORE_TYPE);
+                final KeyPairGenerator generator =
+                        KeyPairGenerator.getInstance(algorithm, ANDROID_KEY_STORE_TYPE);
                 generator.initialize(algorithmSpec);
 
                 final KeyPair keyPair = generator.generateKeyPair();
                 if (keyPair == null) {
-                    Logger.error(TAG + methodName, "Failed to generate a keypair. " +
-                            "The way we're generating it might be incorrect.", null);
+                    Logger.error(
+                            TAG + methodName,
+                            "Failed to generate a keypair. "
+                                    + "The way we're generating it might be incorrect.",
+                            null);
                     throw new ClientException(INVALID_KEY, "Failed to generate a keypair");
                 }
                 return keyPair;
@@ -156,17 +163,10 @@ public class AndroidKeyStoreUtil {
                 Locale.setDefault(currentLocale);
             }
 
-            final ClientException clientException = new ClientException(
-                    errCode,
-                    exception.getMessage(),
-                    exception
-            );
+            final ClientException clientException =
+                    new ClientException(errCode, exception.getMessage(), exception);
 
-            Logger.error(
-                    TAG + methodName,
-                    errCode,
-                    exception
-            );
+            Logger.error(TAG + methodName, errCode, exception);
 
             throw clientException;
         }
@@ -181,7 +181,10 @@ public class AndroidKeyStoreUtil {
         final String methodName = ":hasKey";
         try {
             return getKeyStore().containsAlias(keyAlias);
-        } catch (final KeyStoreException | CertificateException | NoSuchAlgorithmException | IOException e) {
+        } catch (final KeyStoreException
+                | CertificateException
+                | NoSuchAlgorithmException
+                | IOException e) {
             Logger.error(TAG + methodName, "Failed to check keystore key", e);
             return false;
         }
@@ -216,7 +219,8 @@ public class AndroidKeyStoreUtil {
             // Issue 61989:  AndroidKeyStore deleted after changing screen lock type
             // https://code.google.com/p/android/issues/detail?id=61989
             // in this case getEntry throws
-            // java.lang.RuntimeException: error:0D07207B:asn1 encoding routines:ASN1_get_object:header too long
+            // java.lang.RuntimeException: error:0D07207B:asn1 encoding
+            // routines:ASN1_get_object:header too long
             // handle it as regular KeyStoreException
             errCode = ANDROID_KEYSTORE_UNAVAILABLE;
             exception = e;
@@ -237,17 +241,10 @@ public class AndroidKeyStoreUtil {
             exception = e;
         }
 
-        final ClientException clientException = new ClientException(
-                errCode,
-                exception.getMessage(),
-                exception
-        );
+        final ClientException clientException =
+                new ClientException(errCode, exception.getMessage(), exception);
 
-        Logger.error(
-                TAG + methodName,
-                errCode,
-                exception
-        );
+        Logger.error(TAG + methodName, errCode, exception);
 
         throw clientException;
     }
@@ -255,7 +252,8 @@ public class AndroidKeyStoreUtil {
     /**
      * See: https://issuetracker.google.com/issues/37095309
      */
-    private static synchronized void applyKeyStoreLocaleWorkarounds(@NonNull final Locale currentLocale) {
+    private static synchronized void applyKeyStoreLocaleWorkarounds(
+            @NonNull final Locale currentLocale) {
         if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.M
                 && DateUtilities.isLocaleCalendarNonGregorian(currentLocale)) {
             Locale.setDefault(Locale.ENGLISH);
@@ -267,8 +265,7 @@ public class AndroidKeyStoreUtil {
      *
      * @param aliasOfKeyToDelete alias for the key to be deleted.
      */
-    public static synchronized void deleteKey(
-            @NonNull final String aliasOfKeyToDelete)
+    public static synchronized void deleteKey(@NonNull final String aliasOfKeyToDelete)
             throws ClientException {
         final String methodName = ":deleteKeyFromKeyStore";
 
@@ -293,17 +290,10 @@ public class AndroidKeyStoreUtil {
             exception = e;
         }
 
-        final ClientException clientException = new ClientException(
-                errCode,
-                exception.getMessage(),
-                exception
-        );
+        final ClientException clientException =
+                new ClientException(errCode, exception.getMessage(), exception);
 
-        Logger.error(
-                TAG + methodName,
-                errCode,
-                exception
-        );
+        Logger.error(TAG + methodName, errCode, exception);
 
         throw clientException;
     }
@@ -316,9 +306,10 @@ public class AndroidKeyStoreUtil {
      * @param wrapAlgorithm the algorithm used to wrap the key.
      * @return the wrapped key data blob.
      */
-    public static byte[] wrap(@NonNull final SecretKey key,
-                              @NonNull final KeyPair keyToWrap,
-                              @NonNull final String wrapAlgorithm)
+    public static byte[] wrap(
+            @NonNull final SecretKey key,
+            @NonNull final KeyPair keyToWrap,
+            @NonNull final String wrapAlgorithm)
             throws ClientException {
         final String methodName = ":wrap";
 
@@ -343,17 +334,10 @@ public class AndroidKeyStoreUtil {
             exception = e;
         }
 
-        final ClientException clientException = new ClientException(
-                errCode,
-                exception.getMessage(),
-                exception
-        );
+        final ClientException clientException =
+                new ClientException(errCode, exception.getMessage(), exception);
 
-        Logger.error(
-                TAG + methodName,
-                errCode,
-                exception
-        );
+        Logger.error(TAG + methodName, errCode, exception);
 
         throw clientException;
     }
@@ -367,17 +351,20 @@ public class AndroidKeyStoreUtil {
      * @param wrapAlgorithm        the algorithm used to wrap the key.
      * @return the unwrapped key.
      */
-    public static SecretKey unwrap(@NonNull final byte[] wrappedKeyBlob,
-                                   @NonNull final String wrappedKeyAlgorithm,
-                                   @NonNull final KeyPair keyPairForUnwrapping,
-                                   @NonNull final String wrapAlgorithm) throws ClientException {
+    public static SecretKey unwrap(
+            @NonNull final byte[] wrappedKeyBlob,
+            @NonNull final String wrappedKeyAlgorithm,
+            @NonNull final KeyPair keyPairForUnwrapping,
+            @NonNull final String wrapAlgorithm)
+            throws ClientException {
         final String methodName = ":unwrap";
         final Exception exception;
         final String errCode;
         try {
             final Cipher wrapCipher = Cipher.getInstance(wrapAlgorithm);
             wrapCipher.init(Cipher.UNWRAP_MODE, keyPairForUnwrapping.getPrivate());
-            return (SecretKey) wrapCipher.unwrap(wrappedKeyBlob, wrappedKeyAlgorithm, Cipher.SECRET_KEY);
+            return (SecretKey)
+                    wrapCipher.unwrap(wrappedKeyBlob, wrappedKeyAlgorithm, Cipher.SECRET_KEY);
         } catch (final IllegalArgumentException e) {
             // There is issue with Android KeyStore when lock screen type is changed which could
             // potentially wipe out keystore.
@@ -401,19 +388,11 @@ public class AndroidKeyStoreUtil {
             exception = e;
         }
 
-        final ClientException clientException = new ClientException(
-                errCode,
-                exception.getMessage(),
-                exception
-        );
+        final ClientException clientException =
+                new ClientException(errCode, exception.getMessage(), exception);
 
-        Logger.error(
-                TAG + methodName,
-                errCode,
-                exception
-        );
+        Logger.error(TAG + methodName, errCode, exception);
 
         throw clientException;
     }
-
 }

@@ -34,8 +34,9 @@ import java.util.Date;
  * getUserCode() method shown below
  */
 public interface DeviceCodeFlowCommandCallback<T, U> extends CommandCallback<T, U> {
-    void onUserCodeReceived(@NonNull String vUri,
-                            @NonNull String userCode,
-                            @NonNull String message,
-                            @NonNull final Date sessionExpirationDate);
+    void onUserCodeReceived(
+            @NonNull String vUri,
+            @NonNull String userCode,
+            @NonNull String message,
+            @NonNull final Date sessionExpirationDate);
 }

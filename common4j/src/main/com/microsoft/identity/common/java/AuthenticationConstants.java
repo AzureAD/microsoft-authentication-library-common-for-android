@@ -22,8 +22,11 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java;
 
-import com.microsoft.identity.common.java.util.ported.PropertyBag;
 import com.microsoft.identity.common.java.util.ported.LocalBroadcaster;
+import com.microsoft.identity.common.java.util.ported.PropertyBag;
+
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 
 import java.nio.charset.Charset;
 import java.util.Arrays;
@@ -31,9 +34,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
 
 public class AuthenticationConstants {
 
@@ -77,11 +77,13 @@ public class AuthenticationConstants {
     /**
      * Default scopes for OAuth2.
      */
-    public static final Set<String> DEFAULT_SCOPES = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
-            OAuth2Scopes.OPEN_ID_SCOPE,
-            OAuth2Scopes.OFFLINE_ACCESS_SCOPE,
-            OAuth2Scopes.PROFILE_SCOPE
-    )));
+    public static final Set<String> DEFAULT_SCOPES =
+            Collections.unmodifiableSet(
+                    new HashSet<>(
+                            Arrays.asList(
+                                    OAuth2Scopes.OPEN_ID_SCOPE,
+                                    OAuth2Scopes.OFFLINE_ACCESS_SCOPE,
+                                    OAuth2Scopes.PROFILE_SCOPE)));
 
     /**
      * Represents the request code.
@@ -121,7 +123,6 @@ public class AuthenticationConstants {
          */
         public static final int BROKER_ERROR_RESPONSE = 2002;
 
-
         /**
          * Represents that broker successfully returns the response.
          */
@@ -147,7 +148,8 @@ public class AuthenticationConstants {
         /**
          * Represents the exception returned from webview.
          */
-        public static final String RESPONSE_EXCEPTION = "com.microsoft.aad.adal:AuthenticationException";
+        public static final String RESPONSE_EXCEPTION =
+                "com.microsoft.aad.adal:AuthenticationException";
 
         /**
          * Represents the final url that webview receives.
@@ -512,7 +514,8 @@ public class AuthenticationConstants {
         /**
          * Default timeout for broker tasks/futures.
          */
-        public static final long BROKER_TASK_DEFAULT_TIMEOUT_MILLISECONDS = TimeUnit.SECONDS.toMillis(30);
+        public static final long BROKER_TASK_DEFAULT_TIMEOUT_MILLISECONDS =
+                TimeUnit.SECONDS.toMillis(30);
 
         /**
          * String of challenge response header.
@@ -548,7 +551,6 @@ public class AuthenticationConstants {
          * String of broker client ID.
          */
         public static final String BROKER_CLIENT_ID = "29d9ed98-a469-4536-ade2-f981bc1d605e";
-
     }
 
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -632,12 +634,14 @@ public class AuthenticationConstants {
         /**
          * An alias that the intent contains authorization results, was formerly RETURN_INTERACTIVE_REQUEST_RESULT.
          */
-        public static final String RETURN_AUTHORIZATION_REQUEST_RESULT = "return_authorization_request_result";
+        public static final String RETURN_AUTHORIZATION_REQUEST_RESULT =
+                "return_authorization_request_result";
 
         /**
          * For broadcasting an event where the broker has returned the interactive acquire token result.
          */
-        public static final String RETURN_BROKER_INTERACTIVE_ACQUIRE_TOKEN_RESULT = "return_broker_interactive_acquire_token_result";
+        public static final String RETURN_BROKER_INTERACTIVE_ACQUIRE_TOKEN_RESULT =
+                "return_broker_interactive_acquire_token_result";
     }
 
     /**

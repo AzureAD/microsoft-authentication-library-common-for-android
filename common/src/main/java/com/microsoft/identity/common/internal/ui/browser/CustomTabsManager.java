@@ -61,38 +61,46 @@ public class CustomTabsManager {
 
     private CustomTabsIntent mCustomTabsIntent;
 
-    private CustomTabsServiceConnection mCustomTabsServiceConnection = new CustomTabsServiceConnection() {
-        @Override
-        public void onCustomTabsServiceConnected(final ComponentName name, final CustomTabsClient client) {
-            Logger.info(TAG, "CustomTabsService is connected");
-            client.warmup(0L);
-            mCustomTabsServiceIsBound = true;
-            mCustomTabsClient.set(client);
-            mClientLatch.countDown();
-        }
+    private CustomTabsServiceConnection mCustomTabsServiceConnection =
+            new CustomTabsServiceConnection() {
+                @Override
+                public void onCustomTabsServiceConnected(
+                        final ComponentName name, final CustomTabsClient client) {
+                    Logger.info(TAG, "CustomTabsService is connected");
+                    client.warmup(0L);
+                    mCustomTabsServiceIsBound = true;
+                    mCustomTabsClient.set(client);
+                    mClientLatch.countDown();
+                }
 
-        @Override
-        public void onServiceDisconnected(final ComponentName name) {
-            Logger.info(TAG, "CustomTabsService is disconnected");
-            mCustomTabsServiceIsBound = false;
-            mCustomTabsClient.set(null);
-            mClientLatch.countDown();
-        }
+                @Override
+                public void onServiceDisconnected(final ComponentName name) {
+                    Logger.info(TAG, "CustomTabsService is disconnected");
+                    mCustomTabsServiceIsBound = false;
+                    mCustomTabsClient.set(null);
+                    mClientLatch.countDown();
+                }
 
-        @Override
-        public void onBindingDied(final ComponentName name) {
-            Logger.warn(TAG, "Binding died callback on custom tabs service, there will likely be failures. " +
-                    " Component class that failed: " + ((name == null) ? "null" : name.getClassName()));
-            super.onBindingDied(name);
-        }
+                @Override
+                public void onBindingDied(final ComponentName name) {
+                    Logger.warn(
+                            TAG,
+                            "Binding died callback on custom tabs service, there will likely be failures. "
+                                    + " Component class that failed: "
+                                    + ((name == null) ? "null" : name.getClassName()));
+                    super.onBindingDied(name);
+                }
 
-        @Override
-        public void onNullBinding(final ComponentName name) {
-            Logger.warn(TAG, "Null binding callback on custom tabs service, there will likely be failures."
-                    + " Component class that failed: " + ((name == null) ? "null" : name.getClassName()));
-            super.onNullBinding(name);
-        }
-    };
+                @Override
+                public void onNullBinding(final ComponentName name) {
+                    Logger.warn(
+                            TAG,
+                            "Null binding callback on custom tabs service, there will likely be failures."
+                                    + " Component class that failed: "
+                                    + ((name == null) ? "null" : name.getClassName()));
+                    super.onNullBinding(name);
+                }
+            };
 
     public CustomTabsIntent getCustomTabsIntent() {
         return mCustomTabsIntent;
@@ -113,14 +121,18 @@ public class CustomTabsManager {
      * Method to bind Browser {@link androidx.browser.customtabs.CustomTabsService}.
      * Waits until the {@link CustomTabsServiceConnection} is connected.
      */
-    public synchronized boolean bind(final @Nullable Context context, @NonNull String browserPackage) {
+    public synchronized boolean bind(
+            final @Nullable Context context, @NonNull String browserPackage) {
         // Initiate the service-bind action
         if (context == null
-                || !CustomTabsClient.bindCustomTabsService(context, browserPackage, mCustomTabsServiceConnection)) {
-            Logger.info(TAG, "Unable to bind custom tabs service " +
-                    ((context == null)
-                            ? "because the context was null"
-                            : "because the bind call failed") );
+                || !CustomTabsClient.bindCustomTabsService(
+                        context, browserPackage, mCustomTabsServiceConnection)) {
+            Logger.info(
+                    TAG,
+                    "Unable to bind custom tabs service "
+                            + ((context == null)
+                                    ? "because the context was null"
+                                    : "because the bind call failed"));
             mClientLatch.countDown();
             return false;
         }
@@ -178,8 +190,11 @@ public class CustomTabsManager {
         if (context != null && mCustomTabsServiceIsBound) {
             try {
                 context.unbindService(mCustomTabsServiceConnection);
-            } catch(final Exception e) {
-                Logger.warn(TAG, "Error unbinding custom tabs service, likely failed to bind or previously died: " + e.getMessage());
+            } catch (final Exception e) {
+                Logger.warn(
+                        TAG,
+                        "Error unbinding custom tabs service, likely failed to bind or previously died: "
+                                + e.getMessage());
                 if (e instanceof InterruptedException) {
                     Thread.currentThread().interrupt();
                 }

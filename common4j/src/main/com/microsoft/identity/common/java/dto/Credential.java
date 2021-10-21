@@ -22,14 +22,14 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.dto;
 
-import com.google.gson.annotations.SerializedName;
-
 import static com.microsoft.identity.common.java.dto.Credential.SerializedNames.CACHED_AT;
 import static com.microsoft.identity.common.java.dto.Credential.SerializedNames.CLIENT_ID;
 import static com.microsoft.identity.common.java.dto.Credential.SerializedNames.CREDENTIAL_TYPE;
 import static com.microsoft.identity.common.java.dto.Credential.SerializedNames.ENVIRONMENT;
 import static com.microsoft.identity.common.java.dto.Credential.SerializedNames.HOME_ACCOUNT_ID;
 import static com.microsoft.identity.common.java.dto.Credential.SerializedNames.SECRET;
+
+import com.google.gson.annotations.SerializedName;
 
 /**
  * This is a generic credential schema that should be used as a reference to define schemas for
@@ -100,12 +100,12 @@ public abstract class Credential extends AccountCredentialBase {
     private String mSecret;
 
     /**
-     * Unique user identifier for that authentication scheme.  
+     * Unique user identifier for that authentication scheme.
      * <p>
      * For AAD/MSA: <code><uid>.<utid></code> <br />
      * STS returns the clientInfo on both v1 and v2 for AAD. This value is combined from two fields
      * in the client Info. It should be a unique user identifier across tenants (e.g. the value will
-     * be the same for user’s home tenant and a guest tenant). 
+     * be the same for user’s home tenant and a guest tenant).
      * </p>
      * <p>
      * For NTLM: Canonicalized username
@@ -237,7 +237,7 @@ public abstract class Credential extends AccountCredentialBase {
      */
     public abstract boolean isExpired();
 
-    //CHECKSTYLE:OFF
+    // CHECKSTYLE:OFF
     // This method is generated. Checkstyle and/or PMD has been disabled.
     // This method *must* be regenerated if the class' structural definition changes through the
     // addition/subtraction of fields.
@@ -251,18 +251,21 @@ public abstract class Credential extends AccountCredentialBase {
 
         if (mClientId != null ? !mClientId.equals(that.mClientId) : that.mClientId != null)
             return false;
-        if (mCredentialType != null ? !mCredentialType.equals(that.mCredentialType) : that.mCredentialType != null)
-            return false;
-        if (mEnvironment != null ? !mEnvironment.equals(that.mEnvironment) : that.mEnvironment != null)
-            return false;
+        if (mCredentialType != null
+                ? !mCredentialType.equals(that.mCredentialType)
+                : that.mCredentialType != null) return false;
+        if (mEnvironment != null
+                ? !mEnvironment.equals(that.mEnvironment)
+                : that.mEnvironment != null) return false;
         if (mSecret != null ? !mSecret.equals(that.mSecret) : that.mSecret != null) return false;
-        if (mHomeAccountId != null ? !mHomeAccountId.equals(that.mHomeAccountId) : that.mHomeAccountId != null)
-            return false;
+        if (mHomeAccountId != null
+                ? !mHomeAccountId.equals(that.mHomeAccountId)
+                : that.mHomeAccountId != null) return false;
         return mCachedAt != null ? mCachedAt.equals(that.mCachedAt) : that.mCachedAt == null;
     }
-    //CHECKSTYLE:ON
+    // CHECKSTYLE:ON
 
-    //CHECKSTYLE:OFF
+    // CHECKSTYLE:OFF
     // This method is generated. Checkstyle and/or PMD has been disabled.
     // This method *must* be regenerated if the class' structural definition changes through the
     // addition/subtraction of fields.
@@ -277,5 +280,5 @@ public abstract class Credential extends AccountCredentialBase {
         result = 31 * result + (mCachedAt != null ? mCachedAt.hashCode() : 0);
         return result;
     }
-    //CHECKSTYLE:ON
+    // CHECKSTYLE:ON
 }

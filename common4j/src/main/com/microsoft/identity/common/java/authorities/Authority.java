@@ -26,13 +26,18 @@ import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.java.BuildConfig;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
+import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters;
-import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
-import com.microsoft.identity.common.java.logging.Logger;
-import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.util.CommonURIBuilder;
+import com.microsoft.identity.common.java.util.StringUtil;
+
+import edu.umd.cs.findbugs.annotations.Nullable;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
+import lombok.NonNull;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -42,10 +47,6 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-
-import edu.umd.cs.findbugs.annotations.Nullable;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import lombok.NonNull;
 
 public abstract class Authority {
 
@@ -106,12 +107,14 @@ public abstract class Authority {
         mIsDefault = isDefault;
     }
 
-
-    @SuppressFBWarnings(value="RpC_REPEATED_CONDITIONAL_TEST",
-            justification="Somehow, spotbugs thinks that BuildConfig.SLICE and BuildConfig.DC are the same values.")
+    @SuppressFBWarnings(
+            value = "RpC_REPEATED_CONDITIONAL_TEST",
+            justification =
+                    "Somehow, spotbugs thinks that BuildConfig.SLICE and BuildConfig.DC are the same values.")
     public Authority() {
         // setting slice directly here in constructor if slice provided as command line param
-        if (!StringUtil.isNullOrEmpty(BuildConfig.SLICE) || !StringUtil.isNullOrEmpty(BuildConfig.DC)) {
+        if (!StringUtil.isNullOrEmpty(BuildConfig.SLICE)
+                || !StringUtil.isNullOrEmpty(BuildConfig.DC)) {
             final AzureActiveDirectorySlice slice = new AzureActiveDirectorySlice();
             slice.setSlice(BuildConfig.SLICE);
             slice.setDataCenter(BuildConfig.DC);
@@ -157,26 +160,17 @@ public abstract class Authority {
 
             switch (authorityType.toLowerCase(Locale.ROOT)) {
                 case ADFS_PATH_SEGMENT:
-                    //Return new Azure Active Directory Federation Services Authority
-                    Logger.verbose(
-                            TAG + methodName,
-                            "Authority type is ADFS"
-                    );
+                    // Return new Azure Active Directory Federation Services Authority
+                    Logger.verbose(TAG + methodName, "Authority type is ADFS");
                     authority = new ActiveDirectoryFederationServicesAuthority(authorityUrl);
                     break;
                 case B2C_PATH_SEGMENT:
-                    //Return new B2C Authority
-                    Logger.verbose(
-                            TAG + methodName,
-                            "Authority type is B2C"
-                    );
+                    // Return new B2C Authority
+                    Logger.verbose(TAG + methodName, "Authority type is B2C");
                     authority = new AzureActiveDirectoryB2CAuthority(authorityUrl);
                     break;
                 default:
-                    Logger.verbose(
-                            TAG + methodName,
-                            "Authority type default: AAD"
-                    );
+                    Logger.verbose(TAG + methodName, "Authority type default: AAD");
                     authority = createAadAuthority(authorityCommonUriBuilder, pathSegments);
                     break;
             }
@@ -208,11 +202,7 @@ public abstract class Authority {
             }
         } catch (MalformedURLException e) {
             // Shouldn't happen
-            Logger.errorPII(
-                    TAG,
-                    "Error parsing authority",
-                    e
-            );
+            Logger.errorPII(TAG, "Error parsing authority", e);
         }
 
         return result;
@@ -222,19 +212,23 @@ public abstract class Authority {
         return null != getEquivalentConfiguredAuthority(authorityStr);
     }
 
-    private static Authority createAadAuthority(@NonNull final CommonURIBuilder authorityCommonUriBuilder,
-                                                @NonNull final List<String> pathSegments) {
-        AzureActiveDirectoryAudience audience = AzureActiveDirectoryAudience.getAzureActiveDirectoryAudience(
-                authorityCommonUriBuilder.getScheme() + "://" + authorityCommonUriBuilder.getHost(),
-                pathSegments.get(0)
-        );
+    private static Authority createAadAuthority(
+            @NonNull final CommonURIBuilder authorityCommonUriBuilder,
+            @NonNull final List<String> pathSegments) {
+        AzureActiveDirectoryAudience audience =
+                AzureActiveDirectoryAudience.getAzureActiveDirectoryAudience(
+                        authorityCommonUriBuilder.getScheme()
+                                + "://"
+                                + authorityCommonUriBuilder.getHost(),
+                        pathSegments.get(0));
 
         return new AzureActiveDirectoryAuthority(audience);
     }
 
     // Suppressing rawtype warnings due to the generic type OAuth2Strategy
     @SuppressWarnings(WarningType.rawtype_warning)
-    public abstract OAuth2Strategy createOAuth2Strategy(@NonNull final OAuth2StrategyParameters parameters) throws ClientException;
+    public abstract OAuth2Strategy createOAuth2Strategy(
+            @NonNull final OAuth2StrategyParameters parameters) throws ClientException;
 
     /**
      * Indicates whether the authority is known to Microsoft or not.  Microsoft can recognize authorities that exist within public clouds.  Microsoft does
@@ -246,7 +240,7 @@ public abstract class Authority {
         return mKnownToMicrosoft;
     }
 
-    //CHECKSTYLE:OFF
+    // CHECKSTYLE:OFF
     // This method is generated. Checkstyle and/or PMD has been disabled.
     // This method *must* be regenerated if the class' structural definition changes through the
     // addition/subtraction of fields.
@@ -261,9 +255,9 @@ public abstract class Authority {
         if (!mAuthorityTypeString.equals(authority.mAuthorityTypeString)) return false;
         return getAuthorityUri().equals(authority.getAuthorityUri());
     }
-    //CHECKSTYLE:ON
+    // CHECKSTYLE:ON
 
-    //CHECKSTYLE:OFF
+    // CHECKSTYLE:OFF
     // This method is generated. Checkstyle and/or PMD has been disabled.
     // This method *must* be regenerated if the class' structural definition changes through the
     // addition/subtraction of fields.
@@ -274,7 +268,7 @@ public abstract class Authority {
         result = 31 * result + getAuthorityUri().hashCode();
         return result;
     }
-    //CHECKSTYLE:ON
+    // CHECKSTYLE:ON
 
     /**
      * These are authorities that the developer based on configuration of the public client application are known and trusted by the developer using the public client
@@ -292,13 +286,9 @@ public abstract class Authority {
     private static List<Authority> knownAuthorities = new ArrayList<>();
     private static Object sLock = new Object();
 
-    private static void performCloudDiscovery()
-            throws IOException, URISyntaxException {
+    private static void performCloudDiscovery() throws IOException, URISyntaxException {
         final String methodName = ":performCloudDiscovery";
-        Logger.info(
-                TAG + methodName,
-                "Performing cloud discovery..."
-        );
+        Logger.info(TAG + methodName, "Performing cloud discovery...");
         synchronized (sLock) {
             Logger.info(TAG + methodName, "Acquired lock.");
             if (!AzureActiveDirectory.isInitialized()) {
@@ -328,87 +318,75 @@ public abstract class Authority {
         boolean knownToMicrosoft;
 
         if (authority == null) {
-            Logger.warn(
-                    TAG + methodName,
-                    "Authority is null"
-            );
+            Logger.warn(TAG + methodName, "Authority is null");
             return false;
         }
 
-        //Check if authority was added to configuration
+        // Check if authority was added to configuration
         if (authority.getKnownToDeveloper()) {
             knownToDeveloper = true;
         } else {
             for (final Authority currentAuthority : knownAuthorities) {
-                if (currentAuthority.mAuthorityUrlString != null &&
-                        authority.getAuthorityURL() != null &&
-                        authority.getAuthorityURL().getAuthority() != null &&
-                        currentAuthority.mAuthorityUrlString.toLowerCase(Locale.ROOT).contains(
-                                authority
-                                        .getAuthorityURL()
-                                        .getAuthority()
-                                        .toLowerCase(Locale.ROOT))) {
+                if (currentAuthority.mAuthorityUrlString != null
+                        && authority.getAuthorityURL() != null
+                        && authority.getAuthorityURL().getAuthority() != null
+                        && currentAuthority
+                                .mAuthorityUrlString
+                                .toLowerCase(Locale.ROOT)
+                                .contains(
+                                        authority
+                                                .getAuthorityURL()
+                                                .getAuthority()
+                                                .toLowerCase(Locale.ROOT))) {
                     knownToDeveloper = true;
                     break;
                 }
             }
         }
 
-        //Check if authority host is known to Microsoft
+        // Check if authority host is known to Microsoft
         knownToMicrosoft = AzureActiveDirectory.hasCloudHost(authority.getAuthorityURL());
 
         final boolean isKnown = (knownToDeveloper || knownToMicrosoft);
 
         Logger.verbose(
-                TAG + methodName,
-                "Authority is known to developer? [" + knownToDeveloper + "]"
-        );
+                TAG + methodName, "Authority is known to developer? [" + knownToDeveloper + "]");
 
         Logger.verbose(
-                TAG + methodName,
-                "Authority is known to Microsoft? [" + knownToMicrosoft + "]"
-        );
+                TAG + methodName, "Authority is known to Microsoft? [" + knownToMicrosoft + "]");
 
         return isKnown;
     }
 
     public static KnownAuthorityResult getKnownAuthorityResult(Authority authority) {
         final String methodName = ":getKnownAuthorityResult";
-        Logger.verbose(
-                TAG + methodName,
-                "Getting known authority result..."
-        );
+        Logger.verbose(TAG + methodName, "Getting known authority result...");
         ClientException clientException = null;
         boolean known = false;
 
         try {
-            Logger.info(
-                    TAG + methodName,
-                    "Performing cloud discovery"
-            );
+            Logger.info(TAG + methodName, "Performing cloud discovery");
             performCloudDiscovery();
         } catch (final IOException ex) {
-            clientException = new ClientException(
-                    ClientException.IO_ERROR,
-                    "Unable to perform cloud discovery",
-                    ex
-            );
+            clientException =
+                    new ClientException(
+                            ClientException.IO_ERROR, "Unable to perform cloud discovery", ex);
         } catch (final URISyntaxException ex) {
-            clientException = new ClientException(
-                    ClientException.MALFORMED_URL,
-                    "Unable to construct cloud discovery URL",
-                    ex
-            );
+            clientException =
+                    new ClientException(
+                            ClientException.MALFORMED_URL,
+                            "Unable to construct cloud discovery URL",
+                            ex);
         }
 
         Logger.info(TAG + methodName, "Cloud discovery complete.");
 
         if (clientException == null) {
             if (!isKnownAuthority(authority)) {
-                clientException = new ClientException(
-                        ClientException.UNKNOWN_AUTHORITY,
-                        "Provided authority is not known.  MSAL will only make requests to known authorities"
-                );
+                clientException =
+                        new ClientException(
+                                ClientException.UNKNOWN_AUTHORITY,
+                                "Provided authority is not known.  MSAL will only make requests to known authorities");
             } else {
                 Logger.info(TAG + methodName, "Cloud is known.");
                 known = true;

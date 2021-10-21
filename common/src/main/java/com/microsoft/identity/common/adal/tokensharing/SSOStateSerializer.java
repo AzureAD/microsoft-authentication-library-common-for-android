@@ -27,9 +27,9 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonParseException;
 import com.google.gson.annotations.SerializedName;
+import com.microsoft.identity.common.adal.internal.cache.ADALTokenCacheItem;
 import com.microsoft.identity.common.adal.internal.tokensharing.TokenCacheItemSerializationAdapater;
 import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.adal.internal.cache.ADALTokenCacheItem;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -61,16 +61,17 @@ public final class SSOStateSerializer {
      * lightweight TokenCacheItem, FamilyTokenCacheItemAdapter is used here to
      * register custom serializer.
      */
-    private static final Gson GSON = new GsonBuilder()
-            .registerTypeAdapter(ADALTokenCacheItem.class, new TokenCacheItemSerializationAdapater())
-            .create();
+    private static final Gson GSON =
+            new GsonBuilder()
+                    .registerTypeAdapter(
+                            ADALTokenCacheItem.class, new TokenCacheItemSerializationAdapater())
+                    .create();
 
     /**
      * No args constructor for use in serialization for Gson to prevent usage of sun.misc.Unsafe.
      */
     @SuppressWarnings("unused")
-    private SSOStateSerializer() {
-    }
+    private SSOStateSerializer() {}
 
     /**
      * constructor with an input item in type TokenCacheItem. We take
@@ -99,7 +100,9 @@ public final class SSOStateSerializer {
     @SuppressWarnings("PMD")
     private ADALTokenCacheItem getTokenItem() throws ClientException {
         if (mTokenCacheItems == null || mTokenCacheItems.isEmpty()) {
-            throw new ClientException(ClientException.TOKEN_CACHE_ITEM_NOT_FOUND, "There is no token cache item in the SSOStateContainer.");
+            throw new ClientException(
+                    ClientException.TOKEN_CACHE_ITEM_NOT_FOUND,
+                    "There is no token cache item in the SSOStateContainer.");
         }
         return mTokenCacheItems.get(0);
     }
@@ -122,19 +125,23 @@ public final class SSOStateSerializer {
      * @return TokenCacheItem
      * @throws ClientException
      */
-    private ADALTokenCacheItem internalDeserialize(final String serializedBlob) throws ClientException {
+    private ADALTokenCacheItem internalDeserialize(final String serializedBlob)
+            throws ClientException {
         try {
             final JSONObject jsonObject = new JSONObject(serializedBlob);
             if (jsonObject.getInt("version") == this.getVersion()) {
                 return GSON.fromJson(serializedBlob, SSOStateSerializer.class).getTokenItem();
             } else {
-                throw new ClientException(ClientException.TOKEN_SHARING_DESERIALIZATION_ERROR,
+                throw new ClientException(
+                        ClientException.TOKEN_SHARING_DESERIALIZATION_ERROR,
                         "Fail to deserialize because the blob version is incompatible. The version of the serializedBlob is "
-                                + jsonObject.getInt("version") + ". And the target class version is "
+                                + jsonObject.getInt("version")
+                                + ". And the target class version is "
                                 + this.getVersion());
             }
         } catch (final JsonParseException | JSONException exception) {
-            throw new ClientException(ClientException.TOKEN_SHARING_DESERIALIZATION_ERROR, exception.getMessage());
+            throw new ClientException(
+                    ClientException.TOKEN_SHARING_DESERIALIZATION_ERROR, exception.getMessage());
         }
     }
 
@@ -162,7 +169,8 @@ public final class SSOStateSerializer {
      * @return ADALTokenCacheItem
      * @throws ClientException
      */
-    public static ADALTokenCacheItem deserialize(final String serializedBlob) throws ClientException {
+    public static ADALTokenCacheItem deserialize(final String serializedBlob)
+            throws ClientException {
         SSOStateSerializer ssoStateSerializer = new SSOStateSerializer();
         return ssoStateSerializer.internalDeserialize(serializedBlob);
     }

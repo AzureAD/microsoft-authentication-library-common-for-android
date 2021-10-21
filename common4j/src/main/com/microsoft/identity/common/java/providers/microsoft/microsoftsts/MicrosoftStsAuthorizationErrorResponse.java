@@ -37,7 +37,8 @@ public class MicrosoftStsAuthorizationErrorResponse extends MicrosoftAuthorizati
      * @param error            Error string returned from the Authorization Server.
      * @param errorDescription Description string of the error.
      */
-    public MicrosoftStsAuthorizationErrorResponse(final String error, final String errorDescription) {
+    public MicrosoftStsAuthorizationErrorResponse(
+            final String error, final String errorDescription) {
         super(error, errorDescription);
     }
 
@@ -48,9 +49,8 @@ public class MicrosoftStsAuthorizationErrorResponse extends MicrosoftAuthorizati
      * @param errorSubcode     Error subcode string return from the Authorization Server.
      * @param errorDescription Description string of the error.
      */
-    public MicrosoftStsAuthorizationErrorResponse(final String error,
-                                                  final String errorSubcode,
-                                                  final String errorDescription) {
+    public MicrosoftStsAuthorizationErrorResponse(
+            final String error, final String errorSubcode, final String errorDescription) {
         super(error, errorDescription);
         mErrorSubcode = errorSubcode;
     }
@@ -62,6 +62,4 @@ public class MicrosoftStsAuthorizationErrorResponse extends MicrosoftAuthorizati
     public void setErrorSubcode(String errorSubcode) {
         mErrorSubcode = errorSubcode;
     }
-
-
 }

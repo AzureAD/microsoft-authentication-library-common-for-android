@@ -57,7 +57,8 @@ public class FileAppender extends AbstractAppender {
      * @param logFormatter the log formatter to use while writing logs to file
      * @throws IOException an exception that is thrown if an error occurs while creating log file
      */
-    public FileAppender(@NonNull final String filename, @NonNull final ILogFormatter logFormatter) throws IOException {
+    public FileAppender(@NonNull final String filename, @NonNull final ILogFormatter logFormatter)
+            throws IOException {
         super(logFormatter);
         mFileName = filename;
         mLogFile = createLogFile(filename);

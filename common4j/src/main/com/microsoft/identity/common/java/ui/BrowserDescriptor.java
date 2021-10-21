@@ -24,14 +24,15 @@ package com.microsoft.identity.common.java.ui;
 
 import com.google.gson.annotations.SerializedName;
 
-import java.io.Serializable;
-import java.util.Collections;
-import java.util.Set;
-
 import edu.umd.cs.findbugs.annotations.Nullable;
+
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.Accessors;
+
+import java.io.Serializable;
+import java.util.Collections;
+import java.util.Set;
 
 @Getter
 @Accessors(prefix = "m")

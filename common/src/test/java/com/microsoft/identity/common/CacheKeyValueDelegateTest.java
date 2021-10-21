@@ -22,6 +22,12 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common;
 
+import static com.microsoft.identity.common.java.cache.CacheKeyValueDelegate.CACHE_VALUE_SEPARATOR;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -46,22 +52,22 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
-import static com.microsoft.identity.common.java.cache.CacheKeyValueDelegate.CACHE_VALUE_SEPARATOR;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-
 public class CacheKeyValueDelegateTest {
 
-    private static final String HOME_ACCOUNT_ID = "29f3807a-4fb0-42f2-a44a-236aa0cb3f97.0287f963-2d72-4363-9e3a-5705c5b0f031";
+    private static final String HOME_ACCOUNT_ID =
+            "29f3807a-4fb0-42f2-a44a-236aa0cb3f97.0287f963-2d72-4363-9e3a-5705c5b0f031";
     private static final String ENVIRONMENT = "login.microsoftonline.com";
     private static final String CLIENT_ID = "0287f963-2d72-4363-9e3a-5705c5b0f031";
     private static final String TARGET = "user.read user.write https://graph.windows.net";
     private static final String REALM = "3c62ac97-29eb-4aed-a3c8-add0298508d";
-    private static final String CREDENTIAL_TYPE_ACCESS_TOKEN = CredentialType.AccessToken.name().toLowerCase(Locale.US);
-    private static final String CREDENTIAL_TYPE_REFRESH_TOKEN = CredentialType.RefreshToken.name().toLowerCase(Locale.US);
-    private static final String CREDENTIAL_TYPE_ID_TOKEN = CredentialType.IdToken.name().toLowerCase(Locale.US);
-    private static final String CREDENTIAL_TYPE_PRIMARY_REFRESH_TOKEN = CredentialType.PrimaryRefreshToken.name().toLowerCase(Locale.US);
+    private static final String CREDENTIAL_TYPE_ACCESS_TOKEN =
+            CredentialType.AccessToken.name().toLowerCase(Locale.US);
+    private static final String CREDENTIAL_TYPE_REFRESH_TOKEN =
+            CredentialType.RefreshToken.name().toLowerCase(Locale.US);
+    private static final String CREDENTIAL_TYPE_ID_TOKEN =
+            CredentialType.IdToken.name().toLowerCase(Locale.US);
+    private static final String CREDENTIAL_TYPE_PRIMARY_REFRESH_TOKEN =
+            CredentialType.PrimaryRefreshToken.name().toLowerCase(Locale.US);
     private static final String LOCAL_ACCOUNT_ID = "90bc88e6-7c76-45e8-a4e3-a0b1dc0a8ce1";
     private static final String AUTHORITY_TYPE = "AAD";
     private static final String ALTERNATIVE_ACCOUNT_ID = "32000000000003bde810";
@@ -93,13 +99,19 @@ public class CacheKeyValueDelegateTest {
         accessToken.setRealm(REALM);
         accessToken.setTarget(TARGET);
 
-        final String expectedKey = "" // just for formatting
-                + HOME_ACCOUNT_ID + CACHE_VALUE_SEPARATOR
-                + ENVIRONMENT + CACHE_VALUE_SEPARATOR
-                + CREDENTIAL_TYPE_ACCESS_TOKEN + CACHE_VALUE_SEPARATOR
-                + CLIENT_ID + CACHE_VALUE_SEPARATOR
-                + REALM + CACHE_VALUE_SEPARATOR
-                + TARGET;
+        final String expectedKey =
+                "" // just for formatting
+                        + HOME_ACCOUNT_ID
+                        + CACHE_VALUE_SEPARATOR
+                        + ENVIRONMENT
+                        + CACHE_VALUE_SEPARATOR
+                        + CREDENTIAL_TYPE_ACCESS_TOKEN
+                        + CACHE_VALUE_SEPARATOR
+                        + CLIENT_ID
+                        + CACHE_VALUE_SEPARATOR
+                        + REALM
+                        + CACHE_VALUE_SEPARATOR
+                        + TARGET;
         assertEquals(expectedKey, mDelegate.generateCacheKey(accessToken));
     }
 
@@ -113,13 +125,19 @@ public class CacheKeyValueDelegateTest {
         accessToken.setRealm(wrapInEscapeSequenceChars(REALM));
         accessToken.setTarget(wrapInEscapeSequenceChars(TARGET));
 
-        final String expectedKey = "" // just for formatting
-                + HOME_ACCOUNT_ID + CACHE_VALUE_SEPARATOR
-                + ENVIRONMENT + CACHE_VALUE_SEPARATOR
-                + CREDENTIAL_TYPE_ACCESS_TOKEN + CACHE_VALUE_SEPARATOR
-                + CLIENT_ID + CACHE_VALUE_SEPARATOR
-                + REALM + CACHE_VALUE_SEPARATOR
-                + TARGET;
+        final String expectedKey =
+                "" // just for formatting
+                        + HOME_ACCOUNT_ID
+                        + CACHE_VALUE_SEPARATOR
+                        + ENVIRONMENT
+                        + CACHE_VALUE_SEPARATOR
+                        + CREDENTIAL_TYPE_ACCESS_TOKEN
+                        + CACHE_VALUE_SEPARATOR
+                        + CLIENT_ID
+                        + CACHE_VALUE_SEPARATOR
+                        + REALM
+                        + CACHE_VALUE_SEPARATOR
+                        + TARGET;
         assertEquals(expectedKey, mDelegate.generateCacheKey(accessToken));
     }
 
@@ -132,13 +150,18 @@ public class CacheKeyValueDelegateTest {
         accessToken.setRealm(REALM);
         accessToken.setTarget(TARGET);
 
-        final String expectedKey = "" // just for formatting
-                + CACHE_VALUE_SEPARATOR
-                + ENVIRONMENT + CACHE_VALUE_SEPARATOR
-                + CREDENTIAL_TYPE_ACCESS_TOKEN + CACHE_VALUE_SEPARATOR
-                + CLIENT_ID + CACHE_VALUE_SEPARATOR
-                + REALM + CACHE_VALUE_SEPARATOR
-                + TARGET;
+        final String expectedKey =
+                "" // just for formatting
+                        + CACHE_VALUE_SEPARATOR
+                        + ENVIRONMENT
+                        + CACHE_VALUE_SEPARATOR
+                        + CREDENTIAL_TYPE_ACCESS_TOKEN
+                        + CACHE_VALUE_SEPARATOR
+                        + CLIENT_ID
+                        + CACHE_VALUE_SEPARATOR
+                        + REALM
+                        + CACHE_VALUE_SEPARATOR
+                        + TARGET;
         assertEquals(expectedKey, mDelegate.generateCacheKey(accessToken));
     }
 
@@ -151,13 +174,18 @@ public class CacheKeyValueDelegateTest {
         accessToken.setClientId(CLIENT_ID);
         accessToken.setTarget(TARGET);
 
-        final String expectedKey = "" // just for formatting
-                + HOME_ACCOUNT_ID + CACHE_VALUE_SEPARATOR
-                + ENVIRONMENT + CACHE_VALUE_SEPARATOR
-                + CREDENTIAL_TYPE_ACCESS_TOKEN + CACHE_VALUE_SEPARATOR
-                + CLIENT_ID + CACHE_VALUE_SEPARATOR
-                + CACHE_VALUE_SEPARATOR
-                + TARGET;
+        final String expectedKey =
+                "" // just for formatting
+                        + HOME_ACCOUNT_ID
+                        + CACHE_VALUE_SEPARATOR
+                        + ENVIRONMENT
+                        + CACHE_VALUE_SEPARATOR
+                        + CREDENTIAL_TYPE_ACCESS_TOKEN
+                        + CACHE_VALUE_SEPARATOR
+                        + CLIENT_ID
+                        + CACHE_VALUE_SEPARATOR
+                        + CACHE_VALUE_SEPARATOR
+                        + TARGET;
         assertEquals(expectedKey, mDelegate.generateCacheKey(accessToken));
     }
 
@@ -170,12 +198,18 @@ public class CacheKeyValueDelegateTest {
         accessToken.setClientId(CLIENT_ID);
         accessToken.setRealm(REALM);
 
-        final String expectedKey = "" // just for formatting
-                + HOME_ACCOUNT_ID + CACHE_VALUE_SEPARATOR
-                + ENVIRONMENT + CACHE_VALUE_SEPARATOR
-                + CREDENTIAL_TYPE_ACCESS_TOKEN + CACHE_VALUE_SEPARATOR
-                + CLIENT_ID + CACHE_VALUE_SEPARATOR
-                + REALM + CACHE_VALUE_SEPARATOR;
+        final String expectedKey =
+                "" // just for formatting
+                        + HOME_ACCOUNT_ID
+                        + CACHE_VALUE_SEPARATOR
+                        + ENVIRONMENT
+                        + CACHE_VALUE_SEPARATOR
+                        + CREDENTIAL_TYPE_ACCESS_TOKEN
+                        + CACHE_VALUE_SEPARATOR
+                        + CLIENT_ID
+                        + CACHE_VALUE_SEPARATOR
+                        + REALM
+                        + CACHE_VALUE_SEPARATOR;
 
         assertEquals(expectedKey, mDelegate.generateCacheKey(accessToken));
     }
@@ -187,12 +221,16 @@ public class CacheKeyValueDelegateTest {
         accessToken.setCredentialType(CredentialType.AccessToken.name());
         accessToken.setClientId(CLIENT_ID);
 
-        final String expectedKey = "" // just for formatting
-                + CACHE_VALUE_SEPARATOR
-                + ENVIRONMENT + CACHE_VALUE_SEPARATOR
-                + CREDENTIAL_TYPE_ACCESS_TOKEN + CACHE_VALUE_SEPARATOR
-                + CLIENT_ID + CACHE_VALUE_SEPARATOR
-                + CACHE_VALUE_SEPARATOR;
+        final String expectedKey =
+                "" // just for formatting
+                        + CACHE_VALUE_SEPARATOR
+                        + ENVIRONMENT
+                        + CACHE_VALUE_SEPARATOR
+                        + CREDENTIAL_TYPE_ACCESS_TOKEN
+                        + CACHE_VALUE_SEPARATOR
+                        + CLIENT_ID
+                        + CACHE_VALUE_SEPARATOR
+                        + CACHE_VALUE_SEPARATOR;
 
         assertEquals(expectedKey, mDelegate.generateCacheKey(accessToken));
     }
@@ -205,12 +243,17 @@ public class CacheKeyValueDelegateTest {
         accessToken.setCredentialType(CredentialType.AccessToken.name());
         accessToken.setClientId(CLIENT_ID);
 
-        final String expectedKey = "" // just for formatting
-                + HOME_ACCOUNT_ID + CACHE_VALUE_SEPARATOR
-                + ENVIRONMENT + CACHE_VALUE_SEPARATOR
-                + CREDENTIAL_TYPE_ACCESS_TOKEN + CACHE_VALUE_SEPARATOR
-                + CLIENT_ID + CACHE_VALUE_SEPARATOR
-                + CACHE_VALUE_SEPARATOR;
+        final String expectedKey =
+                "" // just for formatting
+                        + HOME_ACCOUNT_ID
+                        + CACHE_VALUE_SEPARATOR
+                        + ENVIRONMENT
+                        + CACHE_VALUE_SEPARATOR
+                        + CREDENTIAL_TYPE_ACCESS_TOKEN
+                        + CACHE_VALUE_SEPARATOR
+                        + CLIENT_ID
+                        + CACHE_VALUE_SEPARATOR
+                        + CACHE_VALUE_SEPARATOR;
 
         assertEquals(expectedKey, mDelegate.generateCacheKey(accessToken));
     }
@@ -229,9 +272,12 @@ public class CacheKeyValueDelegateTest {
 
         // Turn the serialized value into a JSONObject and start testing field equality.
         final JSONObject jsonObject = new JSONObject(serializedValue);
-        assertEquals(HOME_ACCOUNT_ID, jsonObject.getString(Credential.SerializedNames.HOME_ACCOUNT_ID));
+        assertEquals(
+                HOME_ACCOUNT_ID, jsonObject.getString(Credential.SerializedNames.HOME_ACCOUNT_ID));
         assertEquals(ENVIRONMENT, jsonObject.getString(Credential.SerializedNames.ENVIRONMENT));
-        assertEquals(CredentialType.AccessToken.name().toLowerCase(Locale.US), jsonObject.getString("credential_type"));
+        assertEquals(
+                CredentialType.AccessToken.name().toLowerCase(Locale.US),
+                jsonObject.getString("credential_type"));
         assertEquals(CLIENT_ID, jsonObject.getString(Credential.SerializedNames.CLIENT_ID));
         assertEquals(REALM, jsonObject.getString(AccessTokenRecord.SerializedNames.REALM));
         assertEquals(TARGET, jsonObject.getString(AccessTokenRecord.SerializedNames.TARGET));
@@ -266,12 +312,24 @@ public class CacheKeyValueDelegateTest {
 
         String serializedValue = mDelegate.generateCacheValue(accessToken);
         JSONObject derivedCacheValueJsonObject = new JSONObject(serializedValue);
-        assertEquals(HOME_ACCOUNT_ID, derivedCacheValueJsonObject.getString(Credential.SerializedNames.HOME_ACCOUNT_ID));
-        assertEquals(ENVIRONMENT, derivedCacheValueJsonObject.getString(Credential.SerializedNames.ENVIRONMENT));
-        assertEquals(CredentialType.AccessToken.name().toLowerCase(Locale.US), derivedCacheValueJsonObject.getString("credential_type"));
-        assertEquals(CLIENT_ID, derivedCacheValueJsonObject.getString(Credential.SerializedNames.CLIENT_ID));
-        assertEquals(REALM, derivedCacheValueJsonObject.getString(AccessTokenRecord.SerializedNames.REALM));
-        assertEquals(TARGET, derivedCacheValueJsonObject.getString(AccessTokenRecord.SerializedNames.TARGET));
+        assertEquals(
+                HOME_ACCOUNT_ID,
+                derivedCacheValueJsonObject.getString(Credential.SerializedNames.HOME_ACCOUNT_ID));
+        assertEquals(
+                ENVIRONMENT,
+                derivedCacheValueJsonObject.getString(Credential.SerializedNames.ENVIRONMENT));
+        assertEquals(
+                CredentialType.AccessToken.name().toLowerCase(Locale.US),
+                derivedCacheValueJsonObject.getString("credential_type"));
+        assertEquals(
+                CLIENT_ID,
+                derivedCacheValueJsonObject.getString(Credential.SerializedNames.CLIENT_ID));
+        assertEquals(
+                REALM,
+                derivedCacheValueJsonObject.getString(AccessTokenRecord.SerializedNames.REALM));
+        assertEquals(
+                TARGET,
+                derivedCacheValueJsonObject.getString(AccessTokenRecord.SerializedNames.TARGET));
         assertEquals("bar", derivedCacheValueJsonObject.getString("foo"));
 
         final JSONArray jsonArr = derivedCacheValueJsonObject.getJSONArray("numbers");
@@ -298,7 +356,8 @@ public class CacheKeyValueDelegateTest {
 
         // Add more non-standard data to this object...
         final JSONArray numbers = new JSONArray("[1, 2, 3]");
-        final JSONArray objects = new JSONArray("[{\"hello\" : \"hallo\"}, {\"goodbye\" : \"auf wiedersehen\"}]");
+        final JSONArray objects =
+                new JSONArray("[{\"hello\" : \"hallo\"}, {\"goodbye\" : \"auf wiedersehen\"}]");
 
         jsonObject.put("foo", "bar");
         jsonObject.put("numbers", numbers);
@@ -306,18 +365,26 @@ public class CacheKeyValueDelegateTest {
 
         serializedValue = jsonObject.toString();
 
-        final AccessTokenRecord deserializedValue = mDelegate.fromCacheValue(serializedValue, AccessTokenRecord.class);
+        final AccessTokenRecord deserializedValue =
+                mDelegate.fromCacheValue(serializedValue, AccessTokenRecord.class);
         assertNotNull(deserializedValue);
-        assertNull(deserializedValue.getAdditionalFields().get(Credential.SerializedNames.ENVIRONMENT));
+        assertNull(
+                deserializedValue
+                        .getAdditionalFields()
+                        .get(Credential.SerializedNames.ENVIRONMENT));
         assertEquals(HOME_ACCOUNT_ID, deserializedValue.getHomeAccountId());
         assertEquals(ENVIRONMENT, deserializedValue.getEnvironment());
-        assertEquals(CredentialType.AccessToken.name().toLowerCase(Locale.US), deserializedValue.getCredentialType());
+        assertEquals(
+                CredentialType.AccessToken.name().toLowerCase(Locale.US),
+                deserializedValue.getCredentialType());
         assertEquals(CLIENT_ID, deserializedValue.getClientId());
         assertEquals(REALM, deserializedValue.getRealm());
         assertEquals(TARGET, deserializedValue.getTarget());
         assertEquals(3, deserializedValue.getAdditionalFields().size());
         assertEquals("bar", deserializedValue.getAdditionalFields().get("foo").getAsString());
-        assertEquals(numbers.toString(), deserializedValue.getAdditionalFields().get("numbers").toString());
+        assertEquals(
+                numbers.toString(),
+                deserializedValue.getAdditionalFields().get("numbers").toString());
     }
 
     @Test
@@ -347,10 +414,13 @@ public class CacheKeyValueDelegateTest {
         account.setEnvironment(ENVIRONMENT);
         account.setRealm(REALM);
 
-        final String expectedKey = ""
-                + HOME_ACCOUNT_ID + CACHE_VALUE_SEPARATOR
-                + ENVIRONMENT + CACHE_VALUE_SEPARATOR
-                + REALM;
+        final String expectedKey =
+                ""
+                        + HOME_ACCOUNT_ID
+                        + CACHE_VALUE_SEPARATOR
+                        + ENVIRONMENT
+                        + CACHE_VALUE_SEPARATOR
+                        + REALM;
 
         assertEquals(expectedKey, mDelegate.generateCacheKey(account));
     }
@@ -361,10 +431,8 @@ public class CacheKeyValueDelegateTest {
         account.setEnvironment(ENVIRONMENT);
         account.setRealm(REALM);
 
-        final String expectedKey = ""
-                + CACHE_VALUE_SEPARATOR
-                + ENVIRONMENT + CACHE_VALUE_SEPARATOR
-                + REALM;
+        final String expectedKey =
+                "" + CACHE_VALUE_SEPARATOR + ENVIRONMENT + CACHE_VALUE_SEPARATOR + REALM;
 
         assertEquals(expectedKey, mDelegate.generateCacheKey(account));
     }
@@ -375,9 +443,8 @@ public class CacheKeyValueDelegateTest {
         account.setHomeAccountId(HOME_ACCOUNT_ID);
         account.setEnvironment(ENVIRONMENT);
 
-        final String expectedKey = ""
-                + HOME_ACCOUNT_ID + CACHE_VALUE_SEPARATOR
-                + ENVIRONMENT + CACHE_VALUE_SEPARATOR;
+        final String expectedKey =
+                "" + HOME_ACCOUNT_ID + CACHE_VALUE_SEPARATOR + ENVIRONMENT + CACHE_VALUE_SEPARATOR;
 
         assertEquals(expectedKey, mDelegate.generateCacheKey(account));
     }
@@ -387,9 +454,7 @@ public class CacheKeyValueDelegateTest {
         final AccountRecord account = new AccountRecord();
         account.setEnvironment(ENVIRONMENT);
 
-        final String expectedKey = ""
-                + CACHE_VALUE_SEPARATOR
-                + ENVIRONMENT + CACHE_VALUE_SEPARATOR;
+        final String expectedKey = "" + CACHE_VALUE_SEPARATOR + ENVIRONMENT + CACHE_VALUE_SEPARATOR;
 
         assertEquals(expectedKey, mDelegate.generateCacheKey(account));
     }
@@ -410,7 +475,9 @@ public class CacheKeyValueDelegateTest {
         final String serializedValue = mDelegate.generateCacheValue(account);
 
         final JSONObject jsonObject = new JSONObject(serializedValue);
-        assertEquals(HOME_ACCOUNT_ID, jsonObject.getString(AccountRecord.SerializedNames.HOME_ACCOUNT_ID));
+        assertEquals(
+                HOME_ACCOUNT_ID,
+                jsonObject.getString(AccountRecord.SerializedNames.HOME_ACCOUNT_ID));
         assertEquals(ENVIRONMENT, jsonObject.getString(AccountRecord.SerializedNames.ENVIRONMENT));
         assertEquals(REALM, jsonObject.getString(AccountRecord.SerializedNames.REALM));
         assertEquals(LOCAL_ACCOUNT_ID, jsonObject.getString("local_account_id"));
@@ -423,8 +490,7 @@ public class CacheKeyValueDelegateTest {
 
     @Test
     public void accountExtraValueSerialization() throws JSONException {
-        final AccountRecord account
-                = new AccountRecord();
+        final AccountRecord account = new AccountRecord();
         account.setHomeAccountId(HOME_ACCOUNT_ID);
         account.setEnvironment(ENVIRONMENT);
         account.setRealm(REALM);
@@ -454,12 +520,19 @@ public class CacheKeyValueDelegateTest {
 
         String serializedValue = mDelegate.generateCacheValue(account);
         JSONObject derivedCacheValueJsonObject = new JSONObject(serializedValue);
-        assertEquals(HOME_ACCOUNT_ID, derivedCacheValueJsonObject.getString(AccountRecord.SerializedNames.HOME_ACCOUNT_ID));
-        assertEquals(ENVIRONMENT, derivedCacheValueJsonObject.getString(AccountRecord.SerializedNames.ENVIRONMENT));
-        assertEquals(REALM, derivedCacheValueJsonObject.getString(AccountRecord.SerializedNames.REALM));
+        assertEquals(
+                HOME_ACCOUNT_ID,
+                derivedCacheValueJsonObject.getString(
+                        AccountRecord.SerializedNames.HOME_ACCOUNT_ID));
+        assertEquals(
+                ENVIRONMENT,
+                derivedCacheValueJsonObject.getString(AccountRecord.SerializedNames.ENVIRONMENT));
+        assertEquals(
+                REALM, derivedCacheValueJsonObject.getString(AccountRecord.SerializedNames.REALM));
         assertEquals(LOCAL_ACCOUNT_ID, derivedCacheValueJsonObject.get("local_account_id"));
         assertEquals(AUTHORITY_TYPE, derivedCacheValueJsonObject.get("authority_type"));
-        assertEquals(ALTERNATIVE_ACCOUNT_ID, derivedCacheValueJsonObject.get("alternative_account_id"));
+        assertEquals(
+                ALTERNATIVE_ACCOUNT_ID, derivedCacheValueJsonObject.get("alternative_account_id"));
         assertEquals(FIRST_NAME, derivedCacheValueJsonObject.get("first_name"));
         assertEquals(FAMILY_NAME, derivedCacheValueJsonObject.get("family_name"));
         assertEquals(AVATAR_URL, derivedCacheValueJsonObject.get("avatar_url"));
@@ -474,8 +547,7 @@ public class CacheKeyValueDelegateTest {
 
     @Test
     public void accountExtraValueDeserialization() throws JSONException {
-        final AccountRecord account
-                = new AccountRecord();
+        final AccountRecord account = new AccountRecord();
         account.setHomeAccountId(HOME_ACCOUNT_ID);
         account.setEnvironment(ENVIRONMENT);
         account.setRealm(REALM);
@@ -493,7 +565,8 @@ public class CacheKeyValueDelegateTest {
 
         // Add more non-standard data to this object...
         final JSONArray numbers = new JSONArray("[1, 2, 3]");
-        final JSONArray objects = new JSONArray("[{\"hello\" : \"hallo\"}, {\"goodbye\" : \"auf wiedersehen\"}]");
+        final JSONArray objects =
+                new JSONArray("[{\"hello\" : \"hallo\"}, {\"goodbye\" : \"auf wiedersehen\"}]");
 
         jsonObject.put("foo", "bar");
         jsonObject.put("numbers", numbers);
@@ -501,10 +574,13 @@ public class CacheKeyValueDelegateTest {
 
         serializedValue = jsonObject.toString();
 
-        final AccountRecord deserializedValue
-                = mDelegate.fromCacheValue(serializedValue, AccountRecord.class);
+        final AccountRecord deserializedValue =
+                mDelegate.fromCacheValue(serializedValue, AccountRecord.class);
         assertNotNull(deserializedValue);
-        assertNull(deserializedValue.getAdditionalFields().get(AccountRecord.SerializedNames.ENVIRONMENT));
+        assertNull(
+                deserializedValue
+                        .getAdditionalFields()
+                        .get(AccountRecord.SerializedNames.ENVIRONMENT));
         assertEquals(HOME_ACCOUNT_ID, deserializedValue.getHomeAccountId());
         assertEquals(ENVIRONMENT, deserializedValue.getEnvironment());
         assertEquals(REALM, deserializedValue.getRealm());
@@ -516,7 +592,9 @@ public class CacheKeyValueDelegateTest {
         assertEquals(AVATAR_URL, deserializedValue.getAvatarUrl());
         assertEquals(3, deserializedValue.getAdditionalFields().size());
         assertEquals("bar", deserializedValue.getAdditionalFields().get("foo").getAsString());
-        assertEquals(numbers.toString(), deserializedValue.getAdditionalFields().get("numbers").toString());
+        assertEquals(
+                numbers.toString(),
+                deserializedValue.getAdditionalFields().get("numbers").toString());
     }
     // End Accounts
 
@@ -530,13 +608,18 @@ public class CacheKeyValueDelegateTest {
         refreshToken.setClientId(CLIENT_ID);
         refreshToken.setTarget(TARGET);
 
-        final String expectedKey = "" // just for formatting
-                + HOME_ACCOUNT_ID + CACHE_VALUE_SEPARATOR
-                + ENVIRONMENT + CACHE_VALUE_SEPARATOR
-                + CREDENTIAL_TYPE_REFRESH_TOKEN + CACHE_VALUE_SEPARATOR
-                + CLIENT_ID + CACHE_VALUE_SEPARATOR
-                + CACHE_VALUE_SEPARATOR
-                + TARGET;
+        final String expectedKey =
+                "" // just for formatting
+                        + HOME_ACCOUNT_ID
+                        + CACHE_VALUE_SEPARATOR
+                        + ENVIRONMENT
+                        + CACHE_VALUE_SEPARATOR
+                        + CREDENTIAL_TYPE_REFRESH_TOKEN
+                        + CACHE_VALUE_SEPARATOR
+                        + CLIENT_ID
+                        + CACHE_VALUE_SEPARATOR
+                        + CACHE_VALUE_SEPARATOR
+                        + TARGET;
         assertEquals(expectedKey, mDelegate.generateCacheKey(refreshToken));
     }
 
@@ -550,13 +633,18 @@ public class CacheKeyValueDelegateTest {
         refreshToken.setFamilyId("1");
         refreshToken.setTarget(TARGET);
 
-        final String expectedKey = "" // just for formatting
-                + HOME_ACCOUNT_ID + CACHE_VALUE_SEPARATOR
-                + ENVIRONMENT + CACHE_VALUE_SEPARATOR
-                + CREDENTIAL_TYPE_REFRESH_TOKEN + CACHE_VALUE_SEPARATOR
-                + "1" + CACHE_VALUE_SEPARATOR
-                + CACHE_VALUE_SEPARATOR
-                + TARGET;
+        final String expectedKey =
+                "" // just for formatting
+                        + HOME_ACCOUNT_ID
+                        + CACHE_VALUE_SEPARATOR
+                        + ENVIRONMENT
+                        + CACHE_VALUE_SEPARATOR
+                        + CREDENTIAL_TYPE_REFRESH_TOKEN
+                        + CACHE_VALUE_SEPARATOR
+                        + "1"
+                        + CACHE_VALUE_SEPARATOR
+                        + CACHE_VALUE_SEPARATOR
+                        + TARGET;
         assertEquals(expectedKey, mDelegate.generateCacheKey(refreshToken));
     }
 
@@ -570,13 +658,18 @@ public class CacheKeyValueDelegateTest {
         refreshToken.setFamilyId("foci-1");
         refreshToken.setTarget(TARGET);
 
-        final String expectedKey = "" // just for formatting
-                + HOME_ACCOUNT_ID + CACHE_VALUE_SEPARATOR
-                + ENVIRONMENT + CACHE_VALUE_SEPARATOR
-                + CREDENTIAL_TYPE_REFRESH_TOKEN + CACHE_VALUE_SEPARATOR
-                + "1" + CACHE_VALUE_SEPARATOR
-                + CACHE_VALUE_SEPARATOR
-                + TARGET;
+        final String expectedKey =
+                "" // just for formatting
+                        + HOME_ACCOUNT_ID
+                        + CACHE_VALUE_SEPARATOR
+                        + ENVIRONMENT
+                        + CACHE_VALUE_SEPARATOR
+                        + CREDENTIAL_TYPE_REFRESH_TOKEN
+                        + CACHE_VALUE_SEPARATOR
+                        + "1"
+                        + CACHE_VALUE_SEPARATOR
+                        + CACHE_VALUE_SEPARATOR
+                        + TARGET;
         assertEquals(expectedKey, mDelegate.generateCacheKey(refreshToken));
     }
 
@@ -590,13 +683,18 @@ public class CacheKeyValueDelegateTest {
         refreshToken.setFamilyId("2");
         refreshToken.setTarget(TARGET);
 
-        final String expectedKey = "" // just for formatting
-                + HOME_ACCOUNT_ID + CACHE_VALUE_SEPARATOR
-                + ENVIRONMENT + CACHE_VALUE_SEPARATOR
-                + CREDENTIAL_TYPE_REFRESH_TOKEN + CACHE_VALUE_SEPARATOR
-                + "2" + CACHE_VALUE_SEPARATOR
-                + CACHE_VALUE_SEPARATOR
-                + TARGET;
+        final String expectedKey =
+                "" // just for formatting
+                        + HOME_ACCOUNT_ID
+                        + CACHE_VALUE_SEPARATOR
+                        + ENVIRONMENT
+                        + CACHE_VALUE_SEPARATOR
+                        + CREDENTIAL_TYPE_REFRESH_TOKEN
+                        + CACHE_VALUE_SEPARATOR
+                        + "2"
+                        + CACHE_VALUE_SEPARATOR
+                        + CACHE_VALUE_SEPARATOR
+                        + TARGET;
         assertEquals(expectedKey, mDelegate.generateCacheKey(refreshToken));
     }
 
@@ -610,13 +708,18 @@ public class CacheKeyValueDelegateTest {
         refreshToken.setFamilyId("foci-2");
         refreshToken.setTarget(TARGET);
 
-        final String expectedKey = "" // just for formatting
-                + HOME_ACCOUNT_ID + CACHE_VALUE_SEPARATOR
-                + ENVIRONMENT + CACHE_VALUE_SEPARATOR
-                + CREDENTIAL_TYPE_REFRESH_TOKEN + CACHE_VALUE_SEPARATOR
-                + "2" + CACHE_VALUE_SEPARATOR
-                + CACHE_VALUE_SEPARATOR
-                + TARGET;
+        final String expectedKey =
+                "" // just for formatting
+                        + HOME_ACCOUNT_ID
+                        + CACHE_VALUE_SEPARATOR
+                        + ENVIRONMENT
+                        + CACHE_VALUE_SEPARATOR
+                        + CREDENTIAL_TYPE_REFRESH_TOKEN
+                        + CACHE_VALUE_SEPARATOR
+                        + "2"
+                        + CACHE_VALUE_SEPARATOR
+                        + CACHE_VALUE_SEPARATOR
+                        + TARGET;
         assertEquals(expectedKey, mDelegate.generateCacheKey(refreshToken));
     }
 
@@ -628,13 +731,17 @@ public class CacheKeyValueDelegateTest {
         refreshToken.setClientId(CLIENT_ID);
         refreshToken.setTarget(TARGET);
 
-        final String expectedKey = "" // just for formatting
-                + CACHE_VALUE_SEPARATOR
-                + ENVIRONMENT + CACHE_VALUE_SEPARATOR
-                + CREDENTIAL_TYPE_REFRESH_TOKEN + CACHE_VALUE_SEPARATOR
-                + CLIENT_ID + CACHE_VALUE_SEPARATOR
-                + CACHE_VALUE_SEPARATOR
-                + TARGET;
+        final String expectedKey =
+                "" // just for formatting
+                        + CACHE_VALUE_SEPARATOR
+                        + ENVIRONMENT
+                        + CACHE_VALUE_SEPARATOR
+                        + CREDENTIAL_TYPE_REFRESH_TOKEN
+                        + CACHE_VALUE_SEPARATOR
+                        + CLIENT_ID
+                        + CACHE_VALUE_SEPARATOR
+                        + CACHE_VALUE_SEPARATOR
+                        + TARGET;
         assertEquals(expectedKey, mDelegate.generateCacheKey(refreshToken));
     }
 
@@ -647,13 +754,18 @@ public class CacheKeyValueDelegateTest {
         refreshToken.setClientId(CLIENT_ID);
         refreshToken.setTarget(TARGET);
 
-        final String expectedKey = "" // just for formatting
-                + HOME_ACCOUNT_ID + CACHE_VALUE_SEPARATOR
-                + ENVIRONMENT + CACHE_VALUE_SEPARATOR
-                + CREDENTIAL_TYPE_REFRESH_TOKEN + CACHE_VALUE_SEPARATOR
-                + CLIENT_ID + CACHE_VALUE_SEPARATOR
-                + CACHE_VALUE_SEPARATOR
-                + TARGET;
+        final String expectedKey =
+                "" // just for formatting
+                        + HOME_ACCOUNT_ID
+                        + CACHE_VALUE_SEPARATOR
+                        + ENVIRONMENT
+                        + CACHE_VALUE_SEPARATOR
+                        + CREDENTIAL_TYPE_REFRESH_TOKEN
+                        + CACHE_VALUE_SEPARATOR
+                        + CLIENT_ID
+                        + CACHE_VALUE_SEPARATOR
+                        + CACHE_VALUE_SEPARATOR
+                        + TARGET;
         assertEquals(expectedKey, mDelegate.generateCacheKey(refreshToken));
     }
 
@@ -665,12 +777,17 @@ public class CacheKeyValueDelegateTest {
         refreshToken.setCredentialType(CredentialType.RefreshToken.name());
         refreshToken.setClientId(CLIENT_ID);
 
-        final String expectedKey = "" // just for formatting
-                + HOME_ACCOUNT_ID + CACHE_VALUE_SEPARATOR
-                + ENVIRONMENT + CACHE_VALUE_SEPARATOR
-                + CREDENTIAL_TYPE_REFRESH_TOKEN + CACHE_VALUE_SEPARATOR
-                + CLIENT_ID + CACHE_VALUE_SEPARATOR
-                + CACHE_VALUE_SEPARATOR;
+        final String expectedKey =
+                "" // just for formatting
+                        + HOME_ACCOUNT_ID
+                        + CACHE_VALUE_SEPARATOR
+                        + ENVIRONMENT
+                        + CACHE_VALUE_SEPARATOR
+                        + CREDENTIAL_TYPE_REFRESH_TOKEN
+                        + CACHE_VALUE_SEPARATOR
+                        + CLIENT_ID
+                        + CACHE_VALUE_SEPARATOR
+                        + CACHE_VALUE_SEPARATOR;
 
         assertEquals(expectedKey, mDelegate.generateCacheKey(refreshToken));
     }
@@ -682,12 +799,16 @@ public class CacheKeyValueDelegateTest {
         refreshToken.setCredentialType(CredentialType.RefreshToken.name());
         refreshToken.setClientId(CLIENT_ID);
 
-        final String expectedKey = "" // just for formatting
-                + CACHE_VALUE_SEPARATOR
-                + ENVIRONMENT + CACHE_VALUE_SEPARATOR
-                + CREDENTIAL_TYPE_REFRESH_TOKEN + CACHE_VALUE_SEPARATOR
-                + CLIENT_ID + CACHE_VALUE_SEPARATOR
-                + CACHE_VALUE_SEPARATOR;
+        final String expectedKey =
+                "" // just for formatting
+                        + CACHE_VALUE_SEPARATOR
+                        + ENVIRONMENT
+                        + CACHE_VALUE_SEPARATOR
+                        + CREDENTIAL_TYPE_REFRESH_TOKEN
+                        + CACHE_VALUE_SEPARATOR
+                        + CLIENT_ID
+                        + CACHE_VALUE_SEPARATOR
+                        + CACHE_VALUE_SEPARATOR;
 
         assertEquals(expectedKey, mDelegate.generateCacheKey(refreshToken));
     }
@@ -705,9 +826,14 @@ public class CacheKeyValueDelegateTest {
 
         // Turn the serialized value into a JSONObject and start testing field equality.
         final JSONObject jsonObject = new JSONObject(serializedValue);
-        assertEquals(HOME_ACCOUNT_ID, jsonObject.getString(RefreshTokenRecord.SerializedNames.HOME_ACCOUNT_ID));
-        assertEquals(ENVIRONMENT, jsonObject.getString(RefreshTokenRecord.SerializedNames.ENVIRONMENT));
-        assertEquals(CredentialType.RefreshToken.name().toLowerCase(Locale.US), jsonObject.getString("credential_type"));
+        assertEquals(
+                HOME_ACCOUNT_ID,
+                jsonObject.getString(RefreshTokenRecord.SerializedNames.HOME_ACCOUNT_ID));
+        assertEquals(
+                ENVIRONMENT, jsonObject.getString(RefreshTokenRecord.SerializedNames.ENVIRONMENT));
+        assertEquals(
+                CredentialType.RefreshToken.name().toLowerCase(Locale.US),
+                jsonObject.getString("credential_type"));
         assertEquals(CLIENT_ID, jsonObject.getString(RefreshTokenRecord.SerializedNames.CLIENT_ID));
         assertEquals(TARGET, jsonObject.getString(RefreshTokenRecord.SerializedNames.TARGET));
     }
@@ -740,11 +866,24 @@ public class CacheKeyValueDelegateTest {
 
         String serializedValue = mDelegate.generateCacheValue(refreshToken);
         JSONObject derivedCacheValueJsonObject = new JSONObject(serializedValue);
-        assertEquals(HOME_ACCOUNT_ID, derivedCacheValueJsonObject.getString(RefreshTokenRecord.SerializedNames.HOME_ACCOUNT_ID));
-        assertEquals(ENVIRONMENT, derivedCacheValueJsonObject.getString(RefreshTokenRecord.SerializedNames.ENVIRONMENT));
-        assertEquals(CredentialType.RefreshToken.name().toLowerCase(Locale.US), derivedCacheValueJsonObject.getString("credential_type"));
-        assertEquals(CLIENT_ID, derivedCacheValueJsonObject.getString(RefreshTokenRecord.SerializedNames.CLIENT_ID));
-        assertEquals(TARGET, derivedCacheValueJsonObject.getString(RefreshTokenRecord.SerializedNames.TARGET));
+        assertEquals(
+                HOME_ACCOUNT_ID,
+                derivedCacheValueJsonObject.getString(
+                        RefreshTokenRecord.SerializedNames.HOME_ACCOUNT_ID));
+        assertEquals(
+                ENVIRONMENT,
+                derivedCacheValueJsonObject.getString(
+                        RefreshTokenRecord.SerializedNames.ENVIRONMENT));
+        assertEquals(
+                CredentialType.RefreshToken.name().toLowerCase(Locale.US),
+                derivedCacheValueJsonObject.getString("credential_type"));
+        assertEquals(
+                CLIENT_ID,
+                derivedCacheValueJsonObject.getString(
+                        RefreshTokenRecord.SerializedNames.CLIENT_ID));
+        assertEquals(
+                TARGET,
+                derivedCacheValueJsonObject.getString(RefreshTokenRecord.SerializedNames.TARGET));
         assertEquals("bar", derivedCacheValueJsonObject.getString("foo"));
 
         final JSONArray jsonArr = derivedCacheValueJsonObject.getJSONArray("numbers");
@@ -770,7 +909,8 @@ public class CacheKeyValueDelegateTest {
 
         // Add more non-standard data to this object...
         final JSONArray numbers = new JSONArray("[1, 2, 3]");
-        final JSONArray objects = new JSONArray("[{\"hello\" : \"hallo\"}, {\"goodbye\" : \"auf wiedersehen\"}]");
+        final JSONArray objects =
+                new JSONArray("[{\"hello\" : \"hallo\"}, {\"goodbye\" : \"auf wiedersehen\"}]");
 
         jsonObject.put("foo", "bar");
         jsonObject.put("numbers", numbers);
@@ -778,17 +918,25 @@ public class CacheKeyValueDelegateTest {
 
         serializedValue = jsonObject.toString();
 
-        final RefreshTokenRecord deserializedValue = mDelegate.fromCacheValue(serializedValue, RefreshTokenRecord.class);
+        final RefreshTokenRecord deserializedValue =
+                mDelegate.fromCacheValue(serializedValue, RefreshTokenRecord.class);
         assertNotNull(deserializedValue);
-        assertNull(deserializedValue.getAdditionalFields().get(Credential.SerializedNames.ENVIRONMENT));
+        assertNull(
+                deserializedValue
+                        .getAdditionalFields()
+                        .get(Credential.SerializedNames.ENVIRONMENT));
         assertEquals(HOME_ACCOUNT_ID, deserializedValue.getHomeAccountId());
         assertEquals(ENVIRONMENT, deserializedValue.getEnvironment());
-        assertEquals(CredentialType.RefreshToken.name().toLowerCase(Locale.US), deserializedValue.getCredentialType());
+        assertEquals(
+                CredentialType.RefreshToken.name().toLowerCase(Locale.US),
+                deserializedValue.getCredentialType());
         assertEquals(CLIENT_ID, deserializedValue.getClientId());
         assertEquals(TARGET, deserializedValue.getTarget());
         assertEquals(3, deserializedValue.getAdditionalFields().size());
         assertEquals("bar", deserializedValue.getAdditionalFields().get("foo").getAsString());
-        assertEquals(numbers.toString(), deserializedValue.getAdditionalFields().get("numbers").toString());
+        assertEquals(
+                numbers.toString(),
+                deserializedValue.getAdditionalFields().get("numbers").toString());
     }
     // End RefreshTokens
 
@@ -802,12 +950,17 @@ public class CacheKeyValueDelegateTest {
         // Client_id, target and realm not in cache key.
         primaryRefreshTokenRecord.setClientId(CLIENT_ID);
 
-        final String expectedKey = "" // just for formatting
-                + HOME_ACCOUNT_ID + CACHE_VALUE_SEPARATOR
-                + ENVIRONMENT + CACHE_VALUE_SEPARATOR
-                + CREDENTIAL_TYPE_PRIMARY_REFRESH_TOKEN + CACHE_VALUE_SEPARATOR
-                + CLIENT_ID + CACHE_VALUE_SEPARATOR
-                + CACHE_VALUE_SEPARATOR;
+        final String expectedKey =
+                "" // just for formatting
+                        + HOME_ACCOUNT_ID
+                        + CACHE_VALUE_SEPARATOR
+                        + ENVIRONMENT
+                        + CACHE_VALUE_SEPARATOR
+                        + CREDENTIAL_TYPE_PRIMARY_REFRESH_TOKEN
+                        + CACHE_VALUE_SEPARATOR
+                        + CLIENT_ID
+                        + CACHE_VALUE_SEPARATOR
+                        + CACHE_VALUE_SEPARATOR;
         assertEquals(expectedKey, mDelegate.generateCacheKey(primaryRefreshTokenRecord));
     }
 
@@ -816,7 +969,8 @@ public class CacheKeyValueDelegateTest {
         final PrimaryRefreshTokenRecord primaryRefreshToken = new PrimaryRefreshTokenRecord();
         primaryRefreshToken.setHomeAccountId(HOME_ACCOUNT_ID);
         primaryRefreshToken.setEnvironment(ENVIRONMENT);
-        primaryRefreshToken.setCredentialType(CredentialType.PrimaryRefreshToken.name().toLowerCase(Locale.US));
+        primaryRefreshToken.setCredentialType(
+                CredentialType.PrimaryRefreshToken.name().toLowerCase(Locale.US));
         primaryRefreshToken.setClientId(CLIENT_ID);
         primaryRefreshToken.setSessionKey(SESSION_KEY);
 
@@ -824,11 +978,21 @@ public class CacheKeyValueDelegateTest {
 
         // Turn the serialized value into a JSONObject and start testing field equality.
         final JSONObject jsonObject = new JSONObject(serializedValue);
-        assertEquals(HOME_ACCOUNT_ID, jsonObject.getString(PrimaryRefreshTokenRecord.SerializedNames.HOME_ACCOUNT_ID));
-        assertEquals(ENVIRONMENT, jsonObject.getString(PrimaryRefreshTokenRecord.SerializedNames.ENVIRONMENT));
-        assertEquals(CredentialType.PrimaryRefreshToken.name().toLowerCase(Locale.US), jsonObject.getString("credential_type"));
-        assertEquals(CLIENT_ID, jsonObject.getString(PrimaryRefreshTokenRecord.SerializedNames.CLIENT_ID));
-        assertEquals(SESSION_KEY, jsonObject.getString(PrimaryRefreshTokenRecord.SerializedNames.SESSION_KEY));
+        assertEquals(
+                HOME_ACCOUNT_ID,
+                jsonObject.getString(PrimaryRefreshTokenRecord.SerializedNames.HOME_ACCOUNT_ID));
+        assertEquals(
+                ENVIRONMENT,
+                jsonObject.getString(PrimaryRefreshTokenRecord.SerializedNames.ENVIRONMENT));
+        assertEquals(
+                CredentialType.PrimaryRefreshToken.name().toLowerCase(Locale.US),
+                jsonObject.getString("credential_type"));
+        assertEquals(
+                CLIENT_ID,
+                jsonObject.getString(PrimaryRefreshTokenRecord.SerializedNames.CLIENT_ID));
+        assertEquals(
+                SESSION_KEY,
+                jsonObject.getString(PrimaryRefreshTokenRecord.SerializedNames.SESSION_KEY));
     }
     // End PrimaryRefreshTokens
 
@@ -842,12 +1006,18 @@ public class CacheKeyValueDelegateTest {
         idToken.setClientId(CLIENT_ID);
         idToken.setRealm(REALM);
 
-        final String expectedKey = "" // just for formatting
-                + HOME_ACCOUNT_ID + CACHE_VALUE_SEPARATOR
-                + ENVIRONMENT + CACHE_VALUE_SEPARATOR
-                + CREDENTIAL_TYPE_ID_TOKEN + CACHE_VALUE_SEPARATOR
-                + CLIENT_ID + CACHE_VALUE_SEPARATOR
-                + REALM + CACHE_VALUE_SEPARATOR;
+        final String expectedKey =
+                "" // just for formatting
+                        + HOME_ACCOUNT_ID
+                        + CACHE_VALUE_SEPARATOR
+                        + ENVIRONMENT
+                        + CACHE_VALUE_SEPARATOR
+                        + CREDENTIAL_TYPE_ID_TOKEN
+                        + CACHE_VALUE_SEPARATOR
+                        + CLIENT_ID
+                        + CACHE_VALUE_SEPARATOR
+                        + REALM
+                        + CACHE_VALUE_SEPARATOR;
         assertEquals(expectedKey, mDelegate.generateCacheKey(idToken));
     }
 
@@ -859,12 +1029,17 @@ public class CacheKeyValueDelegateTest {
         idToken.setClientId(CLIENT_ID);
         idToken.setRealm(REALM);
 
-        final String expectedKey = "" // just for formatting
-                + CACHE_VALUE_SEPARATOR
-                + ENVIRONMENT + CACHE_VALUE_SEPARATOR
-                + CREDENTIAL_TYPE_ID_TOKEN + CACHE_VALUE_SEPARATOR
-                + CLIENT_ID + CACHE_VALUE_SEPARATOR
-                + REALM + CACHE_VALUE_SEPARATOR;
+        final String expectedKey =
+                "" // just for formatting
+                        + CACHE_VALUE_SEPARATOR
+                        + ENVIRONMENT
+                        + CACHE_VALUE_SEPARATOR
+                        + CREDENTIAL_TYPE_ID_TOKEN
+                        + CACHE_VALUE_SEPARATOR
+                        + CLIENT_ID
+                        + CACHE_VALUE_SEPARATOR
+                        + REALM
+                        + CACHE_VALUE_SEPARATOR;
         assertEquals(expectedKey, mDelegate.generateCacheKey(idToken));
     }
 
@@ -876,12 +1051,17 @@ public class CacheKeyValueDelegateTest {
         idToken.setCredentialType(CredentialType.IdToken.name());
         idToken.setClientId(CLIENT_ID);
 
-        final String expectedKey = "" // just for formatting
-                + HOME_ACCOUNT_ID + CACHE_VALUE_SEPARATOR
-                + ENVIRONMENT + CACHE_VALUE_SEPARATOR
-                + CREDENTIAL_TYPE_ID_TOKEN + CACHE_VALUE_SEPARATOR
-                + CLIENT_ID + CACHE_VALUE_SEPARATOR
-                + CACHE_VALUE_SEPARATOR;
+        final String expectedKey =
+                "" // just for formatting
+                        + HOME_ACCOUNT_ID
+                        + CACHE_VALUE_SEPARATOR
+                        + ENVIRONMENT
+                        + CACHE_VALUE_SEPARATOR
+                        + CREDENTIAL_TYPE_ID_TOKEN
+                        + CACHE_VALUE_SEPARATOR
+                        + CLIENT_ID
+                        + CACHE_VALUE_SEPARATOR
+                        + CACHE_VALUE_SEPARATOR;
         assertEquals(expectedKey, mDelegate.generateCacheKey(idToken));
     }
 
@@ -898,9 +1078,12 @@ public class CacheKeyValueDelegateTest {
 
         // Turn the serialized value into a JSONObject and start testing field equality.
         final JSONObject jsonObject = new JSONObject(serializedValue);
-        assertEquals(HOME_ACCOUNT_ID, jsonObject.getString(Credential.SerializedNames.HOME_ACCOUNT_ID));
+        assertEquals(
+                HOME_ACCOUNT_ID, jsonObject.getString(Credential.SerializedNames.HOME_ACCOUNT_ID));
         assertEquals(ENVIRONMENT, jsonObject.getString(Credential.SerializedNames.ENVIRONMENT));
-        assertEquals(CredentialType.IdToken.name().toLowerCase(Locale.US), jsonObject.getString("credential_type"));
+        assertEquals(
+                CredentialType.IdToken.name().toLowerCase(Locale.US),
+                jsonObject.getString("credential_type"));
         assertEquals(CLIENT_ID, jsonObject.getString(Credential.SerializedNames.CLIENT_ID));
         assertEquals(REALM, jsonObject.getString(IdTokenRecord.SerializedNames.REALM));
     }
@@ -933,11 +1116,20 @@ public class CacheKeyValueDelegateTest {
 
         String serializedValue = mDelegate.generateCacheValue(idToken);
         JSONObject derivedCacheValueJsonObject = new JSONObject(serializedValue);
-        assertEquals(HOME_ACCOUNT_ID, derivedCacheValueJsonObject.getString(Credential.SerializedNames.HOME_ACCOUNT_ID));
-        assertEquals(ENVIRONMENT, derivedCacheValueJsonObject.getString(Credential.SerializedNames.ENVIRONMENT));
-        assertEquals(CredentialType.IdToken.name().toLowerCase(Locale.US), derivedCacheValueJsonObject.getString("credential_type"));
-        assertEquals(CLIENT_ID, derivedCacheValueJsonObject.getString(Credential.SerializedNames.CLIENT_ID));
-        assertEquals(REALM, derivedCacheValueJsonObject.getString(IdTokenRecord.SerializedNames.REALM));
+        assertEquals(
+                HOME_ACCOUNT_ID,
+                derivedCacheValueJsonObject.getString(Credential.SerializedNames.HOME_ACCOUNT_ID));
+        assertEquals(
+                ENVIRONMENT,
+                derivedCacheValueJsonObject.getString(Credential.SerializedNames.ENVIRONMENT));
+        assertEquals(
+                CredentialType.IdToken.name().toLowerCase(Locale.US),
+                derivedCacheValueJsonObject.getString("credential_type"));
+        assertEquals(
+                CLIENT_ID,
+                derivedCacheValueJsonObject.getString(Credential.SerializedNames.CLIENT_ID));
+        assertEquals(
+                REALM, derivedCacheValueJsonObject.getString(IdTokenRecord.SerializedNames.REALM));
         assertEquals("bar", derivedCacheValueJsonObject.getString("foo"));
 
         final JSONArray jsonArr = derivedCacheValueJsonObject.getJSONArray("numbers");
@@ -963,7 +1155,8 @@ public class CacheKeyValueDelegateTest {
 
         // Add more non-standard data to this object...
         final JSONArray numbers = new JSONArray("[1, 2, 3]");
-        final JSONArray objects = new JSONArray("[{\"hello\" : \"hallo\"}, {\"goodbye\" : \"auf wiedersehen\"}]");
+        final JSONArray objects =
+                new JSONArray("[{\"hello\" : \"hallo\"}, {\"goodbye\" : \"auf wiedersehen\"}]");
 
         jsonObject.put("foo", "bar");
         jsonObject.put("numbers", numbers);
@@ -971,17 +1164,25 @@ public class CacheKeyValueDelegateTest {
 
         serializedValue = jsonObject.toString();
 
-        final IdTokenRecord deserializedValue = mDelegate.fromCacheValue(serializedValue, IdTokenRecord.class);
+        final IdTokenRecord deserializedValue =
+                mDelegate.fromCacheValue(serializedValue, IdTokenRecord.class);
         assertNotNull(deserializedValue);
-        assertNull(deserializedValue.getAdditionalFields().get(Credential.SerializedNames.ENVIRONMENT));
+        assertNull(
+                deserializedValue
+                        .getAdditionalFields()
+                        .get(Credential.SerializedNames.ENVIRONMENT));
         assertEquals(HOME_ACCOUNT_ID, deserializedValue.getHomeAccountId());
         assertEquals(ENVIRONMENT, deserializedValue.getEnvironment());
-        assertEquals(CredentialType.IdToken.name().toLowerCase(Locale.US), deserializedValue.getCredentialType());
+        assertEquals(
+                CredentialType.IdToken.name().toLowerCase(Locale.US),
+                deserializedValue.getCredentialType());
         assertEquals(CLIENT_ID, deserializedValue.getClientId());
         assertEquals(REALM, deserializedValue.getRealm());
         assertEquals(3, deserializedValue.getAdditionalFields().size());
         assertEquals("bar", deserializedValue.getAdditionalFields().get("foo").getAsString());
-        assertEquals(numbers.toString(), deserializedValue.getAdditionalFields().get("numbers").toString());
+        assertEquals(
+                numbers.toString(),
+                deserializedValue.getAdditionalFields().get("numbers").toString());
     }
     // End IdTokens
 }

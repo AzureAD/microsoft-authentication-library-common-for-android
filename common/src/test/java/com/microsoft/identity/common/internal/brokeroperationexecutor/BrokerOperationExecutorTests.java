@@ -22,6 +22,9 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.brokeroperationexecutor;
 
+import static com.microsoft.identity.common.exception.BrokerCommunicationException.Category.CONNECTION_ERROR;
+import static com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy.Type.BOUND_SERVICE;
+
 import android.os.Build;
 import android.os.Bundle;
 
@@ -30,17 +33,17 @@ import androidx.annotation.Nullable;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.microsoft.identity.common.AndroidPlatformComponents;
-import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.exception.BrokerCommunicationException;
+import com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle;
+import com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy;
+import com.microsoft.identity.common.internal.controllers.BrokerOperationExecutor;
+import com.microsoft.identity.common.internal.telemetry.events.ApiEndEvent;
+import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
+import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.exception.ServiceException;
 import com.microsoft.identity.common.java.exception.UserCancelException;
-import com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle;
-import com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy;
-import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
-import com.microsoft.identity.common.internal.controllers.BrokerOperationExecutor;
-import com.microsoft.identity.common.internal.telemetry.events.ApiEndEvent;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -50,9 +53,6 @@ import org.robolectric.annotation.Config;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import static com.microsoft.identity.common.exception.BrokerCommunicationException.Category.CONNECTION_ERROR;
-import static com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy.Type.BOUND_SERVICE;
 
 @RunWith(RobolectricTestRunner.class)
 @Config(sdk = {Build.VERSION_CODES.N})
@@ -121,7 +121,8 @@ public class BrokerOperationExecutorTests {
         expectBindFailureException(strategyList);
     }
 
-    // Providing 2 strategies and the first one fails with BrokerCommunicationException inside IIpcStrategy.
+    // Providing 2 strategies and the first one fails with BrokerCommunicationException inside
+    // IIpcStrategy.
     @Test
     public void testTwoStrategiesWithTheFirstOneThrowingBrokerCommunicationException() {
         final List<IIpcStrategy> strategyList = new ArrayList<>();
@@ -132,7 +133,8 @@ public class BrokerOperationExecutorTests {
     }
 
     // Providing 2 strategies and the first one returns a corrupted result.
-    // NOTE: This should never happen in real life. broker should return the same values regardless of communication strategy.
+    // NOTE: This should never happen in real life. broker should return the same values regardless
+    // of communication strategy.
     @Test
     public void testTwoStrategiesWithTheFirstOneReturningCorruptedResult() {
         final List<IIpcStrategy> strategyList = new ArrayList<>();
@@ -142,7 +144,8 @@ public class BrokerOperationExecutorTests {
         expectCorruptedBundleException(strategyList);
     }
 
-    // Providing 2 strategies and the last one failed with BrokerCommunicationException inside IIpcStrategy.
+    // Providing 2 strategies and the last one failed with BrokerCommunicationException inside
+    // IIpcStrategy.
     @Test
     public void testTwoStrategiesWithTheLastOneThrowingBrokerCommunicationException() {
         final List<IIpcStrategy> strategyList = new ArrayList<>();
@@ -153,7 +156,8 @@ public class BrokerOperationExecutorTests {
     }
 
     // Providing 2 strategies and the last one returns a corrupted result.
-    // NOTE: This should never happen in real life. broker should return the same values regardless of communication strategy.
+    // NOTE: This should never happen in real life. broker should return the same values regardless
+    // of communication strategy.
     @Test
     public void testTwoStrategiesWithTheLastOneThrowingCorruptedResult() {
         final List<IIpcStrategy> strategyList = new ArrayList<>();
@@ -218,14 +222,17 @@ public class BrokerOperationExecutorTests {
 
     private CommandParameters getMockParameter() {
         return CommandParameters.builder()
-                .platformComponents(AndroidPlatformComponents.createFromContext(ApplicationProvider.getApplicationContext()))
+                .platformComponents(
+                        AndroidPlatformComponents.createFromContext(
+                                ApplicationProvider.getApplicationContext()))
                 .build();
     }
 
     private IIpcStrategy getStrategyWithValidResult() {
         return new IIpcStrategy() {
             @Override
-            public @NonNull Bundle communicateToBroker(@NonNull BrokerOperationBundle bundle) throws BrokerCommunicationException {
+            public @NonNull Bundle communicateToBroker(@NonNull BrokerOperationBundle bundle)
+                    throws BrokerCommunicationException {
                 final Bundle result = new Bundle();
                 result.putBoolean(SUCCESS_BUNDLE_KEY, true);
                 return result;
@@ -242,7 +249,8 @@ public class BrokerOperationExecutorTests {
     private IIpcStrategy getStrategyWithCorruptedResult() {
         return new IIpcStrategy() {
             @Override
-            public @NonNull Bundle communicateToBroker(final @NonNull BrokerOperationBundle bundle) throws BrokerCommunicationException {
+            public @NonNull Bundle communicateToBroker(final @NonNull BrokerOperationBundle bundle)
+                    throws BrokerCommunicationException {
                 return new Bundle();
             }
 
@@ -257,7 +265,8 @@ public class BrokerOperationExecutorTests {
     private IIpcStrategy getStrategyWithServiceExceptionResult() {
         return new IIpcStrategy() {
             @Override
-            public @NonNull Bundle communicateToBroker(final @NonNull BrokerOperationBundle bundle) throws BrokerCommunicationException {
+            public @NonNull Bundle communicateToBroker(final @NonNull BrokerOperationBundle bundle)
+                    throws BrokerCommunicationException {
                 final Bundle result = new Bundle();
                 result.putBoolean(SERVICE_EXCEPTION_BUNDLE_KEY, true);
                 return result;
@@ -274,7 +283,8 @@ public class BrokerOperationExecutorTests {
     private IIpcStrategy getStrategyWithUserCanceledResult() {
         return new IIpcStrategy() {
             @Override
-            public @NonNull Bundle communicateToBroker(final @NonNull BrokerOperationBundle bundle) throws BrokerCommunicationException {
+            public @NonNull Bundle communicateToBroker(final @NonNull BrokerOperationBundle bundle)
+                    throws BrokerCommunicationException {
                 final Bundle result = new Bundle();
                 result.putBoolean(USER_CANCEL_BUNDLE_KEY, true);
                 return result;
@@ -291,8 +301,10 @@ public class BrokerOperationExecutorTests {
     private IIpcStrategy getStrategyWithBrokerCommunicationException() {
         return new IIpcStrategy() {
             @Override
-            public @Nullable Bundle communicateToBroker(final @NonNull BrokerOperationBundle bundle) throws BrokerCommunicationException {
-                throw new BrokerCommunicationException(CONNECTION_ERROR, BOUND_SERVICE, "Some connection error", null);
+            public @Nullable Bundle communicateToBroker(final @NonNull BrokerOperationBundle bundle)
+                    throws BrokerCommunicationException {
+                throw new BrokerCommunicationException(
+                        CONNECTION_ERROR, BOUND_SERVICE, "Some connection error", null);
             }
 
             @Override
@@ -306,8 +318,7 @@ public class BrokerOperationExecutorTests {
     private BrokerOperationExecutor.BrokerOperation<Boolean> getBrokerOperation() {
         return new BrokerOperationExecutor.BrokerOperation<Boolean>() {
             @Override
-            public void performPrerequisites(@NonNull IIpcStrategy strategy) throws BaseException {
-            }
+            public void performPrerequisites(@NonNull IIpcStrategy strategy) throws BaseException {}
 
             @Override
             public @NonNull BrokerOperationBundle getBundle() {
@@ -318,18 +329,16 @@ public class BrokerOperationExecutorTests {
             }
 
             @Override
-            public @NonNull Boolean extractResultBundle(@Nullable Bundle resultBundle) throws BaseException {
-                if (resultBundle == null)
-                    throw new ClientException(NULL_BUNDLE_ERROR_CODE);
+            public @NonNull Boolean extractResultBundle(@Nullable Bundle resultBundle)
+                    throws BaseException {
+                if (resultBundle == null) throw new ClientException(NULL_BUNDLE_ERROR_CODE);
                 else if (resultBundle.containsKey(SUCCESS_BUNDLE_KEY))
                     return resultBundle.getBoolean(SUCCESS_BUNDLE_KEY);
                 else if (resultBundle.containsKey(SERVICE_EXCEPTION_BUNDLE_KEY))
                     throw new ServiceException(SERVICE_EXCEPTION_BUNDLE_ERROR_CODE, null, null);
                 else if (resultBundle.containsKey(USER_CANCEL_BUNDLE_KEY))
                     throw new UserCancelException();
-                else
-                    throw new ClientException(CORRUPTED_BUNDLE_ERROR_CODE);
-
+                else throw new ClientException(CORRUPTED_BUNDLE_ERROR_CODE);
             }
 
             @Override
@@ -343,8 +352,8 @@ public class BrokerOperationExecutorTests {
             }
 
             @Override
-            public void putValueInSuccessEvent(final @NonNull ApiEndEvent event, final @NonNull Boolean result) {
-            }
+            public void putValueInSuccessEvent(
+                    final @NonNull ApiEndEvent event, final @NonNull Boolean result) {}
         };
     }
 }

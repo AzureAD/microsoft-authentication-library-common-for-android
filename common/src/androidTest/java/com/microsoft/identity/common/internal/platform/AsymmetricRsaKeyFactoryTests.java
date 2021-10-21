@@ -67,10 +67,7 @@ public class AsymmetricRsaKeyFactoryTests {
         Assert.assertNotNull(asymmetricKey2.getThumbprint());
 
         // Assert they're not the same
-        Assert.assertNotEquals(
-                asymmetricKey1.getThumbprint(),
-                asymmetricKey2.getThumbprint()
-        );
+        Assert.assertNotEquals(asymmetricKey1.getThumbprint(), asymmetricKey2.getThumbprint());
     }
 
     @Test
@@ -87,16 +84,10 @@ public class AsymmetricRsaKeyFactoryTests {
         final AsymmetricRsaKey reloadedFirstKey = mKeyFactory.loadAsymmetricKey(SAMPLE_KEY_1);
 
         // Reload the first key - assert that signature hasn't changed
-        Assert.assertEquals(
-                key1Thumbprint,
-                reloadedFirstKey.getThumbprint()
-        );
+        Assert.assertEquals(key1Thumbprint, reloadedFirstKey.getThumbprint());
 
         // Assert the alias is the same
-        Assert.assertEquals(
-                asymmetricKey1.getAlias(),
-                reloadedFirstKey.getAlias()
-        );
+        Assert.assertEquals(asymmetricKey1.getAlias(), reloadedFirstKey.getAlias());
     }
 
     @Test
@@ -120,10 +111,7 @@ public class AsymmetricRsaKeyFactoryTests {
         final AsymmetricRsaKey asymmetricKey2 = mKeyFactory.generateAsymmetricKey(SAMPLE_KEY_1);
 
         // Confirm that the thumbprint has changed
-        Assert.assertNotEquals(
-                key1Thumbprint,
-                asymmetricKey2.getThumbprint()
-        );
+        Assert.assertNotEquals(key1Thumbprint, asymmetricKey2.getThumbprint());
     }
 
     @Test
@@ -135,10 +123,6 @@ public class AsymmetricRsaKeyFactoryTests {
         final AsymmetricRsaKey duplicate = mKeyFactory.generateAsymmetricKey(SAMPLE_KEY_1);
 
         // Assert they are the same underlying entry
-        Assert.assertEquals(
-                asymmetricKey1.getPublicKey(),
-                duplicate.getPublicKey()
-        );
+        Assert.assertEquals(asymmetricKey1.getPublicKey(), duplicate.getPublicKey());
     }
-
 }

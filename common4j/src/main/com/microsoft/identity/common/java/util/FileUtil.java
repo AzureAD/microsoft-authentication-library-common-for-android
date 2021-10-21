@@ -22,8 +22,14 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.util;
 
+import static com.microsoft.identity.common.java.exception.ClientException.IO_ERROR;
+
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.logging.Logger;
+
+import edu.umd.cs.findbugs.annotations.Nullable;
+
+import lombok.NonNull;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -33,19 +39,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import edu.umd.cs.findbugs.annotations.Nullable;
-import lombok.NonNull;
-
-import static com.microsoft.identity.common.java.exception.ClientException.IO_ERROR;
-
 /**
  * Utility class for reading/writing file in Android.
  */
 public class FileUtil {
     private static final String TAG = FileUtil.class.getSimpleName();
 
-    private FileUtil() {
-    }
+    private FileUtil() {}
 
     /**
      * Write a data blob to a file.
@@ -53,8 +53,8 @@ public class FileUtil {
      * @param data a data blob to be written.
      * @param file file to write to.
      */
-    public static void writeDataToFile(@NonNull final byte[] data,
-                                       @NonNull final File file) throws ClientException {
+    public static void writeDataToFile(@NonNull final byte[] data, @NonNull final File file)
+            throws ClientException {
         final String methodName = ":writeKeyData";
 
         Logger.verbose(TAG + methodName, "Writing data to a file");
@@ -67,17 +67,10 @@ public class FileUtil {
                 out.close();
             }
         } catch (IOException e) {
-            final ClientException clientException = new ClientException(
-                    IO_ERROR,
-                    e.getMessage(),
-                    e
-            );
+            final ClientException clientException =
+                    new ClientException(IO_ERROR, e.getMessage(), e);
 
-            Logger.error(
-                    TAG + methodName,
-                    clientException.getErrorCode(),
-                    e
-            );
+            Logger.error(TAG + methodName, clientException.getErrorCode(), e);
 
             throw clientException;
         }
@@ -91,8 +84,8 @@ public class FileUtil {
      * @return A data blob, if exists.
      */
     @Nullable
-    public static byte[] readFromFile(@NonNull final File file,
-                                      final int dataSize) throws ClientException {
+    public static byte[] readFromFile(@NonNull final File file, final int dataSize)
+            throws ClientException {
         final String methodName = ":readKeyData";
 
         if (!file.exists()) {
@@ -115,17 +108,10 @@ public class FileUtil {
                 in.close();
             }
         } catch (IOException e) {
-            final ClientException clientException = new ClientException(
-                    IO_ERROR,
-                    e.getMessage(),
-                    e
-            );
+            final ClientException clientException =
+                    new ClientException(IO_ERROR, e.getMessage(), e);
 
-            Logger.error(
-                    TAG + methodName,
-                    clientException.getErrorCode(),
-                    e
-            );
+            Logger.error(TAG + methodName, clientException.getErrorCode(), e);
 
             throw clientException;
         }
@@ -146,5 +132,4 @@ public class FileUtil {
             }
         }
     }
-
 }

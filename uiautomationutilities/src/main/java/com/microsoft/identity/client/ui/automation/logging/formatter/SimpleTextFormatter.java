@@ -33,5 +33,4 @@ public class SimpleTextFormatter implements ILogFormatter {
     public String format(LogLevel logLevel, String tag, String message, Throwable throwable) {
         return message;
     }
-
 }

@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.ui.webview;
 
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Browser.SSL_HELP_URL;
+
 import android.app.Activity;
 import android.graphics.Bitmap;
 import android.net.Uri;
@@ -41,16 +43,14 @@ import androidx.annotation.VisibleForTesting;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.ChallengeFactory;
-import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.IChallengeHandler;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.NtlmChallenge;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.NtlmChallengeHandler;
 import com.microsoft.identity.common.internal.util.StringUtil;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
+import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.logging.Logger;
-
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Browser.SSL_HELP_URL;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
@@ -62,7 +62,9 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
     private final OnPageLoadedCallback mPageLoadedCallback;
     private final Activity mActivity;
 
-    @SuppressFBWarnings(value = "MS_SHOULD_BE_FINAL", justification = "This is only exposed in testing")
+    @SuppressFBWarnings(
+            value = "MS_SHOULD_BE_FINAL",
+            justification = "This is only exposed in testing")
     @VisibleForTesting
     public static ExpectedPage mExpectedPage = null;
 
@@ -87,39 +89,44 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
      * @param completionCallback Challenge completion callback
      * @param pageLoadedCallback callback to be triggered on page load. For UI purposes.
      */
-    OAuth2WebViewClient(@NonNull final Activity activity,
-                        @NonNull final IAuthorizationCompletionCallback completionCallback,
-                        @NonNull final OnPageLoadedCallback pageLoadedCallback) {
-        //the validation of redirect url and authorization request should be in upper level before launching the webview.
+    OAuth2WebViewClient(
+            @NonNull final Activity activity,
+            @NonNull final IAuthorizationCompletionCallback completionCallback,
+            @NonNull final OnPageLoadedCallback pageLoadedCallback) {
+        // the validation of redirect url and authorization request should be in upper level before
+        // launching the webview.
         mActivity = activity;
         mCompletionCallback = completionCallback;
         mPageLoadedCallback = pageLoadedCallback;
-     }
+    }
 
     @Override
-    public void onReceivedHttpAuthRequest(WebView view, final HttpAuthHandler handler,
-                                          String host, String realm) {
+    public void onReceivedHttpAuthRequest(
+            WebView view, final HttpAuthHandler handler, String host, String realm) {
         // Create a dialog to ask for credentials and post it to the handler.
         Logger.info(TAG, "Receive the http auth request. Start the dialog to ask for creds. ");
         Logger.infoPII(TAG, "Host:" + host);
 
-        //TODO TelemetryEvent.setNTLM(true); after the Telemetry is finished in common.
+        // TODO TelemetryEvent.setNTLM(true); after the Telemetry is finished in common.
         // Use ChallengeFactory to produce a NtlmChallenge
-        final NtlmChallenge ntlmChallenge = ChallengeFactory.getNtlmChallenge(view, handler, host, realm);
+        final NtlmChallenge ntlmChallenge =
+                ChallengeFactory.getNtlmChallenge(view, handler, host, realm);
 
         // Init the NtlmChallengeHandler
-        final IChallengeHandler<NtlmChallenge, Void> challengeHandler = new NtlmChallengeHandler(mActivity, mCompletionCallback);
+        final IChallengeHandler<NtlmChallenge, Void> challengeHandler =
+                new NtlmChallengeHandler(mActivity, mCompletionCallback);
 
-        //Process the challenge through the NtlmChallengeHandler created
+        // Process the challenge through the NtlmChallengeHandler created
         challengeHandler.processChallenge(ntlmChallenge);
     }
 
     @Override
     @SuppressWarnings("deprecation")
-    public void onReceivedError(final WebView view,
-                                final int errorCode,
-                                final String description,
-                                final String failingUrl) {
+    public void onReceivedError(
+            final WebView view,
+            final int errorCode,
+            final String description,
+            final String failingUrl) {
         sendErrorToCallback(view, errorCode, description);
     }
 
@@ -140,9 +147,10 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
      */
     @Override
     @RequiresApi(api = Build.VERSION_CODES.M)
-    public void onReceivedError(@NonNull final WebView view,
-                                @NonNull final WebResourceRequest request,
-                                @NonNull final WebResourceError error) {
+    public void onReceivedError(
+            @NonNull final WebView view,
+            @NonNull final WebResourceRequest request,
+            @NonNull final WebResourceError error) {
         final String methodName = "onReceivedError (23)";
         final boolean isForMainFrame = request.isForMainFrame();
 
@@ -154,9 +162,8 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
         }
     }
 
-    private void sendErrorToCallback(@NonNull final WebView view,
-                                     final int errorCode,
-                                     @NonNull final String description) {
+    private void sendErrorToCallback(
+            @NonNull final WebView view, final int errorCode, @NonNull final String description) {
         view.stopLoading();
 
         // Send the result back to the calling activity
@@ -166,30 +173,30 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
     }
 
     @Override
-    public void onReceivedSslError(final WebView view,
-                                   final SslErrorHandler handler,
-                                   final SslError error) {
+    public void onReceivedSslError(
+            final WebView view, final SslErrorHandler handler, final SslError error) {
         // Developer does not have option to control this for now
         super.onReceivedSslError(view, handler, error);
         handler.cancel();
 
-        final String errMsg = "Received SSL Error during request. For more info see: " + SSL_HELP_URL;
+        final String errMsg =
+                "Received SSL Error during request. For more info see: " + SSL_HELP_URL;
 
         Logger.error(TAG + ":onReceivedSslError", errMsg, null);
 
         // Send the result back to the calling activity
         mCompletionCallback.onChallengeResponseReceived(
                 RawAuthorizationResult.fromException(
-                        new ClientException("Code:" + ERROR_FAILED_SSL_HANDSHAKE, error.toString())));
+                        new ClientException(
+                                "Code:" + ERROR_FAILED_SSL_HANDSHAKE, error.toString())));
     }
 
     @Override
-    public void onPageFinished(final WebView view,
-                               final String url) {
+    public void onPageFinished(final WebView view, final String url) {
         super.onPageFinished(view, url);
         mPageLoadedCallback.onPageLoaded(url);
 
-        //Supports UI Automation... informing that the webview resource is now idle
+        // Supports UI Automation... informing that the webview resource is now idle
         if (mExpectedPage != null && url.startsWith(mExpectedPage.mExpectedPageUrlStartsWith)) {
             mExpectedPage.mCallback.onPageLoaded(url);
         }
@@ -199,9 +206,7 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
     }
 
     @Override
-    public void onPageStarted(final WebView view,
-                              final String url,
-                              final Bitmap favicon) {
+    public void onPageStarted(final WebView view, final String url, final Bitmap favicon) {
         checkStartUrl(url);
         Logger.info(TAG, "WebView starts loading.");
         super.onPageStarted(view, url, favicon);
@@ -218,14 +223,29 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
             Logger.info(TAG, "onPageStarted: Non-hierarchical loading uri.");
             Logger.infoPII(TAG, "start url: " + url);
         } else if (StringUtil.isEmpty(uri.getQueryParameter(AuthenticationConstants.OAuth2.CODE))) {
-            Logger.info(TAG, "onPageStarted: URI has no auth code ('"
-                    + AuthenticationConstants.OAuth2.CODE + "') query parameter.");
-            Logger.infoPII(TAG, "Scheme:" + uri.getScheme() + " Host: " + uri.getHost()
-                    + " Path: " + uri.getPath());
+            Logger.info(
+                    TAG,
+                    "onPageStarted: URI has no auth code ('"
+                            + AuthenticationConstants.OAuth2.CODE
+                            + "') query parameter.");
+            Logger.infoPII(
+                    TAG,
+                    "Scheme:"
+                            + uri.getScheme()
+                            + " Host: "
+                            + uri.getHost()
+                            + " Path: "
+                            + uri.getPath());
         } else {
             Logger.info(TAG, "Auth code is returned for the loading url.");
-            Logger.infoPII(TAG, "Scheme:" + uri.getScheme() + " Host: " + uri.getHost()
-                    + " Path: " + uri.getPath());
+            Logger.infoPII(
+                    TAG,
+                    "Scheme:"
+                            + uri.getScheme()
+                            + " Host: "
+                            + uri.getHost()
+                            + " Path: "
+                            + uri.getPath());
         }
     }
 }

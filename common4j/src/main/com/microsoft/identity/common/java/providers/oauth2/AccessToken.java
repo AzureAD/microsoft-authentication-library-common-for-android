@@ -27,6 +27,7 @@ public class AccessToken {
      * A buffer of ten minutes (in milliseconds) for token expiration.
      */
     private static final long TOKEN_EXPIRED_BUFFER = 600000;
+
     private static final int SECONDS_MS = 1000;
 
     private long mExpiresIn;

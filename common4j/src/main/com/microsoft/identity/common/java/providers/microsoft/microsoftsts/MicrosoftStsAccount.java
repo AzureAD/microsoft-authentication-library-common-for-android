@@ -22,17 +22,18 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.providers.microsoft.microsoftsts;
 
-import com.microsoft.identity.common.java.util.SchemaUtil;
+import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAccount;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.ClientInfo;
 import com.microsoft.identity.common.java.providers.oauth2.IDToken;
-import com.microsoft.identity.common.java.logging.Logger;
-
-import java.util.Map;
+import com.microsoft.identity.common.java.util.SchemaUtil;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 import lombok.EqualsAndHashCode;
 import lombok.NonNull;
+
+import java.util.Map;
 
 @EqualsAndHashCode(callSuper = true)
 public class MicrosoftStsAccount extends MicrosoftAccount {
@@ -54,8 +55,8 @@ public class MicrosoftStsAccount extends MicrosoftAccount {
      * @param clientInfo clientInfo
      */
     @SuppressFBWarnings("RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE")
-    public MicrosoftStsAccount(@NonNull final IDToken idToken,
-                               @NonNull final ClientInfo clientInfo) {
+    public MicrosoftStsAccount(
+            @NonNull final IDToken idToken, @NonNull final ClientInfo clientInfo) {
         super(idToken, clientInfo);
         Logger.verbose(TAG, "Init: " + TAG);
     }
@@ -69,5 +70,4 @@ public class MicrosoftStsAccount extends MicrosoftAccount {
     protected String getDisplayableIdFromClaims(@NonNull final Map<String, ?> claims) {
         return SchemaUtil.getDisplayableId(claims);
     }
-
 }

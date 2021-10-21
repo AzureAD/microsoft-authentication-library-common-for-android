@@ -22,42 +22,47 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.providers.oauth2;
 
+import static org.junit.Assert.assertEquals;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-import static org.junit.Assert.assertEquals;
-
 @RunWith(JUnit4.class)
-public class OpenIdConnectPromptParameterTest  {
+public class OpenIdConnectPromptParameterTest {
 
     @Test
-    public void testPromptBehaviorNull(){
-       final OpenIdConnectPromptParameter promptParameter = OpenIdConnectPromptParameter._fromPromptBehavior(null);
+    public void testPromptBehaviorNull() {
+        final OpenIdConnectPromptParameter promptParameter =
+                OpenIdConnectPromptParameter._fromPromptBehavior(null);
         assertEquals(promptParameter, OpenIdConnectPromptParameter.UNSET);
     }
 
     @Test
-    public void testPromptBehaviorAuto(){
-        final OpenIdConnectPromptParameter promptParameter = OpenIdConnectPromptParameter._fromPromptBehavior("Auto");
+    public void testPromptBehaviorAuto() {
+        final OpenIdConnectPromptParameter promptParameter =
+                OpenIdConnectPromptParameter._fromPromptBehavior("Auto");
         assertEquals(promptParameter, OpenIdConnectPromptParameter.UNSET);
     }
 
     @Test
-    public void testPromptBehaviorAlways(){
-        final OpenIdConnectPromptParameter promptParameter = OpenIdConnectPromptParameter._fromPromptBehavior("Always");
+    public void testPromptBehaviorAlways() {
+        final OpenIdConnectPromptParameter promptParameter =
+                OpenIdConnectPromptParameter._fromPromptBehavior("Always");
         assertEquals(promptParameter, OpenIdConnectPromptParameter.UNSET);
     }
 
     @Test
-    public void testPromptBehaviorRefreshSession(){
-        final OpenIdConnectPromptParameter promptParameter = OpenIdConnectPromptParameter._fromPromptBehavior("REFRESH_SESSION");
+    public void testPromptBehaviorRefreshSession() {
+        final OpenIdConnectPromptParameter promptParameter =
+                OpenIdConnectPromptParameter._fromPromptBehavior("REFRESH_SESSION");
         assertEquals(promptParameter, OpenIdConnectPromptParameter.UNSET);
     }
 
     @Test
-    public void testPromptBehaviorForcePrompt(){
-        final OpenIdConnectPromptParameter promptParameter = OpenIdConnectPromptParameter._fromPromptBehavior("FORCE_PROMPT");
+    public void testPromptBehaviorForcePrompt() {
+        final OpenIdConnectPromptParameter promptParameter =
+                OpenIdConnectPromptParameter._fromPromptBehavior("FORCE_PROMPT");
         assertEquals(promptParameter, OpenIdConnectPromptParameter.LOGIN);
     }
 }

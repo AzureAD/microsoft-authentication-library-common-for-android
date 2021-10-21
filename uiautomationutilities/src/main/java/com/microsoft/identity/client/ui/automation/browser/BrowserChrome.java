@@ -32,7 +32,6 @@ import com.microsoft.identity.client.ui.automation.app.App;
 import com.microsoft.identity.client.ui.automation.logging.Logger;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
-
 /**
  * A model for interacting with the Google Chrome Browser App during UI Test.
  */
@@ -51,7 +50,7 @@ public class BrowserChrome extends App implements IBrowser {
     public void handleFirstRun() {
         Logger.i(TAG, "Handle First Run of Browser..");
         UiAutomatorUtils.handleButtonClick("com.android.chrome:id/terms_accept");
-        if (LITE_MODE_EXPECTED){
+        if (LITE_MODE_EXPECTED) {
             UiAutomatorUtils.handleButtonClickForObjectWithText("Next");
         }
         UiAutomatorUtils.handleButtonClick("com.android.chrome:id/negative_button");
@@ -62,9 +61,8 @@ public class BrowserChrome extends App implements IBrowser {
         Logger.i(TAG, "Navigate to the URL in the browser..");
         UiAutomatorUtils.handleButtonClick("com.android.chrome:id/search_box_text");
 
-        final UiObject inputField = UiAutomatorUtils.obtainUiObjectWithResourceId(
-                "com.android.chrome:id/url_bar"
-        );
+        final UiObject inputField =
+                UiAutomatorUtils.obtainUiObjectWithResourceId("com.android.chrome:id/url_bar");
 
         try {
             // enter the URL
@@ -73,8 +71,7 @@ public class BrowserChrome extends App implements IBrowser {
             throw new AssertionError(e);
         }
 
-        final UiDevice device =
-                UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+        final UiDevice device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
         // press enter on the Keyboard
         device.pressEnter();

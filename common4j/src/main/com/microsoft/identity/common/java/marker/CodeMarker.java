@@ -22,8 +22,6 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.marker;
 
-import java.util.LinkedHashMap;
-
 import static com.microsoft.identity.common.java.marker.PerfConstants.CodeMarkerParameters.APP_RECEIVED;
 import static com.microsoft.identity.common.java.marker.PerfConstants.CodeMarkerParameters.APP_SENT;
 import static com.microsoft.identity.common.java.marker.PerfConstants.CodeMarkerParameters.BATTERY;
@@ -41,6 +39,8 @@ import static com.microsoft.identity.common.java.marker.PerfConstants.CodeMarker
 import static com.microsoft.identity.common.java.marker.PerfConstants.CodeMarkerParameters.WAN_SENT;
 import static com.microsoft.identity.common.java.marker.PerfConstants.CodeMarkerParameters.WIFI_RECEIVED;
 import static com.microsoft.identity.common.java.marker.PerfConstants.CodeMarkerParameters.WIFI_SENT;
+
+import java.util.LinkedHashMap;
 
 /**
  * A Class containing information of a code marker which is an event in code.
@@ -71,7 +71,11 @@ public class CodeMarker {
     private String systemDiskRead = null;
     private String systemDiskWrite = null;
 
-    public CodeMarker(final String marker, final long timeInMilliseconds, final String timeStamp, final long threadId) {
+    public CodeMarker(
+            final String marker,
+            final long timeInMilliseconds,
+            final String timeStamp,
+            final long threadId) {
         this.marker = marker;
         this.timeInMilliseconds = timeInMilliseconds;
         this.timeStamp = timeStamp;
@@ -90,8 +94,10 @@ public class CodeMarker {
         csvKeyValuePairs.put(THREAD, Long.toString(threadId));
         csvKeyValuePairs.put(CPU_USED, cpuUsed == null ? CodeMarker.csvNoValue : cpuUsed);
         csvKeyValuePairs.put(CPU_TOTAL, cpuTotal == null ? CodeMarker.csvNoValue : cpuTotal);
-        csvKeyValuePairs.put(RESIDENT_SIZE, residentSize == null ? CodeMarker.csvNoValue : residentSize);
-        csvKeyValuePairs.put(VIRTUAL_SIZE, virtualSize == null ? CodeMarker.csvNoValue : virtualSize);
+        csvKeyValuePairs.put(
+                RESIDENT_SIZE, residentSize == null ? CodeMarker.csvNoValue : residentSize);
+        csvKeyValuePairs.put(
+                VIRTUAL_SIZE, virtualSize == null ? CodeMarker.csvNoValue : virtualSize);
         csvKeyValuePairs.put(WIFI_SENT, wifiSent == null ? CodeMarker.csvNoValue : wifiSent);
         csvKeyValuePairs.put(WIFI_RECEIVED, wifiRecv == null ? CodeMarker.csvNoValue : wifiRecv);
         csvKeyValuePairs.put(WAN_SENT, wwanSent == null ? CodeMarker.csvNoValue : wwanSent);
@@ -99,8 +105,11 @@ public class CodeMarker {
         csvKeyValuePairs.put(APP_SENT, appSent == null ? CodeMarker.csvNoValue : appSent);
         csvKeyValuePairs.put(APP_RECEIVED, appRecv == null ? CodeMarker.csvNoValue : appRecv);
         csvKeyValuePairs.put(BATTERY, battery == null ? CodeMarker.csvNoValue : battery);
-        csvKeyValuePairs.put(SYSTEM_DISK_READ, systemDiskRead == null ? CodeMarker.csvNoValue : systemDiskRead);
-        csvKeyValuePairs.put(SYSTEM_DISK_WRITE, systemDiskWrite == null ? CodeMarker.csvNoValue : systemDiskWrite);
+        csvKeyValuePairs.put(
+                SYSTEM_DISK_READ, systemDiskRead == null ? CodeMarker.csvNoValue : systemDiskRead);
+        csvKeyValuePairs.put(
+                SYSTEM_DISK_WRITE,
+                systemDiskWrite == null ? CodeMarker.csvNoValue : systemDiskWrite);
         return csvKeyValuePairs;
     }
 
@@ -141,5 +150,4 @@ public class CodeMarker {
         }
         return csvStringBuilder.toString();
     }
-
 }

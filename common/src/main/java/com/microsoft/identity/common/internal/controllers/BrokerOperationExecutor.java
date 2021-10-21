@@ -25,27 +25,28 @@ package com.microsoft.identity.common.internal.controllers;
 
 import android.os.Bundle;
 
-import com.microsoft.identity.common.java.marker.CodeMarkerManager;
-import com.microsoft.identity.common.java.marker.PerfConstants;
 import com.microsoft.identity.common.exception.BrokerCommunicationException;
 import com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle;
 import com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy;
-import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.telemetry.events.ApiEndEvent;
 import com.microsoft.identity.common.internal.telemetry.events.ApiStartEvent;
+import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
+import com.microsoft.identity.common.java.marker.CodeMarkerManager;
+import com.microsoft.identity.common.java.marker.PerfConstants;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.logging.Logger;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 import lombok.NonNull;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Classes for executing IPC service operations.
@@ -115,18 +116,21 @@ public class BrokerOperationExecutor {
      * A generic method that would initialize and iterate through available strategies.
      * It will return a result immediately if any of the strategy succeeds, or throw an exception if all of the strategies fails.
      */
-    public <T extends CommandParameters, U> U execute(@Nullable final T parameters,
-                                                      @NonNull final BrokerOperation<U> operation) throws BaseException {
+    public <T extends CommandParameters, U> U execute(
+            @Nullable final T parameters, @NonNull final BrokerOperation<U> operation)
+            throws BaseException {
         final CodeMarkerManager codeMarkerManager = CodeMarkerManager.getInstance();
-        codeMarkerManager.markCode(PerfConstants.CodeMarkerConstants.BROKER_OPERATION_EXECUTION_START);
+        codeMarkerManager.markCode(
+                PerfConstants.CodeMarkerConstants.BROKER_OPERATION_EXECUTION_START);
         final String methodName = ":execute";
 
         emitOperationStartEvent(parameters, operation);
 
         if (mStrategies.size() == 0) {
-            final ClientException exception = new ClientException(
-                    ErrorStrings.BROKER_BIND_SERVICE_FAILED,
-                    "No strategies can be used to connect to the broker.");
+            final ClientException exception =
+                    new ClientException(
+                            ErrorStrings.BROKER_BIND_SERVICE_FAILED,
+                            "No strategies can be used to connect to the broker.");
             emitOperationFailureEvent(operation, exception);
             throw exception;
         }
@@ -148,10 +152,11 @@ public class BrokerOperationExecutor {
             }
         }
 
-        final ClientException exception = new ClientException(
-                ErrorStrings.BROKER_BIND_SERVICE_FAILED,
-                "Unable to connect to the broker. Please refer to MSAL/Broker logs " +
-                        "or suppressed exception (API 19+) for more details.");
+        final ClientException exception =
+                new ClientException(
+                        ErrorStrings.BROKER_BIND_SERVICE_FAILED,
+                        "Unable to connect to the broker. Please refer to MSAL/Broker logs "
+                                + "or suppressed exception (API 19+) for more details.");
 
         // This means that we've tried every strategies... log everything...
         for (final BrokerCommunicationException e : communicationExceptionStack) {
@@ -163,56 +168,46 @@ public class BrokerOperationExecutor {
         throw exception;
     }
 
-    private <T extends CommandParameters, U> void emitOperationStartEvent(@Nullable final T parameters,
-                                                                          @NonNull final BrokerOperation<U> operation) {
+    private <T extends CommandParameters, U> void emitOperationStartEvent(
+            @Nullable final T parameters, @NonNull final BrokerOperation<U> operation) {
         final String telemetryApiId = operation.getTelemetryApiId();
         if (!StringUtil.isNullOrEmpty(telemetryApiId)) {
-            Telemetry.emit(
-                    new ApiStartEvent()
-                            .putProperties(parameters)
-                            .putApiId(telemetryApiId)
-            );
+            Telemetry.emit(new ApiStartEvent().putProperties(parameters).putApiId(telemetryApiId));
         }
     }
 
     @SuppressFBWarnings("NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE")
-    private <U> void emitOperationSuccessEvent(@NonNull final BrokerOperation<U> operation,
-                                               final U result) {
+    private <U> void emitOperationSuccessEvent(
+            @NonNull final BrokerOperation<U> operation, final U result) {
         final String telemetryApiId = operation.getTelemetryApiId();
         if (telemetryApiId != null) {
             final ApiEndEvent apiEndEvent = new ApiEndEvent();
-            final ApiEndEvent successEvent = apiEndEvent
-                    .putApiId(telemetryApiId)
-                    .isApiCallSuccessful(Boolean.TRUE);
+            final ApiEndEvent successEvent =
+                    apiEndEvent.putApiId(telemetryApiId).isApiCallSuccessful(Boolean.TRUE);
             operation.putValueInSuccessEvent(successEvent, result);
             Telemetry.emit(successEvent);
         }
     }
 
-    private <U> void emitOperationFailureEvent(@NonNull final BrokerOperation<U> operation,
-                                               final BaseException exception) {
+    private <U> void emitOperationFailureEvent(
+            @NonNull final BrokerOperation<U> operation, final BaseException exception) {
         final String telemetryApiId = operation.getTelemetryApiId();
 
         if (!StringUtil.isNullOrEmpty(telemetryApiId)) {
-            Telemetry.emit(
-                    new ApiEndEvent()
-                            .putException(exception)
-                            .putApiId(telemetryApiId)
-            );
+            Telemetry.emit(new ApiEndEvent().putException(exception).putApiId(telemetryApiId));
         }
     }
 
     /**
      * Execute the given operation with a given IIpcStrategy.
      */
-    private <T> T performStrategy(@NonNull final IIpcStrategy strategy,
-                                  @NonNull final BrokerOperation<T> operation) throws BaseException {
+    private <T> T performStrategy(
+            @NonNull final IIpcStrategy strategy, @NonNull final BrokerOperation<T> operation)
+            throws BaseException {
 
         com.microsoft.identity.common.internal.logging.Logger.info(
                 TAG + operation.getMethodName(),
-                "Executing with IIpcStrategy: "
-                        + strategy.getClass().getSimpleName()
-        );
+                "Executing with IIpcStrategy: " + strategy.getClass().getSimpleName());
 
         operation.performPrerequisites(strategy);
         final BrokerOperationBundle brokerOperationBundle = operation.getBundle();

@@ -24,18 +24,17 @@ package com.microsoft.identity.internal.testutils.strategies;
 
 import static com.microsoft.identity.common.java.net.HttpConstants.HeaderField.X_MS_CLITELEM;
 
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.net.HttpResponse;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration;
-import com.microsoft.identity.common.java.providers.oauth2.IAuthorizationStrategy;
-import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenRequest;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
+import com.microsoft.identity.common.java.providers.oauth2.IAuthorizationStrategy;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResponse;
-import com.microsoft.identity.common.java.util.ResultFuture;
+import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.java.util.ObjectMapper;
+import com.microsoft.identity.common.java.util.ResultFuture;
 import com.microsoft.identity.internal.testutils.mocks.MockSuccessAuthorizationResultMockedTests;
 import com.microsoft.identity.internal.testutils.mocks.MockTokenResponse;
 
@@ -67,7 +66,8 @@ public class MockTestStrategy extends ResourceOwnerPasswordCredentialsTestStrate
     public Future<AuthorizationResult> requestAuthorization(
             final MicrosoftStsAuthorizationRequest request,
             final IAuthorizationStrategy IAuthorizationStrategy) {
-        final MockSuccessAuthorizationResultMockedTests authorizationResult = new MockSuccessAuthorizationResultMockedTests();
+        final MockSuccessAuthorizationResultMockedTests authorizationResult =
+                new MockSuccessAuthorizationResultMockedTests();
         final ResultFuture<AuthorizationResult> future = new ResultFuture<>();
         future.setResult(authorizationResult);
         return future;
@@ -99,5 +99,4 @@ public class MockTestStrategy extends ResourceOwnerPasswordCredentialsTestStrate
         final HttpResponse httpResponse = new HttpResponse(200, httpResponseBody, responseHeaders);
         return httpResponse;
     }
-
 }

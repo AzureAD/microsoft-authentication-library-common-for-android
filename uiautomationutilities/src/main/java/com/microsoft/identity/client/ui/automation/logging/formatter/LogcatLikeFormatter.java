@@ -41,8 +41,8 @@ public class LogcatLikeFormatter implements ILogFormatter {
 
     @Override
     public String format(LogLevel logLevel, String tag, String message, Throwable throwable) {
-        final String logMessage = getUTCDateTimeAsString() + ": " + logLevel.getLabel() + "/" + tag
-                + ": " + message;
+        final String logMessage =
+                getUTCDateTimeAsString() + ": " + logLevel.getLabel() + "/" + tag + ": " + message;
         return logMessage + (throwable == null ? "" : '\n' + Log.getStackTraceString(throwable));
     }
 

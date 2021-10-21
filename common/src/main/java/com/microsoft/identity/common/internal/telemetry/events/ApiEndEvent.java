@@ -22,17 +22,17 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.telemetry.events;
 
-import androidx.annotation.NonNull;
-
-import com.microsoft.identity.common.java.exception.BaseException;
-import com.microsoft.identity.common.java.exception.UserCancelException;
-import com.microsoft.identity.common.java.controllers.ExceptionAdapter;
-import com.microsoft.identity.common.java.result.AcquireTokenResult;
-
 import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Event;
 import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.EventType;
 import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Key;
 import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Value;
+
+import androidx.annotation.NonNull;
+
+import com.microsoft.identity.common.java.controllers.ExceptionAdapter;
+import com.microsoft.identity.common.java.exception.BaseException;
+import com.microsoft.identity.common.java.exception.UserCancelException;
+import com.microsoft.identity.common.java.result.AcquireTokenResult;
 
 public class ApiEndEvent extends com.microsoft.identity.common.java.telemetry.events.BaseEvent {
     public ApiEndEvent() {
@@ -51,8 +51,8 @@ public class ApiEndEvent extends com.microsoft.identity.common.java.telemetry.ev
         }
 
         if (null != result.getLocalAuthenticationResult()) {
-            put(Key.USER_ID, result.getLocalAuthenticationResult().getUniqueId()); //pii
-            put(Key.TENANT_ID, result.getLocalAuthenticationResult().getTenantId()); //pii
+            put(Key.USER_ID, result.getLocalAuthenticationResult().getUniqueId()); // pii
+            put(Key.TENANT_ID, result.getLocalAuthenticationResult().getTenantId()); // pii
             put(Key.SPE_RING, result.getLocalAuthenticationResult().getSpeRing());
             put(Key.RT_AGE, result.getLocalAuthenticationResult().getRefreshTokenAge());
         }
@@ -65,7 +65,8 @@ public class ApiEndEvent extends com.microsoft.identity.common.java.telemetry.ev
             return this;
         }
 
-        final BaseException adaptedException = ExceptionAdapter.baseExceptionFromException(exception);
+        final BaseException adaptedException =
+                ExceptionAdapter.baseExceptionFromException(exception);
         if (adaptedException instanceof UserCancelException) {
             put(Key.USER_CANCEL, Value.TRUE);
         }
@@ -74,7 +75,7 @@ public class ApiEndEvent extends com.microsoft.identity.common.java.telemetry.ev
         put(Key.SERVER_SUBERROR_CODE, adaptedException.getCliTelemSubErrorCode());
         put(Key.ERROR_CODE, adaptedException.getErrorCode());
         put(Key.SPE_RING, adaptedException.getSpeRing());
-        put(Key.ERROR_DESCRIPTION, adaptedException.getMessage()); //oii
+        put(Key.ERROR_DESCRIPTION, adaptedException.getMessage()); // oii
         put(Key.RT_AGE, adaptedException.getRefreshTokenAge());
         put(Key.IS_SUCCESSFUL, Value.FALSE);
         return this;
@@ -86,7 +87,8 @@ public class ApiEndEvent extends com.microsoft.identity.common.java.telemetry.ev
     }
 
     @Override
-    public ApiEndEvent put(@NonNull final String propertyName, @NonNull final String propertyValue) {
+    public ApiEndEvent put(
+            @NonNull final String propertyName, @NonNull final String propertyValue) {
         super.put(propertyName, propertyValue);
         return this;
     }

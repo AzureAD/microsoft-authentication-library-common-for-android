@@ -31,10 +31,11 @@ public class NtlmChallenge {
     private String mHost;
     private String mRealm;
 
-    NtlmChallenge(final WebView view,
-                  final HttpAuthHandler handler,
-                  final String host,
-                  final String realm) {
+    NtlmChallenge(
+            final WebView view,
+            final HttpAuthHandler handler,
+            final String host,
+            final String realm) {
         mHandler = handler;
         mView = view;
         mHost = host;

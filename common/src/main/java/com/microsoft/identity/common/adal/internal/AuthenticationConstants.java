@@ -27,13 +27,13 @@ import androidx.annotation.VisibleForTesting;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.java.broker.BrokerAccountDataName;
 
-import java.nio.charset.Charset;
-
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
+
+import java.nio.charset.Charset;
 
 /**
  * {@link AuthenticationConstants} contains all the constant value the SDK is using.
@@ -43,7 +43,7 @@ public final class AuthenticationConstants {
     /**
      * The logging tag for this class.
      */
-    private static final String TAG =  AuthenticationConstants.class.getSimpleName();
+    private static final String TAG = AuthenticationConstants.class.getSimpleName();
 
     /**
      * ADAL package name.
@@ -89,8 +89,8 @@ public final class AuthenticationConstants {
      * A constant for PMD to be happy with.
      */
     public static final String ONE_POINT_ZERO = "1.0";
-    public static final String TWO_POINT_ZERO = "2.0";
 
+    public static final String TWO_POINT_ZERO = "2.0";
 
     /**
      * Holding all the constant value involved in the webview.
@@ -106,7 +106,8 @@ public final class AuthenticationConstants {
         /**
          * Represents the request object returned from webview.
          */
-        public static final String RESPONSE_REQUEST_INFO = "com.microsoft.aad.adal:BrowserRequestInfo";
+        public static final String RESPONSE_REQUEST_INFO =
+                "com.microsoft.aad.adal:BrowserRequestInfo";
 
         /**
          * Represents the error code returned from webview.
@@ -116,17 +117,20 @@ public final class AuthenticationConstants {
         /**
          * Represents the error subcode returned from webview.
          */
-        public static final String RESPONSE_ERROR_SUBCODE = "com.microsoft.aad.adal:BrowserErrorSubCode";
+        public static final String RESPONSE_ERROR_SUBCODE =
+                "com.microsoft.aad.adal:BrowserErrorSubCode";
 
         /**
          * Represents the error message returned from webview.
          */
-        public static final String RESPONSE_ERROR_MESSAGE = "com.microsoft.aad.adal:BrowserErrorMessage";
+        public static final String RESPONSE_ERROR_MESSAGE =
+                "com.microsoft.aad.adal:BrowserErrorMessage";
 
         /**
          * Represents the exception returned from webview.
          */
-        public static final String RESPONSE_AUTHENTICATION_EXCEPTION = "com.microsoft.aad.adal:AuthenticationException";
+        public static final String RESPONSE_AUTHENTICATION_EXCEPTION =
+                "com.microsoft.aad.adal:AuthenticationException";
 
         /**
          * Represents the final url that webview receives.
@@ -161,7 +165,8 @@ public final class AuthenticationConstants {
         /**
          * V2 endpoint for logging the user out in browser.
          */
-        public static final String LOGOUT_ENDPOINT_V2 = "https://login.microsoftonline.com/common/oauth2/v2.0/logout";
+        public static final String LOGOUT_ENDPOINT_V2 =
+                "https://login.microsoftonline.com/common/oauth2/v2.0/logout";
 
         /**
          * Go-link URL for documentation on troubleshooting common SSL, ADFS issues.
@@ -484,7 +489,9 @@ public final class AuthenticationConstants {
         /**
          * String of ADAL version.
          */
-        public static final String ADAL_ID_VERSION = com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.VERSION;
+        public static final String ADAL_ID_VERSION =
+                com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields
+                        .VERSION;
 
         /**
          * String of ADAL id CPU.
@@ -551,7 +558,8 @@ public final class AuthenticationConstants {
         /**
          * String for broker request resume.
          */
-        public static final String BROKER_REQUEST_RESUME = "com.microsoft.aadbroker.adal.broker.request.resume";
+        public static final String BROKER_REQUEST_RESUME =
+                "com.microsoft.aadbroker.adal.broker.request.resume";
 
         /**
          * String for broker return JSON.
@@ -596,14 +604,15 @@ public final class AuthenticationConstants {
         /**
          * The newest Msal-To-Broker protocol version.
          */
-        public static final String MSAL_TO_BROKER_PROTOCOL_VERSION_CODE = computeMaxMsalBrokerProtocol();
+        public static final String MSAL_TO_BROKER_PROTOCOL_VERSION_CODE =
+                computeMaxMsalBrokerProtocol();
 
         /**
          * A client id for requesting the SSO token.
          */
         public static final String SSO_TOKEN_CLIENT_ID = "broker.sso.clientId";
 
-         /**
+        /**
          * The key indicating that this is an ssoUrl parameter in a Bundle.
          */
         public static final String BROKER_SSO_URL_KEY = "ssoUrl";
@@ -622,7 +631,10 @@ public final class AuthenticationConstants {
                             stringVersion = version;
                         }
                     } catch (final NumberFormatException nfe) {
-                        Logger.error(TAG + ":<static initialization>", "Invalid value for protocol version", nfe);
+                        Logger.error(
+                                TAG + ":<static initialization>",
+                                "Invalid value for protocol version",
+                                nfe);
                     }
                 }
             }
@@ -637,7 +649,8 @@ public final class AuthenticationConstants {
         /**
          * The newest BrokerAPI-To-Broker protocol version.
          */
-        public static final String BROKER_API_TO_BROKER_PROTOCOL_VERSION_CODE = computeMaxHostBrokerProtocol();
+        public static final String BROKER_API_TO_BROKER_PROTOCOL_VERSION_CODE =
+                computeMaxHostBrokerProtocol();
 
         @VisibleForTesting
         public static String computeMaxHostBrokerProtocol() {
@@ -653,7 +666,10 @@ public final class AuthenticationConstants {
                             stringVersion = version;
                         }
                     } catch (final NumberFormatException nfe) {
-                        Logger.error(TAG + ":<static initialization>", "Invalid value for protocol version", nfe);
+                        Logger.error(
+                                TAG + ":<static initialization>",
+                                "Invalid value for protocol version",
+                                nfe);
                     }
                 }
             }
@@ -663,18 +679,21 @@ public final class AuthenticationConstants {
         /**
          * The key of maximum broker protocol version that client advertised.
          */
-        public static final String CLIENT_ADVERTISED_MAXIMUM_BP_VERSION_KEY = "broker.protocol.version.name";
+        public static final String CLIENT_ADVERTISED_MAXIMUM_BP_VERSION_KEY =
+                "broker.protocol.version.name";
 
         /**
          * The key of minimum broker protocol version the client requires.
          * Broker will reject the request (in hello()) if its current version is older than its client's minimum version.
          */
-        public static final String CLIENT_CONFIGURED_MINIMUM_BP_VERSION_KEY = "required.broker.protocol.version.name";
+        public static final String CLIENT_CONFIGURED_MINIMUM_BP_VERSION_KEY =
+                "required.broker.protocol.version.name";
 
         /**
          * The key of negotiated broker protocol version between broker client and broker service.
          */
-        public static final String NEGOTIATED_BP_VERSION_KEY = "common.broker.protocol.version.name";
+        public static final String NEGOTIATED_BP_VERSION_KEY =
+                "common.broker.protocol.version.name";
 
         /**
          * String of broker protocol version with PRT support.
@@ -829,12 +848,14 @@ public final class AuthenticationConstants {
         /**
          * String of key for local account id.
          */
-        public static final String ACCOUNT_LOCAL_ACCOUNT_ID = BrokerAccountDataName.ACCOUNT_LOCAL_ACCOUNT_ID;
+        public static final String ACCOUNT_LOCAL_ACCOUNT_ID =
+                BrokerAccountDataName.ACCOUNT_LOCAL_ACCOUNT_ID;
 
         /**
          * String of key for home account id.
          */
-        public static final String ACCOUNT_HOME_ACCOUNT_ID = BrokerAccountDataName.ACCOUNT_HOME_ACCOUNT_ID;
+        public static final String ACCOUNT_HOME_ACCOUNT_ID =
+                BrokerAccountDataName.ACCOUNT_HOME_ACCOUNT_ID;
 
         /**
          * String of key for account id token.
@@ -844,52 +865,62 @@ public final class AuthenticationConstants {
         /**
          * String of key for user id.
          */
-        public static final String ACCOUNT_USERINFO_USERID = BrokerAccountDataName.ACCOUNT_USERINFO_USERID;
+        public static final String ACCOUNT_USERINFO_USERID =
+                BrokerAccountDataName.ACCOUNT_USERINFO_USERID;
 
         /**
          * String of key for user id list.
          */
-        public static final String ACCOUNT_USERINFO_USERID_LIST = BrokerAccountDataName.ACCOUNT_USERINFO_USERID_LIST;
+        public static final String ACCOUNT_USERINFO_USERID_LIST =
+                BrokerAccountDataName.ACCOUNT_USERINFO_USERID_LIST;
 
         /**
          * String of key for given name.
          */
-        public static final String ACCOUNT_USERINFO_GIVEN_NAME = BrokerAccountDataName.ACCOUNT_USERINFO_GIVEN_NAME;
+        public static final String ACCOUNT_USERINFO_GIVEN_NAME =
+                BrokerAccountDataName.ACCOUNT_USERINFO_GIVEN_NAME;
 
         /**
          * String of key for family name.
          */
-        public static final String ACCOUNT_USERINFO_FAMILY_NAME = BrokerAccountDataName.ACCOUNT_USERINFO_FAMILY_NAME;
+        public static final String ACCOUNT_USERINFO_FAMILY_NAME =
+                BrokerAccountDataName.ACCOUNT_USERINFO_FAMILY_NAME;
 
         /**
          * String of key for identity provider.
          */
-        public static final String ACCOUNT_USERINFO_IDENTITY_PROVIDER = BrokerAccountDataName.ACCOUNT_USERINFO_IDENTITY_PROVIDER;
+        public static final String ACCOUNT_USERINFO_IDENTITY_PROVIDER =
+                BrokerAccountDataName.ACCOUNT_USERINFO_IDENTITY_PROVIDER;
 
         /**
          * String of key for displayable id.
          */
-        public static final String ACCOUNT_USERINFO_USERID_DISPLAYABLE = BrokerAccountDataName.ACCOUNT_USERINFO_USERID_DISPLAYABLE;
+        public static final String ACCOUNT_USERINFO_USERID_DISPLAYABLE =
+                BrokerAccountDataName.ACCOUNT_USERINFO_USERID_DISPLAYABLE;
 
         /**
          * String of key for tenant id.
          */
-        public static final String ACCOUNT_USERINFO_TENANTID = BrokerAccountDataName.ACCOUNT_USERINFO_TENANTID;
+        public static final String ACCOUNT_USERINFO_TENANTID =
+                BrokerAccountDataName.ACCOUNT_USERINFO_TENANTID;
 
         /**
          * String of key for environment.
          */
-        public static final String ACCOUNT_USERINFO_ENVIRONMENT = BrokerAccountDataName.ACCOUNT_USERINFO_ENVIRONMENT;
+        public static final String ACCOUNT_USERINFO_ENVIRONMENT =
+                BrokerAccountDataName.ACCOUNT_USERINFO_ENVIRONMENT;
 
         /**
          * String of key for authority type.
          */
-        public static final String ACCOUNT_USERINFO_AUTHORITY_TYPE = BrokerAccountDataName.ACCOUNT_USERINFO_AUTHORITY_TYPE;
+        public static final String ACCOUNT_USERINFO_AUTHORITY_TYPE =
+                BrokerAccountDataName.ACCOUNT_USERINFO_AUTHORITY_TYPE;
 
         /**
          * String of key for account id token record.
          */
-        public static final String ACCOUNT_USERINFO_ID_TOKEN = BrokerAccountDataName.ACCOUNT_USERINFO_ID_TOKEN;
+        public static final String ACCOUNT_USERINFO_ID_TOKEN =
+                BrokerAccountDataName.ACCOUNT_USERINFO_ID_TOKEN;
 
         /**
          * String of key for adal version.
@@ -934,7 +965,8 @@ public final class AuthenticationConstants {
         /**
          * String of key for user data broker PRT session key.
          */
-        public static final String USERDATA_BROKER_PRT_SESSION_KEY = "userdata.broker.prt.session.key";
+        public static final String USERDATA_BROKER_PRT_SESSION_KEY =
+                "userdata.broker.prt.session.key";
 
         /**
          * String of key for caller cache keys.
@@ -989,7 +1021,8 @@ public final class AuthenticationConstants {
         /**
          * Broker Host app package name.
          */
-        public static final String BROKER_HOST_APP_PACKAGE_NAME = "com.microsoft.identity.testuserapp";
+        public static final String BROKER_HOST_APP_PACKAGE_NAME =
+                "com.microsoft.identity.testuserapp";
 
         /**
          * Intune app package name.
@@ -1004,32 +1037,35 @@ public final class AuthenticationConstants {
         /**
          * Intune Company Portal app package name.
          */
-        public static final String COMPANY_PORTAL_APP_PACKAGE_NAME = "com.microsoft.windowsintune.companyportal";
+        public static final String COMPANY_PORTAL_APP_PACKAGE_NAME =
+                "com.microsoft.windowsintune.companyportal";
 
         /**
          * Signature info for Intune Company portal app that installs authenticator
          * component.
          */
-        public static final String COMPANY_PORTAL_APP_RELEASE_SIGNATURE = "1L4Z9FJCgn5c0VLhyAxC5O9LdlE=";
+        public static final String COMPANY_PORTAL_APP_RELEASE_SIGNATURE =
+                "1L4Z9FJCgn5c0VLhyAxC5O9LdlE=";
 
         /**
          * Signature info for Azure authenticator app that installs authenticator
          * component.
          */
-        public static final String AZURE_AUTHENTICATOR_APP_RELEASE_SIGNATURE = "ho040S3ffZkmxqtQrSwpTVOn9r0=";
+        public static final String AZURE_AUTHENTICATOR_APP_RELEASE_SIGNATURE =
+                "ho040S3ffZkmxqtQrSwpTVOn9r0=";
 
         /**
          * Signature info for Azure authenticator app that installs authenticator
          * component.
          */
-        public static final String AZURE_AUTHENTICATOR_APP_DEBUG_SIGNATURE = "N1jdcbbnKDr0LaFZlqdhXgm2luE=";
+        public static final String AZURE_AUTHENTICATOR_APP_DEBUG_SIGNATURE =
+                "N1jdcbbnKDr0LaFZlqdhXgm2luE=";
 
         /**
          * Signature info for Broker Host app that installs authenticator
          * component.
          */
         public static final String BROKER_HOST_APP_SIGNATURE = "1wIqXSqBj7w+h11ZifsnqwgyKrY=";
-
 
         /**
          * Teams IP Phones (Sakurai devices) is supported by Intune, but does not have a back button nor browser.
@@ -1091,12 +1127,14 @@ public final class AuthenticationConstants {
         /**
          * Prefix for the Authenticator MFA linking.
          */
-        public static final String AUTHENTICATOR_MFA_LINKING_PREFIX = "microsoft-authenticator://activatemfa";
+        public static final String AUTHENTICATOR_MFA_LINKING_PREFIX =
+                "microsoft-authenticator://activatemfa";
 
         /**
          * Redirect URL from WebCP that should launch the Intune Company Portal app.
          */
-        public static final String WEBCP_LAUNCH_COMPANY_PORTAL_URL = BROWSER_EXT_WEB_CP + "enrollment";
+        public static final String WEBCP_LAUNCH_COMPANY_PORTAL_URL =
+                BROWSER_EXT_WEB_CP + "enrollment";
 
         /**
          * A query param indicating that this is an intune device CA link.
@@ -1106,7 +1144,8 @@ public final class AuthenticationConstants {
         /**
          * Activity name to launch company portal.
          */
-        public static final String COMPANY_PORTAL_APP_LAUNCH_ACTIVITY_NAME = Broker.COMPANY_PORTAL_APP_PACKAGE_NAME + ".views.SplashActivity";
+        public static final String COMPANY_PORTAL_APP_LAUNCH_ACTIVITY_NAME =
+                Broker.COMPANY_PORTAL_APP_PACKAGE_NAME + ".views.SplashActivity";
 
         /**
          * PRT nonce.
@@ -1241,12 +1280,14 @@ public final class AuthenticationConstants {
          * String indicating a broker flow that Authenticator should route to.
          * See BrokerAccountManagerOperation for more info.
          */
-        public static final String BROKER_ACCOUNT_MANAGER_OPERATION_KEY = "com.microsoft.broker_accountmanager_operation_key";
+        public static final String BROKER_ACCOUNT_MANAGER_OPERATION_KEY =
+                "com.microsoft.broker_accountmanager_operation_key";
 
         /**
          * Boolean to return when a broker account is successfully removed.
          */
-        public static final String REMOVE_BROKER_ACCOUNT_SUCCEEDED = "remove_broker_account_succeeded";
+        public static final String REMOVE_BROKER_ACCOUNT_SUCCEEDED =
+                "remove_broker_account_succeeded";
 
         /**
          * Boolean to return when a Broker RT is successfully updated.
@@ -1351,7 +1392,8 @@ public final class AuthenticationConstants {
 
         public static final String ACQUIRE_TOKEN_SILENT = "ACQUIRE_TOKEN_SILENT";
 
-        public static final String GET_INTENT_FOR_INTERACTIVE_REQUEST = "GET_INTENT_FOR_INTERACTIVE_REQUEST";
+        public static final String GET_INTENT_FOR_INTERACTIVE_REQUEST =
+                "GET_INTENT_FOR_INTERACTIVE_REQUEST";
 
         public static final String REMOVE_ACCOUNT = "REMOVE_ACCOUNT";
 
@@ -1359,7 +1401,8 @@ public final class AuthenticationConstants {
 
         public static final String GET_CURRENT_ACCOUNT = "GET_CURRENT_ACCOUNT";
 
-        public static final String REMOVE_ACCOUNT_FROM_SHARED_DEVICE = "REMOVE_ACCOUNT_FROM_SHARED_DEVICE";
+        public static final String REMOVE_ACCOUNT_FROM_SHARED_DEVICE =
+                "REMOVE_ACCOUNT_FROM_SHARED_DEVICE";
 
         public static final String GENERATE_SHR = "GENERATE_SHR";
     }
@@ -1403,7 +1446,8 @@ public final class AuthenticationConstants {
             ACQUIRE_TOKEN_SILENT(MSAL_ACQUIRE_TOKEN_SILENT_PATH, null, VERSION_3),
             GET_ACCOUNTS(MSAL_GET_ACCOUNTS_PATH, null, VERSION_3),
             REMOVE_ACCOUNT(MSAL_REMOVE_ACCOUNT_PATH, null, VERSION_3),
-            GET_CURRENT_ACCOUNT_SHARED_DEVICE(MSAL_GET_CURRENT_ACCOUNT_SHARED_DEVICE_PATH, null, VERSION_3),
+            GET_CURRENT_ACCOUNT_SHARED_DEVICE(
+                    MSAL_GET_CURRENT_ACCOUNT_SHARED_DEVICE_PATH, null, VERSION_3),
             GET_DEVICE_MODE(MSAL_GET_DEVICE_MODE_PATH, null, VERSION_3),
             SIGN_OUT_FROM_SHARED_DEVICE(MSAL_SIGN_OUT_FROM_SHARED_DEVICE_PATH, null, VERSION_3),
             GENERATE_SHR(GENERATE_SHR_PATH, null, VERSION_6),
@@ -1415,8 +1459,7 @@ public final class AuthenticationConstants {
             BROKER_SET_FLIGHTS(BROKER_API_SET_FLIGHTS_PATH, BROKER_VERSION_2, null),
             BROKER_GET_FLIGHTS(BROKER_API_GET_FLIGHTS_PATH, BROKER_VERSION_2, null),
             GET_SSO_TOKEN(GET_SSO_TOKEN_PATH, null, VERSION_7),
-            UNKNOWN(null, null, null)
-            ;
+            UNKNOWN(null, null, null);
             /**
              * The content provider path that the API exists behind.
              */
@@ -1458,7 +1501,8 @@ public final class AuthenticationConstants {
         /**
          * URI Path constant for MSAL-to-Broker getCurrentAccountSharedDevice request using ContentProvider.
          */
-        public static final String MSAL_GET_CURRENT_ACCOUNT_SHARED_DEVICE_PATH = "/getCurrentAccountSharedDevice";
+        public static final String MSAL_GET_CURRENT_ACCOUNT_SHARED_DEVICE_PATH =
+                "/getCurrentAccountSharedDevice";
 
         /**
          * URI Path constant for MSAL-to-Broker getDeviceMode request using ContentProvider.
@@ -1468,7 +1512,8 @@ public final class AuthenticationConstants {
         /**
          * URI Path constant for MSAL-to-Broker signOutFromSharedDevice request using ContentProvider.
          */
-        public static final String MSAL_SIGN_OUT_FROM_SHARED_DEVICE_PATH = "/signOutFromSharedDevice";
+        public static final String MSAL_SIGN_OUT_FROM_SHARED_DEVICE_PATH =
+                "/signOutFromSharedDevice";
 
         /**
          * URI Path constant for MSAL-to-Broker generateShr request using ContentProvider.
@@ -1483,12 +1528,14 @@ public final class AuthenticationConstants {
         /**
          * URI Path constant for BrokerApi-to-Broker getBrokerAccounts request using ContentProvider.
          */
-        public static final String BROKER_API_GET_BROKER_ACCOUNTS_PATH = "/brokerApi/getBrokerAccounts";
+        public static final String BROKER_API_GET_BROKER_ACCOUNTS_PATH =
+                "/brokerApi/getBrokerAccounts";
 
         /**
          * URI Path constant for BrokerApi-to-Broker removeBrokerAccount request using ContentProvider.
          */
-        public static final String BROKER_API_REMOVE_BROKER_ACCOUNT_PATH = "/brokerApi/removeBrokerAccount";
+        public static final String BROKER_API_REMOVE_BROKER_ACCOUNT_PATH =
+                "/brokerApi/removeBrokerAccount";
 
         /**
          * URI Path constant for BrokerApi-to-Broker updateBrt request using ContentProvider.
@@ -1579,7 +1626,6 @@ public final class AuthenticationConstants {
          * BrokerContentProvider URI code constant for MSAL-to-Broker generateSHR request.
          */
         public static final int MSAL_GENERATE_SHR_CODE = 13;
-
     }
 
     public static final class IntuneContentProviderCall {
@@ -1609,7 +1655,6 @@ public final class AuthenticationConstants {
          * String value indicating supported AppDataClearAction.
          */
         public static final String APP_DATA_CLEAR_SUPPORTED = "SUPPORTED";
-
     }
 
     public static final class AuthorizationIntentKey {
@@ -1622,17 +1667,22 @@ public final class AuthenticationConstants {
 
         public static final String REQUEST_HEADERS = "com.microsoft.identity.request.headers";
 
-        public static final String POST_PAGE_LOADED_URL = "com.microsoft.identity.post.page.loaded.url";
+        public static final String POST_PAGE_LOADED_URL =
+                "com.microsoft.identity.post.page.loaded.url";
 
-        public static final String AUTHORIZATION_AGENT = "com.microsoft.identity.client.authorization.agent";
+        public static final String AUTHORIZATION_AGENT =
+                "com.microsoft.identity.client.authorization.agent";
 
         public static final String REQUEST_ID = "com.microsoft.identity.request.id";
 
-        public static final String AUTHORIZATION_FINAL_URL = "com.microsoft.identity.client.final.url";
+        public static final String AUTHORIZATION_FINAL_URL =
+                "com.microsoft.identity.client.final.url";
 
-        public static final String WEB_VIEW_ZOOM_CONTROLS_ENABLED = "com.microsoft.identity.web.view.zoom.controls.enabled";
+        public static final String WEB_VIEW_ZOOM_CONTROLS_ENABLED =
+                "com.microsoft.identity.web.view.zoom.controls.enabled";
 
-        public static final String WEB_VIEW_ZOOM_ENABLED = "com.microsoft.identity.web.view.zoom.enabled";
+        public static final String WEB_VIEW_ZOOM_ENABLED =
+                "com.microsoft.identity.web.view.zoom.enabled";
     }
 
     public static final class AuthorizationIntentAction {
@@ -1644,14 +1694,15 @@ public final class AuthenticationConstants {
         /**
          * An intent action specifying that the activity receiving the authorization result redirect should be destroyed.
          */
-        public static final String DESTROY_REDIRECT_RECEIVING_ACTIVITY_ACTION = "destroy_redirect_receiving_activity_action";
+        public static final String DESTROY_REDIRECT_RECEIVING_ACTIVITY_ACTION =
+                "destroy_redirect_receiving_activity_action";
 
         /**
          * An intent action used to tell the activity used to launch custom tabs that it should re-launch in order to close the custom tabs UI
          * Custom Tabs does not provide a mechanism to programmtically close custom tabs... hence we have to make this happen via the activity used
          * to launch custom tabs and intent flags to clear the task.
          */
-        public static final String REFRESH_TO_CLOSE= "refresh_to_close";
+        public static final String REFRESH_TO_CLOSE = "refresh_to_close";
     }
 
     public static final class TelemetryEvents {
@@ -1675,9 +1726,11 @@ public final class AuthenticationConstants {
 
         public static final String SHARED_DEVICE_REGISTERED = "shared_device_registered";
 
-        public static final String USER_SIGNED_INTO_SHARED_DEVICE = "user_signed_into_shared_device";
+        public static final String USER_SIGNED_INTO_SHARED_DEVICE =
+                "user_signed_into_shared_device";
 
-        public static final String USER_SIGNED_OUT_FROM_SHARED_DEVICE = "user_signed_out_from_shared_device";
+        public static final String USER_SIGNED_OUT_FROM_SHARED_DEVICE =
+                "user_signed_out_from_shared_device";
     }
 
     /**
@@ -1693,6 +1746,8 @@ public final class AuthenticationConstants {
          * The String representing the sdk version.
          */
         @Deprecated
-        public static final String VERSION = com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.VERSION;
+        public static final String VERSION =
+                com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields
+                        .VERSION;
     }
 }

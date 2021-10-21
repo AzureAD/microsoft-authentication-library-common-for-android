@@ -23,8 +23,8 @@
 package com.microsoft.identity.common.internal.migration;
 
 import com.microsoft.identity.common.java.BaseAccount;
-import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.cache.IShareSingleSignOnState;
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.providers.oauth2.RefreshToken;
 import com.microsoft.identity.common.logging.Logger;
 
@@ -49,37 +49,38 @@ public class TokenMigrationUtility<T extends BaseAccount, U extends RefreshToken
      * @param destination IShareSingleSignOnState instance to which migrated tokens should be written.
      * @param callback    Callback to receive the event when the import has finished.
      */
-    public void _import(final IMigrationAdapter<T, U> adapter,
-                        final Map<String, String> credentials,
-                        final IShareSingleSignOnState<T, U> destination,
-                        final TokenMigrationCallback callback) {
+    public void _import(
+            final IMigrationAdapter<T, U> adapter,
+            final Map<String, String> credentials,
+            final IShareSingleSignOnState<T, U> destination,
+            final TokenMigrationCallback callback) {
         // Do all work on a background thread
-        sBackgroundExecutor.execute(new Runnable() {
-            @Override
-            public void run() {
-                // Keep a running total of the accounts added
-                int accountsAdded = 0;
+        sBackgroundExecutor.execute(
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        // Keep a running total of the accounts added
+                        int accountsAdded = 0;
 
-                // Iterate over the adapted accounts/tokens, incrementing if successfully added to
-                // the cache.
-                for (final Map.Entry<T, U> accountTokenKeyValuePair : adapter.adapt(credentials)) {
-                    try {
-                        destination.setSingleSignOnState(
-                                accountTokenKeyValuePair.getKey(),
-                                accountTokenKeyValuePair.getValue()
-                        );
-                        accountsAdded ++;
-                    } catch (ClientException e) {
-                        Logger.warn(
-                                TAG,
-                                "Failed to save account/refresh token . Skipping "
-                        );
+                        // Iterate over the adapted accounts/tokens, incrementing if successfully
+                        // added to
+                        // the cache.
+                        for (final Map.Entry<T, U> accountTokenKeyValuePair :
+                                adapter.adapt(credentials)) {
+                            try {
+                                destination.setSingleSignOnState(
+                                        accountTokenKeyValuePair.getKey(),
+                                        accountTokenKeyValuePair.getValue());
+                                accountsAdded++;
+                            } catch (ClientException e) {
+                                Logger.warn(
+                                        TAG, "Failed to save account/refresh token . Skipping ");
+                            }
+                        }
+
+                        // Migration is complete, trigger the callback with added Account total.
+                        callback.onMigrationFinished(accountsAdded);
                     }
-                }
-
-                // Migration is complete, trigger the callback with added Account total.
-                callback.onMigrationFinished(accountsAdded);
-            }
-        });
+                });
     }
 }

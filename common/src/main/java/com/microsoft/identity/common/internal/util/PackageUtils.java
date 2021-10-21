@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.util;
 
+import static com.microsoft.identity.common.java.exception.ErrorStrings.BROKER_APP_VERIFICATION_FAILED;
+
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.PackageInfo;
@@ -32,9 +34,12 @@ import android.util.Base64;
 
 import androidx.annotation.NonNull;
 
+import com.microsoft.identity.common.internal.broker.PackageHelper;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
-import com.microsoft.identity.common.internal.broker.PackageHelper;
+
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -55,11 +60,6 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Pattern;
-
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
-
-import static com.microsoft.identity.common.java.exception.ErrorStrings.BROKER_APP_VERIFICATION_FAILED;
 
 /**
  * A set of utility methods for handleing and verifying android packages.  This used to be isolated
@@ -86,20 +86,22 @@ public final class PackageUtils {
      */
     @SuppressLint("PackageManagerGetSignatures")
     @SuppressWarnings("deprecation")
-    public static final List<X509Certificate> readCertDataForApp(final String packageName,
-                                                           final Context context)
+    public static final List<X509Certificate> readCertDataForApp(
+            final String packageName, final Context context)
             throws PackageManager.NameNotFoundException, ClientException, IOException,
-            GeneralSecurityException {
+                    GeneralSecurityException {
 
-        final PackageInfo packageInfo = PackageHelper.getPackageInfo(context.getPackageManager(), packageName);
+        final PackageInfo packageInfo =
+                PackageHelper.getPackageInfo(context.getPackageManager(), packageName);
         if (packageInfo == null) {
-            throw new ClientException(ErrorStrings.APP_PACKAGE_NAME_NOT_FOUND,
-                    "No broker package existed.");
+            throw new ClientException(
+                    ErrorStrings.APP_PACKAGE_NAME_NOT_FOUND, "No broker package existed.");
         }
 
-        final Signature [] signatures = PackageHelper.getSignatures(packageInfo);
+        final Signature[] signatures = PackageHelper.getSignatures(packageInfo);
         if (signatures == null || signatures.length == 0) {
-            throw new ClientException(BROKER_APP_VERIFICATION_FAILED,
+            throw new ClientException(
+                    BROKER_APP_VERIFICATION_FAILED,
                     "No signature associated with the broker package.");
         }
 
@@ -112,8 +114,8 @@ public final class PackageUtils {
             final X509Certificate x509Certificate;
             try {
                 certificateFactory = CertificateFactory.getInstance("X509");
-                x509Certificate = (X509Certificate) certificateFactory.generateCertificate(
-                        certStream);
+                x509Certificate =
+                        (X509Certificate) certificateFactory.generateCertificate(certStream);
                 certificates.add(x509Certificate);
             } catch (final CertificateException e) {
                 throw new ClientException(BROKER_APP_VERIFICATION_FAILED);
@@ -133,10 +135,9 @@ public final class PackageUtils {
      * @throws CertificateEncodingException if a certificate was corrupt.
      * @throws ClientException if no valid hash was found in the list.
      */
-    public static final String verifySignatureHash(final @NonNull List<X509Certificate> certs,
-                                             final @NonNull Iterator<String> validHashes)
-            throws NoSuchAlgorithmException,
-            CertificateEncodingException, ClientException {
+    public static final String verifySignatureHash(
+            final @NonNull List<X509Certificate> certs, final @NonNull Iterator<String> validHashes)
+            throws NoSuchAlgorithmException, CertificateEncodingException, ClientException {
 
         final StringBuilder hashListStringBuilder = new StringBuilder();
 
@@ -145,7 +146,8 @@ public final class PackageUtils {
             messageDigest.update(x509Certificate.getEncoded());
 
             // Check the hash for signer cert is the same as what we hardcoded.
-            final String signatureHash = Base64.encodeToString(messageDigest.digest(), Base64.NO_WRAP);
+            final String signatureHash =
+                    Base64.encodeToString(messageDigest.digest(), Base64.NO_WRAP);
 
             hashListStringBuilder.append(signatureHash);
             hashListStringBuilder.append(',');
@@ -166,7 +168,9 @@ public final class PackageUtils {
             }
         }
 
-        throw new ClientException(BROKER_APP_VERIFICATION_FAILED, "SignatureHashes: " + hashListStringBuilder.toString());
+        throw new ClientException(
+                BROKER_APP_VERIFICATION_FAILED,
+                "SignatureHashes: " + hashListStringBuilder.toString());
     }
 
     /**
@@ -198,10 +202,11 @@ public final class PackageUtils {
         // to the signer cert. Also perform certificate signing validation when chaining them back.
         final X509Certificate issuerCert = getSelfSignedCert(certificates);
         final TrustAnchor trustAnchor = new TrustAnchor(issuerCert, null);
-        final PKIXParameters pkixParameters = new PKIXParameters(Collections.singleton(trustAnchor));
+        final PKIXParameters pkixParameters =
+                new PKIXParameters(Collections.singleton(trustAnchor));
         pkixParameters.setRevocationEnabled(false);
-        final CertPath certPath = CertificateFactory.getInstance("X.509")
-                .generateCertPath(certificates);
+        final CertPath certPath =
+                CertificateFactory.getInstance("X.509").generateCertPath(certificates);
 
         final CertPathValidator certPathValidator = CertPathValidator.getInstance("PKIX");
         certPathValidator.validate(certPath, pkixParameters);
@@ -226,7 +231,8 @@ public final class PackageUtils {
         }
 
         if (count > 1 || selfSignedCert == null) {
-            throw new ClientException(BROKER_APP_VERIFICATION_FAILED,
+            throw new ClientException(
+                    BROKER_APP_VERIFICATION_FAILED,
                     "Multiple self signed certs found or no self signed cert existed.");
         }
 

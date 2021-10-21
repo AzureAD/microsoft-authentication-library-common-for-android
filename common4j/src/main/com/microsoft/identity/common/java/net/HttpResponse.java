@@ -22,13 +22,13 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.net;
 
+import lombok.NonNull;
+
 import net.jcip.annotations.Immutable;
 
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-
-import lombok.NonNull;
 
 /**
  * Internal class to wrap the raw server response, headers and status code.
@@ -48,15 +48,18 @@ public class HttpResponse {
      * @param responseBody    Raw response body.
      * @param responseHeaders Response headers from the connection sent to the server.
      */
-    public HttpResponse(final int statusCode, final String responseBody,
-                        final Map<String, List<String>> responseHeaders) {
+    public HttpResponse(
+            final int statusCode,
+            final String responseBody,
+            final Map<String, List<String>> responseHeaders) {
         this(new Date(), statusCode, responseBody, responseHeaders);
     }
 
-    public HttpResponse(@NonNull final Date date,
-                        final int statusCode,
-                        final String responseBody,
-                        final Map<String, List<String>> headerFields) {
+    public HttpResponse(
+            @NonNull final Date date,
+            final int statusCode,
+            final String responseBody,
+            final Map<String, List<String>> headerFields) {
         mDate = new Date(date.getTime());
         mStatusCode = statusCode;
         mResponseBody = responseBody;
@@ -89,17 +92,21 @@ public class HttpResponse {
         return mResponseHeaders;
     }
 
-    //CHECKSTYLE:OFF
+    // CHECKSTYLE:OFF
     // This method is generated. Checkstyle and/or PMD has been disabled.
     // This method *must* be regenerated if the class' structural definition changes through the
     // addition/subtraction of fields.
     @Override
     public String toString() {
-        return "HttpResponse{" +
-                "mStatusCode=" + mStatusCode +
-                ", mResponseBody='" + mResponseBody + '\'' +
-                ", mResponseHeaders=" + mResponseHeaders +
-                '}';
+        return "HttpResponse{"
+                + "mStatusCode="
+                + mStatusCode
+                + ", mResponseBody='"
+                + mResponseBody
+                + '\''
+                + ", mResponseHeaders="
+                + mResponseHeaders
+                + '}';
     }
-    //CHECKSTYLE:ON
+    // CHECKSTYLE:ON
 }

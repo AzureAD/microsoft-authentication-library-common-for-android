@@ -22,7 +22,6 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.rules;
 
-import android.util.Log;
 
 import com.microsoft.identity.client.ui.automation.app.App;
 import com.microsoft.identity.client.ui.automation.broker.ITestBroker;
@@ -40,7 +39,7 @@ import java.util.List;
  */
 public class RemoveBrokersBeforeTestRule implements TestRule {
 
-    private final static String TAG = RemoveBrokersBeforeTestRule.class.getSimpleName();
+    private static final String TAG = RemoveBrokersBeforeTestRule.class.getSimpleName();
 
     @Override
     public Statement apply(final Statement base, final Description description) {
@@ -52,7 +51,9 @@ public class RemoveBrokersBeforeTestRule implements TestRule {
 
                 for (final ITestBroker broker : testBrokers) {
                     if (broker.isInstalled()) {
-                        Logger.i(TAG, "Detected pre-installed broker: " + ((App) broker).getAppName());
+                        Logger.i(
+                                TAG,
+                                "Detected pre-installed broker: " + ((App) broker).getAppName());
                         Logger.i(TAG, "Uninstalling broker: " + ((App) broker).getAppName());
                         broker.uninstall();
                     }

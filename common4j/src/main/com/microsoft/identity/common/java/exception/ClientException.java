@@ -46,9 +46,11 @@ public class ClientException extends BaseException {
     /**
      * Deserialization error loading the token shared library item.
      */
-    public static final String TOKEN_SHARING_DESERIALIZATION_ERROR = "token_sharing_deserialization_error";
+    public static final String TOKEN_SHARING_DESERIALIZATION_ERROR =
+            "token_sharing_deserialization_error";
 
-    public static final String TOKEN_SHARING_MSA_PERSISTENCE_ERROR = "failed_to_persist_msa_credential";
+    public static final String TOKEN_SHARING_MSA_PERSISTENCE_ERROR =
+            "failed_to_persist_msa_credential";
 
     /**
      * Experienced a failure when attempting to execute PKCE.
@@ -65,7 +67,8 @@ public class ClientException extends BaseException {
      * or refresh token from the cache. Likely it's a bug in the sdk when caching tokens or authority
      * is not proviced in the silent request and multiple tokens were found.
      */
-    public static final String MULTIPLE_MATCHING_TOKENS_DETECTED = "multiple_matching_tokens_detected";
+    public static final String MULTIPLE_MATCHING_TOKENS_DETECTED =
+            "multiple_matching_tokens_detected";
 
     /**
      * No active network is available on the device.
@@ -148,7 +151,8 @@ public class ClientException extends BaseException {
      * The authority is not supported for authority validation. The sdk supports b2c authority, but we don't support b2c authority validation yet.
      * Only well-known host will be supported.
      */
-    public static final String AUTHORITY_VALIDATION_NOT_SUPPORTED = "authority_validation_not_supported";
+    public static final String AUTHORITY_VALIDATION_NOT_SUPPORTED =
+            "authority_validation_not_supported";
 
     /**
      * Note: after MSAL 0.2.0 this error is no longer relevant.
@@ -238,7 +242,8 @@ public class ClientException extends BaseException {
      * Emitted when the target certificate's thumbprint cannot be computed due to lack of support for
      * SHA-256.
      */
-    public static final String THUMBPRINT_COMPUTATION_FAILURE = "failed_to_compute_thumbprint_with_sha256";
+    public static final String THUMBPRINT_COMPUTATION_FAILURE =
+            "failed_to_compute_thumbprint_with_sha256";
 
     /**
      * Emitted when the requested export format of our public key is unknown or unsupported.
@@ -275,7 +280,8 @@ public class ClientException extends BaseException {
     /**
      * Bound service is unavailable or not supported.
      */
-    public static final String BOUND_SERVICE_UNAVAILABLE_OR_NOT_SUPPORTED = "bound_service_unavaliable_or_not_supported";
+    public static final String BOUND_SERVICE_UNAVAILABLE_OR_NOT_SUPPORTED =
+            "bound_service_unavaliable_or_not_supported";
 
     /**
      * The returned bundle does not contain the expected data.
@@ -348,7 +354,8 @@ public class ClientException extends BaseException {
      * @param errorMessage String
      * @param throwable    Throwable
      */
-    public ClientException(final String errorCode, final String errorMessage, final Throwable throwable) {
+    public ClientException(
+            final String errorCode, final String errorMessage, final Throwable throwable) {
         super(errorCode, errorMessage, throwable);
     }
 

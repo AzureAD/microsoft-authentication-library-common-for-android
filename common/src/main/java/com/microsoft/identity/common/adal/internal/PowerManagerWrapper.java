@@ -30,7 +30,6 @@ import android.os.PowerManager;
 /**
  * Wrapper class for PowerManager.
  */
-
 public class PowerManagerWrapper {
 
     private static PowerManagerWrapper sInstance;
@@ -64,7 +63,8 @@ public class PowerManagerWrapper {
      */
     @TargetApi(Build.VERSION_CODES.M)
     public boolean isDeviceIdleMode(final Context connectionContext) {
-        return ((PowerManager) connectionContext.getSystemService(Context.POWER_SERVICE)).isDeviceIdleMode();
+        return ((PowerManager) connectionContext.getSystemService(Context.POWER_SERVICE))
+                .isDeviceIdleMode();
     }
 
     /**
@@ -75,6 +75,7 @@ public class PowerManagerWrapper {
      */
     @TargetApi(Build.VERSION_CODES.M)
     public boolean isIgnoringBatteryOptimizations(final Context connectionContext) {
-        return ((PowerManager) connectionContext.getSystemService(Context.POWER_SERVICE)).isIgnoringBatteryOptimizations(connectionContext.getPackageName());
+        return ((PowerManager) connectionContext.getSystemService(Context.POWER_SERVICE))
+                .isIgnoringBatteryOptimizations(connectionContext.getPackageName());
     }
 }

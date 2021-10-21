@@ -38,20 +38,23 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * Default implementation of {@link IMultiTypeNameValueStorageReencrypter}.
  */
-public class DefaultMultiTypeNameValueStorageReencrypter implements IMultiTypeNameValueStorageReencrypter {
+public class DefaultMultiTypeNameValueStorageReencrypter
+        implements IMultiTypeNameValueStorageReencrypter {
 
-    private static final String TAG = DefaultMultiTypeNameValueStorageReencrypter.class.getSimpleName();
+    private static final String TAG =
+            DefaultMultiTypeNameValueStorageReencrypter.class.getSimpleName();
     private static final ExecutorService executor = Executors.newSingleThreadExecutor();
 
     @Override
-    public IMigrationOperationResult reencrypt(@NonNull final INameValueStorage<String> fileManager,
-                                               @NonNull final IStringEncrypter encrypter,
-                                               @NonNull final IStringDecrypter decrypter,
-                                               @NonNull final ReencryptionParams params) {
+    public IMigrationOperationResult reencrypt(
+            @NonNull final INameValueStorage<String> fileManager,
+            @NonNull final IStringEncrypter encrypter,
+            @NonNull final IStringDecrypter decrypter,
+            @NonNull final ReencryptionParams params) {
         final String methodName = ":reencrypt (sync)";
         final Map<String, String> cacheEntries = new HashMap<>(fileManager.getAll());
-        Logger.verbose(TAG + methodName,
-                "Attempting to migrate cache entries: " + cacheEntries.size());
+        Logger.verbose(
+                TAG + methodName, "Attempting to migrate cache entries: " + cacheEntries.size());
         final MigrationOperationResult result = new MigrationOperationResult();
         result.setCountOfTotalRecords(cacheEntries.size());
         final Set<String> keysMarkedForRemoval = new HashSet<>();
@@ -72,8 +75,7 @@ public class DefaultMultiTypeNameValueStorageReencrypter implements IMultiTypeNa
                 params,
                 keysMarkedForRemoval,
                 skipKeys,
-                shouldAbort
-        );
+                shouldAbort);
 
         // Clear any keys marked for removal...
         clearEntriesMarkedForRemoval(fileManager, cacheEntries, keysMarkedForRemoval);
@@ -97,8 +99,7 @@ public class DefaultMultiTypeNameValueStorageReencrypter implements IMultiTypeNa
                 params,
                 keysMarkedForRemoval,
                 skipKeys,
-                shouldAbort
-        );
+                shouldAbort);
 
         // Clear any keys marked for removal...
         clearEntriesMarkedForRemoval(fileManager, cacheEntries, keysMarkedForRemoval);
@@ -141,13 +142,14 @@ public class DefaultMultiTypeNameValueStorageReencrypter implements IMultiTypeNa
      * @param shouldAbort          A pass-by-reference boolean, allowing this method to dictate that abortive
      *                             action must be taken by the caller.
      */
-    private void applyCacheMutation(@NonNull final Map<String, String> cacheEntries,
-                                    @NonNull final Callable<Map.Entry<String, String>> callable,
-                                    @NonNull final MigrationOperationResult inputResult,
-                                    @NonNull final ReencryptionParams params,
-                                    @NonNull final Set<String> keysMarkedForRemoval,
-                                    @NonNull final Set<String> skipKeys,
-                                    @NonNull AtomicBoolean shouldAbort) {
+    private void applyCacheMutation(
+            @NonNull final Map<String, String> cacheEntries,
+            @NonNull final Callable<Map.Entry<String, String>> callable,
+            @NonNull final MigrationOperationResult inputResult,
+            @NonNull final ReencryptionParams params,
+            @NonNull final Set<String> keysMarkedForRemoval,
+            @NonNull final Set<String> skipKeys,
+            @NonNull AtomicBoolean shouldAbort) {
         final String methodName = ":applyCacheMutation";
         for (final Map.Entry<String, String> cacheEntry : cacheEntries.entrySet()) {
             try {
@@ -182,9 +184,10 @@ public class DefaultMultiTypeNameValueStorageReencrypter implements IMultiTypeNa
         }
     }
 
-    private void clearEntriesMarkedForRemoval(@NonNull final INameValueStorage<String> fileManager,
-                                              @NonNull final Map<String, String> cacheEntries,
-                                              @NonNull final Set<String> keysMarkedForRemoval) {
+    private void clearEntriesMarkedForRemoval(
+            @NonNull final INameValueStorage<String> fileManager,
+            @NonNull final Map<String, String> cacheEntries,
+            @NonNull final Set<String> keysMarkedForRemoval) {
         final String methodName = ":clearEntriesMarkedForRemoval";
         Logger.warn(TAG + methodName, "Removing entries marked for removal");
         for (final String removedKey : keysMarkedForRemoval) {
@@ -194,16 +197,19 @@ public class DefaultMultiTypeNameValueStorageReencrypter implements IMultiTypeNa
     }
 
     @Override
-    public void reencryptAsync(@NonNull final INameValueStorage<String> fileManager,
-                               @NonNull final IStringEncrypter encrypter,
-                               @NonNull final IStringDecrypter decrypter,
-                               @NonNull final ReencryptionParams params,
-                               @NonNull final TaskCompletedCallback<IMigrationOperationResult> callback) {
-        executor.execute(new Runnable() {
-            @Override
-            public void run() {
-                callback.onTaskCompleted(reencrypt(fileManager, encrypter, decrypter, params));
-            }
-        });
+    public void reencryptAsync(
+            @NonNull final INameValueStorage<String> fileManager,
+            @NonNull final IStringEncrypter encrypter,
+            @NonNull final IStringDecrypter decrypter,
+            @NonNull final ReencryptionParams params,
+            @NonNull final TaskCompletedCallback<IMigrationOperationResult> callback) {
+        executor.execute(
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        callback.onTaskCompleted(
+                                reencrypt(fileManager, encrypter, decrypter, params));
+                    }
+                });
     }
 }

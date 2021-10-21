@@ -23,12 +23,12 @@
 
 package com.microsoft.identity.common.java.eststelemetry;
 
+import static com.microsoft.identity.common.java.eststelemetry.SchemaConstants.Key.API_ID;
+import static com.microsoft.identity.common.java.eststelemetry.SchemaConstants.Key.FORCE_REFRESH;
+
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.Accessors;
-
-import static com.microsoft.identity.common.java.eststelemetry.SchemaConstants.Key.API_ID;
-import static com.microsoft.identity.common.java.eststelemetry.SchemaConstants.Key.FORCE_REFRESH;
 
 class CurrentRequestTelemetry extends RequestTelemetry implements ICurrentTelemetry {
 
@@ -46,9 +46,9 @@ class CurrentRequestTelemetry extends RequestTelemetry implements ICurrentTeleme
 
     @Override
     public String getHeaderStringForFields() {
-        return TelemetryUtils.getSchemaCompliantString(mApiId) + "," +
-                TelemetryUtils.getSchemaCompliantStringFromBoolean(mForceRefresh);
-
+        return TelemetryUtils.getSchemaCompliantString(mApiId)
+                + ","
+                + TelemetryUtils.getSchemaCompliantStringFromBoolean(mForceRefresh);
     }
 
     @Override

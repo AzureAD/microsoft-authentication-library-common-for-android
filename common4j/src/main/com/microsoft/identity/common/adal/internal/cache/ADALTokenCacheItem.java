@@ -87,9 +87,11 @@ public class ADALTokenCacheItem implements ITokenCacheItem {
         mSpeRing = tokenCacheItem.getSpeRing();
     }
 
-    ADALTokenCacheItem(final AzureActiveDirectoryOAuth2Strategy strategy,
-                       final AzureActiveDirectoryAuthorizationRequest request,
-                       final AzureActiveDirectoryTokenResponse response) throws ClientException {
+    ADALTokenCacheItem(
+            final AzureActiveDirectoryOAuth2Strategy strategy,
+            final AzureActiveDirectoryAuthorizationRequest request,
+            final AzureActiveDirectoryTokenResponse response)
+            throws ClientException {
         String issuerCacheIdentifier = strategy.getIssuerCacheIdentifier(request);
         AzureActiveDirectoryAccount account = strategy.createAccount(response);
         account.setEnvironment(issuerCacheIdentifier);
@@ -137,7 +139,6 @@ public class ADALTokenCacheItem implements ITokenCacheItem {
         newItem.setClientId(null);
         return newItem;
     }
-
 
     String getSpeRing() {
         return mSpeRing;

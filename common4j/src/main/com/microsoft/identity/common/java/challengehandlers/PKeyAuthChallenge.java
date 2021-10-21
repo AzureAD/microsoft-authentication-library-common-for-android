@@ -33,16 +33,15 @@ import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.util.JWSBuilder;
 import com.microsoft.identity.common.java.util.StringUtil;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
+
 import java.io.Serializable;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.security.PrivateKey;
-import java.security.interfaces.RSAPrivateKey;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
  * A class/builder that represents PKeyAuth challenge.
@@ -52,13 +51,17 @@ public class PKeyAuthChallenge implements Serializable {
     private static final String TAG = PKeyAuthChallenge.class.getSimpleName();
 
     enum RequestField {
-        Nonce, CertAuthorities, Version, SubmitUrl, Context, CertThumbprint
+        Nonce,
+        CertAuthorities,
+        Version,
+        SubmitUrl,
+        Context,
+        CertThumbprint
     }
 
     /**
      * Serial version id.
      */
-
     private final String mNonce;
 
     private final String mContext;
@@ -162,14 +165,18 @@ public class PKeyAuthChallenge implements Serializable {
     public Map<String, String> getChallengeHeader() throws ClientException {
         final String methodName = ":getChallengeHeader";
 
-        String authorizationHeaderValue = String.format("%s Context=\"%s\",Version=\"%s\"",
-                CHALLENGE_RESPONSE_TYPE, mContext, mVersion);
+        String authorizationHeaderValue =
+                String.format(
+                        "%s Context=\"%s\",Version=\"%s\"",
+                        CHALLENGE_RESPONSE_TYPE, mContext, mVersion);
 
         // If not device cert exists, alias or private key will not exist on the device
-        // Suppressing unchecked warnings due to the generic type not provided in the object returned from method getDeviceCertificateProxy
+        // Suppressing unchecked warnings due to the generic type not provided in the object
+        // returned from method getDeviceCertificateProxy
         @SuppressWarnings(WarningType.unchecked_warning)
         final Class<IDeviceCertificate> certClazz =
-                (Class<IDeviceCertificate>) AuthenticationSettings.INSTANCE.getDeviceCertificateProxy();
+                (Class<IDeviceCertificate>)
+                        AuthenticationSettings.INSTANCE.getDeviceCertificateProxy();
 
         if (certClazz != null) {
             IDeviceCertificate deviceCertProxy = getWPJAPIInstance(certClazz);
@@ -179,36 +186,43 @@ public class PKeyAuthChallenge implements Serializable {
                 if (privateKey == null) {
                     throw new ClientException(ErrorStrings.KEY_CHAIN_PRIVATE_KEY_EXCEPTION);
                 }
-                final String jwt = (new JWSBuilder()).generateSignedJWT(
-                        mNonce,
-                        mSubmitUrl,
-                        privateKey,
-                        deviceCertProxy.getPublicKey(),
-                        deviceCertProxy.getCertificate());
-                authorizationHeaderValue = String.format(
-                        "%s AuthToken=\"%s\",Context=\"%s\",Version=\"%s\"",
-                        CHALLENGE_RESPONSE_TYPE, jwt, mContext, mVersion);
+                final String jwt =
+                        (new JWSBuilder())
+                                .generateSignedJWT(
+                                        mNonce,
+                                        mSubmitUrl,
+                                        privateKey,
+                                        deviceCertProxy.getPublicKey(),
+                                        deviceCertProxy.getCertificate());
+                authorizationHeaderValue =
+                        String.format(
+                                "%s AuthToken=\"%s\",Context=\"%s\",Version=\"%s\"",
+                                CHALLENGE_RESPONSE_TYPE, jwt, mContext, mVersion);
                 Logger.info(TAG + methodName, "Receive challenge response. ");
             }
         }
 
         final Map<String, String> headers = new HashMap<>();
-        headers.put(CHALLENGE_RESPONSE_HEADER,
-                authorizationHeaderValue);
+        headers.put(CHALLENGE_RESPONSE_HEADER, authorizationHeaderValue);
         return headers;
     }
 
-    private static IDeviceCertificate getWPJAPIInstance(@NonNull final Class<IDeviceCertificate> certClazz)
-            throws ClientException {
+    private static IDeviceCertificate getWPJAPIInstance(
+            @NonNull final Class<IDeviceCertificate> certClazz) throws ClientException {
         final IDeviceCertificate deviceCertProxy;
         final Constructor<?> constructor;
         try {
             constructor = certClazz.getDeclaredConstructor();
             deviceCertProxy = (IDeviceCertificate) constructor.newInstance((Object[]) null);
-        } catch (final NoSuchMethodException | InstantiationException | IllegalAccessException
-                | IllegalArgumentException | InvocationTargetException e) {
-            throw new ClientException(ErrorStrings.DEVICE_CERTIFICATE_API_EXCEPTION,
-                    "WPJ Api constructor is not defined", e);
+        } catch (final NoSuchMethodException
+                | InstantiationException
+                | IllegalAccessException
+                | IllegalArgumentException
+                | InvocationTargetException e) {
+            throw new ClientException(
+                    ErrorStrings.DEVICE_CERTIFICATE_API_EXCEPTION,
+                    "WPJ Api constructor is not defined",
+                    e);
         }
         return deviceCertProxy;
     }

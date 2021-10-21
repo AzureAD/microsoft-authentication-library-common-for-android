@@ -35,5 +35,4 @@ public interface INameable extends Serializable {
      * @return The name to get.
      */
     String getName();
-
 }

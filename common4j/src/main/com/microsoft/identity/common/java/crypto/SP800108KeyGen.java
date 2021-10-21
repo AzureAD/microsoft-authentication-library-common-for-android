@@ -22,6 +22,10 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.crypto;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
+import lombok.NonNull;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -33,15 +37,13 @@ import java.util.Arrays;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import lombok.NonNull;
-
 /**
  * This class is a key derivation function for SP800 108 key generation.
  */
 public class SP800108KeyGen {
 
-    static final byte[] BIG_ENDIAN_INT_256 = ByteBuffer.allocate(4).order(ByteOrder.BIG_ENDIAN).putInt(256).array();
+    static final byte[] BIG_ENDIAN_INT_256 =
+            ByteBuffer.allocate(4).order(ByteOrder.BIG_ENDIAN).putInt(256).array();
 
     /**]
      * Generate a derived key given a starting key.
@@ -53,8 +55,11 @@ public class SP800108KeyGen {
      * @throws InvalidKeyException
      * @throws NoSuchAlgorithmException
      */
-    @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE", justification = "Interaction with Lombok")
-    public static byte[] generateDerivedKey(@NonNull final byte[] key, @NonNull final byte[] label, @NonNull final byte[] ctx)
+    @SuppressFBWarnings(
+            value = "RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE",
+            justification = "Interaction with Lombok")
+    public static byte[] generateDerivedKey(
+            @NonNull final byte[] key, @NonNull final byte[] label, @NonNull final byte[] ctx)
             throws IOException, InvalidKeyException, NoSuchAlgorithmException {
         final ByteArrayOutputStream stream = new ByteArrayOutputStream();
         stream.write(label);
@@ -105,8 +110,10 @@ public class SP800108KeyGen {
         return keyDerivated;
     }
 
-    private static byte[] updateDataInput(final byte ctr, @NonNull final byte[] fixedInput) throws IOException {
-        final ByteArrayOutputStream tmpFixedInput = new ByteArrayOutputStream(fixedInput.length + 4);
+    private static byte[] updateDataInput(final byte ctr, @NonNull final byte[] fixedInput)
+            throws IOException {
+        final ByteArrayOutputStream tmpFixedInput =
+                new ByteArrayOutputStream(fixedInput.length + 4);
         tmpFixedInput.write(ctr >>> 24);
         tmpFixedInput.write(ctr >>> 16);
         tmpFixedInput.write(ctr >>> 8);

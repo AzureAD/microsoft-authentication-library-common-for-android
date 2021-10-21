@@ -23,6 +23,9 @@
 
 package com.microsoft.identity.common.internal.broker;
 
+import static com.microsoft.identity.common.exception.BrokerCommunicationException.Category.OPERATION_NOT_SUPPORTED_ON_CLIENT_SIDE;
+import static com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy.Type.BOUND_SERVICE;
+
 import android.content.Context;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -35,16 +38,15 @@ import com.microsoft.aad.adal.IBrokerAccountService;
 import com.microsoft.identity.common.exception.BrokerCommunicationException;
 import com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle;
 
-import static com.microsoft.identity.common.exception.BrokerCommunicationException.Category.OPERATION_NOT_SUPPORTED_ON_CLIENT_SIDE;
-import static com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy.Type.BOUND_SERVICE;
-
 /**
  * Client that wraps the code necessary to bind to the a service that implements IBrokerAccountService.aidl
  */
 public class BrokerAccountServiceClient extends BoundServiceClient<IBrokerAccountService> {
 
-    private static final String BROKER_ACCOUNT_SERVICE_INTENT_FILTER = "com.microsoft.workaccount.BrokerAccount";
-    private static final String BROKER_ACCOUNT_SERVICE_CLASS_NAME = "com.microsoft.aad.adal.BrokerAccountService";
+    private static final String BROKER_ACCOUNT_SERVICE_INTENT_FILTER =
+            "com.microsoft.workaccount.BrokerAccount";
+    private static final String BROKER_ACCOUNT_SERVICE_CLASS_NAME =
+            "com.microsoft.aad.adal.BrokerAccountService";
 
     /**
      * BrokerAccountServiceClient's constructor.
@@ -52,10 +54,7 @@ public class BrokerAccountServiceClient extends BoundServiceClient<IBrokerAccoun
      * @param context Application context.
      */
     public BrokerAccountServiceClient(@NonNull final Context context) {
-        super(context,
-                BROKER_ACCOUNT_SERVICE_CLASS_NAME,
-                BROKER_ACCOUNT_SERVICE_INTENT_FILTER
-        );
+        super(context, BROKER_ACCOUNT_SERVICE_CLASS_NAME, BROKER_ACCOUNT_SERVICE_INTENT_FILTER);
     }
 
     /**
@@ -64,27 +63,29 @@ public class BrokerAccountServiceClient extends BoundServiceClient<IBrokerAccoun
      * @param context          Application context.
      * @param timeOutInSeconds The client will terminates its connection if it can't connect to the service by this time out.
      */
-    public BrokerAccountServiceClient(@NonNull final Context context,
-                                      final int timeOutInSeconds) {
-        super(context,
+    public BrokerAccountServiceClient(@NonNull final Context context, final int timeOutInSeconds) {
+        super(
+                context,
                 BROKER_ACCOUNT_SERVICE_CLASS_NAME,
                 BROKER_ACCOUNT_SERVICE_INTENT_FILTER,
-                timeOutInSeconds
-        );
+                timeOutInSeconds);
     }
 
     @Override
-    @NonNull IBrokerAccountService getInterfaceFromIBinder(@NonNull IBinder binder) {
+    @NonNull
+    IBrokerAccountService getInterfaceFromIBinder(@NonNull IBinder binder) {
         final IBrokerAccountService service = IBrokerAccountService.Stub.asInterface(binder);
         if (service == null) {
-            throw new IllegalStateException("Failed to extract IBrokerAccountService from IBinder.", null);
+            throw new IllegalStateException(
+                    "Failed to extract IBrokerAccountService from IBinder.", null);
         }
         return service;
     }
 
     @Override
-    public @Nullable Bundle performOperationInternal(@NonNull BrokerOperationBundle brokerOperationBundle,
-                                                     @NonNull IBrokerAccountService brokerAccountService)
+    public @Nullable Bundle performOperationInternal(
+            @NonNull BrokerOperationBundle brokerOperationBundle,
+            @NonNull IBrokerAccountService brokerAccountService)
             throws RemoteException, BrokerCommunicationException {
         final Bundle inputBundle = brokerOperationBundle.getBundle();
         switch (brokerOperationBundle.getOperation()) {
@@ -100,4 +101,3 @@ public class BrokerAccountServiceClient extends BoundServiceClient<IBrokerAccoun
         }
     }
 }
-

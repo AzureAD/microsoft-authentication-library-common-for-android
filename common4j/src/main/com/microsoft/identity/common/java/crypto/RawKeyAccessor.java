@@ -22,11 +22,25 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.crypto;
 
+import static com.microsoft.identity.common.java.exception.ClientException.BAD_PADDING;
+import static com.microsoft.identity.common.java.exception.ClientException.INVALID_ALG_PARAMETER;
+import static com.microsoft.identity.common.java.exception.ClientException.INVALID_BLOCK_SIZE;
+import static com.microsoft.identity.common.java.exception.ClientException.INVALID_KEY;
+import static com.microsoft.identity.common.java.exception.ClientException.IO_ERROR;
+import static com.microsoft.identity.common.java.exception.ClientException.NO_SUCH_ALGORITHM;
+import static com.microsoft.identity.common.java.exception.ClientException.NO_SUCH_PADDING;
+
 import com.microsoft.identity.common.java.AuthenticationConstants;
-import com.microsoft.identity.common.java.crypto.IKeyAccessor;
-import com.microsoft.identity.common.java.crypto.SP800108KeyGen;
-import com.microsoft.identity.common.java.crypto.SecureHardwareState;
 import com.microsoft.identity.common.java.exception.ClientException;
+
+import edu.umd.cs.findbugs.annotations.Nullable;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.experimental.Accessors;
 
 import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
@@ -46,22 +60,6 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
-import edu.umd.cs.findbugs.annotations.Nullable;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.experimental.Accessors;
-
-import static com.microsoft.identity.common.java.exception.ClientException.BAD_PADDING;
-import static com.microsoft.identity.common.java.exception.ClientException.INVALID_ALG_PARAMETER;
-import static com.microsoft.identity.common.java.exception.ClientException.INVALID_BLOCK_SIZE;
-import static com.microsoft.identity.common.java.exception.ClientException.INVALID_KEY;
-import static com.microsoft.identity.common.java.exception.ClientException.IO_ERROR;
-import static com.microsoft.identity.common.java.exception.ClientException.NO_SUCH_ALGORITHM;
-import static com.microsoft.identity.common.java.exception.ClientException.NO_SUCH_PADDING;
-
 /**
  * Key accessor for using a raw symmetric key.
  */
@@ -76,13 +74,11 @@ public class RawKeyAccessor implements IKeyAccessor {
     /**
      * The cryptoSuite to use with this RawKeyAccessor.
      */
-    @NonNull
-    private final CryptoSuite mSuite;
+    @NonNull private final CryptoSuite mSuite;
     /**
      * The byte array that backs this key.
      */
-    @NonNull
-    private final byte[] mKey;
+    @NonNull private final byte[] mKey;
 
     /**
      * The alias for the stored key, may be null.
@@ -189,8 +185,8 @@ public class RawKeyAccessor implements IKeyAccessor {
     }
 
     @Override
-    public boolean verify(@NonNull final byte[] text,
-                          @NonNull final byte[] signature) throws ClientException {
+    public boolean verify(@NonNull final byte[] text, @NonNull final byte[] signature)
+            throws ClientException {
         return Arrays.equals(signature, sign(text));
     }
 
@@ -203,7 +199,12 @@ public class RawKeyAccessor implements IKeyAccessor {
         try {
             cipher = Cipher.getInstance(keySpec.getAlgorithm());
             final MessageDigest digest = MessageDigest.getInstance("SHA256");
-            return digest.digest(cipher.doFinal((keySpec.getAlgorithm() + cipher.getBlockSize() + cipher.getParameters()).getBytes(AuthenticationConstants.CHARSET_UTF8)));
+            return digest.digest(
+                    cipher.doFinal(
+                            (keySpec.getAlgorithm()
+                                            + cipher.getBlockSize()
+                                            + cipher.getParameters())
+                                    .getBytes(AuthenticationConstants.CHARSET_UTF8)));
         } catch (final NoSuchAlgorithmException e) {
             errCode = NO_SUCH_ALGORITHM;
             exception = e;
@@ -239,7 +240,8 @@ public class RawKeyAccessor implements IKeyAccessor {
      * @return a new key, generated from the previous one.
      * @throws ClientException if something goes wrong during generation.
      */
-    public byte[] generateDerivedKey(@NonNull final byte[] label, @NonNull final byte[] ctx) throws ClientException{
+    public byte[] generateDerivedKey(@NonNull final byte[] label, @NonNull final byte[] ctx)
+            throws ClientException {
         try {
             return SP800108KeyGen.generateDerivedKey(mKey, label, ctx);
         } catch (IOException e) {
@@ -262,10 +264,14 @@ public class RawKeyAccessor implements IKeyAccessor {
      * @throws ClientException if something goes wrong during generation.
      */
     @Override
-    public IKeyAccessor generateDerivedKey(@NonNull final byte[] label, @NonNull final byte[] ctx,
-                                          @NonNull final CryptoSuite suite) throws ClientException{
+    public IKeyAccessor generateDerivedKey(
+            @NonNull final byte[] label,
+            @NonNull final byte[] ctx,
+            @NonNull final CryptoSuite suite)
+            throws ClientException {
         try {
-            return new RawKeyAccessor(suite, SP800108KeyGen.generateDerivedKey(mKey, label, ctx), null);
+            return new RawKeyAccessor(
+                    suite, SP800108KeyGen.generateDerivedKey(mKey, label, ctx), null);
         } catch (IOException e) {
             throw new ClientException(IO_ERROR, e.getMessage(), e);
         } catch (InvalidKeyException e) {
@@ -274,5 +280,4 @@ public class RawKeyAccessor implements IKeyAccessor {
             throw new ClientException(NO_SUCH_ALGORITHM, e.getMessage(), e);
         }
     }
-
 }

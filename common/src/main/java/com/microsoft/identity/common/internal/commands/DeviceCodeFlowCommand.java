@@ -28,11 +28,11 @@ import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.commands.TokenCommand;
 import com.microsoft.identity.common.java.commands.parameters.DeviceCodeFlowCommandParameters;
 import com.microsoft.identity.common.java.controllers.BaseController;
-import com.microsoft.identity.common.java.result.AcquireTokenResult;
+import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResponse;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
+import com.microsoft.identity.common.java.result.AcquireTokenResult;
 import com.microsoft.identity.common.java.util.ported.PropertyBag;
-import com.microsoft.identity.common.java.logging.Logger;
 
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
@@ -47,30 +47,31 @@ import java.util.concurrent.TimeUnit;
 public class DeviceCodeFlowCommand extends TokenCommand {
     private static final String TAG = DeviceCodeFlowCommand.class.getSimpleName();
 
-    public DeviceCodeFlowCommand(@NonNull DeviceCodeFlowCommandParameters parameters,
-                                 @NonNull BaseController controller,
-                                 @SuppressWarnings(WarningType.rawtype_warning) @NonNull DeviceCodeFlowCommandCallback callback,
-                                 @NonNull String publicApiId) {
+    public DeviceCodeFlowCommand(
+            @NonNull DeviceCodeFlowCommandParameters parameters,
+            @NonNull BaseController controller,
+            @SuppressWarnings(WarningType.rawtype_warning) @NonNull
+                    DeviceCodeFlowCommandCallback callback,
+            @NonNull String publicApiId) {
         super(parameters, controller, callback, publicApiId);
     }
 
     @Override
     public AcquireTokenResult execute() throws Exception {
         final String methodName = ":execute";
-        Logger.verbose(
-                TAG + methodName,
-                "Device Code Flow command initiating..."
-        );
+        Logger.verbose(TAG + methodName, "Device Code Flow command initiating...");
 
         // Get the controller used to execute the command
         final BaseController controller = getDefaultController();
 
         // Fetch the parameters
-        final DeviceCodeFlowCommandParameters commandParameters = (DeviceCodeFlowCommandParameters) getParameters();
+        final DeviceCodeFlowCommandParameters commandParameters =
+                (DeviceCodeFlowCommandParameters) getParameters();
 
         // Call deviceCodeFlowAuthRequest to get authorization result (Part 1 of DCF)
         @SuppressWarnings(WarningType.rawtype_warning)
-        final AuthorizationResult authorizationResult = controller.deviceCodeFlowAuthRequest(commandParameters);
+        final AuthorizationResult authorizationResult =
+                controller.deviceCodeFlowAuthRequest(commandParameters);
 
         // Fetch the authorization response
         final MicrosoftStsAuthorizationResponse authorizationResponse =
@@ -78,30 +79,30 @@ public class DeviceCodeFlowCommand extends TokenCommand {
 
         final Date expiredDate = new Date();
         try {
-            long expiredInInMilliseconds = TimeUnit.SECONDS.toMillis(Long.parseLong(authorizationResponse.getExpiresIn()));
+            long expiredInInMilliseconds =
+                    TimeUnit.SECONDS.toMillis(Long.parseLong(authorizationResponse.getExpiresIn()));
             expiredDate.setTime(expiredDate.getTime() + expiredInInMilliseconds);
-        } catch (final NumberFormatException e){
+        } catch (final NumberFormatException e) {
             // Shouldn't happen, but if it does, we don't want to fail the request because of this.
-            Logger.error(TAG + methodName, "Failed to parse authorizationResponse.getExpiresIn()", e);
+            Logger.error(
+                    TAG + methodName, "Failed to parse authorizationResponse.getExpiresIn()", e);
         }
 
         // Communicate with user app and provide authentication information
         @SuppressWarnings(WarningType.rawtype_warning)
-        final DeviceCodeFlowCommandCallback deviceCodeFlowCommandCallback = (DeviceCodeFlowCommandCallback) getCallback();
+        final DeviceCodeFlowCommandCallback deviceCodeFlowCommandCallback =
+                (DeviceCodeFlowCommandCallback) getCallback();
         deviceCodeFlowCommandCallback.onUserCodeReceived(
                 authorizationResponse.getVerificationUri(),
                 authorizationResponse.getUserCode(),
                 authorizationResponse.getMessage(),
-                expiredDate
-        );
+                expiredDate);
 
         // Call acquireDeviceCodeFlowToken to get token result (Part 2 of DCF)
-        final AcquireTokenResult tokenResult = controller.acquireDeviceCodeFlowToken(authorizationResult, commandParameters);
+        final AcquireTokenResult tokenResult =
+                controller.acquireDeviceCodeFlowToken(authorizationResult, commandParameters);
 
-        Logger.verbose(
-                TAG + methodName,
-                "Device Code Flow command exiting with token..."
-        );
+        Logger.verbose(TAG + methodName, "Device Code Flow command exiting with token...");
 
         return tokenResult;
     }
@@ -112,9 +113,8 @@ public class DeviceCodeFlowCommand extends TokenCommand {
     }
 
     @Override
-    public void onFinishAuthorizationSession(final int requestCode,
-                                             final int resultCode,
-                                             @NonNull final PropertyBag data) {
+    public void onFinishAuthorizationSession(
+            final int requestCode, final int resultCode, @NonNull final PropertyBag data) {
         throw new UnsupportedOperationException();
     }
 }

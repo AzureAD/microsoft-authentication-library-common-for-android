@@ -22,7 +22,6 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.rules;
 
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 
@@ -39,7 +38,7 @@ import org.junit.runners.model.Statement;
  */
 public class InstallBrokerTestRule implements TestRule {
 
-    private final static String TAG = InstallBrokerTestRule.class.getSimpleName();
+    private static final String TAG = InstallBrokerTestRule.class.getSimpleName();
 
     private final ITestBroker broker;
 

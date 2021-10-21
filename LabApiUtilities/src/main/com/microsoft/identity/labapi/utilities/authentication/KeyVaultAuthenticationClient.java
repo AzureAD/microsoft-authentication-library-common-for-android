@@ -36,34 +36,35 @@ import lombok.NonNull;
  */
 public class KeyVaultAuthenticationClient implements IAccessTokenSupplier {
 
-    private final static String CLIENT_ID = "4bc6e96f-bd23-408f-8ecb-a7a7145463f9";
-    private final static String SCOPE = "https://vault.azure.net/.default";
-    private final static String CERTIFICATE_ALIAS = "AutomationRunner";
-    private final static String KEYSTORE_TYPE = "Windows-MY";
-    private final static String KEYSTORE_PROVIDER = "SunMSCAPI";
+    private static final String CLIENT_ID = "4bc6e96f-bd23-408f-8ecb-a7a7145463f9";
+    private static final String SCOPE = "https://vault.azure.net/.default";
+    private static final String CERTIFICATE_ALIAS = "AutomationRunner";
+    private static final String KEYSTORE_TYPE = "Windows-MY";
+    private static final String KEYSTORE_PROVIDER = "SunMSCAPI";
 
     // tenant id where lab api and key vault api is registered
-    private final static String TENANT_ID = "72f988bf-86f1-41af-91ab-2d7cd011db47";
+    private static final String TENANT_ID = "72f988bf-86f1-41af-91ab-2d7cd011db47";
 
-    private final static String AUTHORITY = "https://login.microsoftonline.com/" + TENANT_ID;
+    private static final String AUTHORITY = "https://login.microsoftonline.com/" + TENANT_ID;
 
     private final IConfidentialAuthClient mConfidentialAuthClient;
     private final String mClientSecret;
 
-    public KeyVaultAuthenticationClient(@NonNull final IConfidentialAuthClient confidentialAuthClient) {
+    public KeyVaultAuthenticationClient(
+            @NonNull final IConfidentialAuthClient confidentialAuthClient) {
         mConfidentialAuthClient = confidentialAuthClient;
         mClientSecret = null;
     }
 
-    public KeyVaultAuthenticationClient(@NonNull final IConfidentialAuthClient confidentialAuthClient,
-                                        @NonNull final String clientSecret) {
+    public KeyVaultAuthenticationClient(
+            @NonNull final IConfidentialAuthClient confidentialAuthClient,
+            @NonNull final String clientSecret) {
         mConfidentialAuthClient = confidentialAuthClient;
         mClientSecret = clientSecret;
     }
 
     private ITokenParameters getTokenParametersForKeyVault() {
-        return TokenParameters
-                .builder()
+        return TokenParameters.builder()
                 .clientId(CLIENT_ID)
                 .authority(AUTHORITY)
                 .scope(SCOPE)
@@ -76,39 +77,37 @@ public class KeyVaultAuthenticationClient implements IAccessTokenSupplier {
 
         if (mClientSecret != null && mClientSecret.trim().length() > 0) {
             // if client secret is provided then we would use that to acquire token
-            authenticationResult = mConfidentialAuthClient.acquireToken(
-                    mClientSecret, getTokenParametersForKeyVault()
-            );
+            authenticationResult =
+                    mConfidentialAuthClient.acquireToken(
+                            mClientSecret, getTokenParametersForKeyVault());
 
             if (authenticationResult != null) {
                 return authenticationResult.getAccessToken();
             } else {
-                throw new LabApiException(LabError.FAILED_TO_GET_TOKEN_FOR_KEYVAULT_USING_CLIENT_SECRET);
+                throw new LabApiException(
+                        LabError.FAILED_TO_GET_TOKEN_FOR_KEYVAULT_USING_CLIENT_SECRET);
             }
         } else {
             // client secret was not provided...so we would try to use the Certificate
             // the cert must be in store for it to succeed..otherwise it would just fail
-            final KeyStoreConfiguration keyStoreConfiguration = new KeyStoreConfiguration(
-                    KEYSTORE_TYPE, KEYSTORE_PROVIDER, null
-            );
+            final KeyStoreConfiguration keyStoreConfiguration =
+                    new KeyStoreConfiguration(KEYSTORE_TYPE, KEYSTORE_PROVIDER, null);
 
-            final ClientCertificateMetadata certificateMetadata = new ClientCertificateMetadata(
-                    CERTIFICATE_ALIAS, null
-            );
+            final ClientCertificateMetadata certificateMetadata =
+                    new ClientCertificateMetadata(CERTIFICATE_ALIAS, null);
 
-            final CertificateCredential certificateCredential = CertificateCredential.create(
-                    keyStoreConfiguration,
-                    certificateMetadata
-            );
+            final CertificateCredential certificateCredential =
+                    CertificateCredential.create(keyStoreConfiguration, certificateMetadata);
 
-            authenticationResult = mConfidentialAuthClient.acquireToken(
-                    certificateCredential, getTokenParametersForKeyVault()
-            );
+            authenticationResult =
+                    mConfidentialAuthClient.acquireToken(
+                            certificateCredential, getTokenParametersForKeyVault());
 
             if (authenticationResult != null) {
                 return authenticationResult.getAccessToken();
             } else {
-                throw new LabApiException(LabError.FAILED_TO_GET_TOKEN_FOR_KEYVAULT_USING_CERTIFICATE);
+                throw new LabApiException(
+                        LabError.FAILED_TO_GET_TOKEN_FOR_KEYVAULT_USING_CERTIFICATE);
             }
         }
     }

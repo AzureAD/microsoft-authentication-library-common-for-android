@@ -22,8 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.util;
 
-import lombok.NonNull;
-
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.TypeAdapter;
@@ -32,10 +30,13 @@ import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.JsonWriter;
-import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.AuthenticationConstants;
+import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.commands.parameters.IHasExtraParameters;
 import com.microsoft.identity.common.java.logging.Logger;
+
+import lombok.NonNull;
+import lombok.val;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -44,14 +45,11 @@ import java.lang.reflect.Type;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
-
-import lombok.val;
 
 public final class ObjectMapper {
 
@@ -59,10 +57,12 @@ public final class ObjectMapper {
      * Encoding scheme.
      */
     public static final String ENCODING_SCHEME = "UTF-8";
+
     public static final String TAG = ObjectMapper.class.getSimpleName();
-    public static final Gson GSON = new GsonBuilder()
-            .registerTypeAdapterFactory(new UnknownParamTypeAdapterFactory())
-            .create();
+    public static final Gson GSON =
+            new GsonBuilder()
+                    .registerTypeAdapterFactory(new UnknownParamTypeAdapterFactory())
+                    .create();
 
     /*
      * This likely deserves a comment.  What we're doing here is hooking the underlying GSON implementation's
@@ -90,99 +90,102 @@ public final class ObjectMapper {
                     @Override
                     public T read(final JsonReader in) throws IOException {
                         final Map<String, String> otherKeys = new LinkedHashMap<>();
-                        final Reader reader = new Reader() {
-                            @Override
-                            public int read(char[] cbuf, int off, int len) throws IOException {
-                                return 0;
-                            }
+                        final Reader reader =
+                                new Reader() {
+                                    @Override
+                                    public int read(char[] cbuf, int off, int len)
+                                            throws IOException {
+                                        return 0;
+                                    }
 
-                            @Override
-                            public void close() throws IOException {
+                                    @Override
+                                    public void close() throws IOException {}
+                                };
+                        final JsonReader jsonReader =
+                                new JsonReader(reader) {
+                                    String lastName = null;
 
-                            }
-                        };
-                        final JsonReader jsonReader = new JsonReader(reader) {
-                            String lastName = null;
+                                    public void beginArray() throws IOException {
+                                        in.beginArray();
+                                    }
 
-                            public void beginArray() throws IOException {
-                                in.beginArray();
-                            }
+                                    public void endArray() throws IOException {
+                                        in.endArray();
+                                    }
 
-                            public void endArray() throws IOException {
-                                in.endArray();
-                            }
+                                    public void beginObject() throws IOException {
+                                        in.beginObject();
+                                    }
 
-                            public void beginObject() throws IOException {
-                                in.beginObject();
-                            }
+                                    public void endObject() throws IOException {
+                                        in.endObject();
+                                    }
 
-                            public void endObject() throws IOException {
-                                in.endObject();
-                            }
+                                    public boolean hasNext() throws IOException {
+                                        return in.hasNext();
+                                    }
 
-                            public boolean hasNext() throws IOException {
-                                return in.hasNext();
-                            }
+                                    public JsonToken peek() throws IOException {
+                                        return in.peek();
+                                    }
 
-                            public JsonToken peek() throws IOException {
-                                return in.peek();
-                            }
+                                    public String nextName() throws IOException {
+                                        final String name = in.nextName();
+                                        lastName = name;
+                                        return name;
+                                    }
 
-                            public String nextName() throws IOException {
-                                final String name = in.nextName();
-                                lastName = name;
-                                return name;
-                            }
+                                    public String nextString() throws IOException {
+                                        return in.nextString();
+                                    }
 
-                            public String nextString() throws IOException {
-                                return in.nextString();
-                            }
+                                    public boolean nextBoolean() throws IOException {
+                                        return in.nextBoolean();
+                                    }
 
-                            public boolean nextBoolean() throws IOException {
-                                return in.nextBoolean();
-                            }
+                                    public void nextNull() throws IOException {
+                                        in.nextNull();
+                                    }
 
-                            public void nextNull() throws IOException {
-                                in.nextNull();
-                            }
+                                    public double nextDouble() throws IOException {
+                                        return in.nextDouble();
+                                    }
 
-                            public double nextDouble() throws IOException {
-                                return in.nextDouble();
-                            }
+                                    public long nextLong() throws IOException {
+                                        return in.nextLong();
+                                    }
 
-                            public long nextLong() throws IOException {
-                                return in.nextLong();
-                            }
+                                    public int nextInt() throws IOException {
+                                        return in.nextInt();
+                                    }
 
-                            public int nextInt() throws IOException {
-                                return in.nextInt();
-                            }
+                                    public void close() throws IOException {
+                                        in.close();
+                                    }
 
-                            public void close() throws IOException {
-                                in.close();
-                            }
+                                    public void skipValue() throws IOException {
+                                        JsonToken token = in.peek();
+                                        if (token == JsonToken.STRING) {
+                                            otherKeys.put(lastName, in.nextString());
+                                        } else {
+                                            in.skipValue();
+                                        }
+                                    }
 
-                            public void skipValue() throws IOException {
-                                JsonToken token = in.peek();
-                                if (token == JsonToken.STRING) {
-                                    otherKeys.put(lastName, in.nextString());
-                                } else {
-                                    in.skipValue();
-                                }
-                            }
+                                    @NonNull
+                                    @Override
+                                    public String toString() {
+                                        return in.toString();
+                                    }
 
-                            @NonNull
-                            @Override
-                            public String toString() {
-                                return in.toString();
-                            }
-
-                            public String getPath() {
-                                return in.getPath();
-                            }
-                        };
+                                    public String getPath() {
+                                        return in.getPath();
+                                    }
+                                };
                         T output = adapter.read(jsonReader);
-                        ((IHasExtraParameters) output).setExtraParameters(Collections.unmodifiableMap(otherKeys).entrySet());
+                        ((IHasExtraParameters) output)
+                                .setExtraParameters(
+                                        Collections.unmodifiableMap(otherKeys).entrySet());
                         return output;
                     }
                 };
@@ -239,19 +242,24 @@ public final class ObjectMapper {
      * @return String
      * @throws UnsupportedEncodingException thrown if encoding not supported
      */
-    public static String serializeObjectToFormUrlEncoded(Object object) throws UnsupportedEncodingException {
+    public static String serializeObjectToFormUrlEncoded(Object object)
+            throws UnsupportedEncodingException {
         Map<String, String> fields = constructMapFromObject(object);
 
         final StringBuilder builder = new StringBuilder();
 
         Iterator<Map.Entry<String, String>> iterator = fields.entrySet().iterator();
 
-        //URLEncoder.encode doesn't support (String, Charset) in JDK 7,8
+        // URLEncoder.encode doesn't support (String, Charset) in JDK 7,8
         while (iterator.hasNext()) {
             Map.Entry<String, String> entry = iterator.next();
-            builder.append(URLEncoder.encode(entry.getKey(), AuthenticationConstants.ENCODING_UTF8_STRING));
+            builder.append(
+                    URLEncoder.encode(
+                            entry.getKey(), AuthenticationConstants.ENCODING_UTF8_STRING));
             builder.append('=');
-            builder.append(URLEncoder.encode(entry.getValue(), AuthenticationConstants.ENCODING_UTF8_STRING));
+            builder.append(
+                    URLEncoder.encode(
+                            entry.getValue(), AuthenticationConstants.ENCODING_UTF8_STRING));
 
             if (iterator.hasNext()) {
                 builder.append('&');
@@ -270,7 +278,8 @@ public final class ObjectMapper {
      */
     public static Map<String, String> constructMapFromObject(Object object) {
         String json = ObjectMapper.serializeObjectToJsonString(object);
-        final Type stringMap = TypeToken.getParameterized(TreeMap.class, String.class, String.class).getType();
+        final Type stringMap =
+                TypeToken.getParameterized(TreeMap.class, String.class, String.class).getType();
         TreeMap<String, String> fields = new Gson().fromJson(json, stringMap);
         if (object instanceof IHasExtraParameters) {
             final IHasExtraParameters params = (IHasExtraParameters) object;
@@ -301,7 +310,6 @@ public final class ObjectMapper {
 
         return objectHashMap;
     }
-
 
     /**
      * Method to deserialize the query string into a map.
@@ -340,4 +348,3 @@ public final class ObjectMapper {
         return decodedUrlMap;
     }
 }
-

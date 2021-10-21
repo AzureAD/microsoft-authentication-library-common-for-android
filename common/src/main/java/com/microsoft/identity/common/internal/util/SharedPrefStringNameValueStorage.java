@@ -26,10 +26,10 @@ package com.microsoft.identity.common.internal.util;
 import com.microsoft.identity.common.java.cache.IMultiTypeNameValueStorage;
 import com.microsoft.identity.common.java.util.ported.Predicate;
 
+import lombok.NonNull;
+
 import java.util.Iterator;
 import java.util.Map;
-
-import lombok.NonNull;
 
 /**
  * An adapter for SharedPreferences that allows it to appear as a nameValue store with String
@@ -41,7 +41,9 @@ public class SharedPrefStringNameValueStorage extends AbstractSharedPrefNameValu
     }
 
     @Override
-    public String get(@NonNull String name) { return mManager.getString(name); }
+    public String get(@NonNull String name) {
+        return mManager.getString(name);
+    }
 
     @Override
     public @NonNull Map<String, String> getAll() {

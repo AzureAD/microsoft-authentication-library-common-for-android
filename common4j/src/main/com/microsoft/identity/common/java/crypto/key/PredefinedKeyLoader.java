@@ -22,9 +22,9 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.crypto.key;
 
-import javax.crypto.SecretKey;
-
 import lombok.NonNull;
+
+import javax.crypto.SecretKey;
 
 /**
  * For loading an AES-256 key from a provided rawbytes array.
@@ -39,8 +39,7 @@ public class PredefinedKeyLoader extends AES256KeyLoader {
     private final String mAlias;
     private final SecretKey mKey;
 
-    public PredefinedKeyLoader(@NonNull final String alias,
-                               @NonNull final byte[] rawBytes) {
+    public PredefinedKeyLoader(@NonNull final String alias, @NonNull final byte[] rawBytes) {
         mAlias = alias;
         mKey = generateKeyFromRawBytes(rawBytes);
     }

@@ -40,6 +40,5 @@ public class BrokerProtocolVersionUtil {
         return StringUtil.isFirstVersionLargerOrEqual(
                 negotiatedBrokerProtocol,
                 MSAL_TO_BROKER_PROTOCOL_COMPRESSION_CHANGES_MINIMUM_VERSION);
-
     }
 }

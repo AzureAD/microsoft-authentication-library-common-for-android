@@ -27,11 +27,12 @@ import com.microsoft.identity.common.java.cache.NameValueStorageFileManagerSimpl
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.logging.Logger;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
+
+import lombok.NonNull;
+
 import java.lang.reflect.Type;
 import java.util.List;
-
-import edu.umd.cs.findbugs.annotations.Nullable;
-import lombok.NonNull;
 
 /**
  * A basic registry (key/value) style data store for tracking info about apps which bind to the
@@ -43,7 +44,8 @@ public class DefaultBrokerApplicationRegistry
 
     private static final String TAG = DefaultBrokerApplicationRegistry.class.getSimpleName();
 
-    private static final String DEFAULT_APP_REGISTRY_CACHE_NAME = "com.microsoft.identity.app-registry";
+    private static final String DEFAULT_APP_REGISTRY_CACHE_NAME =
+            "com.microsoft.identity.app-registry";
     private static final String KEY_APP_REGISTRY = "app-registry";
 
     public DefaultBrokerApplicationRegistry(@NonNull final IPlatformComponents context) {
@@ -52,13 +54,15 @@ public class DefaultBrokerApplicationRegistry
 
     @Override
     public Type getListTypeToken() {
-        return TypeToken.getParameterized(List.class, BrokerApplicationRegistryData.class).getType();
+        return TypeToken.getParameterized(List.class, BrokerApplicationRegistryData.class)
+                .getType();
     }
 
     @Override
-    public BrokerApplicationRegistryData getMetadata(@NonNull final String clientId,
-                                                     @Nullable final String environment,
-                                                     final int processUid) {
+    public BrokerApplicationRegistryData getMetadata(
+            @NonNull final String clientId,
+            @Nullable final String environment,
+            final int processUid) {
         final String methodName = ":getMetadata";
 
         final List<BrokerApplicationRegistryData> allMetadata = getAll();
@@ -68,10 +72,7 @@ public class DefaultBrokerApplicationRegistry
             if (clientId.equals(metadata.getClientId())
                     && processUid == metadata.getUid()
                     && (null == environment || environment.equals(metadata.getEnvironment()))) {
-                Logger.verbose(
-                        TAG + metadata,
-                        "Metadata located."
-                );
+                Logger.verbose(TAG + metadata, "Metadata located.");
 
                 result = metadata;
                 break;
@@ -85,8 +86,7 @@ public class DefaultBrokerApplicationRegistry
                             + clientId
                             + ", "
                             + environment
-                            + "]"
-            );
+                            + "]");
         }
 
         return result;

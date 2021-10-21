@@ -23,23 +23,9 @@
 package com.microsoft.identity.common.java.controllers;
 
 import static com.microsoft.identity.common.java.authorities.Authority.B2C;
+import static com.microsoft.identity.common.java.exception.ServiceException.SERVICE_NOT_AVAILABLE;
+import static com.microsoft.identity.common.java.util.ResultUtil.logExposedFieldsOfObject;
 
-
-import com.microsoft.identity.common.java.foci.FociQueryUtilities;
-import com.microsoft.identity.common.java.cache.MsalOAuth2TokenCache;
-import com.microsoft.identity.common.java.commands.parameters.BrokerSilentTokenCommandParameters;
-import com.microsoft.identity.common.java.commands.parameters.DeviceCodeFlowCommandParameters;
-import com.microsoft.identity.common.java.commands.parameters.GenerateShrCommandParameters;
-import com.microsoft.identity.common.java.commands.parameters.RemoveAccountCommandParameters;
-import com.microsoft.identity.common.java.constants.OAuth2ErrorCode;
-import com.microsoft.identity.common.java.constants.OAuth2SubErrorCode;
-import com.microsoft.identity.common.java.result.AcquireTokenResult;
-import com.microsoft.identity.common.java.result.GenerateShrResult;
-import com.microsoft.identity.common.java.result.LocalAuthenticationResult;
-import com.microsoft.identity.common.java.telemetry.Telemetry;
-import com.microsoft.identity.common.java.providers.oauth2.IResult;
-import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters;
-import com.microsoft.identity.common.java.telemetry.events.CacheEndEvent;
 import com.microsoft.identity.common.java.AuthenticationConstants;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.authorities.Authority;
@@ -48,11 +34,18 @@ import com.microsoft.identity.common.java.authorities.AzureActiveDirectoryAuthor
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.java.authscheme.ITokenAuthenticationSchemeInternal;
 import com.microsoft.identity.common.java.cache.ICacheRecord;
+import com.microsoft.identity.common.java.cache.MsalOAuth2TokenCache;
+import com.microsoft.identity.common.java.commands.parameters.BrokerSilentTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.DeviceCodeFlowCommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.GenerateShrCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.IHasExtraParameters;
 import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.RemoveAccountCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.SilentTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.TokenCommandParameters;
+import com.microsoft.identity.common.java.constants.OAuth2ErrorCode;
+import com.microsoft.identity.common.java.constants.OAuth2SubErrorCode;
 import com.microsoft.identity.common.java.dto.AccessTokenRecord;
 import com.microsoft.identity.common.java.dto.AccountRecord;
 import com.microsoft.identity.common.java.dto.IdTokenRecord;
@@ -60,6 +53,9 @@ import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.exception.ServiceException;
+import com.microsoft.identity.common.java.foci.FociQueryUtilities;
+import com.microsoft.identity.common.java.logging.DiagnosticContext;
+import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationRequest;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenRequest;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenResponse;
@@ -67,21 +63,31 @@ import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.Micro
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResponse;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
+import com.microsoft.identity.common.java.providers.oauth2.IResult;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
+import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2TokenCache;
 import com.microsoft.identity.common.java.providers.oauth2.OpenIdConnectPromptParameter;
 import com.microsoft.identity.common.java.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.java.request.SdkType;
+import com.microsoft.identity.common.java.result.AcquireTokenResult;
+import com.microsoft.identity.common.java.result.GenerateShrResult;
+import com.microsoft.identity.common.java.result.LocalAuthenticationResult;
 import com.microsoft.identity.common.java.telemetry.CliTelemInfo;
+import com.microsoft.identity.common.java.telemetry.Telemetry;
+import com.microsoft.identity.common.java.telemetry.events.CacheEndEvent;
 import com.microsoft.identity.common.java.util.ObjectMapper;
 import com.microsoft.identity.common.java.util.ResultUtil;
 import com.microsoft.identity.common.java.util.SchemaUtil;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.util.ported.PropertyBag;
-import com.microsoft.identity.common.java.logging.DiagnosticContext;
-import com.microsoft.identity.common.java.logging.Logger;
+
+import edu.umd.cs.findbugs.annotations.Nullable;
+
+import lombok.EqualsAndHashCode;
+import lombok.NonNull;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -90,13 +96,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Pattern;
-
-import edu.umd.cs.findbugs.annotations.Nullable;
-import lombok.EqualsAndHashCode;
-import lombok.NonNull;
-
-import static com.microsoft.identity.common.java.exception.ServiceException.SERVICE_NOT_AVAILABLE;
-import static com.microsoft.identity.common.java.util.ResultUtil.logExposedFieldsOfObject;
 
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public abstract class BaseController {
@@ -119,24 +118,18 @@ public abstract class BaseController {
             throws Exception;
 
     public abstract void onFinishAuthorizationSession(
-            final int requestCode,
-            final int resultCode,
-            @NonNull final PropertyBag data);
+            final int requestCode, final int resultCode, @NonNull final PropertyBag data);
 
     public abstract AcquireTokenResult acquireTokenSilent(
-            final SilentTokenCommandParameters parameters)
+            final SilentTokenCommandParameters parameters) throws Exception;
+
+    public abstract List<ICacheRecord> getAccounts(final CommandParameters parameters)
             throws Exception;
 
-    public abstract List<ICacheRecord> getAccounts(
-            final CommandParameters parameters)
+    public abstract boolean removeAccount(final RemoveAccountCommandParameters parameters)
             throws Exception;
 
-    public abstract boolean removeAccount(
-            final RemoveAccountCommandParameters parameters)
-            throws Exception;
-
-    public abstract boolean getDeviceMode(final CommandParameters parameters)
-            throws Exception;
+    public abstract boolean getDeviceMode(final CommandParameters parameters) throws Exception;
 
     public abstract List<ICacheRecord> getCurrentAccount(final CommandParameters parameters)
             throws Exception;
@@ -146,29 +139,36 @@ public abstract class BaseController {
 
     // Suppressing rawtype warnings due to the generic type AuthorizationResult
     @SuppressWarnings(WarningType.rawtype_warning)
-    public abstract AuthorizationResult deviceCodeFlowAuthRequest(final DeviceCodeFlowCommandParameters parameters)
-            throws Exception;
+    public abstract AuthorizationResult deviceCodeFlowAuthRequest(
+            final DeviceCodeFlowCommandParameters parameters) throws Exception;
 
-    public abstract AcquireTokenResult acquireDeviceCodeFlowToken(@SuppressWarnings(WarningType.rawtype_warning) final AuthorizationResult authorizationResult, final DeviceCodeFlowCommandParameters parameters)
+    public abstract AcquireTokenResult acquireDeviceCodeFlowToken(
+            @SuppressWarnings(WarningType.rawtype_warning)
+                    final AuthorizationResult authorizationResult,
+            final DeviceCodeFlowCommandParameters parameters)
             throws Exception;
 
     /**
      * Pre-filled ALL the fields in AuthorizationRequest.Builder
      */
-    //Suppressing rawtype warnings due to the generic type Builder
+    // Suppressing rawtype warnings due to the generic type Builder
     @SuppressWarnings(WarningType.rawtype_warning)
-    protected final AuthorizationRequest.Builder initializeAuthorizationRequestBuilder(@NonNull final AuthorizationRequest.Builder builder,
-                                                                                       @NonNull final TokenCommandParameters parameters) {
+    protected final AuthorizationRequest.Builder initializeAuthorizationRequestBuilder(
+            @NonNull final AuthorizationRequest.Builder builder,
+            @NonNull final TokenCommandParameters parameters) {
         UUID correlationId = null;
 
         try {
-            correlationId = UUID.fromString(DiagnosticContext.INSTANCE.getRequestContext().get(DiagnosticContext.CORRELATION_ID));
+            correlationId =
+                    UUID.fromString(
+                            DiagnosticContext.INSTANCE
+                                    .getRequestContext()
+                                    .get(DiagnosticContext.CORRELATION_ID));
         } catch (IllegalArgumentException ex) {
             Logger.error(TAG, "correlation id from diagnostic context is not a UUID", ex);
         }
 
-        builder.setClientId(parameters.getClientId())
-                .setRedirectUri(parameters.getRedirectUri());
+        builder.setClientId(parameters.getClientId()).setRedirectUri(parameters.getRedirectUri());
 
         if (builder instanceof MicrosoftAuthorizationRequest.Builder) {
             ((MicrosoftAuthorizationRequest.Builder) builder).setCorrelationId(correlationId);
@@ -177,16 +177,25 @@ public abstract class BaseController {
         final Set<String> scopes = parameters.getScopes();
 
         if (parameters instanceof InteractiveTokenCommandParameters) {
-            final InteractiveTokenCommandParameters interactiveTokenCommandParameters = (InteractiveTokenCommandParameters) parameters;
+            final InteractiveTokenCommandParameters interactiveTokenCommandParameters =
+                    (InteractiveTokenCommandParameters) parameters;
             // Set the multipleCloudAware and slice fields.
             if (builder instanceof MicrosoftAuthorizationRequest.Builder) {
-                ((MicrosoftStsAuthorizationRequest.Builder) builder).setTokenScope(StringUtil.join(" ", parameters.getScopes()));
-                if (interactiveTokenCommandParameters.getAuthority() instanceof AzureActiveDirectoryAuthority) {
-                    final AzureActiveDirectoryAuthority requestAuthority = (AzureActiveDirectoryAuthority) interactiveTokenCommandParameters.getAuthority();
+                ((MicrosoftStsAuthorizationRequest.Builder) builder)
+                        .setTokenScope(StringUtil.join(" ", parameters.getScopes()));
+                if (interactiveTokenCommandParameters.getAuthority()
+                        instanceof AzureActiveDirectoryAuthority) {
+                    final AzureActiveDirectoryAuthority requestAuthority =
+                            (AzureActiveDirectoryAuthority)
+                                    interactiveTokenCommandParameters.getAuthority();
                     ((MicrosoftStsAuthorizationRequest.Builder) builder)
                             .setAuthority(requestAuthority.getAuthorityURL())
                             .setMultipleCloudAware(requestAuthority.mMultipleCloudsSupported)
-                            .setState(interactiveTokenCommandParameters.getPlatformComponents().getStateGenerator().generate())
+                            .setState(
+                                    interactiveTokenCommandParameters
+                                            .getPlatformComponents()
+                                            .getStateGenerator()
+                                            .generate())
                             .setSlice(requestAuthority.mSlice);
                 }
             }
@@ -200,24 +209,24 @@ public abstract class BaseController {
             final HashMap<String, String> completeRequestHeaders = new HashMap<>();
 
             if (interactiveTokenCommandParameters.getRequestHeaders() != null) {
-                completeRequestHeaders.putAll(interactiveTokenCommandParameters.getRequestHeaders());
+                completeRequestHeaders.putAll(
+                        interactiveTokenCommandParameters.getRequestHeaders());
             }
 
             completeRequestHeaders.put(
-                    AuthenticationConstants.AAD.APP_PACKAGE_NAME,
-                    parameters.getApplicationName()
-            );
-            completeRequestHeaders.put(AuthenticationConstants.AAD.APP_VERSION,
-                    parameters.getApplicationVersion()
-            );
+                    AuthenticationConstants.AAD.APP_PACKAGE_NAME, parameters.getApplicationName());
+            completeRequestHeaders.put(
+                    AuthenticationConstants.AAD.APP_VERSION, parameters.getApplicationVersion());
 
             // Add additional fields to the AuthorizationRequest.Builder to support interactive
-            setBuilderProperties(builder, parameters, interactiveTokenCommandParameters, completeRequestHeaders);
+            setBuilderProperties(
+                    builder, parameters, interactiveTokenCommandParameters, completeRequestHeaders);
 
             // We don't want to show the SELECT_ACCOUNT page if login_hint is set.
-            if (!StringUtil.isNullOrEmpty(interactiveTokenCommandParameters.getLoginHint()) &&
-                    interactiveTokenCommandParameters.getPrompt() == OpenIdConnectPromptParameter.SELECT_ACCOUNT &&
-                    builder instanceof MicrosoftStsAuthorizationRequest.Builder) {
+            if (!StringUtil.isNullOrEmpty(interactiveTokenCommandParameters.getLoginHint())
+                    && interactiveTokenCommandParameters.getPrompt()
+                            == OpenIdConnectPromptParameter.SELECT_ACCOUNT
+                    && builder instanceof MicrosoftStsAuthorizationRequest.Builder) {
                 ((MicrosoftStsAuthorizationRequest.Builder) builder).setPrompt(null);
             }
         }
@@ -227,139 +236,153 @@ public abstract class BaseController {
         return builder;
     }
 
-    // Suppressing unchecked warning as the generic type was not provided during constructing builder object.
+    // Suppressing unchecked warning as the generic type was not provided during constructing
+    // builder object.
     @SuppressWarnings(WarningType.unchecked_warning)
-    private void setBuilderProperties(@SuppressWarnings(WarningType.rawtype_warning) @NonNull AuthorizationRequest.Builder builder, @NonNull TokenCommandParameters parameters, InteractiveTokenCommandParameters interactiveTokenCommandParameters, HashMap<String, String> completeRequestHeaders) {
+    private void setBuilderProperties(
+            @SuppressWarnings(WarningType.rawtype_warning) @NonNull
+                    AuthorizationRequest.Builder builder,
+            @NonNull TokenCommandParameters parameters,
+            InteractiveTokenCommandParameters interactiveTokenCommandParameters,
+            HashMap<String, String> completeRequestHeaders) {
         builder.setExtraQueryParams(
-                interactiveTokenCommandParameters.getExtraQueryStringParameters()
-        ).setClaims(
-                parameters.getClaimsRequestJson()
-        ).setRequestHeaders(
-                completeRequestHeaders
-        ).setWebViewZoomEnabled(
-                interactiveTokenCommandParameters.isWebViewZoomEnabled()
-        ).setWebViewZoomControlsEnabled(
-                interactiveTokenCommandParameters.isWebViewZoomControlsEnabled()
-        );
+                        interactiveTokenCommandParameters.getExtraQueryStringParameters())
+                .setClaims(parameters.getClaimsRequestJson())
+                .setRequestHeaders(completeRequestHeaders)
+                .setWebViewZoomEnabled(interactiveTokenCommandParameters.isWebViewZoomEnabled())
+                .setWebViewZoomControlsEnabled(
+                        interactiveTokenCommandParameters.isWebViewZoomControlsEnabled());
 
         if (builder instanceof MicrosoftStsAuthorizationRequest.Builder) {
-            final MicrosoftStsAuthorizationRequest.Builder msBuilder = (MicrosoftStsAuthorizationRequest.Builder) builder;
-            msBuilder.setLoginHint(
-                    interactiveTokenCommandParameters.getLoginHint()
-            ).setPrompt(
-                    interactiveTokenCommandParameters.getPrompt().toString()
-            );
+            final MicrosoftStsAuthorizationRequest.Builder msBuilder =
+                    (MicrosoftStsAuthorizationRequest.Builder) builder;
+            msBuilder
+                    .setLoginHint(interactiveTokenCommandParameters.getLoginHint())
+                    .setPrompt(interactiveTokenCommandParameters.getPrompt().toString());
 
             final String installedCompanyPortalVersion =
-                    parameters.getPlatformComponents().getPlatformUtil().getInstalledCompanyPortalVersion();
+                    parameters
+                            .getPlatformComponents()
+                            .getPlatformUtil()
+                            .getInstalledCompanyPortalVersion();
 
-            if (!StringUtil.isNullOrEmpty(installedCompanyPortalVersion)){
+            if (!StringUtil.isNullOrEmpty(installedCompanyPortalVersion)) {
                 msBuilder.setInstalledCompanyPortalVersion(installedCompanyPortalVersion);
             }
         }
     }
 
-    // Suppressing rawtype warnings due to the generic type AuthorizationRequest, OAuth2Strategy and Builder
+    // Suppressing rawtype warnings due to the generic type AuthorizationRequest, OAuth2Strategy and
+    // Builder
     @SuppressWarnings(WarningType.rawtype_warning)
-    protected AuthorizationRequest getAuthorizationRequest(@NonNull final OAuth2Strategy strategy,
-                                                           @NonNull final TokenCommandParameters parameters) {
-        final AuthorizationRequest.Builder builder = strategy.createAuthorizationRequestBuilder(parameters.getAccount());
+    protected AuthorizationRequest getAuthorizationRequest(
+            @NonNull final OAuth2Strategy strategy,
+            @NonNull final TokenCommandParameters parameters) {
+        final AuthorizationRequest.Builder builder =
+                strategy.createAuthorizationRequestBuilder(parameters.getAccount());
         initializeAuthorizationRequestBuilder(builder, parameters);
         return builder.build();
     }
 
-    protected TokenResult performTokenRequest(@SuppressWarnings(WarningType.rawtype_warning) @NonNull final OAuth2Strategy strategy,
-                                              @SuppressWarnings(WarningType.rawtype_warning) @NonNull final AuthorizationRequest request,
-                                              @NonNull final AuthorizationResponse response,
-                                              @NonNull final InteractiveTokenCommandParameters parameters)
+    protected TokenResult performTokenRequest(
+            @SuppressWarnings(WarningType.rawtype_warning) @NonNull final OAuth2Strategy strategy,
+            @SuppressWarnings(WarningType.rawtype_warning) @NonNull
+                    final AuthorizationRequest request,
+            @NonNull final AuthorizationResponse response,
+            @NonNull final InteractiveTokenCommandParameters parameters)
             throws IOException, ClientException {
         final String methodName = ":performTokenRequest";
 
-        parameters.getPlatformComponents()
+        parameters
+                .getPlatformComponents()
                 .getPlatformUtil()
                 .throwIfNetworkNotAvailable(parameters.isPowerOptCheckEnabled());
 
-        // Suppressing unchecked warnings due to casting of type AuthorizationRequest to GenericAuthorizationRequest and AuthorizationResponse to GenericAuthorizationResponse in arguments of method call to createTokenRequest
-        @SuppressWarnings(WarningType.unchecked_warning) final TokenRequest tokenRequest = strategy.createTokenRequest(
-                request,
-                response,
-                parameters.getAuthenticationScheme()
-        );
+        // Suppressing unchecked warnings due to casting of type AuthorizationRequest to
+        // GenericAuthorizationRequest and AuthorizationResponse to GenericAuthorizationResponse in
+        // arguments of method call to createTokenRequest
+        @SuppressWarnings(WarningType.unchecked_warning)
+        final TokenRequest tokenRequest =
+                strategy.createTokenRequest(
+                        request, response, parameters.getAuthenticationScheme());
 
         if (tokenRequest instanceof MicrosoftTokenRequest) {
-            ((MicrosoftTokenRequest) tokenRequest).setClientAppName(parameters.getApplicationName());
-            ((MicrosoftTokenRequest) tokenRequest).setClientAppVersion(parameters.getApplicationVersion());
+            ((MicrosoftTokenRequest) tokenRequest)
+                    .setClientAppName(parameters.getApplicationName());
+            ((MicrosoftTokenRequest) tokenRequest)
+                    .setClientAppVersion(parameters.getApplicationVersion());
         }
 
         if (parameters instanceof IHasExtraParameters) {
-            ((IHasExtraParameters) tokenRequest).setExtraParameters(((IHasExtraParameters) parameters).getExtraParameters());
+            ((IHasExtraParameters) tokenRequest)
+                    .setExtraParameters(((IHasExtraParameters) parameters).getExtraParameters());
         }
 
         ResultUtil.logExposedFieldsOfObject(TAG + methodName, tokenRequest);
 
-        // Suppressing unchecked warnings due to casting of type TokenRequest to GenericTokenRequest in argument of method call to requestToken
-        @SuppressWarnings(WarningType.unchecked_warning) final TokenResult tokenResult = strategy.requestToken(tokenRequest);
+        // Suppressing unchecked warnings due to casting of type TokenRequest to GenericTokenRequest
+        // in argument of method call to requestToken
+        @SuppressWarnings(WarningType.unchecked_warning)
+        final TokenResult tokenResult = strategy.requestToken(tokenRequest);
 
         ResultUtil.logResult(TAG, tokenResult);
 
         return tokenResult;
     }
 
-    protected void renewAccessToken(@NonNull final SilentTokenCommandParameters parameters,
-                                    @NonNull final AcquireTokenResult acquireTokenSilentResult,
-                                    @SuppressWarnings(WarningType.rawtype_warning) @NonNull final OAuth2TokenCache tokenCache,
-                                    @SuppressWarnings(WarningType.rawtype_warning) @NonNull final OAuth2Strategy strategy,
-                                    @NonNull final ICacheRecord cacheRecord)
+    protected void renewAccessToken(
+            @NonNull final SilentTokenCommandParameters parameters,
+            @NonNull final AcquireTokenResult acquireTokenSilentResult,
+            @SuppressWarnings(WarningType.rawtype_warning) @NonNull
+                    final OAuth2TokenCache tokenCache,
+            @SuppressWarnings(WarningType.rawtype_warning) @NonNull final OAuth2Strategy strategy,
+            @NonNull final ICacheRecord cacheRecord)
             throws IOException, ClientException, ServiceException {
         final String methodName = ":renewAccessToken";
-        Logger.info(
-                TAG + methodName,
-                "Renewing access token..."
-        );
+        Logger.info(TAG + methodName, "Renewing access token...");
 
         RefreshTokenRecord refreshTokenRecord = cacheRecord.getRefreshToken();
 
         logParameters(TAG, parameters);
 
-        final TokenResult tokenResult = performSilentTokenRequest(
-                strategy,
-                refreshTokenRecord,
-                parameters
-        );
+        final TokenResult tokenResult =
+                performSilentTokenRequest(strategy, refreshTokenRecord, parameters);
 
         acquireTokenSilentResult.setTokenResult(tokenResult);
 
         ResultUtil.logResult(TAG + methodName, tokenResult);
 
         if (tokenResult.getSuccess()) {
-            Logger.info(
-                    TAG + methodName,
-                    "Token request was successful"
-            );
+            Logger.info(TAG + methodName, "Token request was successful");
 
-            // Suppressing unchecked warnings due to casting of rawtypes to generic types of OAuth2TokenCache's instance tokenCache while calling method saveAndLoadAggregatedAccountData
-            @SuppressWarnings(WarningType.unchecked_warning) final List<ICacheRecord> savedRecords = tokenCache.saveAndLoadAggregatedAccountData(
-                    strategy,
-                    getAuthorizationRequest(strategy, parameters),
-                    tokenResult.getTokenResponse()
-            );
+            // Suppressing unchecked warnings due to casting of rawtypes to generic types of
+            // OAuth2TokenCache's instance tokenCache while calling method
+            // saveAndLoadAggregatedAccountData
+            @SuppressWarnings(WarningType.unchecked_warning)
+            final List<ICacheRecord> savedRecords =
+                    tokenCache.saveAndLoadAggregatedAccountData(
+                            strategy,
+                            getAuthorizationRequest(strategy, parameters),
+                            tokenResult.getTokenResponse());
 
             final ICacheRecord savedRecord = savedRecords.get(0);
 
             // Create a new AuthenticationResult to hold the saved record
-            final LocalAuthenticationResult authenticationResult = new LocalAuthenticationResult(
-                    finalizeCacheRecordForResult(savedRecord, parameters.getAuthenticationScheme()),
-                    savedRecords,
-                    parameters.getSdkType(),
-                    false
-            );
+            final LocalAuthenticationResult authenticationResult =
+                    new LocalAuthenticationResult(
+                            finalizeCacheRecordForResult(
+                                    savedRecord, parameters.getAuthenticationScheme()),
+                            savedRecords,
+                            parameters.getSdkType(),
+                            false);
 
             // Set the client telemetry...
             if (null != tokenResult.getCliTelemInfo()) {
                 final CliTelemInfo cliTelemInfo = tokenResult.getCliTelemInfo();
                 authenticationResult.setSpeRing(cliTelemInfo.getSpeRing());
                 authenticationResult.setRefreshTokenAge(cliTelemInfo.getRefreshTokenAge());
-                Telemetry.emit(new CacheEndEvent().putSpeInfo(tokenResult.getCliTelemInfo().getSpeRing()));
+                Telemetry.emit(
+                        new CacheEndEvent().putSpeInfo(tokenResult.getCliTelemInfo().getSpeRing()));
             } else {
                 // we can't put SpeInfo as the CliTelemInfo is null
                 Telemetry.emit(new CacheEndEvent());
@@ -373,52 +396,54 @@ public abstract class BaseController {
                 final String subErrorCode = tokenResult.getErrorResponse().getSubError();
                 Logger.info(TAG, "Error: " + errorCode + " Suberror: " + subErrorCode);
 
-                if (OAuth2ErrorCode.INVALID_GRANT.equals(errorCode) &&
-                        OAuth2SubErrorCode.BAD_TOKEN.equals(subErrorCode)) {
+                if (OAuth2ErrorCode.INVALID_GRANT.equals(errorCode)
+                        && OAuth2SubErrorCode.BAD_TOKEN.equals(subErrorCode)) {
                     boolean isRemoved = tokenCache.removeCredential(cacheRecord.getRefreshToken());
                     Logger.info(
                             TAG,
                             "Refresh token is invalid, "
                                     + "attempting to delete the RT from cache, result:"
-                                    + isRemoved
-                    );
+                                    + isRemoved);
                 }
 
                 /*
-                    Intended to cover the AAD outage scenario for the refresh_in logic.
-                    Should return existing AT without refreshing it.
-                    This way caller will know whether to refresh based on this exception.
-                 */
-                if(SERVICE_NOT_AVAILABLE.equals(errorCode)){
-                    throw new ServiceException(SERVICE_NOT_AVAILABLE, "AAD is not available.", tokenResult.getErrorResponse().getStatusCode(), null);
+                   Intended to cover the AAD outage scenario for the refresh_in logic.
+                   Should return existing AT without refreshing it.
+                   This way caller will know whether to refresh based on this exception.
+                */
+                if (SERVICE_NOT_AVAILABLE.equals(errorCode)) {
+                    throw new ServiceException(
+                            SERVICE_NOT_AVAILABLE,
+                            "AAD is not available.",
+                            tokenResult.getErrorResponse().getStatusCode(),
+                            null);
                 }
 
             } else {
-                Logger.warn(TAG, "Invalid state, No token success or error response on the token result");
+                Logger.warn(
+                        TAG,
+                        "Invalid state, No token success or error response on the token result");
             }
         }
     }
 
     /*
-        Light version of:
-        protected renewAccessToken(@NonNull final SilentTokenCommandParameters parameters,
-                                   @NonNull final AcquireTokenResult acquireTokenSilentResult,
-                                   @SuppressWarnings(WarningType.rawtype_warning) @NonNull final OAuth2TokenCache tokenCache,
-                                   @SuppressWarnings(WarningType.rawtype_warning) @NonNull final OAuth2Strategy strategy,
-                                   @NonNull final ICacheRecord cacheRecord)
+       Light version of:
+       protected renewAccessToken(@NonNull final SilentTokenCommandParameters parameters,
+                                  @NonNull final AcquireTokenResult acquireTokenSilentResult,
+                                  @SuppressWarnings(WarningType.rawtype_warning) @NonNull final OAuth2TokenCache tokenCache,
+                                  @SuppressWarnings(WarningType.rawtype_warning) @NonNull final OAuth2Strategy strategy,
+                                  @NonNull final ICacheRecord cacheRecord)
 
-        Diffs
-        1) acquireTokenSilentResult updates omitted.
-        2) All arguments derived from SilentTokenCommandParameters
-        3) New logic replacing old Access Token
-     */
+       Diffs
+       1) acquireTokenSilentResult updates omitted.
+       2) All arguments derived from SilentTokenCommandParameters
+       3) New logic replacing old Access Token
+    */
     public TokenResult renewAccessToken(@NonNull final SilentTokenCommandParameters parameters)
             throws IOException, ClientException, ServiceException {
         final String methodName = ":renewAccessToken";
-        Logger.info(
-                TAG + methodName,
-                "Renewing access token..."
-        );
+        Logger.info(TAG + methodName, "Renewing access token...");
 
         OAuth2Strategy strategy = getStrategy(parameters);
         OAuth2TokenCache cache = getTokenCache(parameters);
@@ -426,45 +451,45 @@ public abstract class BaseController {
 
         Logger.info(
                 TAG + methodName,
-                "Attempting renewal of Access Token because it's refresh-expired. RefreshIn was expired at " + cacheRecord.getAccessToken().getRefreshOn() + ". Regular expiry is at " + cacheRecord.getAccessToken().getExpiresOn() + "."
-                        + "Currently executing acquireTokenSilent(..), SilentTokenCommand with CorrelationId: " + parameters.getCorrelationId()
-        );
-        //Get tokenResult
+                "Attempting renewal of Access Token because it's refresh-expired. RefreshIn was expired at "
+                        + cacheRecord.getAccessToken().getRefreshOn()
+                        + ". Regular expiry is at "
+                        + cacheRecord.getAccessToken().getExpiresOn()
+                        + "."
+                        + "Currently executing acquireTokenSilent(..), SilentTokenCommand with CorrelationId: "
+                        + parameters.getCorrelationId());
+        // Get tokenResult
         RefreshTokenRecord refreshTokenRecord = cacheRecord.getRefreshToken();
         logParameters(TAG, parameters);
-        final TokenResult tokenResult = performSilentTokenRequest(
-                strategy,
-                refreshTokenRecord,
-                parameters
-        );
+        final TokenResult tokenResult =
+                performSilentTokenRequest(strategy, refreshTokenRecord, parameters);
 
         logResult(TAG + methodName, tokenResult);
         if (tokenResult.getSuccess()) {
-            Logger.info(
-                    TAG + methodName,
-                    "Token request was successful"
-            );
+            Logger.info(TAG + methodName, "Token request was successful");
 
             // Remove old Access Token
             Logger.info(
-                    TAG + methodName,
-                    "Access token is refresh-expired. Removing from cache..."
-            );
+                    TAG + methodName, "Access token is refresh-expired. Removing from cache...");
             final AccessTokenRecord accessTokenRecord = cacheRecord.getAccessToken();
             cache.removeCredential(accessTokenRecord);
 
-            // Suppressing unchecked warnings due to casting of rawtypes to generic types of OAuth2TokenCache's instance tokenCache while calling method saveAndLoadAggregatedAccountData
-            @SuppressWarnings(WarningType.unchecked_warning) final List<ICacheRecord> savedRecords = cache.saveAndLoadAggregatedAccountData(
-                    strategy,
-                    getAuthorizationRequest(strategy, parameters),
-                    tokenResult.getTokenResponse()
-            );
+            // Suppressing unchecked warnings due to casting of rawtypes to generic types of
+            // OAuth2TokenCache's instance tokenCache while calling method
+            // saveAndLoadAggregatedAccountData
+            @SuppressWarnings(WarningType.unchecked_warning)
+            final List<ICacheRecord> savedRecords =
+                    cache.saveAndLoadAggregatedAccountData(
+                            strategy,
+                            getAuthorizationRequest(strategy, parameters),
+                            tokenResult.getTokenResponse());
 
             final ICacheRecord savedRecord = savedRecords.get(0);
             finalizeCacheRecordForResult(savedRecord, parameters.getAuthenticationScheme());
             // Set the client telemetry...
             if (null != tokenResult.getCliTelemInfo()) {
-                Telemetry.emit(new CacheEndEvent().putSpeInfo(tokenResult.getCliTelemInfo().getSpeRing()));
+                Telemetry.emit(
+                        new CacheEndEvent().putSpeInfo(tokenResult.getCliTelemInfo().getSpeRing()));
             } else {
                 // we can't put SpeInfo as the CliTelemInfo is null
                 Telemetry.emit(new CacheEndEvent());
@@ -476,60 +501,69 @@ public abstract class BaseController {
                 final String subErrorCode = tokenResult.getErrorResponse().getSubError();
                 Logger.warn(TAG, "Error: " + errorCode + " Suberror: " + subErrorCode);
 
-                if (OAuth2ErrorCode.INVALID_GRANT.equals(errorCode) && OAuth2SubErrorCode.BAD_TOKEN.equals(subErrorCode)) {
+                if (OAuth2ErrorCode.INVALID_GRANT.equals(errorCode)
+                        && OAuth2SubErrorCode.BAD_TOKEN.equals(subErrorCode)) {
                     boolean isRemoved = cache.removeCredential(cacheRecord.getRefreshToken());
                     Logger.info(
                             TAG,
                             "Refresh token is invalid, "
                                     + "attempting to delete the RT from cache, result:"
-                                    + isRemoved
-                    );
+                                    + isRemoved);
                 }
 
                 /*
-                    Intended to cover the AAD outage scenario for the refresh_in logic.
-                    Should return existing AT without refreshing it.
-                    This way caller will know whether to refresh based on this exception.
-                 */
-                if(SERVICE_NOT_AVAILABLE.equals(errorCode)){
-                    throw new ServiceException(SERVICE_NOT_AVAILABLE, "AAD is not available.", tokenResult.getErrorResponse().getStatusCode(), null);
+                   Intended to cover the AAD outage scenario for the refresh_in logic.
+                   Should return existing AT without refreshing it.
+                   This way caller will know whether to refresh based on this exception.
+                */
+                if (SERVICE_NOT_AVAILABLE.equals(errorCode)) {
+                    throw new ServiceException(
+                            SERVICE_NOT_AVAILABLE,
+                            "AAD is not available.",
+                            tokenResult.getErrorResponse().getStatusCode(),
+                            null);
                 }
 
             } else {
-                Logger.warn(TAG, "Invalid state, No token success or error response on the token result");
+                Logger.warn(
+                        TAG,
+                        "Invalid state, No token success or error response on the token result");
             }
         }
 
         return tokenResult;
     }
 
-    public OAuth2Strategy getStrategy(@NonNull final SilentTokenCommandParameters parameters) throws ClientException {
-        final OAuth2StrategyParameters strategyParameters = OAuth2StrategyParameters.builder()
-                .platformComponents(parameters.getPlatformComponents())
-                .build();
+    public OAuth2Strategy getStrategy(@NonNull final SilentTokenCommandParameters parameters)
+            throws ClientException {
+        final OAuth2StrategyParameters strategyParameters =
+                OAuth2StrategyParameters.builder()
+                        .platformComponents(parameters.getPlatformComponents())
+                        .build();
 
         return parameters.getAuthority().createOAuth2Strategy(strategyParameters);
     }
 
-    public ICacheRecord getCacheRecord(@NonNull final SilentTokenCommandParameters parameters) throws ClientException {
-        //Extract cache from parameters
+    public ICacheRecord getCacheRecord(@NonNull final SilentTokenCommandParameters parameters)
+            throws ClientException {
+        // Extract cache from parameters
         final AccountRecord targetAccount = getCachedAccountRecord(parameters);
         final AbstractAuthenticationScheme authScheme = parameters.getAuthenticationScheme();
         final OAuth2TokenCache cache = parameters.getOAuth2TokenCache();
 
-        //Get cacheRecord from cache
+        // Get cacheRecord from cache
         @SuppressWarnings("unchecked")
-        final List<ICacheRecord> cacheRecords = cache.loadWithAggregatedAccountData(
-                parameters.getClientId(),
-                StringUtil.join(" ", parameters.getScopes()),
-                targetAccount,
-                authScheme
-        );
+        final List<ICacheRecord> cacheRecords =
+                cache.loadWithAggregatedAccountData(
+                        parameters.getClientId(),
+                        StringUtil.join(" ", parameters.getScopes()),
+                        targetAccount,
+                        authScheme);
         return cacheRecords.get(0);
     }
 
-    public OAuth2TokenCache getTokenCache(@NonNull final SilentTokenCommandParameters parameters){
-        //Extract cache from parameters
+    public OAuth2TokenCache getTokenCache(@NonNull final SilentTokenCommandParameters parameters) {
+        // Extract cache from parameters
         return parameters.getOAuth2TokenCache();
     }
 
@@ -539,36 +573,24 @@ public abstract class BaseController {
      * @param tag    The log tag to use.
      * @param result The result object to log.
      */
-    public static void logResult(@NonNull final String tag,
-                                 @NonNull final IResult result) {
+    public static void logResult(@NonNull final String tag, @NonNull final IResult result) {
         final String TAG = tag + ":" + result.getClass().getSimpleName();
 
         if (result.getSuccess()) {
-            Logger.info(
-                    TAG,
-                    "Success Result"
-            );
+            Logger.info(TAG, "Success Result");
 
             logExposedFieldsOfObject(TAG, result.getSuccessResponse());
         } else {
-            Logger.warn(
-                    TAG,
-                    "Failure Result"
-            );
+            Logger.warn(TAG, "Failure Result");
 
             if (result.getErrorResponse() != null) {
                 if (result.getErrorResponse().getError() != null) {
-                    Logger.warn(
-                            TAG,
-                            "Error: " + result.getErrorResponse().getError()
-                    );
+                    Logger.warn(TAG, "Error: " + result.getErrorResponse().getError());
                 }
 
                 if (result.getErrorResponse().getErrorDescription() != null) {
                     Logger.warnPII(
-                            TAG,
-                            "Description: " + result.getErrorResponse().getErrorDescription()
-                    );
+                            TAG, "Description: " + result.getErrorResponse().getErrorDescription());
                 }
 
                 logExposedFieldsOfObject(TAG, result.getErrorResponse());
@@ -582,8 +604,7 @@ public abstract class BaseController {
             if (authResult.getAuthorizationStatus() != null) {
                 Logger.info(
                         TAG,
-                        "Authorization Status: " + authResult.getAuthorizationStatus().toString()
-                );
+                        "Authorization Status: " + authResult.getAuthorizationStatus().toString());
             }
         }
     }
@@ -611,12 +632,10 @@ public abstract class BaseController {
             throws ClientException, IOException {
         final String methodName = ":performSilentTokenRequest";
 
-        Logger.info(
-                TAG + methodName,
-                "Requesting tokens..."
-        );
+        Logger.info(TAG + methodName, "Requesting tokens...");
 
-        parameters.getPlatformComponents()
+        parameters
+                .getPlatformComponents()
                 .getPlatformUtil()
                 .throwIfNetworkNotAvailable(parameters.isPowerOptCheckEnabled());
 
@@ -628,63 +647,68 @@ public abstract class BaseController {
             throw authorityResult.getClientException();
         }
 
-        final TokenRequest refreshTokenRequest = strategy.createRefreshTokenRequest(parameters.getAuthenticationScheme());
+        final TokenRequest refreshTokenRequest =
+                strategy.createRefreshTokenRequest(parameters.getAuthenticationScheme());
         refreshTokenRequest.setClientId(parameters.getClientId());
         refreshTokenRequest.setScope(StringUtil.join(" ", parameters.getScopes()));
         refreshTokenRequest.setRefreshToken(refreshToken.getSecret());
 
         if (refreshTokenRequest instanceof MicrosoftTokenRequest) {
-            ((MicrosoftTokenRequest) refreshTokenRequest).setClaims(parameters.getClaimsRequestJson());
-            ((MicrosoftTokenRequest) refreshTokenRequest).setClientAppName(parameters.getApplicationName());
-            ((MicrosoftTokenRequest) refreshTokenRequest).setClientAppVersion(parameters.getApplicationVersion());
+            ((MicrosoftTokenRequest) refreshTokenRequest)
+                    .setClaims(parameters.getClaimsRequestJson());
+            ((MicrosoftTokenRequest) refreshTokenRequest)
+                    .setClientAppName(parameters.getApplicationName());
+            ((MicrosoftTokenRequest) refreshTokenRequest)
+                    .setClientAppVersion(parameters.getApplicationVersion());
         }
 
-        //NOTE: this should be moved to the strategy; however requires a larger refactor
+        // NOTE: this should be moved to the strategy; however requires a larger refactor
         if (parameters.getSdkType() == SdkType.ADAL) {
             ((MicrosoftTokenRequest) refreshTokenRequest).setIdTokenVersion("1");
         }
 
         // Set Broker version to Token Request if it's a brokered request.
         if (parameters instanceof BrokerSilentTokenCommandParameters) {
-            ((MicrosoftTokenRequest) refreshTokenRequest).setBrokerVersion(
-                    ((BrokerSilentTokenCommandParameters) parameters).getBrokerVersion()
-            );
+            ((MicrosoftTokenRequest) refreshTokenRequest)
+                    .setBrokerVersion(
+                            ((BrokerSilentTokenCommandParameters) parameters).getBrokerVersion());
         }
 
         if (!StringUtil.isNullOrEmpty(refreshTokenRequest.getScope())) {
-            Logger.infoPII(
-                    TAG + methodName,
-                    "Scopes: [" + refreshTokenRequest.getScope() + "]"
-            );
+            Logger.infoPII(TAG + methodName, "Scopes: [" + refreshTokenRequest.getScope() + "]");
         }
 
         return strategyRequestToken(strategy, refreshTokenRequest);
     }
 
-    // Suppressing unchecked warnings due to casting of TokenRequest to GenericTokenRequest in the call to requestToken method
+    // Suppressing unchecked warnings due to casting of TokenRequest to GenericTokenRequest in the
+    // call to requestToken method
     @SuppressWarnings(WarningType.unchecked_warning)
-    private TokenResult strategyRequestToken(@SuppressWarnings(WarningType.rawtype_warning) @NonNull OAuth2Strategy strategy, TokenRequest refreshTokenRequest) throws IOException, ClientException {
+    private TokenResult strategyRequestToken(
+            @SuppressWarnings(WarningType.rawtype_warning) @NonNull OAuth2Strategy strategy,
+            TokenRequest refreshTokenRequest)
+            throws IOException, ClientException {
         return strategy.requestToken(refreshTokenRequest);
     }
 
-    protected List<ICacheRecord> saveTokens(@SuppressWarnings(WarningType.rawtype_warning) @NonNull final OAuth2Strategy strategy,
-                                            @SuppressWarnings(WarningType.rawtype_warning) @NonNull final AuthorizationRequest request,
-                                            @NonNull final TokenResponse tokenResponse,
-                                            @SuppressWarnings(WarningType.rawtype_warning) @NonNull final OAuth2TokenCache tokenCache) throws ClientException {
+    protected List<ICacheRecord> saveTokens(
+            @SuppressWarnings(WarningType.rawtype_warning) @NonNull final OAuth2Strategy strategy,
+            @SuppressWarnings(WarningType.rawtype_warning) @NonNull
+                    final AuthorizationRequest request,
+            @NonNull final TokenResponse tokenResponse,
+            @SuppressWarnings(WarningType.rawtype_warning) @NonNull
+                    final OAuth2TokenCache tokenCache)
+            throws ClientException {
         final String methodName = ":saveTokens";
 
-        Logger.info(
-                TAG + methodName,
-                "Saving tokens..."
-        );
+        Logger.info(TAG + methodName, "Saving tokens...");
 
-        // Suppressing unchecked warnings due to casting of rawtypes to generic types of OAuth2TokenCache's instance tokenCache while calling method saveAndLoadAggregatedAccountData
+        // Suppressing unchecked warnings due to casting of rawtypes to generic types of
+        // OAuth2TokenCache's instance tokenCache while calling method
+        // saveAndLoadAggregatedAccountData
         @SuppressWarnings(WarningType.unchecked_warning)
-        List<ICacheRecord> cacheRecords = tokenCache.saveAndLoadAggregatedAccountData(
-                strategy,
-                request,
-                tokenResponse
-        );
+        List<ICacheRecord> cacheRecords =
+                tokenCache.saveAndLoadAggregatedAccountData(strategy, request, tokenResponse);
 
         return cacheRecords;
     }
@@ -697,15 +721,16 @@ public abstract class BaseController {
         return null == cacheRecord.getAccessToken();
     }
 
-    protected boolean idTokenIsNull(@NonNull final ICacheRecord cacheRecord,
-                                    @NonNull final SdkType sdkType) {
-        final IdTokenRecord idTokenRecord = (sdkType == SdkType.ADAL) ?
-                cacheRecord.getV1IdToken() : cacheRecord.getIdToken();
+    protected boolean idTokenIsNull(
+            @NonNull final ICacheRecord cacheRecord, @NonNull final SdkType sdkType) {
+        final IdTokenRecord idTokenRecord =
+                (sdkType == SdkType.ADAL) ? cacheRecord.getV1IdToken() : cacheRecord.getIdToken();
 
         return null == idTokenRecord;
     }
 
-    protected Set<String> addDefaultScopes(@NonNull final TokenCommandParameters commandParameters) {
+    protected Set<String> addDefaultScopes(
+            @NonNull final TokenCommandParameters commandParameters) {
         final Set<String> requestScopes = commandParameters.getScopes();
         requestScopes.addAll(AuthenticationConstants.DEFAULT_SCOPES);
         // sanitize empty and null scopes
@@ -724,15 +749,11 @@ public abstract class BaseController {
         if (parameters.getAccount() == null) {
             throw new ClientException(
                     ErrorStrings.NO_ACCOUNT_FOUND,
-                    "No cached accounts found for the supplied homeAccountId and clientId"
-            );
+                    "No cached accounts found for the supplied homeAccountId and clientId");
         }
 
-        final boolean isB2CAuthority = B2C.equalsIgnoreCase(
-                parameters
-                        .getAuthority()
-                        .getAuthorityTypeString()
-        );
+        final boolean isB2CAuthority =
+                B2C.equalsIgnoreCase(parameters.getAuthority().getAuthorityTypeString());
 
         final String clientId = parameters.getClientId();
         final String homeAccountId = parameters.getAccount().getHomeAccountId();
@@ -743,44 +764,32 @@ public abstract class BaseController {
 
         if (isB2CAuthority) {
             // Due to differences in the B2C service API relative to AAD, all IAccounts returned by
-            // the B2C-STS have the same local_account_id irrespective of the policy used to load it.
+            // the B2C-STS have the same local_account_id irrespective of the policy used to load
+            // it.
             //
             // Because the home_account_id is unique to policy and there is no concept of
             // multi-realm accounts relative to B2C, we'll conditionally use the home_account_id
             // in these cases
-            targetAccount = parameters
-                    .getOAuth2TokenCache()
-                    .getAccountByHomeAccountId(
-                            null,
-                            clientId,
-                            homeAccountId
-                    );
+            targetAccount =
+                    parameters
+                            .getOAuth2TokenCache()
+                            .getAccountByHomeAccountId(null, clientId, homeAccountId);
         } else {
-            targetAccount = parameters
-                    .getOAuth2TokenCache()
-                    .getAccountByLocalAccountId(
-                            environment,
-                            clientId,
-                            localAccountId
-                    );
+            targetAccount =
+                    parameters
+                            .getOAuth2TokenCache()
+                            .getAccountByLocalAccountId(environment, clientId, localAccountId);
         }
 
-        if (null == targetAccount && parameters.getOAuth2TokenCache() instanceof MsalOAuth2TokenCache) {
-            targetAccount = getAccountWithFRTIfAvailable(
-                    parameters,
-                    (MsalOAuth2TokenCache) parameters.getOAuth2TokenCache()
-            );
+        if (null == targetAccount
+                && parameters.getOAuth2TokenCache() instanceof MsalOAuth2TokenCache) {
+            targetAccount =
+                    getAccountWithFRTIfAvailable(
+                            parameters, (MsalOAuth2TokenCache) parameters.getOAuth2TokenCache());
         }
 
         if (null == targetAccount) {
-            Logger.info(
-                    TAG,
-                    "No accounts found for clientId ["
-                            + clientId
-                            + ", "
-                            + "]",
-                    null
-            );
+            Logger.info(TAG, "No accounts found for clientId [" + clientId + ", " + "]", null);
             Logger.errorPII(
                     TAG,
                     "No accounts found for clientId, homeAccountId: ["
@@ -788,53 +797,52 @@ public abstract class BaseController {
                             + ", "
                             + homeAccountId
                             + "]",
-                    null
-            );
+                    null);
             throw new ClientException(
                     ErrorStrings.NO_ACCOUNT_FOUND,
                     "No cached accounts found for the supplied "
-                            + (isB2CAuthority ? "homeAccountId" : "localAccountId")
-            );
+                            + (isB2CAuthority ? "homeAccountId" : "localAccountId"));
         }
 
         return targetAccount;
     }
 
     @Nullable
-    private AccountRecord getAccountWithFRTIfAvailable(@NonNull final SilentTokenCommandParameters parameters,
-                                                       @SuppressWarnings(WarningType.rawtype_warning) @NonNull final MsalOAuth2TokenCache msalOAuth2TokenCache) {
+    private AccountRecord getAccountWithFRTIfAvailable(
+            @NonNull final SilentTokenCommandParameters parameters,
+            @SuppressWarnings(WarningType.rawtype_warning) @NonNull
+                    final MsalOAuth2TokenCache msalOAuth2TokenCache) {
 
         final String homeAccountId = parameters.getAccount().getHomeAccountId();
         final String clientId = parameters.getClientId();
 
         // check for FOCI tokens for the homeAccountId
-        final RefreshTokenRecord refreshTokenRecord = msalOAuth2TokenCache
-                .getFamilyRefreshTokenForHomeAccountId(homeAccountId);
+        final RefreshTokenRecord refreshTokenRecord =
+                msalOAuth2TokenCache.getFamilyRefreshTokenForHomeAccountId(homeAccountId);
 
         if (refreshTokenRecord != null) {
             try {
-                // foci token is available, make a request to service to see if the client id is FOCI and save the tokens
+                // foci token is available, make a request to service to see if the client id is
+                // FOCI and save the tokens
                 FociQueryUtilities.tryFociTokenWithGivenClientId(
                         parameters.getOAuth2TokenCache(),
                         clientId,
                         parameters.getRedirectUri(),
                         refreshTokenRecord,
-                        parameters.getAccount()
-                );
+                        parameters.getAccount());
 
                 // Try to look for account again in the cache
                 return parameters
                         .getOAuth2TokenCache()
                         .getAccountByLocalAccountId(
-                                null,
-                                clientId,
-                                parameters.getAccount().getLocalAccountId()
-                        );
+                                null, clientId, parameters.getAccount().getLocalAccountId());
             } catch (IOException | ClientException e) {
-                Logger.warn(TAG,
+                Logger.warn(
+                        TAG,
                         "Error while attempting to validate client: "
-                                + clientId + " is part of family " + e.getMessage()
-                );
+                                + clientId
+                                + " is part of family "
+                                + e.getMessage());
             }
         } else {
             Logger.info(TAG, "No Foci tokens found for homeAccountId " + homeAccountId);
@@ -848,26 +856,31 @@ public abstract class BaseController {
      * <p>
      * Returns true otherwise.
      */
-    protected boolean isRequestAuthorityRealmSameAsATRealm(@NonNull final Authority requestAuthority,
-                                                           @NonNull final AccessTokenRecord accessTokenRecord)
+    protected boolean isRequestAuthorityRealmSameAsATRealm(
+            @NonNull final Authority requestAuthority,
+            @NonNull final AccessTokenRecord accessTokenRecord)
             throws ServiceException, ClientException {
         if (requestAuthority instanceof AzureActiveDirectoryAuthority) {
 
-            String tenantId = ((AzureActiveDirectoryAuthority) requestAuthority).getAudience().getTenantId();
+            String tenantId =
+                    ((AzureActiveDirectoryAuthority) requestAuthority).getAudience().getTenantId();
 
             if (AzureActiveDirectoryAudience.isHomeTenantAlias(tenantId)) {
-                // if realm on AT and home account's tenant id do not match, we have a token for guest and
-                // requested authority here is for home, so return false we need to refresh the token
-                final String utidFromHomeAccountId = accessTokenRecord
-                        .getHomeAccountId()
-                        .split(Pattern.quote("."))[1];
+                // if realm on AT and home account's tenant id do not match, we have a token for
+                // guest and
+                // requested authority here is for home, so return false we need to refresh the
+                // token
+                final String utidFromHomeAccountId =
+                        accessTokenRecord.getHomeAccountId().split(Pattern.quote("."))[1];
 
                 return utidFromHomeAccountId.equalsIgnoreCase(accessTokenRecord.getRealm());
 
             } else {
-                tenantId = ((AzureActiveDirectoryAuthority) requestAuthority)
-                        .getAudience()
-                        .getTenantUuidForAlias(requestAuthority.getAuthorityURL().toString());
+                tenantId =
+                        ((AzureActiveDirectoryAuthority) requestAuthority)
+                                .getAudience()
+                                .getTenantUuidForAlias(
+                                        requestAuthority.getAuthorityURL().toString());
                 return tenantId.equalsIgnoreCase(accessTokenRecord.getRealm());
             }
         }
@@ -875,26 +888,26 @@ public abstract class BaseController {
     }
 
     protected boolean isMsaAccount(final MicrosoftTokenResponse microsoftTokenResponse) {
-        final String tenantId = SchemaUtil.getTenantId(
-                microsoftTokenResponse.getClientInfo(),
-                microsoftTokenResponse.getIdToken()
-        );
+        final String tenantId =
+                SchemaUtil.getTenantId(
+                        microsoftTokenResponse.getClientInfo(),
+                        microsoftTokenResponse.getIdToken());
         return AzureActiveDirectoryAudience.MSA_MEGA_TENANT_ID.equalsIgnoreCase(tenantId);
     }
 
-    public ICacheRecord finalizeCacheRecordForResult(@NonNull final ICacheRecord cacheRecord,
-                                                     @NonNull final AbstractAuthenticationScheme scheme) throws ClientException {
-        if (scheme instanceof ITokenAuthenticationSchemeInternal &&
-                !StringUtil.isNullOrEmpty(cacheRecord.getAccessToken().getSecret())) {
-            final ITokenAuthenticationSchemeInternal tokenAuthScheme = (ITokenAuthenticationSchemeInternal) scheme;
+    public ICacheRecord finalizeCacheRecordForResult(
+            @NonNull final ICacheRecord cacheRecord,
+            @NonNull final AbstractAuthenticationScheme scheme)
+            throws ClientException {
+        if (scheme instanceof ITokenAuthenticationSchemeInternal
+                && !StringUtil.isNullOrEmpty(cacheRecord.getAccessToken().getSecret())) {
+            final ITokenAuthenticationSchemeInternal tokenAuthScheme =
+                    (ITokenAuthenticationSchemeInternal) scheme;
             cacheRecord
                     .getAccessToken()
                     .setSecret(
-                            tokenAuthScheme
-                                    .getAccessTokenForScheme(
-                                            cacheRecord.getAccessToken().getSecret()
-                                    )
-                    );
+                            tokenAuthScheme.getAccessTokenForScheme(
+                                    cacheRecord.getAccessToken().getSecret()));
         }
 
         return cacheRecord;
@@ -907,5 +920,6 @@ public abstract class BaseController {
      * @return The {@link GenerateShrResult} containing the resulting SHR.
      * @throws Exception If an error is encountered during SHR generation.
      */
-    public abstract GenerateShrResult generateSignedHttpRequest(GenerateShrCommandParameters parameters) throws Exception;
+    public abstract GenerateShrResult generateSignedHttpRequest(
+            GenerateShrCommandParameters parameters) throws Exception;
 }

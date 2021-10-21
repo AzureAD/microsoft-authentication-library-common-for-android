@@ -22,8 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.platform;
 
-import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.crypto.IDevicePopManager;
+import com.microsoft.identity.common.java.exception.ClientException;
 
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -50,5 +50,6 @@ public interface AsymmetricKeyAccessor extends IManagedKeyAccessor<KeyStore.Priv
      * @throws NoSuchAlgorithmException if the public key being retrieved corresponds to an algorithm that is not supported.
      * @throws KeyStoreException if the keystore is not initialized.
      */
-    public PublicKey getPublicKey() throws UnrecoverableEntryException, NoSuchAlgorithmException, KeyStoreException;
+    public PublicKey getPublicKey()
+            throws UnrecoverableEntryException, NoSuchAlgorithmException, KeyStoreException;
 }

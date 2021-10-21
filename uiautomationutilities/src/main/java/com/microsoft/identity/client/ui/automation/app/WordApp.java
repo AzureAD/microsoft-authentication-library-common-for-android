@@ -43,7 +43,7 @@ import org.junit.Assert;
  */
 public class WordApp extends App implements IFirstPartyApp {
 
-    private final static String TAG = WordApp.class.getSimpleName();
+    private static final String TAG = WordApp.class.getSimpleName();
     public static final String WORD_PACKAGE_NAME = "com.microsoft.office.word";
     public static final String WORD_APP_NAME = "Microsoft Word";
 
@@ -57,9 +57,10 @@ public class WordApp extends App implements IFirstPartyApp {
     }
 
     @Override
-    public void addFirstAccount(@NonNull final String username,
-                                @NonNull final String password,
-                                @NonNull final FirstPartyAppPromptHandlerParameters promptHandlerParameters) {
+    public void addFirstAccount(
+            @NonNull final String username,
+            @NonNull final String password,
+            @NonNull final FirstPartyAppPromptHandlerParameters promptHandlerParameters) {
         Logger.i(TAG, "Adding First Account..");
         // Enter email
         UiAutomatorUtils.handleInput("com.microsoft.office.word:id/OfcEditText", username);
@@ -68,19 +69,22 @@ public class WordApp extends App implements IFirstPartyApp {
 
         Logger.i(TAG, "Handle First Account Sign-In Prompt on the APP..");
         // handle prompt
-        final MicrosoftStsPromptHandler microsoftStsPromptHandler = new MicrosoftStsPromptHandler(promptHandlerParameters);
+        final MicrosoftStsPromptHandler microsoftStsPromptHandler =
+                new MicrosoftStsPromptHandler(promptHandlerParameters);
         microsoftStsPromptHandler.handlePrompt(username, password);
     }
 
     @Override
-    public void addAnotherAccount(@NonNull final String username,
-                                  @NonNull final String password,
-                                  @NonNull final FirstPartyAppPromptHandlerParameters promptHandlerParameters) {
+    public void addAnotherAccount(
+            @NonNull final String username,
+            @NonNull final String password,
+            @NonNull final FirstPartyAppPromptHandlerParameters promptHandlerParameters) {
         Logger.i(TAG, "Adding Another Account..");
         // Click account drawer
         UiAutomatorUtils.handleButtonClick("com.microsoft.office.word:id/docsui_me_image");
         // Click add account
-        UiAutomatorUtils.handleButtonClick("com.microsoft.office.word:id/docsui_account_list_add_account");
+        UiAutomatorUtils.handleButtonClick(
+                "com.microsoft.office.word:id/docsui_account_list_add_account");
         // sing in with supplied username/password
         signIn(username, password, promptHandlerParameters);
     }
@@ -90,22 +94,21 @@ public class WordApp extends App implements IFirstPartyApp {
         return;
     }
 
-    private void signIn(@NonNull final String username,
-                        @NonNull final String password,
-                        @NonNull final FirstPartyAppPromptHandlerParameters promptHandlerParameters) {
+    private void signIn(
+            @NonNull final String username,
+            @NonNull final String password,
+            @NonNull final FirstPartyAppPromptHandlerParameters promptHandlerParameters) {
         Logger.i(TAG, "Sign-In on the APP..");
         try {
             // Word has very interesting sign in UI. They show a custom WebView to accept email
             // No resource id available on anything :(
-            final UiObject emailField = UiAutomatorUtils.obtainUiObjectWithTextAndClassType(
-                    "", EditText.class
-            );
+            final UiObject emailField =
+                    UiAutomatorUtils.obtainUiObjectWithTextAndClassType("", EditText.class);
 
             emailField.setText(username);
 
-            final UiObject nextBtn = UiAutomatorUtils.obtainUiObjectWithTextAndClassType(
-                    "Next", Button.class
-            );
+            final UiObject nextBtn =
+                    UiAutomatorUtils.obtainUiObjectWithTextAndClassType("Next", Button.class);
 
             nextBtn.click();
         } catch (final UiObjectNotFoundException e) {
@@ -114,7 +117,8 @@ public class WordApp extends App implements IFirstPartyApp {
 
         Logger.i(TAG, "Handle Sign-In Prompt on the APP..");
         // handle prompt
-        final MicrosoftStsPromptHandler microsoftStsPromptHandler = new MicrosoftStsPromptHandler(promptHandlerParameters);
+        final MicrosoftStsPromptHandler microsoftStsPromptHandler =
+                new MicrosoftStsPromptHandler(promptHandlerParameters);
         microsoftStsPromptHandler.handlePrompt(username, password);
     }
 
@@ -125,8 +129,6 @@ public class WordApp extends App implements IFirstPartyApp {
 
         final UiObject testAccountLabelWord = UiAutomatorUtils.obtainUiObjectWithText(username);
         Assert.assertTrue(
-                "Provided user account exists in Word App.",
-                testAccountLabelWord.exists()
-        );
+                "Provided user account exists in Word App.", testAccountLabelWord.exists());
     }
 }

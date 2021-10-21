@@ -27,14 +27,14 @@ import com.microsoft.identity.common.java.providers.oauth2.OpenIdConnectPromptPa
 import com.microsoft.identity.common.java.ui.AuthorizationAgent;
 import com.microsoft.identity.common.java.ui.BrowserDescriptor;
 
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.experimental.SuperBuilder;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.experimental.SuperBuilder;
 
 @Getter
 @EqualsAndHashCode(callSuper = true)
@@ -47,35 +47,34 @@ public class InteractiveTokenCommandParameters extends TokenCommandParameters {
 
     private final boolean brokerBrowserSupportEnabled;
 
-    @Expose()
-    private final OpenIdConnectPromptParameter prompt;
+    @Expose() private final OpenIdConnectPromptParameter prompt;
 
-    @Expose()
-    private final AuthorizationAgent authorizationAgent;
+    @Expose() private final AuthorizationAgent authorizationAgent;
 
-    @Expose()
-    private final boolean isWebViewZoomEnabled;
+    @Expose() private final boolean isWebViewZoomEnabled;
 
-    @Expose()
-    private final boolean isWebViewZoomControlsEnabled;
+    @Expose() private final boolean isWebViewZoomControlsEnabled;
 
-    @Expose()
-    private final boolean handleNullTaskAffinity;
+    @Expose() private final boolean handleNullTaskAffinity;
 
     private final List<Map.Entry<String, String>> extraQueryStringParameters;
 
     private final List<String> extraScopesToConsent;
 
-    public boolean getHandleNullTaskAffinity(){
+    public boolean getHandleNullTaskAffinity() {
         return handleNullTaskAffinity;
     }
 
     public List<Map.Entry<String, String>> getExtraQueryStringParameters() {
-        return this.extraQueryStringParameters == null ? null : new ArrayList<>(this.extraQueryStringParameters);
+        return this.extraQueryStringParameters == null
+                ? null
+                : new ArrayList<>(this.extraQueryStringParameters);
     }
 
     public List<String> getExtraScopesToConsent() {
-        return this.extraScopesToConsent == null ? null : new ArrayList<>(this.extraScopesToConsent);
+        return this.extraScopesToConsent == null
+                ? null
+                : new ArrayList<>(this.extraScopesToConsent);
     }
 
     public List<BrowserDescriptor> getBrowserSafeList() {

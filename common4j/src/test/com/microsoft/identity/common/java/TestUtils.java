@@ -35,13 +35,14 @@ public class TestUtils {
      * @param subString     A 'keyword' string that we use to count the occurrences.
      * @return # of matches
      */
-    public static int countMatches(@Nullable final String sourceString, @Nullable final String subString) {
+    public static int countMatches(
+            @Nullable final String sourceString, @Nullable final String subString) {
         if (StringUtil.isNullOrEmpty(sourceString) || StringUtil.isNullOrEmpty(subString)) {
             return 0;
         }
 
-        final String truncatedSourceString = sourceString.toLowerCase().replace(subString.toLowerCase(), "");
+        final String truncatedSourceString =
+                sourceString.toLowerCase().replace(subString.toLowerCase(), "");
         return (sourceString.length() - truncatedSourceString.length()) / subString.length();
     }
-
 }

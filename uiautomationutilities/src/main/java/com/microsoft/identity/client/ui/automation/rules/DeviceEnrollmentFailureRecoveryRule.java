@@ -22,7 +22,6 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.rules;
 
-import android.util.Log;
 
 import com.microsoft.identity.client.ui.automation.broker.DeviceLimitReachedException;
 import com.microsoft.identity.client.ui.automation.logging.Logger;
@@ -38,7 +37,7 @@ import org.junit.runners.model.Statement;
  */
 public class DeviceEnrollmentFailureRecoveryRule implements TestRule {
 
-    private final static String TAG = DeviceEnrollmentFailureRecoveryRule.class.getSimpleName();
+    private static final String TAG = DeviceEnrollmentFailureRecoveryRule.class.getSimpleName();
 
     @Override
     public Statement apply(final Statement base, final Description description) {
@@ -56,7 +55,9 @@ public class DeviceEnrollmentFailureRecoveryRule implements TestRule {
 
                         // we delete 10 devices as it is much more efficient
                         for (int i = 0; i < 10; i++) {
-                            ((DeviceLimitReachedException) throwable).getCompanyPortal().removeDevice();
+                            ((DeviceLimitReachedException) throwable)
+                                    .getCompanyPortal()
+                                    .removeDevice();
                         }
                     }
 
@@ -65,5 +66,4 @@ public class DeviceEnrollmentFailureRecoveryRule implements TestRule {
             }
         };
     }
-
 }

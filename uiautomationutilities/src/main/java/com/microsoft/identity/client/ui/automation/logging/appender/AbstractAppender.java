@@ -39,11 +39,14 @@ public abstract class AbstractAppender implements IAppender {
     }
 
     @Override
-    public void append(final LogLevel logLevel, final String tag, final String message, final Throwable throwable) {
+    public void append(
+            final LogLevel logLevel,
+            final String tag,
+            final String message,
+            final Throwable throwable) {
         final String logMessage = mLogFormatter.format(logLevel, tag, message, throwable);
         append(logMessage);
     }
 
-    abstract public void append(final String message);
-
+    public abstract void append(final String message);
 }

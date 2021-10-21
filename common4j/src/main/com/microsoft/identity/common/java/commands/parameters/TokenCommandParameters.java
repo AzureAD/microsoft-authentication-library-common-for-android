@@ -23,21 +23,21 @@
 package com.microsoft.identity.common.java.commands.parameters;
 
 import com.google.gson.annotations.Expose;
-import com.microsoft.identity.common.java.exception.ArgumentException;
 import com.microsoft.identity.common.java.authorities.Authority;
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.java.dto.IAccountRecord;
+import com.microsoft.identity.common.java.exception.ArgumentException;
 import com.microsoft.identity.common.java.logging.Logger;
+
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.experimental.SuperBuilder;
 
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.experimental.SuperBuilder;
 
 @Getter
 @EqualsAndHashCode(callSuper = true)
@@ -48,20 +48,15 @@ public class TokenCommandParameters extends CommandParameters {
 
     private final IAccountRecord account;
 
-    @Expose()
-    private final Set<String> scopes;
+    @Expose() private final Set<String> scopes;
 
-    @Expose()
-    private final Authority authority;
+    @Expose() private final Authority authority;
 
-    @Expose()
-    private final String claimsRequestJson;
+    @Expose() private final String claimsRequestJson;
 
-    @Expose()
-    private final AbstractAuthenticationScheme authenticationScheme;
+    @Expose() private final AbstractAuthenticationScheme authenticationScheme;
 
-    @Expose()
-    private final boolean forceRefresh;
+    @Expose() private final boolean forceRefresh;
 
     private final String loginHint;
 
@@ -74,10 +69,7 @@ public class TokenCommandParameters extends CommandParameters {
     public void validate() throws ArgumentException {
         final String methodName = ":validate";
 
-        Logger.verbose(
-                TAG + methodName,
-                "Validating operation params..."
-        );
+        Logger.verbose(TAG + methodName, "Validating operation params...");
 
         boolean validScopeArgument = false;
 
@@ -93,8 +85,7 @@ public class TokenCommandParameters extends CommandParameters {
                 throw new ArgumentException(
                         ArgumentException.ACQUIRE_TOKEN_SILENT_OPERATION_NAME,
                         ArgumentException.SCOPE_ARGUMENT_NAME,
-                        "scope is empty or null"
-                );
+                        "scope is empty or null");
             }
             if (this instanceof InteractiveTokenCommandParameters) {
                 throw new ArgumentException(
@@ -110,16 +101,14 @@ public class TokenCommandParameters extends CommandParameters {
                 throw new ArgumentException(
                         ArgumentException.ACQUIRE_TOKEN_SILENT_OPERATION_NAME,
                         ArgumentException.AUTHENTICATION_SCHEME_ARGUMENT_NAME,
-                        "authentication scheme is undefined"
-                );
+                        "authentication scheme is undefined");
             }
 
             if (this instanceof InteractiveTokenCommandParameters) {
                 throw new ArgumentException(
                         ArgumentException.ACQUIRE_TOKEN_OPERATION_NAME,
                         ArgumentException.AUTHENTICATION_SCHEME_ARGUMENT_NAME,
-                        "authentication scheme is undefined"
-                );
+                        "authentication scheme is undefined");
             }
         }
     }

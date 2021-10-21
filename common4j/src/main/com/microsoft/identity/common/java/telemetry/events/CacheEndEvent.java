@@ -22,15 +22,15 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.telemetry.events;
 
-import com.microsoft.identity.common.java.cache.CacheRecord;
-import com.microsoft.identity.common.java.util.StringUtil;
-import com.microsoft.identity.common.java.eststelemetry.EstsTelemetry;
-import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings;
-
 import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Event;
 import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.EventType;
 import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Key;
 import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Value;
+
+import com.microsoft.identity.common.java.cache.CacheRecord;
+import com.microsoft.identity.common.java.eststelemetry.EstsTelemetry;
+import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings;
+import com.microsoft.identity.common.java.util.StringUtil;
 
 public class CacheEndEvent extends com.microsoft.identity.common.java.telemetry.events.BaseEvent {
     public CacheEndEvent() {
@@ -61,15 +61,31 @@ public class CacheEndEvent extends com.microsoft.identity.common.java.telemetry.
 
         put(Key.AT_STATUS, cacheRecord.getAccessToken() == null ? Value.FALSE : Value.TRUE);
         if (null != cacheRecord.getRefreshToken()) {
-            put(Key.MRRT_STATUS, Value.TRUE); //MSAL RT is MRRT and ADFS is not supported by now.
+            put(Key.MRRT_STATUS, Value.TRUE); // MSAL RT is MRRT and ADFS is not supported by now.
             put(Key.RT_STATUS, Value.TRUE);
-            put(Key.FRT_STATUS, StringUtil.isNullOrEmpty(cacheRecord.getRefreshToken().getFamilyId()) ? TelemetryEventStrings.Value.FALSE : TelemetryEventStrings.Value.TRUE);
+            put(
+                    Key.FRT_STATUS,
+                    StringUtil.isNullOrEmpty(cacheRecord.getRefreshToken().getFamilyId())
+                            ? TelemetryEventStrings.Value.FALSE
+                            : TelemetryEventStrings.Value.TRUE);
         } else {
             put(Key.RT_STATUS, Value.FALSE);
         }
-        put(Key.ID_TOKEN_STATUS, cacheRecord.getIdToken() == null ? TelemetryEventStrings.Value.FALSE : TelemetryEventStrings.Value.TRUE);
-        put(Key.V1_ID_TOKEN_STATUS, cacheRecord.getV1IdToken() == null ? TelemetryEventStrings.Value.FALSE : TelemetryEventStrings.Value.TRUE);
-        put(Key.ACCOUNT_STATUS, cacheRecord.getAccount() == null ? TelemetryEventStrings.Value.FALSE : TelemetryEventStrings.Value.TRUE);
+        put(
+                Key.ID_TOKEN_STATUS,
+                cacheRecord.getIdToken() == null
+                        ? TelemetryEventStrings.Value.FALSE
+                        : TelemetryEventStrings.Value.TRUE);
+        put(
+                Key.V1_ID_TOKEN_STATUS,
+                cacheRecord.getV1IdToken() == null
+                        ? TelemetryEventStrings.Value.FALSE
+                        : TelemetryEventStrings.Value.TRUE);
+        put(
+                Key.ACCOUNT_STATUS,
+                cacheRecord.getAccount() == null
+                        ? TelemetryEventStrings.Value.FALSE
+                        : TelemetryEventStrings.Value.TRUE);
         EstsTelemetry.getInstance().emit(this.getProperties());
         return this;
     }

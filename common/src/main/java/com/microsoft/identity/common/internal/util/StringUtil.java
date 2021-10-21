@@ -29,13 +29,12 @@ import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 import java.util.AbstractMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
-
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /**
  * String utilities.
@@ -53,7 +52,9 @@ public final class StringUtil {
      * @return true if the string object is null or the string is empty.
      */
     public static boolean isEmpty(final String message) {
-        return message == null || message.trim().length() == 0; //NOPMD  Suppressing PMD warning for new String creation on trim()"
+        return message == null
+                || message.trim().length()
+                        == 0; // NOPMD  Suppressing PMD warning for new String creation on trim()"
     }
 
     /**
@@ -149,8 +150,8 @@ public final class StringUtil {
      * 1 if thisVersion is larger than thatVersion,
      * 0 if thisVersion is equal to thatVersion.
      */
-    public static int compareSemanticVersion(@NonNull final String thisVersion,
-                                             @Nullable final String thatVersion) {
+    public static int compareSemanticVersion(
+            @NonNull final String thisVersion, @Nullable final String thatVersion) {
         if (thatVersion == null) {
             return 1;
         }
@@ -179,16 +180,16 @@ public final class StringUtil {
     /**
      * Returns true if the first semantic version is smaller or equal to the second version.
      */
-    public static boolean isFirstVersionSmallerOrEqual(@NonNull final String first,
-                                                       @Nullable final String second) {
+    public static boolean isFirstVersionSmallerOrEqual(
+            @NonNull final String first, @Nullable final String second) {
         return compareSemanticVersion(first, second) <= 0;
     }
 
     /**
      * Returns true if the first semantic version is larger or equal to the second version.
      */
-    public static boolean isFirstVersionLargerOrEqual(@NonNull final String first,
-                                                      @Nullable final String second) {
+    public static boolean isFirstVersionLargerOrEqual(
+            @NonNull final String first, @Nullable final String second) {
         return compareSemanticVersion(first, second) >= 0;
     }
 
@@ -198,10 +199,10 @@ public final class StringUtil {
      * @param one The first string to compare.
      * @param two The second string to compare.
      */
-    @SuppressFBWarnings(value = "ES_COMPARING_PARAMETER_STRING_WITH_EQ",
-                        justification = "This is actually a reference comparison")
+    @SuppressFBWarnings(
+            value = "ES_COMPARING_PARAMETER_STRING_WITH_EQ",
+            justification = "This is actually a reference comparison")
     public static boolean equalsIgnoreCase(@Nullable final String one, @Nullable final String two) {
         return one == two || (one != null && one.equalsIgnoreCase(two));
     }
-
 }

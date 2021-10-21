@@ -70,5 +70,4 @@ public class TestContext {
 
         return new TestDevice(manufacturer, model, apiLevel);
     }
-
 }

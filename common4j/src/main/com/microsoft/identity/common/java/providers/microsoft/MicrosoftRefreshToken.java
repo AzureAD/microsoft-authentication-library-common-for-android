@@ -22,15 +22,16 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.providers.microsoft;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import lombok.NonNull;
-import edu.umd.cs.findbugs.annotations.Nullable;
-
 import com.microsoft.identity.common.java.exception.ServiceException;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.ClientInfo;
 import com.microsoft.identity.common.java.providers.oauth2.RefreshToken;
 import com.microsoft.identity.common.java.util.SchemaUtil;
 import com.microsoft.identity.common.java.util.StringUtil;
+
+import edu.umd.cs.findbugs.annotations.Nullable;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
+import lombok.NonNull;
 
 @SuppressFBWarnings("RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE")
 public class MicrosoftRefreshToken extends RefreshToken {
@@ -41,12 +42,13 @@ public class MicrosoftRefreshToken extends RefreshToken {
     private String mClientId;
     private String mEnvironment;
 
-    public MicrosoftRefreshToken(final String rawRefreshToken,
-                                 final ClientInfo clientInfo,
-                                 final String scope,
-                                 final String clientId,
-                                 final String environment,
-                                 @Nullable String familyId) {
+    public MicrosoftRefreshToken(
+            final String rawRefreshToken,
+            final ClientInfo clientInfo,
+            final String scope,
+            final String clientId,
+            final String environment,
+            @Nullable String familyId) {
         super(rawRefreshToken);
         mClientInfo = clientInfo;
         mScope = scope;

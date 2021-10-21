@@ -34,13 +34,15 @@ public class DeprecatedApiUsageEvent extends BaseEvent {
                 .types(TelemetryEventStrings.EventType.LIBRARY_CONSUMER_EVENT);
     }
 
-    public DeprecatedApiUsageEvent putDeprecatedClassUsage(@Nonnull final Class<?> deprecatedClass) {
+    public DeprecatedApiUsageEvent putDeprecatedClassUsage(
+            @Nonnull final Class<?> deprecatedClass) {
         put(TelemetryEventStrings.Key.PACKAGE_NAME, deprecatedClass.getPackage().toString());
         put(TelemetryEventStrings.Key.CLASS_NAME, deprecatedClass.getSimpleName());
         return this;
     }
 
-    public DeprecatedApiUsageEvent putDeprecatedMethodUsage(@Nonnull final Class<?> methodClass, @Nonnull final String methodName) {
+    public DeprecatedApiUsageEvent putDeprecatedMethodUsage(
+            @Nonnull final Class<?> methodClass, @Nonnull final String methodName) {
         put(TelemetryEventStrings.Key.CLASS_METHOD, methodName);
         return putDeprecatedClassUsage(methodClass);
     }

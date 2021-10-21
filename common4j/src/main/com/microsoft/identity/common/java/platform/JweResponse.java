@@ -25,14 +25,15 @@ package com.microsoft.identity.common.java.platform;
 
 import com.microsoft.identity.common.java.util.StringUtil;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import cz.msebera.android.httpclient.extras.Base64;
+
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.experimental.Accessors;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class JweResponse {
 
@@ -109,16 +110,17 @@ public class JweResponse {
         String decodedHeader = StringUtil.fromByteArray(headerDecodedBytes);
 
         JSONObject jsonObject = new JSONObject(decodedHeader);
-        response.mJweHeader = JweHeader.builder()
-                .algorithm(jsonObject.optString("alg"))
-                .type(jsonObject.optString("typ"))
-                .x509CertificateThumbprint(jsonObject.optString("x5t"))
-                .x509Certificate(jsonObject.optString("x5c"))
-                .keyID(jsonObject.optString("kid"))
-                .keyUse(jsonObject.optString("use"))
-                .encryptionAlgorithm(jsonObject.optString("enc"))
-                .context(jsonObject.optString("ctx"))
-                .build();
+        response.mJweHeader =
+                JweHeader.builder()
+                        .algorithm(jsonObject.optString("alg"))
+                        .type(jsonObject.optString("typ"))
+                        .x509CertificateThumbprint(jsonObject.optString("x5t"))
+                        .x509Certificate(jsonObject.optString("x5c"))
+                        .keyID(jsonObject.optString("kid"))
+                        .keyUse(jsonObject.optString("use"))
+                        .encryptionAlgorithm(jsonObject.optString("enc"))
+                        .context(jsonObject.optString("ctx"))
+                        .build();
 
         return response;
     }

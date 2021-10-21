@@ -38,5 +38,4 @@ public interface ILogFormatter {
      * @param throwable the exception to log
      */
     String format(LogLevel logLevel, String tag, String message, Throwable throwable);
-
 }

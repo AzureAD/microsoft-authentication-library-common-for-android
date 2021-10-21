@@ -38,7 +38,7 @@ import java.util.concurrent.TimeoutException;
  */
 public class ResultFuture<T, E extends Exception> {
 
-    private final static String TAG = ResultFuture.class.getSimpleName();
+    private static final String TAG = ResultFuture.class.getSimpleName();
     private final CountDownLatch mCountDownLatch = new CountDownLatch(1);
     private T mResult = null;
     private E mException = null;
@@ -79,7 +79,7 @@ public class ResultFuture<T, E extends Exception> {
                     "Timed out waiting for: "
                             + l // duration
                             + timeUnit.name() // units
-            );
+                    );
         }
     }
 

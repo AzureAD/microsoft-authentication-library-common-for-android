@@ -22,10 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.providers.oauth2;
 
-import com.google.gson.annotations.SerializedName;
-
-import java.util.List;
-
 import static com.microsoft.identity.common.java.providers.oauth2.OpenIdProviderConfiguration.SerializedNames.ACR_VALUES_SUPPORTED;
 import static com.microsoft.identity.common.java.providers.oauth2.OpenIdProviderConfiguration.SerializedNames.AUTHORIZATION_ENDPOINT;
 import static com.microsoft.identity.common.java.providers.oauth2.OpenIdProviderConfiguration.SerializedNames.CHECK_SESSION_IFRAME;
@@ -72,6 +68,10 @@ import static com.microsoft.identity.common.java.providers.oauth2.OpenIdProvider
 import static com.microsoft.identity.common.java.providers.oauth2.OpenIdProviderConfiguration.SerializedNames.USERINFO_ENDPOINT;
 import static com.microsoft.identity.common.java.providers.oauth2.OpenIdProviderConfiguration.SerializedNames.USERINFO_SIGNING_ALG_VALUES_SUPPORTED;
 
+import com.google.gson.annotations.SerializedName;
+
+import java.util.List;
+
 /*
  * Represents the information returned from the OpenID Provider Configuration Endpoint
  * https://openid.net/specs/openid-connect-discovery-1_0.html#ProviderMetadata
@@ -83,8 +83,7 @@ public class OpenIdProviderConfiguration {
      * Keys for JSON parsing.
      */
     public static final class SerializedNames {
-        public static final String
-                AUTHORIZATION_ENDPOINT = "authorization_endpoint",
+        public static final String AUTHORIZATION_ENDPOINT = "authorization_endpoint",
                 DEVICE_AUTHORIZATION_ENDPOINT = "device_authorization_endpoint",
                 TOKEN_ENDPOINT = "token_endpoint",
                 TOKEN_ENDPOINT_AUTH_METHODS_SUPPORTED = "token_endpoint_auth_methods_supported",
@@ -109,15 +108,23 @@ public class OpenIdProviderConfiguration {
                 REGISTRATION_ENDPOINT = "registration_endpoint",
                 GRANT_TYPES_SUPPORTED = "grant_types_supported",
                 ACR_VALUES_SUPPORTED = "acr_values_supported",
-                ID_TOKEN_ENCRYPTION_ALG_VALUES_SUPPORTED = "id_token_encryption_alg_values_supported",
-                ID_TOKEN_ENCRYPTION_ENC_VALUES_SUPPORTED = "id_token_encryption_enc_values_supported",
+                ID_TOKEN_ENCRYPTION_ALG_VALUES_SUPPORTED =
+                        "id_token_encryption_alg_values_supported",
+                ID_TOKEN_ENCRYPTION_ENC_VALUES_SUPPORTED =
+                        "id_token_encryption_enc_values_supported",
                 USERINFO_SIGNING_ALG_VALUES_SUPPORTED = "userinfo_signing_alg_values_supported",
-                USERINFO_ENCRYPTION_ALG_VALUES_SUPPORTED = "userinfo_encryption_alg_values_supported",
-                USERINFO_ENCRYPTION_ENC_VALUES_SUPPORTED = "userinfo_encryption_enc_values_supported",
-                REQUEST_OBJECT_SIGNING_ALG_VALUES_SUPPORTED = "request_object_signing_alg_values_supported",
-                REQUEST_OBJECT_ENCRYPTION_ALG_VALUES_SUPPORTED = "request_object_encryption_alg_values_supported",
-                REQUEST_OBJECT_ENCRYPTION_ENC_VALUES_SUPPORTED = "request_object_encryption_enc_values_supported",
-                TOKEN_ENDPOINT_AUTH_SIGNING_ALG_VALUES_SUPPORTED = "token_endpoint_auth_signing_alg_values_supported",
+                USERINFO_ENCRYPTION_ALG_VALUES_SUPPORTED =
+                        "userinfo_encryption_alg_values_supported",
+                USERINFO_ENCRYPTION_ENC_VALUES_SUPPORTED =
+                        "userinfo_encryption_enc_values_supported",
+                REQUEST_OBJECT_SIGNING_ALG_VALUES_SUPPORTED =
+                        "request_object_signing_alg_values_supported",
+                REQUEST_OBJECT_ENCRYPTION_ALG_VALUES_SUPPORTED =
+                        "request_object_encryption_alg_values_supported",
+                REQUEST_OBJECT_ENCRYPTION_ENC_VALUES_SUPPORTED =
+                        "request_object_encryption_enc_values_supported",
+                TOKEN_ENDPOINT_AUTH_SIGNING_ALG_VALUES_SUPPORTED =
+                        "token_endpoint_auth_signing_alg_values_supported",
                 DISPLAY_VALUES_SUPPORTED = "display_values_supported",
                 CLAIM_TYPES_SUPPORTED = "claim_types_supported",
                 SERVICE_DOCUMENTATION = "service_documentation",
@@ -290,7 +297,8 @@ public class OpenIdProviderConfiguration {
         return mTokenEndpointAuthMethodsSupported;
     }
 
-    public void setTokenEndpointAuthMethodsSupported(final List<String> tokenEndpointAuthMethodsSupported) {
+    public void setTokenEndpointAuthMethodsSupported(
+            final List<String> tokenEndpointAuthMethodsSupported) {
         mTokenEndpointAuthMethodsSupported = tokenEndpointAuthMethodsSupported;
     }
 
@@ -322,7 +330,8 @@ public class OpenIdProviderConfiguration {
         return mIdTokenSigningAlgValuesSupported;
     }
 
-    public void setIdTokenSigningAlgValuesSupported(final List<String> idTokenSigningAlgValuesSupported) {
+    public void setIdTokenSigningAlgValuesSupported(
+            final List<String> idTokenSigningAlgValuesSupported) {
         mIdTokenSigningAlgValuesSupported = idTokenSigningAlgValuesSupported;
     }
 
@@ -466,7 +475,8 @@ public class OpenIdProviderConfiguration {
         return mIdTokenEncryptionAlgValuesSupported;
     }
 
-    public void setIdTokenEncryptionAlgValuesSupported(final List<String> idTokenEncryptionAlgValuesSupported) {
+    public void setIdTokenEncryptionAlgValuesSupported(
+            final List<String> idTokenEncryptionAlgValuesSupported) {
         mIdTokenEncryptionAlgValuesSupported = idTokenEncryptionAlgValuesSupported;
     }
 
@@ -474,7 +484,8 @@ public class OpenIdProviderConfiguration {
         return mIdTokenEncryptionEncValuesSupported;
     }
 
-    public void setIdTokenEncryptionEncValuesSupported(final List<String> idTokenEncryptionEncValuesSupported) {
+    public void setIdTokenEncryptionEncValuesSupported(
+            final List<String> idTokenEncryptionEncValuesSupported) {
         mIdTokenEncryptionEncValuesSupported = idTokenEncryptionEncValuesSupported;
     }
 
@@ -482,7 +493,8 @@ public class OpenIdProviderConfiguration {
         return mUserInfoSigningAlgValuesSupported;
     }
 
-    public void setUserInfoSigningAlgValuesSupported(final List<String> userInfoSigningAlgValuesSupported) {
+    public void setUserInfoSigningAlgValuesSupported(
+            final List<String> userInfoSigningAlgValuesSupported) {
         mUserInfoSigningAlgValuesSupported = userInfoSigningAlgValuesSupported;
     }
 
@@ -490,7 +502,8 @@ public class OpenIdProviderConfiguration {
         return mUserInfoEncryptionAlgValuesSupported;
     }
 
-    public void setUserInfoEncryptionAlgValuesSupported(final List<String> userInfoEncryptionAlgValuesSupported) {
+    public void setUserInfoEncryptionAlgValuesSupported(
+            final List<String> userInfoEncryptionAlgValuesSupported) {
         mUserInfoEncryptionAlgValuesSupported = userInfoEncryptionAlgValuesSupported;
     }
 
@@ -498,7 +511,8 @@ public class OpenIdProviderConfiguration {
         return mUserInfoEncryptionEncValueSupported;
     }
 
-    public void setUserInfoEncryptionEncValueSupported(final List<String> userInfoEncryptionEncValueSupported) {
+    public void setUserInfoEncryptionEncValueSupported(
+            final List<String> userInfoEncryptionEncValueSupported) {
         mUserInfoEncryptionEncValueSupported = userInfoEncryptionEncValueSupported;
     }
 
@@ -506,7 +520,8 @@ public class OpenIdProviderConfiguration {
         return mRequestObjectSigningAlgValuesSupported;
     }
 
-    public void setRequestObjectSigningAlgValuesSupported(final List<String> requestObjectSigningAlgValuesSupported) {
+    public void setRequestObjectSigningAlgValuesSupported(
+            final List<String> requestObjectSigningAlgValuesSupported) {
         mRequestObjectSigningAlgValuesSupported = requestObjectSigningAlgValuesSupported;
     }
 
@@ -514,7 +529,8 @@ public class OpenIdProviderConfiguration {
         return mRequestObjectEncryptionAlgValuesSupported;
     }
 
-    public void setRequestObjectEncryptionAlgValuesSupported(final List<String> requestObjectEncryptionAlgValuesSupported) {
+    public void setRequestObjectEncryptionAlgValuesSupported(
+            final List<String> requestObjectEncryptionAlgValuesSupported) {
         mRequestObjectEncryptionAlgValuesSupported = requestObjectEncryptionAlgValuesSupported;
     }
 
@@ -522,7 +538,8 @@ public class OpenIdProviderConfiguration {
         return mRequestObjectEncryptionEncValuesSupported;
     }
 
-    public void setRequestObjectEncryptionEncValuesSupported(final List<String> requestObjectEncryptionEncValuesSupported) {
+    public void setRequestObjectEncryptionEncValuesSupported(
+            final List<String> requestObjectEncryptionEncValuesSupported) {
         mRequestObjectEncryptionEncValuesSupported = requestObjectEncryptionEncValuesSupported;
     }
 
@@ -530,7 +547,8 @@ public class OpenIdProviderConfiguration {
         return mTokenEndpointAuthSigningAlgValuesSupported;
     }
 
-    public void setTokenEndpointAuthSigningAlgValuesSupported(final List<String> tokenEndpointAuthSigningAlgValuesSupported) {
+    public void setTokenEndpointAuthSigningAlgValuesSupported(
+            final List<String> tokenEndpointAuthSigningAlgValuesSupported) {
         mTokenEndpointAuthSigningAlgValuesSupported = tokenEndpointAuthSigningAlgValuesSupported;
     }
 

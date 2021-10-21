@@ -33,15 +33,13 @@ public class IntuneAppProtectionPolicyRequiredException extends ServiceException
     private String mTenantId;
     private String mAuthorityUrl;
 
-
-    public IntuneAppProtectionPolicyRequiredException(final String errorCode,
-                                                      final String errorMessage) {
+    public IntuneAppProtectionPolicyRequiredException(
+            final String errorCode, final String errorMessage) {
         this(errorCode, errorMessage, null);
     }
 
-    public IntuneAppProtectionPolicyRequiredException(final String errorCode,
-                                                      final String errorMessage,
-                                                      final Throwable throwable) {
+    public IntuneAppProtectionPolicyRequiredException(
+            final String errorCode, final String errorMessage, final Throwable throwable) {
         super(errorCode, errorMessage, throwable);
     }
 
@@ -78,7 +76,7 @@ public class IntuneAppProtectionPolicyRequiredException extends ServiceException
     }
 
     @Override
-    public String getExceptionName(){
+    public String getExceptionName() {
         return sName;
     }
 

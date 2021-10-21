@@ -22,7 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.providers.microsoft;
 
-public class MockMicrosoftAuthorizationRequest extends MicrosoftAuthorizationRequest<MockMicrosoftAuthorizationRequest> {
+public class MockMicrosoftAuthorizationRequest
+        extends MicrosoftAuthorizationRequest<MockMicrosoftAuthorizationRequest> {
 
     public static final String MOCK_AUTH_ENDPOINT = "https://MOCK_AUTH_ENDPOINT";
 
@@ -40,7 +41,9 @@ public class MockMicrosoftAuthorizationRequest extends MicrosoftAuthorizationReq
         return MOCK_AUTH_ENDPOINT;
     }
 
-    public static class Builder extends MicrosoftAuthorizationRequest.Builder<MockMicrosoftAuthorizationRequest.Builder> {
+    public static class Builder
+            extends MicrosoftAuthorizationRequest.Builder<
+                    MockMicrosoftAuthorizationRequest.Builder> {
         @Override
         public MockMicrosoftAuthorizationRequest.Builder self() {
             return this;

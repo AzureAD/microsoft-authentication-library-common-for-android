@@ -22,17 +22,11 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.authorities;
 
-import lombok.NonNull;
-
 import com.microsoft.identity.common.java.WarningType;
-import com.microsoft.identity.common.java.authorities.Authority;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters;
 
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
+import lombok.NonNull;
 
 public class ActiveDirectoryFederationServicesAuthority extends Authority {
 

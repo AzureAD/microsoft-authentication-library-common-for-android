@@ -68,5 +68,4 @@ public interface IRefreshTokenRecord {
      * @return The family_id to get.
      */
     String getFamilyId();
-
 }

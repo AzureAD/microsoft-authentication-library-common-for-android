@@ -23,12 +23,14 @@
 package com.microsoft.identity.client.ui.automation.sdk;
 
 import android.text.TextUtils;
-import org.junit.Assert;
+
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.client.ui.automation.logging.Logger;
 
 import lombok.Getter;
+
+import org.junit.Assert;
 
 /**
  * An abstract wrapper class for the result obtained from acquire token interactively
@@ -38,7 +40,7 @@ import lombok.Getter;
 @Getter
 public abstract class AuthResult {
 
-    private final static String TAG = AuthResult.class.getSimpleName();
+    private static final String TAG = AuthResult.class.getSimpleName();
 
     private String accessToken;
     private String idToken;
@@ -47,7 +49,12 @@ public abstract class AuthResult {
     private String authority;
     private Exception exception;
 
-    public AuthResult(@NonNull final String accessToken, @NonNull final String idToken, @NonNull final String userId, @NonNull final String username, @NonNull final String authority) {
+    public AuthResult(
+            @NonNull final String accessToken,
+            @NonNull final String idToken,
+            @NonNull final String userId,
+            @NonNull final String username,
+            @NonNull final String authority) {
         Logger.i(TAG, "Initializing the Result Object..");
         this.accessToken = accessToken;
         this.idToken = idToken;
@@ -76,7 +83,7 @@ public abstract class AuthResult {
         Assert.assertNotNull(exception);
     }
 
-    public boolean isAccessTokenEqual(String accessToken){
+    public boolean isAccessTokenEqual(String accessToken) {
         return accessToken.equals(this.accessToken);
     }
 }

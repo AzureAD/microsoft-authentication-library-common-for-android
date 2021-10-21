@@ -22,10 +22,11 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.providers.microsoft.microsoftsts;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import lombok.NonNull;
-
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftRefreshToken;
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
+import lombok.NonNull;
 
 public class MicrosoftStsRefreshToken extends MicrosoftRefreshToken {
 
@@ -35,9 +36,7 @@ public class MicrosoftStsRefreshToken extends MicrosoftRefreshToken {
      * @param response MicrosoftStsTokenResponse
      */
     @SuppressFBWarnings("RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE")
-    public MicrosoftStsRefreshToken(
-            @NonNull final MicrosoftStsTokenResponse response) {
+    public MicrosoftStsRefreshToken(@NonNull final MicrosoftStsTokenResponse response) {
         super(response);
     }
-
 }

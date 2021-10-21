@@ -33,50 +33,42 @@ import java.util.Set;
  */
 public class TokenParametersTest {
 
-    private final static String CLIENT_ID = "some_client_id";
+    private static final String CLIENT_ID = "some_client_id";
     private static final String AUTHORITY = "some_authority";
     private static final String SCOPE_1 = "some_scope_1";
     private static final String SCOPE_2 = "some_scope_2";
 
     @Test(expected = NullPointerException.class)
     public void testCannotCreateTokenParametersWithoutAuthority() {
-        TokenParameters.builder()
-                .clientId(CLIENT_ID)
-                .scope(SCOPE_1)
-                .build();
+        TokenParameters.builder().clientId(CLIENT_ID).scope(SCOPE_1).build();
 
         Assert.fail("We weren't expecting to hit this line...exception should've already occurred");
     }
 
     @Test
     public void testTokenParametersScopesAreEmptyIfNotProvided() {
-        final TokenParameters tokenParameters = TokenParameters.builder()
-                .clientId(CLIENT_ID)
-                .authority(AUTHORITY)
-                .build();
+        final TokenParameters tokenParameters =
+                TokenParameters.builder().clientId(CLIENT_ID).authority(AUTHORITY).build();
 
         Assert.assertNotNull(tokenParameters);
         Assert.assertTrue(tokenParameters.getScopes().isEmpty());
     }
 
-
     @Test(expected = NullPointerException.class)
     public void testCannotCreateTokenParametersWithoutClientId() {
-        TokenParameters.builder()
-                .authority(AUTHORITY)
-                .scope(SCOPE_1)
-                .build();
+        TokenParameters.builder().authority(AUTHORITY).scope(SCOPE_1).build();
 
         Assert.fail("We weren't expecting to hit this line...exception should've already occurred");
     }
 
     @Test
     public void testCanCreateTokenParametersWhenRequiredDataProvided() {
-        final TokenParameters tokenParameters = TokenParameters.builder()
-                .authority(AUTHORITY)
-                .scope(SCOPE_1)
-                .clientId(CLIENT_ID)
-                .build();
+        final TokenParameters tokenParameters =
+                TokenParameters.builder()
+                        .authority(AUTHORITY)
+                        .scope(SCOPE_1)
+                        .clientId(CLIENT_ID)
+                        .build();
 
         Assert.assertNotNull(tokenParameters);
         Assert.assertEquals(AUTHORITY, tokenParameters.getAuthority());
@@ -88,12 +80,13 @@ public class TokenParametersTest {
 
     @Test
     public void testCanCreateTokenParametersWithMultipleScopes() {
-        final TokenParameters tokenParameters = TokenParameters.builder()
-                .authority(AUTHORITY)
-                .clientId(CLIENT_ID)
-                .scope(SCOPE_1)
-                .scope(SCOPE_2)
-                .build();
+        final TokenParameters tokenParameters =
+                TokenParameters.builder()
+                        .authority(AUTHORITY)
+                        .clientId(CLIENT_ID)
+                        .scope(SCOPE_1)
+                        .scope(SCOPE_2)
+                        .build();
 
         Assert.assertNotNull(tokenParameters);
         Assert.assertEquals(AUTHORITY, tokenParameters.getAuthority());
@@ -106,16 +99,20 @@ public class TokenParametersTest {
 
     @Test
     public void testCanCreateTokenParametersWithScopeSet() {
-        final Set<String> scopes = new HashSet<String>() {{
-            add(SCOPE_1);
-            add(SCOPE_2);
-        }};
+        final Set<String> scopes =
+                new HashSet<String>() {
+                    {
+                        add(SCOPE_1);
+                        add(SCOPE_2);
+                    }
+                };
 
-        final TokenParameters tokenParameters = TokenParameters.builder()
-                .authority(AUTHORITY)
-                .clientId(CLIENT_ID)
-                .scopes(scopes)
-                .build();
+        final TokenParameters tokenParameters =
+                TokenParameters.builder()
+                        .authority(AUTHORITY)
+                        .clientId(CLIENT_ID)
+                        .scopes(scopes)
+                        .build();
 
         Assert.assertNotNull(tokenParameters);
         Assert.assertEquals(AUTHORITY, tokenParameters.getAuthority());
@@ -125,5 +122,4 @@ public class TokenParametersTest {
         Assert.assertTrue(tokenParameters.getScopes().contains(SCOPE_1));
         Assert.assertTrue(tokenParameters.getScopes().contains(SCOPE_2));
     }
-
 }

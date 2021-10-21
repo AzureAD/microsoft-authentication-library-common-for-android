@@ -27,6 +27,7 @@ import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.logging.Logger;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
+
 import lombok.NonNull;
 
 /**
@@ -43,8 +44,9 @@ public class AuthenticationSchemeFactory {
      * @param nameable The nameable public scheme representation.
      * @return The internal scheme representation.
      */
-    public static AbstractAuthenticationScheme createScheme(@NonNull final IPlatformComponents commonComponents,
-                                                            @Nullable final INameable nameable) throws ClientException {
+    public static AbstractAuthenticationScheme createScheme(
+            @NonNull final IPlatformComponents commonComponents, @Nullable final INameable nameable)
+            throws ClientException {
         if (null == nameable) {
             // If null, choose Bearer for backcompat
             return new BearerAuthenticationSchemeInternal();
@@ -52,39 +54,30 @@ public class AuthenticationSchemeFactory {
 
         switch (nameable.getName()) {
             case BearerAuthenticationSchemeInternal.SCHEME_BEARER:
-                Logger.verbose(
-                        TAG,
-                        "Constructing Bearer Authentication Scheme."
-                );
+                Logger.verbose(TAG, "Constructing Bearer Authentication Scheme.");
 
                 return new BearerAuthenticationSchemeInternal();
 
             case PopAuthenticationSchemeInternal.SCHEME_POP:
                 if (nameable instanceof IPoPAuthenticationSchemeParams) {
-                    Logger.verbose(
-                            TAG,
-                            "Constructing PoP Authentication Scheme."
-                    );
+                    Logger.verbose(TAG, "Constructing PoP Authentication Scheme.");
 
-                    final IPoPAuthenticationSchemeParams params = (IPoPAuthenticationSchemeParams) nameable;
+                    final IPoPAuthenticationSchemeParams params =
+                            (IPoPAuthenticationSchemeParams) nameable;
                     return new PopAuthenticationSchemeInternal(
                             commonComponents.getClockSkewManager(),
                             commonComponents.getDefaultDevicePopManager(),
                             params.getHttpMethod(),
                             params.getUrl(),
                             params.getNonce(),
-                            params.getClientClaims()
-                    );
+                            params.getClientClaims());
                 } else {
                     throw new IllegalStateException("Unrecognized parameter type.");
                 }
 
             default:
                 throw new UnsupportedOperationException(
-                        "Unknown or unsupported scheme: "
-                                + nameable.getName()
-                );
+                        "Unknown or unsupported scheme: " + nameable.getName());
         }
     }
-
 }

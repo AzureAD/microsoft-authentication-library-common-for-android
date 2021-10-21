@@ -41,10 +41,10 @@ import java.security.KeyStore;
  * ciphers of interest.
  */
 public enum SymmetricCipher implements CryptoSuite {
-
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN)
     AES_GCM_NONE_HMACSHA256(SymmetricAlgorithm.Builder.of("AES/GCM/NoPadding"), "HmacSHA256", 256) {
-        public KeyGenParameterSpec.Builder decorateKeyGenerator(@NonNull final KeyGenParameterSpec.Builder spec) {
+        public KeyGenParameterSpec.Builder decorateKeyGenerator(
+                @NonNull final KeyGenParameterSpec.Builder spec) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 return spec.setBlockModes(KeyProperties.BLOCK_MODE_GCM)
                         .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
@@ -59,7 +59,8 @@ public enum SymmetricCipher implements CryptoSuite {
     String mMacString;
     int mKeySize;
 
-    SymmetricCipher(@NonNull final SymmetricAlgorithm value, @NonNull String macValue, int keySize) {
+    SymmetricCipher(
+            @NonNull final SymmetricAlgorithm value, @NonNull String macValue, int keySize) {
         mValue = value;
         mMacString = macValue;
         mKeySize = keySize;
@@ -95,5 +96,6 @@ public enum SymmetricCipher implements CryptoSuite {
         return null;
     }
 
-    public abstract @NonNull KeyGenParameterSpec.Builder decorateKeyGenerator(@NonNull final KeyGenParameterSpec.Builder spec);
+    public abstract @NonNull KeyGenParameterSpec.Builder decorateKeyGenerator(
+            @NonNull final KeyGenParameterSpec.Builder spec);
 }

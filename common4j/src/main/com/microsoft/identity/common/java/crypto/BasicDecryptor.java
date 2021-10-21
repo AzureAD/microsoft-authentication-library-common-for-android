@@ -24,6 +24,9 @@ package com.microsoft.identity.common.java.crypto;
 
 import com.microsoft.identity.common.java.exception.ClientException;
 
+import lombok.AllArgsConstructor;
+import lombok.NonNull;
+
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.Key;
@@ -36,22 +39,21 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.IvParameterSpec;
 
-import lombok.AllArgsConstructor;
-import lombok.NonNull;
-
 /**
  * A basic Decryptor class.
  */
 @AllArgsConstructor
-public class BasicDecryptor implements IDecryptor{
+public class BasicDecryptor implements IDecryptor {
 
     private final Provider mProvider;
 
     @Override
-    public byte[] decrypt(@NonNull final Key key,
-                          @NonNull final String decryptAlgorithm,
-                          final byte[] iv,
-                          byte[] dataToBeDecrypted) throws ClientException {
+    public byte[] decrypt(
+            @NonNull final Key key,
+            @NonNull final String decryptAlgorithm,
+            final byte[] iv,
+            byte[] dataToBeDecrypted)
+            throws ClientException {
         try {
             final Cipher cipher = Cipher.getInstance(decryptAlgorithm, mProvider);
 

@@ -22,15 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.dto;
 
-import com.google.gson.annotations.SerializedName;
-
-import java.util.Calendar;
-import java.util.Date;
-import java.util.concurrent.TimeUnit;
-
-import edu.umd.cs.findbugs.annotations.Nullable;
-import lombok.EqualsAndHashCode;
-
 import static com.microsoft.identity.common.java.dto.AccessTokenRecord.SerializedNames.ACCESS_TOKEN_TYPE;
 import static com.microsoft.identity.common.java.dto.AccessTokenRecord.SerializedNames.AUTHORITY;
 import static com.microsoft.identity.common.java.dto.AccessTokenRecord.SerializedNames.EXTENDED_EXPIRES_ON;
@@ -41,6 +32,16 @@ import static com.microsoft.identity.common.java.dto.AccessTokenRecord.Serialize
 import static com.microsoft.identity.common.java.dto.AccessTokenRecord.SerializedNames.TARGET;
 import static com.microsoft.identity.common.java.dto.AccessTokenRecord.SerializedNames.TOKEN_TYPE;
 
+import com.google.gson.annotations.SerializedName;
+
+import edu.umd.cs.findbugs.annotations.Nullable;
+
+import lombok.EqualsAndHashCode;
+
+import java.util.Calendar;
+import java.util.Date;
+import java.util.concurrent.TimeUnit;
+
 @EqualsAndHashCode(callSuper = true)
 public class AccessTokenRecord extends Credential {
 
@@ -48,8 +49,7 @@ public class AccessTokenRecord extends Credential {
         /**
          * <strong>Deprecated<strong> string of access token type.  Prefer @link{#TOKEN_TYPE} instead.
          */
-        @Deprecated
-        public static final String ACCESS_TOKEN_TYPE = "access_token_type";
+        @Deprecated public static final String ACCESS_TOKEN_TYPE = "access_token_type";
 
         /**
          * String of access token type.
@@ -134,7 +134,7 @@ public class AccessTokenRecord extends Credential {
     private String mRealm;
 
     /**
-     * Permissions that are included in the token. Formats for endpoints will be different. 
+     * Permissions that are included in the token. Formats for endpoints will be different.
      * <p>
      * Mandatory, if credential is scoped down by some parameters or requirements (e.g. by
      * resource, scopes or permissions).
@@ -341,9 +341,7 @@ public class AccessTokenRecord extends Credential {
         final Date validity = calendar.getTime();
         // Init a Date for the accessToken's expiry
         long epoch = Long.parseLong(expires);
-        final Date expiresOn = new Date(
-                TimeUnit.SECONDS.toMillis(epoch)
-        );
+        final Date expiresOn = new Date(TimeUnit.SECONDS.toMillis(epoch));
         return expiresOn.before(validity);
     }
 

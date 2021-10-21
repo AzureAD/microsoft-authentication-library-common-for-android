@@ -39,7 +39,8 @@ public class HashMapExtensions {
      * @return HashMap
      * @throws JSONException
      */
-    public static HashMap<String, String> getJsonResponse(HttpResponse webResponse) throws JSONException {
+    public static HashMap<String, String> getJsonResponse(HttpResponse webResponse)
+            throws JSONException {
         final HashMap<String, String> response = new HashMap<>();
         if (webResponse != null && !StringUtil.isNullOrEmpty(webResponse.getBody())) {
             final JSONObject jsonObject = new JSONObject(webResponse.getBody());
@@ -51,5 +52,4 @@ public class HashMapExtensions {
         }
         return response;
     }
-
 }

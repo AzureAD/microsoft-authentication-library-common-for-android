@@ -42,10 +42,15 @@ public class AzureActiveDirectoryB2CAuthorityTest {
     private static final String TENANT_NAME = "tenantName";
     private static final String TENANT_ID = "tenantID";
     private static final String AAD_B2C_HOSTNAME = "azureADB2CHostname";
-    private static final List<String> B2C_AUTHORITY_URLS = Arrays.asList(
-            "https://" + AAD_B2C_HOSTNAME + "/tfp/" + TENANT_NAME + "/" + POLICY_NAME,
-            "https://" + TENANT_NAME + ".b2clogin.com/tfp/" + TENANT_ID + "/" + POLICY_NAME
-    );
+    private static final List<String> B2C_AUTHORITY_URLS =
+            Arrays.asList(
+                    "https://" + AAD_B2C_HOSTNAME + "/tfp/" + TENANT_NAME + "/" + POLICY_NAME,
+                    "https://"
+                            + TENANT_NAME
+                            + ".b2clogin.com/tfp/"
+                            + TENANT_ID
+                            + "/"
+                            + POLICY_NAME);
 
     @ParameterizedRobolectricTestRunner.Parameters(name = "{0}")
     public static Iterable<String> data() {

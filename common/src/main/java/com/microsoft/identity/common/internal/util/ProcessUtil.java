@@ -42,8 +42,7 @@ import java.util.Set;
  */
 public class ProcessUtil {
 
-    private ProcessUtil() {
-    }
+    private ProcessUtil() {}
 
     /**
      * Returns true if the calling app is the auth process.
@@ -67,11 +66,13 @@ public class ProcessUtil {
     /**
      * Returns the running process name.
      */
-    private static @Nullable
-    String getProcessName(@NonNull final Context context) {
+    private static @Nullable String getProcessName(@NonNull final Context context) {
         final int pid = android.os.Process.myPid();
-        final ActivityManager am = (ActivityManager) context.getApplicationContext().getSystemService(Context.ACTIVITY_SERVICE);
-        final List<ActivityManager.RunningAppProcessInfo> runningProcesses = am.getRunningAppProcesses();
+        final ActivityManager am =
+                (ActivityManager)
+                        context.getApplicationContext().getSystemService(Context.ACTIVITY_SERVICE);
+        final List<ActivityManager.RunningAppProcessInfo> runningProcesses =
+                am.getRunningAppProcesses();
         if (runningProcesses != null) {
             for (final ActivityManager.RunningAppProcessInfo procInfo : runningProcesses) {
                 if (procInfo.pid == pid) {
@@ -86,8 +87,7 @@ public class ProcessUtil {
     /**
      * Returns a handler based on the current looper.
      */
-    public static @NonNull
-    Handler getPreferredHandler() {
+    public static @NonNull Handler getPreferredHandler() {
         if (null != Looper.myLooper()) {
             return new Handler(Looper.myLooper());
         } else {

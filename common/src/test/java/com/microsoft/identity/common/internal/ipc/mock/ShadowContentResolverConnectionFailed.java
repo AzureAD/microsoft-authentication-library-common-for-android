@@ -34,9 +34,12 @@ import org.robolectric.annotation.Implements;
 
 @Implements(ContentResolver.class)
 public class ShadowContentResolverConnectionFailed {
-    public final @Nullable Cursor query(@RequiresPermission.Read @NonNull Uri uri,
-                                        @Nullable String[] projection, @Nullable String selection,
-                                        @Nullable String[] selectionArgs, @Nullable String sortOrder) {
+    public final @Nullable Cursor query(
+            @RequiresPermission.Read @NonNull Uri uri,
+            @Nullable String[] projection,
+            @Nullable String selection,
+            @Nullable String[] selectionArgs,
+            @Nullable String sortOrder) {
         return null;
     }
 }

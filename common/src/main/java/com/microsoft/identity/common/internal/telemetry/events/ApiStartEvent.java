@@ -22,10 +22,16 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.telemetry.events;
 
+import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Event;
+import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.EventType;
+import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Key;
+import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Value;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
+import com.microsoft.identity.common.internal.util.StringUtil;
 import com.microsoft.identity.common.java.authorities.Authority;
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.java.commands.parameters.BrokerInteractiveTokenCommandParameters;
@@ -34,18 +40,12 @@ import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.SilentTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.TokenCommandParameters;
-import com.microsoft.identity.common.internal.util.StringUtil;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.NoSuchAlgorithmException;
-
-import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Event;
-import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.EventType;
-import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Key;
-import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Value;
 
 public class ApiStartEvent extends com.microsoft.identity.common.java.telemetry.events.BaseEvent {
     private static final String TAG = ApiStartEvent.class.getSimpleName();
@@ -62,8 +62,7 @@ public class ApiStartEvent extends com.microsoft.identity.common.java.telemetry.
         return this;
     }
 
-    public ApiStartEvent putProperties(
-            @Nullable final CommandParameters parameters) {
+    public ApiStartEvent putProperties(@Nullable final CommandParameters parameters) {
         if (parameters == null) {
             return this;
         }
@@ -74,90 +73,87 @@ public class ApiStartEvent extends com.microsoft.identity.common.java.telemetry.
 
         put(Key.SDK_VERSION, parameters.getSdkVersion());
 
-        put(Key.REDIRECT_URI, parameters.getRedirectUri()); //Pii
-        put(Key.CLIENT_ID, parameters.getClientId()); //Pii
+        put(Key.REDIRECT_URI, parameters.getRedirectUri()); // Pii
+        put(Key.CLIENT_ID, parameters.getClientId()); // Pii
 
         put(
                 Key.BROKER_PROTOCOL_VERSION,
-                String.valueOf(parameters.getRequiredBrokerProtocolVersion())
-        );
+                String.valueOf(parameters.getRequiredBrokerProtocolVersion()));
 
         if (parameters instanceof TokenCommandParameters) {
 
-            final TokenCommandParameters tokenCommandParameters = (TokenCommandParameters) parameters;
+            final TokenCommandParameters tokenCommandParameters =
+                    (TokenCommandParameters) parameters;
 
             final Authority authority = tokenCommandParameters.getAuthority();
 
             if (authority != null) {
                 if (authority.getAuthorityURL() != null) {
-                    put(Key.AUTHORITY, authority.getAuthorityURL().getAuthority()); //Pii
+                    put(Key.AUTHORITY, authority.getAuthorityURL().getAuthority()); // Pii
                 }
                 put(Key.AUTHORITY_TYPE, authority.getAuthorityTypeString());
             }
 
-            put(Key.CLAIM_REQUEST, StringUtil.isEmpty(
-                    tokenCommandParameters.getClaimsRequestJson()) ? Value.FALSE : Value.TRUE
-            );
+            put(
+                    Key.CLAIM_REQUEST,
+                    StringUtil.isEmpty(tokenCommandParameters.getClaimsRequestJson())
+                            ? Value.FALSE
+                            : Value.TRUE);
 
             if (tokenCommandParameters.getScopes() != null) {
                 put(Key.SCOPE_SIZE, String.valueOf(tokenCommandParameters.getScopes().size()));
-                put(Key.SCOPE, tokenCommandParameters.getScopes().toString()); //Pii
+                put(Key.SCOPE, tokenCommandParameters.getScopes().toString()); // Pii
             }
 
-            final AbstractAuthenticationScheme authScheme = tokenCommandParameters.getAuthenticationScheme();
+            final AbstractAuthenticationScheme authScheme =
+                    tokenCommandParameters.getAuthenticationScheme();
 
             if (null != authScheme) {
                 put(Key.AUTHENTICATION_SCHEME, authScheme.getName());
             }
-
         }
 
         if (parameters instanceof InteractiveTokenCommandParameters) {
-            final InteractiveTokenCommandParameters atOperationParameters = (InteractiveTokenCommandParameters) parameters;
+            final InteractiveTokenCommandParameters atOperationParameters =
+                    (InteractiveTokenCommandParameters) parameters;
 
             if (atOperationParameters.getAuthorizationAgent() != null) {
-                put(
-                        Key.USER_AGENT,
-                        atOperationParameters.getAuthorizationAgent().name()
-                );
+                put(Key.USER_AGENT, atOperationParameters.getAuthorizationAgent().name());
             }
 
-            put(Key.LOGIN_HINT, //Pii
-                    atOperationParameters.getLoginHint()
-            );
+            put(
+                    Key.LOGIN_HINT, // Pii
+                    atOperationParameters.getLoginHint());
 
             if (atOperationParameters.getExtraQueryStringParameters() != null) {
-                put(Key.REQUEST_QUERY_PARAMS, //Pii
-                        String.valueOf(atOperationParameters.getExtraQueryStringParameters().size())
-                );
+                put(
+                        Key.REQUEST_QUERY_PARAMS, // Pii
+                        String.valueOf(
+                                atOperationParameters.getExtraQueryStringParameters().size()));
             }
 
             if (atOperationParameters.getPrompt() != null) {
-                put(Key.PROMPT_BEHAVIOR,
-                        atOperationParameters.getPrompt().toString()
-                );
+                put(Key.PROMPT_BEHAVIOR, atOperationParameters.getPrompt().toString());
             }
         }
 
         if (parameters instanceof SilentTokenCommandParameters) {
 
-            final SilentTokenCommandParameters silentParameters = (SilentTokenCommandParameters) parameters;
+            final SilentTokenCommandParameters silentParameters =
+                    (SilentTokenCommandParameters) parameters;
 
             if (silentParameters.getAccount() != null) {
-                put(Key.USER_ID, silentParameters.getAccount().getHomeAccountId()); //Pii
+                put(Key.USER_ID, silentParameters.getAccount().getHomeAccountId()); // Pii
             }
-            put(
-                    Key.IS_FORCE_REFRESH,
-                    String.valueOf(silentParameters.isForceRefresh())
-            );
+            put(Key.IS_FORCE_REFRESH, String.valueOf(silentParameters.isForceRefresh()));
         }
 
         if (parameters instanceof BrokerInteractiveTokenCommandParameters) {
-            //TODO when integrate the telemetry with broker.
+            // TODO when integrate the telemetry with broker.
         }
 
         if (parameters instanceof BrokerSilentTokenCommandParameters) {
-            //TODO when integrate the telemetry with broker.
+            // TODO when integrate the telemetry with broker.
         }
 
         return this;
@@ -193,7 +189,8 @@ public class ApiStartEvent extends com.microsoft.identity.common.java.telemetry.
         return this;
     }
 
-    public ApiStartEvent putExtendedExpiresOnSetting(@NonNull final String extendedExpiresOnSetting) {
+    public ApiStartEvent putExtendedExpiresOnSetting(
+            @NonNull final String extendedExpiresOnSetting) {
         put(Key.EXTENDED_EXPIRES_ON_SETTING, extendedExpiresOnSetting);
         return this;
     }
@@ -210,10 +207,7 @@ public class ApiStartEvent extends com.microsoft.identity.common.java.telemetry.
             urlToSanitize = new URL(url);
         } catch (MalformedURLException e1) {
             com.microsoft.identity.common.internal.logging.Logger.errorPII(
-                    TAG,
-                    "Url is invalid",
-                    e1
-            );
+                    TAG, "Url is invalid", e1);
         }
 
         return urlToSanitize == null ? null : sanitizeUrlForTelemetry(urlToSanitize);
@@ -234,10 +228,7 @@ public class ApiStartEvent extends com.microsoft.identity.common.java.telemetry.
         final String[] splitArray = url.getPath().split("/");
 
         final StringBuilder logPath = new StringBuilder();
-        logPath.append(url.getProtocol())
-                .append("://")
-                .append(authority)
-                .append('/');
+        logPath.append(url.getProtocol()).append("://").append(authority).append('/');
 
         // we do not want to send tenant information
         // index 0 is blank

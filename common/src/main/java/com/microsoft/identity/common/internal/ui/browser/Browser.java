@@ -58,7 +58,7 @@ public class Browser {
      */
     private final String mVersion;
 
-    private final Boolean mIsCustomTabsServiceSupported; //NOPMD
+    private final Boolean mIsCustomTabsServiceSupported; // NOPMD
 
     /**
      * Creates a browser object from a {@link PackageInfo} object returned from the
@@ -69,12 +69,20 @@ public class Browser {
      */
     @SuppressWarnings("deprecation")
     public Browser(@NonNull PackageInfo packageInfo) {
-        this(packageInfo.packageName, generateSignatureHashes(PackageHelper.getSignatures(packageInfo)), packageInfo.versionName, false);
+        this(
+                packageInfo.packageName,
+                generateSignatureHashes(PackageHelper.getSignatures(packageInfo)),
+                packageInfo.versionName,
+                false);
     }
 
     @SuppressWarnings("deprecation")
     public Browser(@NonNull PackageInfo packageInfo, final Boolean isCustomTabsServiceSupported) {
-        this(packageInfo.packageName, generateSignatureHashes(PackageHelper.getSignatures(packageInfo)), packageInfo.versionName, isCustomTabsServiceSupported);
+        this(
+                packageInfo.packageName,
+                generateSignatureHashes(PackageHelper.getSignatures(packageInfo)),
+                packageInfo.versionName,
+                isCustomTabsServiceSupported);
     }
 
     /**
@@ -84,7 +92,11 @@ public class Browser {
      * @param signatureHashes The set of SHA-512, Base64 url safe encoded signatures for the app.
      * @param version         The version name of the browser.
      */
-    public Browser(@NonNull String packageName, @NonNull Set<String> signatureHashes, @NonNull String version, boolean isCustomTabsServiceSupported) {
+    public Browser(
+            @NonNull String packageName,
+            @NonNull Set<String> signatureHashes,
+            @NonNull String version,
+            boolean isCustomTabsServiceSupported) {
         mPackageName = packageName;
         mSignatureHashes = signatureHashes;
         mVersion = version;
@@ -129,7 +141,8 @@ public class Browser {
             try {
                 MessageDigest digest = MessageDigest.getInstance(DIGEST_SHA_512);
                 byte[] hashBytes = digest.digest(signature.toByteArray());
-                signatureHashes.add(Base64.encodeToString(hashBytes, Base64.URL_SAFE | Base64.NO_WRAP));
+                signatureHashes.add(
+                        Base64.encodeToString(hashBytes, Base64.URL_SAFE | Base64.NO_WRAP));
             } catch (final NoSuchAlgorithmException e) {
                 throw new IllegalStateException(
                         "Platform does not support" + DIGEST_SHA_512 + " hashing");

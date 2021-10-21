@@ -39,14 +39,16 @@ import net.jcip.annotations.Immutable;
 import java.lang.reflect.Type;
 
 @Immutable
-public class AzureActiveDirectoryAudienceDeserializer implements JsonDeserializer<AzureActiveDirectoryAudience> {
+public class AzureActiveDirectoryAudienceDeserializer
+        implements JsonDeserializer<AzureActiveDirectoryAudience> {
 
-    private static final String TAG = AzureActiveDirectoryAudienceDeserializer.class.getSimpleName();
+    private static final String TAG =
+            AzureActiveDirectoryAudienceDeserializer.class.getSimpleName();
 
     @Override
-    public AzureActiveDirectoryAudience deserialize(final JsonElement json,
-                                                    final Type typeOfT,
-                                                    final JsonDeserializationContext context) throws JsonParseException {
+    public AzureActiveDirectoryAudience deserialize(
+            final JsonElement json, final Type typeOfT, final JsonDeserializationContext context)
+            throws JsonParseException {
         final String methodName = ":deserialize";
         JsonObject audienceObject = json.getAsJsonObject();
         JsonElement type = audienceObject.get("type");
@@ -54,34 +56,19 @@ public class AzureActiveDirectoryAudienceDeserializer implements JsonDeserialize
         if (type != null) {
             switch (type.getAsString()) {
                 case "AzureADMyOrg":
-                    Logger.verbose(
-                            TAG + methodName,
-                            "Type: AzureADMyOrg"
-                    );
+                    Logger.verbose(TAG + methodName, "Type: AzureADMyOrg");
                     return context.deserialize(audienceObject, AccountsInOneOrganization.class);
                 case "AzureADMultipleOrgs":
-                    Logger.verbose(
-                            TAG + methodName,
-                            "Type: AzureADMultipleOrgs"
-                    );
+                    Logger.verbose(TAG + methodName, "Type: AzureADMultipleOrgs");
                     return context.deserialize(audienceObject, AnyOrganizationalAccount.class);
                 case "AzureADandPersonalMicrosoftAccount":
-                    Logger.verbose(
-                            TAG + methodName,
-                            "Type: AzureADandPersonalMicrosoftAccount"
-                    );
+                    Logger.verbose(TAG + methodName, "Type: AzureADandPersonalMicrosoftAccount");
                     return context.deserialize(audienceObject, AllAccounts.class);
                 case "PersonalMicrosoftAccount":
-                    Logger.verbose(
-                            TAG + methodName,
-                            "Type: PersonalMicrosoftAccount"
-                    );
+                    Logger.verbose(TAG + methodName, "Type: PersonalMicrosoftAccount");
                     return context.deserialize(audienceObject, AnyPersonalAccount.class);
                 default:
-                    Logger.verbose(
-                            TAG + methodName,
-                            "Type: Unknown"
-                    );
+                    Logger.verbose(TAG + methodName, "Type: Unknown");
                     return context.deserialize(audienceObject, UnknownAudience.class);
             }
         }

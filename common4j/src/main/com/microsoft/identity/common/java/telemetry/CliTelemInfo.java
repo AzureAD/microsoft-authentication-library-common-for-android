@@ -25,16 +25,17 @@ package com.microsoft.identity.common.java.telemetry;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.util.StringUtil;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
+
 import java.io.Serializable;
 import java.util.regex.Pattern;
-
-import edu.umd.cs.findbugs.annotations.Nullable;
 
 public class CliTelemInfo implements Serializable {
 
     private static final String TAG = CliTelemInfo.class.getSimpleName();
     private static final long serialVersionUID = -7200606162774338466L;
-    private static final Pattern HEADER_FORMAT_REGULAR_EXPRESSION = Pattern.compile("^[1-9]+\\.?[0-9|\\.]*,[0-9|\\.]*,[0-9|\\.]*,[^,]*[0-9\\.]*,[^,]*$");
+    private static final Pattern HEADER_FORMAT_REGULAR_EXPRESSION =
+            Pattern.compile("^[1-9]+\\.?[0-9|\\.]*,[0-9|\\.]*,[0-9|\\.]*,[^,]*[0-9\\.]*,[^,]*$");
 
     private String mVersion;
     private String mServerErrorCode;
@@ -108,10 +109,7 @@ public class CliTelemInfo implements Serializable {
 
         // make sure the header isn't empty
         if (0 == headerSegments.length) {
-            Logger.warn(
-                    TAG,
-                    "SPE Ring header missing version field."
-            );
+            Logger.warn(TAG, "SPE Ring header missing version field.");
 
             return null;
         }
@@ -127,12 +125,10 @@ public class CliTelemInfo implements Serializable {
             // The expected delimiter count of the v1 header
             final int delimCount = 4;
 
-            // Verify the expected format "<version>, <error_code>, <sub_error_code>, <token_age>, <ring>"
+            // Verify the expected format "<version>, <error_code>, <sub_error_code>, <token_age>,
+            // <ring>"
             if (!HEADER_FORMAT_REGULAR_EXPRESSION.matcher(headerValue).matches()) {
-                Logger.warn(
-                        TAG,
-                        "Malformed x-ms-clitelem header"
-                );
+                Logger.warn(TAG, "Malformed x-ms-clitelem header");
 
                 return null;
             }
@@ -150,10 +146,7 @@ public class CliTelemInfo implements Serializable {
             cliTelemInfo.setRefreshTokenAge(headerSegments[indexTokenAge]);
             cliTelemInfo.setSpeRing(headerSegments[indexSpeInfo]);
         } else { // unrecognized version
-            Logger.warn(
-                    TAG,
-                    "Unrecognized x-ms-clitelem header version"
-            );
+            Logger.warn(TAG, "Unrecognized x-ms-clitelem header version");
 
             return null;
         }

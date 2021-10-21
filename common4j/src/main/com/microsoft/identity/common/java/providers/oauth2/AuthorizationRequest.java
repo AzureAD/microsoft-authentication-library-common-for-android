@@ -29,15 +29,15 @@ import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.util.CommonURIBuilder;
 import com.microsoft.identity.common.java.util.ObjectMapper;
 
+import lombok.Getter;
+import lombok.experimental.Accessors;
+
 import java.io.Serializable;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import lombok.Getter;
-import lombok.experimental.Accessors;
 
 /**
  * A class holding the state of the Authorization Request (OAuth 2.0).
@@ -47,7 +47,8 @@ import lombok.experimental.Accessors;
  */
 @Getter
 @Accessors(prefix = "m")
-public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> implements Serializable {
+public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>>
+        implements Serializable {
     /**
      * Serial version id.
      */
@@ -104,11 +105,9 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
     @SerializedName("claims")
     private final String mClaims;
 
-    @Expose()
-    final transient private boolean mWebViewZoomControlsEnabled;
+    @Expose() private final transient boolean mWebViewZoomControlsEnabled;
 
-    @Expose()
-    final transient private boolean mWebViewZoomEnabled;
+    @Expose() private final transient boolean mWebViewZoomEnabled;
 
     /**
      * Header of the request.
@@ -123,19 +122,25 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
     /**
      * Constructor of AuthorizationRequest.
      */
-    protected AuthorizationRequest(@SuppressWarnings(WarningType.rawtype_warning) final Builder builder) {
+    protected AuthorizationRequest(
+            @SuppressWarnings(WarningType.rawtype_warning) final Builder builder) {
         mResponseType = builder.mResponseType;
         mClientId = builder.mClientId;
         mRedirectUri = builder.mRedirectUri;
         mState = builder.mState;
         mScope = builder.mScope;
 
-        // Suppressing unchecked warning of casting List to List<Pair<String,String>>. This warning is raised as the generic type was not provided during constructing builder object.
-        @SuppressWarnings(WarningType.unchecked_warning) final List<Map.Entry<String, String>> extraQueryParams = builder.mExtraQueryParams;
+        // Suppressing unchecked warning of casting List to List<Pair<String,String>>. This warning
+        // is raised as the generic type was not provided during constructing builder object.
+        @SuppressWarnings(WarningType.unchecked_warning)
+        final List<Map.Entry<String, String>> extraQueryParams = builder.mExtraQueryParams;
         mExtraQueryParams = extraQueryParams;
 
-        // Suppressing unchecked warning of casting HashMap to HashMap<Pair<String,String>>. This warning is raised as the generic type was not provided during constructing builder object.
-        @SuppressWarnings(WarningType.unchecked_warning) final HashMap<String, String> requestHeaders = builder.mRequestHeaders;
+        // Suppressing unchecked warning of casting HashMap to HashMap<Pair<String,String>>. This
+        // warning is raised as the generic type was not provided during constructing builder
+        // object.
+        @SuppressWarnings(WarningType.unchecked_warning)
+        final HashMap<String, String> requestHeaders = builder.mRequestHeaders;
         mRequestHeaders = requestHeaders;
 
         mClaims = builder.mClaims;
@@ -147,8 +152,8 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
         public static final String CODE = "code";
     }
 
-    public static abstract class Builder<B extends AuthorizationRequest.Builder<B>> {
-        private String mResponseType = ResponseType.CODE; //ResponseType.CODE as default.
+    public abstract static class Builder<B extends AuthorizationRequest.Builder<B>> {
+        private String mResponseType = ResponseType.CODE; // ResponseType.CODE as default.
         private String mClientId;
         private String mRedirectUri;
         private String mState;
@@ -219,16 +224,26 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
         public abstract AuthorizationRequest build();
     }
 
-    //CHECKSTYLE:OFF
+    // CHECKSTYLE:OFF
     @Override
     public String toString() {
-        return "AuthorizationRequest{" +
-                "mResponseType='" + mResponseType + '\'' +
-                ", mClientId='" + mClientId + '\'' +
-                ", mRedirectUri='" + mRedirectUri + '\'' +
-                ", mScope='" + mScope + '\'' +
-                ", mState='" + mState + '\'' +
-                '}';
+        return "AuthorizationRequest{"
+                + "mResponseType='"
+                + mResponseType
+                + '\''
+                + ", mClientId='"
+                + mClientId
+                + '\''
+                + ", mRedirectUri='"
+                + mRedirectUri
+                + '\''
+                + ", mScope='"
+                + mScope
+                + '\''
+                + ", mState='"
+                + mState
+                + '\''
+                + '}';
     }
 
     public abstract String getAuthorizationEndpoint() throws ClientException;

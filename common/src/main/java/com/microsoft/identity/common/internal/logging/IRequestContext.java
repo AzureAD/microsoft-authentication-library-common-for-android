@@ -26,6 +26,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 @SuppressFBWarnings("NM_SAME_SIMPLE_NAME_AS_INTERFACE")
 @Deprecated
-public interface IRequestContext extends com.microsoft.identity.common.java.logging.IRequestContext {
+public interface IRequestContext
+        extends com.microsoft.identity.common.java.logging.IRequestContext {
     // Class exists for backcompat
 }

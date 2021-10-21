@@ -44,5 +44,4 @@ public interface ILabTest {
      * @return The type of temp user as denoted in {@link com.microsoft.identity.internal.testutils.labutils.LabConstants.TempUserType}
      */
     String getTempUserType();
-
 }

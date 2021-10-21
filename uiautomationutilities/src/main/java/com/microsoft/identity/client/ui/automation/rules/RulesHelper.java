@@ -27,11 +27,11 @@ import android.util.Log;
 import androidx.annotation.Nullable;
 
 import com.microsoft.identity.client.ui.automation.app.AzureSampleApp;
-import com.microsoft.identity.client.ui.automation.powerlift.IPowerLiftIntegratedApp;
 import com.microsoft.identity.client.ui.automation.broker.BrokerCompanyPortal;
 import com.microsoft.identity.client.ui.automation.broker.BrokerHost;
 import com.microsoft.identity.client.ui.automation.broker.BrokerMicrosoftAuthenticator;
 import com.microsoft.identity.client.ui.automation.broker.ITestBroker;
+import com.microsoft.identity.client.ui.automation.powerlift.IPowerLiftIntegratedApp;
 
 import org.junit.rules.RuleChain;
 import org.junit.rules.Timeout;
@@ -44,7 +44,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class RulesHelper {
 
-    private final static String TAG = RulesHelper.class.getSimpleName();
+    private static final String TAG = RulesHelper.class.getSimpleName();
 
     /**
      * Get a RuleChain object containing the necessary rules
@@ -84,10 +84,11 @@ public class RulesHelper {
 
         if (com.microsoft.identity.client.ui.automation.BuildConfig.PREFER_PRE_INSTALLED_APKS) {
             Log.i(TAG, "Adding CopyPreInstalledApkRule");
-            ruleChain = ruleChain.around(new CopyPreInstalledApkRule(
-                    new BrokerMicrosoftAuthenticator(), new BrokerCompanyPortal(),
-                    new BrokerHost(), new AzureSampleApp()
-            ));
+            ruleChain =
+                    ruleChain.around(
+                            new CopyPreInstalledApkRule(
+                                    new BrokerMicrosoftAuthenticator(), new BrokerCompanyPortal(),
+                                    new BrokerHost(), new AzureSampleApp()));
         }
 
         Log.i(TAG, "Adding FactoryResetChromeRule");
@@ -105,7 +106,9 @@ public class RulesHelper {
 
             if (broker instanceof IPowerLiftIntegratedApp) {
                 Log.i(TAG, "Adding PowerLiftIncidentRule");
-                ruleChain = ruleChain.around(new PowerLiftIncidentRule((IPowerLiftIntegratedApp) broker));
+                ruleChain =
+                        ruleChain.around(
+                                new PowerLiftIncidentRule((IPowerLiftIntegratedApp) broker));
             }
 
             Log.i(TAG, "Adding DeviceEnrollmentFailureRecoveryRule");

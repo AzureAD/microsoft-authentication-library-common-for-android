@@ -22,34 +22,35 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.commands;
 
-import lombok.NonNull;
-
+import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCommandParameters;
 import com.microsoft.identity.common.java.controllers.BaseController;
-import com.microsoft.identity.common.java.result.AcquireTokenResult;
-import com.microsoft.identity.common.java.WarningType;
-import com.microsoft.identity.common.java.util.ported.PropertyBag;
 import com.microsoft.identity.common.java.logging.Logger;
-
-import java.util.List;
+import com.microsoft.identity.common.java.result.AcquireTokenResult;
+import com.microsoft.identity.common.java.util.ported.PropertyBag;
 
 import lombok.EqualsAndHashCode;
+import lombok.NonNull;
+
+import java.util.List;
 
 @EqualsAndHashCode(callSuper = true)
 public class InteractiveTokenCommand extends TokenCommand {
     private static final String TAG = InteractiveTokenCommand.class.getSimpleName();
 
-    public InteractiveTokenCommand(@NonNull final InteractiveTokenCommandParameters parameters,
-                                   @NonNull final BaseController controller,
-                                   @SuppressWarnings(WarningType.rawtype_warning) @NonNull final CommandCallback callback,
-                                   @NonNull final String publicApiId) {
+    public InteractiveTokenCommand(
+            @NonNull final InteractiveTokenCommandParameters parameters,
+            @NonNull final BaseController controller,
+            @SuppressWarnings(WarningType.rawtype_warning) @NonNull final CommandCallback callback,
+            @NonNull final String publicApiId) {
         super(parameters, controller, callback, publicApiId);
     }
 
-    public InteractiveTokenCommand(@NonNull InteractiveTokenCommandParameters parameters,
-                                   @NonNull List<BaseController> controllers,
-                                   @SuppressWarnings(WarningType.rawtype_warning) @NonNull CommandCallback callback,
-                                   @NonNull final String publicApiId) {
+    public InteractiveTokenCommand(
+            @NonNull InteractiveTokenCommandParameters parameters,
+            @NonNull List<BaseController> controllers,
+            @SuppressWarnings(WarningType.rawtype_warning) @NonNull CommandCallback callback,
+            @NonNull final String publicApiId) {
         super(parameters, controllers, callback, publicApiId);
     }
 
@@ -57,24 +58,18 @@ public class InteractiveTokenCommand extends TokenCommand {
     public AcquireTokenResult execute() throws Exception {
         final String methodName = ":execute";
         if (getParameters() instanceof InteractiveTokenCommandParameters) {
-            Logger.info(
-                    TAG + methodName,
-                    "Executing interactive token command..."
-            );
+            Logger.info(TAG + methodName, "Executing interactive token command...");
 
             return getDefaultController()
-                    .acquireToken(
-                            (InteractiveTokenCommandParameters) getParameters()
-                    );
+                    .acquireToken((InteractiveTokenCommandParameters) getParameters());
         } else {
             throw new IllegalArgumentException("Invalid operation parameters");
         }
     }
 
     @Override
-    public void onFinishAuthorizationSession(int requestCode,
-                                             int resultCode,
-                                             @NonNull final PropertyBag data) {
+    public void onFinishAuthorizationSession(
+            int requestCode, int resultCode, @NonNull final PropertyBag data) {
         getDefaultController().onFinishAuthorizationSession(requestCode, resultCode, data);
     }
 

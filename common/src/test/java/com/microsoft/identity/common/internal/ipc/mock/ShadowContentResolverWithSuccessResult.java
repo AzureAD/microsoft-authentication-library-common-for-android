@@ -23,10 +23,7 @@
 package com.microsoft.identity.common.internal.ipc.mock;
 
 import android.content.ContentResolver;
-import android.database.CharArrayBuffer;
-import android.database.ContentObserver;
 import android.database.Cursor;
-import android.database.DataSetObserver;
 import android.database.MatrixCursor;
 import android.net.Uri;
 import android.os.Bundle;
@@ -41,9 +38,12 @@ import org.robolectric.annotation.Implements;
 
 @Implements(ContentResolver.class)
 public class ShadowContentResolverWithSuccessResult {
-    public final @Nullable Cursor query(@RequiresPermission.Read @NonNull Uri uri,
-                                        @Nullable String[] projection, @Nullable String selection,
-                                        @Nullable String[] selectionArgs, @Nullable String sortOrder) {
+    public final @Nullable Cursor query(
+            @RequiresPermission.Read @NonNull Uri uri,
+            @Nullable String[] projection,
+            @Nullable String selection,
+            @Nullable String[] selectionArgs,
+            @Nullable String sortOrder) {
 
         return new MatrixCursor(new String[0]) {
             @Override

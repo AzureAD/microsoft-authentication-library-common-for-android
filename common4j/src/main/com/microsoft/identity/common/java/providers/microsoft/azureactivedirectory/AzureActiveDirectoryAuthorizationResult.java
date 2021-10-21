@@ -30,8 +30,9 @@ import com.microsoft.identity.common.java.providers.oauth2.AuthorizationStatus;
  * Encapsulates Microsoft Authorization Response and additional Azure Active Directory specific parameters and errors.
  */
 public class AzureActiveDirectoryAuthorizationResult
-        extends MicrosoftAuthorizationResult<AzureActiveDirectoryAuthorizationResponse, AzureActiveDirectoryAuthorizationErrorResponse> {
-
+        extends MicrosoftAuthorizationResult<
+                AzureActiveDirectoryAuthorizationResponse,
+                AzureActiveDirectoryAuthorizationErrorResponse> {
 
     /**
      * Constructor of {@link AzureActiveDirectoryAuthorizationResult}.
@@ -39,7 +40,9 @@ public class AzureActiveDirectoryAuthorizationResult
      * @param authStatus   {@link AuthorizationStatus}
      * @param authResponse {@link AzureActiveDirectoryAuthorizationResponse}
      */
-    public AzureActiveDirectoryAuthorizationResult(final AuthorizationStatus authStatus, final AzureActiveDirectoryAuthorizationResponse authResponse) {
+    public AzureActiveDirectoryAuthorizationResult(
+            final AuthorizationStatus authStatus,
+            final AzureActiveDirectoryAuthorizationResponse authResponse) {
         super(authStatus, authResponse);
     }
 
@@ -49,7 +52,9 @@ public class AzureActiveDirectoryAuthorizationResult
      * @param authStatus    {@link AuthorizationStatus}
      * @param errorResponse {@link AzureActiveDirectoryAuthorizationErrorResponse}
      */
-    public AzureActiveDirectoryAuthorizationResult(final AuthorizationStatus authStatus, final AzureActiveDirectoryAuthorizationErrorResponse errorResponse) {
+    public AzureActiveDirectoryAuthorizationResult(
+            final AuthorizationStatus authStatus,
+            final AzureActiveDirectoryAuthorizationErrorResponse errorResponse) {
         super(authStatus, errorResponse);
     }
 }

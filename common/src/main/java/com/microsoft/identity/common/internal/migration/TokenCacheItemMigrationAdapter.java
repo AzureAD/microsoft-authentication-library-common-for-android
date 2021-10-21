@@ -22,31 +22,30 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.migration;
 
+import static com.microsoft.identity.common.internal.migration.AdalMigrationAdapter.loadCloudDiscoveryMetadata;
 
 import com.microsoft.identity.common.adal.internal.cache.ADALTokenCacheItem;
-import com.microsoft.identity.common.java.foci.FociQueryUtilities;
-import com.microsoft.identity.common.java.logging.Logger;
-import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenRequest;
-import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
-import com.microsoft.identity.common.java.providers.oauth2.TokenErrorResponse;
-
-import com.microsoft.identity.common.java.WarningType;
-import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache;
-import com.microsoft.identity.common.java.cache.ICacheRecord;
 import com.microsoft.identity.common.java.cache.ITokenCacheItem;
 import com.microsoft.identity.common.java.controllers.BaseController;
+import com.microsoft.identity.common.java.foci.FociQueryUtilities;
+import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAccount;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftRefreshToken;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsRefreshToken;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenRequest;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters;
+import com.microsoft.identity.common.java.providers.oauth2.TokenErrorResponse;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.java.util.StringUtil;
 
-import java.io.IOException;
+import edu.umd.cs.findbugs.annotations.Nullable;
+
+import lombok.NonNull;
+
 import java.net.URL;
 import java.util.AbstractMap;
 import java.util.ArrayList;
@@ -58,11 +57,6 @@ import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
-import static com.microsoft.identity.common.internal.migration.AdalMigrationAdapter.loadCloudDiscoveryMetadata;
-
-import edu.umd.cs.findbugs.annotations.Nullable;
-import lombok.NonNull;
 
 public class TokenCacheItemMigrationAdapter {
 
@@ -91,18 +85,15 @@ public class TokenCacheItemMigrationAdapter {
         final boolean cloudMetadataLoaded = loadCloudDiscoveryMetadata();
 
         if (cloudMetadataLoaded) {
-            final List<ADALTokenCacheItem> cacheItemsWithoutDuplicates = filterDuplicateTokens(
-                    cacheItems
-            );
+            final List<ADALTokenCacheItem> cacheItemsWithoutDuplicates =
+                    filterDuplicateTokens(cacheItems);
 
             // Key is the clientId
-            final Map<String, List<ADALTokenCacheItem>> tokensByClientId = splitTokensByClientId(
-                    cacheItemsWithoutDuplicates
-            );
+            final Map<String, List<ADALTokenCacheItem>> tokensByClientId =
+                    splitTokensByClientId(cacheItemsWithoutDuplicates);
 
-            final Map<String, List<ADALTokenCacheItem>> filteredTokens = preferentiallySelectTokens(
-                    tokensByClientId
-            );
+            final Map<String, List<ADALTokenCacheItem>> filteredTokens =
+                    preferentiallySelectTokens(tokensByClientId);
 
             // Flatten the Lists of tokens...
             final List<ADALTokenCacheItem> cacheItemsToRenew = new ArrayList<>();
@@ -117,7 +108,6 @@ public class TokenCacheItemMigrationAdapter {
         return result;
     }
 
-
     private static List<Map.Entry<MicrosoftAccount, MicrosoftRefreshToken>> renewTokens(
             @NonNull final Map<String, String> redirects,
             @NonNull final List<ADALTokenCacheItem> filteredTokens) {
@@ -129,36 +119,34 @@ public class TokenCacheItemMigrationAdapter {
 
         for (int ii = 0; ii < tokenCount; ii++) {
             final int subIndex = ii;
-            sBackgroundExecutor.submit(new Runnable() {
-                @Override
-                public void run() {
-                    final ADALTokenCacheItem targetCacheItemToRenew = filteredTokens.get(subIndex);
+            sBackgroundExecutor.submit(
+                    new Runnable() {
+                        @Override
+                        public void run() {
+                            final ADALTokenCacheItem targetCacheItemToRenew =
+                                    filteredTokens.get(subIndex);
 
-                    final Map.Entry<MicrosoftAccount, MicrosoftRefreshToken> renewedKeyValuePair = renewToken(
-                            redirects.get(targetCacheItemToRenew.getClientId()),
-                            targetCacheItemToRenew
-                    );
+                            final Map.Entry<MicrosoftAccount, MicrosoftRefreshToken>
+                                    renewedKeyValuePair =
+                                            renewToken(
+                                                    redirects.get(
+                                                            targetCacheItemToRenew.getClientId()),
+                                                    targetCacheItemToRenew);
 
-                    if (null != renewedKeyValuePair) {
-                        result.add(
-                                renewedKeyValuePair
-                        );
-                    }
+                            if (null != renewedKeyValuePair) {
+                                result.add(renewedKeyValuePair);
+                            }
 
-                    latch.countDown();
-                }
-            });
+                            latch.countDown();
+                        }
+                    });
         }
 
         try {
             latch.await();
         } catch (InterruptedException e) {
             // Shouldn't happen
-            Logger.error(
-                    TAG,
-                    "Interrupted while requesting tokens...",
-                    e
-            );
+            Logger.error(TAG, "Interrupted while requesting tokens...", e);
             Thread.currentThread().interrupt();
         }
 
@@ -177,7 +165,8 @@ public class TokenCacheItemMigrationAdapter {
                 final String clientId = targetCacheItemToRenew.getClientId();
                 final String refreshToken = targetCacheItemToRenew.getRefreshToken();
 
-                final MicrosoftStsOAuth2Configuration config = new MicrosoftStsOAuth2Configuration();
+                final MicrosoftStsOAuth2Configuration config =
+                        new MicrosoftStsOAuth2Configuration();
                 config.setAuthorityUrl(new URL(authority));
 
                 // Create a correlation_id for the request
@@ -188,60 +177,52 @@ public class TokenCacheItemMigrationAdapter {
                 if (StringUtil.isNullOrEmpty(targetCacheItemToRenew.getResource())) {
                     scopes = BaseController.getDelimitedDefaultScopeString();
                 } else {
-                    scopes = getScopesForTokenRequest(
-                            targetCacheItemToRenew.getResource()
-                    );
+                    scopes = getScopesForTokenRequest(targetCacheItemToRenew.getResource());
                 }
 
                 // Create the strategy
-                final OAuth2StrategyParameters strategyParameters = OAuth2StrategyParameters.builder().build();
-                final MicrosoftStsOAuth2Strategy strategy = new MicrosoftStsOAuth2Strategy(config, strategyParameters);
+                final OAuth2StrategyParameters strategyParameters =
+                        OAuth2StrategyParameters.builder().build();
+                final MicrosoftStsOAuth2Strategy strategy =
+                        new MicrosoftStsOAuth2Strategy(config, strategyParameters);
 
-                final MicrosoftStsTokenRequest tokenRequest = FociQueryUtilities.createTokenRequest(
-                        clientId,
-                        scopes,
-                        refreshToken,
-                        redirectUri,
-                        strategy,
-                        correlationId,
-                        "2"
-                );
+                final MicrosoftStsTokenRequest tokenRequest =
+                        FociQueryUtilities.createTokenRequest(
+                                clientId,
+                                scopes,
+                                refreshToken,
+                                redirectUri,
+                                strategy,
+                                correlationId,
+                                "2");
 
                 final TokenResult tokenResult = strategy.requestToken(tokenRequest);
 
                 if (tokenResult.getSuccess()) {
-                    final MicrosoftStsTokenResponse tokenResponse = (MicrosoftStsTokenResponse) tokenResult.getTokenResponse();
+                    final MicrosoftStsTokenResponse tokenResponse =
+                            (MicrosoftStsTokenResponse) tokenResult.getTokenResponse();
                     tokenResponse.setClientId(clientId);
 
                     // Create the Account to save...
                     final MicrosoftAccount account = strategy.createAccount(tokenResponse);
 
                     // Create the refresh token...
-                    final MicrosoftRefreshToken msStsRt = new MicrosoftStsRefreshToken(tokenResponse);
+                    final MicrosoftRefreshToken msStsRt =
+                            new MicrosoftStsRefreshToken(tokenResponse);
                     msStsRt.setEnvironment(
-                            AzureActiveDirectory.getAzureActiveDirectoryCloud(
-                                    new URL(authority)
-                            ).getPreferredCacheHostName()
-                    );
+                            AzureActiveDirectory.getAzureActiveDirectoryCloud(new URL(authority))
+                                    .getPreferredCacheHostName());
 
                     resultKeyValuePair = new AbstractMap.SimpleEntry<>(account, msStsRt);
                 } else {
-                    Logger.warn(
-                            TAG,
-                            correlationId.toString(),
-                            "TokenRequest was unsuccessful."
-                    );
+                    Logger.warn(TAG, correlationId.toString(), "TokenRequest was unsuccessful.");
 
                     if (null != tokenResult.getErrorResponse()) {
                         logTokenResultError(correlationId, tokenResult);
                     }
                 }
             } catch (Exception e) {
-                Logger.errorPII(
-                        TAG,
-                        "Failed to request new refresh token...",
-                        e
-                );
+                Logger.errorPII(TAG, "Failed to request new refresh token...", e);
             }
         }
 
@@ -258,10 +239,7 @@ public class TokenCacheItemMigrationAdapter {
 
         for (final ADALTokenCacheItem cacheItem : cacheItems) {
             if (null == cacheItem.getResource()) {
-                Logger.warn(
-                        TAG,
-                        "Skipping resourceless token."
-                );
+                Logger.warn(TAG, "Skipping resourceless token.");
 
                 continue;
             }
@@ -294,21 +272,13 @@ public class TokenCacheItemMigrationAdapter {
             @NonNull final List<ADALTokenCacheItem> cacheItemsIn) {
         final String methodName = ":splitTokensByClientId";
 
-        Logger.verbose(
-                TAG + methodName,
-                "Splitting ["
-                        + cacheItemsIn.size()
-                        + "] cache items."
-        );
+        Logger.verbose(TAG + methodName, "Splitting [" + cacheItemsIn.size() + "] cache items.");
 
         final Map<String, List<ADALTokenCacheItem>> cacheItemsOut = new HashMap<>();
 
         for (final ADALTokenCacheItem cacheItem : cacheItemsIn) {
             if (null == cacheItemsOut.get(cacheItem.getClientId())) {
-                cacheItemsOut.put(
-                        cacheItem.getClientId(),
-                        new ArrayList<ADALTokenCacheItem>()
-                );
+                cacheItemsOut.put(cacheItem.getClientId(), new ArrayList<ADALTokenCacheItem>());
             }
 
             cacheItemsOut.get(cacheItem.getClientId()).add(cacheItem);
@@ -333,26 +303,21 @@ public class TokenCacheItemMigrationAdapter {
         // Key is client id
         final Map<String, List<ADALTokenCacheItem>> result = new HashMap<>();
 
-        for (final Map.Entry<String, List<ADALTokenCacheItem>> entry : tokensByClientId.entrySet()) {
+        for (final Map.Entry<String, List<ADALTokenCacheItem>> entry :
+                tokensByClientId.entrySet()) {
             final String clientId = entry.getKey();
             final List<ADALTokenCacheItem> tokens = entry.getValue();
 
             ADALTokenCacheItem refreshToken = findFrt(tokens);
 
             if (null == refreshToken) {
-                Logger.verbose(
-                        TAG + methodName,
-                        "FRT was null. Try MRRT."
-                );
+                Logger.verbose(TAG + methodName, "FRT was null. Try MRRT.");
 
                 refreshToken = findMrrt(tokens);
             }
 
             if (null == refreshToken) {
-                Logger.verbose(
-                        TAG + methodName,
-                        "MRRT was null. Try RT."
-                );
+                Logger.verbose(TAG + methodName, "MRRT was null. Try RT.");
 
                 refreshToken = findRt(tokens);
             }
@@ -365,10 +330,7 @@ public class TokenCacheItemMigrationAdapter {
 
                 result.get(clientId).add(refreshToken);
             } else {
-                Logger.warn(
-                        TAG + methodName,
-                        "Refresh token could not be located."
-                );
+                Logger.warn(TAG + methodName, "Refresh token could not be located.");
             }
         }
 
@@ -383,8 +345,7 @@ public class TokenCacheItemMigrationAdapter {
      * @return The first occurring RT or null, if none can be found.
      */
     @Nullable
-    public static ADALTokenCacheItem findRt(
-            @NonNull final List<ADALTokenCacheItem> cacheItems) {
+    public static ADALTokenCacheItem findRt(@NonNull final List<ADALTokenCacheItem> cacheItems) {
         final String methodName = ":findRt";
         ADALTokenCacheItem result = null;
 
@@ -392,10 +353,7 @@ public class TokenCacheItemMigrationAdapter {
             if (!StringUtil.isNullOrEmpty(cacheItem.getRefreshToken())) {
                 result = cacheItem;
 
-                Logger.verbose(
-                        TAG + methodName,
-                        "RT found."
-                );
+                Logger.verbose(TAG + methodName, "RT found.");
 
                 break;
             }
@@ -412,8 +370,7 @@ public class TokenCacheItemMigrationAdapter {
      * @return The first occurring MRRT or null, if none can be found.
      */
     @Nullable
-    public static ADALTokenCacheItem findMrrt(
-            @NonNull final List<ADALTokenCacheItem> cacheItems) {
+    public static ADALTokenCacheItem findMrrt(@NonNull final List<ADALTokenCacheItem> cacheItems) {
         final String methodName = ":findMrrt";
         ADALTokenCacheItem result = null;
 
@@ -422,10 +379,7 @@ public class TokenCacheItemMigrationAdapter {
                     && cacheItem.getIsMultiResourceRefreshToken()) {
                 result = cacheItem;
 
-                Logger.verbose(
-                        TAG + methodName,
-                        "Mrrt found."
-                );
+                Logger.verbose(TAG + methodName, "Mrrt found.");
 
                 break;
             }
@@ -442,8 +396,7 @@ public class TokenCacheItemMigrationAdapter {
      * @return The first occurring FRT or null, if none can be found.
      */
     @Nullable
-    public static ADALTokenCacheItem findFrt(
-            @NonNull final List<ADALTokenCacheItem> cacheItems) {
+    public static ADALTokenCacheItem findFrt(@NonNull final List<ADALTokenCacheItem> cacheItems) {
         final String methodName = ":findFrt";
         ADALTokenCacheItem result = null;
 
@@ -452,10 +405,7 @@ public class TokenCacheItemMigrationAdapter {
                     && !StringUtil.isNullOrEmpty(cacheItem.getFamilyClientId())) {
                 result = cacheItem;
 
-                Logger.verbose(
-                        TAG + methodName,
-                        "Frt found."
-                );
+                Logger.verbose(TAG + methodName, "Frt found.");
 
                 break;
             }
@@ -487,24 +437,18 @@ public class TokenCacheItemMigrationAdapter {
      * @param correlationId The correlation id of the request.
      * @param tokenResult   The TokenResult whose errors should be logged.
      */
-    public static void logTokenResultError(@NonNull final UUID correlationId,
-                                           @NonNull final TokenResult tokenResult) {
+    public static void logTokenResultError(
+            @NonNull final UUID correlationId, @NonNull final TokenResult tokenResult) {
         final TokenErrorResponse tokenErrorResponse = tokenResult.getErrorResponse();
 
         Logger.warn(
                 TAG,
                 correlationId.toString(),
-                "Status code: ["
-                        + tokenErrorResponse.getStatusCode()
-                        + "]"
-        );
+                "Status code: [" + tokenErrorResponse.getStatusCode() + "]");
 
         Logger.warn(
                 TAG,
                 correlationId.toString(),
-                "Error description: ["
-                        + tokenErrorResponse.getErrorDescription()
-                        + "]"
-        );
+                "Error description: [" + tokenErrorResponse.getErrorDescription() + "]");
     }
 }

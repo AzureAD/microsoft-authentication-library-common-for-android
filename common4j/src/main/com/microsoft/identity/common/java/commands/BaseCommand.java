@@ -22,21 +22,21 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.commands;
 
-import lombok.NonNull;
-
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.java.controllers.BaseController;
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.experimental.SuperBuilder;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.experimental.SuperBuilder;
 
 // Suppressing rawtype warnings due to the generic types CommandCallback, BaseController
 @SuppressFBWarnings("RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE")
@@ -46,34 +46,30 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder(toBuilder = true)
 public abstract class BaseCommand<T> implements ICommand<T> {
 
-    @NonNull
-    private final CommandParameters parameters;
+    @NonNull private final CommandParameters parameters;
 
-    @NonNull
-    @EqualsAndHashCode.Exclude
-    private final CommandCallback callback;
+    @NonNull @EqualsAndHashCode.Exclude private final CommandCallback callback;
 
-    @NonNull
-    private final List<BaseController> controllers;
+    @NonNull private final List<BaseController> controllers;
 
-    @NonNull
-    @EqualsAndHashCode.Exclude
-    private final String publicApiId;
+    @NonNull @EqualsAndHashCode.Exclude private final String publicApiId;
 
-    public BaseCommand(@NonNull final CommandParameters parameters,
-                       @NonNull final BaseController controller,
-                       @NonNull final CommandCallback callback,
-                       @NonNull final String publicApiId) {
+    public BaseCommand(
+            @NonNull final CommandParameters parameters,
+            @NonNull final BaseController controller,
+            @NonNull final CommandCallback callback,
+            @NonNull final String publicApiId) {
         this.parameters = parameters;
         this.callback = callback;
         controllers = Collections.unmodifiableList(Arrays.asList(controller));
         this.publicApiId = publicApiId;
     }
 
-    public BaseCommand(@NonNull final CommandParameters parameters,
-                       @NonNull final List<BaseController> controllers,
-                       @NonNull final CommandCallback callback,
-                       @NonNull final String publicApiId) {
+    public BaseCommand(
+            @NonNull final CommandParameters parameters,
+            @NonNull final List<BaseController> controllers,
+            @NonNull final CommandCallback callback,
+            @NonNull final String publicApiId) {
         this.parameters = parameters;
         this.controllers = Collections.unmodifiableList(new ArrayList<BaseController>(controllers));
         this.callback = callback;

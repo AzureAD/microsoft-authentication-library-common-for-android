@@ -26,16 +26,17 @@ import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 
-import java.util.concurrent.Future;
-
 import edu.umd.cs.findbugs.annotations.NonNull;
+
+import java.util.concurrent.Future;
 
 /**
  * Abstracts the behavior associated with gathering a user authorization for an access token (oAuth)
  * and/or authentication information (OIDC)
  * Possible implementations include: EmbeddedWebViewAuthorizationStrategy, SystemWebViewAuthorizationStrategy, Device Code, etc...
  */
-// Suppressing rawtype warnings due to the generic types AuthorizationResult, OAuth2Strategy and AuthorizationRequest
+// Suppressing rawtype warnings due to the generic types AuthorizationResult, OAuth2Strategy and
+// AuthorizationRequest
 @SuppressWarnings(WarningType.rawtype_warning)
 public interface IAuthorizationStrategy<
         GenericOAuth2Strategy extends OAuth2Strategy,
@@ -43,8 +44,8 @@ public interface IAuthorizationStrategy<
     /**
      * Perform the authorization request.
      */
-    Future<AuthorizationResult> requestAuthorization(GenericAuthorizationRequest authorizationRequest,
-                                                     GenericOAuth2Strategy oAuth2Strategy)
+    Future<AuthorizationResult> requestAuthorization(
+            GenericAuthorizationRequest authorizationRequest, GenericOAuth2Strategy oAuth2Strategy)
             throws ClientException;
 
     /**

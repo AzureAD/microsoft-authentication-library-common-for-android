@@ -22,10 +22,11 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.eststelemetry;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import lombok.NonNull;
-
 import com.google.gson.annotations.SerializedName;
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
+import lombok.NonNull;
 
 import java.util.AbstractMap;
 import java.util.ArrayList;
@@ -37,7 +38,7 @@ import java.util.Map;
 @SuppressFBWarnings("RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE")
 public class LastRequestTelemetry extends RequestTelemetry {
 
-    final static int FAILED_REQUEST_CAP = 100;
+    static final int FAILED_REQUEST_CAP = 100;
 
     @SerializedName("silent_successful_count")
     private int silentSuccessfulCount;
@@ -85,7 +86,6 @@ public class LastRequestTelemetry extends RequestTelemetry {
         silentSuccessfulCount = 0;
     }
 
-
     void appendFailedRequest(final String apiId, final String correlationId, final String error) {
         appendFailedRequest(new FailedRequest(apiId, correlationId, error));
     }
@@ -96,7 +96,8 @@ public class LastRequestTelemetry extends RequestTelemetry {
         // The only time this could be greater than the cap is for some existing devices that may
         // have caught themselves in a bad state after accumulating too much telemetry in
         // Shared Preferences. (of course prior to the cap being put in place).
-        // So will just take the last (most recent) 100 items here to get those out of the bad state,
+        // So will just take the last (most recent) 100 items here to get those out of the bad
+        // state,
         // and also to avoid having too much telemetry in the cache going forward.
         if (failedRequests.size() >= FAILED_REQUEST_CAP) {
             final int beginIndex = failedRequests.size() - FAILED_REQUEST_CAP + 1;
@@ -115,7 +116,8 @@ public class LastRequestTelemetry extends RequestTelemetry {
     @Override
     public IRequestTelemetry copySharedValues(@NonNull final IRequestTelemetry requestTelemetry) {
         if (requestTelemetry instanceof LastRequestTelemetry) {
-            this.silentSuccessfulCount = ((LastRequestTelemetry) requestTelemetry).silentSuccessfulCount;
+            this.silentSuccessfulCount =
+                    ((LastRequestTelemetry) requestTelemetry).silentSuccessfulCount;
         }
 
         return super.copySharedValues(requestTelemetry);
@@ -145,6 +147,7 @@ public class LastRequestTelemetry extends RequestTelemetry {
             }
         }
 
-        return new AbstractMap.SimpleEntry<>(apiIdCorrelationIdSegmentBuilder.toString(), errorSegmentBuilder.toString());
+        return new AbstractMap.SimpleEntry<>(
+                apiIdCorrelationIdSegmentBuilder.toString(), errorSegmentBuilder.toString());
     }
 }

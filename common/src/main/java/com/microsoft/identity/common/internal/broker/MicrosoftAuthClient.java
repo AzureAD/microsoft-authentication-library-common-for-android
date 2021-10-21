@@ -23,6 +23,11 @@
 
 package com.microsoft.identity.common.internal.broker;
 
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_ACTIVITY_NAME;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_PACKAGE_NAME;
+import static com.microsoft.identity.common.exception.BrokerCommunicationException.Category.OPERATION_NOT_SUPPORTED_ON_CLIENT_SIDE;
+import static com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy.Type.BOUND_SERVICE;
+
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -37,17 +42,14 @@ import com.microsoft.identity.client.IMicrosoftAuthService;
 import com.microsoft.identity.common.exception.BrokerCommunicationException;
 import com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle;
 
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_ACTIVITY_NAME;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_PACKAGE_NAME;
-import static com.microsoft.identity.common.exception.BrokerCommunicationException.Category.OPERATION_NOT_SUPPORTED_ON_CLIENT_SIDE;
-import static com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy.Type.BOUND_SERVICE;
-
 /**
  * Client that wraps the code necessary to bind to the a service that implements IMicrosoftAuthService.aidl
  */
 public class MicrosoftAuthClient extends BoundServiceClient<IMicrosoftAuthService> {
-    private static final String MICROSOFT_AUTH_SERVICE_INTENT_FILTER = "com.microsoft.identity.client.MicrosoftAuth";
-    private static final String MICROSOFT_AUTH_SERVICE_CLASS_NAME = "com.microsoft.identity.client.MicrosoftAuthService";
+    private static final String MICROSOFT_AUTH_SERVICE_INTENT_FILTER =
+            "com.microsoft.identity.client.MicrosoftAuth";
+    private static final String MICROSOFT_AUTH_SERVICE_CLASS_NAME =
+            "com.microsoft.identity.client.MicrosoftAuthService";
 
     /**
      * MicrosoftAuthClient's constructor.
@@ -55,9 +57,7 @@ public class MicrosoftAuthClient extends BoundServiceClient<IMicrosoftAuthServic
      * @param context Application context.
      */
     public MicrosoftAuthClient(@NonNull final Context context) {
-        super(context,
-                MICROSOFT_AUTH_SERVICE_CLASS_NAME,
-                MICROSOFT_AUTH_SERVICE_INTENT_FILTER);
+        super(context, MICROSOFT_AUTH_SERVICE_CLASS_NAME, MICROSOFT_AUTH_SERVICE_INTENT_FILTER);
     }
 
     /**
@@ -66,17 +66,19 @@ public class MicrosoftAuthClient extends BoundServiceClient<IMicrosoftAuthServic
      * @param context          Application context.
      * @param timeOutInSeconds The client will terminates its connection if it can't connect to the service by this time out.
      */
-    public MicrosoftAuthClient(@NonNull final Context context,
-                               final int timeOutInSeconds) {
-        super(context,
+    public MicrosoftAuthClient(@NonNull final Context context, final int timeOutInSeconds) {
+        super(
+                context,
                 MICROSOFT_AUTH_SERVICE_INTENT_FILTER,
                 MICROSOFT_AUTH_SERVICE_CLASS_NAME,
                 timeOutInSeconds);
     }
 
     @Override
-    @Nullable Bundle performOperationInternal(@NonNull final BrokerOperationBundle brokerOperationBundle,
-                                              @NonNull final IMicrosoftAuthService microsoftAuthService)
+    @Nullable
+    Bundle performOperationInternal(
+            @NonNull final BrokerOperationBundle brokerOperationBundle,
+            @NonNull final IMicrosoftAuthService microsoftAuthService)
             throws RemoteException, BrokerCommunicationException {
 
         final Bundle inputBundle = brokerOperationBundle.getBundle();
@@ -88,10 +90,11 @@ public class MicrosoftAuthClient extends BoundServiceClient<IMicrosoftAuthServic
                 final Intent intent = microsoftAuthService.getIntentForInteractiveRequest();
                 final Bundle bundle = intent.getExtras();
 
-                //older brokers (pre-ContentProvider) are ONLY sending these values in the intent itself.
-                if (intent.getComponent() != null &&
-                        !TextUtils.isEmpty(intent.getPackage()) &&
-                        !TextUtils.isEmpty(intent.getComponent().getClassName())){
+                // older brokers (pre-ContentProvider) are ONLY sending these values in the intent
+                // itself.
+                if (intent.getComponent() != null
+                        && !TextUtils.isEmpty(intent.getPackage())
+                        && !TextUtils.isEmpty(intent.getComponent().getClassName())) {
                     bundle.putString(BROKER_PACKAGE_NAME, intent.getPackage());
                     bundle.putString(BROKER_ACTIVITY_NAME, intent.getComponent().getClassName());
                 }
@@ -120,19 +123,22 @@ public class MicrosoftAuthClient extends BoundServiceClient<IMicrosoftAuthServic
                 return microsoftAuthService.generateSignedHttpRequest(inputBundle);
 
             default:
-                final String errorMessage = "Operation " + brokerOperationBundle.getOperation().name() + " is not supported by MicrosoftAuthClient.";
+                final String errorMessage =
+                        "Operation "
+                                + brokerOperationBundle.getOperation().name()
+                                + " is not supported by MicrosoftAuthClient.";
                 throw new BrokerCommunicationException(
-                        OPERATION_NOT_SUPPORTED_ON_CLIENT_SIDE,
-                        BOUND_SERVICE,
-                        errorMessage, null);
+                        OPERATION_NOT_SUPPORTED_ON_CLIENT_SIDE, BOUND_SERVICE, errorMessage, null);
         }
     }
 
     @Override
-    @NonNull IMicrosoftAuthService getInterfaceFromIBinder(@NonNull IBinder binder) {
+    @NonNull
+    IMicrosoftAuthService getInterfaceFromIBinder(@NonNull IBinder binder) {
         final IMicrosoftAuthService service = IMicrosoftAuthService.Stub.asInterface(binder);
         if (service == null) {
-            throw new IllegalStateException("Failed to extract IMicrosoftAuthService from IBinder.", null);
+            throw new IllegalStateException(
+                    "Failed to extract IMicrosoftAuthService from IBinder.", null);
         }
         return service;
     }

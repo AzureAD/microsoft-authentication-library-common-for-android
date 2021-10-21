@@ -34,5 +34,4 @@ public interface ITokenParameters {
     Set<String> getScopes();
 
     String getClientId();
-
 }

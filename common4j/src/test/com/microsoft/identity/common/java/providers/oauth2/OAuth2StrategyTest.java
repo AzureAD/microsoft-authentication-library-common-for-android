@@ -41,7 +41,8 @@ public class OAuth2StrategyTest {
     public static class TestStrategy extends OAuth2Strategy {
 
         @Override
-        protected HttpResponse performTokenRequest(TokenRequest request) throws IOException, ClientException {
+        protected HttpResponse performTokenRequest(TokenRequest request)
+                throws IOException, ClientException {
             return null;
         }
 
@@ -51,7 +52,8 @@ public class OAuth2StrategyTest {
          * @param config             generic OAuth2 configuration
          * @param strategyParameters
          */
-        public TestStrategy(OAuth2Configuration config, OAuth2StrategyParameters strategyParameters) {
+        public TestStrategy(
+                OAuth2Configuration config, OAuth2StrategyParameters strategyParameters) {
             super(config, strategyParameters);
         }
 
@@ -86,40 +88,42 @@ public class OAuth2StrategyTest {
         }
 
         @Override
-        public AuthorizationRequest.Builder createAuthorizationRequestBuilder(IAccountRecord account) {
+        public AuthorizationRequest.Builder createAuthorizationRequestBuilder(
+                IAccountRecord account) {
             return null;
         }
 
         @Override
-        public TokenRequest createTokenRequest(AuthorizationRequest request, AuthorizationResponse response, AbstractAuthenticationScheme authScheme) throws ClientException {
+        public TokenRequest createTokenRequest(
+                AuthorizationRequest request,
+                AuthorizationResponse response,
+                AbstractAuthenticationScheme authScheme)
+                throws ClientException {
             return null;
         }
 
         @Override
-        public TokenRequest createRefreshTokenRequest(AbstractAuthenticationScheme authScheme) throws ClientException {
+        public TokenRequest createRefreshTokenRequest(AbstractAuthenticationScheme authScheme)
+                throws ClientException {
             return null;
         }
 
         @Override
-        protected void validateAuthorizationRequest(AuthorizationRequest request) {
-
-        }
+        protected void validateAuthorizationRequest(AuthorizationRequest request) {}
 
         @Override
-        protected void validateTokenRequest(TokenRequest request) {
-
-        }
+        protected void validateTokenRequest(TokenRequest request) {}
 
         @Override
-        protected TokenResult getTokenResultFromHttpResponse(HttpResponse response) throws ClientException {
-            //This will return a null TokenResponse.
+        protected TokenResult getTokenResultFromHttpResponse(HttpResponse response)
+                throws ClientException {
+            // This will return a null TokenResponse.
             return new TokenResult();
         }
 
         @Override
-        protected void validateTokenResponse(TokenRequest request, TokenResponse response) throws ClientException {
-
-        }
+        protected void validateTokenResponse(TokenRequest request, TokenResponse response)
+                throws ClientException {}
     }
 
     /**

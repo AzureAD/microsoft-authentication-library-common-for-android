@@ -26,11 +26,11 @@ import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryOAuth2Configuration;
 import com.microsoft.identity.common.java.util.UrlUtil;
 
+import lombok.NonNull;
+
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
-
-import lombok.NonNull;
 
 public class MicrosoftStsOAuth2Configuration extends AzureActiveDirectoryOAuth2Configuration {
 
@@ -76,14 +76,15 @@ public class MicrosoftStsOAuth2Configuration extends AzureActiveDirectoryOAuth2C
             return UrlUtil.appendPathToURL(root, endpointSuffix);
         } catch (final URISyntaxException | MalformedURLException e) {
             Logger.error(
-                    TAG + methodName,
-                    "Unable to create URL from provided root and suffix.",
-                    null);
+                    TAG + methodName, "Unable to create URL from provided root and suffix.", null);
             Logger.errorPII(
                     TAG + methodName,
-                    e.getMessage() +
-                            " Unable to create URL from provided root and suffix." +
-                            " root = " + root.toString() + " suffix = " + endpointSuffix,
+                    e.getMessage()
+                            + " Unable to create URL from provided root and suffix."
+                            + " root = "
+                            + root.toString()
+                            + " suffix = "
+                            + endpointSuffix,
                     e);
         }
 

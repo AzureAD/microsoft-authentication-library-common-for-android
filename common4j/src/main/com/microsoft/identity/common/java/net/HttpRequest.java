@@ -22,6 +22,10 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.net;
 
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.experimental.Accessors;
+
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Collections;
@@ -29,10 +33,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javax.net.ssl.SSLContext;
-
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.experimental.Accessors;
 
 /**
  * Internal class representing a http request.
@@ -84,17 +84,21 @@ public class HttpRequest {
      * @param requestContentType Request content type.
      * @param sslContext         an optional {@link SSLContext} object.
      */
-    public HttpRequest(@NonNull final URL requestUrl,
-                       @NonNull final Map<String, String> requestHeaders,
-                       @NonNull final String requestMethod,
-                       final byte[] requestContent,
-                       final String requestContentType,
-                       final SSLContext sslContext) {
+    public HttpRequest(
+            @NonNull final URL requestUrl,
+            @NonNull final Map<String, String> requestHeaders,
+            @NonNull final String requestMethod,
+            final byte[] requestContent,
+            final String requestContentType,
+            final SSLContext sslContext) {
         mRequestUrl = requestUrl;
         mRequestHeaders.put(HOST, requestUrl.getAuthority());
         mRequestHeaders.putAll(requestHeaders);
         mRequestMethod = requestMethod;
-        mRequestContent = requestContent != null ? Arrays.copyOf(requestContent, requestContent.length) : null;
+        mRequestContent =
+                requestContent != null
+                        ? Arrays.copyOf(requestContent, requestContent.length)
+                        : null;
         mRequestContentType = requestContentType;
         mSslContext = sslContext;
     }

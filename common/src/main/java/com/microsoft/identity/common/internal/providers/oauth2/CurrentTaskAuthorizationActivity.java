@@ -22,6 +22,10 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2;
 
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentAction.DESTROY_REDIRECT_RECEIVING_ACTIVITY_ACTION;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentAction.REDIRECT_RETURNED_ACTION;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentAction.REFRESH_TO_CLOSE;
+
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -34,10 +38,6 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.microsoft.identity.common.internal.ui.DualScreenActivity;
 import com.microsoft.identity.common.logging.Logger;
-
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentAction.DESTROY_REDIRECT_RECEIVING_ACTIVITY_ACTION;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentAction.REDIRECT_RETURNED_ACTION;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentAction.REFRESH_TO_CLOSE;
 
 /**
  * Authorization activity for addressing authorization activities that are launched within the task
@@ -52,7 +52,7 @@ public class CurrentTaskAuthorizationActivity extends DualScreenActivity {
     private static final String TAG = CurrentTaskAuthorizationActivity.class.getSimpleName();
 
     private CurrentTaskBrowserAuthorizationFragment mFragment;
-    //Determines whether we should close this activity onResume.
+    // Determines whether we should close this activity onResume.
     private boolean mCloseCustomTabs = true;
     private BroadcastReceiver redirectReceiver;
 
@@ -60,29 +60,38 @@ public class CurrentTaskAuthorizationActivity extends DualScreenActivity {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        final Fragment fragment = AuthorizationActivityFactory.getAuthorizationFragmentFromStartIntent(getIntent());
+        final Fragment fragment =
+                AuthorizationActivityFactory.getAuthorizationFragmentFromStartIntent(getIntent());
 
-        if(fragment instanceof CurrentTaskBrowserAuthorizationFragment){
+        if (fragment instanceof CurrentTaskBrowserAuthorizationFragment) {
             mFragment = (CurrentTaskBrowserAuthorizationFragment) fragment;
             mFragment.setInstanceState(getIntent().getExtras());
-        }else{
+        } else {
             IllegalStateException ex = new IllegalStateException("Unexpected fragment type");
-            Logger.error(TAG, "Fragment provided was not of type CurrentTaskBrowserAuthorizationFragment", ex);
+            Logger.error(
+                    TAG,
+                    "Fragment provided was not of type CurrentTaskBrowserAuthorizationFragment",
+                    ex);
             throw ex;
         }
 
-        //When the authorization response is received back to the library via an intent filter
-        //That activity will launch this one to handle the processing of the authorization response.
-        //It does that by invoked startActivityForResult.  If this activity is present in the same task stack/affinity
-        //As the activity which received the authorization result and the onNewIntent method will be invoked.
-        //If this activity is not in the same task stack/affinity then starting this activity will create a new instance
-        //In that new instance scneario the following will be executed.
+        // When the authorization response is received back to the library via an intent filter
+        // That activity will launch this one to handle the processing of the authorization
+        // response.
+        // It does that by invoked startActivityForResult.  If this activity is present in the same
+        // task stack/affinity
+        // As the activity which received the authorization result and the onNewIntent method will
+        // be invoked.
+        // If this activity is not in the same task stack/affinity then starting this activity will
+        // create a new instance
+        // In that new instance scneario the following will be executed.
         if (REDIRECT_RETURNED_ACTION.equals(getIntent().getAction())) {
-            if(CurrentTaskBrowserAuthorizationFragment.class.isInstance(mFragment)) {
+            if (CurrentTaskBrowserAuthorizationFragment.class.isInstance(mFragment)) {
                 Bundle arguments = new Bundle();
                 arguments.putBoolean("RESPONSE", true);
                 mFragment.setArguments(arguments);
-                mFragment.completeAuthorizationInBrowserFlow(getIntent().getStringExtra("RESPONSE_URI"));
+                mFragment.completeAuthorizationInBrowserFlow(
+                        getIntent().getStringExtra("RESPONSE_URI"));
                 finish();
                 return;
             }
@@ -97,19 +106,24 @@ public class CurrentTaskAuthorizationActivity extends DualScreenActivity {
             mCloseCustomTabs = false;
 
             // This activity will receive a broadcast if it can't be opened from the back stack
-            redirectReceiver = new BroadcastReceiver() {
-                @Override
-                public void onReceive(Context context, Intent intent) {
-                    // Remove the custom tab on top of this activity.
-                    Intent newIntent = new Intent(CurrentTaskAuthorizationActivity.this, CurrentTaskAuthorizationActivity.class);
-                    newIntent.setAction(REFRESH_TO_CLOSE);
-                    newIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-                    startActivity(newIntent);
-                }
-            };
-            LocalBroadcastManager.getInstance(this).registerReceiver(redirectReceiver,
-                    new IntentFilter(REDIRECT_RETURNED_ACTION)
-            );
+            redirectReceiver =
+                    new BroadcastReceiver() {
+                        @Override
+                        public void onReceive(Context context, Intent intent) {
+                            // Remove the custom tab on top of this activity.
+                            Intent newIntent =
+                                    new Intent(
+                                            CurrentTaskAuthorizationActivity.this,
+                                            CurrentTaskAuthorizationActivity.class);
+                            newIntent.setAction(REFRESH_TO_CLOSE);
+                            newIntent.addFlags(
+                                    Intent.FLAG_ACTIVITY_CLEAR_TOP
+                                            | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                            startActivity(newIntent);
+                        }
+                    };
+            LocalBroadcastManager.getInstance(this)
+                    .registerReceiver(redirectReceiver, new IntentFilter(REDIRECT_RETURNED_ACTION));
         }
     }
 
@@ -134,8 +148,8 @@ public class CurrentTaskAuthorizationActivity extends DualScreenActivity {
             LocalBroadcastManager.getInstance(this).sendBroadcast(broadcast);
             unregisterAndFinish();
         }
-        //IMPORTANT: If you don't call this...
-        //then getIntent will return the original intent used to launch the activity or null
+        // IMPORTANT: If you don't call this...
+        // then getIntent will return the original intent used to launch the activity or null
         setIntent(intent);
     }
 
@@ -143,17 +157,17 @@ public class CurrentTaskAuthorizationActivity extends DualScreenActivity {
     protected void onResume() {
         super.onResume();
 
-        //onNewIntent will change the value of getIntent from what was used to create the activity
-        //to the intent that was communicated to an existing activity
+        // onNewIntent will change the value of getIntent from what was used to create the activity
+        // to the intent that was communicated to an existing activity
         if (REDIRECT_RETURNED_ACTION.equals(getIntent().getAction())) {
 
             Bundle arguments = new Bundle();
             arguments.putBoolean("RESPONSE", true);
             mFragment.setArguments(arguments);
-            mFragment.completeAuthorizationInBrowserFlow(getIntent().getStringExtra("RESPONSE_URI"));
+            mFragment.completeAuthorizationInBrowserFlow(
+                    getIntent().getStringExtra("RESPONSE_URI"));
             setResult(RESULT_OK);
             unregisterAndFinish();
-
         }
         if (mCloseCustomTabs) {
             // The custom tab was closed without getting a result.

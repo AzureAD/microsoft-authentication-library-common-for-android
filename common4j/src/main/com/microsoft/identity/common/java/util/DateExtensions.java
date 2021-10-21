@@ -28,8 +28,7 @@ public final class DateExtensions {
     /**
      * Private constructor to prevent the class from being initiated.
      */
-    private DateExtensions() {
-    }
+    private DateExtensions() {}
 
     /**
      * Create an immutable object for the input Date object
@@ -45,7 +44,4 @@ public final class DateExtensions {
 
         return date;
     }
-
-
 }
-

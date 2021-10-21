@@ -22,6 +22,8 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.broker;
 
+import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -31,7 +33,6 @@ import androidx.test.uiautomator.UiObjectNotFoundException;
 import androidx.test.uiautomator.UiSelector;
 
 import com.microsoft.identity.client.ui.automation.TestContext;
-import com.microsoft.identity.client.ui.automation.powerlift.IPowerLiftIntegratedApp;
 import com.microsoft.identity.client.ui.automation.constants.DeviceAdmin;
 import com.microsoft.identity.client.ui.automation.device.settings.ISettings;
 import com.microsoft.identity.client.ui.automation.device.settings.SamsungSettings;
@@ -39,29 +40,29 @@ import com.microsoft.identity.client.ui.automation.interaction.PromptHandlerPara
 import com.microsoft.identity.client.ui.automation.interaction.PromptParameter;
 import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.AadPromptHandler;
 import com.microsoft.identity.client.ui.automation.logging.Logger;
+import com.microsoft.identity.client.ui.automation.powerlift.IPowerLiftIntegratedApp;
 import com.microsoft.identity.client.ui.automation.utils.CommonUtils;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
+
+import lombok.Getter;
 
 import org.junit.Assert;
 
 import java.util.Random;
 
-import lombok.Getter;
-
-import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT;
-import static org.junit.Assert.fail;
-
 /**
  * A model for interacting with the Company Portal Broker App during UI Test.
  */
 @Getter
-public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBroker, IMdmAgent, IPowerLiftIntegratedApp {
+public class BrokerCompanyPortal extends AbstractTestBroker
+        implements ITestBroker, IMdmAgent, IPowerLiftIntegratedApp {
 
     public static final String TAG = BrokerCompanyPortal.class.getSimpleName();
 
-    public final static String COMPANY_PORTAL_APP_PACKAGE_NAME = "com.microsoft.windowsintune.companyportal";
-    public final static String COMPANY_PORTAL_APP_NAME = "Intune Company Portal";
-    public final static String COMPANY_PORTAL_APK = "CompanyPortal.apk";
+    public static final String COMPANY_PORTAL_APP_PACKAGE_NAME =
+            "com.microsoft.windowsintune.companyportal";
+    public static final String COMPANY_PORTAL_APP_NAME = "Intune Company Portal";
+    public static final String COMPANY_PORTAL_APK = "CompanyPortal.apk";
 
     private boolean enrollmentPerformedSuccessfully;
 
@@ -71,20 +72,19 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
     }
 
     @Override
-    public void performDeviceRegistration(@NonNull final String username,
-                                          @NonNull final String password) {
+    public void performDeviceRegistration(
+            @NonNull final String username, @NonNull final String password) {
         Logger.i(TAG, "Perform Device Registration for the given account..");
-        TestContext.getTestContext().getTestDevice().getSettings().addWorkAccount(
-                this,
-                username,
-                password
-        );
+        TestContext.getTestContext()
+                .getTestDevice()
+                .getSettings()
+                .addWorkAccount(this, username, password);
     }
 
     @Override
-    public void performSharedDeviceRegistration(@NonNull final String username,
-                                                @NonNull final String password) {
-        //TODO implement shared device registration for CP
+    public void performSharedDeviceRegistration(
+            @NonNull final String username, @NonNull final String password) {
+        // TODO implement shared device registration for CP
         throw new UnsupportedOperationException("Not supported!");
     }
 
@@ -108,12 +108,12 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
         }
 
         try {
-            final UiDevice device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+            final UiDevice device =
+                    UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
             // Click more options in the top right
-            final UiObject threeDots = device.findObject(new UiSelector().descriptionContains(
-                    "More options"
-            ));
+            final UiObject threeDots =
+                    device.findObject(new UiSelector().descriptionContains("More options"));
 
             threeDots.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
 
@@ -126,17 +126,15 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
 
             // Click Email Support
             UiAutomatorUtils.handleButtonClick(
-                    "com.microsoft.windowsintune.companyportal:id/email_support_subsection_title"
-            );
+                    "com.microsoft.windowsintune.companyportal:id/email_support_subsection_title");
 
             // Click Upload Logs Only
             UiAutomatorUtils.handleButtonClick(
-                    "com.microsoft.windowsintune.companyportal:id/upload_button"
-            );
+                    "com.microsoft.windowsintune.companyportal:id/upload_button");
 
-            final UiObject incidentIdBox = UiAutomatorUtils.obtainUiObjectWithResourceId(
-                    "com.microsoft.windowsintune.companyportal:id/incident_id_subsection_description"
-            );
+            final UiObject incidentIdBox =
+                    UiAutomatorUtils.obtainUiObjectWithResourceId(
+                            "com.microsoft.windowsintune.companyportal:id/incident_id_subsection_description");
 
             Assert.assertTrue(incidentIdBox.exists());
 
@@ -148,7 +146,6 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
         } catch (final UiObjectNotFoundException e) {
             throw new AssertionError(e);
         }
-
     }
 
     @Override
@@ -162,23 +159,24 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
     }
 
     @Override
-    public void enrollDevice(@NonNull final String username,
-                             @NonNull final String password) {
+    public void enrollDevice(@NonNull final String username, @NonNull final String password) {
         Logger.i(TAG, "Enroll Device for the given account..");
         launch(); // launch CP app
 
         handleFirstRun(); // handle CP first run
 
         // click Sign In button on CP welcome page
-        UiAutomatorUtils.handleButtonClick("com.microsoft.windowsintune.companyportal:id/sign_in_button");
+        UiAutomatorUtils.handleButtonClick(
+                "com.microsoft.windowsintune.companyportal:id/sign_in_button");
 
-        final PromptHandlerParameters promptHandlerParameters = PromptHandlerParameters.builder()
-                .prompt(PromptParameter.LOGIN)
-                .consentPageExpected(false)
-                .expectingLoginPageAccountPicker(false)
-                .sessionExpected(false)
-                .loginHint(null)
-                .build();
+        final PromptHandlerParameters promptHandlerParameters =
+                PromptHandlerParameters.builder()
+                        .prompt(PromptParameter.LOGIN)
+                        .consentPageExpected(false)
+                        .expectingLoginPageAccountPicker(false)
+                        .sessionExpected(false)
+                        .loginHint(null)
+                        .build();
 
         final AadPromptHandler aadPromptHandler = new AadPromptHandler(promptHandlerParameters);
 
@@ -189,18 +187,19 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
         // click the activate device admin btn
         final UiObject accessSetupScreen = UiAutomatorUtils.obtainUiObjectWithText("Access Setup");
         Assert.assertTrue(
-                "CP Enrollment - Access Setup screen appears",
-                accessSetupScreen.exists()
-        );
+                "CP Enrollment - Access Setup screen appears", accessSetupScreen.exists());
 
         // click on BEGIN button to start enroll
-        UiAutomatorUtils.handleButtonClick("com.microsoft.windowsintune.companyportal:id/setup_positive_button");
+        UiAutomatorUtils.handleButtonClick(
+                "com.microsoft.windowsintune.companyportal:id/setup_positive_button");
 
         // click CONTINUE to ack privacy page
-        UiAutomatorUtils.handleButtonClick("com.microsoft.windowsintune.companyportal:id/ContinueButton");
+        UiAutomatorUtils.handleButtonClick(
+                "com.microsoft.windowsintune.companyportal:id/ContinueButton");
 
         // click NEXT to ack Android system permissions requirements
-        UiAutomatorUtils.handleButtonClick("com.microsoft.windowsintune.companyportal:id/bullet_list_page_forward_button");
+        UiAutomatorUtils.handleButtonClick(
+                "com.microsoft.windowsintune.companyportal:id/bullet_list_page_forward_button");
 
         // grant permission
         CommonUtils.grantPackagePermission();
@@ -216,24 +215,23 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
         }
 
         // make sure we are on the page to complete setup
-        final UiObject setupCompletePage = UiAutomatorUtils.obtainUiObjectWithResourceId(
-                "com.microsoft.windowsintune.companyportal:id/setup_title"
-        );
+        final UiObject setupCompletePage =
+                UiAutomatorUtils.obtainUiObjectWithResourceId(
+                        "com.microsoft.windowsintune.companyportal:id/setup_title");
 
         if (!setupCompletePage.exists()) {
             // Something went wrong with enrollment. If we see a device limit reached dialog, then
             // we throw a DeviceLimitReachedException so that we the DeviceEnrollmentRecoveryRule
             // can perform cleanup and recovery for future enrollments.
-            final UiObject deviceLimitReachedDialog = UiAutomatorUtils.obtainUiObjectWithResourceId(
-                    "com.microsoft.windowsintune.companyportal:id/alertTitle"
-            );
+            final UiObject deviceLimitReachedDialog =
+                    UiAutomatorUtils.obtainUiObjectWithResourceId(
+                            "com.microsoft.windowsintune.companyportal:id/alertTitle");
 
             if (deviceLimitReachedDialog.exists()) {
                 Logger.w(TAG, "Device limit reached for the given account..");
                 throw new DeviceLimitReachedException(
                         "Unable to complete enrollment as device limit reached for this account.",
-                        this
-                );
+                        this);
             } else {
                 // We don't see device limit issue, but the enrollment still failed due to reasons
                 // that aren't immediately known
@@ -243,8 +241,7 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
 
         // click on DONE to complete setup
         UiAutomatorUtils.handleButtonClick(
-                "com.microsoft.windowsintune.companyportal:id/setup_center_button"
-        );
+                "com.microsoft.windowsintune.companyportal:id/setup_center_button");
 
         // Enrollment has been performed successfully
         enrollmentPerformedSuccessfully = true;
@@ -257,22 +254,20 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
 
         // get access screen
         final UiObject getAccessScreen = UiAutomatorUtils.obtainUiObjectWithText("Get Access");
-        Assert.assertTrue(
-                "CP - Get Access screen appears",
-                getAccessScreen.exists()
-        );
+        Assert.assertTrue("CP - Get Access screen appears", getAccessScreen.exists());
 
         // get access screen - continue
-        UiAutomatorUtils.handleButtonClick("com.microsoft.windowsintune.companyportal:id/positive_button");
+        UiAutomatorUtils.handleButtonClick(
+                "com.microsoft.windowsintune.companyportal:id/positive_button");
 
         Logger.i(TAG, "Handle PIN to enable App Protection Policy..");
         // handle PIN
         final Random random = new Random();
         final int randomPin = random.nextInt(10000);
 
-        final UiObject pinField = UiAutomatorUtils.obtainUiObjectWithResourceId(
-                "com.microsoft.windowsintune.companyportal:id/pin_entry_passcodeEditView"
-        );
+        final UiObject pinField =
+                UiAutomatorUtils.obtainUiObjectWithResourceId(
+                        "com.microsoft.windowsintune.companyportal:id/pin_entry_passcodeEditView");
 
         try {
             pinField.setText(String.valueOf(randomPin));
@@ -284,9 +279,9 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
 
         // confirm PIN
 
-        final UiObject pinConfirmField = UiAutomatorUtils.obtainUiObjectWithResourceId(
-                "com.microsoft.windowsintune.companyportal:id/pin_entry_passcodeEditView"
-        );
+        final UiObject pinConfirmField =
+                UiAutomatorUtils.obtainUiObjectWithResourceId(
+                        "com.microsoft.windowsintune.companyportal:id/pin_entry_passcodeEditView");
 
         try {
             pinConfirmField.setText(String.valueOf(randomPin));
@@ -303,12 +298,13 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
         launch();
 
         try {
-            final UiDevice device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+            final UiDevice device =
+                    UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
             // Click Devices Tab
-            final UiObject devicesTab = device.findObject(new UiSelector().description(
-                    "Devices, Tab, 2 of 3"
-            ).clickable(true));
+            final UiObject devicesTab =
+                    device.findObject(
+                            new UiSelector().description("Devices, Tab, 2 of 3").clickable(true));
 
             devicesTab.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
 
@@ -329,14 +325,17 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
         }
 
         try {
-            final UiDevice uiDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+            final UiDevice uiDevice =
+                    UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
             // If Enrollment failed, then the first device on the list is in corrupted state and
             // cannot even be removed, we need to remove the second one in the list
-            final UiObject deviceToRemove = uiDevice.findObject(new UiSelector()
-                    .resourceId("com.microsoft.windowsintune.companyportal:id/device_list_item")
-                    .index(enrollmentPerformedSuccessfully ? 0 : 1)
-            );
+            final UiObject deviceToRemove =
+                    uiDevice.findObject(
+                            new UiSelector()
+                                    .resourceId(
+                                            "com.microsoft.windowsintune.companyportal:id/device_list_item")
+                                    .index(enrollmentPerformedSuccessfully ? 0 : 1));
 
             deviceToRemove.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
 
@@ -344,9 +343,8 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
             deviceToRemove.click();
 
             // Click more options in the top right
-            final UiObject threeDots = uiDevice.findObject(new UiSelector().descriptionContains(
-                    "More options"
-            ));
+            final UiObject threeDots =
+                    uiDevice.findObject(new UiSelector().descriptionContains("More options"));
 
             threeDots.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
 
@@ -357,14 +355,11 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
 
             removeBtn.click();
 
-            final UiObject removeDeviceDialog = UiAutomatorUtils.obtainUiObjectWithResourceId(
-                    "com.microsoft.windowsintune.companyportal:id/alertTitle"
-            );
+            final UiObject removeDeviceDialog =
+                    UiAutomatorUtils.obtainUiObjectWithResourceId(
+                            "com.microsoft.windowsintune.companyportal:id/alertTitle");
 
-            Assert.assertTrue(
-                    "CP Remove device dialog appears.",
-                    removeDeviceDialog.exists()
-            );
+            Assert.assertTrue("CP Remove device dialog appears.", removeDeviceDialog.exists());
 
             // Confirm removal
             UiAutomatorUtils.handleButtonClick("android:id/button1");

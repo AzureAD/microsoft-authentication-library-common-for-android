@@ -43,7 +43,8 @@ public final class ErrorStrings {
      * or refresh token from the cache. Likely it's a bug in the sdk when caching tokens or authority
      * is not proviced in the silent request and multiple tokens were found.
      */
-    public static final String MULTIPLE_MATCHING_TOKENS_DETECTED = "multiple_matching_tokens_detected";
+    public static final String MULTIPLE_MATCHING_TOKENS_DETECTED =
+            "multiple_matching_tokens_detected";
 
     /**
      * No active network is available on the device.
@@ -53,7 +54,8 @@ public final class ErrorStrings {
     /**
      * Network is available but device is in the doze mode.
      */
-    public static final String NO_NETWORK_CONNECTION_POWER_OPTIMIZATION = "device_network_not_available_doze_mode";
+    public static final String NO_NETWORK_CONNECTION_POWER_OPTIMIZATION =
+            "device_network_not_available_doze_mode";
 
     /**
      * The sdk failed to parse the Json format.
@@ -110,7 +112,8 @@ public final class ErrorStrings {
      * The authority is not supported for authority validation. The sdk supports b2c authority, but we don't support b2c authority validation yet.
      * Only well-known host will be supported.
      */
-    public static final String AUTHORITY_VALIDATION_NOT_SUPPORTED = "authority_validation_not_supported";
+    public static final String AUTHORITY_VALIDATION_NOT_SUPPORTED =
+            "authority_validation_not_supported";
 
     /**
      * chrome_not_installed: Chrome is not installed on the device. The sdk uses chrome custom tab for
@@ -198,17 +201,20 @@ public final class ErrorStrings {
     /**
      * Account is missing schema-required fields.
      */
-    public static final String ACCOUNT_IS_SCHEMA_NONCOMPLIANT = "Account is missing schema-required fields.";
+    public static final String ACCOUNT_IS_SCHEMA_NONCOMPLIANT =
+            "Account is missing schema-required fields.";
 
     /**
      * Credential is missing schema-required fields.
      */
-    public static final String CREDENTIAL_IS_SCHEMA_NONCOMPLIANT = "Credential is missing schema-required fields.";
+    public static final String CREDENTIAL_IS_SCHEMA_NONCOMPLIANT =
+            "Credential is missing schema-required fields.";
 
     /**
      * Device certificate request is invalid.
      */
-    public static final String DEVICE_CERTIFICATE_REQUEST_INVALID = "Device certificate request is invalid";
+    public static final String DEVICE_CERTIFICATE_REQUEST_INVALID =
+            "Device certificate request is invalid";
 
     /**
      * Certificate encoding is not generated.
@@ -228,12 +234,14 @@ public final class ErrorStrings {
     /**
      * Device certificate API has exception.
      */
-    public static final String DEVICE_CERTIFICATE_API_EXCEPTION = "Device certificate API has exception";
+    public static final String DEVICE_CERTIFICATE_API_EXCEPTION =
+            "Device certificate API has exception";
 
     /**
      * The redirectUri for broker is invalid.
      */
-    public static final String DEVELOPER_REDIRECTURI_INVALID = "The redirectUri for broker is invalid";
+    public static final String DEVELOPER_REDIRECTURI_INVALID =
+            "The redirectUri for broker is invalid";
 
     /**
      * The uri from WebCP is invalid.
@@ -243,7 +251,8 @@ public final class ErrorStrings {
     /**
      * WebView  redirect url is not SSL protected.
      */
-    public static final String WEBVIEW_REDIRECTURL_NOT_SSL_PROTECTED = "Redirect url scheme not SSL protected";
+    public static final String WEBVIEW_REDIRECTURL_NOT_SSL_PROTECTED =
+            "Redirect url scheme not SSL protected";
 
     /**
      * Package name is not resolved.
@@ -258,7 +267,8 @@ public final class ErrorStrings {
     /**
      * App package name is not found in the package manager.
      */
-    public static final String APP_PACKAGE_NAME_NOT_FOUND = "App package name is not found in the package manager";
+    public static final String APP_PACKAGE_NAME_NOT_FOUND =
+            "App package name is not found in the package manager";
 
     /**
      * Signature could not be verified.
@@ -273,7 +283,8 @@ public final class ErrorStrings {
     /**
      * Failed to bind the service in broker app.
      */
-    public static final String BROKER_BIND_SERVICE_FAILED = "Failed to bind the service in broker app";
+    public static final String BROKER_BIND_SERVICE_FAILED =
+            "Failed to bind the service in broker app";
 
     /**
      * Could not retrieve capabilities from broker apps.
@@ -293,7 +304,8 @@ public final class ErrorStrings {
     /**
      * No available browser installed on the device.
      */
-    public static final String NO_AVAILABLE_BROWSER_FOUND = "No available browser installed on the device.";
+    public static final String NO_AVAILABLE_BROWSER_FOUND =
+            "No available browser installed on the device.";
 
     /**
      * Refresh token request failed.
@@ -318,7 +330,8 @@ public final class ErrorStrings {
     /**
      * Device registration data is missing in a flow that expects it.
      */
-    public static final String DEVICE_REGISTRATION_MISSING_FROM_CLIENT = "Device registration data not found.";
+    public static final String DEVICE_REGISTRATION_MISSING_FROM_CLIENT =
+            "Device registration data not found.";
 
     /**
      * Failed to retreive device state.
@@ -349,7 +362,9 @@ public final class ErrorStrings {
      * The broker app is too old to support the calling MSAL.
      */
     public static final String UNSUPPORTED_BROKER_VERSION_ERROR_CODE = "unsupported_broker_version";
-    public static final String UNSUPPORTED_BROKER_VERSION_ERROR_MESSAGE = "Please update Intune Company Portal and/or Microsoft Authenticator to the latest version.";
+
+    public static final String UNSUPPORTED_BROKER_VERSION_ERROR_MESSAGE =
+            "Please update Intune Company Portal and/or Microsoft Authenticator to the latest version.";
 
     /**
      * Decryption failed.
@@ -369,41 +384,57 @@ public final class ErrorStrings {
     /**
      * AccountMode in configuration is set to multiple. However, the device is marked as shared (which requires single account mode).
      */
-    public static final String MULTIPLE_ACCOUNT_PCA_INIT_FAIL_ON_SHARED_DEVICE_ERROR_CODE = "multiple_account_pca_init_fail_on_shared_device";
+    public static final String MULTIPLE_ACCOUNT_PCA_INIT_FAIL_ON_SHARED_DEVICE_ERROR_CODE =
+            "multiple_account_pca_init_fail_on_shared_device";
+
     public static final String MULTIPLE_ACCOUNT_PCA_INIT_FAIL_ON_SHARED_DEVICE_ERROR_MESSAGE =
-            "This application is not supported in the shared device mode. " +
-            "Please contact application developer to update the app.";
+            "This application is not supported in the shared device mode. "
+                    + "Please contact application developer to update the app.";
 
     /**
      * Multiple account PublicClientApplication could not be created for unknown reasons
      */
-    public static final String MULTIPLE_ACCOUNT_PCA_INIT_FAIL_UNKNOWN_REASON_ERROR_CODE = "multiple_account_pca_init_fail_unknown_reason";
-    public static final String MULTIPLE_ACCOUNT_PCA_INIT_FAIL_UNKNOWN_REASON_ERROR_MESSAGE = "Multiple account PublicClientApplication could not be created for unknown reasons";
+    public static final String MULTIPLE_ACCOUNT_PCA_INIT_FAIL_UNKNOWN_REASON_ERROR_CODE =
+            "multiple_account_pca_init_fail_unknown_reason";
+
+    public static final String MULTIPLE_ACCOUNT_PCA_INIT_FAIL_UNKNOWN_REASON_ERROR_MESSAGE =
+            "Multiple account PublicClientApplication could not be created for unknown reasons";
 
     /**
      * AccountMode in configuration is not set to multiple. Cannot initialize multiple account PublicClientApplication.
      */
-    public static final String MULTIPLE_ACCOUNT_PCA_INIT_FAIL_ACCOUNT_MODE_ERROR_CODE = "multiple_account_pca_init_fail_account_mode";
-    public static final String MULTIPLE_ACCOUNT_PCA_INIT_FAIL_ACCOUNT_MODE_ERROR_MESSAGE = "AccountMode in configuration is not set to multiple. Cannot initialize multiple account PublicClientApplication.";
+    public static final String MULTIPLE_ACCOUNT_PCA_INIT_FAIL_ACCOUNT_MODE_ERROR_CODE =
+            "multiple_account_pca_init_fail_account_mode";
+
+    public static final String MULTIPLE_ACCOUNT_PCA_INIT_FAIL_ACCOUNT_MODE_ERROR_MESSAGE =
+            "AccountMode in configuration is not set to multiple. Cannot initialize multiple account PublicClientApplication.";
 
     /**
      * AccountMode in configuration is not set to single. Cannot initialize single account PublicClientApplication.
      */
-    public static final String SINGLE_ACCOUNT_PCA_INIT_FAIL_ACCOUNT_MODE_ERROR_CODE = "single_account_pca_init_fail_account_mode";
-    public static final String SINGLE_ACCOUNT_PCA_INIT_FAIL_ACCOUNT_MODE_ERROR_MESSAGE = "AccountMode in configuration is not set to single. Cannot initialize single account PublicClientApplication.";
+    public static final String SINGLE_ACCOUNT_PCA_INIT_FAIL_ACCOUNT_MODE_ERROR_CODE =
+            "single_account_pca_init_fail_account_mode";
+
+    public static final String SINGLE_ACCOUNT_PCA_INIT_FAIL_ACCOUNT_MODE_ERROR_MESSAGE =
+            "AccountMode in configuration is not set to single. Cannot initialize single account PublicClientApplication.";
 
     /**
      * A single account public client application could not be created for unknown reasons.
      */
-    public static final String SINGLE_ACCOUNT_PCA_INIT_FAIL_UNKNOWN_REASON_ERROR_CODE = "single_account_pca_init_fail_unknown_reason";
-    public static final String SINGLE_ACCOUNT_PCA_INIT_FAIL_UNKNOWN_REASON_ERROR_MESSAGE = "A single account public client application could not be created for unknown reasons.";
+    public static final String SINGLE_ACCOUNT_PCA_INIT_FAIL_UNKNOWN_REASON_ERROR_CODE =
+            "single_account_pca_init_fail_unknown_reason";
+
+    public static final String SINGLE_ACCOUNT_PCA_INIT_FAIL_UNKNOWN_REASON_ERROR_MESSAGE =
+            "A single account public client application could not be created for unknown reasons.";
 
     /**
      * Some or all requested scopes where declined by the server. Developer should decide whether to continue
      * authentication with the granted scopes or end the authentication process.
      */
     public static final String DECLINED_SCOPE_ERROR_CODE = "declined_scope_error";
-    public static final String DECLINED_SCOPE_ERROR_MESSAGE = "Some or all requested scopes have been declined by the Server";
+
+    public static final String DECLINED_SCOPE_ERROR_MESSAGE =
+            "Some or all requested scopes have been declined by the Server";
 
     /**
      * The device is in the shared mode, and its registration was deleted by the admin.
@@ -420,16 +451,16 @@ public final class ErrorStrings {
             "userless_device_deleted_on_server";
 
     public static final String DEVICE_DELETED_ON_SERVER_IRRECOVERABLE_ERROR_MESSAGE =
-            "This device was deleted from the tenant. " +
-                    "This is an irrecoverable error. Only tenant administrator can re-register this device.";
+            "This device was deleted from the tenant. "
+                    + "This is an irrecoverable error. Only tenant administrator can re-register this device.";
 
     /**
      * Home tenant of the BRT acccount doesn't match with WPJ account's tenant.
      */
     public static final String BRT_TENANT_MISMATCH_ERROR_MESSAGE =
-            "Requested account is from a different organization. " +
-                    "Please make sure to use your organizational account. " +
-                    "If that doesn’t help, please return the device to your administrator.";
+            "Requested account is from a different organization. "
+                    + "Please make sure to use your organizational account. "
+                    + "If that doesn’t help, please return the device to your administrator.";
 
     /**
      * Home tenant of the BRT acccount doesn't match with WPJ account's UPN.
@@ -441,45 +472,57 @@ public final class ErrorStrings {
      * Device Code Flow only.
      * Authorization has not been completed yet.
      */
-    public final static String DEVICE_CODE_FLOW_AUTHORIZATION_PENDING_ERROR_CODE = "authorization_pending";
+    public static final String DEVICE_CODE_FLOW_AUTHORIZATION_PENDING_ERROR_CODE =
+            "authorization_pending";
 
     /**
      * Device Code Flow only.
      * Authorization was declined by the user during Device Code Flow.
      */
-    public final static String DEVICE_CODE_FLOW_AUTHORIZATION_DECLINED_ERROR_CODE = "authorization_declined";
-    public final static String DEVICE_CODE_FLOW_AUTHORIZATION_DECLINED_ERROR_MESSAGE = "The end user has denied the authorization request. Re-run the Device Code Flow Protocol with another user.";
+    public static final String DEVICE_CODE_FLOW_AUTHORIZATION_DECLINED_ERROR_CODE =
+            "authorization_declined";
+
+    public static final String DEVICE_CODE_FLOW_AUTHORIZATION_DECLINED_ERROR_MESSAGE =
+            "The end user has denied the authorization request. Re-run the Device Code Flow Protocol with another user.";
 
     /**
      * Device Code Flow only.
      * The token expired before the user authenticated with the user code.
      */
-    public final static String DEVICE_CODE_FLOW_EXPIRED_TOKEN_ERROR_CODE = "expired_token";
-    public final static String DEVICE_CODE_FLOW_EXPIRED_TOKEN_ERROR_MESSAGE = "The token has expired, therefore authentication is no longer possible with this flow attempt. Re-run the Device Code Flow Protocol to try again.";
+    public static final String DEVICE_CODE_FLOW_EXPIRED_TOKEN_ERROR_CODE = "expired_token";
+
+    public static final String DEVICE_CODE_FLOW_EXPIRED_TOKEN_ERROR_MESSAGE =
+            "The token has expired, therefore authentication is no longer possible with this flow attempt. Re-run the Device Code Flow Protocol to try again.";
 
     /**
      * Device Vode Flow only.
      * The token request sent a device code that was not recognized.
      */
-    public final static String DEVICE_CODE_FLOW_BAD_VERIFICATION_ERROR_CODE = "bad_verification_code";
-    public final static String DEVICE_CODE_FLOW_BAD_VERIFICATION_ERROR_MESSAGE = "The token request contains a device code that was not recognized. Verify that the client is sending the right device code.";
+    public static final String DEVICE_CODE_FLOW_BAD_VERIFICATION_ERROR_CODE =
+            "bad_verification_code";
+
+    public static final String DEVICE_CODE_FLOW_BAD_VERIFICATION_ERROR_MESSAGE =
+            "The token request contains a device code that was not recognized. Verify that the client is sending the right device code.";
 
     /**
      * Device Code Flow only.
      * The token was polled again after it was already received.
      * Use error code in AuthenticationConstants.OAuth2ErrorCode
      */
-    public final static String DEVICE_CODE_FLOW_INVALID_GRANT_ERROR_MESSAGE = "The token for this device code has already been redeemed. To receive another access token, please re-run the Device Code Flow protocol.";
+    public static final String DEVICE_CODE_FLOW_INVALID_GRANT_ERROR_MESSAGE =
+            "The token for this device code has already been redeemed. To receive another access token, please re-run the Device Code Flow protocol.";
 
     /**
      * Device Code Flow only.
      * The scope attached to the request was not valid, either formatted wrong or some scopes did not exist.
      */
-    public final static String DEVICE_CODE_FLOW_INVALID_SCOPE_ERROR_MESSAGE = "The scope attached to the device code flow request is invalid. Please re-try with a valid scope.";
+    public static final String DEVICE_CODE_FLOW_INVALID_SCOPE_ERROR_MESSAGE =
+            "The scope attached to the device code flow request is invalid. Please re-try with a valid scope.";
 
     /**
      * Device Code Flow only.
      * Use this message for when Device Code Flow fails with an error code that doesn't match any of the pre-defined Device Code Flow codes.
      */
-    public final static String DEVICE_CODE_FLOW_DEFAULT_ERROR_MESSAGE = "Device Code Flow has failed with an unexpected error. The error code shown was received from the result object.";
+    public static final String DEVICE_CODE_FLOW_DEFAULT_ERROR_MESSAGE =
+            "Device Code Flow has failed with an unexpected error. The error code shown was received from the result object.";
 }

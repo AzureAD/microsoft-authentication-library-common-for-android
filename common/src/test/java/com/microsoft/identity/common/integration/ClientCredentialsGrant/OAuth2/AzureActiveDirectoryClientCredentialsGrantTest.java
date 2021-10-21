@@ -22,6 +22,9 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.integration.ClientCredentialsGrant.OAuth2;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.providers.keys.CertificateCredential;
 import com.microsoft.identity.common.java.providers.keys.ClientCertificateMetadata;
@@ -46,33 +49,37 @@ import java.security.NoSuchProviderException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
-
 @SuppressWarnings("unchecked")
 @Ignore
 @RunWith(JUnit4.class)
 public class AzureActiveDirectoryClientCredentialsGrantTest {
 
-    private final static String CLIENT_ID = "4bc6e96f-bd23-408f-8ecb-a7a7145463f9";
-    private final static String RESOURCE = "https://management.core.windows.net";
-    private final static String GRANT_TYPE = "client_credentials";
-    private final static String CERTIFICATE_ALIAS = "AutomationRunner";
-    private final static String KEYSTORE_TYPE = "Windows-MY";
-    private final static String KEYSTORE_PROVIDER = "SunMSCAPI";
-    private final static String AAD_CLIENT_ASSERTION_AUDIENCE = "https://login.microsoftonline.com/microsoft.com/oauth2/token";
+    private static final String CLIENT_ID = "4bc6e96f-bd23-408f-8ecb-a7a7145463f9";
+    private static final String RESOURCE = "https://management.core.windows.net";
+    private static final String GRANT_TYPE = "client_credentials";
+    private static final String CERTIFICATE_ALIAS = "AutomationRunner";
+    private static final String KEYSTORE_TYPE = "Windows-MY";
+    private static final String KEYSTORE_PROVIDER = "SunMSCAPI";
+    private static final String AAD_CLIENT_ASSERTION_AUDIENCE =
+            "https://login.microsoftonline.com/microsoft.com/oauth2/token";
 
     @Test
-    public void test_ClientCredentials() throws CertificateException, UnrecoverableKeyException, NoSuchAlgorithmException, KeyStoreException, NoSuchProviderException, IOException, ClientException {
+    public void test_ClientCredentials()
+            throws CertificateException, UnrecoverableKeyException, NoSuchAlgorithmException,
+                    KeyStoreException, NoSuchProviderException, IOException, ClientException {
 
-        final CertificateCredential credential = new CertificateCredential.CertificateCredentialBuilder(CLIENT_ID)
-                .clientCertificateMetadata(new ClientCertificateMetadata(CERTIFICATE_ALIAS, null))
-                .keyStoreConfiguration(new KeyStoreConfiguration(KEYSTORE_TYPE, KEYSTORE_PROVIDER, null))
-                .build();
+        final CertificateCredential credential =
+                new CertificateCredential.CertificateCredentialBuilder(CLIENT_ID)
+                        .clientCertificateMetadata(
+                                new ClientCertificateMetadata(CERTIFICATE_ALIAS, null))
+                        .keyStoreConfiguration(
+                                new KeyStoreConfiguration(KEYSTORE_TYPE, KEYSTORE_PROVIDER, null))
+                        .build();
 
         final String audience = AAD_CLIENT_ASSERTION_AUDIENCE;
 
-        final MicrosoftClientAssertion assertion = new MicrosoftClientAssertion(audience, credential);
+        final MicrosoftClientAssertion assertion =
+                new MicrosoftClientAssertion(audience, credential);
 
         final AzureActiveDirectoryTokenRequest tr = new AzureActiveDirectoryTokenRequest();
 
@@ -83,10 +90,9 @@ public class AzureActiveDirectoryClientCredentialsGrantTest {
         tr.setGrantType(GRANT_TYPE);
 
         final OAuth2StrategyParameters options = OAuth2StrategyParameters.builder().build();
-        final OAuth2Strategy strategy = new AzureActiveDirectoryOAuth2Strategy(
-                new AzureActiveDirectoryOAuth2Configuration(),
-                options
-        );
+        final OAuth2Strategy strategy =
+                new AzureActiveDirectoryOAuth2Strategy(
+                        new AzureActiveDirectoryOAuth2Configuration(), options);
 
         try {
             final TokenResult tokenResult = strategy.requestToken(tr);
@@ -96,6 +102,4 @@ public class AzureActiveDirectoryClientCredentialsGrantTest {
             fail("Unexpected exception.");
         }
     }
-
-
 }

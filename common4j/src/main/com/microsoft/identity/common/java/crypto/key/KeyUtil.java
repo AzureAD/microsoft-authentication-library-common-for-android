@@ -22,9 +22,13 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.crypto.key;
 
+import static com.microsoft.identity.common.java.AuthenticationConstants.ENCODING_UTF8;
+
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.util.StringUtil;
+
+import lombok.NonNull;
 
 import java.security.InvalidKeyException;
 import java.security.MessageDigest;
@@ -33,11 +37,6 @@ import java.security.NoSuchAlgorithmException;
 import javax.crypto.Mac;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
-
-import cz.msebera.android.httpclient.extras.Base64;
-import lombok.NonNull;
-
-import static com.microsoft.identity.common.java.AuthenticationConstants.ENCODING_UTF8;
 
 /**
  * Utility class for Key operations.
@@ -111,7 +110,8 @@ public class KeyUtil {
      * @return SecretKey
      * @throws NoSuchAlgorithmException if HMAC_KEY_HASH_ALGORITHM is not supported.
      */
-    public static SecretKey getHMacKey(@NonNull final SecretKey key) throws NoSuchAlgorithmException {
+    public static SecretKey getHMacKey(@NonNull final SecretKey key)
+            throws NoSuchAlgorithmException {
         // Some keys may not produce byte[] with getEncoded
         final byte[] encodedKey = key.getEncoded();
         if (encodedKey != null) {

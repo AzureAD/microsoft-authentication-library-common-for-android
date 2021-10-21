@@ -25,9 +25,9 @@ package com.microsoft.identity.common.internal.logging;
 import com.google.gson.Gson;
 import com.microsoft.identity.common.logging.Logger;
 
-import java.util.HashMap;
-
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
+import java.util.HashMap;
 
 /**
  * This class is deprecated.
@@ -49,8 +49,10 @@ public class RequestContext extends HashMap<String, String> implements IRequestC
         if (sLogDeprecationWarning) {
             // only log 1x
             sLogDeprecationWarning = false;
-            Logger.warn(TAG, "This class is deprecated. "
-                    + "Migrate usage to: com.microsoft.identity.common.logging.RequestContext");
+            Logger.warn(
+                    TAG,
+                    "This class is deprecated. "
+                            + "Migrate usage to: com.microsoft.identity.common.logging.RequestContext");
         }
 
         return mGson.toJson(this);

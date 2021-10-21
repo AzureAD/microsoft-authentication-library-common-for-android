@@ -36,27 +36,26 @@ import org.junit.Test;
  */
 public class MicrosoftClientAssertionTest {
 
-    private final static String CLIENT_ID = "some_client_id";
-    private final static String CERTIFICATE_ALIAS = "AutomationRunner";
-    private final static String KEYSTORE_TYPE = "Windows-MY";
-    private final static String KEYSTORE_PROVIDER = "SunMSCAPI";
-    private final static String AUDIENCE = "some_audience";
+    private static final String CLIENT_ID = "some_client_id";
+    private static final String CERTIFICATE_ALIAS = "AutomationRunner";
+    private static final String KEYSTORE_TYPE = "Windows-MY";
+    private static final String KEYSTORE_PROVIDER = "SunMSCAPI";
+    private static final String AUDIENCE = "some_audience";
 
     @Test
     public void testCanCreateMicrosoftClientAssertionWithValidCertificate() {
         final MicrosoftClientAssertion microsoftClientAssertion;
         try {
-            microsoftClientAssertion = MicrosoftClientAssertion
-                    .builder()
-                    .clientId(CLIENT_ID)
-                    .audience(AUDIENCE)
-                    .certificateCredential(CertificateCredential.create(
-                            new KeyStoreConfiguration(
-                                    KEYSTORE_TYPE, KEYSTORE_PROVIDER, null
-                            ),
-                            new ClientCertificateMetadata(CERTIFICATE_ALIAS, null)
-                    ))
-                    .build();
+            microsoftClientAssertion =
+                    MicrosoftClientAssertion.builder()
+                            .clientId(CLIENT_ID)
+                            .audience(AUDIENCE)
+                            .certificateCredential(
+                                    CertificateCredential.create(
+                                            new KeyStoreConfiguration(
+                                                    KEYSTORE_TYPE, KEYSTORE_PROVIDER, null),
+                                            new ClientCertificateMetadata(CERTIFICATE_ALIAS, null)))
+                            .build();
         } catch (LabApiException e) {
             throw new AssertionError(e);
         }
@@ -64,9 +63,9 @@ public class MicrosoftClientAssertionTest {
         Assert.assertNotNull(microsoftClientAssertion);
         Assert.assertNotNull(microsoftClientAssertion.getClientAssertion());
         Assert.assertNotNull(microsoftClientAssertion.getClientAssertionType());
-        Assert.assertEquals(MicrosoftClientAssertion.CLIENT_ASSERTION_TYPE, microsoftClientAssertion.getClientAssertionType());
+        Assert.assertEquals(
+                MicrosoftClientAssertion.CLIENT_ASSERTION_TYPE,
+                microsoftClientAssertion.getClientAssertionType());
         Assert.assertTrue(microsoftClientAssertion.getClientAssertion().length() > 0);
     }
-
-
 }

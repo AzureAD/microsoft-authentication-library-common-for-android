@@ -22,6 +22,8 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.broker;
 
+import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -41,14 +43,12 @@ import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
 import org.junit.Assert;
 
-import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT;
-
 public class BrokerHost extends AbstractTestBroker {
 
-    private final static String TAG = BrokerHost.class.getSimpleName();
-    public final static String BROKER_HOST_APP_PACKAGE_NAME = "com.microsoft.identity.testuserapp";
-    public final static String BROKER_HOST_APP_NAME = "Broker Host App";
-    public final static String BROKER_HOST_APK = "BrokerHost.apk";
+    private static final String TAG = BrokerHost.class.getSimpleName();
+    public static final String BROKER_HOST_APP_PACKAGE_NAME = "com.microsoft.identity.testuserapp";
+    public static final String BROKER_HOST_APP_NAME = "Broker Host App";
+    public static final String BROKER_HOST_APK = "BrokerHost.apk";
 
     public BrokerHost() {
         super(BROKER_HOST_APP_PACKAGE_NAME, BROKER_HOST_APP_NAME, new LocalApkInstaller());
@@ -56,18 +56,16 @@ public class BrokerHost extends AbstractTestBroker {
     }
 
     @Override
-    public void performDeviceRegistration(@NonNull final String username,
-                                          @NonNull final String password) {
+    public void performDeviceRegistration(
+            @NonNull final String username, @NonNull final String password) {
 
         Logger.i(TAG, "Performing Device Registration for the given account..");
         performDeviceRegistrationHelper(username);
 
         // Click the join btn
-        final UiObject joinBtn = UiAutomatorUtils.obtainUiObjectWithResourceIdAndEnabledFlag(
-                CommonUtils.getResourceId(
-                        getPackageName(), "buttonJoin"
-                ), true
-        );
+        final UiObject joinBtn =
+                UiAutomatorUtils.obtainUiObjectWithResourceIdAndEnabledFlag(
+                        CommonUtils.getResourceId(getPackageName(), "buttonJoin"), true);
 
         try {
             joinBtn.click();
@@ -75,15 +73,16 @@ public class BrokerHost extends AbstractTestBroker {
             throw new AssertionError(e);
         }
 
-        final PromptHandlerParameters promptHandlerParameters = PromptHandlerParameters.builder()
-                .prompt(PromptParameter.LOGIN)
-                .broker(this)
-                .consentPageExpected(false)
-                .expectingBrokerAccountChooserActivity(false)
-                .expectingLoginPageAccountPicker(false)
-                .sessionExpected(false)
-                .loginHint(username)
-                .build();
+        final PromptHandlerParameters promptHandlerParameters =
+                PromptHandlerParameters.builder()
+                        .prompt(PromptParameter.LOGIN)
+                        .broker(this)
+                        .consentPageExpected(false)
+                        .expectingBrokerAccountChooserActivity(false)
+                        .expectingLoginPageAccountPicker(false)
+                        .sessionExpected(false)
+                        .loginHint(username)
+                        .build();
 
         final AadPromptHandler aadPromptHandler = new AadPromptHandler(promptHandlerParameters);
 
@@ -100,9 +99,9 @@ public class BrokerHost extends AbstractTestBroker {
         performDeviceRegistrationHelper(username);
 
         // Click the join shared device btn
-        UiObject joinBtn = UiAutomatorUtils.obtainUiObjectWithResourceIdAndEnabledFlag(
-                "com.microsoft.identity.testuserapp:id/buttonJoinSharedDevice", true
-        );
+        UiObject joinBtn =
+                UiAutomatorUtils.obtainUiObjectWithResourceIdAndEnabledFlag(
+                        "com.microsoft.identity.testuserapp:id/buttonJoinSharedDevice", true);
 
         try {
             joinBtn.click();
@@ -110,16 +109,16 @@ public class BrokerHost extends AbstractTestBroker {
             throw new AssertionError(e);
         }
 
-
-        final PromptHandlerParameters promptHandlerParameters = PromptHandlerParameters.builder()
-                .prompt(PromptParameter.LOGIN)
-                .broker(this)
-                .consentPageExpected(false)
-                .expectingBrokerAccountChooserActivity(false)
-                .expectingLoginPageAccountPicker(false)
-                .sessionExpected(false)
-                .loginHint(username)
-                .build();
+        final PromptHandlerParameters promptHandlerParameters =
+                PromptHandlerParameters.builder()
+                        .prompt(PromptParameter.LOGIN)
+                        .broker(this)
+                        .consentPageExpected(false)
+                        .expectingBrokerAccountChooserActivity(false)
+                        .expectingLoginPageAccountPicker(false)
+                        .sessionExpected(false)
+                        .loginHint(username)
+                        .build();
 
         final AadPromptHandler aadPromptHandler = new AadPromptHandler(promptHandlerParameters);
 
@@ -140,17 +139,14 @@ public class BrokerHost extends AbstractTestBroker {
 
         // enter upn in text box
         UiAutomatorUtils.handleInput(
-                "com.microsoft.identity.testuserapp:id/editTextUsername",
-                username
-        );
+                "com.microsoft.identity.testuserapp:id/editTextUsername", username);
     }
 
     private void postJoinConfirmHelper(@NonNull final String expectedUpn) {
         Logger.i(TAG, "Confirming that Shared Device Registration is successfull or not..");
         // Look for join op completion dialog
-        final UiObject joinFinishDialog = UiAutomatorUtils.obtainUiObjectWithResourceId(
-                "android:id/message"
-        );
+        final UiObject joinFinishDialog =
+                UiAutomatorUtils.obtainUiObjectWithResourceId("android:id/message");
 
         Assert.assertTrue(joinFinishDialog.exists());
 
@@ -185,9 +181,8 @@ public class BrokerHost extends AbstractTestBroker {
         UiAutomatorUtils.handleButtonClick("com.microsoft.identity.testuserapp:id/buttonDeviceId");
 
         // Look for the device id dialog box
-        final UiObject deviceIdDialog = UiAutomatorUtils.obtainUiObjectWithResourceId(
-                "android:id/message"
-        );
+        final UiObject deviceIdDialog =
+                UiAutomatorUtils.obtainUiObjectWithResourceId("android:id/message");
 
         Assert.assertTrue(deviceIdDialog.exists());
 
@@ -219,19 +214,16 @@ public class BrokerHost extends AbstractTestBroker {
 
         // Click enable browser access
         UiAutomatorUtils.handleButtonClick(
-                "com.microsoft.identity.testuserapp:id/buttonInstallCert"
-        );
+                "com.microsoft.identity.testuserapp:id/buttonInstallCert");
 
-        final UiDevice device =
-                UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+        final UiDevice device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
         // Install cert
-        final UiObject certInstaller = device.findObject(new UiSelector().packageName("com.android.certinstaller"));
+        final UiObject certInstaller =
+                device.findObject(new UiSelector().packageName("com.android.certinstaller"));
         certInstaller.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
         Assert.assertTrue(
-                "Microsoft Authenticator - cert installer dialog appears.",
-                certInstaller.exists()
-        );
+                "Microsoft Authenticator - cert installer dialog appears.", certInstaller.exists());
 
         UiAutomatorUtils.handleButtonClick("android:id/button1");
     }
@@ -259,9 +251,8 @@ public class BrokerHost extends AbstractTestBroker {
         UiAutomatorUtils.handleButtonClick("com.microsoft.identity.testuserapp:id/buttonGetWpjUpn");
 
         // Look for the UPN dialog box
-        final UiObject showUpnDialog = UiAutomatorUtils.obtainUiObjectWithResourceId(
-                "android:id/message"
-        );
+        final UiObject showUpnDialog =
+                UiAutomatorUtils.obtainUiObjectWithResourceId("android:id/message");
 
         Assert.assertTrue(showUpnDialog.exists());
 
@@ -290,8 +281,10 @@ public class BrokerHost extends AbstractTestBroker {
         // Make the set flights UI visible on screen
         UiAutomatorUtils.obtainChildInScrollable("Set Flights");
         // input flights string in flights input box
-        UiAutomatorUtils.handleInput("com.microsoft.identity.testuserapp:id/editTextFlights", flightsJson);
+        UiAutomatorUtils.handleInput(
+                "com.microsoft.identity.testuserapp:id/editTextFlights", flightsJson);
         // Click Set Flights button
-        UiAutomatorUtils.handleButtonClick("com.microsoft.identity.testuserapp:id/setFlightsButton");
+        UiAutomatorUtils.handleButtonClick(
+                "com.microsoft.identity.testuserapp:id/setFlightsButton");
     }
 }
