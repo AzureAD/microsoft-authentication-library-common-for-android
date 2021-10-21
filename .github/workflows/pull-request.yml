@@ -32,4 +32,4 @@ jobs:
       - uses: dangoslen/changelog-enforcer@v1.4.0
         with:
           changeLogPath: 'common4j/CHANGELOG'
-          skipLabel: 'No-Changelog'
+          skipLabel: 'No-4j-Changelog'
