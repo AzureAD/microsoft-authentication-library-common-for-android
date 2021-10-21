@@ -1,3 +1,8 @@
+Version 3.6.4
+----------
+- [PATCH] Fix race condition (#1609)
+- [PATCH] Changes to handle IntuneAppProtectionException in common rather than broker (#1579)
+
 Version 3.6.3
 ----------
 - [PATCH] Add helper method to remove the metadataCache entry (#1593)
