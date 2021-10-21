@@ -294,7 +294,7 @@ public class MsalOAuth2TokenCache<
                                 savedCacheRecord.getRefreshToken().getClientId(),
                                 savedCacheRecord
                                         .getAccount() // This account wil be the 0th element in the
-                                                      // result.
+                                // result.
                                 ));
 
         if (!accountsInOtherTenants.isEmpty()) {

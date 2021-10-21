@@ -12,7 +12,6 @@
 
 package com.microsoft.identity.internal.test.labapi;
 
-
 import java.util.List;
 import java.util.Map;
 

@@ -152,7 +152,7 @@ public class MockHttpClient {
 
     private final List<HttpRequestMatcher> matchers =
             new ArrayList<>(); // store a list of matchers for a single MockHttpClient object
-                               // instance
+    // instance
 
     /**
      * Quickly match all the http requests and respond with the specified http response

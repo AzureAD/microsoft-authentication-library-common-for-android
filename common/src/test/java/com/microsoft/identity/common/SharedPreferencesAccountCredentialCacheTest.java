@@ -107,7 +107,7 @@ public class SharedPreferencesAccountCredentialCacheTest {
                                 sAccountCredentialSharedPreferences,
                                 AndroidPlatformComponents.createFromContext(testContext)
                                         .getStorageEncryptionManager(), // Use encrypted storage for
-                                                                        // tests...
+                                // tests...
                                 String.class);
         mSharedPreferencesAccountCredentialCache =
                 new SharedPreferencesAccountCredentialCache(
