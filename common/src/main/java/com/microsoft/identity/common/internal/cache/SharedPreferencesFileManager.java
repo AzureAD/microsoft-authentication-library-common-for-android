@@ -339,9 +339,9 @@ public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage 
                     "Failed to " + (encrypt ? "encrypt" : "decrypt") + " value",
                     encrypt
                             ? null // If we failed to encrypt, don't log the error as it may contain
-                                   // a token
+                            // a token
                             : e // If we failed to decrypt, we couldn't see that secret value so log
-                                // the error
+                    // the error
                     );
 
             // TODO determine if an Exception should be thrown here...
