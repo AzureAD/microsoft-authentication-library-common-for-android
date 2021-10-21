@@ -34,6 +34,7 @@ import com.microsoft.identity.common.internal.commands.parameters.BrokerInteract
 import com.microsoft.identity.common.internal.commands.parameters.BrokerSilentTokenCommandParameters;
 import com.microsoft.identity.common.internal.controllers.ExceptionAdapter;
 import com.microsoft.identity.common.internal.util.StringUtil;
+import com.microsoft.identity.common.logging.Logger;
 
 import java.util.regex.Pattern;
 
@@ -69,8 +70,6 @@ public class IntuneAppProtectionPolicyRequiredException extends ServiceException
                 originalParameters.getAccountManagerAccount().name :
                 originalParameters.getLoginHint();
 
-        setAccountUpn(upn);
-
         String uId = originalParameters.getLocalAccountId();
 
         if (TextUtils.isEmpty(uId)) {
@@ -79,8 +78,6 @@ public class IntuneAppProtectionPolicyRequiredException extends ServiceException
                     originalParameters.getHomeAccountId()
             );
         }
-
-        setAccountUserId(uId);
 
         final Authority authority = originalParameters.getAuthority();
         setAuthorityUrl(authority.getAuthorityURL().toString());
@@ -97,7 +94,24 @@ public class IntuneAppProtectionPolicyRequiredException extends ServiceException
             tenantId = ((AzureActiveDirectoryAuthority) authority).mAudience.getTenantId();
 
         }
+
+        if (TextUtils.isEmpty(uId)) {
+            Logger.verbose(TAG, "IntuneAppProtectionPolicyException property user id was null or empty.");
+        }
+        if (TextUtils.isEmpty(upn)) {
+            Logger.verbose(TAG, "IntuneAppProtectionPolicyException property upn was null or empty.");
+        }
+        if (TextUtils.isEmpty(tenantId)) {
+            Logger.verbose(TAG, "IntuneAppProtectionPolicyException property tenant id was null or empty.");
+        }
+
+        Logger.verbose(TAG, "Setting IntuneAppProtectionPolicyException properties");
+        Logger.verbosePII(TAG, String.format("Setting IntuneAppProtectionPolicyException properties.  AccountId: %s, UPN: %s, TenantId: %s", uId, upn, tenantId));
+        setAccountUserId(uId);
+        setAccountUpn(upn);
         setTenantId(tenantId);
+
+
     }
 
     public IntuneAppProtectionPolicyRequiredException(final String errorCode,
@@ -141,7 +155,7 @@ public class IntuneAppProtectionPolicyRequiredException extends ServiceException
     }
 
     /**
-     * Helper method to get uid from home account id
+     * Helper method to get uid from home account id.
      * V2 home account format : <uid>.<utid>
      * V1 : it's stored as <uid>
      *
@@ -150,8 +164,7 @@ public class IntuneAppProtectionPolicyRequiredException extends ServiceException
      */
     @Nullable
     private String getUIdFromHomeAccountId(@Nullable String homeAccountId) {
-        //TODO: This method is from BrokerOperationParameterUtils...
-        // seems like this is not broker specific per se and should move to somewhere better
+
         final String methodName = ":getUIdFromHomeAccountId";
         final String DELIMITER_TENANTED_USER_ID = ".";
         final int EXPECTED_ARGS_LEN = 2;
@@ -215,7 +228,7 @@ public class IntuneAppProtectionPolicyRequiredException extends ServiceException
     }
 
     @Override
-    public String getExceptionName(){
+    public String getExceptionName() {
         return sName;
     }
 }

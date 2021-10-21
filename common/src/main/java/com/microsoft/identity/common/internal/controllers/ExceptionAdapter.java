@@ -22,10 +22,7 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.controllers;
 
-import android.app.Service;
-import android.media.session.MediaSession;
 import android.text.TextUtils;
-import android.util.Pair;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -37,17 +34,13 @@ import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.DeviceRegistrationRequiredException;
 import com.microsoft.identity.common.exception.IntuneAppProtectionPolicyRequiredException;
-import com.microsoft.identity.common.exception.TerminalException;
 import com.microsoft.identity.common.exception.ServiceException;
+import com.microsoft.identity.common.exception.TerminalException;
 import com.microsoft.identity.common.exception.UiRequiredException;
 import com.microsoft.identity.common.exception.UserCancelException;
-import com.microsoft.identity.common.internal.authorities.Authority;
-import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAuthority;
-import com.microsoft.identity.common.internal.commands.Command;
 import com.microsoft.identity.common.internal.commands.parameters.BrokerInteractiveTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.BrokerSilentTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.CommandParameters;
-import com.microsoft.identity.common.internal.commands.parameters.TokenCommandParameters;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationErrorResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationErrorResponse;
@@ -64,7 +57,6 @@ import org.json.JSONException;
 
 import java.io.IOException;
 import java.util.concurrent.ExecutionException;
-import java.util.regex.Pattern;
 
 public class ExceptionAdapter {
 
@@ -74,8 +66,7 @@ public class ExceptionAdapter {
     public static BaseException exceptionFromAcquireTokenResult(final AcquireTokenResult result, final CommandParameters commandParameters) {
         final String methodName = ":exceptionFromAcquireTokenResult";
 
-        @SuppressWarnings(WarningType.rawtype_warning)
-        final AuthorizationResult authorizationResult = result.getAuthorizationResult();
+        @SuppressWarnings(WarningType.rawtype_warning) final AuthorizationResult authorizationResult = result.getAuthorizationResult();
 
         if (null != authorizationResult) {
             final AuthorizationErrorResponse authorizationErrorResponse = authorizationResult.getAuthorizationErrorResponse();
@@ -132,7 +123,7 @@ public class ExceptionAdapter {
      *
      * @param tokenResult
      * @return ServiceException, UiRequiredException
-     * */
+     */
     public static ServiceException exceptionFromTokenResult(final TokenResult tokenResult, final CommandParameters commandParameters) {
         final String methodName = ":exceptionFromTokenResult";
 
@@ -145,7 +136,7 @@ public class ExceptionAdapter {
 
             outErr = getExceptionFromTokenErrorResponse(commandParameters, tokenResult.getErrorResponse());
             applyCliTelemInfo(tokenResult.getCliTelemInfo(), outErr);
-        }else {
+        } else {
             Logger.warn(
                     TAG + methodName,
                     "Unknown error, Token result is null [" + (tokenResult == null) + "]"
@@ -165,9 +156,9 @@ public class ExceptionAdapter {
      *
      * @param oAuthError
      * @return boolean
-     * */
+     */
     @SuppressWarnings("deprecation")
-    private static boolean shouldBeConvertedToUiRequiredException(final String oAuthError){
+    private static boolean shouldBeConvertedToUiRequiredException(final String oAuthError) {
         // Invalid_grant doesn't necessarily requires UI protocol-wise.
         // We simplify our logic because this layer is also used by MSAL.
 
@@ -183,7 +174,7 @@ public class ExceptionAdapter {
      *
      * @param errorResponse
      * @return ServiceException, UiRequiredException
-     * */
+     */
     public static ServiceException getExceptionFromTokenErrorResponse(@NonNull final TokenErrorResponse errorResponse) {
 
         final ServiceException outErr;
@@ -209,19 +200,19 @@ public class ExceptionAdapter {
     public static ServiceException getExceptionFromTokenErrorResponse(@Nullable final CommandParameters commandParameters,
                                                                       @NonNull final TokenErrorResponse errorResponse) {
 
-        if(isIntunePolicyRequiredError(errorResponse)){
-            if(commandParameters == null || !(isBrokerTokenCommandParameters(commandParameters))){
+        if (isIntunePolicyRequiredError(errorResponse)) {
+            if (commandParameters == null || !(isBrokerTokenCommandParameters(commandParameters))) {
                 Logger.warn(TAG, "In order to properly construct the IntuneAppProtectionPolicyRequiredException we need the command parameters to be supplied.  Returning as service exception instead.");
                 return getExceptionFromTokenErrorResponse(errorResponse);
             }
             IntuneAppProtectionPolicyRequiredException policyRequiredException;
-            if(commandParameters instanceof BrokerInteractiveTokenCommandParameters) {
+            if (commandParameters instanceof BrokerInteractiveTokenCommandParameters) {
                 policyRequiredException = new IntuneAppProtectionPolicyRequiredException(
                         errorResponse.getError(),
                         errorResponse.getErrorDescription(),
                         (BrokerInteractiveTokenCommandParameters) commandParameters
-                        );
-            }else{
+                );
+            } else {
                 policyRequiredException = new IntuneAppProtectionPolicyRequiredException(
                         errorResponse.getError(),
                         errorResponse.getErrorDescription(),
@@ -232,7 +223,7 @@ public class ExceptionAdapter {
             setHttpResponseUsingTokenErrorResponse(policyRequiredException, errorResponse);
 
             return policyRequiredException;
-        }else{
+        } else {
             return getExceptionFromTokenErrorResponse(errorResponse);
         }
 
@@ -241,19 +232,20 @@ public class ExceptionAdapter {
 
     /**
      * Name: setHttpResponseUsingTokenErrorResponse
-     * @param exception ServiceException to which we will append an HttpResponse
+     *
+     * @param exception     ServiceException to which we will append an HttpResponse
      * @param errorResponse A TokenErrorResponse from which we will recontruct an HttpResponse
      */
 
     private static void setHttpResponseUsingTokenErrorResponse(@NonNull final ServiceException exception,
-            @NonNull final TokenErrorResponse errorResponse){
+                                                               @NonNull final TokenErrorResponse errorResponse) {
 
         try {
             exception.setHttpResponse(
                     synthesizeHttpResponse(
-                    errorResponse.getStatusCode(),
-                    errorResponse.getResponseHeadersJson(),
-                    errorResponse.getResponseBody()));
+                            errorResponse.getStatusCode(),
+                            errorResponse.getResponseHeadersJson(),
+                            errorResponse.getResponseBody()));
         } catch (JSONException e) {
             Logger.warn(
                     TAG,
@@ -263,7 +255,7 @@ public class ExceptionAdapter {
 
     }
 
-    private static boolean isBrokerTokenCommandParameters(CommandParameters commandParameters){
+    private static boolean isBrokerTokenCommandParameters(CommandParameters commandParameters) {
         return ((commandParameters instanceof BrokerSilentTokenCommandParameters) || (commandParameters instanceof BrokerInteractiveTokenCommandParameters));
     }
 
@@ -302,7 +294,7 @@ public class ExceptionAdapter {
 
     public static BaseException baseExceptionFromException(final Throwable exception) {
         Throwable e = exception;
-        if (exception instanceof ExecutionException){
+        if (exception instanceof ExecutionException) {
             e = exception.getCause();
         }
 
