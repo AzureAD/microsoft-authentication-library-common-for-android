@@ -22,7 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory;
 
-import cz.msebera.android.httpclient.client.utils.URIBuilder;
 import lombok.NonNull;
 
 import com.microsoft.identity.common.java.WarningType;
@@ -43,9 +42,9 @@ import com.microsoft.identity.common.java.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.java.util.ObjectMapper;
 import com.microsoft.identity.common.java.logging.Logger;
+import com.microsoft.identity.common.java.util.CommonURIBuilder;
 
 import java.net.HttpURLConnection;
-import java.net.URI;
 import java.net.URISyntaxException;
 
 import static com.microsoft.identity.common.java.exception.ErrorStrings.AUTHORITY_URL_NOT_VALID;
@@ -147,7 +146,7 @@ public class AzureActiveDirectoryOAuth2Strategy
         Logger.info(TAG, "Building authority URI");
 
         try {
-            final String issuerCacheIdentifier = new URIBuilder(authRequest.getAuthority().toString())
+            final String issuerCacheIdentifier = new CommonURIBuilder(authRequest.getAuthority().toString())
                     .setHost(cloud.getPreferredCacheHostName())
                     .build().toString();
 

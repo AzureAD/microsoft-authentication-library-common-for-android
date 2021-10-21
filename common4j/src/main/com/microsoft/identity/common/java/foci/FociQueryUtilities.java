@@ -43,6 +43,7 @@ import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParamet
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2TokenCache;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.java.util.StringUtil;
+import com.microsoft.identity.common.java.util.CommonURIBuilder;
 import com.microsoft.identity.common.java.util.ported.ObjectUtils;
 
 import java.io.IOException;
@@ -50,7 +51,6 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.UUID;
 
-import cz.msebera.android.httpclient.client.utils.URIBuilder;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.NonNull;
 
@@ -101,7 +101,7 @@ public class FociQueryUtilities {
         final MicrosoftStsOAuth2Configuration config = new MicrosoftStsOAuth2Configuration();
 
         //Get authority url
-        final URIBuilder requestUrlBuilder = new URIBuilder();
+        final CommonURIBuilder requestUrlBuilder = new CommonURIBuilder();
         requestUrlBuilder.setScheme("https")
                 .setHost(refreshTokenRecord.getEnvironment())
                 .setPath(StringUtil.isNullOrEmpty(accountRecord.getRealm()) ? ALL_ACCOUNTS_TENANT_ID : accountRecord.getRealm());
