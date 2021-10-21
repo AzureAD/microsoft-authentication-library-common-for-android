@@ -52,9 +52,15 @@ public final class StringUtil {
      * @return true if the string object is null or the string is empty.
      */
     public static boolean isEmpty(final String message) {
-        return message == null
-                || message.trim().length()
-                        == 0; // NOPMD  Suppressing PMD warning for new String creation on trim()"
+        if (message == null) {
+            return true;
+        }
+        for (int i = 0; i < message.length(); i++) {
+            if (!Character.isWhitespace(message.charAt(i))) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
