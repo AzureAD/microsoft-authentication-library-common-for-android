@@ -60,6 +60,7 @@ V.Next
 - [PATCH] Fix extracting http response body (#1557)
 - [PATCH] Fix print stack trace for Throwable in Logs (#1556)
 - [PATCH] Support SSO token api (#1543)
+- [PATCH] Add a simple class for pop parameters (#1613)
 
 Version 3.6.3
 ----------
