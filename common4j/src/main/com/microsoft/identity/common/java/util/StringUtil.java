@@ -69,7 +69,15 @@ public class StringUtil {
      * @return true, if the string is null or blank.
      */
     public static boolean isNullOrEmpty(final @Nullable String message) {
-        return message == null || message.trim().length() == 0;
+        if (message == null) {
+            return true;
+        }
+        for (int i = 0; i < message.length(); i++) {
+            if (!Character.isWhitespace(message.charAt(i))) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
