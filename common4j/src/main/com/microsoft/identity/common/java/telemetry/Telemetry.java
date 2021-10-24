@@ -63,8 +63,6 @@ public class Telemetry {
     @SuppressWarnings(WarningType.rawtype_warning)
     private static Queue<ITelemetryObserver> mObservers;
 
-    private static Queue<ITelemetryRelayClient> mRelayClients;
-
     private Queue<Map<String, String>> mTelemetryRawDataMap;
     private TelemetryConfiguration mDefaultConfiguration;
     private AbstractTelemetryContext mTelemetryContext;
@@ -123,39 +121,6 @@ public class Telemetry {
         return mTelemetryRawDataMap;
     }
 
-    public synchronized void addRelayClient(@NonNull final ITelemetryRelayClient relayClient) {
-        final String methodName = ":addRelayClient";
-
-        if (null == mRelayClients) {
-            mRelayClients = new ConcurrentLinkedQueue<>();
-        }
-
-        if (mRelayClients.contains(relayClient)) {
-            return;
-        }
-        try {
-            relayClient.initialize();
-            addObserver(relayClient);
-        } catch (TelemetryRelayClientException exception) {
-            Logger.error(TAG + methodName, exception.getErrorCode() + " : unable to initialize telemetry relay client.", exception);
-            return;
-        }
-        mRelayClients.add(relayClient);
-    }
-
-    public synchronized void removeRelayClient(@NonNull final ITelemetryRelayClient relayClient) {
-        final String methodName = ":removeRelayClient";
-
-        if (null == mRelayClients || mObservers.isEmpty()) {
-            Logger.warn(TAG + methodName,
-                    "Unable to remove the relay client. The relay client list is empty");
-            return;
-        }
-
-        relayClient.unInitialize();
-        mRelayClients.remove(relayClient);
-    }
-
     /**
      * Register the observer to upload the telemetry data.
      *
@@ -173,7 +138,7 @@ public class Telemetry {
         }
 
         if (observer instanceof ITelemetryRelayClient) {
-            ITelemetryRelayClient relayClient = (ITelemetryRelayClient) observer;
+            ITelemetryRelayClient<?> relayClient = (ITelemetryRelayClient<?>) observer;
 
             if (mObservers.contains(relayClient)) {
                 return;
@@ -209,10 +174,10 @@ public class Telemetry {
         @SuppressWarnings(WarningType.rawtype_warning) final Iterator<ITelemetryObserver> observerIterator = mObservers.iterator();
 
         while (observerIterator.hasNext()) {
-            @SuppressWarnings(WarningType.rawtype_warning) final ITelemetryObserver observer = observerIterator.next();
+            final ITelemetryObserver<?> observer = observerIterator.next();
             if (observer.getClass() == cls) {
                 if (cls.isAssignableFrom(ITelemetryRelayClient.class)) {
-                    ((ITelemetryRelayClient) observerIterator.next()).unInitialize();
+                    ((ITelemetryRelayClient<?>) observerIterator.next()).unInitialize();
                 }
                 Logger.verbose(TAG, "The [" + cls.getSimpleName() + "] observer is removed.");
                 observerIterator.remove();
@@ -237,7 +202,7 @@ public class Telemetry {
         }
 
         if (observer instanceof ITelemetryRelayClient) {
-            ((ITelemetryRelayClient) observer).unInitialize();
+            ((ITelemetryRelayClient<?>) observer).unInitialize();
         }
 
         mObservers.remove(observer);
@@ -247,6 +212,12 @@ public class Telemetry {
     public synchronized void removeAllObservers() {
         if (mObservers == null) {
             return;
+        }
+
+        for (ITelemetryObserver<?> observer : mObservers) {
+            if (observer instanceof ITelemetryRelayClient) {
+                ((ITelemetryRelayClient<?>) observer).unInitialize();
+            }
         }
 
         mObservers.clear();

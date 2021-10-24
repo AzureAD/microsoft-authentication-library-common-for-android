@@ -6,12 +6,12 @@ import com.microsoft.applications.telemetry.EventProperties;
 import com.microsoft.applications.telemetry.ILogger;
 import com.microsoft.applications.telemetry.LogConfiguration;
 import com.microsoft.applications.telemetry.LogManager;
-import com.microsoft.identity.common.java.telemetry.relay.ITelemetryRelayClient;
+import com.microsoft.identity.common.java.telemetry.relay.IMATSRelayClient;
 import com.microsoft.identity.common.java.telemetry.relay.TelemetryRelayClientException;
 
 import java.util.Map;
 
-public class AriaTelemetryRelayClient implements ITelemetryRelayClient {
+public class AriaTelemetryRelayClient implements IMATSRelayClient {
     private ILogger logger;
     private final Context context;
     private final String ariaToken;
@@ -21,7 +21,7 @@ public class AriaTelemetryRelayClient implements ITelemetryRelayClient {
         this(context, ariaToken, new LogConfiguration());
     }
 
-    protected AriaTelemetryRelayClient(Context context, String ariaToken, LogConfiguration logConfiguration) {
+    public AriaTelemetryRelayClient(Context context, String ariaToken, LogConfiguration logConfiguration) {
         this.context = context;
         this.ariaToken = ariaToken;
         this.logConfiguration = logConfiguration;
