@@ -90,11 +90,4 @@ public class NetworkTestConstants {
             return null;
         }
     }
-
-    public static class TimelineEntities {
-        public static final String NETWORK_AVAILABILITY_STATE = "Network availability state";
-        public static final String TEST_EXECUTION_STAGE = "Test execution stage";
-        public static final String NETWORK_STATES = "Applied network states";
-        public static final String ACQUIRE_TOKEN_SILENT_FLOW = "Acquire silent token flow";
-    }
 }

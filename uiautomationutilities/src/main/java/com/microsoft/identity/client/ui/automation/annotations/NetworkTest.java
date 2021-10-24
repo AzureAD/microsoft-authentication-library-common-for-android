@@ -8,10 +8,5 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(value = {ElementType.TYPE, ElementType.METHOD})
 public @interface NetworkTest {
-
-    String inputFile();
-
     int testTimeout() default 0;
-
-    boolean recordTimeline() default true;
 }
