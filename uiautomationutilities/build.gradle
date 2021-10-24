@@ -177,6 +177,15 @@ dependencies {
         //Always use the latest release
         implementation(group: 'com.microsoft.identity', name: 'testutils', version: '0.0.+')
     }
+    if (findProject(":common") != null) {
+        //Use project reference if available
+        implementation(project(":common")) {
+            transitive = true
+        }
+    } else {
+        //Always use the latest release
+        implementation(group: 'com.microsoft.identity', name: 'common', version: '0.0.+')
+    }
     compileOnly "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
     annotationProcessor "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
     androidTestImplementation "androidx.test:runner:$rootProject.ext.androidxTestRunnerVersion"

@@ -7,6 +7,6 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(value = {ElementType.TYPE, ElementType.METHOD})
-public @interface NetworkTest {
-    int testTimeout() default 0;
+public @interface NetworkOverrides {
+    NetworkStateOverride[] value() default {};
 }

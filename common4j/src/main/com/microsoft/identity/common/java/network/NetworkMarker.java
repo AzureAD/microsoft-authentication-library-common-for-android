@@ -34,6 +34,8 @@ public class NetworkMarker {
     private final NetworkState mNetworkState = new NetworkState();
     private final long mTimeApplied;
 
+    private long mTimeCompleted;
+
     public NetworkMarker(String marker, NetworkInterface interfaceType, long threadId) {
         this(marker, interfaceType, threadId, 0);
     }
@@ -46,4 +48,7 @@ public class NetworkMarker {
         mTimeApplied = System.currentTimeMillis();
     }
 
+    public long getDuration() {
+        return mTimeCompleted - mTimeApplied;
+    }
 }

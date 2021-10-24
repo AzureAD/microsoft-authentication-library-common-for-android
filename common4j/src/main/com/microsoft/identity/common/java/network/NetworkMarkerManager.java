@@ -71,7 +71,7 @@ public class NetworkMarkerManager {
         return mEnabled;
     }
 
-    public void clear() {
+    public void clearCurrentMarker() {
         final String methodName = ":clear";
 
         if (checkEnabled(methodName)) {
@@ -80,18 +80,25 @@ public class NetworkMarkerManager {
                 return;
             }
             mStateChangeHandler.onNetworkStateCleared(mCurrentMarker);
+            mCurrentMarker.setTimeCompleted(System.currentTimeMillis());
             mCurrentMarker = null;
         }
     }
 
-    public void apply(@NonNull final String marker, @Nullable final NetworkInterface networkInterface, final long duration) {
+    public void applyMarker(@NonNull final String marker, @Nullable final NetworkInterface networkInterface, final long delay, final long duration) {
         final String methodName = ":setNetworkMarker";
 
         if (checkEnabled(methodName)) {
             Logger.info(TAG + methodName, "Marking for network state change with " + marker);
 
             // Check whether there is an override for this marker
-            final NetworkState networkState = mNetworkMarkerOverride.getOrDefault(marker, new NetworkState(networkInterface, duration));
+            final NetworkState networkState = mNetworkMarkerOverride.getOrDefault(marker,
+                    new NetworkState.NetworkStateBuilder()
+                            .delay(delay)
+                            .duration(duration)
+                            .networkInterface(networkInterface)
+                            .build()
+            );
 
             final NetworkMarker networkMarker = new NetworkMarker(
                     marker,
@@ -110,19 +117,35 @@ public class NetworkMarkerManager {
         }
     }
 
-    public void apply(@NonNull final String marker, @NonNull final NetworkInterface networkInterface) {
-        apply(marker, networkInterface, 0);
+    public void applyMarkerWithDuration(@NonNull final String marker, @NonNull final NetworkInterface networkInterface, final long duration) {
+        applyMarker(marker, networkInterface, 0, duration);
     }
 
-    public void apply(@NonNull final String marker, final long duration) {
-        apply(marker, null, duration);
+    public void applyMarkerWithDelay(@NonNull final String marker, @NonNull final NetworkInterface networkInterface, final long delay) {
+        applyMarker(marker, networkInterface, delay, 0);
     }
 
-    public void setOverride(@NonNull final String marker, @NonNull final NetworkState networkState) {
+    public void applyMarker(@NonNull final String marker, @NonNull final NetworkInterface networkInterface) {
+        applyMarker(marker, networkInterface, 0, 0);
+    }
+
+    public void applyMarkerWithDelay(@NonNull final String marker, final long delay) {
+        applyMarkerWithDelay(marker, null, delay);
+    }
+
+    public void applyMarkerWithDuration(@NonNull final String marker, final long duration) {
+        applyMarkerWithDuration(marker, null, duration);
+    }
+
+    public void applyMarker(@NonNull final String marker) {
+        applyMarker(marker, null, 0, 0);
+    }
+
+    public void setMarkerOverride(@NonNull final String marker, @NonNull final NetworkState networkState) {
         mNetworkMarkerOverride.put(marker, networkState);
     }
 
-    public void removeOverride(@NonNull final String marker) {
+    public void removeMarkerOverride(@NonNull final String marker) {
         mNetworkMarkerOverride.remove(marker);
     }
 
