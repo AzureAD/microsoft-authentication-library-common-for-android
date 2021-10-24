@@ -136,6 +136,9 @@ dependencies {
     implementation "androidx.browser:browser:$rootProject.ext.browserVersion"
     implementation "androidx.constraintlayout:constraintlayout:$rootProject.ext.constraintLayoutVersion"
 
+    // Aria Telemetry
+    implementation 'com.microsoft.applications:ariaandroidjavasdk-release:3.0.22.0'
+
     compileOnly 'com.github.spotbugs:spotbugs-annotations:4.3.0'
 
     compileOnly "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
