@@ -23,20 +23,18 @@
 package com.microsoft.identity.common.java.telemetry;
 
 import com.microsoft.identity.common.java.WarningType;
-import com.microsoft.identity.common.java.telemetry.relay.ITelemetryRelayClient;
-import com.microsoft.identity.common.java.telemetry.relay.TelemetryRelayClientException;
-import com.microsoft.identity.common.java.util.StringUtil;
+import com.microsoft.identity.common.java.logging.DiagnosticContext;
+import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.telemetry.adapter.TelemetryAggregationAdapter;
 import com.microsoft.identity.common.java.telemetry.adapter.TelemetryDefaultAdapter;
 import com.microsoft.identity.common.java.telemetry.events.BaseEvent;
 import com.microsoft.identity.common.java.telemetry.observers.ITelemetryAggregatedObserver;
 import com.microsoft.identity.common.java.telemetry.observers.ITelemetryDefaultObserver;
 import com.microsoft.identity.common.java.telemetry.observers.ITelemetryObserver;
+import com.microsoft.identity.common.java.telemetry.relay.ITelemetryRelayClient;
+import com.microsoft.identity.common.java.telemetry.relay.TelemetryRelayClientException;
 import com.microsoft.identity.common.java.telemetry.rules.TelemetryPiiOiiRules;
-import com.microsoft.identity.common.java.logging.Logger;
-import com.microsoft.identity.common.java.logging.DiagnosticContext;
-
-import lombok.NonNull;
+import com.microsoft.identity.common.java.util.StringUtil;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -47,6 +45,8 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
+
+import lombok.NonNull;
 
 import static com.microsoft.identity.common.java.logging.DiagnosticContext.CORRELATION_ID;
 import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Key;
@@ -180,7 +180,6 @@ public class Telemetry {
             }
             try {
                 relayClient.initialize();
-                addObserver(relayClient);
             } catch (TelemetryRelayClientException exception) {
                 Logger.error(TAG + methodName, exception.getErrorCode() + " : unable to initialize telemetry relay client.", exception);
                 return;
