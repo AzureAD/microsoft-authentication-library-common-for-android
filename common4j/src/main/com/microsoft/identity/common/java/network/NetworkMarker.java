@@ -21,23 +21,29 @@
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
 
-package com.microsoft.identity.client.ui.automation.network;
+package com.microsoft.identity.common.java.network;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.experimental.Accessors;
 
-/**
- * Used to define the state of the network during a test run by defining the networkInterface
- * being used by the device, and for how long it will be active. The {@link NetworkTestStateManager}
- * builds a list of these objects to define the changing network state during a test run.
- */
-@Builder
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
-public class NetworkTestState {
-    private NetworkTestConstants.InterfaceType interfaceType;
-    private int time;
+@Accessors(prefix = "m")
+public class NetworkMarker {
+    private final long mThreadId;
+    private final String mMarker;
+    private final NetworkState mNetworkState = new NetworkState();
+    private final long mTimeApplied;
+
+    public NetworkMarker(String marker, NetworkInterface interfaceType, long threadId) {
+        this(marker, interfaceType, threadId, 0);
+    }
+
+    public NetworkMarker(String marker, NetworkInterface interfaceType, long threadId, long duration) {
+        mMarker = marker;
+        mNetworkState.setNetworkInterface(interfaceType);
+        mNetworkState.setDuration(duration);
+        mThreadId = threadId;
+        mTimeApplied = System.currentTimeMillis();
+    }
+
 }
