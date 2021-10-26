@@ -1,0 +1,29 @@
+name: Measure code coverage
+
+variables:
+- name: robolectricSdkVersion
+  value: 29
+
+on:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up JDK 1.8
+        uses: actions/setup-java@v1
+        with:
+          java-version: 1.8
+      - name: Run Coverage
+        run: ./gradlew common:localDebugCommonUnitTestCoverageReport -Plabtest -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}}
+
+      - name: Add coverage to PR
+        id: jacoco
+        uses: madrapps/jacoco-report@v1.2
+        with:
+          paths: ${{ github.workspace }}/build/reports/jacoco/localDebugCommonUnitTestCoverageReport/localDebugCommonUnitTestCoverageReport.xml
+          token: ${{ secrets.GITHUB_TOKEN }}
+          min-coverage-overall: 20
+          min-coverage-changed-files: 30
