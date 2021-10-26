@@ -23,6 +23,11 @@
 
 package com.microsoft.identity.common.java.network;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
 import lombok.Data;
 import lombok.experimental.Accessors;
 
@@ -31,24 +36,19 @@ import lombok.experimental.Accessors;
 public class NetworkMarker {
     private final long mThreadId;
     private final String mMarker;
-    private final NetworkState mNetworkState = new NetworkState();
-    private final long mTimeApplied;
+    private final List<NetworkState> mNetworkStates = new ArrayList<>();
 
-    private long mTimeCompleted;
-
-    public NetworkMarker(String marker, NetworkInterface interfaceType, long threadId) {
-        this(marker, interfaceType, threadId, 0);
-    }
-
-    public NetworkMarker(String marker, NetworkInterface interfaceType, long threadId, long duration) {
+    public NetworkMarker(String marker, long threadId, NetworkState... networkStates) {
         mMarker = marker;
-        mNetworkState.setNetworkInterface(interfaceType);
-        mNetworkState.setDuration(duration);
         mThreadId = threadId;
-        mTimeApplied = System.currentTimeMillis();
+        mNetworkStates.addAll(Arrays.asList(networkStates));
     }
 
     public long getDuration() {
-        return mTimeCompleted - mTimeApplied;
+        return 0;
+    }
+
+    public List<NetworkState> getNetworkStates() {
+        return Collections.unmodifiableList(mNetworkStates);
     }
 }

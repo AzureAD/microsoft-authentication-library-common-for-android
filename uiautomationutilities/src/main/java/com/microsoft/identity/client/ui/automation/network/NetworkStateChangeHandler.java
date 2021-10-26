@@ -1,10 +1,13 @@
 package com.microsoft.identity.client.ui.automation.network;
 
+import androidx.annotation.Nullable;
+
 import com.microsoft.identity.client.ui.automation.logging.Logger;
 import com.microsoft.identity.client.ui.automation.utils.AdbShellUtils;
 import com.microsoft.identity.common.java.network.INetworkStateChangeHandler;
 import com.microsoft.identity.common.java.network.NetworkInterface;
 import com.microsoft.identity.common.java.network.NetworkMarker;
+import com.microsoft.identity.common.java.network.NetworkState;
 
 import lombok.NonNull;
 
@@ -22,13 +25,19 @@ public class NetworkStateChangeHandler implements INetworkStateChangeHandler {
     }
 
     @Override
-    public boolean onNetworkStateApplied(@NonNull NetworkMarker networkMarker) {
-        changeNetworkState(networkMarker.getNetworkState().getNetworkInterface());
-        return true;
+    public boolean onNetworkStateApplied(@NonNull NetworkState networkState) {
+        changeNetworkState(networkState.getNetworkInterface());
+        return false;
     }
 
     @Override
-    public boolean onNetworkStateCleared(@NonNull NetworkMarker networkMarker) {
-        return true;
+    public boolean onRestoreNetworkState(@Nullable NetworkState networkState) {
+        changeNetworkState(NetworkInterface.WIFI_AND_CELLULAR);
+        return false;
+    }
+
+    @Override
+    public void handleNetworkStateNotApplied(@NonNull NetworkMarker marker, @NonNull NetworkState networkState) {
+
     }
 }

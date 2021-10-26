@@ -158,7 +158,7 @@ public class LocalMSALController extends BaseController {
                 .createOAuth2Strategy(strategyParameters);
 
         NetworkMarkerManager.getInstance()
-                .applyMarker(NetworkConstants.NetworkCodeMarkers.ACQUIRE_TOKEN_INTERACTIVE);
+                .startMarker(NetworkConstants.NetworkCodeMarkers.ACQUIRE_TOKEN_INTERACTIVE);
 
         //2) Request authorization interactively
         @SuppressWarnings(WarningType.rawtype_warning) final AuthorizationResult result = performAuthorizationRequest(
@@ -166,7 +166,7 @@ public class LocalMSALController extends BaseController {
                 parametersWithScopes
         );
 
-        NetworkMarkerManager.getInstance().clearCurrentMarker();
+        NetworkMarkerManager.getInstance().stopMarker();
 
         acquireTokenResult.setAuthorizationResult(result);
 
@@ -279,6 +279,9 @@ public class LocalMSALController extends BaseController {
                 methodTag,
                 "Acquiring token silently..."
         );
+
+        NetworkMarkerManager.getInstance()
+                .startMarker(NetworkConstants.NetworkCodeMarkers.ACQUIRE_TOKEN_SILENT);
 
         Telemetry.emit(
                 new ApiStartEvent()
@@ -415,6 +418,8 @@ public class LocalMSALController extends BaseController {
                         .putResult(acquireTokenSilentResult)
                         .putApiId(TelemetryEventStrings.Api.LOCAL_ACQUIRE_TOKEN_SILENT)
         );
+
+        NetworkMarkerManager.getInstance().stopMarker();
 
         return acquireTokenSilentResult;
     }

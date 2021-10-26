@@ -1,9 +1,13 @@
 package com.microsoft.identity.common.java.network;
 
+import javax.annotation.Nullable;
+
 import lombok.NonNull;
 
 public interface INetworkStateChangeHandler {
-    boolean onNetworkStateApplied(@NonNull final NetworkMarker networkMarker);
+    boolean onNetworkStateApplied(@NonNull final NetworkState networkState);
 
-    boolean onNetworkStateCleared(@NonNull final NetworkMarker networkMarker);
+    boolean onRestoreNetworkState(@Nullable final NetworkState networkState);
+
+    void handleNetworkStateNotApplied(@NonNull final NetworkMarker marker, @NonNull final NetworkState networkState);
 }

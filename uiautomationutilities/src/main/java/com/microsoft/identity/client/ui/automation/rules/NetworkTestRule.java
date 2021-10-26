@@ -21,6 +21,7 @@ public class NetworkTestRule implements TestRule {
                     base.evaluate();
                 } finally {
                     networkMarkerManager.setEnabled(false);
+                    networkMarkerManager.clear();
                 }
             }
         };
