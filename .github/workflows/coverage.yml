@@ -32,7 +32,7 @@ jobs:
         id: jacoco
         uses: madrapps/jacoco-report@v1.2
         with:
-          paths: ${{ github.workspace }}/build/reports/jacoco/localDebugCommonUnitTestCoverageReport/localDebugCommonUnitTestCoverageReport.xml
+          paths: ${{ github.workspace }}/common/build/reports/jacoco/localDebugCommonUnitTestCoverageReport/localDebugCommonUnitTestCoverageReport.xml
           token: ${{ secrets.GITHUB_TOKEN }}
           min-coverage-overall: 20
           min-coverage-changed-files: 30
