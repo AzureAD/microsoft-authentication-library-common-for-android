@@ -36,7 +36,7 @@ import java.util.List;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /**
- * Encapsulates the possible responses from the broker.  Both successful response and error response.
+ * Encapsulates the possible responses from the broker. Both successful response and error response.
  */
 public class BrokerResult {
 
