@@ -1,9 +1,5 @@
 name: Measure code coverage
 
-variables:
-- name: robolectricSdkVersion
-  value: 29
-
 on:
   pull_request:
 
@@ -17,7 +13,7 @@ jobs:
         with:
           java-version: 1.8
       - name: Run Coverage
-        run: ./gradlew common:localDebugCommonUnitTestCoverageReport -Plabtest -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}}
+        run: ./gradlew common:localDebugCommonUnitTestCoverageReport -Plabtest -ProbolectricSdkVersion=29
 
       - name: Add coverage to PR
         id: jacoco
