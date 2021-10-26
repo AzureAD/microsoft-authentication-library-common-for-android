@@ -10,6 +10,10 @@ trigger:
     - release/*
   batch: True
 
+variables:
+- name: robolectricSdkVersion
+  value: 29
+
 resources:
   repositories:
   - repository: self
@@ -43,4 +47,12 @@ jobs:
     displayName: Run Unit tests
     inputs:
       tasks: common:testLocalDebugUnitTest
-...
+  - task: Gradle@3
+    displayName: Run common code coverage
+    inputs:
+      tasks: common:localDebugCommonUnitTestCoverageReport -Plabtest -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}}
+  - task: PublishCodeCoverageResults@1
+    displayName: 'Publish code coverage report'
+    inputs:
+      summaryFileLocation: '$(Build.SourcesDirectory)\common\build\reports\jacoco\localDebugCommonUnitTestCoverageReport\localDebugCommonUnitTestCoverageReport.xml'
+      reportDirectory: '$(Build.SourcesDirectory)\common\build\reports\jacoco\localDebugCommonUnitTestCoverageReport\html'
