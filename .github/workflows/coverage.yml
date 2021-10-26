@@ -12,20 +12,22 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 1.8
-      - name : machine echo $GITHUB_WORKSPACE before
-        run : "echo $GITHUB_WORKSPACE"
-      - name : container ls $GITHUB_WORKSPACE before
-        with : { entrypoint : "/bin/sh" , args : '-c "ls -la $GITHUB_WORKSPACE"' }
-      - name : tree $GITHUB_WORKSPACE before
-        run : "tree $GITHUB_WORKSPACE"
+
+      - name: machine echo $GITHUB_WORKSPACE before
+        run: "echo $GITHUB_WORKSPACE"
+
+      - name: tree $GITHUB_WORKSPACE before
+        run: "tree $GITHUB_WORKSPACE"
+
       - name: Run Coverage
         run: ./gradlew common:localDebugCommonUnitTestCoverageReport -Plabtest -ProbolectricSdkVersion=29
-      - name : container ls $GITHUB_WORKSPACE after
-        with : { entrypoint : "/bin/sh" , args : '-c "ls -la $GITHUB_WORKSPACE"' }
-      - name : machine ls $GITHUB_WORKSPACE after
-        run : "ls -la $GITHUB_WORKSPACE"
-      - name : tree $GITHUB_WORKSPACE after
-        run : "tree $GITHUB_WORKSPACE"
+
+      - name: machine ls $GITHUB_WORKSPACE after
+        run: "ls -la $GITHUB_WORKSPACE"
+
+      - name: tree $GITHUB_WORKSPACE after
+        run: "tree $GITHUB_WORKSPACE"
+
       - name: Add coverage to PR
         id: jacoco
         uses: madrapps/jacoco-report@v1.2
