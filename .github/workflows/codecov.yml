@@ -19,6 +19,4 @@ jobs:
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v2
         with:
-          directory: ${{ github.workspace }}/common/build/reports/jacoco/localDebugCommonUnitTestCoverageReport/
-          files: ./localDebugCommonUnitTestCoverageReport.xml
-          verbose: true
+          file: ${{ github.workspace }}/common/build/reports/jacoco/localDebugCommonUnitTestCoverageReport/localDebugCommonUnitTestCoverageReport.xml
