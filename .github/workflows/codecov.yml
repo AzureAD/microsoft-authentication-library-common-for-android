@@ -3,6 +3,9 @@ name: Code coverage
 on:
   pull_request:
 
+env:
+  ROBOELECTRIC_SDK_VERSION: 29
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -14,7 +17,7 @@ jobs:
           java-version: 1.8
 
       - name: Run Coverage
-        run: ./gradlew common:localDebugCommonUnitTestCoverageReport -Plabtest -ProbolectricSdkVersion=29
+        run: ./gradlew common:localDebugCommonUnitTestCoverageReport -Plabtest -ProbolectricSdkVersion=$ROBOELECTRIC_SDK_VERSION
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v2
