@@ -93,7 +93,7 @@ public class Logger {
     }
 
     /**
-     * Initializes and sets Logcat logger as (one of) common4j's external logger.
+     * Initializes and set Logcat logger as (one of) common4j's external logger.
      * Also set Android's platform string.
      *
      * This must be called in Android code before we start using ANY common4j's code.
