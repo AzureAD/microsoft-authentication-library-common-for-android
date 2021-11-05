@@ -71,9 +71,8 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
         localApkFileName = COMPANY_PORTAL_APK;
     }
 
-    public BrokerCompanyPortal(@Nullable final IAppInstaller appInstaller) {
-        super(COMPANY_PORTAL_APP_PACKAGE_NAME, COMPANY_PORTAL_APP_NAME,
-                null == appInstaller ? DEFAULT_BROKER_APP_INSTALLER : appInstaller);
+    public BrokerCompanyPortal(@NonNull final IAppInstaller appInstaller) {
+        super(COMPANY_PORTAL_APP_PACKAGE_NAME, COMPANY_PORTAL_APP_NAME, appInstaller);
         localApkFileName = COMPANY_PORTAL_APK;
     }
 
