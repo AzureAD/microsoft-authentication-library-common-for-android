@@ -6,6 +6,10 @@ This library contains code shared between the [Active Directory Authentication L
 ### Issues
 We encourage users of ADAL and MSAL to file issues against the library that they are using rather than against common.  This helps us understand the version of the common library in use based on the version of ADAL or MSAL against which you report the issue.  With that said, if you determine that the issue is indeed with common please go ahead and create it within this repo.  Likewise if you have a suggestion, request and/or other feedback relative to common please file it here.
 
+### Changelog
+
+This repository contains multiple modules, which track their changes independantly.  There is a change log for [msal-android-common](https://github.com/AzureAD/microsoft-authentication-library-common-for-android/blob/master/common/CHANGELOG) and one for [msal-android-common4j](https://github.com/AzureAD/microsoft-authentication-library-common-for-android/blob/master/common4j/CHANGELOG).
+
 ### Contributing
 
 This project welcomes contributions and suggestions.  Most contributions require you to agree to a
