@@ -274,22 +274,21 @@ public class BrokerHost extends AbstractTestBroker {
         final UiObject dialogBox = UiAutomatorUtils.obtainUiObjectWithResourceId(
                 "android:id/message"
         );
-        dialogBox.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
         Assert.assertTrue(dialogBox.exists());
 
         try {
             // get the textId if it is there, else return null (in case of error)
             final String[] dialogBoxText = dialogBox.getText().split(":");
             // look for the textId if present
-            if (dialogBoxText[0].equalsIgnoreCase(textId)) {
+            if (textId.equalsIgnoreCase(dialogBoxText[0])) {
                 return dialogBoxText[1];
             } else {
                 return null;
             }
-        } catch (UiObjectNotFoundException e) {
+        } catch (final UiObjectNotFoundException e) {
             throw new AssertionError(e);
         } finally {
-            // dismiss the dialog
+            // dismiss dialog
             UiAutomatorUtils.handleButtonClick("android:id/button1");
         }
     }

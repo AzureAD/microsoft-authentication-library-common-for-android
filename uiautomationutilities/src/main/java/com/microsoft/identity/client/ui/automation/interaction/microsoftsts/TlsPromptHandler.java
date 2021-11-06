@@ -51,6 +51,7 @@ public class TlsPromptHandler extends AbstractPromptHandler {
 
     private final static String TAG = TlsPromptHandler.class.getSimpleName();
     public final static long CHROME_MENU_BUTTON_RETRY_TIMEOUT = TimeUnit.SECONDS.toMillis(5);
+    private final static int CHROME_MENU_BUTTON_MAX_RETRY_ATTEMPTS = 2;
 
     public TlsPromptHandler(@NonNull final PromptHandlerParameters parameters) {
         super(new AadLoginComponentHandler(), parameters);
@@ -68,11 +69,11 @@ public class TlsPromptHandler extends AbstractPromptHandler {
         UiAutomatorUtils.obtainUiObjectWithText("Microsoft");
         try {
             final UiObject menuButton = UiAutomatorUtils.obtainUiObjectWithResourceId("com.android.chrome:id/menu_button");
-            Thread.sleep(CHROME_MENU_BUTTON_RETRY_TIMEOUT);
-            menuButton.click();
-            Thread.sleep(CHROME_MENU_BUTTON_RETRY_TIMEOUT);
-            if (menuButton.exists()){
-                menuButton.click();
+            for (int attempt = 0; attempt < CHROME_MENU_BUTTON_MAX_RETRY_ATTEMPTS; attempt++) {
+                Thread.sleep(CHROME_MENU_BUTTON_RETRY_TIMEOUT);
+                if (menuButton.exists()) {
+                    menuButton.click();
+                }
             }
             final UiObject openInChrome = UiAutomatorUtils.obtainUiObjectWithText("Open in");
             openInChrome.click();
