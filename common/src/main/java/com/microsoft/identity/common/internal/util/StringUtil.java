@@ -138,7 +138,7 @@ public final class StringUtil {
             uid = uidUtidArray[INDEX_UID];
             utid = uidUtidArray[INDEX_UTID];
         } else {
-            Logger.warnPII(TAG, "We had a home account id that could not be split correctly, " +
+            Logger.warn(TAG, "We had a home account id that could not be split correctly, " +
                     "We expected it to split into " +
                     EXPECTED_LENGTH + " parts but instead we had " + uidUtidArray.length + " when " +
                     "splitting the string on dot ('.')");
