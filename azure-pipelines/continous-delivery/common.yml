@@ -20,7 +20,7 @@ jobs:
 - job: common4j_phase
   displayName: 'common4j: Build, Test and Publish'
   steps:
-  - template: ../templates/steps/nightly-snapshot-releases/assemble-publish.yml
+  - template: ..\templates\steps\continous-delivery\assemble-publish-projversion.yml
     parameters:
       project: common4j
       prjVersion: $(versionNumber)
@@ -30,21 +30,21 @@ jobs:
   dependsOn:
   - common4j_phase
   steps:
-  - template: ../templates/steps/nightly-snapshot-releases/assemble-publish.yml
+  - template: ..\templates\steps\continous-delivery\assemble-publish-projversion.yml
     parameters:
       project: common
 # Key Vault
 - job: keyvault_phase
   displayName: 'Key Vault: Build, Test and Publish'
   steps:
-  - template: ../templates/steps/nightly-snapshot-releases/assemble-publish.yml
+  - template: ..\templates\steps\continous-delivery\assemble-publish-projversion.yml
     parameters:
       project: keyvault
 # Lab API
 - job: labapi_phase
   displayName: 'Lab API: Build, Test and Publish'
   steps:
-  - template: ../templates/steps/nightly-snapshot-releases/assemble-publish.yml
+  - template: ..\templates\steps\continous-delivery\assemble-publish-projversion.yml
     parameters:
       project: labapi
 # Test utils
@@ -55,7 +55,7 @@ jobs:
   - labapi_phase
   - common_phase
   steps:
-  - template: ../templates/steps/nightly-snapshot-releases/assemble-publish.yml
+  - template: ..\templates\steps\continous-delivery\assemble-publish-projversion.yml
     parameters:
       project: testutils
 # UI Automation utilities
@@ -65,7 +65,7 @@ jobs:
   - testutils_phase
   - common_phase
   steps:
-  - template: ../templates/steps/nightly-snapshot-releases/assemble-publish.yml
+  - template: ..\templates\steps\continous-delivery\assemble-publish-projversion.yml
     parameters:
       project: uiautomationutilities
 ...

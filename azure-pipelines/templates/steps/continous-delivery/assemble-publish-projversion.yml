@@ -1,4 +1,4 @@
-# File: azure-pipelines\templates\steps\nightly-snapshot-releases\assemble-publish-projversion.yml
+# File: azure-pipelines\templates\steps\continous-delivery\assemble-publish-projversion.yml
 # Description: Template to assemble and publish, using PprojVersion
 # Variable: 'project' gradle project
 # Variable: 'envVstsMvnAt' Enviroment VSTS Maven Access Token
