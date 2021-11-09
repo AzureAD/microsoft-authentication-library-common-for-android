@@ -7,12 +7,12 @@
 
 parameters:
 - name: project
+- name: prjVersion
 - name: envVstsMvnAt
   default: 'ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN'
 - name: variant
   default: ''
-- name: prjVersion
-  default: '0.$(Build.BuildId).$(Date:yyyyMMdd).$(Rev:.r)'
+
 
 steps:
 - checkout: self

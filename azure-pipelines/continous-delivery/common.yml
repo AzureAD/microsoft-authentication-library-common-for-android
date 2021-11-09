@@ -1,19 +1,22 @@
 # File: azure-pipelines\continous-delivery\common.yml
 # Description: Assemble & publish common release to internal feed
 
-${{ if ne(parameters.projectVersion, '') }}:
-  name: name: $(Build.DefinitionName)_$(SourceBranchName)_${{ parameters.prjVersion }}
-${{ if eq(parameters.projectVersion, '') }}:
-  name: $(Build.DefinitionName)_$(SourceBranchName)_0.$(Build.BuildId).$(Date:yyyyMMdd).$(Rev:.r)
+name: $(Build.DefinitionName)_$(SourceBranchName)_$(versionNumber)
 
 trigger:
 - dev
 pr: none
 
 parameters:
-- name: projectVersion
+- name: customVersion
   displayName: custom project version
   type: string
+
+variables:
+  ${{ if eq(parameters.customVersion, '') }}:
+    versionNumber: 0.$(Build.BuildId).$(Date:yyyyMMdd).$(Rev:.r)
+  ${{ else }}:
+    versionNumber: ${{ parameters.customVersion }}
 
 pool:
   name: Hosted Windows 2019 with VS2019
@@ -25,8 +28,7 @@ jobs:
   - template: ../templates/steps/nightly-snapshot-releases/assemble-publish.yml
     parameters:
       project: common4j
-      ${{ if ne(parameters.projectVersion, '') }}:
-        prjVersion: ${{ parameters.prjVersion }}
+      prjVersion: $(versionNumber)
 # common
 - job: common_phase
   displayName: 'common: Build, Test and Publish'
