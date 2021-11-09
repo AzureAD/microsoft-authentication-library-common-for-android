@@ -7,16 +7,11 @@ trigger:
 - dev
 pr: none
 
-parameters:
-- name: customVersion
-  displayName: custom project version
-  type: string
-
 variables:
-  ${{ if eq(parameters.customVersion, '') }}:
+  ${{ if eq(variables.customVersion, '') }}:
     versionNumber: 0.$(Build.BuildId).$(Date:yyyyMMdd).$(Rev:.r)
   ${{ else }}:
-    versionNumber: ${{ parameters.customVersion }}
+    versionNumber: ${{ variables.customVersion }}
 
 pool:
   name: Hosted Windows 2019 with VS2019
