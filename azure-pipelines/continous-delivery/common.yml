@@ -1,0 +1,74 @@
+# File: azure-pipelines\continous-delivery\common.yml
+# Description: Assemble & publish common release to internal feed
+
+${{ if ne(parameters.projectVersion, '') }}:
+  name: name: $(Build.DefinitionName)_$(SourceBranchName)_${{ parameters.prjVersion }}
+${{ if eq(parameters.projectVersion, '') }}:
+  name: $(Build.DefinitionName)_$(SourceBranchName)_0.$(Build.BuildId).$(Date:yyyyMMdd).$(Rev:.r)
+
+trigger:
+- dev
+pr: none
+
+parameters:
+- name: projectVersion
+  displayName: custom project version
+  type: string
+
+pool:
+  name: Hosted Windows 2019 with VS2019
+jobs:
+# common4j
+- job: common4j_phase
+  displayName: 'common4j: Build, Test and Publish'
+  steps:
+  - template: ../templates/steps/nightly-snapshot-releases/assemble-publish.yml
+    parameters:
+      project: common4j
+      ${{ if ne(parameters.projectVersion, '') }}:
+        prjVersion: ${{ parameters.prjVersion }}
+# common
+- job: common_phase
+  displayName: 'common: Build, Test and Publish'
+  dependsOn:
+  - common4j_phase
+  steps:
+  - template: ../templates/steps/nightly-snapshot-releases/assemble-publish.yml
+    parameters:
+      project: common
+# Key Vault
+- job: keyvault_phase
+  displayName: 'Key Vault: Build, Test and Publish'
+  steps:
+  - template: ../templates/steps/nightly-snapshot-releases/assemble-publish.yml
+    parameters:
+      project: keyvault
+# Lab API
+- job: labapi_phase
+  displayName: 'Lab API: Build, Test and Publish'
+  steps:
+  - template: ../templates/steps/nightly-snapshot-releases/assemble-publish.yml
+    parameters:
+      project: labapi
+# Test utils
+- job: testutils_phase
+  displayName: 'Test utils: Build, Test and Publish'
+  dependsOn:
+  - keyvault_phase
+  - labapi_phase
+  - common_phase
+  steps:
+  - template: ../templates/steps/nightly-snapshot-releases/assemble-publish.yml
+    parameters:
+      project: testutils
+# UI Automation utilities
+- job: uiautomationutilities_phase
+  displayName: 'UI Automation utilities: Build, Test and Publish'
+  dependsOn:
+  - testutils_phase
+  - common_phase
+  steps:
+  - template: ../templates/steps/nightly-snapshot-releases/assemble-publish.yml
+    parameters:
+      project: uiautomationutilities
+...
