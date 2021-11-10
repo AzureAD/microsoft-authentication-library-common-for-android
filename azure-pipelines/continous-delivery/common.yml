@@ -27,6 +27,7 @@ jobs:
     parameters:
       project: common4j
       prjVersion: $(versionNumber)
+      publishFolder: common4j/build/output
 # common
 - job: common_phase
   displayName: 'common: Build, Test and Publish'
@@ -37,6 +38,7 @@ jobs:
     parameters:
       project: common
       prjVersion: $(versionNumber)
+      publishFolder: common/build/outputs
 # Key Vault
 - job: keyvault_phase
   displayName: 'Key Vault: Build, Test and Publish'
@@ -45,6 +47,7 @@ jobs:
     parameters:
       project: keyvault
       prjVersion: $(versionNumber)
+      publishFolder: keyvault/build/libs
 # Lab API
 - job: labapi_phase
   displayName: 'Lab API: Build, Test and Publish'
@@ -53,8 +56,9 @@ jobs:
     parameters:
       project: labapi
       prjVersion: $(versionNumber)
+      publishFolder: labapi/build/libs
 # Lab API Utilities
-- job: labapi_phase
+- job: labapiutilities_phase
   displayName: 'Lab API Utilities: Build, Test and Publish'
   dependsOn:
   - keyvault_phase
@@ -64,6 +68,7 @@ jobs:
     parameters:
       project: :LabApiUtilities
       prjVersion: $(versionNumber)
+      publishFolder: LabApiUtilities/build/outputs
 # Test utils
 - job: testutils_phase
   displayName: 'Test utils: Build, Test and Publish'
@@ -76,6 +81,7 @@ jobs:
     parameters:
       project: testutils
       prjVersion: $(versionNumber)
+      publishFolder: testutils/build/outputs
 # UI Automation utilities
 - job: uiautomationutilities_phase
   displayName: 'UI Automation utilities: Build, Test and Publish'
@@ -87,4 +93,5 @@ jobs:
     parameters:
       project: uiautomationutilities
       prjVersion: $(versionNumber)
+      publishFolder: uiautomationutilities/build/outputs
 ...
