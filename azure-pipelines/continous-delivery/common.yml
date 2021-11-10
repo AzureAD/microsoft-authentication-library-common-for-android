@@ -1,7 +1,10 @@
 # File: azure-pipelines\continous-delivery\common.yml
 # Description: Assemble & publish common release to internal feed
+# Variable: 'ENV_VSTS_MVN_ANDROIDADAL_USERNAME' was defined in the Variables tab
+# Variable: 'mvnAccessToken' was defined in the Variables tab
+# Variable: 'customVersion' was defined in the Variables tab
 
-name: 0.$(Date:yyyyMMdd)$(Rev:.r)
+name: 0.$(Date:yyyyMMdd)$(Rev:.r) # $(Build.BuildNumber) = name
 
 trigger:
 - dev
@@ -49,6 +52,17 @@ jobs:
   - template: ..\templates\steps\continous-delivery\assemble-publish-projversion.yml
     parameters:
       project: labapi
+      prjVersion: $(versionNumber)
+# Lab API Utilities
+- job: labapi_phase
+  displayName: 'Lab API Utilities: Build, Test and Publish'
+  dependsOn:
+  - keyvault_phase
+  - labapi_phase
+  steps:
+  - template: ..\templates\steps\continous-delivery\assemble-publish-projversion.yml
+    parameters:
+      project: :LabApiUtilities
       prjVersion: $(versionNumber)
 # Test utils
 - job: testutils_phase
