@@ -1,7 +1,7 @@
 # File: azure-pipelines\continous-delivery\common.yml
 # Description: Assemble & publish common release to internal feed
 
-name: $(Build.DefinitionName)_$(SourceBranchName)_${{ variables.versionNumber }}
+name: 0.$(Build.BuildId).$(Date:yyyyMMdd)$(Rev:.r)
 
 trigger:
 - dev
@@ -9,7 +9,7 @@ pr: none
 
 variables:
   ${{ if eq(variables.customVersion, '') }}:
-    versionNumber: '0.$(Build.BuildId).$(Date:yyyyMMdd)$(Rev:.r)'
+    versionNumber: $(Build.BuildNumber)
   ${{ else }}:
     versionNumber: ${{ variables.customVersion }}
 
