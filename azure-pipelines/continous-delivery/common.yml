@@ -1,4 +1,4 @@
-# File: azure-pipelines\continous-delivery\common.yml
+# File: azure-pipelines/continous-delivery/common.yml
 # Description: Assemble & publish common release to internal feed
 # Variable: 'ENV_VSTS_MVN_ANDROIDADAL_USERNAME' was defined in the Variables tab
 # Variable: 'mvnAccessToken' was defined in the Variables tab
@@ -23,7 +23,7 @@ jobs:
 - job: common4j_phase
   displayName: 'common4j: Build, Test and Publish'
   steps:
-  - template: ..\templates\steps\continous-delivery\assemble-publish-projversion.yml
+  - template: ../templates/steps/continous-delivery/assemble-publish-projversion.yml
     parameters:
       project: common4j
       prjVersion: $(versionNumber)
@@ -34,7 +34,7 @@ jobs:
   dependsOn:
   - common4j_phase
   steps:
-  - template: ..\templates\steps\continous-delivery\assemble-publish-projversion.yml
+  - template: ../templates/steps/continous-delivery/assemble-publish-projversion.yml
     parameters:
       project: common
       prjVersion: $(versionNumber)
@@ -43,7 +43,7 @@ jobs:
 - job: keyvault_phase
   displayName: 'Key Vault: Build, Test and Publish'
   steps:
-  - template: ..\templates\steps\continous-delivery\assemble-publish-projversion.yml
+  - template: ../templates/steps/continous-delivery/assemble-publish-projversion.yml
     parameters:
       project: keyvault
       prjVersion: $(versionNumber)
@@ -52,7 +52,7 @@ jobs:
 - job: labapi_phase
   displayName: 'Lab API: Build, Test and Publish'
   steps:
-  - template: ..\templates\steps\continous-delivery\assemble-publish-projversion.yml
+  - template: ../templates/steps/continous-delivery/assemble-publish-projversion.yml
     parameters:
       project: labapi
       prjVersion: $(versionNumber)
@@ -64,7 +64,7 @@ jobs:
   - keyvault_phase
   - labapi_phase
   steps:
-  - template: ..\templates\steps\automation-cert.yml
+  - template: ../templates/steps/automation-cert.yml
     parameters:
       envVstsMvnAt: ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN
   - task: AzureKeyVault@2
@@ -74,7 +74,7 @@ jobs:
       KeyVaultName: 'ADALTestInfo'
       SecretsFilter: 'AndroidAutomationRunnerAppSecret'
       RunAsPreJob: false
-  - template: ..\templates\steps\continous-delivery\assemble-publish-projversion.yml
+  - template: ../templates/steps/continous-delivery/assemble-publish-projversion.yml
     parameters:
       project: LabApiUtilities
       prjVersion: $(versionNumber)
@@ -88,7 +88,7 @@ jobs:
   - labapi_phase
   - common_phase
   steps:
-  - template: ..\templates\steps\continous-delivery\assemble-publish-projversion.yml
+  - template: ../templates/steps/continous-delivery/assemble-publish-projversion.yml
     parameters:
       project: testutils
       prjVersion: $(versionNumber)
@@ -100,7 +100,7 @@ jobs:
   - testutils_phase
   - common_phase
   steps:
-  - template: ..\templates\steps\continous-delivery\assemble-publish-projversion.yml
+  - template: ../templates/steps/continous-delivery/assemble-publish-projversion.yml
     parameters:
       project: uiautomationutilities
       prjVersion: $(versionNumber)
