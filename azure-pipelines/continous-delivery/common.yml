@@ -76,9 +76,9 @@ jobs:
       RunAsPreJob: false
   - template: ..\templates\steps\continous-delivery\assemble-publish-projversion.yml
     parameters:
-      project: :LabApiUtilities
+      project: LabApiUtilities
       prjVersion: $(versionNumber)
-      publishFolder: LabApiUtilities/build
+      publishFolder: LabApiUtilities/build/libs
       testArguments: "-PlabSecret=$(AndroidAutomationRunnerAppSecret)"
 # Test utils
 - job: testutils_phase
