@@ -107,6 +107,9 @@ public abstract class AuthorizationFragment extends Fragment {
     }
 
     void finish() {
+        //We're finished here... stop listening for request cancellation
+        LocalBroadcastManager.getInstance(getContext()).unregisterReceiver(mCancelRequestReceiver);
+
         final FragmentActivity activity = getActivity();
         if (activity instanceof AuthorizationActivity) {
             activity.finish();
