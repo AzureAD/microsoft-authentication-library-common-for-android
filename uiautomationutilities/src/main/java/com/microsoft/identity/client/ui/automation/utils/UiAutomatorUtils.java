@@ -34,6 +34,9 @@ import androidx.test.uiautomator.UiScrollable;
 import androidx.test.uiautomator.UiSelector;
 
 import com.microsoft.identity.client.ui.automation.logging.Logger;
+
+import java.util.concurrent.TimeUnit;
+
 import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT;
 import static org.junit.Assert.fail;
 
@@ -43,6 +46,24 @@ import static org.junit.Assert.fail;
 public class UiAutomatorUtils {
 
     private final static String TAG = UiAutomatorUtils.class.getSimpleName();
+    private static final long DEFAULT_FIND_UI_ELEMENT_TIMEOUT = FIND_UI_ELEMENT_TIMEOUT;
+
+    /**
+     * Override the default value for UI Element timeout
+     *
+     * @param timeout  the timeout value
+     * @param timeUnit the timeout value unit
+     */
+    public static void setUIElementTimeout(final long timeout, final TimeUnit timeUnit) {
+        FIND_UI_ELEMENT_TIMEOUT = timeUnit.toMillis(timeout);
+    }
+
+    /**
+     * Reset the value for UI element timeout
+     */
+    public static void resetUIElementTimeout() {
+        FIND_UI_ELEMENT_TIMEOUT = DEFAULT_FIND_UI_ELEMENT_TIMEOUT;
+    }
 
     /**
      * Obtain an instance of the UiObject for a given resource id.

@@ -37,6 +37,32 @@ public class NetworkState {
         this.networkInterface = networkInterface;
     }
 
+    public static NetworkState newInstance(String networkStateString) {
+        String[] values = networkStateString.split("\\s+");
+        long delay = 0, duration = 0;
+        NetworkInterface networkInterface = null;
+        try {
+            if (values.length == 3) {
+                delay = Integer.parseInt(values[0]);
+                networkInterface = NetworkInterface.fromValue(values[1]);
+                duration = Integer.parseInt(values[2]);
+            } else if (values.length == 2) {
+                networkInterface = NetworkInterface.fromValue(values[0]);
+                duration = Integer.parseInt(values[1]);
+            } else if (values.length == 1) {
+                networkInterface = NetworkInterface.fromValue(values[0]);
+            }
+        } catch (Exception exception) {
+            throw new IllegalArgumentException("Error parsing network state from \"" + networkStateString + "\"", exception);
+        }
+
+        if (networkInterface == null) {
+            throw new IllegalArgumentException("Unable to get network interface from \"" + networkStateString + "\"");
+        }
+
+        return new NetworkState(delay, networkInterface, duration);
+    }
+
     @Override
     public String toString() {
         return String.format(

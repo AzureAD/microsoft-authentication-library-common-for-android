@@ -59,6 +59,20 @@ public class NetworkMarkerManager {
 
     }
 
+
+    private NetworkState[] parseNetworkStates(String networkStatesString) {
+        final String[] statesString = networkStatesString.split("\\s*,\\s*");
+
+        final NetworkState[] networkStates = new NetworkState[statesString.length];
+
+        for (int i = 0; i < networkStates.length; i++) {
+            networkStates[i] = NetworkState.newInstance(statesString[i]);
+        }
+
+        return networkStates;
+    }
+
+
     private boolean checkEnabled(final String methodName) {
         if (mStateChangeHandler == null) {
             Logger.warn(TAG + methodName, "No network state change handler has been registered.");
@@ -84,6 +98,10 @@ public class NetworkMarkerManager {
             networkStatesHandler.clear();
             mCurrentMarker = null;
         }
+    }
+
+    public void startMarker(@NonNull final String marker, @NonNull final String networkStatesString) {
+        startMarker(marker, parseNetworkStates(networkStatesString));
     }
 
 
@@ -116,6 +134,9 @@ public class NetworkMarkerManager {
         }
     }
 
+    public void applyNetworkStates(@NonNull final String marker, @NonNull final String networkStatesString) {
+        applyNetworkStates(marker, parseNetworkStates(networkStatesString));
+    }
 
     public void applyNetworkStates(@NonNull final String marker, @NonNull final NetworkState... networkStates) {
         mNetworkMarkerOverride.put(marker, networkStates);

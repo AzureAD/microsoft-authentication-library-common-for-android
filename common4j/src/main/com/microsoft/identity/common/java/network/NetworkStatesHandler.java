@@ -12,8 +12,8 @@ public class NetworkStatesHandler implements Runnable {
     private final Thread networkStateThread = new Thread(this);
 
     private INetworkStateChangeHandler mStateChangeHandler = null;
-    private NetworkMarker currentMarker = null;
-    private NetworkState currentState = null;
+    private NetworkMarker mCurrentMarker = null;
+    private NetworkState mCurrentState = null;
 
     public void clear() {
         clearCurrentMarker();
@@ -21,25 +21,27 @@ public class NetworkStatesHandler implements Runnable {
 
     public void apply(@NonNull final NetworkMarker networkMarker) {
         clearCurrentMarker();
-        currentMarker = networkMarker;
+        mCurrentMarker = networkMarker;
         networkStateThread.start();
     }
 
     @Override
     public void run() {
         final String methodName = ":run";
-        Logger.info(TAG + methodName, "Running network states for marker: " + currentMarker.getMarker());
-        final List<NetworkState> networkStateList = currentMarker.getNetworkStates();
+        Logger.info(TAG + methodName, "Running network states for marker: " + mCurrentMarker.getMarker());
+        final List<NetworkState> networkStateList = mCurrentMarker.getNetworkStates();
+
+        final NetworkMarker marker = mCurrentMarker;
 
         for (NetworkState networkState : networkStateList) {
             try {
-                if (currentState != null && currentState.wasApplied()) {
-                    Logger.info(TAG + methodName, "Completing network state: " + currentState);
-                    currentState.setTimeCompleted(System.currentTimeMillis());
+                if (mCurrentState != null && mCurrentState.wasApplied()) {
+                    Logger.info(TAG + methodName, "Completing network state: " + mCurrentState);
+                    mCurrentState.setTimeCompleted(System.currentTimeMillis());
                 }
 
                 networkState.setTimeApplied(System.currentTimeMillis());
-                currentState = networkState;
+                mCurrentState = networkState;
 
                 if (networkState.getDelay() > 0) {
                     Thread.sleep(networkState.getDelay());
@@ -50,7 +52,7 @@ public class NetworkStatesHandler implements Runnable {
 
                 if (!stateApplied) {
                     Logger.warn(TAG + methodName, "Could not apply network state: " + networkState);
-                    mStateChangeHandler.handleNetworkStateNotApplied(currentMarker, networkState);
+                    mStateChangeHandler.handleNetworkStateNotApplied(marker, networkState);
                 }
 
                 if (networkState.getDuration() > 0 && stateApplied) {
@@ -59,7 +61,7 @@ public class NetworkStatesHandler implements Runnable {
             } catch (InterruptedException e) {
                 Logger.warn(TAG + methodName, "Network marker handler interrupted while running state: " + networkState);
                 networkState.setApplied(false);
-                mStateChangeHandler.handleNetworkStateNotApplied(currentMarker, networkState);
+                mStateChangeHandler.handleNetworkStateNotApplied(mCurrentMarker, networkState);
             }
         }
     }
@@ -73,16 +75,17 @@ public class NetworkStatesHandler implements Runnable {
     }
 
     private void clearCurrentMarker() {
-        mStateChangeHandler.onRestoreNetworkState(currentState);
-        if (currentState != null) {
+        Logger.info(TAG + ":clearCurrentMarker", "Clearing the current network marker.");
+        mStateChangeHandler.onRestoreNetworkState(mCurrentState);
+        if (mCurrentState != null) {
             if (networkStateThread.isAlive()) {
                 // there's a current marker applying network states, interrupt it.
                 networkStateThread.interrupt();
             } else {
-                currentState.setTimeCompleted(System.currentTimeMillis());
+                mCurrentState.setTimeCompleted(System.currentTimeMillis());
             }
         }
-        currentState = null;
-        currentMarker = null;
+        mCurrentState = null;
+        mCurrentMarker = null;
     }
 }

@@ -30,6 +30,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
+import android.util.Log;
 import android.webkit.ClientCertRequest;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
@@ -98,6 +99,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     @SuppressWarnings(WarningType.deprecation_warning)
     @Override
     public boolean shouldOverrideUrlLoading(final WebView view, final String url) {
+        Log.d(TAG, "shouldOverrideUrlLoading: "+url);
         if (StringUtil.isNullOrEmpty(url)) {
             throw new IllegalArgumentException("Redirect to empty url in web view.");
         }
@@ -116,6 +118,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     @TargetApi(Build.VERSION_CODES.N)
     @RequiresApi(Build.VERSION_CODES.N)
     public boolean shouldOverrideUrlLoading(final WebView view, final WebResourceRequest request) {
+        Log.d(TAG, "shouldOverrideUrlLoading: "+request.getUrl());
         final Uri requestUrl = request.getUrl();
         return handleUrl(view, requestUrl.toString());
     }
@@ -454,6 +457,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     @Override
     public void onReceivedClientCertRequest(WebView view,
                                             final ClientCertRequest clientCertRequest) {
+        Log.d(TAG, "onReceivedClientCertRequest");
         final ClientCertAuthChallengeHandler clientCertAuthChallengeHandler = new ClientCertAuthChallengeHandler(getActivity());
         clientCertAuthChallengeHandler.processChallenge(clientCertRequest);
     }
