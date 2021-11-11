@@ -96,7 +96,7 @@ publishing {
     publications {
         aar(MavenPublication) {
             groupId 'com.microsoft.identity'
-            artifactId 'LabApiUtilities'
+            artifactId 'lab-api-utilities'
             from components.java
         }
     }
