@@ -632,7 +632,9 @@ public class CommandDispatcher {
                                 commandParameters.getSdkVersion()
                         );
                         try {
-                            sRunningInteractiveSessionCount++;
+                            synchronized (sLock) {
+                                sRunningInteractiveSessionCount++;
+                            }
 
                             // set correlation id on parameters as it may not already be set
                             commandParameters.setCorrelationId(correlationId);
@@ -674,7 +676,9 @@ public class CommandDispatcher {
                             Telemetry.getInstance().flush(correlationId);
                             returnCommandResult(command, commandResult);
                         } finally {
-                            sRunningInteractiveSessionCount--;
+                            synchronized (sLock) {
+                                sRunningInteractiveSessionCount--;
+                            }
                             DiagnosticContext.INSTANCE.clear();
                         }
                     }
