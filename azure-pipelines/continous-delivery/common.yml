@@ -78,7 +78,7 @@ jobs:
     parameters:
       project: :LabApiUtilities
       prjVersion: $(versionNumber)
-      publishFolder: LabApiUtilities/build/outputs
+      publishFolder: LabApiUtilities/build
       testArguments: "-PlabSecret=$(AndroidAutomationRunnerAppSecret)"
 # Test utils
 - job: testutils_phase
