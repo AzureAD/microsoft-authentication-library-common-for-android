@@ -189,6 +189,10 @@ public class ClientException extends BaseException {
     public static final String DUPLICATE_COMMAND = "duplicate_command";
 
     /**
+     * An interactive session is already in progress.
+     */
+    public static final String INTERACTIVE_SESSION_IN_PROGRESS = "interactive_session_in_progress";
+    /**
      * Emitted when the KeyStore generates a certificate that does not match the designated key size.
      * Due to a bug in some versions of Android, keySizes may not be exactly as specified
      * To generate a 2048-bit key, two primes of length 1024 are multiplied -- this product

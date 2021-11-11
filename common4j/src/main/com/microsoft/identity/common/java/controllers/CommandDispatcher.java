@@ -29,6 +29,7 @@ import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBr
 import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.PRODUCT;
 import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.VERSION;
 import static com.microsoft.identity.common.java.commands.SilentTokenCommand.ACQUIRE_TOKEN_SILENT_DEFAULT_TIMEOUT_MILLISECONDS;
+import static com.microsoft.identity.common.java.exception.ClientException.INTERACTIVE_SESSION_IN_PROGRESS;
 import static com.microsoft.identity.common.java.marker.PerfConstants.CodeMarkerConstants.ACQUIRE_TOKEN_SILENT_COMMAND_EXECUTION_END;
 import static com.microsoft.identity.common.java.marker.PerfConstants.CodeMarkerConstants.ACQUIRE_TOKEN_SILENT_COMMAND_EXECUTION_START;
 import static com.microsoft.identity.common.java.marker.PerfConstants.CodeMarkerConstants.ACQUIRE_TOKEN_SILENT_EXECUTOR_START;
@@ -85,12 +86,15 @@ import lombok.NonNull;
 public class CommandDispatcher {
 
     private static final String TAG = CommandDispatcher.class.getSimpleName();
+    private static final int INTERACTIVE_REQUEST_THREAD_POOL_SIZE = 1;
     private static final int SILENT_REQUEST_THREAD_POOL_SIZE = 5;
-    private static final ExecutorService sInteractiveExecutor = Executors.newSingleThreadExecutor();
+    private static final ExecutorService sInteractiveExecutor = Executors.newFixedThreadPool(INTERACTIVE_REQUEST_THREAD_POOL_SIZE);
     private static final ExecutorService sSilentExecutor = Executors.newFixedThreadPool(SILENT_REQUEST_THREAD_POOL_SIZE);
     private static final Object sLock = new Object();
     private static InteractiveTokenCommand sCommand = null;
     private static final CommandResultCache sCommandResultCache = new CommandResultCache();
+
+    private static int sRunningInteractiveSessionCount = 0;
 
     private static final Object mapAccessLock = new Object();
 
@@ -609,6 +613,13 @@ public class CommandDispatcher {
                     // Send a broadcast to cancel if any active auth request is present.
                     LocalBroadcaster.INSTANCE.broadcast(CANCEL_AUTHORIZATION_REQUEST, new PropertyBag());
                 }
+                // Otherwise, we return an error IF the interactive request thread pool is already maxed out.
+                else if (sRunningInteractiveSessionCount >= INTERACTIVE_REQUEST_THREAD_POOL_SIZE) {
+                    commandCallBackOnError(command, new ClientException(
+                            INTERACTIVE_SESSION_IN_PROGRESS,
+                            "Interactive sessions are currently in progress."));
+                    return;
+                }
 
                 sInteractiveExecutor.execute(new Runnable() {
                     @Override
@@ -621,6 +632,8 @@ public class CommandDispatcher {
                                 commandParameters.getSdkVersion()
                         );
                         try {
+                            sRunningInteractiveSessionCount++;
+
                             // set correlation id on parameters as it may not already be set
                             commandParameters.setCorrelationId(correlationId);
 
@@ -661,6 +674,7 @@ public class CommandDispatcher {
                             Telemetry.getInstance().flush(correlationId);
                             returnCommandResult(command, commandResult);
                         } finally {
+                            sRunningInteractiveSessionCount--;
                             DiagnosticContext.INSTANCE.clear();
                         }
                     }
