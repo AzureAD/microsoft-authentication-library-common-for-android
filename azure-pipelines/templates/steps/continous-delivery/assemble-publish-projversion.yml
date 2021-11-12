@@ -1,0 +1,54 @@
+# File: azure-pipelines/templates/steps/continous-delivery/assemble-publish-projversion.yml
+# Description: Template to assemble and publish, using PprojVersion
+# parameters: 'project' gradle project
+# parameters: 'envVstsMvnAt' Enviroment VSTS Maven Access Token
+# parameters: 'variant' gradle variant for test assemble and publish
+# parameters: 'prjVersion' define the version tu publish
+# parameters: 'publishFolder' path to publish artifacts
+# parameters: 'testArguments' additional arguments for test
+parameters:
+- name: project
+- name: prjVersion
+- name: envVstsMvnAt
+  default: 'ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN'
+- name: variant
+  default: ''
+- name: publishFolder
+  default: ''
+- name: testArguments
+  default: ''
+
+steps:
+- checkout: self
+  clean: true
+  submodules: recursive
+  persistCredentials: True
+- task: CmdLine@1
+  displayName: Set MVN Access Token in Environment
+  inputs:
+    filename: echo
+    arguments: '##vso[task.setvariable variable=${{ parameters.envVstsMvnAt }}]$(mvnAccessToken)'
+- task: Gradle@2
+  displayName: Assemble ${{ parameters.project }} ${{ parameters.variant }}
+  inputs:
+    tasks: '${{ parameters.project }}:clean ${{ parameters.project }}:assemble${{ parameters.variant }} -PprojVersion=${{ parameters.prjVersion }}'
+- task: Gradle@2
+  displayName: Run unit tests
+  inputs:
+    tasks: ${{ parameters.project }}:test${{ parameters.variant }} ${{ parameters.testArguments }}
+- task: Gradle@2
+  displayName: Publish
+  inputs:
+    tasks: '${{ parameters.project }}:publish${{ parameters.variant }} -PprojVersion=${{ parameters.prjVersion }}'
+- ${{ if ne(parameters.publishFolder, '') }}:
+  - task: CopyFiles@2
+    displayName: Copy Files to Artifact Staging Directory
+    inputs:
+      SourceFolder: ${{ parameters.publishFolder }}
+      TargetFolder: $(build.artifactstagingdirectory)
+  - task: PublishPipelineArtifact@1
+    name: PublishPipelineArtifacts1
+    displayName: Publish Artifact
+    inputs:
+      ArtifactName: ${{ parameters.project }}
+      TargetPath: $(build.artifactstagingdirectory)

@@ -64,6 +64,7 @@ import com.microsoft.identity.common.logging.Logger;
 
 import lombok.NonNull;
 
+import java.io.File;
 import java.io.IOException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -106,7 +107,12 @@ public class AndroidPlatformComponents implements IPlatformComponents {
         if (!sInitialized) {
             Device.setDeviceMetadata(new AndroidDeviceMetadata());
             Logger.setAndroidLogger();
-            HttpCache.initialize(context.getCacheDir());
+            final File cacheDir = context.getCacheDir();
+            if (cacheDir != null) {
+                HttpCache.initialize(cacheDir);
+            } else {
+                Logger.warn(TAG, "Http caching is not enabled because the cache dir is null");
+            }
             sInitialized = true;
         }
     }
