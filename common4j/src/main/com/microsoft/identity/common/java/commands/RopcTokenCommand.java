@@ -33,6 +33,10 @@ import java.util.List;
 
 import lombok.NonNull;
 
+/**
+ * ROPC command for Resource Owner Password Credentials.
+ * see: https://docs.microsoft.com/en-us/azure/active-directory/develop/v2-oauth-ropc
+ */
 public class RopcTokenCommand extends TokenCommand {
 
     private static final String TAG = RopcTokenCommand.class.getSimpleName();
