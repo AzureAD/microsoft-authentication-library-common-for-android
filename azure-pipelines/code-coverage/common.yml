@@ -1,0 +1,46 @@
+# File: azure-pipelines\code-coverage\common.yml
+# Description: Code coverage for common
+# Variable: 'mvnAccessToken' was defined in the Variables tab
+# https://docs.microsoft.com/en-us/azure/devops/organizations/accounts/use-personal-access-tokens-to-authenticate
+# Variable: 'commonBranchName' common branch to be used when running the pipeline manually
+name: $(date:yyyyMMdd)$(rev:.r)
+
+trigger: none
+
+variables:
+- name: robolectricSdkVersion
+  value: 29
+
+resources:
+  repositories:
+  - repository: self
+    type: git
+    ref: paul/code-coverage
+
+pool:
+  name: Hosted Windows 2019 with VS2019
+
+jobs:
+- job: commonCodeCoverage
+  displayName: Common code coverage
+  steps:
+  - checkout: self
+    displayName: Checkout common repository
+    clean: true
+    submodules: recursive
+    persistCredentials: True
+  - template: ../templates/steps/automation-cert.yml
+  - task: Gradle@1
+    displayName: Assemble common
+    inputs:
+      tasks: clean common:assembleLocal
+      publishJUnitResults: false
+  - task: Gradle@2
+    displayName: Run common code coverage
+    inputs:
+      tasks: common:localDebugCommonUnitTestCoverageReport -Plabtest -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}}
+  - task: PublishCodeCoverageResults@1
+    displayName: 'Publish code coverage report'
+    inputs:
+      summaryFileLocation: '$(Build.SourcesDirectory)\common\build\reports\jacoco\localDebugCommonUnitTestCoverageReport\localDebugCommonUnitTestCoverageReport.xml'
+      reportDirectory: '$(Build.SourcesDirectory)\common\build\reports\jacoco\localDebugCommonUnitTestCoverageReport\html'
