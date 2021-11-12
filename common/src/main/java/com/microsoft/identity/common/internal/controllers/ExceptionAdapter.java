@@ -22,6 +22,8 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.controllers;
 
+import android.text.TextUtils;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -31,10 +33,14 @@ import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.DeviceRegistrationRequiredException;
-import com.microsoft.identity.common.exception.TerminalException;
+import com.microsoft.identity.common.exception.IntuneAppProtectionPolicyRequiredException;
 import com.microsoft.identity.common.exception.ServiceException;
+import com.microsoft.identity.common.exception.TerminalException;
 import com.microsoft.identity.common.exception.UiRequiredException;
 import com.microsoft.identity.common.exception.UserCancelException;
+import com.microsoft.identity.common.internal.commands.parameters.BrokerInteractiveTokenCommandParameters;
+import com.microsoft.identity.common.internal.commands.parameters.BrokerSilentTokenCommandParameters;
+import com.microsoft.identity.common.internal.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationErrorResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationErrorResponse;
@@ -57,11 +63,10 @@ public class ExceptionAdapter {
     private static final String TAG = ExceptionAdapter.class.getSimpleName();
 
     @Nullable
-    public static BaseException exceptionFromAcquireTokenResult(final AcquireTokenResult result) {
+    public static BaseException exceptionFromAcquireTokenResult(final AcquireTokenResult result, final CommandParameters commandParameters) {
         final String methodName = ":exceptionFromAcquireTokenResult";
 
-        @SuppressWarnings(WarningType.rawtype_warning)
-        final AuthorizationResult authorizationResult = result.getAuthorizationResult();
+        @SuppressWarnings(WarningType.rawtype_warning) final AuthorizationResult authorizationResult = result.getAuthorizationResult();
 
         if (null != authorizationResult) {
             final AuthorizationErrorResponse authorizationErrorResponse = authorizationResult.getAuthorizationErrorResponse();
@@ -110,7 +115,7 @@ public class ExceptionAdapter {
             );
         }
 
-        return exceptionFromTokenResult(result.getTokenResult());
+        return exceptionFromTokenResult(result.getTokenResult(), commandParameters);
     }
 
     /**
@@ -118,8 +123,8 @@ public class ExceptionAdapter {
      *
      * @param tokenResult
      * @return ServiceException, UiRequiredException
-     * */
-    public static ServiceException exceptionFromTokenResult(final TokenResult tokenResult) {
+     */
+    public static ServiceException exceptionFromTokenResult(final TokenResult tokenResult, final CommandParameters commandParameters) {
         final String methodName = ":exceptionFromTokenResult";
 
         ServiceException outErr;
@@ -129,9 +134,9 @@ public class ExceptionAdapter {
                 tokenResult.getErrorResponse() != null &&
                 !StringUtil.isEmpty(tokenResult.getErrorResponse().getError())) {
 
-            outErr = getExceptionFromTokenErrorResponse(tokenResult.getErrorResponse());
+            outErr = getExceptionFromTokenErrorResponse(commandParameters, tokenResult.getErrorResponse());
             applyCliTelemInfo(tokenResult.getCliTelemInfo(), outErr);
-        }else {
+        } else {
             Logger.warn(
                     TAG + methodName,
                     "Unknown error, Token result is null [" + (tokenResult == null) + "]"
@@ -151,9 +156,9 @@ public class ExceptionAdapter {
      *
      * @param oAuthError
      * @return boolean
-     * */
+     */
     @SuppressWarnings("deprecation")
-    private static boolean shouldBeConvertedToUiRequiredException(final String oAuthError){
+    private static boolean shouldBeConvertedToUiRequiredException(final String oAuthError) {
         // Invalid_grant doesn't necessarily requires UI protocol-wise.
         // We simplify our logic because this layer is also used by MSAL.
 
@@ -169,9 +174,8 @@ public class ExceptionAdapter {
      *
      * @param errorResponse
      * @return ServiceException, UiRequiredException
-     * */
+     */
     public static ServiceException getExceptionFromTokenErrorResponse(@NonNull final TokenErrorResponse errorResponse) {
-        final String methodName = ":getExceptionFromTokenErrorResponse";
 
         final ServiceException outErr;
 
@@ -188,24 +192,71 @@ public class ExceptionAdapter {
         }
 
         outErr.setOauthSubErrorCode(errorResponse.getSubError());
+        setHttpResponseUsingTokenErrorResponse(outErr, errorResponse);
+        return outErr;
+    }
+
+
+    public static ServiceException getExceptionFromTokenErrorResponse(@Nullable final CommandParameters commandParameters,
+                                                                      @NonNull final TokenErrorResponse errorResponse) {
+
+        if (isIntunePolicyRequiredError(errorResponse)) {
+            if (commandParameters == null || !(isBrokerTokenCommandParameters(commandParameters))) {
+                Logger.warn(TAG, "In order to properly construct the IntuneAppProtectionPolicyRequiredException we need the command parameters to be supplied.  Returning as service exception instead.");
+                return getExceptionFromTokenErrorResponse(errorResponse);
+            }
+            IntuneAppProtectionPolicyRequiredException policyRequiredException;
+            if (commandParameters instanceof BrokerInteractiveTokenCommandParameters) {
+                policyRequiredException = new IntuneAppProtectionPolicyRequiredException(
+                        errorResponse.getError(),
+                        errorResponse.getErrorDescription(),
+                        (BrokerInteractiveTokenCommandParameters) commandParameters
+                );
+            } else {
+                policyRequiredException = new IntuneAppProtectionPolicyRequiredException(
+                        errorResponse.getError(),
+                        errorResponse.getErrorDescription(),
+                        (BrokerSilentTokenCommandParameters) commandParameters
+                );
+            }
+            policyRequiredException.setOauthSubErrorCode(errorResponse.getSubError());
+            setHttpResponseUsingTokenErrorResponse(policyRequiredException, errorResponse);
+
+            return policyRequiredException;
+        } else {
+            return getExceptionFromTokenErrorResponse(errorResponse);
+        }
+
+
+    }
+
+    /**
+     * Name: setHttpResponseUsingTokenErrorResponse
+     *
+     * @param exception     ServiceException to which we will append an HttpResponse
+     * @param errorResponse A TokenErrorResponse from which we will recontruct an HttpResponse
+     */
+
+    private static void setHttpResponseUsingTokenErrorResponse(@NonNull final ServiceException exception,
+                                                               @NonNull final TokenErrorResponse errorResponse) {
 
         try {
-            outErr.setHttpResponse(
+            exception.setHttpResponse(
                     synthesizeHttpResponse(
                             errorResponse.getStatusCode(),
                             errorResponse.getResponseHeadersJson(),
-                            errorResponse.getResponseBody()
-                    )
-            );
-        }
-        catch (JSONException e) {
+                            errorResponse.getResponseBody()));
+        } catch (JSONException e) {
             Logger.warn(
-                    TAG + methodName,
+                    TAG,
                     "Failed to deserialize error data: status, headers, response body."
             );
         }
 
-        return outErr;
+    }
+
+    private static boolean isBrokerTokenCommandParameters(CommandParameters commandParameters) {
+        return ((commandParameters instanceof BrokerSilentTokenCommandParameters) || (commandParameters instanceof BrokerInteractiveTokenCommandParameters));
     }
 
     public static void applyCliTelemInfo(@Nullable final CliTelemInfo cliTelemInfo,
@@ -243,7 +294,7 @@ public class ExceptionAdapter {
 
     public static BaseException baseExceptionFromException(final Throwable exception) {
         Throwable e = exception;
-        if (exception instanceof ExecutionException){
+        if (exception instanceof ExecutionException) {
             e = exception.getCause();
         }
 
@@ -273,5 +324,14 @@ public class ExceptionAdapter {
                 ClientException.UNKNOWN_ERROR,
                 e.getMessage(),
                 e);
+    }
+
+    private static boolean isIntunePolicyRequiredError(
+            @NonNull final TokenErrorResponse errorResponse) {
+
+        return !TextUtils.isEmpty(errorResponse.getError()) &&
+                !TextUtils.isEmpty(errorResponse.getSubError()) &&
+                errorResponse.getError().equalsIgnoreCase(AuthenticationConstants.OAuth2ErrorCode.UNAUTHORIZED_CLIENT) &&
+                errorResponse.getSubError().equalsIgnoreCase(AuthenticationConstants.OAuth2SubErrorCode.PROTECTION_POLICY_REQUIRED);
     }
 }
