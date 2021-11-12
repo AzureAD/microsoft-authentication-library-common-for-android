@@ -29,12 +29,15 @@ import static com.microsoft.identity.common.java.exception.ClientException.NO_SU
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.SharedPreferences;
 
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import com.microsoft.identity.common.crypto.AndroidAuthSdkStorageEncryptionManager;
 import com.microsoft.identity.common.crypto.AndroidBrokerStorageEncryptionManager;
+import com.microsoft.identity.common.internal.net.cache.HttpCache;
+import com.microsoft.identity.common.java.broker.ICallValidator;
 import com.microsoft.identity.common.java.cache.IMultiTypeNameValueStorage;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
 import com.microsoft.identity.common.internal.platform.AndroidDeviceMetadata;
@@ -56,13 +59,17 @@ import com.microsoft.identity.common.java.providers.oauth2.IStateGenerator;
 import com.microsoft.identity.common.java.util.ClockSkewManager;
 import com.microsoft.identity.common.java.util.IClockSkewManager;
 import com.microsoft.identity.common.java.util.IPlatformUtil;
+import com.microsoft.identity.common.java.util.ported.Predicate;
 import com.microsoft.identity.common.logging.Logger;
 import com.microsoft.identity.common.java.strategies.IAuthorizationStrategyFactory;
 
+import java.io.File;
 import java.io.IOException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
+import java.util.Iterator;
+import java.util.Map;
 
 import lombok.NonNull;
 
@@ -100,10 +107,16 @@ public class AndroidPlatformComponents implements IPlatformComponents {
      * TODO: Once we finish the work, this should be extracted out.
      *       It should be init separately, not as part of this class' construction.
      */
-    public static synchronized void initializeStaticClasses() {
+    private static synchronized void initializeStaticClasses(@NonNull final Context context) {
         if (!sInitialized) {
             Device.setDeviceMetadata(new AndroidDeviceMetadata());
             Logger.setAndroidLogger();
+            final File cacheDir = context.getCacheDir();
+            if (cacheDir != null) {
+                HttpCache.initialize(cacheDir);
+            } else {
+                Logger.warn(TAG, "Http caching is not enabled because the cache dir is null");
+            }
             sInitialized = true;
         }
     }
@@ -134,7 +147,7 @@ public class AndroidPlatformComponents implements IPlatformComponents {
         mContext = applicationContext;
         mActivity = activity;
         mFragment = fragment;
-        initializeStaticClasses();
+        initializeStaticClasses(applicationContext);
     }
 
     // TODO: The caller of this base 'common' class is unclear whether it's in Broker or ADAL/MSAL.
@@ -238,6 +251,64 @@ public class AndroidPlatformComponents implements IPlatformComponents {
     @Override
     public IMultiTypeNameValueStorage getFileStore(final @NonNull String storeName) {
         return SharedPreferencesFileManager.getSharedPreferences(mContext, storeName, null);
+    }
+
+    @Override
+    public INameValueStorage<String> getMultiProcessStringStore(final @NonNull String storeName) {
+        final SharedPreferences sharedPreferences = mContext.getSharedPreferences(storeName, Context.MODE_MULTI_PROCESS);
+        return new SharedPrefStringNameValueStorage(new IMultiTypeNameValueStorage() {
+            @Override
+            public void putString(String key, String value) {
+                sharedPreferences.edit().putString(key, value).apply();
+            }
+
+            @Override
+            public String getString(String key) {
+                return sharedPreferences.getString(key, null);
+            }
+
+            @Override
+            public void putLong(String key, long value) {
+                sharedPreferences.edit().putString(key, Long.toString(value)).apply();
+            }
+
+            @Override
+            public long getLong(String key) {
+                try {
+                    if (!sharedPreferences.contains(key)) {
+                        return 0;
+                    }
+                    return Long.parseLong(sharedPreferences.getString(key, "0"));
+                } catch (final NumberFormatException nfe) {
+                    return 0;
+                }
+            }
+
+            @Override
+            public Map<String, String> getAll() {
+                return (Map<String, String>) sharedPreferences.getAll();
+            }
+
+            @Override
+            public Iterator<Map.Entry<String, String>> getAllFilteredByKey(Predicate<String> keyFilter) {
+                return null;
+            }
+
+            @Override
+            public boolean contains(String key) {
+                return sharedPreferences.contains(key);
+            }
+
+            @Override
+            public void clear() {
+                sharedPreferences.edit().clear().commit();
+            }
+
+            @Override
+            public void remove(String key) {
+                sharedPreferences.edit().remove(key).commit();
+            }
+        });
     }
 
     @SuppressWarnings(WarningType.rawtype_warning)

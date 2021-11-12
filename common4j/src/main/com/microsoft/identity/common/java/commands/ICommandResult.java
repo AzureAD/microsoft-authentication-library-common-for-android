@@ -25,24 +25,18 @@ package com.microsoft.identity.common.java.commands;
 /**
  * Interface for Broker/MSAL command result.
  */
-public interface ICommandResult {
+public interface ICommandResult<T> {
 
     enum ResultStatus {
         CANCEL,
         COMPLETED,
-        ERROR;
+        ERROR,
+        VOID;
 
         public String getLogStatus() {
-            if (ResultStatus.COMPLETED == this) {
-                return "SUCCESS";
-            } else if (ResultStatus.ERROR == this) {
-                return "ERROR";
-            } else {
-                return "CANCEL";
-            }
+            return this.name();
         }
     }
-
     /**
      * Returns a correlation ID associated to the command.
      */
@@ -56,5 +50,5 @@ public interface ICommandResult {
     /**
      * Gets the result object.
      */
-    Object getResult();
+    T getResult();
 }

@@ -243,7 +243,7 @@ public class UserApi {
      */
     public ApiResponse<List<User>> apiUserGetWithHttpInfo(String usertype, String userrole, String mfa, String protectionpolicy, String homedomain, String homeupn, String b2cprovider, String federationprovider, String azureenvironment, String guesthomeazureenvironment, String apptype, String publicclient, String signinaudience, String guesthomedin, String hasaltid, String altidsource, String altidtype, String passwordpolicyvalidityperiod, String passwordpolicynotificationdays, String tokenlifetimepolicy, String tokentype, String tokenlifetime) throws ApiException {
         com.squareup.okhttp.Call call = apiUserGetValidateBeforeCall(usertype, userrole, mfa, protectionpolicy, homedomain, homeupn, b2cprovider, federationprovider, azureenvironment, guesthomeazureenvironment, apptype, publicclient, signinaudience, guesthomedin, hasaltid, altidsource, altidtype, passwordpolicyvalidityperiod, passwordpolicynotificationdays, tokenlifetimepolicy, tokentype, tokenlifetime, null, null);
-        Type localVarReturnType = new TypeToken<List<User>>(){}.getType();
+        Type localVarReturnType = TypeToken.getParameterized(List.class, User.class).getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
@@ -298,7 +298,7 @@ public class UserApi {
         }
 
         com.squareup.okhttp.Call call = apiUserGetValidateBeforeCall(usertype, userrole, mfa, protectionpolicy, homedomain, homeupn, b2cprovider, federationprovider, azureenvironment, guesthomeazureenvironment, apptype, publicclient, signinaudience, guesthomedin, hasaltid, altidsource, altidtype, passwordpolicyvalidityperiod, passwordpolicynotificationdays, tokenlifetimepolicy, tokentype, tokenlifetime, progressListener, progressRequestListener);
-        Type localVarReturnType = new TypeToken<List<User>>(){}.getType();
+        Type localVarReturnType = TypeToken.getParameterized(List.class, User.class).getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }
@@ -389,7 +389,7 @@ public class UserApi {
      */
     public ApiResponse<List<User>> apiUserUpnGetWithHttpInfo(String upn) throws ApiException {
         com.squareup.okhttp.Call call = apiUserUpnGetValidateBeforeCall(upn, null, null);
-        Type localVarReturnType = new TypeToken<List<User>>(){}.getType();
+        Type localVarReturnType = TypeToken.getParameterized(List.class, User.class).getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
@@ -423,7 +423,7 @@ public class UserApi {
         }
 
         com.squareup.okhttp.Call call = apiUserUpnGetValidateBeforeCall(upn, progressListener, progressRequestListener);
-        Type localVarReturnType = new TypeToken<List<User>>(){}.getType();
+        Type localVarReturnType = TypeToken.getParameterized(List.class, User.class).getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }

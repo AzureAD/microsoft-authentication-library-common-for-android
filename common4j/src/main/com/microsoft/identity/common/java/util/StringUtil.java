@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.java.util;
 
 import com.microsoft.identity.common.java.logging.Logger;
+import com.microsoft.identity.common.java.util.ported.ObjectUtils;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -93,7 +94,7 @@ public class StringUtil {
      * @param two The second string to compare.
      */
     public static boolean equalsIgnoreCase(@Nullable final String one, @Nullable final String two) {
-        return Objects.equals(one, two) || (one != null && one.equalsIgnoreCase(two));
+        return ObjectUtils.equals(one, two) || (one != null && one.equalsIgnoreCase(two));
     }
 
     /**
@@ -221,17 +222,17 @@ public class StringUtil {
     /**
      * Get a string from the given exception.
      *
-     * @param exception an exception object to extract a stack trace string from.
+     * @param throwable an throwable object to extract a stack trace string from.
      * @return A stack trace string
      */
-    public static String getStackTraceAsString(@NonNull final Exception exception) {
+    public static String getStackTraceAsString(@NonNull final Throwable throwable) {
         final StringWriter sw = new StringWriter();
         final PrintWriter pw = new PrintWriter(sw);
-        exception.printStackTrace(pw);
+        throwable.printStackTrace(pw);
         return pw.toString();
     }
 
-    public static String fromByteArray(@NonNull final byte[] bytes) {
+    public static String fromByteArray(final byte[] bytes) {
         return new String(bytes, ENCODING_UTF8);
     }
 
@@ -367,6 +368,22 @@ public class StringUtil {
      */
     public static String urlFormEncode(String source) throws UnsupportedEncodingException {
         return URLEncoder.encode(source, ENCODING_UTF8_STRING);
+    }
+
+    /**
+     * Given a byte array, return a base64-encoded String representing that byte array.
+     * @param bytes the bytes to encode.
+     * @return the Base64 representation of those bytes, without line-wrapping.
+     */
+    public static String base64Encode(final byte[] bytes) {
+        return Base64.encodeToString(bytes, Base64.NO_WRAP);
+    }
+
+    /**
+     * Converts the given String into a rawData byte array, and Base64-decode it.
+     */
+    public static byte[] base64Decode(@NonNull final String encodedString) {
+        return Base64.decode(encodedString, Base64.NO_WRAP);
     }
 
     /**

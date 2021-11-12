@@ -72,6 +72,8 @@ public class AuthenticationConstants {
      */
     public static final String HTTPS_PROTOCOL_STRING = "https";
 
+    public static final String SP800_108_LABEL = "AzureAD-SecureConversation";
+
     /**
      * Default scopes for OAuth2.
      */
@@ -546,6 +548,7 @@ public class AuthenticationConstants {
          * String of broker client ID.
          */
         public static final String BROKER_CLIENT_ID = "29d9ed98-a469-4536-ade2-f981bc1d605e";
+
     }
 
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -608,13 +611,18 @@ public class AuthenticationConstants {
          * The String representing the MSAL.CPP SdkType.
          */
         public static final String PRODUCT_NAME_MSAL_CPP = "MSAL.xplat.Android";
+
+        /**
+         * The String representing the MSAL.XPLAT.Linux SdkType.
+         */
+        public static final String PRODUCT_NAME_MSAL_XPLAT_LINUX = "MSAL.xplat.Linux";
     }
 
     /**
      * Aliases for broadcasting events
      * to be used with {@link LocalBroadcaster}
      */
-    public static final class LobalBroadcasterAliases {
+    public static final class LocalBroadcasterAliases {
 
         /**
          * an alias specifying that the current authorization action should be cancelled.
@@ -622,7 +630,7 @@ public class AuthenticationConstants {
         public static final String CANCEL_AUTHORIZATION_REQUEST = "cancel_authorization_request";
 
         /**
-         * an alias that the intent contains authorization results.
+         * An alias that the intent contains authorization results, was formerly RETURN_INTERACTIVE_REQUEST_RESULT.
          */
         public static final String RETURN_AUTHORIZATION_REQUEST_RESULT = "return_authorization_request_result";
 

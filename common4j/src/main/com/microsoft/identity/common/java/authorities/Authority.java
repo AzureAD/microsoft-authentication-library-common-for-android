@@ -32,6 +32,7 @@ import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParamet
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.util.StringUtil;
+import com.microsoft.identity.common.java.util.CommonURIBuilder;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -42,7 +43,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-import cz.msebera.android.httpclient.client.utils.URIBuilder;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.NonNull;
@@ -128,14 +128,14 @@ public abstract class Authority {
      */
     public static Authority getAuthorityFromAuthorityUrl(String authorityUrl) {
         final String methodName = ":getAuthorityFromAuthorityUrl";
-        final URIBuilder authorityUriBuilder;
+        final CommonURIBuilder authorityCommonUriBuilder;
         try {
-            authorityUriBuilder = new URIBuilder(authorityUrl);
+            authorityCommonUriBuilder = new CommonURIBuilder(authorityUrl);
         } catch (final URISyntaxException e) {
             throw new IllegalArgumentException("Invalid authority URL");
         }
 
-        final List<String> pathSegments = authorityUriBuilder.getPathSegments();
+        final List<String> pathSegments = authorityCommonUriBuilder.getPathSegments();
 
         if (pathSegments.size() == 0) {
             return new UnknownAuthority();
@@ -150,7 +150,7 @@ public abstract class Authority {
             if (B2C.equalsIgnoreCase(authorityTypeStr)) {
                 authority = new AzureActiveDirectoryB2CAuthority(authorityUrl);
             } else {
-                authority = createAadAuthority(authorityUriBuilder, pathSegments);
+                authority = createAadAuthority(authorityCommonUriBuilder, pathSegments);
             }
         } else {
             String authorityType = pathSegments.get(0);
@@ -177,7 +177,7 @@ public abstract class Authority {
                             TAG + methodName,
                             "Authority type default: AAD"
                     );
-                    authority = createAadAuthority(authorityUriBuilder, pathSegments);
+                    authority = createAadAuthority(authorityCommonUriBuilder, pathSegments);
                     break;
             }
         }
@@ -222,10 +222,10 @@ public abstract class Authority {
         return null != getEquivalentConfiguredAuthority(authorityStr);
     }
 
-    private static Authority createAadAuthority(@NonNull final URIBuilder authorityUriBuilder,
+    private static Authority createAadAuthority(@NonNull final CommonURIBuilder authorityCommonUriBuilder,
                                                 @NonNull final List<String> pathSegments) {
         AzureActiveDirectoryAudience audience = AzureActiveDirectoryAudience.getAzureActiveDirectoryAudience(
-                authorityUriBuilder.getScheme() + "://" + authorityUriBuilder.getHost(),
+                authorityCommonUriBuilder.getScheme() + "://" + authorityCommonUriBuilder.getHost(),
                 pathSegments.get(0)
         );
 

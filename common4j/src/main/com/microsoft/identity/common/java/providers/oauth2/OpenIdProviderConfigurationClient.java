@@ -30,12 +30,12 @@ import com.microsoft.identity.common.java.net.HttpClient;
 import com.microsoft.identity.common.java.net.HttpResponse;
 import com.microsoft.identity.common.java.net.UrlConnectionHttpClient;
 import com.microsoft.identity.common.java.logging.Logger;
+import com.microsoft.identity.common.java.util.CommonURIBuilder;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -43,7 +43,6 @@ import java.util.concurrent.Executors;
 
 import static com.microsoft.identity.common.java.exception.ServiceException.OPENID_PROVIDER_CONFIGURATION_FAILED_TO_LOAD;
 
-import cz.msebera.android.httpclient.client.utils.URIBuilder;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.NonNull;
 
@@ -78,7 +77,7 @@ public class OpenIdProviderConfigurationClient {
     public OpenIdProviderConfigurationClient(@NonNull final String authority,
                                              @NonNull final String path, @NonNull final String endpointVersion)
             throws URISyntaxException {
-        mIssuer = new URIBuilder()
+        mIssuer = new CommonURIBuilder()
                 .setScheme("https")
                 .setHost(authority)
                 .setPathSegments(path, endpointVersion)

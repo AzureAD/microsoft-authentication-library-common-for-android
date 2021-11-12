@@ -6,7 +6,7 @@ pluginManagement {
     }
 }
 
-rootProject.name = "com.microsoft.identity.android"
+rootProject.name = "com.microsoft.identity"
 
 // Android Projects
 include(':common')

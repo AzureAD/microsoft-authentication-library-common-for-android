@@ -31,14 +31,18 @@ import androidx.test.core.app.ApplicationProvider;
 import com.microsoft.identity.common.adal.internal.AndroidSecretKeyEnabledHelper;
 import com.microsoft.identity.common.crypto.AndroidAuthSdkStorageEncryptionManager;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
+import com.microsoft.identity.common.java.crypto.IKeyAccessor;
+import com.microsoft.identity.common.java.crypto.KeyAccessorStringAdapter;
 import com.microsoft.identity.common.java.util.ported.Predicate;
 
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
+import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -51,19 +55,21 @@ public class SharedPreferencesFileManagerTests extends AndroidSecretKeyEnabledHe
     private static final String sTEST_SHARED_PREFS_NAME = "com.microsoft.test.preferences";
     private static final String sTEST_KEY = "test_key";
     private static final String sTEST_VALUE = "test_value";
+    private static final IKeyAccessor sTEST_ENCRYPTION_MANAGER = new AndroidAuthSdkStorageEncryptionManager(ApplicationProvider.getApplicationContext(), null);
 
     private SharedPreferencesFileManager mSharedPreferencesFileManager;
 
     @Parameterized.Parameters
     public static Iterable<SharedPreferencesFileManager> testParams() {
         return Arrays.asList(new SharedPreferencesFileManager[]{
-                SharedPreferencesFileManager.getSharedPreferences(ApplicationProvider.getApplicationContext(),
-                        sTEST_SHARED_PREFS_NAME, null),
                 SharedPreferencesFileManager.getSharedPreferences(
                         ApplicationProvider.getApplicationContext(),
                         sTEST_SHARED_PREFS_NAME,
-                        new AndroidAuthSdkStorageEncryptionManager(ApplicationProvider.getApplicationContext(), null)
-                )
+                        null),
+                SharedPreferencesFileManager.getSharedPreferences(
+                        ApplicationProvider.getApplicationContext(),
+                        sTEST_SHARED_PREFS_NAME,
+                        sTEST_ENCRYPTION_MANAGER)
         });
     }
 
@@ -92,6 +98,74 @@ public class SharedPreferencesFileManagerTests extends AndroidSecretKeyEnabledHe
     public void testGetString() {
         mSharedPreferencesFileManager.putString(sTEST_KEY, sTEST_VALUE);
         assertEquals(sTEST_VALUE, mSharedPreferencesFileManager.getString(sTEST_KEY));
+    }
+
+    @Test
+    public void testGetSharedPreferences() throws Exception {
+        Field f = SharedPreferencesFileManager.class.getDeclaredField("mEncryptionManager");
+        f.setAccessible(true);
+
+        IKeyAccessor keyAccessor = (null == f.get(mSharedPreferencesFileManager))? null : sTEST_ENCRYPTION_MANAGER;
+
+        Assert.assertSame(mSharedPreferencesFileManager, SharedPreferencesFileManager.getSharedPreferences(
+                ApplicationProvider.getApplicationContext(),
+                mSharedPreferencesFileManager.getSharedPreferencesFileName(),
+                keyAccessor
+        ));
+    }
+
+    @Test
+    public void testGetSharedPreferencesNoKeyAccessor() throws Exception {
+        Field f = SharedPreferencesFileManager.class.getDeclaredField("mEncryptionManager");
+        f.setAccessible(true);
+        IKeyAccessor mkeyAccessor = (null == f.get(mSharedPreferencesFileManager))? null : sTEST_ENCRYPTION_MANAGER;
+
+        IKeyAccessor keyAccessor = mkeyAccessor;
+        IKeyAccessor newKeyAccessor;
+        if (keyAccessor == null) {
+            newKeyAccessor = new AndroidAuthSdkStorageEncryptionManager(ApplicationProvider.getApplicationContext(), null);
+        } else {
+            newKeyAccessor = null;
+        }
+        Assert.assertNotSame(mSharedPreferencesFileManager, SharedPreferencesFileManager.getSharedPreferences(
+                ApplicationProvider.getApplicationContext(),
+                mSharedPreferencesFileManager.getSharedPreferencesFileName(),
+                newKeyAccessor)
+        );
+        Assert.assertSame(mSharedPreferencesFileManager, SharedPreferencesFileManager.getSharedPreferences(
+                ApplicationProvider.getApplicationContext(),
+                mSharedPreferencesFileManager.getSharedPreferencesFileName(),
+                keyAccessor)
+        );
+    }
+
+    public void testGetSharedPreferencesClear() throws Exception {
+        Field f = SharedPreferencesFileManager.class.getDeclaredField("mEncryptionManager");
+        f.setAccessible(true);
+
+        IKeyAccessor keyAccessor = (null == f.get(mSharedPreferencesFileManager))? null : sTEST_ENCRYPTION_MANAGER;
+
+        Assert.assertSame(mSharedPreferencesFileManager, SharedPreferencesFileManager.getSharedPreferences(
+                ApplicationProvider.getApplicationContext(),
+                mSharedPreferencesFileManager.getSharedPreferencesFileName(),
+                keyAccessor
+        ));
+
+        SharedPreferencesFileManager.clearSingletonCache();
+
+        Assert.assertNotSame(mSharedPreferencesFileManager, SharedPreferencesFileManager.getSharedPreferences(
+                ApplicationProvider.getApplicationContext(),
+                mSharedPreferencesFileManager.getSharedPreferencesFileName(),
+                keyAccessor
+        ));
+    }
+
+    @Test
+    public void testGetSharedPreferencesFileName() {
+        assertEquals(
+                sTEST_SHARED_PREFS_NAME,
+                mSharedPreferencesFileManager.getSharedPreferencesFileName()
+        );
     }
 
     @Test

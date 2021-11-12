@@ -1,6 +1,13 @@
 V.Next
 ----------
-- [MINOR] Telemetry for OneAuth (#1514, #1525)
+- [MAJOR] Rename LobalBroadcasterAliases to LocalBroadcasterAliases (#1584)
+- [PATCH] Make it clear if adding a query param should overwrite or leave as is (#1581)
+- [PATCH] Handle the scenario where broker activity is killed wrongly. (#1568)
+- [MINOR] Add GetOsForMats to IDeviceMetadata (#1552)
+- [MINOR] Enabling refresh_in feature (#1310)
+- [PATCH] Msal removeAccount shouldn't invoke broker's removeAccount (#1336)
+- [MAJOR] Move Utility classes (#1526)
+- [MINOR] Telemetry for OneAUth (#1514, #1525)
 - [MAJOR] Migrate CommandDispatcher to common4j (#1519)
 - [MAJOR] Migrate BaseController to common4j (#1515)
 - [MAJOR] Migrate *TokenCache classes to common4j
@@ -49,6 +56,25 @@ V.Next
 - [PATCH] Remove deprecation logging in Logger class (#1502)
 - [MINOR] Migrate broker application metadata cache to common4j (#1530)
 - [MINOR] Add ropc command and ropc flow to BaseController (#1539)
+- [PATCH] Replace unsafe TypeToken instance with TypeToken#getParameterized (#1485)
+- [MINOR] Add more operation names to ArgumentException (#1553)
+- [MINOR] Add msal linux sdk type (#1554)
+- [PATCH] Fix extracting http response body (#1557)
+- [PATCH] Fix print stack trace for Throwable in Logs (#1556)
+- [PATCH] Support SSO token api (#1543)
+- [MINOR] Add flighting parameters to commmandParameters (#1562)
+
+Version 3.6.2
+----------
+- [PATCH] Handle the scenario where broker activity is killed wrongly. (#1569)
+- [PATCH] Fixing Redirect Uri for Authenticator App, when migrating to MSAL (#1567)
+
+Version 3.6.1
+----------
+- [PATCH] Additional API for method to clear the singleton shared preferences cache
+- [PATCH] Log and swallow failures from CustomTabsService unbind (#1549)
+- [PATCH] Fix correlation id error
+- [PATCH] Fix crash related to fall back to webview when no browser present
 
 Version 3.6.0
 ----------

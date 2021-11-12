@@ -29,6 +29,7 @@ import android.util.LruCache;
 import androidx.annotation.GuardedBy;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.cache.IMultiTypeNameValueStorage;
@@ -59,6 +60,8 @@ public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage 
     @GuardedBy("cacheLock")
     private final SharedPreferences mSharedPreferences;
     private final KeyAccessorStringAdapter mEncryptionManager;
+    @VisibleForTesting
+    private final String mSharedPreferencesFileName;
     // This is making a huge assumption - that we don't need to separate this cache by context.
     private static final ConcurrentMap<String, SharedPreferencesFileManager> objectCache =
             new ConcurrentHashMap<String, SharedPreferencesFileManager>(16, 0.75f, 1);
@@ -75,7 +78,8 @@ public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage 
     public static SharedPreferencesFileManager getSharedPreferences(final Context context,
                                                                     final String name,
                                                                     final IKeyAccessor encryptionManager) {
-        String key = name + "/" + context.getPackageName() + "/" + Context.MODE_PRIVATE;
+        String key = name + "/" + context.getPackageName() + "/" + Context.MODE_PRIVATE +
+                "/" + ((encryptionManager == null) ? "clear" : encryptionManager.getClass().getCanonicalName());
         SharedPreferencesFileManager cachedFileManager = objectCache.get(key);
         if (cachedFileManager == null) {
             cachedFileManager = objectCache.putIfAbsent(key,
@@ -85,6 +89,14 @@ public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage 
             }
         }
         return cachedFileManager;
+    }
+
+    /**
+     * This method clears the singleton cache in use by the system, in the case that unsafe operations
+     * have been performed on disk and the actual data needs to be removed.
+     */
+    public static void clearSingletonCache() {
+        objectCache.clear();
     }
 
     /**
@@ -106,12 +118,17 @@ public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage 
             Logger.verbose(TAG, "Init with storage helper:  " + TAG);
         }
         mSharedPreferences = context.getSharedPreferences(name, Context.MODE_PRIVATE);
-
+        mSharedPreferencesFileName = name;
+        
         if (encryptionManager != null) {
             mEncryptionManager = new KeyAccessorStringAdapter(encryptionManager);
         } else {
             mEncryptionManager = null;
         }
+    }
+
+    public final String getSharedPreferencesFileName() {
+        return mSharedPreferencesFileName;
     }
 
     @Override

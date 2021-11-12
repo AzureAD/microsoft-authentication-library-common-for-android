@@ -26,6 +26,8 @@ import static com.microsoft.identity.common.java.authorities.AllAccounts.ALL_ACC
 
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.authscheme.BearerAuthenticationSchemeInternal;
+import com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache;
+import com.microsoft.identity.common.java.cache.ICacheRecord;
 import com.microsoft.identity.common.java.controllers.BaseController;
 import com.microsoft.identity.common.java.dto.IAccountRecord;
 import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
@@ -41,6 +43,7 @@ import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParamet
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2TokenCache;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.java.util.StringUtil;
+import com.microsoft.identity.common.java.util.CommonURIBuilder;
 import com.microsoft.identity.common.java.util.ported.ObjectUtils;
 
 import java.io.IOException;
@@ -48,13 +51,35 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.UUID;
 
-import cz.msebera.android.httpclient.client.utils.URIBuilder;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.NonNull;
 
 public class FociQueryUtilities {
 
     private static final String TAG = FociQueryUtilities.class.getSimpleName();
+
+    /**
+     * Testing whether the given client ID can use the cached foci to refresh token.
+     *
+     * @param clientId    String of the given client id.
+     * @param redirectUri redirect url string of the given client id.
+     * @param cacheRecord Foci cache record.
+     * @return true if the given client id can use the cached foci token. False, otherwise.
+     * @throws ClientException
+     * @throws IOException
+     */
+    public static boolean tryFociTokenWithGivenClientId(@SuppressWarnings(WarningType.rawtype_warning) @NonNull final BrokerOAuth2TokenCache brokerOAuth2TokenCache,
+                                                        @NonNull final String clientId,
+                                                        @NonNull final String redirectUri,
+                                                        @NonNull final ICacheRecord cacheRecord) throws IOException, ClientException {
+        return tryFociTokenWithGivenClientId(
+                brokerOAuth2TokenCache,
+                clientId, redirectUri,
+                cacheRecord.getRefreshToken(),
+                cacheRecord.getAccount()
+        );
+    }
+
     /**
      * Testing whether the given client ID can use the cached foci to refresh token.
      *
@@ -76,7 +101,7 @@ public class FociQueryUtilities {
         final MicrosoftStsOAuth2Configuration config = new MicrosoftStsOAuth2Configuration();
 
         //Get authority url
-        final URIBuilder requestUrlBuilder = new URIBuilder();
+        final CommonURIBuilder requestUrlBuilder = new CommonURIBuilder();
         requestUrlBuilder.setScheme("https")
                 .setHost(refreshTokenRecord.getEnvironment())
                 .setPath(StringUtil.isNullOrEmpty(accountRecord.getRealm()) ? ALL_ACCOUNTS_TENANT_ID : accountRecord.getRealm());

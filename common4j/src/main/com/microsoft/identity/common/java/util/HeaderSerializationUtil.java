@@ -41,8 +41,11 @@ public class HeaderSerializationUtil {
         return new Gson()
                 .fromJson(
                         jsonIn,
-                        new TypeToken<HashMap<String, List<String>>>() {
-                        }.getType()
+                        TypeToken.getParameterized(
+                                HashMap.class,
+                                String.class,
+                                TypeToken.getParameterized(List.class, String.class).getRawType()
+                        ).getType()
                 );
     }
 }

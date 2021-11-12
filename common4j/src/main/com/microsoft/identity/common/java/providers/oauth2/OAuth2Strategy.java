@@ -53,6 +53,7 @@ import com.microsoft.identity.common.java.telemetry.events.UiShownEvent;
 import com.microsoft.identity.common.java.util.IClockSkewManager;
 import com.microsoft.identity.common.java.util.ObjectMapper;
 import com.microsoft.identity.common.java.util.StringUtil;
+import com.microsoft.identity.common.java.util.CommonURIBuilder;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -67,7 +68,6 @@ import java.util.concurrent.Future;
 
 import javax.net.ssl.HttpsURLConnection;
 
-import cz.msebera.android.httpclient.client.utils.URIBuilder;
 import lombok.NonNull;
 
 import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.CLIENT_REQUEST_ID;
@@ -264,14 +264,14 @@ public abstract class OAuth2Strategy
 
             if (slice != null) {
                 try {
-                    final URIBuilder uriBuilder = new URIBuilder(mTokenEndpoint);
+                    final CommonURIBuilder commonUriBuilder = new CommonURIBuilder(mTokenEndpoint);
                     if (!StringUtil.isNullOrEmpty(slice.getSlice())) {
-                        uriBuilder.addParameter(AzureActiveDirectorySlice.SLICE_PARAMETER, slice.getSlice());
+                        commonUriBuilder.setParameter(AzureActiveDirectorySlice.SLICE_PARAMETER, slice.getSlice());
                     }
                     if (!StringUtil.isNullOrEmpty(slice.getDataCenter())) {
-                        uriBuilder.addParameter(AzureActiveDirectorySlice.DC_PARAMETER, slice.getDataCenter());
+                        commonUriBuilder.setParameter(AzureActiveDirectorySlice.DC_PARAMETER, slice.getDataCenter());
                     }
-                    mTokenEndpoint = uriBuilder.build().toString();
+                    mTokenEndpoint = commonUriBuilder.build().toString();
                 } catch (final URISyntaxException e) {
                     throw new ClientException(ClientException.MALFORMED_URL, e.getMessage(), e);
                 }
@@ -310,8 +310,11 @@ public abstract class OAuth2Strategy
         // Any code below 300 (HTTP_MULT_CHOICE) is considered a success
         if (response.getStatusCode() < HttpsURLConnection.HTTP_MULT_CHOICE) {
             // Get and parse response body
-            final HashMap<String, String> parsedResponseBody = new Gson().fromJson(response.getBody(), new TypeToken<HashMap<String, String>>() {
-            }.getType());
+            final HashMap<String, String> parsedResponseBody = new Gson().fromJson(
+                    response.getBody(),
+                    TypeToken.getParameterized(HashMap.class, String.class, String.class)
+                            .getType()
+            );
 
             // Create response and result objects
             // "code" can be left null since it's DCF
@@ -332,8 +335,11 @@ public abstract class OAuth2Strategy
         // Request failed
         else {
             // Get and parse response body
-            final HashMap<String, Object> parsedResponseBody = new Gson().fromJson(response.getBody(), new TypeToken<HashMap<String, Object>>() {
-            }.getType());
+            final HashMap<String, Object> parsedResponseBody = new Gson().fromJson(
+                    response.getBody(),
+                    TypeToken.getParameterized(HashMap.class, String.class, Object.class)
+                            .getType()
+            );
 
             // Create response and result objects
             final MicrosoftStsAuthorizationErrorResponse authorizationErrorResponse =

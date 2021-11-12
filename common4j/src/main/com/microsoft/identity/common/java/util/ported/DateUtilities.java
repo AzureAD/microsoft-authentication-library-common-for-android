@@ -20,9 +20,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.util;
-
-import androidx.annotation.NonNull;
+package com.microsoft.identity.common.java.util.ported;
 
 import java.util.Arrays;
 import java.util.Date;
@@ -30,6 +28,8 @@ import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+
+import lombok.NonNull;
 
 public final class DateUtilities {
 

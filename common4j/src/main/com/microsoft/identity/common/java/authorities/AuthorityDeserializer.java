@@ -28,13 +28,12 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.microsoft.identity.common.java.logging.Logger;
+import com.microsoft.identity.common.java.util.CommonURIBuilder;
 
 import net.jcip.annotations.Immutable;
 
 import java.lang.reflect.Type;
 import java.util.List;
-
-import cz.msebera.android.httpclient.client.utils.URIBuilder;
 
 @Immutable
 public class AuthorityDeserializer implements JsonDeserializer<Authority> {
@@ -61,7 +60,7 @@ public class AuthorityDeserializer implements JsonDeserializer<Authority> {
 
                     if (aadAuthority != null) {
                         try {
-                            final URIBuilder uri = new URIBuilder(aadAuthority.getAuthorityUri());
+                            final CommonURIBuilder uri = new CommonURIBuilder(aadAuthority.getAuthorityUri());
                             final String cloudUrl = uri.getScheme() + "://" + uri.getHost();
                             final List<String> pathSegments = uri.getPathSegments();
                             if (pathSegments.size() > 0) {

@@ -37,8 +37,6 @@ import com.microsoft.identity.common.java.providers.oauth2.IAuthorizationStrateg
 import com.microsoft.identity.common.java.providers.oauth2.TokenErrorResponse;
 import com.microsoft.identity.common.java.providers.oauth2.TokenRequest;
 
-import cz.msebera.android.httpclient.client.utils.URIBuilder;
-
 import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.NonNull;
@@ -67,6 +65,7 @@ import com.microsoft.identity.common.java.net.HttpResponse;
 import com.microsoft.identity.common.java.net.UrlConnectionHttpClient;
 import com.microsoft.identity.common.java.util.ObjectMapper;
 import com.microsoft.identity.common.java.logging.Logger;
+import com.microsoft.identity.common.java.util.CommonURIBuilder;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -107,6 +106,14 @@ public class MicrosoftStsOAuth2Strategy
                 AuthorizationResult> {
 
     private static final String TAG = MicrosoftStsOAuth2Strategy.class.getSimpleName();
+    /**
+     * The default scope.  This effects of usint this are captured in documentation here
+     * https://docs.microsoft.com/en-us/azure/active-directory/develop/v2-permissions-and-consent#the-default-scope
+     *
+     * What this does is important, from the documentation it requests permission for every scope
+     * that has been selected for the client application in the registration portal.
+     */
+    private static final String RESOURCE_DEFAULT_SCOPE = "/.default";
 
     private final HttpClient httpClient = UrlConnectionHttpClient.getDefaultInstance();
 
@@ -121,6 +128,19 @@ public class MicrosoftStsOAuth2Strategy
                                       @NonNull final OAuth2StrategyParameters parameters) throws ClientException {
         super(config, parameters);
         setTokenEndpoint(config.getTokenEndpoint().toString());
+    }
+
+    /**
+     * Given a v1 resource uri, append '/.default' to convert it to a v2 scope.
+     * This is making use of the default scope as documented here:
+     * https://docs.microsoft.com/en-us/azure/active-directory/develop/v2-permissions-and-consent#the-default-scope
+     *
+     * @param resource The v1 resource uri.
+     * @return The v1 resource uri as a scope.
+     */
+    @NonNull
+    public static String getScopeFromResource(@NonNull final String resource) {
+        return resource + RESOURCE_DEFAULT_SCOPE;
     }
 
     @Override
@@ -684,7 +704,7 @@ public class MicrosoftStsOAuth2Strategy
             @NonNull final MicrosoftStsAuthorizationResponse response) throws ClientException {
         if (!StringUtil.isNullOrEmpty(response.getCloudInstanceHostName())) {
             try {
-                return new URIBuilder(mTokenEndpoint)
+                return new CommonURIBuilder(mTokenEndpoint)
                         .setHost(response.getCloudInstanceHostName())
                         .build()
                         .toString();

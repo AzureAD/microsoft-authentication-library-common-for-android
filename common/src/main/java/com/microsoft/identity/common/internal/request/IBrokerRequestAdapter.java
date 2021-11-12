@@ -23,7 +23,10 @@
 
 package com.microsoft.identity.common.internal.request;
 
+import android.os.Bundle;
+
 import com.microsoft.identity.common.internal.broker.BrokerRequest;
+import com.microsoft.identity.common.java.commands.parameters.AcquirePrtSsoTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.SilentTokenCommandParameters;
 
@@ -32,4 +35,5 @@ public interface IBrokerRequestAdapter {
     BrokerRequest brokerRequestFromAcquireTokenParameters(InteractiveTokenCommandParameters parameters);
 
     BrokerRequest brokerRequestFromSilentOperationParameters(SilentTokenCommandParameters parameters);
+
 }

@@ -28,6 +28,7 @@ import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationRequest;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
+import com.microsoft.identity.common.java.util.CommonURIBuilder;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.util.UrlUtil;
 
@@ -37,7 +38,6 @@ import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 
-import cz.msebera.android.httpclient.client.utils.URIBuilder;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.Getter;
 import lombok.experimental.Accessors;
@@ -206,22 +206,22 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
 
     @Override
     public URI getAuthorizationRequestAsHttpRequest() throws ClientException {
-        final URIBuilder builder = new URIBuilder(super.getAuthorizationRequestAsHttpRequest());
-        appendParameterToBuilder(builder, mFlightParameters);
+        final CommonURIBuilder builder = new CommonURIBuilder(super.getAuthorizationRequestAsHttpRequest());
+        builder.addParametersIfAbsent(mFlightParameters);
 
         if (mSlice != null) {
             if (!StringUtil.isNullOrEmpty(mSlice.getSlice())) {
-                builder.addParameter(AzureActiveDirectorySlice.SLICE_PARAMETER, mSlice.getSlice());
+                builder.addParameterIfAbsent(AzureActiveDirectorySlice.SLICE_PARAMETER, mSlice.getSlice());
             }
             if (!StringUtil.isNullOrEmpty(mSlice.getDataCenter())) {
-                builder.addParameter(AzureActiveDirectorySlice.DC_PARAMETER, mSlice.getDataCenter());
+                builder.addParameterIfAbsent(AzureActiveDirectorySlice.DC_PARAMETER, mSlice.getDataCenter());
             }
         }
 
         // If login_hint is provided, block the user from switching user during login.
         // hsu = HideSwitchUser
         if (!StringUtil.isNullOrEmpty(getLoginHint())) {
-            builder.addParameter(HIDE_SWITCH_USER_QUERY_PARAMETER, "1");
+            builder.addParameterIfAbsent(HIDE_SWITCH_USER_QUERY_PARAMETER, "1");
         }
 
         try {

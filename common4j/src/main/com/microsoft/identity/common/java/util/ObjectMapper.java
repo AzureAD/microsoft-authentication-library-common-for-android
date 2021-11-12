@@ -240,7 +240,7 @@ public final class ObjectMapper {
      * @throws UnsupportedEncodingException thrown if encoding not supported
      */
     public static String serializeObjectToFormUrlEncoded(Object object) throws UnsupportedEncodingException {
-        Map<String, String> fields = constuctMapFromObject(object);
+        Map<String, String> fields = constructMapFromObject(object);
 
         final StringBuilder builder = new StringBuilder();
 
@@ -268,10 +268,9 @@ public final class ObjectMapper {
      * @param object the object to convert.
      * @return a map representation of the object.
      */
-    public static Map<String, String> constuctMapFromObject(Object object) {
+    public static Map<String, String> constructMapFromObject(Object object) {
         String json = ObjectMapper.serializeObjectToJsonString(object);
-        Type stringMap = new TypeToken<TreeMap<String, String>>() {
-        }.getType();
+        final Type stringMap = TypeToken.getParameterized(TreeMap.class, String.class, String.class).getType();
         TreeMap<String, String> fields = new Gson().fromJson(json, stringMap);
         if (object instanceof IHasExtraParameters) {
             final IHasExtraParameters params = (IHasExtraParameters) object;

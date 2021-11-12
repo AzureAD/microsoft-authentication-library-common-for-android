@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.request;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ACCOUNT_CLIENTID_KEY;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ACCOUNT_CORRELATIONID;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ACCOUNT_HOME_ACCOUNT_ID;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ACCOUNT_REDIRECT;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.AUTH_SCHEME_PARAMS_POP;
@@ -34,6 +35,7 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ENVIRONMENT;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.MSAL_TO_BROKER_PROTOCOL_VERSION_CODE;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.REQUEST_AUTHORITY;
 import static com.microsoft.identity.common.internal.util.GzipUtil.compressString;
 
 import android.content.Context;
@@ -43,19 +45,17 @@ import android.text.TextUtils;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.microsoft.identity.common.AndroidPlatformComponents;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.broker.BrokerRequest;
+import com.microsoft.identity.common.java.commands.parameters.AcquirePrtSsoTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.GenerateShrCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.RemoveAccountCommandParameters;
 import com.microsoft.identity.common.java.ui.BrowserDescriptor;
 import com.microsoft.identity.common.internal.util.BrokerProtocolVersionUtil;
-import com.microsoft.identity.common.internal.util.QueryParamsAdapter;
+import com.microsoft.identity.common.java.util.QueryParamsAdapter;
 import com.microsoft.identity.common.internal.util.StringUtil;
 import com.microsoft.identity.common.java.authorities.AzureActiveDirectoryAuthority;
-import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.java.authscheme.AuthenticationSchemeFactory;
-import com.microsoft.identity.common.java.authscheme.BearerAuthenticationSchemeInternal;
 import com.microsoft.identity.common.java.authscheme.INameable;
 import com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeInternal;
 import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
@@ -66,7 +66,6 @@ import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
 import com.microsoft.identity.common.java.providers.oauth2.OpenIdConnectPromptParameter;
 import com.microsoft.identity.common.java.ui.AuthorizationAgent;
-import com.microsoft.identity.common.java.util.IClockSkewManager;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.io.IOException;
@@ -146,6 +145,26 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 .build();
 
         return brokerRequest;
+    }
+
+    public @NonNull Bundle getRequestBundleForSsoToken(final @NonNull AcquirePrtSsoTokenCommandParameters parameters,
+                                                       final @NonNull String negotiatedBrokerProtocolVersion) {
+        Bundle requestBundle = new Bundle();
+        requestBundle.putString(AuthenticationConstants.Broker.ACCOUNT_NAME, parameters.getAccountName());
+        requestBundle.putString(AuthenticationConstants.Broker.ACCOUNT_HOME_ACCOUNT_ID, parameters.getHomeAccountId());
+        requestBundle.putString(AuthenticationConstants.Broker.ACCOUNT_LOCAL_ACCOUNT_ID, parameters.getLocalAccountId());
+        if (parameters.getRequestAuthority() != null) {
+            requestBundle.putString(REQUEST_AUTHORITY, parameters.getRequestAuthority());
+        }
+        if (parameters.getSsoUrl() != null) {
+            requestBundle.putString(AuthenticationConstants.Broker.BROKER_SSO_URL_KEY, parameters.getSsoUrl());
+        }
+        requestBundle.putString(
+                AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY,
+                negotiatedBrokerProtocolVersion
+        );
+        requestBundle.putString(ACCOUNT_CORRELATIONID, parameters.getCorrelationId());
+        return requestBundle;
     }
 
     /**

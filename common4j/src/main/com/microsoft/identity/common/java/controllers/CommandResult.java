@@ -31,40 +31,79 @@ import java.util.List;
 import java.util.Map;
 
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 
-public class CommandResult implements ICommandResult {
 
-    public String getCorrelationId() {
-        return mCorrelationId;
-    }
+@Getter
+@Accessors(prefix = "m")
+public class CommandResult<T> implements ICommandResult<T> {
 
     private final ResultStatus mStatus;
-    private final Object mResult;
+
+    private final T mResult;
+
     private final String mCorrelationId;
 
+    private final Class<T> mResultClass;
+
     @Setter
-    @Getter
-    @Accessors(prefix = "m")
     private List<Map<String, String>> mTelemetryMap = new ArrayList<>();
 
-    public CommandResult(ResultStatus status, Object result) {
+    @Deprecated
+    public CommandResult(ResultStatus status, T result) {
         this(status, result, null);
     }
 
-    public CommandResult(ResultStatus status, Object result, @Nullable String correlationId) {
+    /**
+     * Construct a command result with the corresponding status, and correlation id.
+     * @param status the ResultStatus of the command.
+     * @param result the command result, may <strong>NOT</strong> be null.
+     * @param correlationId an optional correlation Id for the command.
+     */
+    public CommandResult(final @NonNull ResultStatus status, final @NonNull T result, @Nullable String correlationId) {
         mStatus = status;
         mResult = result;
         mCorrelationId = correlationId == null ? "UNSET" : correlationId;
+        @SuppressWarnings("unchecked")
+        final Class<T> aClass = (Class<T>) result.getClass();
+        mResultClass = aClass;
     }
 
-    public ResultStatus getStatus() {
-        return mStatus;
+    /**
+     * Construct a command that does not contain a result object.
+     * @param status the result status.
+     * @param correlationId an optional correlation id.
+     */
+    private CommandResult(final @NonNull ResultStatus status, @Nullable String correlationId) {
+        mStatus = status;
+        mResult = null;
+        mCorrelationId = correlationId == null ? "UNSET" : correlationId;
+        final Class<T> aClass = (Class<T>) Void.class;
+        this.mResultClass = aClass;
     }
 
-    public Object getResult() {
-        return mResult;
+    /**
+     * This is a special method for constructing a result with a null value.  This is to insure
+     * that we can have null-checking on the parameters for the other construction methods.
+     * @param status the {@link com.microsoft.identity.common.java.commands.ICommandResult.ResultStatus}.
+     * @param correlationId a correlation id.
+     * @return A command result with a null result, given the status provided.
+     */
+    public static CommandResult<Void> ofNull(final @NonNull ResultStatus status, final @Nullable String correlationId) {
+        return new CommandResult<>(status, correlationId);
     }
 
+    /**
+     * A factory method for constructing command results.
+     * @param status the result status.
+     * @param result the result of the command.
+     * @param correlationId an optional correlation id.
+     * @param <T> the type of the result.
+     * @return a commandResult object containing the above values.
+     */
+    public static <T> CommandResult<T> of(final @NonNull ResultStatus status, final @NonNull T result, final @Nullable String correlationId) {
+        return new CommandResult<T>(status, result, correlationId);
+    }
 }

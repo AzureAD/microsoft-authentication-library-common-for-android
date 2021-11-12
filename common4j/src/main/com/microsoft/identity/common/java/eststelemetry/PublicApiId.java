@@ -20,7 +20,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.eststelemetry;
+package com.microsoft.identity.common.java.eststelemetry;
 
 public final class PublicApiId {
 
@@ -119,6 +119,14 @@ public final class PublicApiId {
     public static final String PCA_GENERATE_SIGNED_HTTP_REQUEST = "1100";
     public static final String PCA_GENERATE_SIGNED_HTTP_REQUEST_ASYNC = "1101";
     //endregion
+
+    // region RefreshOn API
+    //==============================================================================================
+    public static final String MSAL_REFRESH_ON= "1201";
+    public static final String BROKER_REFRESH_ON = "1202";
+    //endregion
+
+
 
     public static final String PCA_GET_DEVICE_MODE = "1200";
 }
