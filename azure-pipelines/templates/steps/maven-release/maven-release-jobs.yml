@@ -125,7 +125,7 @@ jobs:
   cancelTimeoutInMinutes: 1
   dependsOn: sdl_maven
   pool:
-    name: Hosted Ubuntu 1604
+    vmImage: 'ubuntu-latest'
   steps:
   - ${{ if not(startsWith(parameters.project, 'common')) }}:
     - checkout: common
