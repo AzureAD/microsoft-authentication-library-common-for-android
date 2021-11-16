@@ -53,7 +53,7 @@ import com.microsoft.identity.common.java.exception.ArgumentException;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.exception.ServiceException;
-import com.microsoft.identity.common.java.network.NetworkConstants;
+import com.microsoft.identity.common.java.network.NetworkCodeMarkers;
 import com.microsoft.identity.common.java.network.NetworkMarkerManager;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
@@ -157,8 +157,8 @@ public class LocalMSALController extends BaseController {
                 .getAuthority()
                 .createOAuth2Strategy(strategyParameters);
 
-        NetworkMarkerManager.getInstance()
-                .startMarker(NetworkConstants.NetworkCodeMarkers.ACQUIRE_TOKEN_INTERACTIVE);
+        NetworkMarkerManager
+                .start(NetworkCodeMarkers.ACQUIRE_TOKEN_INTERACTIVE);
 
         //2) Request authorization interactively
         @SuppressWarnings(WarningType.rawtype_warning) final AuthorizationResult result = performAuthorizationRequest(
@@ -166,7 +166,7 @@ public class LocalMSALController extends BaseController {
                 parametersWithScopes
         );
 
-        NetworkMarkerManager.getInstance().stopMarker();
+        NetworkMarkerManager.stop();
 
         acquireTokenResult.setAuthorizationResult(result);
 
@@ -280,8 +280,7 @@ public class LocalMSALController extends BaseController {
                 "Acquiring token silently..."
         );
 
-        NetworkMarkerManager.getInstance()
-                .startMarker(NetworkConstants.NetworkCodeMarkers.ACQUIRE_TOKEN_SILENT);
+        NetworkMarkerManager.start(NetworkCodeMarkers.ACQUIRE_TOKEN_SILENT);
 
         Telemetry.emit(
                 new ApiStartEvent()
@@ -419,7 +418,7 @@ public class LocalMSALController extends BaseController {
                         .putApiId(TelemetryEventStrings.Api.LOCAL_ACQUIRE_TOKEN_SILENT)
         );
 
-        NetworkMarkerManager.getInstance().stopMarker();
+        NetworkMarkerManager.stop();
 
         return acquireTokenSilentResult;
     }

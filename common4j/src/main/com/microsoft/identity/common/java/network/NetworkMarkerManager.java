@@ -36,31 +36,23 @@ import java.util.Map;
 import lombok.NonNull;
 
 public class NetworkMarkerManager {
-    private static class Holder {
-        static final NetworkMarkerManager INSTANCE = new NetworkMarkerManager();
-    }
-
-    public static NetworkMarkerManager getInstance() {
-        return Holder.INSTANCE;
-    }
-
     private static final String TAG = NetworkMarkerManager.class.getSimpleName();
 
-    private final List<NetworkMarker> mNetworkMarkers = Collections.synchronizedList(new ArrayList<NetworkMarker>());
-    private final Map<String, NetworkState[]> mNetworkMarkerOverride = Collections.synchronizedMap(new HashMap<String, NetworkState[]>());
-    private final NetworkStatesHandler networkStatesHandler = new NetworkStatesHandler();
+    private static final List<NetworkMarker> mNetworkMarkers = Collections.synchronizedList(new ArrayList<NetworkMarker>());
+    private static final Map<String, NetworkState[]> mNetworkMarkerOverride = Collections.synchronizedMap(new HashMap<String, NetworkState[]>());
+    private static final NetworkStatesHandler networkStatesHandler = new NetworkStatesHandler();
 
-    private boolean mEnabled = false;
-    private NetworkMarker mCurrentMarker = null;
-    private INetworkStateChangeHandler mStateChangeHandler = null;
-    private long mStartTime;
+    private static boolean mEnabled = false;
+    private static NetworkMarker mCurrentMarker = null;
+    private static INetworkStateChangeHandler mStateChangeHandler = null;
+    private static long mStartTime;
 
     public NetworkMarkerManager() {
 
     }
 
 
-    private NetworkState[] parseNetworkStates(String networkStatesString) {
+    private static NetworkState[] parseNetworkStates(String networkStatesString) {
         final String[] statesString = networkStatesString.split("\\s*,\\s*");
 
         final NetworkState[] networkStates = new NetworkState[statesString.length];
@@ -73,7 +65,7 @@ public class NetworkMarkerManager {
     }
 
 
-    private boolean checkEnabled(final String methodName) {
+    private static boolean checkEnabled(final String methodName) {
         if (mStateChangeHandler == null) {
             Logger.warn(TAG + methodName, "No network state change handler has been registered.");
             setEnabled(false);
@@ -87,7 +79,7 @@ public class NetworkMarkerManager {
     }
 
 
-    public void stopMarker() {
+    public static void stop() {
         final String methodName = ":clear";
 
         if (checkEnabled(methodName)) {
@@ -100,12 +92,12 @@ public class NetworkMarkerManager {
         }
     }
 
-    public void startMarker(@NonNull final String marker, @NonNull final String networkStatesString) {
-        startMarker(marker, parseNetworkStates(networkStatesString));
+    public static void start(@NonNull final String marker, @NonNull final String networkConditionString) {
+        start(marker, parseNetworkStates(networkConditionString));
     }
 
 
-    public void startMarker(@NonNull final String marker, @NonNull NetworkState... networkStates) {
+    public static void start(@NonNull final String marker, @NonNull NetworkState... networkStates) {
         final String methodName = ":setNetworkMarker";
 
         if (checkEnabled(methodName)) {
@@ -124,38 +116,40 @@ public class NetworkMarkerManager {
 
             final NetworkMarker networkMarker = new NetworkMarker(
                     marker,
-                    Thread.currentThread().getId(),
+                    Thread.currentThread(),
                     networkStates
             );
 
             mNetworkMarkers.add(networkMarker);
             mCurrentMarker = networkMarker;
-            networkStatesHandler.apply(networkMarker);
+            if (networkStates.length > 0) {
+                networkStatesHandler.apply(networkMarker);
+            }
         }
     }
 
-    public void applyNetworkStates(@NonNull final String marker, @NonNull final String networkStatesString) {
-        applyNetworkStates(marker, parseNetworkStates(networkStatesString));
+    public static void useNetworkCondition(@NonNull final String marker, @NonNull final String networkConditionString) {
+        useNetworkCondition(marker, parseNetworkStates(networkConditionString));
     }
 
-    public void applyNetworkStates(@NonNull final String marker, @NonNull final NetworkState... networkStates) {
+    public static void useNetworkCondition(@NonNull final String marker, @NonNull final NetworkState... networkStates) {
         mNetworkMarkerOverride.put(marker, networkStates);
     }
 
-    public void removeNetworkStates(@NonNull final String marker) {
+    public static void removeNetworkCondition(@NonNull final String marker) {
         mNetworkMarkerOverride.remove(marker);
     }
 
-    public void removeAllNetworkStates() {
+    public static void removeAllNetworkConditions() {
         mNetworkMarkerOverride.clear();
     }
 
-    public void setStateChangeHandler(@NonNull INetworkStateChangeHandler stateChangeHandler) {
+    public static void setStateChangeHandler(@NonNull INetworkStateChangeHandler stateChangeHandler) {
         mStateChangeHandler = stateChangeHandler;
         networkStatesHandler.setStateChangeHandler(mStateChangeHandler);
     }
 
-    public void removeStateChangeHandler() {
+    public static void removeStateChangeHandler() {
         mStateChangeHandler = null;
         networkStatesHandler.setStateChangeHandler(null);
         setEnabled(false);
@@ -163,7 +157,7 @@ public class NetworkMarkerManager {
         Logger.warn(TAG + ":removeStateChangeHandler", "Network state change handler has been removed.");
     }
 
-    public void setEnabled(boolean enabled) {
+    public static void setEnabled(boolean enabled) {
         mEnabled = enabled;
         Logger.info(TAG + ":setEnabled", (enabled ? "Enabling" : "Disabling") + " the network marker manager.");
         if (!enabled) {
@@ -171,15 +165,15 @@ public class NetworkMarkerManager {
         }
     }
 
-    public boolean isEnabled() {
+    public static boolean isEnabled() {
         return mEnabled;
     }
 
-    public long getStartTime() {
+    public static long getStartTime() {
         return mStartTime;
     }
 
-    public void clear() {
+    public static void clear() {
         setEnabled(false);
         mNetworkMarkers.clear();
         mNetworkMarkerOverride.clear();

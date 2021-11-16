@@ -26,13 +26,10 @@ import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.webkit.ConsoleMessage;
-import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.widget.ProgressBar;
@@ -43,20 +40,19 @@ import androidx.annotation.VisibleForTesting;
 import androidx.fragment.app.FragmentActivity;
 
 import com.microsoft.identity.common.R;
+import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
-import com.microsoft.identity.common.adal.internal.net.DefaultConnectionService;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.ui.webview.AzureActiveDirectoryWebViewClient;
 import com.microsoft.identity.common.internal.ui.webview.OnPageLoadedCallback;
 import com.microsoft.identity.common.internal.ui.webview.WebViewUtil;
-import com.microsoft.identity.common.java.WarningType;
-import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
+import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.logging.Logger;
 
+import java.util.HashMap;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.util.HashMap;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.AUTH_INTENT;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.POST_PAGE_LOADED_URL;
@@ -148,8 +144,6 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         final View view = inflater.inflate(R.layout.common_activity_authentication, container, false);
         mProgressBar = view.findViewById(R.id.common_auth_webview_progressbar);
 
-        final DefaultConnectionService defaultConnectionService = new DefaultConnectionService(getActivity());
-
         final FragmentActivity activity = getActivity();
         if (activity == null) {
             return null;
@@ -161,7 +155,6 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                     @Override
                     public void onPageLoaded(final String url) {
                         final String[] javascriptToExecute = new String[1];
-                        Log.d(TAG, "Page loaded: " + url);
                         mProgressBar.setVisibility(View.INVISIBLE);
                         try {
                             javascriptToExecute[0] = String.format("window.expectedUrl = '%s';%n%s",
@@ -198,48 +191,9 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 // The first page load could take time, and we do not want to just show a blank page.
                 // Therefore, we'll show a spinner here, and hides it when mAuthorizationRequestUrl is successfully loaded.
                 // After that, progress bar will be displayed by MSA/AAD.
-                mProgressBar.setAlpha(0.3f);
                 mProgressBar.setVisibility(View.VISIBLE);
             }
         });
-
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    int connected = 0;
-                    boolean loading = false;
-                    for (int i = 0; i < 100; i++) {
-                        boolean isConnected = defaultConnectionService.isConnectionAvailable();
-                        final int finalI = i;
-                        mWebView.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                Log.d(TAG, finalI + " -> Progress: " + mWebView.getProgress() + " Title: " + mWebView.getTitle() + " Connected: " + defaultConnectionService.isConnectionAvailable());
-                            }
-                        });
-
-                        if (!isConnected) connected++;
-
-                        if (connected > 0 && isConnected && !loading && i == 50) {
-                            mWebView.post(new Runnable() {
-                                @Override
-                                public void run() {
-                                    mWebView.reload();
-                                }
-                            });
-                            loading = true;
-                        }
-
-                        Thread.sleep(2000);
-                    }
-                } catch (InterruptedException ex) {
-                    Log.e(TAG, "Failed", ex);
-                }
-
-            }
-        }).start();
-
 
         return view;
     }
@@ -306,15 +260,8 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         mWebView.getSettings().setUseWideViewPort(true);
         mWebView.getSettings().setBuiltInZoomControls(webViewZoomControlsEnabled);
         mWebView.getSettings().setSupportZoom(webViewZoomEnabled);
-        mWebView.setVisibility(View.VISIBLE);
+        mWebView.setVisibility(View.INVISIBLE);
         mWebView.setWebViewClient(webViewClient);
-        mWebView.setWebChromeClient(new WebChromeClient() {
-            @Override
-            public boolean onConsoleMessage(ConsoleMessage consoleMessage) {
-                Log.d("Network [Console]", consoleMessage.message() + " -- From line " + consoleMessage.lineNumber() + " of " + consoleMessage.sourceId());
-                return super.onConsoleMessage(consoleMessage);
-            }
-        });
     }
 
     /**

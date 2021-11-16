@@ -5,9 +5,9 @@ import javax.annotation.Nullable;
 import lombok.NonNull;
 
 public interface INetworkStateChangeHandler {
-    boolean onNetworkStateApplied(@NonNull final NetworkState networkState);
+    boolean onNetworkStateApplied(@NonNull final NetworkMarker marker, @NonNull final NetworkState networkState);
 
-    boolean onRestoreNetworkState(@Nullable final NetworkState networkState);
+    boolean onRestoreNetworkState(@Nullable final NetworkMarker marker, @Nullable final NetworkState networkState);
 
     void handleNetworkStateNotApplied(@NonNull final NetworkMarker marker, @NonNull final NetworkState networkState);
 }

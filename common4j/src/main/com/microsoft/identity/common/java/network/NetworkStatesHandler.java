@@ -3,17 +3,22 @@ package com.microsoft.identity.common.java.network;
 import com.microsoft.identity.common.java.logging.Logger;
 
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import lombok.NonNull;
 
 public class NetworkStatesHandler implements Runnable {
     private static final String TAG = NetworkStatesHandler.class.getSimpleName();
+    private static final int NETWORK_WAIT_TIMEOUT_SECONDS = 20;
 
     private final Thread networkStateThread = new Thread(this);
 
     private INetworkStateChangeHandler mStateChangeHandler = null;
     private NetworkMarker mCurrentMarker = null;
     private NetworkState mCurrentState = null;
+
+    private CountDownLatch latch = null;
 
     public void clear() {
         clearCurrentMarker();
@@ -22,7 +27,16 @@ public class NetworkStatesHandler implements Runnable {
     public void apply(@NonNull final NetworkMarker networkMarker) {
         clearCurrentMarker();
         mCurrentMarker = networkMarker;
+
+        latch = new CountDownLatch(1);
         networkStateThread.start();
+
+        try {
+            // blocks until the first network state is applied.
+            // For Example, if WIFI was applied, we block until the internet connection is available
+            latch.await(NETWORK_WAIT_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        } catch (InterruptedException ignored) {
+        }
     }
 
     @Override
@@ -47,8 +61,9 @@ public class NetworkStatesHandler implements Runnable {
                     Thread.sleep(networkState.getDelay());
                 }
 
-                final boolean stateApplied = mStateChangeHandler.onNetworkStateApplied(networkState);
+                final boolean stateApplied = mStateChangeHandler.onNetworkStateApplied(marker, networkState);
                 networkState.setApplied(stateApplied);
+                latch.countDown();
 
                 if (!stateApplied) {
                     Logger.warn(TAG + methodName, "Could not apply network state: " + networkState);
@@ -76,7 +91,9 @@ public class NetworkStatesHandler implements Runnable {
 
     private void clearCurrentMarker() {
         Logger.info(TAG + ":clearCurrentMarker", "Clearing the current network marker.");
-        mStateChangeHandler.onRestoreNetworkState(mCurrentState);
+        if (mStateChangeHandler != null) {
+            mStateChangeHandler.onRestoreNetworkState(mCurrentMarker, mCurrentState);
+        }
         if (mCurrentState != null) {
             if (networkStateThread.isAlive()) {
                 // there's a current marker applying network states, interrupt it.

@@ -34,18 +34,14 @@ import lombok.experimental.Accessors;
 @Data
 @Accessors(prefix = "m")
 public class NetworkMarker {
-    private final long mThreadId;
+    private final Thread mThread;
     private final String mMarker;
     private final List<NetworkState> mNetworkStates = new ArrayList<>();
 
-    public NetworkMarker(String marker, long threadId, NetworkState... networkStates) {
+    public NetworkMarker(String marker, Thread currentThread, NetworkState... networkStates) {
         mMarker = marker;
-        mThreadId = threadId;
+        mThread = currentThread;
         mNetworkStates.addAll(Arrays.asList(networkStates));
-    }
-
-    public long getDuration() {
-        return 0;
     }
 
     public List<NetworkState> getNetworkStates() {
