@@ -27,7 +27,9 @@ import android.os.Build;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.microsoft.identity.common.AndroidPlatformComponents;
 import com.microsoft.identity.common.java.crypto.IKeyAccessor;
+import com.microsoft.identity.common.java.crypto.KeyStoreAccessor;
 import com.microsoft.identity.common.java.crypto.SecureHardwareState;
 import com.microsoft.identity.common.java.crypto.SigningAlgorithm;
 import com.microsoft.identity.common.java.exception.ClientException;
@@ -43,7 +45,8 @@ public class KeyStoreAccessorTests {
 
     @Test
     public void testSymmetricBasicFunctionalitySuccessfulRawKey() throws Exception {
-        final IKeyAccessor accessor = KeyStoreAccessor.newInstance(AndroidSymmetricCipher.AES_GCM_NONE_HMACSHA256, true);
+        final AndroidPlatformComponents components = AndroidPlatformComponents.createFromContext(ApplicationProvider.getApplicationContext());
+        final IKeyAccessor accessor = new AndroidKeyStoreAccessor(components).newInstance(AndroidSymmetricCipher.AES_GCM_NONE_HMACSHA256, true);
         final byte[] in = new byte[1024];
         RANDOM.nextBytes(in);
         final byte[] out = accessor.encrypt(in);
@@ -55,7 +58,8 @@ public class KeyStoreAccessorTests {
 
     @Test
     public void testSymmetricBasicFunctionalitySuccessful() throws Exception {
-        final IKeyAccessor accessor = KeyStoreAccessor.newInstance(AndroidSymmetricCipher.AES_GCM_NONE_HMACSHA256, false);
+        final AndroidPlatformComponents components = AndroidPlatformComponents.createFromContext(ApplicationProvider.getApplicationContext());
+        final IKeyAccessor accessor = new AndroidKeyStoreAccessor(components).newInstance(AndroidSymmetricCipher.AES_GCM_NONE_HMACSHA256, false);
         final byte[] in = new byte[1024];
         RANDOM.nextBytes(in);
         final byte[] out = accessor.encrypt(in);
@@ -67,8 +71,8 @@ public class KeyStoreAccessorTests {
 
     @Test
     public void testAsymmetricBasicFunctionalitySuccessful() throws Exception {
-        final Context context = ApplicationProvider.getApplicationContext();
-        final IKeyAccessor accessor = KeyStoreAccessor.newInstance(context, IDevicePopManager.Cipher.RSA_ECB_PKCS1_PADDING, SigningAlgorithm.SHA_256_WITH_RSA);
+        final AndroidPlatformComponents components = AndroidPlatformComponents.createFromContext(ApplicationProvider.getApplicationContext());
+        final IKeyAccessor accessor = new AndroidKeyStoreAccessor(components).newInstance(components, IDevicePopManager.Cipher.RSA_ECB_PKCS1_PADDING, SigningAlgorithm.SHA_256_WITH_RSA);
         final byte[] in = new byte[245];
         RANDOM.nextBytes(in);
         final byte[] out = accessor.encrypt(in);
@@ -80,7 +84,8 @@ public class KeyStoreAccessorTests {
 
     @Test(expected = ClientException.class)
     public void testBasicFunctionalityDecryptDoesSomething() throws Exception {
-        final IKeyAccessor accessor = KeyStoreAccessor.newInstance(AndroidSymmetricCipher.AES_GCM_NONE_HMACSHA256, false);
+        final AndroidPlatformComponents components = AndroidPlatformComponents.createFromContext(ApplicationProvider.getApplicationContext());
+        final IKeyAccessor accessor = new AndroidKeyStoreAccessor(components).newInstance(AndroidSymmetricCipher.AES_GCM_NONE_HMACSHA256, false);
         final byte[] in = new byte[1024];
         RANDOM.nextBytes(in);
         final byte[] out = accessor.encrypt(in);
@@ -91,8 +96,9 @@ public class KeyStoreAccessorTests {
     @Test
     public void testBasicFunctionalityUnsupportedSign() throws Exception {
         boolean exception = false;
+        final AndroidPlatformComponents components = AndroidPlatformComponents.createFromContext(ApplicationProvider.getApplicationContext());
         try {
-            final IKeyAccessor accessor = KeyStoreAccessor.newInstance(AndroidSymmetricCipher.AES_GCM_NONE_HMACSHA256, false);
+            final IKeyAccessor accessor = new AndroidKeyStoreAccessor(components).newInstance(AndroidSymmetricCipher.AES_GCM_NONE_HMACSHA256, false);
             final byte[] in = new byte[1024];
             RANDOM.nextBytes(in);
             final byte[] out = accessor.sign(in);
@@ -109,9 +115,10 @@ public class KeyStoreAccessorTests {
 
     @Test
     public void testBasicFunctionalityUnsupportedVerify() throws Exception {
+        final AndroidPlatformComponents components = AndroidPlatformComponents.createFromContext(ApplicationProvider.getApplicationContext());
         boolean exception = false;
         try {
-            final IKeyAccessor accessor = KeyStoreAccessor.newInstance(AndroidSymmetricCipher.AES_GCM_NONE_HMACSHA256, false);
+            final IKeyAccessor accessor = new AndroidKeyStoreAccessor(components).newInstance(AndroidSymmetricCipher.AES_GCM_NONE_HMACSHA256, false);
             final byte[] in = new byte[1024];
             RANDOM.nextBytes(in);
             accessor.verify(in, in);
@@ -127,7 +134,8 @@ public class KeyStoreAccessorTests {
     }
     @Test
     public void testBasicFunctionalitySignAndVerifySupportedIfRaw() throws Exception {
-        final IKeyAccessor accessor = KeyStoreAccessor.newInstance(AndroidSymmetricCipher.AES_GCM_NONE_HMACSHA256, true);
+        final AndroidPlatformComponents components = AndroidPlatformComponents.createFromContext(ApplicationProvider.getApplicationContext());
+        final IKeyAccessor accessor = new AndroidKeyStoreAccessor(components).newInstance(AndroidSymmetricCipher.AES_GCM_NONE_HMACSHA256, true);
         final byte[] in = new byte[1024];
         RANDOM.nextBytes(in);
         final byte[] out = accessor.sign(in);

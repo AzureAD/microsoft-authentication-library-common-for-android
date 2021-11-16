@@ -2,13 +2,16 @@ package com.microsoft.identity.common.internal.platform;
 
 import android.os.Build;
 import android.security.keystore.KeyGenParameterSpec;
+import android.security.keystore.KeyProperties;
 
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.java.crypto.CryptoSuite;
 import com.microsoft.identity.common.java.crypto.IKeyAccessor;
+import com.microsoft.identity.common.java.crypto.KeyStoreAccessor;
 import com.microsoft.identity.common.java.crypto.RawKeyAccessor;
 import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 
 import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
@@ -23,8 +26,10 @@ import java.util.UUID;
 import javax.crypto.KeyGenerator;
 
 public class AndroidKeyStoreAccessor extends KeyStoreAccessor {
-    public AndroidKeyStoreAccessor() {
-        super("AndroidKeyStore");
+    protected static final int KEY_PURPOSES =  KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT | KeyProperties.PURPOSE_SIGN ;
+
+    public AndroidKeyStoreAccessor(IPlatformComponents components) {
+        super("AndroidKeyStore", components);
     }
 
     @Override
@@ -76,7 +81,7 @@ public class AndroidKeyStoreAccessor extends KeyStoreAccessor {
             }
 
             final DeviceKeyManager<KeyStore.SecretKeyEntry> keyManager = new DeviceKeyManager<>(instance, alias, symmetricThumbprint(alias, instance));
-            return new SecretKeyAccessor(keyManager, cipher) {
+            return new AndroidSecretKeyAccessor(keyManager, cipher) {
                 @Override
                 public byte[] sign(byte[] text) throws ClientException {
                     throw new UnsupportedOperationException("This key instance does not support signing");

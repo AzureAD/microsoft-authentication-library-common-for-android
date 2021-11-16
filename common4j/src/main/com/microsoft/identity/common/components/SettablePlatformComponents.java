@@ -34,6 +34,7 @@ import com.microsoft.identity.common.java.crypto.IKeyAccessor;
 import com.microsoft.identity.common.java.crypto.SecureHardwareState;
 import com.microsoft.identity.common.java.crypto.SigningAlgorithm;
 import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.interfaces.CryptoProvider;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.providers.oauth2.IAuthorizationStrategy;
@@ -44,6 +45,7 @@ import com.microsoft.identity.common.java.util.IClockSkewManager;
 import com.microsoft.identity.common.java.util.IPlatformUtil;
 import com.microsoft.identity.common.java.util.TaskCompletedCallbackWithError;
 import com.microsoft.identity.common.java.util.ported.InMemoryStorage;
+import com.microsoft.identity.common.java.util.ported.Supplier;
 
 import java.io.IOException;
 import java.net.URL;
@@ -385,6 +387,16 @@ public class SettablePlatformComponents implements IPlatformComponents {
                 return null;
             }
         };
+    }
+
+    @Override
+    public IKeyStoreKeyManager<KeyStore.SecretKeyEntry> getSymmetricKeyManager(@NonNull KeyStore keyStore, @NonNull String keyAlias, @NonNull Supplier<byte[]> thumbprintSupplier) throws KeyStoreException {
+        return null;
+    }
+
+    @Override
+    public CryptoProvider getCipherProvider() {
+        return null;
     }
 
     @Builder.Default

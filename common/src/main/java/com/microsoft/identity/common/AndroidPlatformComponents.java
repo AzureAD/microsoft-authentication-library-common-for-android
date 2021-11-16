@@ -37,6 +37,10 @@ import androidx.fragment.app.Fragment;
 import com.microsoft.identity.common.crypto.AndroidAuthSdkStorageEncryptionManager;
 import com.microsoft.identity.common.crypto.AndroidBrokerStorageEncryptionManager;
 import com.microsoft.identity.common.internal.net.cache.HttpCache;
+import com.microsoft.identity.common.internal.platform.AndroidAsymmetricCipher;
+import com.microsoft.identity.common.internal.platform.AndroidKeyStoreAccessor;
+import com.microsoft.identity.common.internal.platform.AndroidSymmetricCipher;
+import com.microsoft.identity.common.internal.platform.DeviceKeyManager;
 import com.microsoft.identity.common.java.broker.ICallValidator;
 import com.microsoft.identity.common.java.cache.IMultiTypeNameValueStorage;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
@@ -49,9 +53,13 @@ import com.microsoft.identity.common.internal.util.ProcessUtil;
 import com.microsoft.identity.common.internal.util.SharedPrefStringNameValueStorage;
 import com.microsoft.identity.common.internal.util.SharedPreferenceLongStorage;
 import com.microsoft.identity.common.java.WarningType;
+import com.microsoft.identity.common.java.crypto.CryptoSuite;
 import com.microsoft.identity.common.java.crypto.IDevicePopManager;
 import com.microsoft.identity.common.java.crypto.IKeyAccessor;
+import com.microsoft.identity.common.java.crypto.IKeyStoreAccessor;
+import com.microsoft.identity.common.java.crypto.IKeyStoreKeyManager;
 import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.interfaces.CryptoProvider;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.platform.Device;
@@ -60,11 +68,13 @@ import com.microsoft.identity.common.java.util.ClockSkewManager;
 import com.microsoft.identity.common.java.util.IClockSkewManager;
 import com.microsoft.identity.common.java.util.IPlatformUtil;
 import com.microsoft.identity.common.java.util.ported.Predicate;
+import com.microsoft.identity.common.java.util.ported.Supplier;
 import com.microsoft.identity.common.logging.Logger;
 import com.microsoft.identity.common.java.strategies.IAuthorizationStrategyFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
@@ -333,5 +343,35 @@ public class AndroidPlatformComponents implements IPlatformComponents {
     @Override
     public @NonNull IPlatformUtil getPlatformUtil() {
         return new AndroidPlatformUtil(mContext, mActivity);
+    }
+
+    @Override
+    public IKeyStoreAccessor getKeyStore() {
+        return new AndroidKeyStoreAccessor(this);
+    }
+
+    @Override
+    public IKeyStoreKeyManager<KeyStore.SecretKeyEntry> getSymmetricKeyManager(@NonNull KeyStore keyStore, @NonNull String keyAlias, @NonNull Supplier<byte[]> thumbprintSupplier) throws KeyStoreException {
+        return new DeviceKeyManager<>(keyStore, keyAlias, thumbprintSupplier);
+    }
+
+    @Override
+    public CryptoProvider getCipherProvider() {
+        return new CryptoProvider() {
+            @Override
+            public CryptoSuite getCryptoSuite(String suiteName) throws NoSuchAlgorithmException {
+                for (final AndroidSymmetricCipher c: AndroidSymmetricCipher.values()) {
+                    if (c.name().equals(suiteName)) {
+                        return c;
+                    }
+                }
+                for (final AndroidAsymmetricCipher c: AndroidAsymmetricCipher.values()) {
+                    if (c.name().equals(suiteName)) {
+                        return c;
+                    }
+                }
+                throw new NoSuchAlgorithmException("Unknown cipher suite " + suiteName);
+            }
+        };
     }
 }

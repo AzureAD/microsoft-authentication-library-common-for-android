@@ -30,7 +30,7 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Account & Credential cache interface.
+ * Account and Credential cache interface.
  */
 public interface IAccountCredentialCache {
 

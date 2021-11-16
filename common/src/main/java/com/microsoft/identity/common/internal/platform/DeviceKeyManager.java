@@ -28,7 +28,7 @@ import android.security.keystore.KeyInfo;
 import com.microsoft.identity.common.java.crypto.IKeyStoreKeyManager;
 import com.microsoft.identity.common.java.crypto.SecureHardwareState;
 import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.internal.util.Supplier;
+import com.microsoft.identity.common.java.util.ported.Supplier;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.security.KeyFactory;

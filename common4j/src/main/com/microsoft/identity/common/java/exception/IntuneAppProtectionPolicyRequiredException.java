@@ -23,6 +23,9 @@
 
 package com.microsoft.identity.common.java.exception;
 
+import com.microsoft.identity.common.java.commands.parameters.BrokerInteractiveTokenCommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.BrokerSilentTokenCommandParameters;
+
 public class IntuneAppProtectionPolicyRequiredException extends ServiceException {
 
     public static final String sName = IntuneAppProtectionPolicyRequiredException.class.getName();
@@ -36,7 +39,28 @@ public class IntuneAppProtectionPolicyRequiredException extends ServiceException
 
     public IntuneAppProtectionPolicyRequiredException(final String errorCode,
                                                       final String errorMessage) {
-        this(errorCode, errorMessage, null);
+        this(errorCode, errorMessage, (Throwable) null);
+    }
+
+
+    public IntuneAppProtectionPolicyRequiredException(final String errorCode,
+                                                      final String errorMessage,
+                                                      final BrokerInteractiveTokenCommandParameters parameters) {
+        super(errorCode, errorMessage, null);
+    }
+
+
+    public IntuneAppProtectionPolicyRequiredException(final String errorCode,
+                                                      final String errorMessage,
+                                                      final BrokerSilentTokenCommandParameters parameters,
+                                                      final Throwable throwable) {
+        super(errorCode, errorMessage, throwable);
+    }
+
+    public IntuneAppProtectionPolicyRequiredException(final String errorCode,
+                                                      final String errorMessage,
+                                                      final BrokerSilentTokenCommandParameters parameters) {
+        super(errorCode, errorMessage, (Throwable) null);
     }
 
     public IntuneAppProtectionPolicyRequiredException(final String errorCode,
