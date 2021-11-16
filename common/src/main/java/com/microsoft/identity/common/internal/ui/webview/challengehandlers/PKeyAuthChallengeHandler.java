@@ -69,20 +69,14 @@ public final class PKeyAuthChallengeHandler implements IChallengeHandler<PKeyAut
                     mWebView.loadUrl(loadUrl, header);
                 }
             });
-        } catch (final Throwable e) {
+        } catch (final ClientException e) {
             // It should return error code and finish the
             // activity, so that onActivityResult implementation
             // returns errors to callback.
             //TODO log the request info
             mChallengeCallback.onChallengeResponseReceived(
-                    RawAuthorizationResult.fromThrowable(e)
+                    RawAuthorizationResult.fromException(e)
             );
-            if (e instanceof InterruptedException) {
-                Thread.currentThread().interrupt();
-            }
-            if (e instanceof Error) {
-                throw (Error) e;
-            }
         }
 
         return null;
