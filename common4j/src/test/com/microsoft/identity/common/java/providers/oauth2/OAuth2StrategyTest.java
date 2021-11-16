@@ -24,6 +24,7 @@ package com.microsoft.identity.common.java.providers.oauth2;
 
 import com.microsoft.identity.common.java.BaseAccount;
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
+import com.microsoft.identity.common.java.commands.parameters.RopcTokenCommandParameters;
 import com.microsoft.identity.common.java.dto.IAccountRecord;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.net.HttpResponse;
@@ -97,6 +98,11 @@ public class OAuth2StrategyTest {
 
         @Override
         public TokenRequest createRefreshTokenRequest(AbstractAuthenticationScheme authScheme) throws ClientException {
+            return null;
+        }
+
+        @Override
+        public TokenRequest createRopcTokenRequest(RopcTokenCommandParameters tokenCommandParameters) throws ClientException {
             return null;
         }
 

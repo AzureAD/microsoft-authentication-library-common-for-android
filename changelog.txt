@@ -55,6 +55,7 @@ V.Next
 - [MINOR] Migrate authorization completion callback to common4j (#1522)
 - [PATCH] Remove deprecation logging in Logger class (#1502)
 - [MINOR] Migrate broker application metadata cache to common4j (#1530)
+- [MINOR] Add ropc command and ropc flow to BaseController (#1539)
 - [PATCH] Replace unsafe TypeToken instance with TypeToken#getParameterized (#1485)
 - [MINOR] Add more operation names to ArgumentException (#1553)
 - [MINOR] Add msal linux sdk type (#1554)
