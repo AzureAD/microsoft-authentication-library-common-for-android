@@ -183,7 +183,7 @@ public abstract class BaseController {
                 .getPlatformUtil()
                 .throwIfNetworkNotAvailable(parametersWithScopes.isPowerOptCheckEnabled());
 
-        Authority.KnownAuthorityResult authorityResult = Authority.getKnownAuthorityResult(parametersWithScopes.getAuthority());
+        final Authority.KnownAuthorityResult authorityResult = Authority.getKnownAuthorityResult(parametersWithScopes.getAuthority());
 
         //0.1 If not known throw resulting exception
         if (!authorityResult.getKnown()) {
