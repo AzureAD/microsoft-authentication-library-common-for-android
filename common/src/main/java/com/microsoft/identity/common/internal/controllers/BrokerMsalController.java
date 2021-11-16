@@ -74,6 +74,7 @@ import com.microsoft.identity.common.java.commands.parameters.DeviceCodeFlowComm
 import com.microsoft.identity.common.java.commands.parameters.GenerateShrCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.RemoveAccountCommandParameters;
 import com.microsoft.identity.common.internal.request.MsalBrokerRequestAdapter;
+import com.microsoft.identity.common.java.commands.parameters.RopcTokenCommandParameters;
 import com.microsoft.identity.common.java.controllers.BaseController;
 import com.microsoft.identity.common.java.result.AcquireTokenResult;
 import com.microsoft.identity.common.java.result.GenerateShrResult;
@@ -203,13 +204,14 @@ public class BrokerMsalController extends BaseController {
     /**
      * MSAL-Broker handshake operation.
      *
-     * @param strategy   an {@link IIpcStrategy}
+     * @param strategy            an {@link IIpcStrategy}
      * @param minRequestedVersion the minimum allowed broker protocol version, may be null.
      * @return a protocol version negotiated by MSAL and Broker.
      */
     @VisibleForTesting
-    public @NonNull String hello(final @NonNull IIpcStrategy strategy,
-                                 final @Nullable String minRequestedVersion) throws BaseException {
+    public @NonNull
+    String hello(final @NonNull IIpcStrategy strategy,
+                 final @Nullable String minRequestedVersion) throws BaseException {
 
         final String cachedProtocolVersion = mHelloCache.tryGetNegotiatedProtocolVersion(
                 minRequestedVersion, MSAL_TO_BROKER_PROTOCOL_VERSION_CODE);
@@ -274,8 +276,8 @@ public class BrokerMsalController extends BaseController {
         final Intent interactiveRequestIntent = getBrokerAuthorizationIntent(parameters);
 
         Activity activity = null;
-        if (parameters instanceof AndroidActivityInteractiveTokenCommandParameters){
-            activity = ((AndroidActivityInteractiveTokenCommandParameters)parameters).getActivity();
+        if (parameters instanceof AndroidActivityInteractiveTokenCommandParameters) {
+            activity = ((AndroidActivityInteractiveTokenCommandParameters) parameters).getActivity();
         }
 
         //Pass this intent to the BrokerActivity which will be used to start this activity
@@ -284,37 +286,37 @@ public class BrokerMsalController extends BaseController {
 
         LocalBroadcaster.INSTANCE.registerCallback(RETURN_BROKER_INTERACTIVE_ACQUIRE_TOKEN_RESULT,
                 new LocalBroadcaster.IReceiverCallback() {
-            @Override
-            public void onReceive(@NonNull PropertyBag propertyBag) {
-                /**
-                 * Get the response from the Broker captured by BrokerActivity.
-                 * BrokerActivity will pass along the response to the broker controller.
-                 * The Broker controller will map the response into the broker result
-                 * and signal the future with the broker result to unblock the request.
-                 */
+                    @Override
+                    public void onReceive(@NonNull PropertyBag propertyBag) {
+                        /**
+                         * Get the response from the Broker captured by BrokerActivity.
+                         * BrokerActivity will pass along the response to the broker controller.
+                         * The Broker controller will map the response into the broker result
+                         * and signal the future with the broker result to unblock the request.
+                         */
 
-                Logger.verbose(
-                        TAG + methodName,
-                        "Received result from Broker..."
-                );
+                        Logger.verbose(
+                                TAG + methodName,
+                                "Received result from Broker..."
+                        );
 
-                Telemetry.emit(
-                        new ApiStartEvent()
-                                .putApiId(TelemetryEventStrings.Api.BROKER_COMPLETE_ACQUIRE_TOKEN_INTERACTIVE)
-                                .put(TelemetryEventStrings.Key.REQUEST_CODE, propertyBag.<Integer>getOrDefault(REQUEST_CODE, -1).toString())
-                                .put(TelemetryEventStrings.Key.RESULT_CODE, propertyBag.<Integer>getOrDefault(RESULT_CODE, -1).toString())
-                );
+                        Telemetry.emit(
+                                new ApiStartEvent()
+                                        .putApiId(TelemetryEventStrings.Api.BROKER_COMPLETE_ACQUIRE_TOKEN_INTERACTIVE)
+                                        .put(TelemetryEventStrings.Key.REQUEST_CODE, propertyBag.<Integer>getOrDefault(REQUEST_CODE, -1).toString())
+                                        .put(TelemetryEventStrings.Key.RESULT_CODE, propertyBag.<Integer>getOrDefault(RESULT_CODE, -1).toString())
+                        );
 
-                mBrokerResultFuture.setResult(PropertyBagUtil.toBundle(propertyBag));
+                        mBrokerResultFuture.setResult(PropertyBagUtil.toBundle(propertyBag));
 
-                Telemetry.emit(
-                        new ApiEndEvent()
-                                .putApiId(TelemetryEventStrings.Api.BROKER_COMPLETE_ACQUIRE_TOKEN_INTERACTIVE)
-                );
+                        Telemetry.emit(
+                                new ApiEndEvent()
+                                        .putApiId(TelemetryEventStrings.Api.BROKER_COMPLETE_ACQUIRE_TOKEN_INTERACTIVE)
+                        );
 
-                LocalBroadcaster.INSTANCE.unregisterCallback(RETURN_BROKER_INTERACTIVE_ACQUIRE_TOKEN_RESULT);
-            }
-        });
+                        LocalBroadcaster.INSTANCE.unregisterCallback(RETURN_BROKER_INTERACTIVE_ACQUIRE_TOKEN_RESULT);
+                    }
+                });
 
         if (null == activity) {
             // To support calling from OneAuth-MSAL, which may be initialized without an Activity
@@ -371,7 +373,8 @@ public class BrokerMsalController extends BaseController {
      * @param parameters a {@link InteractiveTokenCommandParameters}
      * @return an {@link Intent} for initiating Broker interactive activity.
      */
-    private @NonNull Intent getBrokerAuthorizationIntent(
+    private @NonNull
+    Intent getBrokerAuthorizationIntent(
             final @NonNull InteractiveTokenCommandParameters parameters) throws BaseException {
         return mBrokerOperationExecutor.execute(parameters,
                 new BrokerOperation<Intent>() {
@@ -392,7 +395,8 @@ public class BrokerMsalController extends BaseController {
                     }
 
                     @Override
-                    public @NonNull Intent extractResultBundle(final @Nullable Bundle resultBundle) throws BaseException {
+                    public @NonNull
+                    Intent extractResultBundle(final @Nullable Bundle resultBundle) throws BaseException {
                         if (resultBundle == null) {
                             throw mResultAdapter.getExceptionForEmptyResultBundle();
                         }
@@ -431,7 +435,8 @@ public class BrokerMsalController extends BaseController {
      * @return an {@link AcquireTokenResult}.
      */
     @Override
-    public @NonNull AcquireTokenResult acquireTokenSilent(final @NonNull SilentTokenCommandParameters parameters) throws BaseException {
+    public @NonNull
+    AcquireTokenResult acquireTokenSilent(final @NonNull SilentTokenCommandParameters parameters) throws BaseException {
         return mBrokerOperationExecutor.execute(parameters,
                 new BrokerOperation<AcquireTokenResult>() {
                     private String negotiatedBrokerProtocolVersion;
@@ -454,7 +459,8 @@ public class BrokerMsalController extends BaseController {
                     }
 
                     @Override
-                    public @NonNull AcquireTokenResult extractResultBundle(final @Nullable Bundle resultBundle) throws BaseException {
+                    public @NonNull
+                    AcquireTokenResult extractResultBundle(final @Nullable Bundle resultBundle) throws BaseException {
                         if (resultBundle == null) {
                             throw mResultAdapter.getExceptionForEmptyResultBundle();
                         }
@@ -488,7 +494,8 @@ public class BrokerMsalController extends BaseController {
      * @return a list of {@link ICacheRecord}.
      */
     @Override
-    public @NonNull List<ICacheRecord> getAccounts(final @NonNull CommandParameters parameters) throws BaseException {
+    public @NonNull
+    List<ICacheRecord> getAccounts(final @NonNull CommandParameters parameters) throws BaseException {
         return mBrokerOperationExecutor.execute(parameters,
                 new BrokerOperation<List<ICacheRecord>>() {
                     private String negotiatedBrokerProtocolVersion;
@@ -511,7 +518,8 @@ public class BrokerMsalController extends BaseController {
                     }
 
                     @Override
-                    public @NonNull List<ICacheRecord> extractResultBundle(final @Nullable Bundle resultBundle) throws BaseException {
+                    public @NonNull
+                    List<ICacheRecord> extractResultBundle(final @Nullable Bundle resultBundle) throws BaseException {
                         if (resultBundle == null) {
                             throw mResultAdapter.getExceptionForEmptyResultBundle();
                         }
@@ -567,7 +575,8 @@ public class BrokerMsalController extends BaseController {
                     }
 
                     @Override
-                    public @NonNull Boolean extractResultBundle(final @Nullable Bundle resultBundle) throws BaseException {
+                    public @NonNull
+                    Boolean extractResultBundle(final @Nullable Bundle resultBundle) throws BaseException {
                         mResultAdapter.verifyRemoveAccountResultFromBundle(resultBundle);
                         return true;
                     }
@@ -614,7 +623,8 @@ public class BrokerMsalController extends BaseController {
                     }
 
                     @Override
-                    public @NonNull Boolean extractResultBundle(final @Nullable Bundle resultBundle) throws BaseException {
+                    public @NonNull
+                    Boolean extractResultBundle(final @Nullable Bundle resultBundle) throws BaseException {
                         if (resultBundle == null) {
                             throw mResultAdapter.getExceptionForEmptyResultBundle();
                         }
@@ -648,7 +658,8 @@ public class BrokerMsalController extends BaseController {
      * @return a list of {@link ICacheRecord}.
      */
     @Override
-    public @NonNull List<ICacheRecord> getCurrentAccount(final @NonNull CommandParameters parameters) throws BaseException {
+    public @NonNull
+    List<ICacheRecord> getCurrentAccount(final @NonNull CommandParameters parameters) throws BaseException {
         final String methodName = ":getCurrentAccount";
 
         if (!parameters.isSharedDevice()) {
@@ -678,7 +689,8 @@ public class BrokerMsalController extends BaseController {
                     }
 
                     @Override
-                    public @NonNull List<ICacheRecord> extractResultBundle(final @Nullable Bundle resultBundle) throws BaseException {
+                    public @NonNull
+                    List<ICacheRecord> extractResultBundle(final @Nullable Bundle resultBundle) throws BaseException {
                         if (resultBundle == null) {
                             throw mResultAdapter.getExceptionForEmptyResultBundle();
                         }
@@ -752,7 +764,8 @@ public class BrokerMsalController extends BaseController {
                     }
 
                     @Override
-                    public @NonNull Boolean extractResultBundle(final @Nullable Bundle resultBundle) throws BaseException {
+                    public @NonNull
+                    Boolean extractResultBundle(final @Nullable Bundle resultBundle) throws BaseException {
                         mResultAdapter.verifyRemoveAccountResultFromBundle(resultBundle);
                         logOutFromBrowser(mApplicationContext, parameters);
                         return true;
@@ -822,6 +835,11 @@ public class BrokerMsalController extends BaseController {
     @Override
     public AcquireTokenResult acquireDeviceCodeFlowToken(@SuppressWarnings(WarningType.rawtype_warning) AuthorizationResult authorizationResult, DeviceCodeFlowCommandParameters commandParameters) throws ClientException {
         throw new ClientException("acquireDeviceCodeFlowToken() not supported in BrokerMsalController");
+    }
+
+    @Override
+    public AcquireTokenResult acquireTokenWithPassword(@lombok.NonNull RopcTokenCommandParameters parameters) throws Exception {
+        throw new ClientException("acquireTokenWithPassword() not supported in BrokerMsalController");
     }
 
     @Override
