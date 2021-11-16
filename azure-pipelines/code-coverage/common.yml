@@ -15,7 +15,7 @@ resources:
   repositories:
   - repository: self
     type: git
-    ref: paul/code-coverage
+    ref: dev
 
 pool:
   name: Hosted Windows 2019 with VS2019
