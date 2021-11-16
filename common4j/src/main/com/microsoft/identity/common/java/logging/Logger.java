@@ -115,15 +115,21 @@ public class Logger {
         }
     }
 
-    public static void setLogger(@NonNull String identifier,
-                                 ILoggerCallback callback) {
+    public static boolean setLogger(@NonNull String identifier,
+                                    ILoggerCallback callback) {
         sLoggersLock.writeLock().lock();
         try {
             if (callback == null) {
                 sLoggers.remove(identifier);
-                return;
+                return true;
             }
+
+            if (sLoggers.containsValue(callback)){
+                return false;
+            }
+
             sLoggers.put(identifier, callback);
+            return true;
         } finally {
             sLoggersLock.writeLock().unlock();
         }

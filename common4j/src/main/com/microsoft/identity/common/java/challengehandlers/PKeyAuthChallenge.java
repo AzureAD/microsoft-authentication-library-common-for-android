@@ -37,6 +37,8 @@ import java.io.Serializable;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateKey;
 import java.util.HashMap;
 import java.util.List;
@@ -179,12 +181,17 @@ public class PKeyAuthChallenge implements Serializable {
                 if (privateKey == null) {
                     throw new ClientException(ErrorStrings.KEY_CHAIN_PRIVATE_KEY_EXCEPTION);
                 }
+                final PublicKey publicKey = deviceCertProxy.getPublicKey();
+                final X509Certificate certificate = deviceCertProxy.getCertificate();
+                if (certificate == null) {
+                    throw new ClientException(ErrorStrings.KEY_CHAIN_CERTIFICATE_EXCEPTION);
+                }
                 final String jwt = (new JWSBuilder()).generateSignedJWT(
                         mNonce,
                         mSubmitUrl,
                         privateKey,
-                        deviceCertProxy.getPublicKey(),
-                        deviceCertProxy.getCertificate());
+                        publicKey,
+                        certificate);
                 authorizationHeaderValue = String.format(
                         "%s AuthToken=\"%s\",Context=\"%s\",Version=\"%s\"",
                         CHALLENGE_RESPONSE_TYPE, jwt, mContext, mVersion);
