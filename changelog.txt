@@ -64,6 +64,10 @@ V.Next
 - [PATCH] Support SSO token api (#1543)
 - [MINOR] Add flighting parameters to commmandParameters (#1562)
 
+Version 3.6.3
+----------
+- [PATCH] Add helper method to remove the metadataCache entry (#1593)
+
 Version 3.6.2
 ----------
 - [PATCH] Handle the scenario where broker activity is killed wrongly. (#1569)

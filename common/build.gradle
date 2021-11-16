@@ -35,7 +35,7 @@ android {
 
     buildTypes {
         debug {
-            testCoverageEnabled true
+            testCoverageEnabled false
             minifyEnabled false
         }
         release {
@@ -109,7 +109,7 @@ dependencies {
         transitive = false
     }
 
-    distApi("com.microsoft.identity:common4j:0.0.+") {
+    distApi("com.microsoft.identity:common4j:1.0.0-RC5") {
         transitive = false
     }
 
