@@ -29,10 +29,13 @@ import com.microsoft.identity.common.java.dto.IdTokenRecord;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.request.ILocalAuthenticationCallback;
 import com.microsoft.identity.common.java.request.SdkType;
+import com.microsoft.identity.common.java.telemetry.ITelemetryAccessor;
 import com.microsoft.identity.common.java.util.StringUtil;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
@@ -42,7 +45,7 @@ import lombok.NonNull;
  * Successful authentication result. When auth succeeds, token will be wrapped into the
  * {@link LocalAuthenticationResult} and passed back through the {@link ILocalAuthenticationCallback}.
  */
-public class LocalAuthenticationResult implements ILocalAuthenticationResult {
+public class LocalAuthenticationResult implements ILocalAuthenticationResult, ITelemetryAccessor {
 
     private String mRawIdToken;
     private final AccessTokenRecord mAccessTokenRecord;
@@ -54,6 +57,7 @@ public class LocalAuthenticationResult implements ILocalAuthenticationResult {
     private List<ICacheRecord> mCompleteResultFromCache;
     private boolean mServicedFromCache;
     private String mCorrelationId;
+    private List<Map<String, String>> mTelemetry = new ArrayList<>();
 
     private static final String TAG = LocalAuthenticationResult.class.getName();
 
@@ -218,5 +222,19 @@ public class LocalAuthenticationResult implements ILocalAuthenticationResult {
     @Override
     public String getCorrelationId() {
         return mCorrelationId;
+    }
+
+    /**
+     * Set the telemetry on local authentication result.
+     *
+     * @param telemetry the {@link List<Map<String, String>>} containing telemetry data
+     */
+    public void setTelemetry(@NonNull final List<Map<String, String>> telemetry) {
+        mTelemetry = telemetry;
+    }
+
+    @Override
+    public List<Map<String, String>> getTelemetry() {
+        return mTelemetry;
     }
 }

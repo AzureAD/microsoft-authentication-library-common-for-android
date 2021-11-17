@@ -242,10 +242,6 @@ public class Telemetry {
         if (!mIsTelemetryEnabled) {
             return;
         }
-        if (null == mObservers) {
-            Logger.warn(TAG, "No telemetry observer set.");
-            return;
-        }
 
         if (StringUtil.isNullOrEmpty(correlationId)) {
             Logger.warn(TAG, "No correlation id set.");
@@ -269,6 +265,11 @@ public class Telemetry {
 
         //Add the telemetry context to the telemetry data
         finalRawMap.add(applyPiiOiiRule(mTelemetryContext.getProperties()));
+
+        if (null == mObservers) {
+            Logger.warn(TAG, "No telemetry observer set.");
+            return;
+        }
 
         for (@SuppressWarnings(WarningType.rawtype_warning) ITelemetryObserver observer : mObservers) {
             if (observer instanceof ITelemetryAggregatedObserver) {

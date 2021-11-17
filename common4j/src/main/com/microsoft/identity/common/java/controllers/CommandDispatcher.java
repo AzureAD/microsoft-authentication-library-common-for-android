@@ -277,8 +277,6 @@ public class CommandDispatcher {
                                 + correlationId + ", with the status : " + commandResult.getStatus().getLogStatus()
                                 + " is cacheable : " + command.isEligibleForCaching());
                         // TODO 1309671 : change required to stop the LocalAuthenticationResult object from mutating in cases of cached command.
-                        // set correlation id on Local Authentication Result
-                        setCorrelationIdOnResult(commandResult, correlationId);
                         final List<Map<String, String>> telemetryMap = Telemetry.getInstance().getMap(correlationId);
                         commandResult.setTelemetryMap(telemetryMap);
                         Telemetry.getInstance().flush(correlationId);
@@ -354,8 +352,6 @@ public class CommandDispatcher {
                         Logger.info(TAG + methodName, "Completed as owner for correlation id : **"
                                 + correlationId + statusMsg(commandResult.getStatus().getLogStatus())
                                 + " is cacheable : " + command.isEligibleForCaching());
-                        // set correlation id on Local Authentication Result
-                        setCorrelationIdOnResult(commandResult, correlationId);
                         Telemetry.getInstance().flush(correlationId);
                         EstsTelemetry.getInstance().flush(command, commandResult);
                         finalFuture.setResult(commandResult);
@@ -491,7 +487,23 @@ public class CommandDispatcher {
             }
         }
 
+        // set correlation id on Local Authentication Result
+        setCorrelationIdOnResult(commandResult, correlationId);
+        setTelemetryOnResult(commandResult, correlationId);
         return commandResult;
+    }
+
+    private static void setTelemetryOnResult(@NonNull final CommandResult commandResult,
+                                             @NonNull final String correlationId) {
+        final List<Map<String, String>> telemetryMap = Telemetry.getInstance().getMap(
+                correlationId
+        );
+
+        if (commandResult.getResult() instanceof LocalAuthenticationResult) {
+            ((LocalAuthenticationResult) commandResult.getResult()).setTelemetry(telemetryMap);
+        } else if (commandResult.getResult() instanceof BaseException) {
+            ((BaseException) commandResult.getResult()).setTelemetry(telemetryMap);
+        }
     }
 
         /**
@@ -649,9 +661,6 @@ public class CommandDispatcher {
                             sCommand = null;
 
                             LocalBroadcaster.INSTANCE.unregisterCallback(RETURN_AUTHORIZATION_REQUEST_RESULT);
-
-                            // set correlation id on Local Authentication Result
-                            setCorrelationIdOnResult(commandResult, correlationId);
 
                             Logger.info(TAG + methodName,
                                     "Completed interactive request for correlation id : **" + correlationId +
