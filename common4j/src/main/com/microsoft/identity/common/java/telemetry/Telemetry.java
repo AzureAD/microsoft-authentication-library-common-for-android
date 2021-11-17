@@ -138,7 +138,7 @@ public class Telemetry {
         }
 
         if (observer instanceof ITelemetryRelayClient) {
-            ITelemetryRelayClient<?> relayClient = (ITelemetryRelayClient<?>) observer;
+            ITelemetryRelayClient relayClient = (ITelemetryRelayClient) observer;
 
             if (mObservers.contains(relayClient)) {
                 return;
@@ -177,7 +177,7 @@ public class Telemetry {
             final ITelemetryObserver<?> observer = observerIterator.next();
             if (observer.getClass() == cls) {
                 if (cls.isAssignableFrom(ITelemetryRelayClient.class)) {
-                    ((ITelemetryRelayClient<?>) observerIterator.next()).unInitialize();
+                    ((ITelemetryRelayClient) observerIterator.next()).unInitialize();
                 }
                 Logger.verbose(TAG, "The [" + cls.getSimpleName() + "] observer is removed.");
                 observerIterator.remove();
@@ -202,7 +202,7 @@ public class Telemetry {
         }
 
         if (observer instanceof ITelemetryRelayClient) {
-            ((ITelemetryRelayClient<?>) observer).unInitialize();
+            ((ITelemetryRelayClient) observer).unInitialize();
         }
 
         mObservers.remove(observer);
@@ -216,7 +216,7 @@ public class Telemetry {
 
         for (ITelemetryObserver<?> observer : mObservers) {
             if (observer instanceof ITelemetryRelayClient) {
-                ((ITelemetryRelayClient<?>) observer).unInitialize();
+                ((ITelemetryRelayClient) observer).unInitialize();
             }
         }
 

@@ -1,8 +1,8 @@
 package com.microsoft.identity.common.java.telemetry.relay;
 
-import com.microsoft.identity.common.java.telemetry.observers.ITelemetryObserver;
+import com.microsoft.identity.common.java.telemetry.observers.ITelemetryAggregatedObserver;
 
-public interface ITelemetryRelayClient<T> extends ITelemetryObserver<T> {
+public interface ITelemetryRelayClient extends ITelemetryAggregatedObserver {
 
     /**
      * Handle initialization of the relay client before being registered as an observer.
