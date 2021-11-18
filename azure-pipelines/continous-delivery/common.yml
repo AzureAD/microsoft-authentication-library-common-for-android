@@ -4,7 +4,7 @@
 # Variable: 'mvnAccessToken' was defined in the Variables tab
 # Variable: 'customVersion' was defined in the Variables tab
 
-name: 0.$(Date:yyyyMMdd)$(Rev:.r) # $(Build.BuildNumber) = name
+name: 0.0.$(Date:yyyyMMdd)$(Rev:.r) # $(Build.BuildNumber) = name
 
 trigger:
 - dev
@@ -34,6 +34,9 @@ jobs:
   dependsOn:
   - common4j_phase
   steps:
+  - template: ../templates/steps/automation-cert.yml
+    parameters:
+      envVstsMvnAt: ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN
   - template: ../templates/steps/continous-delivery/assemble-publish-projversion.yml
     parameters:
       project: common
