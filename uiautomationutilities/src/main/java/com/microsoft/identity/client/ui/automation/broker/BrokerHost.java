@@ -55,6 +55,16 @@ public class BrokerHost extends AbstractTestBroker {
         localApkFileName = BROKER_HOST_APK;
     }
 
+    /**
+     * Allows you to install different broker host app apk with given file name.
+     *
+     * @param appName
+     */
+    public BrokerHost(String apkFileName) {
+        super(BROKER_HOST_APP_PACKAGE_NAME, appName, new LocalApkInstaller());
+        localApkFileName = apkFileName;
+    }
+
     @Override
     public void performDeviceRegistration(@NonNull final String username,
                                           @NonNull final String password) {

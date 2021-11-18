@@ -35,6 +35,7 @@ import com.microsoft.identity.client.ui.automation.powerlift.IPowerLiftIntegrate
 import com.microsoft.identity.client.ui.automation.constants.DeviceAdmin;
 import com.microsoft.identity.client.ui.automation.device.settings.ISettings;
 import com.microsoft.identity.client.ui.automation.device.settings.SamsungSettings;
+import com.microsoft.identity.client.ui.automation.installer.IAppInstaller;
 import com.microsoft.identity.client.ui.automation.interaction.PromptHandlerParameters;
 import com.microsoft.identity.client.ui.automation.interaction.PromptParameter;
 import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.AadPromptHandler;
@@ -67,6 +68,16 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
 
     public BrokerCompanyPortal() {
         super(COMPANY_PORTAL_APP_PACKAGE_NAME, COMPANY_PORTAL_APP_NAME);
+        localApkFileName = COMPANY_PORTAL_APK;
+    }
+
+    /**
+     * Allows you to choose which appInstaller should we use to install CompanyPortal. The app can be installed from playstore or from localApkinstaller.
+     *
+     * @param appInstaller appInstaller can be either play store or localapkinstaller
+     */
+    public BrokerCompanyPortal(IAppInstaller appInstaller) {
+        super(COMPANY_PORTAL_APP_PACKAGE_NAME, COMPANY_PORTAL_APK, appInstaller);
         localApkFileName = COMPANY_PORTAL_APK;
     }
 

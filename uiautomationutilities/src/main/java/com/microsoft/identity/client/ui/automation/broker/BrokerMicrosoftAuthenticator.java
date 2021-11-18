@@ -37,6 +37,7 @@ import androidx.test.uiautomator.UiSelector;
 
 import com.microsoft.identity.client.ui.automation.powerlift.IPowerLiftIntegratedApp;
 import com.microsoft.identity.client.ui.automation.constants.DeviceAdmin;
+import com.microsoft.identity.client.ui.automation.installer.IAppInstaller;
 import com.microsoft.identity.client.ui.automation.interaction.PromptHandlerParameters;
 import com.microsoft.identity.client.ui.automation.interaction.PromptParameter;
 import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.AadPromptHandler;
@@ -67,6 +68,16 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
 
     public BrokerMicrosoftAuthenticator() {
         super(AUTHENTICATOR_APP_PACKAGE_NAME, AUTHENTICATOR_APP_NAME);
+        localApkFileName = AUTHENTICATOR_APK;
+    }
+
+    /**
+     * Allows you to choose which appInstaller should we use to install Microsoft Authenticator. The app can be installed from playstore or from localApkinstaller.
+     *
+     * @param appInstaller appInstaller can be either play store or localapkinstaller
+     */
+    public BrokerMicrosoftAuthenticator(IAppInstaller appInstaller) {
+        super(AUTHENTICATOR_APP_PACKAGE_NAME, AUTHENTICATOR_APK, appInstaller);
         localApkFileName = AUTHENTICATOR_APK;
     }
 
