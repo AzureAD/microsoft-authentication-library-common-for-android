@@ -23,26 +23,30 @@
 package com.microsoft.identity.common.java.controllers;
 
 import com.google.gson.JsonSyntaxException;
-import com.microsoft.identity.common.java.AuthenticationConstants;
 import com.microsoft.identity.common.java.WarningType;
+import com.microsoft.identity.common.java.commands.parameters.BrokerInteractiveTokenCommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.BrokerSilentTokenCommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.java.constants.OAuth2ErrorCode;
+import com.microsoft.identity.common.java.constants.OAuth2SubErrorCode;
 import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.DeviceRegistrationRequiredException;
+import com.microsoft.identity.common.java.exception.IntuneAppProtectionPolicyRequiredException;
 import com.microsoft.identity.common.java.exception.ServiceException;
+import com.microsoft.identity.common.java.exception.TerminalException;
 import com.microsoft.identity.common.java.exception.UiRequiredException;
 import com.microsoft.identity.common.java.exception.UserCancelException;
+import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.net.HttpResponse;
-import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
-import com.microsoft.identity.common.java.exception.TerminalException;
-import com.microsoft.identity.common.java.result.AcquireTokenResult;
-import com.microsoft.identity.common.java.telemetry.CliTelemInfo;
-import com.microsoft.identity.common.java.util.HeaderSerializationUtil;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationErrorResponse;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationErrorResponse;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.java.providers.oauth2.TokenErrorResponse;
-import com.microsoft.identity.common.java.logging.Logger;
+import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
+import com.microsoft.identity.common.java.result.AcquireTokenResult;
+import com.microsoft.identity.common.java.telemetry.CliTelemInfo;
+import com.microsoft.identity.common.java.util.HeaderSerializationUtil;
 import com.microsoft.identity.common.java.util.StringUtil;
 
 import org.json.JSONException;
@@ -57,8 +61,8 @@ public class ExceptionAdapter {
 
     private static final String TAG = ExceptionAdapter.class.getSimpleName();
 
-    @NonNull
-    public static BaseException exceptionFromAcquireTokenResult(final AcquireTokenResult result) {
+    @Nullable
+    public static BaseException exceptionFromAcquireTokenResult(final AcquireTokenResult result, final CommandParameters commandParameters) {
         final String methodName = ":exceptionFromAcquireTokenResult";
 
         @SuppressWarnings(WarningType.rawtype_warning)
@@ -111,7 +115,7 @@ public class ExceptionAdapter {
             );
         }
 
-        return exceptionFromTokenResult(result.getTokenResult());
+        return exceptionFromTokenResult(result.getTokenResult(), commandParameters);
     }
 
     /**
@@ -119,8 +123,8 @@ public class ExceptionAdapter {
      *
      * @param tokenResult
      * @return ServiceException, UiRequiredException
-     * */
-    public static ServiceException exceptionFromTokenResult(final TokenResult tokenResult) {
+     */
+    public static ServiceException exceptionFromTokenResult(final TokenResult tokenResult, final CommandParameters commandParameters) {
         final String methodName = ":exceptionFromTokenResult";
 
         ServiceException outErr;
@@ -130,9 +134,9 @@ public class ExceptionAdapter {
                 tokenResult.getErrorResponse() != null &&
                 !StringUtil.isNullOrEmpty(tokenResult.getErrorResponse().getError())) {
 
-            outErr = getExceptionFromTokenErrorResponse(tokenResult.getErrorResponse());
+            outErr = getExceptionFromTokenErrorResponse(commandParameters, tokenResult.getErrorResponse());
             applyCliTelemInfo(tokenResult.getCliTelemInfo(), outErr);
-        }else {
+        } else {
             Logger.warn(
                     TAG + methodName,
                     "Unknown error, Token result is null [" + (tokenResult == null) + "]"
@@ -152,9 +156,9 @@ public class ExceptionAdapter {
      *
      * @param oAuthError
      * @return boolean
-     * */
+     */
     @SuppressWarnings("deprecation")
-    private static boolean shouldBeConvertedToUiRequiredException(final String oAuthError){
+    private static boolean shouldBeConvertedToUiRequiredException(final String oAuthError) {
         // Invalid_grant doesn't necessarily requires UI protocol-wise.
         // We simplify our logic because this layer is also used by MSAL.
 
@@ -170,9 +174,8 @@ public class ExceptionAdapter {
      *
      * @param errorResponse
      * @return ServiceException, UiRequiredException
-     * */
+     */
     public static ServiceException getExceptionFromTokenErrorResponse(@NonNull final TokenErrorResponse errorResponse) {
-        final String methodName = ":getExceptionFromTokenErrorResponse";
 
         final ServiceException outErr;
 
@@ -189,24 +192,71 @@ public class ExceptionAdapter {
         }
 
         outErr.setOauthSubErrorCode(errorResponse.getSubError());
+        setHttpResponseUsingTokenErrorResponse(outErr, errorResponse);
+        return outErr;
+    }
+
+
+    public static ServiceException getExceptionFromTokenErrorResponse(@Nullable final CommandParameters commandParameters,
+                                                                      @NonNull final TokenErrorResponse errorResponse) {
+
+        if (isIntunePolicyRequiredError(errorResponse)) {
+            if (commandParameters == null || !(isBrokerTokenCommandParameters(commandParameters))) {
+                Logger.warn(TAG, "In order to properly construct the IntuneAppProtectionPolicyRequiredException we need the command parameters to be supplied.  Returning as service exception instead.");
+                return getExceptionFromTokenErrorResponse(errorResponse);
+            }
+            IntuneAppProtectionPolicyRequiredException policyRequiredException;
+            if (commandParameters instanceof BrokerInteractiveTokenCommandParameters) {
+                policyRequiredException = new IntuneAppProtectionPolicyRequiredException(
+                        errorResponse.getError(),
+                        errorResponse.getErrorDescription(),
+                        (BrokerInteractiveTokenCommandParameters) commandParameters
+                );
+            } else {
+                policyRequiredException = new IntuneAppProtectionPolicyRequiredException(
+                        errorResponse.getError(),
+                        errorResponse.getErrorDescription(),
+                        (BrokerSilentTokenCommandParameters) commandParameters
+                );
+            }
+            policyRequiredException.setOauthSubErrorCode(errorResponse.getSubError());
+            setHttpResponseUsingTokenErrorResponse(policyRequiredException, errorResponse);
+
+            return policyRequiredException;
+        } else {
+            return getExceptionFromTokenErrorResponse(errorResponse);
+        }
+
+
+    }
+
+    /**
+     * Name: setHttpResponseUsingTokenErrorResponse
+     *
+     * @param exception     ServiceException to which we will append an HttpResponse
+     * @param errorResponse A TokenErrorResponse from which we will recontruct an HttpResponse
+     */
+
+    private static void setHttpResponseUsingTokenErrorResponse(@NonNull final ServiceException exception,
+                                                               @NonNull final TokenErrorResponse errorResponse) {
 
         try {
-            outErr.setHttpResponse(
+            exception.setHttpResponse(
                     synthesizeHttpResponse(
                             errorResponse.getStatusCode(),
                             errorResponse.getResponseHeadersJson(),
-                            errorResponse.getResponseBody()
-                    )
-            );
-        }
-        catch (JSONException e) {
+                            errorResponse.getResponseBody()));
+        } catch (JSONException e) {
             Logger.warn(
-                    TAG + methodName,
+                    TAG,
                     "Failed to deserialize error data: status, headers, response body."
             );
         }
 
-        return outErr;
+    }
+
+    private static boolean isBrokerTokenCommandParameters(CommandParameters commandParameters) {
+        return ((commandParameters instanceof BrokerSilentTokenCommandParameters) || (commandParameters instanceof BrokerInteractiveTokenCommandParameters));
     }
 
     public static void applyCliTelemInfo(@Nullable final CliTelemInfo cliTelemInfo,
@@ -244,7 +294,7 @@ public class ExceptionAdapter {
 
     public static BaseException baseExceptionFromException(final Throwable exception) {
         Throwable e = exception;
-        if (exception instanceof ExecutionException){
+        if (exception instanceof ExecutionException) {
             e = exception.getCause();
         }
 
@@ -274,5 +324,14 @@ public class ExceptionAdapter {
                 ClientException.UNKNOWN_ERROR,
                 e.getMessage(),
                 e);
+    }
+
+    private static boolean isIntunePolicyRequiredError(
+            @NonNull final TokenErrorResponse errorResponse) {
+
+        return !StringUtil.isNullOrEmpty(errorResponse.getError()) &&
+                !StringUtil.isNullOrEmpty(errorResponse.getSubError()) &&
+                errorResponse.getError().equalsIgnoreCase(OAuth2ErrorCode.UNAUTHORIZED_CLIENT) &&
+                errorResponse.getSubError().equalsIgnoreCase(OAuth2SubErrorCode.PROTECTION_POLICY_REQUIRED);
     }
 }
