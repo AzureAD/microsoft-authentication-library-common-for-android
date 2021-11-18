@@ -66,6 +66,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static com.microsoft.identity.common.MicrosoftStsAccountCredentialAdapterTest.MOCK_ID_TOKEN_WITH_CLAIMS;
+import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.APPLICATION_IDENTIFIER;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.AUTHORITY_TYPE;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.BEARER_AUTHENTICATION_SCHEME;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.CACHED_AT;
@@ -1232,6 +1233,7 @@ public class MsalOAuth2TokenCacheTest {
         final List<ICacheRecord> secondaryLoad =
                 mOauth2TokenCache.loadWithAggregatedAccountData(
                         CLIENT_ID,
+                        APPLICATION_IDENTIFIER,
                         TARGET,
                         defaultTestBundleV2.mGeneratedAccount,
                         BEARER_AUTHENTICATION_SCHEME
@@ -1259,6 +1261,7 @@ public class MsalOAuth2TokenCacheTest {
         final List<ICacheRecord> secondaryLoad =
                 mOauth2TokenCache.loadWithAggregatedAccountData(
                         CLIENT_ID,
+                        APPLICATION_IDENTIFIER,
                         TARGET,
                         defaultTestBundleV1.mGeneratedAccount,
                         BEARER_AUTHENTICATION_SCHEME

@@ -618,6 +618,7 @@ public abstract class BaseController {
         @SuppressWarnings("unchecked")
         final List<ICacheRecord> cacheRecords = cache.loadWithAggregatedAccountData(
                 parameters.getClientId(),
+                parameters.getApplicationIdentifier(),
                 StringUtil.join(" ", parameters.getScopes()),
                 targetAccount,
                 authScheme

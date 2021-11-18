@@ -46,6 +46,8 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder(toBuilder = true)
 public class CommandParameters {
 
+    public static final String APPLICATION_IDENTIFIER_FORMAT = "%s/%s";
+
     @NonNull
     @EqualsAndHashCode.Exclude
     private transient IPlatformComponents platformComponents;
@@ -80,6 +82,14 @@ public class CommandParameters {
     @Expose()
     private boolean powerOptCheckEnabled;
 
+    //Marking as final excludes from lombok generated builder
+    @Expose()
+    private final String applicationIdentifier;
+    @Expose()
+    private String callerPackageName;
+    @Expose()
+    private String callerSignature;
+
     @Builder.Default
     private transient Map<String, String> flightInformation = Collections.emptyMap();
 
@@ -90,4 +100,12 @@ public class CommandParameters {
 
     @Expose()
     private SerializableSpanContext spanContext;
+    
+    //Overriding what Lombok would otherwise generate for me
+    public String getApplicationIdentifier(){
+        return String.format(APPLICATION_IDENTIFIER_FORMAT, this.callerPackageName, this.callerSignature);
+    }
+
 }
+
+

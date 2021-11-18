@@ -38,10 +38,13 @@ import lombok.experimental.SuperBuilder;
 @EqualsAndHashCode(callSuper = true)
 public class BrokerSilentTokenCommandParameters extends SilentTokenCommandParameters implements IBrokerTokenCommandParameters {
 
+<<<<<<< HEAD
     @Expose
     private final String callerPackageName;
 
     @Expose
+=======
+>>>>>>> 2f1385d10 (WIP - Adding applicationIdentifier to accessTokenRecord)
     private final int callerUid;
 
     @Expose
@@ -77,12 +80,6 @@ public class BrokerSilentTokenCommandParameters extends SilentTokenCommandParame
                     "mCallerUId", "Caller Uid is not set"
             );
         }
-        if (StringUtil.isNullOrEmpty(callerPackageName)) {
-            throw new ArgumentException(
-                    ArgumentException.ACQUIRE_TOKEN_SILENT_OPERATION_NAME,
-                    "mCallerPackageName", "Caller package name is not set"
-            );
-        }
         if (getAuthority() == null) {
             throw new ArgumentException(
                     ArgumentException.ACQUIRE_TOKEN_SILENT_OPERATION_NAME,
@@ -101,13 +98,6 @@ public class BrokerSilentTokenCommandParameters extends SilentTokenCommandParame
                     "mClientId", "Client Id is not set"
             );
         }
-        if (StringUtil.isNullOrEmpty(callerPackageName)) {
-            throw new ArgumentException(
-                    ArgumentException.ACQUIRE_TOKEN_SILENT_OPERATION_NAME,
-                    "mCallerPackageName", "Caller package name is not set"
-            );
-        }
-
         // Check if SDK is capable of MSA to ensure there is uniformity of logic with SdkType.MSALCPP and SdkType.MSAL
         if (getSdkType().isCapableOfMSA() &&
                 !getPlatformComponents().getPlatformUtil().isValidCallingApp(getRedirectUri(), getCallerPackageName())) {

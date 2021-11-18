@@ -98,7 +98,8 @@ public interface IAccountCredentialCache {
      * @param homeAccountId  The homeAccountId used to match Credential cache keys.
      * @param environment    The environment used to match Credential cache keys.
      * @param credentialType The sought CredentialType.
-     * @param clientId       The clientId used to match Credential cache keys.
+     * @param clientId       The clientId used to match Credential cache keys. (logical identifier)
+     * @param applicationIdentifier The physical identifier of the application (Android: packageName/signature)
      * @param realm          The realm used to match Credential cache keys.
      * @param target         The target used to match Credential cache keys.
      * @return A mutable List of Credentials matching the supplied criteria.
@@ -108,6 +109,7 @@ public interface IAccountCredentialCache {
             final String environment,
             final CredentialType credentialType,
             final String clientId,
+            final String applicationIdentifier,
             final String realm,
             final String target,
             final String authScheme
@@ -122,6 +124,7 @@ public interface IAccountCredentialCache {
      * @param environment    The environment used to match Credential cache keys.
      * @param credentialType The sought CredentialType.
      * @param clientId       The clientId used to match Credential cache keys.
+     * @param applicationIdentifier The physical identifier of the application (Android: packageName/signature)
      * @param realm          The realm used to match Credential cache keys.
      * @param target         The target used to match Credential cache keys.
      * @return A mutable List of Credentials matching the supplied criteria.
@@ -131,6 +134,7 @@ public interface IAccountCredentialCache {
             final String environment,
             final CredentialType credentialType,
             final String clientId,
+            final String applicationIdentifier,
             final String realm,
             final String target,
             final String authScheme,
@@ -144,6 +148,7 @@ public interface IAccountCredentialCache {
      * @param environment     The environment used to match Credential cache keys.
      * @param credentialType  The sought CredentialType.
      * @param clientId        The clientId used to match Credential cache keys.
+     * @param applicationIdentifier The physical identifier of the application (Android: packageName/signature)
      * @param realm           The realm used to match Credential cache keys.
      * @param target          The target used to match Credential cache keys.
      * @param requestedClaims The requested claims used to match Credential cache keys.
@@ -154,6 +159,7 @@ public interface IAccountCredentialCache {
             final String environment,
             final CredentialType credentialType,
             final String clientId,
+            final String applicationIdentifier,
             final String realm,
             final String target,
             final String authScheme,
@@ -192,6 +198,7 @@ public interface IAccountCredentialCache {
      * @param environment     The environment used to match Credential cache keys.
      * @param credentialTypes The sought CredentialTypes.
      * @param clientId        The clientId used to match Credential cache keys.
+     * @param applicationIdentifier The physical identifier of the application (Android: packageName/signature)
      * @param realm           The realm used to match Credential cache keys.
      * @param target          The target used to match Credential cache keys.
      * @param requestedClaims The requested claims used to match Credential cache keys.
@@ -202,6 +209,7 @@ public interface IAccountCredentialCache {
             final String environment,
             final Set<CredentialType> credentialTypes,
             final String clientId,
+            final String applicationIdentifier,
             final String realm,
             final String target,
             final String authScheme,
