@@ -34,6 +34,9 @@ jobs:
   dependsOn:
   - common4j_phase
   steps:
+  - template: ../templates/steps/automation-cert.yml
+    parameters:
+      envVstsMvnAt: ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN
   - template: ../templates/steps/continous-delivery/assemble-publish-projversion.yml
     parameters:
       project: common
