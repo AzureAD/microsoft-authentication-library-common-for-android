@@ -55,6 +55,7 @@ import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.NonNull;
 
 public class ExceptionAdapter {
@@ -197,6 +198,7 @@ public class ExceptionAdapter {
     }
 
 
+    @SuppressFBWarnings("BC_UNCONFIRMED_CAST")
     public static ServiceException getExceptionFromTokenErrorResponse(@Nullable final CommandParameters commandParameters,
                                                                       @NonNull final TokenErrorResponse errorResponse) {
 
