@@ -68,7 +68,7 @@ public class BaseException extends Exception implements IErrorInformation, ITele
     @Nullable
     private String mUsername;
 
-    private List<Map<String, String>> mTelemetry = new ArrayList<>();
+    private final List<Map<String, String>> mTelemetry = new ArrayList<>();
 
     /**
      * {@link Exception#addSuppressed(Throwable)} requires API19 in Android, so we're creating our own.
@@ -210,7 +210,7 @@ public class BaseException extends Exception implements IErrorInformation, ITele
      * @param telemetry the {@link List<Map<String, String>>} containing telemetry data
      */
     public void setTelemetry(@NonNull final List<Map<String, String>> telemetry) {
-        mTelemetry = telemetry;
+        mTelemetry.addAll(telemetry);
     }
 
     @Override

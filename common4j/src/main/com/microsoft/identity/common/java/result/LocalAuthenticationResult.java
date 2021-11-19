@@ -57,7 +57,7 @@ public class LocalAuthenticationResult implements ILocalAuthenticationResult, IT
     private List<ICacheRecord> mCompleteResultFromCache;
     private boolean mServicedFromCache;
     private String mCorrelationId;
-    private List<Map<String, String>> mTelemetry = new ArrayList<>();
+    private final List<Map<String, String>> mTelemetry = new ArrayList<>();
 
     private static final String TAG = LocalAuthenticationResult.class.getName();
 
@@ -230,7 +230,7 @@ public class LocalAuthenticationResult implements ILocalAuthenticationResult, IT
      * @param telemetry the {@link List<Map<String, String>>} containing telemetry data
      */
     public void setTelemetry(@NonNull final List<Map<String, String>> telemetry) {
-        mTelemetry = telemetry;
+        mTelemetry.addAll(telemetry);
     }
 
     @Override

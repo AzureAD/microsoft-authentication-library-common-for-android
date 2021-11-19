@@ -277,9 +277,6 @@ public class CommandDispatcher {
                                 + correlationId + ", with the status : " + commandResult.getStatus().getLogStatus()
                                 + " is cacheable : " + command.isEligibleForCaching());
                         // TODO 1309671 : change required to stop the LocalAuthenticationResult object from mutating in cases of cached command.
-                        final List<Map<String, String>> telemetryMap = Telemetry.getInstance().getMap(correlationId);
-                        commandResult.setTelemetryMap(telemetryMap);
-                        Telemetry.getInstance().flush(correlationId);
                         EstsTelemetry.getInstance().flush(command, commandResult);
                         finalFuture.setResult(commandResult);
                     } catch (final Throwable t) {
@@ -352,7 +349,6 @@ public class CommandDispatcher {
                         Logger.info(TAG + methodName, "Completed as owner for correlation id : **"
                                 + correlationId + statusMsg(commandResult.getStatus().getLogStatus())
                                 + " is cacheable : " + command.isEligibleForCaching());
-                        Telemetry.getInstance().flush(correlationId);
                         EstsTelemetry.getInstance().flush(command, commandResult);
                         finalFuture.setResult(commandResult);
                     } catch (final Throwable t) {
@@ -489,21 +485,29 @@ public class CommandDispatcher {
 
         // set correlation id on Local Authentication Result
         setCorrelationIdOnResult(commandResult, correlationId);
-        setTelemetryOnResult(commandResult, correlationId);
+        setTelemetryOnResultAndFlush(commandResult, correlationId);
         return commandResult;
     }
 
-    private static void setTelemetryOnResult(@NonNull final CommandResult commandResult,
-                                             @NonNull final String correlationId) {
-        final List<Map<String, String>> telemetryMap = Telemetry.getInstance().getMap(
-                correlationId
-        );
+    private static void setTelemetryOnResultAndFlush(@NonNull final CommandResult commandResult,
+                                                     @NonNull final String correlationId) {
+        final List<Map<String, String>> telemetryMap = Telemetry.getInstance().getMap(correlationId);
+        commandResult.setTelemetryMap(telemetryMap);
 
         if (commandResult.getResult() instanceof LocalAuthenticationResult) {
             ((LocalAuthenticationResult) commandResult.getResult()).setTelemetry(telemetryMap);
         } else if (commandResult.getResult() instanceof BaseException) {
             ((BaseException) commandResult.getResult()).setTelemetry(telemetryMap);
+        } else if (commandResult.getResult() != null) {
+            Logger.verbose(
+                    TAG + ":setTelemetryOnResult",
+                    "Not setting telemetry on result as result type is " +
+                            commandResult.getResult().getClass().getCanonicalName() +
+                            " and doesn't support telemetry at this time."
+            );
         }
+
+        Telemetry.getInstance().flush(correlationId);
     }
 
         /**
@@ -667,7 +671,6 @@ public class CommandDispatcher {
                                             statusMsg(commandResult.getStatus().getLogStatus()));
 
                             EstsTelemetry.getInstance().flush(command, commandResult);
-                            Telemetry.getInstance().flush(correlationId);
                             returnCommandResult(command, commandResult);
                         } finally {
                             DiagnosticContext.INSTANCE.clear();
