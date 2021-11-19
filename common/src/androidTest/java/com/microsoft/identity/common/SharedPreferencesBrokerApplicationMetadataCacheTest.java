@@ -50,7 +50,7 @@ public class SharedPreferencesBrokerApplicationMetadataCacheTest {
 
     @Before
     public void setUp() {
-        mMetadataCache = new SharedPreferencesBrokerApplicationMetadataCache(
+        mMetadataCache = SharedPreferencesBrokerApplicationMetadataCache.getInstance(
                 InstrumentationRegistry.getContext()
         );
     }
