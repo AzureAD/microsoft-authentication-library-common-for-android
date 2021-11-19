@@ -29,6 +29,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.google.gson.reflect.TypeToken;
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.lang.reflect.Type;
@@ -41,13 +42,23 @@ public class SharedPreferencesBrokerApplicationMetadataCache
         extends SharedPreferencesSimpleCacheImpl<BrokerApplicationMetadata>
         implements IBrokerApplicationMetadataCache {
 
+    private static SharedPreferencesBrokerApplicationMetadataCache INSTANCE;
+
     private static final String TAG = SharedPreferencesBrokerApplicationMetadataCache.class.getSimpleName();
 
     private static final String DEFAULT_APP_METADATA_CACHE_NAME = "com.microsoft.identity.app-meta-cache";
 
     private static final String KEY_CACHE_LIST = "app-meta-cache";
 
-    public SharedPreferencesBrokerApplicationMetadataCache(@NonNull final Context context) {
+    public synchronized static SharedPreferencesBrokerApplicationMetadataCache getInstance(@NonNull final Context context){
+        if(INSTANCE == null){
+            INSTANCE = new SharedPreferencesBrokerApplicationMetadataCache(context);
+        }
+
+        return INSTANCE;
+    }
+
+    protected SharedPreferencesBrokerApplicationMetadataCache(@NonNull final Context context) {
         super(context, DEFAULT_APP_METADATA_CACHE_NAME, KEY_CACHE_LIST);
     }
 
@@ -65,7 +76,14 @@ public class SharedPreferencesBrokerApplicationMetadataCache
 
     public void remove(@NonNull final String clientId,
                        final int processUid) {
-        final List<BrokerApplicationMetadata> allMetadata = getAll();
+        Set<BrokerApplicationMetadata> allMetadata = null;
+        readLock.lock();
+        try {
+            //Get a copy of list first
+            allMetadata = new HashSet<BrokerApplicationMetadata>(mList);
+        }finally{
+            readLock.unlock();
+        }
 
         for (final BrokerApplicationMetadata metadata : allMetadata) {
             if (clientId.equalsIgnoreCase(metadata.getClientId())
@@ -78,7 +96,14 @@ public class SharedPreferencesBrokerApplicationMetadataCache
     private void disposeOfDuplicateRecords(@NonNull final String clientId,
                                            @NonNull final String environment,
                                            final int uid) {
-        final List<BrokerApplicationMetadata> allMetadata = getAll();
+        Set<BrokerApplicationMetadata> allMetadata = null;
+        readLock.lock();
+        try {
+            //Get a copy of list first
+            allMetadata = new HashSet<BrokerApplicationMetadata>(mList);
+        }finally{
+            readLock.unlock();
+        }
 
         for (final BrokerApplicationMetadata metadata : allMetadata) {
             if (clientId.equalsIgnoreCase(metadata.getClientId())
@@ -95,8 +120,13 @@ public class SharedPreferencesBrokerApplicationMetadataCache
 
         final Set<String> allClientIds = new HashSet<>();
 
-        for (final BrokerApplicationMetadata metadata : getAll()) {
-            allClientIds.add(metadata.getClientId());
+        readLock.lock();
+        try {
+            for (final BrokerApplicationMetadata metadata : mList) {
+                allClientIds.add(metadata.getClientId());
+            }
+        }finally{
+            readLock.unlock();
         }
 
         Logger.verbose(
@@ -121,19 +151,24 @@ public class SharedPreferencesBrokerApplicationMetadataCache
 
     @Override
     public List<BrokerApplicationMetadata> getAllFociApplicationMetadata() {
-        final Set<String> fociClientIds = getAllFociClientIds();
-
         final List<BrokerApplicationMetadata> result = new ArrayList<>();
 
-        final List<BrokerApplicationMetadata> allMetadata = getAll();
+        //The following method has it's own read locks... don't want to nest
+        final Set<String> fociClientIds = getAllFociClientIds();
 
-        for (final BrokerApplicationMetadata metadata : allMetadata) {
-            if (fociClientIds.contains(metadata.getClientId())) {
-                result.add(metadata);
+        readLock.lock();
+        try {
+            for (final BrokerApplicationMetadata metadata : mList) {
+                if (fociClientIds.contains(metadata.getClientId())) {
+                    result.add(metadata);
+                }
             }
+        }finally{
+            readLock.unlock();
         }
 
         return result;
+
     }
 
     /**
@@ -147,16 +182,22 @@ public class SharedPreferencesBrokerApplicationMetadataCache
 
         final Set<String> allFociClientIds = new HashSet<>();
 
-        for (final BrokerApplicationMetadata metadata : getAll()) {
-            if (!inverseMatch) { // match FoCI
-                if (!TextUtils.isEmpty(metadata.getFoci())) {
-                    allFociClientIds.add(metadata.getClientId());
-                }
-            } else { // match non FoCI
-                if (TextUtils.isEmpty(metadata.getFoci())) {
-                    allFociClientIds.add(metadata.getClientId());
+        readLock.lock();
+        try {
+
+            for (final BrokerApplicationMetadata metadata : mList) {
+                if (!inverseMatch) { // match FoCI
+                    if (!TextUtils.isEmpty(metadata.getFoci())) {
+                        allFociClientIds.add(metadata.getClientId());
+                    }
+                } else { // match non FoCI
+                    if (TextUtils.isEmpty(metadata.getFoci())) {
+                        allFociClientIds.add(metadata.getClientId());
+                    }
                 }
             }
+        }finally{
+            readLock.unlock();
         }
 
         Logger.verbose(
@@ -176,21 +217,25 @@ public class SharedPreferencesBrokerApplicationMetadataCache
                                                  final int processUid) {
         final String methodName = ":getMetadata";
 
-        final List<BrokerApplicationMetadata> allMetadata = getAll();
         BrokerApplicationMetadata result = null;
 
-        for (final BrokerApplicationMetadata metadata : allMetadata) {
-            if (clientId.equals(metadata.getClientId())
-                    && environment.equals(metadata.getEnvironment())
-                    && processUid == metadata.getUid()) {
-                Logger.verbose(
-                        TAG + metadata,
-                        "Metadata located."
-                );
+        readLock.lock();
+        try {
+            for (final BrokerApplicationMetadata metadata : mList) {
+                if (clientId.equals(metadata.getClientId())
+                        && environment.equals(metadata.getEnvironment())
+                        && processUid == metadata.getUid()) {
+                    Logger.verbose(
+                            TAG + metadata,
+                            "Metadata located."
+                    );
 
-                result = metadata;
-                break;
+                    result = metadata;
+                    break;
+                }
             }
+        }finally{
+            readLock.unlock();
         }
 
         if (null == result) {
