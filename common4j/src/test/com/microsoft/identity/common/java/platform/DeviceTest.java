@@ -58,7 +58,7 @@ public class DeviceTest {
 
         Assert.assertEquals(NOT_SET, Device.getManufacturer());
         Assert.assertEquals(NOT_SET, Device.getModel());
-        Assert.assertEquals(NOT_SET, Device.getProductVersion());
+        Assert.assertEquals("1.5.9-default", Device.getProductVersion());
     }
 
     @Test
@@ -93,7 +93,7 @@ public class DeviceTest {
 
     @Test
     public void testGetProductVersion_DiagContextNotSet(){
-        Assert.assertEquals(NOT_SET, Device.getProductVersion());
+        Assert.assertEquals("1.5.9-default", Device.getProductVersion());
     }
 
     @Test

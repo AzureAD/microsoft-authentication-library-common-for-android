@@ -8,7 +8,7 @@
 
 plugins {
     id 'java-library'
-    id 'com.microsoft.identity.buildsystem' version '0.1.1'
+    id 'com.microsoft.identity.buildsystem' version '0.2.2'
     id 'maven-publish'
 
     // the below build plugin allows to generate BuildConfig files in a JAVA gradle project.
@@ -32,7 +32,7 @@ repositories {
     mavenCentral()
 }
 
-apply from: './versioning/version_tasks.gradle'
+apply from: '../versioning/version_tasks.gradle'
 
 project.ext.vstsUsername = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME") : project.findProperty("vstsUsername")
 project.ext.vstsPassword = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") : project.findProperty("vstsMavenAccessToken")

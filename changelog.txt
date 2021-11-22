@@ -55,6 +55,7 @@ V.Next
 - [MINOR] Migrate authorization completion callback to common4j (#1522)
 - [PATCH] Remove deprecation logging in Logger class (#1502)
 - [MINOR] Migrate broker application metadata cache to common4j (#1530)
+- [MINOR] Add ropc command and ropc flow to BaseController (#1539)
 - [PATCH] Replace unsafe TypeToken instance with TypeToken#getParameterized (#1485)
 - [MINOR] Add more operation names to ArgumentException (#1553)
 - [MINOR] Add msal linux sdk type (#1554)
@@ -62,6 +63,11 @@ V.Next
 - [PATCH] Fix print stack trace for Throwable in Logs (#1556)
 - [PATCH] Support SSO token api (#1543)
 - [MINOR] Add flighting parameters to commmandParameters (#1562)
+- [MINOR] Hook telemetry to LocalAuthenticationResult and BaseException (#1636)
+
+Version 3.6.3
+----------
+- [PATCH] Add helper method to remove the metadataCache entry (#1593)
 
 Version 3.6.2
 ----------

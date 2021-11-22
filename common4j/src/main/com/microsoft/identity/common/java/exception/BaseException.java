@@ -22,11 +22,13 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.exception;
 
+import com.microsoft.identity.common.java.telemetry.ITelemetryAccessor;
 import com.microsoft.identity.common.java.util.StringUtil;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.TreeSet;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
@@ -34,9 +36,9 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.Accessors;
 
-public class BaseException extends Exception implements IErrorInformation {
+public class BaseException extends Exception implements IErrorInformation, ITelemetryAccessor {
 
-    public static final String sName =  BaseException.class.getName();
+    public static final String sName = BaseException.class.getName();
     private static final long serialVersionUID = -5166242728507796770L;
 
     private static final TreeSet<String> nonCacheableErrorCodes = new TreeSet<>(
@@ -66,6 +68,8 @@ public class BaseException extends Exception implements IErrorInformation {
     @Nullable
     private String mUsername;
 
+    private final List<Map<String, String>> mTelemetry = new ArrayList<>();
+
     /**
      * {@link Exception#addSuppressed(Throwable)} requires API19 in Android, so we're creating our own.
      */
@@ -73,7 +77,7 @@ public class BaseException extends Exception implements IErrorInformation {
     @Accessors(prefix = "m")
     private final List<Exception> mSuppressedException = new ArrayList<>();
 
-    public void addSuppressedException(@NonNull final Exception e){
+    public void addSuppressedException(@NonNull final Exception e) {
         mSuppressedException.add(e);
     }
 
@@ -174,9 +178,11 @@ public class BaseException extends Exception implements IErrorInformation {
     }
 
     @Nullable
-    public String getCorrelationId() { return mCorrelationId; }
+    public String getCorrelationId() {
+        return mCorrelationId;
+    }
 
-    public void setCorrelationId(@Nullable final String correlationId){
+    public void setCorrelationId(@Nullable final String correlationId) {
         mCorrelationId = correlationId;
     }
 
@@ -189,12 +195,26 @@ public class BaseException extends Exception implements IErrorInformation {
         this.mUsername = username;
     }
 
-    public String getExceptionName(){
+    public String getExceptionName() {
         return sName;
     }
 
-    public boolean isCacheable(){
+    public boolean isCacheable() {
         //TODO : ADO 1373343 Add the whole transient exception category.
         return !nonCacheableErrorCodes.contains(mErrorCode);
+    }
+
+    /**
+     * Set the telemetry on base exception.
+     *
+     * @param telemetry the {@link List<Map<String, String>>} containing telemetry data
+     */
+    public void setTelemetry(@NonNull final List<Map<String, String>> telemetry) {
+        mTelemetry.addAll(telemetry);
+    }
+
+    @Override
+    public List<Map<String, String>> getTelemetry() {
+        return mTelemetry;
     }
 }

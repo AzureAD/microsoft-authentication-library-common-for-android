@@ -104,6 +104,7 @@ public abstract class AuthorizationFragment extends Fragment {
     }
 
     void finish() {
+        LocalBroadcaster.INSTANCE.unregisterCallback(CANCEL_AUTHORIZATION_REQUEST);
         final FragmentActivity activity = getActivity();
         if (activity instanceof AuthorizationActivity) {
             activity.finish();

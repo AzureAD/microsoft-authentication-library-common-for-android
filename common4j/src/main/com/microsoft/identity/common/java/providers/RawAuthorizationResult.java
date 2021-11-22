@@ -153,6 +153,19 @@ public class RawAuthorizationResult {
     }
 
     @NonNull
+    public static RawAuthorizationResult fromThrowable(@NonNull final Throwable e) {
+        if (e instanceof BaseException) {
+            return fromException((BaseException) e);
+        }
+        return RawAuthorizationResult.builder()
+                .resultCode(ResultCode.NON_OAUTH_ERROR)
+                .exception(new BaseException(ClientException.UNKNOWN_ERROR,
+                        "Unknown error with class: " + e.getClass().getSimpleName(),
+                        e))
+                .build();
+    }
+
+    @NonNull
     public static RawAuthorizationResult fromException(@NonNull final BaseException e) {
         return RawAuthorizationResult.builder()
                 .resultCode(ResultCode.NON_OAUTH_ERROR)
