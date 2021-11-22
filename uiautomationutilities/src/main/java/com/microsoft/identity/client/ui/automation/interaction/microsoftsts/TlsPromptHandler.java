@@ -70,7 +70,9 @@ public class TlsPromptHandler extends AbstractPromptHandler {
         try {
             final UiObject menuButton = UiAutomatorUtils.obtainUiObjectWithResourceId("com.android.chrome:id/menu_button");
             for (int attempt = 0; attempt < CHROME_MENU_BUTTON_MAX_RETRY_ATTEMPTS; attempt++) {
-                Thread.sleep(CHROME_MENU_BUTTON_RETRY_TIMEOUT);
+                if (attempt > 0) {
+                    Thread.sleep(CHROME_MENU_BUTTON_RETRY_TIMEOUT);
+                }
                 if (menuButton.exists()) {
                     menuButton.click();
                 }
