@@ -1,21 +1,23 @@
-# File: azure-pipelines/templates/steps/continous-delivery/assemble-publish-projversion.yml
-# Description: Template to assemble and publish, using PprojVersion
+# File: azure-pipelines/templates/steps/continuous-delivery/assemble-publish-projversion.yml
+# Description: Template to assemble and publish
 # parameters: 'project' gradle project
-# parameters: 'envVstsMvnAt' Enviroment VSTS Maven Access Token
+# parameters: 'envVstsMvnAt' Environment VSTS Maven Access Token
 # parameters: 'variant' gradle variant for test assemble and publish
-# parameters: 'prjVersion' define the version tu publish
-# parameters: 'publishFolder' path to publish artifacts
+# parameters: 'artifactFolder' path to publish artifacts
+# parameters: 'buildArguments' additional arguments for build
+# parameters: 'publishArguments' additional arguments for publish
 # parameters: 'testArguments' additional arguments for test
 parameters:
 - name: project
-- name: prjVersion
 - name: envVstsMvnAt
   default: 'ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN'
 - name: variant
   default: ''
-- name: publishFolder
+- name: buildArguments
   default: ''
 - name: testArguments
+  default: ''
+- name: artifactFolder
   default: ''
 
 steps:
@@ -31,20 +33,20 @@ steps:
 - task: Gradle@2
   displayName: Assemble ${{ parameters.project }} ${{ parameters.variant }}
   inputs:
-    tasks: '${{ parameters.project }}:clean ${{ parameters.project }}:assemble${{ parameters.variant }} -PprojVersion=${{ parameters.prjVersion }}'
+    tasks: '${{ parameters.project }}:clean ${{ parameters.project }}:assemble${{ parameters.variant }} ${{ parameters.buildArguments }}'
 - task: Gradle@2
   displayName: Run unit tests
   inputs:
-    tasks: ${{ parameters.project }}:test${{ parameters.variant }} ${{ parameters.testArguments }}
+    tasks: '${{ parameters.project }}:test${{ parameters.variant }} ${{ parameters.testArguments }}'
 - task: Gradle@2
   displayName: Publish
   inputs:
-    tasks: '${{ parameters.project }}:publish${{ parameters.variant }} -PprojVersion=${{ parameters.prjVersion }}'
-- ${{ if ne(parameters.publishFolder, '') }}:
+    tasks: '${{ parameters.project }}:publish${{ parameters.variant }} ${{ parameters.buildArguments }}'
+- ${{ if ne(parameters.artifactFolder, '') }}:
   - task: CopyFiles@2
     displayName: Copy Files to Artifact Staging Directory
     inputs:
-      SourceFolder: ${{ parameters.publishFolder }}
+      SourceFolder: ${{ parameters.artifactFolder }}
       TargetFolder: $(build.artifactstagingdirectory)
   - task: PublishPipelineArtifact@1
     name: PublishPipelineArtifacts1
