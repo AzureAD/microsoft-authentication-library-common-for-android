@@ -1,8 +1,8 @@
-# File: azure-pipelines/continous-delivery/common.yml
-# Description: Assemble & publish common release to internal feed
-# Variable: 'ENV_VSTS_MVN_ANDROIDADAL_USERNAME' was defined in the Variables tab
-# Variable: 'mvnAccessToken' was defined in the Variables tab
-# Variable: 'customVersion' was defined in the Variables tab
+# File: azure-pipelines/continuous-delivery/common-cd.yml
+# Description: Assemble & publish latest common4j, common, keyvault, labapi, labapiutilities, testutil release to internal vsts feed
+# Variable: 'ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME' was defined in the Variables tab
+# Variable: 'mvnAccessToken' access token to access internal vsts feed
+# Variable: 'customVersion' overrides the version number of the published libraries
 
 name: 0.0.$(Date:yyyyMMdd)$(Rev:.r) # $(Build.BuildNumber) = name
 
@@ -23,11 +23,11 @@ jobs:
 - job: common4j_phase
   displayName: 'common4j: Build, Test and Publish'
   steps:
-  - template: ../templates/steps/continous-delivery/assemble-publish-projversion.yml
+  - template: ../templates/steps/continuous-delivery/assemble-publish-projversion.yml
     parameters:
       project: common4j
-      prjVersion: $(versionNumber)
-      publishFolder: common4j/build/output
+      buildArguments: '-PprojVersion=$(versionNumber)'
+      artifactFolder: 'common4j/build/output'
 # common
 - job: common_phase
   displayName: 'common: Build, Test and Publish'
@@ -37,29 +37,29 @@ jobs:
   - template: ../templates/steps/automation-cert.yml
     parameters:
       envVstsMvnAt: ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN
-  - template: ../templates/steps/continous-delivery/assemble-publish-projversion.yml
+  - template: ../templates/steps/continuous-delivery/assemble-publish-projversion.yml
     parameters:
       project: common
-      prjVersion: $(versionNumber)
-      publishFolder: common/build/outputs
+      buildArguments: '-PprojVersion=$(versionNumber) -PdistCommon4jVersion=$(versionNumber)'
+      artifactFolder: 'common/build/outputs'
 # Key Vault
 - job: keyvault_phase
   displayName: 'Key Vault: Build, Test and Publish'
   steps:
-  - template: ../templates/steps/continous-delivery/assemble-publish-projversion.yml
+  - template: ../templates/steps/continuous-delivery/assemble-publish-projversion.yml
     parameters:
       project: keyvault
-      prjVersion: $(versionNumber)
-      publishFolder: keyvault/build/libs
+      buildArguments: '-PprojVersion=$(versionNumber)'
+      artifactFolder: 'keyvault/build/libs'
 # Lab API
 - job: labapi_phase
   displayName: 'Lab API: Build, Test and Publish'
   steps:
-  - template: ../templates/steps/continous-delivery/assemble-publish-projversion.yml
+  - template: ../templates/steps/continuous-delivery/assemble-publish-projversion.yml
     parameters:
       project: labapi
-      prjVersion: $(versionNumber)
-      publishFolder: labapi/build/libs
+      buildArguments: '-PprojVersion=$(versionNumber)'
+      artifactFolder: 'labapi/build/libs'
 # Lab API Utilities
 - job: labapiutilities_phase
   displayName: 'Lab API Utilities: Build, Test and Publish'
@@ -77,11 +77,11 @@ jobs:
       KeyVaultName: 'ADALTestInfo'
       SecretsFilter: 'AndroidAutomationRunnerAppSecret'
       RunAsPreJob: false
-  - template: ../templates/steps/continous-delivery/assemble-publish-projversion.yml
+  - template: ../templates/steps/continuous-delivery/assemble-publish-projversion.yml
     parameters:
       project: LabApiUtilities
-      prjVersion: $(versionNumber)
-      publishFolder: LabApiUtilities/build/libs
+      buildArguments: '-PprojVersion=$(versionNumber)'
+      artifactFolder: 'LabApiUtilities/build/libs'
       testArguments: "-PlabSecret=$(AndroidAutomationRunnerAppSecret)"
 # Test utils
 - job: testutils_phase
@@ -91,11 +91,11 @@ jobs:
   - labapi_phase
   - common_phase
   steps:
-  - template: ../templates/steps/continous-delivery/assemble-publish-projversion.yml
+  - template: ../templates/steps/continuous-delivery/assemble-publish-projversion.yml
     parameters:
       project: testutils
-      prjVersion: $(versionNumber)
-      publishFolder: testutils/build/outputs
+      buildArguments: '-PprojVersion=$(versionNumber)'
+      artifactFolder: 'testutils/build/outputs'
 # UI Automation utilities
 - job: uiautomationutilities_phase
   displayName: 'UI Automation utilities: Build, Test and Publish'
@@ -103,9 +103,9 @@ jobs:
   - testutils_phase
   - common_phase
   steps:
-  - template: ../templates/steps/continous-delivery/assemble-publish-projversion.yml
+  - template: ../templates/steps/continuous-delivery/assemble-publish-projversion.yml
     parameters:
       project: uiautomationutilities
-      prjVersion: $(versionNumber)
-      publishFolder: uiautomationutilities/build/outputs
+      buildArguments: '-PprojVersion=$(versionNumber)'
+      artifactFolder: 'uiautomationutilities/build/outputs'
 ...

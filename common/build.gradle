@@ -18,6 +18,11 @@ buildSystem {
     desugar = desugarCode
 }
 
+def common4jVersion = "0.0.+"
+if (project.hasProperty("distCommon4jVersion") && project.distCommon4jVersion != '') {
+    common4jVersion = project.distCommon4jVersion
+}
+
 android {
 
     compileSdkVersion rootProject.ext.compileSdkVersion
@@ -109,7 +114,7 @@ dependencies {
         transitive = false
     }
 
-    distApi("com.microsoft.identity:common4j:0.0.+") {
+    distApi("com.microsoft.identity:common4j:${common4jVersion}") {
         transitive = false
     }
 
