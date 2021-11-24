@@ -124,7 +124,7 @@ dependencies {
         transitive = false
     }
 
-    distApi("com.microsoft.identity:common4j:1.0.0-RC5") {
+    distApi("com.microsoft.identity:common4j:${common4jVersion}") {
         transitive = false
     }
 
