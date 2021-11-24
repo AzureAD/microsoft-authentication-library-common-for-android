@@ -38,7 +38,7 @@ jobs:
   - task: Gradle@2
     displayName: Run common code coverage
     inputs:
-      tasks: common:localDebugCommonUnitTestCoverageReport -Plabtest -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}} -PcodeCoverageEnabled=true
+      tasks: common:localDebugCommonUnitTestCoverageReport -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}} -PcodeCoverageEnabled=true
   - task: PublishCodeCoverageResults@1
     displayName: 'Publish code coverage report'
     inputs:
