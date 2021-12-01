@@ -56,6 +56,8 @@ public class MicrosoftTokenRequest extends TokenRequest implements IHasExtraPara
     public static final String CLIENT_APP_VERSION = "x-app-ver";
     public static final String MICROSOFT_ENROLLMENT_ID = "microsoft_enrollment_id";
     public static final String DEVICE_CODE = "device_code";
+    public static final String ISSUER = "iss";
+    public static final String AUDIENCE = "aud";
 
     public MicrosoftTokenRequest() {
         super();
@@ -100,6 +102,14 @@ public class MicrosoftTokenRequest extends TokenRequest implements IHasExtraPara
     @Expose()
     @SerializedName(MICROSOFT_ENROLLMENT_ID)
     private String mMicrosoftEnrollmentId;
+
+    @Expose
+    @SerializedName(ISSUER)
+    private String mIssuer;
+
+    @Expose
+    @SerializedName(AUDIENCE)
+    private String mAudience;
 
     @Nullable
     @Expose()

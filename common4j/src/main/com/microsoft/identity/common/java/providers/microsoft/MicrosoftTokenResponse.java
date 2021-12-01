@@ -37,6 +37,8 @@ public class MicrosoftTokenResponse extends TokenResponse {
     private static final String EXT_EXPIRES_IN = "ext_expires_in";
 
     private static final String FAMILY_ID = "foci";
+    // PRT 2.4/3.1 will communicate responses in a JWE encrypted with the session key.
+    private static final String RESPONSE_JWE = "response_jwe";
     private static final String REFRESH_TOKEN_EXPIRES_IN = "refresh_token_expires_in";
 
     /**
@@ -65,7 +67,13 @@ public class MicrosoftTokenResponse extends TokenResponse {
     }
 
     /**
-     * If this request includes an encrypted session key, return it here.
+     * A session-key-encrypted JWE carrying the response.
+     */
+    @SerializedName(RESPONSE_JWE)
+    private String mResponseJwe;
+
+    /**
+     * The number of seconds until the refresh token expires.
      */
     @SerializedName(REFRESH_TOKEN_EXPIRES_IN)
     private String mRefreshTokenExpiresIn;

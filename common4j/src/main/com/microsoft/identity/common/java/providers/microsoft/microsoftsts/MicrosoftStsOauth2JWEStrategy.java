@@ -1,20 +1,14 @@
-package com.microsoft.identity.common.internal.providers.microsoft.microsoftsts;
+package com.microsoft.identity.common.java.providers.microsoft.microsoftsts;
 
-import android.os.Build;
-import android.util.Base64;
-
-import androidx.annotation.NonNull;
 
 import com.google.gson.Gson;
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
-import com.microsoft.identity.common.internal.platform.AndroidSymmetricCipher;
+import com.microsoft.identity.common.java.AuthenticationConstants;
 import com.microsoft.identity.common.java.crypto.IKeyAccessor;
 import com.microsoft.identity.common.java.crypto.RawKeyAccessor;
+import com.microsoft.identity.common.java.crypto.SymmetricCipher;
 import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.platform.JweResponse;
-import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration;
-import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
-import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenRequest;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters;
 import com.microsoft.identity.common.java.util.ObjectMapper;
 
@@ -28,9 +22,12 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.TreeMap;
 
+import cz.msebera.android.httpclient.extras.Base64;
+import lombok.NonNull;
+
 /**
  * In addition to the normal requests that we handle, some of these need to use a specific
- * kind of strategy that encoses the token request in a JOSE object inside of a form post.
+ * kind of strategy that enloses the token request in a JOSE object inside of a form post.
  */
 public class MicrosoftStsOauth2JWEStrategy extends MicrosoftStsOAuth2Strategy {
 
@@ -40,16 +37,7 @@ public class MicrosoftStsOauth2JWEStrategy extends MicrosoftStsOAuth2Strategy {
     public static final Gson GSON = new Gson();
     private static final SecureRandom random;
     static {
-        SecureRandom tmpRandom;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            try {
-                tmpRandom = SecureRandom.getInstanceStrong();
-            } catch (final NoSuchAlgorithmException e) {
-                tmpRandom = new SecureRandom();
-            }
-        } else {
-            tmpRandom = new SecureRandom();
-        }
+        SecureRandom tmpRandom = new SecureRandom();
         random = tmpRandom;
     }
 
@@ -71,13 +59,13 @@ public class MicrosoftStsOauth2JWEStrategy extends MicrosoftStsOAuth2Strategy {
     /**
      * Helper method to decrypt the access token response using the derived Session key.
      */
-    public byte[] decryptUsingDerivedSessionKey(@androidx.annotation.NonNull final byte[] ivBytes,
-                                                @androidx.annotation.NonNull final byte[] ctx,
-                                                @androidx.annotation.NonNull final byte[] encryptedBytes,
+    public byte[] decryptUsingDerivedSessionKey(@NonNull final byte[] ivBytes,
+                                                @NonNull final byte[] ctx,
+                                                @NonNull final byte[] encryptedBytes,
                                                 RawKeyAccessor skAccessor)
             throws ClientException {
         byte[] label = AuthenticationConstants.SP800_108_LABEL.getBytes(Charset.forName("ASCII"));
-        IKeyAccessor derivedKey = skAccessor.generateDerivedKey(label, ctx, AndroidSymmetricCipher.AES_GCM_NONE_HMACSHA256);
+        IKeyAccessor derivedKey = skAccessor.generateDerivedKey(label, ctx, SymmetricCipher.AES_GCM_NONE_HMACSHA256);
 
         byte[] cryptobuf = new byte[ivBytes.length + encryptedBytes.length];
         System.arraycopy(ivBytes, 0, encryptedBytes, 0, ivBytes.length);
@@ -95,8 +83,8 @@ public class MicrosoftStsOauth2JWEStrategy extends MicrosoftStsOAuth2Strategy {
      * @throws UnsupportedEncodingException
      * @throws ClientException
      */
-    public String decryptTokenResponse(@androidx.annotation.NonNull final String jwe,
-                                       @lombok.NonNull final IKeyAccessor skAccessor)
+    public String decryptTokenResponse(@NonNull final String jwe,
+                                       @NonNull final IKeyAccessor skAccessor)
             throws JSONException, ClientException {
 
         final JweResponse jweResponse = JweResponse.parseJwe(jwe);
@@ -119,7 +107,7 @@ public class MicrosoftStsOauth2JWEStrategy extends MicrosoftStsOAuth2Strategy {
                 Base64.DEFAULT
         );
 
-        com.microsoft.identity.common.internal.logging.Logger.verbose(TAG,
+        Logger.verbose(TAG,
                 "Decrypting the token response for using PRT. IV size:"
                         + ivDecoded.length
                         + " mPayload size:"
@@ -160,7 +148,7 @@ public class MicrosoftStsOauth2JWEStrategy extends MicrosoftStsOAuth2Strategy {
 
         RawKeyAccessor derivedKey = (RawKeyAccessor) ((RawKeyAccessor) mSessionKey)
                 .generateDerivedKey(AuthenticationConstants.SP800_108_LABEL.getBytes(AuthenticationConstants.CHARSET_UTF8),
-                                    ctx, AndroidSymmetricCipher.AES_GCM_NONE_HMACSHA256);
+                                    ctx, SymmetricCipher.AES_GCM_NONE_HMACSHA256);
 
         String bodyString = GSON.toJson(headerMap) + "." + GSON.toJson(bodyMap);
 

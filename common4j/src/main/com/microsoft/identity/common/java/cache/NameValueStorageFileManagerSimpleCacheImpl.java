@@ -121,7 +121,7 @@ public abstract class NameValueStorageFileManagerSimpleCacheImpl<T> implements I
     }
 
     @Override
-    public boolean insert(final T t) {
+    public synchronized boolean insert(final T t) {
         return execWithTiming(new NamedRunnable<Boolean>() {
             @Override
             public String getName() {
@@ -149,7 +149,7 @@ public abstract class NameValueStorageFileManagerSimpleCacheImpl<T> implements I
     }
 
     @Override
-    public boolean remove(final T t) {
+    public synchronized boolean remove(final T t) {
         return execWithTiming(new NamedRunnable<Boolean>() {
             @Override
             public String getName() {
