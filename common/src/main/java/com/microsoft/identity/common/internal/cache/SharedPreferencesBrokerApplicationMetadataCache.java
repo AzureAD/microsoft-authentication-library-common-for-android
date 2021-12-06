@@ -62,18 +62,6 @@ public class SharedPreferencesBrokerApplicationMetadataCache
         super(context, DEFAULT_APP_METADATA_CACHE_NAME, KEY_CACHE_LIST);
     }
 
-    @Override
-    public boolean insert(@NonNull final BrokerApplicationMetadata brokerApplicationMetadata) {
-        // Before we insert a record, if we have a existing entry with the same client id, env, and
-        // processUid, we should remove that entry...
-        disposeOfDuplicateRecords(
-                brokerApplicationMetadata.getClientId(),
-                brokerApplicationMetadata.getEnvironment(),
-                brokerApplicationMetadata.getUid()
-        );
-        return super.insert(brokerApplicationMetadata);
-    }
-
     public void remove(@NonNull final String clientId,
                        final int processUid) {
         Set<BrokerApplicationMetadata> allMetadata = null;
@@ -97,13 +85,9 @@ public class SharedPreferencesBrokerApplicationMetadataCache
                                            @NonNull final String environment,
                                            final int uid) {
         Set<BrokerApplicationMetadata> allMetadata = null;
-        readLock.lock();
-        try {
-            //Get a copy of list first
-            allMetadata = new HashSet<BrokerApplicationMetadata>(mList);
-        }finally{
-            readLock.unlock();
-        }
+
+        //Get a copy of list first
+        allMetadata = new HashSet<BrokerApplicationMetadata>(mList);
 
         for (final BrokerApplicationMetadata metadata : allMetadata) {
             if (clientId.equalsIgnoreCase(metadata.getClientId())
@@ -250,6 +234,21 @@ public class SharedPreferencesBrokerApplicationMetadataCache
         }
 
         return result;
+    }
+
+    @Override
+    public boolean insertOrUpdate(BrokerApplicationMetadata metadata) {
+        writeLock.lock();
+        try {
+            disposeOfDuplicateRecords(
+                    metadata.getClientId(),
+                    metadata.getEnvironment(),
+                    metadata.getUid()
+            );
+            return super.insert(metadata);
+        }finally{
+            writeLock.unlock();
+        }
     }
 
     @Override
