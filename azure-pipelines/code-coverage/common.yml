@@ -51,9 +51,5 @@ jobs:
   - bash: |
       curl -Os https://uploader.codecov.io/latest/windows/codecov.exe
       chmod +x codecov
-      echo '$(codecovToken)'
-      echo '$(System.PullRequest.SourceBranch)'
-      echo '$(System.PullRequest.PullRequestNumber)'
-      dir "$(Build.SourcesDirectory)/common/build/reports/jacoco/localDebugCommonUnitTestCoverageReport"
-      ./codecov.exe -v -t '$(codecovToken)' -B '$(System.PullRequest.SourceBranch)' -P '$(System.PullRequest.PullRequestId)' -f "$(Build.SourcesDirectory)/common/build/reports/jacoco/localDebugCommonUnitTestCoverageReport/localDebugCommonUnitTestCoverageReport.xml"
+      ./codecov.exe -v -t '$(codecovToken)' -B '$(System.PullRequest.SourceBranch)' -P '$(System.PullRequest.PullRequestId)' -s "$(Build.SourcesDirectory)\common\build\reports\jacoco\localDebugCommonUnitTestCoverageReport"
     displayName: 'Publish code coverage to Codecov and the PR'
