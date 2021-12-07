@@ -77,13 +77,6 @@ android {
         unitTests.all {
             exclude 'com/microsoft/identity/common/integration'
             exclude 'com/microsoft/identity/common/ropc'
-
-            if (!project.hasProperty('labtest')) {
-                // Disabling some recent ropc tests added
-                // to turn on pass labtest as build param
-                // example: ./gradlew testLocalDebugUnitTest -Plabtest
-                exclude 'com/microsoft/identity/common/internal/controllers/LocalMsalControllerTest.class'
-            }
         }
     }
 

@@ -7,6 +7,11 @@ name: $(date:yyyyMMdd)$(rev:.r)
 
 trigger: none
 
+pr:
+  branches:
+    include:
+      - '*'
+
 variables:
 - name: robolectricSdkVersion
   value: 28
@@ -15,13 +20,12 @@ resources:
   repositories:
   - repository: self
     type: git
-    ref: dev
 
 pool:
   name: Hosted Windows 2019 with VS2019
 
 jobs:
-- job: commonCodeCoverage
+- job: common_code_coverage
   displayName: Common code coverage
   steps:
   - checkout: self
@@ -38,9 +42,14 @@ jobs:
   - task: Gradle@2
     displayName: Run common code coverage
     inputs:
-      tasks: common:localDebugCommonUnitTestCoverageReport -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}} -PcodeCoverageEnabled=true
+      tasks: common:localDebugCommonUnitTestCoverageReport -Plabtest -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}} -PcodeCoverageEnabled=true
   - task: PublishCodeCoverageResults@1
     displayName: 'Publish code coverage report'
     inputs:
       summaryFileLocation: '$(Build.SourcesDirectory)\common\build\reports\jacoco\localDebugCommonUnitTestCoverageReport\localDebugCommonUnitTestCoverageReport.xml'
       reportDirectory: '$(Build.SourcesDirectory)\common\build\reports\jacoco\localDebugCommonUnitTestCoverageReport\html'
+  - bash: |
+      curl -Os https://uploader.codecov.io/latest/windows/codecov.exe
+      chmod +x codecov
+      ./codecov.exe -v -t $(codecovToken) -B $(System.PullRequest.SourceBranch) -P $(System.PullRequest.PullRequestId) -f $(Build.SourcesDirectory)\common\build\reports\jacoco\localDebugCommonUnitTestCoverageReport\localDebugCommonUnitTestCoverageReport.xml
+    displayName: 'Publish code coverage to Codecov and the PR'
