@@ -51,4 +51,4 @@ jobs:
   - bash: |
       curl -Os https://uploader.codecov.io/latest/windows/codecov.exe
       ./codecov.exe -v -t '$(codecovToken)' -B '$(System.PullRequest.SourceBranch)' -P '$(System.PullRequest.PullRequestNumber)' -f "./common/build/reports/jacoco/localDebugCommonUnitTestCoverageReport/localDebugCommonUnitTestCoverageReport.xml"
-    displayName: 'Publish code coverage to Codecov and the PR'
+    displayName: 'Upload code coverage to Codecov and the PR'
