@@ -207,7 +207,12 @@ public abstract class SharedPreferencesSimpleCacheImpl<T> implements ISimpleCach
 
     public List<T> getAll(){
         //Return copy of list
-        return new ArrayList<T>(mList);
+        readLock.lock();
+        try {
+            return new ArrayList<T>(mList);
+        } finally {
+            readLock.unlock();
+        }
     }
 
     protected List<T> load() {

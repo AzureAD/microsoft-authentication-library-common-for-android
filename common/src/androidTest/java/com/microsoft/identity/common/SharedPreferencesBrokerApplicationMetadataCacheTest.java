@@ -25,19 +25,30 @@ package com.microsoft.identity.common;
 import androidx.test.InstrumentationRegistry;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
+import com.android.dx.rop.code.Exceptions;
 import com.microsoft.identity.common.internal.cache.BrokerApplicationMetadata;
 import com.microsoft.identity.common.internal.cache.IBrokerApplicationMetadataCache;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesBrokerApplicationMetadataCache;
 
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertEquals;
@@ -46,7 +57,10 @@ import static org.junit.Assert.assertNotNull;
 @RunWith(AndroidJUnit4.class)
 public class SharedPreferencesBrokerApplicationMetadataCacheTest {
 
-    private IBrokerApplicationMetadataCache mMetadataCache;
+    public static final String M_CLIENT_ID = UUID.randomUUID().toString();
+    public static final String M_ENVIRONMENT = UUID.randomUUID().toString();
+    public static final int M_UID = new Random().nextInt();
+    private SharedPreferencesBrokerApplicationMetadataCache mMetadataCache;
 
     @Before
     public void setUp() {
@@ -84,6 +98,106 @@ public class SharedPreferencesBrokerApplicationMetadataCacheTest {
                         .getAll()
                         .get(0)
         );
+    }
+
+    @Test
+    public void testMultipleInsertOrUpdate() throws Exception {
+        final ExecutorService executor = Executors.newFixedThreadPool(10);
+        final CountDownLatch latch =  new CountDownLatch(1);
+        final CountDownLatch executionLatch =  new CountDownLatch(10);
+        final Set<BrokerApplicationMetadata> set = Collections.synchronizedSet(new HashSet<BrokerApplicationMetadata>());
+        List<Future<Boolean>> list = new ArrayList<>();
+        for (int i = 0; i <10; i++){
+            list.add(executor.submit(new Callable<Boolean>() {
+                @Override
+                public Boolean call() throws Exception {
+                    BrokerApplicationMetadata metadata = generatePredictiveMetadata();
+                    set.add(metadata);
+                    return insertOrUpdateHelper(metadata, latch, executionLatch);
+                }
+            }));
+        }
+        executionLatch.await();
+        latch.countDown();
+
+        for(Future<Boolean> f : list){
+            Assert.assertTrue(f.get());
+        }
+
+        final int size = mMetadataCache.getAll().size();
+
+        assertEquals("Expected 1 record, but got too many",
+                1,
+                size
+        );
+
+        Assert.assertTrue(set.contains(mMetadataCache.getAll().get(0)));
+    }
+
+    public boolean insertOrUpdateHelper
+            (BrokerApplicationMetadata metadata, CountDownLatch latch, CountDownLatch executionLatch)
+            throws InterruptedException {
+        executionLatch.countDown();
+        latch.await();
+        return mMetadataCache.insertOrUpdate(metadata);
+    }
+
+    @Test
+    public void testReadsWithInsertOrUpdate() throws Exception {
+        final ExecutorService executor = Executors.newFixedThreadPool(10);
+        final CountDownLatch latch =  new CountDownLatch(1);
+        final CountDownLatch executionWriteLatch =  new CountDownLatch(5);
+        final CountDownLatch executionReadLatch =  new CountDownLatch(5);
+        final Set<BrokerApplicationMetadata> set = Collections.synchronizedSet(new HashSet<BrokerApplicationMetadata>());
+
+        mMetadataCache.clear();
+        //inserting one entry initially
+        mMetadataCache.insertOrUpdate(generatePredictiveMetadata());
+
+        assertEquals(1, mMetadataCache.getAll().size());
+
+        for (int i = 0; i <5; i++){
+            executor.submit(new Callable<Boolean>() {
+                @Override
+                public Boolean call() throws Exception {
+                    BrokerApplicationMetadata metadata = generatePredictiveMetadata();
+                    set.add(metadata);
+                    return insertOrUpdateHelper(metadata, latch, executionWriteLatch);
+                }
+            });
+
+            executor.submit(new Runnable() {
+                @Override
+                public void run() {
+                    BrokerApplicationMetadata metadata = generatePredictiveMetadata();
+                    try {
+                        readsWithInsertOrUpdateHelper(latch, executionReadLatch);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+        }
+        executionWriteLatch.await();
+        executionReadLatch.await();
+        latch.countDown();
+
+        final int size = mMetadataCache.getAll().size();
+
+        assertEquals("Expected 1 record, but we too many",
+                1,
+                size
+        );
+
+        //Assert.assertTrue(set.contains(mMetadataCache.getAll().get(0)));
+    }
+
+    public void readsWithInsertOrUpdateHelper
+            (CountDownLatch latch, CountDownLatch executionLatch)
+            throws InterruptedException {
+        executionLatch.countDown();
+        latch.await();
+        Assert.assertTrue(mMetadataCache.getAll().size() == 1);
     }
 
     @Test
@@ -223,6 +337,17 @@ public class SharedPreferencesBrokerApplicationMetadataCacheTest {
         randomMetadata.setEnvironment(UUID.randomUUID().toString());
         randomMetadata.setFoci(UUID.randomUUID().toString());
         randomMetadata.setUid(new Random().nextInt());
+
+        return randomMetadata;
+    }
+
+    private static BrokerApplicationMetadata generatePredictiveMetadata() {
+        final BrokerApplicationMetadata randomMetadata = new BrokerApplicationMetadata();
+
+        randomMetadata.setClientId(M_CLIENT_ID);
+        randomMetadata.setEnvironment(M_ENVIRONMENT);
+        randomMetadata.setFoci(UUID.randomUUID().toString());
+        randomMetadata.setUid(M_UID);
 
         return randomMetadata;
     }
