@@ -50,7 +50,5 @@ jobs:
       reportDirectory: '$(Build.SourcesDirectory)\common\build\reports\jacoco\localDebugCommonUnitTestCoverageReport\html'
   - bash: |
       curl -Os https://uploader.codecov.io/latest/windows/codecov.exe
-      chmod +x codecov
-      pwd
-      ./codecov.exe -v -t '$(codecovToken)' -B '$(System.PullRequest.SourceBranch)' -P '$(System.PullRequest.PullRequestId)' -f "./common/build/reports/jacoco/localDebugCommonUnitTestCoverageReport/localDebugCommonUnitTestCoverageReport.xml"
+      ./codecov.exe -v -t '$(codecovToken)' -B '$(System.PullRequest.SourceBranch)' -P '$(System.PullRequest.PullRequestNumber)' -f "./common/build/reports/jacoco/localDebugCommonUnitTestCoverageReport/localDebugCommonUnitTestCoverageReport.xml"
     displayName: 'Publish code coverage to Codecov and the PR'
