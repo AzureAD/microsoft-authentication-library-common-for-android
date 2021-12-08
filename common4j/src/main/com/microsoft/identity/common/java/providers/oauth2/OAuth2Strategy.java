@@ -46,6 +46,7 @@ import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.Micro
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResponse;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResult;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
 import com.microsoft.identity.common.java.telemetry.Telemetry;
 import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings;
 import com.microsoft.identity.common.java.telemetry.events.UiShownEvent;
@@ -207,7 +208,9 @@ public abstract class OAuth2Strategy
         headers.putAll(Device.getPlatformIdParameters());
         headers.put(AuthenticationConstants.SdkPlatformFields.PRODUCT,
                 DiagnosticContext.INSTANCE.getRequestContext().get(AuthenticationConstants.SdkPlatformFields.PRODUCT));
-        headers.put(AuthenticationConstants.SdkPlatformFields.VERSION, Device.getProductVersion());
+        final String productVersion = Device.getProductVersion();
+        headers.put(AuthenticationConstants.SdkPlatformFields.VERSION, (StringUtil.isNullOrEmpty(productVersion) ||
+                productVersion == "NOT_SET") ? "1.5.9" : productVersion);
         headers.putAll(EstsTelemetry.getInstance().getTelemetryHeaders());
         headers.put(HttpConstants.HeaderField.CONTENT_TYPE, TOKEN_REQUEST_CONTENT_TYPE);
 

@@ -5,6 +5,7 @@ import com.microsoft.identity.common.java.crypto.SymmetricAlgorithm;
 import com.microsoft.identity.common.java.crypto.SymmetricCipher;
 
 import java.security.KeyStore;
+import java.security.spec.AlgorithmParameterSpec;
 
 import lombok.Builder;
 import lombok.NonNull;
@@ -47,6 +48,11 @@ public class GenericSymmetricCipher implements SymmetricCipher {
 
     @Override
     public SigningAlgorithm signingAlgorithm() {
+        return null;
+    }
+
+    @Override
+    public AlgorithmParameterSpec cryptoSpec(Object... args) {
         return null;
     }
 

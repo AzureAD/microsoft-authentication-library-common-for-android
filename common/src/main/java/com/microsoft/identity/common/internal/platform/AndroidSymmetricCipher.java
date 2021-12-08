@@ -35,6 +35,9 @@ import com.microsoft.identity.common.java.crypto.SigningAlgorithm;
 import com.microsoft.identity.common.java.crypto.SymmetricAlgorithm;
 
 import java.security.KeyStore;
+import java.security.spec.AlgorithmParameterSpec;
+
+import javax.crypto.spec.GCMParameterSpec;
 
 /**
  * Having generalized Cipher to CryptoSuite, enable us to distinguish symmetric
@@ -44,6 +47,20 @@ public enum AndroidSymmetricCipher implements CryptoSuite {
 
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN)
     AES_GCM_NONE_HMACSHA256(SymmetricAlgorithm.Builder.of("AES/GCM/NoPadding"), "HmacSHA256", 256) {
+        @Override
+        public AlgorithmParameterSpec cryptoSpec(Object... args) {
+            if (args.length != 2 && !(args[0] instanceof Integer)) {
+                // TODO: log.
+                return null;
+            }
+            byte[] iv = (byte[]) args[1];
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                return new GCMParameterSpec((Integer) args[0], iv);
+            } else {
+                return null;
+            }
+        }
+
         public KeyGenParameterSpec.Builder decorateKeyGenerator(@NonNull final KeyGenParameterSpec.Builder spec) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 return spec.setBlockModes(KeyProperties.BLOCK_MODE_GCM)

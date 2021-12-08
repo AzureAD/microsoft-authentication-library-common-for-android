@@ -1,6 +1,7 @@
 package com.microsoft.identity.common.java.crypto;
 
 import java.security.KeyStore;
+import java.security.spec.AlgorithmParameterSpec;
 
 public interface AsymmetricCipher extends CryptoSuite {
     public static final AsymmetricCipher RSA_NONE_OAEPWithSHA_1AndMGF1PaddingAndHmacSha256 = new AsymmetricCipher() {
@@ -33,6 +34,11 @@ public interface AsymmetricCipher extends CryptoSuite {
         public SigningAlgorithm signingAlgorithm() {
             return SigningAlgorithm.SHA_256_WITH_RSA;
         }
+
+        @Override
+        public AlgorithmParameterSpec cryptoSpec(Object... args) {
+            return null;
+        }
     };
     public static final AsymmetricCipher RSA_ECB_PKCS1_PADDING_HMACSHA256 = new AsymmetricCipher(){
         @Override
@@ -63,6 +69,11 @@ public interface AsymmetricCipher extends CryptoSuite {
         @Override
         public SigningAlgorithm signingAlgorithm() {
             return SigningAlgorithm.SHA_256_WITH_RSA;
+        }
+
+        @Override
+        public AlgorithmParameterSpec cryptoSpec(Object... args) {
+            return null;
         }
     };
 }

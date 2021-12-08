@@ -35,6 +35,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.cert.Certificate;
+import java.security.spec.AlgorithmParameterSpec;
 import java.util.Arrays;
 
 import javax.crypto.BadPaddingException;
@@ -105,7 +106,12 @@ public class RawKeyAccessor implements IKeyAccessor {
             final Cipher c = Cipher.getInstance(keySpec.getAlgorithm());
             final byte[] iv = new byte[12];
             SECURE_RANDOM.nextBytes(iv);
-            final IvParameterSpec ivSpec = new IvParameterSpec(iv);
+            final AlgorithmParameterSpec ivSpec;
+            if (mSuite.cipher().name().startsWith("AES/GCM")) {
+                ivSpec = mSuite.cryptoSpec(16, iv);
+            } else {
+                ivSpec = mSuite.cryptoSpec(iv);
+            }
             c.init(Cipher.ENCRYPT_MODE, keySpec, ivSpec);
             byte[] text = c.update(plaintext);
             byte[] tmp = c.doFinal();
@@ -143,7 +149,13 @@ public class RawKeyAccessor implements IKeyAccessor {
         try {
             final SecretKeySpec key = new SecretKeySpec(this.mKey, mSuite.cipher().name());
             final Cipher c = Cipher.getInstance(key.getAlgorithm());
-            final IvParameterSpec ivSpec = new IvParameterSpec(ciphertext, 0, 12);
+            final byte[] iv = Arrays.copyOfRange(ciphertext, 0, 12);
+            final AlgorithmParameterSpec ivSpec;
+            if (mSuite.cipher().name().startsWith("AES/GCM")) {
+                ivSpec = mSuite.cryptoSpec(16 * 8, iv);
+            } else {
+                ivSpec = mSuite.cryptoSpec(iv);
+            }
             c.init(Cipher.DECRYPT_MODE, key, ivSpec);
             byte[] out = Arrays.copyOfRange(ciphertext, 12, ciphertext.length);
             return c.doFinal(out);

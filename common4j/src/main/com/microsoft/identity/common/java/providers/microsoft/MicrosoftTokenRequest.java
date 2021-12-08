@@ -58,6 +58,8 @@ public class MicrosoftTokenRequest extends TokenRequest implements IHasExtraPara
     public static final String DEVICE_CODE = "device_code";
     public static final String ISSUER = "iss";
     public static final String AUDIENCE = "aud";
+    public static final String NONCE = "request_nonce";
+    public static final String ISSUED_AT = "iat";
 
     public MicrosoftTokenRequest() {
         super();
@@ -110,6 +112,16 @@ public class MicrosoftTokenRequest extends TokenRequest implements IHasExtraPara
     @Expose
     @SerializedName(AUDIENCE)
     private String mAudience;
+
+    @Expose
+    @Nullable
+    @SerializedName(NONCE)
+    private String mNonce;
+
+    @Expose
+    @Nullable
+    @SerializedName(ISSUED_AT)
+    private String mIssuedAtTime;
 
     @Nullable
     @Expose()
