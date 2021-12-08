@@ -26,29 +26,29 @@ pool:
 
 jobs:
 - job: common_code_coverage
-  displayName: Common code coverage
+  displayName: Common Code Coverage
   steps:
   - checkout: self
-    displayName: Checkout common repository
+    displayName: Checkout Common Repository
     clean: true
     submodules: recursive
     persistCredentials: True
   - template: ../templates/steps/automation-cert.yml
   - task: Gradle@1
-    displayName: Assemble common
+    displayName: Assemble Common
     inputs:
       tasks: clean common:assembleLocal
       publishJUnitResults: false
   - task: Gradle@2
-    displayName: Run common code coverage
+    displayName: Run Common Code Coverage
     inputs:
       tasks: common:localDebugCommonUnitTestCoverageReport -Plabtest -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}} -PcodeCoverageEnabled=true
   - task: PublishCodeCoverageResults@1
-    displayName: 'Publish code coverage report'
+    displayName: Publish Code Coverage Report
     inputs:
       summaryFileLocation: '$(Build.SourcesDirectory)\common\build\reports\jacoco\localDebugCommonUnitTestCoverageReport\localDebugCommonUnitTestCoverageReport.xml'
       reportDirectory: '$(Build.SourcesDirectory)\common\build\reports\jacoco\localDebugCommonUnitTestCoverageReport\html'
   - bash: |
       curl -Os https://uploader.codecov.io/latest/windows/codecov.exe
       ./codecov.exe -v -t '$(codecovToken)' -B '$(System.PullRequest.SourceBranch)' -P '$(System.PullRequest.PullRequestNumber)' -f "./common/build/reports/jacoco/localDebugCommonUnitTestCoverageReport/localDebugCommonUnitTestCoverageReport.xml"
-    displayName: 'Upload code coverage to Codecov and the PR'
+    displayName: Upload Code Coverage to Codecov and the PR
