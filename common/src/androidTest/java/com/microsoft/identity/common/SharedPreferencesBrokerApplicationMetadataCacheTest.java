@@ -184,7 +184,7 @@ public class SharedPreferencesBrokerApplicationMetadataCacheTest {
 
         final int size = mMetadataCache.getAll().size();
 
-        assertEquals("Expected 1 record, but we too many",
+        assertEquals("Expected 1 record, but we got too many",
                 1,
                 size
         );
