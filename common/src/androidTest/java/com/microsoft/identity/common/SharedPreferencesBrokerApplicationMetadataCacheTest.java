@@ -29,6 +29,7 @@ import com.android.dx.rop.code.Exceptions;
 import com.microsoft.identity.common.internal.cache.BrokerApplicationMetadata;
 import com.microsoft.identity.common.internal.cache.IBrokerApplicationMetadataCache;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesBrokerApplicationMetadataCache;
+import com.microsoft.identity.common.logging.Logger;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -49,10 +50,14 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 
 @RunWith(AndroidJUnit4.class)
 public class SharedPreferencesBrokerApplicationMetadataCacheTest {
@@ -60,6 +65,7 @@ public class SharedPreferencesBrokerApplicationMetadataCacheTest {
     public static final String M_CLIENT_ID = UUID.randomUUID().toString();
     public static final String M_ENVIRONMENT = UUID.randomUUID().toString();
     public static final int M_UID = new Random().nextInt();
+    public static final int fixedIteration = 1000000;
     private SharedPreferencesBrokerApplicationMetadataCache mMetadataCache;
 
     @Before
@@ -111,9 +117,9 @@ public class SharedPreferencesBrokerApplicationMetadataCacheTest {
             list.add(executor.submit(new Callable<Boolean>() {
                 @Override
                 public Boolean call() throws Exception {
-                    BrokerApplicationMetadata metadata = generatePredictiveMetadata();
+                    BrokerApplicationMetadata metadata = generateDuplicateMetadata();
                     set.add(metadata);
-                    return insertOrUpdateHelper(metadata, latch, executionLatch);
+                    return insertOrUpdateFutureHelper(metadata, latch, executionLatch);
                 }
             }));
         }
@@ -134,6 +140,14 @@ public class SharedPreferencesBrokerApplicationMetadataCacheTest {
         Assert.assertTrue(set.contains(mMetadataCache.getAll().get(0)));
     }
 
+    public boolean insertOrUpdateFutureHelper
+            (BrokerApplicationMetadata metadata, CountDownLatch latch, CountDownLatch executionLatch)
+            throws InterruptedException {
+        executionLatch.countDown();
+        latch.await();
+        return mMetadataCache.insertOrUpdate(metadata);
+    }
+
     public boolean insertOrUpdateHelper
             (BrokerApplicationMetadata metadata, CountDownLatch latch, CountDownLatch executionLatch)
             throws InterruptedException {
@@ -144,36 +158,53 @@ public class SharedPreferencesBrokerApplicationMetadataCacheTest {
 
     @Test
     public void testReadsWithInsertOrUpdate() throws Exception {
+        final String methodName = ":testReadsWithInsertOrUpdate";
+
         final ExecutorService executor = Executors.newFixedThreadPool(10);
         final CountDownLatch latch =  new CountDownLatch(1);
         final CountDownLatch executionWriteLatch =  new CountDownLatch(5);
         final CountDownLatch executionReadLatch =  new CountDownLatch(5);
-        final Set<BrokerApplicationMetadata> set = Collections.synchronizedSet(new HashSet<BrokerApplicationMetadata>());
+        final AtomicInteger iterations = new AtomicInteger(0);
+        final AtomicBoolean failCheck = new AtomicBoolean(true);
+        final AtomicInteger reads = new AtomicInteger(0);
+        final AtomicInteger writes = new AtomicInteger(0);
 
         mMetadataCache.clear();
         //inserting one entry initially
-        mMetadataCache.insertOrUpdate(generatePredictiveMetadata());
+        mMetadataCache.insertOrUpdate(generateDuplicateMetadata());
 
         assertEquals(1, mMetadataCache.getAll().size());
 
         for (int i = 0; i <5; i++){
-            executor.submit(new Callable<Boolean>() {
+            executor.submit(new Runnable() {
                 @Override
-                public Boolean call() throws Exception {
-                    BrokerApplicationMetadata metadata = generatePredictiveMetadata();
-                    set.add(metadata);
-                    return insertOrUpdateHelper(metadata, latch, executionWriteLatch);
+                public void run() {
+                    while (iterations.getAndIncrement() < fixedIteration) {
+                        BrokerApplicationMetadata metadata = generateDuplicateMetadata();
+                        try {
+                            if (!insertOrUpdateHelper(metadata, latch, executionWriteLatch)){
+                                failCheck.set(false);
+                            }
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        writes.getAndIncrement();
+                    }
                 }
             });
 
             executor.submit(new Runnable() {
                 @Override
                 public void run() {
-                    BrokerApplicationMetadata metadata = generatePredictiveMetadata();
-                    try {
-                        readsWithInsertOrUpdateHelper(latch, executionReadLatch);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
+                    while (iterations.getAndIncrement() < fixedIteration) {
+                        try {
+                            if (!readsWithInsertOrUpdateHelper(latch, executionReadLatch)){
+                                failCheck.set(false);
+                            }
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        reads.getAndIncrement();
                     }
                 }
             });
@@ -181,6 +212,8 @@ public class SharedPreferencesBrokerApplicationMetadataCacheTest {
         executionWriteLatch.await();
         executionReadLatch.await();
         latch.countDown();
+        executor.shutdown();
+        executor.awaitTermination(1, TimeUnit.HOURS);
 
         final int size = mMetadataCache.getAll().size();
 
@@ -189,15 +222,16 @@ public class SharedPreferencesBrokerApplicationMetadataCacheTest {
                 size
         );
 
-        //Assert.assertTrue(set.contains(mMetadataCache.getAll().get(0)));
+        Assert.assertTrue(failCheck.get());
+        Logger.info(methodName,"Reads to Writes Ratio : " + reads + ":" + writes);
     }
 
-    public void readsWithInsertOrUpdateHelper
+    public boolean readsWithInsertOrUpdateHelper
             (CountDownLatch latch, CountDownLatch executionLatch)
             throws InterruptedException {
         executionLatch.countDown();
         latch.await();
-        Assert.assertTrue(mMetadataCache.getAll().size() == 1);
+        return mMetadataCache.getAll().size() == 1;
     }
 
     @Test
@@ -341,7 +375,7 @@ public class SharedPreferencesBrokerApplicationMetadataCacheTest {
         return randomMetadata;
     }
 
-    private static BrokerApplicationMetadata generatePredictiveMetadata() {
+    private static BrokerApplicationMetadata generateDuplicateMetadata() {
         final BrokerApplicationMetadata randomMetadata = new BrokerApplicationMetadata();
 
         randomMetadata.setClientId(M_CLIENT_ID);
