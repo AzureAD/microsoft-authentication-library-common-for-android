@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.cache;
 
+import static com.microsoft.identity.common.java.cache.AbstractAccountCredentialCache.targetsIntersect;
+
 import com.microsoft.identity.common.java.BaseAccount;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
@@ -34,16 +36,14 @@ import com.microsoft.identity.common.java.dto.CredentialType;
 import com.microsoft.identity.common.java.dto.IdTokenRecord;
 import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
-import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
+import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
+import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.java.providers.oauth2.RefreshToken;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResponse;
-import com.microsoft.identity.common.java.logging.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import static com.microsoft.identity.common.java.cache.AbstractAccountCredentialCache.targetsIntersect;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.NonNull;
@@ -212,12 +212,12 @@ public class MicrosoftFamilyOAuth2TokenCache
                         + " profiles for this account"
         );
 
-        // Ignore the first element, as it will contain the same result as loadByFamilyId()....
-        accountsInOtherTenants.remove(0);
-
         if (!accountsInOtherTenants.isEmpty()) {
             // We need the IdToken of each of these accounts... we can reuse the RT, since it is
             // an FRT...
+
+            // Ignore the first element, as it will contain the same result as loadByFamilyId()....
+            accountsInOtherTenants.remove(0);
 
             for (final AccountRecord accountRecord : accountsInOtherTenants) {
                 // Declare our container
