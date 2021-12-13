@@ -41,9 +41,15 @@ jobs:
       sqAnalysisBreakBuildIfQualityGateFailed: false
   - task: Gradle@2
     displayName: Publish
+    enabled: false
     inputs:
       tasks: common:publish
       publishJUnitResults: false
+  - template: ../templates/steps/generate-sbom.yml
+    parameters:
+      project: common
+      buildDropPath: $(Build.SourcesDirectory)/common/build/
+      configuration: distReleaseRuntimeClasspath
   - task: CopyFiles@2
     name: CopyFiles1
     displayName: Copy Files to Artifact Staging Directory
