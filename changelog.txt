@@ -1,5 +1,6 @@
 V.Next
 ----------
+- [PATCH] Remove unsafe key thumbprint generator (#1654)
 - [MAJOR] Rename LobalBroadcasterAliases to LocalBroadcasterAliases (#1584)
 - [PATCH] Make it clear if adding a query param should overwrite or leave as is (#1581)
 - [PATCH] Handle the scenario where broker activity is killed wrongly. (#1568)

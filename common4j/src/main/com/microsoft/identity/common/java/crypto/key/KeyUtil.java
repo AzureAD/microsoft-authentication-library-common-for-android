@@ -30,6 +30,7 @@ import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
+import javax.annotation.Nullable;
 import javax.crypto.Mac;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
@@ -86,17 +87,36 @@ public class KeyUtil {
      * Derive a thumbprint from the given key.
      *
      * @param key SecretKey to calculate the thumbprint from.
+     *
      * @return a thumbprint. Will return {@link KeyUtil#UNKNOWN_THUMBPRINT} if it fails to derived one.
      */
-    public static String getKeyThumbPrint(final @NonNull SecretKey key) {
+    public static String getKeyThumbPrint(@NonNull final SecretKey key) {
+        return getKeyThumbPrint(key, null);
+    }
+
+    /**
+     * Derive a thumbprint from the given key.
+     *
+     * @param key SecretKey to calculate the thumbprint from.
+     * @param hmacKey hmacKey of the secretKey above. If not provided, this will be calculated on the fly.
+     *
+     * @return a thumbprint. Will return {@link KeyUtil#UNKNOWN_THUMBPRINT} if it fails to derived one.
+     */
+    public static String getKeyThumbPrint(@NonNull final SecretKey key,
+                                          @Nullable final SecretKey hmacKey) {
         final String methodName = ":getKeyThumbPrint";
         try {
             final byte[] thumbprintBytes = "012345678910111213141516".getBytes(ENCODING_UTF8);
 
             final Mac thumbprintMac = Mac.getInstance(HMAC_ALGORITHM);
-            thumbprintMac.init(getHMacKey(key));
-            byte[] thumbPrintFinal = thumbprintMac.doFinal(thumbprintBytes);
 
+            if (hmacKey == null){
+                thumbprintMac.init(getHMacKey(key));
+            } else {
+                thumbprintMac.init(hmacKey);
+            }
+
+            byte[] thumbPrintFinal = thumbprintMac.doFinal(thumbprintBytes);
             return StringUtil.encodeUrlSafeString(thumbPrintFinal);
         } catch (final NoSuchAlgorithmException | InvalidKeyException e) {
             Logger.warn(TAG + methodName, "failed to calculate thumbprint:" + e.getMessage());
