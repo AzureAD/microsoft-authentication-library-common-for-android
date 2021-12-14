@@ -64,6 +64,7 @@ public class DefaultBrokerApplicationRegistry
         final String methodName = ":getMetadata";
 
         final List<BrokerApplicationRegistryData> allMetadata = getAll();
+
         BrokerApplicationRegistryData result = null;
 
         for (final BrokerApplicationRegistryData metadata : allMetadata) {
