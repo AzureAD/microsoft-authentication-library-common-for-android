@@ -91,31 +91,29 @@ public class KeyUtil {
      * @return a thumbprint. Will return {@link KeyUtil#UNKNOWN_THUMBPRINT} if it fails to derived one.
      */
     public static String getKeyThumbPrint(@NonNull final SecretKey key) {
-        return getKeyThumbPrint(key, null);
+        final String methodName = ":getKeyThumbPrint";
+        try {
+            return getKeyThumbPrintFromHmacKey(getHMacKey(key));
+        } catch (NoSuchAlgorithmException e) {
+            Logger.warn(TAG + methodName, "failed to calculate thumbprint:" + e.getMessage());
+            return UNKNOWN_THUMBPRINT;
+        }
     }
 
     /**
-     * Derive a thumbprint from the given key.
+     * Derive a thumbprint from the given hmac key.
      *
-     * @param key SecretKey to calculate the thumbprint from.
-     * @param hmacKey hmacKey of the secretKey above. If not provided, this will be calculated on the fly.
+     * @param hmacKey hmacKey of the secretKey.
      *
      * @return a thumbprint. Will return {@link KeyUtil#UNKNOWN_THUMBPRINT} if it fails to derived one.
      */
-    public static String getKeyThumbPrint(@NonNull final SecretKey key,
-                                          @Nullable final SecretKey hmacKey) {
-        final String methodName = ":getKeyThumbPrint";
+    public static String getKeyThumbPrintFromHmacKey(@NonNull final SecretKey hmacKey) {
+        final String methodName = ":getKeyThumbPrintFromHmacKey";
         try {
             final byte[] thumbprintBytes = "012345678910111213141516".getBytes(ENCODING_UTF8);
 
             final Mac thumbprintMac = Mac.getInstance(HMAC_ALGORITHM);
-
-            if (hmacKey == null){
-                thumbprintMac.init(getHMacKey(key));
-            } else {
-                thumbprintMac.init(hmacKey);
-            }
-
+            thumbprintMac.init(hmacKey);
             byte[] thumbPrintFinal = thumbprintMac.doFinal(thumbprintBytes);
             return StringUtil.encodeUrlSafeString(thumbPrintFinal);
         } catch (final NoSuchAlgorithmException | InvalidKeyException e) {

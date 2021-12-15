@@ -91,6 +91,7 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_HOST_APP_PACKAGE_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
 import static com.microsoft.identity.common.java.crypto.key.KeyUtil.getKeyThumbPrint;
+import static com.microsoft.identity.common.java.crypto.key.KeyUtil.getKeyThumbPrintFromHmacKey;
 import static com.microsoft.identity.common.java.util.ported.DateUtilities.LOCALE_CHANGE_LOCK;
 import static com.microsoft.identity.common.java.util.ported.DateUtilities.isLocaleCalendarNonGregorian;
 
@@ -256,7 +257,7 @@ public class StorageHelper implements IStorageHelper {
         // load key for encryption if not loaded
         mEncryptionKey = loadSecretKeyForEncryption();
         mEncryptionHMACKey = getHMacKey(mEncryptionKey);
-        logIfKeyHasChanged(mEncryptionKey, mEncryptionHMACKey);
+        logIfKeyHasChanged(mEncryptionHMACKey);
 
         Logger.verbose(TAG + methodName, "Encrypt version:" + mBlobVersion);
         final byte[] blobVersion = mBlobVersion.getBytes(AuthenticationConstants.CHARSET_UTF8);
@@ -310,7 +311,7 @@ public class StorageHelper implements IStorageHelper {
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     public boolean testKeyChange() throws IOException, GeneralSecurityException {
         final SecretKey secretKey = loadSecretKeyForEncryption();
-        return logIfKeyHasChanged(secretKey, null);
+        return logIfKeyHasChanged(getHMacKey(secretKey));
     }
 
     @Override
@@ -492,7 +493,7 @@ public class StorageHelper implements IStorageHelper {
         mac.update(bytes, 0, macIndex);
         final byte[] macDigest = mac.doFinal();
 
-        logIfKeyHasChanged(secretKey, hmacKey);
+        logIfKeyHasChanged(hmacKey);
 
         // Compare digest of input message and calculated digest
         assertHMac(bytes, macIndex, bytes.length, macDigest);
@@ -520,9 +521,8 @@ public class StorageHelper implements IStorageHelper {
         return decrypted;
     }
 
-    private boolean logIfKeyHasChanged(@NonNull final SecretKey secretKey,
-                                       @Nullable final SecretKey hmacKey) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
-        final String keyThumbPrint = getKeyThumbPrint(secretKey, hmacKey);
+    private boolean logIfKeyHasChanged(@NonNull final SecretKey hmacKey) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
+        final String keyThumbPrint = getKeyThumbPrintFromHmacKey(hmacKey);
         if (!LAST_KNOWN_THUMBPRINT.get().equals(keyThumbPrint)) {
             LAST_KNOWN_THUMBPRINT.set(keyThumbPrint);
             if(!FIRST_TIME.compareAndSet(false, true)) {
