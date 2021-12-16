@@ -134,13 +134,6 @@ public class StorageHelper implements IStorageHelper {
      */
     private static final String CIPHER_ALGORITHM = "AES/CBC/PKCS5Padding";
 
-    /**
-     * We are going to attempt to track key changes when performing encryption/decryption.
-     * To do this, we're actually going to run this in ECB mode on a fixed input, and that
-     * should be OK only because we're going to further hash that value.
-     */
-    private static final String CIPHER_ALGORITHM_FOR_KEY_TRACKING = "AES/ECB/PKCS5Padding";
-
     private static final String HMAC_ALGORITHM = "HmacSHA256";
 
     private static final String CURRENT_ACTIVE_BROKER = "current_active_broker";
@@ -256,7 +249,7 @@ public class StorageHelper implements IStorageHelper {
         // load key for encryption if not loaded
         mEncryptionKey = loadSecretKeyForEncryption();
         mEncryptionHMACKey = getHMacKey(mEncryptionKey);
-        logIfKeyHasChanged(mEncryptionKey, mEncryptionHMACKey);
+        logIfKeyHasChanged(mEncryptionHMACKey);
 
         Logger.verbose(TAG + methodName, "Encrypt version:" + mBlobVersion);
         final byte[] blobVersion = mBlobVersion.getBytes(AuthenticationConstants.CHARSET_UTF8);
@@ -304,24 +297,21 @@ public class StorageHelper implements IStorageHelper {
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     public String testThumbprint() throws IOException, GeneralSecurityException {
         final SecretKey secretKey = loadSecretKeyForEncryption();
-        return getKeyThumbPrint(secretKey, getHMacKey(secretKey));
+        return getKeyThumbPrint(getHMacKey(secretKey));
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     public boolean testKeyChange() throws IOException, GeneralSecurityException {
         final SecretKey secretKey = loadSecretKeyForEncryption();
-        return logIfKeyHasChanged(secretKey, getHMacKey(secretKey));
+        return logIfKeyHasChanged(getHMacKey(secretKey));
     }
 
-    private String getKeyThumbPrint(final @NonNull SecretKey secretKey, final @NonNull SecretKey hmacKey) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
-        final Cipher thumbPrintCipher = Cipher.getInstance(CIPHER_ALGORITHM_FOR_KEY_TRACKING);
+    private String getKeyThumbPrint(final @NonNull SecretKey hmacKey) throws NoSuchAlgorithmException, InvalidKeyException {
         final byte[] thumbprintBytes = "012345678910111213141516".getBytes();
-        thumbPrintCipher.init(Cipher.ENCRYPT_MODE, secretKey);
-        byte[] bytesOut = thumbPrintCipher.doFinal(thumbprintBytes);
-        Mac thumbprintMac = Mac.getInstance(HMAC_ALGORITHM);
+        final Mac thumbprintMac = Mac.getInstance(HMAC_ALGORITHM);
         thumbprintMac.init(hmacKey);
-        byte[] thumprintFinal = thumbprintMac.doFinal(bytesOut);
-        return Base64.encodeToString(thumprintFinal, Base64.NO_PADDING | Base64.NO_WRAP);
+        byte[] thumbPrintFinal = thumbprintMac.doFinal(thumbprintBytes);
+        return Base64.encodeToString(thumbPrintFinal, Base64.NO_WRAP | Base64.NO_PADDING | Base64.URL_SAFE);
     }
 
     @Override
@@ -503,7 +493,7 @@ public class StorageHelper implements IStorageHelper {
         mac.update(bytes, 0, macIndex);
         final byte[] macDigest = mac.doFinal();
 
-        logIfKeyHasChanged(secretKey, hmacKey);
+        logIfKeyHasChanged(hmacKey);
 
         // Compare digest of input message and calculated digest
         assertHMac(bytes, macIndex, bytes.length, macDigest);
@@ -531,8 +521,8 @@ public class StorageHelper implements IStorageHelper {
         return decrypted;
     }
 
-    private boolean logIfKeyHasChanged(@NonNull SecretKey secretKey, SecretKey hmacKey) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
-        final String keyThumbPrint = getKeyThumbPrint(secretKey, hmacKey);
+    private boolean logIfKeyHasChanged(@NonNull SecretKey hmacKey) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
+        final String keyThumbPrint = getKeyThumbPrint(hmacKey);
         if (!LAST_KNOWN_THUMBPRINT.get().equals(keyThumbPrint)) {
             LAST_KNOWN_THUMBPRINT.set(keyThumbPrint);
             if(!FIRST_TIME.compareAndSet(false, true)) {

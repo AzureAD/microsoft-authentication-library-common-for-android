@@ -1,3 +1,7 @@
+Version 3.6.6
+----------
+- [PATCH] Remove unsafe key thumbprint generator (#1655)
+
 Version 3.6.5
 ----------
 - [PATCH] Fixing removeAccount method for msal cpp when the realm is empty (#1422)
