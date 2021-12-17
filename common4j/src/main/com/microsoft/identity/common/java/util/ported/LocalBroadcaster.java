@@ -31,7 +31,7 @@ import java.util.concurrent.Executors;
 
 import lombok.NonNull;
 
-public enum  LocalBroadcaster {
+public enum LocalBroadcaster {
     INSTANCE;
 
     private static final String TAG = LocalBroadcaster.class.getSimpleName();
