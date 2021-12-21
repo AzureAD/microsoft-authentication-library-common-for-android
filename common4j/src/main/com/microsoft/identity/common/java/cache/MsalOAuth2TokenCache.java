@@ -22,12 +22,17 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.cache;
 
+import static com.microsoft.identity.common.java.authscheme.BearerAuthenticationSchemeInternal.SCHEME_BEARER;
+import static com.microsoft.identity.common.java.dto.CredentialType.ID_TOKEN_TYPES;
+import static com.microsoft.identity.common.java.dto.CredentialType.IdToken;
+import static com.microsoft.identity.common.java.dto.CredentialType.RefreshToken;
+import static com.microsoft.identity.common.java.dto.CredentialType.V1IdToken;
+import static com.microsoft.identity.common.java.exception.ErrorStrings.ACCOUNT_IS_SCHEMA_NONCOMPLIANT;
+import static com.microsoft.identity.common.java.exception.ErrorStrings.CREDENTIAL_IS_SCHEMA_NONCOMPLIANT;
+
 import com.microsoft.identity.common.java.AuthenticationConstants;
-import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
-import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
 import com.microsoft.identity.common.java.BaseAccount;
 import com.microsoft.identity.common.java.WarningType;
-import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.java.dto.AccessTokenRecord;
 import com.microsoft.identity.common.java.dto.AccountRecord;
@@ -35,20 +40,23 @@ import com.microsoft.identity.common.java.dto.Credential;
 import com.microsoft.identity.common.java.dto.CredentialType;
 import com.microsoft.identity.common.java.dto.IdTokenRecord;
 import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
+import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
+import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAccount;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftRefreshToken;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2TokenCache;
+import com.microsoft.identity.common.java.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.java.telemetry.Telemetry;
 import com.microsoft.identity.common.java.telemetry.events.CacheEndEvent;
 import com.microsoft.identity.common.java.telemetry.events.CacheStartEvent;
 import com.microsoft.identity.common.java.util.StringUtil;
-import com.microsoft.identity.common.java.providers.oauth2.TokenResponse;
-import com.microsoft.identity.common.java.logging.Logger;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -56,15 +64,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
-import static com.microsoft.identity.common.java.exception.ErrorStrings.ACCOUNT_IS_SCHEMA_NONCOMPLIANT;
-import static com.microsoft.identity.common.java.exception.ErrorStrings.CREDENTIAL_IS_SCHEMA_NONCOMPLIANT;
-import static com.microsoft.identity.common.java.authscheme.BearerAuthenticationSchemeInternal.SCHEME_BEARER;
-import static com.microsoft.identity.common.java.cache.SharedPreferencesAccountCredentialCache.DEFAULT_ACCOUNT_CREDENTIAL_SHARED_PREFERENCES;
-import static com.microsoft.identity.common.java.dto.CredentialType.ID_TOKEN_TYPES;
-import static com.microsoft.identity.common.java.dto.CredentialType.IdToken;
-import static com.microsoft.identity.common.java.dto.CredentialType.RefreshToken;
-import static com.microsoft.identity.common.java.dto.CredentialType.V1IdToken;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.NonNull;
@@ -367,10 +366,11 @@ public class MsalOAuth2TokenCache
 
         // Save the Account and Credentials...
         saveAccounts(accountToSave);
-        saveCredentialsInternal(accessTokenToSave, refreshTokenToSave, idTokenToSave);
-
-        // Remove old refresh tokens (except for the one we just saved) if it's MRRT or FRT
-        removeAllRefreshTokensExcept(accountToSave, refreshTokenToSave);
+        synchronized(this) {
+            saveCredentialsInternal(accessTokenToSave, refreshTokenToSave, idTokenToSave);
+            // Remove old refresh tokens (except for the one we just saved) if it's MRRT or FRT
+            removeAllRefreshTokensExcept(accountToSave, refreshTokenToSave);
+        }
 
         final CacheRecord.CacheRecordBuilder result = CacheRecord.builder();
         result.account(accountToSave);
