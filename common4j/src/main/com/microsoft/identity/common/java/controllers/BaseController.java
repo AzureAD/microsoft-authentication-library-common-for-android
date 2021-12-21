@@ -705,8 +705,12 @@ public abstract class BaseController {
         return null == idTokenRecord;
     }
 
-    protected Set<String> addDefaultScopes(@NonNull final TokenCommandParameters commandParameters) {
+    public Set<String> addDefaultScopes(@NonNull final TokenCommandParameters commandParameters) {
         final Set<String> requestScopes = commandParameters.getScopes();
+        return scopesWithDefaults(requestScopes);
+    }
+
+    public static Set<String> scopesWithDefaults(final @NonNull Set<String> requestScopes) {
         requestScopes.addAll(AuthenticationConstants.DEFAULT_SCOPES);
         // sanitize empty and null scopes
         requestScopes.removeAll(Arrays.asList("", null));

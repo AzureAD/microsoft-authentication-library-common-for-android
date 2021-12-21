@@ -45,6 +45,7 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 
 import cz.msebera.android.httpclient.extras.Base64;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.NonNull;
 
 import static com.microsoft.identity.common.java.AuthenticationConstants.ENCODING_UTF8;
@@ -111,6 +112,12 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
     @Override
     @NonNull
     public byte[] encrypt(@NonNull final byte[] plaintext)
+            throws ClientException {
+        return encrypt(plaintext, null);
+    }
+    @Override
+    @NonNull
+    public byte[] encrypt(@NonNull final byte[] plaintext, Object... additionalData)
             throws ClientException {
         final String methodName = ":encrypt";
 
@@ -186,7 +193,7 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
 
     @Override
     @NonNull
-    public byte[] decrypt(@NonNull final byte[] cipherText) throws ClientException {
+    public byte[] decrypt(@NonNull final byte[] cipherText, @Nullable final byte[] aad) throws ClientException{
         final String methodName = ":decrypt";
         Logger.verbose(TAG + methodName, "Starting decryption");
 
@@ -211,7 +218,7 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
             if (keyLoader == null){
                 throw new IllegalStateException("KeyLoader must not be null.");
             }
-            
+
             try {
                 final byte[] result = decryptWithSecretKey(dataBytes, keyLoader);
                 Logger.verbose(TAG + methodName, "Finished decryption with key:" + keyLoader.getAlias());
@@ -229,6 +236,12 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
                 exceptionToThrowIfAllFails.getMessage());
 
         throw exceptionToThrowIfAllFails;
+    }
+
+    @Override
+    @NonNull
+    public byte[] decrypt(@NonNull final byte[] cipherText) throws ClientException {
+        return decrypt(cipherText, null);
     }
 
     @Override
@@ -260,6 +273,12 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
     public IKeyAccessor generateDerivedKey(byte[] label, byte[] ctx, CryptoSuite suite) {
         throw new UnsupportedOperationException();
     }
+
+    @Override
+    public IKeyAccessor generateDerivedKey(byte[] label, byte[] ctx) {
+        throw new UnsupportedOperationException();
+    }
+
 
     /**
      * Decrypted the given encrypted blob with a key from {@link AbstractSecretKeyLoader}

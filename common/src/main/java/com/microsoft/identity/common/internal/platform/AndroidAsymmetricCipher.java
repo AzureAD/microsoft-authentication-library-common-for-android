@@ -35,6 +35,8 @@ import com.microsoft.identity.common.java.crypto.IDevicePopManager;
 import java.security.KeyStore;
 import java.security.spec.AlgorithmParameterSpec;
 
+import javax.crypto.Cipher;
+
 /**
  * Definitions for Asymmetric Crypto suites.
  */
@@ -75,6 +77,11 @@ public enum AndroidAsymmetricCipher implements AsymmetricCipher {
         public AlgorithmParameterSpec cryptoSpec(Object... args) {
             return null;
         }
+
+        @Override
+        public void initialize(Cipher cipher, Object... args) {
+
+        }
     },
     RSA_ECB_PKCS1_PADDING_HMACSHA256 {
         @Override
@@ -111,6 +118,11 @@ public enum AndroidAsymmetricCipher implements AsymmetricCipher {
         @Override
         public AlgorithmParameterSpec cryptoSpec(Object... args) {
             return null;
+        }
+
+        @Override
+        public void initialize(Cipher cipher, Object... args) {
+
         }
     };
 }

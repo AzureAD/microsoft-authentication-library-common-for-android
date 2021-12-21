@@ -33,6 +33,7 @@ import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.security.SecureRandom;
 import java.security.cert.Certificate;
 import java.security.spec.AlgorithmParameterSpec;
@@ -52,6 +53,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.experimental.Accessors;
 
@@ -62,6 +64,7 @@ import static com.microsoft.identity.common.java.exception.ClientException.INVAL
 import static com.microsoft.identity.common.java.exception.ClientException.IO_ERROR;
 import static com.microsoft.identity.common.java.exception.ClientException.NO_SUCH_ALGORITHM;
 import static com.microsoft.identity.common.java.exception.ClientException.NO_SUCH_PADDING;
+import static com.microsoft.identity.common.java.exception.ClientException.NO_SUCH_PROVIDER;
 
 /**
  * Key accessor for using a raw symmetric key.
@@ -97,8 +100,13 @@ public class RawKeyAccessor implements IKeyAccessor {
         return Arrays.copyOf(mKey, mKey.length);
     }
 
-    @Override
-    public byte[] encrypt(@NonNull final byte[] plaintext) throws ClientException {
+    public static class EncData {
+        public byte[] ciphertext;
+        public byte[] iv;
+        public byte[] tag;
+    }
+
+    public EncData encrypt2(@NonNull final byte[] plaintext, boolean foo) throws ClientException {
         final String errCode;
         final Exception exception;
         try {
@@ -108,17 +116,64 @@ public class RawKeyAccessor implements IKeyAccessor {
             SECURE_RANDOM.nextBytes(iv);
             final AlgorithmParameterSpec ivSpec;
             if (mSuite.cipher().name().startsWith("AES/GCM")) {
-                ivSpec = mSuite.cryptoSpec(16, iv);
+                ivSpec = mSuite.cryptoSpec(16 * 8, iv);
             } else {
                 ivSpec = mSuite.cryptoSpec(iv);
             }
             c.init(Cipher.ENCRYPT_MODE, keySpec, ivSpec);
-            byte[] text = c.update(plaintext);
-            byte[] tmp = c.doFinal();
-            final byte[] output = new byte[iv.length + text.length + tmp.length];
+            byte[] text = c.doFinal(plaintext);
+            EncData data = new EncData();
+            data.ciphertext = text;
+            data.iv = iv;
+            return data;
+        } catch (final NoSuchAlgorithmException e) {
+            errCode = NO_SUCH_ALGORITHM;
+            exception = e;
+        } catch (final NoSuchPaddingException e) {
+            errCode = NO_SUCH_PADDING;
+            exception = e;
+        } catch (final IllegalBlockSizeException e) {
+            errCode = INVALID_BLOCK_SIZE;
+            exception = e;
+        } catch (final BadPaddingException e) {
+            errCode = BAD_PADDING;
+            exception = e;
+        } catch (final InvalidKeyException e) {
+            errCode = INVALID_KEY;
+            exception = e;
+        } catch (final InvalidAlgorithmParameterException e) {
+            errCode = INVALID_ALG_PARAMETER;
+            exception = e;
+        }
+        throw new ClientException(errCode, exception.getMessage());
+    }
+
+    @Override
+    public byte[] encrypt(@NonNull final byte[] plaintext) throws ClientException {
+        return encrypt(plaintext, null);
+    }
+
+    @Override
+    public byte[] encrypt(@NonNull final byte[] plaintext, @Nullable Object... aad) throws ClientException {
+        final String errCode;
+        final Exception exception;
+        try {
+            final SecretKeySpec keySpec = new SecretKeySpec(mKey, mSuite.cipher().name());
+            final Cipher c = Cipher.getInstance(keySpec.getAlgorithm());
+            final byte[] iv = new byte[12];
+            SECURE_RANDOM.nextBytes(iv);
+            final AlgorithmParameterSpec ivSpec;
+            if (mSuite.cipher().name().startsWith("AES/GCM")) {
+                ivSpec = mSuite.cryptoSpec(16 * 8, iv);
+            } else {
+                ivSpec = mSuite.cryptoSpec(iv);
+            }
+            c.init(Cipher.ENCRYPT_MODE, keySpec, ivSpec);
+            byte[] text = c.doFinal(plaintext);
+            final byte[] output = new byte[iv.length + text.length];
             System.arraycopy(iv, 0, output, 0, iv.length);
             System.arraycopy(text, 0, output, iv.length, text.length);
-            System.arraycopy(tmp, 0, output, iv.length + text.length, tmp.length);
+            //System.arraycopy(tmp, 0, output, iv.length + text.length, tmp.length);
             return output;
         } catch (final NoSuchAlgorithmException e) {
             errCode = NO_SUCH_ALGORITHM;
@@ -143,13 +198,66 @@ public class RawKeyAccessor implements IKeyAccessor {
     }
 
     @Override
-    public byte[] decrypt(@NonNull final byte[] ciphertext) throws ClientException {
+    public byte[] decrypt(@NonNull final byte[] ciphertext, final byte[] aad) throws ClientException {
+        final String errCode;
+        final Exception exception;
+        try {
+            final SecretKeySpec key = new SecretKeySpec(this.mKey, mSuite.cipher().name().split("/")[0]);
+            final Cipher c = Cipher.getInstance(mSuite.cipher().name());
+            // Once again, this IV is problematic.  But since not every cipher needs an IV, I wanted
+            // to keep the interface consistent.  It should probably pivot on the jwe parsing.
+            final byte[] iv = Arrays.copyOfRange(ciphertext, 0, 12);
+            final AlgorithmParameterSpec ivSpec;
+            if (mSuite.cipher().name().startsWith("AES/GCM")) {
+                // We currently always use 16 bytes of data here.  This should change pattern, so that
+                // this function extracts data from the jwe map, yielding the buffer and we don't have
+                // this fixed constant.
+                ivSpec = mSuite.cryptoSpec(16 * 8, iv);
+            } else {
+                ivSpec = mSuite.cryptoSpec(iv);
+            }
+            c.init(Cipher.DECRYPT_MODE, key, ivSpec);
+            // If we have additional data, allow it to be provided to the cipher.
+            if (aad != null) {
+                mSuite.initialize(c, aad);
+            }
+            return c.doFinal(ciphertext, iv.length, ciphertext.length - iv.length);
+        } catch (final NoSuchAlgorithmException e) {
+            errCode = NO_SUCH_ALGORITHM;
+            exception = e;
+        } catch (final NoSuchPaddingException e) {
+            errCode = NO_SUCH_PADDING;
+            exception = e;
+        } catch (final IllegalBlockSizeException e) {
+            errCode = INVALID_BLOCK_SIZE;
+            exception = e;
+        } catch (final BadPaddingException e) {
+            errCode = BAD_PADDING;
+            exception = e;
+        } catch (final InvalidKeyException e) {
+            errCode = INVALID_KEY;
+            exception = e;
+        } catch (final InvalidAlgorithmParameterException e) {
+            errCode = INVALID_ALG_PARAMETER;
+            exception = e;
+        }/* catch (NoSuchProviderException e) {
+            errCode = NO_SUCH_PROVIDER;
+            exception = e;
+        }*/
+        throw new ClientException(errCode, exception.getMessage(), exception);
+    }
+
+    @Override
+    public byte[] decrypt(byte[] ciphertext) throws ClientException {
+        return decrypt(ciphertext, null);
+    }
+
+    public byte[] decrypt(@NonNull final byte[] ciphertext, final byte[] tag, final byte[] iv) throws ClientException {
         final String errCode;
         final Exception exception;
         try {
             final SecretKeySpec key = new SecretKeySpec(this.mKey, mSuite.cipher().name());
             final Cipher c = Cipher.getInstance(key.getAlgorithm());
-            final byte[] iv = Arrays.copyOfRange(ciphertext, 0, 12);
             final AlgorithmParameterSpec ivSpec;
             if (mSuite.cipher().name().startsWith("AES/GCM")) {
                 ivSpec = mSuite.cryptoSpec(16 * 8, iv);
@@ -157,7 +265,9 @@ public class RawKeyAccessor implements IKeyAccessor {
                 ivSpec = mSuite.cryptoSpec(iv);
             }
             c.init(Cipher.DECRYPT_MODE, key, ivSpec);
-            byte[] out = Arrays.copyOfRange(ciphertext, 12, ciphertext.length);
+
+            byte[] out = ciphertext;
+
             return c.doFinal(out);
         } catch (final NoSuchAlgorithmException e) {
             errCode = NO_SUCH_ALGORITHM;
@@ -251,7 +361,7 @@ public class RawKeyAccessor implements IKeyAccessor {
      * @return a new key, generated from the previous one.
      * @throws ClientException if something goes wrong during generation.
      */
-    public byte[] generateDerivedKey(@NonNull final byte[] label, @NonNull final byte[] ctx) throws ClientException{
+    public byte[] generateDerivedKeyBytes(@NonNull final byte[] label, @NonNull final byte[] ctx) throws ClientException{
         try {
             return SP800108KeyGen.generateDerivedKey(mKey, label, ctx);
         } catch (IOException e) {
@@ -277,7 +387,17 @@ public class RawKeyAccessor implements IKeyAccessor {
     public IKeyAccessor generateDerivedKey(@NonNull final byte[] label, @NonNull final byte[] ctx,
                                           @NonNull final CryptoSuite suite) throws ClientException{
         try {
-            return new RawKeyAccessor(suite, SP800108KeyGen.generateDerivedKey(mKey, label, ctx), null);
+            return new RawKeyAccessor(suite, SP800108KeyGen.generateDerivedKey(mKey, label, ctx), null) {
+                @Override
+                public byte[] generateDerivedKeyBytes(@NonNull byte[] label, @NonNull byte[] ctx) throws ClientException {
+                    throw new UnsupportedOperationException("Generation of second-generation derived keys is not supported");
+                }
+
+                @Override
+                public IKeyAccessor generateDerivedKey(@NonNull byte[] label, @NonNull byte[] ctx, @NonNull CryptoSuite suite) throws ClientException {
+                    throw new UnsupportedOperationException("Generation of second-generation derived keys is not supported");
+                }
+            };
         } catch (IOException e) {
             throw new ClientException(IO_ERROR, e.getMessage(), e);
         } catch (InvalidKeyException e) {
@@ -285,6 +405,11 @@ public class RawKeyAccessor implements IKeyAccessor {
         } catch (NoSuchAlgorithmException e) {
             throw new ClientException(NO_SUCH_ALGORITHM, e.getMessage(), e);
         }
+    }
+
+    @Override
+    public IKeyAccessor generateDerivedKey(byte[] label, byte[] ctx) throws ClientException {
+        return generateDerivedKey(label, ctx, mSuite);
     }
 
 }

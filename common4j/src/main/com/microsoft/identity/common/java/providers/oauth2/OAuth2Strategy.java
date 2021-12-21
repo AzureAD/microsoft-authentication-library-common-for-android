@@ -210,7 +210,7 @@ public abstract class OAuth2Strategy
                 DiagnosticContext.INSTANCE.getRequestContext().get(AuthenticationConstants.SdkPlatformFields.PRODUCT));
         final String productVersion = Device.getProductVersion();
         headers.put(AuthenticationConstants.SdkPlatformFields.VERSION, (StringUtil.isNullOrEmpty(productVersion) ||
-                productVersion == "NOT_SET") ? "1.5.9" : productVersion);
+                productVersion == "NOT_SET") ? "2.0.9-x1" : productVersion);
         headers.putAll(EstsTelemetry.getInstance().getTelemetryHeaders());
         headers.put(HttpConstants.HeaderField.CONTENT_TYPE, TOKEN_REQUEST_CONTENT_TYPE);
 

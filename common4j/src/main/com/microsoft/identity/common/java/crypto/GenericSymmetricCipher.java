@@ -7,6 +7,8 @@ import com.microsoft.identity.common.java.crypto.SymmetricCipher;
 import java.security.KeyStore;
 import java.security.spec.AlgorithmParameterSpec;
 
+import javax.crypto.Cipher;
+
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.experimental.Accessors;
@@ -54,6 +56,11 @@ public class GenericSymmetricCipher implements SymmetricCipher {
     @Override
     public AlgorithmParameterSpec cryptoSpec(Object... args) {
         return null;
+    }
+
+    @Override
+    public void initialize(Cipher cipher, Object... args) {
+
     }
 
     @Override

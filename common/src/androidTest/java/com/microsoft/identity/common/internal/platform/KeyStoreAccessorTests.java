@@ -30,6 +30,7 @@ import androidx.test.core.app.ApplicationProvider;
 import com.microsoft.identity.common.AndroidPlatformComponents;
 import com.microsoft.identity.common.java.crypto.IKeyAccessor;
 import com.microsoft.identity.common.java.crypto.KeyStoreAccessor;
+import com.microsoft.identity.common.java.crypto.RawKeyAccessor;
 import com.microsoft.identity.common.java.crypto.SecureHardwareState;
 import com.microsoft.identity.common.java.crypto.SigningAlgorithm;
 import com.microsoft.identity.common.java.exception.ClientException;
@@ -51,6 +52,19 @@ public class KeyStoreAccessorTests {
         RANDOM.nextBytes(in);
         final byte[] out = accessor.encrypt(in);
         final byte[] around = accessor.decrypt(out);
+        Assert.assertArrayEquals(in, around);
+        Assert.assertNull(accessor.getCertificateChain());
+        Assert.assertEquals(SecureHardwareState.FALSE, accessor.getSecureHardwareState());
+    }
+
+    @Test
+    public void testSymmetricBasicFunctionalitySuccessfulRawKey2() throws Exception {
+        final AndroidPlatformComponents components = AndroidPlatformComponents.createFromContext(ApplicationProvider.getApplicationContext());
+        final RawKeyAccessor accessor = (RawKeyAccessor) new AndroidKeyStoreAccessor(components).newInstance(AndroidSymmetricCipher.AES_GCM_NONE_HMACSHA256, true);
+        final byte[] in = new byte[1024];
+        RANDOM.nextBytes(in);
+        final RawKeyAccessor.EncData out = accessor.encrypt2(in, false);
+        final byte[] around = accessor.decrypt(out.ciphertext, out.tag, out.iv);
         Assert.assertArrayEquals(in, around);
         Assert.assertNull(accessor.getCertificateChain());
         Assert.assertEquals(SecureHardwareState.FALSE, accessor.getSecureHardwareState());

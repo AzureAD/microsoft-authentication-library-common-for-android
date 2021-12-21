@@ -24,6 +24,7 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableEntryException;
 import java.security.cert.Certificate;
+import java.security.spec.AlgorithmParameterSpec;
 import java.util.Arrays;
 
 import javax.crypto.BadPaddingException;
@@ -34,6 +35,7 @@ import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.GCMParameterSpec;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.NonNull;
@@ -50,14 +52,21 @@ public class SecretKeyAccessor implements IManagedKeyAccessor<KeyStore.SecretKey
 
     @Override
     public byte[] encrypt(@NonNull final byte[] plaintext) throws ClientException {
+        return encrypt(plaintext, null);
+    }
+
+    @Override
+    public byte[] encrypt(@NonNull final byte[] plaintext, @Nullable final Object... args) throws ClientException {
         final String errCode;
         final Exception exception;
         try {
             final KeyStore.SecretKeyEntry entry = mKeyManager.getEntry();
             final SecretKey key = entry.getSecretKey();
             final Cipher c = Cipher.getInstance(mSuite.cipher().name());
-            c.init(Cipher.ENCRYPT_MODE, key);
             final byte[] iv = c.getIV();
+            AlgorithmParameterSpec spec = mSuite.cryptoSpec(iv);
+            c.init(Cipher.ENCRYPT_MODE, key, spec);
+            mSuite.initialize(c, args);
             final byte[] enc = c.doFinal(plaintext);
             final byte[] out = new byte[iv.length + enc.length];
             System.arraycopy(iv, 0, out, 0, iv.length);
@@ -84,20 +93,29 @@ public class SecretKeyAccessor implements IManagedKeyAccessor<KeyStore.SecretKey
         } catch (final InvalidKeyException e) {
             errCode = INVALID_KEY;
             exception = e;
+        } catch (InvalidAlgorithmParameterException e) {
+            errCode = INVALID_ALG_PARAMETER;
+            exception = e;
         }
         throw new ClientException(errCode, exception.getMessage(), exception);
     }
 
     @Override
     public byte[] decrypt(@NonNull final byte[] ciphertext) throws ClientException {
+        return decrypt(ciphertext, null);
+    }
+
+    @Override
+    public byte[] decrypt(byte[] ciphertext, byte[] additionalAuthData) throws ClientException {
         final String errCode;
         final Exception exception;
         try {
             final KeyStore.SecretKeyEntry entry = mKeyManager.getEntry();
             final SecretKey key = entry.getSecretKey();
             final Cipher c = Cipher.getInstance(mSuite.cipher().name());
-            final GCMParameterSpec ivSpec = new GCMParameterSpec(128, ciphertext, 0, 12);
+            final AlgorithmParameterSpec ivSpec = mSuite.cryptoSpec(128, ciphertext, 0, 12);
             c.init(Cipher.DECRYPT_MODE, key, ivSpec);
+            mSuite.initialize(c, additionalAuthData);
             final byte[] out = Arrays.copyOfRange(ciphertext, 12, ciphertext.length);
             return c.doFinal(out);
         } catch (final UnrecoverableEntryException e) {
@@ -177,6 +195,11 @@ public class SecretKeyAccessor implements IManagedKeyAccessor<KeyStore.SecretKey
     @Override
     public IKeyAccessor generateDerivedKey(final byte[] label, final byte[] ctx, final CryptoSuite suite) throws ClientException {
         throw new UnsupportedOperationException("This operation is not supported by inaccessible keys");
+    }
+
+    @Override
+    public IKeyAccessor generateDerivedKey(byte[] label, byte[] ctx) throws ClientException {
+        return generateDerivedKey(label, ctx, mSuite);
     }
 
     @Override

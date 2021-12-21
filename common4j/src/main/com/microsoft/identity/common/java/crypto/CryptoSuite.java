@@ -25,6 +25,8 @@ package com.microsoft.identity.common.java.crypto;
 import java.security.KeyStore;
 import java.security.spec.AlgorithmParameterSpec;
 
+import javax.crypto.Cipher;
+
 /**
  * Interface for cryptoSuite definitions.  Designed to span the Cipher enum in use in DevicePopManager
  * to allow for inclusion of symmetric cipher definitions and include the name of a MAC algorithm.
@@ -64,4 +66,9 @@ public interface CryptoSuite {
      * @return an AlgorithmParameterSpec if needed, null if not required.
      */
     AlgorithmParameterSpec cryptoSpec(Object... args);
+
+    /**
+     * Performs any extra initialization steps needed on this cipher.
+     */
+    void initialize(Cipher cipher, Object... args);
 }

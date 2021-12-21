@@ -127,7 +127,17 @@ public abstract class KeyStoreAccessor implements IKeyStoreAccessor {
             }
 
             @Override
+            public byte[] encrypt(byte[] plaintext, Object... additionalAuthData) throws ClientException {
+                return new byte[0];
+            }
+
+            @Override
             public byte[] decrypt(byte[] ciphertext) throws ClientException {
+                return decrypt(ciphertext, null);
+            }
+
+            @Override
+            public byte[] decrypt(byte[] ciphertext, byte[] additionalAuthData) throws ClientException {
                 return popManager.decrypt(cipher, ciphertext);
             }
 
@@ -158,6 +168,11 @@ public abstract class KeyStoreAccessor implements IKeyStoreAccessor {
 
             @Override
             public IKeyAccessor generateDerivedKey(byte[] label, byte[] ctx, CryptoSuite suite) throws ClientException {
+                throw new UnsupportedOperationException("This operation is not supported by asymmetric keys");
+            }
+
+            @Override
+            public IKeyAccessor generateDerivedKey(byte[] label, byte[] ctx) throws ClientException {
                 throw new UnsupportedOperationException("This operation is not supported by asymmetric keys");
             }
         };
@@ -197,7 +212,7 @@ public abstract class KeyStoreAccessor implements IKeyStoreAccessor {
      * @throws IOException
      */
     @Override
-    public IKeyAccessor newInstance(@NonNull final CryptoSuite cipher, @NonNull final boolean needRawAccess)
+    public IKeyAccessor newInstance(@NonNull final CryptoSuite cipher, final boolean needRawAccess)
             throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException, ClientException,
                    NoSuchProviderException, InvalidAlgorithmParameterException {
         if (needRawAccess) {

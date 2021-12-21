@@ -20,19 +20,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.platform;
-
-import android.os.Build;
-import android.security.keystore.KeyGenParameterSpec;
-import android.security.keystore.KeyProperties;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
-
-import com.microsoft.identity.common.java.crypto.Algorithm;
-import com.microsoft.identity.common.java.crypto.CryptoSuite;
-import com.microsoft.identity.common.java.crypto.SigningAlgorithm;
-import com.microsoft.identity.common.java.crypto.SymmetricAlgorithm;
+package com.microsoft.identity.common.java.crypto;
 
 import java.nio.ByteBuffer;
 import java.security.KeyStore;
@@ -42,62 +30,56 @@ import javax.crypto.Cipher;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.IvParameterSpec;
 
+import lombok.NonNull;
+
 /**
  * Having generalized Cipher to CryptoSuite, enable us to distinguish symmetric
  * ciphers of interest.
  */
-public enum AndroidSymmetricCipher implements CryptoSuite {
+public enum XplatSymmetricCipher implements CryptoSuite {
 
-    @RequiresApi(Build.VERSION_CODES.JELLY_BEAN)
     AES_GCM_NONE_HMACSHA256(SymmetricAlgorithm.Builder.of("AES/GCM/NoPadding"), "HmacSHA256", 256) {
         @Override
         public AlgorithmParameterSpec cryptoSpec(Object... args) {
-            if (args.length == 1 && args[0] instanceof byte[]) {
-                return new IvParameterSpec((byte[]) args[1]);
-            }
-            if (args.length != 2 && !(args[0] instanceof Integer)) {
+            if (args.length != 2 || !(args[0] instanceof Integer)) {
                 // TODO: log.
                 return null;
             }
             byte[] iv = (byte[]) args[1];
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                return new GCMParameterSpec((Integer) args[0], iv);
-            } else {
-                return new IvParameterSpec(iv);
-            }
+            return new GCMParameterSpec((Integer) args[0], iv);
         }
 
         @Override
         public void initialize(Cipher cipher, Object... args) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                if (args == null) {
-                    return;
-                } else if (args.length == 1 && args[0] instanceof byte[]) {
+                if (args.length == 1 && args[0] instanceof byte[]) {
                     cipher.updateAAD((byte[]) args[0]);
                 } else if (args.length == 1 && args[0] instanceof ByteBuffer) {
                     cipher.updateAAD((ByteBuffer) args[0]);
                 } else if (args.length == 3 && args[0] instanceof byte[] && args[1] instanceof Integer && args[2] instanceof Integer) {
                     cipher.updateAAD((byte[]) args[0], (Integer) args[1], (Integer) args[2]);
                 }
+        }
+    },
+    AES_CBC_NONE_HMACSHA256(SymmetricAlgorithm.Builder.of("AES/CBC/NoPadding"), "HmacSHA256", 256) {
+        @Override
+        public AlgorithmParameterSpec cryptoSpec(Object... args) {
+            if (args.length != 1 || !(args[0] instanceof byte[])) {
+                // TODO: log.
+                return null;
             }
+            byte[] iv = (byte[]) args[0];
+            return new IvParameterSpec(iv);
         }
 
-        public KeyGenParameterSpec.Builder decorateKeyGenerator(@NonNull final KeyGenParameterSpec.Builder spec) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                return spec.setBlockModes(KeyProperties.BLOCK_MODE_GCM)
-                        .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
-                        .setKeySize(keySize());
-            } else {
-                return spec;
-            }
-        }
+        @Override
+        public void initialize(Cipher cipher, Object... args) {  }
     };
 
     SymmetricAlgorithm mValue;
     String mMacString;
     int mKeySize;
 
-    AndroidSymmetricCipher(@NonNull final SymmetricAlgorithm value, @NonNull String macValue, int keySize) {
+    XplatSymmetricCipher(@NonNull final SymmetricAlgorithm value, @NonNull String macValue, int keySize) {
         mValue = value;
         mMacString = macValue;
         mKeySize = keySize;
@@ -132,6 +114,4 @@ public enum AndroidSymmetricCipher implements CryptoSuite {
     public SigningAlgorithm signingAlgorithm() {
         return null;
     }
-
-    public abstract @NonNull KeyGenParameterSpec.Builder decorateKeyGenerator(@NonNull final KeyGenParameterSpec.Builder spec);
 }

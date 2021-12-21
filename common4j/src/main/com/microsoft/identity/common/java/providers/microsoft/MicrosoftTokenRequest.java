@@ -63,7 +63,6 @@ public class MicrosoftTokenRequest extends TokenRequest implements IHasExtraPara
 
     public MicrosoftTokenRequest() {
         super();
-        mClientInfoEnabled = "1";
     }
 
     @SerializedName(CODE_VERIFIER)
@@ -71,7 +70,8 @@ public class MicrosoftTokenRequest extends TokenRequest implements IHasExtraPara
 
     @Expose()
     @SerializedName(CLIENT_INFO)
-    private String mClientInfoEnabled;
+    // We're using an initializer here to insure other builders/constructors also set this value.
+    private String mClientInfoEnabled = "1";
 
     @Expose()
     @SerializedName(CORRELATION_ID)

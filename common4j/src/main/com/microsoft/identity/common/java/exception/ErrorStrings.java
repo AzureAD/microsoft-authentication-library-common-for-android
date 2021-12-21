@@ -51,6 +51,11 @@ public final class ErrorStrings {
     public static final String DEVICE_NETWORK_NOT_AVAILABLE = "device_network_not_available";
 
     /**
+     * No active network is available on the device.
+     */
+    public static final String MISSING_SESSION_KEY = "session_key_not_present_in_response";
+
+    /**
      * Network is available but device is in the doze mode.
      */
     public static final String NO_NETWORK_CONNECTION_POWER_OPTIMIZATION = "device_network_not_available_doze_mode";

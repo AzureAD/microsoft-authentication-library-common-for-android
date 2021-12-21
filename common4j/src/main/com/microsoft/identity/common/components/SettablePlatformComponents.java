@@ -215,7 +215,17 @@ public class SettablePlatformComponents implements IPlatformComponents {
         }
 
         @Override
+        public byte[] encrypt(byte[] plaintext, Object... additionalAuthData) throws ClientException {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
         public byte[] decrypt(byte[] ciphertext) throws ClientException {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public byte[] decrypt(byte[] ciphertext, byte[] additionalAuthData) throws ClientException {
             throw new UnsupportedOperationException();
         }
 
@@ -246,6 +256,11 @@ public class SettablePlatformComponents implements IPlatformComponents {
 
         @Override
         public IKeyAccessor generateDerivedKey(byte[] label, byte[] ctx, CryptoSuite suite) throws ClientException {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public IKeyAccessor generateDerivedKey(byte[] label, byte[] ctx) throws ClientException {
             throw new UnsupportedOperationException();
         }
     };
