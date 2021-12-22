@@ -35,6 +35,7 @@ import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObjectNotFoundException;
 import androidx.test.uiautomator.UiSelector;
 
+import com.microsoft.identity.client.ui.automation.installer.IAppInstaller;
 import com.microsoft.identity.client.ui.automation.powerlift.IPowerLiftIntegratedApp;
 import com.microsoft.identity.client.ui.automation.constants.DeviceAdmin;
 import com.microsoft.identity.client.ui.automation.interaction.PromptHandlerParameters;
@@ -67,6 +68,11 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
 
     public BrokerMicrosoftAuthenticator() {
         super(AUTHENTICATOR_APP_PACKAGE_NAME, AUTHENTICATOR_APP_NAME);
+        localApkFileName = AUTHENTICATOR_APK;
+    }
+
+    public BrokerMicrosoftAuthenticator(@NonNull final IAppInstaller appInstaller) {
+        super(AUTHENTICATOR_APP_PACKAGE_NAME, AUTHENTICATOR_APP_NAME, appInstaller);
         localApkFileName = AUTHENTICATOR_APK;
     }
 

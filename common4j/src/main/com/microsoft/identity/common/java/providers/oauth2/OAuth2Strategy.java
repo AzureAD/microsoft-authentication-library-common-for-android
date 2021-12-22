@@ -29,6 +29,7 @@ import com.microsoft.identity.common.java.BaseAccount;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.java.cache.ICacheRecord;
+import com.microsoft.identity.common.java.commands.parameters.RopcTokenCommandParameters;
 import com.microsoft.identity.common.java.dto.IAccountRecord;
 import com.microsoft.identity.common.java.eststelemetry.EstsTelemetry;
 import com.microsoft.identity.common.java.exception.ClientException;
@@ -436,6 +437,13 @@ public abstract class OAuth2Strategy
      * @return TokenRequest.
      */
     public abstract GenericTokenRequest createRefreshTokenRequest(AbstractAuthenticationScheme authScheme) throws ClientException;
+
+    /**
+     * Abstract method for creating the ropc token request.
+     *
+     * @return TokenRequest.
+     */
+    public abstract GenericTokenRequest createRopcTokenRequest(RopcTokenCommandParameters tokenCommandParameters) throws ClientException;
 
     /**
      * Abstract method for validating the authorization request.  In the case of AAD this is the method

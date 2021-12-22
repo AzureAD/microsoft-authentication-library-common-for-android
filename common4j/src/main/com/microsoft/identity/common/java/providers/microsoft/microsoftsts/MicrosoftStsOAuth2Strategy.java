@@ -26,8 +26,10 @@ import com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeInte
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallenge;
 import com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallengeFactory;
+import com.microsoft.identity.common.java.commands.parameters.RopcTokenCommandParameters;
 import com.microsoft.identity.common.java.crypto.IDevicePopManager;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
+import com.microsoft.identity.common.java.exception.ArgumentException;
 import com.microsoft.identity.common.java.platform.Device;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationResponse;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenErrorResponse;
@@ -438,26 +440,7 @@ public class MicrosoftStsOAuth2Strategy
         }
 
         if (PopAuthenticationSchemeInternal.SCHEME_POP.equals(authScheme.getName())) {
-            // Add a token_type
-            tokenRequest.setTokenType(TokenRequest.TokenType.POP);
-
-            final IDevicePopManager devicePopManager =
-                    mStrategyParameters.getPlatformComponents().getDefaultDevicePopManager();
-
-            // Generate keys if they don't already exist...
-            if (!devicePopManager.asymmetricKeyExists()) {
-                final String thumbprint = devicePopManager.generateAsymmetricKey();
-
-                Logger.verbosePII(
-                        TAG,
-                        "Generated new PoP asymmetric key with thumbprint: "
-                                + thumbprint
-                );
-            }
-
-            final String reqCnf = devicePopManager.getRequestConfirmation();
-            // Set the req_cnf
-            tokenRequest.setRequestConfirmation(reqCnf);
+            throw new UnsupportedOperationException("MSAL Android supports ROPC on Bearer flows only for testing purposes.");
         }
 
         return tokenRequest;
@@ -494,6 +477,41 @@ public class MicrosoftStsOAuth2Strategy
         request.setGrantType(TokenRequest.GrantTypes.REFRESH_TOKEN);
 
         if (PopAuthenticationSchemeInternal.SCHEME_POP.equals(authScheme.getName())) {
+            request.setTokenType(TokenRequest.TokenType.POP);
+
+            final IDevicePopManager devicePopManager =
+                    mStrategyParameters.getPlatformComponents().getDefaultDevicePopManager();
+
+            if (!devicePopManager.asymmetricKeyExists()) {
+                devicePopManager.generateAsymmetricKey();
+            }
+
+            request.setRequestConfirmation(devicePopManager.getRequestConfirmation());
+        }
+
+        return request;
+    }
+
+    @Override
+    public MicrosoftStsTokenRequest createRopcTokenRequest(@NonNull final RopcTokenCommandParameters parameters) throws ClientException {
+        final String methodName = ":createPasswordTokenRequest";
+        Logger.verbose(
+                TAG + methodName,
+                "Creating password token request"
+        );
+
+        final MicrosoftStsRopcTokenRequest request = new MicrosoftStsRopcTokenRequest();
+        request.setGrantType(TokenRequest.GrantTypes.PASSWORD);
+
+        request.setUsername(parameters.getUsername());
+        request.setPassword(parameters.getPassword());
+        request.setClaims(parameters.getClaimsRequestJson());
+        request.setClientId(parameters.getClientId());
+        request.setRedirectUri(parameters.getRedirectUri());
+        request.setScope(StringUtil.join(" ", parameters.getScopes()));
+        setTokenRequestCorrelationId(request);
+
+        if (PopAuthenticationSchemeInternal.SCHEME_POP.equals(parameters.getAuthenticationScheme().getName())) {
             request.setTokenType(TokenRequest.TokenType.POP);
 
             final IDevicePopManager devicePopManager =
@@ -709,13 +727,13 @@ public class MicrosoftStsOAuth2Strategy
         if (!CLIENT_CREDENTIALS.equalsIgnoreCase(request.getGrantType()) &&
                 StringUtil.isNullOrEmpty(response.getIdToken())) {
             clientException = ClientException.TOKENS_MISSING;
-            tokens =  tokens.concat(" id_token");
+            tokens = tokens.concat(" id_token");
         }
 
         if (!CLIENT_CREDENTIALS.equalsIgnoreCase(request.getGrantType()) &&
                 StringUtil.isNullOrEmpty(response.getRefreshToken())) {
             clientException = ClientException.TOKENS_MISSING;
-            tokens =  tokens.concat(" refresh_token");
+            tokens = tokens.concat(" refresh_token");
         }
 
         if (clientException != null) {

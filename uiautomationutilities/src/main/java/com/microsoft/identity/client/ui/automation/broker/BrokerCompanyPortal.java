@@ -31,6 +31,7 @@ import androidx.test.uiautomator.UiObjectNotFoundException;
 import androidx.test.uiautomator.UiSelector;
 
 import com.microsoft.identity.client.ui.automation.TestContext;
+import com.microsoft.identity.client.ui.automation.installer.IAppInstaller;
 import com.microsoft.identity.client.ui.automation.powerlift.IPowerLiftIntegratedApp;
 import com.microsoft.identity.client.ui.automation.constants.DeviceAdmin;
 import com.microsoft.identity.client.ui.automation.device.settings.ISettings;
@@ -67,6 +68,11 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
 
     public BrokerCompanyPortal() {
         super(COMPANY_PORTAL_APP_PACKAGE_NAME, COMPANY_PORTAL_APP_NAME);
+        localApkFileName = COMPANY_PORTAL_APK;
+    }
+
+    public BrokerCompanyPortal(@NonNull final IAppInstaller appInstaller) {
+        super(COMPANY_PORTAL_APP_PACKAGE_NAME, COMPANY_PORTAL_APP_NAME, appInstaller);
         localApkFileName = COMPANY_PORTAL_APK;
     }
 

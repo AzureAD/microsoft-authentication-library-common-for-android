@@ -18,6 +18,11 @@ buildSystem {
     desugar = desugarCode
 }
 
+def common4jVersion = "0.0.+"
+if (project.hasProperty("distCommon4jVersion") && project.distCommon4jVersion != '') {
+    common4jVersion = project.distCommon4jVersion
+}
+
 android {
 
     compileSdkVersion rootProject.ext.compileSdkVersion
@@ -111,7 +116,7 @@ dependencies {
         transitive = false
     }
 
-    distApi("com.microsoft.identity:common4j:0.0.+") {
+    distApi("com.microsoft.identity:common4j:${common4jVersion}") {
         transitive = false
     }
 
@@ -140,6 +145,7 @@ dependencies {
     testImplementation "org.powermock:powermock-classloading-xstream:$rootProject.ext.powerMockVersion"
     testImplementation "org.robolectric:robolectric:$rootProject.ext.robolectricVersion"
     testImplementation "androidx.test:core:$rootProject.ext.androidxTestCoreVersion"
+    testImplementation project(":LabApiUtilities")
 
     testCompileOnly "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
     testAnnotationProcessor "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
