@@ -24,8 +24,7 @@ package com.microsoft.identity.common.java.util.ported;
 
 import com.microsoft.identity.common.java.logging.Logger;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -41,7 +40,7 @@ public enum LocalBroadcaster {
         void onReceive(@NonNull final PropertyBag propertyBag);
     }
 
-    final Map<String, IReceiverCallback> mReceivers = new HashMap<>();
+    final ConcurrentHashMap<String, IReceiverCallback> mReceivers = new ConcurrentHashMap<>();
 
     public void registerCallback(@NonNull final String alias, @NonNull final IReceiverCallback callback){
         final String methodName = ":registerCallback";
