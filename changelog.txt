@@ -61,6 +61,15 @@ V.Next
 - [PATCH] Fix print stack trace for Throwable in Logs (#1556)
 - [PATCH] Support SSO token api (#1543)
 
+Version 3.6.5
+----------
+- [PATCH] Fixing removeAccount method for msal cpp when the realm is empty (#1422)
+
+Version 3.6.4
+----------
+- [PATCH] Fix race condition (#1609)
+- [PATCH] Changes to handle IntuneAppProtectionException in common rather than broker (#1579)
+
 Version 3.6.3
 ----------
 - [PATCH] Add helper method to remove the metadataCache entry (#1593)

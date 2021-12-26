@@ -131,7 +131,7 @@ dependencies {
         transitive = false
     }
 
-    distApi("com.microsoft.identity:common4j:1.0.0-RC5-OneAuthCrash-2") {
+    distApi("com.microsoft.identity:common4j:1.0.0-RC6") {
         transitive = false
     }
 
