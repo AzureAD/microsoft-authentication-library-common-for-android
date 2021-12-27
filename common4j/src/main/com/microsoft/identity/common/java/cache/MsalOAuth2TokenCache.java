@@ -918,6 +918,7 @@ public class MsalOAuth2TokenCache
                 accountRecord.getEnvironment(),
                 IdToken,
                 clientId, // If null, behaves as wildcard
+                null,
                 accountRecord.getRealm(),
                 null, // wildcard (*),
                 null, // not applicable
