@@ -381,7 +381,26 @@ public class MicrosoftStsOAuth2Strategy
         }
 
         if (PopAuthenticationSchemeInternal.SCHEME_POP.equals(authScheme.getName())) {
-            throw new UnsupportedOperationException("MSAL Android supports ROPC on Bearer flows only for testing purposes.");
+            // Add a token_type
+            tokenRequest.setTokenType(TokenRequest.TokenType.POP);
+
+            final IDevicePopManager devicePopManager =
+                    mStrategyParameters.getPlatformComponents().getDefaultDevicePopManager();
+
+            // Generate keys if they don't already exist...
+            if (!devicePopManager.asymmetricKeyExists()) {
+                final String thumbprint = devicePopManager.generateAsymmetricKey();
+
+                Logger.verbosePII(
+                        TAG,
+                        "Generated new PoP asymmetric key with thumbprint: "
+                                + thumbprint
+                );
+            }
+
+            final String reqCnf = devicePopManager.getRequestConfirmation();
+            // Set the req_cnf
+            tokenRequest.setRequestConfirmation(reqCnf);
         }
 
         return tokenRequest;
@@ -453,16 +472,7 @@ public class MicrosoftStsOAuth2Strategy
         setTokenRequestCorrelationId(request);
 
         if (PopAuthenticationSchemeInternal.SCHEME_POP.equals(parameters.getAuthenticationScheme().getName())) {
-            request.setTokenType(TokenRequest.TokenType.POP);
-
-            final IDevicePopManager devicePopManager =
-                    mStrategyParameters.getPlatformComponents().getDefaultDevicePopManager();
-
-            if (!devicePopManager.asymmetricKeyExists()) {
-                devicePopManager.generateAsymmetricKey();
-            }
-
-            request.setRequestConfirmation(devicePopManager.getRequestConfirmation());
+            throw new UnsupportedOperationException("MSAL Android supports ROPC on Bearer flows only for testing purposes.");
         }
 
         return request;
