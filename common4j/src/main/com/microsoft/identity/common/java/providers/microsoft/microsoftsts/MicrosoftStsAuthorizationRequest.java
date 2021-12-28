@@ -175,7 +175,7 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
             return self();
         }
 
-        public MicrosoftStsAuthorizationRequest.Builder setAppliationIdentifier(String appliationIdentifier) {
+        public MicrosoftStsAuthorizationRequest.Builder setApplicationIdentifier(String appliationIdentifier) {
             mApplicationIdentifier = appliationIdentifier;
             return self();
         }

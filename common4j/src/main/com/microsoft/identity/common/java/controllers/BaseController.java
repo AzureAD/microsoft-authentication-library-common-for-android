@@ -282,7 +282,8 @@ public abstract class BaseController {
                             .setAuthority(requestAuthority.getAuthorityURL())
                             .setMultipleCloudAware(requestAuthority.isMultipleCloudsSupported())
                             .setState(interactiveTokenCommandParameters.getPlatformComponents().getStateGenerator().generate())
-                            .setSlice(requestAuthority.mSlice);
+                            .setSlice(requestAuthority.mSlice)
+                            .setApplicationIdentifier(parameters.getApplicationIdentifier());
                 }
             }
 
