@@ -40,6 +40,7 @@ import com.microsoft.identity.common.java.dto.IdTokenRecord;
 import com.microsoft.identity.common.java.dto.PrimaryRefreshTokenRecord;
 import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
+import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings;
 import com.microsoft.identity.common.shadows.ShadowAndroidSdkStorageEncryptionManager;
 
 import org.junit.After;
@@ -661,6 +662,7 @@ public class SharedPreferencesAccountCredentialCacheTest {
         accessToken.setRealm("Foo");
         accessToken.setEnvironment(ENVIRONMENT);
         accessToken.setClientId(CLIENT_ID);
+        accessToken.setApplicationIdentifier(APPLICATION_IDENTIFIER);
         accessToken.setTarget(TARGET);
         accessToken.setCachedAt(CACHED_AT);
         accessToken.setExpiresOn(EXPIRES_ON);
@@ -725,6 +727,7 @@ public class SharedPreferencesAccountCredentialCacheTest {
         accessToken.setRealm("Foo");
         accessToken.setEnvironment(ENVIRONMENT);
         accessToken.setClientId(CLIENT_ID);
+        accessToken.setApplicationIdentifier(APPLICATION_IDENTIFIER);
         accessToken.setTarget(TARGET);
         accessToken.setCachedAt(CACHED_AT);
         accessToken.setExpiresOn(EXPIRES_ON);
@@ -767,6 +770,7 @@ public class SharedPreferencesAccountCredentialCacheTest {
         accessToken.setRealm(REALM);
         accessToken.setEnvironment(ENVIRONMENT);
         accessToken.setClientId(CLIENT_ID);
+        accessToken.setApplicationIdentifier(APPLICATION_IDENTIFIER);
         accessToken.setTarget(TARGET);
         accessToken.setCachedAt(CACHED_AT);
         accessToken.setExpiresOn(EXPIRES_ON);
@@ -816,6 +820,7 @@ public class SharedPreferencesAccountCredentialCacheTest {
         accessToken.setRealm(REALM);
         accessToken.setEnvironment(ENVIRONMENT);
         accessToken.setClientId(CLIENT_ID);
+        accessToken.setApplicationIdentifier(APPLICATION_IDENTIFIER);
         accessToken.setTarget(TARGET);
         accessToken.setCachedAt(CACHED_AT);
         accessToken.setExpiresOn(EXPIRES_ON);
@@ -863,6 +868,7 @@ public class SharedPreferencesAccountCredentialCacheTest {
         accessToken.setRealm(REALM);
         accessToken.setEnvironment(ENVIRONMENT);
         accessToken.setClientId(CLIENT_ID);
+        accessToken.setApplicationIdentifier(APPLICATION_IDENTIFIER);
         accessToken.setTarget(TARGET);
         accessToken.setCachedAt(CACHED_AT);
         accessToken.setExpiresOn(EXPIRES_ON);
@@ -915,6 +921,7 @@ public class SharedPreferencesAccountCredentialCacheTest {
         accessToken.setRealm(REALM);
         accessToken.setEnvironment(ENVIRONMENT);
         accessToken.setClientId(CLIENT_ID);
+        accessToken.setApplicationIdentifier(APPLICATION_IDENTIFIER);
         accessToken.setTarget(TARGET);
         accessToken.setCachedAt(CACHED_AT);
         accessToken.setExpiresOn(EXPIRES_ON);
@@ -969,6 +976,7 @@ public class SharedPreferencesAccountCredentialCacheTest {
         accessToken.setRealm(REALM);
         accessToken.setEnvironment(ENVIRONMENT);
         accessToken.setClientId(CLIENT_ID);
+        accessToken.setApplicationIdentifier(APPLICATION_IDENTIFIER);
         accessToken.setTarget(TARGET);
         accessToken.setCachedAt(CACHED_AT);
         accessToken.setExpiresOn(EXPIRES_ON);
@@ -1016,6 +1024,7 @@ public class SharedPreferencesAccountCredentialCacheTest {
         accessToken.setEnvironment(ENVIRONMENT);
         accessToken.setCredentialType(CredentialType.AccessToken.name());
         accessToken.setClientId(CLIENT_ID);
+        accessToken.setApplicationIdentifier(APPLICATION_IDENTIFIER);
         accessToken.setTarget(TARGET);
 
         // Save the Credentials
@@ -1054,6 +1063,7 @@ public class SharedPreferencesAccountCredentialCacheTest {
         accessToken.setEnvironment(ENVIRONMENT);
         accessToken.setCredentialType(CredentialType.AccessToken.name());
         accessToken.setClientId(CLIENT_ID);
+        accessToken.setApplicationIdentifier(APPLICATION_IDENTIFIER);
         accessToken.setTarget(TARGET);
 
         final AccessTokenRecord accessToken2 = new AccessTokenRecord();
@@ -1065,6 +1075,7 @@ public class SharedPreferencesAccountCredentialCacheTest {
         accessToken2.setEnvironment(ENVIRONMENT);
         accessToken2.setCredentialType(CredentialType.AccessToken.name());
         accessToken2.setClientId(CLIENT_ID);
+        accessToken2.setApplicationIdentifier(APPLICATION_IDENTIFIER);
         accessToken2.setTarget(TARGET);
 
         // Save the Credentials
@@ -1104,6 +1115,7 @@ public class SharedPreferencesAccountCredentialCacheTest {
         accessToken.setEnvironment(ENVIRONMENT);
         accessToken.setCredentialType(CredentialType.AccessToken.name());
         accessToken.setClientId(CLIENT_ID);
+        accessToken.setApplicationIdentifier(APPLICATION_IDENTIFIER);
         accessToken.setTarget(TARGET);
 
         final AccessTokenRecord accessToken2 = new AccessTokenRecord();
@@ -1115,6 +1127,7 @@ public class SharedPreferencesAccountCredentialCacheTest {
         accessToken2.setEnvironment(ENVIRONMENT);
         accessToken2.setCredentialType(CredentialType.AccessToken.name());
         accessToken2.setClientId(CLIENT_ID);
+        accessToken2.setApplicationIdentifier(APPLICATION_IDENTIFIER);
         accessToken2.setTarget("qux");
 
         // Save the Credentials
@@ -1154,6 +1167,7 @@ public class SharedPreferencesAccountCredentialCacheTest {
         accessToken.setEnvironment(ENVIRONMENT);
         accessToken.setCredentialType(CredentialType.AccessToken.name());
         accessToken.setClientId(CLIENT_ID);
+        accessToken.setApplicationIdentifier(APPLICATION_IDENTIFIER);
         accessToken.setTarget(TARGET);
 
         final AccessTokenRecord accessToken2 = new AccessTokenRecord();
@@ -1165,6 +1179,7 @@ public class SharedPreferencesAccountCredentialCacheTest {
         accessToken2.setEnvironment(ENVIRONMENT);
         accessToken2.setCredentialType(CredentialType.AccessToken.name());
         accessToken2.setClientId(CLIENT_ID);
+        accessToken2.setApplicationIdentifier(APPLICATION_IDENTIFIER);
         accessToken2.setTarget("qux");
 
         // Save the Credentials
@@ -1204,6 +1219,7 @@ public class SharedPreferencesAccountCredentialCacheTest {
         accessToken.setEnvironment(ENVIRONMENT);
         accessToken.setCredentialType(CredentialType.AccessToken.name());
         accessToken.setClientId(CLIENT_ID);
+        accessToken.setApplicationIdentifier(APPLICATION_IDENTIFIER);
         accessToken.setTarget(TARGET);
 
         final AccessTokenRecord accessToken2 = new AccessTokenRecord();
@@ -1215,6 +1231,7 @@ public class SharedPreferencesAccountCredentialCacheTest {
         accessToken2.setEnvironment(ENVIRONMENT);
         accessToken2.setCredentialType(CredentialType.AccessToken.name());
         accessToken2.setClientId(CLIENT_ID);
+        accessToken2.setApplicationIdentifier(APPLICATION_IDENTIFIER);
         accessToken2.setTarget(TARGET);
         accessToken2.setRequestedClaims("{\"access_token\":{\"deviceid\":{\"essential\":true}}}");
 
@@ -1255,6 +1272,7 @@ public class SharedPreferencesAccountCredentialCacheTest {
         accessToken.setEnvironment(ENVIRONMENT);
         accessToken.setCredentialType(CredentialType.AccessToken.name());
         accessToken.setClientId(CLIENT_ID);
+        accessToken.setApplicationIdentifier(APPLICATION_IDENTIFIER);
         accessToken.setTarget(TARGET);
 
         final AccessTokenRecord accessToken2 = new AccessTokenRecord();
@@ -1266,6 +1284,7 @@ public class SharedPreferencesAccountCredentialCacheTest {
         accessToken2.setEnvironment(ENVIRONMENT);
         accessToken2.setCredentialType(CredentialType.AccessToken.name());
         accessToken2.setClientId(CLIENT_ID);
+        accessToken2.setApplicationIdentifier(APPLICATION_IDENTIFIER);
         accessToken2.setTarget(TARGET);
         accessToken2.setRequestedClaims("{\"access_token\":{\"deviceid\":{\"essential\":true}}}");
 
@@ -1279,6 +1298,7 @@ public class SharedPreferencesAccountCredentialCacheTest {
                 ENVIRONMENT,
                 CredentialType.AccessToken,
                 CLIENT_ID,
+                APPLICATION_IDENTIFIER,
                 REALM,
                 null,
                 BEARER_AUTHENTICATION_SCHEME.getName(),
@@ -1307,6 +1327,7 @@ public class SharedPreferencesAccountCredentialCacheTest {
         accessToken.setEnvironment(ENVIRONMENT);
         accessToken.setCredentialType(CredentialType.AccessToken.name());
         accessToken.setClientId(CLIENT_ID);
+        accessToken.setApplicationIdentifier(APPLICATION_IDENTIFIER);
         accessToken.setTarget(TARGET);
         accessToken.setRequestedClaims("{\"access_token\":{\"deviceid\":{\"essential\":false}}}");
 
@@ -1319,6 +1340,7 @@ public class SharedPreferencesAccountCredentialCacheTest {
         accessToken2.setEnvironment(ENVIRONMENT);
         accessToken2.setCredentialType(CredentialType.AccessToken.name());
         accessToken2.setClientId(CLIENT_ID);
+        accessToken2.setApplicationIdentifier(APPLICATION_IDENTIFIER);
         accessToken2.setTarget(TARGET);
         accessToken2.setRequestedClaims("{\"access_token\":{\"deviceid\":{\"essential\":true}}}");
 
@@ -1332,6 +1354,7 @@ public class SharedPreferencesAccountCredentialCacheTest {
                 ENVIRONMENT,
                 CredentialType.AccessToken,
                 CLIENT_ID,
+                APPLICATION_IDENTIFIER,
                 REALM,
                 null,
                 BEARER_AUTHENTICATION_SCHEME.getName(),
@@ -1361,6 +1384,7 @@ public class SharedPreferencesAccountCredentialCacheTest {
         accessToken.setEnvironment(ENVIRONMENT);
         accessToken.setCredentialType(CredentialType.AccessToken.name());
         accessToken.setClientId(CLIENT_ID);
+        accessToken.setApplicationIdentifier(APPLICATION_IDENTIFIER);
         accessToken.setTarget(TARGET);
 
         final AccessTokenRecord accessToken2 = new AccessTokenRecord();
@@ -1372,6 +1396,7 @@ public class SharedPreferencesAccountCredentialCacheTest {
         accessToken2.setEnvironment(ENVIRONMENT);
         accessToken2.setCredentialType(CredentialType.AccessToken.name());
         accessToken2.setClientId(CLIENT_ID);
+        accessToken2.setApplicationIdentifier(APPLICATION_IDENTIFIER);
         accessToken2.setTarget(TARGET);
 
         // Save the Credentials
@@ -1408,6 +1433,7 @@ public class SharedPreferencesAccountCredentialCacheTest {
         accessToken.setRealm("Foo");
         accessToken.setEnvironment(ENVIRONMENT);
         accessToken.setClientId(CLIENT_ID);
+        accessToken.setApplicationIdentifier(APPLICATION_IDENTIFIER);
         accessToken.setTarget(TARGET);
         accessToken.setCachedAt(CACHED_AT);
         accessToken.setExpiresOn(EXPIRES_ON);
@@ -1419,6 +1445,7 @@ public class SharedPreferencesAccountCredentialCacheTest {
         accessToken2.setRealm("Bar");
         accessToken2.setEnvironment(ENVIRONMENT);
         accessToken2.setClientId(CLIENT_ID);
+        accessToken2.setApplicationIdentifier(APPLICATION_IDENTIFIER);
         accessToken2.setTarget("qux");
         accessToken2.setCachedAt(CACHED_AT);
         accessToken2.setExpiresOn(EXPIRES_ON);
@@ -1461,6 +1488,7 @@ public class SharedPreferencesAccountCredentialCacheTest {
         accessToken.setEnvironment(ENVIRONMENT);
         accessToken.setCredentialType(CredentialType.AccessToken.name());
         accessToken.setClientId(CLIENT_ID);
+        accessToken.setApplicationIdentifier(APPLICATION_IDENTIFIER);
         accessToken.setTarget(TARGET);
 
         final AccessTokenRecord accessToken2 = new AccessTokenRecord();
@@ -1472,6 +1500,7 @@ public class SharedPreferencesAccountCredentialCacheTest {
         accessToken2.setEnvironment(ENVIRONMENT);
         accessToken2.setCredentialType(CredentialType.AccessToken.name());
         accessToken2.setClientId(CLIENT_ID);
+        accessToken2.setApplicationIdentifier(APPLICATION_IDENTIFIER);
         accessToken2.setTarget(TARGET);
 
         // Save the Credentials
@@ -1556,7 +1585,7 @@ public class SharedPreferencesAccountCredentialCacheTest {
                 ENVIRONMENT,
                 CredentialType.PrimaryRefreshToken,
                 "another-client-id",
-                APPLICATION_IDENTIFIER,
+                null,
                 null,
                 null,
                 null

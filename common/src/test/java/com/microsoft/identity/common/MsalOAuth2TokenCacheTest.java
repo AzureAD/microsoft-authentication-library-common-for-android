@@ -648,6 +648,7 @@ public class MsalOAuth2TokenCacheTest {
         accessTokenToClear.setEnvironment(ENVIRONMENT);
         accessTokenToClear.setCredentialType(AccessToken.name());
         accessTokenToClear.setClientId(CLIENT_ID);
+        accessTokenToClear.setApplicationIdentifier(APPLICATION_IDENTIFIER);
         accessTokenToClear.setTarget(TARGET);
 
         // Save this dummy AT
