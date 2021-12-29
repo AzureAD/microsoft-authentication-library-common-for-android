@@ -175,6 +175,7 @@ public class LocalMsalControllerTest {
         return SilentTokenCommandParameters.builder()
                 .authority(Authority.getAuthorityFromAuthorityUrl(AUTHORITY_URL))
                 .clientId(CLIENT_ID)
+                .applicationIdentifier(APPLICATION_IDENTIFIER)
                 .correlationId(UUID.randomUUID().toString())
                 .redirectUri(REDIRECT_URI)
                 .platformComponents(mPlatformComponents)
