@@ -49,6 +49,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static com.microsoft.identity.common.java.cache.CacheKeyValueDelegate.CacheKeyReplacements.APPLICATION_IDENTIFIER;
 import static com.microsoft.identity.common.java.cache.CacheKeyValueDelegate.CacheKeyReplacements.AUTH_SCHEME;
 import static com.microsoft.identity.common.java.cache.CacheKeyValueDelegate.CacheKeyReplacements.CLIENT_ID;
 import static com.microsoft.identity.common.java.cache.CacheKeyValueDelegate.CacheKeyReplacements.CREDENTIAL_TYPE;
@@ -89,6 +90,7 @@ public class CacheKeyValueDelegate implements ICacheKeyValueDelegate {
         static final String REALM = "<realm>";
         static final String CREDENTIAL_TYPE = "<credential_type>";
         static final String CLIENT_ID = "<client_id>";
+        static final String APPLICATION_IDENTIFIER = "<application_identifier";
         static final String TARGET = "<target>";
         static final String AUTH_SCHEME = "<auth_scheme>";
         static final String REQUESTED_CLAIMS = "<requested_claims>";
@@ -165,6 +167,11 @@ public class CacheKeyValueDelegate implements ICacheKeyValueDelegate {
             final AccessTokenRecord accessToken = (AccessTokenRecord) credential;
             cacheKey = cacheKey.replace(REALM, StringUtil.sanitizeNullAndLowercaseAndTrim(accessToken.getRealm()));
             cacheKey = cacheKey.replace(TARGET, StringUtil.sanitizeNullAndLowercaseAndTrim(accessToken.getTarget()));
+
+            if (!StringUtil.isNullOrEmpty(accessToken.getApplicationIdentifier())) {
+                cacheKey += CACHE_VALUE_SEPARATOR + APPLICATION_IDENTIFIER;
+                cacheKey = cacheKey.replace(APPLICATION_IDENTIFIER, StringUtil.sanitizeNullAndLowercaseAndTrim(accessToken.getApplicationIdentifier()));
+            }
 
             if (TokenRequest.TokenType.POP.equalsIgnoreCase(accessToken.getAccessTokenType())) {
                 cacheKey += CACHE_VALUE_SEPARATOR + AUTH_SCHEME;

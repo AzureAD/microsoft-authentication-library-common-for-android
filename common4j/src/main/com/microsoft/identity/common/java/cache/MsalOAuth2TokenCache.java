@@ -1676,6 +1676,7 @@ public class MsalOAuth2TokenCache
                 referenceToken.getEnvironment(),
                 CredentialType.fromString(referenceToken.getCredentialType()),
                 referenceToken.getClientId(),
+                referenceToken.getApplicationIdentifier(),
                 referenceToken.getRealm(),
                 null, // Wildcard (*)
                 referenceToken.getAccessTokenType(),
