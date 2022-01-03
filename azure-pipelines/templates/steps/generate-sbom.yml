@@ -1,0 +1,37 @@
+# File: azure-pipelines\templates\steps\generate-sbom.yml
+# Description: Tasks to generate SBOM manifest file
+# Parameters:
+#  'project' name of the project to generate SBOM
+#  'buildDropPath' path to folder for project's build artifacts
+#  'configuration' gradle configuration to lock dependencies for
+#  'artifactName' artifact name to publish dependencies lockfile
+
+parameters:
+- name: project
+- name: buildDropPath
+- name: configuration
+- name: artifactName
+  default: dependencies
+
+steps:
+- task: Gradle@3
+  displayName: generate dependencies lockfile
+  inputs:
+    tasks: ${{ parameters.project }}:dependencies --configuration=${{ parameters.configuration }} --write-locks
+- task: ComponentGovernanceComponentDetection@0
+  inputs:
+    scanType: 'LogOnly'
+    useDefaultDetectors: false
+    detectorsToRun: 'Maven'
+    verbosity: 'Verbose'
+    sourceScanPath: $(Build.SourcesDirectory)/${{ parameters.project }}/gradle
+    alertWarningLevel: 'High'
+- task: ManifestGeneratorTask@0
+  displayName: 'Generate SBOM manifest file'
+  inputs:
+    BuildDropPath: ${{ parameters.buildDropPath }}
+- task: PublishPipelineArtifact@1
+  displayName: 'Publish Artifact: dependencies lockfile'
+  inputs:
+    targetPath: $(Build.SourcesDirectory)/${{ parameters.project }}/gradle/dependency-locks
+    ArtifactName: ${{ parameters.artifactName }}
