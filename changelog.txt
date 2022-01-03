@@ -1,3 +1,7 @@
+Version 3.6.7
+----------
+- [PATCH] Add helper method to fix account id missing in msal get account (#1641)
+
 Version 3.6.6
 ----------
 - [PATCH] Remove unsafe key thumbprint generator (#1655)
