@@ -25,6 +25,9 @@ package com.microsoft.identity.common.java.controllers;
 import static com.microsoft.identity.common.java.authorities.Authority.B2C;
 
 
+import com.microsoft.identity.common.java.commands.parameters.IInteractiveTokenCommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.ISilentTokenCommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.ITokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.RopcTokenCommandParameters;
 import com.microsoft.identity.common.java.foci.FociQueryUtilities;
 import com.microsoft.identity.common.java.cache.MsalOAuth2TokenCache;
@@ -34,14 +37,12 @@ import com.microsoft.identity.common.java.commands.parameters.GenerateShrCommand
 import com.microsoft.identity.common.java.commands.parameters.RemoveAccountCommandParameters;
 import com.microsoft.identity.common.java.constants.OAuth2ErrorCode;
 import com.microsoft.identity.common.java.constants.OAuth2SubErrorCode;
-import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsRopcTokenRequest;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters;
 import com.microsoft.identity.common.java.result.AcquireTokenResult;
 import com.microsoft.identity.common.java.result.GenerateShrResult;
 import com.microsoft.identity.common.java.result.LocalAuthenticationResult;
 import com.microsoft.identity.common.java.telemetry.Telemetry;
 import com.microsoft.identity.common.java.providers.oauth2.IResult;
-import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters;
 import com.microsoft.identity.common.java.telemetry.events.CacheEndEvent;
 import com.microsoft.identity.common.java.AuthenticationConstants;
 import com.microsoft.identity.common.java.WarningType;
@@ -254,7 +255,7 @@ public abstract class BaseController {
     //Suppressing rawtype warnings due to the generic type Builder
     @SuppressWarnings(WarningType.rawtype_warning)
     protected final AuthorizationRequest.Builder initializeAuthorizationRequestBuilder(@NonNull final AuthorizationRequest.Builder builder,
-                                                                                       @NonNull final TokenCommandParameters parameters) {
+                                                                                       @NonNull final ITokenCommandParameters parameters) {
         UUID correlationId = null;
 
         try {
@@ -325,7 +326,7 @@ public abstract class BaseController {
 
     // Suppressing unchecked warning as the generic type was not provided during constructing builder object.
     @SuppressWarnings(WarningType.unchecked_warning)
-    private void setBuilderProperties(@SuppressWarnings(WarningType.rawtype_warning) @NonNull AuthorizationRequest.Builder builder, @NonNull TokenCommandParameters parameters, InteractiveTokenCommandParameters interactiveTokenCommandParameters, HashMap<String, String> completeRequestHeaders) {
+    private void setBuilderProperties(@SuppressWarnings(WarningType.rawtype_warning) @NonNull AuthorizationRequest.Builder builder, @NonNull ITokenCommandParameters parameters, InteractiveTokenCommandParameters interactiveTokenCommandParameters, HashMap<String, String> completeRequestHeaders) {
         builder.setExtraQueryParams(
                 interactiveTokenCommandParameters.getExtraQueryStringParameters()
         ).setClaims(
@@ -358,7 +359,7 @@ public abstract class BaseController {
     // Suppressing rawtype warnings due to the generic type AuthorizationRequest, OAuth2Strategy and Builder
     @SuppressWarnings(WarningType.rawtype_warning)
     protected AuthorizationRequest getAuthorizationRequest(@NonNull final OAuth2Strategy strategy,
-                                                           @NonNull final TokenCommandParameters parameters) {
+                                                           @NonNull final ITokenCommandParameters parameters) {
         final AuthorizationRequest.Builder builder = strategy.createAuthorizationRequestBuilder(parameters.getAccount());
         initializeAuthorizationRequestBuilder(builder, parameters);
         return builder.build();
@@ -367,7 +368,7 @@ public abstract class BaseController {
     protected TokenResult performTokenRequest(@SuppressWarnings(WarningType.rawtype_warning) @NonNull final OAuth2Strategy strategy,
                                               @SuppressWarnings(WarningType.rawtype_warning) @NonNull final AuthorizationRequest request,
                                               @NonNull final AuthorizationResponse response,
-                                              @NonNull final InteractiveTokenCommandParameters parameters)
+                                              final IInteractiveTokenCommandParameters parameters)
             throws IOException, ClientException {
         final String methodName = ":performTokenRequest";
 
@@ -401,7 +402,7 @@ public abstract class BaseController {
         return tokenResult;
     }
 
-    protected void renewAccessToken(@NonNull final SilentTokenCommandParameters parameters,
+    protected void renewAccessToken(@NonNull final ISilentTokenCommandParameters parameters,
                                     @NonNull final AcquireTokenResult acquireTokenSilentResult,
                                     @SuppressWarnings(WarningType.rawtype_warning) @NonNull final OAuth2TokenCache tokenCache,
                                     @SuppressWarnings(WarningType.rawtype_warning) @NonNull final OAuth2Strategy strategy,
@@ -423,6 +424,10 @@ public abstract class BaseController {
                 parameters
         );
 
+        persistResult(parameters, acquireTokenSilentResult, tokenCache, strategy, cacheRecord, methodName, tokenResult);
+    }
+
+    protected void persistResult(ISilentTokenCommandParameters parameters, AcquireTokenResult acquireTokenSilentResult, OAuth2TokenCache tokenCache, OAuth2Strategy strategy, ICacheRecord cacheRecord, String methodName, TokenResult tokenResult) throws ClientException, ServiceException {
         acquireTokenSilentResult.setTokenResult(tokenResult);
 
         ResultUtil.logResult(TAG + methodName, tokenResult);
@@ -703,7 +708,7 @@ public abstract class BaseController {
     protected TokenResult performSilentTokenRequest(
             @SuppressWarnings(WarningType.rawtype_warning) @NonNull final OAuth2Strategy strategy,
             @NonNull final RefreshTokenRecord refreshToken,
-            @NonNull final SilentTokenCommandParameters parameters)
+            @NonNull final ISilentTokenCommandParameters parameters)
             throws ClientException, IOException {
         final String methodName = ":performSilentTokenRequest";
 

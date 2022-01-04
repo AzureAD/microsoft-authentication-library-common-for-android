@@ -20,19 +20,26 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java.strategies;
+package com.microsoft.identity.common.java.commands.parameters;
 
-import com.microsoft.identity.common.java.WarningType;
-import com.microsoft.identity.common.java.commands.parameters.IInteractiveTokenCommandParameters;
-import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCommandParameters;
-import com.microsoft.identity.common.java.providers.oauth2.IAuthorizationStrategy;
+import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 
-import lombok.NonNull;
+public interface IBrokerCommandParameters {
+    String getCallerPackageName();
 
-// Suppressing rawtype warnings due to the generic types IAuthorizationStrategy
-@SuppressWarnings(WarningType.rawtype_warning)
-public interface IAuthorizationStrategyFactory<GenericAuthorizationStrategy extends IAuthorizationStrategy> {
+    int getCallerUid();
 
-    GenericAuthorizationStrategy getAuthorizationStrategy(
-            @NonNull final IInteractiveTokenCommandParameters parameters);
+    String getCallerAppVersion();
+
+    String getBrokerVersion();
+
+    com.microsoft.identity.common.java.broker.IBrokerAccount getBrokerAccount();
+
+    String getHomeAccountId();
+
+    String getLocalAccountId();
+
+    String getNegotiatedBrokerProtocolVersion();
+
+    IPlatformComponents getPlatformComponents();
 }

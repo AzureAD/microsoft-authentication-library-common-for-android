@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.commands.parameters;
 
+import com.microsoft.identity.common.java.broker.IBrokerAccount;
 import com.microsoft.identity.common.java.request.BrokerRequestType;
 import com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache;
 import com.microsoft.identity.common.java.exception.ArgumentException;
@@ -37,7 +38,7 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder(toBuilder = true)
 @EqualsAndHashCode(callSuper = true)
 public class BrokerInteractiveTokenCommandParameters extends InteractiveTokenCommandParameters
-          implements IHasExtraParameters {
+          implements IHasExtraParameters, IBrokerTokenCommandParameters, IInteractiveTokenCommandParameters {
 
     private final String callerPackageName;
     private final int callerUid;
@@ -120,5 +121,20 @@ public class BrokerInteractiveTokenCommandParameters extends InteractiveTokenCom
     @Override
     public void setExtraParameters(Iterable<Map.Entry<String, String>> params) {
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public IBrokerAccount getBrokerAccount() {
+        return null;
+    }
+
+    @Override
+    public String getHomeAccountId() {
+        return null;
+    }
+
+    @Override
+    public String getLocalAccountId() {
+        return null;
     }
 }

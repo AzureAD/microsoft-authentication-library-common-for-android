@@ -20,19 +20,28 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java.strategies;
+package com.microsoft.identity.common.java.commands.parameters;
 
-import com.microsoft.identity.common.java.WarningType;
-import com.microsoft.identity.common.java.commands.parameters.IInteractiveTokenCommandParameters;
-import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCommandParameters;
-import com.microsoft.identity.common.java.providers.oauth2.IAuthorizationStrategy;
+import com.microsoft.identity.common.java.exception.ArgumentException;
 
-import lombok.NonNull;
+import java.util.Set;
 
-// Suppressing rawtype warnings due to the generic types IAuthorizationStrategy
-@SuppressWarnings(WarningType.rawtype_warning)
-public interface IAuthorizationStrategyFactory<GenericAuthorizationStrategy extends IAuthorizationStrategy> {
+public interface ITokenCommandParameters extends ICommandParameters {
+    Set<String> getScopes();
 
-    GenericAuthorizationStrategy getAuthorizationStrategy(
-            @NonNull final IInteractiveTokenCommandParameters parameters);
+    void validate() throws ArgumentException;
+
+    com.microsoft.identity.common.java.dto.IAccountRecord getAccount();
+
+    com.microsoft.identity.common.java.authorities.Authority getAuthority();
+
+    String getClaimsRequestJson();
+
+    com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme getAuthenticationScheme();
+
+    boolean isForceRefresh();
+
+    String getLoginHint();
+
+    java.util.List<java.util.Map.Entry<String, String>> getExtraOptions();
 }

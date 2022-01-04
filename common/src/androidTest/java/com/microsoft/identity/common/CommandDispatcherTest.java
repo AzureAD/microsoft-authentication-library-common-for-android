@@ -28,6 +28,7 @@ import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
+import com.microsoft.identity.common.java.commands.parameters.ISilentTokenCommandParameters;
 import com.microsoft.identity.common.java.result.ILocalAuthenticationResult;
 import com.microsoft.identity.common.java.result.LocalAuthenticationResult;
 import com.microsoft.identity.common.java.cache.CacheRecord;
@@ -890,7 +891,7 @@ public class CommandDispatcherTest {
             }
 
             @Override
-            public TokenResult renewAccessToken(@NonNull SilentTokenCommandParameters parameters) throws ServiceException {
+            public TokenResult renewAccessToken(@NonNull ISilentTokenCommandParameters parameters) throws ServiceException {
                 if(!throwRenewAccessTokenError) {
                     controllerLatch.countDown();
                     renewAccessTokenCallCount.getAndIncrement();

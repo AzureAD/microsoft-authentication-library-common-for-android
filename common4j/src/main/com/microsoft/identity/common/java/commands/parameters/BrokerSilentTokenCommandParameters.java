@@ -34,7 +34,7 @@ import lombok.experimental.SuperBuilder;
 @Getter
 @SuperBuilder(toBuilder = true)
 @EqualsAndHashCode(callSuper = true)
-public class BrokerSilentTokenCommandParameters extends SilentTokenCommandParameters {
+public class BrokerSilentTokenCommandParameters extends SilentTokenCommandParameters implements IBrokerTokenCommandParameters, ISilentTokenCommandParameters {
 
     private final String callerPackageName;
     private final int callerUid;

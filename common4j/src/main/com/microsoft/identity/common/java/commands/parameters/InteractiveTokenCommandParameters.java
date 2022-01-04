@@ -39,7 +39,7 @@ import lombok.experimental.SuperBuilder;
 @Getter
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder(toBuilder = true)
-public class InteractiveTokenCommandParameters extends TokenCommandParameters {
+public class InteractiveTokenCommandParameters extends TokenCommandParameters implements IInteractiveTokenCommandParameters {
 
     private final transient List<BrowserDescriptor> browserSafeList;
 
@@ -66,18 +66,22 @@ public class InteractiveTokenCommandParameters extends TokenCommandParameters {
 
     private final List<String> extraScopesToConsent;
 
+    @Override
     public boolean getHandleNullTaskAffinity(){
         return handleNullTaskAffinity;
     }
 
+    @Override
     public List<Map.Entry<String, String>> getExtraQueryStringParameters() {
         return this.extraQueryStringParameters == null ? null : new ArrayList<>(this.extraQueryStringParameters);
     }
 
+    @Override
     public List<String> getExtraScopesToConsent() {
         return this.extraScopesToConsent == null ? null : new ArrayList<>(this.extraScopesToConsent);
     }
 
+    @Override
     public List<BrowserDescriptor> getBrowserSafeList() {
         return this.browserSafeList == null ? null : new ArrayList<>(this.browserSafeList);
     }

@@ -25,6 +25,7 @@ package com.microsoft.identity.common.components;
 import com.microsoft.identity.common.java.cache.IMultiTypeNameValueStorage;
 import com.microsoft.identity.common.java.cache.MapBackedPreferencesManager;
 import com.microsoft.identity.common.java.commands.ICommand;
+import com.microsoft.identity.common.java.commands.parameters.IInteractiveTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCommandParameters;
 import com.microsoft.identity.common.java.crypto.CryptoSuite;
 import com.microsoft.identity.common.java.crypto.IKeyStoreAccessor;
@@ -417,7 +418,7 @@ public class SettablePlatformComponents implements IPlatformComponents {
     @Builder.Default
     private final IAuthorizationStrategyFactory mAuthorizationStrategyFactory = new IAuthorizationStrategyFactory() {
         @Override
-        public IAuthorizationStrategy getAuthorizationStrategy(@NonNull InteractiveTokenCommandParameters parameters) {
+        public IAuthorizationStrategy getAuthorizationStrategy(@NonNull IInteractiveTokenCommandParameters parameters) {
             throw new UnsupportedOperationException();
         }
     };

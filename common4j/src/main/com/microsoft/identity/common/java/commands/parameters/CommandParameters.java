@@ -43,7 +43,7 @@ import lombok.experimental.SuperBuilder;
 @Getter
 @EqualsAndHashCode
 @SuperBuilder(toBuilder = true)
-public class CommandParameters {
+public class CommandParameters implements ICommandParameters {
 
     @NonNull
     @EqualsAndHashCode.Exclude
