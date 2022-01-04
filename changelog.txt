@@ -64,6 +64,7 @@ V.Next
 - [PATCH] Support SSO token api (#1543)
 - [MINOR] Add flighting parameters to commmandParameters (#1562)
 - [MINOR] Hook telemetry to LocalAuthenticationResult and BaseException (#1636)
+- [PATCH] Fix accidental code change that disabled PoP for auth code grant flow (#1661)
 
 Version 3.6.3
 ----------
