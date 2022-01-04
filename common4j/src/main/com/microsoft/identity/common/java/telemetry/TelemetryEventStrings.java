@@ -80,36 +80,41 @@ public class TelemetryEventStrings {
         public static final String EVENT_NAME = EVENT_PREFIX + "event_name";
         public static final String EVENT_TYPE = EVENT_PREFIX + "event_type";
         public static final String AUTHORITY_TYPE = EVENT_PREFIX + "authority_type";
-        public static final String AUTHORITY_NAME = EVENT_PREFIX + "authority_name"; //adal
+        public static final String AUTHORITY_NAME = EVENT_PREFIX + "authority_name"; // adal
         public static final String AUTHENTICATION_SCHEME = EVENT_PREFIX + "authentication_scheme";
-        public static final String AUTHORITY_VALIDATION_STATUS = EVENT_PREFIX + "authority_validation_status";
-        public static final String EXTENDED_EXPIRES_ON_SETTING = EVENT_PREFIX + "extended_expires_on_setting";
+        public static final String AUTHORITY_VALIDATION_STATUS =
+                EVENT_PREFIX + "authority_validation_status";
+        public static final String EXTENDED_EXPIRES_ON_SETTING =
+                EVENT_PREFIX + "extended_expires_on_setting";
         public static final String PROMPT_BEHAVIOR = EVENT_PREFIX + "prompt_behavior";
         public static final String IDP_NAME = EVENT_PREFIX + "idp";
         public static final String TENANT_ID = EVENT_PREFIX + "tenant_id";
         public static final String USER_ID = EVENT_PREFIX + "user_id";
-        public static final String OCCUR_TIME = EVENT_PREFIX + "occur_time"; //msal only
+        public static final String OCCUR_TIME = EVENT_PREFIX + "occur_time"; // msal only
         public static final String START_TIME = EVENT_PREFIX + "start_time";
         public static final String END_TIME = EVENT_PREFIX + "stop_time";
         public static final String RESPONSE_TIME = "response_time";
-        public static final String NETWORK_CONNECTION = EVENT_PREFIX + "network_connection"; //msal only
-        public static final String POWER_OPTIMIZATION = EVENT_PREFIX + "power_optimization"; //msal only
-        public static final String IS_FORCE_PROMPT = EVENT_PREFIX + "force_prompt"; //msal only
-        public static final String IS_FORCE_REFRESH = EVENT_PREFIX + "force_refresh"; //msal only
-        public static final String SDK_NAME = EVENT_PREFIX + "sdk_name"; //msal only
-        public static final String SDK_VERSION = EVENT_PREFIX + "sdk_version"; //msal only
+        public static final String NETWORK_CONNECTION =
+                EVENT_PREFIX + "network_connection"; // msal only
+        public static final String POWER_OPTIMIZATION =
+                EVENT_PREFIX + "power_optimization"; // msal only
+        public static final String IS_FORCE_PROMPT = EVENT_PREFIX + "force_prompt"; // msal only
+        public static final String IS_FORCE_REFRESH = EVENT_PREFIX + "force_refresh"; // msal only
+        public static final String SDK_NAME = EVENT_PREFIX + "sdk_name"; // msal only
+        public static final String SDK_VERSION = EVENT_PREFIX + "sdk_version"; // msal only
         public static final String LOGIN_HINT = EVENT_PREFIX + "login_hint";
-        public static final String CLAIM_REQUEST = EVENT_PREFIX + "claim_request"; //msal only
-        public static final String REDIRECT_URI = EVENT_PREFIX + "redirect_uri"; //msal only
-        public static final String SCOPE_SIZE = EVENT_PREFIX + "scope_size"; //msal only
-        public static final String SCOPE = EVENT_PREFIX + "scope_value";//msal only
+        public static final String CLAIM_REQUEST = EVENT_PREFIX + "claim_request"; // msal only
+        public static final String REDIRECT_URI = EVENT_PREFIX + "redirect_uri"; // msal only
+        public static final String SCOPE_SIZE = EVENT_PREFIX + "scope_size"; // msal only
+        public static final String SCOPE = EVENT_PREFIX + "scope_value"; // msal only
         public static final String NTLM_HANDLED = EVENT_PREFIX + "ntlm";
         public static final String UI_EVENT_COUNT = EVENT_PREFIX + "ui_event_count";
         public static final String CACHE_EVENT_COUNT = EVENT_PREFIX + "cache_event_count";
         public static final String HTTP_EVENT_COUNT = EVENT_PREFIX + "http_event_count";
         public static final String BROKER_APP = EVENT_PREFIX + "broker_app";
         public static final String BROKER_VERSION = EVENT_PREFIX + "broker_version";
-        public static final String BROKER_PROTOCOL_VERSION = EVENT_PREFIX + "broker_protocol_version"; //msal only
+        public static final String BROKER_PROTOCOL_VERSION =
+                EVENT_PREFIX + "broker_protocol_version"; // msal only
         public static final String BROKER_APP_USED = EVENT_PREFIX + "broker_app_used";
         public static final String CLIENT_ID = EVENT_PREFIX + "client_id";
         public static final String API_ID = EVENT_PREFIX + "api_id";
@@ -118,17 +123,18 @@ public class TelemetryEventStrings {
         public static final String IS_AT = EVENT_PREFIX + "is_at";
         public static final String IS_MRRT = EVENT_PREFIX + "is_mrrt";
         public static final String IS_FRT = EVENT_PREFIX + "is_frt";
-        public static final String RT_STATUS = EVENT_PREFIX + "rt_status";  //msal only
-        public static final String AT_STATUS = EVENT_PREFIX + "at_status";  //msal only
-        public static final String ID_TOKEN_STATUS = EVENT_PREFIX + "id_token_status";  //msal only
+        public static final String RT_STATUS = EVENT_PREFIX + "rt_status"; // msal only
+        public static final String AT_STATUS = EVENT_PREFIX + "at_status"; // msal only
+        public static final String ID_TOKEN_STATUS = EVENT_PREFIX + "id_token_status"; // msal only
         public static final String V1_ID_TOKEN_STATUS = EVENT_PREFIX + "v1_id_token_status";
         public static final String ACCOUNT_STATUS = EVENT_PREFIX + "account_status";
-        public static final String MRRT_STATUS = EVENT_PREFIX + "mrrt_status"; //msal only
-        public static final String FRT_STATUS = EVENT_PREFIX + "frt_status"; //msal only
+        public static final String MRRT_STATUS = EVENT_PREFIX + "mrrt_status"; // msal only
+        public static final String FRT_STATUS = EVENT_PREFIX + "frt_status"; // msal only
         public static final String CORRELATION_ID = EVENT_PREFIX + "correlation_id";
         public static final String ERROR_CODE = EVENT_PREFIX + "api_error_code";
-        public static final String ERROR_DESCRIPTION = EVENT_PREFIX + "error_description"; //msal only
-        public static final String ERROR_DOMAIN = EVENT_PREFIX + "error_domain"; //msal only
+        public static final String ERROR_DESCRIPTION =
+                EVENT_PREFIX + "error_description"; // msal only
+        public static final String ERROR_DOMAIN = EVENT_PREFIX + "error_domain"; // msal only
         public static final String HTTP_METHOD = EVENT_PREFIX + "method";
         public static final String HTTP_PATH = EVENT_PREFIX + "http_path";
         public static final String HTTP_REQUEST_ID_HEADER = EVENT_PREFIX + "x_ms_request_id";
@@ -136,24 +142,25 @@ public class TelemetryEventStrings {
         public static final String OAUTH_ERROR_CODE = EVENT_PREFIX + "oauth_error_code";
         public static final String REQUEST_QUERY_PARAMS = EVENT_PREFIX + "query_params";
         public static final String USER_AGENT = EVENT_PREFIX + "user_agent";
-        public static final String HTTP_ERROR_DOMAIN = EVENT_PREFIX + "http_error_domain"; //msal only
-        public static final String AUTHORITY = EVENT_PREFIX +"authority";
-        public static final String GRANT_TYPE = EVENT_PREFIX +"grant_type"; //msal only
-        public static final String REQUEST_CODE = EVENT_PREFIX +"request_code"; //msal only
-        public static final String RESULT_CODE = EVENT_PREFIX +"result_code"; //msal only
-        public static final String USER_CANCEL = EVENT_PREFIX +"user_cancel";
+        public static final String HTTP_ERROR_DOMAIN =
+                EVENT_PREFIX + "http_error_domain"; // msal only
+        public static final String AUTHORITY = EVENT_PREFIX + "authority";
+        public static final String GRANT_TYPE = EVENT_PREFIX + "grant_type"; // msal only
+        public static final String REQUEST_CODE = EVENT_PREFIX + "request_code"; // msal only
+        public static final String RESULT_CODE = EVENT_PREFIX + "result_code"; // msal only
+        public static final String USER_CANCEL = EVENT_PREFIX + "user_cancel";
         public static final String UI_VISIBLE = EVENT_PREFIX + "ui_visible";
-        public static final String UI_CANCELLED = EVENT_PREFIX +"ui_cancelled"; //msal only
-        public static final String UI_COMPLETE = EVENT_PREFIX +"ui_complete"; //msal only
+        public static final String UI_CANCELLED = EVENT_PREFIX + "ui_cancelled"; // msal only
+        public static final String UI_COMPLETE = EVENT_PREFIX + "ui_complete"; // msal only
         public static final String SERVER_ERROR_CODE = EVENT_PREFIX + "server_error_code";
         public static final String SERVER_SUBERROR_CODE = EVENT_PREFIX + "server_sub_error_code";
         public static final String RT_AGE = EVENT_PREFIX + "rt_age";
         public static final String SPE_INFO = EVENT_PREFIX + "spe_info";
-        public static final String SPE_RING = EVENT_PREFIX + "spe_ring"; //msal only
-        public static final String IS_SUCCESSFUL = "_is_successful"; //sub key
-        public static final String WIPE_APP = EVENT_PREFIX + "wipe_app"; //msal only
-        public static final String WIPE_TIME = EVENT_PREFIX + "wipe_time"; //msal only
-        public static final String BROKER_ACTION = EVENT_PREFIX + "broker_action"; //msal only
+        public static final String SPE_RING = EVENT_PREFIX + "spe_ring"; // msal only
+        public static final String IS_SUCCESSFUL = "_is_successful"; // sub key
+        public static final String WIPE_APP = EVENT_PREFIX + "wipe_app"; // msal only
+        public static final String WIPE_TIME = EVENT_PREFIX + "wipe_time"; // msal only
+        public static final String BROKER_ACTION = EVENT_PREFIX + "broker_action"; // msal only
         public static final String BROKER_STRATEGY = EVENT_PREFIX + "broker_strategy";
         public static final String ACCOUNTS_NUMBER = EVENT_PREFIX + "accounts_number";
         public static final String IS_DEVICE_SHARED = EVENT_PREFIX + "is_device_shared";
@@ -205,4 +212,3 @@ public class TelemetryEventStrings {
         public static final String LOCAL_DEVICE_CODE_FLOW_POLLING = "109";
     }
 }
-

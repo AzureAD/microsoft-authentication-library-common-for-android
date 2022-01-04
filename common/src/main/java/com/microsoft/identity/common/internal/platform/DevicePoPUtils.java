@@ -24,11 +24,11 @@ package com.microsoft.identity.common.internal.platform;
 
 import androidx.annotation.NonNull;
 
-import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.authscheme.IPoPAuthenticationSchemeParams;
-import com.microsoft.identity.common.java.result.GenerateShrResult;
 import com.microsoft.identity.common.java.crypto.IDevicePopManager;
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
+import com.microsoft.identity.common.java.result.GenerateShrResult;
 
 import java.net.URL;
 
@@ -48,10 +48,12 @@ public class DevicePoPUtils {
      */
     public static synchronized GenerateShrResult generateSignedHttpRequest(
             @NonNull final IPlatformComponents platformComponents,
-            @NonNull final IPoPAuthenticationSchemeParams popSchemeParams) throws ClientException {
+            @NonNull final IPoPAuthenticationSchemeParams popSchemeParams)
+            throws ClientException {
         // Clock-skew correction values
         final long ONE_SECOND_MILLIS = 1000L;
-        final long timestampMillis = platformComponents.getClockSkewManager().getAdjustedReferenceTime().getTime();
+        final long timestampMillis =
+                platformComponents.getClockSkewManager().getAdjustedReferenceTime().getTime();
 
         final String httpMethodStr = popSchemeParams.getHttpMethod();
         final URL resourceUrl = popSchemeParams.getUrl();
@@ -64,13 +66,13 @@ public class DevicePoPUtils {
             popMgr.generateAsymmetricKey();
         }
 
-        final String shr = popMgr.mintSignedHttpRequest(
-                httpMethodStr,
-                timestampMillis / ONE_SECOND_MILLIS,
-                resourceUrl,
-                nonce,
-                clientClaims
-        );
+        final String shr =
+                popMgr.mintSignedHttpRequest(
+                        httpMethodStr,
+                        timestampMillis / ONE_SECOND_MILLIS,
+                        resourceUrl,
+                        nonce,
+                        clientClaims);
 
         // Create our result object
         final GenerateShrResult result = new GenerateShrResult();

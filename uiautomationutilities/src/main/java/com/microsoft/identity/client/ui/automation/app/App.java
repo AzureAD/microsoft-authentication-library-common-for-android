@@ -43,15 +43,13 @@ import lombok.Setter;
 @Getter
 public abstract class App implements IApp {
 
-    private final static String TAG = App.class.getSimpleName();
+    private static final String TAG = App.class.getSimpleName();
 
-    @Setter
-    private IAppInstaller appInstaller;
+    @Setter private IAppInstaller appInstaller;
 
     private final String packageName;
 
-    @Setter
-    private String appName;
+    @Setter private String appName;
 
     protected String localApkFileName = null;
 
@@ -78,9 +76,10 @@ public abstract class App implements IApp {
         this.packageName = packageName;
     }
 
-    public App(@NonNull final String packageName,
-               @NonNull final String appName,
-               @NonNull final IAppInstaller appInstaller) {
+    public App(
+            @NonNull final String packageName,
+            @NonNull final String appName,
+            @NonNull final IAppInstaller appInstaller) {
         this.appInstaller = appInstaller;
         this.packageName = packageName;
         this.appName = appName;
@@ -88,7 +87,7 @@ public abstract class App implements IApp {
 
     @Override
     public void install() {
-        //TODO: make it build time configurable to specify the installer that should be used.
+        // TODO: make it build time configurable to specify the installer that should be used.
         // Ideally we can specify different installers on app basis
         if (appInstaller instanceof LocalApkInstaller && !TextUtils.isEmpty(localApkFileName)) {
             Logger.i(TAG, "Installing the " + this.appName + " from local apk..");

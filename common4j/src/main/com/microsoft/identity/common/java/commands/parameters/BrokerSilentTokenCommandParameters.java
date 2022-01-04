@@ -53,63 +53,64 @@ public class BrokerSilentTokenCommandParameters extends SilentTokenCommandParame
         if (callerUid == 0) {
             throw new ArgumentException(
                     ArgumentException.ACQUIRE_TOKEN_SILENT_OPERATION_NAME,
-                    "mCallerUId", "Caller Uid is not set"
-            );
+                    "mCallerUId",
+                    "Caller Uid is not set");
         }
         if (StringUtil.isNullOrEmpty(callerPackageName)) {
             throw new ArgumentException(
                     ArgumentException.ACQUIRE_TOKEN_SILENT_OPERATION_NAME,
-                    "mCallerPackageName", "Caller package name is not set"
-            );
+                    "mCallerPackageName",
+                    "Caller package name is not set");
         }
         if (getAuthority() == null) {
             throw new ArgumentException(
                     ArgumentException.ACQUIRE_TOKEN_SILENT_OPERATION_NAME,
-                    "mAuthority", "Authority Url is not set"
-            );
+                    "mAuthority",
+                    "Authority Url is not set");
         }
         if (getScopes() == null || getScopes().isEmpty()) {
             throw new ArgumentException(
                     ArgumentException.ACQUIRE_TOKEN_SILENT_OPERATION_NAME,
-                    "mScopes", "Scope or resource is not set"
-            );
+                    "mScopes",
+                    "Scope or resource is not set");
         }
         if (StringUtil.isNullOrEmpty(getClientId())) {
             throw new ArgumentException(
                     ArgumentException.ACQUIRE_TOKEN_SILENT_OPERATION_NAME,
-                    "mClientId", "Client Id is not set"
-            );
+                    "mClientId",
+                    "Client Id is not set");
         }
         if (StringUtil.isNullOrEmpty(callerPackageName)) {
             throw new ArgumentException(
                     ArgumentException.ACQUIRE_TOKEN_SILENT_OPERATION_NAME,
-                    "mCallerPackageName", "Caller package name is not set"
-            );
+                    "mCallerPackageName",
+                    "Caller package name is not set");
         }
 
-        // Check if SDK is capable of MSA to ensure there is uniformity of logic with SdkType.MSALCPP and SdkType.MSAL
-        if (getSdkType().isCapableOfMSA() &&
-                !getPlatformComponents().getPlatformUtil().isValidCallingApp(getRedirectUri(), getCallerPackageName())) {
+        // Check if SDK is capable of MSA to ensure there is uniformity of logic with
+        // SdkType.MSALCPP and SdkType.MSAL
+        if (getSdkType().isCapableOfMSA()
+                && !getPlatformComponents()
+                        .getPlatformUtil()
+                        .isValidCallingApp(getRedirectUri(), getCallerPackageName())) {
             throw new ArgumentException(
                     ArgumentException.ACQUIRE_TOKEN_SILENT_OPERATION_NAME,
-                    "mRedirectUri", "The redirect URI doesn't match the uri" +
-                    " generated with caller package name and signature"
-            );
+                    "mRedirectUri",
+                    "The redirect URI doesn't match the uri"
+                            + " generated with caller package name and signature");
         }
 
         if (!(getOAuth2TokenCache() instanceof BrokerOAuth2TokenCache)) {
             throw new ArgumentException(
                     ArgumentException.ACQUIRE_TOKEN_SILENT_OPERATION_NAME,
                     "AcquireTokenSilentOperationParameters",
-                    "OAuth2Cache not an instance of BrokerOAuth2TokenCache"
-            );
+                    "OAuth2Cache not an instance of BrokerOAuth2TokenCache");
         }
         if (null == brokerAccount) {
             throw new ArgumentException(
                     ArgumentException.ACQUIRE_TOKEN_SILENT_OPERATION_NAME,
-                    "mCallerPackageName", "Broker Account is null"
-            );
+                    "mCallerPackageName",
+                    "Broker Account is null");
         }
-
     }
 }

@@ -27,10 +27,10 @@ import com.microsoft.identity.common.java.cache.ICacheRecord;
 import com.microsoft.identity.common.java.dto.AccessTokenRecord;
 import com.microsoft.identity.common.java.dto.IAccountRecord;
 
+import lombok.NonNull;
+
 import java.util.Date;
 import java.util.List;
-
-import lombok.NonNull;
 
 /**
  * Interface to wrap successful authentication result. When auth succeeds, token will be wrapped into the
@@ -47,7 +47,6 @@ public interface ILocalAuthenticationResult {
      */
     @NonNull
     IAccountRecord getAccountRecord();
-
 
     /**
      * Gets the {@link AccessTokenRecord}.
@@ -125,7 +124,6 @@ public interface ILocalAuthenticationResult {
      * Information to uniquely identify the family that the client application belongs to.
      */
     String getFamilyId();
-
 
     /**
      * Gets whether the result of token request was returned from cache or not

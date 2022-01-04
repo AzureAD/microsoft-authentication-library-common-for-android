@@ -32,8 +32,8 @@ public class DeviceLimitReachedException extends RuntimeException {
 
     private final BrokerCompanyPortal companyPortal;
 
-    public DeviceLimitReachedException(@NonNull final String message,
-                                       @NonNull final BrokerCompanyPortal companyPortal) {
+    public DeviceLimitReachedException(
+            @NonNull final String message, @NonNull final BrokerCompanyPortal companyPortal) {
         super(message);
         this.companyPortal = companyPortal;
     }

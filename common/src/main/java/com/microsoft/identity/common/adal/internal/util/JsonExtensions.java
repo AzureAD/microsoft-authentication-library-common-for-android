@@ -53,7 +53,8 @@ public final class JsonExtensions {
         GsonBuilder builder = new GsonBuilder();
         builder.registerTypeAdapter(ICacheRecord.class, new ICacheRecordGsonAdapter());
 
-        final Type listOfCacheRecords = TypeToken.getParameterized(List.class, ICacheRecord.class).getType();
+        final Type listOfCacheRecords =
+                TypeToken.getParameterized(List.class, ICacheRecord.class).getType();
         return builder.create().fromJson(accountJson, listOfCacheRecords);
     }
 
@@ -64,7 +65,8 @@ public final class JsonExtensions {
      * @return a JSON string
      */
     public static String getJsonStringFromICacheRecordList(List<ICacheRecord> cacheRecords) {
-        final Type listOfCacheRecords = TypeToken.getParameterized(List.class, ICacheRecord.class).getType();
+        final Type listOfCacheRecords =
+                TypeToken.getParameterized(List.class, ICacheRecord.class).getType();
         return new Gson().toJson(cacheRecords, listOfCacheRecords);
     }
 
@@ -78,9 +80,6 @@ public final class JsonExtensions {
         return new GsonBuilder()
                 .registerTypeAdapter(ICacheRecord.class, new ICacheRecordGsonAdapter())
                 .create()
-                .fromJson(
-                        jsonString,
-                        BrokerResult.class
-                );
+                .fromJson(jsonString, BrokerResult.class);
     }
 }

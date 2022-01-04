@@ -24,13 +24,12 @@ package com.microsoft.identity.internal.testutils.strategies;
 
 import static com.microsoft.identity.common.java.net.HttpConstants.HeaderField.X_MS_CLITELEM;
 
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.net.HttpResponse;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration;
-import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenRequest;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResponse;
+import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.java.util.ObjectMapper;
 import com.microsoft.identity.internal.testutils.mocks.MockTokenResponse;
 
@@ -41,14 +40,15 @@ import java.util.List;
 
 public class MockDelayedResponseStrategy extends ResourceOwnerPasswordCredentialsTestStrategy {
 
-    private final static long RESPONSE_DELAY = 1000;
+    private static final long RESPONSE_DELAY = 1000;
 
     /**
      * Constructor of MockTestStrategy.
      *
      * @param config Microsoft Sts OAuth2 configuration
      */
-    public MockDelayedResponseStrategy(MicrosoftStsOAuth2Configuration config) throws ClientException {
+    public MockDelayedResponseStrategy(MicrosoftStsOAuth2Configuration config)
+            throws ClientException {
         super(config);
     }
 
@@ -83,5 +83,4 @@ public class MockDelayedResponseStrategy extends ResourceOwnerPasswordCredential
         final HttpResponse httpResponse = new HttpResponse(200, httpResponseBody, responseHeaders);
         return httpResponse;
     }
-
 }

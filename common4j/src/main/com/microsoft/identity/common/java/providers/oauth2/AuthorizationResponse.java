@@ -24,9 +24,9 @@ package com.microsoft.identity.common.java.providers.oauth2;
 
 import com.google.gson.annotations.Expose;
 
-import java.util.Map;
-
 import edu.umd.cs.findbugs.annotations.Nullable;
+
+import java.util.Map;
 
 /**
  * This is the class encapsulating the details of the Authorization Response (OAuth2.0/OIDC).
@@ -56,8 +56,7 @@ public class AuthorizationResponse implements ISuccessResponse {
      * authorization request.  The exact value received from the
      * client.
      */
-    @Expose()
-    private String mState;
+    @Expose() private String mState;
 
     /**
      * Extra parameters that may be on a response.

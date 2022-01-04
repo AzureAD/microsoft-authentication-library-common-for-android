@@ -47,37 +47,40 @@ public class RawKeyAccessorTest {
 
     public RawKeyAccessor getAccessor() throws UnsupportedEncodingException {
 
-        return new RawKeyAccessor(new CryptoSuite() {
-            @Override
-            public SymmetricAlgorithm cipher() {
-                return SymmetricAlgorithm.Builder.of("AES/GCM/NoPadding");
-            }
+        return new RawKeyAccessor(
+                new CryptoSuite() {
+                    @Override
+                    public SymmetricAlgorithm cipher() {
+                        return SymmetricAlgorithm.Builder.of("AES/GCM/NoPadding");
+                    }
 
-            @Override
-            public String macName() {
-                return "HmacSHA256";
-            }
+                    @Override
+                    public String macName() {
+                        return "HmacSHA256";
+                    }
 
-            @Override
-            public boolean isAsymmetric() {
-                return false;
-            }
+                    @Override
+                    public boolean isAsymmetric() {
+                        return false;
+                    }
 
-            @Override
-            public Class<? extends KeyStore.Entry> keyClass() {
-                return null;
-            }
+                    @Override
+                    public Class<? extends KeyStore.Entry> keyClass() {
+                        return null;
+                    }
 
-            @Override
-            public int keySize() {
-                return 256;
-            }
+                    @Override
+                    public int keySize() {
+                        return 256;
+                    }
 
-            @Override
-            public SigningAlgorithm signingAlgorithm() {
-                return null;
-            }
-        }, "12345678123456781234567812345678".getBytes("UTF-8"), null);
+                    @Override
+                    public SigningAlgorithm signingAlgorithm() {
+                        return null;
+                    }
+                },
+                "12345678123456781234567812345678".getBytes("UTF-8"),
+                null);
     }
 
     @Test

@@ -117,7 +117,8 @@ public class LabConstants {
     public static final class SignInAudience {
         public static final String AZURE_AD_MY_ORG = "azureadmyorg";
         public static final String AZURE_AD_MULTIPLE_ORGS = "azureadmultipleorgs";
-        public static final String AZURE_AD_AND_PERSONAL_MICROSOFT_ACCOUNT = "azureadandpersonalmicrosoftaccount";
+        public static final String AZURE_AD_AND_PERSONAL_MICROSOFT_ACCOUNT =
+                "azureadandpersonalmicrosoftaccount";
     }
 
     public static final class GuestHomedIn {

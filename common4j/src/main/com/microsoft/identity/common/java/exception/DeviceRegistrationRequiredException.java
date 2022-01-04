@@ -25,25 +25,24 @@ package com.microsoft.identity.common.java.exception;
 
 import lombok.NonNull;
 
-import com.microsoft.identity.common.java.exception.BaseException;
-
 /**
  *  Internal exception thrown when a device needs to registered to access the required resource (MAM)
  */
-final public class DeviceRegistrationRequiredException extends BaseException {
+public final class DeviceRegistrationRequiredException extends BaseException {
 
-    public static final String sName =  DeviceRegistrationRequiredException.class.getName();
+    public static final String sName = DeviceRegistrationRequiredException.class.getName();
     private static final long serialVersionUID = 5804977362169696152L;
 
-    public DeviceRegistrationRequiredException(@NonNull final String errorCode,
-                                               @NonNull final String errorDescription,
-                                               @NonNull final String userName) {
+    public DeviceRegistrationRequiredException(
+            @NonNull final String errorCode,
+            @NonNull final String errorDescription,
+            @NonNull final String userName) {
         super(errorCode, errorDescription);
         super.setUsername(userName);
     }
 
     @Override
-    public String getExceptionName(){
+    public String getExceptionName() {
         return sName;
     }
 }

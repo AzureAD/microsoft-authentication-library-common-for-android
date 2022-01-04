@@ -22,19 +22,18 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.controllers;
 
-
 import com.microsoft.identity.common.java.commands.ICommandResult;
-import edu.umd.cs.findbugs.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import edu.umd.cs.findbugs.annotations.Nullable;
 
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 @Getter
 @Accessors(prefix = "m")
@@ -48,8 +47,7 @@ public class CommandResult<T> implements ICommandResult<T> {
 
     private final Class<T> mResultClass;
 
-    @Setter
-    private List<Map<String, String>> mTelemetryMap = new ArrayList<>();
+    @Setter private List<Map<String, String>> mTelemetryMap = new ArrayList<>();
 
     @Deprecated
     public CommandResult(ResultStatus status, T result) {
@@ -62,7 +60,10 @@ public class CommandResult<T> implements ICommandResult<T> {
      * @param result the command result, may <strong>NOT</strong> be null.
      * @param correlationId an optional correlation Id for the command.
      */
-    public CommandResult(final @NonNull ResultStatus status, final @NonNull T result, @Nullable String correlationId) {
+    public CommandResult(
+            final @NonNull ResultStatus status,
+            final @NonNull T result,
+            @Nullable String correlationId) {
         mStatus = status;
         mResult = result;
         mCorrelationId = correlationId == null ? "UNSET" : correlationId;
@@ -91,7 +92,8 @@ public class CommandResult<T> implements ICommandResult<T> {
      * @param correlationId a correlation id.
      * @return A command result with a null result, given the status provided.
      */
-    public static CommandResult<Void> ofNull(final @NonNull ResultStatus status, final @Nullable String correlationId) {
+    public static CommandResult<Void> ofNull(
+            final @NonNull ResultStatus status, final @Nullable String correlationId) {
         return new CommandResult<>(status, correlationId);
     }
 
@@ -103,7 +105,10 @@ public class CommandResult<T> implements ICommandResult<T> {
      * @param <T> the type of the result.
      * @return a commandResult object containing the above values.
      */
-    public static <T> CommandResult<T> of(final @NonNull ResultStatus status, final @NonNull T result, final @Nullable String correlationId) {
+    public static <T> CommandResult<T> of(
+            final @NonNull ResultStatus status,
+            final @NonNull T result,
+            final @Nullable String correlationId) {
         return new CommandResult<T>(status, result, correlationId);
     }
 }

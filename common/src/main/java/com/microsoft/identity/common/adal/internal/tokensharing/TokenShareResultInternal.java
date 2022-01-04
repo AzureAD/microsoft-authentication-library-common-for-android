@@ -39,9 +39,10 @@ public class TokenShareResultInternal implements ITokenShareResultInternal {
      * @param refreshToken The rt string, in the designated format.
      * @param format       The format of the rt string.
      */
-    protected TokenShareResultInternal(@NonNull final ICacheRecord cacheRecord,
-                                       @NonNull final String refreshToken,
-                                       @NonNull final String format) {
+    protected TokenShareResultInternal(
+            @NonNull final ICacheRecord cacheRecord,
+            @NonNull final String refreshToken,
+            @NonNull final String format) {
         mCacheRecord = cacheRecord;
         mRefreshToken = refreshToken;
         mFormat = format;

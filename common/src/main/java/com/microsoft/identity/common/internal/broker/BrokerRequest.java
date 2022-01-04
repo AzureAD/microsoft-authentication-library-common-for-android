@@ -30,11 +30,11 @@ import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationSchem
 import com.microsoft.identity.common.java.providers.oauth2.OpenIdConnectPromptParameter;
 import com.microsoft.identity.common.java.request.SdkType;
 
-import java.io.Serializable;
-
 import lombok.Builder;
 import lombok.Getter;
 import lombok.experimental.Accessors;
+
+import java.io.Serializable;
 
 /**
  * Represents the broker request
@@ -47,28 +47,28 @@ public class BrokerRequest implements Serializable {
     private static final long serialVersionUID = -543392127065130474L;
 
     private static final class SerializedNames {
-        final static String EXTRA_OPTIONS = "extra_options";
-        final static String AUTHORITY = "authority";
-        final static String SCOPE = "scopes";
-        final static String REDIRECT = "redirect_uri";
-        final static String CLIENT_ID = "client_id";
-        final static String HOME_ACCOUNT_ID = "home_account_id";
-        final static String LOCAL_ACCOUNT_ID = "local_account_id";
-        final static String USERNAME = "username";
-        final static String EXTRA_QUERY_STRING_PARAMETER = "extra_query_param";
-        final static String CORRELATION_ID = "correlation_id";
-        final static String PROMPT = "prompt";
-        final static String CLAIMS = "claims";
-        final static String FORCE_REFRESH = "force_refresh";
-        final static String CLIENT_APP_NAME = "client_app_name";
-        final static String CLIENT_APP_VERSION = "client_app_version";
-        final static String CLIENT_VERSION = "client_version";
-        final static String CLIENT_SDK_TYPE = "client_sdk_type";
-        final static String ENVIRONMENT = "environment";
-        final static String MULTIPLE_CLOUDS_SUPPORTED = "multiple_clouds_supported";
-        final static String AUTHORIZATION_AGENT = "authorization_agent";
-        final static String AUTHENTICATION_SCHEME = "authentication_scheme";
-        final static String POWER_OPT_CHECK_ENABLED = "power_opt_check_enabled";
+        static final String EXTRA_OPTIONS = "extra_options";
+        static final String AUTHORITY = "authority";
+        static final String SCOPE = "scopes";
+        static final String REDIRECT = "redirect_uri";
+        static final String CLIENT_ID = "client_id";
+        static final String HOME_ACCOUNT_ID = "home_account_id";
+        static final String LOCAL_ACCOUNT_ID = "local_account_id";
+        static final String USERNAME = "username";
+        static final String EXTRA_QUERY_STRING_PARAMETER = "extra_query_param";
+        static final String CORRELATION_ID = "correlation_id";
+        static final String PROMPT = "prompt";
+        static final String CLAIMS = "claims";
+        static final String FORCE_REFRESH = "force_refresh";
+        static final String CLIENT_APP_NAME = "client_app_name";
+        static final String CLIENT_APP_VERSION = "client_app_version";
+        static final String CLIENT_VERSION = "client_version";
+        static final String CLIENT_SDK_TYPE = "client_sdk_type";
+        static final String ENVIRONMENT = "environment";
+        static final String MULTIPLE_CLOUDS_SUPPORTED = "multiple_clouds_supported";
+        static final String AUTHORIZATION_AGENT = "authorization_agent";
+        static final String AUTHENTICATION_SCHEME = "authentication_scheme";
+        static final String POWER_OPT_CHECK_ENABLED = "power_opt_check_enabled";
     }
 
     /**
@@ -218,5 +218,4 @@ public class BrokerRequest implements Serializable {
     @Nullable
     @SerializedName(SerializedNames.POWER_OPT_CHECK_ENABLED)
     private boolean mPowerOptCheckEnabled;
-
 }

@@ -22,13 +22,20 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common;
 
+import static com.microsoft.identity.common.java.providers.microsoft.MicrosoftAccount.AUTHORITY_TYPE_MS_STS;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+
 import com.microsoft.identity.common.java.cache.MicrosoftStsAccountCredentialAdapter;
-import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
 import com.microsoft.identity.common.java.dto.AccessTokenRecord;
 import com.microsoft.identity.common.java.dto.AccountRecord;
 import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAccount;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.nimbusds.jose.JOSEException;
@@ -38,6 +45,8 @@ import com.nimbusds.jose.JWSSigner;
 import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
+
+import cz.msebera.android.httpclient.extras.Base64;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -53,14 +62,6 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
-import cz.msebera.android.httpclient.extras.Base64;
-
-import static com.microsoft.identity.common.java.providers.microsoft.MicrosoftAccount.AUTHORITY_TYPE_MS_STS;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
-
 @PowerMockIgnore("javax.crypto.*")
 @RunWith(PowerMockRunner.class)
 public class MicrosoftStsAccountCredentialAdapterTest {
@@ -74,7 +75,8 @@ public class MicrosoftStsAccountCredentialAdapterTest {
     private static final String MOCK_PREFERRED_USERNAME = "jdoe";
     private static final String MOCK_OID = "1c1db626-0fcb-42bb-b39e-8e983dd92932";
     private static final String MOCK_TID = "7744ecc5-e130-4af1-ba81-749c395efc8c";
-    private static final String MOCK_AUTHORITY = "https://sts.windows.net/0287f963-2d72-4363-9e3a-5705c5b0f031/";
+    private static final String MOCK_AUTHORITY =
+            "https://sts.windows.net/0287f963-2d72-4363-9e3a-5705c5b0f031/";
     private static final String MOCK_ENVIRONMENT = "sts.windows.net";
     private static final String MOCK_UID = "mock_uid";
     private static final String MOCK_UTID = "mock_utid";
@@ -83,9 +85,12 @@ public class MicrosoftStsAccountCredentialAdapterTest {
     private static final String MOCK_FAMILY_ID = "1";
     private static final long MOCK_EXPIRES_IN = 3600L;
     private static final long MOCK_EXT_EXPIRES_IN = MOCK_EXPIRES_IN * 2;
-    private static final Date MOCK_EXPIRES_ON = new GregorianCalendar() {{
-        add(Calendar.SECOND, (int) MOCK_EXPIRES_IN);
-    }}.getTime();
+    private static final Date MOCK_EXPIRES_ON =
+            new GregorianCalendar() {
+                {
+                    add(Calendar.SECOND, (int) MOCK_EXPIRES_IN);
+                }
+            }.getTime();
 
     static {
         String idTokenWithClaims;
@@ -143,7 +148,8 @@ public class MicrosoftStsAccountCredentialAdapterTest {
         mockRequest = Mockito.mock(MicrosoftStsAuthorizationRequest.class);
         mockResponse = Mockito.mock(MicrosoftStsTokenResponse.class);
         mockAccount = Mockito.mock(MicrosoftStsAccount.class);
-        when(mockStrategy.createAccount(any(MicrosoftStsTokenResponse.class))).thenReturn(mockAccount);
+        when(mockStrategy.createAccount(any(MicrosoftStsTokenResponse.class)))
+                .thenReturn(mockAccount);
         when(mockStrategy.getIssuerCacheIdentifier(mockRequest)).thenReturn(MOCK_ENVIRONMENT);
         when(mockStrategy.getIssuerCacheIdentifierFromTokenEndpoint()).thenReturn(MOCK_ENVIRONMENT);
         when(mockStrategy.getAuthorityFromTokenEndpoint()).thenReturn(MOCK_AUTHORITY);
@@ -173,7 +179,8 @@ public class MicrosoftStsAccountCredentialAdapterTest {
     @Test
     public void createAccount() {
         // This test is now basically a copy-constructor test
-        final AccountRecord account = mAccountCredentialAdapter.createAccount(mockStrategy, mockRequest, mockResponse);
+        final AccountRecord account =
+                mAccountCredentialAdapter.createAccount(mockStrategy, mockRequest, mockResponse);
         assertNotNull(account);
         assertEquals(MOCK_UID + "." + MOCK_UTID, account.getHomeAccountId());
         assertEquals(MOCK_ENVIRONMENT, account.getEnvironment());
@@ -190,7 +197,9 @@ public class MicrosoftStsAccountCredentialAdapterTest {
 
     @Test
     public void createAccessToken() {
-        final AccessTokenRecord accessToken = mAccountCredentialAdapter.createAccessToken(mockStrategy, mockRequest, mockResponse);
+        final AccessTokenRecord accessToken =
+                mAccountCredentialAdapter.createAccessToken(
+                        mockStrategy, mockRequest, mockResponse);
         assertNotNull(accessToken);
         assertEquals(MOCK_SCOPE, accessToken.getTarget());
         assertNotNull(accessToken.getCachedAt());
@@ -205,7 +214,9 @@ public class MicrosoftStsAccountCredentialAdapterTest {
 
     @Test
     public void createRefreshToken() {
-        final RefreshTokenRecord refreshToken = mAccountCredentialAdapter.createRefreshToken(mockStrategy, mockRequest, mockResponse);
+        final RefreshTokenRecord refreshToken =
+                mAccountCredentialAdapter.createRefreshToken(
+                        mockStrategy, mockRequest, mockResponse);
         assertNotNull(refreshToken);
         assertEquals(MOCK_SCOPE, refreshToken.getTarget());
         assertNotNull(refreshToken.getCachedAt());

@@ -39,8 +39,8 @@ import java.io.IOException;
  */
 public class AutomationLoggingRule implements TestRule {
 
-    private final static String TAG = AutomationLoggingRule.class.getSimpleName();
-    final static String LOG_FOLDER_NAME = "automation";
+    private static final String TAG = AutomationLoggingRule.class.getSimpleName();
+    static final String LOG_FOLDER_NAME = "automation";
 
     @Override
     public Statement apply(final Statement base, final Description description) {
@@ -56,9 +56,7 @@ public class AutomationLoggingRule implements TestRule {
                     automationLogFileAppender.closeWriter();
 
                     CommonUtils.copyFileToFolderInSdCard(
-                            automationLogFileAppender.getLogFile(),
-                            LOG_FOLDER_NAME
-                    );
+                            automationLogFileAppender.getLogFile(), LOG_FOLDER_NAME);
                 }
             }
         };
@@ -67,12 +65,10 @@ public class AutomationLoggingRule implements TestRule {
     private FileAppender turnOnAutomationLogging(final Description description) throws IOException {
         Logger.i(TAG, "Turn On Automation Logging..");
         final String automationLogFileName = description.getMethodName() + "-automation.log";
-        final FileAppender automationLogFileAppender = new FileAppender(
-                automationLogFileName, new LogcatLikeFormatter()
-        );
+        final FileAppender automationLogFileAppender =
+                new FileAppender(automationLogFileName, new LogcatLikeFormatter());
 
-        com.microsoft.identity.client.ui.automation.logging.Logger
-                .getAppenderRegistry()
+        com.microsoft.identity.client.ui.automation.logging.Logger.getAppenderRegistry()
                 .registerAppender(automationLogFileAppender);
 
         return automationLogFileAppender;

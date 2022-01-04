@@ -30,7 +30,8 @@ import com.microsoft.identity.common.java.providers.oauth2.AuthorizationStatus;
 
 import java.util.HashMap;
 
-public class MockSuccessAuthorizationResultMockedTests extends AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse> {
+public class MockSuccessAuthorizationResultMockedTests
+        extends AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse> {
 
     @Override
     public boolean getSuccess() {
@@ -38,7 +39,8 @@ public class MockSuccessAuthorizationResultMockedTests extends AuthorizationResu
     }
 
     public MockSuccessAuthorizationResultMockedTests() {
-        MicrosoftStsAuthorizationResponse response = new MicrosoftStsAuthorizationResponse("", "", new HashMap<String, String>());
+        MicrosoftStsAuthorizationResponse response =
+                new MicrosoftStsAuthorizationResponse("", "", new HashMap<String, String>());
         this.setAuthorizationResponse(response);
         // assume that we have auth code and auth request was successful
         this.setAuthorizationStatus(AuthorizationStatus.SUCCESS);

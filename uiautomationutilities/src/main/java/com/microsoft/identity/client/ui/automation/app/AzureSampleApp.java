@@ -43,10 +43,10 @@ import org.junit.Assert;
  */
 public class AzureSampleApp extends App {
 
-    private final static String TAG = AzureSampleApp.class.getSimpleName();
+    private static final String TAG = AzureSampleApp.class.getSimpleName();
     private static final String AZURE_SAMPLE_PACKAGE_NAME = "com.azuresamples.msalandroidapp";
     private static final String AZURE_SAMPLE_APP_NAME = "Azure Sample";
-    public final static String AZURE_SAMPLE_APK = "AzureSample.apk";
+    public static final String AZURE_SAMPLE_APK = "AzureSample.apk";
 
     public AzureSampleApp() {
         super(AZURE_SAMPLE_PACKAGE_NAME, AZURE_SAMPLE_APP_NAME, new LocalApkInstaller());
@@ -68,16 +68,19 @@ public class AzureSampleApp extends App {
      * @param shouldHandleBrowserFirstRun whether this is the first time the browser being run
      * @param promptHandlerParameters     the prompt handler parameters indicating how to handle prompt
      */
-    public void signInWithSingleAccountFragment(@NonNull final String username,
-                                                @NonNull final String password,
-                                                @Nullable final IBrowser browser,
-                                                final boolean shouldHandleBrowserFirstRun,
-                                                @NonNull final MicrosoftStsPromptHandlerParameters promptHandlerParameters) {
+    public void signInWithSingleAccountFragment(
+            @NonNull final String username,
+            @NonNull final String password,
+            @Nullable final IBrowser browser,
+            final boolean shouldHandleBrowserFirstRun,
+            @NonNull final MicrosoftStsPromptHandlerParameters promptHandlerParameters) {
         Logger.i(TAG, "Signing in into Azure Sample App with Single Account Mode Fragment..");
         // Click Sign In in Single Account Fragment
         UiAutomatorUtils.handleButtonClick("com.azuresamples.msalandroidapp:id/btn_signIn");
 
-        if (promptHandlerParameters.getBroker() == null && browser != null && shouldHandleBrowserFirstRun) {
+        if (promptHandlerParameters.getBroker() == null
+                && browser != null
+                && shouldHandleBrowserFirstRun) {
             // handle browser first run as applicable
             ((IApp) browser).handleFirstRun();
         }
@@ -106,9 +109,12 @@ public class AzureSampleApp extends App {
      */
     public void confirmSignedIn(@NonNull final String username) {
         Logger.i(TAG, "Confirming account with supplied username is signed in..");
-        final UiObject signedInUser = UiAutomatorUtils.obtainUiObjectWithResourceId("com.azuresamples.msalandroidapp:id/current_user");
+        final UiObject signedInUser =
+                UiAutomatorUtils.obtainUiObjectWithResourceId(
+                        "com.azuresamples.msalandroidapp:id/current_user");
         try {
-            Assert.assertEquals("User is signed into Azure Sample App", signedInUser.getText(), username);
+            Assert.assertEquals(
+                    "User is signed into Azure Sample App", signedInUser.getText(), username);
         } catch (final UiObjectNotFoundException e) {
             throw new AssertionError(e);
         }

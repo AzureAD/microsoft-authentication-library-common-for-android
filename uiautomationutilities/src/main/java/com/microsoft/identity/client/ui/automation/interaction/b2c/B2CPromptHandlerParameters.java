@@ -35,5 +35,4 @@ public class B2CPromptHandlerParameters extends PromptHandlerParameters {
      * Denotes the B2C Provider that is expected to be used during an interactive token request.
      */
     private B2CProvider b2cProvider;
-
 }

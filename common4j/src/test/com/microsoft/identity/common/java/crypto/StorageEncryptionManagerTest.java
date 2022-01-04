@@ -22,6 +22,22 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.crypto;
 
+import static com.microsoft.identity.common.java.AuthenticationConstants.ENCODING_UTF8;
+import static com.microsoft.identity.common.java.crypto.MockData.ANDROID_WRAPPED_KEY;
+import static com.microsoft.identity.common.java.crypto.MockData.ANDROID_WRAPPED_KEY_IDENTIFIER;
+import static com.microsoft.identity.common.java.crypto.MockData.ANDROID_WRAPPED_KEY_IV;
+import static com.microsoft.identity.common.java.crypto.MockData.EXPECTED_ENCRYPTED_TEXT_1_WITH_MALFORMED_ENCODE_VERSION;
+import static com.microsoft.identity.common.java.crypto.MockData.PREDEFINED_KEY;
+import static com.microsoft.identity.common.java.crypto.MockData.PREDEFINED_KEY_IDENTIFIER;
+import static com.microsoft.identity.common.java.crypto.MockData.PREDEFINED_KEY_IV;
+import static com.microsoft.identity.common.java.crypto.MockData.PREDEFINED_KEY_MALFORMED;
+import static com.microsoft.identity.common.java.crypto.MockData.TEXT_ENCRYPTED_BY_ANDROID_WRAPPED_KEY;
+import static com.microsoft.identity.common.java.crypto.MockData.TEXT_ENCRYPTED_BY_PREDEFINED_KEY;
+import static com.microsoft.identity.common.java.crypto.MockData.TEXT_TO_BE_ENCRYPTED_WITH_ANDROID_WRAPPED_KEY;
+import static com.microsoft.identity.common.java.crypto.MockData.TEXT_TO_BE_ENCRYPTED_WITH_PREDEFINED_KEY;
+import static com.microsoft.identity.common.java.exception.ClientException.DATA_MALFORMED;
+import static com.microsoft.identity.common.java.exception.ClientException.HMAC_MISMATCH;
+
 import com.microsoft.identity.common.java.crypto.key.AES256KeyLoader;
 import com.microsoft.identity.common.java.crypto.key.AbstractSecretKeyLoader;
 import com.microsoft.identity.common.java.exception.ClientException;
@@ -33,83 +49,100 @@ import org.junit.Test;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import static com.microsoft.identity.common.java.AuthenticationConstants.ENCODING_UTF8;
-import static com.microsoft.identity.common.java.crypto.MockData.PREDEFINED_KEY;
-import static com.microsoft.identity.common.java.crypto.MockData.ANDROID_WRAPPED_KEY;
-import static com.microsoft.identity.common.java.crypto.MockData.PREDEFINED_KEY_MALFORMED;
-import static com.microsoft.identity.common.java.crypto.MockData.TEXT_ENCRYPTED_BY_PREDEFINED_KEY;
-import static com.microsoft.identity.common.java.crypto.MockData.TEXT_ENCRYPTED_BY_ANDROID_WRAPPED_KEY;
-import static com.microsoft.identity.common.java.crypto.MockData.EXPECTED_ENCRYPTED_TEXT_1_WITH_MALFORMED_ENCODE_VERSION;
-import static com.microsoft.identity.common.java.crypto.MockData.PREDEFINED_KEY_IV;
-import static com.microsoft.identity.common.java.crypto.MockData.ANDROID_WRAPPED_KEY_IV;
-import static com.microsoft.identity.common.java.crypto.MockData.PREDEFINED_KEY_IDENTIFIER;
-import static com.microsoft.identity.common.java.crypto.MockData.ANDROID_WRAPPED_KEY_IDENTIFIER;
-import static com.microsoft.identity.common.java.crypto.MockData.TEXT_TO_BE_ENCRYPTED_WITH_PREDEFINED_KEY;
-import static com.microsoft.identity.common.java.crypto.MockData.TEXT_TO_BE_ENCRYPTED_WITH_ANDROID_WRAPPED_KEY;
-import static com.microsoft.identity.common.java.exception.ClientException.DATA_MALFORMED;
-import static com.microsoft.identity.common.java.exception.ClientException.HMAC_MISMATCH;
-
-
 public class StorageEncryptionManagerTest {
 
     @Test
     public void testEncrypt() throws ClientException {
-        final StorageEncryptionManager manager = new MockStorageEncryptionManager(PREDEFINED_KEY_IV, new MockAES256KeyLoader(PREDEFINED_KEY, PREDEFINED_KEY_IDENTIFIER));
-        Assert.assertArrayEquals(TEXT_ENCRYPTED_BY_PREDEFINED_KEY, manager.encrypt(TEXT_TO_BE_ENCRYPTED_WITH_PREDEFINED_KEY));
+        final StorageEncryptionManager manager =
+                new MockStorageEncryptionManager(
+                        PREDEFINED_KEY_IV,
+                        new MockAES256KeyLoader(PREDEFINED_KEY, PREDEFINED_KEY_IDENTIFIER));
+        Assert.assertArrayEquals(
+                TEXT_ENCRYPTED_BY_PREDEFINED_KEY,
+                manager.encrypt(TEXT_TO_BE_ENCRYPTED_WITH_PREDEFINED_KEY));
 
-        final StorageEncryptionManager manager_2 = new MockStorageEncryptionManager(ANDROID_WRAPPED_KEY_IV, new MockAES256KeyLoader(ANDROID_WRAPPED_KEY, ANDROID_WRAPPED_KEY_IDENTIFIER));
-        Assert.assertArrayEquals(TEXT_ENCRYPTED_BY_ANDROID_WRAPPED_KEY, manager_2.encrypt(TEXT_TO_BE_ENCRYPTED_WITH_ANDROID_WRAPPED_KEY));
+        final StorageEncryptionManager manager_2 =
+                new MockStorageEncryptionManager(
+                        ANDROID_WRAPPED_KEY_IV,
+                        new MockAES256KeyLoader(
+                                ANDROID_WRAPPED_KEY, ANDROID_WRAPPED_KEY_IDENTIFIER));
+        Assert.assertArrayEquals(
+                TEXT_ENCRYPTED_BY_ANDROID_WRAPPED_KEY,
+                manager_2.encrypt(TEXT_TO_BE_ENCRYPTED_WITH_ANDROID_WRAPPED_KEY));
     }
 
     @Test
     public void testDecrypt() throws ClientException {
-        final StorageEncryptionManager manager = new MockStorageEncryptionManager(PREDEFINED_KEY_IV, new MockAES256KeyLoader(PREDEFINED_KEY, PREDEFINED_KEY_IDENTIFIER));
-        Assert.assertArrayEquals(TEXT_TO_BE_ENCRYPTED_WITH_PREDEFINED_KEY, manager.decrypt(TEXT_ENCRYPTED_BY_PREDEFINED_KEY));
+        final StorageEncryptionManager manager =
+                new MockStorageEncryptionManager(
+                        PREDEFINED_KEY_IV,
+                        new MockAES256KeyLoader(PREDEFINED_KEY, PREDEFINED_KEY_IDENTIFIER));
+        Assert.assertArrayEquals(
+                TEXT_TO_BE_ENCRYPTED_WITH_PREDEFINED_KEY,
+                manager.decrypt(TEXT_ENCRYPTED_BY_PREDEFINED_KEY));
 
-        final StorageEncryptionManager manager_2 = new MockStorageEncryptionManager(ANDROID_WRAPPED_KEY_IV, new MockAES256KeyLoader(ANDROID_WRAPPED_KEY, ANDROID_WRAPPED_KEY_IDENTIFIER));
-        Assert.assertArrayEquals(TEXT_TO_BE_ENCRYPTED_WITH_ANDROID_WRAPPED_KEY, manager_2.decrypt(TEXT_ENCRYPTED_BY_ANDROID_WRAPPED_KEY));
+        final StorageEncryptionManager manager_2 =
+                new MockStorageEncryptionManager(
+                        ANDROID_WRAPPED_KEY_IV,
+                        new MockAES256KeyLoader(
+                                ANDROID_WRAPPED_KEY, ANDROID_WRAPPED_KEY_IDENTIFIER));
+        Assert.assertArrayEquals(
+                TEXT_TO_BE_ENCRYPTED_WITH_ANDROID_WRAPPED_KEY,
+                manager_2.decrypt(TEXT_ENCRYPTED_BY_ANDROID_WRAPPED_KEY));
     }
 
     @Test(expected = IllegalStateException.class)
     public void testEncryptNoKeyLoader() throws ClientException {
-        final StorageEncryptionManager manager = new MockStorageEncryptionManager(PREDEFINED_KEY_IV, null);
+        final StorageEncryptionManager manager =
+                new MockStorageEncryptionManager(PREDEFINED_KEY_IV, null);
         manager.encrypt(TEXT_TO_BE_ENCRYPTED_WITH_PREDEFINED_KEY);
         Assert.fail("decrypt() should throw an exception but it succeeds.");
     }
 
     @Test(expected = IllegalStateException.class)
     public void testDecryptNoKeyLoader() throws ClientException {
-        final StorageEncryptionManager manager = new MockStorageEncryptionManager(PREDEFINED_KEY_IV, null, null);
+        final StorageEncryptionManager manager =
+                new MockStorageEncryptionManager(PREDEFINED_KEY_IV, null, null);
         manager.decrypt(TEXT_ENCRYPTED_BY_PREDEFINED_KEY);
         Assert.fail("decrypt() should throw an exception but it succeeds.");
     }
 
     @Test(expected = IllegalStateException.class)
     public void testDecryptNullKeyLoader() throws ClientException {
-        final StorageEncryptionManager manager = new MockStorageEncryptionManager(PREDEFINED_KEY_IV, null,
-                new ArrayList<AbstractSecretKeyLoader>() {{
-                    add(null);
-                }});
+        final StorageEncryptionManager manager =
+                new MockStorageEncryptionManager(
+                        PREDEFINED_KEY_IV,
+                        null,
+                        new ArrayList<AbstractSecretKeyLoader>() {
+                            {
+                                add(null);
+                            }
+                        });
         manager.decrypt(TEXT_ENCRYPTED_BY_PREDEFINED_KEY);
         Assert.fail("decrypt() should throw an exception but it succeeds.");
     }
 
     @Test(expected = ClientException.class)
     public void testEncryptFailToLoadKey() throws ClientException {
-        final StorageEncryptionManager manager = new MockStorageEncryptionManager(PREDEFINED_KEY_IV, new MockAES256KeyLoaderWithGetKeyError());
+        final StorageEncryptionManager manager =
+                new MockStorageEncryptionManager(
+                        PREDEFINED_KEY_IV, new MockAES256KeyLoaderWithGetKeyError());
         manager.encrypt(TEXT_TO_BE_ENCRYPTED_WITH_PREDEFINED_KEY);
         Assert.fail();
     }
 
     @Test
     public void testDecryptFailToLoadKey() throws ClientException {
-        final StorageEncryptionManager manager = new MockStorageEncryptionManager(PREDEFINED_KEY_IV, new MockAES256KeyLoaderWithGetKeyError());
+        final StorageEncryptionManager manager =
+                new MockStorageEncryptionManager(
+                        PREDEFINED_KEY_IV, new MockAES256KeyLoaderWithGetKeyError());
         try {
             manager.decrypt(TEXT_ENCRYPTED_BY_PREDEFINED_KEY);
             Assert.fail("decrypt() should throw an exception but it succeeds.");
-        } catch (ClientException e){
+        } catch (ClientException e) {
             Assert.assertEquals(e.getErrorCode(), ErrorStrings.DECRYPTION_FAILED);
-            Assert.assertEquals(((ClientException)e.getSuppressedException().get(0)).getErrorCode(),
+            Assert.assertEquals(
+                    ((ClientException) e.getSuppressedException().get(0)).getErrorCode(),
                     MockAES256KeyLoaderWithGetKeyError.FAIL_TO_LOAD_KEY_ERROR);
         }
     }
@@ -117,24 +150,39 @@ public class StorageEncryptionManagerTest {
     @Test
     public void testDecryptFailToLoadOneOfTheKeys() throws ClientException {
         final AES256KeyLoader failingKeyLoader = new MockAES256KeyLoaderWithGetKeyError();
-        final AES256KeyLoader successKeyLoader = new MockAES256KeyLoader(PREDEFINED_KEY, PREDEFINED_KEY_IDENTIFIER);
+        final AES256KeyLoader successKeyLoader =
+                new MockAES256KeyLoader(PREDEFINED_KEY, PREDEFINED_KEY_IDENTIFIER);
 
         // Key order doesn't matter.
-        final StorageEncryptionManager manager_failFirst = new MockStorageEncryptionManager(PREDEFINED_KEY_IV, null,
-                new ArrayList<AbstractSecretKeyLoader>(){{
-                    add(failingKeyLoader);
-                    add(successKeyLoader);
-                }});
+        final StorageEncryptionManager manager_failFirst =
+                new MockStorageEncryptionManager(
+                        PREDEFINED_KEY_IV,
+                        null,
+                        new ArrayList<AbstractSecretKeyLoader>() {
+                            {
+                                add(failingKeyLoader);
+                                add(successKeyLoader);
+                            }
+                        });
 
-        Assert.assertArrayEquals(TEXT_TO_BE_ENCRYPTED_WITH_PREDEFINED_KEY, manager_failFirst.decrypt(TEXT_ENCRYPTED_BY_PREDEFINED_KEY));
+        Assert.assertArrayEquals(
+                TEXT_TO_BE_ENCRYPTED_WITH_PREDEFINED_KEY,
+                manager_failFirst.decrypt(TEXT_ENCRYPTED_BY_PREDEFINED_KEY));
 
-        final StorageEncryptionManager manager_failSecond = new MockStorageEncryptionManager(PREDEFINED_KEY_IV, null,
-                new ArrayList<AbstractSecretKeyLoader>(){{
-                    add(successKeyLoader);
-                    add(failingKeyLoader);
-                }});
+        final StorageEncryptionManager manager_failSecond =
+                new MockStorageEncryptionManager(
+                        PREDEFINED_KEY_IV,
+                        null,
+                        new ArrayList<AbstractSecretKeyLoader>() {
+                            {
+                                add(successKeyLoader);
+                                add(failingKeyLoader);
+                            }
+                        });
 
-        Assert.assertArrayEquals(TEXT_TO_BE_ENCRYPTED_WITH_PREDEFINED_KEY, manager_failSecond.decrypt(TEXT_ENCRYPTED_BY_PREDEFINED_KEY));
+        Assert.assertArrayEquals(
+                TEXT_TO_BE_ENCRYPTED_WITH_PREDEFINED_KEY,
+                manager_failSecond.decrypt(TEXT_ENCRYPTED_BY_PREDEFINED_KEY));
     }
 
     @Test
@@ -142,17 +190,22 @@ public class StorageEncryptionManagerTest {
         final AES256KeyLoader decryptKeyLoader = new MockAES256KeyLoader();
         final AES256KeyLoader decryptKeyLoader_2 = new MockAES256KeyLoader();
 
-        final StorageEncryptionManager manager = new MockStorageEncryptionManager(PREDEFINED_KEY_IV, null,
-                new ArrayList<AbstractSecretKeyLoader>(){{
-                    add(decryptKeyLoader);
-                    add(decryptKeyLoader_2);
-                }});
+        final StorageEncryptionManager manager =
+                new MockStorageEncryptionManager(
+                        PREDEFINED_KEY_IV,
+                        null,
+                        new ArrayList<AbstractSecretKeyLoader>() {
+                            {
+                                add(decryptKeyLoader);
+                                add(decryptKeyLoader_2);
+                            }
+                        });
 
         try {
             /* This one is encrypted by {@link StorageEncryptionManagerTest#encryptionKey} */
             manager.decrypt(TEXT_ENCRYPTED_BY_PREDEFINED_KEY);
             Assert.fail("decrypt() should throw an exception but it succeeds.");
-        } catch (final ClientException e){
+        } catch (final ClientException e) {
             Assert.assertEquals(e.getErrorCode(), ErrorStrings.DECRYPTION_FAILED);
         }
     }
@@ -160,57 +213,62 @@ public class StorageEncryptionManagerTest {
     @Test
     public void testDecryptWithMalformedKey() {
         try {
-            final StorageEncryptionManager manager = new MockStorageEncryptionManager(PREDEFINED_KEY_IV, new MockAES256KeyLoader(PREDEFINED_KEY_MALFORMED, PREDEFINED_KEY_IDENTIFIER));
+            final StorageEncryptionManager manager =
+                    new MockStorageEncryptionManager(
+                            PREDEFINED_KEY_IV,
+                            new MockAES256KeyLoader(
+                                    PREDEFINED_KEY_MALFORMED, PREDEFINED_KEY_IDENTIFIER));
             manager.decrypt(TEXT_ENCRYPTED_BY_PREDEFINED_KEY);
             Assert.fail("decrypt() should throw an exception but it succeeds.");
-        } catch (final ClientException e){
+        } catch (final ClientException e) {
             Assert.assertEquals(e.getErrorCode(), ErrorStrings.DECRYPTION_FAILED);
-            Assert.assertEquals(((ClientException)e.getSuppressedException().get(0)).getErrorCode(), HMAC_MISMATCH);
+            Assert.assertEquals(
+                    ((ClientException) e.getSuppressedException().get(0)).getErrorCode(),
+                    HMAC_MISMATCH);
         }
     }
 
     @Test
     public void testDecryptUnencryptedText() throws ClientException {
-        final StorageEncryptionManager manager = new MockStorageEncryptionManager(PREDEFINED_KEY_IV, new MockAES256KeyLoader(PREDEFINED_KEY, PREDEFINED_KEY_IDENTIFIER));
-        Assert.assertArrayEquals(TEXT_TO_BE_ENCRYPTED_WITH_PREDEFINED_KEY, manager.decrypt(TEXT_TO_BE_ENCRYPTED_WITH_PREDEFINED_KEY));
+        final StorageEncryptionManager manager =
+                new MockStorageEncryptionManager(
+                        PREDEFINED_KEY_IV,
+                        new MockAES256KeyLoader(PREDEFINED_KEY, PREDEFINED_KEY_IDENTIFIER));
+        Assert.assertArrayEquals(
+                TEXT_TO_BE_ENCRYPTED_WITH_PREDEFINED_KEY,
+                manager.decrypt(TEXT_TO_BE_ENCRYPTED_WITH_PREDEFINED_KEY));
     }
 
     @Test
     public void testIsEncryptedByThisKeyIdentifier_True() throws ClientException {
-       Assert.assertTrue(
-               StorageEncryptionManager.isEncryptedByThisKeyIdentifier(
-                       TEXT_ENCRYPTED_BY_PREDEFINED_KEY,
-                       PREDEFINED_KEY_IDENTIFIER));
-
+        Assert.assertTrue(
+                StorageEncryptionManager.isEncryptedByThisKeyIdentifier(
+                        TEXT_ENCRYPTED_BY_PREDEFINED_KEY, PREDEFINED_KEY_IDENTIFIER));
     }
 
     @Test
     public void testIsEncryptedByThisKeyIdentifier_False() throws ClientException {
         Assert.assertFalse(
                 StorageEncryptionManager.isEncryptedByThisKeyIdentifier(
-                        TEXT_ENCRYPTED_BY_PREDEFINED_KEY,
-                        ANDROID_WRAPPED_KEY_IDENTIFIER));
+                        TEXT_ENCRYPTED_BY_PREDEFINED_KEY, ANDROID_WRAPPED_KEY_IDENTIFIER));
     }
 
     @Test
     public void testIsEncryptedByThisKeyIdentifier_StringNotEncrypted() throws ClientException {
         Assert.assertFalse(
                 StorageEncryptionManager.isEncryptedByThisKeyIdentifier(
-                        TEXT_TO_BE_ENCRYPTED_WITH_PREDEFINED_KEY,
-                        PREDEFINED_KEY_IDENTIFIER));
+                        TEXT_TO_BE_ENCRYPTED_WITH_PREDEFINED_KEY, PREDEFINED_KEY_IDENTIFIER));
     }
 
     @Test
     public void testIsEncryptedByThisKeyIdentifier_StringNotProperlyEncrypted() {
         Assert.assertFalse(
                 StorageEncryptionManager.isEncryptedByThisKeyIdentifier(
-                        "cE1".getBytes(ENCODING_UTF8),
-                        PREDEFINED_KEY_IDENTIFIER));
+                        "cE1".getBytes(ENCODING_UTF8), PREDEFINED_KEY_IDENTIFIER));
 
         Assert.assertFalse(
                 StorageEncryptionManager.isEncryptedByThisKeyIdentifier(
-                        "c".getBytes(ENCODING_UTF8),
-                        PREDEFINED_KEY_IDENTIFIER));
+                        "c".getBytes(ENCODING_UTF8), PREDEFINED_KEY_IDENTIFIER));
     }
 
     @Test
@@ -224,23 +282,37 @@ public class StorageEncryptionManagerTest {
     @Test
     public void testDecryptedTruncatedString() {
         try {
-            final StorageEncryptionManager manager = new MockStorageEncryptionManager(PREDEFINED_KEY_IV, new MockAES256KeyLoader(PREDEFINED_KEY, PREDEFINED_KEY_IDENTIFIER));
+            final StorageEncryptionManager manager =
+                    new MockStorageEncryptionManager(
+                            PREDEFINED_KEY_IV,
+                            new MockAES256KeyLoader(PREDEFINED_KEY, PREDEFINED_KEY_IDENTIFIER));
             final byte[] encryptedByteArray = TEXT_ENCRYPTED_BY_PREDEFINED_KEY;
-            final byte[] truncatedByteArray = Arrays.copyOf(encryptedByteArray, encryptedByteArray.length / 2);
+            final byte[] truncatedByteArray =
+                    Arrays.copyOf(encryptedByteArray, encryptedByteArray.length / 2);
             manager.decrypt(truncatedByteArray);
             Assert.fail("decrypt() should throw an exception but it succeeds.");
-        } catch (final ClientException e){
+        } catch (final ClientException e) {
             Assert.assertEquals(e.getErrorCode(), ErrorStrings.DECRYPTION_FAILED);
-            Assert.assertEquals(((ClientException)e.getSuppressedException().get(0)).getErrorCode(), HMAC_MISMATCH);
+            Assert.assertEquals(
+                    ((ClientException) e.getSuppressedException().get(0)).getErrorCode(),
+                    HMAC_MISMATCH);
         }
 
         try {
-            final StorageEncryptionManager manager = new MockStorageEncryptionManager(PREDEFINED_KEY_IV, new MockAES256KeyLoader(PREDEFINED_KEY, PREDEFINED_KEY_IDENTIFIER));
-            manager.decrypt(new String(TEXT_ENCRYPTED_BY_PREDEFINED_KEY, ENCODING_UTF8).substring(0, 25).getBytes(ENCODING_UTF8));
+            final StorageEncryptionManager manager =
+                    new MockStorageEncryptionManager(
+                            PREDEFINED_KEY_IV,
+                            new MockAES256KeyLoader(PREDEFINED_KEY, PREDEFINED_KEY_IDENTIFIER));
+            manager.decrypt(
+                    new String(TEXT_ENCRYPTED_BY_PREDEFINED_KEY, ENCODING_UTF8)
+                            .substring(0, 25)
+                            .getBytes(ENCODING_UTF8));
             Assert.fail("decrypt() should throw an exception but it succeeds.");
-        } catch (final ClientException e){
+        } catch (final ClientException e) {
             Assert.assertEquals(e.getErrorCode(), ErrorStrings.DECRYPTION_FAILED);
-            Assert.assertEquals(((ClientException)e.getSuppressedException().get(0)).getErrorCode(), DATA_MALFORMED);
+            Assert.assertEquals(
+                    ((ClientException) e.getSuppressedException().get(0)).getErrorCode(),
+                    DATA_MALFORMED);
         }
     }
 }

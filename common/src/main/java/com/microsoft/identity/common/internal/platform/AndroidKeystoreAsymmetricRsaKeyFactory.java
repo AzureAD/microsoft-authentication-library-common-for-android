@@ -46,21 +46,25 @@ public class AndroidKeystoreAsymmetricRsaKeyFactory implements AsymmetricRsaKeyF
     }
 
     @Override
-    public synchronized AsymmetricRsaKey generateAsymmetricKey(@NonNull final String alias) throws ClientException {
+    public synchronized AsymmetricRsaKey generateAsymmetricKey(@NonNull final String alias)
+            throws ClientException {
         return new AndroidKeystoreAsymmetricRsaKey(
                 AndroidPlatformComponents.createFromContext(mContext).getDevicePopManager(alias),
-                alias
-        );
+                alias);
     }
 
     @Override
-    public synchronized AsymmetricRsaKey loadAsymmetricKey(@NonNull final String alias) throws ClientException {
+    public synchronized AsymmetricRsaKey loadAsymmetricKey(@NonNull final String alias)
+            throws ClientException {
         // We can just call generate.... same thing... it will be created if it doesn't exist.
         return generateAsymmetricKey(alias);
     }
 
     @Override
-    public synchronized boolean clearAsymmetricKey(@NonNull final String alias) throws ClientException {
-        return AndroidPlatformComponents.createFromContext(mContext).getDevicePopManager(alias).clearAsymmetricKey();
+    public synchronized boolean clearAsymmetricKey(@NonNull final String alias)
+            throws ClientException {
+        return AndroidPlatformComponents.createFromContext(mContext)
+                .getDevicePopManager(alias)
+                .clearAsymmetricKey();
     }
 }

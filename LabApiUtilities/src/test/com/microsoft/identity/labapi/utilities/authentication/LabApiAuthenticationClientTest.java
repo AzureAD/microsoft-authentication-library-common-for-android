@@ -22,10 +22,10 @@
 // THE SOFTWARE.
 package com.microsoft.identity.labapi.utilities.authentication;
 
-import com.microsoft.identity.labapi.utilities.jwt.IJWTParser;
-import com.microsoft.identity.labapi.utilities.jwt.JWTParserFactory;
 import com.microsoft.identity.labapi.utilities.TestBuildConfig;
 import com.microsoft.identity.labapi.utilities.exception.LabApiException;
+import com.microsoft.identity.labapi.utilities.jwt.IJWTParser;
+import com.microsoft.identity.labapi.utilities.jwt.JWTParserFactory;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -50,8 +50,11 @@ public class LabApiAuthenticationClientTest {
             Assert.assertNotEquals("", accessToken);
             Assert.assertEquals(
                     LabAuthenticationConstants.LAB_API_TOKEN_AUDIENCE,
-                    ((List<String>) jwtParser.parseJWT(accessToken).get(LabAuthenticationConstants.AUDIENCE_CLAIM)).get(0)
-            );
+                    ((List<String>)
+                                    jwtParser
+                                            .parseJWT(accessToken)
+                                            .get(LabAuthenticationConstants.AUDIENCE_CLAIM))
+                            .get(0));
         } catch (final LabApiException e) {
             throw new AssertionError(e);
         }
@@ -68,11 +71,13 @@ public class LabApiAuthenticationClientTest {
             Assert.assertNotEquals("", accessToken);
             Assert.assertEquals(
                     LabAuthenticationConstants.LAB_API_TOKEN_AUDIENCE,
-                    ((List<String>) jwtParser.parseJWT(accessToken).get(LabAuthenticationConstants.AUDIENCE_CLAIM)).get(0)
-            );
+                    ((List<String>)
+                                    jwtParser
+                                            .parseJWT(accessToken)
+                                            .get(LabAuthenticationConstants.AUDIENCE_CLAIM))
+                            .get(0));
         } catch (final LabApiException e) {
             throw new AssertionError(e);
         }
     }
-
 }

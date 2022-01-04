@@ -22,13 +22,13 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.dto;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
+
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-
-import edu.umd.cs.findbugs.annotations.Nullable;
 
 public enum CredentialType {
     /**
@@ -76,7 +76,8 @@ public enum CredentialType {
      */
     PrimaryRefreshToken;
 
-    public static final Collection<CredentialType> ID_TOKEN_TYPES = Collections.unmodifiableList(Arrays.asList(IdToken, V1IdToken));
+    public static final Collection<CredentialType> ID_TOKEN_TYPES =
+            Collections.unmodifiableList(Arrays.asList(IdToken, V1IdToken));
 
     /**
      * Get the credential type name set.

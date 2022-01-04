@@ -39,5 +39,5 @@ public interface IRetryPolicy<T> {
      * @return the result of calling the supplier.
      * @throws IOException if an IO error occurs.
      */
-    T attempt (Callable<T> supplier) throws IOException;
+    T attempt(Callable<T> supplier) throws IOException;
 }

@@ -23,7 +23,6 @@
 package com.microsoft.identity.client.ui.automation.interaction.microsoftsts;
 
 import android.text.TextUtils;
-import android.widget.ImageButton;
 
 import androidx.annotation.NonNull;
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -42,16 +41,14 @@ import org.junit.Assert;
 
 import java.util.concurrent.TimeUnit;
 
-import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT;
-
 /**
  * A Prompt Handler for TLS login flows.
  */
 public class TlsPromptHandler extends AbstractPromptHandler {
 
-    private final static String TAG = TlsPromptHandler.class.getSimpleName();
-    public final static long CHROME_MENU_BUTTON_RETRY_TIMEOUT = TimeUnit.SECONDS.toMillis(5);
-    private final static int CHROME_MENU_BUTTON_MAX_RETRY_ATTEMPTS = 2;
+    private static final String TAG = TlsPromptHandler.class.getSimpleName();
+    public static final long CHROME_MENU_BUTTON_RETRY_TIMEOUT = TimeUnit.SECONDS.toMillis(5);
+    private static final int CHROME_MENU_BUTTON_MAX_RETRY_ATTEMPTS = 2;
 
     public TlsPromptHandler(@NonNull final PromptHandlerParameters parameters) {
         super(new AadLoginComponentHandler(), parameters);
@@ -60,7 +57,8 @@ public class TlsPromptHandler extends AbstractPromptHandler {
 
     @Override
     public void handlePrompt(@NonNull final String username, @NonNull final String password) {
-        final UiDevice uiDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+        final UiDevice uiDevice =
+                UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
         final boolean loginHintProvided = !TextUtils.isEmpty(parameters.getLoginHint());
         // handle browser
         final BrowserChrome chrome = new BrowserChrome();
@@ -68,7 +66,9 @@ public class TlsPromptHandler extends AbstractPromptHandler {
         // click on Open in chrome tabs.
         UiAutomatorUtils.obtainUiObjectWithText("Microsoft");
         try {
-            final UiObject menuButton = UiAutomatorUtils.obtainUiObjectWithResourceId("com.android.chrome:id/menu_button");
+            final UiObject menuButton =
+                    UiAutomatorUtils.obtainUiObjectWithResourceId(
+                            "com.android.chrome:id/menu_button");
             for (int attempt = 0; attempt < CHROME_MENU_BUTTON_MAX_RETRY_ATTEMPTS; attempt++) {
                 if (attempt > 0) {
                     Thread.sleep(CHROME_MENU_BUTTON_RETRY_TIMEOUT);
@@ -83,7 +83,8 @@ public class TlsPromptHandler extends AbstractPromptHandler {
             throw new AssertionError(e);
         }
         // in url removing x-client-SKU=MSAL.Android.
-        final UiObject urlBar = UiAutomatorUtils.obtainUiObjectWithResourceId("com.android.chrome:id/url_bar");
+        final UiObject urlBar =
+                UiAutomatorUtils.obtainUiObjectWithResourceId("com.android.chrome:id/url_bar");
         Assert.assertTrue(urlBar.exists());
         try {
             String url = urlBar.getText();
@@ -97,7 +98,8 @@ public class TlsPromptHandler extends AbstractPromptHandler {
 
         // check parameters
         if (!loginHintProvided) {
-            if (parameters.getBroker() != null && parameters.isExpectingBrokerAccountChooserActivity()) {
+            if (parameters.getBroker() != null
+                    && parameters.isExpectingBrokerAccountChooserActivity()) {
                 parameters.getBroker().handleAccountPicker(username);
             } else if (parameters.isExpectingLoginPageAccountPicker()) {
                 loginComponentHandler.handleAccountPicker(username);
@@ -108,11 +110,12 @@ public class TlsPromptHandler extends AbstractPromptHandler {
             loginComponentHandler.handleEmailField(username);
         }
 
-        if (parameters.isPasswordPageExpected() || parameters.getPrompt() == PromptParameter.LOGIN || !parameters.isSessionExpected()) {
+        if (parameters.isPasswordPageExpected()
+                || parameters.getPrompt() == PromptParameter.LOGIN
+                || !parameters.isSessionExpected()) {
             loginComponentHandler.handlePasswordField(password);
         }
         // installing certificate.
         UiAutomatorUtils.handleButtonClick("android:id/button1");
-
     }
 }

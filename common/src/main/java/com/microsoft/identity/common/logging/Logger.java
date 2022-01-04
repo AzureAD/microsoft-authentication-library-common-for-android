@@ -74,7 +74,7 @@ public class Logger {
         }
 
         private static LogLevel convertFromJavaLogLevel(
-                @NonNull com.microsoft.identity.common.java.logging.Logger.LogLevel logLevel){
+                @NonNull com.microsoft.identity.common.java.logging.Logger.LogLevel logLevel) {
             switch (logLevel) {
                 case INFO:
                     return INFO;
@@ -100,15 +100,16 @@ public class Logger {
      * There will be a lot of places (adapters) at first, but eventually the number will shrink
      * once we finish each flows e2e.
      * */
-    public static void setAndroidLogger(){
+    public static void setAndroidLogger() {
         com.microsoft.identity.common.java.logging.Logger.setLogger(
                 ANDROID_LOGCAT_LOGGER_IDENTIFIER,
                 new com.microsoft.identity.common.java.logging.ILoggerCallback() {
                     @Override
-                    public void log(String tag,
-                                    com.microsoft.identity.common.java.logging.Logger.LogLevel logLevel,
-                                    String message,
-                                    boolean containsPII) {
+                    public void log(
+                            String tag,
+                            com.microsoft.identity.common.java.logging.Logger.LogLevel logLevel,
+                            String message,
+                            boolean containsPII) {
                         // Send logs into Logcat.
                         if (sAllowLogcat) {
                             switch (logLevel) {
@@ -135,7 +136,8 @@ public class Logger {
                     }
                 });
 
-        com.microsoft.identity.common.java.logging.Logger.setPlatformString(" Android " + Build.VERSION.SDK_INT);
+        com.microsoft.identity.common.java.logging.Logger.setPlatformString(
+                " Android " + Build.VERSION.SDK_INT);
     }
 
     /**
@@ -189,7 +191,8 @@ public class Logger {
      * @param logLevel The {@link LogLevel} to be enabled for the diagnostic logging.
      */
     public void setLogLevel(final LogLevel logLevel) {
-        com.microsoft.identity.common.java.logging.Logger.setLogLevel(logLevel.convertToJavaLogLevel());
+        com.microsoft.identity.common.java.logging.Logger.setLogLevel(
+                logLevel.convertToJavaLogLevel());
     }
 
     /**
@@ -204,11 +207,13 @@ public class Logger {
                 ANDROID_EXTERNAL_LOGGER_IDENTIFIER,
                 new com.microsoft.identity.common.java.logging.ILoggerCallback() {
                     @Override
-                    public void log(String tag,
-                                    com.microsoft.identity.common.java.logging.Logger.LogLevel logLevel,
-                                    String message,
-                                    boolean containsPII) {
-                        externalLogger.log(tag,
+                    public void log(
+                            String tag,
+                            com.microsoft.identity.common.java.logging.Logger.LogLevel logLevel,
+                            String message,
+                            boolean containsPII) {
+                        externalLogger.log(
+                                tag,
                                 LogLevel.convertFromJavaLogLevel(logLevel),
                                 message,
                                 containsPII);
@@ -236,13 +241,11 @@ public class Logger {
      * @param errorMessage The error message to log.
      * @param exception    An exception to log
      */
-    public static void error(final String tag,
-                             @Nullable final String errorMessage,
-                             @Nullable final Throwable exception) {
-        com.microsoft.identity.common.java.logging.Logger.error(
-                tag,
-                errorMessage,
-                exception);
+    public static void error(
+            final String tag,
+            @Nullable final String errorMessage,
+            @Nullable final Throwable exception) {
+        com.microsoft.identity.common.java.logging.Logger.error(tag, errorMessage, exception);
     }
 
     /**
@@ -254,16 +257,13 @@ public class Logger {
      * @param errorMessage  The error message to log.
      * @param exception     An exception to log.
      */
-    public static void error(final String tag,
-                             @Nullable final String correlationID,
-                             @Nullable final String errorMessage,
-                             @Nullable final Throwable exception) {
+    public static void error(
+            final String tag,
+            @Nullable final String correlationID,
+            @Nullable final String errorMessage,
+            @Nullable final Throwable exception) {
         com.microsoft.identity.common.java.logging.Logger.error(
-                tag,
-                correlationID,
-                errorMessage,
-                exception
-        );
+                tag, correlationID, errorMessage, exception);
     }
 
     /**
@@ -274,14 +274,11 @@ public class Logger {
      * @param errorMessage The error message to log.
      * @param exception    An exception to log.
      */
-    public static void errorPII(final String tag,
-                                @Nullable final String errorMessage,
-                                @Nullable final Throwable exception) {
-        com.microsoft.identity.common.java.logging.Logger.errorPII(
-                tag,
-                errorMessage,
-                exception
-        );
+    public static void errorPII(
+            final String tag,
+            @Nullable final String errorMessage,
+            @Nullable final Throwable exception) {
+        com.microsoft.identity.common.java.logging.Logger.errorPII(tag, errorMessage, exception);
     }
 
     /**
@@ -293,16 +290,13 @@ public class Logger {
      * @param errorMessage  The error message to log.
      * @param exception     An exception to log.
      */
-    public static void errorPII(final String tag,
-                                @Nullable final String correlationID,
-                                @Nullable final String errorMessage,
-                                @Nullable final Throwable exception) {
+    public static void errorPII(
+            final String tag,
+            @Nullable final String correlationID,
+            @Nullable final String errorMessage,
+            @Nullable final Throwable exception) {
         com.microsoft.identity.common.java.logging.Logger.errorPII(
-                tag,
-                correlationID,
-                errorMessage,
-                exception
-        );
+                tag, correlationID, errorMessage, exception);
     }
 
     /**
@@ -313,10 +307,7 @@ public class Logger {
      * @param message The message to log.
      */
     public static void warn(final String tag, @Nullable final String message) {
-        com.microsoft.identity.common.java.logging.Logger.warn(
-                tag,
-                message
-        );
+        com.microsoft.identity.common.java.logging.Logger.warn(tag, message);
     }
 
     /**
@@ -327,14 +318,11 @@ public class Logger {
      * @param correlationID Unique identifier for a request or flow used to trace program execution.
      * @param message       The message to log.
      */
-    public static void warn(final String tag,
-                            @Nullable final String correlationID,
-                            @Nullable final String message) {
-        com.microsoft.identity.common.java.logging.Logger.warn(
-                tag,
-                correlationID,
-                message
-        );
+    public static void warn(
+            final String tag,
+            @Nullable final String correlationID,
+            @Nullable final String message) {
+        com.microsoft.identity.common.java.logging.Logger.warn(tag, correlationID, message);
     }
 
     /**
@@ -345,10 +333,7 @@ public class Logger {
      * @param message The message to log.
      */
     public static void warnPII(final String tag, @Nullable final String message) {
-        com.microsoft.identity.common.java.logging.Logger.warnPII(
-                tag,
-                message
-        );
+        com.microsoft.identity.common.java.logging.Logger.warnPII(tag, message);
     }
 
     /**
@@ -359,14 +344,11 @@ public class Logger {
      * @param correlationID Unique identifier for a request or flow used to trace program execution.
      * @param message       The message to log.
      */
-    public static void warnPII(final String tag,
-                               @Nullable final String correlationID,
-                               @Nullable final String message) {
-        com.microsoft.identity.common.java.logging.Logger.warnPII(
-                tag,
-                correlationID,
-                message
-        );
+    public static void warnPII(
+            final String tag,
+            @Nullable final String correlationID,
+            @Nullable final String message) {
+        com.microsoft.identity.common.java.logging.Logger.warnPII(tag, correlationID, message);
     }
 
     /**
@@ -377,10 +359,7 @@ public class Logger {
      * @param message The message to log.
      */
     public static void info(final String tag, @Nullable final String message) {
-        com.microsoft.identity.common.java.logging.Logger.info(
-                tag,
-                message
-        );
+        com.microsoft.identity.common.java.logging.Logger.info(tag, message);
     }
 
     /**
@@ -391,14 +370,11 @@ public class Logger {
      * @param correlationID Unique identifier for a request or flow used to trace program execution.
      * @param message       The message to log.
      */
-    public static void info(final String tag,
-                            @Nullable final String correlationID,
-                            @Nullable final String message) {
-        com.microsoft.identity.common.java.logging.Logger.info(
-                tag,
-                correlationID,
-                message
-        );
+    public static void info(
+            final String tag,
+            @Nullable final String correlationID,
+            @Nullable final String message) {
+        com.microsoft.identity.common.java.logging.Logger.info(tag, correlationID, message);
     }
 
     /**
@@ -409,10 +385,7 @@ public class Logger {
      * @param message The message to log.
      */
     public static void infoPII(final String tag, @Nullable final String message) {
-        com.microsoft.identity.common.java.logging.Logger.infoPII(
-                tag,
-                message
-        );
+        com.microsoft.identity.common.java.logging.Logger.infoPII(tag, message);
     }
 
     /**
@@ -423,14 +396,11 @@ public class Logger {
      * @param correlationID Unique identifier for a request or flow used to trace program execution.
      * @param message       The message to log.
      */
-    public static void infoPII(final String tag,
-                               @Nullable final String correlationID,
-                               @Nullable final String message) {
-        com.microsoft.identity.common.java.logging.Logger.infoPII(
-                tag,
-                correlationID,
-                message
-        );
+    public static void infoPII(
+            final String tag,
+            @Nullable final String correlationID,
+            @Nullable final String message) {
+        com.microsoft.identity.common.java.logging.Logger.infoPII(tag, correlationID, message);
     }
 
     /**
@@ -441,10 +411,7 @@ public class Logger {
      * @param message The message to log.
      */
     public static void verbose(final String tag, @Nullable final String message) {
-        com.microsoft.identity.common.java.logging.Logger.verbose(
-                tag,
-                message
-        );
+        com.microsoft.identity.common.java.logging.Logger.verbose(tag, message);
     }
 
     /**
@@ -455,14 +422,11 @@ public class Logger {
      * @param correlationID Unique identifier for a request or flow used to trace program execution.
      * @param message       The message to log.
      */
-    public static void verbose(final String tag,
-                               @Nullable final String correlationID,
-                               @Nullable final String message) {
-        com.microsoft.identity.common.java.logging.Logger.verbose(
-                tag,
-                correlationID,
-                message
-        );
+    public static void verbose(
+            final String tag,
+            @Nullable final String correlationID,
+            @Nullable final String message) {
+        com.microsoft.identity.common.java.logging.Logger.verbose(tag, correlationID, message);
     }
 
     /**
@@ -473,10 +437,7 @@ public class Logger {
      * @param message The message to log.
      */
     public static void verbosePII(final String tag, @Nullable final String message) {
-        com.microsoft.identity.common.java.logging.Logger.verbosePII(
-                tag,
-                message
-        );
+        com.microsoft.identity.common.java.logging.Logger.verbosePII(tag, message);
     }
 
     /**
@@ -487,13 +448,8 @@ public class Logger {
      * @param correlationID Unique identifier for a request or flow used to trace program execution.
      * @param message       The message to log.
      */
-    public static void verbosePII(final String tag,
-                                  final String correlationID,
-                                  @Nullable final String message) {
-        com.microsoft.identity.common.java.logging.Logger.verbosePII(
-                tag,
-                correlationID,
-                message
-        );
+    public static void verbosePII(
+            final String tag, final String correlationID, @Nullable final String message) {
+        com.microsoft.identity.common.java.logging.Logger.verbosePII(tag, correlationID, message);
     }
 }

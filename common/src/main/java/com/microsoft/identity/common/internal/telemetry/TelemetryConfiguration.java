@@ -29,5 +29,5 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
  **/
 @SuppressFBWarnings("NM_SAME_SIMPLE_NAME_AS_SUPERCLASS")
 @Deprecated
-public class TelemetryConfiguration extends com.microsoft.identity.common.java.telemetry.TelemetryConfiguration {
-}
+public class TelemetryConfiguration
+        extends com.microsoft.identity.common.java.telemetry.TelemetryConfiguration {}

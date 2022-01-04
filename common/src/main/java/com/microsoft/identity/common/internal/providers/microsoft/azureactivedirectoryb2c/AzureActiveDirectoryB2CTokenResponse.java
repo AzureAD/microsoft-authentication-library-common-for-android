@@ -27,5 +27,4 @@ import com.microsoft.identity.common.java.providers.oauth2.TokenResponse;
 /**
  * The Azure Active Directory B2C Token Response.
  */
-public class AzureActiveDirectoryB2CTokenResponse extends TokenResponse {
-}
+public class AzureActiveDirectoryB2CTokenResponse extends TokenResponse {}

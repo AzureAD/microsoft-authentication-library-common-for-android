@@ -37,7 +37,8 @@ import java.util.HashMap;
 /**
  * A class to provide a Fake Authorization Result object to be used in ROPC flow
  */
-public class MockSuccessAuthorizationResultNetworkTests extends AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse> {
+public class MockSuccessAuthorizationResultNetworkTests
+        extends AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse> {
 
     @Override
     public boolean getSuccess() {
@@ -51,12 +52,16 @@ public class MockSuccessAuthorizationResultNetworkTests extends AuthorizationRes
 
             if (labConfig != null) {
                 // get cloud instance host name from the authority url provided by lab info
-                // and set in the mock authorization response so that we can test multiple cloud support
+                // and set in the mock authorization response so that we can test multiple cloud
+                // support
                 final URL authorityURL = new URL(LabConfig.getCurrentLabConfig().getAuthority());
-                authorizationParams.put(MicrosoftAuthorizationResponse.CLOUD_INSTANCE_HOST_NAME, authorityURL.getHost());
+                authorizationParams.put(
+                        MicrosoftAuthorizationResponse.CLOUD_INSTANCE_HOST_NAME,
+                        authorityURL.getHost());
             }
 
-            MicrosoftStsAuthorizationResponse response = new MicrosoftStsAuthorizationResponse("", "", authorizationParams);
+            MicrosoftStsAuthorizationResponse response =
+                    new MicrosoftStsAuthorizationResponse("", "", authorizationParams);
             this.setAuthorizationResponse(response);
             // assume that we have auth code and auth request was successful
             this.setAuthorizationStatus(AuthorizationStatus.SUCCESS);

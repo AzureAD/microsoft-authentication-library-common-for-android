@@ -32,7 +32,6 @@ import com.microsoft.identity.common.adal.internal.AndroidSecretKeyEnabledHelper
 import com.microsoft.identity.common.crypto.AndroidAuthSdkStorageEncryptionManager;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
 import com.microsoft.identity.common.java.crypto.IKeyAccessor;
-import com.microsoft.identity.common.java.crypto.KeyAccessorStringAdapter;
 import com.microsoft.identity.common.java.util.ported.Predicate;
 
 import org.junit.After;
@@ -55,25 +54,29 @@ public class SharedPreferencesFileManagerTests extends AndroidSecretKeyEnabledHe
     private static final String sTEST_SHARED_PREFS_NAME = "com.microsoft.test.preferences";
     private static final String sTEST_KEY = "test_key";
     private static final String sTEST_VALUE = "test_value";
-    private static final IKeyAccessor sTEST_ENCRYPTION_MANAGER = new AndroidAuthSdkStorageEncryptionManager(ApplicationProvider.getApplicationContext(), null);
+    private static final IKeyAccessor sTEST_ENCRYPTION_MANAGER =
+            new AndroidAuthSdkStorageEncryptionManager(
+                    ApplicationProvider.getApplicationContext(), null);
 
     private SharedPreferencesFileManager mSharedPreferencesFileManager;
 
     @Parameterized.Parameters
     public static Iterable<SharedPreferencesFileManager> testParams() {
-        return Arrays.asList(new SharedPreferencesFileManager[]{
-                SharedPreferencesFileManager.getSharedPreferences(
-                        ApplicationProvider.getApplicationContext(),
-                        sTEST_SHARED_PREFS_NAME,
-                        null),
-                SharedPreferencesFileManager.getSharedPreferences(
-                        ApplicationProvider.getApplicationContext(),
-                        sTEST_SHARED_PREFS_NAME,
-                        sTEST_ENCRYPTION_MANAGER)
-        });
+        return Arrays.asList(
+                new SharedPreferencesFileManager[] {
+                    SharedPreferencesFileManager.getSharedPreferences(
+                            ApplicationProvider.getApplicationContext(),
+                            sTEST_SHARED_PREFS_NAME,
+                            null),
+                    SharedPreferencesFileManager.getSharedPreferences(
+                            ApplicationProvider.getApplicationContext(),
+                            sTEST_SHARED_PREFS_NAME,
+                            sTEST_ENCRYPTION_MANAGER)
+                });
     }
 
-    public SharedPreferencesFileManagerTests(final SharedPreferencesFileManager sharedPreferencesFileManager) {
+    public SharedPreferencesFileManagerTests(
+            final SharedPreferencesFileManager sharedPreferencesFileManager) {
         mSharedPreferencesFileManager = sharedPreferencesFileManager;
     }
 
@@ -105,67 +108,76 @@ public class SharedPreferencesFileManagerTests extends AndroidSecretKeyEnabledHe
         Field f = SharedPreferencesFileManager.class.getDeclaredField("mEncryptionManager");
         f.setAccessible(true);
 
-        IKeyAccessor keyAccessor = (null == f.get(mSharedPreferencesFileManager))? null : sTEST_ENCRYPTION_MANAGER;
+        IKeyAccessor keyAccessor =
+                (null == f.get(mSharedPreferencesFileManager)) ? null : sTEST_ENCRYPTION_MANAGER;
 
-        Assert.assertSame(mSharedPreferencesFileManager, SharedPreferencesFileManager.getSharedPreferences(
-                ApplicationProvider.getApplicationContext(),
-                mSharedPreferencesFileManager.getSharedPreferencesFileName(),
-                keyAccessor
-        ));
+        Assert.assertSame(
+                mSharedPreferencesFileManager,
+                SharedPreferencesFileManager.getSharedPreferences(
+                        ApplicationProvider.getApplicationContext(),
+                        mSharedPreferencesFileManager.getSharedPreferencesFileName(),
+                        keyAccessor));
     }
 
     @Test
     public void testGetSharedPreferencesNoKeyAccessor() throws Exception {
         Field f = SharedPreferencesFileManager.class.getDeclaredField("mEncryptionManager");
         f.setAccessible(true);
-        IKeyAccessor mkeyAccessor = (null == f.get(mSharedPreferencesFileManager))? null : sTEST_ENCRYPTION_MANAGER;
+        IKeyAccessor mkeyAccessor =
+                (null == f.get(mSharedPreferencesFileManager)) ? null : sTEST_ENCRYPTION_MANAGER;
 
         IKeyAccessor keyAccessor = mkeyAccessor;
         IKeyAccessor newKeyAccessor;
         if (keyAccessor == null) {
-            newKeyAccessor = new AndroidAuthSdkStorageEncryptionManager(ApplicationProvider.getApplicationContext(), null);
+            newKeyAccessor =
+                    new AndroidAuthSdkStorageEncryptionManager(
+                            ApplicationProvider.getApplicationContext(), null);
         } else {
             newKeyAccessor = null;
         }
-        Assert.assertNotSame(mSharedPreferencesFileManager, SharedPreferencesFileManager.getSharedPreferences(
-                ApplicationProvider.getApplicationContext(),
-                mSharedPreferencesFileManager.getSharedPreferencesFileName(),
-                newKeyAccessor)
-        );
-        Assert.assertSame(mSharedPreferencesFileManager, SharedPreferencesFileManager.getSharedPreferences(
-                ApplicationProvider.getApplicationContext(),
-                mSharedPreferencesFileManager.getSharedPreferencesFileName(),
-                keyAccessor)
-        );
+        Assert.assertNotSame(
+                mSharedPreferencesFileManager,
+                SharedPreferencesFileManager.getSharedPreferences(
+                        ApplicationProvider.getApplicationContext(),
+                        mSharedPreferencesFileManager.getSharedPreferencesFileName(),
+                        newKeyAccessor));
+        Assert.assertSame(
+                mSharedPreferencesFileManager,
+                SharedPreferencesFileManager.getSharedPreferences(
+                        ApplicationProvider.getApplicationContext(),
+                        mSharedPreferencesFileManager.getSharedPreferencesFileName(),
+                        keyAccessor));
     }
 
     public void testGetSharedPreferencesClear() throws Exception {
         Field f = SharedPreferencesFileManager.class.getDeclaredField("mEncryptionManager");
         f.setAccessible(true);
 
-        IKeyAccessor keyAccessor = (null == f.get(mSharedPreferencesFileManager))? null : sTEST_ENCRYPTION_MANAGER;
+        IKeyAccessor keyAccessor =
+                (null == f.get(mSharedPreferencesFileManager)) ? null : sTEST_ENCRYPTION_MANAGER;
 
-        Assert.assertSame(mSharedPreferencesFileManager, SharedPreferencesFileManager.getSharedPreferences(
-                ApplicationProvider.getApplicationContext(),
-                mSharedPreferencesFileManager.getSharedPreferencesFileName(),
-                keyAccessor
-        ));
+        Assert.assertSame(
+                mSharedPreferencesFileManager,
+                SharedPreferencesFileManager.getSharedPreferences(
+                        ApplicationProvider.getApplicationContext(),
+                        mSharedPreferencesFileManager.getSharedPreferencesFileName(),
+                        keyAccessor));
 
         SharedPreferencesFileManager.clearSingletonCache();
 
-        Assert.assertNotSame(mSharedPreferencesFileManager, SharedPreferencesFileManager.getSharedPreferences(
-                ApplicationProvider.getApplicationContext(),
-                mSharedPreferencesFileManager.getSharedPreferencesFileName(),
-                keyAccessor
-        ));
+        Assert.assertNotSame(
+                mSharedPreferencesFileManager,
+                SharedPreferencesFileManager.getSharedPreferences(
+                        ApplicationProvider.getApplicationContext(),
+                        mSharedPreferencesFileManager.getSharedPreferencesFileName(),
+                        keyAccessor));
     }
 
     @Test
     public void testGetSharedPreferencesFileName() {
         assertEquals(
                 sTEST_SHARED_PREFS_NAME,
-                mSharedPreferencesFileManager.getSharedPreferencesFileName()
-        );
+                mSharedPreferencesFileManager.getSharedPreferencesFileName());
     }
 
     @Test
@@ -190,12 +202,14 @@ public class SharedPreferencesFileManagerTests extends AndroidSecretKeyEnabledHe
             mSharedPreferencesFileManager.putString(testKeys[ii], testValues[ii]);
         }
         Map<String, String> allMap = new HashMap<String, String>();
-        Iterator<Map.Entry<String, String>> itr = mSharedPreferencesFileManager.getAllFilteredByKey(new Predicate<String>() {
-            @Override
-            public boolean test(String value) {
-                return true;
-            }
-        });
+        Iterator<Map.Entry<String, String>> itr =
+                mSharedPreferencesFileManager.getAllFilteredByKey(
+                        new Predicate<String>() {
+                            @Override
+                            public boolean test(String value) {
+                                return true;
+                            }
+                        });
         while (itr.hasNext()) {
             Map.Entry<String, String> e = itr.next();
             allMap.put(e.getKey(), e.getValue());
@@ -213,12 +227,14 @@ public class SharedPreferencesFileManagerTests extends AndroidSecretKeyEnabledHe
             mSharedPreferencesFileManager.putString(testKeys[ii], testValues[ii]);
         }
         Map<String, String> allMap = new HashMap<String, String>();
-        Iterator<Map.Entry<String, String>> itr = mSharedPreferencesFileManager.getAllFilteredByKey(new Predicate<String>() {
-            @Override
-            public boolean test(String value) {
-                return true;
-            }
-        });
+        Iterator<Map.Entry<String, String>> itr =
+                mSharedPreferencesFileManager.getAllFilteredByKey(
+                        new Predicate<String>() {
+                            @Override
+                            public boolean test(String value) {
+                                return true;
+                            }
+                        });
         while (itr.hasNext()) {
             Map.Entry<String, String> e = itr.next();
             allMap.put(e.getKey(), e.getValue());
@@ -237,12 +253,14 @@ public class SharedPreferencesFileManagerTests extends AndroidSecretKeyEnabledHe
             mSharedPreferencesFileManager.putString(testKeys[ii], testValues[ii]);
         }
         Map<String, String> allMap = new HashMap<String, String>();
-        Iterator<Map.Entry<String, String>> itr = mSharedPreferencesFileManager.getAllFilteredByKey(new Predicate<String>() {
-            @Override
-            public boolean test(String value) {
-                return false;
-            }
-        });
+        Iterator<Map.Entry<String, String>> itr =
+                mSharedPreferencesFileManager.getAllFilteredByKey(
+                        new Predicate<String>() {
+                            @Override
+                            public boolean test(String value) {
+                                return false;
+                            }
+                        });
         while (itr.hasNext()) {
             Map.Entry<String, String> e = itr.next();
             allMap.put(e.getKey(), e.getValue());
@@ -261,12 +279,14 @@ public class SharedPreferencesFileManagerTests extends AndroidSecretKeyEnabledHe
             mSharedPreferencesFileManager.putString(testKeys[ii], testValues[ii]);
         }
         Map<String, String> allMap = new HashMap<String, String>();
-        Iterator<Map.Entry<String, String>> itr = mSharedPreferencesFileManager.getAllFilteredByKey(new Predicate<String>() {
-            @Override
-            public boolean test(String value) {
-                return value.equals("2");
-            }
-        });
+        Iterator<Map.Entry<String, String>> itr =
+                mSharedPreferencesFileManager.getAllFilteredByKey(
+                        new Predicate<String>() {
+                            @Override
+                            public boolean test(String value) {
+                                return value.equals("2");
+                            }
+                        });
         while (itr.hasNext()) {
             Map.Entry<String, String> e = itr.next();
             allMap.put(e.getKey(), e.getValue());

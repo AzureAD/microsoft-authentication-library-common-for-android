@@ -34,6 +34,10 @@ import com.microsoft.identity.common.java.result.ILocalAuthenticationResult;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.util.ported.InMemoryStorage;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
+
+import lombok.NonNull;
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -41,14 +45,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import edu.umd.cs.findbugs.annotations.Nullable;
-import lombok.NonNull;
-
 /**
  * Manages telemetry to be sent to ESTS via token requests.
  */
 public class EstsTelemetry {
-    private final static String TAG = EstsTelemetry.class.getSimpleName();
+    private static final String TAG = EstsTelemetry.class.getSimpleName();
 
     /**
      * The name of the storage file on disk for the last request telemetry.
@@ -62,13 +63,15 @@ public class EstsTelemetry {
     private final INameValueStorage<Set<FailedRequest>> mSentFailedRequests;
 
     EstsTelemetry() {
-        this(new InMemoryStorage<CurrentRequestTelemetry>(),
+        this(
+                new InMemoryStorage<CurrentRequestTelemetry>(),
                 new InMemoryStorage<Set<FailedRequest>>());
     }
 
     // Exposed for testing only.
-    EstsTelemetry(@NonNull final INameValueStorage<CurrentRequestTelemetry> telemetryMap,
-                  @NonNull final INameValueStorage<Set<FailedRequest>> sentFailedRequestsMap) {
+    EstsTelemetry(
+            @NonNull final INameValueStorage<CurrentRequestTelemetry> telemetryMap,
+            @NonNull final INameValueStorage<Set<FailedRequest>> sentFailedRequestsMap) {
         mTelemetryMap = telemetryMap;
         mSentFailedRequests = sentFailedRequestsMap;
     }
@@ -87,8 +90,8 @@ public class EstsTelemetry {
         return sEstsTelemetryInstance;
     }
 
-    //@VisibleForTesting
-    public synchronized void clear(){
+    // @VisibleForTesting
+    public synchronized void clear() {
         mTelemetryMap.clear();
         mSentFailedRequests.clear();
         if (mLastRequestTelemetryCache != null) {
@@ -100,7 +103,8 @@ public class EstsTelemetry {
      * Bootstrap an instance of {@link EstsTelemetry}.
      * Must be invoked prior to any operation on this object.
      */
-    public synchronized void setUp(@NonNull final LastRequestTelemetryCache lastRequestTelemetryCache) {
+    public synchronized void setUp(
+            @NonNull final LastRequestTelemetryCache lastRequestTelemetryCache) {
         if (this.mLastRequestTelemetryCache == null) {
             this.mLastRequestTelemetryCache = lastRequestTelemetryCache;
         }
@@ -112,8 +116,10 @@ public class EstsTelemetry {
      */
     public synchronized void setUp(@NonNull final IPlatformComponents platformComponents) {
         if (this.mLastRequestTelemetryCache == null) {
-            this.mLastRequestTelemetryCache = new LastRequestTelemetryCache(
-                    platformComponents.getNameValueStore(LAST_REQUEST_TELEMETRY_STORAGE_FILE, String.class));
+            this.mLastRequestTelemetryCache =
+                    new LastRequestTelemetryCache(
+                            platformComponents.getNameValueStore(
+                                    LAST_REQUEST_TELEMETRY_STORAGE_FILE, String.class));
         }
     }
 
@@ -159,9 +165,13 @@ public class EstsTelemetry {
             return;
         }
 
-        final String correlationId = DiagnosticContext.INSTANCE.getRequestContext().get(DiagnosticContext.CORRELATION_ID);
+        final String correlationId =
+                DiagnosticContext.INSTANCE
+                        .getRequestContext()
+                        .get(DiagnosticContext.CORRELATION_ID);
         final String compliantValueString = TelemetryUtils.getSchemaCompliantString(value);
-        final CurrentRequestTelemetry currentTelemetryInstance = getCurrentTelemetryInstance(correlationId);
+        final CurrentRequestTelemetry currentTelemetryInstance =
+                getCurrentTelemetryInstance(correlationId);
         if (currentTelemetryInstance != null) {
             currentTelemetryInstance.put(key, compliantValueString);
         }
@@ -193,8 +203,8 @@ public class EstsTelemetry {
      * Removes the telemetry associated to the correlation id from the telemetry map,
      * and saves it to the cache (SharedPreferences) as the last request telemetry.
      */
-    public synchronized void flush(@NonNull final ICommand<?> command,
-                                   @NonNull final ICommandResult commandResult) {
+    public synchronized void flush(
+            @NonNull final ICommand<?> command, @NonNull final ICommandResult commandResult) {
         final String methodName = ":flush";
 
         final String correlationId = command.getCorrelationId();
@@ -212,11 +222,13 @@ public class EstsTelemetry {
         // load the last request object from cache
         LastRequestTelemetry lastRequestTelemetry = loadLastRequestTelemetryFromCache();
 
-        // We did not have a last request object in cache, let's create a new one and copySharedValues
+        // We did not have a last request object in cache, let's create a new one and
+        // copySharedValues
         // fields from current request where applicable
         if (lastRequestTelemetry == null) {
             lastRequestTelemetry = new LastRequestTelemetry(currentTelemetry.getSchemaVersion());
-            lastRequestTelemetry = (LastRequestTelemetry) lastRequestTelemetry.copySharedValues(currentTelemetry);
+            lastRequestTelemetry =
+                    (LastRequestTelemetry) lastRequestTelemetry.copySharedValues(currentTelemetry);
         }
 
         if (isTelemetryLoggedByServer(command, commandResult)) {
@@ -240,12 +252,11 @@ public class EstsTelemetry {
         if (errorCode != null) {
             // we have an error, let's append it to the list
             lastRequestTelemetry.appendFailedRequest(
-                    currentTelemetry.getApiId(),
-                    correlationId,
-                    errorCode);
-        } else if (commandResult.getResult() != null &&
-                commandResult.getResult() instanceof ILocalAuthenticationResult) {
-            final ILocalAuthenticationResult localAuthenticationResult = (ILocalAuthenticationResult) commandResult.getResult();
+                    currentTelemetry.getApiId(), correlationId, errorCode);
+        } else if (commandResult.getResult() != null
+                && commandResult.getResult() instanceof ILocalAuthenticationResult) {
+            final ILocalAuthenticationResult localAuthenticationResult =
+                    (ILocalAuthenticationResult) commandResult.getResult();
             if (localAuthenticationResult.isServicedFromCache()) {
                 // we returned a token from cache, let's increment the silent success count
                 lastRequestTelemetry.incrementSilentSuccessCount();
@@ -262,9 +273,8 @@ public class EstsTelemetry {
         } else {
             Logger.warn(
                     TAG + methodName,
-                    "Last Request Telemetry Cache object was null. " +
-                            "Unable to save request telemetry to cache."
-            );
+                    "Last Request Telemetry Cache object was null. "
+                            + "Unable to save request telemetry to cache.");
         }
     }
 
@@ -278,9 +288,8 @@ public class EstsTelemetry {
         if (mLastRequestTelemetryCache == null) {
             Logger.verbose(
                     TAG + methodName,
-                    "Last Request Telemetry Cache has not been initialized. " +
-                            "Cannot load Last Request Telemetry data from cache."
-            );
+                    "Last Request Telemetry Cache has not been initialized. "
+                            + "Cannot load Last Request Telemetry data from cache.");
             return null;
         }
 
@@ -305,9 +314,10 @@ public class EstsTelemetry {
     /**
      * Returns true if the telemetry associated to the given command has been logged by eSTS.
      **/
-    private boolean isTelemetryLoggedByServer(@NonNull final ICommand<?> command,
-                                              @NonNull final ICommandResult commandResult) {
-        // This was a local operation - we didn't reach token endpoint and hence telemetry wasn't sent
+    private boolean isTelemetryLoggedByServer(
+            @NonNull final ICommand<?> command, @NonNull final ICommandResult commandResult) {
+        // This was a local operation - we didn't reach token endpoint and hence telemetry wasn't
+        // sent
         if (!command.willReachTokenEndpoint()) {
             return false;
         }
@@ -322,16 +332,17 @@ public class EstsTelemetry {
                 final ServiceException serviceException = (ServiceException) baseException;
                 final int statusCode = serviceException.getHttpStatusCode();
                 // for these status codes, headers aren't logged by ests
-                return !(statusCode == ServiceException.DEFAULT_STATUS_CODE ||
-                        statusCode == 429 ||
-                        statusCode >= 500);
+                return !(statusCode == ServiceException.DEFAULT_STATUS_CODE
+                        || statusCode == 429
+                        || statusCode >= 500);
             }
         } else if (commandResult.getStatus() == ICommandResult.ResultStatus.CANCEL) {
             // we did not go to token endpoint
             return false;
         } else if (commandResult.getStatus() == ICommandResult.ResultStatus.COMPLETED) {
             if (commandResult.getResult() instanceof ILocalAuthenticationResult) {
-                final ILocalAuthenticationResult localAuthenticationResult = (ILocalAuthenticationResult) commandResult.getResult();
+                final ILocalAuthenticationResult localAuthenticationResult =
+                        (ILocalAuthenticationResult) commandResult.getResult();
                 if (localAuthenticationResult.isServicedFromCache()) {
                     // we did not go to token endpoint
                     return false;
@@ -353,7 +364,10 @@ public class EstsTelemetry {
     private String getCurrentTelemetryHeaderString() {
         final String methodName = ":getCurrentTelemetryHeaderString";
 
-        final String correlationId = DiagnosticContext.INSTANCE.getRequestContext().get(DiagnosticContext.CORRELATION_ID);
+        final String correlationId =
+                DiagnosticContext.INSTANCE
+                        .getRequestContext()
+                        .get(DiagnosticContext.CORRELATION_ID);
         if (correlationId == null) {
             Logger.warn(TAG + methodName, "correlation ID is null.");
             return null;
@@ -361,8 +375,9 @@ public class EstsTelemetry {
 
         final RequestTelemetry currentTelemetry = mTelemetryMap.get(correlationId);
         if (currentTelemetry == null) {
-            Logger.warn(TAG + methodName, "currentTelemetry for correlation ID:" +
-                    correlationId + " is null.");
+            Logger.warn(
+                    TAG + methodName,
+                    "currentTelemetry for correlation ID:" + correlationId + " is null.");
             return null;
         }
 
@@ -381,41 +396,49 @@ public class EstsTelemetry {
             return null;
         }
 
-        final String correlationId = DiagnosticContext.INSTANCE.getRequestContext().get(DiagnosticContext.CORRELATION_ID);
+        final String correlationId =
+                DiagnosticContext.INSTANCE
+                        .getRequestContext()
+                        .get(DiagnosticContext.CORRELATION_ID);
         if (correlationId == null) {
             Logger.warn(TAG + methodName, "correlation ID is null.");
             return null;
         }
 
-        final LastRequestTelemetry lastRequestTelemetryFromCache = mLastRequestTelemetryCache.getRequestTelemetryFromCache();
+        final LastRequestTelemetry lastRequestTelemetryFromCache =
+                mLastRequestTelemetryCache.getRequestTelemetryFromCache();
         if (lastRequestTelemetryFromCache == null) {
             // we did not have anything in the telemetry cache for the last request
             // let's create a new object based on the data available from the current request object
             // and return the header string formed via that object
-            final CurrentRequestTelemetry currentRequestTelemetry = mTelemetryMap.get(correlationId);
+            final CurrentRequestTelemetry currentRequestTelemetry =
+                    mTelemetryMap.get(correlationId);
             if (currentRequestTelemetry == null) {
-                Logger.warn(TAG + methodName, "currentTelemetry for correlation ID:" +
-                        correlationId + " is null.");
+                Logger.warn(
+                        TAG + methodName,
+                        "currentTelemetry for correlation ID:" + correlationId + " is null.");
                 return null;
             }
 
-            // We're trying to send this.. so that if we ever come across this field being null on the server
+            // We're trying to send this.. so that if we ever come across this field being null on
+            // the server
             // then we know you have a bug in the client.
-            final LastRequestTelemetry lastRequestTelemetry = new LastRequestTelemetry(currentRequestTelemetry.getSchemaVersion());
+            final LastRequestTelemetry lastRequestTelemetry =
+                    new LastRequestTelemetry(currentRequestTelemetry.getSchemaVersion());
             lastRequestTelemetry.copySharedValues(currentRequestTelemetry);
             lastRequestTelemetry.putInPlatformTelemetry(
-                    SchemaConstants.Key.ALL_TELEMETRY_DATA_SENT,
-                    SchemaConstants.Value.TRUE
-            );
+                    SchemaConstants.Key.ALL_TELEMETRY_DATA_SENT, SchemaConstants.Value.TRUE);
             return lastRequestTelemetry.getCompleteHeaderString();
         }
 
         // create a copy of the object retrieved from cache
-        final LastRequestTelemetry lastRequestTelemetryCopy = new LastRequestTelemetry(lastRequestTelemetryFromCache.getSchemaVersion());
+        final LastRequestTelemetry lastRequestTelemetryCopy =
+                new LastRequestTelemetry(lastRequestTelemetryFromCache.getSchemaVersion());
         lastRequestTelemetryCopy.copySharedValues(lastRequestTelemetryFromCache);
 
         // failed request data from the object retrieved from cache
-        final List<FailedRequest> originalFailedRequests = lastRequestTelemetryFromCache.getFailedRequests();
+        final List<FailedRequest> originalFailedRequests =
+                lastRequestTelemetryFromCache.getFailedRequests();
 
         // get the failed request set for the failed request data that we attempt to send in header
         // as part of this request
@@ -425,9 +448,11 @@ public class EstsTelemetry {
         for (int i = 0; i < originalFailedRequests.size(); i++) {
             // there is a limit of 8KB for the payload sent in request headers
             // we will be maxing out at 4KB to avoid HTTP 413 errors
-            // check if we have enough space in the String to store another failed request/error element
+            // check if we have enough space in the String to store another failed request/error
+            // element
             // if yes, then add it to the failed request array (for the copy)
-            if (lastRequestTelemetryCopy.getCompleteHeaderString().length() < SchemaConstants.HEADER_DATA_LIMIT) {
+            if (lastRequestTelemetryCopy.getCompleteHeaderString().length()
+                    < SchemaConstants.HEADER_DATA_LIMIT) {
                 final FailedRequest failedRequest = originalFailedRequests.get(i);
                 lastRequestTelemetryCopy.appendFailedRequest(failedRequest);
 
@@ -442,12 +467,11 @@ public class EstsTelemetry {
             }
         }
 
-        final String isAllDataSentString = TelemetryUtils.getSchemaCompliantStringFromBoolean(isAllDataSentInHeader);
+        final String isAllDataSentString =
+                TelemetryUtils.getSchemaCompliantStringFromBoolean(isAllDataSentInHeader);
 
         lastRequestTelemetryCopy.putInPlatformTelemetry(
-                SchemaConstants.Key.ALL_TELEMETRY_DATA_SENT,
-                isAllDataSentString
-        );
+                SchemaConstants.Key.ALL_TELEMETRY_DATA_SENT, isAllDataSentString);
 
         // return the header string formed for the copy element
         return lastRequestTelemetryCopy.getCompleteHeaderString();
@@ -475,19 +499,13 @@ public class EstsTelemetry {
         if (currentHeader != null) {
             headerMap.put(SchemaConstants.CURRENT_REQUEST_HEADER_NAME, currentHeader);
         } else {
-            Logger.verbose(
-                    TAG + methodName,
-                    "Current Request Telemetry Header is null"
-            );
+            Logger.verbose(TAG + methodName, "Current Request Telemetry Header is null");
         }
 
         if (lastHeader != null) {
             headerMap.put(SchemaConstants.LAST_REQUEST_HEADER_NAME, lastHeader);
         } else {
-            Logger.verbose(
-                    TAG + methodName,
-                    "Last Request Telemetry Header is null"
-            );
+            Logger.verbose(TAG + methodName, "Last Request Telemetry Header is null");
         }
 
         return Collections.unmodifiableMap(headerMap);
@@ -497,8 +515,12 @@ public class EstsTelemetry {
      * Returns true if there exists a telemetry instance associated to the current correlation ID.
      **/
     private boolean isCurrentTelemetryAvailable() {
-        final String correlationId = DiagnosticContext.INSTANCE.getRequestContext().get(DiagnosticContext.CORRELATION_ID);
-        final CurrentRequestTelemetry currentRequestTelemetry = getCurrentTelemetryInstance(correlationId);
+        final String correlationId =
+                DiagnosticContext.INSTANCE
+                        .getRequestContext()
+                        .get(DiagnosticContext.CORRELATION_ID);
+        final CurrentRequestTelemetry currentRequestTelemetry =
+                getCurrentTelemetryInstance(correlationId);
         return currentRequestTelemetry != null;
     }
 

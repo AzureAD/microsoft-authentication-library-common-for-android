@@ -32,8 +32,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
-import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
+import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.logging.Logger;
 
 /**
@@ -76,10 +76,11 @@ public class HelloCache {
      * @param targetAppPackageName package name of the app that this client will hello() with.
      * @param components
      */
-    public HelloCache(final @NonNull Context context,
-                      final @NonNull String protocolName,
-                      final @NonNull String targetAppPackageName,
-                      final @NonNull IPlatformComponents components) {
+    public HelloCache(
+            final @NonNull Context context,
+            final @NonNull String protocolName,
+            final @NonNull String targetAppPackageName,
+            final @NonNull IPlatformComponents components) {
         mFileManager = components.getNameValueStore(SHARED_PREFERENCE_NAME, String.class);
         mContext = context;
         mProtocolName = protocolName;
@@ -92,8 +93,9 @@ public class HelloCache {
      * @param clientMinimumProtocolVersion minimum version of the protocol that the client supports.
      * @param clientMaximumProtocolVersion maximum version of the protocol that to be advertised by the client.
      */
-    public @Nullable String tryGetNegotiatedProtocolVersion(final @Nullable String clientMinimumProtocolVersion,
-                                                            final @NonNull String clientMaximumProtocolVersion) {
+    public @Nullable String tryGetNegotiatedProtocolVersion(
+            final @Nullable String clientMinimumProtocolVersion,
+            final @NonNull String clientMaximumProtocolVersion) {
         final String methodName = ":tryGetNegotiatedProtocolVersion";
 
         if (!sIsEnabled) {
@@ -103,7 +105,9 @@ public class HelloCache {
 
         final String key;
         try {
-            key = getNegotiatedProtocolVersionCacheKey(clientMinimumProtocolVersion, clientMaximumProtocolVersion);
+            key =
+                    getNegotiatedProtocolVersionCacheKey(
+                            clientMinimumProtocolVersion, clientMaximumProtocolVersion);
         } catch (final PackageManager.NameNotFoundException e) {
             Logger.error(TAG + methodName, "Failed to retrieve key", e);
             return null;
@@ -119,9 +123,10 @@ public class HelloCache {
      * @param clientMaximumProtocolVersion maximum version of the protocol that to be advertised by the client.
      * @param negotiatedProtocolVersion    the negotiated protocol version as returned from hello().
      */
-    public void saveNegotiatedProtocolVersion(final @Nullable String clientMinimumProtocolVersion,
-                                              final @NonNull String clientMaximumProtocolVersion,
-                                              final @NonNull String negotiatedProtocolVersion) {
+    public void saveNegotiatedProtocolVersion(
+            final @Nullable String clientMinimumProtocolVersion,
+            final @NonNull String clientMaximumProtocolVersion,
+            final @NonNull String negotiatedProtocolVersion) {
         final String methodName = ":saveNegotiatedProtocolVersion";
 
         if (!sIsEnabled) {
@@ -131,7 +136,9 @@ public class HelloCache {
 
         final String key;
         try {
-            key = getNegotiatedProtocolVersionCacheKey(clientMinimumProtocolVersion, clientMaximumProtocolVersion);
+            key =
+                    getNegotiatedProtocolVersionCacheKey(
+                            clientMinimumProtocolVersion, clientMaximumProtocolVersion);
         } catch (final PackageManager.NameNotFoundException e) {
             Logger.error(TAG + methodName, "Failed to retrieve key", e);
             return;
@@ -146,12 +153,20 @@ public class HelloCache {
      * @param clientMinimumProtocolVersion minimum version of the protocol that the client supports.
      * @param clientMaximumProtocolVersion maximum version of the protocol that to be advertised by the client.
      */
-    private @NonNull String getNegotiatedProtocolVersionCacheKey(final @Nullable String clientMinimumProtocolVersion,
-                                                                 final @NonNull String clientMaximumProtocolVersion)
+    private @NonNull String getNegotiatedProtocolVersionCacheKey(
+            final @Nullable String clientMinimumProtocolVersion,
+            final @NonNull String clientMaximumProtocolVersion)
             throws PackageManager.NameNotFoundException {
-        return mProtocolName +
-                "[" + clientMinimumProtocolVersion + "," + clientMaximumProtocolVersion + "]:"
-                + mTargetAppPackageName + "[" + getVersionCode() + "]";
+        return mProtocolName
+                + "["
+                + clientMinimumProtocolVersion
+                + ","
+                + clientMaximumProtocolVersion
+                + "]:"
+                + mTargetAppPackageName
+                + "["
+                + getVersionCode()
+                + "]";
     }
 
     @VisibleForTesting
@@ -161,7 +176,8 @@ public class HelloCache {
 
     @VisibleForTesting
     public @NonNull String getVersionCode() throws PackageManager.NameNotFoundException {
-        final PackageInfo packageInfo = mContext.getPackageManager().getPackageInfo(mTargetAppPackageName, 0);
+        final PackageInfo packageInfo =
+                mContext.getPackageManager().getPackageInfo(mTargetAppPackageName, 0);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             return String.valueOf(packageInfo.getLongVersionCode());
         } else {

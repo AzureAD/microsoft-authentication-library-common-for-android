@@ -23,6 +23,6 @@
 package com.microsoft.identity.common.java.telemetry.adapter;
 
 public interface ITelemetryAdapter<T> {
-    //Future extensibility void process(T observable, Rule rule);
+    // Future extensibility void process(T observable, Rule rule);
     void process(T observable);
 }

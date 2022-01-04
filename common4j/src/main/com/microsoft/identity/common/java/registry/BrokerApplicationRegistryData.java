@@ -60,7 +60,7 @@ public class BrokerApplicationRegistryData extends AbstractApplicationMetadata {
         mWpjAccountAccessAllowed = allow;
     }
 
-    //CHECKSTYLE:OFF
+    // CHECKSTYLE:OFF
     // This method is generated. Checkstyle and/or PMD has been disabled.
     // This method *must* be regenerated if the class' structural definition changes through the
     // addition/subtraction of fields.
@@ -75,9 +75,9 @@ public class BrokerApplicationRegistryData extends AbstractApplicationMetadata {
 
         return mWpjAccountAccessAllowed == that.mWpjAccountAccessAllowed;
     }
-    //CHECKSTYLE:ON
+    // CHECKSTYLE:ON
 
-    //CHECKSTYLE:OFF
+    // CHECKSTYLE:OFF
     // This method is generated. Checkstyle and/or PMD has been disabled.
     // This method *must* be regenerated if the class' structural definition changes through the
     // addition/subtraction of fields.
@@ -88,5 +88,5 @@ public class BrokerApplicationRegistryData extends AbstractApplicationMetadata {
         result = 31 * result + (mWpjAccountAccessAllowed ? 1 : 0);
         return result;
     }
-    //CHECKSTYLE:ON
+    // CHECKSTYLE:ON
 }

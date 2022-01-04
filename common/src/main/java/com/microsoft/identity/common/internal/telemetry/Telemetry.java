@@ -31,10 +31,11 @@ import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.telemetry.observers.ITelemetryObserver;
 import com.microsoft.identity.common.logging.Logger;
 
-import java.util.List;
-
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 import lombok.NonNull;
+
+import java.util.List;
 
 /**
  * Deprecated.
@@ -43,18 +44,19 @@ import lombok.NonNull;
  **/
 @SuppressFBWarnings("NM_SAME_SIMPLE_NAME_AS_SUPERCLASS")
 public class Telemetry extends com.microsoft.identity.common.java.telemetry.Telemetry {
-    private final static String TAG = Telemetry.class.getSimpleName();
+    private static final String TAG = Telemetry.class.getSimpleName();
 
     private static final Telemetry instance = new Telemetry();
     private static final com.microsoft.identity.common.java.telemetry.Telemetry actualInstance =
             com.microsoft.identity.common.java.telemetry.Telemetry.getInstance();
 
-    public synchronized static Telemetry getInstance() {
+    public static synchronized Telemetry getInstance() {
         return instance;
     }
 
     @Override
-    public void addObserver(@SuppressWarnings(WarningType.rawtype_warning) final ITelemetryObserver observer) {
+    public void addObserver(
+            @SuppressWarnings(WarningType.rawtype_warning) final ITelemetryObserver observer) {
         actualInstance.addObserver(observer);
     }
 
@@ -69,7 +71,8 @@ public class Telemetry extends com.microsoft.identity.common.java.telemetry.Tele
     }
 
     @Override
-    public void removeObserver(@SuppressWarnings(WarningType.rawtype_warning) final ITelemetryObserver observer)  {
+    public void removeObserver(
+            @SuppressWarnings(WarningType.rawtype_warning) final ITelemetryObserver observer) {
         actualInstance.removeObserver(observer);
     }
 
@@ -93,12 +96,12 @@ public class Telemetry extends com.microsoft.identity.common.java.telemetry.Tele
      * API for creating {@link Telemetry} instances.
      */
     public static class Builder {
-        private com.microsoft.identity.common.java.telemetry.TelemetryConfiguration mDefaultConfiguration;
+        private com.microsoft.identity.common.java.telemetry.TelemetryConfiguration
+                mDefaultConfiguration;
         private AndroidTelemetryContext mTelemetryContext;
         private Boolean mIsDebugging;
 
-        public Builder() {
-        }
+        public Builder() {}
 
         public Builder withContext(final Context context) {
             if (context == null) {

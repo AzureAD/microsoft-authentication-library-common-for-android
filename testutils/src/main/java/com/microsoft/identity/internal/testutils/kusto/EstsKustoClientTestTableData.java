@@ -22,10 +22,10 @@
 // THE SOFTWARE.
 package com.microsoft.identity.internal.testutils.kusto;
 
-import java.sql.Timestamp;
-
 import lombok.Builder;
 import lombok.Getter;
+
+import java.sql.Timestamp;
 
 /**
  * A model representing the ClientTestTable in ESTS Kusto Cluster.
@@ -46,14 +46,14 @@ public class EstsKustoClientTestTableData implements IKustoTableData {
 
     @Override
     public final String[] getTableDataAsCsv() {
-        return new String[]{
-                timestamp.toString(),
-                runnerInstance,
-                scaleUnit,
-                result,
-                testName,
-                errorMessage,
-                runnerVersion
+        return new String[] {
+            timestamp.toString(),
+            runnerInstance,
+            scaleUnit,
+            result,
+            testName,
+            errorMessage,
+            runnerVersion
         };
     }
 }

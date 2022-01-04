@@ -22,18 +22,18 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory;
 
-import cz.msebera.android.httpclient.extras.Base64;
-import lombok.NonNull;
-
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.exception.ServiceException;
 import com.microsoft.identity.common.java.util.JsonUtil;
 import com.microsoft.identity.common.java.util.StringUtil;
 
+import cz.msebera.android.httpclient.extras.Base64;
+
+import lombok.NonNull;
+
 import org.json.JSONException;
 
 import java.io.Serializable;
-import java.nio.charset.Charset;
 import java.util.Map;
 
 /**
@@ -69,7 +69,8 @@ public class ClientInfo implements Serializable {
         }
 
         // decode the client info first
-        final String decodedClientInfo = StringUtil.fromByteArray(Base64.decode(rawClientInfo, Base64.URL_SAFE));
+        final String decodedClientInfo =
+                StringUtil.fromByteArray(Base64.decode(rawClientInfo, Base64.URL_SAFE));
         final Map<String, String> clientInfoItems;
         try {
             clientInfoItems = JsonUtil.extractJsonObjectIntoMap(decodedClientInfo);
@@ -108,5 +109,4 @@ public class ClientInfo implements Serializable {
     public String getRawClientInfo() {
         return mRawClientInfo;
     }
-
 }

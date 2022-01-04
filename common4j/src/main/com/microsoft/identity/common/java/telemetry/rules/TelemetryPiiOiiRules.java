@@ -22,41 +22,36 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.telemetry.rules;
 
-import lombok.NonNull;
+import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Device;
+import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Key;
 
-import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings;
+import com.microsoft.identity.common.java.util.StringUtil;
+
+import lombok.NonNull;
 
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
-import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Device;
-import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Key;
-
-final public class TelemetryPiiOiiRules {
+public final class TelemetryPiiOiiRules {
     private static TelemetryPiiOiiRules sInstance;
     private Set<String> piiPropertiesSet;
     private Set<String> oiiPropertiesSet;
 
-    final private String[] piiArray = {
-            Key.USER_ID,
-            Device.ID,
-            Key.LOGIN_HINT,
-            Key.ERROR_DESCRIPTION,
-            Key.REQUEST_QUERY_PARAMS,
-            Key.REDIRECT_URI,
-            Key.SCOPE,
-            Key.CLAIM_REQUEST
+    private final String[] piiArray = {
+        Key.USER_ID,
+        Device.ID,
+        Key.LOGIN_HINT,
+        Key.ERROR_DESCRIPTION,
+        Key.REQUEST_QUERY_PARAMS,
+        Key.REDIRECT_URI,
+        Key.SCOPE,
+        Key.CLAIM_REQUEST
     };
 
-    final private String[] oiiArray = {
-            Key.TENANT_ID,
-            Key.CLIENT_ID,
-            Key.REDIRECT_URI,
-            Key.HTTP_PATH,
-            Key.AUTHORITY,
-            Key.IDP_NAME
+    private final String[] oiiArray = {
+        Key.TENANT_ID, Key.CLIENT_ID, Key.REDIRECT_URI, Key.HTTP_PATH, Key.AUTHORITY, Key.IDP_NAME
     };
 
     private TelemetryPiiOiiRules() {
@@ -65,7 +60,7 @@ final public class TelemetryPiiOiiRules {
     }
 
     @NonNull
-    public synchronized static TelemetryPiiOiiRules getInstance() {
+    public static synchronized TelemetryPiiOiiRules getInstance() {
         if (sInstance == null) {
             sInstance = new TelemetryPiiOiiRules();
         }

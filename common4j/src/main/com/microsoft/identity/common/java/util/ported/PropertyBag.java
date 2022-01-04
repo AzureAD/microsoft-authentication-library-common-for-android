@@ -24,13 +24,13 @@ package com.microsoft.identity.common.java.util.ported;
 
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 
-import java.io.Serializable;
-import java.util.Set;
-
 import edu.umd.cs.findbugs.annotations.Nullable;
-import lombok.Getter;
+
 import lombok.NonNull;
 import lombok.experimental.Accessors;
+
+import java.io.Serializable;
+import java.util.Set;
 
 @Accessors(prefix = "m")
 public class PropertyBag {
@@ -46,13 +46,15 @@ public class PropertyBag {
     }
 
     @NonNull
-    public <T extends Serializable> T getOrDefault(@NonNull final String name, @NonNull final T defaultValue) {
-       return getOrDefaultInternal(name, defaultValue);
+    public <T extends Serializable> T getOrDefault(
+            @NonNull final String name, @NonNull final T defaultValue) {
+        return getOrDefaultInternal(name, defaultValue);
     }
 
     @NonNull
     @SuppressWarnings("unchecked")
-    private <T extends Serializable> T getOrDefaultInternal(@NonNull final String name, @Nullable final T defaultValue) {
+    private <T extends Serializable> T getOrDefaultInternal(
+            @NonNull final String name, @Nullable final T defaultValue) {
         final Object object = mMap.get(name);
         if (object == null) {
             return defaultValue;
@@ -65,7 +67,7 @@ public class PropertyBag {
         }
     }
 
-    public Set<String> keySet(){
+    public Set<String> keySet() {
         return mMap.keySet();
     }
 }

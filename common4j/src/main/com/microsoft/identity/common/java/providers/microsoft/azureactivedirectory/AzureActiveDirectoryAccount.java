@@ -22,18 +22,18 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import lombok.NonNull;
-
+import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAccount;
 import com.microsoft.identity.common.java.providers.oauth2.IDToken;
-import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.util.StringUtil;
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
+import lombok.EqualsAndHashCode;
+import lombok.NonNull;
 
 import java.util.HashMap;
 import java.util.Map;
-
-import lombok.EqualsAndHashCode;
 
 /**
  * Inherits from account and implements the getUniqueIdentifier method for returning a unique identifier for an AAD User UTID, UID combined as a single identifier per current MSAL implementation.
@@ -61,8 +61,8 @@ public class AzureActiveDirectoryAccount extends MicrosoftAccount {
      * @param clientInfo Returned via TokenResponse
      */
     @SuppressFBWarnings("RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE")
-    public AzureActiveDirectoryAccount(@NonNull final IDToken idToken,
-                                       @NonNull final ClientInfo clientInfo) {
+    public AzureActiveDirectoryAccount(
+            @NonNull final IDToken idToken, @NonNull final ClientInfo clientInfo) {
         super(idToken, clientInfo);
         final Map<String, ?> claims = new HashMap<>(idToken.getTokenClaims());
         mIdentityProvider = (String) claims.get(AzureActiveDirectoryIdToken.IDENTITY_PROVIDER);
@@ -99,7 +99,8 @@ public class AzureActiveDirectoryAccount extends MicrosoftAccount {
         if (!StringUtil.isNullOrEmpty((String) claims.get(AzureActiveDirectoryIdToken.UPN))) {
             Logger.info(TAG + ":" + methodName, "Returning upn as displayableId");
             displayableId = (String) claims.get(AzureActiveDirectoryIdToken.UPN);
-        } else if (!StringUtil.isNullOrEmpty((String) claims.get(AzureActiveDirectoryIdToken.EMAIL))) {
+        } else if (!StringUtil.isNullOrEmpty(
+                (String) claims.get(AzureActiveDirectoryIdToken.EMAIL))) {
             Logger.info(TAG + ":" + methodName, "Returning email as displayableId");
             displayableId = (String) claims.get(AzureActiveDirectoryIdToken.EMAIL);
         }
@@ -109,7 +110,10 @@ public class AzureActiveDirectoryAccount extends MicrosoftAccount {
 
     @Override
     public String toString() {
-        return "AzureActiveDirectoryAccount{} " + super.toString() +
-                ", mIdentityProvider='" + mIdentityProvider + '\'';
+        return "AzureActiveDirectoryAccount{} "
+                + super.toString()
+                + ", mIdentityProvider='"
+                + mIdentityProvider
+                + '\'';
     }
 }

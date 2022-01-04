@@ -27,11 +27,11 @@ import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.logging.Logger;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
-
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /**
  * Class is deprecated.
@@ -40,7 +40,8 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
  */
 @SuppressFBWarnings("NM_SAME_SIMPLE_NAME_AS_SUPERCLASS")
 @Deprecated
-public final class DiagnosticContext extends com.microsoft.identity.common.logging.DiagnosticContext {
+public final class DiagnosticContext
+        extends com.microsoft.identity.common.logging.DiagnosticContext {
 
     private static final String TAG = DiagnosticContext.class.getSimpleName();
 
@@ -54,8 +55,10 @@ public final class DiagnosticContext extends com.microsoft.identity.common.loggi
     private static void logDeprecationWarning() {
         if (sLogDeprecationWarning) {
             sLogDeprecationWarning = false;
-            Logger.warn(TAG, "This class is deprecated. "
-                    + "Migrate usage to: com.microsoft.identity.common.logging.DiagnosticContext");
+            Logger.warn(
+                    TAG,
+                    "This class is deprecated. "
+                            + "Migrate usage to: com.microsoft.identity.common.logging.DiagnosticContext");
         }
     }
 
@@ -65,7 +68,8 @@ public final class DiagnosticContext extends com.microsoft.identity.common.loggi
         // To maintain true backcompat, we'll new up an instance of the old interface which
         // will delegate to the object returned by the super class.
         final com.microsoft.identity.common.java.logging.IRequestContext origRc =
-                com.microsoft.identity.common.java.logging.DiagnosticContext.INSTANCE.getRequestContext();
+                com.microsoft.identity.common.java.logging.DiagnosticContext.INSTANCE
+                        .getRequestContext();
         return new IRequestContext() {
             @Override
             public String toJsonString() {

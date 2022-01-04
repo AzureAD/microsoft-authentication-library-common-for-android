@@ -35,5 +35,4 @@ public interface IRuleBasedTest {
      * @return a {@link RuleChain} object
      */
     RuleChain getPrimaryRules();
-
 }

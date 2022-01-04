@@ -25,7 +25,6 @@ package com.microsoft.identity.common.java.providers.microsoft.azureactivedirect
 /**
  * Prompt Behaviors that sets the behavior for authentication activity launch.
  */
-
 public enum AzureActiveDirectoryPromptBehavior {
     /**
      * Acquire token will prompt the user for credentials only when necessary.

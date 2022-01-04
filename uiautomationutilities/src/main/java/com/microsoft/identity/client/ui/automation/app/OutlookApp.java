@@ -38,7 +38,7 @@ import org.junit.Assert;
  */
 public class OutlookApp extends App implements IFirstPartyApp {
 
-    private final static String TAG = OutlookApp.class.getSimpleName();
+    private static final String TAG = OutlookApp.class.getSimpleName();
     private static final String OUTLOOK_PACKAGE_NAME = "com.microsoft.office.outlook";
     private static final String OUTLOOK_APP_NAME = "Microsoft Outlook";
 
@@ -52,9 +52,10 @@ public class OutlookApp extends App implements IFirstPartyApp {
     }
 
     @Override
-    public void addFirstAccount(@NonNull final String username,
-                                @NonNull final String password,
-                                @NonNull final FirstPartyAppPromptHandlerParameters promptHandlerParameters) {
+    public void addFirstAccount(
+            @NonNull final String username,
+            @NonNull final String password,
+            @NonNull final FirstPartyAppPromptHandlerParameters promptHandlerParameters) {
         Logger.i(TAG, "Adding First Account..");
         // Click start btn
         UiAutomatorUtils.handleButtonClick("com.microsoft.office.outlook:id/btn_primary_button");
@@ -67,21 +68,22 @@ public class OutlookApp extends App implements IFirstPartyApp {
     public void onAccountAdded() {
         Logger.i(TAG, "Handling UI after account is added on the App..");
         // Make sure we are on add another account (shows up after an account is added)
-        final UiObject addAnotherAccountScreen = UiAutomatorUtils.obtainUiObjectWithText("Add another account");
+        final UiObject addAnotherAccountScreen =
+                UiAutomatorUtils.obtainUiObjectWithText("Add another account");
         Assert.assertTrue(
                 "Add another account screen appears in Outlook account.",
-                addAnotherAccountScreen.exists()
-        );
+                addAnotherAccountScreen.exists());
 
         // click may be later
-        UiAutomatorUtils.handleButtonClick("com.microsoft.office.outlook:id/bottom_flow_navigation_start_button");
-
+        UiAutomatorUtils.handleButtonClick(
+                "com.microsoft.office.outlook:id/bottom_flow_navigation_start_button");
     }
 
     @Override
-    public void addAnotherAccount(final String username,
-                                  final String password,
-                                  final FirstPartyAppPromptHandlerParameters promptHandlerParameters) {
+    public void addAnotherAccount(
+            final String username,
+            final String password,
+            final FirstPartyAppPromptHandlerParameters promptHandlerParameters) {
         Logger.i(TAG, "Adding Another Account..");
         // Click the account drawer
         UiAutomatorUtils.handleButtonClick("com.microsoft.office.outlook:id/account_button");
@@ -105,14 +107,13 @@ public class OutlookApp extends App implements IFirstPartyApp {
         // Make sure our account is listed in the account drawer
         final UiObject testAccountLabel = UiAutomatorUtils.obtainUiObjectWithText(username);
         Assert.assertTrue(
-                "Provided user account exists in Outlook App.",
-                testAccountLabel.exists()
-        );
+                "Provided user account exists in Outlook App.", testAccountLabel.exists());
     }
 
-    private void signIn(@NonNull final String username,
-                        @NonNull final String password,
-                        @NonNull final FirstPartyAppPromptHandlerParameters promptHandlerParameters) {
+    private void signIn(
+            @NonNull final String username,
+            @NonNull final String password,
+            @NonNull final FirstPartyAppPromptHandlerParameters promptHandlerParameters) {
         Logger.i(TAG, "Sign-In on the APP..");
         // enter email in edit text email field
         UiAutomatorUtils.handleInput("com.microsoft.office.outlook:id/edit_text_email", username);
@@ -122,7 +123,8 @@ public class OutlookApp extends App implements IFirstPartyApp {
 
         Logger.i(TAG, "Handle Sign-In Prompt on the APP..");
         // handle login prompt
-        final MicrosoftStsPromptHandler microsoftStsPromptHandler = new MicrosoftStsPromptHandler(promptHandlerParameters);
+        final MicrosoftStsPromptHandler microsoftStsPromptHandler =
+                new MicrosoftStsPromptHandler(promptHandlerParameters);
         microsoftStsPromptHandler.handlePrompt(username, password);
     }
 }

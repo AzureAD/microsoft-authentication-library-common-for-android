@@ -46,7 +46,8 @@ import java.util.List;
  */
 public class MicrosoftClientAssertion extends ClientAssertion {
 
-    private static final String CLIENT_ASSERTION_TYPE = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer";
+    private static final String CLIENT_ASSERTION_TYPE =
+            "urn:ietf:params:oauth:client-assertion-type:jwt-bearer";
     private static final String THUMBPRINT_ALGORITHM = "SHA-1";
     private static final int ONE_MINUTE_MILLIS = 60000;
 
@@ -68,23 +69,23 @@ public class MicrosoftClientAssertion extends ClientAssertion {
         SignedJWT assertion = createSignedJwt(credential.getClientId(), audience, credential);
         setClientAssertion(assertion.serialize());
         setClientAssertionType(MicrosoftClientAssertion.CLIENT_ASSERTION_TYPE);
-
     }
 
     @SuppressWarnings("deprecation")
-    private SignedJWT createSignedJwt(String clientId, String audience, CertificateCredential credential)
+    private SignedJWT createSignedJwt(
+            String clientId, String audience, CertificateCredential credential)
             throws NoSuchAlgorithmException, CertificateEncodingException {
 
         final long time = System.currentTimeMillis();
 
-        final JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
-                .audience(audience)
-                .issuer(clientId)
-                .notBeforeTime(new Date(time))
-                .expirationTime(new Date(time
-                        + ONE_MINUTE_MILLIS))
-                .subject(clientId)
-                .build();
+        final JWTClaimsSet claimsSet =
+                new JWTClaimsSet.Builder()
+                        .audience(audience)
+                        .issuer(clientId)
+                        .notBeforeTime(new Date(time))
+                        .expirationTime(new Date(time + ONE_MINUTE_MILLIS))
+                        .subject(clientId)
+                        .build();
 
         SignedJWT jwt;
 
@@ -93,7 +94,8 @@ public class MicrosoftClientAssertion extends ClientAssertion {
             List<Base64> certs = new ArrayList<Base64>();
             certs.add(Base64.encode(credential.getPublicCertificate().getEncoded()));
             builder.x509CertChain(certs);
-            //x509CertThumbprint has been deprecated.  We have to keep using this since this is the only thing that AAD accepts.
+            // x509CertThumbprint has been deprecated.  We have to keep using this since this is the
+            // only thing that AAD accepts.
             builder.x509CertThumbprint(createSHA1ThumbPrint(credential.getPublicCertificate()));
 
             jwt = new SignedJWT(builder.build(), claimsSet);
@@ -119,6 +121,4 @@ public class MicrosoftClientAssertion extends ClientAssertion {
 
         return thumbprint;
     }
-
-
 }

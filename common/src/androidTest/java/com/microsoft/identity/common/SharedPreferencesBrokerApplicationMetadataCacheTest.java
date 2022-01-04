@@ -23,6 +23,7 @@
 package com.microsoft.identity.common;
 
 import static junit.framework.TestCase.assertTrue;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -31,9 +32,9 @@ import android.content.Context;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
-import com.microsoft.identity.common.java.cache.NameValueStorageBrokerApplicationMetadataCache;
 import com.microsoft.identity.common.java.cache.BrokerApplicationMetadata;
 import com.microsoft.identity.common.java.cache.IBrokerApplicationMetadataCache;
+import com.microsoft.identity.common.java.cache.NameValueStorageBrokerApplicationMetadataCache;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 
 import org.junit.After;
@@ -54,12 +55,9 @@ public class SharedPreferencesBrokerApplicationMetadataCacheTest {
     @Before
     public void setUp() {
         final Context context = ApplicationProvider.getApplicationContext();
-        final IPlatformComponents platformComponents = AndroidPlatformComponents.createFromContext(
-                context
-        );
-        mMetadataCache = new NameValueStorageBrokerApplicationMetadataCache(
-                platformComponents
-        );
+        final IPlatformComponents platformComponents =
+                AndroidPlatformComponents.createFromContext(context);
+        mMetadataCache = new NameValueStorageBrokerApplicationMetadataCache(platformComponents);
     }
 
     @After
@@ -80,17 +78,9 @@ public class SharedPreferencesBrokerApplicationMetadataCacheTest {
 
         mMetadataCache.insert(randomMetadata);
 
-        assertEquals(
-                1,
-                mMetadataCache.getAll().size()
-        );
+        assertEquals(1, mMetadataCache.getAll().size());
 
-        assertEquals(
-                randomMetadata,
-                mMetadataCache
-                        .getAll()
-                        .get(0)
-        );
+        assertEquals(randomMetadata, mMetadataCache.getAll().get(0));
     }
 
     @Test
@@ -109,9 +99,7 @@ public class SharedPreferencesBrokerApplicationMetadataCacheTest {
         final List<BrokerApplicationMetadata> cacheContents = mMetadataCache.getAll();
 
         for (final BrokerApplicationMetadata metadata : cacheContents) {
-            assertTrue(
-                    metadataList.contains(metadata)
-            );
+            assertTrue(metadataList.contains(metadata));
         }
     }
 
@@ -121,17 +109,9 @@ public class SharedPreferencesBrokerApplicationMetadataCacheTest {
 
         mMetadataCache.insert(randomMetadata);
 
-        assertEquals(
-                1,
-                mMetadataCache.getAll().size()
-        );
+        assertEquals(1, mMetadataCache.getAll().size());
 
-        assertEquals(
-                randomMetadata,
-                mMetadataCache
-                        .getAll()
-                        .get(0)
-        );
+        assertEquals(randomMetadata, mMetadataCache.getAll().get(0));
 
         assertTrue(mMetadataCache.remove(randomMetadata));
     }
@@ -152,9 +132,7 @@ public class SharedPreferencesBrokerApplicationMetadataCacheTest {
         final List<BrokerApplicationMetadata> cacheContents = mMetadataCache.getAll();
 
         for (final BrokerApplicationMetadata metadata : cacheContents) {
-            assertTrue(
-                    mMetadataCache.remove(metadata)
-            );
+            assertTrue(mMetadataCache.remove(metadata));
         }
 
         assertTrue(mMetadataCache.getAll().isEmpty());
@@ -162,11 +140,7 @@ public class SharedPreferencesBrokerApplicationMetadataCacheTest {
 
     @Test
     public void testRemoveNone() {
-        assertTrue(
-                mMetadataCache.remove(
-                        generateRandomMetadata()
-                )
-        );
+        assertTrue(mMetadataCache.remove(generateRandomMetadata()));
     }
 
     @Test
@@ -177,19 +151,11 @@ public class SharedPreferencesBrokerApplicationMetadataCacheTest {
             mMetadataCache.insert(generateRandomMetadata());
         }
 
-        assertEquals(
-                expected,
-                mMetadataCache.getAll().size()
-        );
+        assertEquals(expected, mMetadataCache.getAll().size());
 
-        assertTrue(
-                mMetadataCache.clear()
-        );
+        assertTrue(mMetadataCache.clear());
 
-        assertEquals(
-                0,
-                mMetadataCache.getAll().size()
-        );
+        assertEquals(0, mMetadataCache.getAll().size());
     }
 
     @Test

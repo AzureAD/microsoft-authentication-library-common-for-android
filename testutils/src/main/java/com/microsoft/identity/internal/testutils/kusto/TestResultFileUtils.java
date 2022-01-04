@@ -33,7 +33,7 @@ import java.io.IOException;
  */
 public class TestResultFileUtils {
 
-    public final static String TEST_RESULT_FILE_NAME = "test-results.csv";
+    public static final String TEST_RESULT_FILE_NAME = "test-results.csv";
 
     /**
      * Get the file containing the android test results.

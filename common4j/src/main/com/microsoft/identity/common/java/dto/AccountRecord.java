@@ -22,8 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.dto;
 
-import com.google.gson.annotations.SerializedName;
-
 import static com.microsoft.identity.common.java.dto.AccountRecord.SerializedNames.ALTERNATIVE_ACCOUNT_ID;
 import static com.microsoft.identity.common.java.dto.AccountRecord.SerializedNames.AUTHORITY_TYPE;
 import static com.microsoft.identity.common.java.dto.AccountRecord.SerializedNames.AVATAR_URL;
@@ -37,6 +35,8 @@ import static com.microsoft.identity.common.java.dto.AccountRecord.SerializedNam
 import static com.microsoft.identity.common.java.dto.AccountRecord.SerializedNames.NAME;
 import static com.microsoft.identity.common.java.dto.AccountRecord.SerializedNames.REALM;
 import static com.microsoft.identity.common.java.dto.AccountRecord.SerializedNames.USERNAME;
+
+import com.google.gson.annotations.SerializedName;
 
 /**
  * Accounts collect user displayable information about the user in each tenant (AAD) or environment
@@ -231,9 +231,8 @@ public class AccountRecord extends AccountCredentialBase implements IAccountReco
     @SerializedName(AVATAR_URL)
     private String mAvatarUrl;
 
-
     /**
-     * Full base64 encoded client info received from ESTS, if available. STS returns the clientInfo 
+     * Full base64 encoded client info received from ESTS, if available. STS returns the clientInfo
      * on both v1 and v2 for AAD. This field is used for extensibility purposes.
      */
     @SerializedName(CLIENT_INFO)
@@ -407,7 +406,6 @@ public class AccountRecord extends AccountCredentialBase implements IAccountReco
         mAvatarUrl = avatarUrl;
     }
 
-
     /**
      * Gets the client_info.
      *
@@ -427,7 +425,7 @@ public class AccountRecord extends AccountCredentialBase implements IAccountReco
         mClientInfo = clientInfo;
     }
 
-    //CHECKSTYLE:OFF
+    // CHECKSTYLE:OFF
     // This method is generated. Checkstyle and/or PMD has been disabled.
     // This method *must* be regenerated if the class' structural definition changes through the
     // addition/subtraction of fields.
@@ -439,28 +437,37 @@ public class AccountRecord extends AccountCredentialBase implements IAccountReco
 
         AccountRecord account = (AccountRecord) o;
 
-        if (mHomeAccountId != null ? !mHomeAccountId.equals(account.mHomeAccountId) : account.mHomeAccountId != null)
-            return false;
-        if (mEnvironment != null ? !mEnvironment.equals(account.mEnvironment) : account.mEnvironment != null)
-            return false;
+        if (mHomeAccountId != null
+                ? !mHomeAccountId.equals(account.mHomeAccountId)
+                : account.mHomeAccountId != null) return false;
+        if (mEnvironment != null
+                ? !mEnvironment.equals(account.mEnvironment)
+                : account.mEnvironment != null) return false;
         if (mRealm != null ? !mRealm.equals(account.mRealm) : account.mRealm != null) return false;
-        if (mLocalAccountId != null ? !mLocalAccountId.equals(account.mLocalAccountId) : account.mLocalAccountId != null)
-            return false;
+        if (mLocalAccountId != null
+                ? !mLocalAccountId.equals(account.mLocalAccountId)
+                : account.mLocalAccountId != null) return false;
         if (mUsername != null ? !mUsername.equals(account.mUsername) : account.mUsername != null)
             return false;
-        if (mAuthorityType != null ? !mAuthorityType.equals(account.mAuthorityType) : account.mAuthorityType != null)
-            return false;
-        if (mAlternativeAccountId != null ? !mAlternativeAccountId.equals(account.mAlternativeAccountId) : account.mAlternativeAccountId != null)
-            return false;
-        if (mFirstName != null ? !mFirstName.equals(account.mFirstName) : account.mFirstName != null)
-            return false;
-        if (mFamilyName != null ? !mFamilyName.equals(account.mFamilyName) : account.mFamilyName != null)
-            return false;
-        return mAvatarUrl != null ? mAvatarUrl.equals(account.mAvatarUrl) : account.mAvatarUrl == null;
+        if (mAuthorityType != null
+                ? !mAuthorityType.equals(account.mAuthorityType)
+                : account.mAuthorityType != null) return false;
+        if (mAlternativeAccountId != null
+                ? !mAlternativeAccountId.equals(account.mAlternativeAccountId)
+                : account.mAlternativeAccountId != null) return false;
+        if (mFirstName != null
+                ? !mFirstName.equals(account.mFirstName)
+                : account.mFirstName != null) return false;
+        if (mFamilyName != null
+                ? !mFamilyName.equals(account.mFamilyName)
+                : account.mFamilyName != null) return false;
+        return mAvatarUrl != null
+                ? mAvatarUrl.equals(account.mAvatarUrl)
+                : account.mAvatarUrl == null;
     }
-    //CHECKSTYLE:ON
+    // CHECKSTYLE:ON
 
-    //CHECKSTYLE:OFF
+    // CHECKSTYLE:OFF
     // This method is generated. Checkstyle and/or PMD has been disabled.
     // This method *must* be regenerated if the class' structural definition changes through the
     // addition/subtraction of fields.
@@ -472,12 +479,14 @@ public class AccountRecord extends AccountCredentialBase implements IAccountReco
         result = 31 * result + (mLocalAccountId != null ? mLocalAccountId.hashCode() : 0);
         result = 31 * result + (mUsername != null ? mUsername.hashCode() : 0);
         result = 31 * result + (mAuthorityType != null ? mAuthorityType.hashCode() : 0);
-        result = 31 * result + (mAlternativeAccountId != null ? mAlternativeAccountId.hashCode() : 0);
+        result =
+                31 * result
+                        + (mAlternativeAccountId != null ? mAlternativeAccountId.hashCode() : 0);
         result = 31 * result + (mFirstName != null ? mFirstName.hashCode() : 0);
         result = 31 * result + (mFamilyName != null ? mFamilyName.hashCode() : 0);
         result = 31 * result + (mAvatarUrl != null ? mAvatarUrl.hashCode() : 0);
         return result;
     }
-    //CHECKSTYLE:ON
+    // CHECKSTYLE:ON
 
 }

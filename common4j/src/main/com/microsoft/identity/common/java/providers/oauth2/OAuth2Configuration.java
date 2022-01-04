@@ -31,5 +31,4 @@ package com.microsoft.identity.common.java.providers.oauth2;
  * - The scopes supported by the oAuth provider
  * - etc...
  */
-public class OAuth2Configuration {
-}
+public class OAuth2Configuration {}

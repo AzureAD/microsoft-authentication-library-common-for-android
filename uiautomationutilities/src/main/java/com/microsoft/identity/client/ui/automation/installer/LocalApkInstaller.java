@@ -23,19 +23,13 @@
 package com.microsoft.identity.client.ui.automation.installer;
 
 import androidx.annotation.NonNull;
-import androidx.test.uiautomator.UiDevice;
 
 import com.microsoft.identity.client.ui.automation.utils.AdbShellUtils;
 
-import org.junit.Assert;
-
-import java.io.IOException;
-
-import static androidx.test.platform.app.InstrumentationRegistry.getInstrumentation;
-
 public class LocalApkInstaller implements IAppInstaller {
 
-    // Files would be picked up from here (by Default) so they should be pushed to this folder on the device
+    // Files would be picked up from here (by Default) so they should be pushed to this folder on
+    // the device
     public static final String LOCAL_APK_PATH_PREFIX = "/data/local/tmp/";
 
     private String mApkFolderPath;

@@ -24,6 +24,7 @@ package com.microsoft.identity.common.java.telemetry;
 
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.java.util.StringUtil;
+
 import lombok.NonNull;
 
 import java.util.UUID;

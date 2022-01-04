@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.net;
 
+import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.CLIENT_REQUEST_ID;
+
 import com.microsoft.identity.common.java.AuthenticationConstants;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.telemetry.Telemetry;
@@ -32,7 +34,10 @@ import com.microsoft.identity.common.java.util.ported.Consumer;
 import com.microsoft.identity.common.java.util.ported.Function;
 import com.microsoft.identity.common.java.util.ported.Supplier;
 
-import net.jcip.annotations.Immutable;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.NonNull;
+
 import net.jcip.annotations.ThreadSafe;
 
 import java.io.BufferedReader;
@@ -55,12 +60,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
-
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.NonNull;
-
-import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.CLIENT_REQUEST_ID;
 
 /**
  * A client object for handling HTTP requests and responses.  This class accepts a RetryPolicy that
@@ -87,32 +86,30 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
     public static final int DEFAULT_READ_TIME_OUT_MS = 30000;
     public static final int DEFAULT_STREAM_BUFFER_SIZE = 1024;
 
-    @Builder.Default
-    private final IRetryPolicy<HttpResponse> retryPolicy = new NoRetryPolicy();
-    @Builder.Default
-    private final int connectTimeoutMs = DEFAULT_CONNECT_TIME_OUT_MS;
-    @Builder.Default
-    private final int readTimeoutMs = DEFAULT_READ_TIME_OUT_MS;
-    @Builder.Default
-    private final Supplier<Integer> connectTimeoutMsSupplier = null;
-    @Builder.Default
-    private final Supplier<Integer> readTimeoutMsSupplier = null;
-    @Builder.Default
-    private final int streamBufferSize = DEFAULT_STREAM_BUFFER_SIZE;
-    @Builder.Default
-    private final List<String> supportedSslProtocol = SSLSocketFactoryWrapper.SUPPORTED_SSL_PROTOCOLS;
+    @Builder.Default private final IRetryPolicy<HttpResponse> retryPolicy = new NoRetryPolicy();
+    @Builder.Default private final int connectTimeoutMs = DEFAULT_CONNECT_TIME_OUT_MS;
+    @Builder.Default private final int readTimeoutMs = DEFAULT_READ_TIME_OUT_MS;
+    @Builder.Default private final Supplier<Integer> connectTimeoutMsSupplier = null;
+    @Builder.Default private final Supplier<Integer> readTimeoutMsSupplier = null;
+    @Builder.Default private final int streamBufferSize = DEFAULT_STREAM_BUFFER_SIZE;
 
+    @Builder.Default
+    private final List<String> supportedSslProtocol =
+            SSLSocketFactoryWrapper.SUPPORTED_SSL_PROTOCOLS;
 
     private SSLSocketFactoryWrapper sDefault;
 
-    private synchronized SSLSocketFactoryWrapper getDefaultWrapper(){
-        if (sDefault == null){
-            sDefault = new SSLSocketFactoryWrapper((SSLSocketFactory) SSLSocketFactory.getDefault(), supportedSslProtocol);
+    private synchronized SSLSocketFactoryWrapper getDefaultWrapper() {
+        if (sDefault == null) {
+            sDefault =
+                    new SSLSocketFactoryWrapper(
+                            (SSLSocketFactory) SSLSocketFactory.getDefault(), supportedSslProtocol);
         }
         return sDefault;
     }
 
-    private static final transient AtomicReference<UrlConnectionHttpClient> defaultReference = new AtomicReference<>(null);
+    private static final transient AtomicReference<UrlConnectionHttpClient> defaultReference =
+            new AtomicReference<>(null);
 
     /**
      * Obtain a static default instance of the HTTP Client class.
@@ -122,29 +119,44 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
     public static synchronized UrlConnectionHttpClient getDefaultInstance() {
         UrlConnectionHttpClient reference = defaultReference.get();
         if (reference == null) {
-            defaultReference.compareAndSet(null, UrlConnectionHttpClient.builder()
-                    .streamBufferSize(STREAM_BUFFER_SIZE_BYTES)
-                    .retryPolicy(StatusCodeAndExceptionRetry.builder()
-                            .number(1)
-                            .extensionFactor(2)
-                            .isAcceptable(new Function<HttpResponse, Boolean>() {
-                                public Boolean apply(HttpResponse response) {
-                                    return response != null && response.getStatusCode() < 400;
-                                }
-                            })
-                            .initialDelay(RETRY_TIME_WAITING_PERIOD_MSEC)
-                            .isRetryable(new Function<HttpResponse, Boolean>() {
-                                public Boolean apply(HttpResponse response) {
-                                    return response != null && isRetryableError(response.getStatusCode());
-                                }
-                            })
-                            .isRetryableException(new Function<Exception, Boolean>() {
-                                public Boolean apply(Exception e) {
-                                    return e instanceof SocketTimeoutException;
-                                }
-                            })
-                            .build())
-                    .build());
+            defaultReference.compareAndSet(
+                    null,
+                    UrlConnectionHttpClient.builder()
+                            .streamBufferSize(STREAM_BUFFER_SIZE_BYTES)
+                            .retryPolicy(
+                                    StatusCodeAndExceptionRetry.builder()
+                                            .number(1)
+                                            .extensionFactor(2)
+                                            .isAcceptable(
+                                                    new Function<HttpResponse, Boolean>() {
+                                                        public Boolean apply(
+                                                                HttpResponse response) {
+                                                            return response != null
+                                                                    && response.getStatusCode()
+                                                                            < 400;
+                                                        }
+                                                    })
+                                            .initialDelay(RETRY_TIME_WAITING_PERIOD_MSEC)
+                                            .isRetryable(
+                                                    new Function<HttpResponse, Boolean>() {
+                                                        public Boolean apply(
+                                                                HttpResponse response) {
+                                                            return response != null
+                                                                    && isRetryableError(
+                                                                            response
+                                                                                    .getStatusCode());
+                                                        }
+                                                    })
+                                            .isRetryableException(
+                                                    new Function<Exception, Boolean>() {
+                                                        public Boolean apply(Exception e) {
+                                                            return e
+                                                                    instanceof
+                                                                    SocketTimeoutException;
+                                                        }
+                                                    })
+                                            .build())
+                            .build());
             reference = defaultReference.get();
         }
         return reference;
@@ -153,15 +165,15 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
     /**
      * Record the beginning of an http request.
      */
-    private static void recordHttpTelemetryEventStart(@NonNull final String requestMethod,
-                                                      @NonNull final URL requestUrl,
-                                                      final String requestId) {
+    private static void recordHttpTelemetryEventStart(
+            @NonNull final String requestMethod,
+            @NonNull final URL requestUrl,
+            final String requestId) {
         Telemetry.emit(
                 new HttpStartEvent()
                         .putMethod(requestMethod)
                         .putPath(requestUrl)
-                        .putRequestIdHeader(requestId)
-        );
+                        .putRequestIdHeader(requestId));
     }
 
     /**
@@ -192,34 +204,44 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
      * @throws IOException If an error is encountered while servicing this request.
      */
     @Override
-    public HttpResponse method(@NonNull final HttpClient.HttpMethod httpMethod,
-                               @NonNull final URL requestUrl,
-                               @NonNull final Map<String, String> requestHeaders,
-                               final byte[] requestContent,
-                               final SSLContext sslContext) throws IOException {
-        recordHttpTelemetryEventStart(httpMethod.name(), requestUrl, requestHeaders.get(CLIENT_REQUEST_ID));
-        final HttpRequest request = constructHttpRequest(httpMethod, requestUrl, requestHeaders, requestContent, sslContext);
-        return retryPolicy.attempt(new Callable<HttpResponse>() {
-            public HttpResponse call() throws IOException {
-                return executeHttpSend(request, new Consumer<HttpResponse>() {
-                    @Override
-                    public void accept(HttpResponse httpResponse) {
-                        recordHttpTelemetryEventEnd(httpResponse);
+    public HttpResponse method(
+            @NonNull final HttpClient.HttpMethod httpMethod,
+            @NonNull final URL requestUrl,
+            @NonNull final Map<String, String> requestHeaders,
+            final byte[] requestContent,
+            final SSLContext sslContext)
+            throws IOException {
+        recordHttpTelemetryEventStart(
+                httpMethod.name(), requestUrl, requestHeaders.get(CLIENT_REQUEST_ID));
+        final HttpRequest request =
+                constructHttpRequest(
+                        httpMethod, requestUrl, requestHeaders, requestContent, sslContext);
+        return retryPolicy.attempt(
+                new Callable<HttpResponse>() {
+                    public HttpResponse call() throws IOException {
+                        return executeHttpSend(
+                                request,
+                                new Consumer<HttpResponse>() {
+                                    @Override
+                                    public void accept(HttpResponse httpResponse) {
+                                        recordHttpTelemetryEventEnd(httpResponse);
+                                    }
+                                });
                     }
                 });
-            }
-        });
     }
 
-    private static HttpRequest constructHttpRequest(@NonNull HttpClient.HttpMethod httpMethod,
-                                                    @NonNull URL requestUrl,
-                                                    @NonNull Map<String, String> requestHeaders,
-                                                    byte[] requestContent,
-                                                    final SSLContext sslContext) {
+    private static HttpRequest constructHttpRequest(
+            @NonNull HttpClient.HttpMethod httpMethod,
+            @NonNull URL requestUrl,
+            @NonNull Map<String, String> requestHeaders,
+            byte[] requestContent,
+            final SSLContext sslContext) {
 
         // Apply special backcompat behaviors for PATCH, if reqd
         if (HttpClient.HttpMethod.PATCH == httpMethod) {
-            // Because HttpURLConnection predates RFC-5789, we need to fallback on POST w/ a backcompat
+            // Because HttpURLConnection predates RFC-5789, we need to fallback on POST w/ a
+            // backcompat
             // workaround. See: https://stackoverflow.com/a/32503192/741827
             httpMethod = HttpClient.HttpMethod.POST;
             // This map may be immutable.
@@ -234,8 +256,7 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
                 httpMethod.name(), // HttpURLConnection doesn't natively support PATCH
                 requestContent,
                 null,
-                sslContext
-        );
+                sslContext);
     }
 
     /**
@@ -247,8 +268,10 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
      */
     private String convertStreamToString(final InputStream inputStream) throws IOException {
         try {
-            final BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream,
-                    AuthenticationConstants.CHARSET_UTF8));
+            final BufferedReader reader =
+                    new BufferedReader(
+                            new InputStreamReader(
+                                    inputStream, AuthenticationConstants.CHARSET_UTF8));
             final char[] buffer = new char[streamBufferSize];
             final StringBuilder stringBuilder = new StringBuilder();
             int charsRead;
@@ -278,14 +301,21 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
         try {
             stream.close();
         } catch (final IOException e) {
-            Logger.error(TAG + methodName, "Encountered IO exception when trying to close the stream", e);
+            Logger.error(
+                    TAG + methodName,
+                    "Encountered IO exception when trying to close the stream",
+                    e);
         }
     }
 
-    private HttpResponse executeHttpSend(HttpRequest request, Consumer<HttpResponse> completionCallback) throws IOException {
+    private HttpResponse executeHttpSend(
+            HttpRequest request, Consumer<HttpResponse> completionCallback) throws IOException {
         final HttpURLConnection urlConnection = setupConnection(request);
 
-        sendRequest(urlConnection, request.getRequestContent(), request.getRequestHeaders().get(HttpConstants.HeaderField.CONTENT_TYPE));
+        sendRequest(
+                urlConnection,
+                request.getRequestContent(),
+                request.getRequestHeaders().get(HttpConstants.HeaderField.CONTENT_TYPE));
 
         InputStream responseStream = null;
         HttpResponse response = null;
@@ -305,16 +335,12 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
             final int statusCode = urlConnection.getResponseCode();
             final Date date = new Date(urlConnection.getDate());
 
-            final String responseBody = responseStream == null
-                    ? ""
-                    : convertStreamToString(responseStream);
+            final String responseBody =
+                    responseStream == null ? "" : convertStreamToString(responseStream);
 
-            response = new HttpResponse(
-                    date,
-                    statusCode,
-                    responseBody,
-                    urlConnection.getHeaderFields()
-            );
+            response =
+                    new HttpResponse(
+                            date, statusCode, responseBody, urlConnection.getHeaderFields());
         } finally {
             completionCallback.accept(response);
             safeCloseStream(responseStream);
@@ -325,7 +351,8 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
 
     private HttpURLConnection setupConnection(HttpRequest request) throws IOException {
         final String methodName = ":setupConnection";
-        final HttpURLConnection urlConnection = HttpUrlConnectionFactory.createHttpURLConnection(request.getRequestUrl());
+        final HttpURLConnection urlConnection =
+                HttpUrlConnectionFactory.createHttpURLConnection(request.getRequestUrl());
 
         // Apply request headers and update the headers with default attributes first
         final Set<Map.Entry<String, String>> headerEntries = request.getRequestHeaders().entrySet();
@@ -336,16 +363,22 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
 
         if (urlConnection instanceof HttpsURLConnection) {
             final SSLSocketFactory factory =
-                    request.getSslContext() != null ?
-                            new SSLSocketFactoryWrapper(request.getSslContext().getSocketFactory(), supportedSslProtocol) :
-                            getDefaultWrapper();
+                    request.getSslContext() != null
+                            ? new SSLSocketFactoryWrapper(
+                                    request.getSslContext().getSocketFactory(),
+                                    supportedSslProtocol)
+                            : getDefaultWrapper();
             ((HttpsURLConnection) urlConnection).setSSLSocketFactory(factory);
         } else if ("https".equalsIgnoreCase(request.getRequestUrl().getProtocol())) {
-            throw new IllegalStateException("Trying to initiate a HTTPS request, but didn't get back HttpsURLConnection");
+            throw new IllegalStateException(
+                    "Trying to initiate a HTTPS request, but didn't get back HttpsURLConnection");
         } else if ("http".equalsIgnoreCase(request.getRequestUrl().getProtocol())) {
             Logger.warn(TAG + methodName, "Making a request for non-https URL.");
         } else {
-            Logger.warn(TAG + methodName, "gets a request from an unexpected protocol: " + request.getRequestUrl().getProtocol());
+            Logger.warn(
+                    TAG + methodName,
+                    "gets a request from an unexpected protocol: "
+                            + request.getRequestUrl().getProtocol());
         }
 
         urlConnection.setRequestMethod(request.getRequestMethod());
@@ -366,9 +399,11 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
         return connectTimeoutMsSupplier == null ? connectTimeoutMs : connectTimeoutMsSupplier.get();
     }
 
-    private static void sendRequest(@NonNull final HttpURLConnection connection,
-                                    final byte[] contentRequest,
-                                    final String requestContentType) throws IOException {
+    private static void sendRequest(
+            @NonNull final HttpURLConnection connection,
+            final byte[] contentRequest,
+            final String requestContentType)
+            throws IOException {
         if (contentRequest == null) {
             return;
         }
@@ -402,5 +437,4 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
                 || statusCode == HttpURLConnection.HTTP_GATEWAY_TIMEOUT
                 || statusCode == HttpURLConnection.HTTP_UNAVAILABLE;
     }
-
 }

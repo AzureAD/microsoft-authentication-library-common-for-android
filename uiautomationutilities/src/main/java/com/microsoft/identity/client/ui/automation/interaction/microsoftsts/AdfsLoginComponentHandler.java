@@ -32,7 +32,7 @@ import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
  */
 public class AdfsLoginComponentHandler extends AadLoginComponentHandler {
 
-    private final static String TAG = AdfsLoginComponentHandler.class.getSimpleName();
+    private static final String TAG = AdfsLoginComponentHandler.class.getSimpleName();
 
     @Override
     public void handleEmailField(@NonNull final String username) {

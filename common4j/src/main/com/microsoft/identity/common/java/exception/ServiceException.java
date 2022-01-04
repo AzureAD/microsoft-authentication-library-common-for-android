@@ -25,16 +25,16 @@ package com.microsoft.identity.common.java.exception;
 import com.microsoft.identity.common.java.net.HttpResponse;
 import com.microsoft.identity.common.java.util.HashMapExtensions;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
+
 import org.json.JSONException;
 
 import java.util.HashMap;
 import java.util.List;
 
-import edu.umd.cs.findbugs.annotations.Nullable;
-
 public class ServiceException extends BaseException {
 
-    public static final String sName =  ServiceException.class.getName();
+    public static final String sName = ServiceException.class.getName();
     private static final long serialVersionUID = 5139563940871615046L;
 
     public static final String OPENID_PROVIDER_CONFIGURATION_FAILED_TO_LOAD =
@@ -180,9 +180,8 @@ public class ServiceException extends BaseException {
      * @param errorMessage String
      * @param throwable    Throwable
      */
-    public ServiceException(final String errorCode,
-                            final String errorMessage,
-                            final Throwable throwable) {
+    public ServiceException(
+            final String errorCode, final String errorMessage, final Throwable throwable) {
         super(errorCode, errorMessage, throwable);
         mHttpStatusCode = DEFAULT_STATUS_CODE;
     }
@@ -195,16 +194,17 @@ public class ServiceException extends BaseException {
      * @param httpStatusCode int
      * @param throwable      Throwable
      */
-    public ServiceException(final String errorCode,
-                            final String errorMessage,
-                            final int httpStatusCode,
-                            final Throwable throwable) {
+    public ServiceException(
+            final String errorCode,
+            final String errorMessage,
+            final int httpStatusCode,
+            final Throwable throwable) {
         super(errorCode, errorMessage, throwable);
         mHttpStatusCode = httpStatusCode;
     }
 
     @Override
-    public String getExceptionName(){
+    public String getExceptionName() {
         return sName;
     }
 }

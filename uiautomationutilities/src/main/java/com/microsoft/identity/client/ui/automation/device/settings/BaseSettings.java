@@ -22,6 +22,8 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.device.settings;
 
+import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.launchIntent;
+
 import android.content.ActivityNotFoundException;
 import android.content.ComponentName;
 import android.content.Context;
@@ -38,21 +40,16 @@ import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
 import org.junit.Assert;
 
-import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.launchIntent;
-
 public abstract class BaseSettings implements ISettings {
 
-    private final static String TAG = BaseSettings.class.getSimpleName();
-    final static String SETTINGS_PKG = "com.android.settings";
+    private static final String TAG = BaseSettings.class.getSimpleName();
+    static final String SETTINGS_PKG = "com.android.settings";
 
     @Override
     public void launchDeviceAdminSettingsPage() {
         Logger.i(TAG, "Launching Device Admin Settings Page..");
         final Intent intent = new Intent();
-        intent.setComponent(new ComponentName(
-                SETTINGS_PKG,
-                SETTINGS_PKG + ".DeviceAdminSettings")
-        );
+        intent.setComponent(new ComponentName(SETTINGS_PKG, SETTINGS_PKG + ".DeviceAdminSettings"));
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
         final Context context = ApplicationProvider.getApplicationContext();
         context.startActivity(intent);
@@ -88,7 +85,7 @@ public abstract class BaseSettings implements ISettings {
     @Override
     public void launchAppInfoPage(@NonNull final String packageName) {
         try {
-            //Open the specific App Info page:
+            // Open the specific App Info page:
             final Uri data = Uri.parse("package:" + packageName);
             launchIntent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, data);
         } catch (final ActivityNotFoundException e) {

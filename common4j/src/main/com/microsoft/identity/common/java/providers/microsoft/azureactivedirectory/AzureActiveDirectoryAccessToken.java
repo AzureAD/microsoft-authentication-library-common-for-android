@@ -22,11 +22,12 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import lombok.NonNull;
-
 import com.microsoft.identity.common.java.providers.oauth2.AccessToken;
 import com.microsoft.identity.common.java.util.CopyUtil;
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
+import lombok.NonNull;
 
 import java.util.Date;
 
@@ -62,6 +63,6 @@ public class AzureActiveDirectoryAccessToken extends AccessToken {
         return CopyUtil.copyIfNotNull(mExtendedExpiresOn);
     }
 
-    //TODO: Need to add override for IsExpired() to address extended token expires on
+    // TODO: Need to add override for IsExpired() to address extended token expires on
 
 }

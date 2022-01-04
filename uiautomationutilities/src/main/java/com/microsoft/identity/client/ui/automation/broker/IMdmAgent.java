@@ -39,5 +39,4 @@ public interface IMdmAgent {
      * Handle protection policy UI flow using this MDM agent.
      */
     void handleAppProtectionPolicy();
-
 }

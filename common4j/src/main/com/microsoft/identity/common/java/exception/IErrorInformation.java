@@ -22,7 +22,6 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.exception;
 
-import javax.annotation.Nullable;
 
 import lombok.NonNull;
 

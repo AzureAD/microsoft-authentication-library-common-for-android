@@ -38,7 +38,7 @@ import com.microsoft.identity.internal.testutils.labutils.LabConstants;
  */
 public class IdLabB2cSisoPolicyPromptHandler extends AbstractPromptHandler {
 
-    private final static String TAG = IdLabB2cSisoPolicyPromptHandler.class.getSimpleName();
+    private static final String TAG = IdLabB2cSisoPolicyPromptHandler.class.getSimpleName();
 
     public IdLabB2cSisoPolicyPromptHandler(@NonNull final B2CPromptHandlerParameters parameters) {
         super(getAppropriateLoginComponentHandler(parameters), parameters);
@@ -61,22 +61,23 @@ public class IdLabB2cSisoPolicyPromptHandler extends AbstractPromptHandler {
 
         final boolean loginHintProvided = !TextUtils.isEmpty(parameters.getLoginHint());
 
-        if ((!isExternalIdP && !loginHintProvided) ||
-                (isExternalIdP && !parameters.isSessionExpected())) {
+        if ((!isExternalIdP && !loginHintProvided)
+                || (isExternalIdP && !parameters.isSessionExpected())) {
             loginComponentHandler.handleEmailField(username);
         }
 
         if (!parameters.isSessionExpected()) {
             loginComponentHandler.handlePasswordField(password);
 
-            if (loginComponentHandler instanceof GoogleLoginComponentHandler &&
-                    b2CProvider == B2CProvider.Google){
+            if (loginComponentHandler instanceof GoogleLoginComponentHandler
+                    && b2CProvider == B2CProvider.Google) {
                 ((GoogleLoginComponentHandler) loginComponentHandler).handleRecoveryEmail();
             }
         }
     }
 
-    protected static IOAuth2LoginComponentHandler getAppropriateLoginComponentHandler(@NonNull final B2CPromptHandlerParameters parameters) {
+    protected static IOAuth2LoginComponentHandler getAppropriateLoginComponentHandler(
+            @NonNull final B2CPromptHandlerParameters parameters) {
         Logger.i(TAG, "Get Appropriate Login Component Handler..");
         switch (parameters.getB2cProvider().getProviderName()) {
             case LabConstants.B2CProvider.LOCAL:

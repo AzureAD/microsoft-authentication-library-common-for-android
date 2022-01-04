@@ -29,7 +29,8 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 /**
  * Azure Active Directory B2C Authorization Request.
  */
-public class AzureActiveDirectoryB2CAuthorizationRequest extends MicrosoftAuthorizationRequest<AzureActiveDirectoryB2CAuthorizationRequest> {
+public class AzureActiveDirectoryB2CAuthorizationRequest
+        extends MicrosoftAuthorizationRequest<AzureActiveDirectoryB2CAuthorizationRequest> {
     private static final long serialVersionUID = -3380061616328869269L;
     private String mPrompt;
 
@@ -38,11 +39,12 @@ public class AzureActiveDirectoryB2CAuthorizationRequest extends MicrosoftAuthor
         this.mPrompt = builder.mPrompt;
     }
 
-    public static final class Builder extends MicrosoftAuthorizationRequest.Builder<AzureActiveDirectoryB2CAuthorizationRequest.Builder> {
+    public static final class Builder
+            extends MicrosoftAuthorizationRequest.Builder<
+                    AzureActiveDirectoryB2CAuthorizationRequest.Builder> {
         private String mPrompt;
 
-        public Builder() {
-        }
+        public Builder() {}
 
         @SuppressFBWarnings("URF_UNREAD_FIELD")
         public Builder setPrompt(String prompt) {
@@ -58,8 +60,6 @@ public class AzureActiveDirectoryB2CAuthorizationRequest extends MicrosoftAuthor
         public AzureActiveDirectoryB2CAuthorizationRequest.Builder self() {
             return this;
         }
-
-
     }
 
     public String getPrompt() {

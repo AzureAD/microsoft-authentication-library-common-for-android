@@ -38,7 +38,8 @@ import java.security.Principal;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 
-public final class ClientCertAuthChallengeHandler implements IChallengeHandler<ClientCertRequest, Void> {
+public final class ClientCertAuthChallengeHandler
+        implements IChallengeHandler<ClientCertRequest, Void> {
     private static final String TAG = ClientCertAuthChallengeHandler.class.getSimpleName();
     private static final String ACCEPTABLE_ISSUER = "CN=MS-Organization-Access";
     private Activity mActivity;
@@ -56,30 +57,38 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
         if (acceptableCertIssuers != null) {
             for (Principal issuer : acceptableCertIssuers) {
                 if (issuer.getName().contains(ACCEPTABLE_ISSUER)) {
-                    //Checking if received acceptable issuers contain "CN=MS-Organization-Access"
-                    Logger.info(TAG, "Cancelling the TLS request, not respond to TLS challenge triggered by device authentication.");
+                    // Checking if received acceptable issuers contain "CN=MS-Organization-Access"
+                    Logger.info(
+                            TAG,
+                            "Cancelling the TLS request, not respond to TLS challenge triggered by device authentication.");
                     request.cancel();
                     return null;
                 }
             }
         }
 
-        KeyChain.choosePrivateKeyAlias(mActivity, new KeyChainAliasCallback() {
+        KeyChain.choosePrivateKeyAlias(
+                mActivity,
+                new KeyChainAliasCallback() {
                     @Override
                     public void alias(String alias) {
                         if (alias == null) {
-                            Logger.info(TAG, "No certificate chosen by user, cancelling the TLS request.");
+                            Logger.info(
+                                    TAG,
+                                    "No certificate chosen by user, cancelling the TLS request.");
                             request.cancel();
                             return;
                         }
 
                         try {
-                            final X509Certificate[] certChain = KeyChain.getCertificateChain(
-                                    mActivity.getApplicationContext(), alias);
-                            final PrivateKey privateKey = KeyChain.getPrivateKey(
-                                    mActivity, alias);
+                            final X509Certificate[] certChain =
+                                    KeyChain.getCertificateChain(
+                                            mActivity.getApplicationContext(), alias);
+                            final PrivateKey privateKey = KeyChain.getPrivateKey(mActivity, alias);
 
-                            Logger.info(TAG, "Certificate is chosen by user, proceed with TLS request.");
+                            Logger.info(
+                                    TAG,
+                                    "Certificate is chosen by user, proceed with TLS request.");
                             request.proceed(privateKey, certChain);
                             return;
                         } catch (final KeyChainException e) {

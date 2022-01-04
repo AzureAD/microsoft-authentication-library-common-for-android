@@ -54,5 +54,4 @@ public interface ITokenCacheItem {
      * @return The resource to get.
      */
     String getResource();
-
 }

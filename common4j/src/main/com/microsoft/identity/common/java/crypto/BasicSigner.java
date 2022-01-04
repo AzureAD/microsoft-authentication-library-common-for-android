@@ -26,6 +26,8 @@ import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.logging.Logger;
 
+import lombok.NonNull;
+
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
@@ -35,19 +37,19 @@ import java.security.SignatureException;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
-import lombok.NonNull;
-
 /**
  * A basic Signer class.
  */
-public class BasicSigner implements ISigner{
+public class BasicSigner implements ISigner {
 
     private static final String TAG = BasicSigner.class.getSimpleName();
 
     @Override
-    public byte[] sign(@NonNull final PrivateKey key,
-                       @NonNull final String signingAlgorithm,
-                       final byte[] dataToBeSigned) throws ClientException {
+    public byte[] sign(
+            @NonNull final PrivateKey key,
+            @NonNull final String signingAlgorithm,
+            final byte[] dataToBeSigned)
+            throws ClientException {
         final Signature signer;
         try {
             signer = Signature.getInstance(signingAlgorithm);
@@ -63,9 +65,9 @@ public class BasicSigner implements ISigner{
         }
     }
 
-    public byte[] signWithHMac(final byte[] keyData,
-                               @NonNull final String hmacAlgorithm,
-                               final byte[] dataToBeSigned) throws ClientException {
+    public byte[] signWithHMac(
+            final byte[] keyData, @NonNull final String hmacAlgorithm, final byte[] dataToBeSigned)
+            throws ClientException {
         final String methodName = "signWithDerivedKey";
         try {
             final Mac sha256HMAC = Mac.getInstance(hmacAlgorithm);
@@ -73,7 +75,8 @@ public class BasicSigner implements ISigner{
             sha256HMAC.init(secretKey);
             return sha256HMAC.doFinal(dataToBeSigned);
         } catch (final NoSuchAlgorithmException e) {
-            final String errorString = hmacAlgorithm + " algorithm does not exist " + e.getMessage();
+            final String errorString =
+                    hmacAlgorithm + " algorithm does not exist " + e.getMessage();
             Logger.error(TAG + methodName, errorString, e);
             throw new ClientException(ClientException.NO_SUCH_ALGORITHM, errorString, e);
         } catch (final IllegalStateException e) {

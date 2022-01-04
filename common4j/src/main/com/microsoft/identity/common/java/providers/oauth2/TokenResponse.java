@@ -25,9 +25,9 @@ package com.microsoft.identity.common.java.providers.oauth2;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
-import java.util.Map;
-
 import edu.umd.cs.findbugs.annotations.Nullable;
+
+import java.util.Map;
 
 /**
  * This is the class encapsulating the details of the TokenResponse (oAuth2/OIDC).
@@ -38,7 +38,6 @@ import edu.umd.cs.findbugs.annotations.Nullable;
  * TODO: make the request object part of this response class
  *       (so that the caller does NOT have to persist the request object even after the request is made).
  */
-
 public class TokenResponse implements ISuccessResponse {
 
     /**
@@ -53,7 +52,6 @@ public class TokenResponse implements ISuccessResponse {
     @Expose()
     @SerializedName("expires_in")
     private Long mExpiresIn;
-
 
     /**
      * RECOMMENDED.  The refresh lifetime in seconds of the access token.  For
@@ -150,8 +148,7 @@ public class TokenResponse implements ISuccessResponse {
     /**
      * A long representing the time at which the response was received in milliseconds since the Unix Epoch.
      */
-    @Expose()
-    private long mResponseReceivedTime;
+    @Expose() private long mResponseReceivedTime;
 
     /**
      * Any extra parameters that may have shown up on the response.
@@ -320,25 +317,40 @@ public class TokenResponse implements ISuccessResponse {
         return mResponseReceivedTime;
     }
 
-    //CHECKSTYLE:OFF
+    // CHECKSTYLE:OFF
     // This method is generated. Checkstyle and/or PMD has been disabled.
     // This method *must* be regenerated if the class' structural definition changes through the
     // addition/subtraction of fields.
     @Override
     public String toString() {
-        return "TokenResponse{" +
-                "mExpiresIn=" + mExpiresIn +
-                ", mRefreshIn=" + mRefreshIn +
-                ", mAccessToken='" + mAccessToken + '\'' +
-                ", mTokenType='" + mTokenType + '\'' +
-                ", mRefreshToken='" + mRefreshToken + '\'' +
-                ", mScope='" + mScope + '\'' +
-                ", mState='" + mState + '\'' +
-                ", mIdToken='" + mIdToken + '\'' +
-                ", mResponseReceivedTime=" + mResponseReceivedTime +
-                '}';
+        return "TokenResponse{"
+                + "mExpiresIn="
+                + mExpiresIn
+                + ", mRefreshIn="
+                + mRefreshIn
+                + ", mAccessToken='"
+                + mAccessToken
+                + '\''
+                + ", mTokenType='"
+                + mTokenType
+                + '\''
+                + ", mRefreshToken='"
+                + mRefreshToken
+                + '\''
+                + ", mScope='"
+                + mScope
+                + '\''
+                + ", mState='"
+                + mState
+                + '\''
+                + ", mIdToken='"
+                + mIdToken
+                + '\''
+                + ", mResponseReceivedTime="
+                + mResponseReceivedTime
+                + '}';
     }
-    //CHECKSTYLE:ON
+    // CHECKSTYLE:ON
 
     @Nullable
     @Override

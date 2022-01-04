@@ -66,7 +66,7 @@ public final class StringExtensions {
      * @return boolean if the string was null or blank.
      */
     public static boolean isNullOrBlank(String param) {
-        return param == null || param.trim().length() == 0; //NOPMD
+        return param == null || param.trim().length() == 0; // NOPMD
     }
 
     /**
@@ -77,13 +77,13 @@ public final class StringExtensions {
      * @throws NoSuchAlgorithmException     throws if no such algorithm.
      * @throws UnsupportedEncodingException throws if encoding not supported.
      */
-    public static String createHash(String msg) throws NoSuchAlgorithmException,
-            UnsupportedEncodingException {
+    public static String createHash(String msg)
+            throws NoSuchAlgorithmException, UnsupportedEncodingException {
         if (!isNullOrBlank(msg)) {
             MessageDigest digester = MessageDigest.getInstance(TOKEN_HASH_ALGORITHM);
             final byte[] msgInBytes = msg.getBytes(ENCODING_UTF8);
-            return new String(Base64.encode(digester.digest(msgInBytes), Base64.NO_WRAP),
-                    ENCODING_UTF8);
+            return new String(
+                    Base64.encode(digester.digest(msgInBytes), Base64.NO_WRAP), ENCODING_UTF8);
         }
         return msg;
     }
@@ -137,7 +137,8 @@ public final class StringExtensions {
         try {
             authority = new URL(endpoint);
         } catch (MalformedURLException e1) {
-            //Log.e(TAG, e1.getMessage(), "", ADALError.DEVELOPER_AUTHORITY_IS_NOT_VALID_URL.toString(), e1);
+            // Log.e(TAG, e1.getMessage(), "",
+            // ADALError.DEVELOPER_AUTHORITY_IS_NOT_VALID_URL.toString(), e1);
             Log.e(TAG, ErrorStrings.AUTHORITY_URL_NOT_VALID);
         }
 
@@ -235,7 +236,8 @@ public final class StringExtensions {
      * @return boolean true if the string starts with prefix and has some body after it.
      */
     public static boolean hasPrefixInHeader(final String value, final String prefix) {
-        return value.startsWith(prefix) && value.length() > prefix.length() + 2
+        return value.startsWith(prefix)
+                && value.length() > prefix.length() + 2
                 && Character.isWhitespace(value.charAt(prefix.length()));
     }
 
@@ -246,13 +248,15 @@ public final class StringExtensions {
      * @return String
      */
     public static String base64UrlEncodeToString(final String message) {
-        return Base64.encodeToString(message.getBytes(Charset.forName(ENCODING_UTF8)), Base64.URL_SAFE | Base64.NO_WRAP);
+        return Base64.encodeToString(
+                message.getBytes(Charset.forName(ENCODING_UTF8)), Base64.URL_SAFE | Base64.NO_WRAP);
     }
 
     /**
      * Append parameter to the url. If the no query parameters, return the url originally passed in.
      */
-    public static String appendQueryParameterToUrl(final String url, final Map<String, String> requestParams)
+    public static String appendQueryParameterToUrl(
+            final String url, final Map<String, String> requestParams)
             throws UnsupportedEncodingException {
         if (isNullOrBlank(url)) {
             throw new IllegalArgumentException("Empty authority endpoint parameter.");
@@ -275,10 +279,7 @@ public final class StringExtensions {
      */
     public static String removeQueryParameterFromUrl(final String url) throws URISyntaxException {
         final URI uri = new URI(url);
-        return new URI(uri.getScheme(),
-                uri.getAuthority(),
-                uri.getPath(),
-                null,
-                uri.getFragment()).toString();
+        return new URI(uri.getScheme(), uri.getAuthority(), uri.getPath(), null, uri.getFragment())
+                .toString();
     }
 }

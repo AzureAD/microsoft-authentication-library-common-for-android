@@ -69,7 +69,6 @@ public class CSVWriter implements Closeable, Flushable {
     protected void writeNext(String[] nextLine) throws IOException {
         final Appendable appendable = new StringBuilder(INITIAL_STRING_SIZE);
 
-
         if (nextLine == null) {
             return;
         }
@@ -87,7 +86,6 @@ public class CSVWriter implements Closeable, Flushable {
             }
 
             appendable.append(nextElement);
-
         }
 
         appendable.append(lineEnd);

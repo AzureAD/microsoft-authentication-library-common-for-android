@@ -29,9 +29,9 @@ import com.microsoft.identity.common.java.controllers.BaseController;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.result.AcquireTokenResult;
 
-import java.util.List;
-
 import lombok.NonNull;
+
+import java.util.List;
 
 /**
  * ROPC command for Resource Owner Password Credentials.
@@ -41,17 +41,19 @@ public class RopcTokenCommand extends TokenCommand {
 
     private static final String TAG = RopcTokenCommand.class.getSimpleName();
 
-    public RopcTokenCommand(@NonNull final RopcTokenCommandParameters parameters,
-                            @NonNull final BaseController controller,
-                            @SuppressWarnings(WarningType.rawtype_warning) @NonNull final CommandCallback callback,
-                            @NonNull final String publicApiId) {
+    public RopcTokenCommand(
+            @NonNull final RopcTokenCommandParameters parameters,
+            @NonNull final BaseController controller,
+            @SuppressWarnings(WarningType.rawtype_warning) @NonNull final CommandCallback callback,
+            @NonNull final String publicApiId) {
         super(parameters, controller, callback, publicApiId);
     }
 
-    public RopcTokenCommand(@NonNull final RopcTokenCommandParameters parameters,
-                            @NonNull final List<BaseController> controllers,
-                            @SuppressWarnings(WarningType.rawtype_warning) @NonNull final CommandCallback callback,
-                            @NonNull final String publicApiId) {
+    public RopcTokenCommand(
+            @NonNull final RopcTokenCommandParameters parameters,
+            @NonNull final List<BaseController> controllers,
+            @SuppressWarnings(WarningType.rawtype_warning) @NonNull final CommandCallback callback,
+            @NonNull final String publicApiId) {
         super(parameters, controllers, callback, publicApiId);
     }
 
@@ -59,15 +61,10 @@ public class RopcTokenCommand extends TokenCommand {
     public AcquireTokenResult execute() throws Exception {
         final String methodName = ":execute";
         if (getParameters() instanceof RopcTokenCommandParameters) {
-            Logger.info(
-                    TAG + methodName,
-                    "Executing ROPC token command..."
-            );
+            Logger.info(TAG + methodName, "Executing ROPC token command...");
 
             return getDefaultController()
-                    .acquireToken(
-                            (InteractiveTokenCommandParameters) getParameters()
-                    );
+                    .acquireToken((InteractiveTokenCommandParameters) getParameters());
         } else {
             throw new IllegalArgumentException("Invalid operation parameters");
         }

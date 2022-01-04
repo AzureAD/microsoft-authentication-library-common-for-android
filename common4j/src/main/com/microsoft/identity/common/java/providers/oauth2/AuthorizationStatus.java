@@ -51,5 +51,5 @@ public enum AuthorizationStatus {
      * AuthenticationActivity detects the invalid request.
      */
     INVALID_REQUEST
-    //TODO:  Investigate how chrome tab returns http timeout error
+    // TODO:  Investigate how chrome tab returns http timeout error
 }

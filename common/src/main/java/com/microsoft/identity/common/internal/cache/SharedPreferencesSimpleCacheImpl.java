@@ -45,7 +45,8 @@ import java.util.Set;
  *
  * @param <T> The type of metadata that will be persisted.
  */
-public abstract class SharedPreferencesSimpleCacheImpl<T> implements ISimpleCache<T>, IListTypeToken {
+public abstract class SharedPreferencesSimpleCacheImpl<T>
+        implements ISimpleCache<T>, IListTypeToken {
 
     private static final String TAG = SharedPreferencesSimpleCacheImpl.class.getSimpleName();
 
@@ -55,17 +56,12 @@ public abstract class SharedPreferencesSimpleCacheImpl<T> implements ISimpleCach
     private final String mKeySingleEntry;
     private final Gson mGson = new Gson();
 
-    public SharedPreferencesSimpleCacheImpl(@NonNull final Context context,
-                                            @NonNull final String prefsName,
-                                            @NonNull final String singleKey) {
-        Logger.verbose(
-                TAG + "::ctor",
-                "Init"
-        );
-        mSharedPrefs = context.getSharedPreferences(
-                prefsName,
-                Context.MODE_PRIVATE
-        );
+    public SharedPreferencesSimpleCacheImpl(
+            @NonNull final Context context,
+            @NonNull final String prefsName,
+            @NonNull final String singleKey) {
+        Logger.verbose(TAG + "::ctor", "Init");
+        mSharedPrefs = context.getSharedPreferences(prefsName, Context.MODE_PRIVATE);
         mKeySingleEntry = singleKey;
     }
 
@@ -76,39 +72,22 @@ public abstract class SharedPreferencesSimpleCacheImpl<T> implements ISimpleCach
         final Set<T> allMetadata = new HashSet<>(getAll());
         Logger.verbose(
                 TAG + methodName,
-                "Existing metadata contained ["
-                        + allMetadata.size()
-                        + "] elements."
-        );
+                "Existing metadata contained [" + allMetadata.size() + "] elements.");
 
         allMetadata.add(t);
 
-        Logger.verbose(
-                TAG + methodName,
-                "New metadata set size: ["
-                        + allMetadata.size()
-                        + "]"
-        );
+        Logger.verbose(TAG + methodName, "New metadata set size: [" + allMetadata.size() + "]");
 
         final String json = mGson.toJson(allMetadata);
 
-        Logger.verbose(
-                TAG + methodName,
-                "Writing cache entry."
-        );
+        Logger.verbose(TAG + methodName, "Writing cache entry.");
 
         final boolean success = mSharedPrefs.edit().putString(mKeySingleEntry, json).commit();
 
         if (success) {
-            Logger.verbose(
-                    TAG + methodName,
-                    "Cache successfully updated."
-            );
+            Logger.verbose(TAG + methodName, "Cache successfully updated.");
         } else {
-            Logger.warn(
-                    TAG + methodName,
-                    "Error writing to cache."
-            );
+            Logger.warn(TAG + methodName, "Error writing to cache.");
         }
 
         return success;
@@ -122,44 +101,25 @@ public abstract class SharedPreferencesSimpleCacheImpl<T> implements ISimpleCach
 
         Logger.verbose(
                 TAG + methodName,
-                "Existing metadata contained ["
-                        + allMetadata.size()
-                        + "] elements."
-        );
+                "Existing metadata contained [" + allMetadata.size() + "] elements.");
 
         final boolean removed = allMetadata.remove(t);
 
-        Logger.verbose(
-                TAG + methodName,
-                "New metadata set size: ["
-                        + allMetadata.size()
-                        + "]"
-        );
+        Logger.verbose(TAG + methodName, "New metadata set size: [" + allMetadata.size() + "]");
 
         if (!removed) {
             // Nothing to do, wasn't cached in the first place!
-            Logger.warn(
-                    TAG + methodName,
-                    "Nothing to delete -- cache entry is missing!"
-            );
+            Logger.warn(TAG + methodName, "Nothing to delete -- cache entry is missing!");
 
             return true;
         } else {
             final String json = mGson.toJson(allMetadata);
 
-            Logger.verbose(
-                    TAG + methodName,
-                    "Writing new cache values..."
-            );
+            Logger.verbose(TAG + methodName, "Writing new cache values...");
 
             final boolean written = mSharedPrefs.edit().putString(mKeySingleEntry, json).commit();
 
-            Logger.verbose(
-                    TAG + methodName,
-                    "Updated cache contents written? ["
-                            + written
-                            + "]"
-            );
+            Logger.verbose(TAG + methodName, "Updated cache contents written? [" + written + "]");
 
             return written;
         }
@@ -172,17 +132,9 @@ public abstract class SharedPreferencesSimpleCacheImpl<T> implements ISimpleCach
 
         final Type listType = getListTypeToken();
 
-        final List<T> result = mGson.fromJson(
-                jsonList,
-                listType
-        );
+        final List<T> result = mGson.fromJson(jsonList, listType);
 
-        Logger.verbose(
-                TAG + methodName,
-                "Found ["
-                        + result.size()
-                        + "] cache entries."
-        );
+        Logger.verbose(TAG + methodName, "Found [" + result.size() + "] cache entries.");
 
         return result;
     }
@@ -194,15 +146,9 @@ public abstract class SharedPreferencesSimpleCacheImpl<T> implements ISimpleCach
         final boolean cleared = mSharedPrefs.edit().clear().commit();
 
         if (!cleared) {
-            Logger.warn(
-                    TAG + methodName,
-                    "Failed to clear cache."
-            );
+            Logger.warn(TAG + methodName, "Failed to clear cache.");
         } else {
-            Logger.verbose(
-                    TAG + methodName,
-                    "Cache successfully cleared."
-            );
+            Logger.verbose(TAG + methodName, "Cache successfully cleared.");
         }
 
         return cleared;

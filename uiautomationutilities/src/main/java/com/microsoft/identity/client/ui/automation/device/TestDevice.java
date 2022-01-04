@@ -42,33 +42,33 @@ import lombok.Getter;
 @Getter
 public class TestDevice {
 
-    private final static String TAG = TestDevice.class.getSimpleName();
+    private static final String TAG = TestDevice.class.getSimpleName();
     private final String manufacturer;
     private final String model;
     private final int apiLevel;
     private final ISettings settings;
 
-    public TestDevice(@NonNull final String manufacturer,
-                      @NonNull final String model,
-                      final int apiLevel) {
+    public TestDevice(
+            @NonNull final String manufacturer, @NonNull final String model, final int apiLevel) {
         this.manufacturer = manufacturer;
         this.model = model;
         this.apiLevel = apiLevel;
         this.settings = getSupportedDeviceSettings(manufacturer, model);
     }
 
-    public TestDevice(@NonNull final String manufacturer,
-                      @NonNull final String model,
-                      final int apiLevel,
-                      @NonNull final ISettings settings) {
+    public TestDevice(
+            @NonNull final String manufacturer,
+            @NonNull final String model,
+            final int apiLevel,
+            @NonNull final ISettings settings) {
         this.manufacturer = manufacturer;
         this.model = model;
         this.apiLevel = apiLevel;
         this.settings = settings;
     }
 
-    private static ISettings getSupportedDeviceSettings(@NonNull final String manufacturer,
-                                                        @NonNull final String model) {
+    private static ISettings getSupportedDeviceSettings(
+            @NonNull final String manufacturer, @NonNull final String model) {
         Logger.i(TAG, "Get Supported Device Settings..");
         // each device could have its own version of settings depending on make, model & apiLevel
         // For simplicity right now, we just have two configurations depending on manufacturer
@@ -91,8 +91,10 @@ public class TestDevice {
 
     public void setPin(final String pin) {
         if (isSecured()) {
-            Logger.i(TAG, "The device already has a PIN setup so we are not going to put " +
-                    "a new one in there.");
+            Logger.i(
+                    TAG,
+                    "The device already has a PIN setup so we are not going to put "
+                            + "a new one in there.");
             return;
         }
         getSettings().setPinOnDevice(pin);
@@ -100,8 +102,10 @@ public class TestDevice {
 
     public void removePin(final String pin) {
         if (!isSecured()) {
-            Logger.w(TAG, "Unable to remove pin from device as the device doesn't actually " +
-                    "have a screen lock.");
+            Logger.w(
+                    TAG,
+                    "Unable to remove pin from device as the device doesn't actually "
+                            + "have a screen lock.");
             return;
         }
 

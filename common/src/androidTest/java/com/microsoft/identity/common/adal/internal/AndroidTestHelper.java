@@ -22,10 +22,10 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.adal.internal;
 
+import static org.junit.Assert.assertTrue;
+
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
 import android.content.pm.Signature;
 import android.util.Base64;
 import android.util.Log;
@@ -41,8 +41,6 @@ import junit.framework.Assert;
 import java.security.MessageDigest;
 import java.util.Locale;
 
-import static org.junit.Assert.assertTrue;
-
 public class AndroidTestHelper {
 
     protected static final int REQUEST_TIME_OUT = 40000; // milliseconds
@@ -57,20 +55,14 @@ public class AndroidTestHelper {
     public void setUp() throws Exception {
         System.setProperty(
                 "dexmaker.dexcache",
-                InstrumentationRegistry
-                        .getInstrumentation()
+                InstrumentationRegistry.getInstrumentation()
                         .getTargetContext()
                         .getCacheDir()
-                        .getPath()
-        );
+                        .getPath());
 
         System.setProperty(
                 "org.mockito.android.target",
-                ApplicationProvider
-                        .getApplicationContext()
-                        .getCacheDir()
-                        .getPath()
-        );
+                ApplicationProvider.getApplicationContext().getCacheDir().getPath());
 
         // ADAL is set to this signature for now
         final Context context = InstrumentationRegistry.getInstrumentation().getContext();
@@ -83,8 +75,8 @@ public class AndroidTestHelper {
         }
 
         AuthenticationSettings.INSTANCE.setBrokerSignature(mTestTag);
-        AuthenticationSettings.INSTANCE
-                .setBrokerPackageName(AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME);
+        AuthenticationSettings.INSTANCE.setBrokerPackageName(
+                AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME);
         Log.d(TAG, "mTestSignature is set");
     }
 
@@ -92,8 +84,10 @@ public class AndroidTestHelper {
         HttpUrlConnectionFactory.setMockedHttpUrlConnection(null);
     }
 
-    public void assertThrowsException(final Class<? extends Exception> expected, String hasMessage,
-                                      final ThrowableRunnable testCode) {
+    public void assertThrowsException(
+            final Class<? extends Exception> expected,
+            String hasMessage,
+            final ThrowableRunnable testCode) {
         try {
             testCode.run();
             Assert.fail("This is expecting an exception, but it was not thrown.");
@@ -103,8 +97,10 @@ public class AndroidTestHelper {
             }
 
             if (hasMessage != null && !hasMessage.isEmpty()) {
-                assertTrue("Message has the text " + result.getMessage(),
-                        (result.getMessage().toLowerCase(Locale.US)
+                assertTrue(
+                        "Message has the text " + result.getMessage(),
+                        (result.getMessage()
+                                .toLowerCase(Locale.US)
                                 .contains(hasMessage.toLowerCase(Locale.US))));
             }
         }
@@ -114,5 +110,3 @@ public class AndroidTestHelper {
         void run() throws Exception;
     }
 }
-
-

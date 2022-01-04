@@ -33,10 +33,11 @@ import org.junit.runners.JUnit4;
 public class AndroidTaskStateGeneratorTest {
 
     private static final int TASK_ID = 19;
-    private static final String STATE_EXAMPLE_1 = String.format("%s:%s", TASK_ID, "SOMEGUID-SOMEGUID");
+    private static final String STATE_EXAMPLE_1 =
+            String.format("%s:%s", TASK_ID, "SOMEGUID-SOMEGUID");
 
     @Test
-    public void test_stateGeneratorGenerateMethod(){
+    public void test_stateGeneratorGenerateMethod() {
         IStateGenerator generator = new AndroidTaskStateGenerator(TASK_ID);
         String state = generator.generate();
         String expected = String.valueOf(TASK_ID);
@@ -44,7 +45,7 @@ public class AndroidTaskStateGeneratorTest {
     }
 
     @Test
-    public void test_stateGeneratorGetTaskFromStateMethod(){
+    public void test_stateGeneratorGetTaskFromStateMethod() {
         int taskId = AndroidTaskStateGenerator.getTaskFromState(STATE_EXAMPLE_1);
         Assert.assertEquals(TASK_ID, taskId);
     }

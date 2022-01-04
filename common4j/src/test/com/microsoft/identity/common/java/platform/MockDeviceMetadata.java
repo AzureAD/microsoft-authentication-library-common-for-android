@@ -50,7 +50,9 @@ public class MockDeviceMetadata extends AbstractDeviceMetadata {
     }
 
     @Override
-    public @NonNull String getOsForMats() { return TEST_OS_MATS; }
+    public @NonNull String getOsForMats() {
+        return TEST_OS_MATS;
+    }
 
     @Override
     public @NonNull String getOsForDrs() {
@@ -67,4 +69,3 @@ public class MockDeviceMetadata extends AbstractDeviceMetadata {
         return TEST_MANUFACTURER;
     }
 }
-

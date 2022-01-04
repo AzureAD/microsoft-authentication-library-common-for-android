@@ -102,5 +102,4 @@ public interface IMultiTypeNameValueStorage {
      * @param key The key whose value should be cleared.
      */
     void remove(final String key);
-
 }

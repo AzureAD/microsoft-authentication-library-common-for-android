@@ -32,14 +32,14 @@ import com.google.gson.stream.JsonWriter;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.logging.Logger;
 
+import lombok.AllArgsConstructor;
+
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
-import lombok.AllArgsConstructor;
 
 /**
  * Class to serialize and deserialize query parameters from List<Map.Entry<String, String>> to json String
@@ -69,15 +69,16 @@ public class QueryParamsAdapter extends TypeAdapter<List<Map.Entry<String, Strin
         gsonBuilder.registerTypeAdapter(
                 getListType(),
                 // Turn off the "proper" format for now, because it'll break backcompat.
-                new QueryParamsAdapter(false)
-        );
+                new QueryParamsAdapter(false));
         mGson = gsonBuilder.create();
     }
 
     @Override
-    public void write(final JsonWriter out, final List<Map.Entry<String, String>> queryParams) throws IOException {
+    public void write(final JsonWriter out, final List<Map.Entry<String, String>> queryParams)
+            throws IOException {
         if (mWriteProperFormat) {
-            // The "proper" format. We don't use it now because it'll break backcompat. The older broker doesn't support it.
+            // The "proper" format. We don't use it now because it'll break backcompat. The older
+            // broker doesn't support it.
             // i.e. {"eqp1":"1","eqp2","2"}.
             writeProperFormat(out, queryParams);
         } else {
@@ -87,7 +88,9 @@ public class QueryParamsAdapter extends TypeAdapter<List<Map.Entry<String, Strin
         }
     }
 
-    private void writeProperFormat(final JsonWriter out, final List<Map.Entry<String, String>> queryParams) throws IOException {
+    private void writeProperFormat(
+            final JsonWriter out, final List<Map.Entry<String, String>> queryParams)
+            throws IOException {
         out.beginObject();
         for (final Map.Entry<String, String> keyValuePair : queryParams) {
             out.name(keyValuePair.getKey());
@@ -96,7 +99,9 @@ public class QueryParamsAdapter extends TypeAdapter<List<Map.Entry<String, Strin
         out.endObject();
     }
 
-    private void writeListPairFormat(final JsonWriter out, final List<Map.Entry<String, String>> queryParams) throws IOException {
+    private void writeListPairFormat(
+            final JsonWriter out, final List<Map.Entry<String, String>> queryParams)
+            throws IOException {
         out.beginArray();
         for (final Map.Entry<String, String> keyValuePair : queryParams) {
             out.beginObject();
@@ -112,13 +117,13 @@ public class QueryParamsAdapter extends TypeAdapter<List<Map.Entry<String, Strin
     @Override
     public List<Map.Entry<String, String>> read(final JsonReader in) throws IOException {
         switch (in.peek()) {
-            // Backcompat to support the old "List<Pair<String,String>>" format
-            // i.e. [{"first":"eqp1","second":"1"},{"first":"eqp2","second":"2"}]
+                // Backcompat to support the old "List<Pair<String,String>>" format
+                // i.e. [{"first":"eqp1","second":"1"},{"first":"eqp2","second":"2"}]
             case BEGIN_ARRAY:
                 return readListPairFormat(in);
 
-            // i.e. {"eqp1":"1","eqp2","2"}, the "proper" one.
-            // We don't use it now because it's not compatible with the old Broker.
+                // i.e. {"eqp1":"1","eqp2","2"}, the "proper" one.
+                // We don't use it now because it's not compatible with the old Broker.
             case BEGIN_OBJECT:
                 return readProperFormat(in);
         }
@@ -126,19 +131,22 @@ public class QueryParamsAdapter extends TypeAdapter<List<Map.Entry<String, Strin
         return new ArrayList<>();
     }
 
-    private List<Map.Entry<String, String>> readProperFormat(final JsonReader in) throws IOException {
+    private List<Map.Entry<String, String>> readProperFormat(final JsonReader in)
+            throws IOException {
         final List<Map.Entry<String, String>> result = new ArrayList<>();
 
         in.beginObject();
         while (in.hasNext()) {
-            final Map.Entry<String, String> keyValuePair = new AbstractMap.SimpleEntry<>(in.nextName(), in.nextString());
+            final Map.Entry<String, String> keyValuePair =
+                    new AbstractMap.SimpleEntry<>(in.nextName(), in.nextString());
             result.add(keyValuePair);
         }
         in.endObject();
         return result;
     }
 
-    private List<Map.Entry<String, String>> readListPairFormat(final JsonReader in) throws IOException {
+    private List<Map.Entry<String, String>> readListPairFormat(final JsonReader in)
+            throws IOException {
         final List<Map.Entry<String, String>> result = new ArrayList<>();
 
         in.beginArray();
@@ -154,7 +162,7 @@ public class QueryParamsAdapter extends TypeAdapter<List<Map.Entry<String, Strin
                     key = in.nextString();
                 } else if (StringUtil.equalsIgnoreCase(name, "second")) {
                     value = in.nextString();
-                } else{
+                } else {
                     throw new JsonSyntaxException("Unexpected NAME field: " + name);
                 }
             }
@@ -183,7 +191,7 @@ public class QueryParamsAdapter extends TypeAdapter<List<Map.Entry<String, Strin
      * @return a deserialized object.
      * */
     public static List<Map.Entry<String, String>> _fromJson(final String jsonString)
-            throws ClientException{
+            throws ClientException {
         final String methodName = ":_fromJson";
 
         if (StringUtil.isNullOrEmpty(jsonString)) {
@@ -205,6 +213,10 @@ public class QueryParamsAdapter extends TypeAdapter<List<Map.Entry<String, Strin
      * @return a Type object representing the type of the query params in this case List<Map.Entry<String, String>>
      */
     public static Type getListType() {
-        return TypeToken.getParameterized(List.class, TypeToken.getParameterized(Map.Entry.class, String.class, String.class).getRawType()).getType();
+        return TypeToken.getParameterized(
+                        List.class,
+                        TypeToken.getParameterized(Map.Entry.class, String.class, String.class)
+                                .getRawType())
+                .getType();
     }
 }

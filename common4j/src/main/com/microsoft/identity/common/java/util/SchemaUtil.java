@@ -22,18 +22,19 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.util;
 
-import edu.umd.cs.findbugs.annotations.Nullable;
-import lombok.NonNull;
-
 import com.microsoft.identity.common.java.AuthenticationConstants;
-import com.microsoft.identity.common.java.exception.ServiceException;
 import com.microsoft.identity.common.java.dto.CredentialType;
+import com.microsoft.identity.common.java.exception.ServiceException;
+import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftIdToken;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryIdToken;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.ClientInfo;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsIdToken;
 import com.microsoft.identity.common.java.providers.oauth2.IDToken;
-import com.microsoft.identity.common.java.logging.Logger;
+
+import edu.umd.cs.findbugs.annotations.Nullable;
+
+import lombok.NonNull;
 
 import java.util.Map;
 
@@ -122,7 +123,8 @@ public final class SchemaUtil {
 
             alternativeAccountId = (String) idTokenClaims.get("altsecid");
 
-            Logger.verbosePII(TAG + ":" + methodName, "alternative_account_id: " + alternativeAccountId);
+            Logger.verbosePII(
+                    TAG + ":" + methodName, "alternative_account_id: " + alternativeAccountId);
 
             if (null == alternativeAccountId) {
                 Logger.warn(TAG + ":" + methodName, "alternative_account_id was null.");
@@ -145,15 +147,15 @@ public final class SchemaUtil {
             try {
                 idToken = new IDToken(idTokenString);
                 final Map<String, ?> idTokenClaims = idToken.getTokenClaims();
-                final String aadVersion = (String) idTokenClaims.get(
-                        AuthenticationConstants.AAD.AAD_VERSION
-                );
+                final String aadVersion =
+                        (String) idTokenClaims.get(AuthenticationConstants.AAD.AAD_VERSION);
 
                 if (AuthenticationConstants.AAD.AAD_VERSION_V1.equalsIgnoreCase(aadVersion)) {
                     idTokenVersion = CredentialType.V1IdToken.name();
                 }
             } catch (ServiceException e) {
-                Logger.warn(TAG + ":" + methodName, EXCEPTION_CONSTRUCTING_IDTOKEN + e.getMessage());
+                Logger.warn(
+                        TAG + ":" + methodName, EXCEPTION_CONSTRUCTING_IDTOKEN + e.getMessage());
             }
         }
 
@@ -171,7 +173,8 @@ public final class SchemaUtil {
                 idToken = new IDToken(idTokenString);
                 final Map<String, ?> idTokenClaims = idToken.getTokenClaims();
 
-                // IDP claim is present only in case of guest scenerio and is empty for home tenants.
+                // IDP claim is present only in case of guest scenerio and is empty for home
+                // tenants.
                 // Few Apps consuming ADAL use this to differentiate between home vs guest accounts.
                 idp = (String) idTokenClaims.get(AzureActiveDirectoryIdToken.IDENTITY_PROVIDER);
 
@@ -180,7 +183,8 @@ public final class SchemaUtil {
                     Logger.info(TAG + ":" + methodName, "idp claim was null.");
                 }
             } catch (ServiceException e) {
-                Logger.warn(TAG + ":" + methodName, EXCEPTION_CONSTRUCTING_IDTOKEN + e.getMessage());
+                Logger.warn(
+                        TAG + ":" + methodName, EXCEPTION_CONSTRUCTING_IDTOKEN + e.getMessage());
             }
         } else {
             Logger.warn(TAG + ":" + methodName, "IDToken was null.");
@@ -233,47 +237,46 @@ public final class SchemaUtil {
      * @return tenantId
      */
     @Nullable
-    public static String getTenantId(@Nullable final String clientInfoString,
-                                     @Nullable final String idTokenString) {
+    public static String getTenantId(
+            @Nullable final String clientInfoString, @Nullable final String idTokenString) {
 
         String tenantId = null;
 
         try {
-            if (!StringUtil.isNullOrEmpty(idTokenString) && !StringUtil.isNullOrEmpty(clientInfoString)) {
+            if (!StringUtil.isNullOrEmpty(idTokenString)
+                    && !StringUtil.isNullOrEmpty(clientInfoString)) {
                 final IDToken idToken = new IDToken(idTokenString);
                 final ClientInfo clientInfo = new ClientInfo(clientInfoString);
                 final Map<String, ?> claims = idToken.getTokenClaims();
 
-                if (!StringUtil.isNullOrEmpty((String) claims.get(AzureActiveDirectoryIdToken.TENANT_ID))) {
+                if (!StringUtil.isNullOrEmpty(
+                        (String) claims.get(AzureActiveDirectoryIdToken.TENANT_ID))) {
                     tenantId = (String) claims.get(AzureActiveDirectoryIdToken.TENANT_ID);
                 } else if (!StringUtil.isNullOrEmpty(clientInfo.getUtid())) {
                     Logger.warn(TAG, "realm is not returned from server. Use utid as realm.");
                     tenantId = clientInfo.getUtid();
                 } else {
-                    Logger.warn(TAG,
-                            "realm and utid is not returned from server. " +
-                                    "Using empty string as default tid."
-                    );
+                    Logger.warn(
+                            TAG,
+                            "realm and utid is not returned from server. "
+                                    + "Using empty string as default tid.");
                 }
             }
         } catch (final ServiceException e) {
-            Logger.errorPII(
-                    TAG,
-                    "Failed to construct IDToken or ClientInfo",
-                    e
-            );
+            Logger.errorPII(TAG, "Failed to construct IDToken or ClientInfo", e);
         }
 
         return tenantId;
-
     }
 
     public static String getDisplayableId(@NonNull final Map<String, ?> claims) {
-        if (!StringUtil.isNullOrEmpty((String) claims.get(MicrosoftStsIdToken.PREFERRED_USERNAME))) {
+        if (!StringUtil.isNullOrEmpty(
+                (String) claims.get(MicrosoftStsIdToken.PREFERRED_USERNAME))) {
             return (String) claims.get(MicrosoftStsIdToken.PREFERRED_USERNAME);
         } else if (!StringUtil.isNullOrEmpty((String) claims.get(MicrosoftStsIdToken.EMAIL))) {
             return (String) claims.get(MicrosoftStsIdToken.EMAIL);
-        } else if (!StringUtil.isNullOrEmpty((String) claims.get(AzureActiveDirectoryIdToken.UPN))) {
+        } else if (!StringUtil.isNullOrEmpty(
+                (String) claims.get(AzureActiveDirectoryIdToken.UPN))) {
             // TODO : Temporary Hack to read and store V1 id token in Cache for V2 request
             return (String) claims.get(AzureActiveDirectoryIdToken.UPN);
         } else {

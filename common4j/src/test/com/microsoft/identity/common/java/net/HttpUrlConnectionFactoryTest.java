@@ -25,7 +25,6 @@ package com.microsoft.identity.common.java.net;
 
 import org.junit.After;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 
@@ -49,8 +48,9 @@ public final class HttpUrlConnectionFactoryTest {
         final HttpURLConnection mockedConnection = Mockito.mock(HttpURLConnection.class);
         HttpUrlConnectionFactory.addMockedConnection(mockedConnection);
 
-        Assert.assertTrue(HttpUrlConnectionFactory.createHttpURLConnection(
-                getValidRequestUrl()).equals(mockedConnection));
+        Assert.assertTrue(
+                HttpUrlConnectionFactory.createHttpURLConnection(getValidRequestUrl())
+                        .equals(mockedConnection));
         Assert.assertTrue(HttpUrlConnectionFactory.getMockedConnectionCountInQueue() == 0);
     }
 
@@ -66,21 +66,29 @@ public final class HttpUrlConnectionFactoryTest {
         HttpUrlConnectionFactory.addMockedConnection(thirdMockedConnection);
 
         final int connectionQueueCount = 3;
-        Assert.assertTrue(HttpUrlConnectionFactory.getMockedConnectionCountInQueue() == connectionQueueCount);
-        Assert.assertTrue(HttpUrlConnectionFactory.createHttpURLConnection(
-                getValidRequestUrl()).equals(firstMockedConnection));
-        Assert.assertTrue(HttpUrlConnectionFactory.getMockedConnectionCountInQueue() == connectionQueueCount - 1);
+        Assert.assertTrue(
+                HttpUrlConnectionFactory.getMockedConnectionCountInQueue() == connectionQueueCount);
+        Assert.assertTrue(
+                HttpUrlConnectionFactory.createHttpURLConnection(getValidRequestUrl())
+                        .equals(firstMockedConnection));
+        Assert.assertTrue(
+                HttpUrlConnectionFactory.getMockedConnectionCountInQueue()
+                        == connectionQueueCount - 1);
 
-        Assert.assertTrue(HttpUrlConnectionFactory.createHttpURLConnection(
-                getValidRequestUrl()).equals(secondMockedConnection));
-        Assert.assertTrue(HttpUrlConnectionFactory.getMockedConnectionCountInQueue() == connectionQueueCount - 2);
+        Assert.assertTrue(
+                HttpUrlConnectionFactory.createHttpURLConnection(getValidRequestUrl())
+                        .equals(secondMockedConnection));
+        Assert.assertTrue(
+                HttpUrlConnectionFactory.getMockedConnectionCountInQueue()
+                        == connectionQueueCount - 2);
     }
 
     @Test
     public void testMockedConnectionNotSet() throws IOException {
         HttpUrlConnectionFactory.clearMockedConnectionQueue();
         Assert.assertTrue(HttpUrlConnectionFactory.getMockedConnectionCountInQueue() == 0);
-        Assert.assertNotNull(HttpUrlConnectionFactory.createHttpURLConnection(getValidRequestUrl()));
+        Assert.assertNotNull(
+                HttpUrlConnectionFactory.createHttpURLConnection(getValidRequestUrl()));
     }
 
     private URL getValidRequestUrl() throws MalformedURLException {

@@ -33,28 +33,24 @@ public abstract class AbstractB2CLoginComponentHandler implements IOAuth2LoginCo
     @Override
     public void handleAccountPicker(@NonNull final String username) {
         throw new UnsupportedOperationException(
-                "Not supported for B2C " + getHandlerName() + " Provider"
-        );
+                "Not supported for B2C " + getHandlerName() + " Provider");
     }
 
     @Override
     public void confirmConsentPageReceived() {
         throw new UnsupportedOperationException(
-                "Not supported for B2C " + getHandlerName() + " Provider"
-        );
+                "Not supported for B2C " + getHandlerName() + " Provider");
     }
 
     @Override
     public void acceptConsent() {
         throw new UnsupportedOperationException(
-                "Not supported for B2C " + getHandlerName() + " Provider"
-        );
+                "Not supported for B2C " + getHandlerName() + " Provider");
     }
 
     @Override
     public void declineConsent() {
         throw new UnsupportedOperationException(
-                "Not supported for B2C " + getHandlerName() + " Provider"
-        );
+                "Not supported for B2C " + getHandlerName() + " Provider");
     }
 }

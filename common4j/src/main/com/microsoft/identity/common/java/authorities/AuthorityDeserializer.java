@@ -41,7 +41,8 @@ public class AuthorityDeserializer implements JsonDeserializer<Authority> {
     private static final String TAG = AuthorityDeserializer.class.getSimpleName();
 
     @Override
-    public Authority deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+    public Authority deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
+            throws JsonParseException {
         final String methodName = ":deserialize";
         JsonObject authorityObject = json.getAsJsonObject();
         JsonElement type = authorityObject.get("type");
@@ -49,23 +50,26 @@ public class AuthorityDeserializer implements JsonDeserializer<Authority> {
         if (type != null) {
             switch (type.getAsString()) {
                 case "AAD":
-                    Logger.verbose(
-                            TAG + methodName,
-                            "Type: AAD"
-                    );
-                    final AzureActiveDirectoryAuthority aadAuthority = context.deserialize(authorityObject, AzureActiveDirectoryAuthority.class);
+                    Logger.verbose(TAG + methodName, "Type: AAD");
+                    final AzureActiveDirectoryAuthority aadAuthority =
+                            context.deserialize(
+                                    authorityObject, AzureActiveDirectoryAuthority.class);
 
                     // The developer might supply authority_url instead of audience.
                     // In that case, we'll try our best to map the audience here.
 
                     if (aadAuthority != null) {
                         try {
-                            final CommonURIBuilder uri = new CommonURIBuilder(aadAuthority.getAuthorityUri());
+                            final CommonURIBuilder uri =
+                                    new CommonURIBuilder(aadAuthority.getAuthorityUri());
                             final String cloudUrl = uri.getScheme() + "://" + uri.getHost();
                             final List<String> pathSegments = uri.getPathSegments();
                             if (pathSegments.size() > 0) {
-                                aadAuthority.mAudience = AzureActiveDirectoryAudience.getAzureActiveDirectoryAudience(cloudUrl,
-                                        pathSegments.get(pathSegments.size() - 1));
+                                aadAuthority.mAudience =
+                                        AzureActiveDirectoryAudience
+                                                .getAzureActiveDirectoryAudience(
+                                                        cloudUrl,
+                                                        pathSegments.get(pathSegments.size() - 1));
                             }
                         } catch (final IllegalArgumentException e) {
                             // Do nothing.
@@ -75,22 +79,15 @@ public class AuthorityDeserializer implements JsonDeserializer<Authority> {
 
                     return aadAuthority;
                 case "B2C":
-                    Logger.verbose(
-                            TAG + methodName,
-                            "Type: B2C"
-                    );
-                    return context.deserialize(authorityObject, AzureActiveDirectoryB2CAuthority.class);
+                    Logger.verbose(TAG + methodName, "Type: B2C");
+                    return context.deserialize(
+                            authorityObject, AzureActiveDirectoryB2CAuthority.class);
                 case "ADFS":
-                    Logger.verbose(
-                            TAG + methodName,
-                            "Type: ADFS"
-                    );
-                    return context.deserialize(authorityObject, ActiveDirectoryFederationServicesAuthority.class);
+                    Logger.verbose(TAG + methodName, "Type: ADFS");
+                    return context.deserialize(
+                            authorityObject, ActiveDirectoryFederationServicesAuthority.class);
                 default:
-                    Logger.verbose(
-                            TAG + methodName,
-                            "Type: Unknown"
-                    );
+                    Logger.verbose(TAG + methodName, "Type: Unknown");
                     return context.deserialize(authorityObject, UnknownAuthority.class);
             }
         }

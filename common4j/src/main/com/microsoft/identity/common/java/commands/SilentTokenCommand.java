@@ -32,10 +32,10 @@ import com.microsoft.identity.common.java.exception.UiRequiredException;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.result.AcquireTokenResult;
 
-import java.util.List;
-
 import lombok.EqualsAndHashCode;
 import lombok.NonNull;
+
+import java.util.List;
 
 @EqualsAndHashCode(callSuper = true)
 public class SilentTokenCommand extends TokenCommand {
@@ -44,17 +44,19 @@ public class SilentTokenCommand extends TokenCommand {
 
     private static final String TAG = SilentTokenCommand.class.getSimpleName();
 
-    public SilentTokenCommand(@NonNull SilentTokenCommandParameters parameters,
-                              @NonNull BaseController controller,
-                              @SuppressWarnings(WarningType.rawtype_warning) @NonNull CommandCallback callback,
-                              @NonNull String publicApiId) {
+    public SilentTokenCommand(
+            @NonNull SilentTokenCommandParameters parameters,
+            @NonNull BaseController controller,
+            @SuppressWarnings(WarningType.rawtype_warning) @NonNull CommandCallback callback,
+            @NonNull String publicApiId) {
         super(parameters, controller, callback, publicApiId);
     }
 
-    public SilentTokenCommand(@NonNull SilentTokenCommandParameters parameters,
-                              @NonNull List<BaseController> controllers,
-                              @SuppressWarnings(WarningType.rawtype_warning) @NonNull CommandCallback callback,
-                              @NonNull String publicApiId) {
+    public SilentTokenCommand(
+            @NonNull SilentTokenCommandParameters parameters,
+            @NonNull List<BaseController> controllers,
+            @SuppressWarnings(WarningType.rawtype_warning) @NonNull CommandCallback callback,
+            @NonNull String publicApiId) {
         super(parameters, controllers, callback, publicApiId);
     }
 
@@ -69,32 +71,31 @@ public class SilentTokenCommand extends TokenCommand {
             try {
                 Logger.verbose(
                         TAG + methodName,
-                        "Executing with controller: "
-                                + controller.getClass().getSimpleName()
-                );
+                        "Executing with controller: " + controller.getClass().getSimpleName());
 
-                result = controller.acquireTokenSilent(
-                        (SilentTokenCommandParameters) getParameters()
-                );
+                result =
+                        controller.acquireTokenSilent(
+                                (SilentTokenCommandParameters) getParameters());
 
                 if (result.getSucceeded()) {
                     Logger.verbose(
                             TAG + methodName,
                             "Executing with controller: "
                                     + controller.getClass().getSimpleName()
-                                    + ": Succeeded"
-                    );
+                                    + ": Succeeded");
 
                     return result;
                 }
             } catch (UiRequiredException | ClientException e) {
                 if (e.getErrorCode().equals(OAuth2ErrorCode.INVALID_GRANT) // was invalid_grant
-                        && this.getControllers().size() > ii + 1) { // isn't the last controller we can try
+                        && this.getControllers().size()
+                                > ii + 1) { // isn't the last controller we can try
                     continue;
                 } else if ((e.getErrorCode().equals(ErrorStrings.NO_TOKENS_FOUND)
-                        || e.getErrorCode().equals(ErrorStrings.NO_ACCOUNT_FOUND))
+                                || e.getErrorCode().equals(ErrorStrings.NO_ACCOUNT_FOUND))
                         && this.getControllers().size() > ii + 1) {
-                    //if no token or account for this silent call, we should continue to the next silent call.
+                    // if no token or account for this silent call, we should continue to the next
+                    // silent call.
                     continue;
                 } else {
                     throw e;
@@ -114,5 +115,4 @@ public class SilentTokenCommand extends TokenCommand {
     public boolean isEligibleForEstsTelemetry() {
         return true;
     }
-
 }

@@ -25,7 +25,7 @@ package com.microsoft.identity.common.java.telemetry;
 import com.microsoft.identity.common.java.util.ported.InMemoryStorage;
 
 class MockTelemetryContext extends AbstractTelemetryContext {
-    public MockTelemetryContext(){
+    public MockTelemetryContext() {
         super(new TelemetryPropertiesCache(new InMemoryStorage()));
         addApplicationInfo("TestApp", "1.0", "100XXX");
         addOsInfo("TestOS", "1.0");

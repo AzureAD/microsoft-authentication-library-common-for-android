@@ -22,6 +22,13 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2;
 
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.AUTHORIZATION_AGENT;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.AUTH_INTENT;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REDIRECT_URI;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_HEADERS;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_URL;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_ZOOM_CONTROLS_ENABLED;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_ZOOM_ENABLED;
 
 import android.content.Context;
 import android.content.Intent;
@@ -30,22 +37,14 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
-import com.microsoft.identity.common.java.configuration.LibraryConfiguration;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.telemetry.events.UiStartEvent;
-import com.microsoft.identity.common.java.ui.AuthorizationAgent;
 import com.microsoft.identity.common.internal.util.ProcessUtil;
+import com.microsoft.identity.common.java.configuration.LibraryConfiguration;
+import com.microsoft.identity.common.java.ui.AuthorizationAgent;
 import com.microsoft.identity.common.logging.DiagnosticContext;
 
 import java.util.HashMap;
-
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.AUTHORIZATION_AGENT;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.AUTH_INTENT;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REDIRECT_URI;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_HEADERS;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_URL;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_ZOOM_CONTROLS_ENABLED;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_ZOOM_ENABLED;
 
 /**
  * Constructs intents and/or fragments for interactive requests based on library configuration and current request.
@@ -65,26 +64,31 @@ public class AuthorizationActivityFactory {
      * @param webViewZoomControlsEnabled This parameter is specific to embedded and controls whether webview zoom controls are enabled... NOTE: Needs refactoring
      * @return An android Intent which will be used by Android to create an AuthorizationActivity
      */
-    public static Intent getAuthorizationActivityIntent(final Context context,
-                                                        final Intent authIntent,
-                                                        final String requestUrl,
-                                                        final String redirectUri,
-                                                        final HashMap<String, String> requestHeaders,
-                                                        final AuthorizationAgent authorizationAgent,
-                                                        final boolean webViewZoomEnabled,
-                                                        final boolean webViewZoomControlsEnabled) {
+    public static Intent getAuthorizationActivityIntent(
+            final Context context,
+            final Intent authIntent,
+            final String requestUrl,
+            final String redirectUri,
+            final HashMap<String, String> requestHeaders,
+            final AuthorizationAgent authorizationAgent,
+            final boolean webViewZoomEnabled,
+            final boolean webViewZoomControlsEnabled) {
         Intent intent;
         final LibraryConfiguration libraryConfig = LibraryConfiguration.getInstance();
         if (ProcessUtil.isBrokerProcess(context)) {
             intent = new Intent(context, BrokerAuthorizationActivity.class);
-        } else if (libraryConfig.isAuthorizationInCurrentTask() && !authorizationAgent.equals(AuthorizationAgent.WEBVIEW)) {
-        // We exclude the case when the authorization agent is already selected as WEBVIEW because of confusion
-        // that results from attempting to use the CurrentTaskAuthorizationActivity in that case, because as webview
-        // already uses the current task, attempting to manually simulate that behavior ends up supplying an incorrect
-        // Fragment to the activity.
-                intent = new Intent(context, CurrentTaskAuthorizationActivity.class);
+        } else if (libraryConfig.isAuthorizationInCurrentTask()
+                && !authorizationAgent.equals(AuthorizationAgent.WEBVIEW)) {
+            // We exclude the case when the authorization agent is already selected as WEBVIEW
+            // because of confusion
+            // that results from attempting to use the CurrentTaskAuthorizationActivity in that
+            // case, because as webview
+            // already uses the current task, attempting to manually simulate that behavior ends up
+            // supplying an incorrect
+            // Fragment to the activity.
+            intent = new Intent(context, CurrentTaskAuthorizationActivity.class);
         } else {
-                intent = new Intent(context, AuthorizationActivity.class);
+            intent = new Intent(context, AuthorizationActivity.class);
         }
 
         intent.putExtra(AUTH_INTENT, authIntent);
@@ -94,7 +98,9 @@ public class AuthorizationActivityFactory {
         intent.putExtra(AUTHORIZATION_AGENT, authorizationAgent);
         intent.putExtra(WEB_VIEW_ZOOM_CONTROLS_ENABLED, webViewZoomControlsEnabled);
         intent.putExtra(WEB_VIEW_ZOOM_ENABLED, webViewZoomEnabled);
-        intent.putExtra(DiagnosticContext.CORRELATION_ID, DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID));
+        intent.putExtra(
+                DiagnosticContext.CORRELATION_ID,
+                DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID));
         return intent;
     }
 
@@ -110,7 +116,8 @@ public class AuthorizationActivityFactory {
      */
     public static Fragment getAuthorizationFragmentFromStartIntent(@NonNull final Intent intent) {
         Fragment fragment;
-        final AuthorizationAgent authorizationAgent = (AuthorizationAgent) intent.getSerializableExtra(AUTHORIZATION_AGENT);
+        final AuthorizationAgent authorizationAgent =
+                (AuthorizationAgent) intent.getSerializableExtra(AUTHORIZATION_AGENT);
         Telemetry.emit(new UiStartEvent().putUserAgent(authorizationAgent));
 
         final LibraryConfiguration libraryConfig = LibraryConfiguration.getInstance();
@@ -140,8 +147,8 @@ public class AuthorizationActivityFactory {
      * @param bundle the bundle to add to the Fragment if it is an AuthorizationFragment.
      * @return returns an Fragment that's used as to authorize a token request.
      */
-    public static Fragment getAuthorizationFragmentFromStartIntentWithState(@NonNull final Intent intent,
-                                                                            @NonNull final Bundle bundle) {
+    public static Fragment getAuthorizationFragmentFromStartIntentWithState(
+            @NonNull final Intent intent, @NonNull final Bundle bundle) {
         final Fragment fragment = getAuthorizationFragmentFromStartIntent(intent);
         if (fragment instanceof AuthorizationFragment) {
             final AuthorizationFragment authFragment = (AuthorizationFragment) fragment;

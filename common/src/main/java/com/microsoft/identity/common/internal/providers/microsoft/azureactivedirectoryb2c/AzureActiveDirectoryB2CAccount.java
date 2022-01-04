@@ -24,9 +24,9 @@ package com.microsoft.identity.common.internal.providers.microsoft.azureactivedi
 
 import com.microsoft.identity.common.java.BaseAccount;
 
-import java.util.List;
-
 import lombok.EqualsAndHashCode;
+
+import java.util.List;
 
 /**
  * Represents the Azure AD B2C Account.

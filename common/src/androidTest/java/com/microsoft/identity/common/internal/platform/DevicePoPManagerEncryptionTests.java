@@ -22,6 +22,11 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.platform;
 
+import static com.microsoft.identity.common.java.crypto.IDevicePopManager.Cipher.RSA_ECB_OAEPWithSHA_1AndMGF1Padding;
+import static com.microsoft.identity.common.java.crypto.IDevicePopManager.Cipher.RSA_ECB_OAEPWithSHA_256AndMGF1Padding;
+import static com.microsoft.identity.common.java.crypto.IDevicePopManager.Cipher.RSA_ECB_PKCS1_PADDING;
+import static com.microsoft.identity.common.java.crypto.IDevicePopManager.Cipher.RSA_NONE_OAEPWithSHA_1AndMGF1Padding;
+
 import android.os.Build;
 
 import androidx.test.core.app.ApplicationProvider;
@@ -43,11 +48,6 @@ import java.security.cert.CertificateException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.microsoft.identity.common.java.crypto.IDevicePopManager.Cipher.RSA_ECB_OAEPWithSHA_1AndMGF1Padding;
-import static com.microsoft.identity.common.java.crypto.IDevicePopManager.Cipher.RSA_ECB_OAEPWithSHA_256AndMGF1Padding;
-import static com.microsoft.identity.common.java.crypto.IDevicePopManager.Cipher.RSA_ECB_PKCS1_PADDING;
-import static com.microsoft.identity.common.java.crypto.IDevicePopManager.Cipher.RSA_NONE_OAEPWithSHA_1AndMGF1Padding;
-
 // Note: Test cannot use robolectric due to the following open issue
 // https://github.com/robolectric/robolectric/issues/1518
 @RunWith(Parameterized.class)
@@ -67,8 +67,8 @@ public class DevicePoPManagerEncryptionTests {
             ciphers.add(RSA_ECB_PKCS1_PADDING);
         }
 
-        //https://stackoverflow.com/questions/36015194/android-keystoreexception-unknown-error -
-        //https://issuetracker.google.com/issues/37075898
+        // https://stackoverflow.com/questions/36015194/android-keystoreexception-unknown-error -
+        // https://issuetracker.google.com/issues/37075898
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             ciphers.add(RSA_NONE_OAEPWithSHA_1AndMGF1Padding);
             ciphers.add(RSA_ECB_OAEPWithSHA_1AndMGF1Padding);

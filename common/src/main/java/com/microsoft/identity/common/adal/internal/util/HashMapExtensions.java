@@ -25,7 +25,6 @@ package com.microsoft.identity.common.adal.internal.util;
 import android.text.TextUtils;
 
 import com.microsoft.identity.common.adal.internal.net.HttpWebResponse;
-import com.microsoft.identity.common.java.net.HttpResponse;
 import com.microsoft.identity.common.logging.Logger;
 
 import org.json.JSONArray;
@@ -83,11 +82,7 @@ public final class HashMapExtensions {
                         key = StringExtensions.urlFormDecode(elements[0].trim());
                         value = StringExtensions.urlFormDecode(elements[1].trim());
                     } catch (UnsupportedEncodingException e) {
-                        Logger.errorPII(
-                                TAG + methodName,
-                                "Encoding format is not supported",
-                                e
-                        );
+                        Logger.errorPII(TAG + methodName, "Encoding format is not supported", e);
                         continue;
                     }
                 } else if (elements.length == 1) {
@@ -95,11 +90,7 @@ public final class HashMapExtensions {
                         key = StringExtensions.urlFormDecode(elements[0].trim());
                         value = "";
                     } catch (UnsupportedEncodingException e) {
-                        Logger.errorPII(
-                                TAG + methodName,
-                                "Encoding format is not supported",
-                                e
-                        );
+                        Logger.errorPII(TAG + methodName, "Encoding format is not supported", e);
                         continue;
                     }
                 }
@@ -113,7 +104,6 @@ public final class HashMapExtensions {
         return result;
     }
 
-
     /**
      * get key value pairs from response.
      *
@@ -121,7 +111,8 @@ public final class HashMapExtensions {
      * @return HashMap
      * @throws JSONException
      */
-    public static HashMap<String, String> getJsonResponse(HttpWebResponse webResponse) throws JSONException {
+    public static HashMap<String, String> getJsonResponse(HttpWebResponse webResponse)
+            throws JSONException {
         final HashMap<String, String> response = new HashMap<>();
         if (webResponse != null && !TextUtils.isEmpty(webResponse.getBody())) {
             JSONObject jsonObject = new JSONObject(webResponse.getBody());
@@ -162,7 +153,8 @@ public final class HashMapExtensions {
      * @return HashMap
      * @throws JSONException
      */
-    public static HashMap<String, List<String>> jsonStringAsMapList(String jsonString) throws JSONException {
+    public static HashMap<String, List<String>> jsonStringAsMapList(String jsonString)
+            throws JSONException {
         final HashMap<String, List<String>> responseItems = new HashMap<>();
         if (!StringExtensions.isNullOrBlank(jsonString)) {
             JSONObject jsonObject = new JSONObject(jsonString);

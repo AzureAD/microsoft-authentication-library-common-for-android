@@ -111,7 +111,8 @@ public class AsymmetricRsaKeyTests {
     public void testVerificationFailsForModifiedString() throws ClientException {
         final String signature = mAsymmetricKey.sign(VALIDATION_TEXT);
         Assert.assertNotNull(signature);
-        Assert.assertFalse(mAsymmetricKey.verify(VALIDATION_TEXT.toLowerCase(Locale.ROOT), signature));
+        Assert.assertFalse(
+                mAsymmetricKey.verify(VALIDATION_TEXT.toLowerCase(Locale.ROOT), signature));
     }
 
     @Test
@@ -124,5 +125,4 @@ public class AsymmetricRsaKeyTests {
         final String decryptedCiphertext = mAsymmetricKey.decrypt(cipherText);
         Assert.assertEquals(VALIDATION_TEXT, decryptedCiphertext);
     }
-
 }

@@ -34,29 +34,34 @@ import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
 
-// Suppressing rawtype warnings due to the generic types OAuth2Strategy, AuthorizationRequest and AuthorizationResult
+// Suppressing rawtype warnings due to the generic types OAuth2Strategy, AuthorizationRequest and
+// AuthorizationResult
 @SuppressWarnings(WarningType.rawtype_warning)
 public class DefaultBrowserAuthorizationStrategy<
-        GenericOAuth2Strategy extends OAuth2Strategy,
-        GenericAuthorizationRequest extends AuthorizationRequest>
+                GenericOAuth2Strategy extends OAuth2Strategy,
+                GenericAuthorizationRequest extends AuthorizationRequest>
         extends BrowserAuthorizationStrategy<GenericOAuth2Strategy, GenericAuthorizationRequest> {
 
     private final boolean mIsRequestFromBroker;
 
-    public DefaultBrowserAuthorizationStrategy(@NonNull Context applicationContext,
-                                               @NonNull Activity activity,
-                                               @Nullable Fragment fragment,
-                                               boolean isRequestFromBroker) {
+    public DefaultBrowserAuthorizationStrategy(
+            @NonNull Context applicationContext,
+            @NonNull Activity activity,
+            @Nullable Fragment fragment,
+            boolean isRequestFromBroker) {
         super(applicationContext, activity, fragment);
         mIsRequestFromBroker = isRequestFromBroker;
     }
 
     @Override
     protected void setIntentFlag(@NonNull final Intent intent) {
-        // singleTask launchMode is required for the authorization redirect is from an external browser
+        // singleTask launchMode is required for the authorization redirect is from an external
+        // browser
         // in the browser authorization flow
-        // For broker request we need to clear all activities in the task and bring Authorization Activity to the
-        // top. If we do not add FLAG_ACTIVITY_CLEAR_TASK, Authorization Activity on finish can land on
+        // For broker request we need to clear all activities in the task and bring Authorization
+        // Activity to the
+        // top. If we do not add FLAG_ACTIVITY_CLEAR_TASK, Authorization Activity on finish can land
+        // on
         // Authenticator's or Company Portal's active activity which would be confusing to the user.
         if (mIsRequestFromBroker) {
             intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -64,5 +69,4 @@ public class DefaultBrowserAuthorizationStrategy<
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         }
     }
-
 }

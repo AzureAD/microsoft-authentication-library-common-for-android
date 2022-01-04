@@ -22,6 +22,13 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.installer;
 
+import static androidx.test.platform.app.InstrumentationRegistry.getInstrumentation;
+
+import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT;
+import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.getResourceId;
+import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.isStringPackageName;
+import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.launchApp;
+
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
@@ -41,15 +48,9 @@ import org.junit.Assert;
 
 import java.util.concurrent.TimeUnit;
 
-import static androidx.test.platform.app.InstrumentationRegistry.getInstrumentation;
-import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT;
-import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.getResourceId;
-import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.isStringPackageName;
-import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.launchApp;
-
 public class PlayStore implements IAppInstaller {
 
-    private final static String TAG = PlayStore.class.getSimpleName();
+    private static final String TAG = PlayStore.class.getSimpleName();
     private static final String GOOGLE_PLAY_PACKAGE_NAME = "com.android.vending";
 
     // wait at least 5 mins for app installation from Play Store
@@ -58,8 +59,18 @@ public class PlayStore implements IAppInstaller {
     private void launchMarketPageForPackage(final String appPackageName) {
         Logger.i(TAG, "Launch Market Page For " + appPackageName + " Package..");
         final Context context = ApplicationProvider.getApplicationContext();
-        final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + appPackageName)); //sets the intent to start your app
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_MULTIPLE_TASK);  //clear out any previous task, i.e., make sure it starts on the initial screen
+        final Intent intent =
+                new Intent(
+                        Intent.ACTION_VIEW,
+                        Uri.parse(
+                                "market://details?id="
+                                        + appPackageName)); // sets the intent to start your app
+        intent.setFlags(
+                Intent.FLAG_ACTIVITY_NEW_TASK
+                        | Intent
+                                .FLAG_ACTIVITY_MULTIPLE_TASK); // clear out any previous task, i.e.,
+                                                               // make sure it starts on the initial
+                                                               // screen
         context.startActivity(intent);
     }
 
@@ -69,9 +80,12 @@ public class PlayStore implements IAppInstaller {
 
         launchApp(GOOGLE_PLAY_PACKAGE_NAME);
 
-        final UiObject searchButton = device.findObject(new UiSelector().resourceId(
-                getResourceId(GOOGLE_PLAY_PACKAGE_NAME, "search_bar_hint")
-        ));
+        final UiObject searchButton =
+                device.findObject(
+                        new UiSelector()
+                                .resourceId(
+                                        getResourceId(
+                                                GOOGLE_PLAY_PACKAGE_NAME, "search_bar_hint")));
         try {
             searchButton.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
             searchButton.click();
@@ -79,9 +93,13 @@ public class PlayStore implements IAppInstaller {
             throw new AssertionError(e);
         }
 
-        final UiObject searchTextField = device.findObject(new UiSelector().resourceId(
-                getResourceId(GOOGLE_PLAY_PACKAGE_NAME, "search_bar_text_input")
-        ));
+        final UiObject searchTextField =
+                device.findObject(
+                        new UiSelector()
+                                .resourceId(
+                                        getResourceId(
+                                                GOOGLE_PLAY_PACKAGE_NAME,
+                                                "search_bar_text_input")));
         try {
             searchTextField.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
             searchTextField.setText(hint);
@@ -97,9 +115,11 @@ public class PlayStore implements IAppInstaller {
         final UiDevice device = UiDevice.getInstance(getInstrumentation());
 
         // we will just take the first app in the list
-        final UiObject appIconInSearchResult = device.findObject(new UiSelector().resourceId(
-                getResourceId(GOOGLE_PLAY_PACKAGE_NAME, "bucket_items")
-        ));
+        final UiObject appIconInSearchResult =
+                device.findObject(
+                        new UiSelector()
+                                .resourceId(
+                                        getResourceId(GOOGLE_PLAY_PACKAGE_NAME, "bucket_items")));
 
         appIconInSearchResult.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
         appIconInSearchResult.click();
@@ -108,9 +128,11 @@ public class PlayStore implements IAppInstaller {
     private void selectGooglePlayAppFromInstallBar() throws UiObjectNotFoundException {
         Logger.i(TAG, "Select Google Play App From Install Bar..");
         final UiDevice device = UiDevice.getInstance(getInstrumentation());
-        final UiObject appInstallBar = device.findObject(new UiSelector().resourceId(
-                getResourceId(GOOGLE_PLAY_PACKAGE_NAME, "install_bar")
-        ));
+        final UiObject appInstallBar =
+                device.findObject(
+                        new UiSelector()
+                                .resourceId(
+                                        getResourceId(GOOGLE_PLAY_PACKAGE_NAME, "install_bar")));
         appInstallBar.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
         appInstallBar.click();
     }
@@ -132,17 +154,17 @@ public class PlayStore implements IAppInstaller {
         Logger.i(TAG, "Install App From Market Page Internal..");
         final UiDevice device = UiDevice.getInstance(getInstrumentation());
 
-        final UiObject installBtn = device.findObject(
-                new UiSelector().className(Button.class).text("Install").enabled(true)
-        );
+        final UiObject installBtn =
+                device.findObject(
+                        new UiSelector().className(Button.class).text("Install").enabled(true));
 
         installBtn.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
 
         installBtn.click();
 
-        final UiObject openButton = device.findObject(
-                new UiSelector().className(Button.class).text("Open").enabled(true)
-        );
+        final UiObject openButton =
+                device.findObject(
+                        new UiSelector().className(Button.class).text("Open").enabled(true));
 
         // if we see open button, then we know that the installation is complete
         openButton.waitForExists(PLAY_STORE_INSTALL_APP_TIMEOUT);
@@ -186,5 +208,4 @@ public class PlayStore implements IAppInstaller {
 
         installAppFromMarketPage();
     }
-
 }

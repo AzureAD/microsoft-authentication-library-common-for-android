@@ -22,15 +22,15 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.telemetry.events;
 
-import androidx.annotation.NonNull;
-
-import com.microsoft.identity.common.java.exception.BaseException;
-import com.microsoft.identity.common.java.exception.UserCancelException;
-
 import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Event;
 import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.EventType;
 import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Key;
 import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Value;
+
+import androidx.annotation.NonNull;
+
+import com.microsoft.identity.common.java.exception.BaseException;
+import com.microsoft.identity.common.java.exception.UserCancelException;
 
 public class BrokerEndEvent extends com.microsoft.identity.common.java.telemetry.events.BaseEvent {
     public BrokerEndEvent() {
@@ -43,7 +43,6 @@ public class BrokerEndEvent extends com.microsoft.identity.common.java.telemetry
         put(Key.BROKER_ACTION, actionName);
         return this;
     }
-
 
     public BrokerEndEvent isSuccessful(final boolean isSuccessful) {
         put(Key.IS_SUCCESSFUL, String.valueOf(isSuccessful));
@@ -63,7 +62,7 @@ public class BrokerEndEvent extends com.microsoft.identity.common.java.telemetry
         put(Key.SERVER_SUBERROR_CODE, exception.getCliTelemSubErrorCode());
         put(Key.ERROR_CODE, exception.getErrorCode());
         put(Key.SPE_RING, exception.getSpeRing());
-        put(Key.ERROR_DESCRIPTION, exception.getMessage()); //OII
+        put(Key.ERROR_DESCRIPTION, exception.getMessage()); // OII
         put(Key.RT_AGE, exception.getRefreshTokenAge());
         put(Key.IS_SUCCESSFUL, Value.FALSE);
         return this;

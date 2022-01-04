@@ -22,25 +22,22 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.telemetry.rules;
 
-import lombok.NonNull;
+import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Key;
 
 import com.microsoft.identity.common.java.util.StringUtil;
+
+import lombok.NonNull;
 
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
-import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Key;
-
 public class TelemetryAggregationRules {
     private static TelemetryAggregationRules sInstance;
     private Set<String> aggregatedPropertiesSet;
 
-    final private String[] aggregatedArray = {
-            Key.EVENT_NAME,
-            Key.OCCUR_TIME,
-            Key.EVENT_TYPE,
-            Key.IS_SUCCESSFUL
+    private final String[] aggregatedArray = {
+        Key.EVENT_NAME, Key.OCCUR_TIME, Key.EVENT_TYPE, Key.IS_SUCCESSFUL
     };
 
     private TelemetryAggregationRules() {
@@ -48,7 +45,7 @@ public class TelemetryAggregationRules {
     }
 
     @NonNull
-    public synchronized static TelemetryAggregationRules getInstance() {
+    public static synchronized TelemetryAggregationRules getInstance() {
         if (sInstance == null) {
             sInstance = new TelemetryAggregationRules();
         }

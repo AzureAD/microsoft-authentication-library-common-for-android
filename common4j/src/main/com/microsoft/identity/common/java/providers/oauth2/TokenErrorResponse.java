@@ -27,13 +27,11 @@ import com.google.gson.annotations.SerializedName;
 
 public class TokenErrorResponse implements IErrorResponse {
 
-    @Expose()
-    private int mStatusCode;
+    @Expose() private int mStatusCode;
 
     private String mResponseBody;
 
-    @Expose()
-    private String mResponseHeadersJson;
+    @Expose() private String mResponseHeadersJson;
 
     @Expose()
     @SerializedName("error")
@@ -161,18 +159,30 @@ public class TokenErrorResponse implements IErrorResponse {
         this.mResponseHeadersJson = responseHeadersJson;
     }
 
-    //CHECKSTYLE:OFF
+    // CHECKSTYLE:OFF
     @Override
     public String toString() {
-        return "TokenErrorResponse{" +
-                "mStatusCode=" + mStatusCode +
-                ", mResponseBody='" + mResponseBody + '\'' +
-                ", mResponseHeadersJson=" + mResponseHeadersJson +
-                ", mError='" + mError + '\'' +
-                ", mSubError='" + mSubError + '\'' +
-                ", mErrorDescription='" + mErrorDescription + '\'' +
-                ", mErrorUri='" + mErrorUri + '\'' +
-                '}';
+        return "TokenErrorResponse{"
+                + "mStatusCode="
+                + mStatusCode
+                + ", mResponseBody='"
+                + mResponseBody
+                + '\''
+                + ", mResponseHeadersJson="
+                + mResponseHeadersJson
+                + ", mError='"
+                + mError
+                + '\''
+                + ", mSubError='"
+                + mSubError
+                + '\''
+                + ", mErrorDescription='"
+                + mErrorDescription
+                + '\''
+                + ", mErrorUri='"
+                + mErrorUri
+                + '\''
+                + '}';
     }
-    //CHECKSTYLE:ON
+    // CHECKSTYLE:ON
 }

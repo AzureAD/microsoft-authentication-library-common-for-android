@@ -52,5 +52,4 @@ public interface IMigrationOperationResult {
      * @return The error map.
      */
     Map<String, Integer> getFailures();
-
 }

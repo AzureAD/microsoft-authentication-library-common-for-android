@@ -52,15 +52,21 @@ public class TestUtils {
     }
 
     public static boolean isAccessToken(@NonNull final String cacheKey) {
-        return SharedPreferencesAccountCredentialCache.getCredentialTypeForCredentialCacheKey(cacheKey) == CredentialType.AccessToken;
+        return SharedPreferencesAccountCredentialCache.getCredentialTypeForCredentialCacheKey(
+                        cacheKey)
+                == CredentialType.AccessToken;
     }
 
     public static boolean isRefreshToken(@NonNull final String cacheKey) {
-        return SharedPreferencesAccountCredentialCache.getCredentialTypeForCredentialCacheKey(cacheKey) == CredentialType.RefreshToken;
+        return SharedPreferencesAccountCredentialCache.getCredentialTypeForCredentialCacheKey(
+                        cacheKey)
+                == CredentialType.RefreshToken;
     }
 
     public static IMultiTypeNameValueStorage getSharedPreferences(final String sharedPrefName) {
-        final IPlatformComponents components = AndroidPlatformComponents.createFromContext(ApplicationProvider.getApplicationContext());
+        final IPlatformComponents components =
+                AndroidPlatformComponents.createFromContext(
+                        ApplicationProvider.getApplicationContext());
 
         return components.getFileStore(sharedPrefName);
     }
@@ -71,12 +77,14 @@ public class TestUtils {
      * @param sharedPrefName the name of the shared preferences file.
      * @return A SharedPreferences that decrypts and encrypts the values.
      */
-    public static IMultiTypeNameValueStorage getEncryptedSharedPreferences(final String sharedPrefName) {
-        final IPlatformComponents components = AndroidPlatformComponents.createFromContext(ApplicationProvider.getApplicationContext());
-        final IMultiTypeNameValueStorage barePreferences = components.getEncryptedFileStore(
-                sharedPrefName,
-                components.
-                        getStorageEncryptionManager());
+    public static IMultiTypeNameValueStorage getEncryptedSharedPreferences(
+            final String sharedPrefName) {
+        final IPlatformComponents components =
+                AndroidPlatformComponents.createFromContext(
+                        ApplicationProvider.getApplicationContext());
+        final IMultiTypeNameValueStorage barePreferences =
+                components.getEncryptedFileStore(
+                        sharedPrefName, components.getStorageEncryptionManager());
         return barePreferences;
     }
 
@@ -97,5 +105,4 @@ public class TestUtils {
     public static Context getContext() {
         return ApplicationProvider.getApplicationContext();
     }
-
 }

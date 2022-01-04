@@ -25,35 +25,43 @@ package com.microsoft.identity.common.java.crypto;
 import com.microsoft.identity.common.java.crypto.key.AbstractSecretKeyLoader;
 import com.microsoft.identity.common.java.exception.ClientException;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
+
+import lombok.NonNull;
+
 import java.util.ArrayList;
 import java.util.List;
-
-import edu.umd.cs.findbugs.annotations.Nullable;
-import lombok.NonNull;
 
 public class MockStorageEncryptionManager extends StorageEncryptionManager {
 
     private final AbstractSecretKeyLoader mEncryptKey;
     private final List<AbstractSecretKeyLoader> mDecryptKey;
 
-    MockStorageEncryptionManager(@NonNull final byte[] iv,
-                                 @Nullable final AbstractSecretKeyLoader key) throws ClientException {
-        this(iv,
+    MockStorageEncryptionManager(
+            @NonNull final byte[] iv, @Nullable final AbstractSecretKeyLoader key)
+            throws ClientException {
+        this(
+                iv,
                 key,
-                new ArrayList<AbstractSecretKeyLoader>() {{
-                    add(key);
-                }});
+                new ArrayList<AbstractSecretKeyLoader>() {
+                    {
+                        add(key);
+                    }
+                });
     }
 
-    MockStorageEncryptionManager(@NonNull final byte[] iv,
-                                 @Nullable final AbstractSecretKeyLoader encryptKey,
-                                 @Nullable final List<AbstractSecretKeyLoader> decryptKey) throws ClientException {
-        super(new IVGenerator() {
-            @Override
-            public byte[] generate() {
-                return iv.clone();
-            }
-        });
+    MockStorageEncryptionManager(
+            @NonNull final byte[] iv,
+            @Nullable final AbstractSecretKeyLoader encryptKey,
+            @Nullable final List<AbstractSecretKeyLoader> decryptKey)
+            throws ClientException {
+        super(
+                new IVGenerator() {
+                    @Override
+                    public byte[] generate() {
+                        return iv.clone();
+                    }
+                });
         mEncryptKey = encryptKey;
         mDecryptKey = decryptKey;
     }
@@ -64,7 +72,8 @@ public class MockStorageEncryptionManager extends StorageEncryptionManager {
     }
 
     @Override
-    public @NonNull List<AbstractSecretKeyLoader> getKeyLoaderForDecryption(@NonNull byte[] cipherText) throws ClientException {
+    public @NonNull List<AbstractSecretKeyLoader> getKeyLoaderForDecryption(
+            @NonNull byte[] cipherText) throws ClientException {
         return mDecryptKey;
     }
 }

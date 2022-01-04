@@ -22,6 +22,12 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.crypto;
 
+import static com.microsoft.identity.common.crypto.MockData.ANOTHER_PREDEFINED_KEY;
+import static com.microsoft.identity.common.crypto.MockData.PREDEFINED_KEY;
+import static com.microsoft.identity.common.crypto.MockData.TEXT_ENCRYPTED_BY_ANDROID_WRAPPED_KEY;
+import static com.microsoft.identity.common.crypto.MockData.TEXT_ENCRYPTED_BY_PREDEFINED_KEY;
+import static com.microsoft.identity.common.java.AuthenticationConstants.ENCODING_UTF8;
+
 import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
@@ -42,28 +48,23 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.microsoft.identity.common.crypto.MockData.ANOTHER_PREDEFINED_KEY;
-import static com.microsoft.identity.common.crypto.MockData.PREDEFINED_KEY;
-import static com.microsoft.identity.common.crypto.MockData.TEXT_ENCRYPTED_BY_ANDROID_WRAPPED_KEY;
-import static com.microsoft.identity.common.crypto.MockData.TEXT_ENCRYPTED_BY_PREDEFINED_KEY;
-import static com.microsoft.identity.common.java.AuthenticationConstants.ENCODING_UTF8;
-
 @RunWith(RobolectricTestRunner.class)
 public class AndroidBrokerStorageEncryptionManagerTest {
 
     final byte[] mockAuthAppKeyRawBytes = PREDEFINED_KEY;
     final byte[] mockCpKeyRawBytes = ANOTHER_PREDEFINED_KEY;
 
-    final Context context = ApplicationProvider.getApplicationContext();;
+    final Context context = ApplicationProvider.getApplicationContext();
+    ;
 
     @Before
-    public void setUp(){
+    public void setUp() {
         AuthenticationSettings.INSTANCE.clearSecretKeysForTestCases();
     }
 
     @Test
     @Config(shadows = {AndroidBrokerStorageEncryptionManager_OnAuthApp.class})
-    public void testGetEncryptionKey_Authenticator(){
+    public void testGetEncryptionKey_Authenticator() {
         final AndroidBrokerStorageEncryptionManager manager = initManager();
 
         final AbstractSecretKeyLoader loader = manager.getKeyLoaderForEncryption();
@@ -73,7 +74,7 @@ public class AndroidBrokerStorageEncryptionManagerTest {
 
     @Test
     @Config(shadows = {AndroidBrokerStorageEncryptionManager_OnCP.class})
-    public void testGetEncryptionKey_CP(){
+    public void testGetEncryptionKey_CP() {
         final AndroidBrokerStorageEncryptionManager manager = initManager();
 
         final AbstractSecretKeyLoader loader = manager.getKeyLoaderForEncryption();
@@ -82,7 +83,7 @@ public class AndroidBrokerStorageEncryptionManagerTest {
     }
 
     @Test(expected = IllegalStateException.class)
-    public void testGetEncryptionKey_UnexpectedBrokerApp(){
+    public void testGetEncryptionKey_UnexpectedBrokerApp() {
         final AndroidBrokerStorageEncryptionManager manager = initManager();
 
         final AbstractSecretKeyLoader loader = manager.getKeyLoaderForEncryption();
@@ -90,8 +91,9 @@ public class AndroidBrokerStorageEncryptionManagerTest {
     }
 
     @Test(expected = NullPointerException.class)
-    public void testGetEncryptionKey_KeyNotLoaded(){
-        final AndroidBrokerStorageEncryptionManager manager = new AndroidBrokerStorageEncryptionManager(context, null);
+    public void testGetEncryptionKey_KeyNotLoaded() {
+        final AndroidBrokerStorageEncryptionManager manager =
+                new AndroidBrokerStorageEncryptionManager(context, null);
         final AbstractSecretKeyLoader loader = manager.getKeyLoaderForEncryption();
         Assert.fail();
     }
@@ -101,9 +103,10 @@ public class AndroidBrokerStorageEncryptionManagerTest {
      * try getting a decryption key.
      */
     @Test
-    public void testGetDecryptionKey_ForDataEncryptedWithWrappedKey(){
+    public void testGetDecryptionKey_ForDataEncryptedWithWrappedKey() {
         final AndroidBrokerStorageEncryptionManager manager = initManager();
-        final List<AbstractSecretKeyLoader> keyLoaderList = manager.getKeyLoaderForDecryption(TEXT_ENCRYPTED_BY_ANDROID_WRAPPED_KEY);
+        final List<AbstractSecretKeyLoader> keyLoaderList =
+                manager.getKeyLoaderForDecryption(TEXT_ENCRYPTED_BY_ANDROID_WRAPPED_KEY);
 
         Assert.assertEquals(1, keyLoaderList.size());
         Assert.assertTrue(keyLoaderList.get(0) instanceof AndroidWrappedKeyLoader);
@@ -116,16 +119,19 @@ public class AndroidBrokerStorageEncryptionManagerTest {
      */
     @Test
     @Config(shadows = {AndroidBrokerStorageEncryptionManager_OnAuthApp.class})
-    public void testGetDecryptionKey_ForDataEncryptedWithUserDefinedKey_OnAuthApp(){
+    public void testGetDecryptionKey_ForDataEncryptedWithUserDefinedKey_OnAuthApp() {
         final AndroidBrokerStorageEncryptionManager manager = initManager();
-        final List<AbstractSecretKeyLoader> keyLoaderList = manager.getKeyLoaderForDecryption(TEXT_ENCRYPTED_BY_PREDEFINED_KEY);
+        final List<AbstractSecretKeyLoader> keyLoaderList =
+                manager.getKeyLoaderForDecryption(TEXT_ENCRYPTED_BY_PREDEFINED_KEY);
 
         Assert.assertEquals(2, keyLoaderList.size());
         Assert.assertTrue(keyLoaderList.get(0) instanceof PredefinedKeyLoader);
-        Assert.assertEquals(manager.LEGACY_AUTHENTICATOR_APP_KEY_ALIAS, keyLoaderList.get(0).getAlias());
+        Assert.assertEquals(
+                manager.LEGACY_AUTHENTICATOR_APP_KEY_ALIAS, keyLoaderList.get(0).getAlias());
 
         Assert.assertTrue(keyLoaderList.get(1) instanceof PredefinedKeyLoader);
-        Assert.assertEquals(manager.LEGACY_COMPANY_PORTAL_KEY_ALIAS, keyLoaderList.get(1).getAlias());
+        Assert.assertEquals(
+                manager.LEGACY_COMPANY_PORTAL_KEY_ALIAS, keyLoaderList.get(1).getAlias());
     }
 
     /**
@@ -135,25 +141,29 @@ public class AndroidBrokerStorageEncryptionManagerTest {
      */
     @Test
     @Config(shadows = {AndroidBrokerStorageEncryptionManager_OnCP.class})
-    public void testGetDecryptionKey_ForDataEncryptedWithUserDefinedKey_OnCP(){
+    public void testGetDecryptionKey_ForDataEncryptedWithUserDefinedKey_OnCP() {
         final AndroidBrokerStorageEncryptionManager manager = initManager();
-        final List<AbstractSecretKeyLoader> keyLoaderList = manager.getKeyLoaderForDecryption(TEXT_ENCRYPTED_BY_PREDEFINED_KEY);
+        final List<AbstractSecretKeyLoader> keyLoaderList =
+                manager.getKeyLoaderForDecryption(TEXT_ENCRYPTED_BY_PREDEFINED_KEY);
 
         Assert.assertEquals(2, keyLoaderList.size());
         Assert.assertTrue(keyLoaderList.get(0) instanceof PredefinedKeyLoader);
-        Assert.assertEquals(manager.LEGACY_COMPANY_PORTAL_KEY_ALIAS, keyLoaderList.get(0).getAlias());
+        Assert.assertEquals(
+                manager.LEGACY_COMPANY_PORTAL_KEY_ALIAS, keyLoaderList.get(0).getAlias());
 
         Assert.assertTrue(keyLoaderList.get(1) instanceof PredefinedKeyLoader);
-        Assert.assertEquals(manager.LEGACY_AUTHENTICATOR_APP_KEY_ALIAS, keyLoaderList.get(1).getAlias());
+        Assert.assertEquals(
+                manager.LEGACY_AUTHENTICATOR_APP_KEY_ALIAS, keyLoaderList.get(1).getAlias());
     }
 
     /**
      * Try getting a decryption key with a malformed data.
      */
     @Test
-    public void testGetDecryptionKey_ForMalformedData(){
+    public void testGetDecryptionKey_ForMalformedData() {
         final AndroidBrokerStorageEncryptionManager manager = initManager();
-        final List<AbstractSecretKeyLoader> keyLoaderList = manager.getKeyLoaderForDecryption("SOME_MALFORMED_DATA".getBytes(ENCODING_UTF8));
+        final List<AbstractSecretKeyLoader> keyLoaderList =
+                manager.getKeyLoaderForDecryption("SOME_MALFORMED_DATA".getBytes(ENCODING_UTF8));
 
         Assert.assertEquals(0, keyLoaderList.size());
     }
@@ -163,10 +173,11 @@ public class AndroidBrokerStorageEncryptionManagerTest {
      */
     private AndroidBrokerStorageEncryptionManager initManager() {
         final Map<String, byte[]> secretKeys = new HashMap<String, byte[]>(2);
-        secretKeys.put(AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME,
+        secretKeys.put(
+                AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME,
                 mockAuthAppKeyRawBytes);
-        secretKeys.put(AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME,
-                mockCpKeyRawBytes);
+        secretKeys.put(
+                AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME, mockCpKeyRawBytes);
         AuthenticationSettings.INSTANCE.setBrokerSecretKeys(secretKeys);
         return new AndroidBrokerStorageEncryptionManager(context, null);
     }

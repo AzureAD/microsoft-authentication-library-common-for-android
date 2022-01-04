@@ -30,9 +30,9 @@ import com.microsoft.identity.common.java.commands.CommandCallback;
 import com.microsoft.identity.common.java.commands.parameters.RemoveAccountCommandParameters;
 import com.microsoft.identity.common.java.controllers.BaseController;
 
-import java.util.List;
-
 import lombok.EqualsAndHashCode;
+
+import java.util.List;
 
 /**
  * Command class to call controllers to remove the account and return the result to
@@ -42,17 +42,19 @@ import lombok.EqualsAndHashCode;
 public class RemoveAccountCommand extends BaseCommand<Boolean> {
     private static final String TAG = RemoveAccountCommand.class.getSimpleName();
 
-    public RemoveAccountCommand(@NonNull RemoveAccountCommandParameters parameters,
-                                @NonNull BaseController controller,
-                                @SuppressWarnings(WarningType.rawtype_warning) @NonNull CommandCallback callback,
-                                @NonNull String publicApiId) {
+    public RemoveAccountCommand(
+            @NonNull RemoveAccountCommandParameters parameters,
+            @NonNull BaseController controller,
+            @SuppressWarnings(WarningType.rawtype_warning) @NonNull CommandCallback callback,
+            @NonNull String publicApiId) {
         super(parameters, controller, callback, publicApiId);
     }
 
-    public RemoveAccountCommand(@NonNull RemoveAccountCommandParameters parameters,
-                                @NonNull List<BaseController> controllers,
-                                @SuppressWarnings(WarningType.rawtype_warning) @NonNull CommandCallback callback,
-                                @NonNull String publicApiId) {
+    public RemoveAccountCommand(
+            @NonNull RemoveAccountCommandParameters parameters,
+            @NonNull List<BaseController> controllers,
+            @SuppressWarnings(WarningType.rawtype_warning) @NonNull CommandCallback callback,
+            @NonNull String publicApiId) {
         super(parameters, controllers, callback, publicApiId);
     }
 
@@ -66,9 +68,7 @@ public class RemoveAccountCommand extends BaseCommand<Boolean> {
             final BaseController controller = getControllers().get(ii);
             com.microsoft.identity.common.internal.logging.Logger.verbose(
                     TAG + methodName,
-                    "Executing with controller: "
-                            + controller.getClass().getSimpleName()
-            );
+                    "Executing with controller: " + controller.getClass().getSimpleName());
 
             result = controller.removeAccount((RemoveAccountCommandParameters) getParameters());
         }

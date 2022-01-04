@@ -36,10 +36,11 @@ import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.java.providers.oauth2.IAuthorizationStrategy;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
 
-import java.lang.ref.WeakReference;
-
 import edu.umd.cs.findbugs.annotations.Nullable;
+
 import lombok.NonNull;
+
+import java.lang.ref.WeakReference;
 
 /**
  * Android's {@link IAuthorizationStrategy} implementation.
@@ -47,8 +48,8 @@ import lombok.NonNull;
 // Suppressing rawtype warnings due to the generic types OAuth2Strategy and AuthorizationRequest
 @SuppressWarnings(WarningType.rawtype_warning)
 public abstract class AndroidAuthorizationStrategy<
-        GenericOAuth2Strategy extends OAuth2Strategy,
-        GenericAuthorizationRequest extends AuthorizationRequest>
+                GenericOAuth2Strategy extends OAuth2Strategy,
+                GenericAuthorizationRequest extends AuthorizationRequest>
         implements IAuthorizationStrategy<GenericOAuth2Strategy, GenericAuthorizationRequest> {
 
     private final WeakReference<Context> mReferencedApplicationContext;
@@ -58,9 +59,10 @@ public abstract class AndroidAuthorizationStrategy<
     /**
      * Constructor of AndroidAuthorizationStrategy.
      */
-    public AndroidAuthorizationStrategy(@NonNull Context applicationContext,
-                                        @NonNull Activity activity,
-                                        @Nullable Fragment fragment) {
+    public AndroidAuthorizationStrategy(
+            @NonNull Context applicationContext,
+            @NonNull Activity activity,
+            @Nullable Fragment fragment) {
         mReferencedApplicationContext = new WeakReference<>(applicationContext);
         mReferencedActivity = new WeakReference<>(activity);
         mReferencedFragment = new WeakReference<>(fragment);
@@ -78,14 +80,17 @@ public abstract class AndroidAuthorizationStrategy<
         final Fragment fragment = mReferencedFragment.get();
 
         if (fragment != null) {
-            final Fragment authFragment = AuthorizationActivityFactory.getAuthorizationFragmentFromStartIntent(intent);
+            final Fragment authFragment =
+                    AuthorizationActivityFactory.getAuthorizationFragmentFromStartIntent(intent);
 
             final FragmentManager fragmentManager = fragment.getFragmentManager();
             if (fragmentManager == null) {
-                throw new ClientException(ClientException.UNKNOWN_ERROR, "Fragment Manager is null");
+                throw new ClientException(
+                        ClientException.UNKNOWN_ERROR, "Fragment Manager is null");
             }
 
-            fragmentManager.beginTransaction()
+            fragmentManager
+                    .beginTransaction()
                     .setTransitionStyle(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
                     .add(fragment.getId(), authFragment, Fragment.class.getName())
                     .commit();

@@ -22,13 +22,12 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.adal.internal.net;
 
-import android.content.Context;
 import android.os.Debug;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
-import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.java.exception.ErrorStrings;
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import java.io.BufferedReader;
 import java.io.Closeable;
@@ -41,8 +40,6 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /**
  * Webrequest are called in background thread from API level. HttpWebRequest
@@ -173,9 +170,9 @@ public class HttpWebRequest {
             // We are not disconnecting from network to allow connection to be returned into the
             // connection pool. If we call disconnect due to buggy implementation we are not reusing
             // connections.
-            //if (connection != null) {
+            // if (connection != null) {
             //	connection.disconnect();
-            //}
+            // }
         }
 
         return response;
@@ -191,7 +188,10 @@ public class HttpWebRequest {
     private static String convertStreamToString(final InputStream inputStream) throws IOException {
         BufferedReader reader = null;
         try {
-            reader = new BufferedReader(new InputStreamReader(inputStream, AuthenticationConstants.CHARSET_UTF8));
+            reader =
+                    new BufferedReader(
+                            new InputStreamReader(
+                                    inputStream, AuthenticationConstants.CHARSET_UTF8));
             StringBuilder sb = new StringBuilder();
             String line;
             while ((line = reader.readLine()) != null) {
@@ -209,7 +209,9 @@ public class HttpWebRequest {
         }
     }
 
-    private static void setRequestBody(HttpURLConnection connection, byte[] contentRequest, String requestContentType) throws IOException {
+    private static void setRequestBody(
+            HttpURLConnection connection, byte[] contentRequest, String requestContentType)
+            throws IOException {
         if (null != contentRequest) {
             connection.setDoOutput(true);
 
@@ -217,8 +219,8 @@ public class HttpWebRequest {
                 connection.setRequestProperty("Content-Type", requestContentType);
             }
 
-            connection.setRequestProperty("Content-Length",
-                    Integer.toString(contentRequest.length));
+            connection.setRequestProperty(
+                    "Content-Length", Integer.toString(contentRequest.length));
             connection.setFixedLengthStreamingMode(contentRequest.length);
 
             OutputStream out = null;

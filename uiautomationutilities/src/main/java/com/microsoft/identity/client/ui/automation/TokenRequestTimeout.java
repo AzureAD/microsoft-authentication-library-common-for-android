@@ -28,7 +28,6 @@ import java.util.concurrent.TimeUnit;
  * Timeout values to be used with {@link TokenRequestLatch} to perform awaits.
  */
 public enum TokenRequestTimeout {
-
     SILENT(15, TimeUnit.SECONDS),
     SHORT(30, TimeUnit.SECONDS),
     MEDIUM(1, TimeUnit.MINUTES),

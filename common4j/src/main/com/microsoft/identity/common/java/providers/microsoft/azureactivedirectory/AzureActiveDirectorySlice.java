@@ -39,8 +39,8 @@ import lombok.experimental.Accessors;
 @EqualsAndHashCode
 public class AzureActiveDirectorySlice {
 
-    public final static String SLICE_PARAMETER = "slice";
-    public final static String DC_PARAMETER = "dc";
+    public static final String SLICE_PARAMETER = "slice";
+    public static final String DC_PARAMETER = "dc";
 
     @SerializedName(SLICE_PARAMETER)
     private String mSlice;

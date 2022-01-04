@@ -38,7 +38,7 @@ public class AzureActiveDirectoryAuthorizationRequest extends MicrosoftAuthoriza
      */
     @SerializedName("resource")
     private String mResource;
-    //TODO The microsoft doc is different with V1 has currently.
+    // TODO The microsoft doc is different with V1 has currently.
     /**
      * Optional. Indicate the type of user interaction that is required.
      */
@@ -106,7 +106,9 @@ public class AzureActiveDirectoryAuthorizationRequest extends MicrosoftAuthoriza
         mClaimsChallenge = builder.mClaimsChallenge;
     }
 
-    public static class Builder extends MicrosoftAuthorizationRequest.Builder<AzureActiveDirectoryAuthorizationRequest.Builder> {
+    public static class Builder
+            extends MicrosoftAuthorizationRequest.Builder<
+                    AzureActiveDirectoryAuthorizationRequest.Builder> {
         /**
          * The App ID URI of the target web API.
          * This is required in one of either the authorization or token requests.
@@ -115,14 +117,13 @@ public class AzureActiveDirectoryAuthorizationRequest extends MicrosoftAuthoriza
          */
         private String mResource;
 
-        //TODO The microsoft doc is different with V1 has currently.
+        // TODO The microsoft doc is different with V1 has currently.
         /**
          * Optional. Indicate the type of user interaction that is required.
          */
         private String mPrompt;
 
         private String mClaimsChallenge;
-
 
         public Builder setResource(final String resource) {
             mResource = resource;
@@ -149,8 +150,6 @@ public class AzureActiveDirectoryAuthorizationRequest extends MicrosoftAuthoriza
             this.setLibraryVersion("1.15.2");
             return new AzureActiveDirectoryAuthorizationRequest(this);
         }
-
-
     }
 
     public String getResource() {

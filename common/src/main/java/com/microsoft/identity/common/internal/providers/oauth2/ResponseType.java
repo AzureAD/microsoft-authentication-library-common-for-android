@@ -5,7 +5,6 @@ package com.microsoft.identity.common.internal.providers.oauth2;
  * [OAuth 2.0](https://tools.ietf.org/html/rfc6749) and
  * [OpenID Connect Core 1.0](http://openid.net/specs/openid-connect-core-1_0.html)
  **/
-
 public final class ResponseType {
     /**
      * For requesting an authorization code.

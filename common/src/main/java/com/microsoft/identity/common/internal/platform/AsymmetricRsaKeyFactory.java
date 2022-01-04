@@ -53,5 +53,4 @@ public interface AsymmetricRsaKeyFactory extends AsymmetricKeyFactory {
      * @throws ClientException If the key cannot be retrieved/created.
      */
     AsymmetricRsaKey loadAsymmetricKey(String alias) throws ClientException;
-
 }

@@ -22,6 +22,14 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.util;
 
+import static com.microsoft.identity.common.java.util.HeaderSerializationUtilTest.HeaderNames.ACCESS_CONTROL_ALLOW_METHODS;
+import static com.microsoft.identity.common.java.util.HeaderSerializationUtilTest.HeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN;
+import static com.microsoft.identity.common.java.util.HeaderSerializationUtilTest.HeaderNames.CACHE_CONTROL;
+import static com.microsoft.identity.common.java.util.HeaderSerializationUtilTest.HeaderNames.CONTENT_TYPE;
+import static com.microsoft.identity.common.java.util.HeaderSerializationUtilTest.HeaderNames.SERVER;
+
+import static org.junit.Assert.assertEquals;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -30,13 +38,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import static com.microsoft.identity.common.java.util.HeaderSerializationUtilTest.HeaderNames.ACCESS_CONTROL_ALLOW_METHODS;
-import static com.microsoft.identity.common.java.util.HeaderSerializationUtilTest.HeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN;
-import static com.microsoft.identity.common.java.util.HeaderSerializationUtilTest.HeaderNames.CACHE_CONTROL;
-import static com.microsoft.identity.common.java.util.HeaderSerializationUtilTest.HeaderNames.CONTENT_TYPE;
-import static com.microsoft.identity.common.java.util.HeaderSerializationUtilTest.HeaderNames.SERVER;
-import static org.junit.Assert.assertEquals;
 
 @RunWith(JUnit4.class)
 public class HeaderSerializationUtilTest {
@@ -78,34 +79,22 @@ public class HeaderSerializationUtilTest {
 
         final Map<String, List<String>> reserializedMap = HeaderSerializationUtil.fromJson(json);
 
-        assertEquals(
-                testHeaders.size(),
-                reserializedMap.size()
-        );
+        assertEquals(testHeaders.size(), reserializedMap.size());
 
         assertEquals(
-                testHeaders.get(CACHE_CONTROL).size(),
-                reserializedMap.get(CACHE_CONTROL).size()
-        );
+                testHeaders.get(CACHE_CONTROL).size(), reserializedMap.get(CACHE_CONTROL).size());
 
         assertEquals(
-                testHeaders.get(CONTENT_TYPE).size(),
-                reserializedMap.get(CONTENT_TYPE).size()
-        );
+                testHeaders.get(CONTENT_TYPE).size(), reserializedMap.get(CONTENT_TYPE).size());
 
-        assertEquals(
-                testHeaders.get(SERVER).size(),
-                reserializedMap.get(SERVER).size()
-        );
+        assertEquals(testHeaders.get(SERVER).size(), reserializedMap.get(SERVER).size());
 
         assertEquals(
                 testHeaders.get(ACCESS_CONTROL_ALLOW_ORIGIN).size(),
-                reserializedMap.get(ACCESS_CONTROL_ALLOW_ORIGIN).size()
-        );
+                reserializedMap.get(ACCESS_CONTROL_ALLOW_ORIGIN).size());
 
         assertEquals(
                 testHeaders.get(ACCESS_CONTROL_ALLOW_METHODS).size(),
-                reserializedMap.get(ACCESS_CONTROL_ALLOW_METHODS).size()
-        );
+                reserializedMap.get(ACCESS_CONTROL_ALLOW_METHODS).size());
     }
 }

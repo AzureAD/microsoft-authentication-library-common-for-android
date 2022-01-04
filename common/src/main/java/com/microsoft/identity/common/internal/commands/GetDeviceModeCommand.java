@@ -30,9 +30,9 @@ import com.microsoft.identity.common.java.commands.CommandCallback;
 import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.java.controllers.BaseController;
 
-import java.util.List;
-
 import lombok.EqualsAndHashCode;
+
+import java.util.List;
 
 /**
  * Command class to call controllers to remove the account and return the result to
@@ -41,17 +41,19 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 public class GetDeviceModeCommand extends BaseCommand<Boolean> {
 
-    public GetDeviceModeCommand(@NonNull CommandParameters parameters,
-                                @NonNull BaseController controller,
-                                @SuppressWarnings(WarningType.rawtype_warning) @NonNull CommandCallback callback,
-                                @NonNull String publicApiId) {
+    public GetDeviceModeCommand(
+            @NonNull CommandParameters parameters,
+            @NonNull BaseController controller,
+            @SuppressWarnings(WarningType.rawtype_warning) @NonNull CommandCallback callback,
+            @NonNull String publicApiId) {
         super(parameters, controller, callback, publicApiId);
     }
 
-    public GetDeviceModeCommand(@NonNull CommandParameters parameters,
-                                @NonNull List<BaseController> controllers,
-                                @SuppressWarnings(WarningType.rawtype_warning) @NonNull CommandCallback callback,
-                                @NonNull String publicApiId) {
+    public GetDeviceModeCommand(
+            @NonNull CommandParameters parameters,
+            @NonNull List<BaseController> controllers,
+            @SuppressWarnings(WarningType.rawtype_warning) @NonNull CommandCallback callback,
+            @NonNull String publicApiId) {
         super(parameters, controllers, callback, publicApiId);
     }
 

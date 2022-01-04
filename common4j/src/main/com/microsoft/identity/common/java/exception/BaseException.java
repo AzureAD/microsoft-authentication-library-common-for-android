@@ -25,48 +25,45 @@ package com.microsoft.identity.common.java.exception;
 import com.microsoft.identity.common.java.telemetry.ITelemetryAccessor;
 import com.microsoft.identity.common.java.util.StringUtil;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
+
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.experimental.Accessors;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
 
-import edu.umd.cs.findbugs.annotations.Nullable;
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.experimental.Accessors;
-
 public class BaseException extends Exception implements IErrorInformation, ITelemetryAccessor {
 
     public static final String sName = BaseException.class.getName();
     private static final long serialVersionUID = -5166242728507796770L;
 
-    private static final TreeSet<String> nonCacheableErrorCodes = new TreeSet<>(
-            Arrays.asList(
-                    ErrorStrings.DEVICE_NETWORK_NOT_AVAILABLE,
-                    ClientException.INTERRUPTED_OPERATION,
-                    ClientException.INVALID_BROKER_BUNDLE,
-                    ClientException.IO_ERROR));
+    private static final TreeSet<String> nonCacheableErrorCodes =
+            new TreeSet<>(
+                    Arrays.asList(
+                            ErrorStrings.DEVICE_NETWORK_NOT_AVAILABLE,
+                            ClientException.INTERRUPTED_OPERATION,
+                            ClientException.INVALID_BROKER_BUNDLE,
+                            ClientException.IO_ERROR));
 
-    @Nullable
-    private String mSpeRing;
+    @Nullable private String mSpeRing;
 
-    @Nullable
-    private String mRefreshTokenAge;
+    @Nullable private String mRefreshTokenAge;
 
-    @Nullable
-    private String mCliTelemErrorCode;
+    @Nullable private String mCliTelemErrorCode;
 
-    @Nullable
-    private String mCliTelemSubErrorCode;
+    @Nullable private String mCliTelemSubErrorCode;
 
     private String mErrorCode;
 
     private String mCorrelationId;
 
     // The username of the account that owns the flow.
-    @Nullable
-    private String mUsername;
+    @Nullable private String mUsername;
 
     private final List<Map<String, String>> mTelemetry = new ArrayList<>();
 
@@ -84,8 +81,7 @@ public class BaseException extends Exception implements IErrorInformation, ITele
     /**
      * Default constructor.
      */
-    protected BaseException() {
-    }
+    protected BaseException() {}
 
     /**
      * Initiates the detailed error code.
@@ -114,8 +110,8 @@ public class BaseException extends Exception implements IErrorInformation, ITele
      * @param errorMessage The error message contained in the exception.
      * @param throwable    The {@link Throwable} contains the cause for the exception.
      */
-    public BaseException(final String errorCode, final String errorMessage,
-                         final Throwable throwable) {
+    public BaseException(
+            final String errorCode, final String errorMessage, final Throwable throwable) {
         super(errorMessage, throwable);
         mErrorCode = errorCode;
     }
@@ -200,7 +196,7 @@ public class BaseException extends Exception implements IErrorInformation, ITele
     }
 
     public boolean isCacheable() {
-        //TODO : ADO 1373343 Add the whole transient exception category.
+        // TODO : ADO 1373343 Add the whole transient exception category.
         return !nonCacheableErrorCodes.contains(mErrorCode);
     }
 

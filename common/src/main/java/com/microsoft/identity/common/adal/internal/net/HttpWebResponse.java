@@ -22,7 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.adal.internal.net;
 
-
 import java.util.List;
 import java.util.Map;
 
@@ -41,7 +40,8 @@ public class HttpWebResponse {
      * @param responseBody    Response body returned from the http network call.
      * @param responseHeaders Response header for the network call.
      */
-    public HttpWebResponse(int statusCode, String responseBody, Map<String, List<String>> responseHeaders) {
+    public HttpWebResponse(
+            int statusCode, String responseBody, Map<String, List<String>> responseHeaders) {
         mStatusCode = statusCode;
         mResponseBody = responseBody;
         mResponseHeaders = responseHeaders;
@@ -67,5 +67,4 @@ public class HttpWebResponse {
     public String getBody() {
         return mResponseBody;
     }
-
 }

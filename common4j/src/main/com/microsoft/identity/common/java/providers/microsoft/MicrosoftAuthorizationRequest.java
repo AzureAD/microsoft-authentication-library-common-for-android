@@ -31,15 +31,15 @@ import com.microsoft.identity.common.java.providers.oauth2.DefaultStateGenerator
 import com.microsoft.identity.common.java.providers.oauth2.PkceChallenge;
 import com.microsoft.identity.common.java.util.StringUtil;
 
-import java.net.URL;
-import java.util.UUID;
-
-import cz.msebera.android.httpclient.extras.Base64;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.Accessors;
 
-public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthorizationRequest<T>> extends AuthorizationRequest<T> {
+import java.net.URL;
+import java.util.UUID;
+
+public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthorizationRequest<T>>
+        extends AuthorizationRequest<T> {
     /**
      * Serial version id.
      */
@@ -56,7 +56,8 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
      */
     @Getter
     @Accessors(prefix = "m")
-    private final transient URL mAuthority; //Not going to be serialized into request url parameters
+    private final transient URL
+            mAuthority; // Not going to be serialized into request url parameters
 
     /**
      * Can be used to pre-fill the username/email address field of the sign-in page for the user, if you know their username ahead of time.
@@ -87,7 +88,7 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
 
     @Getter
     @Accessors(prefix = "m")
-    private transient final String mPkceCodeVerifier;
+    private final transient String mPkceCodeVerifier;
 
     /**
      * The version of the calling library.
@@ -131,15 +132,17 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
     /**
      * Constructor of MicrosoftAuthorizationRequest.
      */
-    protected MicrosoftAuthorizationRequest(@SuppressWarnings(WarningType.rawtype_warning) final Builder builder) {
+    protected MicrosoftAuthorizationRequest(
+            @SuppressWarnings(WarningType.rawtype_warning) final Builder builder) {
         super(builder);
         mAuthority = builder.mAuthority;
         mLoginHint = builder.mLoginHint;
         mCorrelationId = builder.mCorrelationId;
 
-        final PkceChallenge challenge = builder.mPkceChallenge == null ?
-                PkceChallenge.newPkceChallenge() :
-                builder.mPkceChallenge;
+        final PkceChallenge challenge =
+                builder.mPkceChallenge == null
+                        ? PkceChallenge.newPkceChallenge()
+                        : builder.mPkceChallenge;
         mPkceCodeChallengeMethod = challenge.getCodeChallengeMethod();
         mPkceCodeChallenge = challenge.getCodeChallenge();
         mPkceCodeVerifier = challenge.getCodeVerifier();
@@ -153,7 +156,8 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
         mDiagnosticCPU = Device.getCpu();
     }
 
-    public abstract static class Builder<B extends MicrosoftAuthorizationRequest.Builder<B>> extends AuthorizationRequest.Builder<B> {
+    public abstract static class Builder<B extends MicrosoftAuthorizationRequest.Builder<B>>
+            extends AuthorizationRequest.Builder<B> {
         /**
          * Required.
          */
@@ -166,6 +170,7 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
          * The name of the calling library.
          */
         private String mLibraryName;
+
         private Boolean mMultipleCloudAware;
         private UUID mCorrelationId;
         private String mLoginHint;

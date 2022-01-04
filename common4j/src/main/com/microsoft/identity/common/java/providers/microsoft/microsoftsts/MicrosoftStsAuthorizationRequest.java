@@ -32,17 +32,19 @@ import com.microsoft.identity.common.java.util.CommonURIBuilder;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.util.UrlUtil;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
+import lombok.Getter;
+import lombok.experimental.Accessors;
+
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import lombok.Getter;
-import lombok.experimental.Accessors;
-
-public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequest<MicrosoftStsAuthorizationRequest> {
+public class MicrosoftStsAuthorizationRequest
+        extends MicrosoftAuthorizationRequest<MicrosoftStsAuthorizationRequest> {
     private static final Object TAG = MicrosoftStsAuthorizationRequest.class.getSimpleName();
 
     /**
@@ -143,7 +145,9 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
         mFlightParameters = builder.mFlightParameters;
     }
 
-    public static class Builder extends MicrosoftAuthorizationRequest.Builder<MicrosoftStsAuthorizationRequest.Builder> {
+    public static class Builder
+            extends MicrosoftAuthorizationRequest.Builder<
+                    MicrosoftStsAuthorizationRequest.Builder> {
 
         private String mUid;
         private String mUtid;
@@ -174,7 +178,8 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
             return self();
         }
 
-        public MicrosoftStsAuthorizationRequest.Builder setInstalledCompanyPortalVersion(String companyPortalVersion) {
+        public MicrosoftStsAuthorizationRequest.Builder setInstalledCompanyPortalVersion(
+                String companyPortalVersion) {
             mCompanyPortalVersion = companyPortalVersion;
             return self();
         }
@@ -189,7 +194,8 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
             return self();
         }
 
-        public MicrosoftStsAuthorizationRequest.Builder setFlightParameters(Map<String, String> flightParameters) {
+        public MicrosoftStsAuthorizationRequest.Builder setFlightParameters(
+                Map<String, String> flightParameters) {
             mFlightParameters = flightParameters;
             return self();
         }
@@ -206,15 +212,18 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
 
     @Override
     public URI getAuthorizationRequestAsHttpRequest() throws ClientException {
-        final CommonURIBuilder builder = new CommonURIBuilder(super.getAuthorizationRequestAsHttpRequest());
+        final CommonURIBuilder builder =
+                new CommonURIBuilder(super.getAuthorizationRequestAsHttpRequest());
         builder.addParametersIfAbsent(mFlightParameters);
 
         if (mSlice != null) {
             if (!StringUtil.isNullOrEmpty(mSlice.getSlice())) {
-                builder.addParameterIfAbsent(AzureActiveDirectorySlice.SLICE_PARAMETER, mSlice.getSlice());
+                builder.addParameterIfAbsent(
+                        AzureActiveDirectorySlice.SLICE_PARAMETER, mSlice.getSlice());
             }
             if (!StringUtil.isNullOrEmpty(mSlice.getDataCenter())) {
-                builder.addParameterIfAbsent(AzureActiveDirectorySlice.DC_PARAMETER, mSlice.getDataCenter());
+                builder.addParameterIfAbsent(
+                        AzureActiveDirectorySlice.DC_PARAMETER, mSlice.getDataCenter());
             }
         }
 
@@ -236,8 +245,10 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
         final String methodName = ":getAuthorizationEndpoint";
 
         if (this.getAuthority() == null) {
-            Logger.error(TAG + methodName, "Authority is null. " +
-                    "cannot construct authorization endpoint URL.", null);
+            Logger.error(
+                    TAG + methodName,
+                    "Authority is null. " + "cannot construct authorization endpoint URL.",
+                    null);
             throw new IllegalStateException("Authority is null.");
         }
 
@@ -248,4 +259,3 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
         }
     }
 }
-

@@ -40,7 +40,8 @@ public class MockAuthorizationRequest extends AuthorizationRequest<MockAuthoriza
         return MOCK_AUTH_ENDPOINT;
     }
 
-    public static class Builder extends AuthorizationRequest.Builder<MockAuthorizationRequest.Builder> {
+    public static class Builder
+            extends AuthorizationRequest.Builder<MockAuthorizationRequest.Builder> {
         @Override
         public Builder self() {
             return this;

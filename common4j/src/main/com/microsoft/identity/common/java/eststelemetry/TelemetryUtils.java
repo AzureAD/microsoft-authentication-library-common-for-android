@@ -22,10 +22,10 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.eststelemetry;
 
-import lombok.NonNull;
-
-import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings;
+import com.microsoft.identity.common.java.util.StringUtil;
+
+import lombok.NonNull;
 
 public class TelemetryUtils {
 

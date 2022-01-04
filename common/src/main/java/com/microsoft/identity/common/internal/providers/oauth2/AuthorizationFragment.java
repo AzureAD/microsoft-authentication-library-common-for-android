@@ -22,6 +22,11 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2;
 
+import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterAliases.CANCEL_AUTHORIZATION_REQUEST;
+import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterAliases.RETURN_AUTHORIZATION_REQUEST_RESULT;
+import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterFields.REQUEST_CODE;
+import static com.microsoft.identity.common.java.AuthenticationConstants.UIRequest.BROWSER_FLOW;
+
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -35,15 +40,10 @@ import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.telemetry.events.UiEndEvent;
 import com.microsoft.identity.common.java.logging.RequestContext;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
-import com.microsoft.identity.common.java.util.ported.PropertyBag;
 import com.microsoft.identity.common.java.util.ported.LocalBroadcaster;
+import com.microsoft.identity.common.java.util.ported.PropertyBag;
 import com.microsoft.identity.common.logging.DiagnosticContext;
 import com.microsoft.identity.common.logging.Logger;
-
-import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterAliases.CANCEL_AUTHORIZATION_REQUEST;
-import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterAliases.RETURN_AUTHORIZATION_REQUEST_RESULT;
-import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterFields.REQUEST_CODE;
-import static com.microsoft.identity.common.java.AuthenticationConstants.UIRequest.BROWSER_FLOW;
 
 /**
  * This base classes
@@ -67,12 +67,14 @@ public abstract class AuthorizationFragment extends Fragment {
     /**
      * Listens to an operation cancellation event.
      */
-    private final LocalBroadcaster.IReceiverCallback mCancelRequestReceiver = new LocalBroadcaster.IReceiverCallback() {
-        @Override
-        public void onReceive(@NonNull final PropertyBag propertyBag) {
-            cancelAuthorization(propertyBag.getOrDefault(CANCEL_AUTHORIZATION_REQUEST, false));
-        }
-    };
+    private final LocalBroadcaster.IReceiverCallback mCancelRequestReceiver =
+            new LocalBroadcaster.IReceiverCallback() {
+                @Override
+                public void onReceive(@NonNull final PropertyBag propertyBag) {
+                    cancelAuthorization(
+                            propertyBag.getOrDefault(CANCEL_AUTHORIZATION_REQUEST, false));
+                }
+            };
 
     void setInstanceState(@NonNull final Bundle instanceStateBundle) {
         mInstanceState = instanceStateBundle;
@@ -85,7 +87,8 @@ public abstract class AuthorizationFragment extends Fragment {
 
         // Register Broadcast receiver to cancel the auth request
         // if another incoming request is launched by the app
-        LocalBroadcaster.INSTANCE.registerCallback(CANCEL_AUTHORIZATION_REQUEST, mCancelRequestReceiver);
+        LocalBroadcaster.INSTANCE.registerCallback(
+                CANCEL_AUTHORIZATION_REQUEST, mCancelRequestReceiver);
 
         if (savedInstanceState == null && mInstanceState == null) {
             Logger.warn(TAG, "No stored state. Unable to handle response");
@@ -140,9 +143,7 @@ public abstract class AuthorizationFragment extends Fragment {
         rc.put(DiagnosticContext.CORRELATION_ID, correlationId);
         DiagnosticContext.setRequestContext(rc);
         Logger.verbose(
-                TAG + methodName,
-                "Initializing diagnostic context for AuthorizationActivity"
-        );
+                TAG + methodName, "Initializing diagnostic context for AuthorizationActivity");
     }
 
     @Override
@@ -150,9 +151,9 @@ public abstract class AuthorizationFragment extends Fragment {
         final String methodName = ":onStop";
         final FragmentActivity activity = getActivity();
         if (!mAuthResultSent && (activity == null || activity.isFinishing())) {
-            Logger.info(TAG + methodName,
-                    "Hosting Activity is destroyed before Auth request is completed, sending request cancel"
-            );
+            Logger.info(
+                    TAG + methodName,
+                    "Hosting Activity is destroyed before Auth request is completed, sending request cancel");
             Telemetry.emit(new UiEndEvent().isUserCancelled());
             sendResult(RawAuthorizationResult.ResultCode.SDK_CANCELLED);
         }
@@ -164,9 +165,9 @@ public abstract class AuthorizationFragment extends Fragment {
         final String methodName = "#onDestroy";
         Logger.info(TAG + methodName, "");
         if (!mAuthResultSent) {
-            Logger.info(TAG + methodName,
-                    "Hosting Activity is destroyed before Auth request is completed, sending request cancel"
-            );
+            Logger.info(
+                    TAG + methodName,
+                    "Hosting Activity is destroyed before Auth request is completed, sending request cancel");
             Telemetry.emit(new UiEndEvent().isUserCancelled());
             sendResult(RawAuthorizationResult.ResultCode.SDK_CANCELLED);
         }
@@ -188,7 +189,10 @@ public abstract class AuthorizationFragment extends Fragment {
     }
 
     void sendResult(@NonNull final RawAuthorizationResult result) {
-        Logger.info(TAG, "Sending result from Authorization Activity, resultCode: " + result.getResultCode());
+        Logger.info(
+                TAG,
+                "Sending result from Authorization Activity, resultCode: "
+                        + result.getResultCode());
 
         final PropertyBag propertyBag = RawAuthorizationResult.toPropertyBag(result);
         propertyBag.put(REQUEST_CODE, BROWSER_FLOW);

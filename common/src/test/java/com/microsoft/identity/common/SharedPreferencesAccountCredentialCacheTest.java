@@ -22,6 +22,13 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common;
 
+import static com.microsoft.identity.common.java.cache.CacheKeyValueDelegate.CACHE_VALUE_SEPARATOR;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
 import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
@@ -53,18 +60,14 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import static com.microsoft.identity.common.java.cache.CacheKeyValueDelegate.CACHE_VALUE_SEPARATOR;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
 @RunWith(RobolectricTestRunner.class)
 @Config(shadows = {ShadowAndroidSdkStorageEncryptionManager.class})
 public class SharedPreferencesAccountCredentialCacheTest {
 
-    static final BearerAuthenticationSchemeInternal BEARER_AUTHENTICATION_SCHEME = new BearerAuthenticationSchemeInternal();
-    static final String HOME_ACCOUNT_ID = "29f3807a-4fb0-42f2-a44a-236aa0cb3f97.0287f963-2d72-4363-9e3a-5705c5b0f031";
+    static final BearerAuthenticationSchemeInternal BEARER_AUTHENTICATION_SCHEME =
+            new BearerAuthenticationSchemeInternal();
+    static final String HOME_ACCOUNT_ID =
+            "29f3807a-4fb0-42f2-a44a-236aa0cb3f97.0287f963-2d72-4363-9e3a-5705c5b0f031";
     static final String ENVIRONMENT = "login.microsoftonline.com";
     static final String CLIENT_ID = "0287f963-2d72-4363-9e3a-5705c5b0f031";
     static final String TARGET = "user.read user.write https://graph.windows.net";
@@ -85,7 +88,8 @@ public class SharedPreferencesAccountCredentialCacheTest {
     private static final String ENVIRONMENT_LEGACY = "login.windows.net";
     private static final String REALM3 = "fc5171ec-2889-4ba6-bd1f-216fe87a8613";
 
-    // The names of the SharedPreferences file on disk - must match SharedPreferencesAccountCredentialCache declaration to test impl
+    // The names of the SharedPreferences file on disk - must match
+    // SharedPreferencesAccountCredentialCache declaration to test impl
     private static final String sAccountCredentialSharedPreferences =
             "com.microsoft.identity.client.account_credential_cache";
 
@@ -97,15 +101,17 @@ public class SharedPreferencesAccountCredentialCacheTest {
     public void setUp() throws Exception {
         final Context testContext = ApplicationProvider.getApplicationContext();
         mDelegate = new CacheKeyValueDelegate();
-        mSharedPreferencesFileManager = AndroidPlatformComponents.createFromContext(testContext).getEncryptedNameValueStore(
-                sAccountCredentialSharedPreferences,
-                AndroidPlatformComponents.createFromContext(testContext).getStorageEncryptionManager(), // Use encrypted storage for tests...
-                String.class
-        );
-        mSharedPreferencesAccountCredentialCache = new SharedPreferencesAccountCredentialCache(
-                mDelegate,
-                mSharedPreferencesFileManager
-        );
+        mSharedPreferencesFileManager =
+                AndroidPlatformComponents.createFromContext(testContext)
+                        .getEncryptedNameValueStore(
+                                sAccountCredentialSharedPreferences,
+                                AndroidPlatformComponents.createFromContext(testContext)
+                                        .getStorageEncryptionManager(), // Use encrypted storage for
+                                                                        // tests...
+                                String.class);
+        mSharedPreferencesAccountCredentialCache =
+                new SharedPreferencesAccountCredentialCache(
+                        mDelegate, mSharedPreferencesFileManager);
     }
 
     @After
@@ -137,7 +143,8 @@ public class SharedPreferencesAccountCredentialCacheTest {
         final String accountCacheKey = mDelegate.generateCacheKey(account);
 
         // Resurrect the Account
-        final AccountRecord restoredAccount = mSharedPreferencesAccountCredentialCache.getAccount(accountCacheKey);
+        final AccountRecord restoredAccount =
+                mSharedPreferencesAccountCredentialCache.getAccount(accountCacheKey);
         assertTrue(account.equals(restoredAccount));
     }
 
@@ -157,7 +164,8 @@ public class SharedPreferencesAccountCredentialCacheTest {
         final String accountCacheKey = mDelegate.generateCacheKey(account);
 
         // Resurrect the Account
-        final AccountRecord restoredAccount = mSharedPreferencesAccountCredentialCache.getAccount(accountCacheKey);
+        final AccountRecord restoredAccount =
+                mSharedPreferencesAccountCredentialCache.getAccount(accountCacheKey);
         assertTrue(account.equals(restoredAccount));
     }
 
@@ -176,7 +184,8 @@ public class SharedPreferencesAccountCredentialCacheTest {
         final String accountCacheKey = mDelegate.generateCacheKey(account);
 
         // Resurrect the Account
-        final AccountRecord restoredAccount = mSharedPreferencesAccountCredentialCache.getAccount(accountCacheKey);
+        final AccountRecord restoredAccount =
+                mSharedPreferencesAccountCredentialCache.getAccount(accountCacheKey);
         assertTrue(account.equals(restoredAccount));
     }
 
@@ -197,7 +206,8 @@ public class SharedPreferencesAccountCredentialCacheTest {
         final String credentialCacheKey = mDelegate.generateCacheKey(idToken);
 
         // Resurrect the Credential
-        final Credential restoredIdToken = mSharedPreferencesAccountCredentialCache.getCredential(credentialCacheKey);
+        final Credential restoredIdToken =
+                mSharedPreferencesAccountCredentialCache.getCredential(credentialCacheKey);
         assertEquals(idToken.getHomeAccountId(), restoredIdToken.getHomeAccountId());
         assertEquals(idToken.getEnvironment(), restoredIdToken.getEnvironment());
         assertEquals(idToken.getCredentialType(), restoredIdToken.getCredentialType());
@@ -222,14 +232,16 @@ public class SharedPreferencesAccountCredentialCacheTest {
         final String credentialCacheKey = mDelegate.generateCacheKey(refreshToken);
 
         // Resurrect the Credential
-        final Credential restoredRefreshToken = mSharedPreferencesAccountCredentialCache.getCredential(credentialCacheKey);
+        final Credential restoredRefreshToken =
+                mSharedPreferencesAccountCredentialCache.getCredential(credentialCacheKey);
         assertTrue(refreshToken.equals(restoredRefreshToken));
     }
 
     @Test
     public void saveCredentialWithEscapeChars() {
         final RefreshTokenRecord refreshToken = new RefreshTokenRecord();
-        refreshToken.setCredentialType(wrapInEscapeSequenceChars(CredentialType.RefreshToken.name()));
+        refreshToken.setCredentialType(
+                wrapInEscapeSequenceChars(CredentialType.RefreshToken.name()));
         refreshToken.setEnvironment(wrapInEscapeSequenceChars(ENVIRONMENT));
         refreshToken.setHomeAccountId(wrapInEscapeSequenceChars(HOME_ACCOUNT_ID));
         refreshToken.setClientId(wrapInEscapeSequenceChars(CLIENT_ID));
@@ -243,7 +255,8 @@ public class SharedPreferencesAccountCredentialCacheTest {
         final String credentialCacheKey = mDelegate.generateCacheKey(refreshToken);
 
         // Resurrect the Credential
-        final Credential restoredRefreshToken = mSharedPreferencesAccountCredentialCache.getCredential(credentialCacheKey);
+        final Credential restoredRefreshToken =
+                mSharedPreferencesAccountCredentialCache.getCredential(credentialCacheKey);
         assertTrue(refreshToken.equals(restoredRefreshToken));
     }
 
@@ -263,7 +276,8 @@ public class SharedPreferencesAccountCredentialCacheTest {
         final String credentialCacheKey = mDelegate.generateCacheKey(refreshToken);
 
         // Resurrect the Credential
-        final Credential restoredRefreshToken = mSharedPreferencesAccountCredentialCache.getCredential(credentialCacheKey);
+        final Credential restoredRefreshToken =
+                mSharedPreferencesAccountCredentialCache.getCredential(credentialCacheKey);
         assertTrue(refreshToken.equals(restoredRefreshToken));
     }
 
@@ -285,7 +299,8 @@ public class SharedPreferencesAccountCredentialCacheTest {
         final String credentialCacheKey = mDelegate.generateCacheKey(accessToken);
 
         // Resurrect the Credential
-        final Credential restoredAccessToken = mSharedPreferencesAccountCredentialCache.getCredential(credentialCacheKey);
+        final Credential restoredAccessToken =
+                mSharedPreferencesAccountCredentialCache.getCredential(credentialCacheKey);
         assertTrue(accessToken.equals(restoredAccessToken));
     }
 
@@ -307,7 +322,8 @@ public class SharedPreferencesAccountCredentialCacheTest {
         final String credentialCacheKey = mDelegate.generateCacheKey(accessToken);
 
         // Resurrect the Credential
-        final Credential restoredAccessToken = mSharedPreferencesAccountCredentialCache.getCredential(credentialCacheKey);
+        final Credential restoredAccessToken =
+                mSharedPreferencesAccountCredentialCache.getCredential(credentialCacheKey);
         assertTrue(accessToken.equals(restoredAccessToken));
     }
 
@@ -327,7 +343,8 @@ public class SharedPreferencesAccountCredentialCacheTest {
         final String credentialCacheKey = mDelegate.generateCacheKey(refreshToken);
 
         // Resurrect the Credential
-        final Credential restoredRefreshToken = mSharedPreferencesAccountCredentialCache.getCredential(credentialCacheKey);
+        final Credential restoredRefreshToken =
+                mSharedPreferencesAccountCredentialCache.getCredential(credentialCacheKey);
         assertTrue(refreshToken.equals(restoredRefreshToken));
     }
 
@@ -346,7 +363,8 @@ public class SharedPreferencesAccountCredentialCacheTest {
         final String credentialCacheKey = mDelegate.generateCacheKey(accessToken);
 
         // Resurrect the Credential
-        final Credential restoredAccessToken = mSharedPreferencesAccountCredentialCache.getCredential(credentialCacheKey);
+        final Credential restoredAccessToken =
+                mSharedPreferencesAccountCredentialCache.getCredential(credentialCacheKey);
         assertTrue(accessToken.equals(restoredAccessToken));
     }
 
@@ -365,7 +383,8 @@ public class SharedPreferencesAccountCredentialCacheTest {
         final String credentialCacheKey = mDelegate.generateCacheKey(refreshToken);
 
         // Resurrect the Credential
-        final Credential restoredRefreshToken = mSharedPreferencesAccountCredentialCache.getCredential(credentialCacheKey);
+        final Credential restoredRefreshToken =
+                mSharedPreferencesAccountCredentialCache.getCredential(credentialCacheKey);
         assertEquals(refreshToken, restoredRefreshToken);
     }
 
@@ -388,7 +407,8 @@ public class SharedPreferencesAccountCredentialCacheTest {
         final String credentialCacheKey = mDelegate.generateCacheKey(accessToken);
 
         // Resurrect the Credential
-        final Credential restoredAccessToken = mSharedPreferencesAccountCredentialCache.getCredential(credentialCacheKey);
+        final Credential restoredAccessToken =
+                mSharedPreferencesAccountCredentialCache.getCredential(credentialCacheKey);
         assertTrue(accessToken.equals(restoredAccessToken));
     }
 
@@ -456,11 +476,9 @@ public class SharedPreferencesAccountCredentialCacheTest {
         mSharedPreferencesAccountCredentialCache.saveAccount(account2);
 
         // Test retrieval
-        final List<AccountRecord> accounts = mSharedPreferencesAccountCredentialCache.getAccountsFilteredBy(
-                HOME_ACCOUNT_ID,
-                null,
-                REALM
-        );
+        final List<AccountRecord> accounts =
+                mSharedPreferencesAccountCredentialCache.getAccountsFilteredBy(
+                        HOME_ACCOUNT_ID, null, REALM);
         assertEquals(2, accounts.size());
     }
 
@@ -478,7 +496,9 @@ public class SharedPreferencesAccountCredentialCacheTest {
         mSharedPreferencesAccountCredentialCache.saveAccount(account);
 
         // Test retrieval
-        final List<AccountRecord> accounts = mSharedPreferencesAccountCredentialCache.getAccountsFilteredBy(HOME_ACCOUNT_ID, ENVIRONMENT, REALM);
+        final List<AccountRecord> accounts =
+                mSharedPreferencesAccountCredentialCache.getAccountsFilteredBy(
+                        HOME_ACCOUNT_ID, ENVIRONMENT, REALM);
         assertEquals(1, accounts.size());
         final AccountRecord retrievedAccount = accounts.get(0);
         assertEquals(HOME_ACCOUNT_ID, retrievedAccount.getHomeAccountId());
@@ -500,7 +520,9 @@ public class SharedPreferencesAccountCredentialCacheTest {
         mSharedPreferencesAccountCredentialCache.saveAccount(account);
 
         // Test retrieval
-        final List<AccountRecord> accounts = mSharedPreferencesAccountCredentialCache.getAccountsFilteredBy(null, ENVIRONMENT, REALM);
+        final List<AccountRecord> accounts =
+                mSharedPreferencesAccountCredentialCache.getAccountsFilteredBy(
+                        null, ENVIRONMENT, REALM);
         assertEquals(1, accounts.size());
         final AccountRecord retrievedAccount = accounts.get(0);
         assertEquals(HOME_ACCOUNT_ID, retrievedAccount.getHomeAccountId());
@@ -522,7 +544,9 @@ public class SharedPreferencesAccountCredentialCacheTest {
         mSharedPreferencesAccountCredentialCache.saveAccount(account);
 
         // Test retrieval
-        final List<AccountRecord> accounts = mSharedPreferencesAccountCredentialCache.getAccountsFilteredBy(null, ENVIRONMENT, null);
+        final List<AccountRecord> accounts =
+                mSharedPreferencesAccountCredentialCache.getAccountsFilteredBy(
+                        null, ENVIRONMENT, null);
         assertEquals(1, accounts.size());
         final AccountRecord retrievedAccount = accounts.get(0);
         assertEquals(HOME_ACCOUNT_ID, retrievedAccount.getHomeAccountId());
@@ -544,7 +568,9 @@ public class SharedPreferencesAccountCredentialCacheTest {
         mSharedPreferencesAccountCredentialCache.saveAccount(account);
 
         // Test retrieval
-        final List<AccountRecord> accounts = mSharedPreferencesAccountCredentialCache.getAccountsFilteredBy(HOME_ACCOUNT_ID, ENVIRONMENT, null);
+        final List<AccountRecord> accounts =
+                mSharedPreferencesAccountCredentialCache.getAccountsFilteredBy(
+                        HOME_ACCOUNT_ID, ENVIRONMENT, null);
         assertEquals(1, accounts.size());
         final AccountRecord retrievedAccount = accounts.get(0);
         assertEquals(HOME_ACCOUNT_ID, retrievedAccount.getHomeAccountId());
@@ -592,7 +618,9 @@ public class SharedPreferencesAccountCredentialCacheTest {
         mSharedPreferencesAccountCredentialCache.saveAccount(account3);
         mSharedPreferencesAccountCredentialCache.saveAccount(account4);
 
-        final List<AccountRecord> accounts = mSharedPreferencesAccountCredentialCache.getAccountsFilteredBy(HOME_ACCOUNT_ID, ENVIRONMENT, null);
+        final List<AccountRecord> accounts =
+                mSharedPreferencesAccountCredentialCache.getAccountsFilteredBy(
+                        HOME_ACCOUNT_ID, ENVIRONMENT, null);
         assertEquals(3, accounts.size());
     }
 
@@ -636,7 +664,9 @@ public class SharedPreferencesAccountCredentialCacheTest {
         mSharedPreferencesAccountCredentialCache.saveAccount(account3);
         mSharedPreferencesAccountCredentialCache.saveAccount(account4);
 
-        final List<AccountRecord> accounts = mSharedPreferencesAccountCredentialCache.getAccountsFilteredBy(null, ENVIRONMENT, REALM);
+        final List<AccountRecord> accounts =
+                mSharedPreferencesAccountCredentialCache.getAccountsFilteredBy(
+                        null, ENVIRONMENT, REALM);
         assertEquals(3, accounts.size());
     }
 
@@ -676,7 +706,8 @@ public class SharedPreferencesAccountCredentialCacheTest {
         mSharedPreferencesAccountCredentialCache.saveCredential(refreshToken);
 
         // Verify getCredentials() returns two matching elements
-        final List<Credential> credentials = mSharedPreferencesAccountCredentialCache.getCredentials();
+        final List<Credential> credentials =
+                mSharedPreferencesAccountCredentialCache.getCredentials();
         assertTrue(credentials.size() == 2);
     }
 
@@ -701,15 +732,15 @@ public class SharedPreferencesAccountCredentialCacheTest {
         mSharedPreferencesAccountCredentialCache.saveCredential(refreshToken1);
         mSharedPreferencesAccountCredentialCache.saveCredential(refreshToken2);
 
-        List<Credential> credentials = mSharedPreferencesAccountCredentialCache.getCredentialsFilteredBy(
-                HOME_ACCOUNT_ID,
-                null, // * wildcard
-                CredentialType.RefreshToken,
-                CLIENT_ID,
-                REALM,
-                TARGET,
-                BEARER_AUTHENTICATION_SCHEME.getName()
-        );
+        List<Credential> credentials =
+                mSharedPreferencesAccountCredentialCache.getCredentialsFilteredBy(
+                        HOME_ACCOUNT_ID,
+                        null, // * wildcard
+                        CredentialType.RefreshToken,
+                        CLIENT_ID,
+                        REALM,
+                        TARGET,
+                        BEARER_AUTHENTICATION_SCHEME.getName());
         assertEquals(2, credentials.size());
     }
 
@@ -738,20 +769,17 @@ public class SharedPreferencesAccountCredentialCacheTest {
         refreshToken.setTarget(TARGET);
         mSharedPreferencesAccountCredentialCache.saveCredential(refreshToken);
 
-        final List<Credential> credentials = mSharedPreferencesAccountCredentialCache.getCredentialsFilteredBy(
-                HOME_ACCOUNT_ID,
-                ENVIRONMENT,
-                null,
-                CLIENT_ID,
-                null,
-                TARGET,
-                BEARER_AUTHENTICATION_SCHEME.getName()
-        );
+        final List<Credential> credentials =
+                mSharedPreferencesAccountCredentialCache.getCredentialsFilteredBy(
+                        HOME_ACCOUNT_ID,
+                        ENVIRONMENT,
+                        null,
+                        CLIENT_ID,
+                        null,
+                        TARGET,
+                        BEARER_AUTHENTICATION_SCHEME.getName());
 
-        assertEquals(
-                2,
-                credentials.size()
-        );
+        assertEquals(2, credentials.size());
     }
 
     @Test
@@ -779,20 +807,17 @@ public class SharedPreferencesAccountCredentialCacheTest {
         refreshToken.setTarget(TARGET);
         mSharedPreferencesAccountCredentialCache.saveCredential(refreshToken);
 
-        final List<Credential> credentials = mSharedPreferencesAccountCredentialCache.getCredentialsFilteredBy(
-                HOME_ACCOUNT_ID,
-                ENVIRONMENT,
-                null,
-                null,
-                REALM,
-                TARGET,
-                BEARER_AUTHENTICATION_SCHEME.getName()
-        );
+        final List<Credential> credentials =
+                mSharedPreferencesAccountCredentialCache.getCredentialsFilteredBy(
+                        HOME_ACCOUNT_ID,
+                        ENVIRONMENT,
+                        null,
+                        null,
+                        REALM,
+                        TARGET,
+                        BEARER_AUTHENTICATION_SCHEME.getName());
 
-        assertEquals(
-                2,
-                credentials.size()
-        );
+        assertEquals(2, credentials.size());
     }
 
     @Test
@@ -820,21 +845,18 @@ public class SharedPreferencesAccountCredentialCacheTest {
         mSharedPreferencesAccountCredentialCache.saveCredential(refreshToken);
         mSharedPreferencesAccountCredentialCache.saveCredential(accessToken);
 
-        List<Credential> credentials = mSharedPreferencesAccountCredentialCache.getCredentialsFilteredBy(
-                HOME_ACCOUNT_ID,
-                ENVIRONMENT,
-                CredentialType.RefreshToken,
-                CLIENT_ID,
-                REALM,
-                TARGET,
-                BEARER_AUTHENTICATION_SCHEME.getName()
-        );
+        List<Credential> credentials =
+                mSharedPreferencesAccountCredentialCache.getCredentialsFilteredBy(
+                        HOME_ACCOUNT_ID,
+                        ENVIRONMENT,
+                        CredentialType.RefreshToken,
+                        CLIENT_ID,
+                        REALM,
+                        TARGET,
+                        BEARER_AUTHENTICATION_SCHEME.getName());
         assertEquals(1, credentials.size());
         final Credential retrievedCredential = credentials.get(0);
-        assertEquals(
-                CredentialType.RefreshToken.name(),
-                retrievedCredential.getCredentialType()
-        );
+        assertEquals(CredentialType.RefreshToken.name(), retrievedCredential.getCredentialType());
     }
 
     @Test
@@ -866,21 +888,18 @@ public class SharedPreferencesAccountCredentialCacheTest {
         mSharedPreferencesAccountCredentialCache.saveCredential(refreshToken);
         mSharedPreferencesAccountCredentialCache.saveCredential(accessToken);
 
-        List<Credential> credentials = mSharedPreferencesAccountCredentialCache.getCredentialsFilteredBy(
-                HOME_ACCOUNT_ID,
-                ENVIRONMENT,
-                CredentialType.RefreshToken,
-                CLIENT_ID,
-                REALM,
-                searchTarget,
-                BEARER_AUTHENTICATION_SCHEME.getName()
-        );
+        List<Credential> credentials =
+                mSharedPreferencesAccountCredentialCache.getCredentialsFilteredBy(
+                        HOME_ACCOUNT_ID,
+                        ENVIRONMENT,
+                        CredentialType.RefreshToken,
+                        CLIENT_ID,
+                        REALM,
+                        searchTarget,
+                        BEARER_AUTHENTICATION_SCHEME.getName());
         assertEquals(1, credentials.size());
         final Credential retrievedCredential = credentials.get(0);
-        assertEquals(
-                CredentialType.RefreshToken.name(),
-                retrievedCredential.getCredentialType()
-        );
+        assertEquals(CredentialType.RefreshToken.name(), retrievedCredential.getCredentialType());
     }
 
     @Test
@@ -917,21 +936,18 @@ public class SharedPreferencesAccountCredentialCacheTest {
         mSharedPreferencesAccountCredentialCache.saveCredential(refreshToken);
         mSharedPreferencesAccountCredentialCache.saveCredential(accessToken);
 
-        List<Credential> credentials = mSharedPreferencesAccountCredentialCache.getCredentialsFilteredBy(
-                HOME_ACCOUNT_ID,
-                ENVIRONMENT,
-                CredentialType.RefreshToken,
-                CLIENT_ID,
-                REALM,
-                searchTarget,
-                BEARER_AUTHENTICATION_SCHEME.getName()
-        );
+        List<Credential> credentials =
+                mSharedPreferencesAccountCredentialCache.getCredentialsFilteredBy(
+                        HOME_ACCOUNT_ID,
+                        ENVIRONMENT,
+                        CredentialType.RefreshToken,
+                        CLIENT_ID,
+                        REALM,
+                        searchTarget,
+                        BEARER_AUTHENTICATION_SCHEME.getName());
         assertEquals(1, credentials.size());
         final Credential retrievedCredential = credentials.get(0);
-        assertEquals(
-                CredentialType.RefreshToken.name(),
-                retrievedCredential.getCredentialType()
-        );
+        assertEquals(CredentialType.RefreshToken.name(), retrievedCredential.getCredentialType());
     }
 
     @Test
@@ -943,9 +959,8 @@ public class SharedPreferencesAccountCredentialCacheTest {
 
         // Let's grab a subset of these in a different order and make sure we still get the right
         // results back
-        final String searchTarget = targetScopes[2].toUpperCase()
-                + " "
-                + targetScopes[0].toUpperCase();
+        final String searchTarget =
+                targetScopes[2].toUpperCase() + " " + targetScopes[0].toUpperCase();
 
         final RefreshTokenRecord refreshToken = new RefreshTokenRecord();
         refreshToken.setCredentialType(CredentialType.RefreshToken.name());
@@ -970,21 +985,18 @@ public class SharedPreferencesAccountCredentialCacheTest {
         mSharedPreferencesAccountCredentialCache.saveCredential(refreshToken);
         mSharedPreferencesAccountCredentialCache.saveCredential(accessToken);
 
-        List<Credential> credentials = mSharedPreferencesAccountCredentialCache.getCredentialsFilteredBy(
-                HOME_ACCOUNT_ID,
-                ENVIRONMENT,
-                CredentialType.RefreshToken,
-                CLIENT_ID,
-                REALM,
-                searchTarget,
-                BEARER_AUTHENTICATION_SCHEME.getName()
-        );
+        List<Credential> credentials =
+                mSharedPreferencesAccountCredentialCache.getCredentialsFilteredBy(
+                        HOME_ACCOUNT_ID,
+                        ENVIRONMENT,
+                        CredentialType.RefreshToken,
+                        CLIENT_ID,
+                        REALM,
+                        searchTarget,
+                        BEARER_AUTHENTICATION_SCHEME.getName());
         assertEquals(1, credentials.size());
         final Credential retrievedCredential = credentials.get(0);
-        assertEquals(
-                CredentialType.RefreshToken.name(),
-                retrievedCredential.getCredentialType()
-        );
+        assertEquals(CredentialType.RefreshToken.name(), retrievedCredential.getCredentialType());
     }
 
     @Test
@@ -1013,15 +1025,15 @@ public class SharedPreferencesAccountCredentialCacheTest {
         mSharedPreferencesAccountCredentialCache.saveCredential(refreshToken);
         mSharedPreferencesAccountCredentialCache.saveCredential(accessToken);
 
-        List<Credential> credentials = mSharedPreferencesAccountCredentialCache.getCredentialsFilteredBy(
-                null,
-                ENVIRONMENT,
-                CredentialType.RefreshToken,
-                CLIENT_ID,
-                REALM,
-                TARGET,
-                BEARER_AUTHENTICATION_SCHEME.getName()
-        );
+        List<Credential> credentials =
+                mSharedPreferencesAccountCredentialCache.getCredentialsFilteredBy(
+                        null,
+                        ENVIRONMENT,
+                        CredentialType.RefreshToken,
+                        CLIENT_ID,
+                        REALM,
+                        TARGET,
+                        BEARER_AUTHENTICATION_SCHEME.getName());
         assertEquals(1, credentials.size());
     }
 
@@ -1062,15 +1074,15 @@ public class SharedPreferencesAccountCredentialCacheTest {
         mSharedPreferencesAccountCredentialCache.saveCredential(accessToken);
         mSharedPreferencesAccountCredentialCache.saveCredential(accessToken2);
 
-        List<Credential> credentials = mSharedPreferencesAccountCredentialCache.getCredentialsFilteredBy(
-                null,
-                ENVIRONMENT,
-                CredentialType.AccessToken,
-                CLIENT_ID,
-                null,
-                TARGET,
-                BEARER_AUTHENTICATION_SCHEME.getName()
-        );
+        List<Credential> credentials =
+                mSharedPreferencesAccountCredentialCache.getCredentialsFilteredBy(
+                        null,
+                        ENVIRONMENT,
+                        CredentialType.AccessToken,
+                        CLIENT_ID,
+                        null,
+                        TARGET,
+                        BEARER_AUTHENTICATION_SCHEME.getName());
         assertEquals(2, credentials.size());
     }
 
@@ -1111,15 +1123,15 @@ public class SharedPreferencesAccountCredentialCacheTest {
         mSharedPreferencesAccountCredentialCache.saveCredential(accessToken);
         mSharedPreferencesAccountCredentialCache.saveCredential(accessToken2);
 
-        List<Credential> credentials = mSharedPreferencesAccountCredentialCache.getCredentialsFilteredBy(
-                null,
-                ENVIRONMENT,
-                CredentialType.AccessToken,
-                CLIENT_ID,
-                null,
-                null,
-                BEARER_AUTHENTICATION_SCHEME.getName()
-        );
+        List<Credential> credentials =
+                mSharedPreferencesAccountCredentialCache.getCredentialsFilteredBy(
+                        null,
+                        ENVIRONMENT,
+                        CredentialType.AccessToken,
+                        CLIENT_ID,
+                        null,
+                        null,
+                        BEARER_AUTHENTICATION_SCHEME.getName());
         assertEquals(2, credentials.size());
     }
 
@@ -1160,15 +1172,15 @@ public class SharedPreferencesAccountCredentialCacheTest {
         mSharedPreferencesAccountCredentialCache.saveCredential(accessToken);
         mSharedPreferencesAccountCredentialCache.saveCredential(accessToken2);
 
-        List<Credential> credentials = mSharedPreferencesAccountCredentialCache.getCredentialsFilteredBy(
-                HOME_ACCOUNT_ID,
-                ENVIRONMENT,
-                CredentialType.AccessToken,
-                CLIENT_ID,
-                REALM,
-                null,
-                BEARER_AUTHENTICATION_SCHEME.getName()
-        );
+        List<Credential> credentials =
+                mSharedPreferencesAccountCredentialCache.getCredentialsFilteredBy(
+                        HOME_ACCOUNT_ID,
+                        ENVIRONMENT,
+                        CredentialType.AccessToken,
+                        CLIENT_ID,
+                        REALM,
+                        null,
+                        BEARER_AUTHENTICATION_SCHEME.getName());
         assertEquals(2, credentials.size());
     }
 
@@ -1210,15 +1222,15 @@ public class SharedPreferencesAccountCredentialCacheTest {
         mSharedPreferencesAccountCredentialCache.saveCredential(accessToken);
         mSharedPreferencesAccountCredentialCache.saveCredential(accessToken2);
 
-        List<Credential> credentials = mSharedPreferencesAccountCredentialCache.getCredentialsFilteredBy(
-                HOME_ACCOUNT_ID,
-                ENVIRONMENT,
-                CredentialType.AccessToken,
-                CLIENT_ID,
-                REALM,
-                null,
-                BEARER_AUTHENTICATION_SCHEME.getName()
-        );
+        List<Credential> credentials =
+                mSharedPreferencesAccountCredentialCache.getCredentialsFilteredBy(
+                        HOME_ACCOUNT_ID,
+                        ENVIRONMENT,
+                        CredentialType.AccessToken,
+                        CLIENT_ID,
+                        REALM,
+                        null,
+                        BEARER_AUTHENTICATION_SCHEME.getName());
         assertEquals(2, credentials.size());
     }
 
@@ -1260,16 +1272,16 @@ public class SharedPreferencesAccountCredentialCacheTest {
         mSharedPreferencesAccountCredentialCache.saveCredential(accessToken);
         mSharedPreferencesAccountCredentialCache.saveCredential(accessToken2);
 
-        List<Credential> credentials = mSharedPreferencesAccountCredentialCache.getCredentialsFilteredBy(
-                HOME_ACCOUNT_ID,
-                ENVIRONMENT,
-                CredentialType.AccessToken,
-                CLIENT_ID,
-                REALM,
-                null,
-                BEARER_AUTHENTICATION_SCHEME.getName(),
-                "{\"access_token\":{\"deviceid\":{\"essential\":true}}}"
-        );
+        List<Credential> credentials =
+                mSharedPreferencesAccountCredentialCache.getCredentialsFilteredBy(
+                        HOME_ACCOUNT_ID,
+                        ENVIRONMENT,
+                        CredentialType.AccessToken,
+                        CLIENT_ID,
+                        REALM,
+                        null,
+                        BEARER_AUTHENTICATION_SCHEME.getName(),
+                        "{\"access_token\":{\"deviceid\":{\"essential\":true}}}");
         assertEquals(1, credentials.size());
     }
 
@@ -1312,16 +1324,16 @@ public class SharedPreferencesAccountCredentialCacheTest {
         mSharedPreferencesAccountCredentialCache.saveCredential(accessToken);
         mSharedPreferencesAccountCredentialCache.saveCredential(accessToken2);
 
-        List<Credential> credentials = mSharedPreferencesAccountCredentialCache.getCredentialsFilteredBy(
-                HOME_ACCOUNT_ID,
-                ENVIRONMENT,
-                CredentialType.AccessToken,
-                CLIENT_ID,
-                REALM,
-                null,
-                BEARER_AUTHENTICATION_SCHEME.getName(),
-                "{\"access_token\":{\"deviceid\":{\"essential\":true}}}"
-        );
+        List<Credential> credentials =
+                mSharedPreferencesAccountCredentialCache.getCredentialsFilteredBy(
+                        HOME_ACCOUNT_ID,
+                        ENVIRONMENT,
+                        CredentialType.AccessToken,
+                        CLIENT_ID,
+                        REALM,
+                        null,
+                        BEARER_AUTHENTICATION_SCHEME.getName(),
+                        "{\"access_token\":{\"deviceid\":{\"essential\":true}}}");
         assertEquals(1, credentials.size());
         assertEquals("SecretB", credentials.get(0).getSecret());
     }
@@ -1363,15 +1375,15 @@ public class SharedPreferencesAccountCredentialCacheTest {
         mSharedPreferencesAccountCredentialCache.saveCredential(accessToken);
         mSharedPreferencesAccountCredentialCache.saveCredential(accessToken2);
 
-        List<Credential> credentials = mSharedPreferencesAccountCredentialCache.getCredentialsFilteredBy(
-                HOME_ACCOUNT_ID,
-                ENVIRONMENT,
-                CredentialType.AccessToken,
-                CLIENT_ID,
-                null,
-                TARGET,
-                BEARER_AUTHENTICATION_SCHEME.getName()
-        );
+        List<Credential> credentials =
+                mSharedPreferencesAccountCredentialCache.getCredentialsFilteredBy(
+                        HOME_ACCOUNT_ID,
+                        ENVIRONMENT,
+                        CredentialType.AccessToken,
+                        CLIENT_ID,
+                        null,
+                        TARGET,
+                        BEARER_AUTHENTICATION_SCHEME.getName());
         assertEquals(2, credentials.size());
     }
 
@@ -1412,15 +1424,15 @@ public class SharedPreferencesAccountCredentialCacheTest {
         mSharedPreferencesAccountCredentialCache.saveCredential(accessToken);
         mSharedPreferencesAccountCredentialCache.saveCredential(accessToken2);
 
-        List<Credential> credentials = mSharedPreferencesAccountCredentialCache.getCredentialsFilteredBy(
-                HOME_ACCOUNT_ID,
-                ENVIRONMENT,
-                CredentialType.AccessToken,
-                CLIENT_ID,
-                null,
-                null,
-                BEARER_AUTHENTICATION_SCHEME.getName()
-        );
+        List<Credential> credentials =
+                mSharedPreferencesAccountCredentialCache.getCredentialsFilteredBy(
+                        HOME_ACCOUNT_ID,
+                        ENVIRONMENT,
+                        CredentialType.AccessToken,
+                        CLIENT_ID,
+                        null,
+                        null,
+                        BEARER_AUTHENTICATION_SCHEME.getName());
         assertEquals(2, credentials.size());
     }
 
@@ -1461,15 +1473,15 @@ public class SharedPreferencesAccountCredentialCacheTest {
         mSharedPreferencesAccountCredentialCache.saveCredential(accessToken);
         mSharedPreferencesAccountCredentialCache.saveCredential(accessToken2);
 
-        List<Credential> credentials = mSharedPreferencesAccountCredentialCache.getCredentialsFilteredBy(
-                null,
-                ENVIRONMENT,
-                CredentialType.AccessToken,
-                CLIENT_ID,
-                REALM,
-                null,
-                BEARER_AUTHENTICATION_SCHEME.getName()
-        );
+        List<Credential> credentials =
+                mSharedPreferencesAccountCredentialCache.getCredentialsFilteredBy(
+                        null,
+                        ENVIRONMENT,
+                        CredentialType.AccessToken,
+                        CLIENT_ID,
+                        REALM,
+                        null,
+                        BEARER_AUTHENTICATION_SCHEME.getName());
         assertEquals(2, credentials.size());
     }
 
@@ -1478,21 +1490,22 @@ public class SharedPreferencesAccountCredentialCacheTest {
         final PrimaryRefreshTokenRecord primaryRefreshToken = new PrimaryRefreshTokenRecord();
         primaryRefreshToken.setHomeAccountId(HOME_ACCOUNT_ID);
         primaryRefreshToken.setEnvironment(ENVIRONMENT);
-        primaryRefreshToken.setCredentialType(CredentialType.PrimaryRefreshToken.name().toLowerCase(Locale.US));
+        primaryRefreshToken.setCredentialType(
+                CredentialType.PrimaryRefreshToken.name().toLowerCase(Locale.US));
         primaryRefreshToken.setClientId(CLIENT_ID);
         primaryRefreshToken.setSessionKey(SESSION_KEY);
 
         mSharedPreferencesAccountCredentialCache.saveCredential(primaryRefreshToken);
 
-        List<Credential> credentials = mSharedPreferencesAccountCredentialCache.getCredentialsFilteredBy(
-                HOME_ACCOUNT_ID,
-                ENVIRONMENT,
-                CredentialType.PrimaryRefreshToken,
-                null, /* client id */
-                null,
-                null,
-                null
-        );
+        List<Credential> credentials =
+                mSharedPreferencesAccountCredentialCache.getCredentialsFilteredBy(
+                        HOME_ACCOUNT_ID,
+                        ENVIRONMENT,
+                        CredentialType.PrimaryRefreshToken,
+                        null, /* client id */
+                        null,
+                        null,
+                        null);
         assertEquals(1, credentials.size());
     }
 
@@ -1501,21 +1514,22 @@ public class SharedPreferencesAccountCredentialCacheTest {
         final PrimaryRefreshTokenRecord primaryRefreshToken = new PrimaryRefreshTokenRecord();
         primaryRefreshToken.setHomeAccountId(HOME_ACCOUNT_ID);
         primaryRefreshToken.setEnvironment(ENVIRONMENT);
-        primaryRefreshToken.setCredentialType(CredentialType.PrimaryRefreshToken.name().toLowerCase(Locale.US));
+        primaryRefreshToken.setCredentialType(
+                CredentialType.PrimaryRefreshToken.name().toLowerCase(Locale.US));
         primaryRefreshToken.setClientId(CLIENT_ID);
         primaryRefreshToken.setSessionKey(SESSION_KEY);
 
         mSharedPreferencesAccountCredentialCache.saveCredential(primaryRefreshToken);
 
-        List<Credential> credentials = mSharedPreferencesAccountCredentialCache.getCredentialsFilteredBy(
-                HOME_ACCOUNT_ID,
-                ENVIRONMENT,
-                CredentialType.PrimaryRefreshToken,
-                CLIENT_ID,
-                null,
-                null,
-                null
-        );
+        List<Credential> credentials =
+                mSharedPreferencesAccountCredentialCache.getCredentialsFilteredBy(
+                        HOME_ACCOUNT_ID,
+                        ENVIRONMENT,
+                        CredentialType.PrimaryRefreshToken,
+                        CLIENT_ID,
+                        null,
+                        null,
+                        null);
         assertEquals(1, credentials.size());
     }
 
@@ -1524,21 +1538,22 @@ public class SharedPreferencesAccountCredentialCacheTest {
         final PrimaryRefreshTokenRecord primaryRefreshToken = new PrimaryRefreshTokenRecord();
         primaryRefreshToken.setHomeAccountId(HOME_ACCOUNT_ID);
         primaryRefreshToken.setEnvironment(ENVIRONMENT);
-        primaryRefreshToken.setCredentialType(CredentialType.PrimaryRefreshToken.name().toLowerCase(Locale.US));
+        primaryRefreshToken.setCredentialType(
+                CredentialType.PrimaryRefreshToken.name().toLowerCase(Locale.US));
         primaryRefreshToken.setClientId(CLIENT_ID);
         primaryRefreshToken.setSessionKey(SESSION_KEY);
 
         mSharedPreferencesAccountCredentialCache.saveCredential(primaryRefreshToken);
 
-        List<Credential> credentials = mSharedPreferencesAccountCredentialCache.getCredentialsFilteredBy(
-                HOME_ACCOUNT_ID,
-                ENVIRONMENT,
-                CredentialType.PrimaryRefreshToken,
-                "another-client-id",
-                null,
-                null,
-                null
-        );
+        List<Credential> credentials =
+                mSharedPreferencesAccountCredentialCache.getCredentialsFilteredBy(
+                        HOME_ACCOUNT_ID,
+                        ENVIRONMENT,
+                        CredentialType.PrimaryRefreshToken,
+                        "another-client-id",
+                        null,
+                        null,
+                        null);
         assertTrue(credentials.isEmpty());
     }
 
@@ -1584,7 +1599,8 @@ public class SharedPreferencesAccountCredentialCacheTest {
         assertTrue(mSharedPreferencesAccountCredentialCache.getAccounts().isEmpty());
 
         // Verify getCredentials() returns two items
-        final List<Credential> credentials = mSharedPreferencesAccountCredentialCache.getCredentials();
+        final List<Credential> credentials =
+                mSharedPreferencesAccountCredentialCache.getCredentials();
         assertTrue(credentials.size() == 2);
     }
 
@@ -1687,28 +1703,44 @@ public class SharedPreferencesAccountCredentialCacheTest {
     @Test
     public void noValueForCacheKeyAccount() {
         assertEquals(0, mSharedPreferencesAccountCredentialCache.getAccounts().size());
-        final AccountRecord account = (AccountRecord) mSharedPreferencesAccountCredentialCache.getAccount("No account");
+        final AccountRecord account =
+                (AccountRecord) mSharedPreferencesAccountCredentialCache.getAccount("No account");
         assertNull(account);
     }
 
     @Test
     public void noValueForCacheKeyAccessToken() {
         assertEquals(0, mSharedPreferencesAccountCredentialCache.getCredentials().size());
-        final AccessTokenRecord accessToken = (AccessTokenRecord) mSharedPreferencesAccountCredentialCache.getCredential(CACHE_VALUE_SEPARATOR + CredentialType.AccessToken.name().toLowerCase() + CACHE_VALUE_SEPARATOR);
+        final AccessTokenRecord accessToken =
+                (AccessTokenRecord)
+                        mSharedPreferencesAccountCredentialCache.getCredential(
+                                CACHE_VALUE_SEPARATOR
+                                        + CredentialType.AccessToken.name().toLowerCase()
+                                        + CACHE_VALUE_SEPARATOR);
         assertNull(accessToken);
     }
 
     @Test
     public void noValueForCacheKeyRefreshToken() {
         assertEquals(0, mSharedPreferencesAccountCredentialCache.getCredentials().size());
-        final RefreshTokenRecord refreshToken = (RefreshTokenRecord) mSharedPreferencesAccountCredentialCache.getCredential(CACHE_VALUE_SEPARATOR + CredentialType.RefreshToken.name().toLowerCase() + CACHE_VALUE_SEPARATOR);
+        final RefreshTokenRecord refreshToken =
+                (RefreshTokenRecord)
+                        mSharedPreferencesAccountCredentialCache.getCredential(
+                                CACHE_VALUE_SEPARATOR
+                                        + CredentialType.RefreshToken.name().toLowerCase()
+                                        + CACHE_VALUE_SEPARATOR);
         assertNull(refreshToken);
     }
 
     @Test
     public void noValueForCacheKeyIdToken() {
         assertEquals(0, mSharedPreferencesAccountCredentialCache.getCredentials().size());
-        final IdTokenRecord idToken = (IdTokenRecord) mSharedPreferencesAccountCredentialCache.getCredential(CACHE_VALUE_SEPARATOR + CredentialType.IdToken.name().toLowerCase() + CACHE_VALUE_SEPARATOR);
+        final IdTokenRecord idToken =
+                (IdTokenRecord)
+                        mSharedPreferencesAccountCredentialCache.getCredential(
+                                CACHE_VALUE_SEPARATOR
+                                        + CredentialType.IdToken.name().toLowerCase()
+                                        + CACHE_VALUE_SEPARATOR);
         assertNull(idToken);
     }
 
@@ -1724,7 +1756,8 @@ public class SharedPreferencesAccountCredentialCacheTest {
 
         mSharedPreferencesFileManager.put(cacheKey, "{\"thing\" \"not an account\"}");
 
-        final AccountRecord malformedAccount = mSharedPreferencesAccountCredentialCache.getAccount(cacheKey);
+        final AccountRecord malformedAccount =
+                mSharedPreferencesAccountCredentialCache.getAccount(cacheKey);
         assertNull(malformedAccount);
         assertNotNull(mSharedPreferencesFileManager.get(cacheKey));
     }
@@ -1741,7 +1774,8 @@ public class SharedPreferencesAccountCredentialCacheTest {
 
         mSharedPreferencesFileManager.put(cacheKey, "{\"thing\" : \"not an account\"}");
 
-        final AccountRecord malformedAccount = mSharedPreferencesAccountCredentialCache.getAccount(cacheKey);
+        final AccountRecord malformedAccount =
+                mSharedPreferencesAccountCredentialCache.getAccount(cacheKey);
         assertNull(malformedAccount);
         assertNull(mSharedPreferencesFileManager.get(cacheKey));
     }
@@ -1759,7 +1793,9 @@ public class SharedPreferencesAccountCredentialCacheTest {
 
         mSharedPreferencesFileManager.put(cacheKey, "{\"thing\" \"not an accessToken\"}");
 
-        final AccessTokenRecord malformedAccessToken = (AccessTokenRecord) mSharedPreferencesAccountCredentialCache.getCredential(cacheKey);
+        final AccessTokenRecord malformedAccessToken =
+                (AccessTokenRecord)
+                        mSharedPreferencesAccountCredentialCache.getCredential(cacheKey);
         assertNull(malformedAccessToken);
         assertNotNull(mSharedPreferencesFileManager.get(cacheKey));
     }
@@ -1777,7 +1813,9 @@ public class SharedPreferencesAccountCredentialCacheTest {
 
         mSharedPreferencesFileManager.put(cacheKey, "{\"thing\" : \"not an accessToken\"}");
 
-        final AccessTokenRecord malformedAccessToken = (AccessTokenRecord) mSharedPreferencesAccountCredentialCache.getCredential(cacheKey);
+        final AccessTokenRecord malformedAccessToken =
+                (AccessTokenRecord)
+                        mSharedPreferencesAccountCredentialCache.getCredential(cacheKey);
         assertNull(malformedAccessToken);
         assertNull(mSharedPreferencesFileManager.get(cacheKey));
     }
@@ -1795,7 +1833,9 @@ public class SharedPreferencesAccountCredentialCacheTest {
 
         mSharedPreferencesFileManager.put(cacheKey, "{\"thing\" \"not a refreshToken\"}");
 
-        final RefreshTokenRecord malformedRefreshToken = (RefreshTokenRecord) mSharedPreferencesAccountCredentialCache.getCredential(cacheKey);
+        final RefreshTokenRecord malformedRefreshToken =
+                (RefreshTokenRecord)
+                        mSharedPreferencesAccountCredentialCache.getCredential(cacheKey);
         assertNull(malformedRefreshToken);
         assertNotNull(mSharedPreferencesFileManager.get(cacheKey));
     }
@@ -1813,7 +1853,9 @@ public class SharedPreferencesAccountCredentialCacheTest {
 
         mSharedPreferencesFileManager.put(cacheKey, "{\"thing\" : \"not a refreshToken\"}");
 
-        final RefreshTokenRecord malformedRefreshToken = (RefreshTokenRecord) mSharedPreferencesAccountCredentialCache.getCredential(cacheKey);
+        final RefreshTokenRecord malformedRefreshToken =
+                (RefreshTokenRecord)
+                        mSharedPreferencesAccountCredentialCache.getCredential(cacheKey);
         assertNull(malformedRefreshToken);
         assertNull(mSharedPreferencesFileManager.get(cacheKey));
     }
@@ -1831,7 +1873,8 @@ public class SharedPreferencesAccountCredentialCacheTest {
 
         mSharedPreferencesFileManager.put(cacheKey, "{\"thing\"  \"not an idToken\"}");
 
-        final IdTokenRecord restoredIdToken = (IdTokenRecord) mSharedPreferencesAccountCredentialCache.getCredential(cacheKey);
+        final IdTokenRecord restoredIdToken =
+                (IdTokenRecord) mSharedPreferencesAccountCredentialCache.getCredential(cacheKey);
         assertNull(restoredIdToken);
         assertNotNull(mSharedPreferencesFileManager.get(cacheKey));
     }
@@ -1849,7 +1892,8 @@ public class SharedPreferencesAccountCredentialCacheTest {
 
         mSharedPreferencesFileManager.put(cacheKey, "{\"thing\" : \"not an idToken\"}");
 
-        final IdTokenRecord restoredIdToken = (IdTokenRecord) mSharedPreferencesAccountCredentialCache.getCredential(cacheKey);
+        final IdTokenRecord restoredIdToken =
+                (IdTokenRecord) mSharedPreferencesAccountCredentialCache.getCredential(cacheKey);
         assertNull(restoredIdToken);
         assertNull(mSharedPreferencesFileManager.get(cacheKey));
     }
@@ -1888,10 +1932,15 @@ public class SharedPreferencesAccountCredentialCacheTest {
         final String credentialCacheKey = mDelegate.generateCacheKey(account);
 
         // Resurrect the Credential
-        final AccountRecord restoredAccount = mSharedPreferencesAccountCredentialCache.getAccount(credentialCacheKey);
+        final AccountRecord restoredAccount =
+                mSharedPreferencesAccountCredentialCache.getAccount(credentialCacheKey);
         assertTrue(account.equals(restoredAccount));
-        assertEquals(additionalValue, restoredAccount.getAdditionalFields().get(additionalKey).getAsString());
-        assertEquals(secondAdditionalValue, restoredAccount.getAdditionalFields().get(secondAdditionalKey).getAsString());
+        assertEquals(
+                additionalValue,
+                restoredAccount.getAdditionalFields().get(additionalKey).getAsString());
+        assertEquals(
+                secondAdditionalValue,
+                restoredAccount.getAdditionalFields().get(secondAdditionalKey).getAsString());
     }
 
     @Test
@@ -1924,9 +1973,12 @@ public class SharedPreferencesAccountCredentialCacheTest {
         final String credentialCacheKey = mDelegate.generateCacheKey(accessToken);
 
         // Resurrect the Credential
-        final Credential restoredAccessToken = mSharedPreferencesAccountCredentialCache.getCredential(credentialCacheKey);
+        final Credential restoredAccessToken =
+                mSharedPreferencesAccountCredentialCache.getCredential(credentialCacheKey);
         assertTrue(accessToken.equals(restoredAccessToken));
-        assertEquals(additionalValue, restoredAccessToken.getAdditionalFields().get(additionalKey).getAsString());
+        assertEquals(
+                additionalValue,
+                restoredAccessToken.getAdditionalFields().get(additionalKey).getAsString());
     }
 
     @Test
@@ -1956,9 +2008,12 @@ public class SharedPreferencesAccountCredentialCacheTest {
         final String credentialCacheKey = mDelegate.generateCacheKey(refreshToken);
 
         // Resurrect the Credential
-        final Credential restoredRefreshToken = mSharedPreferencesAccountCredentialCache.getCredential(credentialCacheKey);
+        final Credential restoredRefreshToken =
+                mSharedPreferencesAccountCredentialCache.getCredential(credentialCacheKey);
         assertTrue(refreshToken.equals(restoredRefreshToken));
-        assertEquals(additionalValue, restoredRefreshToken.getAdditionalFields().get(additionalKey).getAsString());
+        assertEquals(
+                additionalValue,
+                restoredRefreshToken.getAdditionalFields().get(additionalKey).getAsString());
     }
 
     @Test
@@ -1988,9 +2043,12 @@ public class SharedPreferencesAccountCredentialCacheTest {
         final String credentialCacheKey = mDelegate.generateCacheKey(idToken);
 
         // Resurrect the Credential
-        final Credential restoredIdToken = mSharedPreferencesAccountCredentialCache.getCredential(credentialCacheKey);
+        final Credential restoredIdToken =
+                mSharedPreferencesAccountCredentialCache.getCredential(credentialCacheKey);
         assertTrue(idToken.equals(restoredIdToken));
-        assertEquals(additionalValue, restoredIdToken.getAdditionalFields().get(additionalKey).getAsString());
+        assertEquals(
+                additionalValue,
+                restoredIdToken.getAdditionalFields().get(additionalKey).getAsString());
     }
 
     @Test
@@ -2046,12 +2104,17 @@ public class SharedPreferencesAccountCredentialCacheTest {
         final String credentialCacheKey = mDelegate.generateCacheKey(accountFirst);
 
         // Resurrect the Credential
-        final AccountRecord restoredAccount = mSharedPreferencesAccountCredentialCache.getAccount(credentialCacheKey);
+        final AccountRecord restoredAccount =
+                mSharedPreferencesAccountCredentialCache.getAccount(credentialCacheKey);
         assertTrue(accountFirst.equals(restoredAccount));
 
         // Assert the presence of both additionalFields
-        assertEquals(additionalValue, restoredAccount.getAdditionalFields().get(additionalKey).getAsString());
-        assertEquals(additionalValue2, restoredAccount.getAdditionalFields().get(additionalKey2).getAsString());
+        assertEquals(
+                additionalValue,
+                restoredAccount.getAdditionalFields().get(additionalKey).getAsString());
+        assertEquals(
+                additionalValue2,
+                restoredAccount.getAdditionalFields().get(additionalKey2).getAsString());
     }
 
     @Test
@@ -2108,10 +2171,15 @@ public class SharedPreferencesAccountCredentialCacheTest {
         final String credentialCacheKey = mDelegate.generateCacheKey(accessTokenFirst);
 
         // Resurrect the Credential
-        final Credential restoredAccessToken = mSharedPreferencesAccountCredentialCache.getCredential(credentialCacheKey);
+        final Credential restoredAccessToken =
+                mSharedPreferencesAccountCredentialCache.getCredential(credentialCacheKey);
         assertTrue(accessTokenFirst.equals(restoredAccessToken));
-        assertEquals(additionalValue, restoredAccessToken.getAdditionalFields().get(additionalKey).getAsString());
-        assertEquals(additionalValue2, restoredAccessToken.getAdditionalFields().get(additionalKey2).getAsString());
+        assertEquals(
+                additionalValue,
+                restoredAccessToken.getAdditionalFields().get(additionalKey).getAsString());
+        assertEquals(
+                additionalValue2,
+                restoredAccessToken.getAdditionalFields().get(additionalKey2).getAsString());
     }
 
     @Test
@@ -2164,10 +2232,15 @@ public class SharedPreferencesAccountCredentialCacheTest {
         final String credentialCacheKey = mDelegate.generateCacheKey(idTokenFirst);
 
         // Resurrect the Credential
-        final Credential restoredIdToken = mSharedPreferencesAccountCredentialCache.getCredential(credentialCacheKey);
+        final Credential restoredIdToken =
+                mSharedPreferencesAccountCredentialCache.getCredential(credentialCacheKey);
         assertTrue(idTokenFirst.equals(restoredIdToken));
-        assertEquals(additionalValue, restoredIdToken.getAdditionalFields().get(additionalKey).getAsString());
-        assertEquals(additionalValue2, restoredIdToken.getAdditionalFields().get(additionalKey2).getAsString());
+        assertEquals(
+                additionalValue,
+                restoredIdToken.getAdditionalFields().get(additionalKey).getAsString());
+        assertEquals(
+                additionalValue2,
+                restoredIdToken.getAdditionalFields().get(additionalKey2).getAsString());
     }
 
     @Test
@@ -2218,10 +2291,15 @@ public class SharedPreferencesAccountCredentialCacheTest {
         final String credentialCacheKey = mDelegate.generateCacheKey(refreshTokenFirst);
 
         // Resurrect the Credential
-        final Credential restoredIdToken = mSharedPreferencesAccountCredentialCache.getCredential(credentialCacheKey);
+        final Credential restoredIdToken =
+                mSharedPreferencesAccountCredentialCache.getCredential(credentialCacheKey);
         assertTrue(refreshTokenFirst.equals(restoredIdToken));
-        assertEquals(additionalValue, restoredIdToken.getAdditionalFields().get(additionalKey).getAsString());
-        assertEquals(additionalValue2, restoredIdToken.getAdditionalFields().get(additionalKey2).getAsString());
+        assertEquals(
+                additionalValue,
+                restoredIdToken.getAdditionalFields().get(additionalKey).getAsString());
+        assertEquals(
+                additionalValue2,
+                restoredIdToken.getAdditionalFields().get(additionalKey2).getAsString());
     }
 
     @Test
@@ -2272,8 +2350,11 @@ public class SharedPreferencesAccountCredentialCacheTest {
         final String credentialCacheKey = mDelegate.generateCacheKey(refreshTokenFirst);
 
         // Resurrect the Credential
-        final Credential restoredIdToken = mSharedPreferencesAccountCredentialCache.getCredential(credentialCacheKey);
+        final Credential restoredIdToken =
+                mSharedPreferencesAccountCredentialCache.getCredential(credentialCacheKey);
         assertTrue(refreshTokenFirst.equals(restoredIdToken));
-        assertEquals(additionalValue2, restoredIdToken.getAdditionalFields().get(additionalKey).getAsString());
+        assertEquals(
+                additionalValue2,
+                restoredIdToken.getAdditionalFields().get(additionalKey).getAsString());
     }
 }

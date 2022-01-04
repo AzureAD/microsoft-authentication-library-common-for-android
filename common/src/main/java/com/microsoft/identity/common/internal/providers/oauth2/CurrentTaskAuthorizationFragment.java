@@ -22,6 +22,11 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2;
 
+import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterAliases.CANCEL_AUTHORIZATION_REQUEST;
+import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterAliases.RETURN_AUTHORIZATION_REQUEST_RESULT;
+import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterFields.REQUEST_CODE;
+import static com.microsoft.identity.common.java.AuthenticationConstants.UIRequest.BROWSER_FLOW;
+
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -34,17 +39,12 @@ import com.microsoft.identity.common.internal.telemetry.events.UiEndEvent;
 import com.microsoft.identity.common.internal.util.FindBugsConstants;
 import com.microsoft.identity.common.java.logging.RequestContext;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
-import com.microsoft.identity.common.java.util.ported.PropertyBag;
 import com.microsoft.identity.common.java.util.ported.LocalBroadcaster;
+import com.microsoft.identity.common.java.util.ported.PropertyBag;
 import com.microsoft.identity.common.logging.DiagnosticContext;
 import com.microsoft.identity.common.logging.Logger;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-
-import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterAliases.CANCEL_AUTHORIZATION_REQUEST;
-import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterAliases.RETURN_AUTHORIZATION_REQUEST_RESULT;
-import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterFields.REQUEST_CODE;
-import static com.microsoft.identity.common.java.AuthenticationConstants.UIRequest.BROWSER_FLOW;
 
 public abstract class CurrentTaskAuthorizationFragment extends AuthorizationFragment {
 
@@ -58,12 +58,14 @@ public abstract class CurrentTaskAuthorizationFragment extends AuthorizationFrag
     /**
      * Listens to an operation cancellation event.
      */
-    private final LocalBroadcaster.IReceiverCallback mCancelRequestReceiver = new LocalBroadcaster.IReceiverCallback() {
-        @Override
-        public void onReceive(@NonNull final PropertyBag propertyBag) {
-            cancelAuthorization(propertyBag.getOrDefault(CANCEL_AUTHORIZATION_REQUEST, false));
-        }
-    };
+    private final LocalBroadcaster.IReceiverCallback mCancelRequestReceiver =
+            new LocalBroadcaster.IReceiverCallback() {
+                @Override
+                public void onReceive(@NonNull final PropertyBag propertyBag) {
+                    cancelAuthorization(
+                            propertyBag.getOrDefault(CANCEL_AUTHORIZATION_REQUEST, false));
+                }
+            };
 
     void setInstanceState(@NonNull final Bundle instanceStateBundle) {
         mInstanceState = instanceStateBundle;
@@ -77,7 +79,8 @@ public abstract class CurrentTaskAuthorizationFragment extends AuthorizationFrag
 
         // Register Broadcast receiver to cancel the auth request
         // if another incoming request is launched by the app
-        LocalBroadcaster.INSTANCE.registerCallback(CANCEL_AUTHORIZATION_REQUEST, mCancelRequestReceiver);
+        LocalBroadcaster.INSTANCE.registerCallback(
+                CANCEL_AUTHORIZATION_REQUEST, mCancelRequestReceiver);
 
         if (savedInstanceState == null) {
             Logger.verbose(TAG + methodName, "Extract state from the intent bundle.");
@@ -127,8 +130,7 @@ public abstract class CurrentTaskAuthorizationFragment extends AuthorizationFrag
         DiagnosticContext.setRequestContext(rc);
         Logger.verbose(
                 TAG + methodName,
-                "Initializing diagnostic context for CurrentTaskAuthorizationActivity"
-        );
+                "Initializing diagnostic context for CurrentTaskAuthorizationActivity");
 
         return correlationId;
     }
@@ -153,7 +155,10 @@ public abstract class CurrentTaskAuthorizationFragment extends AuthorizationFrag
     }
 
     void sendResult(@NonNull final RawAuthorizationResult result) {
-        Logger.info(TAG, "Sending result from Authorization Activity, resultCode: " + result.getResultCode());
+        Logger.info(
+                TAG,
+                "Sending result from Authorization Activity, resultCode: "
+                        + result.getResultCode());
 
         final PropertyBag propertyBag = RawAuthorizationResult.toPropertyBag(result);
         propertyBag.put(REQUEST_CODE, BROWSER_FLOW);

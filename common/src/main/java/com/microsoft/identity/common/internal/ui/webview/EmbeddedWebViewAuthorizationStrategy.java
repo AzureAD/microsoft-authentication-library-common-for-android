@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.ui.webview;
 
+import static com.microsoft.identity.common.java.AuthenticationConstants.UIRequest.BROWSER_FLOW;
+
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -36,38 +38,40 @@ import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
-import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
-import com.microsoft.identity.common.java.util.ResultFuture;
+import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.java.ui.AuthorizationAgent;
+import com.microsoft.identity.common.java.util.ResultFuture;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.net.URI;
 import java.util.concurrent.Future;
 
-import static com.microsoft.identity.common.java.AuthenticationConstants.UIRequest.BROWSER_FLOW;
-
 /**
  * Serve as a class to do the OAuth2 auth code grant flow with Android embedded web view.
  */
-// Suppressing rawtype warnings due to the generic types OAuth2Strategy, AuthorizationRequest and AuthorizationResult
+// Suppressing rawtype warnings due to the generic types OAuth2Strategy, AuthorizationRequest and
+// AuthorizationResult
 @SuppressWarnings(WarningType.rawtype_warning)
-public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2Strategy,
-        GenericAuthorizationRequest extends AuthorizationRequest> extends AndroidAuthorizationStrategy<GenericOAuth2Strategy, GenericAuthorizationRequest> {
+public class EmbeddedWebViewAuthorizationStrategy<
+                GenericOAuth2Strategy extends OAuth2Strategy,
+                GenericAuthorizationRequest extends AuthorizationRequest>
+        extends AndroidAuthorizationStrategy<GenericOAuth2Strategy, GenericAuthorizationRequest> {
 
     private static final String TAG = EmbeddedWebViewAuthorizationStrategy.class.getSimpleName();
     private ResultFuture<AuthorizationResult> mAuthorizationResultFuture;
-    private GenericOAuth2Strategy mOAuth2Strategy; //NOPMD
-    private GenericAuthorizationRequest mAuthorizationRequest; //NOPMD
+    private GenericOAuth2Strategy mOAuth2Strategy; // NOPMD
+    private GenericAuthorizationRequest mAuthorizationRequest; // NOPMD
 
     /**
      * Constructor of EmbeddedWebViewAuthorizationStrategy.
      *
      * @param activity The app activity which invoke the interactive auth request.
      */
-    public EmbeddedWebViewAuthorizationStrategy(@NonNull Context applicationContext,
-                                                @NonNull Activity activity,
-                                                @Nullable Fragment fragment) {
+    public EmbeddedWebViewAuthorizationStrategy(
+            @NonNull Context applicationContext,
+            @NonNull Activity activity,
+            @Nullable Fragment fragment) {
         super(applicationContext, activity, fragment);
     }
 
@@ -76,8 +80,9 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
      * The activity result is set in Authorization.setResult() and passed to the onActivityResult() of the calling activity.
      */
     @Override
-    public Future<AuthorizationResult> requestAuthorization(GenericAuthorizationRequest authorizationRequest,
-                                                            GenericOAuth2Strategy oAuth2Strategy) throws ClientException {
+    public Future<AuthorizationResult> requestAuthorization(
+            GenericAuthorizationRequest authorizationRequest, GenericOAuth2Strategy oAuth2Strategy)
+            throws ClientException {
         mAuthorizationResultFuture = new ResultFuture<>();
         mOAuth2Strategy = oAuth2Strategy;
         mAuthorizationRequest = authorizationRequest;
@@ -89,18 +94,19 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
         return mAuthorizationResultFuture;
     }
 
-    // Suppressing unchecked warnings during casting to HashMap<String,String> due to no generic type with mAuthorizationRequest
+    // Suppressing unchecked warnings during casting to HashMap<String,String> due to no generic
+    // type with mAuthorizationRequest
     @SuppressWarnings(WarningType.unchecked_warning)
     private Intent buildAuthorizationActivityStartIntent(URI requestUrl) {
         return AuthorizationActivityFactory.getAuthorizationActivityIntent(
-                    getApplicationContext(),
-                    null,
-                    requestUrl.toString(),
-                    mAuthorizationRequest.getRedirectUri(),
-                    mAuthorizationRequest.getRequestHeaders(),
-                    AuthorizationAgent.WEBVIEW,
-                    mAuthorizationRequest.isWebViewZoomEnabled(),
-                    mAuthorizationRequest.isWebViewZoomControlsEnabled());
+                getApplicationContext(),
+                null,
+                requestUrl.toString(),
+                mAuthorizationRequest.getRedirectUri(),
+                mAuthorizationRequest.getRequestHeaders(),
+                AuthorizationAgent.WEBVIEW,
+                mAuthorizationRequest.isWebViewZoomEnabled(),
+                mAuthorizationRequest.isWebViewZoomControlsEnabled());
     }
 
     @Override
@@ -108,20 +114,25 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
         if (requestCode == BROWSER_FLOW) {
             if (mOAuth2Strategy != null && mAuthorizationResultFuture != null) {
 
-                //Suppressing unchecked warnings due to method createAuthorizationResult being a member of the raw type AuthorizationResultFactory
-                @SuppressWarnings(WarningType.unchecked_warning) final AuthorizationResult result = mOAuth2Strategy
-                        .getAuthorizationResultFactory()
-                        .createAuthorizationResult(
-                                data,
-                                mAuthorizationRequest
-                        );
+                // Suppressing unchecked warnings due to method createAuthorizationResult being a
+                // member of the raw type AuthorizationResultFactory
+                @SuppressWarnings(WarningType.unchecked_warning)
+                final AuthorizationResult result =
+                        mOAuth2Strategy
+                                .getAuthorizationResultFactory()
+                                .createAuthorizationResult(data, mAuthorizationRequest);
                 mAuthorizationResultFuture.setResult(result);
             } else {
-                Logger.warn(TAG, "SDK Cancel triggering before request is sent out. " +
-                        "Potentially due to an stale activity state, " +
-                        "oAuth2Strategy null ? [" + (mOAuth2Strategy == null) + "]" +
-                        "mAuthorizationResultFuture ? [" + (mAuthorizationResultFuture == null) + "]"
-                );
+                Logger.warn(
+                        TAG,
+                        "SDK Cancel triggering before request is sent out. "
+                                + "Potentially due to an stale activity state, "
+                                + "oAuth2Strategy null ? ["
+                                + (mOAuth2Strategy == null)
+                                + "]"
+                                + "mAuthorizationResultFuture ? ["
+                                + (mAuthorizationResultFuture == null)
+                                + "]");
             }
         } else {
             Logger.warnPII(TAG, "Unknown request code " + requestCode);

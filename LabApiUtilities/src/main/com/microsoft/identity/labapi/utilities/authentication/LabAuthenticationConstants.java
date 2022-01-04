@@ -27,5 +27,4 @@ public class LabAuthenticationConstants {
     public static final String AUDIENCE_CLAIM = "aud";
     public static final String KEY_VAULT_TOKEN_AUDIENCE = "https://vault.azure.net";
     public static final String LAB_API_TOKEN_AUDIENCE = "https://msidlab.com";
-
 }

@@ -32,14 +32,15 @@ import com.microsoft.identity.common.java.request.SdkType;
 import com.microsoft.identity.common.java.telemetry.ITelemetryAccessor;
 import com.microsoft.identity.common.java.util.StringUtil;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
+
+import lombok.NonNull;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-
-import edu.umd.cs.findbugs.annotations.Nullable;
-import lombok.NonNull;
 
 /**
  * Successful authentication result. When auth succeeds, token will be wrapped into the
@@ -61,16 +62,18 @@ public class LocalAuthenticationResult implements ILocalAuthenticationResult, IT
 
     private static final String TAG = LocalAuthenticationResult.class.getName();
 
-    public LocalAuthenticationResult(@NonNull final ICacheRecord lastAuthorized,
-                                     @NonNull final List<ICacheRecord> completeResultFromCache,
-                                     @NonNull final SdkType sdkType,
-                                     final boolean isServicedFromCache) {
+    public LocalAuthenticationResult(
+            @NonNull final ICacheRecord lastAuthorized,
+            @NonNull final List<ICacheRecord> completeResultFromCache,
+            @NonNull final SdkType sdkType,
+            final boolean isServicedFromCache) {
         this(lastAuthorized, sdkType);
         mCompleteResultFromCache = completeResultFromCache;
         mServicedFromCache = isServicedFromCache;
     }
 
-    private LocalAuthenticationResult(@NonNull final ICacheRecord cacheRecord, @NonNull SdkType sdkType) {
+    private LocalAuthenticationResult(
+            @NonNull final ICacheRecord cacheRecord, @NonNull SdkType sdkType) {
         mAccessTokenRecord = cacheRecord.getAccessToken();
         mAccountRecord = cacheRecord.getAccount();
 
@@ -78,16 +81,16 @@ public class LocalAuthenticationResult implements ILocalAuthenticationResult, IT
             mRefreshToken = cacheRecord.getRefreshToken().getSecret();
         }
 
-        final IdTokenRecord idTokenRecord = sdkType == SdkType.ADAL ?
-                cacheRecord.getV1IdToken() :
-                cacheRecord.getIdToken();
+        final IdTokenRecord idTokenRecord =
+                sdkType == SdkType.ADAL ? cacheRecord.getV1IdToken() : cacheRecord.getIdToken();
         if (idTokenRecord != null) {
             mRawIdToken = idTokenRecord.getSecret();
-            Logger.info(TAG, "Id Token type: " +
-                    idTokenRecord.getCredentialType());
+            Logger.info(TAG, "Id Token type: " + idTokenRecord.getCredentialType());
         } else if (cacheRecord.getV1IdToken() != null) {
-            // For all AAD requests, we hit the V2 endpoint, so the id token returned will be of version 2.0 (V2 )
-            // However for B2C we might get back v1 id tokens, so check if getV1IdToken() is not null and add it
+            // For all AAD requests, we hit the V2 endpoint, so the id token returned will be of
+            // version 2.0 (V2 )
+            // However for B2C we might get back v1 id tokens, so check if getV1IdToken() is not
+            // null and add it
             Logger.info(TAG, "V1 Id Token returned here, ");
             mRawIdToken = cacheRecord.getV1IdToken().getSecret();
         }
@@ -95,12 +98,14 @@ public class LocalAuthenticationResult implements ILocalAuthenticationResult, IT
         Logger.info(
                 TAG,
                 "Constructing LocalAuthentication result"
-                        + ", AccessTokenRecord null: " + (mAccessTokenRecord == null)
-                        + ", AccountRecord null: " + (mAccountRecord == null)
-                        + ", RefreshTokenRecord null or empty: " + StringUtil.isNullOrEmpty(mRefreshToken)
-                        + ", IdTokenRecord null: " + (idTokenRecord == null)
-        );
-
+                        + ", AccessTokenRecord null: "
+                        + (mAccessTokenRecord == null)
+                        + ", AccountRecord null: "
+                        + (mAccountRecord == null)
+                        + ", RefreshTokenRecord null or empty: "
+                        + StringUtil.isNullOrEmpty(mRefreshToken)
+                        + ", IdTokenRecord null: "
+                        + (idTokenRecord == null));
     }
 
     @Override
@@ -114,13 +119,10 @@ public class LocalAuthenticationResult implements ILocalAuthenticationResult, IT
     public Date getExpiresOn() {
         final Date expiresOn;
 
-        expiresOn = new Date(
-                TimeUnit.SECONDS.toMillis(
-                        Long.parseLong(
-                                mAccessTokenRecord.getExpiresOn()
-                        )
-                )
-        );
+        expiresOn =
+                new Date(
+                        TimeUnit.SECONDS.toMillis(
+                                Long.parseLong(mAccessTokenRecord.getExpiresOn())));
 
         return expiresOn;
     }
@@ -207,7 +209,6 @@ public class LocalAuthenticationResult implements ILocalAuthenticationResult, IT
     public AccessTokenRecord getAccessTokenRecord() {
         return mAccessTokenRecord;
     }
-
 
     @Override
     public boolean isServicedFromCache() {

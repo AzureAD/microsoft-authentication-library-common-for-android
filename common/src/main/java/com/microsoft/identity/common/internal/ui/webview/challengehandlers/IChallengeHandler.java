@@ -25,7 +25,6 @@ package com.microsoft.identity.common.internal.ui.webview.challengehandlers;
 /**
  * Abstract Factory class which can be extended to process difference type of challenges.
  */
-
 public interface IChallengeHandler<GenericChallenge, GenericResponse> {
     /**
      * Process difference kinds of challenge request.

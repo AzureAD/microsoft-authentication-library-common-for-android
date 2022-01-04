@@ -22,6 +22,9 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2;
 
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.AUTH_INTENT;
+import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.APP_LINK_KEY;
+
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
@@ -34,20 +37,16 @@ import androidx.fragment.app.FragmentActivity;
 
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.telemetry.events.UiEndEvent;
-import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
+import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.util.UrlUtil;
 import com.microsoft.identity.common.logging.Logger;
 
-import java.net.URISyntaxException;
-import java.util.Map;
-
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.AUTH_INTENT;
-import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.APP_LINK_KEY;
-
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
+import java.util.Map;
 
 /**
  * Authorization fragment with customTabs or browsers.
@@ -56,8 +55,7 @@ public class BrowserAuthorizationFragment extends AuthorizationFragment {
 
     private static final String TAG = BrowserAuthorizationFragment.class.getSimpleName();
 
-    @VisibleForTesting
-    private static final String BROWSER_FLOW_STARTED = "browserFlowStarted";
+    @VisibleForTesting private static final String BROWSER_FLOW_STARTED = "browserFlowStarted";
 
     /**
      * Class of the Activity that hosts this fragment.
@@ -87,8 +85,8 @@ public class BrowserAuthorizationFragment extends AuthorizationFragment {
      * @param responseUri the response URI, which carries the parameters describing the response.
      */
     @Nullable
-    public static Intent createCustomTabResponseIntent(final Context context,
-                                                       final String responseUri) {
+    public static Intent createCustomTabResponseIntent(
+            final Context context, final String responseUri) {
         if (sCallingActivityClass == null) {
             // can't create intent for response if no activity available, this can happen if the app
             // was closed either by the user or the OS.
@@ -96,11 +94,13 @@ public class BrowserAuthorizationFragment extends AuthorizationFragment {
             // the app after the interactive request started in the browser. After closing, the user
             // returns to the browser and completes authorization and when the OS redirects here,
             // the calling activity class is NULL as the app was closed and memory was wiped.
-            Logger.warn(TAG, "Calling activity class is NULL. Unable to create intent for response.");
+            Logger.warn(
+                    TAG, "Calling activity class is NULL. Unable to create intent for response.");
             return null;
         }
 
-        // We cannot pass this as part of a new intent, because we might not have any control over the calling activity.
+        // We cannot pass this as part of a new intent, because we might not have any control over
+        // the calling activity.
         sCustomTabResponseUri = responseUri;
 
         final Intent intent = new Intent(context, sCallingActivityClass);
@@ -148,17 +148,19 @@ public class BrowserAuthorizationFragment extends AuthorizationFragment {
          * In the first case, generate the authorization result from the response uri.
          * In the second case, set the activity result intent with AUTH_CODE_CANCEL code.
          */
-        //This check is needed when using customTabs or browser flow.
+        // This check is needed when using customTabs or browser flow.
         if (!mBrowserFlowStarted) {
             mBrowserFlowStarted = true;
             if (mAuthIntent != null) {
                 // We cannot start browser activity inside OnCreate().
-                // Because the life cycle of the current activity will continue and onResume will be called before finishing the login in browser.
+                // Because the life cycle of the current activity will continue and onResume will be
+                // called before finishing the login in browser.
                 // This is by design of Android OS.
                 startActivity(mAuthIntent);
             } else {
-                sendResult(RawAuthorizationResult.fromException(
-                        new ClientException(ErrorStrings.AUTHORIZATION_INTENT_IS_NULL)));
+                sendResult(
+                        RawAuthorizationResult.fromException(
+                                new ClientException(ErrorStrings.AUTHORIZATION_INTENT_IS_NULL)));
                 finish();
             }
         } else {
@@ -175,9 +177,10 @@ public class BrowserAuthorizationFragment extends AuthorizationFragment {
         Logger.info(TAG, null, "Received redirect from customTab/browser.");
 
         RawAuthorizationResult data = RawAuthorizationResult.fromRedirectUri(customTabResponseUri);
-        switch (data.getResultCode()){
+        switch (data.getResultCode()) {
             case BROKER_INSTALLATION_TRIGGERED:
-                final Map<String, String> urlQueryParameters = UrlUtil.getParameters(data.getAuthorizationFinalUri());
+                final Map<String, String> urlQueryParameters =
+                        UrlUtil.getParameters(data.getAuthorizationFinalUri());
                 final String appLink = urlQueryParameters.get(APP_LINK_KEY);
                 final Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(appLink));
                 startActivity(browserIntent);

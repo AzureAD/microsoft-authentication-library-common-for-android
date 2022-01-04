@@ -30,9 +30,11 @@ import com.microsoft.identity.common.java.providers.oauth2.AuthorizationStatus;
  * Encapsulates OAuth2 Authorization Response and additional Microsoft specific parameters and errors.
  */
 public abstract class MicrosoftAuthorizationResult<
-        GenericMicrosoftAuthorizationResponse extends MicrosoftAuthorizationResponse,
-        GenericMicrosoftAuthorizationErrorResponse extends MicrosoftAuthorizationErrorResponse>
-        extends AuthorizationResult<GenericMicrosoftAuthorizationResponse, GenericMicrosoftAuthorizationErrorResponse> {
+                GenericMicrosoftAuthorizationResponse extends MicrosoftAuthorizationResponse,
+                GenericMicrosoftAuthorizationErrorResponse extends
+                        MicrosoftAuthorizationErrorResponse>
+        extends AuthorizationResult<
+                GenericMicrosoftAuthorizationResponse, GenericMicrosoftAuthorizationErrorResponse> {
 
     /**
      * Constructor of {@link MicrosoftAuthorizationResult}.
@@ -40,7 +42,9 @@ public abstract class MicrosoftAuthorizationResult<
      * @param authStatus   {@link AuthorizationStatus}
      * @param authResponse {@link MicrosoftAuthorizationResponse}
      */
-    public MicrosoftAuthorizationResult(final AuthorizationStatus authStatus, final GenericMicrosoftAuthorizationResponse authResponse) {
+    public MicrosoftAuthorizationResult(
+            final AuthorizationStatus authStatus,
+            final GenericMicrosoftAuthorizationResponse authResponse) {
         super(authResponse, null);
         setAuthorizationStatus(authStatus);
         setAuthorizationResponse(authResponse);
@@ -52,7 +56,9 @@ public abstract class MicrosoftAuthorizationResult<
      * @param authStatus    {@link AuthorizationStatus}
      * @param errorResponse {@link MicrosoftAuthorizationErrorResponse}
      */
-    public MicrosoftAuthorizationResult(final AuthorizationStatus authStatus, final GenericMicrosoftAuthorizationErrorResponse errorResponse) {
+    public MicrosoftAuthorizationResult(
+            final AuthorizationStatus authStatus,
+            final GenericMicrosoftAuthorizationErrorResponse errorResponse) {
         super(null, errorResponse);
         setAuthorizationStatus(authStatus);
         setAuthorizationErrorResponse(errorResponse);

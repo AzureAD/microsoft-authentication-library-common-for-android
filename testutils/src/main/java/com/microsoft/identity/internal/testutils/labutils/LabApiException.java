@@ -26,10 +26,10 @@ import androidx.annotation.NonNull;
 
 import com.microsoft.identity.internal.test.labapi.ApiException;
 
+import lombok.Getter;
+
 import java.util.List;
 import java.util.Map;
-
-import lombok.Getter;
 
 /**
  * An exception wrapping the {@link ApiException}.
@@ -46,5 +46,4 @@ public class LabApiException extends Throwable {
         this.responseHeaders = apiException.getResponseHeaders();
         this.responseBody = apiException.getResponseBody();
     }
-
 }

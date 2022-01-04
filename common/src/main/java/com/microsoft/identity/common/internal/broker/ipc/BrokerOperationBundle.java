@@ -23,6 +23,10 @@
 
 package com.microsoft.identity.common.internal.broker.ipc;
 
+import static com.microsoft.identity.common.exception.BrokerCommunicationException.Category.OPERATION_NOT_SUPPORTED_ON_CLIENT_SIDE;
+import static com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy.Type.ACCOUNT_MANAGER_ADD_ACCOUNT;
+import static com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy.Type.CONTENT_PROVIDER;
+
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -37,10 +41,6 @@ import com.microsoft.identity.common.logging.Logger;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.experimental.Accessors;
-
-import static com.microsoft.identity.common.exception.BrokerCommunicationException.Category.OPERATION_NOT_SUPPORTED_ON_CLIENT_SIDE;
-import static com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy.Type.ACCOUNT_MANAGER_ADD_ACCOUNT;
-import static com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy.Type.CONTENT_PROVIDER;
 
 /**
  * An object that acts as a bridge between business logic and communication layer.
@@ -58,13 +58,20 @@ public class BrokerOperationBundle {
     @Accessors(prefix = "m")
     public enum Operation {
         MSAL_HELLO(API.MSAL_HELLO, BrokerAccountManagerOperation.HELLO),
-        MSAL_GET_INTENT_FOR_INTERACTIVE_REQUEST(API.ACQUIRE_TOKEN_INTERACTIVE, BrokerAccountManagerOperation.GET_INTENT_FOR_INTERACTIVE_REQUEST),
-        MSAL_ACQUIRE_TOKEN_SILENT(API.ACQUIRE_TOKEN_SILENT, BrokerAccountManagerOperation.ACQUIRE_TOKEN_SILENT),
+        MSAL_GET_INTENT_FOR_INTERACTIVE_REQUEST(
+                API.ACQUIRE_TOKEN_INTERACTIVE,
+                BrokerAccountManagerOperation.GET_INTENT_FOR_INTERACTIVE_REQUEST),
+        MSAL_ACQUIRE_TOKEN_SILENT(
+                API.ACQUIRE_TOKEN_SILENT, BrokerAccountManagerOperation.ACQUIRE_TOKEN_SILENT),
         MSAL_GET_ACCOUNTS(API.GET_ACCOUNTS, BrokerAccountManagerOperation.GET_ACCOUNTS),
         MSAL_REMOVE_ACCOUNT(API.REMOVE_ACCOUNT, BrokerAccountManagerOperation.REMOVE_ACCOUNT),
         MSAL_GET_DEVICE_MODE(API.GET_DEVICE_MODE, BrokerAccountManagerOperation.GET_DEVICE_MODE),
-        MSAL_GET_CURRENT_ACCOUNT_IN_SHARED_DEVICE(API.GET_CURRENT_ACCOUNT_SHARED_DEVICE, BrokerAccountManagerOperation.GET_CURRENT_ACCOUNT),
-        MSAL_SIGN_OUT_FROM_SHARED_DEVICE(API.SIGN_OUT_FROM_SHARED_DEVICE, BrokerAccountManagerOperation.REMOVE_ACCOUNT_FROM_SHARED_DEVICE),
+        MSAL_GET_CURRENT_ACCOUNT_IN_SHARED_DEVICE(
+                API.GET_CURRENT_ACCOUNT_SHARED_DEVICE,
+                BrokerAccountManagerOperation.GET_CURRENT_ACCOUNT),
+        MSAL_SIGN_OUT_FROM_SHARED_DEVICE(
+                API.SIGN_OUT_FROM_SHARED_DEVICE,
+                BrokerAccountManagerOperation.REMOVE_ACCOUNT_FROM_SHARED_DEVICE),
         MSAL_GENERATE_SHR(API.GENERATE_SHR, BrokerAccountManagerOperation.GENERATE_SHR),
         BROKER_GET_KEY_FROM_INACTIVE_BROKER(null, null),
         BROKER_API_HELLO(API.BROKER_HELLO, null),
@@ -77,26 +84,23 @@ public class BrokerOperationBundle {
         MSAL_SSO_TOKEN(API.GET_SSO_TOKEN, null);
         final API mContentApi;
         final String mAccountManagerOperation;
+
         Operation(API contentApi, String accountManagerOperation) {
             this.mContentApi = contentApi;
             this.mAccountManagerOperation = accountManagerOperation;
         }
     }
 
-    @Getter
-    @NonNull final private Operation operation;
+    @Getter @NonNull private final Operation operation;
 
-    @Getter
-    @NonNull final private String targetBrokerAppPackageName;
+    @Getter @NonNull private final String targetBrokerAppPackageName;
 
-    @Getter
-    @Nullable final private Bundle bundle;
+    @Getter @Nullable private final Bundle bundle;
 
     /**
      * Packs the response bundle with the account manager key.
      */
-    public Bundle getAccountManagerBundle()
-            throws BrokerCommunicationException {
+    public Bundle getAccountManagerBundle() throws BrokerCommunicationException {
         Bundle requestBundle = bundle;
         if (requestBundle == null) {
             requestBundle = new Bundle();
@@ -109,12 +113,15 @@ public class BrokerOperationBundle {
         return requestBundle;
     }
 
-    private String getAccountManagerAddAccountOperationKey() throws BrokerCommunicationException{
+    private String getAccountManagerAddAccountOperationKey() throws BrokerCommunicationException {
         final String methodName = ":getAccountManagerAddAccountOperationKey";
 
         String accountManagerKey = operation.getAccountManagerOperation();
         if (accountManagerKey == null) {
-            final String errorMessage = "Operation " + operation.name() + " is not supported by AccountManager addAccount().";
+            final String errorMessage =
+                    "Operation "
+                            + operation.name()
+                            + " is not supported by AccountManager addAccount().";
             Logger.warn(TAG + methodName, errorMessage);
             throw new BrokerCommunicationException(
                     OPERATION_NOT_SUPPORTED_ON_CLIENT_SIDE,
@@ -130,13 +137,11 @@ public class BrokerOperationBundle {
 
         final API contentApi = operation.getContentApi();
         if (contentApi == null) {
-            final String errorMessage = "Operation " + operation.name() + " is not supported by ContentProvider.";
+            final String errorMessage =
+                    "Operation " + operation.name() + " is not supported by ContentProvider.";
             Logger.warn(TAG + methodName, errorMessage);
             throw new BrokerCommunicationException(
-                    OPERATION_NOT_SUPPORTED_ON_CLIENT_SIDE,
-                    CONTENT_PROVIDER,
-                    errorMessage,
-                    null);
+                    OPERATION_NOT_SUPPORTED_ON_CLIENT_SIDE, CONTENT_PROVIDER, errorMessage, null);
         }
         return contentApi.getPath();
     }

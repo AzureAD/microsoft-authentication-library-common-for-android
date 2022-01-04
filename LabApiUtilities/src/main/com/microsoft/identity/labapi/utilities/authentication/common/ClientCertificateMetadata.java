@@ -22,11 +22,11 @@
 // THE SOFTWARE.
 package com.microsoft.identity.labapi.utilities.authentication.common;
 
-import java.util.Arrays;
-
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.Accessors;
+
+import java.util.Arrays;
 
 /**
  * Configuration information for the client certificate to be used.

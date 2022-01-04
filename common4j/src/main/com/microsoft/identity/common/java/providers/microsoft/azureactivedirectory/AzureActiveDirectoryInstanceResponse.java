@@ -24,18 +24,20 @@ package com.microsoft.identity.common.java.providers.microsoft.azureactivedirect
 
 import com.google.gson.annotations.SerializedName;
 
-import java.util.ArrayList;
-
 import lombok.Getter;
 import lombok.experimental.Accessors;
+
+import java.util.ArrayList;
 
 @Getter
 @Accessors(prefix = "m")
 public class AzureActiveDirectoryInstanceResponse {
     @SerializedName("tenant_discovery_endpoint")
     private String mTestDiscoveryEndpoint;
+
     @SerializedName("api-version")
     private String mApiVersion;
+
     @SerializedName("metadata")
     private ArrayList<AzureActiveDirectoryCloud> mClouds;
 }

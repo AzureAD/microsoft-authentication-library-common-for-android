@@ -28,18 +28,17 @@ import android.os.Build;
 
 import androidx.annotation.VisibleForTesting;
 
-import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
-import com.microsoft.identity.common.java.challengehandlers.IDeviceCertificate;
+import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.logging.Logger;
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
-
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /**
  * Settings to be used in AuthenticationContext.
@@ -58,16 +57,20 @@ public enum AuthenticationSettings {
 
     private static final int DEFAULT_READ_CONNECT_TIMEOUT = 30000;
 
-    // This is used to accept two broker key. Today we have company portal and azure authenticator apps,
-    // and each app is also going to send the other app's keys. They need to set package name and corresponding
+    // This is used to accept two broker key. Today we have company portal and azure authenticator
+    // apps,
+    // and each app is also going to send the other app's keys. They need to set package name and
+    // corresponding
     // keys in the map. used by broker.
     private final Map<String, byte[]> mBrokerSecretKeys = new HashMap<String, byte[]>(2);
 
     private AtomicReference<byte[]> mSecretKeyData = new AtomicReference<>();
 
-    private String mBrokerPackageName = AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
+    private String mBrokerPackageName =
+            AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
 
-    private String mBrokerSignature = AuthenticationConstants.Broker.COMPANY_PORTAL_APP_RELEASE_SIGNATURE;
+    private String mBrokerSignature =
+            AuthenticationConstants.Broker.COMPANY_PORTAL_APP_RELEASE_SIGNATURE;
 
     private String mActivityPackageName;
 
@@ -134,9 +137,12 @@ public enum AuthenticationSettings {
             throw new IllegalArgumentException("rawKey");
         }
         if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-            Logger.warn(":setSecretKey", "You're using setSecretKey in a version of android " +
-                    "that supports keyStore functionality.  Consider not doing this, as it only exists " +
-                    "for devices with an SDK lower than " + Build.VERSION_CODES.JELLY_BEAN_MR2);
+            Logger.warn(
+                    ":setSecretKey",
+                    "You're using setSecretKey in a version of android "
+                            + "that supports keyStore functionality.  Consider not doing this, as it only exists "
+                            + "for devices with an SDK lower than "
+                            + Build.VERSION_CODES.JELLY_BEAN_MR2);
         }
         mSecretKeyData.set(rawKey);
     }
@@ -158,7 +164,8 @@ public enum AuthenticationSettings {
 
         for (Map.Entry<String, byte[]> entry : secretKeys.entrySet()) {
             if (entry.getValue() == null || entry.getValue().length != SECRET_RAW_KEY_LENGTH) {
-                throw new IllegalArgumentException("Passed in raw key is null or length is not as expected. ");
+                throw new IllegalArgumentException(
+                        "Passed in raw key is null or length is not as expected. ");
             }
 
             mBrokerSecretKeys.put(entry.getKey(), entry.getValue());
@@ -179,8 +186,7 @@ public enum AuthenticationSettings {
     public void clearLegacySecretKeyConfiguration() {
         Logger.info(
                 TAG + ":clearLegacySecretKeyConfiguration",
-                "Clearing legacy secret key configuration."
-        );
+                "Clearing legacy secret key configuration.");
         mBrokerSecretKeys.clear();
         mSecretKeyData.set(null);
     }
@@ -241,8 +247,10 @@ public enum AuthenticationSettings {
      *
      * @param clazz class for workplace join
      */
-    public void setDeviceCertificateProxyClass(@SuppressWarnings(WarningType.rawtype_warning) Class clazz) {
-        com.microsoft.identity.common.java.AuthenticationSettings.INSTANCE.setDeviceCertificateProxyClass(clazz);
+    public void setDeviceCertificateProxyClass(
+            @SuppressWarnings(WarningType.rawtype_warning) Class clazz) {
+        com.microsoft.identity.common.java.AuthenticationSettings.INSTANCE
+                .setDeviceCertificateProxyClass(clazz);
     }
 
     /**
@@ -252,7 +260,8 @@ public enum AuthenticationSettings {
      * @return Class
      */
     public Class<?> getDeviceCertificateProxy() {
-        return com.microsoft.identity.common.java.AuthenticationSettings.INSTANCE.getDeviceCertificateProxy();
+        return com.microsoft.identity.common.java.AuthenticationSettings.INSTANCE
+                .getDeviceCertificateProxy();
     }
 
     /**
@@ -260,7 +269,8 @@ public enum AuthenticationSettings {
      * Authenticator side.
      */
     public void removeDeviceCertificateProxy() {
-        com.microsoft.identity.common.java.AuthenticationSettings.INSTANCE.removeDeviceCertificateProxy();
+        com.microsoft.identity.common.java.AuthenticationSettings.INSTANCE
+                .removeDeviceCertificateProxy();
     }
 
     /**

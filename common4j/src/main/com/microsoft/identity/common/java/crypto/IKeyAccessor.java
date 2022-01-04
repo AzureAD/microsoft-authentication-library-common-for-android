@@ -64,7 +64,6 @@ public interface IKeyAccessor {
      */
     byte[] getThumbprint() throws ClientException;
 
-
     /**
      * @return the certificate chain for this key, if it exists.
      */
@@ -84,5 +83,6 @@ public interface IKeyAccessor {
      * @return A {link KeyAccessor} that provides access to operations using the derived key.
      * @throws ClientException if an underlying issue prevents the key generation.
      */
-    IKeyAccessor generateDerivedKey(byte[] label, byte[] ctx, CryptoSuite suite) throws ClientException;
+    IKeyAccessor generateDerivedKey(byte[] label, byte[] ctx, CryptoSuite suite)
+            throws ClientException;
 }

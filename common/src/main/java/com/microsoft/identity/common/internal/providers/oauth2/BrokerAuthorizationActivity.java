@@ -26,5 +26,4 @@ package com.microsoft.identity.common.internal.providers.oauth2;
  * Declares as a separate class so that we can specify attributes exclusively to :auth process
  * in AndroidManifest without overriding MSAL's (In case where MSAL and broker is shipped together).
  */
-public class BrokerAuthorizationActivity extends AuthorizationActivity {
-}
+public class BrokerAuthorizationActivity extends AuthorizationActivity {}

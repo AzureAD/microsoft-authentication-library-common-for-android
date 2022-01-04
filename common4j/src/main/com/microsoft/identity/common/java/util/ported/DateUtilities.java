@@ -22,14 +22,14 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.util.ported;
 
+import lombok.NonNull;
+
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-
-import lombok.NonNull;
 
 public final class DateUtilities {
 
@@ -54,26 +54,24 @@ public final class DateUtilities {
 
     // This list may not be exhaustive, but represents the set of non-Gregorian locales
     // available as of AOSP API 24
-    private static final Set<String> NON_GREGORIAN_CALENDAR_LOCALES = new HashSet<>(
-            Arrays.asList(
-                    LOCALE_PREFIX_ARABIC,
-                    LOCALE_PREFIX_ASSAMESE,
-                    LOCALE_PREFIX_BENGALI,
-                    LOCALE_PREFIX_ALGERIAN,
-                    LOCALE_PREFIX_PERSIAN,
-                    LOCALE_PREFIX_KASHMIRI,
-                    LOCALE_PREFIX_MARATHI,
-                    LOCALE_PREFIX_BURMESE,
-                    LOCALE_PREFIX_NEPALI,
-                    LOCALE_PREFIX_PUNJABI,
-                    LOCALE_PREFIX_PASHTO,
-                    LOCALE_PREFIX_URDU,
-                    LOCALE_PREFIX_UZBEK
-            )
-    );
+    private static final Set<String> NON_GREGORIAN_CALENDAR_LOCALES =
+            new HashSet<>(
+                    Arrays.asList(
+                            LOCALE_PREFIX_ARABIC,
+                            LOCALE_PREFIX_ASSAMESE,
+                            LOCALE_PREFIX_BENGALI,
+                            LOCALE_PREFIX_ALGERIAN,
+                            LOCALE_PREFIX_PERSIAN,
+                            LOCALE_PREFIX_KASHMIRI,
+                            LOCALE_PREFIX_MARATHI,
+                            LOCALE_PREFIX_BURMESE,
+                            LOCALE_PREFIX_NEPALI,
+                            LOCALE_PREFIX_PUNJABI,
+                            LOCALE_PREFIX_PASHTO,
+                            LOCALE_PREFIX_URDU,
+                            LOCALE_PREFIX_UZBEK));
 
-    private DateUtilities() {
-    }
+    private DateUtilities() {}
 
     /**
      * Create a copy of a date to avoid exposing the internal references.
@@ -106,4 +104,3 @@ public final class DateUtilities {
         return NON_GREGORIAN_CALENDAR_LOCALES.contains(localePrefix);
     }
 }
-

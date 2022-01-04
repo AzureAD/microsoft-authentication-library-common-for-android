@@ -36,10 +36,8 @@ import androidx.fragment.app.Fragment;
 
 import com.microsoft.identity.common.crypto.AndroidAuthSdkStorageEncryptionManager;
 import com.microsoft.identity.common.crypto.AndroidBrokerStorageEncryptionManager;
-import com.microsoft.identity.common.internal.net.cache.HttpCache;
-import com.microsoft.identity.common.java.broker.ICallValidator;
-import com.microsoft.identity.common.java.cache.IMultiTypeNameValueStorage;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
+import com.microsoft.identity.common.internal.net.cache.HttpCache;
 import com.microsoft.identity.common.internal.platform.AndroidDeviceMetadata;
 import com.microsoft.identity.common.internal.platform.AndroidPlatformUtil;
 import com.microsoft.identity.common.internal.platform.DevicePopManager;
@@ -49,6 +47,7 @@ import com.microsoft.identity.common.internal.util.ProcessUtil;
 import com.microsoft.identity.common.internal.util.SharedPrefStringNameValueStorage;
 import com.microsoft.identity.common.internal.util.SharedPreferenceLongStorage;
 import com.microsoft.identity.common.java.WarningType;
+import com.microsoft.identity.common.java.cache.IMultiTypeNameValueStorage;
 import com.microsoft.identity.common.java.crypto.IDevicePopManager;
 import com.microsoft.identity.common.java.crypto.IKeyAccessor;
 import com.microsoft.identity.common.java.exception.ClientException;
@@ -56,12 +55,14 @@ import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.platform.Device;
 import com.microsoft.identity.common.java.providers.oauth2.IStateGenerator;
+import com.microsoft.identity.common.java.strategies.IAuthorizationStrategyFactory;
 import com.microsoft.identity.common.java.util.ClockSkewManager;
 import com.microsoft.identity.common.java.util.IClockSkewManager;
 import com.microsoft.identity.common.java.util.IPlatformUtil;
 import com.microsoft.identity.common.java.util.ported.Predicate;
 import com.microsoft.identity.common.logging.Logger;
-import com.microsoft.identity.common.java.strategies.IAuthorizationStrategyFactory;
+
+import lombok.NonNull;
 
 import java.io.File;
 import java.io.IOException;
@@ -70,8 +71,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.util.Iterator;
 import java.util.Map;
-
-import lombok.NonNull;
 
 /**
  * Android implementations of platform-dependent components in Common.
@@ -85,14 +84,11 @@ public class AndroidPlatformComponents implements IPlatformComponents {
     private static final String SKEW_PREFERENCES_FILENAME =
             "com.microsoft.identity.client.clock_correction";
 
-    @NonNull
-    protected final Context mContext;
+    @NonNull protected final Context mContext;
 
-    @Nullable
-    protected final Activity mActivity;
+    @Nullable protected final Activity mActivity;
 
-    @Nullable
-    protected final Fragment mFragment;
+    @Nullable protected final Fragment mFragment;
 
     private IClockSkewManager mClockSkewManager;
     private IDevicePopManager mDefaultDevicePoPManager;
@@ -136,14 +132,15 @@ public class AndroidPlatformComponents implements IPlatformComponents {
      * @param activity an activity where an interactive session will be attached to.
      * @param fragment a fragment where an interactive session will be attached to.
      **/
-    public static AndroidPlatformComponents createFromActivity(@NonNull final Activity activity,
-                                                               @Nullable final Fragment fragment) {
+    public static AndroidPlatformComponents createFromActivity(
+            @NonNull final Activity activity, @Nullable final Fragment fragment) {
         return new AndroidPlatformComponents(activity.getApplicationContext(), activity, fragment);
     }
 
-    protected AndroidPlatformComponents(@NonNull final Context applicationContext,
-                                        @Nullable final Activity activity,
-                                        @Nullable final Fragment fragment) {
+    protected AndroidPlatformComponents(
+            @NonNull final Context applicationContext,
+            @Nullable final Activity activity,
+            @Nullable final Fragment fragment) {
         mContext = applicationContext;
         mActivity = activity;
         mFragment = fragment;
@@ -169,20 +166,19 @@ public class AndroidPlatformComponents implements IPlatformComponents {
     @Override
     public synchronized @NonNull IClockSkewManager getClockSkewManager() {
         if (null == mClockSkewManager) {
-            mClockSkewManager = new ClockSkewManager(new SharedPreferenceLongStorage(
-                    SharedPreferencesFileManager.getSharedPreferences(
-                            mContext,
-                            SKEW_PREFERENCES_FILENAME,
-                            null
-                    )
-            ));
+            mClockSkewManager =
+                    new ClockSkewManager(
+                            new SharedPreferenceLongStorage(
+                                    SharedPreferencesFileManager.getSharedPreferences(
+                                            mContext, SKEW_PREFERENCES_FILENAME, null)));
         }
 
         return mClockSkewManager;
     }
 
     @Override
-    public synchronized @NonNull IDevicePopManager getDefaultDevicePopManager() throws ClientException {
+    public synchronized @NonNull IDevicePopManager getDefaultDevicePopManager()
+            throws ClientException {
         if (mDefaultDevicePoPManager == null) {
             mDefaultDevicePoPManager = getDevicePopManager(null);
         }
@@ -190,7 +186,8 @@ public class AndroidPlatformComponents implements IPlatformComponents {
     }
 
     @Override
-    public @NonNull IDevicePopManager getDevicePopManager(@Nullable String alias) throws ClientException {
+    public @NonNull IDevicePopManager getDevicePopManager(@Nullable String alias)
+            throws ClientException {
         final Exception exception;
         final String errCode;
 
@@ -217,34 +214,40 @@ public class AndroidPlatformComponents implements IPlatformComponents {
         throw new ClientException(
                 errCode,
                 "Failed to initialize DevicePoPManager = " + exception.getMessage(),
-                exception
-        );
+                exception);
     }
 
     @Override
-    public <T> INameValueStorage<T> getNameValueStore(final @NonNull String storeName, final @NonNull Class<T> clazz) {
+    public <T> INameValueStorage<T> getNameValueStore(
+            final @NonNull String storeName, final @NonNull Class<T> clazz) {
         return getEncryptedNameValueStore(storeName, null, clazz);
     }
 
     @Override
-    public <T> INameValueStorage<T> getEncryptedNameValueStore(final @NonNull String storeName,
-                                                               final @Nullable IKeyAccessor helper,
-                                                               final @NonNull Class<T> clazz) {
-        final IMultiTypeNameValueStorage mgr = SharedPreferencesFileManager.getSharedPreferences(mContext, storeName, helper);
+    public <T> INameValueStorage<T> getEncryptedNameValueStore(
+            final @NonNull String storeName,
+            final @Nullable IKeyAccessor helper,
+            final @NonNull Class<T> clazz) {
+        final IMultiTypeNameValueStorage mgr =
+                SharedPreferencesFileManager.getSharedPreferences(mContext, storeName, helper);
         if (Long.class.isAssignableFrom(clazz)) {
             @SuppressWarnings("unchecked")
-            final INameValueStorage<T> store = (INameValueStorage<T>) new SharedPreferenceLongStorage(mgr);
+            final INameValueStorage<T> store =
+                    (INameValueStorage<T>) new SharedPreferenceLongStorage(mgr);
             return store;
         } else if (String.class.isAssignableFrom(clazz)) {
             @SuppressWarnings("unchecked")
-            final INameValueStorage<T> store = (INameValueStorage<T>) new SharedPrefStringNameValueStorage(mgr);
+            final INameValueStorage<T> store =
+                    (INameValueStorage<T>) new SharedPrefStringNameValueStorage(mgr);
             return store;
         }
-        throw new UnsupportedOperationException("Only Long and String are natively supported as types");
+        throw new UnsupportedOperationException(
+                "Only Long and String are natively supported as types");
     }
 
     @Override
-    public IMultiTypeNameValueStorage getEncryptedFileStore(final @NonNull String storeName, final @NonNull IKeyAccessor helper) {
+    public IMultiTypeNameValueStorage getEncryptedFileStore(
+            final @NonNull String storeName, final @NonNull IKeyAccessor helper) {
         return SharedPreferencesFileManager.getSharedPreferences(mContext, storeName, helper);
     }
 
@@ -255,60 +258,63 @@ public class AndroidPlatformComponents implements IPlatformComponents {
 
     @Override
     public INameValueStorage<String> getMultiProcessStringStore(final @NonNull String storeName) {
-        final SharedPreferences sharedPreferences = mContext.getSharedPreferences(storeName, Context.MODE_MULTI_PROCESS);
-        return new SharedPrefStringNameValueStorage(new IMultiTypeNameValueStorage() {
-            @Override
-            public void putString(String key, String value) {
-                sharedPreferences.edit().putString(key, value).apply();
-            }
-
-            @Override
-            public String getString(String key) {
-                return sharedPreferences.getString(key, null);
-            }
-
-            @Override
-            public void putLong(String key, long value) {
-                sharedPreferences.edit().putString(key, Long.toString(value)).apply();
-            }
-
-            @Override
-            public long getLong(String key) {
-                try {
-                    if (!sharedPreferences.contains(key)) {
-                        return 0;
+        final SharedPreferences sharedPreferences =
+                mContext.getSharedPreferences(storeName, Context.MODE_MULTI_PROCESS);
+        return new SharedPrefStringNameValueStorage(
+                new IMultiTypeNameValueStorage() {
+                    @Override
+                    public void putString(String key, String value) {
+                        sharedPreferences.edit().putString(key, value).apply();
                     }
-                    return Long.parseLong(sharedPreferences.getString(key, "0"));
-                } catch (final NumberFormatException nfe) {
-                    return 0;
-                }
-            }
 
-            @Override
-            public Map<String, String> getAll() {
-                return (Map<String, String>) sharedPreferences.getAll();
-            }
+                    @Override
+                    public String getString(String key) {
+                        return sharedPreferences.getString(key, null);
+                    }
 
-            @Override
-            public Iterator<Map.Entry<String, String>> getAllFilteredByKey(Predicate<String> keyFilter) {
-                return null;
-            }
+                    @Override
+                    public void putLong(String key, long value) {
+                        sharedPreferences.edit().putString(key, Long.toString(value)).apply();
+                    }
 
-            @Override
-            public boolean contains(String key) {
-                return sharedPreferences.contains(key);
-            }
+                    @Override
+                    public long getLong(String key) {
+                        try {
+                            if (!sharedPreferences.contains(key)) {
+                                return 0;
+                            }
+                            return Long.parseLong(sharedPreferences.getString(key, "0"));
+                        } catch (final NumberFormatException nfe) {
+                            return 0;
+                        }
+                    }
 
-            @Override
-            public void clear() {
-                sharedPreferences.edit().clear().commit();
-            }
+                    @Override
+                    public Map<String, String> getAll() {
+                        return (Map<String, String>) sharedPreferences.getAll();
+                    }
 
-            @Override
-            public void remove(String key) {
-                sharedPreferences.edit().remove(key).commit();
-            }
-        });
+                    @Override
+                    public Iterator<Map.Entry<String, String>> getAllFilteredByKey(
+                            Predicate<String> keyFilter) {
+                        return null;
+                    }
+
+                    @Override
+                    public boolean contains(String key) {
+                        return sharedPreferences.contains(key);
+                    }
+
+                    @Override
+                    public void clear() {
+                        sharedPreferences.edit().clear().commit();
+                    }
+
+                    @Override
+                    public void remove(String key) {
+                        sharedPreferences.edit().remove(key).commit();
+                    }
+                });
     }
 
     @SuppressWarnings(WarningType.rawtype_warning)

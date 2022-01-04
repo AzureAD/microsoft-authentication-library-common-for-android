@@ -23,7 +23,6 @@
 package com.microsoft.identity.common.java.result;
 
 /*
-    Null Object Pattern for Commands who's result should be ignored.
- */
-public class VoidResult {
-}
+   Null Object Pattern for Commands who's result should be ignored.
+*/
+public class VoidResult {}

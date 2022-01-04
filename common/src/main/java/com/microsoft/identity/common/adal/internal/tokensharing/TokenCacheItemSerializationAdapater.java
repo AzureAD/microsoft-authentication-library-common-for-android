@@ -47,21 +47,23 @@ public final class TokenCacheItemSerializationAdapater
     private static final String TAG = TokenCacheItemSerializationAdapater.class.getSimpleName();
 
     @Override
-    public JsonElement serialize(final ADALTokenCacheItem tokenCacheItem,
-                                 final Type type,
-                                 final JsonSerializationContext context) {
+    public JsonElement serialize(
+            final ADALTokenCacheItem tokenCacheItem,
+            final Type type,
+            final JsonSerializationContext context) {
         JsonObject jsonObj = new JsonObject();
         jsonObj.add(OAuth2.AUTHORITY, new JsonPrimitive(tokenCacheItem.getAuthority()));
         jsonObj.add(OAuth2.REFRESH_TOKEN, new JsonPrimitive(tokenCacheItem.getRefreshToken()));
         jsonObj.add(OAuth2.ID_TOKEN, new JsonPrimitive(tokenCacheItem.getRawIdToken()));
-        jsonObj.add(OAuth2.ADAL_CLIENT_FAMILY_ID, new JsonPrimitive(tokenCacheItem.getFamilyClientId()));
+        jsonObj.add(
+                OAuth2.ADAL_CLIENT_FAMILY_ID,
+                new JsonPrimitive(tokenCacheItem.getFamilyClientId()));
         return jsonObj;
     }
 
     @Override
-    public ADALTokenCacheItem deserialize(final JsonElement json,
-                                          final Type type,
-                                          final JsonDeserializationContext context)
+    public ADALTokenCacheItem deserialize(
+            final JsonElement json, final Type type, final JsonDeserializationContext context)
             throws JsonParseException {
         final JsonObject srcJsonObj = json.getAsJsonObject();
         throwIfParameterMissing(srcJsonObj, OAuth2.AUTHORITY);
@@ -74,14 +76,16 @@ public final class TokenCacheItemSerializationAdapater
 
         tokenCacheItem.setAuthority(srcJsonObj.get(OAuth2.AUTHORITY).getAsString());
         tokenCacheItem.setRawIdToken(rawIdToken);
-        tokenCacheItem.setFamilyClientId(srcJsonObj.get(OAuth2.ADAL_CLIENT_FAMILY_ID).getAsString());
+        tokenCacheItem.setFamilyClientId(
+                srcJsonObj.get(OAuth2.ADAL_CLIENT_FAMILY_ID).getAsString());
         tokenCacheItem.setRefreshToken(srcJsonObj.get(OAuth2.REFRESH_TOKEN).getAsString());
         return tokenCacheItem;
     }
 
     private void throwIfParameterMissing(JsonObject json, String name) {
         if (!json.has(name)) {
-            throw new JsonParseException(TAG + "Attribute " + name + " is missing for deserialization.");
+            throw new JsonParseException(
+                    TAG + "Attribute " + name + " is missing for deserialization.");
         }
     }
 }

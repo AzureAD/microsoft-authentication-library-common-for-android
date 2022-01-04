@@ -22,13 +22,13 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.net;
 
+import lombok.SneakyThrows;
+
 import net.jcip.annotations.Immutable;
 import net.jcip.annotations.ThreadSafe;
 
 import java.io.IOException;
 import java.util.concurrent.Callable;
-
-import lombok.SneakyThrows;
 
 /**
  * A retry policy that, by default, does nothing.

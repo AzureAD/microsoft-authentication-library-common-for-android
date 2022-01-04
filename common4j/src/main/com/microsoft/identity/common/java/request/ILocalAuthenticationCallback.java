@@ -25,10 +25,10 @@ package com.microsoft.identity.common.java.request;
 
 import com.microsoft.identity.common.java.exception.ArgumentException;
 import com.microsoft.identity.common.java.exception.BaseException;
-import com.microsoft.identity.common.java.result.ILocalAuthenticationResult;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ServiceException;
 import com.microsoft.identity.common.java.exception.UiRequiredException;
+import com.microsoft.identity.common.java.result.ILocalAuthenticationResult;
 
 /**
  * Callback passed with token acquisition. {@link ILocalAuthenticationResult} or {@link Exception} will be returned back via callback.
@@ -41,7 +41,6 @@ public interface ILocalAuthenticationCallback {
      * @param authenticationResult {@link ILocalAuthenticationResult} that contains the success response.
      */
     void onSuccess(final ILocalAuthenticationResult authenticationResult);
-
 
     /**
      * Error occurs during the authentication.

@@ -39,15 +39,17 @@ public class ProcessUtil {
     public static boolean isRunningOnAuthService(final Context context) {
         final String processName = context.getPackageName() + ":" + AuthServiceProcess;
         int pid = android.os.Process.myPid();
-        final ActivityManager activityManager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+        final ActivityManager activityManager =
+                (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
         if (activityManager != null && activityManager.getRunningAppProcesses() != null) {
-            for (ActivityManager.RunningAppProcessInfo processInfo : activityManager.getRunningAppProcesses()) {
-                if (processInfo.pid == pid && processInfo.processName.equalsIgnoreCase(processName)) {
+            for (ActivityManager.RunningAppProcessInfo processInfo :
+                    activityManager.getRunningAppProcesses()) {
+                if (processInfo.pid == pid
+                        && processInfo.processName.equalsIgnoreCase(processName)) {
                     return true;
                 }
             }
         }
         return false;
     }
-
 }

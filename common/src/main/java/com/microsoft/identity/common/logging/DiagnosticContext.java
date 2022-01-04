@@ -30,11 +30,14 @@ import com.microsoft.identity.common.java.logging.IRequestContext;
  * @see com.microsoft.identity.common.java.logging.DiagnosticContext
  */
 // TODO @Deprecate
-public class DiagnosticContext{
+public class DiagnosticContext {
 
-    public static final String CORRELATION_ID = com.microsoft.identity.common.java.logging.DiagnosticContext.CORRELATION_ID;
-    public static final String THREAD_ID = com.microsoft.identity.common.java.logging.DiagnosticContext.THREAD_ID;
-    public static final String THREAD_NAME = com.microsoft.identity.common.java.logging.DiagnosticContext.THREAD_NAME;
+    public static final String CORRELATION_ID =
+            com.microsoft.identity.common.java.logging.DiagnosticContext.CORRELATION_ID;
+    public static final String THREAD_ID =
+            com.microsoft.identity.common.java.logging.DiagnosticContext.THREAD_ID;
+    public static final String THREAD_NAME =
+            com.microsoft.identity.common.java.logging.DiagnosticContext.THREAD_NAME;
 
     /**
      * Set the request context.
@@ -42,7 +45,8 @@ public class DiagnosticContext{
      * @param requestContext IRequestContext
      */
     public static void setRequestContext(final IRequestContext requestContext) {
-        com.microsoft.identity.common.java.logging.DiagnosticContext.INSTANCE.setRequestContext(requestContext);
+        com.microsoft.identity.common.java.logging.DiagnosticContext.INSTANCE.setRequestContext(
+                requestContext);
     }
 
     /**
@@ -51,7 +55,8 @@ public class DiagnosticContext{
      * @return IRequestContext
      */
     public static IRequestContext getRequestContext() {
-        return com.microsoft.identity.common.java.logging.DiagnosticContext.INSTANCE.getRequestContext();
+        return com.microsoft.identity.common.java.logging.DiagnosticContext.INSTANCE
+                .getRequestContext();
     }
 
     /**

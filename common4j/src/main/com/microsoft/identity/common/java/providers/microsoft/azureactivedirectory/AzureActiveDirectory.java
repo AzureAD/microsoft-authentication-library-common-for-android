@@ -22,23 +22,23 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory;
 
-import lombok.NonNull;
-
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.microsoft.identity.common.java.authorities.Environment;
 import com.microsoft.identity.common.java.cache.HttpCache;
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.logging.Logger;
-import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.net.HttpClient;
 import com.microsoft.identity.common.java.net.HttpResponse;
 import com.microsoft.identity.common.java.net.UrlConnectionHttpClient;
 import com.microsoft.identity.common.java.providers.IdentityProvider;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters;
+import com.microsoft.identity.common.java.util.CommonURIBuilder;
 import com.microsoft.identity.common.java.util.ObjectMapper;
 import com.microsoft.identity.common.java.util.StringUtil;
-import com.microsoft.identity.common.java.util.CommonURIBuilder;
+
+import lombok.NonNull;
 
 import org.json.JSONException;
 
@@ -61,7 +61,8 @@ import java.util.concurrent.ConcurrentMap;
  * Implements the IdentityProvider base class...
  */
 public class AzureActiveDirectory
-        extends IdentityProvider<AzureActiveDirectoryOAuth2Strategy, AzureActiveDirectoryOAuth2Configuration> {
+        extends IdentityProvider<
+                AzureActiveDirectoryOAuth2Strategy, AzureActiveDirectoryOAuth2Configuration> {
 
     private static final String TAG = AzureActiveDirectory.class.getSimpleName();
 
@@ -72,19 +73,22 @@ public class AzureActiveDirectory
     private static final String API_VERSION = "api-version";
     private static final String API_VERSION_VALUE = "1.1";
     private static final String AUTHORIZATION_ENDPOINT = "authorization_endpoint";
-    private static final String AUTHORIZATION_ENDPOINT_VALUE = "https://login.microsoftonline.com/common/oauth2/v2.0/authorize";
+    private static final String AUTHORIZATION_ENDPOINT_VALUE =
+            "https://login.microsoftonline.com/common/oauth2/v2.0/authorize";
 
-    private static ConcurrentMap<String, AzureActiveDirectoryCloud> sAadClouds = new ConcurrentHashMap<>();
+    private static ConcurrentMap<String, AzureActiveDirectoryCloud> sAadClouds =
+            new ConcurrentHashMap<>();
     private static boolean sIsInitialized = false;
     private static Environment sEnvironment = Environment.Production;
     private static final HttpClient httpClient = UrlConnectionHttpClient.getDefaultInstance();
 
     @Override
-    public AzureActiveDirectoryOAuth2Strategy createOAuth2Strategy(@NonNull final AzureActiveDirectoryOAuth2Configuration config,
-                                                                   @NonNull final IPlatformComponents commonComponents) throws ClientException {
-        final OAuth2StrategyParameters parameters = OAuth2StrategyParameters.builder()
-                .platformComponents(commonComponents)
-                .build();
+    public AzureActiveDirectoryOAuth2Strategy createOAuth2Strategy(
+            @NonNull final AzureActiveDirectoryOAuth2Configuration config,
+            @NonNull final IPlatformComponents commonComponents)
+            throws ClientException {
+        final OAuth2StrategyParameters parameters =
+                OAuth2StrategyParameters.builder().platformComponents(commonComponents).build();
 
         return new AzureActiveDirectoryOAuth2Strategy(config, parameters);
     }
@@ -94,7 +98,8 @@ public class AzureActiveDirectory
     }
 
     static synchronized boolean isValidCloudHost(@NonNull final URL authorityUrl) {
-        return hasCloudHost(authorityUrl) && getAzureActiveDirectoryCloud(authorityUrl).isValidated();
+        return hasCloudHost(authorityUrl)
+                && getAzureActiveDirectoryCloud(authorityUrl).isValidated();
     }
 
     public static synchronized boolean isInitialized() {
@@ -108,7 +113,6 @@ public class AzureActiveDirectory
             sIsInitialized = false;
             sEnvironment = environment;
         }
-
     }
 
     public static synchronized Environment getEnvironment() {
@@ -119,7 +123,8 @@ public class AzureActiveDirectory
      * @param authorityUrl URL
      * @return AzureActiveDirectoryCloud
      */
-    public static synchronized AzureActiveDirectoryCloud getAzureActiveDirectoryCloud(@NonNull final URL authorityUrl) {
+    public static synchronized AzureActiveDirectoryCloud getAzureActiveDirectoryCloud(
+            @NonNull final URL authorityUrl) {
         return sAadClouds.get(authorityUrl.getHost().toLowerCase(Locale.US));
     }
 
@@ -127,7 +132,8 @@ public class AzureActiveDirectory
      * @param preferredCacheHostName String
      * @return AzureActiveDirectoryCloud
      */
-    public static synchronized AzureActiveDirectoryCloud getAzureActiveDirectoryCloudFromHostName(@NonNull final String preferredCacheHostName) {
+    public static synchronized AzureActiveDirectoryCloud getAzureActiveDirectoryCloudFromHostName(
+            @NonNull final String preferredCacheHostName) {
         return sAadClouds.get(preferredCacheHostName.toLowerCase(Locale.US));
     }
 
@@ -135,7 +141,8 @@ public class AzureActiveDirectory
      * @param host  String
      * @param cloud AzureActiveDirectoryCloud
      */
-    public static synchronized void putCloud(@NonNull final String host, final AzureActiveDirectoryCloud cloud) {
+    public static synchronized void putCloud(
+            @NonNull final String host, final AzureActiveDirectoryCloud cloud) {
         sAadClouds.put(host.toLowerCase(Locale.US), cloud);
     }
 
@@ -146,9 +153,12 @@ public class AzureActiveDirectory
      * @param discoveryResponse The response JSON serialized into a Map.
      * @throws JSONException If a parsing error is encountered.
      */
-    public static synchronized void initializeCloudMetadata(@NonNull final String authorityHost,
-                                                            @NonNull final Map<String, String> discoveryResponse) throws JSONException {
-        final boolean tenantDiscoveryEndpointReturned = discoveryResponse.containsKey(TENANT_DISCOVERY_ENDPOINT);
+    public static synchronized void initializeCloudMetadata(
+            @NonNull final String authorityHost,
+            @NonNull final Map<String, String> discoveryResponse)
+            throws JSONException {
+        final boolean tenantDiscoveryEndpointReturned =
+                discoveryResponse.containsKey(TENANT_DISCOVERY_ENDPOINT);
         final String metadata = discoveryResponse.get(METADATA);
 
         if (!tenantDiscoveryEndpointReturned) {
@@ -157,7 +167,8 @@ public class AzureActiveDirectory
         }
 
         if (StringUtil.isNullOrEmpty(metadata)) {
-            sAadClouds.put(authorityHost, new AzureActiveDirectoryCloud(authorityHost, authorityHost));
+            sAadClouds.put(
+                    authorityHost, new AzureActiveDirectoryCloud(authorityHost, authorityHost));
             return;
         }
 
@@ -181,16 +192,17 @@ public class AzureActiveDirectory
         }
     }
 
-    public static synchronized void performCloudDiscovery()
-            throws IOException, URISyntaxException {
+    public static synchronized void performCloudDiscovery() throws IOException, URISyntaxException {
         final String methodName = ":performCloudDiscovery";
-        final URI instanceDiscoveryRequestUri = new CommonURIBuilder(getDefaultCloudUrl() + AAD_INSTANCE_DISCOVERY_ENDPOINT)
-                .setParameter(API_VERSION, API_VERSION_VALUE)
-                .setParameter(AUTHORIZATION_ENDPOINT, AUTHORIZATION_ENDPOINT_VALUE)
-                .build();
+        final URI instanceDiscoveryRequestUri =
+                new CommonURIBuilder(getDefaultCloudUrl() + AAD_INSTANCE_DISCOVERY_ENDPOINT)
+                        .setParameter(API_VERSION, API_VERSION_VALUE)
+                        .setParameter(AUTHORIZATION_ENDPOINT, AUTHORIZATION_ENDPOINT_VALUE)
+                        .build();
 
         final HttpResponse response =
-                httpClient.get(new URL(instanceDiscoveryRequestUri.toString()),
+                httpClient.get(
+                        new URL(instanceDiscoveryRequestUri.toString()),
                         new HashMap<String, String>(),
                         null);
 
@@ -205,11 +217,10 @@ public class AzureActiveDirectory
             Logger.info(TAG + methodName, "Parsing response.");
             AzureActiveDirectoryInstanceResponse instanceResponse =
                     ObjectMapper.deserializeJsonStringToObject(
-                            response.getBody(),
-                            AzureActiveDirectoryInstanceResponse.class
-                    );
-            Logger.info(TAG + methodName, "Discovered ["
-                    + instanceResponse.getClouds().size() + "] clouds.");
+                            response.getBody(), AzureActiveDirectoryInstanceResponse.class);
+            Logger.info(
+                    TAG + methodName,
+                    "Discovered [" + instanceResponse.getClouds().size() + "] clouds.");
 
             for (final AzureActiveDirectoryCloud cloud : instanceResponse.getClouds()) {
                 cloud.setIsValidated(true); // Mark the deserialized Clouds as validated
@@ -245,9 +256,10 @@ public class AzureActiveDirectory
      * @return Native List of clouds.
      * @throws JSONException If a parsing error is encountered.
      */
-    private static List<AzureActiveDirectoryCloud> deserializeClouds(final String jsonCloudArray) throws JSONException {
-        final Type listType = TypeToken.getParameterized(List.class, AzureActiveDirectoryCloud.class).getType();
+    private static List<AzureActiveDirectoryCloud> deserializeClouds(final String jsonCloudArray)
+            throws JSONException {
+        final Type listType =
+                TypeToken.getParameterized(List.class, AzureActiveDirectoryCloud.class).getType();
         return new Gson().fromJson(jsonCloudArray, listType);
     }
-
 }

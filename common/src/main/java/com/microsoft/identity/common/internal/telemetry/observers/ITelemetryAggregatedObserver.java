@@ -29,5 +29,6 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
  **/
 @SuppressFBWarnings("NM_SAME_SIMPLE_NAME_AS_INTERFACE")
 @Deprecated
-public interface ITelemetryAggregatedObserver extends com.microsoft.identity.common.java.telemetry.observers.ITelemetryAggregatedObserver {
-}
+public interface ITelemetryAggregatedObserver
+        extends com.microsoft.identity.common.java.telemetry.observers
+                .ITelemetryAggregatedObserver {}

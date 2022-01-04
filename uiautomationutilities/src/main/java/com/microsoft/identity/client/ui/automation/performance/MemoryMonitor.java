@@ -28,7 +28,8 @@ package com.microsoft.identity.client.ui.automation.performance;
 public class MemoryMonitor implements PerformanceProfileMonitor<Long> {
     @Override
     public Long getStats(ProcessInfo processInfo) {
-        // From the total memory used in the device, calculate the number of bytes being used by the process defined by processInfo.
+        // From the total memory used in the device, calculate the number of bytes being used by the
+        // process defined by processInfo.
         return (long) (processInfo.getMemoryUsage() * processInfo.getUsedSystemMemory()) / 100;
     }
 }

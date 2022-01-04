@@ -38,9 +38,9 @@ import android.os.SystemClock;
 import com.microsoft.identity.common.adal.internal.net.DefaultConnectionService;
 import com.microsoft.identity.common.internal.broker.BrokerValidator;
 import com.microsoft.identity.common.internal.broker.IntuneMAMEnrollmentIdGateway;
-import com.microsoft.identity.common.java.commands.InteractiveTokenCommand;
 import com.microsoft.identity.common.internal.ui.webview.WebViewUtil;
 import com.microsoft.identity.common.java.commands.ICommand;
+import com.microsoft.identity.common.java.commands.InteractiveTokenCommand;
 import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCommandParameters;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
@@ -48,23 +48,22 @@ import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.ui.BrowserDescriptor;
 import com.microsoft.identity.common.java.util.IPlatformUtil;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
+
+import lombok.AllArgsConstructor;
+import lombok.NonNull;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-
-import edu.umd.cs.findbugs.annotations.Nullable;
-import lombok.AllArgsConstructor;
-import lombok.NonNull;
 
 @AllArgsConstructor
 public class AndroidPlatformUtil implements IPlatformUtil {
     private static final String TAG = AndroidPlatformUtil.class.getSimpleName();
 
-    @NonNull
-    private final Context mContext;
+    @NonNull private final Context mContext;
 
-    @Nullable
-    private final Activity mActivity;
+    @Nullable private final Activity mActivity;
 
     /**
      * List of System Browsers which can be used from broker, currently only Chrome is supported.
@@ -76,13 +75,10 @@ public class AndroidPlatformUtil implements IPlatformUtil {
     public List<BrowserDescriptor> getBrowserSafeListForBroker() {
         List<BrowserDescriptor> browserDescriptors = new ArrayList<>();
         final HashSet<String> signatureHashes = new HashSet<String>();
-        signatureHashes.add("7fmduHKTdHHrlMvldlEqAIlSfii1tl35bxj1OXN5Ve8c4lU6URVu4xtSHc3BVZxS6WWJnxMDhIfQN0N0K2NDJg==");
-        final BrowserDescriptor chrome = new BrowserDescriptor(
-                "com.android.chrome",
-                signatureHashes,
-                null,
-                null
-        );
+        signatureHashes.add(
+                "7fmduHKTdHHrlMvldlEqAIlSfii1tl35bxj1OXN5Ve8c4lU6URVu4xtSHc3BVZxS6WWJnxMDhIfQN0N0K2NDJg==");
+        final BrowserDescriptor chrome =
+                new BrowserDescriptor("com.android.chrome", signatureHashes, null, null);
         browserDescriptors.add(chrome);
 
         return browserDescriptors;
@@ -107,7 +103,8 @@ public class AndroidPlatformUtil implements IPlatformUtil {
 
         final DefaultConnectionService connectionService = new DefaultConnectionService(mContext);
 
-        if (performPowerOptimizationCheck && connectionService.isNetworkDisabledFromOptimizations()) {
+        if (performPowerOptimizationCheck
+                && connectionService.isNetworkDisabledFromOptimizations()) {
             throw new ClientException(
                     ErrorStrings.NO_NETWORK_CONNECTION_POWER_OPTIMIZATION,
                     "Connection is not available to refresh token because power optimization is "
@@ -134,12 +131,8 @@ public class AndroidPlatformUtil implements IPlatformUtil {
     @Override
     @Nullable
     public String getEnrollmentId(@NonNull final String userId, @NonNull final String packageName) {
-        return IntuneMAMEnrollmentIdGateway
-                .getInstance().getEnrollmentId(
-                        mContext,
-                        userId,
-                        packageName
-                );
+        return IntuneMAMEnrollmentIdGateway.getInstance()
+                .getEnrollmentId(mContext, userId, packageName);
     }
 
     @Override
@@ -174,23 +167,32 @@ public class AndroidPlatformUtil implements IPlatformUtil {
     private void optionallyReorderTasks(@NonNull final ICommand<?> command) {
         final String methodName = ":optionallyReorderTasks";
         if (command instanceof InteractiveTokenCommand) {
-            if (mActivity == null){
-                throw new IllegalStateException("Activity cannot be null in an interactive session.");
+            if (mActivity == null) {
+                throw new IllegalStateException(
+                        "Activity cannot be null in an interactive session.");
             }
 
-            final InteractiveTokenCommand interactiveTokenCommand = (InteractiveTokenCommand) command;
-            final InteractiveTokenCommandParameters interactiveTokenCommandParameters = (InteractiveTokenCommandParameters) interactiveTokenCommand.getParameters();
-            if (interactiveTokenCommandParameters.getHandleNullTaskAffinity() && !hasTaskAffinity(mActivity)) {
-                //If an interactive command doesn't have a task affinity bring the
-                //task that launched the command to the foreground
-                //In order for this to work the app has to have requested the re-order tasks permission
-                //https://developer.android.com/reference/android/Manifest.permission#REORDER_TASKS
-                //if the permission has not been granted nothing will happen if you just invoke the method
-                final ActivityManager activityManager = (ActivityManager) mContext.getSystemService(Context.ACTIVITY_SERVICE);
+            final InteractiveTokenCommand interactiveTokenCommand =
+                    (InteractiveTokenCommand) command;
+            final InteractiveTokenCommandParameters interactiveTokenCommandParameters =
+                    (InteractiveTokenCommandParameters) interactiveTokenCommand.getParameters();
+            if (interactiveTokenCommandParameters.getHandleNullTaskAffinity()
+                    && !hasTaskAffinity(mActivity)) {
+                // If an interactive command doesn't have a task affinity bring the
+                // task that launched the command to the foreground
+                // In order for this to work the app has to have requested the re-order tasks
+                // permission
+                // https://developer.android.com/reference/android/Manifest.permission#REORDER_TASKS
+                // if the permission has not been granted nothing will happen if you just invoke the
+                // method
+                final ActivityManager activityManager =
+                        (ActivityManager) mContext.getSystemService(Context.ACTIVITY_SERVICE);
                 if (activityManager != null) {
                     activityManager.moveTaskToFront(mActivity.getTaskId(), 0);
                 } else {
-                    Logger.warn(TAG + methodName, "ActivityManager was null; Unable to bring task for the foreground.");
+                    Logger.warn(
+                            TAG + methodName,
+                            "ActivityManager was null; Unable to bring task for the foreground.");
                 }
             }
         }
@@ -201,7 +203,8 @@ public class AndroidPlatformUtil implements IPlatformUtil {
         final PackageManager packageManager = activity.getPackageManager();
         try {
             final ComponentName componentName = activity.getComponentName();
-            final ActivityInfo startActivityInfo = componentName != null ? packageManager.getActivityInfo(componentName, 0) : null;
+            final ActivityInfo startActivityInfo =
+                    componentName != null ? packageManager.getActivityInfo(componentName, 0) : null;
             if (startActivityInfo == null) {
                 return false;
             }
@@ -209,10 +212,10 @@ public class AndroidPlatformUtil implements IPlatformUtil {
         } catch (final PackageManager.NameNotFoundException e) {
             Logger.warn(
                     TAG + methodName,
-                    "Unable to get ActivityInfo for activity provided to start authorization."
-            );
+                    "Unable to get ActivityInfo for activity provided to start authorization.");
 
-            //Normally all tasks have an affinity unless configured explicitly for multi-window support to not have one
+            // Normally all tasks have an affinity unless configured explicitly for multi-window
+            // support to not have one
             return true;
         }
     }

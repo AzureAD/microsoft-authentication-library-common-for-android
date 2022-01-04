@@ -22,21 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory;
 
-import com.microsoft.identity.common.java.exception.ErrorStrings;
-import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationErrorResponse;
-import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResultFactory;
-import com.microsoft.identity.common.java.providers.oauth2.AuthorizationStatus;
-import com.microsoft.identity.common.java.util.StringUtil;
-import com.microsoft.identity.common.java.util.UrlUtil;
-import com.microsoft.identity.common.java.logging.Logger;
-
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.Map;
-
-import edu.umd.cs.findbugs.annotations.NonNull;
-import edu.umd.cs.findbugs.annotations.Nullable;
-
 import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.CORRELATION_ID;
 import static com.microsoft.identity.common.java.AuthenticationConstants.OAuth2.CODE;
 import static com.microsoft.identity.common.java.AuthenticationConstants.OAuth2.ERROR;
@@ -44,32 +29,51 @@ import static com.microsoft.identity.common.java.AuthenticationConstants.OAuth2.
 import static com.microsoft.identity.common.java.AuthenticationConstants.OAuth2.ERROR_DESCRIPTION;
 import static com.microsoft.identity.common.java.AuthenticationConstants.OAuth2.STATE;
 
+import com.microsoft.identity.common.java.exception.ErrorStrings;
+import com.microsoft.identity.common.java.logging.Logger;
+import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationErrorResponse;
+import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResultFactory;
+import com.microsoft.identity.common.java.providers.oauth2.AuthorizationStatus;
+import com.microsoft.identity.common.java.util.StringUtil;
+import com.microsoft.identity.common.java.util.UrlUtil;
+
+import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.Nullable;
+
+import java.net.URI;
+import java.util.Map;
+
 /**
  * Sub class of {@link AuthorizationResultFactory}.
  * Encapsulates Authorization response or errors specific to Azure Active Directory in the form of
  * {@link AzureActiveDirectoryAuthorizationResult}
  */
 public class AzureActiveDirectoryAuthorizationResultFactory
-        extends AuthorizationResultFactory<AzureActiveDirectoryAuthorizationResult, AzureActiveDirectoryAuthorizationRequest> {
+        extends AuthorizationResultFactory<
+                AzureActiveDirectoryAuthorizationResult, AzureActiveDirectoryAuthorizationRequest> {
 
-    private static final String TAG = AzureActiveDirectoryAuthorizationResultFactory.class.getSimpleName();
+    private static final String TAG =
+            AzureActiveDirectoryAuthorizationResultFactory.class.getSimpleName();
 
     @Override
-    protected AzureActiveDirectoryAuthorizationResult createAuthorizationResultWithErrorResponse(final AuthorizationStatus authStatus,
-                                                                                                 @NonNull final String error,
-                                                                                                 @Nullable final String errorDescription) {
+    protected AzureActiveDirectoryAuthorizationResult createAuthorizationResultWithErrorResponse(
+            final AuthorizationStatus authStatus,
+            @NonNull final String error,
+            @Nullable final String errorDescription) {
         final AzureActiveDirectoryAuthorizationErrorResponse errorResponse =
                 new AzureActiveDirectoryAuthorizationErrorResponse(error, errorDescription);
         return new AzureActiveDirectoryAuthorizationResult(authStatus, errorResponse);
     }
 
     @Override
-    protected AzureActiveDirectoryAuthorizationResult parseRedirectUriAndCreateAuthorizationResult(@NonNull final URI redirectUri,
-                                                                                                   @Nullable final String requestStateParameter) {
+    protected AzureActiveDirectoryAuthorizationResult parseRedirectUriAndCreateAuthorizationResult(
+            @NonNull final URI redirectUri, @Nullable final String requestStateParameter) {
         final Map<String, String> urlParameters = UrlUtil.getParameters(redirectUri);
         if (urlParameters == null || urlParameters.isEmpty()) {
-            Logger.warn(TAG, "Invalid server response, empty query string from the webview redirect.");
-            return createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL,
+            Logger.warn(
+                    TAG, "Invalid server response, empty query string from the webview redirect.");
+            return createAuthorizationResultWithErrorResponse(
+                    AuthorizationStatus.FAIL,
                     MicrosoftAuthorizationErrorResponse.AUTHORIZATION_FAILED,
                     MicrosoftAuthorizationErrorResponse.AUTHORIZATION_SERVER_INVALID_RESPONSE);
         }
@@ -78,26 +82,38 @@ public class AzureActiveDirectoryAuthorizationResultFactory
         final AzureActiveDirectoryAuthorizationResult result;
 
         if (urlParameters.containsKey(CODE)) {
-            result = validateAndCreateAuthorizationResult(urlParameters, requestStateParameter, correlationInResponse);
+            result =
+                    validateAndCreateAuthorizationResult(
+                            urlParameters, requestStateParameter, correlationInResponse);
         } else if (urlParameters.containsKey(ERROR)) {
-            result = createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL, urlParameters.get(ERROR),
-                    urlParameters.get(ERROR_DESCRIPTION), urlParameters.get(ERROR_CODES), correlationInResponse);
+            result =
+                    createAuthorizationResultWithErrorResponse(
+                            AuthorizationStatus.FAIL,
+                            urlParameters.get(ERROR),
+                            urlParameters.get(ERROR_DESCRIPTION),
+                            urlParameters.get(ERROR_CODES),
+                            correlationInResponse);
         } else {
-            result = createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL,
-                    MicrosoftAuthorizationErrorResponse.AUTHORIZATION_FAILED,
-                    MicrosoftAuthorizationErrorResponse.AUTHORIZATION_SERVER_INVALID_RESPONSE);
+            result =
+                    createAuthorizationResultWithErrorResponse(
+                            AuthorizationStatus.FAIL,
+                            MicrosoftAuthorizationErrorResponse.AUTHORIZATION_FAILED,
+                            MicrosoftAuthorizationErrorResponse
+                                    .AUTHORIZATION_SERVER_INVALID_RESPONSE);
         }
 
         return result;
     }
 
-    private AzureActiveDirectoryAuthorizationResult createAuthorizationResultWithErrorResponse(@NonNull final AuthorizationStatus authStatus,
-                                                                                               @Nullable final String error,
-                                                                                               @Nullable final String errorDescription,
-                                                                                               @Nullable final String errorCodes,
-                                                                                               @Nullable final String correlationId) {
+    private AzureActiveDirectoryAuthorizationResult createAuthorizationResultWithErrorResponse(
+            @NonNull final AuthorizationStatus authStatus,
+            @Nullable final String error,
+            @Nullable final String errorDescription,
+            @Nullable final String errorCodes,
+            @Nullable final String correlationId) {
         Logger.info(TAG, correlationId, "Error is returned from webview redirect");
-        Logger.infoPII(TAG, correlationId, "error: " + error + " errorDescription: " + errorDescription);
+        Logger.infoPII(
+                TAG, correlationId, "error: " + error + " errorDescription: " + errorDescription);
         final AzureActiveDirectoryAuthorizationErrorResponse errorResponse =
                 new AzureActiveDirectoryAuthorizationErrorResponse(error, errorDescription);
         errorResponse.setErrorCodes(errorCodes);
@@ -105,26 +121,46 @@ public class AzureActiveDirectoryAuthorizationResultFactory
     }
 
     @Override
-    protected AzureActiveDirectoryAuthorizationResult validateAndCreateAuthorizationResult(@NonNull final Map<String, String> urlParameters,
-                                                                                           @Nullable final String requestStateParameter,
-                                                                                           @Nullable final String correlationId) {
+    protected AzureActiveDirectoryAuthorizationResult validateAndCreateAuthorizationResult(
+            @NonNull final Map<String, String> urlParameters,
+            @Nullable final String requestStateParameter,
+            @Nullable final String correlationId) {
         AzureActiveDirectoryAuthorizationResult result;
         final String state = urlParameters.get(STATE);
         final String code = urlParameters.get(CODE);
 
         if (StringUtil.isNullOrEmpty(state)) {
-            Logger.warn(TAG, correlationId, "State parameter is not returned from the webview redirect.");
-            result = createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL,
-                    ErrorStrings.STATE_MISMATCH, MicrosoftAuthorizationErrorResponse.STATE_NOT_RETURNED);
-        } else if (StringUtil.isNullOrEmpty(requestStateParameter) || !requestStateParameter.equals(state)) {
-            Logger.warn(TAG, correlationId, "State parameter returned from the redirect is not same as the one sent in request.");
-            result = createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL,
-                    ErrorStrings.STATE_MISMATCH, MicrosoftAuthorizationErrorResponse.STATE_NOT_THE_SAME);
+            Logger.warn(
+                    TAG,
+                    correlationId,
+                    "State parameter is not returned from the webview redirect.");
+            result =
+                    createAuthorizationResultWithErrorResponse(
+                            AuthorizationStatus.FAIL,
+                            ErrorStrings.STATE_MISMATCH,
+                            MicrosoftAuthorizationErrorResponse.STATE_NOT_RETURNED);
+        } else if (StringUtil.isNullOrEmpty(requestStateParameter)
+                || !requestStateParameter.equals(state)) {
+            Logger.warn(
+                    TAG,
+                    correlationId,
+                    "State parameter returned from the redirect is not same as the one sent in request.");
+            result =
+                    createAuthorizationResultWithErrorResponse(
+                            AuthorizationStatus.FAIL,
+                            ErrorStrings.STATE_MISMATCH,
+                            MicrosoftAuthorizationErrorResponse.STATE_NOT_THE_SAME);
         } else {
-            Logger.info(TAG, correlationId, "Auth code is successfully returned from webview redirect.");
-            AzureActiveDirectoryAuthorizationResponse response = new AzureActiveDirectoryAuthorizationResponse(code, state);
+            Logger.info(
+                    TAG,
+                    correlationId,
+                    "Auth code is successfully returned from webview redirect.");
+            AzureActiveDirectoryAuthorizationResponse response =
+                    new AzureActiveDirectoryAuthorizationResponse(code, state);
             response.setCorrelationId(correlationId);
-            result = new AzureActiveDirectoryAuthorizationResult(AuthorizationStatus.SUCCESS, response);
+            result =
+                    new AzureActiveDirectoryAuthorizationResult(
+                            AuthorizationStatus.SUCCESS, response);
         }
 
         return result;

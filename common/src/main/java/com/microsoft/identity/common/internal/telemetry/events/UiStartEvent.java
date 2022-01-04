@@ -22,11 +22,11 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.telemetry.events;
 
-import com.microsoft.identity.common.java.ui.AuthorizationAgent;
-
 import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Event;
 import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.EventType;
 import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Key;
+
+import com.microsoft.identity.common.java.ui.AuthorizationAgent;
 
 public class UiStartEvent extends com.microsoft.identity.common.java.telemetry.events.BaseEvent {
     public UiStartEvent() {

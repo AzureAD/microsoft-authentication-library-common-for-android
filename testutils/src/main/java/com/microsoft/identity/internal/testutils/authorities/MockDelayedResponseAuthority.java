@@ -39,9 +39,9 @@ public class MockDelayedResponseAuthority extends AzureActiveDirectoryAuthority 
     }
 
     @Override
-    public OAuth2Strategy createOAuth2Strategy(@NonNull final OAuth2StrategyParameters parameters) throws ClientException {
+    public OAuth2Strategy createOAuth2Strategy(@NonNull final OAuth2StrategyParameters parameters)
+            throws ClientException {
         final MicrosoftStsOAuth2Configuration config = createOAuth2Configuration();
         return new MockTestStrategy(config);
     }
-
 }

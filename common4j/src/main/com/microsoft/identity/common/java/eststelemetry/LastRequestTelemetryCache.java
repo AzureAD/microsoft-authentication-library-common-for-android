@@ -33,11 +33,11 @@ import lombok.NonNull;
 
 public class LastRequestTelemetryCache implements IRequestTelemetryCache<LastRequestTelemetry> {
 
-    final static String LAST_TELEMETRY_OBJECT_CACHE_KEY = "last_telemetry_object";
-    final static String LAST_TELEMETRY_HEADER_STRING_CACHE_KEY = "last_telemetry_header_string";
-    final static String LAST_TELEMETRY_SCHEMA_VERSION_CACHE_KEY = "last_telemetry_schema_version";
+    static final String LAST_TELEMETRY_OBJECT_CACHE_KEY = "last_telemetry_object";
+    static final String LAST_TELEMETRY_HEADER_STRING_CACHE_KEY = "last_telemetry_header_string";
+    static final String LAST_TELEMETRY_SCHEMA_VERSION_CACHE_KEY = "last_telemetry_schema_version";
 
-    private final static String TAG = LastRequestTelemetryCache.class.getSimpleName();
+    private static final String TAG = LastRequestTelemetryCache.class.getSimpleName();
 
     private static final Gson mGson = new Gson();
 
@@ -62,23 +62,24 @@ public class LastRequestTelemetryCache implements IRequestTelemetryCache<LastReq
             final String cacheValue = mStorage.get(LAST_TELEMETRY_OBJECT_CACHE_KEY);
 
             if (cacheValue == null) {
-                Logger.info(TAG + methodName, "There is no last request telemetry saved in " +
-                        "the cache. Returning NULL");
+                Logger.info(
+                        TAG + methodName,
+                        "There is no last request telemetry saved in "
+                                + "the cache. Returning NULL");
 
                 return null;
             }
 
-            final LastRequestTelemetry lastRequestTelemetry = mGson.fromJson(cacheValue, LastRequestTelemetry.class);
+            final LastRequestTelemetry lastRequestTelemetry =
+                    mGson.fromJson(cacheValue, LastRequestTelemetry.class);
 
             if (lastRequestTelemetry == null) {
-                Logger.warn(TAG + methodName,
-                        "Last Request Telemetry deserialization failed");
+                Logger.warn(TAG + methodName, "Last Request Telemetry deserialization failed");
             }
 
             return lastRequestTelemetry;
         } catch (final JsonSyntaxException e) {
-            Logger.error(TAG + methodName,
-                    "Last Request Telemetry deserialization failed", e);
+            Logger.error(TAG + methodName, "Last Request Telemetry deserialization failed", e);
             return null;
         } catch (final OutOfMemoryError e) {
             mStorage.clear();
@@ -91,7 +92,8 @@ public class LastRequestTelemetryCache implements IRequestTelemetryCache<LastReq
     }
 
     @Override
-    public synchronized void saveRequestTelemetryToCache(@NonNull final LastRequestTelemetry requestTelemetry) {
+    public synchronized void saveRequestTelemetryToCache(
+            @NonNull final LastRequestTelemetry requestTelemetry) {
         Logger.verbose(TAG, "Saving Last Request Telemetry to cache...");
 
         saveRequestTelemetryObjectToCache(requestTelemetry);
@@ -99,22 +101,26 @@ public class LastRequestTelemetryCache implements IRequestTelemetryCache<LastReq
         saveTelemetrySchemaVersionToCache(requestTelemetry);
     }
 
-    private void saveRequestTelemetryObjectToCache(@NonNull final LastRequestTelemetry requestTelemetry) {
+    private void saveRequestTelemetryObjectToCache(
+            @NonNull final LastRequestTelemetry requestTelemetry) {
         final String cacheValue = generateCacheValue(requestTelemetry);
         saveToTelemetryCache(LAST_TELEMETRY_OBJECT_CACHE_KEY, cacheValue);
     }
 
-    private void saveTelemetryHeaderStringToCache(@NonNull final LastRequestTelemetry requestTelemetry) {
+    private void saveTelemetryHeaderStringToCache(
+            @NonNull final LastRequestTelemetry requestTelemetry) {
         final String cacheValue = requestTelemetry.getCompleteHeaderString();
         saveToTelemetryCache(LAST_TELEMETRY_HEADER_STRING_CACHE_KEY, cacheValue);
     }
 
-    private void saveTelemetrySchemaVersionToCache(@NonNull final LastRequestTelemetry requestTelemetry) {
+    private void saveTelemetrySchemaVersionToCache(
+            @NonNull final LastRequestTelemetry requestTelemetry) {
         final String cacheValue = requestTelemetry.getSchemaVersion();
         saveToTelemetryCache(LAST_TELEMETRY_SCHEMA_VERSION_CACHE_KEY, cacheValue);
     }
 
-    private void saveToTelemetryCache(@NonNull final String cacheKey, @NonNull final String cacheValue) {
+    private void saveToTelemetryCache(
+            @NonNull final String cacheKey, @NonNull final String cacheValue) {
         mStorage.put(cacheKey, cacheValue);
     }
 

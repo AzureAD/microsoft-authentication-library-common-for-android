@@ -25,6 +25,12 @@ package com.microsoft.identity.common.java.logging;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.util.ThrowableUtil;
 
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.Setter;
+import lombok.Synchronized;
+import lombok.experimental.Accessors;
+
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
@@ -34,12 +40,6 @@ import java.util.TimeZone;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.Setter;
-import lombok.Synchronized;
-import lombok.experimental.Accessors;
 
 public class Logger {
 
@@ -115,8 +115,7 @@ public class Logger {
         }
     }
 
-    public static boolean setLogger(@NonNull String identifier,
-                                    ILoggerCallback callback) {
+    public static boolean setLogger(@NonNull String identifier, ILoggerCallback callback) {
         sLoggersLock.writeLock().lock();
         try {
             if (callback == null) {
@@ -124,7 +123,7 @@ public class Logger {
                 return true;
             }
 
-            if (sLoggers.containsValue(callback)){
+            if (sLoggers.containsValue(callback)) {
                 return false;
             }
 
@@ -144,8 +143,12 @@ public class Logger {
      * @return String The concatenation of thread_name and correlation_id to serve as the required metadata in the log lines.
      */
     public static synchronized String getDiagnosticContextMetadata() {
-        String threadName = DiagnosticContext.INSTANCE.getRequestContext().get(DiagnosticContext.THREAD_NAME);
-        String correlationId = DiagnosticContext.INSTANCE.getRequestContext().get(DiagnosticContext.CORRELATION_ID);
+        String threadName =
+                DiagnosticContext.INSTANCE.getRequestContext().get(DiagnosticContext.THREAD_NAME);
+        String correlationId =
+                DiagnosticContext.INSTANCE
+                        .getRequestContext()
+                        .get(DiagnosticContext.CORRELATION_ID);
 
         if (StringUtil.isNullOrEmpty(threadName)) {
             threadName = UNSET;
@@ -154,9 +157,12 @@ public class Logger {
             correlationId = UNSET;
         }
 
-        return DiagnosticContext.THREAD_NAME + " : "
-                + threadName + ", "
-                + DiagnosticContext.CORRELATION_ID + " : "
+        return DiagnosticContext.THREAD_NAME
+                + " : "
+                + threadName
+                + ", "
+                + DiagnosticContext.CORRELATION_ID
+                + " : "
                 + correlationId;
     }
 
@@ -168,9 +174,8 @@ public class Logger {
      * @param errorMessage The error message to log.
      * @param exception    An exception to log
      */
-    public static void error(final String tag,
-                             final String errorMessage,
-                             final Throwable exception) {
+    public static void error(
+            final String tag, final String errorMessage, final Throwable exception) {
         log(tag, LogLevel.ERROR, getDiagnosticContextMetadata(), errorMessage, exception, false);
     }
 
@@ -183,10 +188,11 @@ public class Logger {
      * @param errorMessage  The error message to log.
      * @param exception     An exception to log.
      */
-    public static void error(final String tag,
-                             final String correlationID,
-                             final String errorMessage,
-                             final Throwable exception) {
+    public static void error(
+            final String tag,
+            final String correlationID,
+            final String errorMessage,
+            final Throwable exception) {
         log(tag, LogLevel.ERROR, correlationID, errorMessage, exception, false);
     }
 
@@ -198,9 +204,8 @@ public class Logger {
      * @param errorMessage The error message to log.
      * @param exception    An exception to log.
      */
-    public static void errorPII(final String tag,
-                                final String errorMessage,
-                                final Throwable exception) {
+    public static void errorPII(
+            final String tag, final String errorMessage, final Throwable exception) {
         log(tag, LogLevel.ERROR, getDiagnosticContextMetadata(), errorMessage, exception, true);
     }
 
@@ -213,10 +218,11 @@ public class Logger {
      * @param errorMessage  The error message to log.
      * @param exception     An exception to log.
      */
-    public static void errorPII(final String tag,
-                                final String correlationID,
-                                final String errorMessage,
-                                final Throwable exception) {
+    public static void errorPII(
+            final String tag,
+            final String correlationID,
+            final String errorMessage,
+            final Throwable exception) {
         log(tag, LogLevel.ERROR, correlationID, errorMessage, exception, true);
     }
 
@@ -227,8 +233,7 @@ public class Logger {
      *                or activity where the log call occurs.
      * @param message The message to log.
      */
-    public static void warn(final String tag,
-                            final String message) {
+    public static void warn(final String tag, final String message) {
         log(tag, LogLevel.WARN, getDiagnosticContextMetadata(), message, null, false);
     }
 
@@ -240,9 +245,7 @@ public class Logger {
      * @param correlationID Unique identifier for a request or flow used to trace program execution.
      * @param message       The message to log.
      */
-    public static void warn(final String tag,
-                            final String correlationID,
-                            final String message) {
+    public static void warn(final String tag, final String correlationID, final String message) {
         log(tag, LogLevel.WARN, correlationID, message, null, false);
     }
 
@@ -253,8 +256,7 @@ public class Logger {
      *                or activity where the log call occurs.
      * @param message The message to log.
      */
-    public static void warnPII(final String tag,
-                               final String message) {
+    public static void warnPII(final String tag, final String message) {
         log(tag, LogLevel.WARN, getDiagnosticContextMetadata(), message, null, true);
     }
 
@@ -266,9 +268,7 @@ public class Logger {
      * @param correlationID Unique identifier for a request or flow used to trace program execution.
      * @param message       The message to log.
      */
-    public static void warnPII(final String tag,
-                               final String correlationID,
-                               final String message) {
+    public static void warnPII(final String tag, final String correlationID, final String message) {
         log(tag, LogLevel.WARN, correlationID, message, null, true);
     }
 
@@ -279,8 +279,7 @@ public class Logger {
      *                or activity where the log call occurs.
      * @param message The message to log.
      */
-    public static void info(final String tag,
-                            final String message) {
+    public static void info(final String tag, final String message) {
         log(tag, Logger.LogLevel.INFO, getDiagnosticContextMetadata(), message, null, false);
     }
 
@@ -292,9 +291,7 @@ public class Logger {
      * @param correlationID Unique identifier for a request or flow used to trace program execution.
      * @param message       The message to log.
      */
-    public static void info(final String tag,
-                            final String correlationID,
-                            final String message) {
+    public static void info(final String tag, final String correlationID, final String message) {
         log(tag, LogLevel.INFO, correlationID, message, null, false);
     }
 
@@ -305,8 +302,7 @@ public class Logger {
      *                or activity where the log call occurs.
      * @param message The message to log.
      */
-    public static void infoPII(final String tag,
-                               final String message) {
+    public static void infoPII(final String tag, final String message) {
         log(tag, LogLevel.INFO, getDiagnosticContextMetadata(), message, null, true);
     }
 
@@ -318,9 +314,7 @@ public class Logger {
      * @param correlationID Unique identifier for a request or flow used to trace program execution.
      * @param message       The message to log.
      */
-    public static void infoPII(final String tag,
-                               final String correlationID,
-                               final String message) {
+    public static void infoPII(final String tag, final String correlationID, final String message) {
         log(tag, LogLevel.INFO, correlationID, message, null, true);
     }
 
@@ -331,8 +325,7 @@ public class Logger {
      *                or activity where the log call occurs.
      * @param message The message to log.
      */
-    public static void verbose(final String tag,
-                               final String message) {
+    public static void verbose(final String tag, final String message) {
         log(tag, LogLevel.VERBOSE, getDiagnosticContextMetadata(), message, null, false);
     }
 
@@ -344,9 +337,7 @@ public class Logger {
      * @param correlationID Unique identifier for a request or flow used to trace program execution.
      * @param message       The message to log.
      */
-    public static void verbose(final String tag,
-                               final String correlationID,
-                               final String message) {
+    public static void verbose(final String tag, final String correlationID, final String message) {
         log(tag, LogLevel.VERBOSE, correlationID, message, null, false);
     }
 
@@ -357,8 +348,7 @@ public class Logger {
      *                or activity where the log call occurs.
      * @param message The message to log.
      */
-    public static void verbosePII(final String tag,
-                                  final String message) {
+    public static void verbosePII(final String tag, final String message) {
         log(tag, LogLevel.VERBOSE, getDiagnosticContextMetadata(), message, null, true);
     }
 
@@ -370,65 +360,85 @@ public class Logger {
      * @param correlationID Unique identifier for a request or flow used to trace program execution.
      * @param message       The message to log.
      */
-    public static void verbosePII(final String tag,
-                                  final String correlationID,
-                                  final String message) {
+    public static void verbosePII(
+            final String tag, final String correlationID, final String message) {
         log(tag, LogLevel.VERBOSE, correlationID, message, null, true);
     }
 
-    private static void log(final String tag,
-                            @NonNull final LogLevel logLevel,
-                            final String correlationID,
-                            final String message,
-                            final Throwable throwable,
-                            final boolean containsPII) {
+    private static void log(
+            final String tag,
+            @NonNull final LogLevel logLevel,
+            final String correlationID,
+            final String message,
+            final Throwable throwable,
+            final boolean containsPII) {
 
         final String dateTimeStamp = getUTCDateTimeAsString();
 
-        sLogExecutor.execute(new Runnable() {
-            @Override
-            public void run() {
-                //Format the log message.
-                final String logMessage = formatMessage(correlationID, message, dateTimeStamp, throwable);
+        sLogExecutor.execute(
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        // Format the log message.
+                        final String logMessage =
+                                formatMessage(correlationID, message, dateTimeStamp, throwable);
 
-                sLoggersLock.readLock().lock();
-                try {
-                    for (final String loggerCallbackKey : sLoggers.keySet()) {
+                        sLoggersLock.readLock().lock();
                         try {
-                            final ILoggerCallback callback = sLoggers.get(loggerCallbackKey);
-                            if (callback != null) {
-                                if (logLevel.compareTo(sLogLevel) > 0) {
-                                    logDiscardedLogIfApplicable(logMessage, callback, tag, logLevel, containsPII);
-                                    return;
-                                }
+                            for (final String loggerCallbackKey : sLoggers.keySet()) {
+                                try {
+                                    final ILoggerCallback callback =
+                                            sLoggers.get(loggerCallbackKey);
+                                    if (callback != null) {
+                                        if (logLevel.compareTo(sLogLevel) > 0) {
+                                            logDiscardedLogIfApplicable(
+                                                    logMessage,
+                                                    callback,
+                                                    tag,
+                                                    logLevel,
+                                                    containsPII);
+                                            return;
+                                        }
 
-                                // Developer turns off PII logging, if the log message contains any PII,
-                                // we should not send it.
-                                if (!sAllowPii && containsPII) {
-                                    logDiscardedLogIfApplicable(logMessage, callback, tag, logLevel, containsPII);
-                                    return;
-                                }
+                                        // Developer turns off PII logging, if the log message
+                                        // contains any PII,
+                                        // we should not send it.
+                                        if (!sAllowPii && containsPII) {
+                                            logDiscardedLogIfApplicable(
+                                                    logMessage,
+                                                    callback,
+                                                    tag,
+                                                    logLevel,
+                                                    containsPII);
+                                            return;
+                                        }
 
-                                callback.log(tag, logLevel, logMessage, containsPII);
+                                        callback.log(tag, logLevel, logMessage, containsPII);
+                                    }
+                                } catch (final Exception e) {
+                                    // Do nothing.
+                                }
                             }
-                        } catch (final Exception e) {
-                            // Do nothing.
+                        } finally {
+                            sLoggersLock.readLock().unlock();
                         }
                     }
-                } finally {
-                    sLoggersLock.readLock().unlock();
-                }
-            }
-        });
+                });
     }
 
     /**
      * If applicable, log the discarded log.
      * This is applicable for testing only (IDetailedLoggerCallback is package-private).
      */
-    private static void logDiscardedLogIfApplicable(String logMessage, ILoggerCallback callback, @NonNull String tag, @NonNull Logger.LogLevel logLevel, boolean containsPII) {
+    private static void logDiscardedLogIfApplicable(
+            String logMessage,
+            ILoggerCallback callback,
+            @NonNull String tag,
+            @NonNull Logger.LogLevel logLevel,
+            boolean containsPII) {
         if (callback instanceof IDetailedLoggerCallback) {
-            ((IDetailedLoggerCallback) callback).discardedLog(tag, logLevel, logMessage, containsPII);
+            ((IDetailedLoggerCallback) callback)
+                    .discardedLog(tag, logLevel, logMessage, containsPII);
         }
     }
 
@@ -439,14 +449,17 @@ public class Logger {
      * If correlation id doesn't exist:
      * <library_version> [<timestamp>] <log_message>
      */
-    private static String formatMessage(final String correlationID,
-                                        final String message,
-                                        @NonNull final String dateTimeStamp,
-                                        final Throwable throwable) {
+    private static String formatMessage(
+            final String correlationID,
+            final String message,
+            @NonNull final String dateTimeStamp,
+            final Throwable throwable) {
         final String logMessage = StringUtil.isNullOrEmpty(message) ? "N/A" : message;
-        return " [" + dateTimeStamp
+        return " ["
+                + dateTimeStamp
                 + (StringUtil.isNullOrEmpty(correlationID) ? "] " : " - " + correlationID + "] ")
-                + sPlatformString + " "
+                + sPlatformString
+                + " "
                 + logMessage
                 + (throwable == null ? "" : '\n' + ThrowableUtil.getStackTraceAsString(throwable));
     }
@@ -458,4 +471,3 @@ public class Logger {
         return dateFormat.format(new Date());
     }
 }
-

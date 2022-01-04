@@ -37,7 +37,8 @@ import java.util.HashMap;
  */
 public class DeviceMonitor {
 
-    private static final HashMap<PerformanceProfile, PerformanceProfileMonitor<?>> profilers = new HashMap<>();
+    private static final HashMap<PerformanceProfile, PerformanceProfileMonitor<?>> profilers =
+            new HashMap<>();
     private static final ProcessInfo processInfo = new ProcessInfo();
 
     static {
@@ -52,7 +53,8 @@ public class DeviceMonitor {
     public static String getDeviceName() {
         final String manufacturer = Build.MANUFACTURER;
         final String model = Build.MODEL;
-        // If the device model has the name of the manufacturer, just return the model, otherwise concatenate
+        // If the device model has the name of the manufacturer, just return the model, otherwise
+        // concatenate
         // the manufacturer and the model
         if (model.toLowerCase().startsWith(manufacturer.toLowerCase())) {
             return capitalize(model);
@@ -60,7 +62,6 @@ public class DeviceMonitor {
             return capitalize(manufacturer) + " " + model;
         }
     }
-
 
     private static String capitalize(final String s) {
         if (s == null || s.length() == 0) {
@@ -113,7 +114,9 @@ public class DeviceMonitor {
      * @param <T>                the type of the stats retrieved for the performance profile
      * @return the current data showing its usage.
      */
-    public static <T> T getStats(@NonNull final PerformanceProfile performanceProfile, @NonNull final Class<T> classOfT) {
+    public static <T> T getStats(
+            @NonNull final PerformanceProfile performanceProfile,
+            @NonNull final Class<T> classOfT) {
         final PerformanceProfileMonitor<?> monitor = profilers.get(performanceProfile);
 
         if (monitor == null) {
@@ -141,7 +144,9 @@ public class DeviceMonitor {
      * @param profiler the profile monitor to use {@link PerformanceProfileMonitor}
      * @param <T>      the type of the data that will be collected by the {@link PerformanceProfileMonitor}
      */
-    public static <T> void setProfiler(@NonNull final PerformanceProfile profile, @NonNull final PerformanceProfileMonitor<T> profiler) {
+    public static <T> void setProfiler(
+            @NonNull final PerformanceProfile profile,
+            @NonNull final PerformanceProfileMonitor<T> profiler) {
         profilers.put(profile, profiler);
     }
 
@@ -151,7 +156,8 @@ public class DeviceMonitor {
      * @param profile {@link PerformanceProfile}
      * @return the profile monitor tool {@link PerformanceProfileMonitor}
      */
-    public static PerformanceProfileMonitor<?> getProfiler(@NonNull final PerformanceProfile profile) {
+    public static PerformanceProfileMonitor<?> getProfiler(
+            @NonNull final PerformanceProfile profile) {
         return profilers.get(profile);
     }
 
@@ -205,7 +211,8 @@ public class DeviceMonitor {
 
         // Execute the top command by passing the process id.
         // -b [Batch Mode] sets the output in a parsable format.
-        // -n [Exit top command after specific number of repetitions] in this case we just need it to fetch once.
+        // -n [Exit top command after specific number of repetitions] in this case we just need it
+        // to fetch once.
         // -p [Process ID] set the process id
         final String shellCommand = "top -b -n 1 -p " + pid;
         final String[] commandResult = AdbShellUtils.executeShellCommand(shellCommand).split("\n");
@@ -218,7 +225,5 @@ public class DeviceMonitor {
         processInfo.setCpuUsage(Double.parseDouble(cpuUsage) / numCpuCores);
         processInfo.setMemoryUsage(Double.parseDouble(memoryUsage));
         processInfo.setPid(pid);
-
     }
-
 }

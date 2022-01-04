@@ -25,14 +25,15 @@ package com.microsoft.identity.common.java.cache;
 
 import com.microsoft.identity.common.java.dto.AccountRecord;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
+
+import lombok.NonNull;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
-
-import edu.umd.cs.findbugs.annotations.Nullable;
-import lombok.NonNull;
 
 /**
  * Functions as a 'receipt' when deleting AccountRecords: AccountRecords which have been removed
@@ -84,13 +85,11 @@ public class AccountDeletionRecord implements List<AccountRecord> {
     @Override
     public boolean add(AccountRecord accountRecord) {
         throw new UnsupportedOperationException(RESULT_IS_READ_ONLY);
-
     }
 
     @Override
     public boolean remove(Object o) {
         throw new UnsupportedOperationException(RESULT_IS_READ_ONLY);
-
     }
 
     @Override
@@ -101,7 +100,6 @@ public class AccountDeletionRecord implements List<AccountRecord> {
     @Override
     public boolean addAll(Collection<? extends AccountRecord> c) {
         throw new UnsupportedOperationException(RESULT_IS_READ_ONLY);
-
     }
 
     @Override
@@ -132,7 +130,6 @@ public class AccountDeletionRecord implements List<AccountRecord> {
     @Override
     public AccountRecord set(int index, AccountRecord element) {
         throw new UnsupportedOperationException(RESULT_IS_READ_ONLY);
-
     }
 
     @Override

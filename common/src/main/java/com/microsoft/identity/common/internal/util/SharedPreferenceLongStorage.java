@@ -26,14 +26,15 @@ import com.microsoft.identity.common.java.cache.IMultiTypeNameValueStorage;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.java.util.ported.Predicate;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
+
+import lombok.NonNull;
+
 import java.util.AbstractMap;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
-
-import edu.umd.cs.findbugs.annotations.Nullable;
-import lombok.NonNull;
 
 /**
  * Adapts {@link IMultiTypeNameValueStorage} to {@link INameValueStorage <Long>}
@@ -55,7 +56,7 @@ public class SharedPreferenceLongStorage extends AbstractSharedPrefNameValueStor
             try {
                 allLongs.put(e.getKey(), Long.parseLong(e.getValue()));
             } catch (final NumberFormatException nfe) {
-                //nothing to do
+                // nothing to do
             }
         }
         return allLongs;
@@ -71,10 +72,12 @@ public class SharedPreferenceLongStorage extends AbstractSharedPrefNameValueStor
     }
 
     @Override
-    public Iterator<Map.Entry<String, Long>> getAllFilteredByKey(final @NonNull Predicate<String> keyFilter) {
+    public Iterator<Map.Entry<String, Long>> getAllFilteredByKey(
+            final @NonNull Predicate<String> keyFilter) {
         return new Iterator<Map.Entry<String, Long>>() {
 
-            final Iterator<Map.Entry<String, String>> iterator = mManager.getAllFilteredByKey(keyFilter);
+            final Iterator<Map.Entry<String, String>> iterator =
+                    mManager.getAllFilteredByKey(keyFilter);
             Map.Entry<String, Long> nextEntry = null;
 
             @Override
@@ -89,7 +92,9 @@ public class SharedPreferenceLongStorage extends AbstractSharedPrefNameValueStor
                     Map.Entry<String, String> nextElement = iterator.next();
                     try {
                         long parsedValue = Long.parseLong(nextElement.getValue());
-                        nextEntry = new AbstractMap.SimpleEntry<String, Long>(nextElement.getKey(), parsedValue);
+                        nextEntry =
+                                new AbstractMap.SimpleEntry<String, Long>(
+                                        nextElement.getKey(), parsedValue);
                     } catch (NumberFormatException nfe) {
                         nextEntry = null;
                     }
@@ -106,7 +111,6 @@ public class SharedPreferenceLongStorage extends AbstractSharedPrefNameValueStor
                 nextEntry = null;
                 return tmp;
             }
-
 
             @Override
             public void remove() {

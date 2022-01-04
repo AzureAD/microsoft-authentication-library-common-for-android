@@ -37,9 +37,9 @@ import java.lang.reflect.Type;
 public class ICacheRecordGsonAdapter implements JsonDeserializer<ICacheRecord> {
 
     @Override
-    public ICacheRecord deserialize(final JsonElement json,
-                                    final Type typeOfT,
-                                    final JsonDeserializationContext context) throws JsonParseException {
+    public ICacheRecord deserialize(
+            final JsonElement json, final Type typeOfT, final JsonDeserializationContext context)
+            throws JsonParseException {
         return context.deserialize(json, CacheRecord.class);
     }
 }

@@ -22,13 +22,13 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.annotations;
 
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
 import com.microsoft.identity.client.ui.automation.broker.ITestBroker;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
-
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * An annotation indicating which brokers are supported for a given test. This annotation is coupled

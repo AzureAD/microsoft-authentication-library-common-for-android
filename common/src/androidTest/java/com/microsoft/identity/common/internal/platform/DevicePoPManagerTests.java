@@ -22,6 +22,9 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.platform;
 
+import static com.microsoft.identity.common.java.crypto.IDevicePopManager.PublicKeyFormat.JWK;
+import static com.microsoft.identity.common.java.crypto.IDevicePopManager.PublicKeyFormat.X_509_SubjectPublicKeyInfo_ASN_1;
+
 import android.content.Context;
 import android.os.Build;
 import android.util.Base64;
@@ -32,12 +35,9 @@ import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.java.crypto.IDevicePopManager;
 import com.google.gson.reflect.TypeToken;
+import com.microsoft.identity.common.java.crypto.IDevicePopManager;
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
@@ -63,9 +63,6 @@ import java.text.ParseException;
 import java.util.Date;
 import java.util.Map;
 
-import static com.microsoft.identity.common.java.crypto.IDevicePopManager.PublicKeyFormat.JWK;
-import static com.microsoft.identity.common.java.crypto.IDevicePopManager.PublicKeyFormat.X_509_SubjectPublicKeyInfo_ASN_1;
-
 // Note: Test cannot use robolectric due to the following open issue
 // https://github.com/robolectric/robolectric/issues/1518
 @RunWith(AndroidJUnit4.class)
@@ -76,8 +73,7 @@ public class DevicePoPManagerTests {
 
     @Before
     public void setUp()
-            throws CertificateException, NoSuchAlgorithmException,
-            KeyStoreException, IOException {
+            throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException {
         mContext = InstrumentationRegistry.getTargetContext();
         mDevicePopManager = new DevicePopManager(ApplicationProvider.getApplicationContext());
     }
@@ -142,13 +138,13 @@ public class DevicePoPManagerTests {
         Assert.assertFalse(mDevicePopManager.asymmetricKeyExists());
         mDevicePopManager.generateAsymmetricKey();
         Assert.assertTrue(mDevicePopManager.asymmetricKeyExists());
-        final String shr = mDevicePopManager.mintSignedAccessToken(
-                "GET",
-                12345,
-                new URL("https://www.contoso.com"),
-                "a_token_for_you",
-                "54321"
-        );
+        final String shr =
+                mDevicePopManager.mintSignedAccessToken(
+                        "GET",
+                        12345,
+                        new URL("https://www.contoso.com"),
+                        "a_token_for_you",
+                        "54321");
         Assert.assertNotNull(shr);
     }
 
@@ -167,14 +163,14 @@ public class DevicePoPManagerTests {
         final String at = "a_token_for_you";
         final String nonce = "54321";
         final String clientClaims = "some_claims";
-        final String shr = mDevicePopManager.mintSignedAccessToken(
-                httpMethod,
-                timestamp,
-                new URL(hostWithSchemeAndPath),
-                at,
-                nonce,
-                clientClaims
-        );
+        final String shr =
+                mDevicePopManager.mintSignedAccessToken(
+                        httpMethod,
+                        timestamp,
+                        new URL(hostWithSchemeAndPath),
+                        at,
+                        nonce,
+                        clientClaims);
         Assert.assertNotNull(shr);
 
         final SignedJWT jwt = SignedJWT.parse(shr);
@@ -201,13 +197,13 @@ public class DevicePoPManagerTests {
         Assert.assertFalse(mDevicePopManager.asymmetricKeyExists());
         mDevicePopManager.generateAsymmetricKey();
         Assert.assertTrue(mDevicePopManager.asymmetricKeyExists());
-        final String shr = mDevicePopManager.mintSignedAccessToken(
-                null, // Not supplied
-                12345,
-                new URL("https://www.contoso.com"),
-                "a_token_for_you",
-                "54321"
-        );
+        final String shr =
+                mDevicePopManager.mintSignedAccessToken(
+                        null, // Not supplied
+                        12345,
+                        new URL("https://www.contoso.com"),
+                        "a_token_for_you",
+                        "54321");
         final SignedJWT jwt = SignedJWT.parse(shr);
         final JWTClaimsSet jwtClaimsSet = jwt.getJWTClaimsSet();
         Assert.assertNull(jwtClaimsSet.getClaim("m"));
@@ -215,17 +211,18 @@ public class DevicePoPManagerTests {
     }
 
     @Test
-    public void testKidHeaderMatchesThumbprint() throws ClientException, MalformedURLException, ParseException {
+    public void testKidHeaderMatchesThumbprint()
+            throws ClientException, MalformedURLException, ParseException {
         Assert.assertFalse(mDevicePopManager.asymmetricKeyExists());
         mDevicePopManager.generateAsymmetricKey();
         Assert.assertTrue(mDevicePopManager.asymmetricKeyExists());
-        final String shr = mDevicePopManager.mintSignedAccessToken(
-                null, // Not supplied
-                12345,
-                new URL("https://www.contoso.com"),
-                "a_token_for_you",
-                "54321"
-        );
+        final String shr =
+                mDevicePopManager.mintSignedAccessToken(
+                        null, // Not supplied
+                        12345,
+                        new URL("https://www.contoso.com"),
+                        "a_token_for_you",
+                        "54321");
         final SignedJWT jwt = SignedJWT.parse(shr);
         final JWSHeader jwsHeader = jwt.getHeader();
         Assert.assertEquals(jwsHeader.getKeyID(), mDevicePopManager.getAsymmetricKeyThumbprint());
@@ -236,13 +233,13 @@ public class DevicePoPManagerTests {
         Assert.assertFalse(mDevicePopManager.asymmetricKeyExists());
         mDevicePopManager.generateAsymmetricKey();
         Assert.assertTrue(mDevicePopManager.asymmetricKeyExists());
-        final String shr = mDevicePopManager.mintSignedAccessToken(
-                null, // Not supplied
-                12345,
-                new URL("https://www.contoso.com"),
-                "a_token_for_you",
-                "54321"
-        );
+        final String shr =
+                mDevicePopManager.mintSignedAccessToken(
+                        null, // Not supplied
+                        12345,
+                        new URL("https://www.contoso.com"),
+                        "a_token_for_you",
+                        "54321");
         final SignedJWT jwt = SignedJWT.parse(shr);
         final JWSHeader jwsHeader = jwt.getHeader();
         Assert.assertEquals("RS256", jwsHeader.getAlgorithm().getName());
@@ -257,13 +254,13 @@ public class DevicePoPManagerTests {
         Assert.assertFalse(mDevicePopManager.asymmetricKeyExists());
         mDevicePopManager.generateAsymmetricKey();
         Assert.assertTrue(mDevicePopManager.asymmetricKeyExists());
-        final String shr = mDevicePopManager.mintSignedAccessToken(
-                "OPTIONS", // Not supplied
-                12345,
-                new URL(hostWithScheme),
-                "a_token_for_you",
-                "54321"
-        );
+        final String shr =
+                mDevicePopManager.mintSignedAccessToken(
+                        "OPTIONS", // Not supplied
+                        12345,
+                        new URL(hostWithScheme),
+                        "a_token_for_you",
+                        "54321");
         final SignedJWT jwt = SignedJWT.parse(shr);
         final JWTClaimsSet jwtClaimsSet = jwt.getJWTClaimsSet();
         Assert.assertEquals(host, jwtClaimsSet.getClaim("u"));
@@ -281,13 +278,13 @@ public class DevicePoPManagerTests {
         Assert.assertFalse(mDevicePopManager.asymmetricKeyExists());
         mDevicePopManager.generateAsymmetricKey();
         Assert.assertTrue(mDevicePopManager.asymmetricKeyExists());
-        final String shr = mDevicePopManager.mintSignedAccessToken(
-                null, // Not supplied
-                12345,
-                new URL(hostWithSchemeAndPath),
-                "a_token_for_you",
-                "54321"
-        );
+        final String shr =
+                mDevicePopManager.mintSignedAccessToken(
+                        null, // Not supplied
+                        12345,
+                        new URL(hostWithSchemeAndPath),
+                        "a_token_for_you",
+                        "54321");
         final SignedJWT jwt = SignedJWT.parse(shr);
         final JWTClaimsSet jwtClaimsSet = jwt.getJWTClaimsSet();
         Assert.assertEquals(host, jwtClaimsSet.getClaim("u"));
@@ -303,13 +300,13 @@ public class DevicePoPManagerTests {
         Assert.assertFalse(mDevicePopManager.asymmetricKeyExists());
         mDevicePopManager.generateAsymmetricKey();
         Assert.assertTrue(mDevicePopManager.asymmetricKeyExists());
-        final String shr = mDevicePopManager.mintSignedAccessToken(
-                null, // Not supplied
-                12345,
-                new URL(hostWithScheme),
-                "a_token_for_you",
-                "54321"
-        );
+        final String shr =
+                mDevicePopManager.mintSignedAccessToken(
+                        null, // Not supplied
+                        12345,
+                        new URL(hostWithScheme),
+                        "a_token_for_you",
+                        "54321");
         final SignedJWT jwt = SignedJWT.parse(shr);
         final JWTClaimsSet jwtClaimsSet = jwt.getJWTClaimsSet();
         Assert.assertEquals(host, jwtClaimsSet.getClaim("u"));
@@ -330,13 +327,9 @@ public class DevicePoPManagerTests {
         Assert.assertFalse(mDevicePopManager.asymmetricKeyExists());
         mDevicePopManager.generateAsymmetricKey();
         Assert.assertTrue(mDevicePopManager.asymmetricKeyExists());
-        final String shr = mDevicePopManager.mintSignedAccessToken(
-                httpMethod,
-                timestamp,
-                new URL(hostWithPath),
-                accessToken,
-                nonce
-        );
+        final String shr =
+                mDevicePopManager.mintSignedAccessToken(
+                        httpMethod, timestamp, new URL(hostWithPath), accessToken, nonce);
         final SignedJWT jwt = SignedJWT.parse(shr);
 
         // Verify headers
@@ -374,7 +367,8 @@ public class DevicePoPManagerTests {
     }
 
     @Test
-    public void testAsymmetricKeyHasPublicKeyX509() throws ClientException, NoSuchAlgorithmException, InvalidKeySpecException {
+    public void testAsymmetricKeyHasPublicKeyX509()
+            throws ClientException, NoSuchAlgorithmException, InvalidKeySpecException {
         // Generate keys
         mDevicePopManager.generateAsymmetricKey();
 
@@ -397,7 +391,12 @@ public class DevicePoPManagerTests {
         final String publicKey = mDevicePopManager.getPublicKey(JWK);
 
         // Convert it to JSON, parse to verify fields
-        final Map<String, String> jwkObj = new Gson().fromJson(publicKey, TypeToken.getParameterized(Map.class, String.class, String.class).getType());
+        final Map<String, String> jwkObj =
+                new Gson()
+                        .fromJson(
+                                publicKey,
+                                TypeToken.getParameterized(Map.class, String.class, String.class)
+                                        .getType());
 
         // We should expect the following claims...
         // 'kty' - Key Type - Identifies the cryptographic alg used with this key (ex: RSA, EC)
@@ -430,13 +429,9 @@ public class DevicePoPManagerTests {
         Assert.assertFalse(mDevicePopManager.asymmetricKeyExists());
         mDevicePopManager.generateAsymmetricKey();
         Assert.assertTrue(mDevicePopManager.asymmetricKeyExists());
-        final String shr = mDevicePopManager.mintSignedHttpRequest(
-                httpMethod,
-                timestamp,
-                new URL(hostWithPath),
-                nonce,
-                clientClaims
-        );
+        final String shr =
+                mDevicePopManager.mintSignedHttpRequest(
+                        httpMethod, timestamp, new URL(hostWithPath), nonce, clientClaims);
         final SignedJWT jwt = SignedJWT.parse(shr);
 
         // Verify headers
@@ -466,10 +461,7 @@ public class DevicePoPManagerTests {
         // endorsement key (EK) root if testing on a real, Play Services compatible device.
         final Certificate[] chain = mDevicePopManager.getCertificateChain();
         Assert.assertNotEquals(0, chain.length);
-        Assert.assertEquals(
-                "X.509",
-                mDevicePopManager.getCertificateChain()[0].getType()
-        );
+        Assert.assertEquals("X.509", mDevicePopManager.getCertificateChain()[0].getType());
     }
 
     @Test

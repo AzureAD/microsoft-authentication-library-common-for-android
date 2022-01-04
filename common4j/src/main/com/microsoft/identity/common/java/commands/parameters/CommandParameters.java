@@ -28,15 +28,15 @@ import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2TokenCache;
 import com.microsoft.identity.common.java.request.SdkType;
 
-import java.util.Collections;
-import java.util.Map;
-
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
+
+import java.util.Collections;
+import java.util.Map;
 
 // Suppressing rawtype warnings due to the generic type OAuth2TokenCache
 @SuppressWarnings(WarningType.rawtype_warning)
@@ -45,45 +45,30 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder(toBuilder = true)
 public class CommandParameters {
 
-    @NonNull
-    @EqualsAndHashCode.Exclude
-    private transient IPlatformComponents platformComponents;
+    @NonNull @EqualsAndHashCode.Exclude private transient IPlatformComponents platformComponents;
 
-    @EqualsAndHashCode.Exclude
-    private transient OAuth2TokenCache oAuth2TokenCache;
+    @EqualsAndHashCode.Exclude private transient OAuth2TokenCache oAuth2TokenCache;
 
-    @EqualsAndHashCode.Exclude
-    private transient boolean isSharedDevice;
+    @EqualsAndHashCode.Exclude private transient boolean isSharedDevice;
 
-    @Expose()
-    private String applicationName;
+    @Expose() private String applicationName;
 
-    @Expose()
-    private String applicationVersion;
+    @Expose() private String applicationVersion;
 
-    @Expose()
-    private String requiredBrokerProtocolVersion;
+    @Expose() private String requiredBrokerProtocolVersion;
 
-    @Expose()
-    private SdkType sdkType;
+    @Expose() private SdkType sdkType;
 
-    @Expose()
-    private String sdkVersion;
+    @Expose() private String sdkVersion;
 
-    @Expose()
-    private String clientId;
+    @Expose() private String clientId;
 
-    @Expose()
-    private String redirectUri;
+    @Expose() private String redirectUri;
 
-    @Expose()
-    private boolean powerOptCheckEnabled;
+    @Expose() private boolean powerOptCheckEnabled;
 
     @Builder.Default
     private transient Map<String, String> flightInformation = Collections.emptyMap();
 
-    @Setter
-    @EqualsAndHashCode.Exclude
-    @Expose()
-    private String correlationId;
+    @Setter @EqualsAndHashCode.Exclude @Expose() private String correlationId;
 }

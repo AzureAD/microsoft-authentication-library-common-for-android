@@ -48,7 +48,10 @@ public class TrafficInfo {
      * @param totalBytesReceived the total bytes received so far
      * @param prevTrafficInfo    the previous TrafficInfo queried.
      */
-    protected void setTrafficInfo(final long totalBytesSent, final long totalBytesReceived, final TrafficInfo prevTrafficInfo) {
+    protected void setTrafficInfo(
+            final long totalBytesSent,
+            final long totalBytesReceived,
+            final TrafficInfo prevTrafficInfo) {
         mTotalBytesReceived = totalBytesReceived;
         mTotalBytesSent = totalBytesSent;
         if (prevTrafficInfo != null) {

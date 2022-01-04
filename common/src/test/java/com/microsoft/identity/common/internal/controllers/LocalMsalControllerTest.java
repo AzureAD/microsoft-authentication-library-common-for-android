@@ -50,6 +50,8 @@ import com.microsoft.identity.labapi.utilities.exception.LabApiException;
 import com.microsoft.identity.labapi.utilities.jwt.IJWTParser;
 import com.microsoft.identity.labapi.utilities.jwt.JWTParserFactory;
 
+import lombok.NonNull;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -61,16 +63,13 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.UUID;
 
-import lombok.NonNull;
-
 /**
  * Tests for {@link LocalMSALController}.
  */
 @RunWith(RobolectricTestRunner.class)
 public class LocalMsalControllerTest {
-    private static final ILabClient sLabClient = new LabClient(
-            new LabApiAuthenticationClient(BuildConfig.LAB_CLIENT_SECRET)
-    );
+    private static final ILabClient sLabClient =
+            new LabClient(new LabApiAuthenticationClient(BuildConfig.LAB_CLIENT_SECRET));
 
     private static ILabAccount sTestAccount;
 
@@ -78,7 +77,8 @@ public class LocalMsalControllerTest {
 
     private static final String CLIENT_ID = "4b0db8c2-9f26-4417-8bde-3f0e3656f8e0";
 
-    private static final String REDIRECT_URI = "msauth://com.msft.identity.client.sample.local/1wIqXSqBj7w%2Bh11ZifsnqwgyKrY%3D";
+    private static final String REDIRECT_URI =
+            "msauth://com.msft.identity.client.sample.local/1wIqXSqBj7w%2Bh11ZifsnqwgyKrY%3D";
 
     private static final String SCOPE = "User.read";
 
@@ -95,9 +95,7 @@ public class LocalMsalControllerTest {
     @Before
     public void setup() {
         final Context context = ApplicationProvider.getApplicationContext();
-        mPlatformComponents = AndroidPlatformComponents.createFromContext(
-                context
-        );
+        mPlatformComponents = AndroidPlatformComponents.createFromContext(context);
     }
 
     @Test
@@ -119,33 +117,41 @@ public class LocalMsalControllerTest {
 
     private ILocalAuthenticationResult acquireTokenUsingRopc() throws Exception {
         final RopcTokenCommandParameters tokenCommandParameters = createRopcCommandParameters();
-        final AcquireTokenResult acquireTokenResult = mController.acquireTokenWithPassword(tokenCommandParameters);
+        final AcquireTokenResult acquireTokenResult =
+                mController.acquireTokenWithPassword(tokenCommandParameters);
         performAssertionsOnTokenResult(acquireTokenResult);
         return acquireTokenResult.getLocalAuthenticationResult();
     }
 
-    private ILocalAuthenticationResult acquireTokenSilently(@NonNull final IAccountRecord accountRecord) throws Exception {
-        final SilentTokenCommandParameters tokenCommandParameters = createSilentTokenCommandParameters(accountRecord);
-        final AcquireTokenResult acquireTokenResult = mController.acquireTokenSilent(tokenCommandParameters);
+    private ILocalAuthenticationResult acquireTokenSilently(
+            @NonNull final IAccountRecord accountRecord) throws Exception {
+        final SilentTokenCommandParameters tokenCommandParameters =
+                createSilentTokenCommandParameters(accountRecord);
+        final AcquireTokenResult acquireTokenResult =
+                mController.acquireTokenSilent(tokenCommandParameters);
         performAssertionsOnTokenResult(acquireTokenResult);
         return acquireTokenResult.getLocalAuthenticationResult();
     }
 
-    private void performAssertionsOnTokenResult(@NonNull final AcquireTokenResult acquireTokenResult) {
+    private void performAssertionsOnTokenResult(
+            @NonNull final AcquireTokenResult acquireTokenResult) {
         Assert.assertNotNull(acquireTokenResult);
         Assert.assertTrue(acquireTokenResult.getSucceeded());
 
-        final ILocalAuthenticationResult localAuthenticationResult = acquireTokenResult.getLocalAuthenticationResult();
+        final ILocalAuthenticationResult localAuthenticationResult =
+                acquireTokenResult.getLocalAuthenticationResult();
 
         Assert.assertNotNull(localAuthenticationResult);
         Assert.assertNotNull(localAuthenticationResult.getAccessToken());
         Assert.assertNotNull(localAuthenticationResult.getIdToken());
 
-        final Map<String, ?> idTokenClaims = mJwtParser.parseJWT(localAuthenticationResult.getIdToken());
+        final Map<String, ?> idTokenClaims =
+                mJwtParser.parseJWT(localAuthenticationResult.getIdToken());
 
         Assert.assertNotNull(idTokenClaims);
 
-        Assert.assertEquals(sTestAccount.getUsername(), idTokenClaims.get(IDToken.PREFERRED_USERNAME));
+        Assert.assertEquals(
+                sTestAccount.getUsername(), idTokenClaims.get(IDToken.PREFERRED_USERNAME));
     }
 
     private RopcTokenCommandParameters createRopcCommandParameters() {
@@ -160,12 +166,15 @@ public class LocalMsalControllerTest {
                 .oAuth2TokenCache(MsalOAuth2TokenCache.create(mPlatformComponents))
                 .authenticationScheme(new BearerAuthenticationSchemeInternal())
                 .sdkType(SdkType.MSAL)
-                .requiredBrokerProtocolVersion(BrokerProtocolVersionUtil.MSAL_TO_BROKER_PROTOCOL_COMPRESSION_CHANGES_MINIMUM_VERSION)
+                .requiredBrokerProtocolVersion(
+                        BrokerProtocolVersionUtil
+                                .MSAL_TO_BROKER_PROTOCOL_COMPRESSION_CHANGES_MINIMUM_VERSION)
                 .scopes(Collections.singleton(SCOPE))
                 .build();
     }
 
-    private SilentTokenCommandParameters createSilentTokenCommandParameters(@NonNull final IAccountRecord accountRecord) {
+    private SilentTokenCommandParameters createSilentTokenCommandParameters(
+            @NonNull final IAccountRecord accountRecord) {
         return SilentTokenCommandParameters.builder()
                 .authority(Authority.getAuthorityFromAuthorityUrl(AUTHORITY_URL))
                 .clientId(CLIENT_ID)
@@ -175,7 +184,9 @@ public class LocalMsalControllerTest {
                 .oAuth2TokenCache(MsalOAuth2TokenCache.create(mPlatformComponents))
                 .authenticationScheme(new BearerAuthenticationSchemeInternal())
                 .sdkType(SdkType.MSAL)
-                .requiredBrokerProtocolVersion(BrokerProtocolVersionUtil.MSAL_TO_BROKER_PROTOCOL_COMPRESSION_CHANGES_MINIMUM_VERSION)
+                .requiredBrokerProtocolVersion(
+                        BrokerProtocolVersionUtil
+                                .MSAL_TO_BROKER_PROTOCOL_COMPRESSION_CHANGES_MINIMUM_VERSION)
                 .scopes(Collections.singleton(SCOPE))
                 .account(accountRecord)
                 .build();

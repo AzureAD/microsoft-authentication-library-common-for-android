@@ -24,10 +24,10 @@ package com.microsoft.identity.common.java.providers.microsoft.azureactivedirect
 
 import com.google.gson.annotations.SerializedName;
 
+import lombok.EqualsAndHashCode;
+
 import java.util.ArrayList;
 import java.util.List;
-
-import lombok.EqualsAndHashCode;
 
 /**
  * This class contains information about a specific Azure Active Directory Cloud.  Azure Active Directory
@@ -64,9 +64,10 @@ public class AzureActiveDirectoryCloud {
      * @param preferredCache   preferred cache
      * @param aliases          aliases
      */
-    public AzureActiveDirectoryCloud(final String preferredNetwork,
-                                     final String preferredCache,
-                                     final List<String> aliases) {
+    public AzureActiveDirectoryCloud(
+            final String preferredNetwork,
+            final String preferredCache,
+            final List<String> aliases) {
         mPreferredNetworkHostName = preferredNetwork;
         mPreferredCacheHostName = preferredCache;
         mCloudHostAliases = new ArrayList<>();
@@ -101,8 +102,8 @@ public class AzureActiveDirectoryCloud {
         return mCloudHostAliases;
     }
 
-    //TODO: This is set to true if we were able to load the list of valid clouds from the server
-    //TODO: Should we really be loading it at all if we were not able to find it?
+    // TODO: This is set to true if we were able to load the list of valid clouds from the server
+    // TODO: Should we really be loading it at all if we were not able to find it?
     boolean isValidated() {
         return mIsValidated;
     }

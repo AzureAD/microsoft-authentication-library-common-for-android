@@ -35,14 +35,16 @@ import java.util.UUID;
 public final class MicrosoftStsTokenRequestTests {
 
     @Test
-    public void testCorrelationIdSerializedCorrectly(){
+    public void testCorrelationIdSerializedCorrectly() {
         UUID correlationId = UUID.randomUUID();
         MicrosoftStsTokenRequest request = new MicrosoftStsTokenRequest();
         request.setCorrelationId(correlationId);
 
         String jsonRequest = ObjectMapper.serializeObjectToJsonString(request);
 
-        MicrosoftStsTokenRequest deserializedRequest = ObjectMapper.deserializeJsonStringToObject(jsonRequest, MicrosoftStsTokenRequest.class);
+        MicrosoftStsTokenRequest deserializedRequest =
+                ObjectMapper.deserializeJsonStringToObject(
+                        jsonRequest, MicrosoftStsTokenRequest.class);
 
         Assert.assertEquals(correlationId, deserializedRequest.getCorrelationId());
     }

@@ -24,8 +24,7 @@ package com.microsoft.identity.common.java.authorities;
 
 public class AccountsInOneOrganization extends AzureActiveDirectoryAudience {
 
-    public AccountsInOneOrganization() {
-    }
+    public AccountsInOneOrganization() {}
 
     public AccountsInOneOrganization(String tenantId) {
         this.setTenantId(tenantId);
@@ -35,6 +34,4 @@ public class AccountsInOneOrganization extends AzureActiveDirectoryAudience {
         this.setCloudUrl(cloudUrl);
         this.setTenantId(tenantId);
     }
-
-
 }

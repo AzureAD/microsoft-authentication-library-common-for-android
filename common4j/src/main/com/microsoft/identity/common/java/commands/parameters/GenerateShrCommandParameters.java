@@ -23,7 +23,6 @@
 package com.microsoft.identity.common.java.commands.parameters;
 
 import com.microsoft.identity.common.java.authscheme.IPoPAuthenticationSchemeParams;
-import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

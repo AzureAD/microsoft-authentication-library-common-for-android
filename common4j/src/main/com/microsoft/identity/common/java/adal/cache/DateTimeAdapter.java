@@ -43,11 +43,11 @@ public class DateTimeAdapter implements JsonDeserializer<Date>, JsonSerializer<D
 
     private static final String TAG = "DateTimeAdapter";
 
-    private final DateFormat mEnUsFormat = DateFormat.getDateTimeInstance(DateFormat.DEFAULT,
-            DateFormat.DEFAULT, Locale.US);
+    private final DateFormat mEnUsFormat =
+            DateFormat.getDateTimeInstance(DateFormat.DEFAULT, DateFormat.DEFAULT, Locale.US);
 
-    private final DateFormat mLocalFormat = DateFormat.getDateTimeInstance(DateFormat.DEFAULT,
-            DateFormat.DEFAULT);
+    private final DateFormat mLocalFormat =
+            DateFormat.getDateTimeInstance(DateFormat.DEFAULT, DateFormat.DEFAULT);
 
     private final DateFormat mISO8601Format = buildIso8601Format();
     private final DateFormat mEnUs24HourFormat = buildEnUs24HourDateFormat();
@@ -84,8 +84,9 @@ public class DateTimeAdapter implements JsonDeserializer<Date>, JsonSerializer<D
      * {@inheritDoc}
      */
     @Override
-    public synchronized Date deserialize(JsonElement json, Type typeOfT,
-                                         JsonDeserializationContext context) throws JsonParseException {
+    public synchronized Date deserialize(
+            JsonElement json, Type typeOfT, JsonDeserializationContext context)
+            throws JsonParseException {
         String jsonString = json.getAsString();
 
         // Datetime string is serialized with iso8601 format by default, should
@@ -102,19 +103,22 @@ public class DateTimeAdapter implements JsonDeserializer<Date>, JsonSerializer<D
         try {
             return mLocalFormat.parse(jsonString);
         } catch (final ParseException ignored) {
-            Logger.verbose(TAG, "Cannot parse with local format, try again with local 24 hour format.");
+            Logger.verbose(
+                    TAG, "Cannot parse with local format, try again with local 24 hour format.");
         }
 
         try {
             return mLocal24HourFormat.parse(jsonString);
         } catch (final ParseException ignored) {
-            Logger.verbose(TAG, "Cannot parse with local 24 hour format, try again with en us format.");
+            Logger.verbose(
+                    TAG, "Cannot parse with local 24 hour format, try again with en us format.");
         }
 
         try {
             return mEnUsFormat.parse(jsonString);
         } catch (final ParseException ignored) {
-            Logger.verbose(TAG, "Cannot parse with en us format, try again with en us 24 hour format.");
+            Logger.verbose(
+                    TAG, "Cannot parse with en us format, try again with en us 24 hour format.");
         }
 
         try {
@@ -130,8 +134,8 @@ public class DateTimeAdapter implements JsonDeserializer<Date>, JsonSerializer<D
      * {@inheritDoc}
      */
     @Override
-    public synchronized JsonElement serialize(Date src, Type typeOfSrc,
-                                              JsonSerializationContext context) {
+    public synchronized JsonElement serialize(
+            Date src, Type typeOfSrc, JsonSerializationContext context) {
         return new JsonPrimitive(mISO8601Format.format(src));
     }
 }

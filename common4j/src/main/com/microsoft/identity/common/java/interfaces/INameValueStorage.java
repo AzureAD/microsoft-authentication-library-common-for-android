@@ -24,12 +24,13 @@ package com.microsoft.identity.common.java.interfaces;
 
 import com.microsoft.identity.common.java.util.ported.Predicate;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
+
+import lombok.NonNull;
+
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-
-import edu.umd.cs.findbugs.annotations.Nullable;
-import lombok.NonNull;
 
 /**
  * An interface for a NameValue storage.
@@ -81,4 +82,3 @@ public interface INameValueStorage<T> {
      */
     Iterator<Map.Entry<String, T>> getAllFilteredByKey(Predicate<String> keyFilter);
 }
-

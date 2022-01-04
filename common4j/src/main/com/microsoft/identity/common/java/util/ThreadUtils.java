@@ -22,9 +22,9 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.util;
 
-import lombok.NonNull;
-
 import com.microsoft.identity.common.java.logging.Logger;
+
+import lombok.NonNull;
 
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
@@ -49,7 +49,8 @@ public class ThreadUtils {
      * @param tag           the tag for logging a message.
      * @param message       the message to log.
      */
-    public static void sleepSafely(final int sleepTimeInMs, @NonNull final String tag, @NonNull final String message) {
+    public static void sleepSafely(
+            final int sleepTimeInMs, @NonNull final String tag, @NonNull final String message) {
         if (sleepTimeInMs > 0) {
             try {
                 Thread.sleep(sleepTimeInMs);
@@ -71,49 +72,76 @@ public class ThreadUtils {
      * @param poolName      The name of the thread pool in use.
      * @return An executor service with the specified properties.
      */
-    public static ExecutorService getNamedThreadPoolExecutor(final int corePool, final int maxPool,
-                                                             final int queueSize, final long keepAliveTime,
-                                                             @NonNull final TimeUnit keepAliveUnit,
-                                                             @NonNull final String poolName) {
+    public static ExecutorService getNamedThreadPoolExecutor(
+            final int corePool,
+            final int maxPool,
+            final int queueSize,
+            final long keepAliveTime,
+            @NonNull final TimeUnit keepAliveUnit,
+            @NonNull final String poolName) {
         if (queueSize > 0) {
-            return new ThreadPoolExecutor(corePool, maxPool, keepAliveTime, keepAliveUnit,
-                                          new ArrayBlockingQueue<Runnable>(queueSize),
-                                          getNamedThreadFactory(poolName, System.getSecurityManager()));
+            return new ThreadPoolExecutor(
+                    corePool,
+                    maxPool,
+                    keepAliveTime,
+                    keepAliveUnit,
+                    new ArrayBlockingQueue<Runnable>(queueSize),
+                    getNamedThreadFactory(poolName, System.getSecurityManager()));
         } else if (queueSize == 0) {
-            return new ThreadPoolExecutor(corePool, maxPool, keepAliveTime, keepAliveUnit,
-                                          new SynchronousQueue<Runnable>(),
-                                          getNamedThreadFactory(poolName, System.getSecurityManager()));
+            return new ThreadPoolExecutor(
+                    corePool,
+                    maxPool,
+                    keepAliveTime,
+                    keepAliveUnit,
+                    new SynchronousQueue<Runnable>(),
+                    getNamedThreadFactory(poolName, System.getSecurityManager()));
         } else { // (queueSize < 0)
-            return new ThreadPoolExecutor(corePool, maxPool, keepAliveTime, keepAliveUnit,
-                                          new LinkedBlockingQueue<Runnable>(),
-                                          getNamedThreadFactory(poolName, System.getSecurityManager()));
+            return new ThreadPoolExecutor(
+                    corePool,
+                    maxPool,
+                    keepAliveTime,
+                    keepAliveUnit,
+                    new LinkedBlockingQueue<Runnable>(),
+                    getNamedThreadFactory(poolName, System.getSecurityManager()));
         }
     }
 
-    //Nice thought, but if you're using executors, you're using ThreadGroup whether you want to or not.
+    // Nice thought, but if you're using executors, you're using ThreadGroup whether you want to or
+    // not.
     @SuppressWarnings("PMD.AvoidThreadGroup")
-    private static ThreadFactory getNamedThreadFactory(@NonNull final String poolName, final SecurityManager securityManager) {
+    private static ThreadFactory getNamedThreadFactory(
+            @NonNull final String poolName, final SecurityManager securityManager) {
         return new ThreadFactory() {
             private final String poolPrefix = poolName + "-";
             private final AtomicLong threadNumber = new AtomicLong(1);
-            private final ThreadGroup group = securityManager == null ? Thread.currentThread().getThreadGroup()
-                                                                      : securityManager.getThreadGroup();
+            private final ThreadGroup group =
+                    securityManager == null
+                            ? Thread.currentThread().getThreadGroup()
+                            : securityManager.getThreadGroup();
 
             @Override
             public Thread newThread(Runnable r) {
-                final Thread thread = new Thread(group, r, poolPrefix + threadNumber.getAndIncrement(), 0);
-                thread.setUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
-                    @Override
-                    public void uncaughtException(@NonNull final Thread t, @NonNull final Throwable e) {
-                        if (e instanceof ThreadDeath) {
-                            Logger.info("ThreadPool[" + poolName + "]", null,
-                                    "Thread Death Exception in thread pool " + poolName);
-                        } else {
-                            Logger.error("ThreadPool[" + poolName + "]", null,
-                                    "Uncaught Exception in thread pool " + poolName, e);
-                        }
-                    }
-                });
+                final Thread thread =
+                        new Thread(group, r, poolPrefix + threadNumber.getAndIncrement(), 0);
+                thread.setUncaughtExceptionHandler(
+                        new Thread.UncaughtExceptionHandler() {
+                            @Override
+                            public void uncaughtException(
+                                    @NonNull final Thread t, @NonNull final Throwable e) {
+                                if (e instanceof ThreadDeath) {
+                                    Logger.info(
+                                            "ThreadPool[" + poolName + "]",
+                                            null,
+                                            "Thread Death Exception in thread pool " + poolName);
+                                } else {
+                                    Logger.error(
+                                            "ThreadPool[" + poolName + "]",
+                                            null,
+                                            "Uncaught Exception in thread pool " + poolName,
+                                            e);
+                                }
+                            }
+                        });
                 return thread;
             }
         };

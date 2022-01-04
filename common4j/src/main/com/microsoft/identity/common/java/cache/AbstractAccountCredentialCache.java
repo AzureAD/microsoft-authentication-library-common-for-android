@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.cache;
 
+import static com.microsoft.identity.common.java.AuthenticationConstants.DEFAULT_SCOPES;
+
 import com.microsoft.identity.common.java.dto.AccessTokenRecord;
 import com.microsoft.identity.common.java.dto.AccountRecord;
 import com.microsoft.identity.common.java.dto.Credential;
@@ -31,7 +33,10 @@ import com.microsoft.identity.common.java.dto.PrimaryRefreshTokenRecord;
 import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.util.StringUtil;
-import com.microsoft.identity.common.java.logging.Logger;
+
+import edu.umd.cs.findbugs.annotations.Nullable;
+
+import lombok.NonNull;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -39,19 +44,14 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
-import static com.microsoft.identity.common.java.AuthenticationConstants.DEFAULT_SCOPES;
-
-import edu.umd.cs.findbugs.annotations.Nullable;
-import lombok.NonNull;
-
 public abstract class AbstractAccountCredentialCache implements IAccountCredentialCache {
 
     private static final String TAG = AbstractAccountCredentialCache.class.getSimpleName();
     private static final String NEW_LINE = "\n";
 
     @Nullable
-    protected Class<? extends Credential> getTargetClassForCredentialType(@Nullable final String cacheKey,
-                                                                          @NonNull final CredentialType targetType) {
+    protected Class<? extends Credential> getTargetClassForCredentialType(
+            @Nullable final String cacheKey, @NonNull final CredentialType targetType) {
         Class<? extends Credential> credentialClass = null;
 
         switch (targetType) {
@@ -70,8 +70,10 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
                 credentialClass = PrimaryRefreshTokenRecord.class;
                 break;
             default:
-                Logger.warn(TAG, "Could not match CredentialType to class. "
-                        + "Did you forget to update this method with a new type?");
+                Logger.warn(
+                        TAG,
+                        "Could not match CredentialType to class. "
+                                + "Did you forget to update this method with a new type?");
                 if (null != cacheKey) {
                     Logger.warnPII(TAG, "Sought key was: [" + cacheKey + "]");
                 }
@@ -81,20 +83,24 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
     }
 
     @NonNull
-    protected List<AccountRecord> getAccountsFilteredByInternal(@Nullable final String homeAccountId,
-                                                                @Nullable final String environment,
-                                                                @Nullable final String realm,
-                                                                @NonNull final List<AccountRecord> allAccounts) {
+    protected List<AccountRecord> getAccountsFilteredByInternal(
+            @Nullable final String homeAccountId,
+            @Nullable final String environment,
+            @Nullable final String realm,
+            @NonNull final List<AccountRecord> allAccounts) {
         final boolean mustMatchOnHomeAccountId = !StringUtil.isNullOrEmpty(homeAccountId);
         final boolean mustMatchOnEnvironment = !StringUtil.isNullOrEmpty(environment);
         final boolean mustMatchOnRealm = !StringUtil.isNullOrEmpty(realm);
 
         Logger.verbose(
                 TAG,
-                "Account lookup filtered by home_account_id? [" + mustMatchOnHomeAccountId + "]"
+                "Account lookup filtered by home_account_id? ["
+                        + mustMatchOnHomeAccountId
+                        + "]"
                         + NEW_LINE
-                        + "Account lookup filtered by realm? [" + mustMatchOnRealm + "]"
-        );
+                        + "Account lookup filtered by realm? ["
+                        + mustMatchOnRealm
+                        + "]");
 
         final List<AccountRecord> matchingAccounts = new ArrayList<>();
 
@@ -102,11 +108,16 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
             boolean matches = true;
 
             if (mustMatchOnHomeAccountId) {
-                matches = StringUtil.equalsIgnoreCaseTrimBoth(homeAccountId, account.getHomeAccountId());
+                matches =
+                        StringUtil.equalsIgnoreCaseTrimBoth(
+                                homeAccountId, account.getHomeAccountId());
             }
 
             if (mustMatchOnEnvironment) {
-                matches = matches && StringUtil.equalsIgnoreCaseTrimBoth(environment, account.getEnvironment());
+                matches =
+                        matches
+                                && StringUtil.equalsIgnoreCaseTrimBoth(
+                                        environment, account.getEnvironment());
             }
 
             if (mustMatchOnRealm) {
@@ -118,50 +129,62 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
             }
         }
 
-        Logger.verbose(
-                TAG,
-                "Found [" + matchingAccounts.size() + "] matching accounts"
-        );
+        Logger.verbose(TAG, "Found [" + matchingAccounts.size() + "] matching accounts");
 
         return matchingAccounts;
     }
 
-    protected List<Credential> getCredentialsFilteredByInternal(@Nullable final String homeAccountId,
-                                                                @Nullable final String environment,
-                                                                @Nullable final CredentialType credentialType,
-                                                                @Nullable final String clientId,
-                                                                @Nullable final String realm,
-                                                                @Nullable final String target,
-                                                                @Nullable final String authScheme,
-                                                                @Nullable final String requestedClaims,
-                                                                @NonNull final List<Credential> allCredentials) {
+    protected List<Credential> getCredentialsFilteredByInternal(
+            @Nullable final String homeAccountId,
+            @Nullable final String environment,
+            @Nullable final CredentialType credentialType,
+            @Nullable final String clientId,
+            @Nullable final String realm,
+            @Nullable final String target,
+            @Nullable final String authScheme,
+            @Nullable final String requestedClaims,
+            @NonNull final List<Credential> allCredentials) {
         final boolean mustMatchOnEnvironment = !StringUtil.isNullOrEmpty(environment);
         final boolean mustMatchOnHomeAccountId = !StringUtil.isNullOrEmpty(homeAccountId);
         final boolean mustMatchOnRealm = !StringUtil.isNullOrEmpty(realm);
         final boolean mustMatchOnTarget = !StringUtil.isNullOrEmpty(target);
         final boolean mustMatchOnClientId = !StringUtil.isNullOrEmpty(clientId);
         final boolean mustMatchOnCredentialType = null != credentialType;
-        final boolean mustMatchOnAuthScheme = mustMatchOnCredentialType
-                && !StringUtil.isNullOrEmpty(authScheme)
-                && credentialType == CredentialType.AccessToken_With_AuthScheme;
+        final boolean mustMatchOnAuthScheme =
+                mustMatchOnCredentialType
+                        && !StringUtil.isNullOrEmpty(authScheme)
+                        && credentialType == CredentialType.AccessToken_With_AuthScheme;
         final boolean mustMatchOnRequestedClaims = !StringUtil.isNullOrEmpty(requestedClaims);
 
         Logger.verbose(
                 TAG,
-                "Credential lookup filtered by home_account_id? [" + mustMatchOnHomeAccountId + "]"
+                "Credential lookup filtered by home_account_id? ["
+                        + mustMatchOnHomeAccountId
+                        + "]"
                         + NEW_LINE
-                        + "Credential lookup filtered by realm? [" + mustMatchOnRealm + "]"
+                        + "Credential lookup filtered by realm? ["
+                        + mustMatchOnRealm
+                        + "]"
                         + NEW_LINE
-                        + "Credential lookup filtered by target? [" + mustMatchOnTarget + "]"
+                        + "Credential lookup filtered by target? ["
+                        + mustMatchOnTarget
+                        + "]"
                         + NEW_LINE
-                        + "Credential lookup filtered by clientId? [" + mustMatchOnClientId + "]"
+                        + "Credential lookup filtered by clientId? ["
+                        + mustMatchOnClientId
+                        + "]"
                         + NEW_LINE
-                        + "Credential lookup filtered by credential type? [" + mustMatchOnCredentialType + "]"
+                        + "Credential lookup filtered by credential type? ["
+                        + mustMatchOnCredentialType
+                        + "]"
                         + NEW_LINE
-                        + "Credential lookup filtered by auth scheme? [" + mustMatchOnAuthScheme + "]"
+                        + "Credential lookup filtered by auth scheme? ["
+                        + mustMatchOnAuthScheme
+                        + "]"
                         + NEW_LINE
-                        + "Credential lookup filtered by requested claims? [" + mustMatchOnRequestedClaims + "]"
-        );
+                        + "Credential lookup filtered by requested claims? ["
+                        + mustMatchOnRequestedClaims
+                        + "]");
 
         final List<Credential> matchingCredentials = new ArrayList<>();
 
@@ -169,24 +192,38 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
             boolean matches = true;
 
             if (mustMatchOnHomeAccountId) {
-                matches = StringUtil.equalsIgnoreCaseTrimBoth(homeAccountId, credential.getHomeAccountId());
+                matches =
+                        StringUtil.equalsIgnoreCaseTrimBoth(
+                                homeAccountId, credential.getHomeAccountId());
             }
 
             if (mustMatchOnEnvironment) {
-                matches = matches && StringUtil.equalsIgnoreCaseTrimBoth(environment, credential.getEnvironment());
+                matches =
+                        matches
+                                && StringUtil.equalsIgnoreCaseTrimBoth(
+                                        environment, credential.getEnvironment());
             }
 
             if (mustMatchOnCredentialType) {
-                matches = matches && StringUtil.equalsIgnoreCaseTrimBoth(credentialType.name(), credential.getCredentialType());
+                matches =
+                        matches
+                                && StringUtil.equalsIgnoreCaseTrimBoth(
+                                        credentialType.name(), credential.getCredentialType());
             }
 
             if (mustMatchOnClientId) {
-                matches = matches && StringUtil.equalsIgnoreCaseTrimBoth(clientId, credential.getClientId());
+                matches =
+                        matches
+                                && StringUtil.equalsIgnoreCaseTrimBoth(
+                                        clientId, credential.getClientId());
             }
 
             if (mustMatchOnRealm && credential instanceof AccessTokenRecord) {
                 final AccessTokenRecord accessToken = (AccessTokenRecord) credential;
-                matches = matches && StringUtil.equalsIgnoreCaseTrimBoth(realm, accessToken.getRealm());
+                matches =
+                        matches
+                                && StringUtil.equalsIgnoreCaseTrimBoth(
+                                        realm, accessToken.getRealm());
             }
 
             if (mustMatchOnRealm && credential instanceof IdTokenRecord) {
@@ -220,9 +257,14 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
             if (mustMatchOnRequestedClaims) {
                 if (credential instanceof AccessTokenRecord) {
                     final AccessTokenRecord accessToken = (AccessTokenRecord) credential;
-                    matches = matches && StringUtil.equalsIgnoreCaseTrimBoth(requestedClaims, accessToken.getRequestedClaims());
+                    matches =
+                            matches
+                                    && StringUtil.equalsIgnoreCaseTrimBoth(
+                                            requestedClaims, accessToken.getRequestedClaims());
                 } else {
-                    Logger.verbose(TAG, "Query specified requested_claims-match, but attempted to match with non-AT credential type.");
+                    Logger.verbose(
+                            TAG,
+                            "Query specified requested_claims-match, but attempted to match with non-AT credential type.");
                 }
             }
 
@@ -244,9 +286,10 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
      * @return True, if the credentialTarget contains all of the targets (scopes) declared by
      * targetToMatch. False otherwise.
      */
-    static boolean targetsIntersect(@NonNull final String targetToMatch,
-                                    @NonNull final String credentialTarget,
-                                    final boolean omitDefaultScopes) {
+    static boolean targetsIntersect(
+            @NonNull final String targetToMatch,
+            @NonNull final String credentialTarget,
+            final boolean omitDefaultScopes) {
         // The credentialTarget must contain all of the scopes in the targetToMatch
         // It may contain more, but it must contain minimally those
         // Matching is case-insensitive

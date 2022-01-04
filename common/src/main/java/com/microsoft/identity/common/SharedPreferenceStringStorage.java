@@ -29,12 +29,13 @@ import com.microsoft.identity.common.internal.util.AbstractSharedPrefNameValueSt
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.java.util.ported.Predicate;
 
-import java.util.Iterator;
-import java.util.Map;
-
 import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 import lombok.NonNull;
+
+import java.util.Iterator;
+import java.util.Map;
 
 /**
  * An implementation of {@link INameValueStorage} for storing String.
@@ -42,14 +43,12 @@ import lombok.NonNull;
  */
 public class SharedPreferenceStringStorage extends AbstractSharedPrefNameValueStorage<String> {
 
-    @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE", justification = "Lombok inserts nullchecks")
-    public SharedPreferenceStringStorage(@NonNull final Context context,
-                                         @NonNull final String sharedPrefFileName) {
-        super(SharedPreferencesFileManager.getSharedPreferences(
-                context,
-                sharedPrefFileName,
-                null
-        ));
+    @SuppressFBWarnings(
+            value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE",
+            justification = "Lombok inserts nullchecks")
+    public SharedPreferenceStringStorage(
+            @NonNull final Context context, @NonNull final String sharedPrefFileName) {
+        super(SharedPreferencesFileManager.getSharedPreferences(context, sharedPrefFileName, null));
     }
 
     @Override

@@ -23,6 +23,8 @@
 
 package com.microsoft.identity.common.java.util;
 
+import static org.junit.Assert.assertEquals;
+
 import com.microsoft.identity.common.java.util.ported.InMemoryStorage;
 
 import org.junit.Test;
@@ -31,19 +33,18 @@ import org.junit.runners.JUnit4;
 
 import java.util.Date;
 
-import static org.junit.Assert.assertEquals;
-
 @RunWith(JUnit4.class)
 public class ClockSkewManagerTest {
 
     @Test
     public void testOnTimestampReceived() {
-        final IClockSkewManager clockSkewManager = new ClockSkewManager(new InMemoryStorage<Long>()) {
-            @Override
-            public Date getCurrentClientTime() {
-                return new Date(12345);
-            }
-        };
+        final IClockSkewManager clockSkewManager =
+                new ClockSkewManager(new InMemoryStorage<Long>()) {
+                    @Override
+                    public Date getCurrentClientTime() {
+                        return new Date(12345);
+                    }
+                };
 
         final Date serverTime = new Date(67890);
         clockSkewManager.onTimestampReceived(serverTime.getTime());
@@ -52,12 +53,13 @@ public class ClockSkewManagerTest {
 
     @Test
     public void testOnTimestampReceived2() {
-        final IClockSkewManager clockSkewManager = new ClockSkewManager(new InMemoryStorage<Long>()) {
-            @Override
-            public Date getCurrentClientTime() {
-                return new Date(67890);
-            }
-        };
+        final IClockSkewManager clockSkewManager =
+                new ClockSkewManager(new InMemoryStorage<Long>()) {
+                    @Override
+                    public Date getCurrentClientTime() {
+                        return new Date(67890);
+                    }
+                };
 
         final Date serverTime = new Date(12345);
         clockSkewManager.onTimestampReceived(serverTime.getTime());
@@ -66,43 +68,45 @@ public class ClockSkewManagerTest {
 
     @Test
     public void testGetReferenceTime() {
-        final IClockSkewManager clockSkewManager = new ClockSkewManager(new InMemoryStorage<Long>()) {
-            @Override
-            public Date getCurrentClientTime() {
-                return new Date(67890);
-            }
+        final IClockSkewManager clockSkewManager =
+                new ClockSkewManager(new InMemoryStorage<Long>()) {
+                    @Override
+                    public Date getCurrentClientTime() {
+                        return new Date(67890);
+                    }
 
-            @Override
-            public long getSkewMillis() {
-                return 42L;
-            }
-        };
+                    @Override
+                    public long getSkewMillis() {
+                        return 42L;
+                    }
+                };
 
         assertEquals(67848L, clockSkewManager.getAdjustedReferenceTime().getTime());
     }
 
     @Test
     public void testToClientTime() {
-        final IClockSkewManager clockSkewManager = new ClockSkewManager(new InMemoryStorage<Long>()) {
-            @Override
-            public long getSkewMillis() {
-                return 42L;
-            }
-        };
+        final IClockSkewManager clockSkewManager =
+                new ClockSkewManager(new InMemoryStorage<Long>()) {
+                    @Override
+                    public long getSkewMillis() {
+                        return 42L;
+                    }
+                };
 
         assertEquals(67932L, clockSkewManager.toClientTime(67890).getTime());
     }
 
     @Test
     public void testToReferenceTime() {
-        final IClockSkewManager clockSkewManager = new ClockSkewManager(new InMemoryStorage<Long>()) {
-            @Override
-            public long getSkewMillis() {
-                return 42L;
-            }
-        };
+        final IClockSkewManager clockSkewManager =
+                new ClockSkewManager(new InMemoryStorage<Long>()) {
+                    @Override
+                    public long getSkewMillis() {
+                        return 42L;
+                    }
+                };
 
         assertEquals(67848L, clockSkewManager.toReferenceTime(67890).getTime());
     }
 }
-

@@ -29,18 +29,22 @@ public class PkceChallengeTest {
 
     @Test
     public void testGenerateCodeVerifier() {
-        final byte[] verifierBytes = new byte[]{-121, -61, 79, 79, 38, 98, 25, 43, 105, -86,
-                -122, -94, 40, 72, 57, 76, -68, -71, 28, 98, 47, -17, -101, -55, 63, 93, 53,
-                -113, 78, 124, -52, -38};
-        Assert.assertEquals("h8NPTyZiGStpqoaiKEg5TLy5HGIv75vJP101j058zNo",
+        final byte[] verifierBytes =
+                new byte[] {
+                    -121, -61, 79, 79, 38, 98, 25, 43, 105, -86, -122, -94, 40, 72, 57, 76, -68,
+                    -71, 28, 98, 47, -17, -101, -55, 63, 93, 53, -113, 78, 124, -52, -38
+                };
+        Assert.assertEquals(
+                "h8NPTyZiGStpqoaiKEg5TLy5HGIv75vJP101j058zNo",
                 PkceChallenge.generateCodeVerifier(verifierBytes));
     }
 
     @Test
-    public void testGenerateCodeVerifierChallenge(){
+    public void testGenerateCodeVerifierChallenge() {
         final String verifier = "z86XHrKFENPT1U8dZt_Aa6UIybxaTKrqJkdTwsGfAv4";
 
-        Assert.assertEquals("9zH10spxQ4ivCvet1EQdRQI82xZ7I8DKU2NFvoSg5mY",
+        Assert.assertEquals(
+                "9zH10spxQ4ivCvet1EQdRQI82xZ7I8DKU2NFvoSg5mY",
                 PkceChallenge.generateCodeVerifierChallenge(verifier));
     }
 }

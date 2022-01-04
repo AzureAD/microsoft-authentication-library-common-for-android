@@ -22,8 +22,18 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.util;
 
+import static com.microsoft.identity.common.java.AuthenticationConstants.ENCODING_UTF8;
+import static com.microsoft.identity.common.java.AuthenticationConstants.ENCODING_UTF8_STRING;
+
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.util.ported.ObjectUtils;
+
+import cz.msebera.android.httpclient.extras.Base64;
+
+import edu.umd.cs.findbugs.annotations.Nullable;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
+import lombok.NonNull;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -41,19 +51,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.TimeZone;
 import java.util.UUID;
-
-import cz.msebera.android.httpclient.extras.Base64;
-import edu.umd.cs.findbugs.annotations.Nullable;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import lombok.NonNull;
-
-import static com.microsoft.identity.common.java.AuthenticationConstants.ENCODING_UTF8;
-import static com.microsoft.identity.common.java.AuthenticationConstants.ENCODING_UTF8_STRING;
 
 public class StringUtil {
     private static String TAG = StringUtil.class.getSimpleName();
@@ -133,7 +133,8 @@ public class StringUtil {
      * @return boolean true if the string starts with prefix and has some body after it.
      */
     public static boolean hasPrefixInHeader(final String value, final String prefix) {
-        return value.startsWith(prefix) && value.length() > prefix.length() + 2
+        return value.startsWith(prefix)
+                && value.length() > prefix.length() + 2
                 && Character.isWhitespace(value.charAt(prefix.length()));
     }
 
@@ -250,7 +251,8 @@ public class StringUtil {
     public static String RFC3339DateToString(@NonNull final Date date) {
         final String methodName = "RFC3339DateToString";
         Logger.verbose(TAG + methodName, "RFC3339DateToString is called.");
-        final SimpleDateFormat RFC3339DateFormat = new SimpleDateFormat(RFC3339_DATE_FORMAT, Locale.US);
+        final SimpleDateFormat RFC3339DateFormat =
+                new SimpleDateFormat(RFC3339_DATE_FORMAT, Locale.US);
         RFC3339DateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
         return RFC3339DateFormat.format(date);
     }
@@ -266,7 +268,8 @@ public class StringUtil {
     public static Date RFC3339StringToDate(@NonNull String dateStr) throws ParseException {
         final String methodName = "RFC3339StringToDate";
         Logger.verbose(TAG + methodName, "RFC3339StringToDate is called.");
-        final SimpleDateFormat RFC3339DateFormat = new SimpleDateFormat(RFC3339_DATE_FORMAT, Locale.US);
+        final SimpleDateFormat RFC3339DateFormat =
+                new SimpleDateFormat(RFC3339_DATE_FORMAT, Locale.US);
         RFC3339DateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
         return RFC3339DateFormat.parse(dateStr);
     }
@@ -287,11 +290,13 @@ public class StringUtil {
     }
 
     public static String encodeUrlSafeString(@NonNull final byte[] bytesToEncode) {
-        return Base64.encodeToString(bytesToEncode, Base64.NO_WRAP | Base64.NO_PADDING | Base64.URL_SAFE);
+        return Base64.encodeToString(
+                bytesToEncode, Base64.NO_WRAP | Base64.NO_PADDING | Base64.URL_SAFE);
     }
 
     public static String encodeUrlSafeString(@NonNull final String stringToEncode) {
-        return Base64.encodeToString(toByteArray(stringToEncode), Base64.NO_WRAP | Base64.NO_PADDING | Base64.URL_SAFE);
+        return Base64.encodeToString(
+                toByteArray(stringToEncode), Base64.NO_WRAP | Base64.NO_PADDING | Base64.URL_SAFE);
     }
 
     /**
@@ -305,8 +310,8 @@ public class StringUtil {
         if (!isNullOrEmpty(msg)) {
             final MessageDigest digester = MessageDigest.getInstance(TOKEN_HASH_ALGORITHM);
             final byte[] msgInBytes = msg.getBytes(ENCODING_UTF8);
-            return new String(Base64.encode(digester.digest(msgInBytes), Base64.NO_WRAP),
-                    ENCODING_UTF8);
+            return new String(
+                    Base64.encode(digester.digest(msgInBytes), Base64.NO_WRAP), ENCODING_UTF8);
         }
         return msg;
     }
@@ -318,8 +323,8 @@ public class StringUtil {
      * @param two The second string to compare.
      * @return true if the inputs are equal, false otherwise.
      */
-    public static boolean equalsIgnoreCaseTrimBoth(@Nullable final String one,
-                                                   @Nullable final String two) {
+    public static boolean equalsIgnoreCaseTrimBoth(
+            @Nullable final String one, @Nullable final String two) {
         return equalsIgnoreCaseTrim(one != null ? one.trim() : null, two);
     }
 
@@ -330,9 +335,11 @@ public class StringUtil {
      * @param two The second string to compare.
      * @return true if the inputs are equal, false otherwise.
      */
-    @SuppressFBWarnings(value = "ES_COMPARING_PARAMETER_STRING_WITH_EQ",
+    @SuppressFBWarnings(
+            value = "ES_COMPARING_PARAMETER_STRING_WITH_EQ",
             justification = "This is an intentional reference comparison")
-    public static boolean equalsIgnoreCaseTrim(@Nullable final String one, @Nullable final String two) {
+    public static boolean equalsIgnoreCaseTrim(
+            @Nullable final String one, @Nullable final String two) {
         return one == two || (two != null && equalsIgnoreCase(one, two.trim()));
     }
 
@@ -393,7 +400,8 @@ public class StringUtil {
      * @param segments a set of segments to join.
      * @return a new char sequence constructed by joining the segments with the separator.
      */
-    public static <T extends CharSequence> String join(final CharSequence separator, final @NonNull Iterable<T> segments) {
+    public static <T extends CharSequence> String join(
+            final CharSequence separator, final @NonNull Iterable<T> segments) {
         final Iterator<T> itr = segments.iterator();
         // If the iterable is empty, return empty string.
         if (!itr.hasNext()) {

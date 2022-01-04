@@ -23,7 +23,6 @@
 
 package com.microsoft.identity.common.internal.broker;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
@@ -84,7 +83,7 @@ public class PackageHelper {
      */
     public static String getCurrentSignatureForPackage(final PackageInfo packageInfo) {
         try {
-            final Signature [] signatures = getSignatures(packageInfo);
+            final Signature[] signatures = getSignatures(packageInfo);
             if (signatures != null && signatures.length > 0) {
                 final Signature signature = signatures[0];
                 MessageDigest md = MessageDigest.getInstance("SHA");
@@ -146,11 +145,14 @@ public class PackageHelper {
      * @param signatureDigest application signature
      * @return broker redirect url
      */
-    public static String getBrokerRedirectUrl(final String packageName, final String signatureDigest) {
+    public static String getBrokerRedirectUrl(
+            final String packageName, final String signatureDigest) {
         if (!StringExtensions.isNullOrBlank(packageName)
                 && !StringExtensions.isNullOrBlank(signatureDigest)) {
             try {
-                return String.format("%s://%s/%s", AuthenticationConstants.Broker.REDIRECT_PREFIX,
+                return String.format(
+                        "%s://%s/%s",
+                        AuthenticationConstants.Broker.REDIRECT_PREFIX,
                         URLEncoder.encode(packageName, AuthenticationConstants.ENCODING_UTF8),
                         URLEncoder.encode(signatureDigest, AuthenticationConstants.ENCODING_UTF8));
             } catch (UnsupportedEncodingException e) {
@@ -196,11 +198,14 @@ public class PackageHelper {
         return PackageManager.GET_SIGNATURES;
     }
 
-    public static PackageInfo getPackageInfo(@NonNull PackageManager packageManager, @NonNull String packageName) throws PackageManager.NameNotFoundException {
+    public static PackageInfo getPackageInfo(
+            @NonNull PackageManager packageManager, @NonNull String packageName)
+            throws PackageManager.NameNotFoundException {
         return packageManager.getPackageInfo(packageName, getPackageManagerSignaturesFlag());
     }
 
-    public static Signature[] getSignatures(@NonNull Context context) throws PackageManager.NameNotFoundException {
+    public static Signature[] getSignatures(@NonNull Context context)
+            throws PackageManager.NameNotFoundException {
         return getSignatures(getPackageInfo(context.getPackageManager(), context.getPackageName()));
     }
 }

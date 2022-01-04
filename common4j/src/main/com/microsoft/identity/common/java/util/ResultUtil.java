@@ -36,36 +36,24 @@ public class ResultUtil {
      * @param tag    The log tag to use.
      * @param result The result object to log.
      */
-    public static void logResult(@NonNull final String tag,
-                                 @NonNull final IResult result) {
+    public static void logResult(@NonNull final String tag, @NonNull final IResult result) {
         final String TAG = tag + ":" + result.getClass().getSimpleName();
 
         if (result.getSuccess()) {
-            Logger.info(
-                    TAG,
-                    "Success Result"
-            );
+            Logger.info(TAG, "Success Result");
 
             logExposedFieldsOfObject(TAG, result.getSuccessResponse());
         } else {
-            Logger.warn(
-                    TAG,
-                    "Failure Result"
-            );
+            Logger.warn(TAG, "Failure Result");
 
             if (result.getErrorResponse() != null) {
                 if (result.getErrorResponse().getError() != null) {
-                    Logger.warn(
-                            TAG,
-                            "Error: " + result.getErrorResponse().getError()
-                    );
+                    Logger.warn(TAG, "Error: " + result.getErrorResponse().getError());
                 }
 
                 if (result.getErrorResponse().getErrorDescription() != null) {
                     Logger.warnPII(
-                            TAG,
-                            "Description: " + result.getErrorResponse().getErrorDescription()
-                    );
+                            TAG, "Description: " + result.getErrorResponse().getErrorDescription());
                 }
 
                 logExposedFieldsOfObject(TAG, result.getErrorResponse());
@@ -79,14 +67,13 @@ public class ResultUtil {
             if (authResult.getAuthorizationStatus() != null) {
                 Logger.info(
                         TAG,
-                        "Authorization Status: " + authResult.getAuthorizationStatus().toString()
-                );
+                        "Authorization Status: " + authResult.getAuthorizationStatus().toString());
             }
         }
     }
 
-    public static void logExposedFieldsOfObject(@NonNull final String tag,
-                                                @NonNull final Object object) {
+    public static void logExposedFieldsOfObject(
+            @NonNull final String tag, @NonNull final Object object) {
         final String TAG = tag + ":" + object.getClass().getSimpleName();
         Logger.info(TAG, ObjectMapper.serializeExposedFieldsOfObjectToJsonString(object));
     }

@@ -22,7 +22,6 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.commands.parameters;
 
-import com.microsoft.identity.common.java.dto.IAccountRecord;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

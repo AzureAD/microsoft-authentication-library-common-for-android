@@ -39,8 +39,7 @@ import lombok.experimental.Accessors;
 @Getter
 public class CacheRecord implements ICacheRecord {
 
-    @NonNull
-    AccountRecord mAccount;
+    @NonNull AccountRecord mAccount;
     AccessTokenRecord mAccessToken;
     RefreshTokenRecord mRefreshToken;
     IdTokenRecord mIdToken;
@@ -50,15 +49,15 @@ public class CacheRecord implements ICacheRecord {
         @Deprecated
         public CacheRecordBuilder mAccount(final @NonNull AccountRecord account) {
             if (account == null) {
-                throw new NullPointerException("The account record for a CacheRecord may not be null");
+                throw new NullPointerException(
+                        "The account record for a CacheRecord may not be null");
             }
             this.account = account;
             return this;
         }
     }
 
-
-    //CHECKSTYLE:OFF
+    // CHECKSTYLE:OFF
     // This method is generated. Checkstyle and/or PMD has been disabled.
     // This method *must* be regenerated if the class' structural definition changes through the
     // addition/subtraction of fields.
@@ -72,15 +71,17 @@ public class CacheRecord implements ICacheRecord {
 
         if (mAccount != null ? !mAccount.equals(that.mAccount) : that.mAccount != null)
             return false;
-        if (mAccessToken != null ? !mAccessToken.equals(that.mAccessToken) : that.mAccessToken != null)
-            return false;
-        if (mRefreshToken != null ? !mRefreshToken.equals(that.mRefreshToken) : that.mRefreshToken != null)
-            return false;
+        if (mAccessToken != null
+                ? !mAccessToken.equals(that.mAccessToken)
+                : that.mAccessToken != null) return false;
+        if (mRefreshToken != null
+                ? !mRefreshToken.equals(that.mRefreshToken)
+                : that.mRefreshToken != null) return false;
         return mIdToken != null ? mIdToken.equals(that.mIdToken) : that.mIdToken == null;
     }
-    //CHECKSTYLE:ON
+    // CHECKSTYLE:ON
 
-    //CHECKSTYLE:OFF
+    // CHECKSTYLE:OFF
     // This method is generated. Checkstyle and/or PMD has been disabled.
     // This method *must* be regenerated if the class' structural definition changes through the
     // addition/subtraction of fields.
@@ -93,6 +94,6 @@ public class CacheRecord implements ICacheRecord {
         result = 31 * result + (mIdToken != null ? mIdToken.hashCode() : 0);
         return result;
     }
-    //CHECKSTYLE:ON
+    // CHECKSTYLE:ON
 
 }

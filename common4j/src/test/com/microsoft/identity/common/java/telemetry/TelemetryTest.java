@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.telemetry;
 
+import static org.junit.Assert.fail;
+
 import com.microsoft.identity.common.java.telemetry.events.HttpStartEvent;
 import com.microsoft.identity.common.java.telemetry.observers.ITelemetryAggregatedObserver;
 import com.microsoft.identity.common.java.telemetry.observers.ITelemetryDefaultObserver;
@@ -34,8 +36,6 @@ import org.junit.Test;
 
 import java.util.List;
 import java.util.Map;
-
-import static org.junit.Assert.fail;
 
 public class TelemetryTest {
 
@@ -78,49 +78,53 @@ public class TelemetryTest {
 
     @Test
     public void testAddAndRemoveObserverSuccess() {
-        ITelemetryAggregatedObserver telemetryAggregatedObserver = new ITelemetryAggregatedObserver() {
-            @Override
-            public void onReceived(Map<String, String> telemetryData) {
-            }
-        };
+        ITelemetryAggregatedObserver telemetryAggregatedObserver =
+                new ITelemetryAggregatedObserver() {
+                    @Override
+                    public void onReceived(Map<String, String> telemetryData) {}
+                };
 
         Telemetry.getInstance().addObserver(telemetryAggregatedObserver);
 
         Assert.assertEquals(1, Telemetry.getInstance().getObservers().size());
-        Assert.assertTrue(Telemetry.getInstance().getObservers().contains(telemetryAggregatedObserver));
+        Assert.assertTrue(
+                Telemetry.getInstance().getObservers().contains(telemetryAggregatedObserver));
 
         Telemetry.getInstance().removeObserver(telemetryAggregatedObserver);
         Assert.assertEquals(0, Telemetry.getInstance().getObservers().size());
-        Assert.assertFalse(Telemetry.getInstance().getObservers().contains(telemetryAggregatedObserver));
+        Assert.assertFalse(
+                Telemetry.getInstance().getObservers().contains(telemetryAggregatedObserver));
     }
 
     @Test
     public void testAddAndRemoveMultipleObserversSuccess() {
-        ITelemetryAggregatedObserver telemetryAggregatedObserver = new ITelemetryAggregatedObserver() {
-            @Override
-            public void onReceived(Map<String, String> telemetryData) {
-            }
-        };
+        ITelemetryAggregatedObserver telemetryAggregatedObserver =
+                new ITelemetryAggregatedObserver() {
+                    @Override
+                    public void onReceived(Map<String, String> telemetryData) {}
+                };
 
-        ITelemetryDefaultObserver telemetryDefaultObserver = new ITelemetryDefaultObserver() {
-            @Override
-            public void onReceived(List<Map<String, String>> telemetryData) {
-            }
-        };
+        ITelemetryDefaultObserver telemetryDefaultObserver =
+                new ITelemetryDefaultObserver() {
+                    @Override
+                    public void onReceived(List<Map<String, String>> telemetryData) {}
+                };
 
-        final ITelemetryObserver telemetryObserver = new ITelemetryObserver() {
-            @Override
-            public void onReceived(Object telemetryData) {
-            }
-        };
+        final ITelemetryObserver telemetryObserver =
+                new ITelemetryObserver() {
+                    @Override
+                    public void onReceived(Object telemetryData) {}
+                };
 
         Telemetry.getInstance().addObserver(telemetryAggregatedObserver);
         Telemetry.getInstance().addObserver(telemetryDefaultObserver);
         Telemetry.getInstance().addObserver(telemetryObserver);
 
         Assert.assertEquals(3, Telemetry.getInstance().getObservers().size());
-        Assert.assertTrue(Telemetry.getInstance().getObservers().contains(telemetryAggregatedObserver));
-        Assert.assertTrue(Telemetry.getInstance().getObservers().contains(telemetryDefaultObserver));
+        Assert.assertTrue(
+                Telemetry.getInstance().getObservers().contains(telemetryAggregatedObserver));
+        Assert.assertTrue(
+                Telemetry.getInstance().getObservers().contains(telemetryDefaultObserver));
         Assert.assertTrue(Telemetry.getInstance().getObservers().contains(telemetryObserver));
 
         Telemetry.getInstance().removeObserver(telemetryDefaultObserver);
@@ -132,35 +136,52 @@ public class TelemetryTest {
 
     @Test(expected = UnsupportedOperationException.class)
     public void testGetObserversReturnsUnmodifiableListSuccess() {
-        Telemetry.getInstance().getObservers().add(new ITelemetryObserver() {
-            @Override
-            public void onReceived(Object telemetryData) {
-            }
-        });
+        Telemetry.getInstance()
+                .getObservers()
+                .add(
+                        new ITelemetryObserver() {
+                            @Override
+                            public void onReceived(Object telemetryData) {}
+                        });
     }
 
     @Test
     public void testBasicDeviceInfoPresentInTelemetry() {
-        Telemetry.getInstance().addObserver(new ITelemetryDefaultObserver() {
-            @Override
-            public void onReceived(List<Map<String, String>> telemetryData) {
-                final Map<String, String> mapWithDeviceInfo = telemetryData.get(0);
-                Assert.assertTrue(mapWithDeviceInfo.containsKey(TelemetryEventStrings.App.NAME));
-                Assert.assertTrue(mapWithDeviceInfo.containsKey(TelemetryEventStrings.App.BUILD));
-                Assert.assertTrue(mapWithDeviceInfo.containsKey(TelemetryEventStrings.Device.MODEL));
-                Assert.assertTrue(mapWithDeviceInfo.containsKey(TelemetryEventStrings.Device.NAME));
-                Assert.assertTrue(mapWithDeviceInfo.containsKey(TelemetryEventStrings.Os.NAME));
-                Assert.assertTrue(mapWithDeviceInfo.containsKey(TelemetryEventStrings.Os.VERSION));
-                Assert.assertTrue(mapWithDeviceInfo.containsKey(TelemetryEventStrings.Device.TIMEZONE));
-            }
-        });
+        Telemetry.getInstance()
+                .addObserver(
+                        new ITelemetryDefaultObserver() {
+                            @Override
+                            public void onReceived(List<Map<String, String>> telemetryData) {
+                                final Map<String, String> mapWithDeviceInfo = telemetryData.get(0);
+                                Assert.assertTrue(
+                                        mapWithDeviceInfo.containsKey(
+                                                TelemetryEventStrings.App.NAME));
+                                Assert.assertTrue(
+                                        mapWithDeviceInfo.containsKey(
+                                                TelemetryEventStrings.App.BUILD));
+                                Assert.assertTrue(
+                                        mapWithDeviceInfo.containsKey(
+                                                TelemetryEventStrings.Device.MODEL));
+                                Assert.assertTrue(
+                                        mapWithDeviceInfo.containsKey(
+                                                TelemetryEventStrings.Device.NAME));
+                                Assert.assertTrue(
+                                        mapWithDeviceInfo.containsKey(
+                                                TelemetryEventStrings.Os.NAME));
+                                Assert.assertTrue(
+                                        mapWithDeviceInfo.containsKey(
+                                                TelemetryEventStrings.Os.VERSION));
+                                Assert.assertTrue(
+                                        mapWithDeviceInfo.containsKey(
+                                                TelemetryEventStrings.Device.TIMEZONE));
+                            }
+                        });
 
         Telemetry.getInstance().flush();
     }
 
-
     private void testTelemetryMapHelper() {
-        List<Map<String,String>> telemetryData = Telemetry.getInstance().getMap();
+        List<Map<String, String>> telemetryData = Telemetry.getInstance().getMap();
         Map<String, String> map = telemetryData.get(0);
         Assert.assertTrue(map.containsKey("Microsoft.MSAL.method"));
     }
@@ -174,13 +195,17 @@ public class TelemetryTest {
 
     @Test
     public void testITelemetryAggregatedObserver() {
-        Telemetry.getInstance().addObserver(new ITelemetryAggregatedObserver() {
-            @Override
-            public void onReceived(Map<String, String> telemetryData) {
-                final String errorDomain = telemetryData.get(TelemetryEventStrings.Key.HTTP_ERROR_DOMAIN);
-                Assert.assertEquals("TESTDOMAIN", errorDomain);
-            }
-        });
+        Telemetry.getInstance()
+                .addObserver(
+                        new ITelemetryAggregatedObserver() {
+                            @Override
+                            public void onReceived(Map<String, String> telemetryData) {
+                                final String errorDomain =
+                                        telemetryData.get(
+                                                TelemetryEventStrings.Key.HTTP_ERROR_DOMAIN);
+                                Assert.assertEquals("TESTDOMAIN", errorDomain);
+                            }
+                        });
 
         Telemetry.emit(new HttpStartEvent().putErrorDomain("TESTDOMAIN"));
         Telemetry.getInstance().flush();
@@ -188,21 +213,25 @@ public class TelemetryTest {
 
     @Test
     public void testITelemetryDefaultObserver() {
-        Telemetry.getInstance().addObserver(new ITelemetryDefaultObserver() {
-            @Override
-            public void onReceived(List<Map<String, String>> telemetryData) {
-                final Map<String, String> mapWithExpectedInfo = telemetryData.get(0);
-                final String errorDomain = mapWithExpectedInfo.get(TelemetryEventStrings.Key.HTTP_ERROR_DOMAIN);
-                final String method = mapWithExpectedInfo.get(TelemetryEventStrings.Key.HTTP_METHOD);
-                Assert.assertEquals("TESTDOMAIN", errorDomain);
-                Assert.assertEquals("TESTMETHOD", method);
-            }
-        });
+        Telemetry.getInstance()
+                .addObserver(
+                        new ITelemetryDefaultObserver() {
+                            @Override
+                            public void onReceived(List<Map<String, String>> telemetryData) {
+                                final Map<String, String> mapWithExpectedInfo =
+                                        telemetryData.get(0);
+                                final String errorDomain =
+                                        mapWithExpectedInfo.get(
+                                                TelemetryEventStrings.Key.HTTP_ERROR_DOMAIN);
+                                final String method =
+                                        mapWithExpectedInfo.get(
+                                                TelemetryEventStrings.Key.HTTP_METHOD);
+                                Assert.assertEquals("TESTDOMAIN", errorDomain);
+                                Assert.assertEquals("TESTMETHOD", method);
+                            }
+                        });
 
-        Telemetry.emit(new HttpStartEvent()
-                .putErrorDomain("TESTDOMAIN")
-                .putMethod("TESTMETHOD"));
+        Telemetry.emit(new HttpStartEvent().putErrorDomain("TESTDOMAIN").putMethod("TESTMETHOD"));
         Telemetry.getInstance().flush();
     }
-
 }

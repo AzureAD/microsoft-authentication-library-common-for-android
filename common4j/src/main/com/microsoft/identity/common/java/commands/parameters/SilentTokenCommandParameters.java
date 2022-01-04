@@ -22,20 +22,20 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.commands.parameters;
 
-import com.microsoft.identity.common.java.exception.ArgumentException;
-import com.microsoft.identity.common.java.exception.TerminalException;
 import com.microsoft.identity.common.java.authorities.AzureActiveDirectoryB2CAuthority;
+import com.microsoft.identity.common.java.exception.ArgumentException;
+import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.exception.TerminalException;
+import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud;
-import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.java.logging.Logger;
-
-import java.io.IOException;
-import java.net.URISyntaxException;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.experimental.SuperBuilder;
+
+import java.io.IOException;
+import java.net.URISyntaxException;
 
 @Getter
 @EqualsAndHashCode(callSuper = true)
@@ -52,14 +52,14 @@ public class SilentTokenCommandParameters extends TokenCommandParameters {
 
         if (getAccount() == null) {
             Logger.warn(TAG, "The account set on silent operation parameters is NULL.");
-            // if the authority is B2C, then we do not need check if matches with the account enviroment
+            // if the authority is B2C, then we do not need check if matches with the account
+            // enviroment
             // as B2C only exists in one cloud and can use custom domains
         } else if (!isAuthorityB2C() && !authorityMatchesAccountEnvironment()) {
             throw new ArgumentException(
                     ArgumentException.ACQUIRE_TOKEN_SILENT_OPERATION_NAME,
                     ArgumentException.AUTHORITY_ARGUMENT_NAME,
-                    "Authority passed to silent parameters does not match with the cloud associated to the account."
-            );
+                    "Authority passed to silent parameters does not match with the cloud associated to the account.");
         }
     }
 
@@ -82,8 +82,12 @@ public class SilentTokenCommandParameters extends TokenCommandParameters {
             if (!AzureActiveDirectory.isInitialized()) {
                 performCloudDiscovery();
             }
-            final AzureActiveDirectoryCloud cloud = AzureActiveDirectory.getAzureActiveDirectoryCloudFromHostName(getAccount().getEnvironment());
-            return cloud != null && cloud.getPreferredNetworkHostName().equals(getAuthority().getAuthorityURL().getAuthority());
+            final AzureActiveDirectoryCloud cloud =
+                    AzureActiveDirectory.getAzureActiveDirectoryCloudFromHostName(
+                            getAccount().getEnvironment());
+            return cloud != null
+                    && cloud.getPreferredNetworkHostName()
+                            .equals(getAuthority().getAuthorityURL().getAuthority());
         } catch (final IOException e) {
             cause = e;
             errorCode = ClientException.IO_ERROR;
@@ -92,23 +96,16 @@ public class SilentTokenCommandParameters extends TokenCommandParameters {
             errorCode = ClientException.MALFORMED_URL;
         }
 
-        Logger.error(
-                TAG + methodName,
-                "Unable to perform cloud discovery",
-                cause);
+        Logger.error(TAG + methodName, "Unable to perform cloud discovery", cause);
         throw new TerminalException(
                 "Unable to perform cloud discovery in order to validate request authority",
                 cause,
                 errorCode);
     }
 
-    private static void performCloudDiscovery()
-            throws IOException, URISyntaxException {
+    private static void performCloudDiscovery() throws IOException, URISyntaxException {
         final String methodName = ":performCloudDiscovery";
-        Logger.verbose(
-                TAG + methodName,
-                "Performing cloud discovery..."
-        );
+        Logger.verbose(TAG + methodName, "Performing cloud discovery...");
         synchronized (sLock) {
             AzureActiveDirectory.performCloudDiscovery();
         }

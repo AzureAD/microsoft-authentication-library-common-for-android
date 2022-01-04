@@ -26,21 +26,21 @@ package com.microsoft.identity.common.java.exception;
 /**
  * MSAL internal exception for user cancelling the flow.
  */
-final public class UserCancelException extends BaseException {
+public final class UserCancelException extends BaseException {
 
-    public static final String sName =  UserCancelException.class.getName();
+    public static final String sName = UserCancelException.class.getName();
     private static final long serialVersionUID = 5184560527352649832L;
 
     public UserCancelException() {
         super();
     }
 
-    public UserCancelException(final String errorCode, final String errorMessage){
+    public UserCancelException(final String errorCode, final String errorMessage) {
         super(errorCode, errorMessage);
     }
 
     @Override
-    public String getExceptionName(){
+    public String getExceptionName() {
         return sName;
     }
 }
