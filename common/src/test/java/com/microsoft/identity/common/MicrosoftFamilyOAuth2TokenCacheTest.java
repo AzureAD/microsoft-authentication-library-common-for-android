@@ -66,6 +66,7 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -573,7 +574,7 @@ public class MicrosoftFamilyOAuth2TokenCacheTest extends MsalOAuth2TokenCacheTes
         when(mockCredentialAdapter.createAccount(mockStrategy, mockRequest, mockResponse)).thenAnswer(new Answer<AccountRecord>() {
             @Override
             public AccountRecord answer(InvocationOnMock invocation) throws Throwable {
-                String currentThread = Thread.currentThread().getName();
+                final String currentThread = Thread.currentThread().getName();
                 if(currentThread == thread1[0]) {
                     return frtTestBundle1.mGeneratedAccount;
                 } else if(currentThread == thread2[0]) {
@@ -585,7 +586,7 @@ public class MicrosoftFamilyOAuth2TokenCacheTest extends MsalOAuth2TokenCacheTes
         when(mockCredentialAdapter.createAccessToken(mockStrategy, mockRequest, mockResponse)).thenAnswer(new Answer<AccessTokenRecord>() {
             @Override
             public AccessTokenRecord answer(InvocationOnMock invocation) throws Throwable {
-                String currentThread = Thread.currentThread().getName();
+                final String currentThread = Thread.currentThread().getName();
                 if(currentThread == thread1[0]) {
                     frtTestBundle1.mGeneratedAccessToken.setSecret(SECRET + "AT2" + currentThread);
                     return frtTestBundle1.mGeneratedAccessToken;
@@ -599,7 +600,7 @@ public class MicrosoftFamilyOAuth2TokenCacheTest extends MsalOAuth2TokenCacheTes
         when(mockCredentialAdapter.createRefreshToken(mockStrategy, mockRequest, mockResponse)).thenAnswer(new Answer<RefreshTokenRecord>() {
             @Override
             public RefreshTokenRecord answer(InvocationOnMock invocation) throws Throwable {
-                String currentThread = Thread.currentThread().getName();
+                final String currentThread = Thread.currentThread().getName();
                 if(currentThread == thread1[0]) {
                     frtTestBundle1.mGeneratedRefreshToken.setSecret(SECRET + "RT2" + Thread.currentThread().getName());
                     return frtTestBundle1.mGeneratedRefreshToken;
@@ -613,7 +614,7 @@ public class MicrosoftFamilyOAuth2TokenCacheTest extends MsalOAuth2TokenCacheTes
         when(mockCredentialAdapter.createIdToken(mockStrategy, mockRequest, mockResponse)).thenAnswer(new Answer<IdTokenRecord>() {
             @Override
             public IdTokenRecord answer(InvocationOnMock invocation) throws Throwable {
-                String currentThread = Thread.currentThread().getName();
+                final String currentThread = Thread.currentThread().getName();
                 if(currentThread == thread1[0]) {
                     return frtTestBundle1.mGeneratedIdToken;
                 } else if(currentThread == thread2[0]) {
@@ -623,34 +624,38 @@ public class MicrosoftFamilyOAuth2TokenCacheTest extends MsalOAuth2TokenCacheTes
             }
         });
 
+        final CountDownLatch countDownLatch = new CountDownLatch(1);
         // Submit runnable tasks to save tokens from two different threads concurrently
-        Runnable runnable1 = new Runnable() {
+        final Runnable runnable1 = new Runnable() {
             @Override
             public void run() {
                 try {
                     thread1[0] = Thread.currentThread().getName();
+                    countDownLatch.await();
                     mOauth2TokenCache.save(mockStrategy, mockRequest, mockResponse);
-                } catch (ClientException e) {
+                } catch (ClientException | InterruptedException e) {
                     throw new AssertionError(e.getMessage());
                 }
             }
         };
 
-        Runnable runnable2 = new Runnable() {
+        final Runnable runnable2 = new Runnable() {
             @Override
             public void run() {
                 try {
                     thread2[0] = Thread.currentThread().getName();
+                    countDownLatch.await();
                     mOauth2TokenCache.save(mockStrategy, mockRequest, mockResponse);
-                } catch (ClientException e) {
+                } catch (ClientException | InterruptedException e) {
                     throw new AssertionError(e.getMessage());
                 }
             }
         };
 
-        ExecutorService executorService = Executors.newFixedThreadPool(5);
-        Future runnableTask1 = executorService.submit(runnable1);
-        Future runnableTask2 = executorService.submit(runnable2);
+        final ExecutorService executorService = Executors.newFixedThreadPool(5);
+        final Future runnableTask1 = executorService.submit(runnable1);
+        final Future runnableTask2 = executorService.submit(runnable2);
+        countDownLatch.countDown();
         try{
             runnableTask1.get();
             runnableTask2.get();
