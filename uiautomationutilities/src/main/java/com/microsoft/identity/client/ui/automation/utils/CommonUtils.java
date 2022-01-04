@@ -64,9 +64,8 @@ public class CommonUtils {
                         .getLaunchIntentForPackage(
                                 packageName); // sets the intent to start your app
         intent.addFlags(
-                Intent
-                        .FLAG_ACTIVITY_CLEAR_TASK); // clear out any previous task, i.e., make sure
-                                                    // it starts on the initial screen
+                Intent.FLAG_ACTIVITY_CLEAR_TASK); // clear out any previous task, i.e., make sure
+        // it starts on the initial screen
         context.startActivity(intent);
     }
 

@@ -1208,9 +1208,8 @@ public class BrokerOAuth2TokenCache<
                             metadata.getClientId(),
                             metadata.getEnvironment(),
                             deviceWide
-                                    ? metadata
-                                            .getUid() // Supports the removeAccountFromDevice()
-                                                      // function
+                                    ? metadata.getUid() // Supports the removeAccountFromDevice()
+                                    // function
                                     : mUid);
 
             if (null != candidateCache) {

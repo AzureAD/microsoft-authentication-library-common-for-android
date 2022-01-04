@@ -67,10 +67,9 @@ public class PlayStore implements IAppInstaller {
                                         + appPackageName)); // sets the intent to start your app
         intent.setFlags(
                 Intent.FLAG_ACTIVITY_NEW_TASK
-                        | Intent
-                                .FLAG_ACTIVITY_MULTIPLE_TASK); // clear out any previous task, i.e.,
-                                                               // make sure it starts on the initial
-                                                               // screen
+                        | Intent.FLAG_ACTIVITY_MULTIPLE_TASK); // clear out any previous task, i.e.,
+        // make sure it starts on the initial
+        // screen
         context.startActivity(intent);
     }
 

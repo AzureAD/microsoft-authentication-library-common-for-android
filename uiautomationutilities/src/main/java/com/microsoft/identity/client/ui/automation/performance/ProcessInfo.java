@@ -54,12 +54,11 @@ public class ProcessInfo {
     private int mPid;
     private long mTotalSystemMemory;
     private long mUsedSystemMemory; // the memory being used by all the processes in the device
-    private long
-            mFreeSystemMemory; // the free memory in the device, should be equal to
-                               // mTotalSystemMemory - mUsedSystemMemory
+    private long mFreeSystemMemory; // the free memory in the device, should be equal to
+    // mTotalSystemMemory - mUsedSystemMemory
     private long
             mAvailableSystemMemory; // the free memory in the device that is available for processes
-                                    // to make use of
+    // to make use of
     private double mCpuUsage;
     private double mMemoryUsage; // a percentage of the system memory
 
