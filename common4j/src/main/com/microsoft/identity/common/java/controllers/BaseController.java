@@ -513,7 +513,7 @@ public abstract class BaseController {
         2) All arguments derived from SilentTokenCommandParameters
         3) New logic replacing old Access Token
      */
-    public TokenResult renewAccessToken(@NonNull final SilentTokenCommandParameters parameters)
+    public TokenResult renewAccessToken(@NonNull final ISilentTokenCommandParameters parameters)
             throws IOException, ClientException, ServiceException {
         final String methodName = ":renewAccessToken";
         Logger.info(
@@ -604,7 +604,7 @@ public abstract class BaseController {
         return tokenResult;
     }
 
-    public OAuth2Strategy getStrategy(@NonNull final SilentTokenCommandParameters parameters) throws ClientException {
+    public OAuth2Strategy getStrategy(@NonNull final ISilentTokenCommandParameters parameters) throws ClientException {
         final OAuth2StrategyParameters strategyParameters = OAuth2StrategyParameters.builder()
                 .platformComponents(parameters.getPlatformComponents())
                 .build();
@@ -612,7 +612,7 @@ public abstract class BaseController {
         return parameters.getAuthority().createOAuth2Strategy(strategyParameters);
     }
 
-    public ICacheRecord getCacheRecord(@NonNull final SilentTokenCommandParameters parameters) throws ClientException {
+    public ICacheRecord getCacheRecord(@NonNull final ISilentTokenCommandParameters parameters) throws ClientException {
         //Extract cache from parameters
         final AccountRecord targetAccount = getCachedAccountRecord(parameters);
         final AbstractAuthenticationScheme authScheme = parameters.getAuthenticationScheme();
@@ -629,7 +629,7 @@ public abstract class BaseController {
         return cacheRecords.get(0);
     }
 
-    public OAuth2TokenCache getTokenCache(@NonNull final SilentTokenCommandParameters parameters){
+    public OAuth2TokenCache getTokenCache(@NonNull final ISilentTokenCommandParameters parameters){
         //Extract cache from parameters
         return parameters.getOAuth2TokenCache();
     }
@@ -825,7 +825,7 @@ public abstract class BaseController {
      * @return
      */
     protected AccountRecord getCachedAccountRecord(
-            @NonNull final SilentTokenCommandParameters parameters) throws ClientException {
+            @NonNull final ISilentTokenCommandParameters parameters) throws ClientException {
         if (parameters.getAccount() == null) {
             throw new ClientException(
                     ErrorStrings.NO_ACCOUNT_FOUND,
@@ -906,7 +906,7 @@ public abstract class BaseController {
     }
 
     @Nullable
-    private AccountRecord getAccountWithFRTIfAvailable(@NonNull final SilentTokenCommandParameters parameters,
+    private AccountRecord getAccountWithFRTIfAvailable(@NonNull final ISilentTokenCommandParameters parameters,
                                                        @SuppressWarnings(WarningType.rawtype_warning) @NonNull final MsalOAuth2TokenCache msalOAuth2TokenCache) {
 
         final String homeAccountId = parameters.getAccount().getHomeAccountId();

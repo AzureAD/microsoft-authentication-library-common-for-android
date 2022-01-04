@@ -37,6 +37,8 @@ import com.microsoft.identity.common.java.crypto.SymmetricAlgorithm;
 import java.nio.ByteBuffer;
 import java.security.KeyStore;
 import java.security.spec.AlgorithmParameterSpec;
+import java.security.spec.InvalidParameterSpecException;
+import java.util.Arrays;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.GCMParameterSpec;
@@ -53,13 +55,36 @@ public enum AndroidSymmetricCipher implements CryptoSuite {
         @Override
         public AlgorithmParameterSpec cryptoSpec(Object... args) {
             if (args.length == 1 && args[0] instanceof byte[]) {
-                return new IvParameterSpec((byte[]) args[1]);
+                return new IvParameterSpec((byte[]) args[0]);
+            } else if (args.length == 2 && args[0] instanceof Cipher && args[1] instanceof byte[]) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                    try {
+                        GCMParameterSpec spec = ((Cipher) args[0]).getParameters().getParameterSpec(GCMParameterSpec.class);
+                        System.arraycopy(spec.getIV(), 0, (byte[]) args[1], 0, 12);
+                        return spec;
+                    } catch (InvalidParameterSpecException e) {
+                       return null;
+                    }
+                } else {
+                    try {
+                        IvParameterSpec spec = ((Cipher) args[0]).getParameters().getParameterSpec(IvParameterSpec.class);
+                        System.arraycopy(spec.getIV(), 0, (byte[]) args[1], 0, 12);
+                        return spec;
+                    } catch (InvalidParameterSpecException e) {
+                        return null;
+                    }
+                }
             }
             if (args.length != 2 && !(args[0] instanceof Integer)) {
                 // TODO: log.
                 return null;
             }
-            byte[] iv = (byte[]) args[1];
+            byte[] iv;
+            if (args.length == 2) {
+                iv = (byte[]) args[1];
+            } else {
+                iv = Arrays.copyOfRange((byte[]) args[1], (Integer) args[2], (Integer) args[3]);
+            }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
                 return new GCMParameterSpec((Integer) args[0], iv);
             } else {
@@ -70,7 +95,7 @@ public enum AndroidSymmetricCipher implements CryptoSuite {
         @Override
         public void initialize(Cipher cipher, Object... args) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                if (args == null) {
+                if (args == null || (args.length == 1 && args[0] == null)) {
                     return;
                 } else if (args.length == 1 && args[0] instanceof byte[]) {
                     cipher.updateAAD((byte[]) args[0]);

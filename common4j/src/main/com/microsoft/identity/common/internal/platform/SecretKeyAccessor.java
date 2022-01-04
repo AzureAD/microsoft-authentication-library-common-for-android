@@ -26,6 +26,7 @@ import java.security.UnrecoverableEntryException;
 import java.security.cert.Certificate;
 import java.security.spec.AlgorithmParameterSpec;
 import java.util.Arrays;
+import java.util.Random;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -34,6 +35,7 @@ import javax.crypto.Mac;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.GCMParameterSpec;
+import javax.crypto.spec.IvParameterSpec;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.AllArgsConstructor;
@@ -63,9 +65,9 @@ public class SecretKeyAccessor implements IManagedKeyAccessor<KeyStore.SecretKey
             final KeyStore.SecretKeyEntry entry = mKeyManager.getEntry();
             final SecretKey key = entry.getSecretKey();
             final Cipher c = Cipher.getInstance(mSuite.cipher().name());
-            final byte[] iv = c.getIV();
-            AlgorithmParameterSpec spec = mSuite.cryptoSpec(iv);
-            c.init(Cipher.ENCRYPT_MODE, key, spec);
+            byte[] iv = new byte[12];
+            c.init(Cipher.ENCRYPT_MODE, key);
+            AlgorithmParameterSpec spec = mSuite.cryptoSpec(c, iv);
             mSuite.initialize(c, args);
             final byte[] enc = c.doFinal(plaintext);
             final byte[] out = new byte[iv.length + enc.length];
@@ -93,10 +95,10 @@ public class SecretKeyAccessor implements IManagedKeyAccessor<KeyStore.SecretKey
         } catch (final InvalidKeyException e) {
             errCode = INVALID_KEY;
             exception = e;
-        } catch (InvalidAlgorithmParameterException e) {
+        } /* catch (InvalidAlgorithmParameterException e) {
             errCode = INVALID_ALG_PARAMETER;
             exception = e;
-        }
+        } */
         throw new ClientException(errCode, exception.getMessage(), exception);
     }
 
