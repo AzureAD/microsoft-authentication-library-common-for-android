@@ -22,7 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.cache;
 
-
 import edu.umd.cs.findbugs.annotations.Nullable;
 
 import java.util.List;

@@ -22,7 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common;
 
-
 import static com.microsoft.identity.common.java.exception.ServiceException.SERVICE_NOT_AVAILABLE;
 
 import androidx.annotation.NonNull;

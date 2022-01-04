@@ -198,7 +198,7 @@ public class ADALOAuth2TokenCache
         }
 
         return null; // Returning null, since the ADAL cache's schema doesn't support this return
-                     // type.
+        // type.
     }
 
     @Override

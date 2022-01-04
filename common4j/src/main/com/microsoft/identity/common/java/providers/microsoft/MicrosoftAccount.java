@@ -67,7 +67,7 @@ public abstract class MicrosoftAccount extends BaseAccount {
     private Date mPasswordExpiresOn;
     private String
             mTenantId; // Tenant Id of the authority that issued the idToken... not necessarily the
-                       // home tenant of the account
+    // home tenant of the account
     private String mGivenName;
     private String mFamilyName;
     private String mMiddleName;

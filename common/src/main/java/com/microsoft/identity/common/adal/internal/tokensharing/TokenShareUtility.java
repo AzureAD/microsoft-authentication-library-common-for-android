@@ -188,7 +188,7 @@ public class TokenShareUtility implements ITokenShareInternal {
                 null, // wildcard (*)
                 localAccountRecord,
                 new BearerAuthenticationSchemeInternal() // Auth scheme is inconsequential - only
-                                                         // using RT
+                // using RT
                 );
     }
 
