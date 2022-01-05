@@ -109,13 +109,14 @@ public class RawAuthorizationResult {
          */
         MDM_FLOW(2009);
 
+        @Getter
         private final int mCode;
 
         ResultCode(final int code){
             mCode = code;
         }
 
-        static ResultCode fromInteger(@Nullable final Integer value){
+        public static ResultCode fromInteger(@Nullable final Integer value){
             if (value == null){
                 return ResultCode.UNKNOWN;
             }
@@ -126,7 +127,7 @@ public class RawAuthorizationResult {
                 }
             }
 
-            return null;
+            return ResultCode.UNKNOWN;
         }
     }
 
