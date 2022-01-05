@@ -5,40 +5,41 @@ on:
      branches: [ dev ]
 
 jobs:
-  test:
-    name: Add comments
-    runs-on: ubuntu-18.04
+  licensing:
+    name: Add license comments
+    runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v2.3.4
         with:
           ref: ${{ github.event.pull_request.head.ref }}
       - name: Add comments to testutils/src/
-        uses: koj-co/header-comments
+        uses: koj-co/header-comments@v1.0.5
         with:
           directory: testutils/src
       - name: Add comments to uiautomationutilities/src/
-        uses: koj-co/header-comments
+        uses: koj-co/header-comments@v1.0.5
         with:
           directory: uiautomationutilities/src
       - name: Add comments to common4j/src/
-        uses: koj-co/header-comments
+        uses: koj-co/header-comments@v1.0.5
         with:
           directory: common4j/src
       - name: Add comments to labapi/src/
-        uses: koj-co/header-comments
+        uses: koj-co/header-comments@v1.0.5
         with:
           directory: labapi/src
       - name: Add comments to LabApiUtilities/src/
-        uses: koj-co/header-comments
+        uses: koj-co/header-comments@v1.0.5
         with:
           directory: LabApiUtilities/src
       - name: Add comments to keyvault/src/
-        uses: koj-co/header-comments
+        uses: koj-co/header-comments@v1.0.5
         with:
           directory: keyvault/src
       - name: Add comments to common/src/
-        uses: koj-co/header-comments
+        uses: koj-co/header-comments@v1.0.5
         with:
           directory: common/src
       - name: Create commit
