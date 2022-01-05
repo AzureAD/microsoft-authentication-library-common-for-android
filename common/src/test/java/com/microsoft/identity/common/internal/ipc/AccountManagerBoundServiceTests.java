@@ -22,23 +22,6 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.ipc;
 
-import android.os.Build;
-
-import androidx.test.core.app.ApplicationProvider;
-
-import com.microsoft.identity.common.internal.broker.MicrosoftAuthClient;
-import com.microsoft.identity.common.internal.broker.ipc.BoundServiceStrategy;
-import com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy;
-import com.microsoft.identity.common.internal.ipc.mock.ShadowBoundServiceClientConnectionFailed;
-import com.microsoft.identity.common.internal.ipc.mock.ShadowBoundServiceClientWithLegacyBroker;
-import com.microsoft.identity.common.internal.ipc.mock.ShadowBoundServiceClientWithCurrentBroker;
-import com.microsoft.identity.common.internal.ipc.mock.ShadowBoundServiceClientWithSuccessResult;
-
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.robolectric.RobolectricTestRunner;
-import org.robolectric.annotation.Config;
-
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.BROKER_GET_KEY_FROM_INACTIVE_BROKER;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_ACQUIRE_TOKEN_SILENT;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_GET_ACCOUNTS;
@@ -49,11 +32,32 @@ import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationB
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_REMOVE_ACCOUNT;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_SIGN_OUT_FROM_SHARED_DEVICE;
 
+import android.os.Build;
+
+import androidx.test.core.app.ApplicationProvider;
+
+import com.microsoft.identity.common.internal.broker.MicrosoftAuthClient;
+import com.microsoft.identity.common.internal.broker.ipc.BoundServiceStrategy;
+import com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy;
+import com.microsoft.identity.common.internal.ipc.mock.ShadowBoundServiceClientConnectionFailed;
+import com.microsoft.identity.common.internal.ipc.mock.ShadowBoundServiceClientWithCurrentBroker;
+import com.microsoft.identity.common.internal.ipc.mock.ShadowBoundServiceClientWithLegacyBroker;
+import com.microsoft.identity.common.internal.ipc.mock.ShadowBoundServiceClientWithSuccessResult;
+
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.robolectric.RobolectricTestRunner;
+import org.robolectric.annotation.Config;
+
 @RunWith(RobolectricTestRunner.class)
-@Config(sdk = {Build.VERSION_CODES.N}, shadows = {ShadowBoundServiceClientWithSuccessResult.class})
+@Config(
+        sdk = {Build.VERSION_CODES.N},
+        shadows = {ShadowBoundServiceClientWithSuccessResult.class})
 public class AccountManagerBoundServiceTests extends IpcStrategyTests {
-    @Override IIpcStrategy getStrategy() {
-        return new BoundServiceStrategy<>(new MicrosoftAuthClient(ApplicationProvider.getApplicationContext()));
+    @Override
+    IIpcStrategy getStrategy() {
+        return new BoundServiceStrategy<>(
+                new MicrosoftAuthClient(ApplicationProvider.getApplicationContext()));
     }
 
     @Test
@@ -107,7 +111,8 @@ public class AccountManagerBoundServiceTests extends IpcStrategyTests {
     @Test
     @Override
     public void testBrokerGetKeyFromInactiveBroker() {
-        testOperationNotSupportedOnClientSide(getMockRequestBundle(BROKER_GET_KEY_FROM_INACTIVE_BROKER));
+        testOperationNotSupportedOnClientSide(
+                getMockRequestBundle(BROKER_GET_KEY_FROM_INACTIVE_BROKER));
     }
 
     @Test

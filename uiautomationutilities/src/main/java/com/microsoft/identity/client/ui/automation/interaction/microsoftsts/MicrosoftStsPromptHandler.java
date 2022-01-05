@@ -37,24 +37,21 @@ import com.microsoft.identity.client.ui.automation.logging.Logger;
  */
 public class MicrosoftStsPromptHandler extends AbstractPromptHandler {
 
-    private final static String TAG = MicrosoftStsPromptHandler.class.getSimpleName();
+    private static final String TAG = MicrosoftStsPromptHandler.class.getSimpleName();
 
-    public MicrosoftStsPromptHandler(
-            @NonNull MicrosoftStsPromptHandlerParameters parameters) {
+    public MicrosoftStsPromptHandler(@NonNull MicrosoftStsPromptHandlerParameters parameters) {
         super(
-                parameters.isFederated() ? new AdfsLoginComponentHandler() : new AadLoginComponentHandler(),
-                parameters
-        );
+                parameters.isFederated()
+                        ? new AdfsLoginComponentHandler()
+                        : new AadLoginComponentHandler(),
+                parameters);
         Logger.i(TAG, "Initializing Microsoft Sts Prompt Handler..");
     }
 
     public MicrosoftStsPromptHandler(
             @NonNull final IMicrosoftStsLoginComponentHandler loginComponentHandler,
             @NonNull final PromptHandlerParameters parameters) {
-        super(
-                loginComponentHandler,
-                parameters
-        );
+        super(loginComponentHandler, parameters);
         Logger.i(TAG, "Initializing Microsoft Sts Prompt Handler..");
     }
 
@@ -65,7 +62,8 @@ public class MicrosoftStsPromptHandler extends AbstractPromptHandler {
         // if login hint was not provided, then we need to handle either account picker or email
         // field. If it was provided, then we expect to go straight to password field.
         if (!loginHintProvided) {
-            if (parameters.getBroker() != null && parameters.isExpectingBrokerAccountChooserActivity()) {
+            if (parameters.getBroker() != null
+                    && parameters.isExpectingBrokerAccountChooserActivity()) {
                 parameters.getBroker().handleAccountPicker(username);
             } else if (parameters.isExpectingLoginPageAccountPicker()) {
                 loginComponentHandler.handleAccountPicker(username);
@@ -76,11 +74,14 @@ public class MicrosoftStsPromptHandler extends AbstractPromptHandler {
             loginComponentHandler.handleEmailField(username);
         }
 
-        if (parameters.isPasswordPageExpected() || parameters.getPrompt() == PromptParameter.LOGIN || !parameters.isSessionExpected()) {
+        if (parameters.isPasswordPageExpected()
+                || parameters.getPrompt() == PromptParameter.LOGIN
+                || !parameters.isSessionExpected()) {
             loginComponentHandler.handlePasswordField(password);
         }
 
-        if (parameters.isConsentPageExpected() || parameters.getPrompt() == PromptParameter.CONSENT) {
+        if (parameters.isConsentPageExpected()
+                || parameters.getPrompt() == PromptParameter.CONSENT) {
             final UiResponse consentPageResponse = parameters.getConsentPageResponse();
             if (consentPageResponse == UiResponse.ACCEPT) {
                 loginComponentHandler.acceptConsent();

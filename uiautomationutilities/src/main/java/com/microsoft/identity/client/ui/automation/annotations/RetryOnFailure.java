@@ -22,9 +22,9 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.annotations;
 
-import java.lang.annotation.Retention;
-
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
+import java.lang.annotation.Retention;
 
 /**
  * An annotation indicating how many times a test should be retried. This annotation must be placed

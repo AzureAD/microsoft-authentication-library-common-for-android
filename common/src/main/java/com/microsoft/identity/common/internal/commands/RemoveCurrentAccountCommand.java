@@ -30,9 +30,9 @@ import com.microsoft.identity.common.java.commands.CommandCallback;
 import com.microsoft.identity.common.java.commands.parameters.RemoveAccountCommandParameters;
 import com.microsoft.identity.common.java.controllers.BaseController;
 
-import java.util.List;
-
 import lombok.EqualsAndHashCode;
+
+import java.util.List;
 
 /**
  * Command class to call controllers to remove the account and return the result to
@@ -43,17 +43,19 @@ public class RemoveCurrentAccountCommand extends BaseCommand<Boolean> {
 
     private static final String TAG = RemoveCurrentAccountCommand.class.getSimpleName();
 
-    public RemoveCurrentAccountCommand(@NonNull RemoveAccountCommandParameters parameters,
-                                       @NonNull BaseController controller,
-                                       @SuppressWarnings(WarningType.rawtype_warning) @NonNull CommandCallback callback,
-                                       @NonNull String publicApiId) {
+    public RemoveCurrentAccountCommand(
+            @NonNull RemoveAccountCommandParameters parameters,
+            @NonNull BaseController controller,
+            @SuppressWarnings(WarningType.rawtype_warning) @NonNull CommandCallback callback,
+            @NonNull String publicApiId) {
         super(parameters, controller, callback, publicApiId);
     }
 
-    public RemoveCurrentAccountCommand(@NonNull RemoveAccountCommandParameters parameters,
-                                       @NonNull List<BaseController> controllers,
-                                       @SuppressWarnings(WarningType.rawtype_warning) @NonNull CommandCallback callback,
-                                       @NonNull String publicApiId) {
+    public RemoveCurrentAccountCommand(
+            @NonNull RemoveAccountCommandParameters parameters,
+            @NonNull List<BaseController> controllers,
+            @SuppressWarnings(WarningType.rawtype_warning) @NonNull CommandCallback callback,
+            @NonNull String publicApiId) {
         super(parameters, controllers, callback, publicApiId);
     }
 
@@ -64,11 +66,11 @@ public class RemoveCurrentAccountCommand extends BaseCommand<Boolean> {
         for (final BaseController controller : getControllers()) {
             com.microsoft.identity.common.internal.logging.Logger.verbose(
                     TAG + methodName,
-                    "Executing with controller: "
-                            + controller.getClass().getSimpleName()
-            );
+                    "Executing with controller: " + controller.getClass().getSimpleName());
 
-            final boolean removed = controller.removeCurrentAccount((RemoveAccountCommandParameters) getParameters());
+            final boolean removed =
+                    controller.removeCurrentAccount(
+                            (RemoveAccountCommandParameters) getParameters());
 
             if (removed) {
                 return true;

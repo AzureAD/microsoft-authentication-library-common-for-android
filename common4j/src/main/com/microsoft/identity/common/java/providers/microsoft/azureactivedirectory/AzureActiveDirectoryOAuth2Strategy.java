@@ -22,7 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory;
 
-import lombok.NonNull;
+import static com.microsoft.identity.common.java.exception.ErrorStrings.AUTHORITY_URL_NOT_VALID;
 
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
@@ -30,6 +30,7 @@ import com.microsoft.identity.common.java.commands.parameters.RopcTokenCommandPa
 import com.microsoft.identity.common.java.dto.IAccountRecord;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ServiceException;
+import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.net.HttpResponse;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenErrorResponse;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
@@ -39,17 +40,15 @@ import com.microsoft.identity.common.java.providers.oauth2.IDToken;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters;
 import com.microsoft.identity.common.java.providers.oauth2.TokenErrorResponse;
-import com.microsoft.identity.common.java.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
-import com.microsoft.identity.common.java.util.ObjectMapper;
-import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.util.CommonURIBuilder;
+import com.microsoft.identity.common.java.util.ObjectMapper;
+
+import lombok.NonNull;
 
 import java.net.HttpURLConnection;
 import java.net.URISyntaxException;
-
-import static com.microsoft.identity.common.java.exception.ErrorStrings.AUTHORITY_URL_NOT_VALID;
 
 /**
  * The Azure Active Directory OAuth 2.0 Strategy.
@@ -66,23 +65,24 @@ import static com.microsoft.identity.common.java.exception.ErrorStrings.AUTHORIT
  * TokenResult,
  * AuthorizationResult>
  */
-// Suppressing rawtype warnings due to the generic types AuthorizationStrategy, AuthorizationResult and AuthorizationResultFactory
+// Suppressing rawtype warnings due to the generic types AuthorizationStrategy, AuthorizationResult
+// and AuthorizationResultFactory
 @SuppressWarnings(WarningType.rawtype_warning)
 public class AzureActiveDirectoryOAuth2Strategy
         extends OAuth2Strategy<
-        AzureActiveDirectoryAccessToken,
-        AzureActiveDirectoryAccount,
-        AzureActiveDirectoryAuthorizationRequest,
-        AzureActiveDirectoryAuthorizationRequest.Builder,
-        IAuthorizationStrategy,
-        AzureActiveDirectoryOAuth2Configuration,
-        OAuth2StrategyParameters,
-        AzureActiveDirectoryAuthorizationResponse,
-        AzureActiveDirectoryRefreshToken,
-        AzureActiveDirectoryTokenRequest,
-        AzureActiveDirectoryTokenResponse,
-        TokenResult,
-        AuthorizationResult> {
+                AzureActiveDirectoryAccessToken,
+                AzureActiveDirectoryAccount,
+                AzureActiveDirectoryAuthorizationRequest,
+                AzureActiveDirectoryAuthorizationRequest.Builder,
+                IAuthorizationStrategy,
+                AzureActiveDirectoryOAuth2Configuration,
+                OAuth2StrategyParameters,
+                AzureActiveDirectoryAuthorizationResponse,
+                AzureActiveDirectoryRefreshToken,
+                AzureActiveDirectoryTokenRequest,
+                AzureActiveDirectoryTokenResponse,
+                TokenResult,
+                AuthorizationResult> {
 
     private static final String TAG = AzureActiveDirectoryOAuth2Strategy.class.getSimpleName();
 
@@ -91,8 +91,10 @@ public class AzureActiveDirectoryOAuth2Strategy
      *
      * @param config Azure Active Directory OAuth2 configuration
      */
-    public AzureActiveDirectoryOAuth2Strategy(final AzureActiveDirectoryOAuth2Configuration config,
-                                              final OAuth2StrategyParameters options) throws ClientException {
+    public AzureActiveDirectoryOAuth2Strategy(
+            final AzureActiveDirectoryOAuth2Configuration config,
+            final OAuth2StrategyParameters options)
+            throws ClientException {
         super(config, options);
         Logger.verbose(TAG, "Init: " + TAG);
         if (null != config.getAuthorityUrl()) {
@@ -108,29 +110,38 @@ public class AzureActiveDirectoryOAuth2Strategy
     }
 
     @Override
-    public String getIssuerCacheIdentifier(final AzureActiveDirectoryAuthorizationRequest authRequest) throws ClientException {
+    public String getIssuerCacheIdentifier(
+            final AzureActiveDirectoryAuthorizationRequest authRequest) throws ClientException {
         final String methodName = "getIssuerCacheIdentifier";
 
-        final AzureActiveDirectoryCloud cloud = AzureActiveDirectory.getAzureActiveDirectoryCloud(authRequest.getAuthority());
+        final AzureActiveDirectoryCloud cloud =
+                AzureActiveDirectory.getAzureActiveDirectoryCloud(authRequest.getAuthority());
         if (cloud == null) {
             if (!getOAuth2Configuration().isAuthorityHostValidationEnabled()) {
-                Logger.warn(TAG + ":" + methodName, "Discovery data does not include cloud authority and validation is off."
-                        + " Returning passed in Authority: "
-                        + authRequest.getAuthority().toString());
+                Logger.warn(
+                        TAG + ":" + methodName,
+                        "Discovery data does not include cloud authority and validation is off."
+                                + " Returning passed in Authority: "
+                                + authRequest.getAuthority().toString());
                 return authRequest.getAuthority().toString();
             }
 
-            throw new ClientException(AUTHORITY_URL_NOT_VALID,
+            throw new ClientException(
+                    AUTHORITY_URL_NOT_VALID,
                     "Discovery data does not include cloud authority and validation is on.");
         }
 
         if (!cloud.isValidated() && getOAuth2Configuration().isAuthorityHostValidationEnabled()) {
-            Logger.warn(TAG + ":" + methodName, "Authority host validation has been enabled. This data hasn't been validated, though.");
+            Logger.warn(
+                    TAG + ":" + methodName,
+                    "Authority host validation has been enabled. This data hasn't been validated, though.");
             // We have invalid cloud data... and authority host validation is enabled....
             // TODO: Throw an exception in this case... need to see what ADAL does in this case.
-            // If Cloud is null, e.g. Authority is PPE and AAD PE doesn't include it in the discovery data, this will similarly throw:
+            // If Cloud is null, e.g. Authority is PPE and AAD PE doesn't include it in the
+            // discovery data, this will similarly throw:
             // java.lang.NullPointerException: Attempt to invoke virtual method
-            // 'boolean com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud.isValidated()'
+            // 'boolean
+            // com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud.isValidated()'
             // on a null object reference
         }
 
@@ -139,8 +150,7 @@ public class AzureActiveDirectoryOAuth2Strategy
                     TAG + ":" + methodName,
                     "Authority host validation not specified..."
                             + "but there is no cloud..."
-                            + "Hence just return the passed in Authority"
-            );
+                            + "Hence just return the passed in Authority");
 
             return authRequest.getAuthority().toString();
         }
@@ -148,9 +158,11 @@ public class AzureActiveDirectoryOAuth2Strategy
         Logger.info(TAG, "Building authority URI");
 
         try {
-            final String issuerCacheIdentifier = new CommonURIBuilder(authRequest.getAuthority().toString())
-                    .setHost(cloud.getPreferredCacheHostName())
-                    .build().toString();
+            final String issuerCacheIdentifier =
+                    new CommonURIBuilder(authRequest.getAuthority().toString())
+                            .setHost(cloud.getPreferredCacheHostName())
+                            .build()
+                            .toString();
 
             Logger.infoPII(TAG, "Issuer cache identifier created: " + issuerCacheIdentifier);
             return issuerCacheIdentifier;
@@ -201,7 +213,8 @@ public class AzureActiveDirectoryOAuth2Strategy
             throw new RuntimeException();
         }
 
-        final AzureActiveDirectoryAccount account = new AzureActiveDirectoryAccount(idToken, clientInfo);
+        final AzureActiveDirectoryAccount account =
+                new AzureActiveDirectoryAccount(idToken, clientInfo);
 
         Logger.info(TAG, "Account created");
         Logger.infoPII(TAG, account.toString());
@@ -215,7 +228,8 @@ public class AzureActiveDirectoryOAuth2Strategy
     }
 
     @Override
-    public AzureActiveDirectoryAuthorizationRequest.Builder createAuthorizationRequestBuilder(IAccountRecord account) {
+    public AzureActiveDirectoryAuthorizationRequest.Builder createAuthorizationRequestBuilder(
+            IAccountRecord account) {
         return createAuthorizationRequestBuilder();
     }
 
@@ -228,17 +242,20 @@ public class AzureActiveDirectoryOAuth2Strategy
     }
 
     @Override
-    public AzureActiveDirectoryTokenRequest createRefreshTokenRequest(AbstractAuthenticationScheme scheme) {
+    public AzureActiveDirectoryTokenRequest createRefreshTokenRequest(
+            AbstractAuthenticationScheme scheme) {
         return null;
     }
 
     @Override
-    public AzureActiveDirectoryTokenRequest createRopcTokenRequest(RopcTokenCommandParameters tokenCommandParameters) throws ClientException {
+    public AzureActiveDirectoryTokenRequest createRopcTokenRequest(
+            RopcTokenCommandParameters tokenCommandParameters) throws ClientException {
         return null;
     }
 
     @Override
-    protected void validateAuthorizationRequest(final AzureActiveDirectoryAuthorizationRequest request) {
+    protected void validateAuthorizationRequest(
+            final AzureActiveDirectoryAuthorizationRequest request) {
         // TODO
     }
 
@@ -261,11 +278,15 @@ public class AzureActiveDirectoryOAuth2Strategy
         TokenErrorResponse tokenErrorResponse = null;
 
         if (response.getStatusCode() >= HttpURLConnection.HTTP_BAD_REQUEST) {
-            //An error occurred
+            // An error occurred
             Logger.warn(TAG + ":" + methodName, "Status code was: " + response.getStatusCode());
-            tokenErrorResponse = ObjectMapper.deserializeJsonStringToObject(response.getBody(), MicrosoftTokenErrorResponse.class);
+            tokenErrorResponse =
+                    ObjectMapper.deserializeJsonStringToObject(
+                            response.getBody(), MicrosoftTokenErrorResponse.class);
         } else {
-            tokenResponse = ObjectMapper.deserializeJsonStringToObject(response.getBody(), AzureActiveDirectoryTokenResponse.class);
+            tokenResponse =
+                    ObjectMapper.deserializeJsonStringToObject(
+                            response.getBody(), AzureActiveDirectoryTokenResponse.class);
         }
 
         final TokenResult result = new TokenResult(tokenResponse, tokenErrorResponse);
@@ -274,9 +295,8 @@ public class AzureActiveDirectoryOAuth2Strategy
     }
 
     @Override
-    protected void validateTokenResponse(AzureActiveDirectoryTokenRequest request,
-                                         AzureActiveDirectoryTokenResponse response) {
+    protected void validateTokenResponse(
+            AzureActiveDirectoryTokenRequest request, AzureActiveDirectoryTokenResponse response) {
         // TODO
     }
-
 }

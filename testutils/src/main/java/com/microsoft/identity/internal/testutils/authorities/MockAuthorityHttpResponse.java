@@ -34,14 +34,15 @@ import com.microsoft.identity.internal.testutils.strategies.MockStrategyWithMock
 
 public class MockAuthorityHttpResponse extends AzureActiveDirectoryAuthority {
 
-    public MockAuthorityHttpResponse(final AzureActiveDirectoryAudience azureActiveDirectoryAudience) {
+    public MockAuthorityHttpResponse(
+            final AzureActiveDirectoryAudience azureActiveDirectoryAudience) {
         super(azureActiveDirectoryAudience);
     }
 
     @Override
-    public OAuth2Strategy createOAuth2Strategy(@NonNull final OAuth2StrategyParameters parameters) throws ClientException {
+    public OAuth2Strategy createOAuth2Strategy(@NonNull final OAuth2StrategyParameters parameters)
+            throws ClientException {
         final MicrosoftStsOAuth2Configuration config = createOAuth2Configuration();
         return new MockStrategyWithMockedHttpResponse(config);
     }
-
 }

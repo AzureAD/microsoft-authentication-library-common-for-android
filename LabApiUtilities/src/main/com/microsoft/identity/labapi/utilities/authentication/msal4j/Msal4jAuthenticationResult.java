@@ -24,9 +24,9 @@ package com.microsoft.identity.labapi.utilities.authentication.msal4j;
 
 import com.microsoft.identity.labapi.utilities.authentication.IAuthenticationResult;
 
-import java.util.Date;
-
 import lombok.AllArgsConstructor;
+
+import java.util.Date;
 
 /**
  * An {@link IAuthenticationResult} that wraps around msal4j's authentication result.

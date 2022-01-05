@@ -46,12 +46,12 @@ import java.util.function.Predicate;
  */
 public class MockHttpClient {
 
-
     /**
      * Store a map with HttpRequestMatcher as the key. This allows us to have different
      * interceptors for matching different request patterns.
      */
-    private static final Map<HttpRequestMatcher, HttpRequestInterceptor> interceptors = new HashMap<>();
+    private static final Map<HttpRequestMatcher, HttpRequestInterceptor> interceptors =
+            new HashMap<>();
 
     private static final AtomicBoolean sSaveRequests = new AtomicBoolean(false);
 
@@ -61,7 +61,8 @@ public class MockHttpClient {
         sSaveRequests.set(saveRequests);
     }
 
-    private static final List<HttpRequest> sInterceptedRequests = Collections.synchronizedList(new ArrayList<>());
+    private static final List<HttpRequest> sInterceptedRequests =
+            Collections.synchronizedList(new ArrayList<>());
 
     public MockHttpClient() {
         this(false);
@@ -109,13 +110,13 @@ public class MockHttpClient {
      * @param url    the request url to intercept
      * @return the http request interceptor configured for the http method and request url
      */
-    public static HttpRequestInterceptor getInterceptor (
+    public static HttpRequestInterceptor getInterceptor(
             @NonNull final HttpMethod method,
             @NonNull final URL url,
             final Map<String, String> requestHeaders,
-            final byte[] requestContent
-    ) {
-        // this is also not quite right, but will work given the current usage model, where getInterceptor is always called
+            final byte[] requestContent) {
+        // this is also not quite right, but will work given the current usage model, where
+        // getInterceptor is always called
         sTotalRequests.incrementAndGet();
         // for each pair of HttpMethod and url regex
         for (HttpRequestMatcher matcher : interceptors.keySet()) {
@@ -124,11 +125,24 @@ public class MockHttpClient {
                 final HttpRequestInterceptor httpRequestInterceptor = interceptors.get(matcher);
                 return new HttpRequestInterceptor() {
                     @Override
-                    public HttpResponse performIntercept(@NonNull HttpClient.HttpMethod httpMethod, @NonNull  URL requestUrl, @NonNull Map<String, String> requestHeaders, @Nullable byte[] requestContent) throws IOException {
+                    public HttpResponse performIntercept(
+                            @NonNull HttpClient.HttpMethod httpMethod,
+                            @NonNull URL requestUrl,
+                            @NonNull Map<String, String> requestHeaders,
+                            @Nullable byte[] requestContent)
+                            throws IOException {
                         if (sSaveRequests.get()) {
-                            sInterceptedRequests.add(new HttpRequest(url, requestHeaders, method.name(), requestContent, null, null));
+                            sInterceptedRequests.add(
+                                    new HttpRequest(
+                                            url,
+                                            requestHeaders,
+                                            method.name(),
+                                            requestContent,
+                                            null,
+                                            null));
                         }
-                        return httpRequestInterceptor.performIntercept(httpMethod, requestUrl, requestHeaders, requestContent);
+                        return httpRequestInterceptor.performIntercept(
+                                httpMethod, requestUrl, requestHeaders, requestContent);
                     }
                 };
             }
@@ -136,7 +150,9 @@ public class MockHttpClient {
         return null;
     }
 
-    private final List<HttpRequestMatcher> matchers = new ArrayList<>(); // store a list of matchers for a single MockHttpClient object instance
+    private final List<HttpRequestMatcher> matchers =
+            new ArrayList<>(); // store a list of matchers for a single MockHttpClient object
+    // instance
 
     /**
      * Quickly match all the http requests and respond with the specified http response
@@ -144,18 +160,20 @@ public class MockHttpClient {
      * @param httpResponse the http response
      */
     public void intercept(@NonNull final HttpResponse httpResponse) {
-        intercept(HttpRequestMatcher.builder().build(), new HttpRequestInterceptor() {
-            @Override
-            public HttpResponse performIntercept(
-                    @NonNull HttpMethod httpMethod,
-                    @NonNull URL requestUrl,
-                    @NonNull Map<String, String> requestHeaders,
-                    @Nullable byte[] requestContent) throws IOException {
-                return httpResponse;
-            }
-        });
+        intercept(
+                HttpRequestMatcher.builder().build(),
+                new HttpRequestInterceptor() {
+                    @Override
+                    public HttpResponse performIntercept(
+                            @NonNull HttpMethod httpMethod,
+                            @NonNull URL requestUrl,
+                            @NonNull Map<String, String> requestHeaders,
+                            @Nullable byte[] requestContent)
+                            throws IOException {
+                        return httpResponse;
+                    }
+                });
     }
-
 
     /**
      * Quickly match all the http requests with the specified interceptor
@@ -166,25 +184,25 @@ public class MockHttpClient {
         intercept(HttpRequestMatcher.builder().build(), interceptor);
     }
 
-
     /**
      * Quickly match all the http requests that match the url specified
      *
      * @param url         the URL to match
      * @param interceptor the http interceptor
      */
-    public void intercept(@NonNull final URL url, @NonNull final HttpRequestInterceptor interceptor) {
+    public void intercept(
+            @NonNull final URL url, @NonNull final HttpRequestInterceptor interceptor) {
         intercept(
                 HttpRequestMatcher.builder()
-                        .url(new Predicate<URL>() {
-                            @Override
-                            public boolean test(URL u) {
-                                return u.toString().equals(url.toString());
-                            }
-                        })
+                        .url(
+                                new Predicate<URL>() {
+                                    @Override
+                                    public boolean test(URL u) {
+                                        return u.toString().equals(url.toString());
+                                    }
+                                })
                         .build(),
-                interceptor
-        );
+                interceptor);
     }
 
     /**
@@ -200,20 +218,22 @@ public class MockHttpClient {
             @NonNull final HttpRequestInterceptor interceptor) {
         intercept(
                 HttpRequestMatcher.builder()
-                        .url(new Predicate<URL>() {
-                            @Override
-                            public boolean test(URL u) {
-                                return u.toString().equals(url.toString());
-                            }
-                        })
-                        .method(new Predicate<HttpMethod>() {
-                            @Override
-                            public boolean test(HttpMethod m) {
-                                return m == method;
-                            }
-                        }).build(),
-                interceptor
-        );
+                        .url(
+                                new Predicate<URL>() {
+                                    @Override
+                                    public boolean test(URL u) {
+                                        return u.toString().equals(url.toString());
+                                    }
+                                })
+                        .method(
+                                new Predicate<HttpMethod>() {
+                                    @Override
+                                    public boolean test(HttpMethod m) {
+                                        return m == method;
+                                    }
+                                })
+                        .build(),
+                interceptor);
     }
 
     /**
@@ -223,20 +243,18 @@ public class MockHttpClient {
      * @param interceptor the request interceptor
      */
     public void intercept(
-            @NonNull final HttpMethod method,
-            @NonNull final HttpRequestInterceptor interceptor
-    ) {
+            @NonNull final HttpMethod method, @NonNull final HttpRequestInterceptor interceptor) {
         intercept(
                 HttpRequestMatcher.builder()
-                        .method(new Predicate<HttpMethod>() {
-                            @Override
-                            public boolean test(HttpMethod m) {
-                                return m == method;
-                            }
-                        })
+                        .method(
+                                new Predicate<HttpMethod>() {
+                                    @Override
+                                    public boolean test(HttpMethod m) {
+                                        return m == method;
+                                    }
+                                })
                         .build(),
-                interceptor
-        );
+                interceptor);
     }
 
     /**
@@ -254,11 +272,11 @@ public class MockHttpClient {
                             @NonNull HttpMethod httpMethod,
                             @NonNull URL requestUrl,
                             @NonNull Map<String, String> requestHeaders,
-                            @Nullable byte[] requestContent) throws IOException {
+                            @Nullable byte[] requestContent)
+                            throws IOException {
                         return httpResponse;
                     }
-                }
-        );
+                });
     }
 
     /**
@@ -273,7 +291,6 @@ public class MockHttpClient {
         }
         MockHttpClient.interceptors.put(matcher, interceptor);
     }
-
 
     /**
      * Removes all the set http request interceptors for this mock instance

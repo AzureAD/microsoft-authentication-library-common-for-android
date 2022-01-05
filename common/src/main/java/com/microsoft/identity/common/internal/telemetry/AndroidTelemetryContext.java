@@ -34,6 +34,7 @@ import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings;
 import com.microsoft.identity.common.logging.Logger;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 import lombok.NonNull;
 
 /**
@@ -44,7 +45,8 @@ public class AndroidTelemetryContext extends AbstractTelemetryContext {
 
     private static final String TAG = AndroidTelemetryContext.class.getName();
 
-    @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE",
+    @SuppressFBWarnings(
+            value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE",
             justification = "Lombok inserts nullchecks")
     public AndroidTelemetryContext(@NonNull final Context context) {
         super(new AndroidTelemetryPropertiesCache(context));
@@ -56,14 +58,16 @@ public class AndroidTelemetryContext extends AbstractTelemetryContext {
     private void addApplicationInfo(@NonNull final Context context) {
         try {
             final PackageManager packageManager = context.getPackageManager();
-            final PackageInfo packageInfo = packageManager.getPackageInfo(context.getPackageName(), 0);
+            final PackageInfo packageInfo =
+                    packageManager.getPackageInfo(context.getPackageName(), 0);
             long versionCode = PackageInfoCompat.getLongVersionCode(packageInfo);
 
-            super.addApplicationInfo(packageInfo.applicationInfo.packageName,
+            super.addApplicationInfo(
+                    packageInfo.applicationInfo.packageName,
                     packageInfo.versionName,
                     String.valueOf(versionCode));
         } catch (final PackageManager.NameNotFoundException e) {
-            //Not throw the exception to break the auth request when getting the app's telemetry
+            // Not throw the exception to break the auth request when getting the app's telemetry
             Logger.warn(TAG, "Unable to find the app's package name from PackageManager.");
         }
     }

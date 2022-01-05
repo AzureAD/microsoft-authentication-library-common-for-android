@@ -47,8 +47,7 @@ public class Logger {
      *                It usually identifies the class or activity where the log call occurs.
      * @param message The error message to log.
      */
-    public static void e(@NonNull final String tag,
-                         @NonNull final String message) {
+    public static void e(@NonNull final String tag, @NonNull final String message) {
         log(LogLevel.ERROR, tag, message, null);
     }
 
@@ -60,12 +59,12 @@ public class Logger {
      * @param message   The error message to log.
      * @param exception An exception to log
      */
-    public static void e(@NonNull final String tag,
-                         @NonNull final String message,
-                         @NonNull final Throwable exception) {
+    public static void e(
+            @NonNull final String tag,
+            @NonNull final String message,
+            @NonNull final Throwable exception) {
         log(LogLevel.ERROR, tag, message, exception);
     }
-
 
     /**
      * Send a {@link LogLevel#WARN} log message.
@@ -74,8 +73,7 @@ public class Logger {
      *                It usually identifies the class or activity where the log call occurs.
      * @param message The error message to log.
      */
-    public static void w(@NonNull final String tag,
-                         @NonNull final String message) {
+    public static void w(@NonNull final String tag, @NonNull final String message) {
         log(LogLevel.WARN, tag, message, null);
     }
 
@@ -87,9 +85,10 @@ public class Logger {
      * @param message   The error message to log.
      * @param exception An exception to log
      */
-    public static void w(@NonNull final String tag,
-                         @NonNull final String message,
-                         @NonNull final Throwable exception) {
+    public static void w(
+            @NonNull final String tag,
+            @NonNull final String message,
+            @NonNull final Throwable exception) {
         log(LogLevel.WARN, tag, message, exception);
     }
 
@@ -100,8 +99,7 @@ public class Logger {
      *                It usually identifies the class or activity where the log call occurs.
      * @param message The error message to log.
      */
-    public static void i(@NonNull final String tag,
-                         @NonNull final String message) {
+    public static void i(@NonNull final String tag, @NonNull final String message) {
         log(LogLevel.INFO, tag, message, null);
     }
 
@@ -113,12 +111,12 @@ public class Logger {
      * @param message   The error message to log.
      * @param exception An exception to log
      */
-    public static void i(@NonNull final String tag,
-                         @NonNull final String message,
-                         @NonNull final Throwable exception) {
+    public static void i(
+            @NonNull final String tag,
+            @NonNull final String message,
+            @NonNull final Throwable exception) {
         log(LogLevel.INFO, tag, message, exception);
     }
-
 
     /**
      * Send a {@link LogLevel#VERBOSE} log message.
@@ -127,8 +125,7 @@ public class Logger {
      *                It usually identifies the class or activity where the log call occurs.
      * @param message The error message to log.
      */
-    public static void v(@NonNull final String tag,
-                         @NonNull final String message) {
+    public static void v(@NonNull final String tag, @NonNull final String message) {
         log(LogLevel.VERBOSE, tag, message, null);
     }
 
@@ -140,16 +137,18 @@ public class Logger {
      * @param message   The error message to log.
      * @param exception An exception to log
      */
-    public static void v(@NonNull final String tag,
-                         @NonNull final String message,
-                         @NonNull final Throwable exception) {
+    public static void v(
+            @NonNull final String tag,
+            @NonNull final String message,
+            @NonNull final Throwable exception) {
         log(LogLevel.VERBOSE, tag, message, exception);
     }
 
-    private static void log(final LogLevel logLevel,
-                            final String tag,
-                            final String message,
-                            final Throwable throwable) {
+    private static void log(
+            final LogLevel logLevel,
+            final String tag,
+            final String message,
+            final Throwable throwable) {
         for (final IAppender appender : APPENDER_REGISTRY.getRegisteredAppenders()) {
             appender.append(logLevel, tag, message, throwable);
         }

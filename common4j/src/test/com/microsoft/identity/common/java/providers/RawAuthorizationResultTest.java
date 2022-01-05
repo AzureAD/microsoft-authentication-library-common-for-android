@@ -22,11 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.providers;
 
-import com.microsoft.identity.common.java.exception.ClientException;
-
-import org.junit.Assert;
-import org.junit.Test;
-
 import static com.microsoft.identity.common.java.providers.Constants.BROKER_INSTALLATION_REQUIRED_BROWSER_REDIRECT_URI;
 import static com.microsoft.identity.common.java.providers.Constants.BROKER_INSTALLATION_REQUIRED_WEBVIEW_REDIRECT_URI;
 import static com.microsoft.identity.common.java.providers.Constants.CANCEL_RESPONSE_REDIRECT_URI;
@@ -38,12 +33,17 @@ import static com.microsoft.identity.common.java.providers.Constants.SUCCEED_RED
 import static com.microsoft.identity.common.java.providers.Constants.WPJ_REQUIRED_REDIRECT_URI;
 import static com.microsoft.identity.common.java.providers.RawAuthorizationResult.ResultCode.BROKER_INSTALLATION_TRIGGERED;
 import static com.microsoft.identity.common.java.providers.RawAuthorizationResult.ResultCode.CANCELLED;
-import static com.microsoft.identity.common.java.providers.RawAuthorizationResult.ResultCode.NON_OAUTH_ERROR;
 import static com.microsoft.identity.common.java.providers.RawAuthorizationResult.ResultCode.COMPLETED;
 import static com.microsoft.identity.common.java.providers.RawAuthorizationResult.ResultCode.DEVICE_REGISTRATION_REQUIRED;
 import static com.microsoft.identity.common.java.providers.RawAuthorizationResult.ResultCode.MDM_FLOW;
+import static com.microsoft.identity.common.java.providers.RawAuthorizationResult.ResultCode.NON_OAUTH_ERROR;
 import static com.microsoft.identity.common.java.providers.RawAuthorizationResult.ResultCode.SDK_CANCELLED;
 import static com.microsoft.identity.common.java.providers.RawAuthorizationResult.ResultCode.UNKNOWN;
+
+import com.microsoft.identity.common.java.exception.ClientException;
+
+import org.junit.Assert;
+import org.junit.Test;
 
 public class RawAuthorizationResultTest {
 
@@ -100,9 +100,9 @@ public class RawAuthorizationResultTest {
 
     @Test
     public void testFromException() {
-        final RawAuthorizationResult result = RawAuthorizationResult.fromException(
-                new ClientException(MOCK_ERROR_CODE, MOCK_ERROR_MESSAGE)
-        );
+        final RawAuthorizationResult result =
+                RawAuthorizationResult.fromException(
+                        new ClientException(MOCK_ERROR_CODE, MOCK_ERROR_MESSAGE));
 
         Assert.assertEquals(NON_OAUTH_ERROR, result.getResultCode());
         Assert.assertNull(result.getAuthorizationFinalUri());
@@ -113,7 +113,8 @@ public class RawAuthorizationResultTest {
 
     @Test
     public void testFromSuccessRedirectUri() {
-        final RawAuthorizationResult result = RawAuthorizationResult.fromRedirectUri(SUCCEED_REDIRECT_URI);
+        final RawAuthorizationResult result =
+                RawAuthorizationResult.fromRedirectUri(SUCCEED_REDIRECT_URI);
 
         Assert.assertEquals(COMPLETED, result.getResultCode());
         Assert.assertEquals(SUCCEED_REDIRECT_URI, result.getAuthorizationFinalUri().toString());
@@ -123,23 +124,28 @@ public class RawAuthorizationResultTest {
     // AuthorizationResponseFactory will handle the rest.
     @Test
     public void testFromErrorRedirectUri() {
-        final RawAuthorizationResult result = RawAuthorizationResult.fromRedirectUri(ERROR_RESPONSE_REDIRECT_URI);
+        final RawAuthorizationResult result =
+                RawAuthorizationResult.fromRedirectUri(ERROR_RESPONSE_REDIRECT_URI);
 
         Assert.assertEquals(COMPLETED, result.getResultCode());
-        Assert.assertEquals(ERROR_RESPONSE_REDIRECT_URI, result.getAuthorizationFinalUri().toString());
+        Assert.assertEquals(
+                ERROR_RESPONSE_REDIRECT_URI, result.getAuthorizationFinalUri().toString());
     }
 
     @Test
     public void testFromCancelRedirectUri() {
-        final RawAuthorizationResult result = RawAuthorizationResult.fromRedirectUri(CANCEL_RESPONSE_REDIRECT_URI);
+        final RawAuthorizationResult result =
+                RawAuthorizationResult.fromRedirectUri(CANCEL_RESPONSE_REDIRECT_URI);
 
         Assert.assertEquals(CANCELLED, result.getResultCode());
-        Assert.assertEquals(CANCEL_RESPONSE_REDIRECT_URI, result.getAuthorizationFinalUri().toString());
+        Assert.assertEquals(
+                CANCEL_RESPONSE_REDIRECT_URI, result.getAuthorizationFinalUri().toString());
     }
 
     @Test
     public void testFromMalformedRedirectUri() {
-        final RawAuthorizationResult result = RawAuthorizationResult.fromRedirectUri(MALFORMED_REDIRECT_URI);
+        final RawAuthorizationResult result =
+                RawAuthorizationResult.fromRedirectUri(MALFORMED_REDIRECT_URI);
 
         Assert.assertEquals(NON_OAUTH_ERROR, result.getResultCode());
         Assert.assertNull(result.getAuthorizationFinalUri());
@@ -149,25 +155,35 @@ public class RawAuthorizationResultTest {
 
     @Test
     public void testFromWpjRequiredRedirectUri() {
-        final RawAuthorizationResult result = RawAuthorizationResult.fromRedirectUri(WPJ_REQUIRED_REDIRECT_URI);
+        final RawAuthorizationResult result =
+                RawAuthorizationResult.fromRedirectUri(WPJ_REQUIRED_REDIRECT_URI);
 
         Assert.assertEquals(DEVICE_REGISTRATION_REQUIRED, result.getResultCode());
-        Assert.assertEquals(WPJ_REQUIRED_REDIRECT_URI, result.getAuthorizationFinalUri().toString());
+        Assert.assertEquals(
+                WPJ_REQUIRED_REDIRECT_URI, result.getAuthorizationFinalUri().toString());
     }
 
     @Test
     public void testFromBrowserBrokerInstallationRedirectUri() {
-        final RawAuthorizationResult result = RawAuthorizationResult.fromRedirectUri(BROKER_INSTALLATION_REQUIRED_BROWSER_REDIRECT_URI);
+        final RawAuthorizationResult result =
+                RawAuthorizationResult.fromRedirectUri(
+                        BROKER_INSTALLATION_REQUIRED_BROWSER_REDIRECT_URI);
 
         Assert.assertEquals(BROKER_INSTALLATION_TRIGGERED, result.getResultCode());
-        Assert.assertEquals(BROKER_INSTALLATION_REQUIRED_BROWSER_REDIRECT_URI, result.getAuthorizationFinalUri().toString());
+        Assert.assertEquals(
+                BROKER_INSTALLATION_REQUIRED_BROWSER_REDIRECT_URI,
+                result.getAuthorizationFinalUri().toString());
     }
 
     @Test
     public void testFromWebViewBrokerInstallationRedirectUri() {
-        final RawAuthorizationResult result = RawAuthorizationResult.fromRedirectUri(BROKER_INSTALLATION_REQUIRED_WEBVIEW_REDIRECT_URI);
+        final RawAuthorizationResult result =
+                RawAuthorizationResult.fromRedirectUri(
+                        BROKER_INSTALLATION_REQUIRED_WEBVIEW_REDIRECT_URI);
 
         Assert.assertEquals(BROKER_INSTALLATION_TRIGGERED, result.getResultCode());
-        Assert.assertEquals(BROKER_INSTALLATION_REQUIRED_WEBVIEW_REDIRECT_URI, result.getAuthorizationFinalUri().toString());
+        Assert.assertEquals(
+                BROKER_INSTALLATION_REQUIRED_WEBVIEW_REDIRECT_URI,
+                result.getAuthorizationFinalUri().toString());
     }
 }

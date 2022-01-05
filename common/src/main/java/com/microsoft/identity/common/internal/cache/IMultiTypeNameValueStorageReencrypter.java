@@ -64,9 +64,10 @@ public interface IMultiTypeNameValueStorageReencrypter {
          * @param eraseEntryOnError True, if the operation should delete the entry that caused the error.
          * @param eraseAllOnError   True, if the operation should delete all entries if an error occurs.
          */
-        public ReencryptionParams(final boolean abortOnError,
-                                  final boolean eraseEntryOnError,
-                                  final boolean eraseAllOnError) {
+        public ReencryptionParams(
+                final boolean abortOnError,
+                final boolean eraseEntryOnError,
+                final boolean eraseAllOnError) {
             mAbortOnError = abortOnError;
             mEraseEntryOnError = eraseEntryOnError;
             mEraseAllOnError = eraseAllOnError;
@@ -114,11 +115,12 @@ public interface IMultiTypeNameValueStorageReencrypter {
      * @param decrypter   The delegate object to handle decryption of the existing data.
      * @param params      Params to control error handling behavior.
      */
-    void reencrypt(IMultiTypeNameValueStorage fileManager,
-                   IStringEncrypter encrypter,
-                   IStringDecrypter decrypter,
-                   ReencryptionParams params
-    ) throws Exception;
+    void reencrypt(
+            IMultiTypeNameValueStorage fileManager,
+            IStringEncrypter encrypter,
+            IStringDecrypter decrypter,
+            ReencryptionParams params)
+            throws Exception;
 
     /**
      * Performs reencryption of the provided {@link IMultiTypeNameValueStorage} asynchronously,
@@ -135,10 +137,10 @@ public interface IMultiTypeNameValueStorageReencrypter {
      * @param params      Params to control error handling behavior.
      * @param callback    Callback to receive any error/completion callbacks.
      */
-    void reencryptAsync(IMultiTypeNameValueStorage fileManager,
-                        IStringEncrypter encrypter,
-                        IStringDecrypter decrypter,
-                        ReencryptionParams params,
-                        TaskCompletedCallbackWithError<Void, Exception> callback
-    );
+    void reencryptAsync(
+            IMultiTypeNameValueStorage fileManager,
+            IStringEncrypter encrypter,
+            IStringDecrypter decrypter,
+            ReencryptionParams params,
+            TaskCompletedCallbackWithError<Void, Exception> callback);
 }

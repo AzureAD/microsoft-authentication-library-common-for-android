@@ -22,14 +22,14 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.crypto;
 
-import org.robolectric.annotation.Implements;
-
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME;
+
+import org.robolectric.annotation.Implements;
 
 @Implements(AndroidBrokerStorageEncryptionManager.class)
 public class AndroidBrokerStorageEncryptionManager_OnAuthApp {
 
-    protected String getPackageName(){
+    protected String getPackageName() {
         return AZURE_AUTHENTICATOR_APP_PACKAGE_NAME;
     }
 }

@@ -33,5 +33,4 @@ public interface TokenMigrationCallback {
      * @param numberOfAccountsMigrated The number of accounts migrated.
      */
     void onMigrationFinished(int numberOfAccountsMigrated);
-
 }

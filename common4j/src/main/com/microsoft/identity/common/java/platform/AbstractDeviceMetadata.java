@@ -32,10 +32,14 @@ public abstract class AbstractDeviceMetadata implements IDeviceMetadata {
 
     @Override
     public String getAllMetadata() {
-        return getDeviceModel() + SEPARATOR +
-                getManufacturer() + SEPARATOR +
-                getCpu() + SEPARATOR +
-                getOsForEsts() + SEPARATOR +
-                getOsForDrs();
+        return getDeviceModel()
+                + SEPARATOR
+                + getManufacturer()
+                + SEPARATOR
+                + getCpu()
+                + SEPARATOR
+                + getOsForEsts()
+                + SEPARATOR
+                + getOsForDrs();
     }
 }

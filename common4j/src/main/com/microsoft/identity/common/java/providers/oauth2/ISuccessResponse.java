@@ -24,5 +24,4 @@ package com.microsoft.identity.common.java.providers.oauth2;
 
 import com.microsoft.identity.common.java.commands.parameters.IHasExtraParameters;
 
-public interface ISuccessResponse extends IHasExtraParameters {
-}
+public interface ISuccessResponse extends IHasExtraParameters {}

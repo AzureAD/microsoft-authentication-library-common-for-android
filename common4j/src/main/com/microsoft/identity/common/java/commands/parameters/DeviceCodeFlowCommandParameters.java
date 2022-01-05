@@ -22,8 +22,6 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.commands.parameters;
 
-import com.microsoft.identity.common.java.commands.parameters.TokenCommandParameters;
-
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.experimental.SuperBuilder;
@@ -36,5 +34,4 @@ import lombok.experimental.SuperBuilder;
 @Getter
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder(toBuilder = true)
-public class DeviceCodeFlowCommandParameters extends TokenCommandParameters {
-}
+public class DeviceCodeFlowCommandParameters extends TokenCommandParameters {}

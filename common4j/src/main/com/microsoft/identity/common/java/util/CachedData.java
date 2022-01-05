@@ -36,7 +36,7 @@ public abstract class CachedData<T> {
 
     private T mData;
 
-    public void clear(){
+    public void clear() {
         mData = null;
     }
 }

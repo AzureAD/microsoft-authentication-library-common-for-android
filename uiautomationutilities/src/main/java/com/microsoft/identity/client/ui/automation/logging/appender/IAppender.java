@@ -38,5 +38,4 @@ public interface IAppender {
      * @param throwable the exception to log
      */
     void append(LogLevel logLevel, String tag, String message, Throwable throwable);
-
 }

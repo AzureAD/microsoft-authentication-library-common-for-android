@@ -22,6 +22,11 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.broker;
 
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ACCOUNT_NAME;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_HOST_APP_PACKAGE_NAME;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
+
 import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.os.Build;
@@ -38,11 +43,6 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.Accessors;
 
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ACCOUNT_NAME;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_HOST_APP_PACKAGE_NAME;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
-
 @Getter
 @Accessors(prefix = "m")
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
@@ -53,8 +53,7 @@ public class AndroidBrokerAccount implements IBrokerAccount {
     /**
      * Android's {@link AccountManager} account.
      */
-    @NonNull
-    private final Account mAccount;
+    @NonNull private final Account mAccount;
 
     @Override
     @NonNull
@@ -71,8 +70,10 @@ public class AndroidBrokerAccount implements IBrokerAccount {
         try {
             return (AndroidBrokerAccount) account;
         } catch (final ClassCastException e) {
-            Logger.error(TAG + methodName,
-                    "Expected an AndroidBrokerAccount, but got " + e.getClass().getSimpleName(), e);
+            Logger.error(
+                    TAG + methodName,
+                    "Expected an AndroidBrokerAccount, but got " + e.getClass().getSimpleName(),
+                    e);
             throw e;
         }
     }
@@ -83,9 +84,10 @@ public class AndroidBrokerAccount implements IBrokerAccount {
     }
 
     @NonNull
-    public static AndroidBrokerAccount create(@NonNull final AccountManager accountManager,
-                                              @NonNull final String accountName,
-                                              @NonNull final String accountType) {
+    public static AndroidBrokerAccount create(
+            @NonNull final AccountManager accountManager,
+            @NonNull final String accountName,
+            @NonNull final String accountType) {
         final String methodName = ":create";
 
         Account account = getAccount(accountManager, accountName, accountType);
@@ -105,27 +107,21 @@ public class AndroidBrokerAccount implements IBrokerAccount {
             accountManager.setAccountVisibility(
                     account,
                     AZURE_AUTHENTICATOR_APP_PACKAGE_NAME,
-                    AccountManager.VISIBILITY_VISIBLE
-            );
+                    AccountManager.VISIBILITY_VISIBLE);
             accountManager.setAccountVisibility(
-                    account,
-                    COMPANY_PORTAL_APP_PACKAGE_NAME,
-                    AccountManager.VISIBILITY_VISIBLE
-            );
+                    account, COMPANY_PORTAL_APP_PACKAGE_NAME, AccountManager.VISIBILITY_VISIBLE);
             accountManager.setAccountVisibility(
-                    account,
-                    BROKER_HOST_APP_PACKAGE_NAME,
-                    AccountManager.VISIBILITY_VISIBLE
-            );
+                    account, BROKER_HOST_APP_PACKAGE_NAME, AccountManager.VISIBILITY_VISIBLE);
         }
 
         return adapt(account);
     }
 
     @Nullable
-    private static Account getAccount(@NonNull final AccountManager accountManager,
-                                      @Nullable final String accountName,
-                                      @NonNull final String accountType) {
+    private static Account getAccount(
+            @NonNull final AccountManager accountManager,
+            @Nullable final String accountName,
+            @NonNull final String accountType) {
         final String methodName = "getAccount";
         if (accountName == null) {
             return null;

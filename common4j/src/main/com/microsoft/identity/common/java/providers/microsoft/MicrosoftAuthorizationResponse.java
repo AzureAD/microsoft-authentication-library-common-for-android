@@ -31,42 +31,31 @@ import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResponse
  */
 public class MicrosoftAuthorizationResponse extends AuthorizationResponse {
 
-    public final static String CLOUD_INSTANCE_NAME = "cloud_instance_name";
-    public final static String CLOUD_INSTANCE_HOST_NAME = "cloud_instance_host_name";
-    public final static String CLOUD_GRAPH_HOST_NAME = "cloud_graph_host_name";
-    public final static String SESSION_STATE = "session_state";
+    public static final String CLOUD_INSTANCE_NAME = "cloud_instance_name";
+    public static final String CLOUD_INSTANCE_HOST_NAME = "cloud_instance_host_name";
+    public static final String CLOUD_GRAPH_HOST_NAME = "cloud_graph_host_name";
+    public static final String SESSION_STATE = "session_state";
 
-    public final static String DEVICE_CODE = "device_code";
-    public final static String USER_CODE = "user_code";
-    public final static String VERIFICATION_URI = "verification_uri";
-    public final static String EXPIRES_IN = "expires_in";
-    public final static String INTERVAL = "interval";
-    public final static String MESSAGE = "message";
+    public static final String DEVICE_CODE = "device_code";
+    public static final String USER_CODE = "user_code";
+    public static final String VERIFICATION_URI = "verification_uri";
+    public static final String EXPIRES_IN = "expires_in";
+    public static final String INTERVAL = "interval";
+    public static final String MESSAGE = "message";
 
-    @Expose()
-    protected String mCorrelationId;
-    @Expose()
-    protected String mCloudInstanceName;
-    @Expose()
-    protected String mCloudInstanceHostName;
-    @Expose()
-    protected String mCloudGraphHostName;
-    @Expose()
-    protected String mSessionState;
+    @Expose() protected String mCorrelationId;
+    @Expose() protected String mCloudInstanceName;
+    @Expose() protected String mCloudInstanceHostName;
+    @Expose() protected String mCloudGraphHostName;
+    @Expose() protected String mSessionState;
 
     // Device Code Flow Fields
-    @Expose()
-    protected String mDeviceCode;
-    @Expose()
-    protected String mUserCode;
-    @Expose()
-    protected String mVerificationUri;
-    @Expose()
-    protected String mExpiresIn;
-    @Expose()
-    protected String mInterval;
-    @Expose()
-    protected String mMessage;
+    @Expose() protected String mDeviceCode;
+    @Expose() protected String mUserCode;
+    @Expose() protected String mVerificationUri;
+    @Expose() protected String mExpiresIn;
+    @Expose() protected String mInterval;
+    @Expose() protected String mMessage;
 
     /**
      * Constructor of {@link MicrosoftAuthorizationResponse}.
@@ -96,53 +85,73 @@ public class MicrosoftAuthorizationResponse extends AuthorizationResponse {
         mCorrelationId = correlationId;
     }
 
-    public String getCloudInstanceName() { return mCloudInstanceName;}
+    public String getCloudInstanceName() {
+        return mCloudInstanceName;
+    }
 
-    public String getCloudInstanceHostName() { return mCloudInstanceHostName;}
+    public String getCloudInstanceHostName() {
+        return mCloudInstanceHostName;
+    }
 
-    public String getCloudGraphHostName() { return mCloudGraphHostName;}
+    public String getCloudGraphHostName() {
+        return mCloudGraphHostName;
+    }
 
-    public String getSessionState() { return mSessionState;}
+    public String getSessionState() {
+        return mSessionState;
+    }
 
     /**
      * Getter method for the device code used in Device Code Flow.
      *
      * @return device code of the request (null in non-DCF cases).
      */
-    public String getDeviceCode() { return mDeviceCode;}
+    public String getDeviceCode() {
+        return mDeviceCode;
+    }
 
     /**
      * Getter method for the user code used in Device Code Flow.
      *
      * @return user code of the request (null in non-DCF cases).
      */
-    public String getUserCode() { return mUserCode;}
+    public String getUserCode() {
+        return mUserCode;
+    }
 
     /**
      * Getter method for the verification uri used in Device Code Flow.
      *
      * @return verification uri of the request (null in non-DCF cases).
      */
-    public String getVerificationUri() { return mVerificationUri;}
+    public String getVerificationUri() {
+        return mVerificationUri;
+    }
 
     /**
      * Getter method for the expiration interval used in Device Code Flow.
      *
      * @return expiration interval of the request (null in non-DCF cases).
      */
-    public String getExpiresIn() { return mExpiresIn;}
+    public String getExpiresIn() {
+        return mExpiresIn;
+    }
 
     /**
      * Getter method for the polling waiting interval used in Device Code Flow.
      *
      * @return waiting interval of the request (null in non-DCF cases).
      */
-    public String getInterval() { return mInterval;}
+    public String getInterval() {
+        return mInterval;
+    }
 
     /**
      * Getter method for the authentication message used in Device Code Flow.
      *
      * @return message of the request (null in non-DCF cases).
      */
-    public String getMessage() { return mMessage;}
+    public String getMessage() {
+        return mMessage;
+    }
 }

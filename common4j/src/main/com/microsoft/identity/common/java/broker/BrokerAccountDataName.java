@@ -24,8 +24,7 @@ package com.microsoft.identity.common.java.broker;
 
 public final class BrokerAccountDataName {
 
-    private BrokerAccountDataName() {
-    }
+    private BrokerAccountDataName() {}
 
     /**
      * Key for the data used by the PRTv3 protocol.
@@ -82,12 +81,14 @@ public final class BrokerAccountDataName {
     /**
      * String of key for identity provider.
      */
-    public static final String ACCOUNT_USERINFO_IDENTITY_PROVIDER = "account.userinfo.identity.provider";
+    public static final String ACCOUNT_USERINFO_IDENTITY_PROVIDER =
+            "account.userinfo.identity.provider";
 
     /**
      * String of key for displayable id.
      */
-    public static final String ACCOUNT_USERINFO_USERID_DISPLAYABLE = "account.userinfo.userid.displayable";
+    public static final String ACCOUNT_USERINFO_USERID_DISPLAYABLE =
+            "account.userinfo.userid.displayable";
 
     /**
      * String of key for tenant id.
@@ -113,7 +114,6 @@ public final class BrokerAccountDataName {
      * String of key for user data broker RT.
      */
     public static final String USERDATA_BROKER_RT = "userdata.broker.rt";
-
 
     public static final String DATA_IS_NGC = "com.microsoft.workaccount.isNGC";
 }

@@ -22,6 +22,13 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.adal.internal.util;
 
+import static com.microsoft.identity.common.adal.internal.util.HashMapExtensions.urlFormDecode;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import com.microsoft.identity.common.adal.internal.AndroidTestHelper;
@@ -32,12 +39,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.util.HashMap;
-
-import static com.microsoft.identity.common.adal.internal.util.HashMapExtensions.urlFormDecode;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 @RunWith(AndroidJUnit4.class)
 public class HashMapExtensionTests extends AndroidTestHelper {

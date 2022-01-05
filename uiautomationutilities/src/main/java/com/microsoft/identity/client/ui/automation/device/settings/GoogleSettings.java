@@ -22,6 +22,9 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.device.settings;
 
+import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT;
+import static com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils.obtainUiObjectWithExactText;
+
 import androidx.annotation.NonNull;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.UiDevice;
@@ -40,16 +43,13 @@ import org.junit.Assert;
 import java.util.Calendar;
 import java.util.concurrent.TimeUnit;
 
-import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT;
-import static com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils.obtainUiObjectWithExactText;
-
 /**
  * A model representing the Settings app on a Google device. Please note that this class is
  * currently optimized for a Google Pixel 2 device.
  */
 public class GoogleSettings extends BaseSettings {
 
-    private final static String TAG = GoogleSettings.class.getSimpleName();
+    private static final String TAG = GoogleSettings.class.getSimpleName();
 
     @Override
     public void disableAdmin(@NonNull final DeviceAdmin deviceAdmin) {
@@ -65,10 +65,9 @@ public class GoogleSettings extends BaseSettings {
             adminAppListItem.click();
 
             // scroll down the recycler view to find btn to deactivate admin
-            final UiObject deactivateBtn = UiAutomatorUtils.obtainChildInScrollable(
-                    android.widget.ScrollView.class,
-                    "Deactivate this device admin app"
-            );
+            final UiObject deactivateBtn =
+                    UiAutomatorUtils.obtainChildInScrollable(
+                            android.widget.ScrollView.class, "Deactivate this device admin app");
 
             // click the deactivate admin btn
             deactivateBtn.click();
@@ -92,18 +91,16 @@ public class GoogleSettings extends BaseSettings {
             // Click this account
             account.click();
 
-            final UiObject removeAccountBtn = UiAutomatorUtils.obtainUiObjectWithResourceIdAndText(
-                    "com.android.settings:id/button",
-                    "Remove account"
-            );
+            final UiObject removeAccountBtn =
+                    UiAutomatorUtils.obtainUiObjectWithResourceIdAndText(
+                            "com.android.settings:id/button", "Remove account");
 
             // Click the removeAccountBtn
             removeAccountBtn.click();
 
-            final UiObject removeAccountConfirmationDialogBtn = UiAutomatorUtils.obtainUiObjectWithResourceIdAndText(
-                    "android:id/button1",
-                    "Remove account"
-            );
+            final UiObject removeAccountConfirmationDialogBtn =
+                    UiAutomatorUtils.obtainUiObjectWithResourceIdAndText(
+                            "android:id/button1", "Remove account");
 
             // Click confirm in confirmation dialog
             removeAccountConfirmationDialogBtn.click();
@@ -113,9 +110,10 @@ public class GoogleSettings extends BaseSettings {
     }
 
     @Override
-    public void addWorkAccount(@NonNull final ITestBroker broker,
-                               @NonNull final String username,
-                               @NonNull final String password) {
+    public void addWorkAccount(
+            @NonNull final ITestBroker broker,
+            @NonNull final String username,
+            @NonNull final String password) {
         Logger.i(TAG, "Adding Work Account on Google Device..");
         launchAddAccountPage();
 
@@ -133,12 +131,11 @@ public class GoogleSettings extends BaseSettings {
                     UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
             // Find the cert installer and make sure it exists
-            UiObject certInstaller = device.findObject(new UiSelector().packageName("com.android.certinstaller"));
+            UiObject certInstaller =
+                    device.findObject(new UiSelector().packageName("com.android.certinstaller"));
             certInstaller.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
             Assert.assertTrue(
-                    "Cert Installer appears while adding work account",
-                    certInstaller.exists()
-            );
+                    "Cert Installer appears while adding work account", certInstaller.exists());
 
             // Confirm install cert
             UiAutomatorUtils.handleButtonClick("android:id/button1");
@@ -174,7 +171,9 @@ public class GoogleSettings extends BaseSettings {
             setDateBtn.click();
 
             // Make sure we see the calendar
-            final UiObject datePicker = UiAutomatorUtils.obtainUiObjectWithResourceId("android:id/date_picker_header_date");
+            final UiObject datePicker =
+                    UiAutomatorUtils.obtainUiObjectWithResourceId(
+                            "android:id/date_picker_header_date");
             Assert.assertTrue("Date Picker appears", datePicker.exists());
 
             final Calendar cal = Calendar.getInstance();
@@ -191,9 +190,7 @@ public class GoogleSettings extends BaseSettings {
             }
 
             // Click on this new date in this calendar
-            UiObject specifiedDateIcon = obtainUiObjectWithExactText(
-                    String.valueOf(dateToSet)
-            );
+            UiObject specifiedDateIcon = obtainUiObjectWithExactText(String.valueOf(dateToSet));
             specifiedDateIcon.click();
 
             // Confirm setting date
@@ -218,9 +215,8 @@ public class GoogleSettings extends BaseSettings {
         Logger.i(TAG, "Activating Admin on Google Device..");
         try {
             // scroll down the recycler view to find activate device admin btn
-            final UiObject activeDeviceAdminBtn = UiAutomatorUtils.obtainChildInScrollable(
-                    "Activate this device admin app"
-            );
+            final UiObject activeDeviceAdminBtn =
+                    UiAutomatorUtils.obtainChildInScrollable("Activate this device admin app");
 
             assert activeDeviceAdminBtn != null;
 
@@ -234,39 +230,30 @@ public class GoogleSettings extends BaseSettings {
     private UiObject obtainButtonInScrollable(final String Text) {
         Logger.i(TAG, "Obtain Button In Scrollable on Google Device..");
         if (android.os.Build.VERSION.SDK_INT == 28) {
-            return UiAutomatorUtils.obtainChildInScrollable(
-                    "com.android.settings:id/list",
-                    Text
-            );
+            return UiAutomatorUtils.obtainChildInScrollable("com.android.settings:id/list", Text);
         }
 
         return UiAutomatorUtils.obtainChildInScrollable(
-                "com.android.settings:id/recycler_view",
-                Text
-        );
+                "com.android.settings:id/recycler_view", Text);
     }
-
 
     private UiObject obtainDisableAdminButton(final DeviceAdmin deviceAdmin) {
         Logger.i(TAG, "Obtain Disable Admin Button on Google Device..");
         if (android.os.Build.VERSION.SDK_INT == 28) {
             return UiAutomatorUtils.obtainChildInScrollable(
-                    "android:id/list",
-                    deviceAdmin.getAdminName()
-            );
+                    "android:id/list", deviceAdmin.getAdminName());
         }
 
         return UiAutomatorUtils.obtainChildInScrollable(
-                "com.android.settings:id/recycler_view",
-                deviceAdmin.getAdminName()
-        );
+                "com.android.settings:id/recycler_view", deviceAdmin.getAdminName());
     }
 
     @Override
     public void setPinOnDevice(final String pin) {
         try {
             Logger.i(TAG, "Set Pin on Google Device..");
-            final UiDevice device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+            final UiDevice device =
+                    UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
             launchScreenLockPage();
             final UiObject screenLock = UiAutomatorUtils.obtainUiObjectWithText("Screen lock");
             Assert.assertTrue(screenLock.exists());
@@ -286,7 +273,8 @@ public class GoogleSettings extends BaseSettings {
     public void removePinFromDevice(final String pin) {
         try {
             Logger.i(TAG, "Remove Pin on Google Device..");
-            final UiDevice device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+            final UiDevice device =
+                    UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
             launchScreenLockPage();
             final UiObject screenLock = UiAutomatorUtils.obtainUiObjectWithText("Screen lock");
             Assert.assertTrue(screenLock.exists());
@@ -311,6 +299,4 @@ public class GoogleSettings extends BaseSettings {
             doneButton.click();
         }
     }
-
 }
-

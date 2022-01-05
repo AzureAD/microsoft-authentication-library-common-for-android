@@ -22,24 +22,24 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.commands;
 
+import static com.microsoft.identity.common.java.exception.ErrorStrings.NO_ACCOUNT_FOUND;
+
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.java.commands.BaseCommand;
 import com.microsoft.identity.common.java.commands.CommandCallback;
+import com.microsoft.identity.common.java.commands.parameters.GenerateShrCommandParameters;
+import com.microsoft.identity.common.java.controllers.BaseController;
 import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.UiRequiredException;
-import com.microsoft.identity.common.java.commands.parameters.GenerateShrCommandParameters;
-import com.microsoft.identity.common.java.controllers.BaseController;
 import com.microsoft.identity.common.java.result.GenerateShrResult;
-
-import java.util.List;
 
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
 import lombok.experimental.SuperBuilder;
 
-import static com.microsoft.identity.common.java.exception.ErrorStrings.NO_ACCOUNT_FOUND;
+import java.util.List;
 
 /**
  * Command class to perform generation of AT-less SHRs on behalf of a user.
@@ -59,10 +59,11 @@ public class GenerateShrCommand extends BaseCommand<GenerateShrResult> {
      * @param callback    The command to notify once execution has completed.
      * @param publicApiId The public API ID of this command.
      */
-    public GenerateShrCommand(@NonNull final GenerateShrCommandParameters parameters,
-                              @NonNull final List<BaseController> controllers,
-                              @NonNull final CommandCallback<GenerateShrResult, BaseException> callback,
-                              @NonNull final String publicApiId) {
+    public GenerateShrCommand(
+            @NonNull final GenerateShrCommandParameters parameters,
+            @NonNull final List<BaseController> controllers,
+            @NonNull final CommandCallback<GenerateShrResult, BaseException> callback,
+            @NonNull final String publicApiId) {
         super(parameters, controllers, callback, publicApiId);
     }
 
@@ -71,7 +72,8 @@ public class GenerateShrCommand extends BaseCommand<GenerateShrResult> {
         final String methodName = ":execute";
 
         GenerateShrResult result = null;
-        final GenerateShrCommandParameters parameters = (GenerateShrCommandParameters) getParameters();
+        final GenerateShrCommandParameters parameters =
+                (GenerateShrCommandParameters) getParameters();
 
         // Iterate over our controllers, to service the request either locally or via the broker...
         // if the local (embedded) cache contains tokens for the supplied user, we will sign using
@@ -83,9 +85,7 @@ public class GenerateShrCommand extends BaseCommand<GenerateShrResult> {
 
             com.microsoft.identity.common.internal.logging.Logger.verbose(
                     TAG + methodName,
-                    "Executing with controller: "
-                            + controller.getClass().getSimpleName()
-            );
+                    "Executing with controller: " + controller.getClass().getSimpleName());
 
             result = controller.generateSignedHttpRequest(parameters);
 

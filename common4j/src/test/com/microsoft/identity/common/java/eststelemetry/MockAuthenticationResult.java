@@ -28,50 +28,38 @@ import com.microsoft.identity.common.java.dto.AccessTokenRecord;
 import com.microsoft.identity.common.java.dto.IAccountRecord;
 import com.microsoft.identity.common.java.result.ILocalAuthenticationResult;
 
-import java.util.Date;
-import java.util.List;
-
 import lombok.Builder;
 import lombok.NonNull;
+
+import java.util.Date;
+import java.util.List;
 
 @Builder
 public class MockAuthenticationResult implements ILocalAuthenticationResult {
 
-    @Builder.Default
-    String accessToken = "MOCK_ACCESS_TOKEN";
+    @Builder.Default String accessToken = "MOCK_ACCESS_TOKEN";
 
-    @Builder.Default
-    Date date = new Date();
+    @Builder.Default Date date = new Date();
 
-    @Builder.Default
-    String tenantId = "MOCK_TENANT_ID";
+    @Builder.Default String tenantId = "MOCK_TENANT_ID";
 
-    @Builder.Default
-    String refreshToken = "MOCK_REFRESH_TOKEN";
+    @Builder.Default String refreshToken = "MOCK_REFRESH_TOKEN";
 
-    @Builder.Default
-    String idToken = "MOCK_ID_TOKEN";
+    @Builder.Default String idToken = "MOCK_ID_TOKEN";
 
-    @Builder.Default
-    String uniqueId = "MOCK_UNIQUE_ID";
+    @Builder.Default String uniqueId = "MOCK_UNIQUE_ID";
 
-    @Builder.Default
-    String[] scope = new String[0];
+    @Builder.Default String[] scope = new String[0];
 
-    @Builder.Default
-    String speRing = "MOCK_SPE_RING";
+    @Builder.Default String speRing = "MOCK_SPE_RING";
 
-    @Builder.Default
-    String refreshTokenAge = "MOCK_REFRESH_TOKEN_AGE";
+    @Builder.Default String refreshTokenAge = "MOCK_REFRESH_TOKEN_AGE";
 
-    @Builder.Default
-    String familyId = "MOCK_FAMILY_ID";
+    @Builder.Default String familyId = "MOCK_FAMILY_ID";
 
-    @Builder.Default
-    String correlationId = "MOCK_CORRELATION_ID";
+    @Builder.Default String correlationId = "MOCK_CORRELATION_ID";
 
-    @Builder.Default
-    boolean isServicedFromCache = false;
+    @Builder.Default boolean isServicedFromCache = false;
 
     @Override
     public @NonNull IAccountRecord getAccountRecord() {

@@ -22,19 +22,20 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.telemetry.adapter;
 
-import lombok.NonNull;
+import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Key;
 
-import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.telemetry.observers.ITelemetryAggregatedObserver;
 import com.microsoft.identity.common.java.telemetry.rules.TelemetryAggregationRules;
+import com.microsoft.identity.common.java.util.StringUtil;
+
+import lombok.NonNull;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Key;
-
-public final class TelemetryAggregationAdapter implements ITelemetryAdapter<List<Map<String, String>>> {
+public final class TelemetryAggregationAdapter
+        implements ITelemetryAdapter<List<Map<String, String>>> {
     private ITelemetryAggregatedObserver mObserver;
     private static final String START = "start";
     private static final String END = "end";
@@ -60,23 +61,19 @@ public final class TelemetryAggregationAdapter implements ITelemetryAdapter<List
                 continue;
             }
 
-            //Count the events. Only check the "*_start_event" when counting.
+            // Count the events. Only check the "*_start_event" when counting.
             if (eventName.contains(START)) {
                 final String eventTypeCountKey = eventType + "_count";
                 final String currentEventTypeCount = aggregatedData.get(eventTypeCountKey);
-                final int currentEventTypeCountValue = Integer.parseInt(currentEventTypeCount == null ? "0" : currentEventTypeCount);
+                final int currentEventTypeCountValue =
+                        Integer.parseInt(
+                                currentEventTypeCount == null ? "0" : currentEventTypeCount);
                 final int newEventTypeCountValue = currentEventTypeCountValue + 1;
-                aggregatedData.put(
-                        eventTypeCountKey,
-                        String.valueOf(newEventTypeCountValue)
-                );
+                aggregatedData.put(eventTypeCountKey, String.valueOf(newEventTypeCountValue));
             }
 
             if (!StringUtil.isNullOrEmpty(event.get(Key.IS_SUCCESSFUL))) {
-                aggregatedData.put(
-                        eventType + Key.IS_SUCCESSFUL,
-                        event.get(Key.IS_SUCCESSFUL)
-                );
+                aggregatedData.put(eventType + Key.IS_SUCCESSFUL, event.get(Key.IS_SUCCESSFUL));
             }
 
             trackEventResponseTime(responseTimeMap, event);
@@ -89,7 +86,8 @@ public final class TelemetryAggregationAdapter implements ITelemetryAdapter<List
         mObserver.onReceived(aggregatedData);
     }
 
-    private Map<String, String> applyAggregationRule(@NonNull final Map<String, String> properties) {
+    private Map<String, String> applyAggregationRule(
+            @NonNull final Map<String, String> properties) {
         final Map<String, String> nonPiiProperties = new HashMap<>();
         for (Map.Entry<String, String> entry : properties.entrySet()) {
             if (!StringUtil.isNullOrEmpty(entry.getValue())
@@ -101,26 +99,21 @@ public final class TelemetryAggregationAdapter implements ITelemetryAdapter<List
         return nonPiiProperties;
     }
 
-    //The response time is the duration of the last occurrence.
-    private void trackEventResponseTime(@NonNull final Map<String, String> responseTimeMap,
-                                        @NonNull final Map<String, String> event) {
+    // The response time is the duration of the last occurrence.
+    private void trackEventResponseTime(
+            @NonNull final Map<String, String> responseTimeMap,
+            @NonNull final Map<String, String> event) {
         final String eventName = event.get(Key.EVENT_NAME);
         final String eventType = event.get(Key.EVENT_TYPE);
 
         if (eventName != null && eventName.contains(START)) {
             final String eventStartTime = eventType + "_start_time";
-            responseTimeMap.put(
-                    eventStartTime,
-                    event.get(Key.OCCUR_TIME)
-            );
+            responseTimeMap.put(eventStartTime, event.get(Key.OCCUR_TIME));
         }
 
         if (eventName != null && eventName.contains(END)) {
             final String eventEndTime = eventType + "_end_time";
-            responseTimeMap.put(
-                    eventEndTime,
-                    event.get(Key.OCCUR_TIME)
-            );
+            responseTimeMap.put(eventEndTime, event.get(Key.OCCUR_TIME));
         }
     }
 
@@ -133,8 +126,9 @@ public final class TelemetryAggregationAdapter implements ITelemetryAdapter<List
      * @param responseTimeMap has the start time and end time of each event type.
      * @param aggregatedData  the result map of the aggregation adapter.
      */
-    private void calculateEventResponseTime(@NonNull final Map<String, String> responseTimeMap,
-                                            @NonNull final Map<String, String> aggregatedData) {
+    private void calculateEventResponseTime(
+            @NonNull final Map<String, String> responseTimeMap,
+            @NonNull final Map<String, String> aggregatedData) {
         for (Map.Entry<String, String> entry : responseTimeMap.entrySet()) {
             final String entryKey = entry.getKey();
             if (entryKey.contains(START)) {

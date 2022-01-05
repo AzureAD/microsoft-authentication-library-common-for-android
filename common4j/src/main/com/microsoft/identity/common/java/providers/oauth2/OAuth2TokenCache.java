@@ -22,24 +22,24 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.providers.oauth2;
 
-import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
-import com.microsoft.identity.common.java.cache.AccountDeletionRecord;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
+import com.microsoft.identity.common.java.cache.AccountDeletionRecord;
 import com.microsoft.identity.common.java.cache.ICacheRecord;
 import com.microsoft.identity.common.java.dto.AccountRecord;
 import com.microsoft.identity.common.java.dto.Credential;
 import com.microsoft.identity.common.java.dto.CredentialType;
 import com.microsoft.identity.common.java.dto.IdTokenRecord;
-
 import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
+
+import edu.umd.cs.findbugs.annotations.Nullable;
+
+import lombok.AllArgsConstructor;
+import lombok.NonNull;
 
 import java.util.List;
 import java.util.Set;
-
-import edu.umd.cs.findbugs.annotations.Nullable;
-import lombok.AllArgsConstructor;
-import lombok.NonNull;
 
 /**
  * Class for managing the tokens saved locally on a device.
@@ -47,8 +47,8 @@ import lombok.NonNull;
 // Suppressing rawtype warnings due to the generic type OAuth2Strategy and AuthorizationRequest
 @SuppressWarnings(WarningType.rawtype_warning)
 @AllArgsConstructor
-public abstract class OAuth2TokenCache
-        <T extends OAuth2Strategy, U extends AuthorizationRequest, V extends TokenResponse> {
+public abstract class OAuth2TokenCache<
+        T extends OAuth2Strategy, U extends AuthorizationRequest, V extends TokenResponse> {
 
     public static final String ERR_UNSUPPORTED_OPERATION = "This method is unsupported.";
     private final @NonNull IPlatformComponents mPlatformComponents;
@@ -62,9 +62,8 @@ public abstract class OAuth2TokenCache
      * @return The {@link ICacheRecord} containing the Account + Credentials saved to the cache.
      * @throws ClientException If tokens cannot be successfully saved.
      */
-    public abstract ICacheRecord save(final T oAuth2Strategy,
-                                      final U request,
-                                      final V response) throws ClientException;
+    public abstract ICacheRecord save(final T oAuth2Strategy, final U request, final V response)
+            throws ClientException;
 
     /**
      * Saves the credentials and tokens returned by the service to the cache and returns all of
@@ -82,9 +81,7 @@ public abstract class OAuth2TokenCache
      * @throws ClientException If tokens cannot be successfully saved.
      */
     public abstract List<ICacheRecord> saveAndLoadAggregatedAccountData(
-            final T oAuth2Strategy,
-            final U request,
-            final V response) throws ClientException;
+            final T oAuth2Strategy, final U request, final V response) throws ClientException;
 
     /**
      * Saves the supplied Account and Credential in the cache.
@@ -93,9 +90,8 @@ public abstract class OAuth2TokenCache
      * @param idTokenRecord The IdTokenRecord to save.
      * @return The {@link ICacheRecord} containing the Account + Credential[s] saved to the cache.
      */
-    public abstract ICacheRecord save(final AccountRecord accountRecord,
-                                      final IdTokenRecord idTokenRecord
-    );
+    public abstract ICacheRecord save(
+            final AccountRecord accountRecord, final IdTokenRecord idTokenRecord);
 
     /**
      * Loads the tokens for the supplied Account into the result {@link ICacheRecord}.
@@ -109,8 +105,7 @@ public abstract class OAuth2TokenCache
             final String clientId,
             final String target,
             final AccountRecord account,
-            final AbstractAuthenticationScheme authScheme
-    );
+            final AbstractAuthenticationScheme authScheme);
 
     /**
      * Loads the tokens for the supplied Account into the result {@link ICacheRecord} - this will
@@ -126,8 +121,7 @@ public abstract class OAuth2TokenCache
             final String clientId,
             final String target,
             final AccountRecord account,
-            final AbstractAuthenticationScheme authenticationScheme
-    );
+            final AbstractAuthenticationScheme authenticationScheme);
 
     /**
      * Removes the supplied Credential from the cache.
@@ -146,11 +140,11 @@ public abstract class OAuth2TokenCache
      * @param realm         The tenant id of the targeted account (if applicable).
      * @return The sought AccountRecord or null if it cannot be found.
      */
-    public abstract AccountRecord getAccount(final String environment,
-                                             final String clientId,
-                                             final String homeAccountId,
-                                             final String realm
-    );
+    public abstract AccountRecord getAccount(
+            final String environment,
+            final String clientId,
+            final String homeAccountId,
+            final String realm);
 
     /**
      * Returns sparse ICacheRecords (containing only AccountRecord + IdTokenRecord) based on the
@@ -161,10 +155,8 @@ public abstract class OAuth2TokenCache
      * @param homeAccountId The homeAccountId of the sought AccountRecord.
      * @return An unmodifiable List of ICacheRecords matching the supplid criteria.
      */
-    public abstract List<ICacheRecord> getAccountsWithAggregatedAccountData(final String environment,
-                                                                            final String clientId,
-                                                                            final String homeAccountId
-    );
+    public abstract List<ICacheRecord> getAccountsWithAggregatedAccountData(
+            final String environment, final String clientId, final String homeAccountId);
 
     /**
      * Returns the AccountRecord matching the supplied criteria.
@@ -174,10 +166,8 @@ public abstract class OAuth2TokenCache
      * @param localAccountId The local account id of the targeted account.
      * @return The sought AccountRecord or null if it cannot be found.
      */
-    public abstract AccountRecord getAccountByLocalAccountId(final String environment,
-                                                             final String clientId,
-                                                             final String localAccountId
-    );
+    public abstract AccountRecord getAccountByLocalAccountId(
+            final String environment, final String clientId, final String localAccountId);
 
     /**
      * Returns the ICacheRecord matching the supplied criteria.
@@ -188,10 +178,7 @@ public abstract class OAuth2TokenCache
      * @return The sought AccountRecord or null if it cannot be found.
      */
     public abstract ICacheRecord getAccountWithAggregatedAccountDataByLocalAccountId(
-            final String environment,
-            final String clientId,
-            final String localAccountId
-    );
+            final String environment, final String clientId, final String localAccountId);
 
     /**
      * Gets an immutable List of AccountRecords for this app which have RefreshTokens in the cache.
@@ -200,9 +187,8 @@ public abstract class OAuth2TokenCache
      * @param environment The current environment.
      * @return An immutable List of AccountRecords.
      */
-    public abstract List<AccountRecord> getAccounts(final String environment,
-                                                    final String clientId
-    );
+    public abstract List<AccountRecord> getAccounts(
+            final String environment, final String clientId);
 
     /**
      * For a provided {@link AccountRecord} and clientId, find other AccountRecords which share a
@@ -214,9 +200,8 @@ public abstract class OAuth2TokenCache
      * @param accountRecord The AccountRecord whose corollary AccountRecords should be loaded.
      * @return a list of all matching {@link AccountRecord}s.
      */
-    public abstract List<AccountRecord> getAllTenantAccountsForAccountByClientId(final String clientId,
-                                                                                 final AccountRecord accountRecord
-    );
+    public abstract List<AccountRecord> getAllTenantAccountsForAccountByClientId(
+            final String clientId, final AccountRecord accountRecord);
 
     /**
      * Gets an immutable List of ICacheRecords for this app which have RefreshTokens in the cache.
@@ -227,9 +212,7 @@ public abstract class OAuth2TokenCache
      * @return An immutable List of ICacheRecords.
      */
     public abstract List<ICacheRecord> getAccountsWithAggregatedAccountData(
-            final String environment,
-            final String clientId
-    );
+            final String environment, final String clientId);
 
     /**
      * Gets an immutable List of IdTokenRecords for the supplied AccountRecord.
@@ -238,9 +221,8 @@ public abstract class OAuth2TokenCache
      * @param accountRecord The AccountRecord for which IdTokenRecords should be loaded.
      * @return An immutable List of IdTokenRecords.
      */
-    public abstract List<IdTokenRecord> getIdTokensForAccountRecord(final String clientId,
-                                                                    final AccountRecord accountRecord
-    );
+    public abstract List<IdTokenRecord> getIdTokensForAccountRecord(
+            final String clientId, final AccountRecord accountRecord);
 
     /**
      * Removes the Account (and its associated Credentials) matching the supplied criteria.
@@ -251,11 +233,11 @@ public abstract class OAuth2TokenCache
      * @param realm         The tenant id of the targeted Account (if applicable).
      * @return The {@link AccountDeletionRecord} containing the removed AccountRecords.
      */
-    public abstract AccountDeletionRecord removeAccount(final String environment,
-                                                        final String clientId,
-                                                        final String homeAccountId,
-                                                        final String realm
-    );
+    public abstract AccountDeletionRecord removeAccount(
+            final String environment,
+            final String clientId,
+            final String homeAccountId,
+            final String realm);
 
     /**
      * Removes the Account (and its associated Credentials) matching the supplied criteria.
@@ -267,12 +249,12 @@ public abstract class OAuth2TokenCache
      * @param typesToRemove The CredentialTypes to be deleted for this Account.
      * @return The {@link AccountDeletionRecord} containing the removed AccountRecords.
      */
-    public abstract AccountDeletionRecord removeAccount(final String environment,
-                                                        final String clientId,
-                                                        final String homeAccountId,
-                                                        final String realm,
-                                                        final CredentialType... typesToRemove
-    );
+    public abstract AccountDeletionRecord removeAccount(
+            final String environment,
+            final String clientId,
+            final String homeAccountId,
+            final String realm,
+            final CredentialType... typesToRemove);
 
     /**
      * Removes all entries from the cache.
@@ -295,8 +277,8 @@ public abstract class OAuth2TokenCache
         return mPlatformComponents;
     }
 
-    public abstract AccountRecord getAccountByHomeAccountId(@Nullable final String environment,
-                                                            @NonNull final String clientId,
-                                                            @NonNull final String homeAccountId
-    );
+    public abstract AccountRecord getAccountByHomeAccountId(
+            @Nullable final String environment,
+            @NonNull final String clientId,
+            @NonNull final String homeAccountId);
 }

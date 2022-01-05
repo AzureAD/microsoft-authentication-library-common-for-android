@@ -35,15 +35,12 @@ public class LabClientTest {
 
     @Test
     public void canFetchCloudAccount() {
-        final LabApiAuthenticationClient authenticationClient = new LabApiAuthenticationClient(
-                TestBuildConfig.LAB_CLIENT_SECRET
-        );
+        final LabApiAuthenticationClient authenticationClient =
+                new LabApiAuthenticationClient(TestBuildConfig.LAB_CLIENT_SECRET);
 
         final LabClient labClient = new LabClient(authenticationClient);
 
-        final LabQuery query = LabQuery.builder()
-                .userType(UserType.CLOUD)
-                .build();
+        final LabQuery query = LabQuery.builder().userType(UserType.CLOUD).build();
 
         try {
             final LabAccount labAccount = labClient.getLabAccount(query);
@@ -60,15 +57,12 @@ public class LabClientTest {
 
     @Test
     public void canFetchFederatedAccount() {
-        final LabApiAuthenticationClient authenticationClient = new LabApiAuthenticationClient(
-                TestBuildConfig.LAB_CLIENT_SECRET
-        );
+        final LabApiAuthenticationClient authenticationClient =
+                new LabApiAuthenticationClient(TestBuildConfig.LAB_CLIENT_SECRET);
 
         final LabClient labClient = new LabClient(authenticationClient);
 
-        final LabQuery query = LabQuery.builder()
-                .userType(UserType.FEDERATED)
-                .build();
+        final LabQuery query = LabQuery.builder().userType(UserType.FEDERATED).build();
 
         try {
             final LabAccount labAccount = labClient.getLabAccount(query);
@@ -85,9 +79,8 @@ public class LabClientTest {
 
     @Test
     public void canCreateBasicTempUser() {
-        final LabApiAuthenticationClient authenticationClient = new LabApiAuthenticationClient(
-                TestBuildConfig.LAB_CLIENT_SECRET
-        );
+        final LabApiAuthenticationClient authenticationClient =
+                new LabApiAuthenticationClient(TestBuildConfig.LAB_CLIENT_SECRET);
 
         final LabClient labClient = new LabClient(authenticationClient);
 
@@ -103,5 +96,4 @@ public class LabClientTest {
             throw new AssertionError(e);
         }
     }
-
 }

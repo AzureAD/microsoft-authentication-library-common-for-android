@@ -32,18 +32,17 @@ import androidx.test.uiautomator.UiSelector;
 import com.microsoft.identity.client.ui.automation.logging.Logger;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
-import org.junit.Assert;
-
 /**
  * A login component handler for Google IdP.
  */
 public class GoogleLoginComponentHandler extends AbstractB2CLoginComponentHandler {
 
-    private final static boolean RECOVERY_EMAIL_PROMPT_EXPECTED = false;
-    private final static String TAG = GoogleLoginComponentHandler.class.getSimpleName();
-    private final static String RECOVERY_EMAIL_BUTTON_TEXT = "Confirm your recovery email";
-    private final static String RECOVERY_EMAIL_INPUT_RESOURCE_ID = "knowledge-preregistered-email-response";
-    private final static  String RECOVERY_EMAIL = "msidlabint@microsoft.com";
+    private static final boolean RECOVERY_EMAIL_PROMPT_EXPECTED = false;
+    private static final String TAG = GoogleLoginComponentHandler.class.getSimpleName();
+    private static final String RECOVERY_EMAIL_BUTTON_TEXT = "Confirm your recovery email";
+    private static final String RECOVERY_EMAIL_INPUT_RESOURCE_ID =
+            "knowledge-preregistered-email-response";
+    private static final String RECOVERY_EMAIL = "msidlabint@microsoft.com";
 
     @Override
     protected String getHandlerName() {
@@ -63,9 +62,8 @@ public class GoogleLoginComponentHandler extends AbstractB2CLoginComponentHandle
         final UiObject passwordBox = UiAutomatorUtils.obtainUiObjectWithResourceId("password");
 
         try {
-            final UiObject passwordInput = passwordBox.getChild(
-                    new UiSelector().className(EditText.class)
-            );
+            final UiObject passwordInput =
+                    passwordBox.getChild(new UiSelector().className(EditText.class));
 
             passwordInput.setText(password);
         } catch (final UiObjectNotFoundException e) {
@@ -91,9 +89,10 @@ public class GoogleLoginComponentHandler extends AbstractB2CLoginComponentHandle
     }
 
     public void handleRecoveryEmail() {
-        if(RECOVERY_EMAIL_PROMPT_EXPECTED) {
+        if (RECOVERY_EMAIL_PROMPT_EXPECTED) {
             Logger.i(TAG, "Handle Google Recovery Email UI..");
-            final UiObject confirmationEmailButton = UiAutomatorUtils.obtainUiObjectWithText(RECOVERY_EMAIL_BUTTON_TEXT);
+            final UiObject confirmationEmailButton =
+                    UiAutomatorUtils.obtainUiObjectWithText(RECOVERY_EMAIL_BUTTON_TEXT);
             if (confirmationEmailButton.exists()) {
                 try {
                     confirmationEmailButton.click();

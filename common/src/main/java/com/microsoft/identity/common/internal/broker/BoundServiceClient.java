@@ -23,6 +23,9 @@
 
 package com.microsoft.identity.common.internal.broker;
 
+import static com.microsoft.identity.common.exception.BrokerCommunicationException.Category.OPERATION_NOT_SUPPORTED_ON_SERVER_SIDE;
+import static com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy.Type.BOUND_SERVICE;
+
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ResolveInfo;
@@ -44,9 +47,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import static com.microsoft.identity.common.exception.BrokerCommunicationException.Category.OPERATION_NOT_SUPPORTED_ON_SERVER_SIDE;
-import static com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy.Type.BOUND_SERVICE;
-
 /**
  * Interface for a Bound Service client.
  * A separate implementation is required for each AIDL interface (android.os.IInterface)
@@ -67,8 +67,9 @@ public abstract class BoundServiceClient<T extends IInterface> {
     /**
      * Perform the given operation with the given .aidl {@link IInterface}
      */
-    abstract @Nullable Bundle performOperationInternal(@NonNull final BrokerOperationBundle inputBundle,
-                                                       @NonNull final T aidlInterface) throws RemoteException, BrokerCommunicationException;
+    abstract @Nullable Bundle performOperationInternal(
+            @NonNull final BrokerOperationBundle inputBundle, @NonNull final T aidlInterface)
+            throws RemoteException, BrokerCommunicationException;
 
     /**
      * Extracts {@link IInterface} from a given {@link IBinder}
@@ -83,10 +84,15 @@ public abstract class BoundServiceClient<T extends IInterface> {
      * @param targetServiceClassName    Full class name of the service that implements the AIDL interface.
      * @param targetServiceIntentFilter Intent filter of the service that implements the AIDL interface.
      */
-    public BoundServiceClient(@NonNull final Context context,
-                              @NonNull final String targetServiceClassName,
-                              @NonNull final String targetServiceIntentFilter) {
-        this(context, targetServiceClassName, targetServiceIntentFilter, DEFAULT_BIND_TIMEOUT_IN_SECONDS);
+    public BoundServiceClient(
+            @NonNull final Context context,
+            @NonNull final String targetServiceClassName,
+            @NonNull final String targetServiceIntentFilter) {
+        this(
+                context,
+                targetServiceClassName,
+                targetServiceIntentFilter,
+                DEFAULT_BIND_TIMEOUT_IN_SECONDS);
     }
 
     /**
@@ -97,10 +103,11 @@ public abstract class BoundServiceClient<T extends IInterface> {
      * @param targetServiceIntentFilter Intent filter of the service that implements the AIDL interface.
      * @param timeOutInSeconds          the client will terminates its connection if it can't connect to the service by this time out.
      */
-    public BoundServiceClient(@NonNull final Context context,
-                              @NonNull final String targetServiceClassName,
-                              @NonNull final String targetServiceIntentFilter,
-                              final int timeOutInSeconds) {
+    public BoundServiceClient(
+            @NonNull final Context context,
+            @NonNull final String targetServiceClassName,
+            @NonNull final String targetServiceIntentFilter,
+            final int timeOutInSeconds) {
         mContext = context;
         mTimeOutInSeconds = timeOutInSeconds;
         mTargetServiceClassName = targetServiceClassName;
@@ -116,7 +123,8 @@ public abstract class BoundServiceClient<T extends IInterface> {
      * @return a bundle that contains a response from the AIDL service.
      */
     public @Nullable Bundle performOperation(@NonNull final BrokerOperationBundle inputBundle)
-            throws RemoteException, BrokerCommunicationException, InterruptedException, ExecutionException, TimeoutException {
+            throws RemoteException, BrokerCommunicationException, InterruptedException,
+                    ExecutionException, TimeoutException {
         final T aidlInterface = connect(inputBundle.getTargetBrokerAppPackageName());
         return performOperationInternal(inputBundle, aidlInterface);
     }
@@ -127,31 +135,30 @@ public abstract class BoundServiceClient<T extends IInterface> {
      * @param targetServicePackageName Package name of the app this client will talk to.
      */
     protected @NonNull T connect(@NonNull final String targetServicePackageName)
-            throws BrokerCommunicationException, InterruptedException, TimeoutException, ExecutionException {
+            throws BrokerCommunicationException, InterruptedException, TimeoutException,
+                    ExecutionException {
         final String methodName = ":connect";
 
         if (!isBoundServiceSupported(targetServicePackageName)) {
             final String errorMessage = "Bound service is not supported.";
             Logger.info(TAG + methodName, errorMessage);
             throw new BrokerCommunicationException(
-                    OPERATION_NOT_SUPPORTED_ON_SERVER_SIDE,
-                    BOUND_SERVICE,
-                    errorMessage,
-                    null);
+                    OPERATION_NOT_SUPPORTED_ON_SERVER_SIDE, BOUND_SERVICE, errorMessage, null);
         }
 
         final ResultFuture<IBinder> future = new ResultFuture<>();
         mConnection = new BoundServiceConnection(future);
-        mHasStartedBinding = mContext.bindService(getIntentForBoundService(targetServicePackageName), mConnection, Context.BIND_AUTO_CREATE);
+        mHasStartedBinding =
+                mContext.bindService(
+                        getIntentForBoundService(targetServicePackageName),
+                        mConnection,
+                        Context.BIND_AUTO_CREATE);
 
         if (!mHasStartedBinding) {
             final String errorMessage = "failed to bind. The service is not available.";
             Logger.info(TAG + methodName, errorMessage);
             throw new BrokerCommunicationException(
-                    OPERATION_NOT_SUPPORTED_ON_SERVER_SIDE,
-                    BOUND_SERVICE,
-                    errorMessage,
-                    null);
+                    OPERATION_NOT_SUPPORTED_ON_SERVER_SIDE, BOUND_SERVICE, errorMessage, null);
         }
 
         Logger.info(TAG + "connect", "Android is establishing the bound service connection.");
@@ -175,7 +182,9 @@ public abstract class BoundServiceClient<T extends IInterface> {
      * @param targetServicePackageName Package name of the app this client will talk to.
      */
     public boolean isBoundServiceSupported(@NonNull final String targetServicePackageName) {
-        final List<ResolveInfo> info = mContext.getPackageManager().queryIntentServices(getIntentForBoundService(targetServicePackageName), 0);
+        final List<ResolveInfo> info =
+                mContext.getPackageManager()
+                        .queryIntentServices(getIntentForBoundService(targetServicePackageName), 0);
         return info != null && info.size() > 0;
     }
 
@@ -184,7 +193,8 @@ public abstract class BoundServiceClient<T extends IInterface> {
      *
      * @param targetServicePackageName Package name of the app this client will talk to.
      */
-    private @NonNull Intent getIntentForBoundService(@NonNull final String targetServicePackageName) {
+    private @NonNull Intent getIntentForBoundService(
+            @NonNull final String targetServicePackageName) {
         final Intent boundServiceIntent = new Intent(mTargetServiceIntentFilter);
         boundServiceIntent.setPackage(targetServicePackageName);
         boundServiceIntent.setClassName(targetServicePackageName, mTargetServiceClassName);

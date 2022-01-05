@@ -43,8 +43,7 @@ public class PromptHandlerParameters {
     /**
      * The prompt behaviour expected to be observed during an interactive token request.
      */
-    @NonNull
-    private final PromptParameter prompt;
+    @NonNull private final PromptParameter prompt;
 
     /**
      * The login hint that was provided to the interactive token request.
@@ -125,21 +124,17 @@ public class PromptHandlerParameters {
     /**
      * Denotes the way in which we want to respond to the enroll page for this request.
      */
-    @Builder.Default
-    private final UiResponse enrollPageResponse = UiResponse.ACCEPT;
+    @Builder.Default private final UiResponse enrollPageResponse = UiResponse.ACCEPT;
 
     /**
      * Denotes the way in which we want to respond to the consent page for this request.
      */
-    @Builder.Default
-    private final UiResponse consentPageResponse = UiResponse.ACCEPT;
+    @Builder.Default private final UiResponse consentPageResponse = UiResponse.ACCEPT;
 
     /**
      * Denotes the way in which we want to respond to the register page for this request.
      */
-    @Builder.Default
-    private final UiResponse speedBumpResponse = UiResponse.ACCEPT;
+    @Builder.Default private final UiResponse speedBumpResponse = UiResponse.ACCEPT;
 
-    @Builder.Default
-    private final UiResponse staySignedInResponse = UiResponse.ACCEPT;
+    @Builder.Default private final UiResponse staySignedInResponse = UiResponse.ACCEPT;
 }

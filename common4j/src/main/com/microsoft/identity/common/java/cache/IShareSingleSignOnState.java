@@ -47,5 +47,4 @@ public interface IShareSingleSignOnState<T extends BaseAccount, U extends Refres
      * @return U
      */
     U getSingleSignOnState(T account);
-
 }

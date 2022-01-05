@@ -31,14 +31,12 @@ import androidx.test.uiautomator.UiObjectNotFoundException;
 import com.microsoft.identity.client.ui.automation.logging.Logger;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
-import org.junit.Assert;
-
 /**
  * A login component handler for Facebook IdP.
  */
 public class FacebookLoginComponentHandler extends AbstractB2CLoginComponentHandler {
 
-    private final static String TAG = FacebookLoginComponentHandler.class.getSimpleName();
+    private static final String TAG = FacebookLoginComponentHandler.class.getSimpleName();
 
     @Override
     protected String getHandlerName() {
@@ -64,9 +62,8 @@ public class FacebookLoginComponentHandler extends AbstractB2CLoginComponentHand
 
     @Override
     public void handleNextButton() {
-        final UiObject nextBtn = UiAutomatorUtils.obtainUiObjectWithTextAndClassType(
-                "Log In", Button.class
-        );
+        final UiObject nextBtn =
+                UiAutomatorUtils.obtainUiObjectWithTextAndClassType("Log In", Button.class);
 
         try {
             nextBtn.click();

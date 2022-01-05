@@ -51,7 +51,8 @@ public class KustoTableDataCsvWriter extends CSVWriter {
      *
      * @param clientTestTableDataList the table data that needs to be written
      */
-    public void writeAll(@NonNull final ArrayList<IKustoTableData> clientTestTableDataList) throws IOException {
+    public void writeAll(@NonNull final ArrayList<IKustoTableData> clientTestTableDataList)
+            throws IOException {
         for (final IKustoTableData data : clientTestTableDataList) {
             writeNext(data);
         }

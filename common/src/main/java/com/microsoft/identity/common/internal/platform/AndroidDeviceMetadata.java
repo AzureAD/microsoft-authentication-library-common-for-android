@@ -45,7 +45,7 @@ public class AndroidDeviceMetadata extends AbstractDeviceMetadata {
     @NonNull
     public String getCpu() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-            //CPU_ABI has been deprecated
+            // CPU_ABI has been deprecated
             return Build.CPU_ABI;
         } else {
             final String[] supportedABIs = Build.SUPPORTED_ABIS;
@@ -63,7 +63,9 @@ public class AndroidDeviceMetadata extends AbstractDeviceMetadata {
     }
 
     @Override
-    public @NonNull String getOsForMats() { return android.os.Build.VERSION.RELEASE; }
+    public @NonNull String getOsForMats() {
+        return android.os.Build.VERSION.RELEASE;
+    }
 
     @Override
     public @NonNull String getOsForDrs() {
@@ -82,4 +84,3 @@ public class AndroidDeviceMetadata extends AbstractDeviceMetadata {
         return Build.MANUFACTURER;
     }
 }
-

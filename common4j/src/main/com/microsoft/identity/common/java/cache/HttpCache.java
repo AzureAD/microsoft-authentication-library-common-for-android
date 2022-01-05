@@ -22,9 +22,9 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.cache;
 
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-
 import edu.umd.cs.findbugs.annotations.Nullable;
+
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * Class for managing HttpCache.
@@ -71,5 +71,4 @@ public class HttpCache {
             sLock.readLock().unlock();
         }
     }
-
 }

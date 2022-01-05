@@ -35,7 +35,7 @@ import org.junit.runners.model.Statement;
  */
 public class RetryTestRule implements TestRule {
 
-    private final static String TAG = RetryTestRule.class.getSimpleName();
+    private static final String TAG = RetryTestRule.class.getSimpleName();
 
     @Override
     public Statement apply(final Statement base, final Description description) {
@@ -69,13 +69,24 @@ public class RetryTestRule implements TestRule {
                         return;
                     } catch (final Throwable throwable) {
                         caughtThrowable = throwable;
-                        Logger.e(TAG, description.getMethodName() + ": Attempt " + (i + 1) +
-                                " failed with " + throwable.getClass().getSimpleName(), throwable);
+                        Logger.e(
+                                TAG,
+                                description.getMethodName()
+                                        + ": Attempt "
+                                        + (i + 1)
+                                        + " failed with "
+                                        + throwable.getClass().getSimpleName(),
+                                throwable);
                     }
                 }
 
-                Logger.e(TAG, "Test " + description.getMethodName() +
-                        " - Giving up after " + numAttempts + " attempts as all attempts have failed :(");
+                Logger.e(
+                        TAG,
+                        "Test "
+                                + description.getMethodName()
+                                + " - Giving up after "
+                                + numAttempts
+                                + " attempts as all attempts have failed :(");
 
                 assert caughtThrowable != null;
                 throw caughtThrowable;

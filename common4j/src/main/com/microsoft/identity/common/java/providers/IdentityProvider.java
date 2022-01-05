@@ -39,6 +39,7 @@ public abstract class IdentityProvider<T extends OAuth2Strategy, U extends OAuth
      * @param config generic OAuth2 configuration
      * @return Generic OAuth2Strategy
      */
-    public abstract T createOAuth2Strategy(@NonNull U config, @NonNull IPlatformComponents commonComponents) throws ClientException;
-
+    public abstract T createOAuth2Strategy(
+            @NonNull U config, @NonNull IPlatformComponents commonComponents)
+            throws ClientException;
 }

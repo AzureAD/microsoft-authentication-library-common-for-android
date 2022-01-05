@@ -22,15 +22,15 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.dto;
 
-import com.google.gson.annotations.SerializedName;
-
-import lombok.EqualsAndHashCode;
-
 import static com.microsoft.identity.common.java.dto.PrimaryRefreshTokenRecord.SerializedNames.EXPIRES_ON;
 import static com.microsoft.identity.common.java.dto.PrimaryRefreshTokenRecord.SerializedNames.FAMILY_ID;
 import static com.microsoft.identity.common.java.dto.PrimaryRefreshTokenRecord.SerializedNames.PRT_PROTOCOL_VERSION;
 import static com.microsoft.identity.common.java.dto.PrimaryRefreshTokenRecord.SerializedNames.SESSION_KEY;
 import static com.microsoft.identity.common.java.dto.PrimaryRefreshTokenRecord.SerializedNames.SESSION_KEY_ROLLING_DATE;
+
+import com.google.gson.annotations.SerializedName;
+
+import lombok.EqualsAndHashCode;
 
 @EqualsAndHashCode(callSuper = true, doNotUseGetters = true)
 public class PrimaryRefreshTokenRecord extends Credential {
@@ -188,20 +188,31 @@ public class PrimaryRefreshTokenRecord extends Credential {
         mSessionKeyRollingDate = sessionKeyRollingDate;
     }
 
-    //CHECKSTYLE:OFF
+    // CHECKSTYLE:OFF
     // This method is generated. Checkstyle and/or PMD has been disabled.
     // This method *must* be regenerated if the class' structural definition changes through the
     // addition/subtraction of fields.
     @SuppressWarnings("PMD")
     @Override
     public String toString() {
-        return "PrimaryRefreshTokenRecord{" +
-                "mFamilyId='" + mFamilyId + '\'' +
-                ", mExpiresOn='" + mExpiresOn + '\'' +
-                ", mSessionKey='" + mSessionKey + '\'' +
-                ", mPrtProtocolVersion='" + mPrtProtocolVersion + '\'' +
-                ", mSessionKeyRollingDate='" + mSessionKeyRollingDate + '\'' +
-                "} " + super.toString();
+        return "PrimaryRefreshTokenRecord{"
+                + "mFamilyId='"
+                + mFamilyId
+                + '\''
+                + ", mExpiresOn='"
+                + mExpiresOn
+                + '\''
+                + ", mSessionKey='"
+                + mSessionKey
+                + '\''
+                + ", mPrtProtocolVersion='"
+                + mPrtProtocolVersion
+                + '\''
+                + ", mSessionKeyRollingDate='"
+                + mSessionKeyRollingDate
+                + '\''
+                + "} "
+                + super.toString();
     }
-    //CHECKSTYLE:ON
+    // CHECKSTYLE:ON
 }

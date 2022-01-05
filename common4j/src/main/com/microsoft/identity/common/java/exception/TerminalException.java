@@ -22,11 +22,11 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.exception;
 
-import javax.annotation.Nullable;
-
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.Accessors;
+
+import javax.annotation.Nullable;
 
 /**
  * A RuntimeException derivative indicating that the command cannot continue.  This is largely
@@ -45,9 +45,10 @@ public class TerminalException extends RuntimeException implements IErrorInforma
      * @param cause the causing exception.  Should not be null.
      * @param errorCode the error code.  May not be null.  This should be an error string from {@link ClientException}.
      */
-    public TerminalException(final @Nullable String message,
-                             final @NonNull Throwable cause,
-                             final @NonNull String errorCode) {
+    public TerminalException(
+            final @Nullable String message,
+            final @NonNull Throwable cause,
+            final @NonNull String errorCode) {
         super(message, cause);
         this.mErrorCode = errorCode;
     }
@@ -57,8 +58,7 @@ public class TerminalException extends RuntimeException implements IErrorInforma
      * @param cause the causing exception.  Should not be null.
      * @param errorCode the error code.  May not be null.  This should be an error string from {@link ClientException}.
      */
-    public TerminalException(final @NonNull Throwable cause,
-                             final @NonNull String errorCode) {
+    public TerminalException(final @NonNull Throwable cause, final @NonNull String errorCode) {
         super(cause);
         this.mErrorCode = errorCode;
     }

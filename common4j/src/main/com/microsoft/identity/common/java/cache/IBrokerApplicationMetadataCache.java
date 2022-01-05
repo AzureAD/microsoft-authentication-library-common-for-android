@@ -22,12 +22,10 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.cache;
 
-import com.microsoft.identity.common.java.cache.ISimpleCache;
+import edu.umd.cs.findbugs.annotations.Nullable;
 
 import java.util.List;
 import java.util.Set;
-
-import edu.umd.cs.findbugs.annotations.Nullable;
 
 public interface IBrokerApplicationMetadataCache extends ISimpleCache<BrokerApplicationMetadata> {
 

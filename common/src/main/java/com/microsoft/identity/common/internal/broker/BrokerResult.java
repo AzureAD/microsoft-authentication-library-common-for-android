@@ -29,11 +29,10 @@ import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.java.cache.ICacheRecord;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Encapsulates the possible responses from the broker.  Both successful response and error response.
@@ -83,6 +82,7 @@ public class BrokerResult {
          * The OAuth2 suberror.
          */
         static final String OAUTH_SUB_ERROR = "oauth_sub_error";
+
         static final String HTTP_RESPONSE_CODE = "http_response_code";
         static final String HTTP_HEADERS = "http_response_headers";
         static final String HTTP_RESPONSE_BODY = "http_response_body";
@@ -152,7 +152,6 @@ public class BrokerResult {
     @Nullable
     @SerializedName(SerializedNames.FAMILY_ID)
     private String mFamilyId;
-
 
     /**
      * Scopes requested
@@ -309,7 +308,6 @@ public class BrokerResult {
     @SerializedName(SerializedNames.CLI_TELEM_SUB_ERROR_CODE)
     private String mCliTelemSubErrorCode;
 
-
     @Nullable
     @SerializedName(SerializedNames.TENANT_PROFILE_CACHE_RECORDS)
     private final List<ICacheRecord> mTenantProfileData;
@@ -359,9 +357,7 @@ public class BrokerResult {
     }
 
     public List<ICacheRecord> getTenantProfileData() {
-        return mTenantProfileData == null
-                ? null
-                : new ArrayList<>(mTenantProfileData);
+        return mTenantProfileData == null ? null : new ArrayList<>(mTenantProfileData);
     }
 
     public String getCliTelemSubErrorCode() {
@@ -627,7 +623,8 @@ public class BrokerResult {
         }
 
         @SuppressFBWarnings("URF_UNREAD_FIELD")
-        public Builder negotiatedBrokerProtocolVersion(final String negotiatedBrokerProtocolVersion) {
+        public Builder negotiatedBrokerProtocolVersion(
+                final String negotiatedBrokerProtocolVersion) {
             this.mNegotiatedBrokerProtocolVersion = negotiatedBrokerProtocolVersion;
             return this;
         }
@@ -681,7 +678,8 @@ public class BrokerResult {
             return new BrokerResult(this);
         }
 
-        public Builder tenantProfileRecords(final List<ICacheRecord> cacheRecordWithTenantProfileData) {
+        public Builder tenantProfileRecords(
+                final List<ICacheRecord> cacheRecordWithTenantProfileData) {
             if (cacheRecordWithTenantProfileData != null) {
                 this.mTenantProfileData = new ArrayList<>(cacheRecordWithTenantProfileData);
             }
@@ -693,5 +691,4 @@ public class BrokerResult {
             return this;
         }
     }
-
 }

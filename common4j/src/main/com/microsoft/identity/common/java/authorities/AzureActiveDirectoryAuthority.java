@@ -22,21 +22,21 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.authorities;
 
-import lombok.NonNull;
-
 import com.google.gson.annotations.SerializedName;
+import com.microsoft.identity.common.java.WarningType;
+import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud;
+import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters;
-import com.microsoft.identity.common.java.WarningType;
-import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
-import com.microsoft.identity.common.java.logging.Logger;
-import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.util.CommonURIBuilder;
+import com.microsoft.identity.common.java.util.StringUtil;
+
+import lombok.NonNull;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -49,7 +49,7 @@ import java.util.Map;
 
 public class AzureActiveDirectoryAuthority extends Authority {
 
-    private static transient final String TAG = AzureActiveDirectoryAuthority.class.getSimpleName();
+    private static final transient String TAG = AzureActiveDirectoryAuthority.class.getSimpleName();
 
     @SerializedName("audience")
     public AzureActiveDirectoryAudience mAudience;
@@ -66,14 +66,12 @@ public class AzureActiveDirectoryAuthority extends Authority {
         AzureActiveDirectoryCloud cloud = null;
 
         try {
-            cloud = AzureActiveDirectory.getAzureActiveDirectoryCloud(new URL(mAudience.getCloudUrl()));
+            cloud =
+                    AzureActiveDirectory.getAzureActiveDirectoryCloud(
+                            new URL(mAudience.getCloudUrl()));
             mKnownToMicrosoft = true;
         } catch (MalformedURLException e) {
-            Logger.errorPII(
-                    TAG + methodName,
-                    "AAD cloud URL was malformed.",
-                    e
-            );
+            Logger.errorPII(TAG + methodName, "AAD cloud URL was malformed.", e);
             cloud = null;
             mKnownToMicrosoft = false;
         }
@@ -88,7 +86,7 @@ public class AzureActiveDirectoryAuthority extends Authority {
     }
 
     public AzureActiveDirectoryAuthority() {
-        //Defaulting to AllAccounts which maps to the "common" tenant
+        // Defaulting to AllAccounts which maps to the "common" tenant
         mAudience = new AllAccounts();
         mAuthorityTypeString = "AAD";
         mMultipleCloudsSupported = false;
@@ -126,7 +124,10 @@ public class AzureActiveDirectoryAuthority extends Authority {
             if (mAzureActiveDirectoryCloud == null) {
                 issuer = new CommonURIBuilder(mAudience.getCloudUrl());
             } else {
-                issuer = new CommonURIBuilder("https://" + mAzureActiveDirectoryCloud.getPreferredNetworkHostName());
+                issuer =
+                        new CommonURIBuilder(
+                                "https://"
+                                        + mAzureActiveDirectoryCloud.getPreferredNetworkHostName());
             }
 
             if (!StringUtil.isNullOrEmpty(mAudience.getTenantId())) {
@@ -143,18 +144,12 @@ public class AzureActiveDirectoryAuthority extends Authority {
 
     protected MicrosoftStsOAuth2Configuration createOAuth2Configuration() {
         final String methodName = ":createOAuth2Configuration";
-        Logger.verbose(
-                TAG + methodName,
-                "Creating OAuth2Configuration"
-        );
+        Logger.verbose(TAG + methodName, "Creating OAuth2Configuration");
         MicrosoftStsOAuth2Configuration config = new MicrosoftStsOAuth2Configuration();
         config.setAuthorityUrl(this.getAuthorityURL());
 
         if (mSlice != null) {
-            Logger.info(
-                    TAG + methodName,
-                    "Setting slice parameters..."
-            );
+            Logger.info(TAG + methodName, "Setting slice parameters...");
             final AzureActiveDirectorySlice slice = new AzureActiveDirectorySlice();
             slice.setSlice(mSlice.getSlice());
             slice.setDataCenter(mSlice.getDataCenter());
@@ -162,16 +157,12 @@ public class AzureActiveDirectoryAuthority extends Authority {
         }
 
         if (mFlightParameters != null) {
-            Logger.info(
-                    TAG + methodName,
-                    "Setting flight parameters..."
-            );
-            //GSON Returns a LinkedTreeMap which implement AbstractMap....
+            Logger.info(TAG + methodName, "Setting flight parameters...");
+            // GSON Returns a LinkedTreeMap which implement AbstractMap....
             for (Map.Entry<String, String> entry : mFlightParameters.entrySet()) {
                 config.getFlightParameters().put(entry.getKey(), entry.getValue());
             }
         }
-
 
         config.setMultipleCloudsSupported(mMultipleCloudsSupported);
         return config;
@@ -180,7 +171,8 @@ public class AzureActiveDirectoryAuthority extends Authority {
     // Suppressing rawtype warnings due to the generic type OAuth2Strategy
     @SuppressWarnings(WarningType.rawtype_warning)
     @Override
-    public OAuth2Strategy createOAuth2Strategy(@NonNull final OAuth2StrategyParameters parameters) throws ClientException {
+    public OAuth2Strategy createOAuth2Strategy(@NonNull final OAuth2StrategyParameters parameters)
+            throws ClientException {
         MicrosoftStsOAuth2Configuration config = createOAuth2Configuration();
         return new MicrosoftStsOAuth2Strategy(config, parameters);
     }
@@ -195,14 +187,17 @@ public class AzureActiveDirectoryAuthority extends Authority {
      * @param authorityToCheck authority to check against.
      * @return true if both authorities belong to same cloud, otherwise false.
      */
-    //@WorkerThread
-    public synchronized boolean isSameCloudAsAuthority(@NonNull final AzureActiveDirectoryAuthority authorityToCheck)
+    // @WorkerThread
+    public synchronized boolean isSameCloudAsAuthority(
+            @NonNull final AzureActiveDirectoryAuthority authorityToCheck)
             throws IOException, URISyntaxException {
         if (!AzureActiveDirectory.isInitialized()) {
-            // Cloud discovery is needed in order to make sure that we have a preferred_network_host_name to cloud aliases mappings
+            // Cloud discovery is needed in order to make sure that we have a
+            // preferred_network_host_name to cloud aliases mappings
             AzureActiveDirectory.performCloudDiscovery();
         }
 
-        return getAzureActiveDirectoryCloud().equals(authorityToCheck.getAzureActiveDirectoryCloud());
+        return getAzureActiveDirectoryCloud()
+                .equals(authorityToCheck.getAzureActiveDirectoryCloud());
     }
 }

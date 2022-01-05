@@ -22,15 +22,16 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.util;
 
+import cz.msebera.android.httpclient.NameValuePair;
+
+import edu.umd.cs.findbugs.annotations.Nullable;
+
+import lombok.NonNull;
+
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Map;
-
-import cz.msebera.android.httpclient.NameValuePair;
-import cz.msebera.android.httpclient.client.utils.URIBuilder;
-import edu.umd.cs.findbugs.annotations.Nullable;
-import lombok.NonNull;
 
 /**
  * Our URIBuilder.
@@ -42,7 +43,7 @@ import lombok.NonNull;
  */
 public class CommonURIBuilder extends cz.msebera.android.httpclient.client.utils.URIBuilder {
 
-    public CommonURIBuilder(){
+    public CommonURIBuilder() {
         super();
     }
 
@@ -56,12 +57,14 @@ public class CommonURIBuilder extends cz.msebera.android.httpclient.client.utils
 
     @Override
     public CommonURIBuilder addParameters(@NonNull final List<NameValuePair> nvps) {
-        throw new UnsupportedOperationException("This should never be used. Either use setParameter or addParametersIfAbsent");
+        throw new UnsupportedOperationException(
+                "This should never be used. Either use setParameter or addParametersIfAbsent");
     }
 
     @Override
     public CommonURIBuilder addParameter(@NonNull final String param, @NonNull final String value) {
-        throw new UnsupportedOperationException("This should never be used. Either use setParameter or addParametersIfAbsent");
+        throw new UnsupportedOperationException(
+                "This should never be used. Either use setParameter or addParametersIfAbsent");
     }
 
     @Override
@@ -116,7 +119,8 @@ public class CommonURIBuilder extends cz.msebera.android.httpclient.client.utils
      * @param params list of parameters.
      * @return {@link CommonURIBuilder}
      */
-    public CommonURIBuilder addParametersIfAbsent(@Nullable final List<Map.Entry<String, String>> params) {
+    public CommonURIBuilder addParametersIfAbsent(
+            @Nullable final List<Map.Entry<String, String>> params) {
         if (params == null) {
             return this;
         }
@@ -140,7 +144,8 @@ public class CommonURIBuilder extends cz.msebera.android.httpclient.client.utils
      * @param value parameter value.
      * @return {@link CommonURIBuilder}
      */
-    public CommonURIBuilder addParameterIfAbsent(@NonNull final String param, @NonNull final String value) {
+    public CommonURIBuilder addParameterIfAbsent(
+            @NonNull final String param, @NonNull final String value) {
         if (containsParam(param)) {
             return this;
         }
@@ -149,8 +154,8 @@ public class CommonURIBuilder extends cz.msebera.android.httpclient.client.utils
         return this;
     }
 
-    private boolean containsParam(@NonNull final String param){
-        for (final NameValuePair pair: getQueryParams()) {
+    private boolean containsParam(@NonNull final String param) {
+        for (final NameValuePair pair : getQueryParams()) {
             if (pair.getName().equalsIgnoreCase(param)) {
                 return true;
             }
@@ -158,5 +163,4 @@ public class CommonURIBuilder extends cz.msebera.android.httpclient.client.utils
 
         return false;
     }
-
 }

@@ -22,11 +22,11 @@
 // THE SOFTWARE.
 package com.microsoft.identity.labapi.utilities.authentication.common;
 
-import java.util.Arrays;
-
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.Accessors;
+
+import java.util.Arrays;
 
 /**
  * Class holds information necessary to instantiate a keystore in order to retrieve and access
@@ -43,14 +43,20 @@ public class KeyStoreConfiguration {
     private final char[] mKeyStorePassword;
 
     public char[] getKeyStorePassword() {
-        return mKeyStorePassword == null ? null : Arrays.copyOf(mKeyStorePassword, mKeyStorePassword.length);
+        return mKeyStorePassword == null
+                ? null
+                : Arrays.copyOf(mKeyStorePassword, mKeyStorePassword.length);
     }
 
-    public KeyStoreConfiguration(@NonNull final String keyStoreType,
-                                 @NonNull final String keyStoreProvider,
-                                 final char[] keyStorePassword) {
+    public KeyStoreConfiguration(
+            @NonNull final String keyStoreType,
+            @NonNull final String keyStoreProvider,
+            final char[] keyStorePassword) {
         this.mKeyStoreType = keyStoreType;
         this.mKeyStoreProvider = keyStoreProvider;
-        this.mKeyStorePassword = keyStorePassword == null ? null : Arrays.copyOf(keyStorePassword, keyStorePassword.length);
+        this.mKeyStorePassword =
+                keyStorePassword == null
+                        ? null
+                        : Arrays.copyOf(keyStorePassword, keyStorePassword.length);
     }
 }

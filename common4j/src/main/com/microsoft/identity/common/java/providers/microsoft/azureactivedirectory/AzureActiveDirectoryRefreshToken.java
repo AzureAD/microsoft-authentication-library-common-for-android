@@ -22,10 +22,11 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import lombok.NonNull;
-
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftRefreshToken;
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
+import lombok.NonNull;
 
 public class AzureActiveDirectoryRefreshToken extends MicrosoftRefreshToken {
 
@@ -39,5 +40,4 @@ public class AzureActiveDirectoryRefreshToken extends MicrosoftRefreshToken {
             @NonNull final AzureActiveDirectoryTokenResponse response) {
         super(response);
     }
-
 }

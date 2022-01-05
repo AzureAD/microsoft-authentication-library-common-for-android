@@ -25,12 +25,12 @@ package com.microsoft.identity.common.java.commands.parameters;
 import com.microsoft.identity.common.java.dto.IAccountRecord;
 import com.microsoft.identity.common.java.ui.BrowserDescriptor;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.experimental.SuperBuilder;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 @SuperBuilder(toBuilder = true)

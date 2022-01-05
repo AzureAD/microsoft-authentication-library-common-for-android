@@ -22,12 +22,27 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.crypto;
 
+import static com.microsoft.identity.common.java.AuthenticationConstants.ENCODING_UTF8;
+import static com.microsoft.identity.common.java.crypto.key.KeyUtil.HMAC_ALGORITHM;
+import static com.microsoft.identity.common.java.exception.ClientException.BAD_PADDING;
+import static com.microsoft.identity.common.java.exception.ClientException.DATA_MALFORMED;
+import static com.microsoft.identity.common.java.exception.ClientException.HMAC_MISMATCH;
+import static com.microsoft.identity.common.java.exception.ClientException.INVALID_ALG_PARAMETER;
+import static com.microsoft.identity.common.java.exception.ClientException.INVALID_BLOCK_SIZE;
+import static com.microsoft.identity.common.java.exception.ClientException.INVALID_KEY;
+import static com.microsoft.identity.common.java.exception.ClientException.NO_SUCH_ALGORITHM;
+import static com.microsoft.identity.common.java.exception.ClientException.NO_SUCH_PADDING;
+import static com.microsoft.identity.common.java.exception.ClientException.UNEXPECTED_HMAC_LENGTH;
+
 import com.microsoft.identity.common.java.crypto.key.AbstractSecretKeyLoader;
 import com.microsoft.identity.common.java.crypto.key.KeyUtil;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.logging.Logger;
-import com.microsoft.identity.common.java.util.StringUtil;
+
+import cz.msebera.android.httpclient.extras.Base64;
+
+import lombok.NonNull;
 
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
@@ -43,21 +58,6 @@ import javax.crypto.Mac;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
-
-import cz.msebera.android.httpclient.extras.Base64;
-import lombok.NonNull;
-
-import static com.microsoft.identity.common.java.AuthenticationConstants.ENCODING_UTF8;
-import static com.microsoft.identity.common.java.crypto.key.KeyUtil.HMAC_ALGORITHM;
-import static com.microsoft.identity.common.java.exception.ClientException.BAD_PADDING;
-import static com.microsoft.identity.common.java.exception.ClientException.DATA_MALFORMED;
-import static com.microsoft.identity.common.java.exception.ClientException.HMAC_MISMATCH;
-import static com.microsoft.identity.common.java.exception.ClientException.INVALID_ALG_PARAMETER;
-import static com.microsoft.identity.common.java.exception.ClientException.INVALID_BLOCK_SIZE;
-import static com.microsoft.identity.common.java.exception.ClientException.INVALID_KEY;
-import static com.microsoft.identity.common.java.exception.ClientException.NO_SUCH_ALGORITHM;
-import static com.microsoft.identity.common.java.exception.ClientException.NO_SUCH_PADDING;
-import static com.microsoft.identity.common.java.exception.ClientException.UNEXPECTED_HMAC_LENGTH;
 
 /**
  * Encrypts/Decrypts data (to be stored into storage).
@@ -89,16 +89,17 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
     private final IVGenerator mGenerator;
 
     public StorageEncryptionManager() {
-        mGenerator = new IVGenerator() {
-            final SecureRandom mRandom = new SecureRandom();
+        mGenerator =
+                new IVGenerator() {
+                    final SecureRandom mRandom = new SecureRandom();
 
-            @Override
-            public byte[] generate() {
-                final byte[] iv = new byte[IV_LENGTH];
-                mRandom.nextBytes(iv);
-                return iv;
-            }
-        };
+                    @Override
+                    public byte[] generate() {
+                        final byte[] iv = new byte[IV_LENGTH];
+                        mRandom.nextBytes(iv);
+                        return iv;
+                    }
+                };
     }
 
     /**
@@ -110,8 +111,7 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
 
     @Override
     @NonNull
-    public byte[] encrypt(@NonNull final byte[] plaintext)
-            throws ClientException {
+    public byte[] encrypt(@NonNull final byte[] plaintext) throws ClientException {
         final String methodName = ":encrypt";
 
         Logger.verbose(TAG + methodName, "Starting encryption");
@@ -121,7 +121,7 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
         try {
             // load key for encryption if not loaded
             final AbstractSecretKeyLoader keyLoader = getKeyLoaderForEncryption();
-            if (keyLoader == null){
+            if (keyLoader == null) {
                 throw new IllegalStateException("KeyLoader must not be null.");
             }
 
@@ -148,16 +148,36 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
             final byte[] macDigest = mac.doFinal();
 
             // Init array to store keyIdentifier, encrypted data, iv, macdigest
-            final byte[] blobVerAndEncryptedDataAndIVAndMacDigest = new byte[keyIdentifier.length
-                    + encrypted.length + iv.length + macDigest.length];
-            System.arraycopy(keyIdentifier, 0, blobVerAndEncryptedDataAndIVAndMacDigest, 0,
+            final byte[] blobVerAndEncryptedDataAndIVAndMacDigest =
+                    new byte
+                            [keyIdentifier.length
+                                    + encrypted.length
+                                    + iv.length
+                                    + macDigest.length];
+            System.arraycopy(
+                    keyIdentifier,
+                    0,
+                    blobVerAndEncryptedDataAndIVAndMacDigest,
+                    0,
                     keyIdentifier.length);
-            System.arraycopy(encrypted, 0, blobVerAndEncryptedDataAndIVAndMacDigest,
-                    keyIdentifier.length, encrypted.length);
-            System.arraycopy(iv, 0, blobVerAndEncryptedDataAndIVAndMacDigest, keyIdentifier.length
-                    + encrypted.length, iv.length);
-            System.arraycopy(macDigest, 0, blobVerAndEncryptedDataAndIVAndMacDigest, keyIdentifier.length
-                    + encrypted.length + iv.length, macDigest.length);
+            System.arraycopy(
+                    encrypted,
+                    0,
+                    blobVerAndEncryptedDataAndIVAndMacDigest,
+                    keyIdentifier.length,
+                    encrypted.length);
+            System.arraycopy(
+                    iv,
+                    0,
+                    blobVerAndEncryptedDataAndIVAndMacDigest,
+                    keyIdentifier.length + encrypted.length,
+                    iv.length);
+            System.arraycopy(
+                    macDigest,
+                    0,
+                    blobVerAndEncryptedDataAndIVAndMacDigest,
+                    keyIdentifier.length + encrypted.length + iv.length,
+                    macDigest.length);
 
             Logger.verbose(TAG + methodName, "Finished encryption");
             return prefixWithEncodeVersion(blobVerAndEncryptedDataAndIVAndMacDigest);
@@ -193,40 +213,48 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
         final byte[] dataBytes;
         try {
             dataBytes = stripEncodeVersionFromCipherText(cipherText);
-        } catch (final ClientException e){
-            Logger.verbose(TAG + methodName,
-                    "Failed to strip encode version from cipherText, string might not be encrypted. Exception: ", e.getMessage());
+        } catch (final ClientException e) {
+            Logger.verbose(
+                    TAG + methodName,
+                    "Failed to strip encode version from cipherText, string might not be encrypted. Exception: ",
+                    e.getMessage());
             return cipherText;
         }
 
-        final List<AbstractSecretKeyLoader> keysForDecryption = getKeyLoaderForDecryption(cipherText);
+        final List<AbstractSecretKeyLoader> keysForDecryption =
+                getKeyLoaderForDecryption(cipherText);
         if (keysForDecryption == null || keysForDecryption.size() == 0) {
             throw new IllegalStateException("KeyLoader list must not be null or empty.");
         }
 
-        final ClientException exceptionToThrowIfAllFails = new ClientException(ErrorStrings.DECRYPTION_FAILED,
-                "Tried all decryption keys and decryption still fails.");
+        final ClientException exceptionToThrowIfAllFails =
+                new ClientException(
+                        ErrorStrings.DECRYPTION_FAILED,
+                        "Tried all decryption keys and decryption still fails.");
 
         for (final AbstractSecretKeyLoader keyLoader : keysForDecryption) {
-            if (keyLoader == null){
+            if (keyLoader == null) {
                 throw new IllegalStateException("KeyLoader must not be null.");
             }
-            
+
             try {
                 final byte[] result = decryptWithSecretKey(dataBytes, keyLoader);
-                Logger.verbose(TAG + methodName, "Finished decryption with key:" + keyLoader.getAlias());
+                Logger.verbose(
+                        TAG + methodName, "Finished decryption with key:" + keyLoader.getAlias());
                 return result;
             } catch (final ClientException e) {
-                Logger.warn(TAG + methodName, "Failed to decrypt with key:" + keyLoader.getAlias() +
-                        " thumbprint : " + KeyUtil.getKeyThumbPrint(keyLoader));
+                Logger.warn(
+                        TAG + methodName,
+                        "Failed to decrypt with key:"
+                                + keyLoader.getAlias()
+                                + " thumbprint : "
+                                + KeyUtil.getKeyThumbPrint(keyLoader));
                 handleDecryptionFailure(keyLoader.getAlias(), e);
                 exceptionToThrowIfAllFails.addSuppressedException(e);
             }
         }
 
-        Logger.warn(
-                TAG + methodName,
-                exceptionToThrowIfAllFails.getMessage());
+        Logger.warn(TAG + methodName, exceptionToThrowIfAllFails.getMessage());
 
         throw exceptionToThrowIfAllFails;
     }
@@ -269,8 +297,9 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
      * @param keyLoader                         a {@link AbstractSecretKeyLoader} to load the decryption key from.
      */
     @NonNull
-    private byte[] decryptWithSecretKey(@NonNull final byte[] encryptedBlobWithoutEncodeVersion,
-                                        @NonNull final AbstractSecretKeyLoader keyLoader)
+    private byte[] decryptWithSecretKey(
+            @NonNull final byte[] encryptedBlobWithoutEncodeVersion,
+            @NonNull final AbstractSecretKeyLoader keyLoader)
             throws ClientException {
         final String errCode;
         final Exception exception;
@@ -279,9 +308,11 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
             final SecretKey hmacKey = KeyUtil.getHMacKey(secretKey);
 
             // byte input array: [keyVersion][encryptedData][IV][macDigest]
-            final int ivIndex = encryptedBlobWithoutEncodeVersion.length - IV_LENGTH - MAC_DIGEST_LENGTH;
+            final int ivIndex =
+                    encryptedBlobWithoutEncodeVersion.length - IV_LENGTH - MAC_DIGEST_LENGTH;
             final int macDigestIndex = encryptedBlobWithoutEncodeVersion.length - MAC_DIGEST_LENGTH;
-            final int encryptedDataIndex = keyLoader.getKeyTypeIdentifier().getBytes(ENCODING_UTF8).length;
+            final int encryptedDataIndex =
+                    keyLoader.getKeyTypeIdentifier().getBytes(ENCODING_UTF8).length;
             final int encryptedDataLength = ivIndex - encryptedDataIndex;
 
             // Calculate digest again and compare to the appended value
@@ -294,7 +325,8 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
             final byte[] macDigest = mac.doFinal();
 
             // Compare digest of input message and calculated digest
-            assertHMac(encryptedBlobWithoutEncodeVersion,
+            assertHMac(
+                    encryptedBlobWithoutEncodeVersion,
                     macDigestIndex,
                     encryptedBlobWithoutEncodeVersion.length,
                     macDigest);
@@ -305,16 +337,12 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
             cipher.init(
                     Cipher.DECRYPT_MODE,
                     secretKey,
-                    new IvParameterSpec(encryptedBlobWithoutEncodeVersion, ivIndex, IV_LENGTH)
-            );
+                    new IvParameterSpec(encryptedBlobWithoutEncodeVersion, ivIndex, IV_LENGTH));
 
             // Decrypt data bytes from 0 to ivindex - offset the KeyIdentifier.
             // We only need to decrypt the actual content.
             return cipher.doFinal(
-                    encryptedBlobWithoutEncodeVersion,
-                    encryptedDataIndex,
-                    encryptedDataLength
-            );
+                    encryptedBlobWithoutEncodeVersion, encryptedDataIndex, encryptedDataLength);
         } catch (final NoSuchAlgorithmException e) {
             errCode = NO_SUCH_ALGORITHM;
             exception = e;
@@ -347,8 +375,8 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
      * @param keyAlias  Alias of the key (from {@link AbstractSecretKeyLoader#getAlias()}
      * @param exception the root cause of the failure.
      */
-    protected void handleDecryptionFailure(@NonNull final String keyAlias,
-                                           @NonNull final Exception exception) {
+    protected void handleDecryptionFailure(
+            @NonNull final String keyAlias, @NonNull final Exception exception) {
         // Do nothing by default.
     }
 
@@ -359,20 +387,14 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
      * @param keyIdentifier identifier to verify.
      */
     protected static boolean isEncryptedByThisKeyIdentifier(
-            @NonNull final byte[] cipherText,
-            @NonNull final String keyIdentifier) {
+            @NonNull final byte[] cipherText, @NonNull final String keyIdentifier) {
         final String methodName = ":isEncryptedByThisKeyIdentifier";
 
         final byte[] bytes;
         try {
             bytes = stripEncodeVersionFromCipherText(cipherText);
 
-            final String keyVersion = new String(
-                    bytes,
-                    0,
-                    keyIdentifier.length(),
-                    ENCODING_UTF8
-            );
+            final String keyVersion = new String(bytes, 0, keyIdentifier.length(), ENCODING_UTF8);
 
             return keyIdentifier.equalsIgnoreCase(keyVersion);
         } catch (final Exception e) {
@@ -434,23 +456,22 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
      * @param encodeVersionLength length of the encode version as defined in the encrypted blob.
      * @throws ClientException if the string wasn't encoded with {@link StorageEncryptionManager#ENCODE_VERSION}.
      */
-    private static void validateEncodeVersion(@NonNull final String cipherString,
-                                              final int encodeVersionLength) throws ClientException {
+    private static void validateEncodeVersion(
+            @NonNull final String cipherString, final int encodeVersionLength)
+            throws ClientException {
         if (encodeVersionLength <= 0) {
             throw new ClientException(
                     DATA_MALFORMED,
                     String.format(
                             "Encode version length: '%s' is not valid, it must be greater of equal to 0",
-                            encodeVersionLength
-                    )
-            );
+                            encodeVersionLength));
         }
 
-        if (encodeVersionLength + 1 > cipherString.length()){
+        if (encodeVersionLength + 1 > cipherString.length()) {
             throw new ClientException(
                     DATA_MALFORMED,
-                    "Length of encode version string (plus the length character) is longer than " +
-                            "the CipherString itself. The data is malformed.");
+                    "Length of encode version string (plus the length character) is longer than "
+                            + "the CipherString itself. The data is malformed.");
         }
 
         if (!cipherString.substring(1, 1 + encodeVersionLength).equals(ENCODE_VERSION)) {
@@ -458,9 +479,7 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
                     DATA_MALFORMED,
                     String.format(
                             "Unsupported encode version received. Encode version supported is: '%s'",
-                            ENCODE_VERSION
-                    )
-            );
+                            ENCODE_VERSION));
         }
     }
 
@@ -472,12 +491,10 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
      * @param expected The expected mac digest.
      * @throws ClientException Client if there is any mismatch.
      */
-    private void assertHMac(final byte[] encryptedBlob,
-                            final int start,
-                            final int end,
-                            final byte[] expected)
+    private void assertHMac(
+            final byte[] encryptedBlob, final int start, final int end, final byte[] expected)
             throws ClientException {
-        if (expected.length != (end - start)) { //NOPMD
+        if (expected.length != (end - start)) { // NOPMD
             throw new ClientException(UNEXPECTED_HMAC_LENGTH);
         }
 
@@ -508,5 +525,6 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
      * @return a prioritized list of SecretKey (earlier keys is more likely to be the correct one).
      **/
     @NonNull
-    abstract public List<AbstractSecretKeyLoader> getKeyLoaderForDecryption(@NonNull final byte[] cipherText) throws ClientException;
+    public abstract List<AbstractSecretKeyLoader> getKeyLoaderForDecryption(
+            @NonNull final byte[] cipherText) throws ClientException;
 }

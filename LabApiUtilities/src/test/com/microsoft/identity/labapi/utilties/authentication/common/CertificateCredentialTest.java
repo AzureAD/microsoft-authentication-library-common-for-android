@@ -52,162 +52,164 @@ import java.util.Set;
  */
 public class CertificateCredentialTest {
 
-    private final static String CERTIFICATE_ALIAS_INVALID = "SomeRandomCertThatShouldNotExist";
-    private final static String CERTIFICATE_ALIAS_VALID = "AutomationRunner";
-    private final static String KEYSTORE_TYPE = "Windows-MY";
-    private final static String KEYSTORE_PROVIDER = "SunMSCAPI";
+    private static final String CERTIFICATE_ALIAS_INVALID = "SomeRandomCertThatShouldNotExist";
+    private static final String CERTIFICATE_ALIAS_VALID = "AutomationRunner";
+    private static final String KEYSTORE_TYPE = "Windows-MY";
+    private static final String KEYSTORE_PROVIDER = "SunMSCAPI";
 
     @Test
     public void testCanCreateCertificateCredentialFromPrivateKeyAndCertificate() {
-        final CertificateCredential certificateCredential = CertificateCredential.create(
-                new PrivateKey() {
-                    @Override
-                    public String getAlgorithm() {
-                        return null;
-                    }
+        final CertificateCredential certificateCredential =
+                CertificateCredential.create(
+                        new PrivateKey() {
+                            @Override
+                            public String getAlgorithm() {
+                                return null;
+                            }
 
-                    @Override
-                    public String getFormat() {
-                        return null;
-                    }
+                            @Override
+                            public String getFormat() {
+                                return null;
+                            }
 
-                    @Override
-                    public byte[] getEncoded() {
-                        return new byte[0];
-                    }
-                },
-                new X509Certificate() {
-                    @Override
-                    public void checkValidity() throws CertificateExpiredException, CertificateNotYetValidException {
+                            @Override
+                            public byte[] getEncoded() {
+                                return new byte[0];
+                            }
+                        },
+                        new X509Certificate() {
+                            @Override
+                            public void checkValidity()
+                                    throws CertificateExpiredException,
+                                            CertificateNotYetValidException {}
 
-                    }
+                            @Override
+                            public void checkValidity(Date date)
+                                    throws CertificateExpiredException,
+                                            CertificateNotYetValidException {}
 
-                    @Override
-                    public void checkValidity(Date date) throws CertificateExpiredException, CertificateNotYetValidException {
+                            @Override
+                            public int getVersion() {
+                                return 0;
+                            }
 
-                    }
+                            @Override
+                            public BigInteger getSerialNumber() {
+                                return null;
+                            }
 
-                    @Override
-                    public int getVersion() {
-                        return 0;
-                    }
+                            @Override
+                            public Principal getIssuerDN() {
+                                return null;
+                            }
 
-                    @Override
-                    public BigInteger getSerialNumber() {
-                        return null;
-                    }
+                            @Override
+                            public Principal getSubjectDN() {
+                                return null;
+                            }
 
-                    @Override
-                    public Principal getIssuerDN() {
-                        return null;
-                    }
+                            @Override
+                            public Date getNotBefore() {
+                                return null;
+                            }
 
-                    @Override
-                    public Principal getSubjectDN() {
-                        return null;
-                    }
+                            @Override
+                            public Date getNotAfter() {
+                                return null;
+                            }
 
-                    @Override
-                    public Date getNotBefore() {
-                        return null;
-                    }
+                            @Override
+                            public byte[] getTBSCertificate() throws CertificateEncodingException {
+                                return new byte[0];
+                            }
 
-                    @Override
-                    public Date getNotAfter() {
-                        return null;
-                    }
+                            @Override
+                            public byte[] getSignature() {
+                                return new byte[0];
+                            }
 
-                    @Override
-                    public byte[] getTBSCertificate() throws CertificateEncodingException {
-                        return new byte[0];
-                    }
+                            @Override
+                            public String getSigAlgName() {
+                                return null;
+                            }
 
-                    @Override
-                    public byte[] getSignature() {
-                        return new byte[0];
-                    }
+                            @Override
+                            public String getSigAlgOID() {
+                                return null;
+                            }
 
-                    @Override
-                    public String getSigAlgName() {
-                        return null;
-                    }
+                            @Override
+                            public byte[] getSigAlgParams() {
+                                return new byte[0];
+                            }
 
-                    @Override
-                    public String getSigAlgOID() {
-                        return null;
-                    }
+                            @Override
+                            public boolean[] getIssuerUniqueID() {
+                                return new boolean[0];
+                            }
 
-                    @Override
-                    public byte[] getSigAlgParams() {
-                        return new byte[0];
-                    }
+                            @Override
+                            public boolean[] getSubjectUniqueID() {
+                                return new boolean[0];
+                            }
 
-                    @Override
-                    public boolean[] getIssuerUniqueID() {
-                        return new boolean[0];
-                    }
+                            @Override
+                            public boolean[] getKeyUsage() {
+                                return new boolean[0];
+                            }
 
-                    @Override
-                    public boolean[] getSubjectUniqueID() {
-                        return new boolean[0];
-                    }
+                            @Override
+                            public int getBasicConstraints() {
+                                return 0;
+                            }
 
-                    @Override
-                    public boolean[] getKeyUsage() {
-                        return new boolean[0];
-                    }
+                            @Override
+                            public byte[] getEncoded() throws CertificateEncodingException {
+                                return new byte[0];
+                            }
 
-                    @Override
-                    public int getBasicConstraints() {
-                        return 0;
-                    }
+                            @Override
+                            public void verify(PublicKey key)
+                                    throws CertificateException, NoSuchAlgorithmException,
+                                            InvalidKeyException, NoSuchProviderException,
+                                            SignatureException {}
 
-                    @Override
-                    public byte[] getEncoded() throws CertificateEncodingException {
-                        return new byte[0];
-                    }
+                            @Override
+                            public void verify(PublicKey key, String sigProvider)
+                                    throws CertificateException, NoSuchAlgorithmException,
+                                            InvalidKeyException, NoSuchProviderException,
+                                            SignatureException {}
 
-                    @Override
-                    public void verify(PublicKey key) throws CertificateException, NoSuchAlgorithmException, InvalidKeyException, NoSuchProviderException, SignatureException {
+                            @Override
+                            public String toString() {
+                                return null;
+                            }
 
-                    }
+                            @Override
+                            public PublicKey getPublicKey() {
+                                return null;
+                            }
 
-                    @Override
-                    public void verify(PublicKey key, String sigProvider) throws CertificateException, NoSuchAlgorithmException, InvalidKeyException, NoSuchProviderException, SignatureException {
+                            @Override
+                            public boolean hasUnsupportedCriticalExtension() {
+                                return false;
+                            }
 
-                    }
+                            @Override
+                            public Set<String> getCriticalExtensionOIDs() {
+                                return null;
+                            }
 
-                    @Override
-                    public String toString() {
-                        return null;
-                    }
+                            @Override
+                            public Set<String> getNonCriticalExtensionOIDs() {
+                                return null;
+                            }
 
-                    @Override
-                    public PublicKey getPublicKey() {
-                        return null;
-                    }
-
-                    @Override
-                    public boolean hasUnsupportedCriticalExtension() {
-                        return false;
-                    }
-
-                    @Override
-                    public Set<String> getCriticalExtensionOIDs() {
-                        return null;
-                    }
-
-                    @Override
-                    public Set<String> getNonCriticalExtensionOIDs() {
-                        return null;
-                    }
-
-                    @Override
-                    public byte[] getExtensionValue(String oid) {
-                        return new byte[0];
-                    }
-                }
-        );
+                            @Override
+                            public byte[] getExtensionValue(String oid) {
+                                return new byte[0];
+                            }
+                        });
 
         Assert.assertNotNull(certificateCredential);
         Assert.assertNotNull(certificateCredential.getPrivateKey());
@@ -218,12 +220,10 @@ public class CertificateCredentialTest {
     public void testCanCertificateCredentialFromKeyStoreConfigurationAndCertificateMetadata() {
         final CertificateCredential certificateCredential;
         try {
-            certificateCredential = CertificateCredential.create(
-                    new KeyStoreConfiguration(
-                            KEYSTORE_TYPE, KEYSTORE_PROVIDER, null
-                    ),
-                    new ClientCertificateMetadata(CERTIFICATE_ALIAS_VALID, null)
-            );
+            certificateCredential =
+                    CertificateCredential.create(
+                            new KeyStoreConfiguration(KEYSTORE_TYPE, KEYSTORE_PROVIDER, null),
+                            new ClientCertificateMetadata(CERTIFICATE_ALIAS_VALID, null));
         } catch (LabApiException e) {
             throw new AssertionError(e);
         }
@@ -237,16 +237,13 @@ public class CertificateCredentialTest {
     public void testCannotCreateCertificateCredentialIfCertNotFoundInKeyStore() {
         try {
             CertificateCredential.create(
-                    new KeyStoreConfiguration(
-                            KEYSTORE_TYPE, KEYSTORE_PROVIDER, null
-                    ),
-                    new ClientCertificateMetadata(CERTIFICATE_ALIAS_INVALID, null)
-            );
-            Assert.fail("We weren't expecting to hit this line...exception should've already occurred");
+                    new KeyStoreConfiguration(KEYSTORE_TYPE, KEYSTORE_PROVIDER, null),
+                    new ClientCertificateMetadata(CERTIFICATE_ALIAS_INVALID, null));
+            Assert.fail(
+                    "We weren't expecting to hit this line...exception should've already occurred");
         } catch (final LabApiException e) {
             Assert.assertNotNull(e);
             Assert.assertEquals(LabError.CERTIFICATE_NOT_FOUND_IN_KEY_STORE, e.getErrorCode());
         }
     }
-
 }

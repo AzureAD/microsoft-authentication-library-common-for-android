@@ -22,7 +22,7 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.device.settings;
 
-import android.view.View;
+import static com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils.obtainUiObjectWithExactText;
 
 import androidx.annotation.NonNull;
 import androidx.test.uiautomator.UiObject;
@@ -38,15 +38,13 @@ import org.junit.Assert;
 
 import java.util.Calendar;
 
-import static com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils.obtainUiObjectWithExactText;
-
 /**
  * A model representing the Settings app on a Samsung device. Please note that this class is
  * currently optimized for a Samsung Galaxy S6 device.
  */
 public class SamsungSettings extends BaseSettings {
 
-    private final static String TAG = SamsungSettings.class.getSimpleName();
+    private static final String TAG = SamsungSettings.class.getSimpleName();
 
     @Override
     public void disableAdmin(@NonNull final DeviceAdmin deviceAdmin) {
@@ -55,10 +53,9 @@ public class SamsungSettings extends BaseSettings {
 
         try {
             // scroll down the recycler view to find the list item for this admin
-            final UiObject adminAppListItem = UiAutomatorUtils.obtainChildInScrollable(
-                    "android:id/list",
-                    deviceAdmin.getAdminName()
-            );
+            final UiObject adminAppListItem =
+                    UiAutomatorUtils.obtainChildInScrollable(
+                            "android:id/list", deviceAdmin.getAdminName());
 
             // Click into this admin
             assert adminAppListItem != null;
@@ -82,28 +79,24 @@ public class SamsungSettings extends BaseSettings {
         launchAccountListPage();
         try {
             // scroll down the recycler view to find the list item for this account
-            final UiObject account = UiAutomatorUtils.obtainChildInScrollable(
-                    "android:id/list",
-                    username
-            );
+            final UiObject account =
+                    UiAutomatorUtils.obtainChildInScrollable("android:id/list", username);
 
             // Click into this account
             account.click();
 
             // Find the remover Account btn
-            final UiObject removeAccountBtn = UiAutomatorUtils.obtainUiObjectWithResourceIdAndText(
-                    "com.android.settings:id/button",
-                    "Remove account"
-            );
+            final UiObject removeAccountBtn =
+                    UiAutomatorUtils.obtainUiObjectWithResourceIdAndText(
+                            "com.android.settings:id/button", "Remove account");
 
             // Click the remove account btn
             removeAccountBtn.click();
 
             // Click confirm in the dialog to complete removal
-            final UiObject removeAccountConfirmationDialogBtn = UiAutomatorUtils.obtainUiObjectWithResourceIdAndText(
-                    "android:id/button1",
-                    "Remove account"
-            );
+            final UiObject removeAccountConfirmationDialogBtn =
+                    UiAutomatorUtils.obtainUiObjectWithResourceIdAndText(
+                            "android:id/button1", "Remove account");
 
             removeAccountConfirmationDialogBtn.click();
         } catch (final UiObjectNotFoundException e) {
@@ -112,18 +105,17 @@ public class SamsungSettings extends BaseSettings {
     }
 
     @Override
-    public void addWorkAccount(@NonNull final ITestBroker broker,
-                               @NonNull final String username,
-                               @NonNull final String password) {
+    public void addWorkAccount(
+            @NonNull final ITestBroker broker,
+            @NonNull final String username,
+            @NonNull final String password) {
         Logger.i(TAG, "Adding Work Account on Samsung Device..");
         launchAddAccountPage();
 
         try {
             // scroll down the recycler view to find the list item for this account type
-            final UiObject workAccount = UiAutomatorUtils.obtainChildInScrollable(
-                    "android:id/list",
-                    "Work account"
-            );
+            final UiObject workAccount =
+                    UiAutomatorUtils.obtainChildInScrollable("android:id/list", "Work account");
 
             // Click into the work account
             workAccount.click();
@@ -162,7 +154,9 @@ public class SamsungSettings extends BaseSettings {
             setDateBtn.click();
 
             // Make sure we are seeing the calendar
-            final UiObject datePicker = UiAutomatorUtils.obtainUiObjectWithResourceId("android:id/sem_datepicker_calendar_header");
+            final UiObject datePicker =
+                    UiAutomatorUtils.obtainUiObjectWithResourceId(
+                            "android:id/sem_datepicker_calendar_header");
             Assert.assertTrue("Date Picker appears.", datePicker.exists());
             setDateBtn.click();
 
@@ -180,9 +174,7 @@ public class SamsungSettings extends BaseSettings {
             }
 
             // Click on this new date in this calendar
-            UiObject specifiedDateIcon = obtainUiObjectWithExactText(
-                    String.valueOf(dateToSet)
-            );
+            UiObject specifiedDateIcon = obtainUiObjectWithExactText(String.valueOf(dateToSet));
             specifiedDateIcon.click();
 
             // Confirm setting date
@@ -207,11 +199,11 @@ public class SamsungSettings extends BaseSettings {
 
     @Override
     public void setPinOnDevice(final String password) {
-        //TODO: implement addPinSetup for SAMSUNG device.
+        // TODO: implement addPinSetup for SAMSUNG device.
     }
 
     @Override
     public void removePinFromDevice(String pin) {
-        //TODO: implement removing PIN for SAMSUNG device.
+        // TODO: implement removing PIN for SAMSUNG device.
     }
 }

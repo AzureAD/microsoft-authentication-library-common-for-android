@@ -17,9 +17,9 @@
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- // THE SOFTWARE.
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
 package com.microsoft.identity.common.java.foci;
 
 import static com.microsoft.identity.common.java.authorities.AllAccounts.ALL_ACCOUNTS_TENANT_ID;
@@ -42,17 +42,18 @@ import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.Micro
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2TokenCache;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
-import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.util.CommonURIBuilder;
+import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.util.ported.ObjectUtils;
+
+import edu.umd.cs.findbugs.annotations.Nullable;
+
+import lombok.NonNull;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.UUID;
-
-import edu.umd.cs.findbugs.annotations.Nullable;
-import lombok.NonNull;
 
 public class FociQueryUtilities {
 
@@ -68,16 +69,19 @@ public class FociQueryUtilities {
      * @throws ClientException
      * @throws IOException
      */
-    public static boolean tryFociTokenWithGivenClientId(@SuppressWarnings(WarningType.rawtype_warning) @NonNull final BrokerOAuth2TokenCache brokerOAuth2TokenCache,
-                                                        @NonNull final String clientId,
-                                                        @NonNull final String redirectUri,
-                                                        @NonNull final ICacheRecord cacheRecord) throws IOException, ClientException {
+    public static boolean tryFociTokenWithGivenClientId(
+            @SuppressWarnings(WarningType.rawtype_warning) @NonNull
+                    final BrokerOAuth2TokenCache brokerOAuth2TokenCache,
+            @NonNull final String clientId,
+            @NonNull final String redirectUri,
+            @NonNull final ICacheRecord cacheRecord)
+            throws IOException, ClientException {
         return tryFociTokenWithGivenClientId(
                 brokerOAuth2TokenCache,
-                clientId, redirectUri,
+                clientId,
+                redirectUri,
                 cacheRecord.getRefreshToken(),
-                cacheRecord.getAccount()
-        );
+                cacheRecord.getAccount());
     }
 
     /**
@@ -91,20 +95,26 @@ public class FociQueryUtilities {
      * @throws ClientException
      * @throws IOException
      */
-    public static boolean tryFociTokenWithGivenClientId(@SuppressWarnings(WarningType.rawtype_warning) @NonNull final OAuth2TokenCache brokerOAuth2TokenCache,
-                                                        @NonNull final String clientId,
-                                                        @NonNull final String redirectUri,
-                                                        @NonNull final RefreshTokenRecord refreshTokenRecord,
-                                                        @NonNull final IAccountRecord accountRecord)
+    public static boolean tryFociTokenWithGivenClientId(
+            @SuppressWarnings(WarningType.rawtype_warning) @NonNull
+                    final OAuth2TokenCache brokerOAuth2TokenCache,
+            @NonNull final String clientId,
+            @NonNull final String redirectUri,
+            @NonNull final RefreshTokenRecord refreshTokenRecord,
+            @NonNull final IAccountRecord accountRecord)
             throws ClientException, IOException {
         final String methodName = ":tryFociTokenWithGivenClientId";
         final MicrosoftStsOAuth2Configuration config = new MicrosoftStsOAuth2Configuration();
 
-        //Get authority url
+        // Get authority url
         final CommonURIBuilder requestUrlBuilder = new CommonURIBuilder();
-        requestUrlBuilder.setScheme("https")
+        requestUrlBuilder
+                .setScheme("https")
                 .setHost(refreshTokenRecord.getEnvironment())
-                .setPath(StringUtil.isNullOrEmpty(accountRecord.getRealm()) ? ALL_ACCOUNTS_TENANT_ID : accountRecord.getRealm());
+                .setPath(
+                        StringUtil.isNullOrEmpty(accountRecord.getRealm())
+                                ? ALL_ACCOUNTS_TENANT_ID
+                                : accountRecord.getRealm());
         final URL authorityUrl;
         try {
             authorityUrl = new URL(requestUrlBuilder.build().toString());
@@ -112,25 +122,31 @@ public class FociQueryUtilities {
             throw new ClientException(ErrorStrings.MALFORMED_URL, e.getMessage(), e);
         }
 
-        //set the token endpoint for the configuration
+        // set the token endpoint for the configuration
         config.setAuthorityUrl(authorityUrl);
 
         // Create the strategy
-        final OAuth2StrategyParameters strategyParameters = OAuth2StrategyParameters.builder().build();
-        final MicrosoftStsOAuth2Strategy strategy = new MicrosoftStsOAuth2Strategy(config, strategyParameters);
+        final OAuth2StrategyParameters strategyParameters =
+                OAuth2StrategyParameters.builder().build();
+        final MicrosoftStsOAuth2Strategy strategy =
+                new MicrosoftStsOAuth2Strategy(config, strategyParameters);
 
         final String refreshToken = refreshTokenRecord.getSecret();
 
         final String scopes;
         // Hardcoding Teams Agent's client ID with the scope it's pre-authorized for.
-        // This is because if only the default scope is passed, eSTS will set the resource ID (on its side)
+        // This is because if only the default scope is passed, eSTS will set the resource ID (on
+        // its side)
         // based on the RT (Which the given clientId might not be pre-authorized for).
         // TODO: make pre-authorization of MSGraph User.read (and the default scopes) a requirement
         //       for every FoCI apps (and hardcode it here).
         //       https://identitydivision.visualstudio.com/Engineering/_workitems/edit/1222002
         if (ObjectUtils.equals(clientId, "87749df4-7ccf-48f8-aa87-704bad0e0e16")) {
-            scopes = "https://devicemgmt.teams.microsoft.com/.default " + BaseController.getDelimitedDefaultScopeString();
-            Logger.info(TAG + methodName,
+            scopes =
+                    "https://devicemgmt.teams.microsoft.com/.default "
+                            + BaseController.getDelimitedDefaultScopeString();
+            Logger.info(
+                    TAG + methodName,
                     "Teams agent client ID - making a test request with teams agent resource.");
         } else {
             scopes = BaseController.getDelimitedDefaultScopeString();
@@ -139,28 +155,23 @@ public class FociQueryUtilities {
         // Create a correlation_id for the request
         final UUID correlationId = UUID.randomUUID();
 
-        Logger.verbose(TAG + methodName,
-                "Create the token request with correlationId ["
-                        + correlationId
-                        + "]");
+        Logger.verbose(
+                TAG + methodName,
+                "Create the token request with correlationId [" + correlationId + "]");
 
-        final MicrosoftStsTokenRequest tokenRequest = createTokenRequest(
-                clientId,
-                scopes,
-                refreshToken,
-                redirectUri,
-                strategy,
-                correlationId,
-                "2"
-        );
+        final MicrosoftStsTokenRequest tokenRequest =
+                createTokenRequest(
+                        clientId, scopes, refreshToken, redirectUri, strategy, correlationId, "2");
 
-        Logger.verbose(TAG + methodName,
+        Logger.verbose(
+                TAG + methodName,
                 "Start refreshing token (to verify foci) with correlationId ["
                         + correlationId
                         + "]");
         final TokenResult tokenResult = strategy.requestToken(tokenRequest);
 
-        Logger.verbose(TAG + methodName,
+        Logger.verbose(
+                TAG + methodName,
                 "Is the client ID able to use the foci? ["
                         + tokenResult.getSuccess()
                         + "] with correlationId ["
@@ -168,19 +179,14 @@ public class FociQueryUtilities {
                         + "]");
 
         if (tokenResult.getSuccess()) {
-            // Save the token record in tha cache so that we have an entry in BrokerApplicationMetadata for this client id.
-            final MicrosoftStsAuthorizationRequest authorizationRequest = createAuthRequest(
-                    strategy,
-                    clientId,
-                    redirectUri,
-                    scopes,
-                    accountRecord,
-                    correlationId
-            );
-            Logger.verbose(TAG + methodName,
-                    "Saving records to cache with client id" + clientId
-            );
-            brokerOAuth2TokenCacheSave(brokerOAuth2TokenCache, strategy, tokenResult, authorizationRequest);
+            // Save the token record in tha cache so that we have an entry in
+            // BrokerApplicationMetadata for this client id.
+            final MicrosoftStsAuthorizationRequest authorizationRequest =
+                    createAuthRequest(
+                            strategy, clientId, redirectUri, scopes, accountRecord, correlationId);
+            Logger.verbose(TAG + methodName, "Saving records to cache with client id" + clientId);
+            brokerOAuth2TokenCacheSave(
+                    brokerOAuth2TokenCache, strategy, tokenResult, authorizationRequest);
         }
         return tokenResult.getSuccess();
     }
@@ -197,13 +203,15 @@ public class FociQueryUtilities {
      * @return The fully-formed TokenRequest.
      */
     @NonNull
-    public static MicrosoftStsTokenRequest createTokenRequest(@NonNull final String clientId,
-                                                              @NonNull final String scopes,
-                                                              @NonNull final String refreshToken,
-                                                              @NonNull final String redirectUri,
-                                                              @NonNull final MicrosoftStsOAuth2Strategy strategy,
-                                                              @Nullable final UUID correlationId,
-                                                              @NonNull final String idTokenVersion) throws ClientException {
+    public static MicrosoftStsTokenRequest createTokenRequest(
+            @NonNull final String clientId,
+            @NonNull final String scopes,
+            @NonNull final String refreshToken,
+            @NonNull final String redirectUri,
+            @NonNull final MicrosoftStsOAuth2Strategy strategy,
+            @Nullable final UUID correlationId,
+            @NonNull final String idTokenVersion)
+            throws ClientException {
         final MicrosoftStsTokenRequest tokenRequest =
                 strategy.createRefreshTokenRequest(new BearerAuthenticationSchemeInternal());
 
@@ -218,15 +226,15 @@ public class FociQueryUtilities {
         return tokenRequest;
     }
 
-    private static MicrosoftStsAuthorizationRequest createAuthRequest(@NonNull final MicrosoftStsOAuth2Strategy strategy,
-                                                                      @NonNull final String clientId,
-                                                                      @NonNull final String redirectUri,
-                                                                      @NonNull final String scope,
-                                                                      @NonNull final IAccountRecord accountRecord,
-                                                                      @Nullable final UUID correlationId) {
-        final MicrosoftStsAuthorizationRequest.Builder builder = strategy.createAuthorizationRequestBuilder(
-                accountRecord
-        );
+    private static MicrosoftStsAuthorizationRequest createAuthRequest(
+            @NonNull final MicrosoftStsOAuth2Strategy strategy,
+            @NonNull final String clientId,
+            @NonNull final String redirectUri,
+            @NonNull final String scope,
+            @NonNull final IAccountRecord accountRecord,
+            @Nullable final UUID correlationId) {
+        final MicrosoftStsAuthorizationRequest.Builder builder =
+                strategy.createAuthorizationRequestBuilder(accountRecord);
         return builder.setClientId(clientId)
                 .setRedirectUri(redirectUri)
                 .setCorrelationId(correlationId)
@@ -234,13 +242,19 @@ public class FociQueryUtilities {
                 .build();
     }
 
-    // Suppressing unchecked warnings due to casting of rawtypes to generic types of OAuth2TokenCache's instance brokerOAuth2TokenCache while calling method save
+    // Suppressing unchecked warnings due to casting of rawtypes to generic types of
+    // OAuth2TokenCache's instance brokerOAuth2TokenCache while calling method save
     @SuppressWarnings(WarningType.unchecked_warning)
-    private static void brokerOAuth2TokenCacheSave(@SuppressWarnings(WarningType.rawtype_warning) @NonNull OAuth2TokenCache brokerOAuth2TokenCache, MicrosoftStsOAuth2Strategy strategy, TokenResult tokenResult, MicrosoftStsAuthorizationRequest authorizationRequest) throws ClientException {
+    private static void brokerOAuth2TokenCacheSave(
+            @SuppressWarnings(WarningType.rawtype_warning) @NonNull
+                    OAuth2TokenCache brokerOAuth2TokenCache,
+            MicrosoftStsOAuth2Strategy strategy,
+            TokenResult tokenResult,
+            MicrosoftStsAuthorizationRequest authorizationRequest)
+            throws ClientException {
         brokerOAuth2TokenCache.save(
                 strategy,
                 authorizationRequest,
-                (MicrosoftTokenResponse) tokenResult.getTokenResponse()
-        );
+                (MicrosoftTokenResponse) tokenResult.getTokenResponse());
     }
 }

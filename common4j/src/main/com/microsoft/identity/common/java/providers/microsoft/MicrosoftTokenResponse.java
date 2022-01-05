@@ -124,7 +124,8 @@ public class MicrosoftTokenResponse extends TokenResponse {
     private String mAuthority;
 
     // The token returned is cached with this authority as key.
-    // We expect the subsequent requests to AcquireToken will use this authority as the authority parameter,
+    // We expect the subsequent requests to AcquireToken will use this authority as the authority
+    // parameter,
     // otherwise the AcquireTokenSilent will fail
     public final String getAuthority() {
         return mAuthority;
@@ -137,14 +138,12 @@ public class MicrosoftTokenResponse extends TokenResponse {
     /**
      * The deployment ring of the current request chain.
      */
-    @Expose()
-    private String mSpeRing;
+    @Expose() private String mSpeRing;
 
     /**
      * The age of the RT, according to the server (x-ms-clitelem header).
      */
-    @Expose()
-    private String mRefreshTokenAge;
+    @Expose() private String mRefreshTokenAge;
 
     /**
      * The error code code set as part of the client telemetry info header.  This likely will not be populated for a successful token response
@@ -336,17 +335,26 @@ public class MicrosoftTokenResponse extends TokenResponse {
         mCloudInstanceHostName = cloudInstanceHostName;
     }
 
-    //CHECKSTYLE:OFF
+    // CHECKSTYLE:OFF
     @Override
     public String toString() {
-        return "MicrosoftTokenResponse{" +
-                "mExtExpiresOn=" + mExtExpiresOn +
-                ", mClientInfo='" + mClientInfo + '\'' +
-                ", mClientId='" + mClientId + '\'' +
-                ", mExtendedExpiresIn=" + mExtendedExpiresIn +
-                ", mFamilyId='" + mFamilyId + '\'' +
-                "} " + super.toString();
+        return "MicrosoftTokenResponse{"
+                + "mExtExpiresOn="
+                + mExtExpiresOn
+                + ", mClientInfo='"
+                + mClientInfo
+                + '\''
+                + ", mClientId='"
+                + mClientId
+                + '\''
+                + ", mExtendedExpiresIn="
+                + mExtendedExpiresIn
+                + ", mFamilyId='"
+                + mFamilyId
+                + '\''
+                + "} "
+                + super.toString();
     }
-    //CHECKSTYLE:ON
+    // CHECKSTYLE:ON
 
 }

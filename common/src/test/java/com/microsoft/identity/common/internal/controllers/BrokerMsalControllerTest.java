@@ -49,7 +49,9 @@ import java.util.Collections;
 import java.util.List;
 
 @RunWith(RobolectricTestRunner.class)
-@Config(sdk = {Build.VERSION_CODES.N}, shadows = {})
+@Config(
+        sdk = {Build.VERSION_CODES.N},
+        shadows = {})
 public class BrokerMsalControllerTest {
     /**
      * This test simulates a result calling the PrtSsoToken Api where everything goes well talking
@@ -62,55 +64,80 @@ public class BrokerMsalControllerTest {
         final String aLocalAccountId = "aLocalAccountId";
         final String aCorrelationId = "aCorrelationId";
         final String accountAuthority = "https://login.microsoft.com/anAuthority";
-        final String ssoUrl = "https://a.url.that.we.need/that/has/a/path?one_useless_param&sso_nonce=aNonceToUse&anotherUselessParam=foo";
+        final String ssoUrl =
+                "https://a.url.that.we.need/that/has/a/path?one_useless_param&sso_nonce=aNonceToUse&anotherUselessParam=foo";
         final String aCookie = "aCookie";
         final SettablePlatformComponents components = SettablePlatformComponents.builder().build();
-        BrokerMsalController controller = new BrokerMsalController(InstrumentationRegistry.getInstrumentation().getContext(), components) {
-            @Override
-            public String getActiveBrokerPackageName() {
-                return "aBrokerPackage";
-            }
-
-            @NonNull
-            @Override
-            protected List<IIpcStrategy> getIpcStrategies(Context applicationContext, String activeBrokerPackageName) {
-                return Collections.<IIpcStrategy>singletonList(new IIpcStrategy() {
-                    @Nullable
+        BrokerMsalController controller =
+                new BrokerMsalController(
+                        InstrumentationRegistry.getInstrumentation().getContext(), components) {
                     @Override
-                    public Bundle communicateToBroker(@NonNull BrokerOperationBundle bundle) throws BrokerCommunicationException {
-                        Bundle retBundle = new Bundle();
-                        if (bundle.getOperation().equals(BrokerOperationBundle.Operation.MSAL_HELLO)) {
-                            retBundle.putString(AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY, "7.0");
-                        } else if (bundle.getOperation().equals(BrokerOperationBundle.Operation.MSAL_SSO_TOKEN)) {
-                            AcquirePrtSsoTokenResult result = AcquirePrtSsoTokenResult.builder()
-                                    .accountName(anAccountName)
-                                    .localAccountId(aLocalAccountId)
-                                    .homeAccountId(aHomeAccountId)
-                                    .accountAuthority(accountAuthority)
-                                    .cookieName("x-ms-RefreshTokenCredential")
-                                    .cookieContent(aCookie)
-                                    .telemetry(Collections.<String, Object>emptyMap())
-                                    .build();
-
-                            retBundle.putString(AuthenticationConstants.Broker.BROKER_GENERATE_SSO_TOKEN_RESULT, new Gson().toJson(result));
-                        }
-                        return retBundle;
+                    public String getActiveBrokerPackageName() {
+                        return "aBrokerPackage";
                     }
 
+                    @NonNull
                     @Override
-                    public Type getType() {
-                        return Type.CONTENT_PROVIDER;
+                    protected List<IIpcStrategy> getIpcStrategies(
+                            Context applicationContext, String activeBrokerPackageName) {
+                        return Collections.<IIpcStrategy>singletonList(
+                                new IIpcStrategy() {
+                                    @Nullable
+                                    @Override
+                                    public Bundle communicateToBroker(
+                                            @NonNull BrokerOperationBundle bundle)
+                                            throws BrokerCommunicationException {
+                                        Bundle retBundle = new Bundle();
+                                        if (bundle.getOperation()
+                                                .equals(
+                                                        BrokerOperationBundle.Operation
+                                                                .MSAL_HELLO)) {
+                                            retBundle.putString(
+                                                    AuthenticationConstants.Broker
+                                                            .NEGOTIATED_BP_VERSION_KEY,
+                                                    "7.0");
+                                        } else if (bundle.getOperation()
+                                                .equals(
+                                                        BrokerOperationBundle.Operation
+                                                                .MSAL_SSO_TOKEN)) {
+                                            AcquirePrtSsoTokenResult result =
+                                                    AcquirePrtSsoTokenResult.builder()
+                                                            .accountName(anAccountName)
+                                                            .localAccountId(aLocalAccountId)
+                                                            .homeAccountId(aHomeAccountId)
+                                                            .accountAuthority(accountAuthority)
+                                                            .cookieName(
+                                                                    "x-ms-RefreshTokenCredential")
+                                                            .cookieContent(aCookie)
+                                                            .telemetry(
+                                                                    Collections
+                                                                            .<String, Object>
+                                                                                    emptyMap())
+                                                            .build();
+
+                                            retBundle.putString(
+                                                    AuthenticationConstants.Broker
+                                                            .BROKER_GENERATE_SSO_TOKEN_RESULT,
+                                                    new Gson().toJson(result));
+                                        }
+                                        return retBundle;
+                                    }
+
+                                    @Override
+                                    public Type getType() {
+                                        return Type.CONTENT_PROVIDER;
+                                    }
+                                });
                     }
-                });
-            }
-        };
-        AcquirePrtSsoTokenCommandParameters params = AcquirePrtSsoTokenCommandParameters.builder()
-                .platformComponents(components)
-                .correlationId(aCorrelationId)
-                .accountName(anAccountName)
-                .requestAuthority(accountAuthority)
-                .ssoUrl(ssoUrl)
-                .build();
+                };
+        AcquirePrtSsoTokenCommandParameters params =
+                AcquirePrtSsoTokenCommandParameters.builder()
+                        .platformComponents(components)
+                        .correlationId(aCorrelationId)
+                        .accountName(anAccountName)
+                        .requestAuthority(accountAuthority)
+                        .ssoUrl(ssoUrl)
+                        .build();
         final AcquirePrtSsoTokenResult ssoTokenResult = controller.getSsoToken(params);
         Assert.assertEquals(accountAuthority, ssoTokenResult.getAccountAuthority());
         Assert.assertEquals(anAccountName, ssoTokenResult.getAccountName());
@@ -119,5 +146,4 @@ public class BrokerMsalControllerTest {
         Assert.assertEquals(aCookie, ssoTokenResult.getCookieContent());
         Assert.assertEquals("x-ms-RefreshTokenCredential", ssoTokenResult.getCookieName());
     }
-
 }

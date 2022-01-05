@@ -67,5 +67,4 @@ public class BrokerValidatorTests {
         Assert.assertTrue(brokerData.contains(BrokerData.COMPANY_PORTAL));
         Assert.assertTrue(brokerData.contains(BrokerData.MICROSOFT_AUTHENTICATOR_PROD));
     }
-
 }

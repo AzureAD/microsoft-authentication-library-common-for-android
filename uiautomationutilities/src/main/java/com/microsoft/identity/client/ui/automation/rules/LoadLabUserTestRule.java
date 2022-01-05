@@ -22,15 +22,12 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.rules;
 
-import android.util.Log;
-
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.client.ui.automation.logging.Logger;
 import com.microsoft.identity.internal.testutils.labutils.LabUserHelper;
 import com.microsoft.identity.internal.testutils.labutils.LabUserQuery;
 
-import org.junit.Assert;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
@@ -42,7 +39,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class LoadLabUserTestRule implements TestRule {
 
-    private final static String TAG = LoadLabUserTestRule.class.getSimpleName();
+    private static final String TAG = LoadLabUserTestRule.class.getSimpleName();
 
     public static final long TEMP_USER_WAIT_TIME = TimeUnit.SECONDS.toMillis(20);
 
@@ -73,13 +70,15 @@ public class LoadLabUserTestRule implements TestRule {
                     upn = LabUserHelper.loadTempUser(tempUserType);
                     try {
                         // temp user takes some time to actually being created even though it may be
-                        // returned by the LAB API. Adding a wait here before we proceed with the test.
+                        // returned by the LAB API. Adding a wait here before we proceed with the
+                        // test.
                         Thread.sleep(TEMP_USER_WAIT_TIME);
                     } catch (final InterruptedException e) {
                         throw new AssertionError(e);
                     }
                 } else {
-                    throw new IllegalArgumentException("Both Lab User query and temp user type were null.");
+                    throw new IllegalArgumentException(
+                            "Both Lab User query and temp user type were null.");
                 }
 
                 base.evaluate();
@@ -90,5 +89,4 @@ public class LoadLabUserTestRule implements TestRule {
     public String getLabUserUpn() {
         return upn;
     }
-
 }

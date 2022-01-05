@@ -27,9 +27,9 @@ import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.java.commands.parameters.IHasExtraParameters;
 import com.microsoft.identity.common.java.providers.oauth2.TokenRequest;
 
-import java.util.UUID;
-
 import edu.umd.cs.findbugs.annotations.Nullable;
+
+import java.util.UUID;
 
 public class MicrosoftTokenRequest extends TokenRequest implements IHasExtraParameters {
 

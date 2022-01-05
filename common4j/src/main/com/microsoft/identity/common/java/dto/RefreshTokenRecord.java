@@ -22,10 +22,10 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.dto;
 
-import com.google.gson.annotations.SerializedName;
-
 import static com.microsoft.identity.common.java.dto.RefreshTokenRecord.SerializedNames.FAMILY_ID;
 import static com.microsoft.identity.common.java.dto.RefreshTokenRecord.SerializedNames.TARGET;
+
+import com.google.gson.annotations.SerializedName;
 
 public class RefreshTokenRecord extends Credential {
 
@@ -47,7 +47,7 @@ public class RefreshTokenRecord extends Credential {
     private String mFamilyId;
 
     /**
-     * Permissions that are included in the token. Formats for endpoints will be different. 
+     * Permissions that are included in the token. Formats for endpoints will be different.
      * <p>
      * Mandatory, if credential is scoped down by some parameters or requirements (e.g. by
      * resource, scopes or permissions).
@@ -96,7 +96,7 @@ public class RefreshTokenRecord extends Credential {
         return false;
     }
 
-    //CHECKSTYLE:OFF
+    // CHECKSTYLE:OFF
     // This method is generated. Checkstyle and/or PMD has been disabled.
     // This method *must* be regenerated if the class' structural definition changes through the
     // addition/subtraction of fields.
@@ -113,9 +113,9 @@ public class RefreshTokenRecord extends Credential {
             return false;
         return mTarget != null ? mTarget.equals(that.mTarget) : that.mTarget == null;
     }
-    //CHECKSTYLE:ON
+    // CHECKSTYLE:ON
 
-    //CHECKSTYLE:OFF
+    // CHECKSTYLE:OFF
     // This method is generated. Checkstyle and/or PMD has been disabled.
     // This method *must* be regenerated if the class' structural definition changes through the
     // addition/subtraction of fields.
@@ -127,19 +127,24 @@ public class RefreshTokenRecord extends Credential {
         result = 31 * result + (mTarget != null ? mTarget.hashCode() : 0);
         return result;
     }
-    //CHECKSTYLE:ON
+    // CHECKSTYLE:ON
 
-    //CHECKSTYLE:OFF
+    // CHECKSTYLE:OFF
     // This method is generated. Checkstyle and/or PMD has been disabled.
     // This method *must* be regenerated if the class' structural definition changes through the
     // addition/subtraction of fields.
     @SuppressWarnings("PMD")
     @Override
     public String toString() {
-        return "RefreshToken{" +
-                "mFamilyId='" + mFamilyId + '\'' +
-                ", mTarget='" + mTarget + '\'' +
-                "} " + super.toString();
+        return "RefreshToken{"
+                + "mFamilyId='"
+                + mFamilyId
+                + '\''
+                + ", mTarget='"
+                + mTarget
+                + '\''
+                + "} "
+                + super.toString();
     }
-    //CHECKSTYLE:ON
+    // CHECKSTYLE:ON
 }

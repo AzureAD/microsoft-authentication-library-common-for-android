@@ -25,7 +25,8 @@ package com.microsoft.identity.labapi.utilities.constants;
 public enum SignInAudience {
     AZURE_AD_MY_ORG(LabConstants.SignInAudience.AZURE_AD_MY_ORG),
     AZURE_AD_MULTIPLE_ORGS(LabConstants.SignInAudience.AZURE_AD_MULTIPLE_ORGS),
-    AZURE_AD_AND_PERSONAL_MICROSOFT_ACCOUNT(LabConstants.SignInAudience.AZURE_AD_AND_PERSONAL_MICROSOFT_ACCOUNT);
+    AZURE_AD_AND_PERSONAL_MICROSOFT_ACCOUNT(
+            LabConstants.SignInAudience.AZURE_AD_AND_PERSONAL_MICROSOFT_ACCOUNT);
 
     final String value;
 

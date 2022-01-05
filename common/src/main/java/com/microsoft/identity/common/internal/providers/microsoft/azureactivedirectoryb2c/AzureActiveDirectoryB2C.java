@@ -24,8 +24,8 @@ package com.microsoft.identity.common.internal.providers.microsoft.azureactivedi
 
 import androidx.annotation.NonNull;
 
-import com.microsoft.identity.common.java.providers.IdentityProvider;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
+import com.microsoft.identity.common.java.providers.IdentityProvider;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2Configuration;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters;
 
@@ -37,13 +37,12 @@ public class AzureActiveDirectoryB2C
         extends IdentityProvider<AzureActiveDirectoryB2COAuth2Strategy, OAuth2Configuration> {
 
     @Override
-    public AzureActiveDirectoryB2COAuth2Strategy createOAuth2Strategy(@NonNull final OAuth2Configuration config,
-                                                                      @NonNull final IPlatformComponents commonComponents) {
-        final OAuth2StrategyParameters parameters = OAuth2StrategyParameters.builder()
-                .platformComponents(commonComponents)
-                .build();
+    public AzureActiveDirectoryB2COAuth2Strategy createOAuth2Strategy(
+            @NonNull final OAuth2Configuration config,
+            @NonNull final IPlatformComponents commonComponents) {
+        final OAuth2StrategyParameters parameters =
+                OAuth2StrategyParameters.builder().platformComponents(commonComponents).build();
 
         return new AzureActiveDirectoryB2COAuth2Strategy(config, parameters);
     }
-
 }

@@ -53,16 +53,14 @@ public class BrokerCommunicationException extends BaseException {
         }
 
         @Override
-        public @NonNull String toString(){
+        public @NonNull String toString() {
             return this.name;
         }
     }
 
-    @Getter
-    private final Category category;
+    @Getter private final Category category;
 
-    @Getter
-    private final IIpcStrategy.Type strategyType;
+    @Getter private final IIpcStrategy.Type strategyType;
 
     /**
      * Initiates the {@link BrokerCommunicationException} with error message and throwable.
@@ -70,9 +68,11 @@ public class BrokerCommunicationException extends BaseException {
      * @param errorMessage The error message contained in the exception.
      * @param throwable    The {@link Throwable} contains the cause for the exception.
      */
-    public BrokerCommunicationException(final Category category,
-                                        final IIpcStrategy.Type strategyType,
-                                        final String errorMessage, final Throwable throwable) {
+    public BrokerCommunicationException(
+            final Category category,
+            final IIpcStrategy.Type strategyType,
+            final String errorMessage,
+            final Throwable throwable) {
         super(category.toString(), errorMessage, throwable);
         this.category = category;
         this.strategyType = strategyType;
@@ -80,7 +80,12 @@ public class BrokerCommunicationException extends BaseException {
 
     @Override
     public String getMessage() {
-        return "[" + category.toString() +"] [" +  strategyType.toString() +"] :" + super.getMessage();
+        return "["
+                + category.toString()
+                + "] ["
+                + strategyType.toString()
+                + "] :"
+                + super.getMessage();
     }
 
     @Override

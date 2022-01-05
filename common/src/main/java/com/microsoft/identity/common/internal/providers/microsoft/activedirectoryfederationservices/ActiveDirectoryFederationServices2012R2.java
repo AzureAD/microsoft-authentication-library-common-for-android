@@ -33,16 +33,16 @@ import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParamet
  * The Active Directory Federation Services 2012 R2 Identity Provider Implementation.
  */
 public class ActiveDirectoryFederationServices2012R2
-        extends IdentityProvider<ActiveDirectoryFederationServices2012R2OAuth2Strategy, OAuth2Configuration> {
+        extends IdentityProvider<
+                ActiveDirectoryFederationServices2012R2OAuth2Strategy, OAuth2Configuration> {
 
     @Override
-    public ActiveDirectoryFederationServices2012R2OAuth2Strategy createOAuth2Strategy(@NonNull final OAuth2Configuration config,
-                                                                                      @NonNull final IPlatformComponents commonComponents) {
-        final OAuth2StrategyParameters parameters = OAuth2StrategyParameters.builder()
-                .platformComponents(commonComponents)
-                .build();
+    public ActiveDirectoryFederationServices2012R2OAuth2Strategy createOAuth2Strategy(
+            @NonNull final OAuth2Configuration config,
+            @NonNull final IPlatformComponents commonComponents) {
+        final OAuth2StrategyParameters parameters =
+                OAuth2StrategyParameters.builder().platformComponents(commonComponents).build();
 
         return new ActiveDirectoryFederationServices2012R2OAuth2Strategy(config, parameters);
     }
-
 }

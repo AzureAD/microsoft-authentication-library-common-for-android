@@ -67,6 +67,8 @@ public interface ICacheKeyValueDelegate {
      * @param <T>    Generic type
      * @return AccountCredentialBase
      */
-    <T extends AccountCredentialBase> T fromCacheValue(final String string, Class<? extends AccountCredentialBase> t); // TODO consider throwing an Exception if parsing fails
-
+    <T extends AccountCredentialBase> T fromCacheValue(
+            final String string,
+            Class<? extends AccountCredentialBase>
+                    t); // TODO consider throwing an Exception if parsing fails
 }

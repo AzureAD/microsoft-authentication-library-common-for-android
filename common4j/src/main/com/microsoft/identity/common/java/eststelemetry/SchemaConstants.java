@@ -62,29 +62,28 @@ public class SchemaConstants {
         public static final String EMPTY = "";
     }
 
-
     /**
      * This array defines the platform schema for current request
      * NOTE: These fields must always be listed in the correct order in this array.
      * Failure do so will break the schema.
      */
-    private static final String[] currentRequestPlatformFields = new String[]{
-            SchemaConstants.Key.ACCOUNT_STATUS,
-            SchemaConstants.Key.ID_TOKEN_STATUS,
-            SchemaConstants.Key.AT_STATUS,
-            SchemaConstants.Key.RT_STATUS,
-            SchemaConstants.Key.FRT_STATUS,
-            SchemaConstants.Key.MRRT_STATUS
-    };
+    private static final String[] currentRequestPlatformFields =
+            new String[] {
+                SchemaConstants.Key.ACCOUNT_STATUS,
+                SchemaConstants.Key.ID_TOKEN_STATUS,
+                SchemaConstants.Key.AT_STATUS,
+                SchemaConstants.Key.RT_STATUS,
+                SchemaConstants.Key.FRT_STATUS,
+                SchemaConstants.Key.MRRT_STATUS
+            };
 
     /**
      * This array defines the platform schema for last request
      * NOTE: These fields must always be listed in the correct order in this array.
      * Failure do so will break the schema.
      */
-    private static final String[] lastRequestPlatformFields = new String[]{
-            SchemaConstants.Key.ALL_TELEMETRY_DATA_SENT
-    };
+    private static final String[] lastRequestPlatformFields =
+            new String[] {SchemaConstants.Key.ALL_TELEMETRY_DATA_SENT};
 
     static boolean isCurrentPlatformField(final String key) {
         return Arrays.asList(currentRequestPlatformFields).contains(key);
@@ -93,7 +92,6 @@ public class SchemaConstants {
     static boolean isLastPlatformField(final String key) {
         return Arrays.asList(lastRequestPlatformFields).contains(key);
     }
-
 
     static String[] getCurrentRequestPlatformFields() {
         return currentRequestPlatformFields;

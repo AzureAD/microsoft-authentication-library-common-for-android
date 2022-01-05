@@ -22,9 +22,9 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.telemetry.adapter;
 
-import lombok.NonNull;
-
 import com.microsoft.identity.common.java.telemetry.observers.ITelemetryDefaultObserver;
+
+import lombok.NonNull;
 
 import java.util.List;
 import java.util.Map;

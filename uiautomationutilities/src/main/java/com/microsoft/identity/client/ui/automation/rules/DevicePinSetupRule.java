@@ -23,14 +23,11 @@
 package com.microsoft.identity.client.ui.automation.rules;
 
 import com.microsoft.identity.client.ui.automation.TestContext;
-import com.microsoft.identity.client.ui.automation.device.settings.BaseSettings;
-import com.microsoft.identity.client.ui.automation.device.settings.ISettings;
-import com.microsoft.identity.client.ui.automation.logging.Logger;
-import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 import com.microsoft.identity.client.ui.automation.broker.BrokerCompanyPortal;
 import com.microsoft.identity.client.ui.automation.broker.BrokerMicrosoftAuthenticator;
 import com.microsoft.identity.client.ui.automation.broker.ITestBroker;
 import com.microsoft.identity.client.ui.automation.device.TestDevice;
+import com.microsoft.identity.client.ui.automation.logging.Logger;
 
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
@@ -56,7 +53,7 @@ import org.junit.runners.model.Statement;
  */
 public class DevicePinSetupRule implements TestRule {
 
-    private final static String TAG = DevicePinSetupRule.class.getSimpleName();
+    private static final String TAG = DevicePinSetupRule.class.getSimpleName();
     static final String PIN = "1234";
 
     private final ITestBroker mBroker;
@@ -82,5 +79,4 @@ public class DevicePinSetupRule implements TestRule {
             }
         };
     }
-
 }

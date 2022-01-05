@@ -32,30 +32,33 @@ import java.util.concurrent.TimeUnit;
 public class ThreadUtilsTests {
     @Test
     public void basicPoolTest() throws Exception {
-        final ExecutorService s = ThreadUtils.getNamedThreadPoolExecutor(1, 10, -1, 5, TimeUnit.SECONDS, "testPool");
-        final Future<String> result = s.submit(new Callable<String>() {
-            @Override
-            public String call() {
-                return Thread.currentThread().getName();
-            }
-        });
+        final ExecutorService s =
+                ThreadUtils.getNamedThreadPoolExecutor(1, 10, -1, 5, TimeUnit.SECONDS, "testPool");
+        final Future<String> result =
+                s.submit(
+                        new Callable<String>() {
+                            @Override
+                            public String call() {
+                                return Thread.currentThread().getName();
+                            }
+                        });
         Assert.assertTrue(result.get().startsWith("testPool"));
         s.shutdownNow();
     }
 
     @Test
     public void capacityOneTest() throws Exception {
-        final ExecutorService s = ThreadUtils.getNamedThreadPoolExecutor(1, 1, 1, 5, TimeUnit.SECONDS, "testPool");
+        final ExecutorService s =
+                ThreadUtils.getNamedThreadPoolExecutor(1, 1, 1, 5, TimeUnit.SECONDS, "testPool");
         final Future<?> result = s.submit(hangThread());
         final Future<?> result2 = s.submit(hangThread());
         boolean caught = false;
         try {
-            s.submit(new Runnable() {
-                @Override
-                public void run() {
-
-                }
-            });
+            s.submit(
+                    new Runnable() {
+                        @Override
+                        public void run() {}
+                    });
         } catch (RejectedExecutionException e) {
             caught = true;
         }
@@ -64,18 +67,19 @@ public class ThreadUtilsTests {
         result2.cancel(true);
         s.shutdownNow();
     }
+
     @Test
     public void capacityZeroTest() throws Exception {
-        final ExecutorService s = ThreadUtils.getNamedThreadPoolExecutor(1, 1, 0, 5, TimeUnit.SECONDS, "testPool");
+        final ExecutorService s =
+                ThreadUtils.getNamedThreadPoolExecutor(1, 1, 0, 5, TimeUnit.SECONDS, "testPool");
         final Future<?> result = s.submit(hangThread());
         boolean caught = false;
         try {
-            s.submit(new Runnable() {
-                @Override
-                public void run() {
-
-                }
-            });
+            s.submit(
+                    new Runnable() {
+                        @Override
+                        public void run() {}
+                    });
         } catch (RejectedExecutionException e) {
             caught = true;
         }

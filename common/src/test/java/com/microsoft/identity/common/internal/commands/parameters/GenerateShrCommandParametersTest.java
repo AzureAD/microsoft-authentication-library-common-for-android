@@ -43,70 +43,101 @@ import java.util.Map;
 
 @RunWith(RobolectricTestRunner.class)
 public class GenerateShrCommandParametersTest {
-    private static final CommandCallback EMPTY_CALLBACK = new CommandCallback() {
-        @Override public void onCancel() {  }
-        @Override public void onError(Object error) {  }
-        @Override public void onTaskCompleted(Object o) {  }
-    };
+    private static final CommandCallback EMPTY_CALLBACK =
+            new CommandCallback() {
+                @Override
+                public void onCancel() {}
 
-    public static final GenerateShrCommandParameters PARAMS_ONE = GenerateShrCommandParameters.builder()
-            .platformComponents(AndroidPlatformComponents.createFromContext(ApplicationProvider.getApplicationContext()))
-            .homeAccountId("One")
-            .popParameters(PopAuthenticationSchemeInternal.builder()
-                    .clientClaims("claims")
-                    .httpMethod("GET")
-                    .url(UrlUtil.makeUrlSilent("https://url"))
-                    .nonce("one")
-                    .clockSkewManager(new ClockSkewManager(new InMemoryStorage<Long>()))
-                    .build())
-            .build();
-    public static final GenerateShrCommandParameters PARAMS_ONE_CLONE = GenerateShrCommandParameters.builder()
-            .platformComponents(AndroidPlatformComponents.createFromContext(ApplicationProvider.getApplicationContext()))
-            .homeAccountId("One")
-            .popParameters(PopAuthenticationSchemeInternal.builder()
-                    .clientClaims("claims")
-                    .httpMethod("GET")
-                    .url(UrlUtil.makeUrlSilent("https://url"))
-                    .nonce("one")
-                    .clockSkewManager(new ClockSkewManager(new InMemoryStorage<Long>()))
-                    .build())
-            .build();
-    public static final GenerateShrCommandParameters PARAMS_TWO = GenerateShrCommandParameters.builder()
-            .platformComponents(AndroidPlatformComponents.createFromContext(ApplicationProvider.getApplicationContext()))
-            .homeAccountId("One")
-            .popParameters(PopAuthenticationSchemeInternal.builder()
-                    .clientClaims("claims")
-                    .httpMethod("GET")
-                    .url(UrlUtil.makeUrlSilent("https://url"))
-                    .nonce("two")
-                    .clockSkewManager(new ClockSkewManager(new InMemoryStorage<Long>()))
-                    .build())
-            .build();
+                @Override
+                public void onError(Object error) {}
+
+                @Override
+                public void onTaskCompleted(Object o) {}
+            };
+
+    public static final GenerateShrCommandParameters PARAMS_ONE =
+            GenerateShrCommandParameters.builder()
+                    .platformComponents(
+                            AndroidPlatformComponents.createFromContext(
+                                    ApplicationProvider.getApplicationContext()))
+                    .homeAccountId("One")
+                    .popParameters(
+                            PopAuthenticationSchemeInternal.builder()
+                                    .clientClaims("claims")
+                                    .httpMethod("GET")
+                                    .url(UrlUtil.makeUrlSilent("https://url"))
+                                    .nonce("one")
+                                    .clockSkewManager(
+                                            new ClockSkewManager(new InMemoryStorage<Long>()))
+                                    .build())
+                    .build();
+    public static final GenerateShrCommandParameters PARAMS_ONE_CLONE =
+            GenerateShrCommandParameters.builder()
+                    .platformComponents(
+                            AndroidPlatformComponents.createFromContext(
+                                    ApplicationProvider.getApplicationContext()))
+                    .homeAccountId("One")
+                    .popParameters(
+                            PopAuthenticationSchemeInternal.builder()
+                                    .clientClaims("claims")
+                                    .httpMethod("GET")
+                                    .url(UrlUtil.makeUrlSilent("https://url"))
+                                    .nonce("one")
+                                    .clockSkewManager(
+                                            new ClockSkewManager(new InMemoryStorage<Long>()))
+                                    .build())
+                    .build();
+    public static final GenerateShrCommandParameters PARAMS_TWO =
+            GenerateShrCommandParameters.builder()
+                    .platformComponents(
+                            AndroidPlatformComponents.createFromContext(
+                                    ApplicationProvider.getApplicationContext()))
+                    .homeAccountId("One")
+                    .popParameters(
+                            PopAuthenticationSchemeInternal.builder()
+                                    .clientClaims("claims")
+                                    .httpMethod("GET")
+                                    .url(UrlUtil.makeUrlSilent("https://url"))
+                                    .nonce("two")
+                                    .clockSkewManager(
+                                            new ClockSkewManager(new InMemoryStorage<Long>()))
+                                    .build())
+                    .build();
 
     @Test
     public void testMappability() throws Exception {
-        GenerateShrCommandParameters commandOne = GenerateShrCommandParameters.builder()
-                .platformComponents(AndroidPlatformComponents.createFromContext(ApplicationProvider.getApplicationContext()))
-                .homeAccountId("One")
-                .popParameters(PopAuthenticationSchemeInternal.builder()
-                        .clientClaims("claims")
-                        .httpMethod("GET")
-                        .url(UrlUtil.makeUrlSilent("https://url"))
-                        .nonce("one")
-                        .clockSkewManager(new ClockSkewManager(new InMemoryStorage<Long>()))
-                        .build())
-                .build();
-        GenerateShrCommandParameters commandTwo = GenerateShrCommandParameters.builder()
-                .platformComponents(AndroidPlatformComponents.createFromContext(ApplicationProvider.getApplicationContext()))
-                .homeAccountId("One")
-                .popParameters(PopAuthenticationSchemeInternal.builder()
-                        .clientClaims("claims")
-                        .httpMethod("GET")
-                        .url(UrlUtil.makeUrlSilent("https://url"))
-                        .nonce("two")
-                        .clockSkewManager(new ClockSkewManager(new InMemoryStorage<Long>()))
-                        .build())
-                .build();
+        GenerateShrCommandParameters commandOne =
+                GenerateShrCommandParameters.builder()
+                        .platformComponents(
+                                AndroidPlatformComponents.createFromContext(
+                                        ApplicationProvider.getApplicationContext()))
+                        .homeAccountId("One")
+                        .popParameters(
+                                PopAuthenticationSchemeInternal.builder()
+                                        .clientClaims("claims")
+                                        .httpMethod("GET")
+                                        .url(UrlUtil.makeUrlSilent("https://url"))
+                                        .nonce("one")
+                                        .clockSkewManager(
+                                                new ClockSkewManager(new InMemoryStorage<Long>()))
+                                        .build())
+                        .build();
+        GenerateShrCommandParameters commandTwo =
+                GenerateShrCommandParameters.builder()
+                        .platformComponents(
+                                AndroidPlatformComponents.createFromContext(
+                                        ApplicationProvider.getApplicationContext()))
+                        .homeAccountId("One")
+                        .popParameters(
+                                PopAuthenticationSchemeInternal.builder()
+                                        .clientClaims("claims")
+                                        .httpMethod("GET")
+                                        .url(UrlUtil.makeUrlSilent("https://url"))
+                                        .nonce("two")
+                                        .clockSkewManager(
+                                                new ClockSkewManager(new InMemoryStorage<Long>()))
+                                        .build())
+                        .build();
 
         Map<CommandParameters, Boolean> map = new HashMap<>();
         map.put(commandOne, true);
@@ -114,6 +145,7 @@ public class GenerateShrCommandParametersTest {
         map.put(commandTwo, true);
         Assert.assertEquals(2, map.size());
     }
+
     @Test
     public void testHashCode_equals() throws Exception {
         Assert.assertEquals(PARAMS_ONE.hashCode(), PARAMS_ONE_CLONE.hashCode());
@@ -128,17 +160,19 @@ public class GenerateShrCommandParametersTest {
     public void testEquals_equals() throws Exception {
         Assert.assertEquals(PARAMS_ONE, PARAMS_ONE_CLONE);
     }
+
     @Test
     public void testEquals_notEqualNull() throws Exception {
         Assert.assertNotEquals(PARAMS_ONE, null);
     }
+
     @Test
     public void testEquals_equalsSame() throws Exception {
         Assert.assertEquals(PARAMS_ONE, PARAMS_ONE);
     }
+
     @Test
     public void testEquals_notEqualDifferenceInNonce() {
         Assert.assertNotEquals(PARAMS_ONE, PARAMS_TWO);
     }
-
 }

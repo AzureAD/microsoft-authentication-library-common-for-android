@@ -23,27 +23,21 @@
 package com.microsoft.identity.common.java.eststelemetry;
 
 import com.microsoft.identity.common.java.commands.ICommand;
-import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
 
 import lombok.Builder;
-import lombok.NonNull;
 
 @Builder
 public class MockCommand implements ICommand<Boolean> {
 
     private String correlationId;
 
-    @Builder.Default
-    private Boolean result = true;
+    @Builder.Default private Boolean result = true;
 
-    @Builder.Default
-    private Boolean isEligibleForEstsTelemetry = true;
+    @Builder.Default private Boolean isEligibleForEstsTelemetry = true;
 
-    @Builder.Default
-    private Boolean isEligibleForCaching = true;
+    @Builder.Default private Boolean isEligibleForCaching = true;
 
-    @Builder.Default
-    private Boolean willReachTokenEndpoint = true;
+    @Builder.Default private Boolean willReachTokenEndpoint = true;
 
     @Override
     public Boolean execute() throws Exception {

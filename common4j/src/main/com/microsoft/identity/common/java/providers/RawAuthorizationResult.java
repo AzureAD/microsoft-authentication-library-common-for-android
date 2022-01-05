@@ -22,25 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.providers;
 
-import com.microsoft.identity.common.java.exception.BaseException;
-import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.java.logging.Logger;
-import com.microsoft.identity.common.java.util.StringUtil;
-import com.microsoft.identity.common.java.util.UrlUtil;
-import com.microsoft.identity.common.java.util.ported.PropertyBag;
-
-import java.io.Serializable;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.Map;
-
-import edu.umd.cs.findbugs.annotations.Nullable;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.experimental.Accessors;
-
 import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.APP_LINK_KEY;
 import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.DEVICE_REGISTRATION_REDIRECT_URI_HOSTNAME;
 import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.REDIRECT_PREFIX;
@@ -49,6 +30,26 @@ import static com.microsoft.identity.common.java.AuthenticationConstants.Browser
 import static com.microsoft.identity.common.java.AuthenticationConstants.Browser.SUB_ERROR_UI_CANCEL;
 import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterFields.RESULT_CODE;
 import static com.microsoft.identity.common.java.AuthenticationConstants.OAuth2.ERROR_SUBCODE;
+
+import com.microsoft.identity.common.java.exception.BaseException;
+import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.logging.Logger;
+import com.microsoft.identity.common.java.util.StringUtil;
+import com.microsoft.identity.common.java.util.UrlUtil;
+import com.microsoft.identity.common.java.util.ported.PropertyBag;
+
+import edu.umd.cs.findbugs.annotations.Nullable;
+
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.experimental.Accessors;
+
+import java.io.Serializable;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Map;
 
 /**
  * Raw results from an Authorization session.
@@ -111,12 +112,12 @@ public class RawAuthorizationResult {
 
         private final int mCode;
 
-        ResultCode(final int code){
+        ResultCode(final int code) {
             mCode = code;
         }
 
-        static ResultCode fromInteger(@Nullable final Integer value){
-            if (value == null){
+        static ResultCode fromInteger(@Nullable final Integer value) {
+            if (value == null) {
                 return ResultCode.UNKNOWN;
             }
 
@@ -132,24 +133,21 @@ public class RawAuthorizationResult {
 
     private final ResultCode mResultCode;
 
-    @Nullable
-    private final URI mAuthorizationFinalUri;
+    @Nullable private final URI mAuthorizationFinalUri;
 
-    @Nullable
-    private final BaseException mException;
+    @Nullable private final BaseException mException;
 
     @NonNull
     public static RawAuthorizationResult fromResultCode(final ResultCode resultCode) {
-        if (resultCode == ResultCode.NON_OAUTH_ERROR ||
-                resultCode == ResultCode.COMPLETED ||
-                resultCode == ResultCode.DEVICE_REGISTRATION_REQUIRED ||
-                resultCode == ResultCode.BROKER_INSTALLATION_TRIGGERED) {
-            throw new IllegalArgumentException("Result code " + resultCode + " should be set via other factory methods");
+        if (resultCode == ResultCode.NON_OAUTH_ERROR
+                || resultCode == ResultCode.COMPLETED
+                || resultCode == ResultCode.DEVICE_REGISTRATION_REQUIRED
+                || resultCode == ResultCode.BROKER_INSTALLATION_TRIGGERED) {
+            throw new IllegalArgumentException(
+                    "Result code " + resultCode + " should be set via other factory methods");
         }
 
-        return RawAuthorizationResult.builder()
-                .resultCode(resultCode)
-                .build();
+        return RawAuthorizationResult.builder().resultCode(resultCode).build();
     }
 
     @NonNull
@@ -159,9 +157,11 @@ public class RawAuthorizationResult {
         }
         return RawAuthorizationResult.builder()
                 .resultCode(ResultCode.NON_OAUTH_ERROR)
-                .exception(new BaseException(ClientException.UNKNOWN_ERROR,
-                        "Unknown error with class: " + e.getClass().getSimpleName(),
-                        e))
+                .exception(
+                        new BaseException(
+                                ClientException.UNKNOWN_ERROR,
+                                "Unknown error with class: " + e.getClass().getSimpleName(),
+                                e))
                 .build();
     }
 
@@ -182,8 +182,9 @@ public class RawAuthorizationResult {
                     .authorizationFinalUri(uri)
                     .build();
         } catch (final URISyntaxException e) {
-            return fromException(new ClientException(ClientException.MALFORMED_URL,
-                    "Failed to parse redirect URL", e));
+            return fromException(
+                    new ClientException(
+                            ClientException.MALFORMED_URL, "Failed to parse redirect URL", e));
         }
     }
 
@@ -205,20 +206,28 @@ public class RawAuthorizationResult {
                 .build();
     }
 
-    private static ResultCode getResultCodeFromFinalRedirectUri(@NonNull final URI uri) throws URISyntaxException {
+    private static ResultCode getResultCodeFromFinalRedirectUri(@NonNull final URI uri)
+            throws URISyntaxException {
         final Map<String, String> parameters = UrlUtil.getParameters(uri);
 
         if (REDIRECT_PREFIX.equalsIgnoreCase(uri.getScheme())) {
-            // i.e. (Browser) msauth://com.msft.identity.client.sample.local/1wIqXSqBj7w%2Bh11ZifsnqwgyKrY%3D?wpj=1&username=idlab1%40msidlab4.onmicrosoft.com&app_link=https%3a%2f%2fplay.google.com%2fstore%2fapps%2fdetails%3fid%3dcom.azure.authenticator
-            //      (WebView) msauth://wpj/?username=idlab1%40msidlab4.onmicrosoft.com&app_link=https%3a%2f%2fplay.google.com%2fstore%2fapps%2fdetails%3fid%3dcom.azure.authenticator%26referrer%3dcom.msft.identity.client.sample.local
+            // i.e. (Browser)
+            // msauth://com.msft.identity.client.sample.local/1wIqXSqBj7w%2Bh11ZifsnqwgyKrY%3D?wpj=1&username=idlab1%40msidlab4.onmicrosoft.com&app_link=https%3a%2f%2fplay.google.com%2fstore%2fapps%2fdetails%3fid%3dcom.azure.authenticator
+            //      (WebView)
+            // msauth://wpj/?username=idlab1%40msidlab4.onmicrosoft.com&app_link=https%3a%2f%2fplay.google.com%2fstore%2fapps%2fdetails%3fid%3dcom.azure.authenticator%26referrer%3dcom.msft.identity.client.sample.local
             if (parameters.containsKey(APP_LINK_KEY)) {
-                Logger.info(TAG, "Return to caller with BROWSER_CODE_WAIT_FOR_BROKER_INSTALL, and waiting for result.");
+                Logger.info(
+                        TAG,
+                        "Return to caller with BROWSER_CODE_WAIT_FOR_BROKER_INSTALL, and waiting for result.");
                 return ResultCode.BROKER_INSTALLATION_TRIGGERED;
             }
 
-            // i.e. (both Browser and WebView) msauth://wpj/?username=idlab1%40msidlab4.onmicrosoft.com&client_info=[SOME_GUID]
+            // i.e. (both Browser and WebView)
+            // msauth://wpj/?username=idlab1%40msidlab4.onmicrosoft.com&client_info=[SOME_GUID]
             if (DEVICE_REGISTRATION_REDIRECT_URI_HOSTNAME.equalsIgnoreCase(uri.getHost())) {
-                Logger.info(TAG, " Device needs to be registered, sending BROWSER_CODE_DEVICE_REGISTER");
+                Logger.info(
+                        TAG,
+                        " Device needs to be registered, sending BROWSER_CODE_DEVICE_REGISTER");
                 return ResultCode.DEVICE_REGISTRATION_REQUIRED;
             }
         }

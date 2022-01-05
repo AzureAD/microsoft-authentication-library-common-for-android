@@ -28,8 +28,8 @@ import com.microsoft.identity.common.java.dto.AccessTokenRecord;
 import com.microsoft.identity.common.java.dto.AccountRecord;
 import com.microsoft.identity.common.java.dto.IdTokenRecord;
 import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
-import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
+import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.java.providers.oauth2.RefreshToken;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResponse;
 
@@ -38,12 +38,12 @@ import com.microsoft.identity.common.java.providers.oauth2.TokenResponse;
  */
 // Suppressing rawtype warnings due to the generic type OAuth2Strategy and AuthorizationRequest
 @SuppressWarnings(WarningType.rawtype_warning)
-public interface IAccountCredentialAdapter
-        <T extends OAuth2Strategy,
-                U extends AuthorizationRequest,
-                V extends TokenResponse,
-                W extends BaseAccount,
-                X extends RefreshToken> {
+public interface IAccountCredentialAdapter<
+        T extends OAuth2Strategy,
+        U extends AuthorizationRequest,
+        V extends TokenResponse,
+        W extends BaseAccount,
+        X extends RefreshToken> {
 
     /**
      * Constructs an Account.

@@ -48,11 +48,9 @@ public class TokenRequestLatch extends CountDownLatch {
         try {
             Assert.assertTrue(
                     "Timed out while waiting for token request to complete",
-                    this.await(tokenRequestTimeout.getTime(), tokenRequestTimeout.getTimeUnit())
-            );
+                    this.await(tokenRequestTimeout.getTime(), tokenRequestTimeout.getTimeUnit()));
         } catch (final InterruptedException e) {
             throw new AssertionError(e);
         }
     }
-
 }

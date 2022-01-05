@@ -22,8 +22,6 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.rules;
 
-import android.util.Log;
-
 import com.microsoft.identity.client.ui.automation.app.App;
 import com.microsoft.identity.client.ui.automation.app.IApp;
 import com.microsoft.identity.client.ui.automation.installer.LocalApkInstaller;
@@ -67,10 +65,16 @@ public class CopyPreInstalledApkRule implements TestRule {
                     Logger.i(TAG, "Attempting to copy APK for " + ((App) app).getAppName());
                     if (app.isInstalled()) {
                         Logger.i(TAG, "Detected pre-installed app: " + ((App) app).getAppName());
-                        Logger.i(TAG, "Proceeding with copying apk for: " + ((App) app).getAppName());
+                        Logger.i(
+                                TAG,
+                                "Proceeding with copying apk for: " + ((App) app).getAppName());
                         app.copyApk(getDestApkFileName(app));
                     } else {
-                        Logger.i(TAG, "Can't copy APK for: " + ((App) app).getAppName() + " as it is not pre-installed");
+                        Logger.i(
+                                TAG,
+                                "Can't copy APK for: "
+                                        + ((App) app).getAppName()
+                                        + " as it is not pre-installed");
                     }
                 }
 
@@ -86,5 +90,4 @@ public class CopyPreInstalledApkRule implements TestRule {
             return LocalApkInstaller.LOCAL_APK_PATH_PREFIX + app.getClass().getSimpleName();
         }
     }
-
 }

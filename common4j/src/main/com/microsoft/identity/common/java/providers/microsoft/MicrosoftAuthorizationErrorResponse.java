@@ -53,22 +53,26 @@ public class MicrosoftAuthorizationErrorResponse extends AuthorizationErrorRespo
     /**
      * Error string to return for invalid response from Authorization server.
      */
-    public static final String AUTHORIZATION_SERVER_INVALID_RESPONSE = "The authorization server returned an invalid response.";
+    public static final String AUTHORIZATION_SERVER_INVALID_RESPONSE =
+            "The authorization server returned an invalid response.";
 
     /**
      * Error description string to return if the user cancelled the flow.
      */
-    public static final String USER_CANCELLED_FLOW = "User pressed device back button to cancel the flow.";
+    public static final String USER_CANCELLED_FLOW =
+            "User pressed device back button to cancel the flow.";
 
     /**
      * Error description string to return if the user cancelled the flow.
      */
-    public static final String SDK_CANCELLED_FLOW = "Sdk cancelled the auth flow as the app launched a new interactive auth request.";
+    public static final String SDK_CANCELLED_FLOW =
+            "Sdk cancelled the auth flow as the app launched a new interactive auth request.";
 
     /**
      * Error string to return if the state parameter from authorization endpoint doesn't match with the request state.
      */
-    public static final String STATE_NOT_THE_SAME = "Returned state from authorize endpoint is not the same as the one sent";
+    public static final String STATE_NOT_THE_SAME =
+            "Returned state from authorize endpoint is not the same as the one sent";
 
     /**
      * Error string to return if the state parameter is not returned from authorization endpoint.
@@ -89,19 +93,25 @@ public class MicrosoftAuthorizationErrorResponse extends AuthorizationErrorRespo
      * Error string to return if the broker is not installed.
      */
     public static final String BROKER_NEEDS_TO_BE_INSTALLED = "broker_needs_to_be_installed";
-    public static final String BROKER_NEEDS_TO_BE_INSTALLED_ERROR_DESCRIPTION= "Device needs to have broker installed";
+
+    public static final String BROKER_NEEDS_TO_BE_INSTALLED_ERROR_DESCRIPTION =
+            "Device needs to have broker installed";
 
     /**
      * Error string to indicate that the device needs to be registered
      */
     public static final String DEVICE_REGISTRATION_NEEDED = "device_registration_needed";
-    public static final String DEVICE_REGISTRATION_NEEDED_ERROR_DESCRIPTION = "Device needs to be registered to access the resource";
+
+    public static final String DEVICE_REGISTRATION_NEEDED_ERROR_DESCRIPTION =
+            "Device needs to be registered to access the resource";
 
     /**
      * Error string to indicate that the device needs to be managed
      */
     public static final String DEVICE_NEEDS_TO_BE_MANAGED = "device_needs_to_be_managed";
-    public static final String DEVICE_NEEDS_TO_BE_MANAGED_ERROR_DESCRIPTION = "Device needs to be managed to access the resource";
+
+    public static final String DEVICE_NEEDS_TO_BE_MANAGED_ERROR_DESCRIPTION =
+            "Device needs to be managed to access the resource";
 
     /**
      * Constructor of {@link MicrosoftAuthorizationErrorResponse}.

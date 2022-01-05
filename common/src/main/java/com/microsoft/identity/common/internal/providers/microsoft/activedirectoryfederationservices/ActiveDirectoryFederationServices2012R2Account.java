@@ -24,9 +24,9 @@ package com.microsoft.identity.common.internal.providers.microsoft.activedirecto
 
 import com.microsoft.identity.common.java.BaseAccount;
 
-import java.util.List;
-
 import lombok.EqualsAndHashCode;
+
+import java.util.List;
 
 /**
  * The Active Directory Federation Services 2012 R2 Account Object

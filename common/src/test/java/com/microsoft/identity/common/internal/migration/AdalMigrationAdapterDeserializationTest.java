@@ -22,6 +22,8 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.migration;
 
+import static org.junit.Assert.assertEquals;
+
 import android.content.Context;
 
 import androidx.annotation.NonNull;
@@ -29,7 +31,6 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.google.gson.Gson;
 import com.microsoft.identity.common.adal.internal.cache.ADALTokenCacheItem;
-
 
 import org.junit.After;
 import org.junit.Before;
@@ -40,8 +41,6 @@ import org.robolectric.ParameterizedRobolectricTestRunner;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-
-import static org.junit.Assert.assertEquals;
 
 @RunWith(ParameterizedRobolectricTestRunner.class)
 public class AdalMigrationAdapterDeserializationTest {
@@ -63,23 +62,23 @@ public class AdalMigrationAdapterDeserializationTest {
     @ParameterizedRobolectricTestRunner.Parameters(name = "{0}")
     public static Iterable<Object[]> testParams() {
         return Arrays.asList(
-                new Object[]{
-                        "Single Item Valid Input Test",
-                        getAdalCacheItemInput(),
-                        getDeserializationValidator()
+                new Object[] {
+                    "Single Item Valid Input Test",
+                    getAdalCacheItemInput(),
+                    getDeserializationValidator()
                 },
-                new Object[]{
-                        "Multi-Item Input Test with Malformed JSON",
-                        getMalformedCacheItemInput(),
-                        getDeserializationValidator()
-                }
-        );
+                new Object[] {
+                    "Multi-Item Input Test with Malformed JSON",
+                    getMalformedCacheItemInput(),
+                    getDeserializationValidator()
+                });
     }
 
     @SuppressWarnings("unused")
-    public AdalMigrationAdapterDeserializationTest(@NonNull final String testName,
-                                                   @NonNull final Map<String, String> deserializationInput,
-                                                   @NonNull final DeserializationValidator validator) {
+    public AdalMigrationAdapterDeserializationTest(
+            @NonNull final String testName,
+            @NonNull final Map<String, String> deserializationInput,
+            @NonNull final DeserializationValidator validator) {
         mDeserializationInput = deserializationInput;
         mValidator = validator;
     }
@@ -97,9 +96,7 @@ public class AdalMigrationAdapterDeserializationTest {
 
     @Test
     public void executeTest() {
-        mValidator.onDeserializationFinished(
-                mMigrationAdapter.deserialize(mDeserializationInput)
-        );
+        mValidator.onDeserializationFinished(mMigrationAdapter.deserialize(mDeserializationInput));
     }
 
     private static DeserializationValidator getDeserializationValidator() {

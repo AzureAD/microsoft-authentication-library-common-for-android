@@ -49,9 +49,9 @@ public class FactoryResetChromeRule implements TestRule {
 
     public static final String TAG = FactoryResetChromeRule.class.getSimpleName();
 
-    private final static int CHROME_MAJOR_VERSION_SUITABLE_FOR_AUTOMATION = 74;
-    private final static int WEB_VIEW_MAJOR_VERSION_SUITABLE_FOR_AUTOMATION = 74;
-    private final static String WEB_VIEW_PACKAGE_NAME = "com.google.android.webview";
+    private static final int CHROME_MAJOR_VERSION_SUITABLE_FOR_AUTOMATION = 74;
+    private static final int WEB_VIEW_MAJOR_VERSION_SUITABLE_FOR_AUTOMATION = 74;
+    private static final String WEB_VIEW_PACKAGE_NAME = "com.google.android.webview";
 
     @Override
     public Statement apply(final Statement base, Description description) {
@@ -59,10 +59,13 @@ public class FactoryResetChromeRule implements TestRule {
             @Override
             public void evaluate() throws Throwable {
                 // validate Chrome version is suitable for automation
-                validatePackageSuitableForAutomation(BrowserChrome.CHROME_PACKAGE_NAME, CHROME_MAJOR_VERSION_SUITABLE_FOR_AUTOMATION);
+                validatePackageSuitableForAutomation(
+                        BrowserChrome.CHROME_PACKAGE_NAME,
+                        CHROME_MAJOR_VERSION_SUITABLE_FOR_AUTOMATION);
 
                 // validate WebView version is suitable for automation
-                validatePackageSuitableForAutomation(WEB_VIEW_PACKAGE_NAME, WEB_VIEW_MAJOR_VERSION_SUITABLE_FOR_AUTOMATION);
+                validatePackageSuitableForAutomation(
+                        WEB_VIEW_PACKAGE_NAME, WEB_VIEW_MAJOR_VERSION_SUITABLE_FOR_AUTOMATION);
 
                 // proceed with the test case
                 base.evaluate();
@@ -89,24 +92,38 @@ public class FactoryResetChromeRule implements TestRule {
         }
     }
 
-    private void validatePackageSuitableForAutomation(final String packageName,
-                                                      final int majorVersionSuitableForAutomation) {
+    private void validatePackageSuitableForAutomation(
+            final String packageName, final int majorVersionSuitableForAutomation) {
         final String packageVersion = getPackageMajorVersion(packageName);
-        if (!TextUtils.isEmpty(packageVersion) &&
-                Integer.parseInt(packageVersion) > majorVersionSuitableForAutomation) {
-            Logger.w(TAG, packageName + " version on the device is higher than the known version suitable for automation. " +
-                    "We are going to attempt to factory reset this package and hope that it will give us the desired version.");
+        if (!TextUtils.isEmpty(packageVersion)
+                && Integer.parseInt(packageVersion) > majorVersionSuitableForAutomation) {
+            Logger.w(
+                    TAG,
+                    packageName
+                            + " version on the device is higher than the known version suitable for automation. "
+                            + "We are going to attempt to factory reset this package and hope that it will give us the desired version.");
             // adb uninstall does factory reset for default apps
             AdbShellUtils.removePackage(packageName);
 
             final String packageVersionAfterDowngrade = getPackageMajorVersion(packageName);
-            Logger.i(TAG, packageName + " version after factory reset = " + packageVersionAfterDowngrade);
+            Logger.i(
+                    TAG,
+                    packageName + " version after factory reset = " + packageVersionAfterDowngrade);
 
-            if (Integer.parseInt(packageVersionAfterDowngrade) > majorVersionSuitableForAutomation) {
-                Logger.w(TAG, packageName + " version after factory reset is still higher " +
-                        "than the currently supported version: " + majorVersionSuitableForAutomation +
-                        " - We are just going to fail the test at this point.");
-                throw new AssertionError("Unsupported version " + packageVersionAfterDowngrade + " for package: " + packageName);
+            if (Integer.parseInt(packageVersionAfterDowngrade)
+                    > majorVersionSuitableForAutomation) {
+                Logger.w(
+                        TAG,
+                        packageName
+                                + " version after factory reset is still higher "
+                                + "than the currently supported version: "
+                                + majorVersionSuitableForAutomation
+                                + " - We are just going to fail the test at this point.");
+                throw new AssertionError(
+                        "Unsupported version "
+                                + packageVersionAfterDowngrade
+                                + " for package: "
+                                + packageName);
             }
         }
     }

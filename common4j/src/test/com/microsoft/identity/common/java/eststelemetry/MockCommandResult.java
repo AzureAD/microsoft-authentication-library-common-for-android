@@ -10,8 +10,7 @@ public class MockCommandResult<T> implements ICommandResult {
     private String correlationId;
     private ResultStatus resultStatus;
 
-    @Builder.Default
-    private T result = null;
+    @Builder.Default private T result = null;
 
     @Override
     public String getCorrelationId() {

@@ -60,7 +60,7 @@ public class ADALUserInfo {
         mPasswordExpiresOn = account.getPasswordExpiresOn();
     }
 
-    public ADALUserInfo (ILocalAuthenticationResult localAuthenticationResult){
+    public ADALUserInfo(ILocalAuthenticationResult localAuthenticationResult) {
         mUniqueId = localAuthenticationResult.getUniqueId();
         mDisplayableId = localAuthenticationResult.getAccountRecord().getUsername();
         mGivenName = localAuthenticationResult.getAccountRecord().getFirstName();
@@ -77,8 +77,12 @@ public class ADALUserInfo {
      * @param identityProvider IdentityProvider for the userInfo.
      * @param displayableId    Displayable for the userInfo.
      */
-    public ADALUserInfo(String userid, String givenName, String familyName, String identityProvider,
-                    String displayableId) {
+    public ADALUserInfo(
+            String userid,
+            String givenName,
+            String familyName,
+            String identityProvider,
+            String displayableId) {
         mUniqueId = userid;
         mGivenName = givenName;
         mFamilyName = familyName;
@@ -163,21 +167,33 @@ public class ADALUserInfo {
         return DateExtensions.createCopy(mPasswordExpiresOn);
     }
 
-    //CHECKSTYLE:OFF
+    // CHECKSTYLE:OFF
     // This method is generated. Checkstyle and/or PMD has been disabled.
     // This method *must* be regenerated if the class' structural definition changes through the
     // addition/subtraction of fields.
     @Override
     public String toString() {
-        return "ADALUserInfo{" +
-                "mUniqueId='" + mUniqueId + '\'' +
-                ", mDisplayableId='" + mDisplayableId + '\'' +
-                ", mGivenName='" + mGivenName + '\'' +
-                ", mFamilyName='" + mFamilyName + '\'' +
-                ", mIdentityProvider='" + mIdentityProvider + '\'' +
-                ", mPasswordChangeUrl=" + mPasswordChangeUrl +
-                ", mPasswordExpiresOn=" + mPasswordExpiresOn +
-                '}';
+        return "ADALUserInfo{"
+                + "mUniqueId='"
+                + mUniqueId
+                + '\''
+                + ", mDisplayableId='"
+                + mDisplayableId
+                + '\''
+                + ", mGivenName='"
+                + mGivenName
+                + '\''
+                + ", mFamilyName='"
+                + mFamilyName
+                + '\''
+                + ", mIdentityProvider='"
+                + mIdentityProvider
+                + '\''
+                + ", mPasswordChangeUrl="
+                + mPasswordChangeUrl
+                + ", mPasswordExpiresOn="
+                + mPasswordExpiresOn
+                + '}';
     }
-    //CHECKSTYLE:ON
+    // CHECKSTYLE:ON
 }

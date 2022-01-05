@@ -22,22 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.providers.oauth2;
 
-import com.microsoft.identity.common.java.exception.ClientException;
-
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
-
-import java.io.UnsupportedEncodingException;
-import java.net.MalformedURLException;
-import java.net.URISyntaxException;
-import java.util.AbstractMap;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import static com.microsoft.identity.common.java.providers.Constants.MOCK_CLAIMS;
 import static com.microsoft.identity.common.java.providers.Constants.MOCK_CLAIMS_ENCODED;
 import static com.microsoft.identity.common.java.providers.Constants.MOCK_CLIENT_ID;
@@ -55,12 +39,20 @@ import static com.microsoft.identity.common.java.providers.Constants.MOCK_STATE;
 import static com.microsoft.identity.common.java.providers.Constants.MOCK_VALUE_1;
 import static com.microsoft.identity.common.java.providers.Constants.MOCK_VALUE_2;
 
+import com.microsoft.identity.common.java.exception.ClientException;
+
+import org.junit.Assert;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
+
 @RunWith(JUnit4.class)
 public class AuthorizationRequestTests {
     @Test
     public void testCreateUriFromEmptyAuthorizationRequest() throws ClientException {
         final MockAuthorizationRequest.Builder builder = new MockAuthorizationRequest.Builder();
-        Assert.assertEquals(MockAuthorizationRequest.MOCK_AUTH_ENDPOINT + "?response_type=code",
+        Assert.assertEquals(
+                MockAuthorizationRequest.MOCK_AUTH_ENDPOINT + "?response_type=code",
                 builder.build().getAuthorizationRequestAsHttpRequest().toString());
     }
 
@@ -68,28 +60,42 @@ public class AuthorizationRequestTests {
     // by comparing the resulted URL by-character.
     @Test
     public void testCreateUriFromAuthorizationRequest() throws ClientException {
-        final MockAuthorizationRequest request = new MockAuthorizationRequest.Builder()
-                .setClientId(MOCK_CLIENT_ID)
-                .setClaims(MOCK_CLAIMS)
-                .setExtraQueryParams(MOCK_EXTRA_QUERY_PARAMS)
-                .setScope(MOCK_SCOPE)
-                .setRedirectUri(MOCK_REDIRECT_URI)
-                .setRequestHeaders(MOCK_REQUEST_HEADERS)            // Shouldn't be in the URI.
-                .setResponseType(MOCK_RESPONSE_TYPE)
-                .setState(MOCK_STATE)
-                .setWebViewZoomControlsEnabled(true)
-                .setWebViewZoomEnabled(true)
-                .build();
+        final MockAuthorizationRequest request =
+                new MockAuthorizationRequest.Builder()
+                        .setClientId(MOCK_CLIENT_ID)
+                        .setClaims(MOCK_CLAIMS)
+                        .setExtraQueryParams(MOCK_EXTRA_QUERY_PARAMS)
+                        .setScope(MOCK_SCOPE)
+                        .setRedirectUri(MOCK_REDIRECT_URI)
+                        .setRequestHeaders(MOCK_REQUEST_HEADERS) // Shouldn't be in the URI.
+                        .setResponseType(MOCK_RESPONSE_TYPE)
+                        .setState(MOCK_STATE)
+                        .setWebViewZoomControlsEnabled(true)
+                        .setWebViewZoomEnabled(true)
+                        .build();
 
-        Assert.assertEquals(MockAuthorizationRequest.MOCK_AUTH_ENDPOINT +
-                        "?response_type=" + MOCK_RESPONSE_TYPE +
-                        "&client_id=" + MOCK_CLIENT_ID +
-                        "&redirect_uri=" + MOCK_REDIRECT_URI +
-                        "&state=" + MOCK_STATE +
-                        "&scope=" + MOCK_SCOPE_ENCODED +
-                        "&claims=" + MOCK_CLAIMS_ENCODED +
-                        "&" + MOCK_QUERY_1 + "=" + MOCK_VALUE_1 +
-                        "&" + MOCK_QUERY_2 + "=" + MOCK_VALUE_2,
+        Assert.assertEquals(
+                MockAuthorizationRequest.MOCK_AUTH_ENDPOINT
+                        + "?response_type="
+                        + MOCK_RESPONSE_TYPE
+                        + "&client_id="
+                        + MOCK_CLIENT_ID
+                        + "&redirect_uri="
+                        + MOCK_REDIRECT_URI
+                        + "&state="
+                        + MOCK_STATE
+                        + "&scope="
+                        + MOCK_SCOPE_ENCODED
+                        + "&claims="
+                        + MOCK_CLAIMS_ENCODED
+                        + "&"
+                        + MOCK_QUERY_1
+                        + "="
+                        + MOCK_VALUE_1
+                        + "&"
+                        + MOCK_QUERY_2
+                        + "="
+                        + MOCK_VALUE_2,
                 request.getAuthorizationRequestAsHttpRequest().toString());
 
         Assert.assertEquals(2, request.getRequestHeaders().size());

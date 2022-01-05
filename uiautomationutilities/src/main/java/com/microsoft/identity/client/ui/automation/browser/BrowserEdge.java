@@ -34,16 +34,12 @@ import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.AadP
 import com.microsoft.identity.client.ui.automation.logging.Logger;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
-import org.junit.Assert;
-
-import static org.junit.Assert.fail;
-
 /**
  * A model for interacting with the Microsoft Edge Browser App during UI Test.
  */
 public class BrowserEdge extends App implements IBrowser {
 
-    private final static String TAG = BrowserEdge.class.getSimpleName();
+    private static final String TAG = BrowserEdge.class.getSimpleName();
     private static final String EDGE_PACKAGE_NAME = "com.microsoft.emmx";
     private static final String EDGE_APP_NAME = "Microsoft Edge";
 
@@ -62,10 +58,10 @@ public class BrowserEdge extends App implements IBrowser {
         sleep(); // need to use sleep due to Edge animations
         // cancel personalization
         UiAutomatorUtils.handleButtonClick("com.microsoft.emmx:id/fre_share_not_now");
-        sleep();// need to use sleep due to Edge animations
+        sleep(); // need to use sleep due to Edge animations
         // avoid setting default
         UiAutomatorUtils.handleButtonClick("com.microsoft.emmx:id/no");
-        sleep();// need to use sleep due to Edge animations
+        sleep(); // need to use sleep due to Edge animations
     }
 
     public void navigateTo(@NonNull final String url) {
@@ -73,9 +69,8 @@ public class BrowserEdge extends App implements IBrowser {
         //  Click on the search bar in the browser UI
         UiAutomatorUtils.handleButtonClick("com.microsoft.emmx:id/search_box_text");
 
-        final UiObject inputField = UiAutomatorUtils.obtainUiObjectWithResourceId(
-                "com.microsoft.emmx:id/url_bar"
-        );
+        final UiObject inputField =
+                UiAutomatorUtils.obtainUiObjectWithResourceId("com.microsoft.emmx:id/url_bar");
 
         try {
             // enter the URL
@@ -84,8 +79,7 @@ public class BrowserEdge extends App implements IBrowser {
             throw new AssertionError(e);
         }
 
-        final UiDevice device =
-                UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+        final UiDevice device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
         // press enter on the Keyboard
         device.pressEnter();
@@ -100,9 +94,10 @@ public class BrowserEdge extends App implements IBrowser {
         }
     }
 
-    public void signIn(@NonNull final String username,
-                       @NonNull final String password,
-                       @NonNull final FirstPartyAppPromptHandlerParameters promptHandlerParameters) {
+    public void signIn(
+            @NonNull final String username,
+            @NonNull final String password,
+            @NonNull final FirstPartyAppPromptHandlerParameters promptHandlerParameters) {
         // The Sign In UI in Edge is different depending on if account(s) are in TSL
         try {
             if (promptHandlerParameters.isExpectingProvidedAccountInTSL()) {
@@ -116,19 +111,21 @@ public class BrowserEdge extends App implements IBrowser {
 
                 Logger.i(TAG, "Handle Sign-In Prompt for account which is expected to be in TSL..");
                 // handle prompt
-                final AadPromptHandler aadPromptHandler = new AadPromptHandler(promptHandlerParameters);
+                final AadPromptHandler aadPromptHandler =
+                        new AadPromptHandler(promptHandlerParameters);
                 aadPromptHandler.handlePrompt(username, password);
 
                 handleFirstRun();
             } else if (promptHandlerParameters.isExpectingNonZeroAccountsInTSL()) {
-                Logger.i(TAG, "Sign-In on the browser if given account is not in TSL but others could be..");
+                Logger.i(
+                        TAG,
+                        "Sign-In on the browser if given account is not in TSL but others could be..");
                 // This case handles UI when our account is not in TSL, however, there are other
                 // accounts in TSL
 
                 // Click sign in with another account
-                final UiObject signInWithAnotherAccount = UiAutomatorUtils.obtainUiObjectWithText(
-                        "Sign in with another account"
-                );
+                final UiObject signInWithAnotherAccount =
+                        UiAutomatorUtils.obtainUiObjectWithText("Sign in with another account");
 
                 signInWithAnotherAccount.click();
 
@@ -142,15 +139,16 @@ public class BrowserEdge extends App implements IBrowser {
             throw new AssertionError(e);
         }
 
-        //todo implement MSA sign in for Microsoft Edge
+        // todo implement MSA sign in for Microsoft Edge
     }
 
-    private void signInWithWorkOrSchoolAccount(@NonNull final String username,
-                                               @NonNull final String password,
-                                               @NonNull final FirstPartyAppPromptHandlerParameters promptHandlerParameters) throws UiObjectNotFoundException {
-        final UiObject signInWithWorkAccountBtn = UiAutomatorUtils.obtainUiObjectWithText(
-                "Sign in with a work or school account"
-        );
+    private void signInWithWorkOrSchoolAccount(
+            @NonNull final String username,
+            @NonNull final String password,
+            @NonNull final FirstPartyAppPromptHandlerParameters promptHandlerParameters)
+            throws UiObjectNotFoundException {
+        final UiObject signInWithWorkAccountBtn =
+                UiAutomatorUtils.obtainUiObjectWithText("Sign in with a work or school account");
 
         // click Sign In with work or school account btn
         signInWithWorkAccountBtn.click();

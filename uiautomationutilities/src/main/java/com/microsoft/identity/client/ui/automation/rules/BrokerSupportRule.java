@@ -22,8 +22,6 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.rules;
 
-import android.util.Log;
-
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.client.ui.automation.annotations.SupportedBrokers;
@@ -49,7 +47,7 @@ import java.util.List;
  */
 public class BrokerSupportRule implements TestRule {
 
-    private final static String TAG = BrokerSupportRule.class.getSimpleName();
+    private static final String TAG = BrokerSupportRule.class.getSimpleName();
 
     private final ITestBroker mBroker;
 
@@ -63,23 +61,27 @@ public class BrokerSupportRule implements TestRule {
             @Override
             public void evaluate() throws Throwable {
                 Logger.i(TAG, "Applying rule....");
-                SupportedBrokers supportedBrokersAnnotation = description.getAnnotation(SupportedBrokers.class);
+                SupportedBrokers supportedBrokersAnnotation =
+                        description.getAnnotation(SupportedBrokers.class);
 
                 if (supportedBrokersAnnotation == null) {
                     Logger.i(TAG, "Does not Received any supported broker annotation..");
                     // if the test didn't have the SupportedBrokers annotation, then we see if the
                     // class had that annotation and we try to honor that
-                    supportedBrokersAnnotation = description.getTestClass().getAnnotation(SupportedBrokers.class);
+                    supportedBrokersAnnotation =
+                            description.getTestClass().getAnnotation(SupportedBrokers.class);
                 }
 
                 if (supportedBrokersAnnotation != null) {
                     final List<Class<? extends ITestBroker>> supportedBrokerClasses =
                             Arrays.asList(supportedBrokersAnnotation.brokers());
-                    Logger.i(TAG, "Received supported broker annotation with value: " + supportedBrokerClasses.toString());
+                    Logger.i(
+                            TAG,
+                            "Received supported broker annotation with value: "
+                                    + supportedBrokerClasses.toString());
                     Assume.assumeTrue(
                             "Ignoring test as not applicable with supplied broker",
-                            supportedBrokerClasses.contains(mBroker.getClass())
-                    );
+                            supportedBrokerClasses.contains(mBroker.getClass()));
                 }
 
                 base.evaluate();

@@ -30,7 +30,6 @@ import android.os.Build;
 /**
  * Wrapper class for UsageStatsManager.
  */
-
 public class UsageStatsManagerWrapper {
 
     private static UsageStatsManagerWrapper sInstance;
@@ -64,6 +63,7 @@ public class UsageStatsManagerWrapper {
      */
     @TargetApi(Build.VERSION_CODES.M)
     public boolean isAppInactive(final Context connectionContext) {
-        return ((UsageStatsManager) connectionContext.getSystemService(Context.USAGE_STATS_SERVICE)).isAppInactive(connectionContext.getPackageName());
+        return ((UsageStatsManager) connectionContext.getSystemService(Context.USAGE_STATS_SERVICE))
+                .isAppInactive(connectionContext.getPackageName());
     }
 }

@@ -22,8 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.providers.oauth2;
 
-import lombok.NonNull;
-
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.exception.ServiceException;
 import com.microsoft.identity.common.java.logging.Logger;
@@ -32,12 +30,13 @@ import com.nimbusds.jwt.JWT;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.JWTParser;
 
+import lombok.EqualsAndHashCode;
+import lombok.NonNull;
+
 import java.text.ParseException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-
-import lombok.EqualsAndHashCode;
 
 /**
  * Represents the OpenID Connect Id Token.
@@ -222,10 +221,13 @@ public class IDToken {
      * @return Token claims in Map<String, String>.
      */
     public Map<String, ?> getTokenClaims() {
-        return mTokenClaims == null ? Collections.<String, Object>emptyMap() : Collections.unmodifiableMap(mTokenClaims);
+        return mTokenClaims == null
+                ? Collections.<String, Object>emptyMap()
+                : Collections.unmodifiableMap(mTokenClaims);
     }
 
-    public static Map<String, ?> parseJWT(@NonNull final String rawIdToken) throws ServiceException {
+    public static Map<String, ?> parseJWT(@NonNull final String rawIdToken)
+            throws ServiceException {
         final String methodName = ":getClaims(String)";
 
         final Map<String, Object> result = new HashMap<>();
@@ -235,16 +237,11 @@ public class IDToken {
             final JWTClaimsSet claimsSet = jwt.getJWTClaimsSet();
             result.putAll(claimsSet.getClaims());
         } catch (ParseException e) {
-            Logger.error(
-                    TAG + methodName,
-                    "Failed to parse IdToken",
-                    e
-            );
+            Logger.error(TAG + methodName, "Failed to parse IdToken", e);
 
             throw new ServiceException("Failed to parse JWT", ErrorStrings.INVALID_JWT, e);
         }
 
         return result;
     }
-
 }

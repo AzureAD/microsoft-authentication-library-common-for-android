@@ -73,7 +73,7 @@ public abstract class AbstractApplicationMetadata {
         this.mUid = mUid;
     }
 
-    //CHECKSTYLE:OFF
+    // CHECKSTYLE:OFF
     // This method is generated. Checkstyle and/or PMD has been disabled.
     // This method *must* be regenerated if the class' structural definition changes through the
     // addition/subtraction of fields.
@@ -88,11 +88,13 @@ public abstract class AbstractApplicationMetadata {
         if (mUid != that.mUid) return false;
         if (mClientId != null ? !mClientId.equals(that.mClientId) : that.mClientId != null)
             return false;
-        return mEnvironment != null ? mEnvironment.equals(that.mEnvironment) : that.mEnvironment == null;
+        return mEnvironment != null
+                ? mEnvironment.equals(that.mEnvironment)
+                : that.mEnvironment == null;
     }
-    //CHECKSTYLE:ON
+    // CHECKSTYLE:ON
 
-    //CHECKSTYLE:OFF
+    // CHECKSTYLE:OFF
     // This method is generated. Checkstyle and/or PMD has been disabled.
     // This method *must* be regenerated if the class' structural definition changes through the
     // addition/subtraction of fields.
@@ -104,5 +106,5 @@ public abstract class AbstractApplicationMetadata {
         result = 31 * result + mUid;
         return result;
     }
-    //CHECKSTYLE:ON
+    // CHECKSTYLE:ON
 }

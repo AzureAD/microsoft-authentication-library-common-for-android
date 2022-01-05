@@ -55,17 +55,18 @@ public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage 
     private static final String TAG = SharedPreferencesFileManager.class.getSimpleName();
 
     private final Object cacheLock = new Object();
+
     @GuardedBy("cacheLock")
     private final LruCache<String, String> fileCache = new LruCache<>(256);
+
     @GuardedBy("cacheLock")
     private final SharedPreferences mSharedPreferences;
+
     private final KeyAccessorStringAdapter mEncryptionManager;
-    @VisibleForTesting
-    private final String mSharedPreferencesFileName;
+    @VisibleForTesting private final String mSharedPreferencesFileName;
     // This is making a huge assumption - that we don't need to separate this cache by context.
     private static final ConcurrentMap<String, SharedPreferencesFileManager> objectCache =
             new ConcurrentHashMap<String, SharedPreferencesFileManager>(16, 0.75f, 1);
-
 
     /**
      * Constructs an instance of SharedPreferencesFileManager. Operating mode is always MODE_PRIVATE.
@@ -75,15 +76,24 @@ public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage 
      * @param encryptionManager The {@link IKeyAccessor} to handle encryption/decryption of values.
      * @return The SharedPreferencesFileManager instance.
      */
-    public static SharedPreferencesFileManager getSharedPreferences(final Context context,
-                                                                    final String name,
-                                                                    final IKeyAccessor encryptionManager) {
-        String key = name + "/" + context.getPackageName() + "/" + Context.MODE_PRIVATE +
-                "/" + ((encryptionManager == null) ? "clear" : encryptionManager.getClass().getCanonicalName());
+    public static SharedPreferencesFileManager getSharedPreferences(
+            final Context context, final String name, final IKeyAccessor encryptionManager) {
+        String key =
+                name
+                        + "/"
+                        + context.getPackageName()
+                        + "/"
+                        + Context.MODE_PRIVATE
+                        + "/"
+                        + ((encryptionManager == null)
+                                ? "clear"
+                                : encryptionManager.getClass().getCanonicalName());
         SharedPreferencesFileManager cachedFileManager = objectCache.get(key);
         if (cachedFileManager == null) {
-            cachedFileManager = objectCache.putIfAbsent(key,
-                    new SharedPreferencesFileManager(context, name, encryptionManager));
+            cachedFileManager =
+                    objectCache.putIfAbsent(
+                            key,
+                            new SharedPreferencesFileManager(context, name, encryptionManager));
             if (cachedFileManager == null) {
                 cachedFileManager = objectCache.get(key);
             }
@@ -109,9 +119,7 @@ public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage 
      * @param encryptionManager The {@link IKeyAccessor} to handle encryption/decryption of values.
      */
     public SharedPreferencesFileManager(
-            final Context context,
-            final String name,
-            final IKeyAccessor encryptionManager) {
+            final Context context, final String name, final IKeyAccessor encryptionManager) {
         if (encryptionManager == null) {
             Logger.verbose(TAG, "Init: ");
         } else {
@@ -119,7 +127,7 @@ public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage 
         }
         mSharedPreferences = context.getSharedPreferences(name, Context.MODE_PRIVATE);
         mSharedPreferencesFileName = name;
-        
+
         if (encryptionManager != null) {
             mEncryptionManager = new KeyAccessorStringAdapter(encryptionManager);
         } else {
@@ -132,9 +140,7 @@ public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage 
     }
 
     @Override
-    public final void putString(
-            final String key,
-            final String value) {
+    public final void putString(final String key, final String value) {
         synchronized (cacheLock) {
             if (value != null) {
                 fileCache.put(key, value);
@@ -196,8 +202,7 @@ public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage 
         Logger.warn(
                 TAG,
                 "Failed to decrypt value! "
-                        + "This usually signals an issue with KeyStore or the provided SecretKeys."
-        );
+                        + "This usually signals an issue with KeyStore or the provided SecretKeys.");
 
         remove(key);
     }
@@ -206,15 +211,16 @@ public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage 
     public final Map<String, String> getAll() {
         // We're not synchronizing this access, since we're not modifying it here.
         // Suppressing unchecked warnings due to casting Map<String,?> to Map<String,String>
-        @SuppressWarnings(WarningType.unchecked_warning) final Map<String, String> entries = (Map<String, String>) mSharedPreferences.getAll();
+        @SuppressWarnings(WarningType.unchecked_warning)
+        final Map<String, String> entries = (Map<String, String>) mSharedPreferences.getAll();
 
         if (null != mEncryptionManager) {
             final Iterator<Map.Entry<String, String>> iterator = entries.entrySet().iterator();
 
             while (iterator.hasNext()) {
                 final Map.Entry<String, String> entry = iterator.next();
-                //This is slightly wasteful, but we have no better key iterator and decryption
-                //is probably more painful than the additional file read when we miss in the cache.
+                // This is slightly wasteful, but we have no better key iterator and decryption
+                // is probably more painful than the additional file read when we miss in the cache.
                 String decryptedValue = getString(entry.getKey());
                 if (!StringUtil.isNullOrEmpty(decryptedValue)) {
                     entry.setValue(decryptedValue);
@@ -225,10 +231,12 @@ public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage 
     }
 
     @Override
-    public final Iterator<Map.Entry<String, String>> getAllFilteredByKey(final @NonNull Predicate<String> keyFilter) {
+    public final Iterator<Map.Entry<String, String>> getAllFilteredByKey(
+            final @NonNull Predicate<String> keyFilter) {
         // We're not synchronizing this access, since we're not modifying it here.
         // Suppressing unchecked warnings due to casting Map<String,?> to Map<String,String>
-        @SuppressWarnings(WarningType.unchecked_warning) final Map<String, String> entries = (Map<String, String>) mSharedPreferences.getAll();
+        @SuppressWarnings(WarningType.unchecked_warning)
+        final Map<String, String> entries = (Map<String, String>) mSharedPreferences.getAll();
 
         return new Iterator<Map.Entry<String, String>>() {
             final Iterator<Map.Entry<String, String>> iterator = entries.entrySet().iterator();
@@ -248,7 +256,9 @@ public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage 
                         if (mEncryptionManager != null) {
                             String decryptedValue = getString(nextElement.getKey());
                             if (!StringUtil.isNullOrEmpty(decryptedValue)) {
-                                nextEntry = new AbstractMap.SimpleEntry<String, String>(nextElement.getKey(), decryptedValue);
+                                nextEntry =
+                                        new AbstractMap.SimpleEntry<String, String>(
+                                                nextElement.getKey(), decryptedValue);
                             }
                         } else {
                             nextEntry = nextElement;
@@ -275,7 +285,6 @@ public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage 
         };
     }
 
-
     @Override
     public final boolean contains(final String key) {
         return !StringUtil.isNullOrEmpty(getString(key));
@@ -293,10 +302,7 @@ public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage 
 
     @Override
     public void remove(final String key) {
-        Logger.info(
-                TAG,
-                "Removing cache key"
-        );
+        Logger.info(TAG, "Removing cache key");
         synchronized (cacheLock) {
             fileCache.remove(key);
             final SharedPreferences.Editor editor = mSharedPreferences.edit();
@@ -304,12 +310,7 @@ public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage 
             editor.apply();
         }
 
-        Logger.infoPII(
-                TAG,
-                "Removed cache key ["
-                        + key
-                        + "]"
-        );
+        Logger.infoPII(TAG, "Removed cache key [" + key + "]");
     }
 
     @Nullable
@@ -323,24 +324,25 @@ public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage 
     }
 
     @Nullable
-    private String encryptDecryptInternal(
-            @NonNull final String inputText,
-            final boolean encrypt) {
+    private String encryptDecryptInternal(@NonNull final String inputText, final boolean encrypt) {
         final String methodName = "encryptDecryptInternal";
 
         String result;
         try {
-            result = encrypt
-                    ? mEncryptionManager.encrypt(inputText)
-                    : mEncryptionManager.decrypt(inputText);
+            result =
+                    encrypt
+                            ? mEncryptionManager.encrypt(inputText)
+                            : mEncryptionManager.decrypt(inputText);
         } catch (ClientException e) {
             Logger.error(
                     TAG + ":" + methodName,
                     "Failed to " + (encrypt ? "encrypt" : "decrypt") + " value",
                     encrypt
-                            ? null // If we failed to encrypt, don't log the error as it may contain a token
-                            : e // If we failed to decrypt, we couldn't see that secret value so log the error
-            );
+                            ? null // If we failed to encrypt, don't log the error as it may contain
+                            // a token
+                            : e // If we failed to decrypt, we couldn't see that secret value so log
+                    // the error
+                    );
 
             // TODO determine if an Exception should be thrown here...
             result = null;
@@ -348,5 +350,4 @@ public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage 
 
         return result;
     }
-
 }

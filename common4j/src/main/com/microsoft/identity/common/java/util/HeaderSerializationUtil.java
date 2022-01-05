@@ -22,10 +22,10 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.util;
 
-import lombok.NonNull;
-
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+
+import lombok.NonNull;
 
 import java.util.HashMap;
 import java.util.List;
@@ -42,10 +42,10 @@ public class HeaderSerializationUtil {
                 .fromJson(
                         jsonIn,
                         TypeToken.getParameterized(
-                                HashMap.class,
-                                String.class,
-                                TypeToken.getParameterized(List.class, String.class).getRawType()
-                        ).getType()
-                );
+                                        HashMap.class,
+                                        String.class,
+                                        TypeToken.getParameterized(List.class, String.class)
+                                                .getRawType())
+                                .getType());
     }
 }

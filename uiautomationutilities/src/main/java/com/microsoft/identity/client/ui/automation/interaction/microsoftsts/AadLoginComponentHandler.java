@@ -22,6 +22,10 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.interaction.microsoftsts;
 
+import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT;
+
+import static org.junit.Assert.fail;
+
 import androidx.annotation.NonNull;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.UiDevice;
@@ -35,15 +39,12 @@ import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
 import org.junit.Assert;
 
-import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT;
-import static org.junit.Assert.fail;
-
 /**
  * A login component handler for AAD.
  */
 public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHandler {
 
-    private final static String TAG = AadLoginComponentHandler.class.getSimpleName();
+    private static final String TAG = AadLoginComponentHandler.class.getSimpleName();
 
     @Override
     public void handleEmailField(@NonNull final String username) {
@@ -81,9 +82,7 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
             fail("Account picker screen did not show up");
         }
 
-        final UiObject account = uiDevice.findObject(new UiSelector()
-                .textContains(username)
-        );
+        final UiObject account = uiDevice.findObject(new UiSelector().textContains(username));
 
         account.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
 
@@ -103,9 +102,7 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
         Logger.i(TAG, "Confirm Consent on Consent Page Received..");
         final UiObject consentScreen = getConsentScreen();
         Assert.assertTrue(
-                "Consent screen appears",
-                consentScreen.waitForExists(FIND_UI_ELEMENT_TIMEOUT)
-        );
+                "Consent screen appears", consentScreen.waitForExists(FIND_UI_ELEMENT_TIMEOUT));
     }
 
     @Override
@@ -134,7 +131,8 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
 
     @Override
     public void confirmEnrollPageReceived() {
-        final UiObject enrollmentHeader = UiAutomatorUtils.obtainUiObjectWithText("Set up your device to get access");
+        final UiObject enrollmentHeader =
+                UiAutomatorUtils.obtainUiObjectWithText("Set up your device to get access");
         Assert.assertTrue("Enroll Page appears.", enrollmentHeader.exists());
     }
 
@@ -161,7 +159,8 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
 
     @Override
     public void handleStaySignedIn(final UiResponse staySignedInResponse) {
-        final UiObject staySignedInView = UiAutomatorUtils.obtainUiObjectWithText("Stay signed in?");
+        final UiObject staySignedInView =
+                UiAutomatorUtils.obtainUiObjectWithText("Stay signed in?");
 
         if (!staySignedInView.waitForExists(FIND_UI_ELEMENT_TIMEOUT)) {
             fail("Stay signed in page did not show up");

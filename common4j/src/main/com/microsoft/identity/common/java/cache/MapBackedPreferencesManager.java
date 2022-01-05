@@ -24,13 +24,13 @@ package com.microsoft.identity.common.java.cache;
 
 import com.microsoft.identity.common.java.util.ported.Predicate;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.Accessors;
+
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 @Builder
 @RequiredArgsConstructor
@@ -74,7 +74,7 @@ public class MapBackedPreferencesManager implements IMultiTypeNameValueStorage {
     @Override
     public Iterator<Map.Entry<String, String>> getAllFilteredByKey(Predicate<String> keyFilter) {
         Map<String, String> newMap = new HashMap<>();
-        for (Map.Entry<String, String> entry: mBackingStore.entrySet()) {
+        for (Map.Entry<String, String> entry : mBackingStore.entrySet()) {
             if (keyFilter.test(entry.getKey())) {
                 newMap.put(entry.getKey(), entry.getValue());
             }

@@ -44,18 +44,20 @@ import com.microsoft.identity.common.R;
 
 import java.util.List;
 
-// This activity readjusts its child layouts so that they're displayed on both single-screen and dual-screen device correctly.
+// This activity readjusts its child layouts so that they're displayed on both single-screen and
+// dual-screen device correctly.
 public class DualScreenActivity extends FragmentActivity {
 
     @Override
     public void setContentView(int layoutResID) {
         initializeContentView();
 
-        final RelativeLayout contentLayout = findViewById(com.microsoft.identity.common.R.id.dual_screen_content);
+        final RelativeLayout contentLayout =
+                findViewById(com.microsoft.identity.common.R.id.dual_screen_content);
         LayoutInflater.from(this).inflate(layoutResID, contentLayout);
     }
 
-    private void initializeContentView(){
+    private void initializeContentView() {
         super.setContentView(R.layout.dual_screen_layout);
         adjustLayoutForDualScreenActivity();
     }
@@ -81,15 +83,55 @@ public class DualScreenActivity extends FragmentActivity {
         boolean isHorizontal = rotation == Surface.ROTATION_0 || rotation == Surface.ROTATION_180;
 
         final ConstraintSet constraintSet = new ConstraintSet();
-        constraintSet.connect(R.id.dual_screen_content, ConstraintSet.LEFT, R.id.dual_screen_layout, ConstraintSet.LEFT, 0);
-        constraintSet.connect(R.id.dual_screen_content, ConstraintSet.RIGHT, R.id.dual_screen_layout, ConstraintSet.RIGHT, 0);
-        constraintSet.connect(R.id.dual_screen_content, ConstraintSet.TOP, R.id.dual_screen_layout, ConstraintSet.TOP, 0);
-        constraintSet.connect(R.id.dual_screen_content, ConstraintSet.BOTTOM, R.id.dual_screen_layout, ConstraintSet.BOTTOM, 0);
+        constraintSet.connect(
+                R.id.dual_screen_content,
+                ConstraintSet.LEFT,
+                R.id.dual_screen_layout,
+                ConstraintSet.LEFT,
+                0);
+        constraintSet.connect(
+                R.id.dual_screen_content,
+                ConstraintSet.RIGHT,
+                R.id.dual_screen_layout,
+                ConstraintSet.RIGHT,
+                0);
+        constraintSet.connect(
+                R.id.dual_screen_content,
+                ConstraintSet.TOP,
+                R.id.dual_screen_layout,
+                ConstraintSet.TOP,
+                0);
+        constraintSet.connect(
+                R.id.dual_screen_content,
+                ConstraintSet.BOTTOM,
+                R.id.dual_screen_layout,
+                ConstraintSet.BOTTOM,
+                0);
 
-        constraintSet.connect(R.id.dual_screen_empty_view, ConstraintSet.LEFT, R.id.dual_screen_layout, ConstraintSet.LEFT, 0);
-        constraintSet.connect(R.id.dual_screen_empty_view, ConstraintSet.RIGHT, R.id.dual_screen_layout, ConstraintSet.RIGHT, 0);
-        constraintSet.connect(R.id.dual_screen_empty_view, ConstraintSet.TOP, R.id.dual_screen_layout, ConstraintSet.TOP, 0);
-        constraintSet.connect(R.id.dual_screen_empty_view, ConstraintSet.BOTTOM, R.id.dual_screen_layout, ConstraintSet.BOTTOM, 0);
+        constraintSet.connect(
+                R.id.dual_screen_empty_view,
+                ConstraintSet.LEFT,
+                R.id.dual_screen_layout,
+                ConstraintSet.LEFT,
+                0);
+        constraintSet.connect(
+                R.id.dual_screen_empty_view,
+                ConstraintSet.RIGHT,
+                R.id.dual_screen_layout,
+                ConstraintSet.RIGHT,
+                0);
+        constraintSet.connect(
+                R.id.dual_screen_empty_view,
+                ConstraintSet.TOP,
+                R.id.dual_screen_layout,
+                ConstraintSet.TOP,
+                0);
+        constraintSet.connect(
+                R.id.dual_screen_empty_view,
+                ConstraintSet.BOTTOM,
+                R.id.dual_screen_layout,
+                ConstraintSet.BOTTOM,
+                0);
 
         getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
 
@@ -98,18 +140,38 @@ public class DualScreenActivity extends FragmentActivity {
                 int duoHingeWidth = getHinge(this, rotation).width() / 2;
 
                 // WebView is on the right.
-                constraintSet.connect(R.id.dual_screen_content, ConstraintSet.LEFT, R.id.vertical_guideline, ConstraintSet.RIGHT, duoHingeWidth);
+                constraintSet.connect(
+                        R.id.dual_screen_content,
+                        ConstraintSet.LEFT,
+                        R.id.vertical_guideline,
+                        ConstraintSet.RIGHT,
+                        duoHingeWidth);
 
                 // Empty view is on the left.
-                constraintSet.connect(R.id.dual_screen_empty_view, ConstraintSet.RIGHT, R.id.vertical_guideline, ConstraintSet.LEFT, 0);
+                constraintSet.connect(
+                        R.id.dual_screen_empty_view,
+                        ConstraintSet.RIGHT,
+                        R.id.vertical_guideline,
+                        ConstraintSet.LEFT,
+                        0);
             } else {
                 int duoHingeWidth = getHinge(this, rotation).height() / 2;
 
                 // WebView is on the top.
-                constraintSet.connect(R.id.dual_screen_content, ConstraintSet.BOTTOM, R.id.horizontal_guideline, ConstraintSet.TOP, duoHingeWidth);
+                constraintSet.connect(
+                        R.id.dual_screen_content,
+                        ConstraintSet.BOTTOM,
+                        R.id.horizontal_guideline,
+                        ConstraintSet.TOP,
+                        duoHingeWidth);
 
                 // Empty view is in the bottom.
-                constraintSet.connect(R.id.dual_screen_empty_view, ConstraintSet.TOP, R.id.horizontal_guideline, ConstraintSet.BOTTOM, 0);
+                constraintSet.connect(
+                        R.id.dual_screen_empty_view,
+                        ConstraintSet.TOP,
+                        R.id.horizontal_guideline,
+                        ConstraintSet.BOTTOM,
+                        0);
 
                 // In spanned vertical mode, keyboard will always be on the lower screen.
                 // This means we do not need to shrink the webview.
@@ -178,8 +240,7 @@ public class DualScreenActivity extends FragmentActivity {
      * @param Context
      * @param rotation Surface.ROTATION_0, Surface.ROTATION_90, Surface.ROTATION_180 or Surface.ROTATION_270
      */
-    private Rect getHinge(final Context context,
-                          int rotation) {
+    private Rect getHinge(final Context context, int rotation) {
         // Hinge's coordinates of its 4 edges in different mode
         // Double Landscape Rect(0, 1350 - 1800, 1434)
         // Double Portrait  Rect(1350, 0 - 1434, 1800)

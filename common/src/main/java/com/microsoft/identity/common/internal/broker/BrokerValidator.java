@@ -22,6 +22,11 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.broker;
 
+import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.BROKER_ACCOUNT_TYPE;
+import static com.microsoft.identity.common.java.exception.ClientException.NO_SUCH_ALGORITHM;
+import static com.microsoft.identity.common.java.exception.ErrorStrings.APP_PACKAGE_NAME_NOT_FOUND;
+import static com.microsoft.identity.common.java.exception.ErrorStrings.BROKER_VERIFICATION_FAILED;
+
 import android.accounts.AccountManager;
 import android.accounts.AuthenticatorDescription;
 import android.annotation.SuppressLint;
@@ -33,10 +38,9 @@ import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.BuildConfig;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
-import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.util.PackageUtils;
 import com.microsoft.identity.common.internal.util.StringUtil;
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.io.IOException;
@@ -46,11 +50,6 @@ import java.security.cert.X509Certificate;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-
-import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.BROKER_ACCOUNT_TYPE;
-import static com.microsoft.identity.common.java.exception.ClientException.NO_SUCH_ALGORITHM;
-import static com.microsoft.identity.common.java.exception.ErrorStrings.APP_PACKAGE_NAME_NOT_FOUND;
-import static com.microsoft.identity.common.java.exception.ErrorStrings.BROKER_VERIFICATION_FAILED;
 
 public class BrokerValidator {
 
@@ -99,7 +98,8 @@ public class BrokerValidator {
             final List<X509Certificate> certs = readCertDataForBrokerApp(brokerPackageName);
 
             // Verify the cert list contains the cert we trust.
-            final String signatureHash = PackageUtils.verifySignatureHash(certs, getValidBrokerSignatures());
+            final String signatureHash =
+                    PackageUtils.verifySignatureHash(certs, getValidBrokerSignatures());
 
             // Perform the certificate chain validation. If there is only one cert returned,
             // no need to perform certificate chain validation.
@@ -141,9 +141,8 @@ public class BrokerValidator {
      * @return a Set of {@link BrokerData}
      */
     public Set<BrokerData> getValidBrokers() {
-        final Set<BrokerData> validBrokers = sShouldTrustDebugBrokers
-                ? BrokerData.getAllBrokers()
-                : BrokerData.getProdBrokers();
+        final Set<BrokerData> validBrokers =
+                sShouldTrustDebugBrokers ? BrokerData.getAllBrokers() : BrokerData.getProdBrokers();
 
         return validBrokers;
     }
@@ -194,8 +193,7 @@ public class BrokerValidator {
     @SuppressLint("PackageManagerGetSignatures")
     @SuppressWarnings("deprecation")
     private List<X509Certificate> readCertDataForBrokerApp(final String brokerPackageName)
-            throws NameNotFoundException, ClientException, IOException,
-            GeneralSecurityException {
+            throws NameNotFoundException, ClientException, IOException, GeneralSecurityException {
         return PackageUtils.readCertDataForApp(brokerPackageName, mContext);
     }
 
@@ -212,7 +210,8 @@ public class BrokerValidator {
      */
     @Nullable
     public String getCurrentActiveBrokerPackageName() {
-        AuthenticatorDescription[] authenticators = AccountManager.get(mContext).getAuthenticatorTypes();
+        AuthenticatorDescription[] authenticators =
+                AccountManager.get(mContext).getAuthenticatorTypes();
         for (AuthenticatorDescription authenticator : authenticators) {
             if (authenticator.type.equals(BROKER_ACCOUNT_TYPE)
                     && verifySignature(authenticator.packageName)) {
@@ -222,20 +221,26 @@ public class BrokerValidator {
         return null;
     }
 
-    public static boolean isValidBrokerRedirect(@Nullable final String redirectUri,
-                                                @NonNull final Context context,
-                                                @NonNull final String packageName) {
+    public static boolean isValidBrokerRedirect(
+            @Nullable final String redirectUri,
+            @NonNull final Context context,
+            @NonNull final String packageName) {
         final String methodName = ":isValidBrokerRedirect";
         final String expectedBrokerRedirectUri = getBrokerRedirectUri(context, packageName);
-        boolean isValidBrokerRedirect = StringUtil.equalsIgnoreCase(redirectUri, expectedBrokerRedirectUri);
-        if (packageName.equals(AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME)) {
+        boolean isValidBrokerRedirect =
+                StringUtil.equalsIgnoreCase(redirectUri, expectedBrokerRedirectUri);
+        if (packageName.equals(
+                AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME)) {
             final PackageHelper info = new PackageHelper(context.getPackageManager());
             final String signatureDigest = info.getCurrentSignatureForPackage(packageName);
             if (BrokerData.MICROSOFT_AUTHENTICATOR_PROD.signatureHash.equals(signatureDigest)
-                || BrokerData.MICROSOFT_AUTHENTICATOR_DEBUG.signatureHash.equals(signatureDigest)) {
+                    || BrokerData.MICROSOFT_AUTHENTICATOR_DEBUG.signatureHash.equals(
+                            signatureDigest)) {
                 // If the caller is the Authenticator, check if the redirect uri matches with either
                 // the one generated with package name and signature or broker redirect uri.
-                isValidBrokerRedirect |= StringUtil.equalsIgnoreCase(redirectUri, AuthenticationConstants.Broker.BROKER_REDIRECT_URI);
+                isValidBrokerRedirect |=
+                        StringUtil.equalsIgnoreCase(
+                                redirectUri, AuthenticationConstants.Broker.BROKER_REDIRECT_URI);
             }
         }
 
@@ -245,10 +250,8 @@ public class BrokerValidator {
                     "Broker redirect uri is invalid. Expected: "
                             + expectedBrokerRedirectUri
                             + " Actual: "
-                            + redirectUri
-                    ,
-                    null
-            );
+                            + redirectUri,
+                    null);
         }
 
         return isValidBrokerRedirect;
@@ -264,7 +267,6 @@ public class BrokerValidator {
     public static String getBrokerRedirectUri(final Context context, final String packageName) {
         final PackageHelper info = new PackageHelper(context.getPackageManager());
         final String signatureDigest = info.getCurrentSignatureForPackage(packageName);
-        return PackageHelper.getBrokerRedirectUrl(packageName,
-                signatureDigest);
+        return PackageHelper.getBrokerRedirectUrl(packageName, signatureDigest);
     }
 }

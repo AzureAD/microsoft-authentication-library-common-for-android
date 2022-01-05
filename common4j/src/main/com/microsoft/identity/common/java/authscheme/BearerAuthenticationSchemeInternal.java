@@ -22,9 +22,8 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.authscheme;
 
-import lombok.NonNull;
-
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.experimental.Accessors;
 
 /**
@@ -32,8 +31,7 @@ import lombok.experimental.Accessors;
  */
 @Getter
 @Accessors(prefix = "m")
-public class BearerAuthenticationSchemeInternal
-        extends TokenAuthenticationScheme
+public class BearerAuthenticationSchemeInternal extends TokenAuthenticationScheme
         implements ITokenAuthenticationSchemeInternal {
 
     public static final String SCHEME_BEARER = "Bearer";

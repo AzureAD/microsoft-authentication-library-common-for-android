@@ -22,32 +22,32 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.commands;
 
-import lombok.NonNull;
-
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.commands.parameters.TokenCommandParameters;
 import com.microsoft.identity.common.java.controllers.BaseController;
 import com.microsoft.identity.common.java.result.AcquireTokenResult;
-import com.microsoft.identity.common.java.util.ported.PropertyBag;
-
-import java.util.List;
 
 import lombok.EqualsAndHashCode;
+import lombok.NonNull;
+
+import java.util.List;
 
 @EqualsAndHashCode(callSuper = true)
 public abstract class TokenCommand extends BaseCommand<AcquireTokenResult> {
 
-    public TokenCommand(@NonNull TokenCommandParameters parameters,
-                        @NonNull BaseController controller,
-                        @SuppressWarnings(WarningType.rawtype_warning) @NonNull CommandCallback callback,
-                        @NonNull String publicApiId) {
+    public TokenCommand(
+            @NonNull TokenCommandParameters parameters,
+            @NonNull BaseController controller,
+            @SuppressWarnings(WarningType.rawtype_warning) @NonNull CommandCallback callback,
+            @NonNull String publicApiId) {
         super(parameters, controller, callback, publicApiId);
     }
 
-    public TokenCommand(@NonNull TokenCommandParameters parameters,
-                        @NonNull List<BaseController> controllers,
-                        @SuppressWarnings(WarningType.rawtype_warning) @NonNull CommandCallback callback,
-                        @NonNull String publicApiId) {
+    public TokenCommand(
+            @NonNull TokenCommandParameters parameters,
+            @NonNull List<BaseController> controllers,
+            @SuppressWarnings(WarningType.rawtype_warning) @NonNull CommandCallback callback,
+            @NonNull String publicApiId) {
         super(parameters, controllers, callback, publicApiId);
     }
 

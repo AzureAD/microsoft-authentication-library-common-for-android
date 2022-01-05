@@ -22,14 +22,14 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.commands;
 
-import com.microsoft.identity.common.java.result.AcquireTokenResult;
-import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.commands.CommandCallback;
+import com.microsoft.identity.common.java.exception.BaseException;
+import com.microsoft.identity.common.java.result.AcquireTokenResult;
 import com.microsoft.identity.common.logging.Logger;
 
 /*
-    Null Object Pattern for Commands who's result should be ignored.
- */
+   Null Object Pattern for Commands who's result should be ignored.
+*/
 public class RefreshOnCallback implements CommandCallback<AcquireTokenResult, BaseException> {
 
     private static final String TAG = RefreshOnCallback.class.getSimpleName();
@@ -41,16 +41,14 @@ public class RefreshOnCallback implements CommandCallback<AcquireTokenResult, Ba
     public void onTaskCompleted(AcquireTokenResult result) {
         Logger.verbose(
                 TAG + ":onTaskCompleted",
-                "Task succeeded: " + result.getSucceeded() + " . CorrelationId: " + result.getLocalAuthenticationResult().getCorrelationId()
-        );
+                "Task succeeded: "
+                        + result.getSucceeded()
+                        + " . CorrelationId: "
+                        + result.getLocalAuthenticationResult().getCorrelationId());
     }
 
     @Override
     public void onError(BaseException error) {
-        Logger.verbose(
-                TAG + ":onError",
-                error.getMessage()
-        );
+        Logger.verbose(TAG + ":onError", error.getMessage());
     }
-
 }

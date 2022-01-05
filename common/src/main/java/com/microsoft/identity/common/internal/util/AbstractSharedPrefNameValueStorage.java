@@ -25,10 +25,10 @@ package com.microsoft.identity.common.internal.util;
 import com.microsoft.identity.common.java.cache.IMultiTypeNameValueStorage;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 
-import java.util.Set;
-
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
+
+import java.util.Set;
 
 /**
  * Adapts {@link IMultiTypeNameValueStorage} to {@link INameValueStorage}

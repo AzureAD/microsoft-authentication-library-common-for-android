@@ -24,9 +24,9 @@ package com.microsoft.identity.common.java.broker;
 
 import com.microsoft.identity.common.java.exception.ClientException;
 
-import java.util.Map;
-
 import lombok.NonNull;
+
+import java.util.Map;
 
 /**
  * An interface that throws an exception if the caller is not acceptable given a UID.
@@ -41,8 +41,9 @@ public interface ICallValidator {
      * @param allowedApplications A map of name to iterable of verification string for calling apps.
      * @throws ClientException if the caller cannot be validated.
      */
-    void throwIfNotInvokedByAcceptableApp(@NonNull String methodName,
-                                          int callingUid,
-                                          @NonNull Map<String, Iterable<String>> allowedApplications)
+    void throwIfNotInvokedByAcceptableApp(
+            @NonNull String methodName,
+            int callingUid,
+            @NonNull Map<String, Iterable<String>> allowedApplications)
             throws ClientException;
 }

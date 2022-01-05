@@ -22,13 +22,13 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.cache;
 
-import lombok.NonNull;
-
 import com.google.gson.Gson;
-import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
+import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.util.StringUtil;
+
+import lombok.NonNull;
 
 import java.util.HashSet;
 import java.util.List;
@@ -48,9 +48,11 @@ import java.util.concurrent.TimeUnit;
  * @param <T> The type of metadata that will be persisted.
  * @see SharedPreferencesSimpleCacheImpl
  */
-public abstract class NameValueStorageFileManagerSimpleCacheImpl<T> implements ISimpleCache<T>, IListTypeToken {
+public abstract class NameValueStorageFileManagerSimpleCacheImpl<T>
+        implements ISimpleCache<T>, IListTypeToken {
 
-    private static final String TAG = NameValueStorageFileManagerSimpleCacheImpl.class.getSimpleName();
+    private static final String TAG =
+            NameValueStorageFileManagerSimpleCacheImpl.class.getSimpleName();
     private static final String EMTPY_ARRAY = "[]";
     private static final String TIMING_TAG = "execWithTiming";
 
@@ -68,9 +70,10 @@ public abstract class NameValueStorageFileManagerSimpleCacheImpl<T> implements I
      * @param name       The name of the underlying storage file.
      * @param singleKey  The name of the key under which all entries will be cached.
      */
-    public NameValueStorageFileManagerSimpleCacheImpl(@NonNull final IPlatformComponents components,
-                                                      @NonNull final String name,
-                                                      @NonNull final String singleKey) {
+    public NameValueStorageFileManagerSimpleCacheImpl(
+            @NonNull final IPlatformComponents components,
+            @NonNull final String name,
+            @NonNull final String singleKey) {
         this(components, name, singleKey, false);
     }
 
@@ -84,10 +87,11 @@ public abstract class NameValueStorageFileManagerSimpleCacheImpl<T> implements I
      * @param forceReinsertionOfDuplicates If true, calling insert() on a value that already exists
      *                                     replaces the existing value with the newly-provided one.
      */
-    public NameValueStorageFileManagerSimpleCacheImpl(@NonNull final IPlatformComponents components,
-                                                      @NonNull final String name,
-                                                      @NonNull final String singleKey,
-                                                      final boolean forceReinsertionOfDuplicates) {
+    public NameValueStorageFileManagerSimpleCacheImpl(
+            @NonNull final IPlatformComponents components,
+            @NonNull final String name,
+            @NonNull final String singleKey,
+            final boolean forceReinsertionOfDuplicates) {
 
         Logger.verbose(TAG + "::ctor", "Init");
         mComponents = components;
@@ -112,9 +116,14 @@ public abstract class NameValueStorageFileManagerSimpleCacheImpl<T> implements I
             }
             Logger.error(TAG + TIMING_TAG, "Error during operation", e);
         } finally {
-            final long execTime =  mComponents.getPlatformUtil().getNanosecondTime() - startTime;
-            Logger.verbose(TAG + TIMING_TAG,
-                    runnable.getName() + " finished in: " + execTime + " " + TimeUnit.NANOSECONDS.name());
+            final long execTime = mComponents.getPlatformUtil().getNanosecondTime() - startTime;
+            Logger.verbose(
+                    TAG + TIMING_TAG,
+                    runnable.getName()
+                            + " finished in: "
+                            + execTime
+                            + " "
+                            + TimeUnit.NANOSECONDS.name());
         }
 
         return v;
@@ -122,87 +131,91 @@ public abstract class NameValueStorageFileManagerSimpleCacheImpl<T> implements I
 
     @Override
     public boolean insert(final T t) {
-        return execWithTiming(new NamedRunnable<Boolean>() {
-            @Override
-            public String getName() {
-                return "insert";
-            }
+        return execWithTiming(
+                new NamedRunnable<Boolean>() {
+                    @Override
+                    public String getName() {
+                        return "insert";
+                    }
 
-            @Override
-            public Boolean call() {
-                final Set<T> allMetadata = new HashSet<>(getAll());
+                    @Override
+                    public Boolean call() {
+                        final Set<T> allMetadata = new HashSet<>(getAll());
 
-                if (mForceReinsertionOfDuplicates) {
-                    // This is a bit of workaround for Set's default behavior
-                    // where items already within the Set are not replaced if they are
-                    // inserted but already exist.
-                    // This makes it behave more like a Map.
-                    allMetadata.remove(t);
-                }
+                        if (mForceReinsertionOfDuplicates) {
+                            // This is a bit of workaround for Set's default behavior
+                            // where items already within the Set are not replaced if they are
+                            // inserted but already exist.
+                            // This makes it behave more like a Map.
+                            allMetadata.remove(t);
+                        }
 
-                allMetadata.add(t);
-                final String json = mGson.toJson(allMetadata);
-                mStorage.put(mKeySingleEntry, json);
-                return true;
-            }
-        });
+                        allMetadata.add(t);
+                        final String json = mGson.toJson(allMetadata);
+                        mStorage.put(mKeySingleEntry, json);
+                        return true;
+                    }
+                });
     }
 
     @Override
     public boolean remove(final T t) {
-        return execWithTiming(new NamedRunnable<Boolean>() {
-            @Override
-            public String getName() {
-                return "remove";
-            }
+        return execWithTiming(
+                new NamedRunnable<Boolean>() {
+                    @Override
+                    public String getName() {
+                        return "remove";
+                    }
 
-            @Override
-            public Boolean call() {
-                final Set<T> allMetadata = new HashSet<>(getAll());
-                allMetadata.remove(t);
-                final String json = mGson.toJson(allMetadata);
-                mStorage.put(mKeySingleEntry, json);
-                return true;
-            }
-        });
+                    @Override
+                    public Boolean call() {
+                        final Set<T> allMetadata = new HashSet<>(getAll());
+                        allMetadata.remove(t);
+                        final String json = mGson.toJson(allMetadata);
+                        mStorage.put(mKeySingleEntry, json);
+                        return true;
+                    }
+                });
     }
 
     @Override
     public List<T> getAll() {
-        return execWithTiming(new NamedRunnable<List<T>>() {
-            @Override
-            public String getName() {
-                return "getAll";
-            }
+        return execWithTiming(
+                new NamedRunnable<List<T>>() {
+                    @Override
+                    public String getName() {
+                        return "getAll";
+                    }
 
-            @Override
-            public List<T> call() {
-                String jsonList = mStorage.get(mKeySingleEntry);
+                    @Override
+                    public List<T> call() {
+                        String jsonList = mStorage.get(mKeySingleEntry);
 
-                if (StringUtil.isNullOrEmpty(jsonList)) {
-                    jsonList = EMTPY_ARRAY;
-                }
+                        if (StringUtil.isNullOrEmpty(jsonList)) {
+                            jsonList = EMTPY_ARRAY;
+                        }
 
-                final List<T> result = mGson.fromJson(jsonList, getListTypeToken());
+                        final List<T> result = mGson.fromJson(jsonList, getListTypeToken());
 
-                return result;
-            }
-        });
+                        return result;
+                    }
+                });
     }
 
     @Override
     public boolean clear() {
-        return execWithTiming(new NamedRunnable<Boolean>() {
-            @Override
-            public String getName() {
-                return "clear";
-            }
+        return execWithTiming(
+                new NamedRunnable<Boolean>() {
+                    @Override
+                    public String getName() {
+                        return "clear";
+                    }
 
-            @Override
-            public Boolean call() {
-                mStorage.clear();
-                return true;
-            }
-        });
+                    @Override
+                    public Boolean call() {
+                        mStorage.clear();
+                        return true;
+                    }
+                });
     }
 }

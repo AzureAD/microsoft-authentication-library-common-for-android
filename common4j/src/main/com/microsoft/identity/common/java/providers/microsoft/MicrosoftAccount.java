@@ -22,31 +22,31 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.providers.microsoft;
 
-import cz.msebera.android.httpclient.extras.Base64;
-import edu.umd.cs.findbugs.annotations.Nullable;
-import lombok.NonNull;
-
 import com.microsoft.identity.common.java.BaseAccount;
+import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryIdToken;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.ClientInfo;
 import com.microsoft.identity.common.java.providers.oauth2.IDToken;
-import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.util.CopyUtil;
 import com.microsoft.identity.common.java.util.SchemaUtil;
 import com.microsoft.identity.common.java.util.StringUtil;
 
+import cz.msebera.android.httpclient.extras.Base64;
+
+import edu.umd.cs.findbugs.annotations.Nullable;
+
+import lombok.EqualsAndHashCode;
+import lombok.NonNull;
+import lombok.experimental.Accessors;
+
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Map;
-
-import lombok.EqualsAndHashCode;
-import lombok.experimental.Accessors;
 
 @EqualsAndHashCode(callSuper = true)
 @Accessors(prefix = "m")
@@ -65,7 +65,9 @@ public abstract class MicrosoftAccount extends BaseAccount {
     private IDToken mIDToken;
     private URL mPasswordChangeUrl;
     private Date mPasswordExpiresOn;
-    private String mTenantId; // Tenant Id of the authority that issued the idToken... not necessarily the home tenant of the account
+    private String
+            mTenantId; // Tenant Id of the authority that issued the idToken... not necessarily the
+    // home tenant of the account
     private String mGivenName;
     private String mFamilyName;
     private String mMiddleName;
@@ -86,8 +88,7 @@ public abstract class MicrosoftAccount extends BaseAccount {
      * @param idToken    id token of the Microsoft account.
      * @param clientInfo the client_info for this Account.
      */
-    public MicrosoftAccount(@NonNull final IDToken idToken,
-                            @NonNull final ClientInfo clientInfo) {
+    public MicrosoftAccount(@NonNull final IDToken idToken, @NonNull final ClientInfo clientInfo) {
         Logger.verbose(TAG, "Init: " + TAG);
         mIDToken = idToken;
         mRawClientInfo = clientInfo.getRawClientInfo();
@@ -104,9 +105,12 @@ public abstract class MicrosoftAccount extends BaseAccount {
             Logger.warnPII(TAG, "realm is not returned from server. Use utid as realm.");
             mTenantId = clientInfo.getUtid();
         } else {
-            // According to the spec, full tenant or organizational identifier that account belongs to.
+            // According to the spec, full tenant or organizational identifier that account belongs
+            // to.
             // Can be an empty string for non-AAD scenarios.
-            Logger.warnPII(TAG, "realm and utid is not returned from server. Use empty string as default tid.");
+            Logger.warnPII(
+                    TAG,
+                    "realm and utid is not returned from server. Use empty string as default tid.");
             mTenantId = "";
         }
 
@@ -129,7 +133,8 @@ public abstract class MicrosoftAccount extends BaseAccount {
         }
 
         mPasswordChangeUrl = null;
-        final String passwordChangeUrl = (String) claims.get(AzureActiveDirectoryIdToken.PASSWORD_CHANGE_URL);
+        final String passwordChangeUrl =
+                (String) claims.get(AzureActiveDirectoryIdToken.PASSWORD_CHANGE_URL);
 
         if (!StringUtil.isNullOrEmpty(passwordChangeUrl)) {
             try {
@@ -150,7 +155,8 @@ public abstract class MicrosoftAccount extends BaseAccount {
         if (!StringUtil.isNullOrEmpty((String) claims.get(AzureActiveDirectoryIdToken.OBJECT_ID))) {
             Logger.info(TAG + ":" + methodName, "Using ObjectId as uniqueId");
             uniqueId = (String) claims.get(AzureActiveDirectoryIdToken.OBJECT_ID);
-        } else if (!StringUtil.isNullOrEmpty((String) claims.get(AzureActiveDirectoryIdToken.SUBJECT))) {
+        } else if (!StringUtil.isNullOrEmpty(
+                (String) claims.get(AzureActiveDirectoryIdToken.SUBJECT))) {
             Logger.info(TAG + ":" + methodName, "Using Subject as uniqueId");
             uniqueId = (String) claims.get(AzureActiveDirectoryIdToken.SUBJECT);
         }
@@ -256,8 +262,9 @@ public abstract class MicrosoftAccount extends BaseAccount {
     public synchronized String getUniqueIdentifier() {
 
         return Base64.encodeToString(StringUtil.toByteArray(mUid), Base64.URL_SAFE | Base64.NO_WRAP)
-                + "." +
-                Base64.encodeToString(StringUtil.toByteArray(mUtid), Base64.URL_SAFE | Base64.NO_WRAP);
+                + "."
+                + Base64.encodeToString(
+                        StringUtil.toByteArray(mUtid), Base64.URL_SAFE | Base64.NO_WRAP);
     }
 
     @Override
@@ -376,22 +383,42 @@ public abstract class MicrosoftAccount extends BaseAccount {
         return mRawClientInfo;
     }
 
-    //CHECKSTYLE:OFF
+    // CHECKSTYLE:OFF
     @Override
     public synchronized String toString() {
-        return "MicrosoftAccount{" +
-                "mDisplayableId='" + mDisplayableId + '\'' +
-                ", mUserId='" + mUserId + '\'' +
-                ", mName='" + mName + '\'' +
-                ", mUid='" + mUid + '\'' +
-                ", mUtid='" + mUtid + '\'' +
-                ", mIDToken=" + mIDToken +
-                ", mPasswordChangeUrl=" + mPasswordChangeUrl +
-                ", mPasswordExpiresOn=" + mPasswordExpiresOn +
-                ", mTenantId='" + mTenantId + '\'' +
-                ", mGivenName='" + mGivenName + '\'' +
-                ", mFamilyName='" + mFamilyName + '\'' +
-                "} " + super.toString();
+        return "MicrosoftAccount{"
+                + "mDisplayableId='"
+                + mDisplayableId
+                + '\''
+                + ", mUserId='"
+                + mUserId
+                + '\''
+                + ", mName='"
+                + mName
+                + '\''
+                + ", mUid='"
+                + mUid
+                + '\''
+                + ", mUtid='"
+                + mUtid
+                + '\''
+                + ", mIDToken="
+                + mIDToken
+                + ", mPasswordChangeUrl="
+                + mPasswordChangeUrl
+                + ", mPasswordExpiresOn="
+                + mPasswordExpiresOn
+                + ", mTenantId='"
+                + mTenantId
+                + '\''
+                + ", mGivenName='"
+                + mGivenName
+                + '\''
+                + ", mFamilyName='"
+                + mFamilyName
+                + '\''
+                + "} "
+                + super.toString();
     }
-    //CHECKSTYLE:ON
+    // CHECKSTYLE:ON
 }

@@ -22,17 +22,14 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.authorities;
 
-import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters;
-
-import java.net.MalformedURLException;
-import java.net.URL;
 
 import lombok.NonNull;
 
@@ -47,19 +44,13 @@ public class AzureActiveDirectoryB2CAuthority extends Authority {
 
     protected MicrosoftStsOAuth2Configuration createOAuth2Configuration() {
         final String methodName = ":createOAuth2Configuration";
-        Logger.verbose(
-                TAG + methodName,
-                "Creating OAuth2Configuration"
-        );
+        Logger.verbose(TAG + methodName, "Creating OAuth2Configuration");
         MicrosoftStsOAuth2Configuration config = new MicrosoftStsOAuth2Configuration();
         config.setMultipleCloudsSupported(false);
         config.setAuthorityUrl(this.getAuthorityURL());
 
         if (mSlice != null) {
-            Logger.info(
-                    TAG + methodName,
-                    "Setting slice parameters..."
-            );
+            Logger.info(TAG + methodName, "Setting slice parameters...");
             final AzureActiveDirectorySlice slice = new AzureActiveDirectorySlice();
             slice.setSlice(mSlice.getSlice());
             slice.setDataCenter(mSlice.getDataCenter());
@@ -85,7 +76,7 @@ public class AzureActiveDirectoryB2CAuthority extends Authority {
      *
      * @return a String with the Policy name
      */
-    public String getB2CPolicyName(){
+    public String getB2CPolicyName() {
         final String[] authorityUriParts = mAuthorityUrlString.split("/");
         return authorityUriParts[authorityUriParts.length - 1];
     }

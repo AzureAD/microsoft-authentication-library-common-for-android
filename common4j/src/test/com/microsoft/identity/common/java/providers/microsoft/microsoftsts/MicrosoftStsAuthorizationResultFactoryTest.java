@@ -22,23 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.providers.microsoft.microsoftsts;
 
-import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.java.exception.ErrorStrings;
-import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
-import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationErrorResponse;
-import com.microsoft.identity.common.java.providers.oauth2.AuthorizationErrorResponse;
-import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
-import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResultFactory;
-import com.microsoft.identity.common.java.providers.oauth2.AuthorizationStatus;
-
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
-
-import lombok.NonNull;
-
 import static com.microsoft.identity.common.java.providers.Constants.BROKER_INSTALLATION_REQUIRED_WEBVIEW_REDIRECT_URI;
 import static com.microsoft.identity.common.java.providers.Constants.CANCEL_RESPONSE_REDIRECT_URI;
 import static com.microsoft.identity.common.java.providers.Constants.MOCK_AUTH_CODE_AND_STATE;
@@ -49,14 +32,34 @@ import static com.microsoft.identity.common.java.providers.Constants.MOCK_REDIRE
 import static com.microsoft.identity.common.java.providers.Constants.MOCK_STATE;
 import static com.microsoft.identity.common.java.providers.Constants.MOCK_WPJ_USERNAME;
 import static com.microsoft.identity.common.java.providers.Constants.WPJ_REQUIRED_REDIRECT_URI;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
+import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.exception.ErrorStrings;
+import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
+import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationErrorResponse;
+import com.microsoft.identity.common.java.providers.oauth2.AuthorizationErrorResponse;
+import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
+import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResultFactory;
+import com.microsoft.identity.common.java.providers.oauth2.AuthorizationStatus;
+
+import lombok.NonNull;
+
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
+
 @RunWith(JUnit4.class)
 public class MicrosoftStsAuthorizationResultFactoryTest {
 
-    private AuthorizationResultFactory<MicrosoftStsAuthorizationResult, MicrosoftStsAuthorizationRequest> mAuthorizationResultFactory;
+    private AuthorizationResultFactory<
+                    MicrosoftStsAuthorizationResult, MicrosoftStsAuthorizationRequest>
+            mAuthorizationResultFactory;
 
     @Before
     public void setUp() {
@@ -67,183 +70,255 @@ public class MicrosoftStsAuthorizationResultFactoryTest {
         return new MicrosoftStsAuthorizationRequest.Builder().setState(MOCK_STATE).build();
     }
 
-    private MicrosoftStsAuthorizationRequest getMstsAuthorizationRequestWithState(@NonNull final String state) {
+    private MicrosoftStsAuthorizationRequest getMstsAuthorizationRequestWithState(
+            @NonNull final String state) {
         return new MicrosoftStsAuthorizationRequest.Builder().setState(state).build();
     }
 
     @Test
     public void testClientError() {
-        final AuthorizationResult result = mAuthorizationResultFactory.createAuthorizationResult(
-                RawAuthorizationResult.fromException(new ClientException(MOCK_ERROR_CODE, MOCK_ERROR_MESSAGE)), getMstsAuthorizationRequest());
+        final AuthorizationResult result =
+                mAuthorizationResultFactory.createAuthorizationResult(
+                        RawAuthorizationResult.fromException(
+                                new ClientException(MOCK_ERROR_CODE, MOCK_ERROR_MESSAGE)),
+                        getMstsAuthorizationRequest());
         assertNotNull(result);
         assertNull(result.getAuthorizationResponse());
         assertEquals(AuthorizationStatus.FAIL, result.getAuthorizationStatus());
         assertNotNull(result.getAuthorizationErrorResponse());
         assertNotNull(MOCK_ERROR_CODE, result.getAuthorizationErrorResponse().getError());
-        assertNotNull(MOCK_ERROR_MESSAGE, result.getAuthorizationErrorResponse().getErrorDescription());
+        assertNotNull(
+                MOCK_ERROR_MESSAGE, result.getAuthorizationErrorResponse().getErrorDescription());
     }
 
     // BROWSER_CODE_COMPLETE should be set only via RawAuthorizationResult.fromRedirectUrl()
     @Test(expected = IllegalArgumentException.class)
     public void testHandleCompleteResultWithOnlyCode() {
         mAuthorizationResultFactory.createAuthorizationResult(
-                RawAuthorizationResult.fromResultCode(RawAuthorizationResult.ResultCode.COMPLETED), getMstsAuthorizationRequest());
+                RawAuthorizationResult.fromResultCode(RawAuthorizationResult.ResultCode.COMPLETED),
+                getMstsAuthorizationRequest());
         Assert.fail();
     }
 
     @Test
-    public void testHandleInlineWpj(){
-        final AuthorizationResult result = mAuthorizationResultFactory.createAuthorizationResult(
-                RawAuthorizationResult.fromRedirectUri(WPJ_REQUIRED_REDIRECT_URI), getMstsAuthorizationRequest());
+    public void testHandleInlineWpj() {
+        final AuthorizationResult result =
+                mAuthorizationResultFactory.createAuthorizationResult(
+                        RawAuthorizationResult.fromRedirectUri(WPJ_REQUIRED_REDIRECT_URI),
+                        getMstsAuthorizationRequest());
         assertNotNull(result);
         assertNull(result.getAuthorizationResponse());
         assertEquals(AuthorizationStatus.FAIL, result.getAuthorizationStatus());
         AuthorizationErrorResponse errorResponse = result.getAuthorizationErrorResponse();
         assertNotNull(errorResponse);
-        assertEquals(MicrosoftAuthorizationErrorResponse.DEVICE_REGISTRATION_NEEDED, errorResponse.getError());
-        assertEquals(MicrosoftAuthorizationErrorResponse.DEVICE_REGISTRATION_NEEDED_ERROR_DESCRIPTION, errorResponse.getErrorDescription());
+        assertEquals(
+                MicrosoftAuthorizationErrorResponse.DEVICE_REGISTRATION_NEEDED,
+                errorResponse.getError());
+        assertEquals(
+                MicrosoftAuthorizationErrorResponse.DEVICE_REGISTRATION_NEEDED_ERROR_DESCRIPTION,
+                errorResponse.getErrorDescription());
         assertEquals(MOCK_WPJ_USERNAME, errorResponse.getUpnToWpj());
     }
 
     @Test
-    public void testHandleBrokerAppInstallationRequired(){
-        final AuthorizationResult result = mAuthorizationResultFactory.createAuthorizationResult(
-                RawAuthorizationResult.fromRedirectUri(BROKER_INSTALLATION_REQUIRED_WEBVIEW_REDIRECT_URI), getMstsAuthorizationRequest());
+    public void testHandleBrokerAppInstallationRequired() {
+        final AuthorizationResult result =
+                mAuthorizationResultFactory.createAuthorizationResult(
+                        RawAuthorizationResult.fromRedirectUri(
+                                BROKER_INSTALLATION_REQUIRED_WEBVIEW_REDIRECT_URI),
+                        getMstsAuthorizationRequest());
         assertNotNull(result);
         assertNull(result.getAuthorizationResponse());
         assertEquals(AuthorizationStatus.FAIL, result.getAuthorizationStatus());
         AuthorizationErrorResponse errorResponse = result.getAuthorizationErrorResponse();
         assertNotNull(errorResponse);
-        assertEquals(MicrosoftAuthorizationErrorResponse.BROKER_NEEDS_TO_BE_INSTALLED, errorResponse.getError());
-        assertEquals(MicrosoftAuthorizationErrorResponse.BROKER_NEEDS_TO_BE_INSTALLED_ERROR_DESCRIPTION, errorResponse.getErrorDescription());
+        assertEquals(
+                MicrosoftAuthorizationErrorResponse.BROKER_NEEDS_TO_BE_INSTALLED,
+                errorResponse.getError());
+        assertEquals(
+                MicrosoftAuthorizationErrorResponse.BROKER_NEEDS_TO_BE_INSTALLED_ERROR_DESCRIPTION,
+                errorResponse.getErrorDescription());
         assertEquals(MOCK_WPJ_USERNAME, errorResponse.getUpnToWpj());
     }
 
     @Test
-    public void testHandleSDKCancel(){
-        final AuthorizationResult result = mAuthorizationResultFactory.createAuthorizationResult(
-                RawAuthorizationResult.fromResultCode(RawAuthorizationResult.ResultCode.SDK_CANCELLED), getMstsAuthorizationRequest());
+    public void testHandleSDKCancel() {
+        final AuthorizationResult result =
+                mAuthorizationResultFactory.createAuthorizationResult(
+                        RawAuthorizationResult.fromResultCode(
+                                RawAuthorizationResult.ResultCode.SDK_CANCELLED),
+                        getMstsAuthorizationRequest());
         assertNotNull(result);
         assertNull(result.getAuthorizationResponse());
         assertEquals(AuthorizationStatus.SDK_CANCEL, result.getAuthorizationStatus());
         AuthorizationErrorResponse errorResponse = result.getAuthorizationErrorResponse();
         assertNotNull(errorResponse);
         assertEquals(MicrosoftAuthorizationErrorResponse.SDK_AUTH_CANCEL, errorResponse.getError());
-        assertEquals(MicrosoftAuthorizationErrorResponse.SDK_CANCELLED_FLOW, errorResponse.getErrorDescription());
+        assertEquals(
+                MicrosoftAuthorizationErrorResponse.SDK_CANCELLED_FLOW,
+                errorResponse.getErrorDescription());
     }
 
     @Test
     public void testBrowserCodeCancel() {
-        final AuthorizationResult result = mAuthorizationResultFactory.createAuthorizationResult(
-                RawAuthorizationResult.fromResultCode(RawAuthorizationResult.ResultCode.CANCELLED), getMstsAuthorizationRequest());
+        final AuthorizationResult result =
+                mAuthorizationResultFactory.createAuthorizationResult(
+                        RawAuthorizationResult.fromResultCode(
+                                RawAuthorizationResult.ResultCode.CANCELLED),
+                        getMstsAuthorizationRequest());
         assertNotNull(result);
         assertNull(result.getAuthorizationResponse());
         assertEquals(AuthorizationStatus.USER_CANCEL, result.getAuthorizationStatus());
         AuthorizationErrorResponse errorResponse = result.getAuthorizationErrorResponse();
         assertNotNull(errorResponse);
         assertEquals(MicrosoftAuthorizationErrorResponse.USER_CANCEL, errorResponse.getError());
-        assertEquals(MicrosoftAuthorizationErrorResponse.USER_CANCELLED_FLOW, errorResponse.getErrorDescription());
+        assertEquals(
+                MicrosoftAuthorizationErrorResponse.USER_CANCELLED_FLOW,
+                errorResponse.getErrorDescription());
     }
 
     @Test
-    public void testHandleCancelViaUrl(){
-        final AuthorizationResult result = mAuthorizationResultFactory.createAuthorizationResult(
-                RawAuthorizationResult.fromRedirectUri(CANCEL_RESPONSE_REDIRECT_URI), getMstsAuthorizationRequest());
+    public void testHandleCancelViaUrl() {
+        final AuthorizationResult result =
+                mAuthorizationResultFactory.createAuthorizationResult(
+                        RawAuthorizationResult.fromRedirectUri(CANCEL_RESPONSE_REDIRECT_URI),
+                        getMstsAuthorizationRequest());
         assertNotNull(result);
         assertNull(result.getAuthorizationResponse());
         assertEquals(AuthorizationStatus.USER_CANCEL, result.getAuthorizationStatus());
         AuthorizationErrorResponse errorResponse = result.getAuthorizationErrorResponse();
         assertNotNull(errorResponse);
         assertEquals(MicrosoftAuthorizationErrorResponse.USER_CANCEL, errorResponse.getError());
-        assertEquals(MicrosoftAuthorizationErrorResponse.USER_CANCELLED_FLOW, errorResponse.getErrorDescription());
+        assertEquals(
+                MicrosoftAuthorizationErrorResponse.USER_CANCELLED_FLOW,
+                errorResponse.getErrorDescription());
     }
 
     @Test
-    public void testHandleMDMFlow(){
-        final AuthorizationResult result = mAuthorizationResultFactory.createAuthorizationResult(
-                RawAuthorizationResult.fromResultCode(RawAuthorizationResult.ResultCode.MDM_FLOW), getMstsAuthorizationRequest());
+    public void testHandleMDMFlow() {
+        final AuthorizationResult result =
+                mAuthorizationResultFactory.createAuthorizationResult(
+                        RawAuthorizationResult.fromResultCode(
+                                RawAuthorizationResult.ResultCode.MDM_FLOW),
+                        getMstsAuthorizationRequest());
         assertNotNull(result);
         assertNull(result.getAuthorizationResponse());
         assertEquals(AuthorizationStatus.FAIL, result.getAuthorizationStatus());
         AuthorizationErrorResponse errorResponse = result.getAuthorizationErrorResponse();
         assertNotNull(errorResponse);
-        assertEquals(MicrosoftAuthorizationErrorResponse.DEVICE_NEEDS_TO_BE_MANAGED, errorResponse.getError());
-        assertEquals(MicrosoftAuthorizationErrorResponse.DEVICE_NEEDS_TO_BE_MANAGED_ERROR_DESCRIPTION, errorResponse.getErrorDescription());
+        assertEquals(
+                MicrosoftAuthorizationErrorResponse.DEVICE_NEEDS_TO_BE_MANAGED,
+                errorResponse.getError());
+        assertEquals(
+                MicrosoftAuthorizationErrorResponse.DEVICE_NEEDS_TO_BE_MANAGED_ERROR_DESCRIPTION,
+                errorResponse.getErrorDescription());
     }
 
     @Test
     public void testUnknownResultCode() {
-        final AuthorizationResult result = mAuthorizationResultFactory.createAuthorizationResult(
-                RawAuthorizationResult.fromResultCode(RawAuthorizationResult.ResultCode.UNKNOWN), getMstsAuthorizationRequest());
+        final AuthorizationResult result =
+                mAuthorizationResultFactory.createAuthorizationResult(
+                        RawAuthorizationResult.fromResultCode(
+                                RawAuthorizationResult.ResultCode.UNKNOWN),
+                        getMstsAuthorizationRequest());
         assertNotNull(result);
         assertNull(result.getAuthorizationResponse());
         assertEquals(AuthorizationStatus.FAIL, result.getAuthorizationStatus());
         AuthorizationErrorResponse errorResponse = result.getAuthorizationErrorResponse();
         assertNotNull(errorResponse);
         assertEquals(MicrosoftAuthorizationErrorResponse.UNKNOWN_ERROR, errorResponse.getError());
-        assertEquals(MicrosoftAuthorizationErrorResponse.UNKNOWN_RESULT_CODE + "[" +
-                RawAuthorizationResult.ResultCode.UNKNOWN.name() +"]", errorResponse.getErrorDescription());
+        assertEquals(
+                MicrosoftAuthorizationErrorResponse.UNKNOWN_RESULT_CODE
+                        + "["
+                        + RawAuthorizationResult.ResultCode.UNKNOWN.name()
+                        + "]",
+                errorResponse.getErrorDescription());
     }
 
     @Test
     public void testEmptyUrl() {
-        final AuthorizationResult result = mAuthorizationResultFactory.createAuthorizationResult(
-                RawAuthorizationResult.fromRedirectUri(""), getMstsAuthorizationRequest());
+        final AuthorizationResult result =
+                mAuthorizationResultFactory.createAuthorizationResult(
+                        RawAuthorizationResult.fromRedirectUri(""), getMstsAuthorizationRequest());
         assertNotNull(result);
         assertNull(result.getAuthorizationResponse());
         assertEquals(AuthorizationStatus.FAIL, result.getAuthorizationStatus());
         AuthorizationErrorResponse errorResponse = result.getAuthorizationErrorResponse();
         assertNotNull(errorResponse);
-        assertEquals(MicrosoftAuthorizationErrorResponse.AUTHORIZATION_FAILED, errorResponse.getError());
-        assertEquals(MicrosoftAuthorizationErrorResponse.AUTHORIZATION_SERVER_INVALID_RESPONSE, errorResponse.getErrorDescription());
+        assertEquals(
+                MicrosoftAuthorizationErrorResponse.AUTHORIZATION_FAILED, errorResponse.getError());
+        assertEquals(
+                MicrosoftAuthorizationErrorResponse.AUTHORIZATION_SERVER_INVALID_RESPONSE,
+                errorResponse.getErrorDescription());
     }
 
     @Test
     public void testUrlWithEmptyParams() {
-        final AuthorizationResult result = mAuthorizationResultFactory.createAuthorizationResult(
-                RawAuthorizationResult.fromRedirectUri(MOCK_REDIRECT_URI), getMstsAuthorizationRequest());
+        final AuthorizationResult result =
+                mAuthorizationResultFactory.createAuthorizationResult(
+                        RawAuthorizationResult.fromRedirectUri(MOCK_REDIRECT_URI),
+                        getMstsAuthorizationRequest());
         assertNotNull(result);
         assertNull(result.getAuthorizationResponse());
         assertEquals(AuthorizationStatus.FAIL, result.getAuthorizationStatus());
         AuthorizationErrorResponse errorResponse = result.getAuthorizationErrorResponse();
         assertNotNull(errorResponse);
-        assertEquals(MicrosoftAuthorizationErrorResponse.AUTHORIZATION_FAILED, errorResponse.getError());
-        assertEquals(MicrosoftAuthorizationErrorResponse.AUTHORIZATION_SERVER_INVALID_RESPONSE, errorResponse.getErrorDescription());
+        assertEquals(
+                MicrosoftAuthorizationErrorResponse.AUTHORIZATION_FAILED, errorResponse.getError());
+        assertEquals(
+                MicrosoftAuthorizationErrorResponse.AUTHORIZATION_SERVER_INVALID_RESPONSE,
+                errorResponse.getErrorDescription());
     }
 
     @Test
     public void testUrlWithInvalidParams() {
-        final AuthorizationResult result = mAuthorizationResultFactory.createAuthorizationResult(
-                RawAuthorizationResult.fromRedirectUri(MOCK_REDIRECT_URI + "?some_random_error=accessdenied"), getMstsAuthorizationRequest());
+        final AuthorizationResult result =
+                mAuthorizationResultFactory.createAuthorizationResult(
+                        RawAuthorizationResult.fromRedirectUri(
+                                MOCK_REDIRECT_URI + "?some_random_error=accessdenied"),
+                        getMstsAuthorizationRequest());
         assertNotNull(result);
         assertNull(result.getAuthorizationResponse());
         assertEquals(AuthorizationStatus.FAIL, result.getAuthorizationStatus());
         AuthorizationErrorResponse errorResponse = result.getAuthorizationErrorResponse();
         assertNotNull(errorResponse);
-        assertEquals(MicrosoftAuthorizationErrorResponse.AUTHORIZATION_FAILED, errorResponse.getError());
-        assertEquals(MicrosoftAuthorizationErrorResponse.AUTHORIZATION_SERVER_INVALID_RESPONSE, errorResponse.getErrorDescription());
+        assertEquals(
+                MicrosoftAuthorizationErrorResponse.AUTHORIZATION_FAILED, errorResponse.getError());
+        assertEquals(
+                MicrosoftAuthorizationErrorResponse.AUTHORIZATION_SERVER_INVALID_RESPONSE,
+                errorResponse.getErrorDescription());
     }
-
 
     @Test
     public void testUrlWithInCorrectState() {
-        final AuthorizationResult result = mAuthorizationResultFactory.createAuthorizationResult(
-                RawAuthorizationResult.fromRedirectUri(MOCK_REDIRECT_URI + "?" + MOCK_AUTH_CODE_AND_STATE),
-                getMstsAuthorizationRequestWithState("incorrect_state"));
+        final AuthorizationResult result =
+                mAuthorizationResultFactory.createAuthorizationResult(
+                        RawAuthorizationResult.fromRedirectUri(
+                                MOCK_REDIRECT_URI + "?" + MOCK_AUTH_CODE_AND_STATE),
+                        getMstsAuthorizationRequestWithState("incorrect_state"));
         assertNotNull(result);
         assertNotNull(result.getAuthorizationErrorResponse());
         assertEquals(AuthorizationStatus.FAIL, result.getAuthorizationStatus());
         AuthorizationErrorResponse errorResponse = result.getAuthorizationErrorResponse();
         assertNotNull(errorResponse);
         assertEquals(ErrorStrings.STATE_MISMATCH, errorResponse.getError());
-        assertEquals(MicrosoftAuthorizationErrorResponse.STATE_NOT_THE_SAME, errorResponse.getErrorDescription());
+        assertEquals(
+                MicrosoftAuthorizationErrorResponse.STATE_NOT_THE_SAME,
+                errorResponse.getErrorDescription());
     }
 
     @Test
     public void testUrlWithErrorInParams() {
-        final String responseUrl = MOCK_REDIRECT_URI + "?error=" + MOCK_ERROR_CODE + "&error_description=" + MOCK_ERROR_MESSAGE;
-        final AuthorizationResult result = mAuthorizationResultFactory.createAuthorizationResult(
-                RawAuthorizationResult.fromRedirectUri(responseUrl), getMstsAuthorizationRequest());
+        final String responseUrl =
+                MOCK_REDIRECT_URI
+                        + "?error="
+                        + MOCK_ERROR_CODE
+                        + "&error_description="
+                        + MOCK_ERROR_MESSAGE;
+        final AuthorizationResult result =
+                mAuthorizationResultFactory.createAuthorizationResult(
+                        RawAuthorizationResult.fromRedirectUri(responseUrl),
+                        getMstsAuthorizationRequest());
         assertNotNull(result);
         assertNull(result.getAuthorizationResponse());
         assertEquals(AuthorizationStatus.FAIL, result.getAuthorizationStatus());
@@ -255,12 +330,15 @@ public class MicrosoftStsAuthorizationResultFactoryTest {
 
     @Test
     public void testUrlWithValidAuthCodeAndFragmentParas() {
-        final AuthorizationResult result = mAuthorizationResultFactory.createAuthorizationResult(
-                RawAuthorizationResult.fromRedirectUri(
-                        MOCK_REDIRECT_URI
-                                + "?" + "code=authorization_code&state=" + MOCK_STATE
-                                + MOCK_FRAGMENT_STRING
-                ), getMstsAuthorizationRequest());
+        final AuthorizationResult result =
+                mAuthorizationResultFactory.createAuthorizationResult(
+                        RawAuthorizationResult.fromRedirectUri(
+                                MOCK_REDIRECT_URI
+                                        + "?"
+                                        + "code=authorization_code&state="
+                                        + MOCK_STATE
+                                        + MOCK_FRAGMENT_STRING),
+                        getMstsAuthorizationRequest());
         assertNotNull(result);
         assertNotNull(result.getAuthorizationResponse());
         assertEquals(AuthorizationStatus.SUCCESS, result.getAuthorizationStatus());
@@ -269,13 +347,19 @@ public class MicrosoftStsAuthorizationResultFactoryTest {
 
     @Test
     public void testUrlWithInvalidAuthCodeAndFragmentParas() {
-        final AuthorizationResult result = mAuthorizationResultFactory.createAuthorizationResult(
-                RawAuthorizationResult.fromRedirectUri(MOCK_REDIRECT_URI + "?" + MOCK_FRAGMENT_STRING), getMstsAuthorizationRequest());
+        final AuthorizationResult result =
+                mAuthorizationResultFactory.createAuthorizationResult(
+                        RawAuthorizationResult.fromRedirectUri(
+                                MOCK_REDIRECT_URI + "?" + MOCK_FRAGMENT_STRING),
+                        getMstsAuthorizationRequest());
         assertNotNull(result);
         assertNotNull(result.getAuthorizationErrorResponse());
         assertEquals(AuthorizationStatus.FAIL, result.getAuthorizationStatus());
         AuthorizationErrorResponse errorResponse = result.getAuthorizationErrorResponse();
-        assertEquals(errorResponse.getError(), MicrosoftAuthorizationErrorResponse.AUTHORIZATION_FAILED);
-        assertEquals(errorResponse.getErrorDescription(), MicrosoftAuthorizationErrorResponse.AUTHORIZATION_SERVER_INVALID_RESPONSE);
+        assertEquals(
+                errorResponse.getError(), MicrosoftAuthorizationErrorResponse.AUTHORIZATION_FAILED);
+        assertEquals(
+                errorResponse.getErrorDescription(),
+                MicrosoftAuthorizationErrorResponse.AUTHORIZATION_SERVER_INVALID_RESPONSE);
     }
 }

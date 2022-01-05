@@ -25,6 +25,8 @@ package com.microsoft.identity.common.java.crypto;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.util.TaskCompletedCallbackWithError;
 
+import lombok.NonNull;
+
 import java.net.URL;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -38,8 +40,6 @@ import java.util.Date;
 
 import javax.crypto.spec.OAEPParameterSpec;
 import javax.crypto.spec.PSource;
-
-import lombok.NonNull;
 
 /**
  * Internal convenience class interface for PoP related functions.
@@ -88,40 +88,45 @@ public interface IDevicePopManager {
      * requires use of a SHA-1 digest or uses NO_PADDING should not be supported.
      */
     enum Cipher implements AsymmetricAlgorithm {
-        //@RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
+        // @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
         RSA_ECB_PKCS1_PADDING("RSA/ECB/PKCS1Padding"),
 
-
-        //@RequiresApi(Build.VERSION_CODES.GINGERBREAD_MR1)
+        // @RequiresApi(Build.VERSION_CODES.GINGERBREAD_MR1)
         RSA_NONE_OAEPWithSHA_1AndMGF1Padding("RSA/NONE/OAEPWithSHA-1AndMGF1Padding") {
             @Override
             public AlgorithmParameterSpec getParameters() {
-                // We're going to be forcing defaults in this cipher to correct a deficiency in certain
+                // We're going to be forcing defaults in this cipher to correct a deficiency in
+                // certain
                 // android platform support.  See:
                 // https://issuetracker.google.com/issues/37075898#comment7
-                return new OAEPParameterSpec(SHA_1, MGF_1, new MGF1ParameterSpec(SHA_1), PSource.PSpecified.DEFAULT);
+                return new OAEPParameterSpec(
+                        SHA_1, MGF_1, new MGF1ParameterSpec(SHA_1), PSource.PSpecified.DEFAULT);
             }
         },
 
-        //@RequiresApi(Build.VERSION_CODES.GINGERBREAD_MR1)
+        // @RequiresApi(Build.VERSION_CODES.GINGERBREAD_MR1)
         RSA_ECB_OAEPWithSHA_1AndMGF1Padding("RSA/ECB/OAEPWithSHA-1AndMGF1Padding") {
             @Override
             public AlgorithmParameterSpec getParameters() {
-                // We're going to be forcing defaults in this cipher to correct a deficiency in certain
+                // We're going to be forcing defaults in this cipher to correct a deficiency in
+                // certain
                 // android platform support.  See:
                 // https://issuetracker.google.com/issues/37075898#comment7
-                return new OAEPParameterSpec(SHA_1, MGF_1, new MGF1ParameterSpec(SHA_1), PSource.PSpecified.DEFAULT);
+                return new OAEPParameterSpec(
+                        SHA_1, MGF_1, new MGF1ParameterSpec(SHA_1), PSource.PSpecified.DEFAULT);
             }
         },
 
-        //@RequiresApi(Build.VERSION_CODES.M)
+        // @RequiresApi(Build.VERSION_CODES.M)
         RSA_ECB_OAEPWithSHA_256AndMGF1Padding("RSA/ECB/OAEPWithSHA-256AndMGF1Padding") {
             @Override
             public AlgorithmParameterSpec getParameters() {
-                // We're going to be forcing defaults in this cipher to correct a deficiency in certain
+                // We're going to be forcing defaults in this cipher to correct a deficiency in
+                // certain
                 // android platform support.  See:
                 // https://issuetracker.google.com/issues/37075898#comment7
-                return new OAEPParameterSpec("SHA-256", MGF_1, new MGF1ParameterSpec(SHA_1), PSource.PSpecified.DEFAULT);
+                return new OAEPParameterSpec(
+                        "SHA-256", MGF_1, new MGF1ParameterSpec(SHA_1), PSource.PSpecified.DEFAULT);
             }
         };
 
@@ -151,7 +156,9 @@ public interface IDevicePopManager {
         /**
          * @return true if this cipher can be used for SHR generation.
          */
-        public boolean supportsShr() { return true; }
+        public boolean supportsShr() {
+            return true;
+        }
     }
 
     /**
@@ -278,7 +285,8 @@ public interface IDevicePopManager {
      * @return The encrypted plaintext.
      * @throws ClientException If encryption fails.
      */
-    byte[] encrypt(@NonNull final Cipher cipher, @NonNull final byte[] plaintext) throws ClientException;
+    byte[] encrypt(@NonNull final Cipher cipher, @NonNull final byte[] plaintext)
+            throws ClientException;
 
     /**
      * Decrypts the supplied String with the provided cipher.
@@ -322,8 +330,9 @@ public interface IDevicePopManager {
      *
      * @return A PublicKey instance.
      */
-    PublicKey getPublicKey() throws UnrecoverableEntryException, NoSuchAlgorithmException, KeyStoreException;
-    
+    PublicKey getPublicKey()
+            throws UnrecoverableEntryException, NoSuchAlgorithmException, KeyStoreException;
+
     /*
      * Returns the certificate chain associated with the underlying key material.
      *
@@ -344,12 +353,9 @@ public interface IDevicePopManager {
      * @param nonce       (Optional) Arbitrary value used for replay protection by middleware.
      * @return The signed PoP access token.
      */
-    String mintSignedAccessToken(String httpMethod,
-                                 long timestamp,
-                                 URL requestUrl,
-                                 String accessToken,
-                                 String nonce
-    ) throws ClientException;
+    String mintSignedAccessToken(
+            String httpMethod, long timestamp, URL requestUrl, String accessToken, String nonce)
+            throws ClientException;
 
     /**
      * Api to create the signed PoP access token.
@@ -363,13 +369,14 @@ public interface IDevicePopManager {
      *                     client_claims value.
      * @return The signed PoP access token.
      */
-    String mintSignedAccessToken(String httpMethod,
-                                 long timestamp,
-                                 URL requestUrl,
-                                 String accessToken,
-                                 String nonce,
-                                 String clientClaims
-    ) throws ClientException;
+    String mintSignedAccessToken(
+            String httpMethod,
+            long timestamp,
+            URL requestUrl,
+            String accessToken,
+            String nonce,
+            String clientClaims)
+            throws ClientException;
 
     /**
      * Api to create the signed HTTP requests (SHRs) without embedding a PoP-AT.
@@ -382,13 +389,9 @@ public interface IDevicePopManager {
      *                     client_claims value.
      * @return The signed PoP access token.
      */
-    String mintSignedHttpRequest(String httpMethod,
-                                 long timestamp,
-                                 URL requestUrl,
-                                 String nonce,
-                                 String clientClaims
-    ) throws ClientException;
-
+    String mintSignedHttpRequest(
+            String httpMethod, long timestamp, URL requestUrl, String nonce, String clientClaims)
+            throws ClientException;
 
     /**
      * Get the key manager that this device pop manager uses for key provisioning and

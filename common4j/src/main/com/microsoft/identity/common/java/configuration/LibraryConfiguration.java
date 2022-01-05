@@ -24,11 +24,10 @@ package com.microsoft.identity.common.java.configuration;
 
 import com.microsoft.identity.common.java.logging.Logger;
 
-import lombok.NonNull;
-
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NonNull;
 
 /**
  * Holds configuration settings that are global in scope.
@@ -43,7 +42,7 @@ public class LibraryConfiguration {
     private static LibraryConfiguration sInstance = null;
 
     // static method to create instance of Singleton class
-    public synchronized static LibraryConfiguration getInstance() {
+    public static synchronized LibraryConfiguration getInstance() {
         if (sInstance == null) {
             sInstance = createDefaultInstance();
         }
@@ -51,7 +50,8 @@ public class LibraryConfiguration {
         return sInstance;
     }
 
-    public static synchronized void intializeLibraryConfiguration(@NonNull final LibraryConfiguration config) {
+    public static synchronized void intializeLibraryConfiguration(
+            @NonNull final LibraryConfiguration config) {
         if (sInstance == null) {
             sInstance = config;
         } else {
@@ -60,7 +60,10 @@ public class LibraryConfiguration {
     }
 
     private static synchronized LibraryConfiguration createDefaultInstance() {
-        return LibraryConfiguration.builder().authorizationInCurrentTask(false).refreshInEnabled(false).build();
+        return LibraryConfiguration.builder()
+                .authorizationInCurrentTask(false)
+                .refreshInEnabled(false)
+                .build();
     }
 
     /**
@@ -77,5 +80,4 @@ public class LibraryConfiguration {
      * Determined whether refresh_in feature is enabled by client.
      */
     private boolean refreshInEnabled;
-
 }

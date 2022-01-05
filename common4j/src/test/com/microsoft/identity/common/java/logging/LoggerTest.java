@@ -23,13 +23,13 @@
 
 package com.microsoft.identity.common.java.logging;
 
+import lombok.SneakyThrows;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.util.concurrent.CountDownLatch;
-
-import lombok.SneakyThrows;
 
 public class LoggerTest {
     final int TEST_TIME_OUT_IN_MILLISECONDS = 1000;
@@ -50,12 +50,19 @@ public class LoggerTest {
         final boolean containsPII = false;
 
         Logger.setLogLevel(logLevel);
-        testLogger(tag, logLevel, correlationId, message, containsPII, new IOperationToTest() {
-            @Override
-            public void execute() {
-                Logger.verbose(tag, correlationId, message);
-            }
-        }, false);
+        testLogger(
+                tag,
+                logLevel,
+                correlationId,
+                message,
+                containsPII,
+                new IOperationToTest() {
+                    @Override
+                    public void execute() {
+                        Logger.verbose(tag, correlationId, message);
+                    }
+                },
+                false);
     }
 
     @Test(timeout = TEST_TIME_OUT_IN_MILLISECONDS)
@@ -64,12 +71,19 @@ public class LoggerTest {
         final boolean containsPII = false;
 
         Logger.setLogLevel(logLevel);
-        testLogger(tag, logLevel, correlationId, message, containsPII, new IOperationToTest() {
-            @Override
-            public void execute() {
-                Logger.info(tag, correlationId, message);
-            }
-        }, false);
+        testLogger(
+                tag,
+                logLevel,
+                correlationId,
+                message,
+                containsPII,
+                new IOperationToTest() {
+                    @Override
+                    public void execute() {
+                        Logger.info(tag, correlationId, message);
+                    }
+                },
+                false);
     }
 
     @Test(timeout = TEST_TIME_OUT_IN_MILLISECONDS)
@@ -78,12 +92,19 @@ public class LoggerTest {
         final boolean containsPII = false;
 
         Logger.setLogLevel(logLevel);
-        testLogger(tag, logLevel, correlationId, message, containsPII, new IOperationToTest() {
-            @Override
-            public void execute() {
-                Logger.error(tag, correlationId, message, null);
-            }
-        }, false);
+        testLogger(
+                tag,
+                logLevel,
+                correlationId,
+                message,
+                containsPII,
+                new IOperationToTest() {
+                    @Override
+                    public void execute() {
+                        Logger.error(tag, correlationId, message, null);
+                    }
+                },
+                false);
     }
 
     @Test(timeout = TEST_TIME_OUT_IN_MILLISECONDS)
@@ -92,12 +113,19 @@ public class LoggerTest {
         final boolean containsPII = false;
 
         Logger.setLogLevel(logLevel);
-        testLogger(tag, logLevel, correlationId, message, containsPII, new IOperationToTest() {
-            @Override
-            public void execute() {
-                Logger.warn(tag, correlationId, message);
-            }
-        }, false);
+        testLogger(
+                tag,
+                logLevel,
+                correlationId,
+                message,
+                containsPII,
+                new IOperationToTest() {
+                    @Override
+                    public void execute() {
+                        Logger.warn(tag, correlationId, message);
+                    }
+                },
+                false);
     }
 
     @Test(timeout = TEST_TIME_OUT_IN_MILLISECONDS)
@@ -106,12 +134,19 @@ public class LoggerTest {
         final boolean containsPII = false;
 
         Logger.setLogLevel(Logger.LogLevel.ERROR);
-        testLogger(tag, logLevel, correlationId, message, containsPII, new IOperationToTest() {
-            @Override
-            public void execute() {
-                Logger.verbose(tag, correlationId, message);
-            }
-        }, true);
+        testLogger(
+                tag,
+                logLevel,
+                correlationId,
+                message,
+                containsPII,
+                new IOperationToTest() {
+                    @Override
+                    public void execute() {
+                        Logger.verbose(tag, correlationId, message);
+                    }
+                },
+                true);
     }
 
     @Test(timeout = TEST_TIME_OUT_IN_MILLISECONDS)
@@ -120,12 +155,19 @@ public class LoggerTest {
         final boolean containsPII = true;
 
         Logger.setAllowPii(false);
-        testLogger(tag, logLevel, correlationId, message, containsPII, new IOperationToTest() {
-            @Override
-            public void execute() {
-                Logger.verbosePII(tag, correlationId, message);
-            }
-        }, true);
+        testLogger(
+                tag,
+                logLevel,
+                correlationId,
+                message,
+                containsPII,
+                new IOperationToTest() {
+                    @Override
+                    public void execute() {
+                        Logger.verbosePII(tag, correlationId, message);
+                    }
+                },
+                true);
     }
 
     @Test(timeout = TEST_TIME_OUT_IN_MILLISECONDS)
@@ -140,15 +182,23 @@ public class LoggerTest {
         DiagnosticContext.INSTANCE.setRequestContext(requestContext);
 
         Logger.setAllowPii(false);
-        testLogger(tag, logLevel, newCorrelationId, newThreadName, containsPII, new IOperationToTest() {
-            @Override
-            public void execute() {
-                Logger.verbose(tag, "");
-            }
-        }, false);
+        testLogger(
+                tag,
+                logLevel,
+                newCorrelationId,
+                newThreadName,
+                containsPII,
+                new IOperationToTest() {
+                    @Override
+                    public void execute() {
+                        Logger.verbose(tag, "");
+                    }
+                },
+                false);
     }
 
-    // Each thread should print a different thread name (and correlation ID, if set differently) to the log.
+    // Each thread should print a different thread name (and correlation ID, if set differently) to
+    // the log.
     @Test(timeout = TEST_TIME_OUT_IN_MILLISECONDS)
     public void logWithDiagnosticContext_Multithread() throws InterruptedException {
         final Logger.LogLevel logLevel = Logger.LogLevel.VERBOSE;
@@ -166,33 +216,50 @@ public class LoggerTest {
         final String[] threadName_2 = {null};
 
         // Spin a background thread.
-        new Thread(new Runnable() {
-            @SneakyThrows
-            @Override
-            public void run() {
-                threadName_2[0] = Thread.currentThread().getName();
+        new Thread(
+                        new Runnable() {
+                            @SneakyThrows
+                            @Override
+                            public void run() {
+                                threadName_2[0] = Thread.currentThread().getName();
 
-                final RequestContext requestContext = new RequestContext();
-                requestContext.put(DiagnosticContext.CORRELATION_ID, correlationId_2);
-                DiagnosticContext.INSTANCE.setRequestContext(requestContext);
+                                final RequestContext requestContext = new RequestContext();
+                                requestContext.put(
+                                        DiagnosticContext.CORRELATION_ID, correlationId_2);
+                                DiagnosticContext.INSTANCE.setRequestContext(requestContext);
 
-                testLogger(tag, logLevel, correlationId_2, threadName_2[0], containsPII, new IOperationToTest() {
+                                testLogger(
+                                        tag,
+                                        logLevel,
+                                        correlationId_2,
+                                        threadName_2[0],
+                                        containsPII,
+                                        new IOperationToTest() {
+                                            @Override
+                                            public void execute() {
+                                                Logger.verbose(tag, "");
+                                            }
+                                        },
+                                        false);
+                                countDownLatch.countDown();
+                            }
+                        })
+                .start();
+
+        countDownLatch.await();
+        testLogger(
+                tag,
+                logLevel,
+                correlationId_1,
+                threadName_1,
+                containsPII,
+                new IOperationToTest() {
                     @Override
                     public void execute() {
                         Logger.verbose(tag, "");
                     }
-                }, false);
-                countDownLatch.countDown();
-            }
-        }).start();
-
-        countDownLatch.await();
-        testLogger(tag, logLevel, correlationId_1, threadName_1, containsPII, new IOperationToTest() {
-            @Override
-            public void execute() {
-                Logger.verbose(tag, "");
-            }
-        }, false);
+                },
+                false);
 
         Assert.assertNotEquals(threadName_2[0], threadName_1);
     }
@@ -201,13 +268,15 @@ public class LoggerTest {
         void execute();
     }
 
-    private void testLogger(String expectedTag,
-                            Logger.LogLevel expectedLogLevel,
-                            String expectedCorrelationId,
-                            String expectedMessage,
-                            boolean expectedContainsPii,
-                            IOperationToTest operation,
-                            boolean shouldLogBeDiscarded) throws InterruptedException {
+    private void testLogger(
+            String expectedTag,
+            Logger.LogLevel expectedLogLevel,
+            String expectedCorrelationId,
+            String expectedMessage,
+            boolean expectedContainsPii,
+            IOperationToTest operation,
+            boolean shouldLogBeDiscarded)
+            throws InterruptedException {
         final CountDownLatch countDownLatch = new CountDownLatch(1);
         final String[] result_tag = {null};
         final Logger.LogLevel[] result_logLevel = {Logger.LogLevel.UNDEFINED};
@@ -219,25 +288,35 @@ public class LoggerTest {
         final String[] discarded_logMessage = {null};
         final Boolean[] discarded_containsPII = {null};
 
-        Logger.setLogger("TEST", new IDetailedLoggerCallback() {
-            @Override
-            public void log(String tag, Logger.LogLevel logLevel, String message, boolean containsPII) {
-                result_tag[0] = tag;
-                result_logLevel[0] = logLevel;
-                result_logMessage[0] = message;
-                result_containsPII[0] = containsPII;
-                countDownLatch.countDown();
-            }
+        Logger.setLogger(
+                "TEST",
+                new IDetailedLoggerCallback() {
+                    @Override
+                    public void log(
+                            String tag,
+                            Logger.LogLevel logLevel,
+                            String message,
+                            boolean containsPII) {
+                        result_tag[0] = tag;
+                        result_logLevel[0] = logLevel;
+                        result_logMessage[0] = message;
+                        result_containsPII[0] = containsPII;
+                        countDownLatch.countDown();
+                    }
 
-            @Override
-            public void discardedLog(String tag, Logger.LogLevel logLevel, String message, boolean containsPII) {
-                discarded_tag[0] = tag;
-                discarded_logLevel[0] = logLevel;
-                discarded_logMessage[0] = message;
-                discarded_containsPII[0] = containsPII;
-                countDownLatch.countDown();
-            }
-        });
+                    @Override
+                    public void discardedLog(
+                            String tag,
+                            Logger.LogLevel logLevel,
+                            String message,
+                            boolean containsPII) {
+                        discarded_tag[0] = tag;
+                        discarded_logLevel[0] = logLevel;
+                        discarded_logMessage[0] = message;
+                        discarded_containsPII[0] = containsPII;
+                        countDownLatch.countDown();
+                    }
+                });
 
         operation.execute();
         countDownLatch.await();

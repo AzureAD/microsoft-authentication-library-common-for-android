@@ -28,7 +28,6 @@ import android.webkit.WebView;
 /**
  * Factory capable of producing different kinds of challenges.
  */
-
 public final class ChallengeFactory {
     /**
      * Factory method to get new NtlmChallenge object.
@@ -39,10 +38,11 @@ public final class ChallengeFactory {
      * @param realm   the realm for which authentication is required
      * @return NtlmChallenge
      */
-    public static NtlmChallenge getNtlmChallenge(final WebView view,
-                                                 final HttpAuthHandler handler,
-                                                 final String host,
-                                                 final String realm) {
+    public static NtlmChallenge getNtlmChallenge(
+            final WebView view,
+            final HttpAuthHandler handler,
+            final String host,
+            final String realm) {
         return new NtlmChallenge(view, handler, host, realm);
     }
 }

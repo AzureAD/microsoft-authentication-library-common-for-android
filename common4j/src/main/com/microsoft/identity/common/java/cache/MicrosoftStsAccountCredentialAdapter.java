@@ -22,42 +22,43 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.cache;
 
-import com.microsoft.identity.common.java.exception.ServiceException;
+import static com.microsoft.identity.common.java.AuthenticationConstants.DEFAULT_SCOPES;
+import static com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeInternal.SCHEME_POP;
+
 import com.microsoft.identity.common.java.dto.AccessTokenRecord;
 import com.microsoft.identity.common.java.dto.AccountRecord;
 import com.microsoft.identity.common.java.dto.CredentialType;
 import com.microsoft.identity.common.java.dto.IdTokenRecord;
 import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
+import com.microsoft.identity.common.java.exception.ServiceException;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAccount;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftRefreshToken;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.ClientInfo;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAccount;
-import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
-import com.microsoft.identity.common.java.providers.oauth2.IDToken;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
+import com.microsoft.identity.common.java.providers.oauth2.IDToken;
 import com.microsoft.identity.common.java.util.SchemaUtil;
 import com.microsoft.identity.common.java.util.StringUtil;
+
+import edu.umd.cs.findbugs.annotations.Nullable;
+
+import lombok.NonNull;
 
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
-import static com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeInternal.SCHEME_POP;
-import static com.microsoft.identity.common.java.AuthenticationConstants.DEFAULT_SCOPES;
-
-import edu.umd.cs.findbugs.annotations.Nullable;
-import lombok.NonNull;
-
 public class MicrosoftStsAccountCredentialAdapter
-        implements IAccountCredentialAdapter
-        <MicrosoftStsOAuth2Strategy,
-                        MicrosoftStsAuthorizationRequest,
-                        MicrosoftStsTokenResponse,
-                        MicrosoftAccount,
-                        MicrosoftRefreshToken> {
+        implements IAccountCredentialAdapter<
+                MicrosoftStsOAuth2Strategy,
+                MicrosoftStsAuthorizationRequest,
+                MicrosoftStsTokenResponse,
+                MicrosoftAccount,
+                MicrosoftRefreshToken> {
 
     private static final String TAG = MicrosoftStsAccountCredentialAdapter.class.getSimpleName();
 
@@ -83,17 +84,13 @@ public class MicrosoftStsAccountCredentialAdapter
 
             final AccessTokenRecord accessToken = new AccessTokenRecord();
             // Required fields
-            accessToken.setCredentialType(getCredentialType(StringUtil.sanitizeNull(response.getTokenType())));
+            accessToken.setCredentialType(
+                    getCredentialType(StringUtil.sanitizeNull(response.getTokenType())));
             accessToken.setHomeAccountId(SchemaUtil.getHomeAccountId(clientInfo));
             accessToken.setRealm(getRealm(strategy, response));
             accessToken.setEnvironment(strategy.getIssuerCacheIdentifierFromTokenEndpoint());
             accessToken.setClientId(request.getClientId());
-            accessToken.setTarget(
-                    getTarget(
-                            request.getScope(),
-                            response.getScope()
-                    )
-            );
+            accessToken.setTarget(getTarget(request.getScope(), response.getScope()));
             accessToken.setCachedAt(String.valueOf(cachedAt)); // generated @ client side
             accessToken.setExpiresOn(String.valueOf(expiresOn));
             accessToken.setRefreshOn(String.valueOf(refreshOn));
@@ -133,8 +130,8 @@ public class MicrosoftStsAccountCredentialAdapter
      * @param responseScope The response scope to parse.
      * @return The target containing default scopes.
      */
-    private String getTarget(@Nullable final String requestScope,
-                             @Nullable final String responseScope) {
+    private String getTarget(
+            @Nullable final String requestScope, @Nullable final String responseScope) {
 
         if (StringUtil.isNullOrEmpty(responseScope)) {
             final StringBuilder scopesToCache = new StringBuilder();
@@ -173,12 +170,7 @@ public class MicrosoftStsAccountCredentialAdapter
 
             // Optional
             refreshToken.setFamilyId(response.getFamilyId());
-            refreshToken.setTarget(
-                    getTarget(
-                            request.getScope(),
-                            response.getScope()
-                    )
-            );
+            refreshToken.setTarget(getTarget(request.getScope(), response.getScope()));
 
             // TODO are these needed? Expected?
             refreshToken.setCachedAt(String.valueOf(cachedAt)); // generated @ client side
@@ -204,10 +196,7 @@ public class MicrosoftStsAccountCredentialAdapter
             idToken.setEnvironment(strategy.getIssuerCacheIdentifierFromTokenEndpoint());
             idToken.setRealm(getRealm(strategy, response));
             idToken.setCredentialType(
-                    SchemaUtil.getCredentialTypeFromVersion(
-                            response.getIdToken()
-                    )
-            );
+                    SchemaUtil.getCredentialTypeFromVersion(response.getIdToken()));
             idToken.setClientId(request.getClientId());
             idToken.setSecret(response.getIdToken());
             idToken.setAuthority(strategy.getAuthorityFromTokenEndpoint());
@@ -232,7 +221,8 @@ public class MicrosoftStsAccountCredentialAdapter
 
         // Optional fields
         refreshTokenOut.setTarget(refreshTokenIn.getTarget());
-        refreshTokenOut.setCachedAt(String.valueOf(TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis())));
+        refreshTokenOut.setCachedAt(
+                String.valueOf(TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis())));
         refreshTokenOut.setFamilyId(refreshTokenIn.getFamilyId());
 
         return refreshTokenOut;
@@ -269,12 +259,15 @@ public class MicrosoftStsAccountCredentialAdapter
     private String getExtendedExpiresOn(final MicrosoftStsTokenResponse response) {
         final long currentTimeMillis = System.currentTimeMillis();
         final long currentTimeSecs = TimeUnit.MILLISECONDS.toSeconds(currentTimeMillis);
-        final long extExpiresIn = null == response.getExtExpiresIn() ? 0 : response.getExtExpiresIn();
+        final long extExpiresIn =
+                null == response.getExtExpiresIn() ? 0 : response.getExtExpiresIn();
 
         return String.valueOf(currentTimeSecs + extExpiresIn);
     }
 
-    private String getRealm(final MicrosoftStsOAuth2Strategy msStrategy, final MicrosoftStsTokenResponse msTokenResponse) {
+    private String getRealm(
+            final MicrosoftStsOAuth2Strategy msStrategy,
+            final MicrosoftStsTokenResponse msTokenResponse) {
         final MicrosoftStsAccount msAccount = msStrategy.createAccount(msTokenResponse);
         return msAccount.getRealm();
     }
@@ -295,11 +288,11 @@ public class MicrosoftStsAccountCredentialAdapter
     private long getRefreshOn(final MicrosoftStsTokenResponse msTokenResponse) {
         final long currentTimeMillis = System.currentTimeMillis();
         final long currentTimeSecs = TimeUnit.MILLISECONDS.toSeconds(currentTimeMillis);
-        final long refreshIn = msTokenResponse.getRefreshIn() == null ? msTokenResponse.getExpiresIn() : msTokenResponse.getRefreshIn();
+        final long refreshIn =
+                msTokenResponse.getRefreshIn() == null
+                        ? msTokenResponse.getExpiresIn()
+                        : msTokenResponse.getRefreshIn();
 
         return currentTimeSecs + refreshIn;
     }
-
-
 }
-

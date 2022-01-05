@@ -51,7 +51,8 @@ public class GzipUtil {
     /**
      * Util method which converts the gzip compressed bytes to  String.
      */
-    public static String decompressBytesToString(@NonNull final byte[] compressedBytes) throws IOException {
+    public static String decompressBytesToString(@NonNull final byte[] compressedBytes)
+            throws IOException {
         ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(compressedBytes);
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         GZIPInputStream gzipInputStream = new GZIPInputStream(byteArrayInputStream);

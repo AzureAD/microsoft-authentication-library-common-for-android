@@ -28,6 +28,7 @@ import com.microsoft.identity.common.SharedPreferenceStringStorage;
 import com.microsoft.identity.common.java.telemetry.TelemetryPropertiesCache;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 import lombok.NonNull;
 
 /**

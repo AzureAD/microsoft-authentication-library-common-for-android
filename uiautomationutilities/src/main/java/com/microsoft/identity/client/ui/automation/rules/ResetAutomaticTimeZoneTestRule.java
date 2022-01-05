@@ -22,8 +22,6 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.rules;
 
-import android.util.Log;
-
 import com.microsoft.identity.client.ui.automation.logging.Logger;
 import com.microsoft.identity.client.ui.automation.utils.AdbShellUtils;
 
@@ -36,7 +34,7 @@ import org.junit.runners.model.Statement;
  */
 public class ResetAutomaticTimeZoneTestRule implements TestRule {
 
-    private final static String TAG = ResetAutomaticTimeZoneTestRule.class.getSimpleName();
+    private static final String TAG = ResetAutomaticTimeZoneTestRule.class.getSimpleName();
 
     @Override
     public Statement apply(final Statement base, final Description description) {
@@ -49,5 +47,4 @@ public class ResetAutomaticTimeZoneTestRule implements TestRule {
             }
         };
     }
-
 }

@@ -22,23 +22,23 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.ipc;
 
+import static com.microsoft.identity.common.exception.BrokerCommunicationException.Category.CONNECTION_ERROR;
+import static com.microsoft.identity.common.exception.BrokerCommunicationException.Category.OPERATION_NOT_SUPPORTED_ON_CLIENT_SIDE;
+
 import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
-import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.exception.BrokerCommunicationException;
 import com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle;
 import com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy;
+import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.util.ported.ObjectUtils;
 
 import org.junit.Assert;
 import org.junit.Test;
-
-import static com.microsoft.identity.common.exception.BrokerCommunicationException.Category.CONNECTION_ERROR;
-import static com.microsoft.identity.common.exception.BrokerCommunicationException.Category.OPERATION_NOT_SUPPORTED_ON_CLIENT_SIDE;
 
 /**
  * IMPORTANT: This class must cover EVERY {@link com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation}.
@@ -77,7 +77,8 @@ public abstract class IpcStrategyTests {
     @Test
     public abstract void testIpcFailed();
 
-    protected BrokerOperationBundle getMockRequestBundle(final BrokerOperationBundle.Operation operation) {
+    protected BrokerOperationBundle getMockRequestBundle(
+            final BrokerOperationBundle.Operation operation) {
         final Bundle bundle = new Bundle();
         bundle.putBoolean("REQUEST_BUNDLE", true);
 
@@ -95,7 +96,9 @@ public abstract class IpcStrategyTests {
         final Intent intent = new Intent();
         intent.setPackage("MOCK_PACKAGE");
         intent.setClassName("MOCK_PACKAGE", "MOCK_CLASSNAME");
-        intent.putExtra(AuthenticationConstants.Broker.BROKER_VERSION, AuthenticationConstants.Broker.BROKER_PROTOCOL_VERSION);
+        intent.putExtra(
+                AuthenticationConstants.Broker.BROKER_VERSION,
+                AuthenticationConstants.Broker.BROKER_PROTOCOL_VERSION);
         intent.putExtra(AuthenticationConstants.Broker.CALLER_INFO_UID, 0);
         intent.putExtra(AuthenticationConstants.Broker.BROKER_DEVICE_MODE, false);
         return intent;
@@ -111,7 +114,9 @@ public abstract class IpcStrategyTests {
 
     public static Bundle getMockInteractiveRequestResultBundle() {
         final Bundle bundle = new Bundle();
-        bundle.putString(AuthenticationConstants.Broker.BROKER_VERSION, AuthenticationConstants.Broker.BROKER_PROTOCOL_VERSION);
+        bundle.putString(
+                AuthenticationConstants.Broker.BROKER_VERSION,
+                AuthenticationConstants.Broker.BROKER_PROTOCOL_VERSION);
         bundle.putInt(AuthenticationConstants.Broker.CALLER_INFO_UID, 0);
         bundle.putBoolean(AuthenticationConstants.Broker.BROKER_DEVICE_MODE, false);
         bundle.putString(AuthenticationConstants.Broker.BROKER_PACKAGE_NAME, "MOCK_PACKAGE");
@@ -123,8 +128,9 @@ public abstract class IpcStrategyTests {
         testOperationSucceeds(bundle, getMockIpcResultBundle());
     }
 
-    protected void testOperationSucceeds(@NonNull final BrokerOperationBundle bundle,
-                                         @NonNull final Bundle expectedResultBundle) {
+    protected void testOperationSucceeds(
+            @NonNull final BrokerOperationBundle bundle,
+            @NonNull final Bundle expectedResultBundle) {
         final IIpcStrategy strategy = getStrategy();
         try {
             final Bundle resultBundle = strategy.communicateToBroker(bundle);
@@ -135,15 +141,19 @@ public abstract class IpcStrategyTests {
         }
     }
 
-    protected void testOperationNotSupportedOnClientSide(@NonNull final BrokerOperationBundle bundle) {
+    protected void testOperationNotSupportedOnClientSide(
+            @NonNull final BrokerOperationBundle bundle) {
         final IIpcStrategy strategy = getStrategy();
         try {
             strategy.communicateToBroker(bundle);
             Assert.fail("Operation should fail.");
         } catch (BaseException e) {
             Assert.assertTrue(e instanceof BrokerCommunicationException);
-            Assert.assertSame(((BrokerCommunicationException) e).getCategory(), OPERATION_NOT_SUPPORTED_ON_CLIENT_SIDE);
-            Assert.assertSame(((BrokerCommunicationException) e).getStrategyType(), strategy.getType());
+            Assert.assertSame(
+                    ((BrokerCommunicationException) e).getCategory(),
+                    OPERATION_NOT_SUPPORTED_ON_CLIENT_SIDE);
+            Assert.assertSame(
+                    ((BrokerCommunicationException) e).getStrategyType(), strategy.getType());
         }
     }
 
@@ -155,12 +165,13 @@ public abstract class IpcStrategyTests {
         } catch (BaseException e) {
             Assert.assertTrue(e instanceof BrokerCommunicationException);
             Assert.assertSame(((BrokerCommunicationException) e).getCategory(), CONNECTION_ERROR);
-            Assert.assertSame(((BrokerCommunicationException) e).getStrategyType(), strategy.getType());
+            Assert.assertSame(
+                    ((BrokerCommunicationException) e).getStrategyType(), strategy.getType());
         }
     }
 
-    public static boolean isBundleEqual(@NonNull final Bundle resultBundle,
-                                        @NonNull final Bundle expectedBundle) {
+    public static boolean isBundleEqual(
+            @NonNull final Bundle resultBundle, @NonNull final Bundle expectedBundle) {
 
         if (resultBundle.size() != expectedBundle.size()) {
             return false;

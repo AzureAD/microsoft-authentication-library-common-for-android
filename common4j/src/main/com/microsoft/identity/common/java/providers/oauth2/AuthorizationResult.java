@@ -29,15 +29,18 @@ package com.microsoft.identity.common.java.providers.oauth2;
  * In the case of an error/exception this class should return the associated exception
  */
 public abstract class AuthorizationResult<
-        GenericAuthorizationResponse extends AuthorizationResponse,
-        GenericAuthorizationErrorResponse extends AuthorizationErrorResponse> implements IResult {
+                GenericAuthorizationResponse extends AuthorizationResponse,
+                GenericAuthorizationErrorResponse extends AuthorizationErrorResponse>
+        implements IResult {
 
     private AuthorizationStatus mAuthorizationStatus;
     private GenericAuthorizationResponse mAuthorizationResponse;
     private GenericAuthorizationErrorResponse mAuthorizationErrorResponse;
     private boolean mSuccess = false;
 
-    public AuthorizationResult(final GenericAuthorizationResponse response, final GenericAuthorizationErrorResponse errorResponse) {
+    public AuthorizationResult(
+            final GenericAuthorizationResponse response,
+            final GenericAuthorizationErrorResponse errorResponse) {
 
         this.mAuthorizationResponse = response;
         this.mAuthorizationErrorResponse = errorResponse;
@@ -51,9 +54,7 @@ public abstract class AuthorizationResult<
         this.mAuthorizationStatus = status;
     }
 
-    public AuthorizationResult() {
-
-    }
+    public AuthorizationResult() {}
 
     /**
      * Returns whether the authorization request was successful or not.
@@ -85,7 +86,8 @@ public abstract class AuthorizationResult<
         return mAuthorizationErrorResponse;
     }
 
-    protected void setAuthorizationErrorResponse(final GenericAuthorizationErrorResponse authErrorResponse) {
+    protected void setAuthorizationErrorResponse(
+            final GenericAuthorizationErrorResponse authErrorResponse) {
         mAuthorizationErrorResponse = authErrorResponse;
     }
 
@@ -104,6 +106,4 @@ public abstract class AuthorizationResult<
     public ISuccessResponse getSuccessResponse() {
         return mAuthorizationResponse;
     }
-
 }
-

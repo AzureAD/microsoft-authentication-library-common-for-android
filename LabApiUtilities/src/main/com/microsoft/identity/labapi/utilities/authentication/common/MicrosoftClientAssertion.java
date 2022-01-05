@@ -31,6 +31,10 @@ import com.nimbusds.jose.util.Base64URL;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.experimental.Accessors;
+
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateEncodingException;
@@ -39,10 +43,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.experimental.Accessors;
 
 /**
  * This class is used to create a client assertion per the following documentation.
@@ -55,12 +55,13 @@ import lombok.experimental.Accessors;
 @Accessors(prefix = "m")
 public class MicrosoftClientAssertion extends ClientAssertion {
 
-    public static final String CLIENT_ASSERTION_TYPE = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer";
+    public static final String CLIENT_ASSERTION_TYPE =
+            "urn:ietf:params:oauth:client-assertion-type:jwt-bearer";
     private static final String THUMBPRINT_ALGORITHM = "SHA-1";
     private static final int ONE_MINUTE_MILLIS = Math.toIntExact(TimeUnit.MINUTES.toMillis(1));
 
-    private MicrosoftClientAssertion(@NonNull final String clientAssertion,
-                                     @NonNull final String clientAssertionType) {
+    private MicrosoftClientAssertion(
+            @NonNull final String clientAssertion, @NonNull final String clientAssertionType) {
         super(clientAssertion, clientAssertionType);
     }
 
@@ -73,8 +74,7 @@ public class MicrosoftClientAssertion extends ClientAssertion {
         private String audience;
         private CertificateCredential certificateCredential;
 
-        MicrosoftClientAssertionBuilder() {
-        }
+        MicrosoftClientAssertionBuilder() {}
 
         public MicrosoftClientAssertion build() {
             final SignedJWT assertion = createSignedJwt(clientId, audience, certificateCredential);
@@ -91,36 +91,46 @@ public class MicrosoftClientAssertion extends ClientAssertion {
             return this;
         }
 
-        public MicrosoftClientAssertionBuilder certificateCredential(@NonNull final CertificateCredential certificateCredential) {
+        public MicrosoftClientAssertionBuilder certificateCredential(
+                @NonNull final CertificateCredential certificateCredential) {
             this.certificateCredential = certificateCredential;
             return this;
         }
 
         public String toString() {
-            return "MicrosoftClientAssertion.MicrosoftClientAssertionBuilder(clientId=" + this.clientId + ", audience=" + this.audience + ", certificateCredential=" + this.certificateCredential + ")";
+            return "MicrosoftClientAssertion.MicrosoftClientAssertionBuilder(clientId="
+                    + this.clientId
+                    + ", audience="
+                    + this.audience
+                    + ", certificateCredential="
+                    + this.certificateCredential
+                    + ")";
         }
 
         @SuppressWarnings("deprecation")
-        private SignedJWT createSignedJwt(@NonNull final String clientId,
-                                          @NonNull final String audience,
-                                          @NonNull final CertificateCredential credential) {
+        private SignedJWT createSignedJwt(
+                @NonNull final String clientId,
+                @NonNull final String audience,
+                @NonNull final CertificateCredential credential) {
 
             final long time = System.currentTimeMillis();
 
-            final JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
-                    .audience(audience)
-                    .issuer(clientId)
-                    .notBeforeTime(new Date(time))
-                    .expirationTime(new Date(time + ONE_MINUTE_MILLIS))
-                    .subject(clientId)
-                    .build();
+            final JWTClaimsSet claimsSet =
+                    new JWTClaimsSet.Builder()
+                            .audience(audience)
+                            .issuer(clientId)
+                            .notBeforeTime(new Date(time))
+                            .expirationTime(new Date(time + ONE_MINUTE_MILLIS))
+                            .subject(clientId)
+                            .build();
 
             try {
                 final JWSHeader.Builder builder = new JWSHeader.Builder(JWSAlgorithm.RS256);
                 final List<Base64> certs = new ArrayList<>();
                 certs.add(Base64.encode(credential.getPublicCertificate().getEncoded()));
                 builder.x509CertChain(certs);
-                //x509CertThumbprint has been deprecated.  We have to keep using this since this is the only thing that AAD accepts.
+                // x509CertThumbprint has been deprecated.  We have to keep using this since this is
+                // the only thing that AAD accepts.
                 builder.x509CertThumbprint(createSHA1ThumbPrint(credential.getPublicCertificate()));
 
                 final SignedJWT jwt = new SignedJWT(builder.build(), claimsSet);
@@ -128,7 +138,9 @@ public class MicrosoftClientAssertion extends ClientAssertion {
 
                 jwt.sign(signer);
                 return jwt;
-            } catch (final NoSuchAlgorithmException | CertificateEncodingException | JOSEException e) {
+            } catch (final NoSuchAlgorithmException
+                    | CertificateEncodingException
+                    | JOSEException e) {
                 throw new RuntimeException("Failed to create signed JWT", e);
             }
         }

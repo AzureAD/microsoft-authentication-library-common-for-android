@@ -46,9 +46,10 @@ public interface HttpRequestInterceptor {
      * @return the http response object
      * @throws IOException throws an exception when something went wrong during the http request
      */
-    HttpResponse performIntercept(@NonNull HttpClient.HttpMethod httpMethod,
-                                  @NonNull URL requestUrl,
-                                  @NonNull Map<String, String> requestHeaders,
-                                  @Nullable byte[] requestContent) throws IOException;
-
+    HttpResponse performIntercept(
+            @NonNull HttpClient.HttpMethod httpMethod,
+            @NonNull URL requestUrl,
+            @NonNull Map<String, String> requestHeaders,
+            @Nullable byte[] requestContent)
+            throws IOException;
 }

@@ -25,5 +25,6 @@ package com.microsoft.identity.common.java.providers.oauth2;
 public interface IErrorResponse {
 
     String getError();
+
     String getErrorDescription();
 }

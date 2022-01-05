@@ -32,16 +32,17 @@ import com.microsoft.identity.common.java.BaseAccount;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.adal.cache.CacheKey;
 import com.microsoft.identity.common.java.adal.cache.DateTimeAdapter;
+import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.java.cache.AccountDeletionRecord;
 import com.microsoft.identity.common.java.cache.ICacheRecord;
 import com.microsoft.identity.common.java.cache.IShareSingleSignOnState;
-import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.java.dto.AccountRecord;
 import com.microsoft.identity.common.java.dto.Credential;
 import com.microsoft.identity.common.java.dto.CredentialType;
 import com.microsoft.identity.common.java.dto.IdTokenRecord;
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
+import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAccount;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftRefreshToken;
@@ -50,18 +51,18 @@ import com.microsoft.identity.common.java.providers.microsoft.azureactivedirecto
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryOAuth2Strategy;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryRefreshToken;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryTokenResponse;
-import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2TokenCache;
 import com.microsoft.identity.common.java.providers.oauth2.RefreshToken;
 import com.microsoft.identity.common.java.util.StringUtil;
+
+import edu.umd.cs.findbugs.annotations.Nullable;
+
+import lombok.NonNull;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
-
-import edu.umd.cs.findbugs.annotations.Nullable;
-import lombok.NonNull;
 
 /**
  * Class responsible for saving oAuth2 Tokens for use in future requests.  Ideally this class would
@@ -70,16 +71,18 @@ import lombok.NonNull;
 // Suppressing rawtype warnings due to the generic type IShareSingleSignOnState
 @SuppressWarnings(WarningType.rawtype_warning)
 public class ADALOAuth2TokenCache
-        extends OAuth2TokenCache<AzureActiveDirectoryOAuth2Strategy, AzureActiveDirectoryAuthorizationRequest, AzureActiveDirectoryTokenResponse>
+        extends OAuth2TokenCache<
+                AzureActiveDirectoryOAuth2Strategy,
+                AzureActiveDirectoryAuthorizationRequest,
+                AzureActiveDirectoryTokenResponse>
         implements IShareSingleSignOnState {
     private INameValueStorage<String> mISharedPreferencesFileManager;
 
     private static final String TAG = ADALOAuth2TokenCache.class.getSimpleName();
     private static final String SHARED_PREFERENCES_FILENAME = "com.microsoft.aad.adal.cache";
 
-    private Gson mGson = new GsonBuilder()
-            .registerTypeAdapter(Date.class, new DateTimeAdapter())
-            .create();
+    private Gson mGson =
+            new GsonBuilder().registerTypeAdapter(Date.class, new DateTimeAdapter()).create();
 
     private List<IShareSingleSignOnState<MicrosoftAccount, MicrosoftRefreshToken>> mSharedSSOCaches;
 
@@ -102,11 +105,14 @@ public class ADALOAuth2TokenCache
      * @param context         Context
      * @param sharedSSOCaches List<IShareSingleSignOnState>
      */
-    public ADALOAuth2TokenCache(final IPlatformComponents context,
-                                final List<IShareSingleSignOnState<MicrosoftAccount, MicrosoftRefreshToken>> sharedSSOCaches) {
+    public ADALOAuth2TokenCache(
+            final IPlatformComponents context,
+            final List<IShareSingleSignOnState<MicrosoftAccount, MicrosoftRefreshToken>>
+                    sharedSSOCaches) {
         super(context);
         Logger.verbose(TAG, "Init: " + TAG);
-        //Logger.info(TAG, "Context is an Application? [" + (context instanceof Application) + "]");
+        // Logger.info(TAG, "Context is an Application? [" + (context instanceof Application) +
+        // "]");
         validateSecretKeySetting();
         initializeSharedPreferencesFileManager(ADALOAuth2TokenCache.SHARED_PREFERENCES_FILENAME);
         mSharedSSOCaches = sharedSSOCaches;
@@ -119,10 +125,7 @@ public class ADALOAuth2TokenCache
         final IPlatformComponents components = getComponents();
         mISharedPreferencesFileManager =
                 components.getEncryptedNameValueStore(
-                        fileName,
-                        components.getStorageEncryptionManager(),
-                        String.class
-                );
+                        fileName, components.getStorageEncryptionManager(), String.class);
     }
 
     /**
@@ -136,7 +139,8 @@ public class ADALOAuth2TokenCache
     public ICacheRecord save(
             final AzureActiveDirectoryOAuth2Strategy strategy,
             final AzureActiveDirectoryAuthorizationRequest request,
-            final AzureActiveDirectoryTokenResponse response) throws ClientException {
+            final AzureActiveDirectoryTokenResponse response)
+            throws ClientException {
         final String methodName = "save";
         Logger.info(TAG + ":" + methodName, "Saving Tokens...");
 
@@ -144,62 +148,71 @@ public class ADALOAuth2TokenCache
         final AzureActiveDirectoryAccount account = strategy.createAccount(response);
         final String msalEnvironment = Uri.parse(issuerCacheIdentifier).getAuthority();
         account.setEnvironment(msalEnvironment);
-        final AzureActiveDirectoryRefreshToken refreshToken = strategy.getRefreshTokenFromResponse(response);
+        final AzureActiveDirectoryRefreshToken refreshToken =
+                strategy.getRefreshTokenFromResponse(response);
         refreshToken.setEnvironment(msalEnvironment);
 
         Logger.info(TAG, "Constructing new ADALTokenCacheItem");
         final ADALTokenCacheItem cacheItem = new ADALTokenCacheItem(strategy, request, response);
         logTokenCacheItem(cacheItem);
 
-        //There is more than one valid user identifier for some accounts... AAD Accounts as of this writing have 3
+        // There is more than one valid user identifier for some accounts... AAD Accounts as of this
+        // writing have 3
         Logger.info(TAG + ":" + methodName, "Setting items to cache for user...");
         for (final String cacheIdentifier : account.getCacheIdentifiers()) {
-            //Azure AD Uses Resource and Not Scope... but we didn't override... heads up
+            // Azure AD Uses Resource and Not Scope... but we didn't override... heads up
             final String scope = request.getScope();
             final String clientId = request.getClientId();
 
-            Logger.infoPII(TAG + ":" + methodName, "issuerCacheIdentifier: [" + issuerCacheIdentifier + "]");
+            Logger.infoPII(
+                    TAG + ":" + methodName,
+                    "issuerCacheIdentifier: [" + issuerCacheIdentifier + "]");
             Logger.infoPII(TAG + ":" + methodName, "scope: [" + scope + "]");
             Logger.infoPII(TAG + ":" + methodName, "clientId: [" + clientId + "]");
             Logger.infoPII(TAG + ":" + methodName, "cacheIdentifier: [" + cacheIdentifier + "]");
 
-            setItemToCacheForUser(issuerCacheIdentifier, scope, clientId, cacheItem, cacheIdentifier);
+            setItemToCacheForUser(
+                    issuerCacheIdentifier, scope, clientId, cacheItem, cacheIdentifier);
         }
 
-        //For legacy reasons creating a cache entry where the userid is null
-        //ADAL supported a single user mode where it was not necessary for the developer to provide the user id
-        //on calls to acquireTokenSilentAsync
-        setItemToCacheForUser(issuerCacheIdentifier, request.getScope(), request.getClientId(), cacheItem, null);
+        // For legacy reasons creating a cache entry where the userid is null
+        // ADAL supported a single user mode where it was not necessary for the developer to provide
+        // the user id
+        // on calls to acquireTokenSilentAsync
+        setItemToCacheForUser(
+                issuerCacheIdentifier, request.getScope(), request.getClientId(), cacheItem, null);
 
         // TODO At some point, the type-safety of this call needs to get beefed-up
         Logger.info(TAG + ":" + methodName, "Syncing SSO state to caches...");
-        for (final IShareSingleSignOnState<MicrosoftAccount, MicrosoftRefreshToken> sharedSsoCache : mSharedSSOCaches) {
+        for (final IShareSingleSignOnState<MicrosoftAccount, MicrosoftRefreshToken> sharedSsoCache :
+                mSharedSSOCaches) {
             try {
                 sharedSsoCache.setSingleSignOnState(account, refreshToken);
             } catch (ClientException e) {
-                Logger.errorPII(TAG,
-                        "Exception setting single sign on state for account " + account.getUsername(),
-                        e
-                );
+                Logger.errorPII(
+                        TAG,
+                        "Exception setting single sign on state for account "
+                                + account.getUsername(),
+                        e);
             }
         }
 
-        return null; // Returning null, since the ADAL cache's schema doesn't support this return type.
+        return null; // Returning null, since the ADAL cache's schema doesn't support this return
+        // type.
     }
 
     @Override
-    public List<ICacheRecord> saveAndLoadAggregatedAccountData(AzureActiveDirectoryOAuth2Strategy oAuth2Strategy, AzureActiveDirectoryAuthorizationRequest request, AzureActiveDirectoryTokenResponse response) throws ClientException {
-        throw new UnsupportedOperationException(
-                ERR_UNSUPPORTED_OPERATION
-        );
+    public List<ICacheRecord> saveAndLoadAggregatedAccountData(
+            AzureActiveDirectoryOAuth2Strategy oAuth2Strategy,
+            AzureActiveDirectoryAuthorizationRequest request,
+            AzureActiveDirectoryTokenResponse response)
+            throws ClientException {
+        throw new UnsupportedOperationException(ERR_UNSUPPORTED_OPERATION);
     }
 
     @Override
-    public ICacheRecord save(final AccountRecord accountRecord,
-                             final IdTokenRecord idTokenRecord) {
-        throw new UnsupportedOperationException(
-                ERR_UNSUPPORTED_OPERATION
-        );
+    public ICacheRecord save(final AccountRecord accountRecord, final IdTokenRecord idTokenRecord) {
+        throw new UnsupportedOperationException(ERR_UNSUPPORTED_OPERATION);
     }
 
     @Override
@@ -208,134 +221,108 @@ public class ADALOAuth2TokenCache
             final String target,
             final AccountRecord account,
             final AbstractAuthenticationScheme scheme) {
-        throw new UnsupportedOperationException(
-                ERR_UNSUPPORTED_OPERATION
-        );
+        throw new UnsupportedOperationException(ERR_UNSUPPORTED_OPERATION);
     }
 
     @Override
-    public List<ICacheRecord> loadWithAggregatedAccountData(final String clientId,
-                                                            final String target,
-                                                            final AccountRecord account,
-                                                            final AbstractAuthenticationScheme scheme) {
-        throw new UnsupportedOperationException(
-                ERR_UNSUPPORTED_OPERATION
-        );
+    public List<ICacheRecord> loadWithAggregatedAccountData(
+            final String clientId,
+            final String target,
+            final AccountRecord account,
+            final AbstractAuthenticationScheme scheme) {
+        throw new UnsupportedOperationException(ERR_UNSUPPORTED_OPERATION);
     }
 
     @Override
     public boolean removeCredential(Credential credential) {
-        throw new UnsupportedOperationException(
-                ERR_UNSUPPORTED_OPERATION
-        );
+        throw new UnsupportedOperationException(ERR_UNSUPPORTED_OPERATION);
     }
 
     @Override
-    public AccountRecord getAccount(final String environment,
-                                    final String clientId,
-                                    final String homeAccountId,
-                                    final String realm) {
-        throw new UnsupportedOperationException(
-                ERR_UNSUPPORTED_OPERATION
-        );
+    public AccountRecord getAccount(
+            final String environment,
+            final String clientId,
+            final String homeAccountId,
+            final String realm) {
+        throw new UnsupportedOperationException(ERR_UNSUPPORTED_OPERATION);
     }
 
     @Override
-    public List<ICacheRecord> getAccountsWithAggregatedAccountData(String environment, String clientId, String homeAccountId) {
-        throw new UnsupportedOperationException(
-                ERR_UNSUPPORTED_OPERATION
-        );
+    public List<ICacheRecord> getAccountsWithAggregatedAccountData(
+            String environment, String clientId, String homeAccountId) {
+        throw new UnsupportedOperationException(ERR_UNSUPPORTED_OPERATION);
     }
 
     @Override
-    public AccountRecord getAccountByLocalAccountId(final String environment,
-                                                    final String clientId,
-                                                    final String localAccountId) {
-        throw new UnsupportedOperationException(
-                ERR_UNSUPPORTED_OPERATION
-        );
+    public AccountRecord getAccountByLocalAccountId(
+            final String environment, final String clientId, final String localAccountId) {
+        throw new UnsupportedOperationException(ERR_UNSUPPORTED_OPERATION);
     }
 
     @Override
-    public ICacheRecord getAccountWithAggregatedAccountDataByLocalAccountId(String environment, String clientId, String localAccountId) {
-        throw new UnsupportedOperationException(
-                ERR_UNSUPPORTED_OPERATION
-        );
+    public ICacheRecord getAccountWithAggregatedAccountDataByLocalAccountId(
+            String environment, String clientId, String localAccountId) {
+        throw new UnsupportedOperationException(ERR_UNSUPPORTED_OPERATION);
     }
 
     @Override
-    public List<AccountRecord> getAccounts(final String environment,
-                                           final String clientId) {
-        throw new UnsupportedOperationException(
-                ERR_UNSUPPORTED_OPERATION
-        );
+    public List<AccountRecord> getAccounts(final String environment, final String clientId) {
+        throw new UnsupportedOperationException(ERR_UNSUPPORTED_OPERATION);
     }
 
     @Override
-    public List<AccountRecord> getAllTenantAccountsForAccountByClientId(String clientId, AccountRecord accountRecord) {
-        throw new UnsupportedOperationException(
-                ERR_UNSUPPORTED_OPERATION
-        );
+    public List<AccountRecord> getAllTenantAccountsForAccountByClientId(
+            String clientId, AccountRecord accountRecord) {
+        throw new UnsupportedOperationException(ERR_UNSUPPORTED_OPERATION);
     }
 
     @Override
-    public List<ICacheRecord> getAccountsWithAggregatedAccountData(final String environment,
-                                                                   final String clientId) {
-        throw new UnsupportedOperationException(
-                ERR_UNSUPPORTED_OPERATION
-        );
+    public List<ICacheRecord> getAccountsWithAggregatedAccountData(
+            final String environment, final String clientId) {
+        throw new UnsupportedOperationException(ERR_UNSUPPORTED_OPERATION);
     }
 
     @Override
-    public List<IdTokenRecord> getIdTokensForAccountRecord(final String clientId,
-                                                           final AccountRecord accountRecord) {
-        throw new UnsupportedOperationException(
-                ERR_UNSUPPORTED_OPERATION
-        );
+    public List<IdTokenRecord> getIdTokensForAccountRecord(
+            final String clientId, final AccountRecord accountRecord) {
+        throw new UnsupportedOperationException(ERR_UNSUPPORTED_OPERATION);
     }
 
     @Override
-    public AccountDeletionRecord removeAccount(final String environment,
-                                               final String clientId,
-                                               final String homeAccountId,
-                                               final String realm) {
-        throw new UnsupportedOperationException(
-                ERR_UNSUPPORTED_OPERATION
-        );
+    public AccountDeletionRecord removeAccount(
+            final String environment,
+            final String clientId,
+            final String homeAccountId,
+            final String realm) {
+        throw new UnsupportedOperationException(ERR_UNSUPPORTED_OPERATION);
     }
 
     @Override
-    public AccountDeletionRecord removeAccount(final String environment,
-                                               final String clientId,
-                                               final String homeAccountId,
-                                               final String realm,
-                                               final CredentialType... typesToRemove) {
-        throw new UnsupportedOperationException(
-                ERR_UNSUPPORTED_OPERATION
-        );
+    public AccountDeletionRecord removeAccount(
+            final String environment,
+            final String clientId,
+            final String homeAccountId,
+            final String realm,
+            final CredentialType... typesToRemove) {
+        throw new UnsupportedOperationException(ERR_UNSUPPORTED_OPERATION);
     }
 
     @Override
     public void clearAll() {
-        throw new UnsupportedOperationException(
-                ERR_UNSUPPORTED_OPERATION
-        );
+        throw new UnsupportedOperationException(ERR_UNSUPPORTED_OPERATION);
     }
 
     @Override
     protected Set<String> getAllClientIds() {
-        throw new UnsupportedOperationException(
-                ERR_UNSUPPORTED_OPERATION
-        );
+        throw new UnsupportedOperationException(ERR_UNSUPPORTED_OPERATION);
     }
 
     @Override
-    public AccountRecord getAccountByHomeAccountId(@Nullable final String environment,
-                                                   @NonNull final String clientId,
-                                                   @NonNull final String homeAccountId) {
-        throw new UnsupportedOperationException(
-                ERR_UNSUPPORTED_OPERATION
-        );
+    public AccountRecord getAccountByHomeAccountId(
+            @Nullable final String environment,
+            @NonNull final String clientId,
+            @NonNull final String homeAccountId) {
+        throw new UnsupportedOperationException(ERR_UNSUPPORTED_OPERATION);
     }
 
     private static void logTokenCacheItem(final ADALTokenCacheItem tokenCacheItem) {
@@ -351,11 +338,12 @@ public class ADALOAuth2TokenCache
         Logger.infoPII(TAG, "speRing: [" + tokenCacheItem.getSpeRing() + "]");
     }
 
-    private void setItemToCacheForUser(final String issuer,
-                                       final String resource,
-                                       final String clientId,
-                                       final ADALTokenCacheItem cacheItem,
-                                       final String userId) {
+    private void setItemToCacheForUser(
+            final String issuer,
+            final String resource,
+            final String clientId,
+            final ADALTokenCacheItem cacheItem,
+            final String userId) {
         final String methodName = "setItemToCacheForUser";
 
         Logger.info(TAG + ":" + methodName, "Setting cacheitem for RT entry.");
@@ -363,12 +351,16 @@ public class ADALOAuth2TokenCache
 
         if (cacheItem.getIsMultiResourceRefreshToken()) {
             Logger.info(TAG + ":" + methodName, "CacheItem is an MRRT.");
-            setItem(CacheKey.createCacheKeyForMRRT(issuer, clientId, userId), ADALTokenCacheItem.getAsMRRTTokenCacheItem(cacheItem));
+            setItem(
+                    CacheKey.createCacheKeyForMRRT(issuer, clientId, userId),
+                    ADALTokenCacheItem.getAsMRRTTokenCacheItem(cacheItem));
         }
 
         if (!StringUtil.isNullOrEmpty(cacheItem.getFamilyClientId())) {
             Logger.info(TAG + ":" + methodName, "CacheItem is an FRT.");
-            setItem(CacheKey.createCacheKeyForFRT(issuer, cacheItem.getFamilyClientId(), userId), ADALTokenCacheItem.getAsFRTTokenCacheItem(cacheItem));
+            setItem(
+                    CacheKey.createCacheKeyForFRT(issuer, cacheItem.getFamilyClientId(), userId),
+                    ADALTokenCacheItem.getAsFRTTokenCacheItem(cacheItem));
         }
     }
 
@@ -383,8 +375,9 @@ public class ADALOAuth2TokenCache
         final byte[] secretKeyData = AuthenticationSettings.INSTANCE.getSecretKeyData();
 
         if (secretKeyData == null && Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR2) {
-            throw new IllegalArgumentException("Secret key must be provided for API < 18. "
-                    + "Use AuthenticationSettings.INSTANCE.setSecretKey()");
+            throw new IllegalArgumentException(
+                    "Secret key must be provided for API < 18. "
+                            + "Use AuthenticationSettings.INSTANCE.setSecretKey()");
         }
     }
 
@@ -403,10 +396,7 @@ public class ADALOAuth2TokenCache
     }
 
     public static String getAdalCacheFilename() {
-        Logger.info(
-                TAG + ":getAdalCacheFilename",
-                "Getting ADAL cache file name..."
-        );
+        Logger.info(TAG + ":getAdalCacheFilename", "Getting ADAL cache file name...");
         return SHARED_PREFERENCES_FILENAME;
     }
 }

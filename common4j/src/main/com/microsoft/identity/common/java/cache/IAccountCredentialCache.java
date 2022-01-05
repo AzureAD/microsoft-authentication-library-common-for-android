@@ -80,10 +80,7 @@ public interface IAccountCredentialCache {
      * @return A mutable List of Accounts matching the supplied criteria.
      */
     List<AccountRecord> getAccountsFilteredBy(
-            final String homeAccountId,
-            final String environment,
-            final String realm
-    );
+            final String homeAccountId, final String environment, final String realm);
 
     /**
      * Returns all of the Credentials saved in the cache.
@@ -110,8 +107,7 @@ public interface IAccountCredentialCache {
             final String clientId,
             final String realm,
             final String target,
-            final String authScheme
-    );
+            final String authScheme);
 
     /**
      * Returns all of the Credentials matching the supplied criteria from the supplied List.
@@ -134,8 +130,7 @@ public interface IAccountCredentialCache {
             final String realm,
             final String target,
             final String authScheme,
-            final List<Credential> inputCredentials
-    );
+            final List<Credential> inputCredentials);
 
     /**
      * Returns all of the Credentials matching the supplied criteria.
@@ -157,8 +152,7 @@ public interface IAccountCredentialCache {
             final String realm,
             final String target,
             final String authScheme,
-            final String requestedClaims
-    );
+            final String requestedClaims);
 
     /**
      * Returns all of the Credentials matching the supplied criteria.
@@ -180,8 +174,7 @@ public interface IAccountCredentialCache {
             final String realm,
             final String target,
             final String authScheme,
-            final String requestedClaims
-    );
+            final String requestedClaims);
 
     /**
      * Removes the supplied Account from the cache.
@@ -203,5 +196,4 @@ public interface IAccountCredentialCache {
      * Clear the contents of the cache.
      */
     void clearAll();
-
 }

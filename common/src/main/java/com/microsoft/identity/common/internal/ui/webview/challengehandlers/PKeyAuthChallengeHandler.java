@@ -27,7 +27,6 @@ import android.webkit.WebView;
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallenge;
-import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.logging.Logger;
@@ -43,8 +42,9 @@ public final class PKeyAuthChallengeHandler implements IChallengeHandler<PKeyAut
      * @param view
      * @param completionCallback
      */
-    public PKeyAuthChallengeHandler(@NonNull final WebView view,
-                                    @NonNull IAuthorizationCompletionCallback completionCallback) {
+    public PKeyAuthChallengeHandler(
+            @NonNull final WebView view,
+            @NonNull IAuthorizationCompletionCallback completionCallback) {
         mWebView = view;
         mChallengeCallback = completionCallback;
     }
@@ -55,27 +55,28 @@ public final class PKeyAuthChallengeHandler implements IChallengeHandler<PKeyAut
         mChallengeCallback.setPKeyAuthStatus(true);
 
         try {
-            //Get no device cert response
+            // Get no device cert response
             final Map<String, String> header = pKeyAuthChallenge.getChallengeHeader();
 
-            mWebView.post(new Runnable() {
-                @Override
-                public void run() {
-                    String loadUrl = pKeyAuthChallenge.getSubmitUrl();
-                    Logger.info(TAG, "Respond to pkeyAuth challenge");
-                    Logger.infoPII(TAG, "Challenge submit url:" + pKeyAuthChallenge.getSubmitUrl());
+            mWebView.post(
+                    new Runnable() {
+                        @Override
+                        public void run() {
+                            String loadUrl = pKeyAuthChallenge.getSubmitUrl();
+                            Logger.info(TAG, "Respond to pkeyAuth challenge");
+                            Logger.infoPII(
+                                    TAG,
+                                    "Challenge submit url:" + pKeyAuthChallenge.getSubmitUrl());
 
-                    mWebView.loadUrl(loadUrl, header);
-                }
-            });
+                            mWebView.loadUrl(loadUrl, header);
+                        }
+                    });
         } catch (final Throwable e) {
             // It should return error code and finish the
             // activity, so that onActivityResult implementation
             // returns errors to callback.
-            //TODO log the request info
-            mChallengeCallback.onChallengeResponseReceived(
-                    RawAuthorizationResult.fromThrowable(e)
-            );
+            // TODO log the request info
+            mChallengeCallback.onChallengeResponseReceived(RawAuthorizationResult.fromThrowable(e));
             if (e instanceof InterruptedException) {
                 Thread.currentThread().interrupt();
             }

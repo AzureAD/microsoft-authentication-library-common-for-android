@@ -24,12 +24,9 @@ package com.microsoft.identity.common.java.crypto;
 
 import com.microsoft.identity.common.java.exception.ClientException;
 
-import java.security.Key;
-import java.security.PrivateKey;
-
-import javax.crypto.SecretKey;
-
 import lombok.NonNull;
+
+import java.security.Key;
 
 /**
  * Interface for a Decryptor.
@@ -45,8 +42,10 @@ public interface IDecryptor {
      * @param dataToBeDecrypted the data to be encrypted.
      * @return a decrypted byte array.
      */
-    byte[] decrypt(@NonNull final Key key,
-                   @NonNull final String decryptAlgorithm,
-                   final byte[] iv,
-                   final byte[] dataToBeDecrypted) throws ClientException;
+    byte[] decrypt(
+            @NonNull final Key key,
+            @NonNull final String decryptAlgorithm,
+            final byte[] iv,
+            final byte[] dataToBeDecrypted)
+            throws ClientException;
 }

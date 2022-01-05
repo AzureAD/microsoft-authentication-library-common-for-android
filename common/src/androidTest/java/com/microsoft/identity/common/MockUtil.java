@@ -28,31 +28,33 @@ import org.mockito.Mockito;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.SocketTimeoutException;
-import java.util.Date;
 
 /**
  * Util class for mocking.
  */
 public final class MockUtil {
     // private constructor for Util class.
-    private MockUtil() {
-    }
+    private MockUtil() {}
 
-    static HttpURLConnection getMockedConnectionWithSuccessResponse(final String message) throws IOException {
+    static HttpURLConnection getMockedConnectionWithSuccessResponse(final String message)
+            throws IOException {
         final HttpURLConnection mockedHttpUrlConnection = getCommonHttpUrlConnection();
 
-        Mockito.when(mockedHttpUrlConnection.getInputStream()).thenReturn(Util.createInputStream(message));
-        Mockito.when(mockedHttpUrlConnection.getResponseCode()).thenReturn(HttpURLConnection.HTTP_OK);
+        Mockito.when(mockedHttpUrlConnection.getInputStream())
+                .thenReturn(Util.createInputStream(message));
+        Mockito.when(mockedHttpUrlConnection.getResponseCode())
+                .thenReturn(HttpURLConnection.HTTP_OK);
 
         return mockedHttpUrlConnection;
     }
 
-    static HttpURLConnection getMockedConnectionWithFailureResponse(final int statusCode, final String errorMessage)
-            throws IOException {
+    static HttpURLConnection getMockedConnectionWithFailureResponse(
+            final int statusCode, final String errorMessage) throws IOException {
         final HttpURLConnection mockedHttpUrlConnection = getCommonHttpUrlConnection();
 
         Mockito.when(mockedHttpUrlConnection.getInputStream()).thenThrow(IOException.class);
-        Mockito.when(mockedHttpUrlConnection.getErrorStream()).thenReturn(Util.createInputStream(errorMessage));
+        Mockito.when(mockedHttpUrlConnection.getErrorStream())
+                .thenReturn(Util.createInputStream(errorMessage));
         Mockito.when(mockedHttpUrlConnection.getResponseCode()).thenReturn(statusCode);
 
         return mockedHttpUrlConnection;
@@ -69,7 +71,7 @@ public final class MockUtil {
         final HttpURLConnection mockedConnection = Mockito.mock(HttpURLConnection.class);
         Mockito.doNothing().when(mockedConnection).setConnectTimeout(Mockito.anyInt());
         Mockito.doNothing().when(mockedConnection).setDoInput(Mockito.anyBoolean());
-        Mockito.doReturn(System.currentTimeMillis()/1000).when(mockedConnection).getDate();
+        Mockito.doReturn(System.currentTimeMillis() / 1000).when(mockedConnection).getDate();
         return mockedConnection;
     }
 }

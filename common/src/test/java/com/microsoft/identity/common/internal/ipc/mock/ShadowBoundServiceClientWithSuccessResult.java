@@ -31,9 +31,9 @@ import android.os.RemoteException;
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.client.IMicrosoftAuthService;
-import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.internal.broker.BoundServiceClient;
 import com.microsoft.identity.common.internal.ipc.IpcStrategyTests;
+import com.microsoft.identity.common.java.exception.ClientException;
 
 import org.robolectric.annotation.Implements;
 
@@ -44,50 +44,62 @@ import java.util.concurrent.TimeoutException;
 public class ShadowBoundServiceClientWithSuccessResult<T extends IInterface> {
     protected @NonNull T connect(@NonNull final String targetServicePackageName)
             throws ClientException, InterruptedException, TimeoutException, ExecutionException {
-        final IMicrosoftAuthService authService = new IMicrosoftAuthService() {
-            @Override public IBinder asBinder() {
-                return null;
-            }
+        final IMicrosoftAuthService authService =
+                new IMicrosoftAuthService() {
+                    @Override
+                    public IBinder asBinder() {
+                        return null;
+                    }
 
-            @Override public Bundle hello(Bundle bundle) throws RemoteException {
-                return IpcStrategyTests.getMockIpcResultBundle();
-            }
+                    @Override
+                    public Bundle hello(Bundle bundle) throws RemoteException {
+                        return IpcStrategyTests.getMockIpcResultBundle();
+                    }
 
-            @Override public Bundle getAccounts(Bundle bundle) throws RemoteException {
-                return IpcStrategyTests.getMockIpcResultBundle();
-            }
+                    @Override
+                    public Bundle getAccounts(Bundle bundle) throws RemoteException {
+                        return IpcStrategyTests.getMockIpcResultBundle();
+                    }
 
-            @Override public Bundle acquireTokenSilently(Bundle requestBundle) throws RemoteException {
-                return IpcStrategyTests.getMockIpcResultBundle();
-            }
+                    @Override
+                    public Bundle acquireTokenSilently(Bundle requestBundle)
+                            throws RemoteException {
+                        return IpcStrategyTests.getMockIpcResultBundle();
+                    }
 
-            @Override public Intent getIntentForInteractiveRequest() throws RemoteException {
-                final Intent intent = new Intent();
-                intent.putExtras(IpcStrategyTests.getMockIpcResultBundle());
-                return intent;
-            }
+                    @Override
+                    public Intent getIntentForInteractiveRequest() throws RemoteException {
+                        final Intent intent = new Intent();
+                        intent.putExtras(IpcStrategyTests.getMockIpcResultBundle());
+                        return intent;
+                    }
 
-            @Override public Bundle removeAccount(Bundle bundle) throws RemoteException {
-                return IpcStrategyTests.getMockIpcResultBundle();
-            }
+                    @Override
+                    public Bundle removeAccount(Bundle bundle) throws RemoteException {
+                        return IpcStrategyTests.getMockIpcResultBundle();
+                    }
 
-            @Override public Bundle getDeviceMode() throws RemoteException {
-                return IpcStrategyTests.getMockIpcResultBundle();
-            }
+                    @Override
+                    public Bundle getDeviceMode() throws RemoteException {
+                        return IpcStrategyTests.getMockIpcResultBundle();
+                    }
 
-            @Override public Bundle getCurrentAccount(Bundle bundle) throws RemoteException {
-                return IpcStrategyTests.getMockIpcResultBundle();
-            }
+                    @Override
+                    public Bundle getCurrentAccount(Bundle bundle) throws RemoteException {
+                        return IpcStrategyTests.getMockIpcResultBundle();
+                    }
 
-            @Override public Bundle removeAccountFromSharedDevice(Bundle bundle) throws RemoteException {
-                return IpcStrategyTests.getMockIpcResultBundle();
-            }
+                    @Override
+                    public Bundle removeAccountFromSharedDevice(Bundle bundle)
+                            throws RemoteException {
+                        return IpcStrategyTests.getMockIpcResultBundle();
+                    }
 
-            @Override
-            public Bundle generateSignedHttpRequest(Bundle bundle) throws RemoteException {
-                return IpcStrategyTests.getMockIpcResultBundle();
-            }
-        };
+                    @Override
+                    public Bundle generateSignedHttpRequest(Bundle bundle) throws RemoteException {
+                        return IpcStrategyTests.getMockIpcResultBundle();
+                    }
+                };
 
         @SuppressWarnings("unchecked")
         final T returnVal = (T) authService;

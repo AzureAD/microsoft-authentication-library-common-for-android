@@ -36,10 +36,10 @@ import java.util.Map;
 @SuppressWarnings(WarningType.rawtype_warning)
 public class CommandResultCache {
 
-    private final static int DEFAULT_ITEM_COUNT = 250;
+    private static final int DEFAULT_ITEM_COUNT = 250;
 
     private final Object cacheLock = new Object();
-    //Cache items allowed is still TBD... for now using default value of 250
+    // Cache items allowed is still TBD... for now using default value of 250
     private final Map<BaseCommand, CommandResultCacheItem> mCache;
 
     public CommandResultCache() {
@@ -47,12 +47,15 @@ public class CommandResultCache {
     }
 
     public CommandResultCache(final int maxItemCount) {
-        mCache = new LinkedHashMap<BaseCommand, CommandResultCacheItem>(maxItemCount + 1, .75f, true) {
-            @Override
-            protected boolean removeEldestEntry(Map.Entry<BaseCommand, CommandResultCacheItem> eldest) {
-                return size() > maxItemCount;
-            }
-        };
+        mCache =
+                new LinkedHashMap<BaseCommand, CommandResultCacheItem>(
+                        maxItemCount + 1, .75f, true) {
+                    @Override
+                    protected boolean removeEldestEntry(
+                            Map.Entry<BaseCommand, CommandResultCacheItem> eldest) {
+                        return size() > maxItemCount;
+                    }
+                };
     }
 
     public CommandResult get(@SuppressWarnings(WarningType.rawtype_warning) BaseCommand key) {
@@ -71,13 +74,15 @@ public class CommandResultCache {
         }
     }
 
-    public void put(@SuppressWarnings(WarningType.rawtype_warning) BaseCommand key, CommandResult value) {
+    public void put(
+            @SuppressWarnings(WarningType.rawtype_warning) BaseCommand key, CommandResult value) {
         synchronized (cacheLock) {
             CommandResultCacheItem cacheItem = new CommandResultCacheItem(value);
-            //NOTE: If an existing item using this key already in the cache it will be replaced
+            // NOTE: If an existing item using this key already in the cache it will be replaced
             mCache.put(key, cacheItem);
-            //Object old = mCache.put(key, cacheItem);
-            //We may want to log old if we see problems here, since the the old value is the value being replace with the new item.
+            // Object old = mCache.put(key, cacheItem);
+            // We may want to log old if we see problems here, since the the old value is the value
+            // being replace with the new item.
         }
     }
 

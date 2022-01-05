@@ -48,8 +48,8 @@ public final class NtlmChallengeHandler implements IChallengeHandler<NtlmChallen
      * @param activity activity to place the UI
      * @param callback challenge completion callback which will process the challenge result.
      */
-    public NtlmChallengeHandler(final Activity activity,
-                                final IAuthorizationCompletionCallback callback) {
+    public NtlmChallengeHandler(
+            final Activity activity, final IAuthorizationCompletionCallback callback) {
         mActivity = activity;
         mChallengeCallback = callback;
     }
@@ -67,21 +67,32 @@ public final class NtlmChallengeHandler implements IChallengeHandler<NtlmChallen
 
     private void showHttpAuthDialog(final NtlmChallenge ntlmChallenge) {
         final LayoutInflater factory = LayoutInflater.from(mActivity);
-        final View v = factory.inflate(mActivity.getResources().getLayout(R.layout.http_auth_dialog), null);
+        final View v =
+                factory.inflate(
+                        mActivity.getResources().getLayout(R.layout.http_auth_dialog), null);
         final EditText usernameView = (EditText) v.findViewById(R.id.editUserName);
         final EditText passwordView = (EditText) v.findViewById(R.id.editPassword);
         final String title = mActivity.getText(R.string.http_auth_dialog_title).toString();
         final AlertDialog.Builder httpAuthDialog = new AlertDialog.Builder(mActivity);
-        httpAuthDialog.setTitle(title)
+        httpAuthDialog
+                .setTitle(title)
                 .setView(v)
-                .setPositiveButton(R.string.http_auth_dialog_login,
+                .setPositiveButton(
+                        R.string.http_auth_dialog_login,
                         new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int whichButton) {
-                                Logger.info(TAG, "Proceeding with user supplied username and password.");
-                                ntlmChallenge.getHandler().proceed(usernameView.getText().toString(), passwordView.getText().toString());
+                                Logger.info(
+                                        TAG,
+                                        "Proceeding with user supplied username and password.");
+                                ntlmChallenge
+                                        .getHandler()
+                                        .proceed(
+                                                usernameView.getText().toString(),
+                                                passwordView.getText().toString());
                             }
                         })
-                .setNegativeButton(R.string.http_auth_dialog_cancel,
+                .setNegativeButton(
+                        R.string.http_auth_dialog_cancel,
                         new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int whichButton) {
                                 ntlmChallenge.getHandler().cancel();
@@ -94,7 +105,9 @@ public final class NtlmChallengeHandler implements IChallengeHandler<NtlmChallen
                                 ntlmChallenge.getHandler().cancel();
                                 cancelRequest();
                             }
-                        }).create().show();
+                        })
+                .create()
+                .show();
     }
 
     private void cancelRequest() {

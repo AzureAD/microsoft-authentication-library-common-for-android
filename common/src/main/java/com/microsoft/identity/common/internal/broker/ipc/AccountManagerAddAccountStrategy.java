@@ -22,6 +22,10 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.broker.ipc;
 
+import static com.microsoft.identity.common.exception.BrokerCommunicationException.Category.CONNECTION_ERROR;
+import static com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy.Type.ACCOUNT_MANAGER_ADD_ACCOUNT;
+import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.BROKER_ACCOUNT_TYPE;
+
 import android.accounts.AccountManager;
 import android.accounts.AccountManagerFuture;
 import android.accounts.AuthenticatorException;
@@ -40,17 +44,12 @@ import com.microsoft.identity.common.logging.Logger;
 
 import java.io.IOException;
 
-import static com.microsoft.identity.common.exception.BrokerCommunicationException.Category.CONNECTION_ERROR;
-import static com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy.Type.ACCOUNT_MANAGER_ADD_ACCOUNT;
-import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.BROKER_ACCOUNT_TYPE;
-
 /**
  * A strategy for communicating with the targeted broker via AccountManager's addAccount().
  *
  * NOTE: SuppressLint is added because this API requires MANAGE_ACCOUNTS for API<= 22.
  * AccountManagerUtil.canUseAccountManagerOperation() will validate that.
  * */
-
 @SuppressLint("MissingPermission")
 public class AccountManagerAddAccountStrategy implements IIpcStrategy {
     private static final String TAG = AccountManagerAddAccountStrategy.class.getSimpleName();
@@ -62,7 +61,8 @@ public class AccountManagerAddAccountStrategy implements IIpcStrategy {
     }
 
     @Override
-    @Nullable public Bundle communicateToBroker(final @NonNull BrokerOperationBundle brokerOperationBundle)
+    @Nullable
+    public Bundle communicateToBroker(final @NonNull BrokerOperationBundle brokerOperationBundle)
             throws BrokerCommunicationException {
         final String methodName = brokerOperationBundle.getOperation().name();
         try {
@@ -81,7 +81,8 @@ public class AccountManagerAddAccountStrategy implements IIpcStrategy {
             return resultBundle.getResult();
         } catch (final AuthenticatorException | IOException | OperationCanceledException e) {
             Logger.error(TAG + methodName, e.getMessage(), e);
-            throw new BrokerCommunicationException(CONNECTION_ERROR, getType(), "Failed to connect to AccountManager", e);
+            throw new BrokerCommunicationException(
+                    CONNECTION_ERROR, getType(), "Failed to connect to AccountManager", e);
         }
     }
 

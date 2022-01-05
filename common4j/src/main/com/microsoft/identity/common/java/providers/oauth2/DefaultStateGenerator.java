@@ -22,9 +22,9 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.providers.oauth2;
 
-import java.util.UUID;
-
 import lombok.NonNull;
+
+import java.util.UUID;
 
 /**
  * This generates a non-guessable value for the state parameter in an authorization request per the specification:
@@ -39,5 +39,4 @@ public class DefaultStateGenerator implements IStateGenerator {
 
         return stateUUID1.toString() + "-" + stateUUID2.toString();
     }
-
 }

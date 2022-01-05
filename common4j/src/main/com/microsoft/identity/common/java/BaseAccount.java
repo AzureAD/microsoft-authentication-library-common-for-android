@@ -49,5 +49,4 @@ public abstract class BaseAccount implements IAccountRecord {
      * @return cache identifiers in List<String>
      */
     public abstract List<String> getCacheIdentifiers();
-
 }

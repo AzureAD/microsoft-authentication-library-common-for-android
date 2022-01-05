@@ -36,7 +36,9 @@ public interface IIpcStrategy {
      * @param bundle a {@link BrokerOperationBundle} object.
      * @return a response bundle (returned from the active broker).
      */
-    @Nullable Bundle communicateToBroker(final @NonNull BrokerOperationBundle bundle) throws BrokerCommunicationException;
+    @Nullable
+    Bundle communicateToBroker(final @NonNull BrokerOperationBundle bundle)
+            throws BrokerCommunicationException;
 
     /**
      * Gets this strategy type.

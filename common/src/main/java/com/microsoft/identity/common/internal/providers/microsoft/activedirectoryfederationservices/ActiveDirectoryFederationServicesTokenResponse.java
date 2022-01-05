@@ -27,5 +27,4 @@ import com.microsoft.identity.common.java.providers.oauth2.TokenResponse;
 /**
  * Active Directory Federation Service Token Response.
  */
-public class ActiveDirectoryFederationServicesTokenResponse extends TokenResponse {
-}
+public class ActiveDirectoryFederationServicesTokenResponse extends TokenResponse {}

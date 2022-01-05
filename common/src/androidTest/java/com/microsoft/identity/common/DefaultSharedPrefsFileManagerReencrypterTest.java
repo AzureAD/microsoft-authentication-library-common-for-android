@@ -33,8 +33,8 @@ import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.java.util.TaskCompletedCallback;
 import com.microsoft.identity.common.migration.DefaultMultiTypeNameValueStorageReencrypter;
-import com.microsoft.identity.common.migration.IMultiTypeNameValueStorageReencrypter;
 import com.microsoft.identity.common.migration.IMigrationOperationResult;
+import com.microsoft.identity.common.migration.IMultiTypeNameValueStorageReencrypter;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -70,17 +70,17 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
     private IMultiTypeNameValueStorageReencrypter.IStringEncrypter mStringEncrypter;
     private IMultiTypeNameValueStorageReencrypter.IStringDecrypter mStringDecrypter;
 
-    private class TestEncrypterDecrypter implements
-            IMultiTypeNameValueStorageReencrypter.IStringEncrypter,
-            IMultiTypeNameValueStorageReencrypter.IStringDecrypter {
+    private class TestEncrypterDecrypter
+            implements IMultiTypeNameValueStorageReencrypter.IStringEncrypter,
+                    IMultiTypeNameValueStorageReencrypter.IStringDecrypter {
 
         private final Context mContext;
 
         // Decryption will use the legacy key
         private final byte[] mMockLegacyKey;
 
-        TestEncrypterDecrypter(@NonNull final Context context,
-                               @NonNull final byte[] secretKeyData) {
+        TestEncrypterDecrypter(
+                @NonNull final Context context, @NonNull final byte[] secretKeyData) {
             mContext = context;
             mMockLegacyKey = secretKeyData;
         }
@@ -120,7 +120,9 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
     @Before
     public void setUp() {
         mContext = InstrumentationRegistry.getTargetContext();
-        mTestCacheFile = AndroidPlatformComponents.createFromContext(mContext).getNameValueStore(TEST_CACHE_FILENAME, String.class);
+        mTestCacheFile =
+                AndroidPlatformComponents.createFromContext(mContext)
+                        .getNameValueStore(TEST_CACHE_FILENAME, String.class);
         mFileManagerReencrypter = new DefaultMultiTypeNameValueStorageReencrypter();
         try {
             final byte[] mockKey = generateLegacyFormatKey("abcdedfdfd");
@@ -136,12 +138,14 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
 
     private byte[] generateLegacyFormatKey(@NonNull final String salt)
             throws NoSuchAlgorithmException, UnsupportedEncodingException, InvalidKeySpecException {
-        SecretKeyFactory keyFactory = SecretKeyFactory
-                .getInstance("PBEWithSHA256And256BitAES-CBC-BC");
+        SecretKeyFactory keyFactory =
+                SecretKeyFactory.getInstance("PBEWithSHA256And256BitAES-CBC-BC");
         final int iterations = 100;
         final int keySize = 256;
-        final SecretKey tempkey = keyFactory.generateSecret(new PBEKeySpec("test".toCharArray(),
-                salt.getBytes("UTF-8"), iterations, keySize));
+        final SecretKey tempkey =
+                keyFactory.generateSecret(
+                        new PBEKeySpec(
+                                "test".toCharArray(), salt.getBytes("UTF-8"), iterations, keySize));
         final SecretKey secretKey = new SecretKeySpec(tempkey.getEncoded(), "AES");
         return secretKey.getEncoded();
     }
@@ -158,12 +162,7 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
                 mTestCacheFile,
                 mStringEncrypter,
                 mStringDecrypter,
-                new IMultiTypeNameValueStorageReencrypter.ReencryptionParams(
-                        true,
-                        false,
-                        false
-                )
-        );
+                new IMultiTypeNameValueStorageReencrypter.ReencryptionParams(true, false, false));
     }
 
     @Test
@@ -174,21 +173,17 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
                 mTestCacheFile,
                 mStringEncrypter,
                 mStringDecrypter,
-                new IMultiTypeNameValueStorageReencrypter.ReencryptionParams(
-                        true,
-                        false,
-                        false
-                ),
+                new IMultiTypeNameValueStorageReencrypter.ReencryptionParams(true, false, false),
                 new TaskCompletedCallback<IMigrationOperationResult>() {
                     @Override
-                    public void onTaskCompleted(final IMigrationOperationResult iMigrationOperationResult) {
+                    public void onTaskCompleted(
+                            final IMigrationOperationResult iMigrationOperationResult) {
                         Assert.assertEquals(0, iMigrationOperationResult.getCountOfTotalRecords());
                         Assert.assertEquals(0, iMigrationOperationResult.getCountOfFailedRecords());
                         Assert.assertEquals(0, iMigrationOperationResult.getFailures().size());
                         latch.countDown();
                     }
-                }
-        );
+                });
 
         latch.await(MAX_WAIT, MAX_WAIT_UNIT);
     }
@@ -198,7 +193,8 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
         // Add the numbers 0-9 to the cache, encrypted format...
         for (int ii = 0; ii < 10; ii++) {
             try {
-                final String encryptedIntStr = mTestEncrypterDecrypter.encryptWithLegacyKey(String.valueOf(ii));
+                final String encryptedIntStr =
+                        mTestEncrypterDecrypter.encryptWithLegacyKey(String.valueOf(ii));
                 mTestCacheFile.put(String.valueOf(ii), encryptedIntStr);
             } catch (Exception e) {
                 Assert.assertNull("Should not throw", e);
@@ -219,12 +215,7 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
                 mTestCacheFile,
                 mStringEncrypter,
                 mStringDecrypter,
-                new IMultiTypeNameValueStorageReencrypter.ReencryptionParams(
-                        true,
-                        false,
-                        false
-                )
-        );
+                new IMultiTypeNameValueStorageReencrypter.ReencryptionParams(true, false, false));
 
         Assert.assertEquals(10, mTestCacheFile.getAll().size());
     }
@@ -234,7 +225,8 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
         // Add the numbers 0-9 to the cache, encrypted format...
         for (int ii = 0; ii < 10; ii++) {
             try {
-                final String encryptedIntStr = mTestEncrypterDecrypter.encryptWithLegacyKey(String.valueOf(ii));
+                final String encryptedIntStr =
+                        mTestEncrypterDecrypter.encryptWithLegacyKey(String.valueOf(ii));
                 mTestCacheFile.put(String.valueOf(ii), encryptedIntStr);
             } catch (Exception e) {
                 Assert.assertNull("Should not throw", e);
@@ -256,21 +248,17 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
                 mTestCacheFile,
                 mStringEncrypter,
                 mStringDecrypter,
-                new IMultiTypeNameValueStorageReencrypter.ReencryptionParams(
-                        true,
-                        false,
-                        false
-                ),
+                new IMultiTypeNameValueStorageReencrypter.ReencryptionParams(true, false, false),
                 new TaskCompletedCallback<IMigrationOperationResult>() {
                     @Override
-                    public void onTaskCompleted(IMigrationOperationResult iMigrationOperationResult) {
+                    public void onTaskCompleted(
+                            IMigrationOperationResult iMigrationOperationResult) {
                         Assert.assertEquals(10, iMigrationOperationResult.getCountOfTotalRecords());
                         Assert.assertEquals(0, iMigrationOperationResult.getCountOfFailedRecords());
                         Assert.assertEquals(0, iMigrationOperationResult.getFailures().size());
                         latch.countDown();
                     }
-                }
-        );
+                });
 
         latch.await(MAX_WAIT, MAX_WAIT_UNIT);
 
@@ -284,23 +272,20 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
         mTestCacheFile.put(sampleKey, sampleValue);
 
         // Try to decrypt the unencrypted data, it will fail
-        final IMigrationOperationResult result = mFileManagerReencrypter.reencrypt(
-                mTestCacheFile,
-                mStringEncrypter,
-                new IMultiTypeNameValueStorageReencrypter.IStringDecrypter() {
-                    @Override
-                    public String decrypt(String input) throws Exception {
-                        Assert.assertEquals(1, mTestCacheFile.getAll().size());
-                        Assert.assertEquals(sampleValue, mTestCacheFile.get(sampleKey));
-                        throw new IOException();
-                    }
-                },
-                new IMultiTypeNameValueStorageReencrypter.ReencryptionParams(
-                        true,
-                        false,
-                        false
-                )
-        );
+        final IMigrationOperationResult result =
+                mFileManagerReencrypter.reencrypt(
+                        mTestCacheFile,
+                        mStringEncrypter,
+                        new IMultiTypeNameValueStorageReencrypter.IStringDecrypter() {
+                            @Override
+                            public String decrypt(String input) throws Exception {
+                                Assert.assertEquals(1, mTestCacheFile.getAll().size());
+                                Assert.assertEquals(sampleValue, mTestCacheFile.get(sampleKey));
+                                throw new IOException();
+                            }
+                        },
+                        new IMultiTypeNameValueStorageReencrypter.ReencryptionParams(
+                                true, false, false));
 
         Assert.assertEquals(1, result.getCountOfTotalRecords());
         Assert.assertEquals(1, result.getCountOfFailedRecords());
@@ -325,21 +310,17 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
                         throw new IOException();
                     }
                 },
-                new IMultiTypeNameValueStorageReencrypter.ReencryptionParams(
-                        true,
-                        false,
-                        false
-                ),
+                new IMultiTypeNameValueStorageReencrypter.ReencryptionParams(true, false, false),
                 new TaskCompletedCallback<IMigrationOperationResult>() {
                     @Override
-                    public void onTaskCompleted(IMigrationOperationResult iMigrationOperationResult) {
+                    public void onTaskCompleted(
+                            IMigrationOperationResult iMigrationOperationResult) {
                         Assert.assertEquals(1, iMigrationOperationResult.getCountOfTotalRecords());
                         Assert.assertEquals(1, iMigrationOperationResult.getCountOfFailedRecords());
                         Assert.assertEquals(1, iMigrationOperationResult.getFailures().size());
                         latch.countDown();
                     }
-                }
-        );
+                });
 
         latch.await(MAX_WAIT, MAX_WAIT_UNIT);
         Assert.assertEquals(1, mTestCacheFile.getAll().size());
@@ -362,12 +343,7 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
                         throw new IOException();
                     }
                 },
-                new IMultiTypeNameValueStorageReencrypter.ReencryptionParams(
-                        false,
-                        true,
-                        false
-                )
-        );
+                new IMultiTypeNameValueStorageReencrypter.ReencryptionParams(false, true, false));
         Assert.assertEquals(0, mTestCacheFile.getAll().size());
     }
 
@@ -389,21 +365,17 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
                         throw new IOException();
                     }
                 },
-                new IMultiTypeNameValueStorageReencrypter.ReencryptionParams(
-                        false,
-                        true,
-                        false
-                ),
+                new IMultiTypeNameValueStorageReencrypter.ReencryptionParams(false, true, false),
                 new TaskCompletedCallback<IMigrationOperationResult>() {
                     @Override
-                    public void onTaskCompleted(IMigrationOperationResult iMigrationOperationResult) {
+                    public void onTaskCompleted(
+                            IMigrationOperationResult iMigrationOperationResult) {
                         Assert.assertEquals(1, iMigrationOperationResult.getCountOfTotalRecords());
                         Assert.assertEquals(1, iMigrationOperationResult.getCountOfFailedRecords());
                         Assert.assertEquals(1, iMigrationOperationResult.getFailures().size());
                         latch.countDown();
                     }
-                }
-        );
+                });
 
         latch.await(MAX_WAIT, MAX_WAIT_UNIT);
         Assert.assertEquals(0, mTestCacheFile.getAll().size());
@@ -430,12 +402,7 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
                         throw new IOException();
                     }
                 },
-                new IMultiTypeNameValueStorageReencrypter.ReencryptionParams(
-                        false,
-                        true,
-                        false
-                )
-        );
+                new IMultiTypeNameValueStorageReencrypter.ReencryptionParams(false, true, false));
 
         Assert.assertEquals(0, mTestCacheFile.getAll().size());
     }
@@ -463,22 +430,18 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
                         throw new IOException();
                     }
                 },
-                new IMultiTypeNameValueStorageReencrypter.ReencryptionParams(
-                        false,
-                        true,
-                        false
-                ),
+                new IMultiTypeNameValueStorageReencrypter.ReencryptionParams(false, true, false),
                 new TaskCompletedCallback<IMigrationOperationResult>() {
                     @Override
-                    public void onTaskCompleted(IMigrationOperationResult iMigrationOperationResult) {
+                    public void onTaskCompleted(
+                            IMigrationOperationResult iMigrationOperationResult) {
                         Assert.assertEquals(2, iMigrationOperationResult.getCountOfTotalRecords());
                         Assert.assertEquals(2, iMigrationOperationResult.getCountOfFailedRecords());
                         Assert.assertEquals(1, iMigrationOperationResult.getFailures().size());
                         Assert.assertEquals(0, mTestCacheFile.getAll().size());
                         latch.countDown();
                     }
-                }
-        );
+                });
 
         latch.await(MAX_WAIT, MAX_WAIT_UNIT);
         Assert.assertEquals(0, mTestCacheFile.getAll().size());
@@ -501,12 +464,7 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
                 mTestCacheFile,
                 mTestEncrypterDecrypter,
                 mTestEncrypterDecrypter,
-                new IMultiTypeNameValueStorageReencrypter.ReencryptionParams(
-                        false,
-                        false,
-                        false
-                )
-        );
+                new IMultiTypeNameValueStorageReencrypter.ReencryptionParams(false, false, false));
 
         // Assert nothing was done
         Assert.assertEquals(legacyEncryptedValue, mTestCacheFile.get(key));
@@ -524,16 +482,13 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
         mTestCacheFile.put(key, legacyEncryptedValue);
 
         // Attempt to reencrypt the cache, but provide the wrong key intentionally
-        final IMigrationOperationResult result = mFileManagerReencrypter.reencrypt(
-                mTestCacheFile,
-                mTestEncrypterDecrypter,
-                mTestEncrypterDecrypter,
-                new IMultiTypeNameValueStorageReencrypter.ReencryptionParams(
-                        true,
-                        false,
-                        false
-                )
-        );
+        final IMigrationOperationResult result =
+                mFileManagerReencrypter.reencrypt(
+                        mTestCacheFile,
+                        mTestEncrypterDecrypter,
+                        mTestEncrypterDecrypter,
+                        new IMultiTypeNameValueStorageReencrypter.ReencryptionParams(
+                                true, false, false));
     }
 
     @Test
@@ -548,22 +503,20 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
         final String legacyEncryptedValue = origDelegate.encryptWithLegacyKey(plainTextValue);
 
         final String keyTwo = "key_two";
-        final String anotherLegacyEncryptedValue = origDelegate.encryptWithLegacyKey(anotherPlaintextValue);
+        final String anotherLegacyEncryptedValue =
+                origDelegate.encryptWithLegacyKey(anotherPlaintextValue);
 
         mTestCacheFile.put(keyOne, legacyEncryptedValue);
         mTestCacheFile.put(keyTwo, anotherLegacyEncryptedValue);
 
         // Attempt to reencrypt the cache, but provide the wrong key intentionally
-        final IMigrationOperationResult result = mFileManagerReencrypter.reencrypt(
-                mTestCacheFile,
-                mTestEncrypterDecrypter,
-                mTestEncrypterDecrypter,
-                new IMultiTypeNameValueStorageReencrypter.ReencryptionParams(
-                        false,
-                        true,
-                        false
-                )
-        );
+        final IMigrationOperationResult result =
+                mFileManagerReencrypter.reencrypt(
+                        mTestCacheFile,
+                        mTestEncrypterDecrypter,
+                        mTestEncrypterDecrypter,
+                        new IMultiTypeNameValueStorageReencrypter.ReencryptionParams(
+                                false, true, false));
 
         // Assert entries removed
         Assert.assertNull(mTestCacheFile.get(keyOne));
@@ -585,22 +538,20 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
         final String legacyEncryptedValue = origDelegate.encryptWithLegacyKey(plainTextValue);
 
         final String keyTwo = "key_two";
-        final String anotherLegacyEncryptedValue = origDelegate.encryptWithLegacyKey(anotherPlaintextValue);
+        final String anotherLegacyEncryptedValue =
+                origDelegate.encryptWithLegacyKey(anotherPlaintextValue);
 
         mTestCacheFile.put(keyOne, legacyEncryptedValue);
         mTestCacheFile.put(keyTwo, anotherLegacyEncryptedValue);
 
         // Attempt to reencrypt the cache, but provide the wrong key intentionally
-        final IMigrationOperationResult result = mFileManagerReencrypter.reencrypt(
-                mTestCacheFile,
-                mTestEncrypterDecrypter,
-                mTestEncrypterDecrypter,
-                new IMultiTypeNameValueStorageReencrypter.ReencryptionParams(
-                        true,
-                        true,
-                        false
-                )
-        );
+        final IMigrationOperationResult result =
+                mFileManagerReencrypter.reencrypt(
+                        mTestCacheFile,
+                        mTestEncrypterDecrypter,
+                        mTestEncrypterDecrypter,
+                        new IMultiTypeNameValueStorageReencrypter.ReencryptionParams(
+                                true, true, false));
 
         Assert.assertEquals(2, result.getCountOfTotalRecords());
         Assert.assertEquals(1, result.getCountOfFailedRecords());
@@ -620,7 +571,8 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
         final String legacyEncryptedValue = origDelegate.encryptWithLegacyKey(plainTextValue);
 
         final String keyTwo = "key_two";
-        final String anotherLegacyEncryptedValue = origDelegate.encryptWithLegacyKey(anotherPlaintextValue);
+        final String anotherLegacyEncryptedValue =
+                origDelegate.encryptWithLegacyKey(anotherPlaintextValue);
 
         mTestCacheFile.put(keyOne, legacyEncryptedValue);
         mTestCacheFile.put(keyTwo, anotherLegacyEncryptedValue);
@@ -632,11 +584,7 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
                     mTestEncrypterDecrypter,
                     mTestEncrypterDecrypter,
                     new IMultiTypeNameValueStorageReencrypter.ReencryptionParams(
-                            true,
-                            false,
-                            true
-                    )
-            );
+                            true, false, true));
         } catch (final Exception e) {
             Assert.assertEquals(0, mTestCacheFile.getAll().size());
         }
@@ -647,7 +595,8 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
         // Add the numbers 0-9 to the cache, encrypted format...
         for (int ii = 0; ii < 10; ii++) {
             try {
-                final String encryptedIntStr = mTestEncrypterDecrypter.encryptWithLegacyKey(String.valueOf(ii));
+                final String encryptedIntStr =
+                        mTestEncrypterDecrypter.encryptWithLegacyKey(String.valueOf(ii));
                 mTestCacheFile.put(String.valueOf(ii), encryptedIntStr);
             } catch (Exception e) {
                 // wont happen
@@ -668,12 +617,7 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
                 mTestCacheFile,
                 mStringEncrypter,
                 mStringDecrypter,
-                new IMultiTypeNameValueStorageReencrypter.ReencryptionParams(
-                        true,
-                        false,
-                        false
-                )
-        );
+                new IMultiTypeNameValueStorageReencrypter.ReencryptionParams(true, false, false));
 
         Assert.assertEquals(10, mTestCacheFile.getAll().size());
 
@@ -684,11 +628,7 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
                     mStringEncrypter,
                     mStringDecrypter,
                     new IMultiTypeNameValueStorageReencrypter.ReencryptionParams(
-                            true,
-                            false,
-                            false
-                    )
-            );
+                            true, false, false));
         } catch (final Exception e) {
             Assert.assertEquals(10, mTestCacheFile.getAll().size());
         }
@@ -699,7 +639,8 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
         // Add the numbers 0-9 to the cache, encrypted format...
         for (int ii = 0; ii < 10; ii++) {
             try {
-                final String encryptedIntStr = mTestEncrypterDecrypter.encryptWithLegacyKey(String.valueOf(ii));
+                final String encryptedIntStr =
+                        mTestEncrypterDecrypter.encryptWithLegacyKey(String.valueOf(ii));
                 mTestCacheFile.put(String.valueOf(ii), encryptedIntStr);
             } catch (Exception e) {
                 // wont happen
@@ -720,12 +661,7 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
                 mTestCacheFile,
                 mStringEncrypter,
                 mStringDecrypter,
-                new IMultiTypeNameValueStorageReencrypter.ReencryptionParams(
-                        true,
-                        false,
-                        false
-                )
-        );
+                new IMultiTypeNameValueStorageReencrypter.ReencryptionParams(true, false, false));
 
         Assert.assertEquals(10, mTestCacheFile.getAll().size());
 
@@ -736,14 +672,9 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
                     mStringEncrypter,
                     mStringDecrypter,
                     new IMultiTypeNameValueStorageReencrypter.ReencryptionParams(
-                            true,
-                            false,
-                            true
-                    )
-            );
+                            true, false, true));
         } catch (final Exception e) {
             Assert.assertEquals(0, mTestCacheFile.getAll().size());
         }
     }
-
 }

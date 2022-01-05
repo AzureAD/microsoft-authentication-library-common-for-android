@@ -22,51 +22,59 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.providers.microsoft.microsoftsts;
 
-import com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeInternal;
+import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.APP_PACKAGE_NAME;
+import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.APP_VERSION;
+import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.CHALLENGE_REQUEST_HEADER;
+import static com.microsoft.identity.common.java.AuthenticationConstants.OAuth2Scopes.CLAIMS_UPDATE_RESOURCE;
+import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.PRODUCT;
+import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.VERSION;
+import static com.microsoft.identity.common.java.net.HttpConstants.HeaderField.X_MS_CLITELEM;
+import static com.microsoft.identity.common.java.providers.oauth2.TokenRequest.GrantTypes.CLIENT_CREDENTIALS;
+
+import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
+import com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeInternal;
+import com.microsoft.identity.common.java.cache.ICacheRecord;
 import com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallenge;
 import com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallengeFactory;
 import com.microsoft.identity.common.java.commands.parameters.RopcTokenCommandParameters;
 import com.microsoft.identity.common.java.crypto.IDevicePopManager;
-import com.microsoft.identity.common.java.exception.ArgumentException;
-import com.microsoft.identity.common.java.platform.Device;
-import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationResponse;
-import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenErrorResponse;
-import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
-import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResultFactory;
-import com.microsoft.identity.common.java.providers.oauth2.IAuthorizationStrategy;
-import com.microsoft.identity.common.java.providers.oauth2.TokenErrorResponse;
-import com.microsoft.identity.common.java.providers.oauth2.TokenRequest;
-
-import edu.umd.cs.findbugs.annotations.Nullable;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import lombok.NonNull;
-
-import com.microsoft.identity.common.java.WarningType;
+import com.microsoft.identity.common.java.dto.IAccountRecord;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.exception.ServiceException;
-import com.microsoft.identity.common.java.cache.ICacheRecord;
-import com.microsoft.identity.common.java.dto.IAccountRecord;
-import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
-import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud;
-import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.ClientInfo;
-import com.microsoft.identity.common.java.providers.oauth2.IDToken;
-import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
-import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters;
-import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
-import com.microsoft.identity.common.java.telemetry.CliTelemInfo;
-import com.microsoft.identity.common.java.util.HeaderSerializationUtil;
-import com.microsoft.identity.common.java.util.ResultUtil;
-import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.logging.DiagnosticContext;
+import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.net.HttpClient;
 import com.microsoft.identity.common.java.net.HttpConstants;
 import com.microsoft.identity.common.java.net.HttpResponse;
 import com.microsoft.identity.common.java.net.UrlConnectionHttpClient;
-import com.microsoft.identity.common.java.util.ObjectMapper;
-import com.microsoft.identity.common.java.logging.Logger;
+import com.microsoft.identity.common.java.platform.Device;
+import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationResponse;
+import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenErrorResponse;
+import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
+import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud;
+import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.ClientInfo;
+import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
+import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResultFactory;
+import com.microsoft.identity.common.java.providers.oauth2.IAuthorizationStrategy;
+import com.microsoft.identity.common.java.providers.oauth2.IDToken;
+import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
+import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters;
+import com.microsoft.identity.common.java.providers.oauth2.TokenErrorResponse;
+import com.microsoft.identity.common.java.providers.oauth2.TokenRequest;
+import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
+import com.microsoft.identity.common.java.telemetry.CliTelemInfo;
 import com.microsoft.identity.common.java.util.CommonURIBuilder;
+import com.microsoft.identity.common.java.util.HeaderSerializationUtil;
+import com.microsoft.identity.common.java.util.ObjectMapper;
+import com.microsoft.identity.common.java.util.ResultUtil;
+import com.microsoft.identity.common.java.util.StringUtil;
+
+import edu.umd.cs.findbugs.annotations.Nullable;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
+import lombok.NonNull;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -79,20 +87,12 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.UUID;
 
-import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.APP_PACKAGE_NAME;
-import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.APP_VERSION;
-import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.CHALLENGE_REQUEST_HEADER;
-import static com.microsoft.identity.common.java.AuthenticationConstants.OAuth2Scopes.CLAIMS_UPDATE_RESOURCE;
-import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.PRODUCT;
-import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.VERSION;
-import static com.microsoft.identity.common.java.net.HttpConstants.HeaderField.X_MS_CLITELEM;
-import static com.microsoft.identity.common.java.providers.oauth2.TokenRequest.GrantTypes.CLIENT_CREDENTIALS;
-
-// Suppressing rawtype warnings due to the generic type AuthorizationStrategy, AuthorizationResult, AuthorizationResultFactory and MicrosoftAuthorizationRequest
+// Suppressing rawtype warnings due to the generic type AuthorizationStrategy, AuthorizationResult,
+// AuthorizationResultFactory and MicrosoftAuthorizationRequest
 @SuppressWarnings(WarningType.rawtype_warning)
 public class MicrosoftStsOAuth2Strategy
-        extends OAuth2Strategy
-        <MicrosoftStsAccessToken,
+        extends OAuth2Strategy<
+                MicrosoftStsAccessToken,
                 MicrosoftStsAccount,
                 MicrosoftStsAuthorizationRequest,
                 MicrosoftStsAuthorizationRequest.Builder,
@@ -125,8 +125,10 @@ public class MicrosoftStsOAuth2Strategy
      * @param parameters OAuth2StrategyParameters
      */
     @SuppressFBWarnings("RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE")
-    public MicrosoftStsOAuth2Strategy(@NonNull final MicrosoftStsOAuth2Configuration config,
-                                      @NonNull final OAuth2StrategyParameters parameters) throws ClientException {
+    public MicrosoftStsOAuth2Strategy(
+            @NonNull final MicrosoftStsOAuth2Configuration config,
+            @NonNull final OAuth2StrategyParameters parameters)
+            throws ClientException {
         super(config, parameters);
         setTokenEndpoint(config.getTokenEndpoint().toString());
     }
@@ -150,24 +152,21 @@ public class MicrosoftStsOAuth2Strategy
     }
 
     @Override
-    public String getIssuerCacheIdentifier(@NonNull final MicrosoftStsAuthorizationRequest request) {
+    public String getIssuerCacheIdentifier(
+            @NonNull final MicrosoftStsAuthorizationRequest request) {
         final String methodName = ":getIssuerCacheIdentifier";
 
         final URL authority = request.getAuthority();
-        final AzureActiveDirectoryCloud cloudEnv = AzureActiveDirectory.getAzureActiveDirectoryCloud(authority);
+        final AzureActiveDirectoryCloud cloudEnv =
+                AzureActiveDirectory.getAzureActiveDirectoryCloud(authority);
 
         // This map can only be consulted if the authority (cloud really) is known to Microsoft
         // If the host has a hardcoded trust, we can just use the hostname.
         if (null != cloudEnv) {
             final String preferredCacheHostName = cloudEnv.getPreferredCacheHostName();
-            Logger.info(
-                    TAG + methodName,
-                    "Using preferred cache host name..."
-            );
+            Logger.info(TAG + methodName, "Using preferred cache host name...");
             Logger.infoPII(
-                    TAG + methodName,
-                    "Preferred cache hostname: [" + preferredCacheHostName + "]"
-            );
+                    TAG + methodName, "Preferred cache hostname: [" + preferredCacheHostName + "]");
 
             return preferredCacheHostName;
         }
@@ -178,20 +177,16 @@ public class MicrosoftStsOAuth2Strategy
     private String getIssuerCacheIdentifierFromAuthority(final URL authority) {
         final String methodName = ":getIssuerCacheIdentifierFromAuthority";
 
-        final AzureActiveDirectoryCloud cloudEnv = AzureActiveDirectory.getAzureActiveDirectoryCloud(authority);
+        final AzureActiveDirectoryCloud cloudEnv =
+                AzureActiveDirectory.getAzureActiveDirectoryCloud(authority);
 
         // This map can only be consulted if the cloud is known to Microsoft
         // If the host has a hardcoded trust, we can just use the hostname.
         if (null != cloudEnv) {
             final String preferredCacheHostName = cloudEnv.getPreferredCacheHostName();
-            Logger.info(
-                    TAG + methodName,
-                    "Using preferred cache host name..."
-            );
+            Logger.info(TAG + methodName, "Using preferred cache host name...");
             Logger.infoPII(
-                    TAG + methodName,
-                    "Preferred cache hostname: [" + preferredCacheHostName + "]"
-            );
+                    TAG + methodName, "Preferred cache hostname: [" + preferredCacheHostName + "]");
 
             return preferredCacheHostName;
         }
@@ -210,8 +205,7 @@ public class MicrosoftStsOAuth2Strategy
             Logger.error(
                     TAG + methodName,
                     "Getting issuer cache identifier from token endpoint failed due to malformed URL (mTokenEndpoint)...",
-                    e
-            );
+                    e);
         }
 
         if (authority != null) {
@@ -226,10 +220,7 @@ public class MicrosoftStsOAuth2Strategy
             @NonNull final MicrosoftStsTokenResponse response) {
         final String methodName = ":getAccessTokenFromResponse";
 
-        Logger.verbose(
-                TAG + methodName,
-                "Getting AT from TokenResponse..."
-        );
+        Logger.verbose(TAG + methodName, "Getting AT from TokenResponse...");
 
         return new MicrosoftStsAccessToken(response);
     }
@@ -239,22 +230,15 @@ public class MicrosoftStsOAuth2Strategy
             @NonNull final MicrosoftStsTokenResponse response) {
         final String methodName = ":getRefreshTokenFromResponse";
 
-        Logger.verbose(
-                TAG + methodName,
-                "Getting RT from TokenResponse..."
-        );
+        Logger.verbose(TAG + methodName, "Getting RT from TokenResponse...");
 
         return new MicrosoftStsRefreshToken(response);
     }
 
     @Override
-    public MicrosoftStsAccount createAccount(
-            @NonNull final MicrosoftStsTokenResponse response) {
+    public MicrosoftStsAccount createAccount(@NonNull final MicrosoftStsTokenResponse response) {
         final String methodName = ":createAccount";
-        Logger.verbose(
-                TAG + methodName,
-                "Creating account from TokenResponse..."
-        );
+        Logger.verbose(TAG + methodName, "Creating account from TokenResponse...");
         IDToken idToken = null;
         ClientInfo clientInfo = null;
 
@@ -262,16 +246,8 @@ public class MicrosoftStsOAuth2Strategy
             idToken = new IDToken(response.getIdToken());
             clientInfo = new ClientInfo(response.getClientInfo());
         } catch (ServiceException ccse) {
-            Logger.error(
-                    TAG + methodName,
-                    "Failed to construct IDToken or ClientInfo",
-                    null
-            );
-            Logger.errorPII(
-                    TAG + methodName,
-                    "Failed with Exception",
-                    ccse
-            );
+            Logger.error(TAG + methodName, "Failed to construct IDToken or ClientInfo", null);
+            Logger.errorPII(TAG + methodName, "Failed with Exception", ccse);
 
             throw new RuntimeException();
         }
@@ -287,22 +263,16 @@ public class MicrosoftStsOAuth2Strategy
     public MicrosoftStsAuthorizationRequest.Builder createAuthorizationRequestBuilder() {
         final String methodName = ":createAuthorizationRequestBuilder";
 
-        Logger.info(
-                TAG + methodName,
-                "Creating AuthorizationRequestBuilder..."
-        );
+        Logger.info(TAG + methodName, "Creating AuthorizationRequestBuilder...");
 
-        final MicrosoftStsAuthorizationRequest.Builder builder = new MicrosoftStsAuthorizationRequest.Builder();
+        final MicrosoftStsAuthorizationRequest.Builder builder =
+                new MicrosoftStsAuthorizationRequest.Builder();
         builder.setAuthority(mConfig.getAuthorityUrl());
 
         if (mConfig.getSlice() != null) {
-            Logger.info(
-                    TAG + methodName,
-                    "Setting slice params..."
-            );
+            Logger.info(TAG + methodName, "Setting slice params...");
             builder.setSlice(mConfig.getSlice());
         }
-
 
         builder.setLibraryName(DiagnosticContext.INSTANCE.getRequestContext().get(PRODUCT));
         builder.setLibraryVersion(Device.getProductVersion());
@@ -316,16 +286,15 @@ public class MicrosoftStsOAuth2Strategy
     public MicrosoftStsAuthorizationRequest.Builder createAuthorizationRequestBuilder(
             @Nullable final IAccountRecord account) {
         final String methodName = ":createAuthorizationRequestBuilder";
-        Logger.info(
-                TAG + methodName,
-                "Creating AuthorizationRequestBuilder"
-        );
-        final MicrosoftStsAuthorizationRequest.Builder builder = createAuthorizationRequestBuilder();
+        Logger.info(TAG + methodName, "Creating AuthorizationRequestBuilder");
+        final MicrosoftStsAuthorizationRequest.Builder builder =
+                createAuthorizationRequestBuilder();
 
         if (null != account) {
             final String homeAccountId = account.getHomeAccountId();
 
-            final Map.Entry<String, String> uidUtidKeyValuePair = StringUtil.getTenantInfo(homeAccountId);
+            final Map.Entry<String, String> uidUtidKeyValuePair =
+                    StringUtil.getTenantInfo(homeAccountId);
 
             if (!StringUtil.isNullOrEmpty(uidUtidKeyValuePair.getKey())
                     && !StringUtil.isNullOrEmpty(uidUtidKeyValuePair.getValue())) {
@@ -333,14 +302,11 @@ public class MicrosoftStsOAuth2Strategy
                 builder.setUtid(uidUtidKeyValuePair.getValue());
 
                 Logger.infoPII(
-                        TAG + methodName,
-                        "Builder w/ uid: [" + uidUtidKeyValuePair.getKey() + "]"
-                );
+                        TAG + methodName, "Builder w/ uid: [" + uidUtidKeyValuePair.getKey() + "]");
 
                 Logger.infoPII(
                         TAG + methodName,
-                        "Builder w/ utid: [" + uidUtidKeyValuePair.getValue() + "]"
-                );
+                        "Builder w/ utid: [" + uidUtidKeyValuePair.getValue() + "]");
             }
         }
 
@@ -348,15 +314,13 @@ public class MicrosoftStsOAuth2Strategy
     }
 
     @Override
-    public MicrosoftStsTokenRequest createTokenRequest(@NonNull final MicrosoftStsAuthorizationRequest request,
-                                                       @NonNull final MicrosoftStsAuthorizationResponse response,
-                                                       @NonNull final AbstractAuthenticationScheme authScheme)
+    public MicrosoftStsTokenRequest createTokenRequest(
+            @NonNull final MicrosoftStsAuthorizationRequest request,
+            @NonNull final MicrosoftStsAuthorizationResponse response,
+            @NonNull final AbstractAuthenticationScheme authScheme)
             throws ClientException {
         final String methodName = ":createTokenRequest";
-        Logger.verbose(
-                TAG + methodName,
-                "Creating TokenRequest..."
-        );
+        Logger.verbose(TAG + methodName, "Creating TokenRequest...");
 
         if (mConfig.getMultipleCloudsSupported() || request.getMultipleCloudAware()) {
             Logger.verbose(TAG, "get cloud specific authority based on authorization response.");
@@ -372,7 +336,8 @@ public class MicrosoftStsOAuth2Strategy
         tokenRequest.setClaims(request.getClaims());
         setTokenRequestCorrelationId(tokenRequest);
 
-        // Existence of a device code inside of the response object implies Device Code Flow is being used
+        // Existence of a device code inside of the response object implies Device Code Flow is
+        // being used
         if (response.getDeviceCode() != null) {
             tokenRequest.setGrantType(TokenRequest.GrantTypes.DEVICE_CODE);
             tokenRequest.setDeviceCode(response.getDeviceCode());
@@ -392,10 +357,7 @@ public class MicrosoftStsOAuth2Strategy
                 final String thumbprint = devicePopManager.generateAsymmetricKey();
 
                 Logger.verbosePII(
-                        TAG,
-                        "Generated new PoP asymmetric key with thumbprint: "
-                                + thumbprint
-                );
+                        TAG, "Generated new PoP asymmetric key with thumbprint: " + thumbprint);
             }
 
             final String reqCnf = devicePopManager.getRequestConfirmation();
@@ -406,32 +368,28 @@ public class MicrosoftStsOAuth2Strategy
         return tokenRequest;
     }
 
-    private void setTokenRequestCorrelationId(@NonNull final MicrosoftStsTokenRequest tokenRequest) {
+    private void setTokenRequestCorrelationId(
+            @NonNull final MicrosoftStsTokenRequest tokenRequest) {
         try {
             tokenRequest.setCorrelationId(
                     UUID.fromString(
                             DiagnosticContext.INSTANCE
                                     .getRequestContext()
-                                    .get(DiagnosticContext.CORRELATION_ID)
-                    )
-            );
+                                    .get(DiagnosticContext.CORRELATION_ID)));
         } catch (IllegalArgumentException ex) {
-            //We're not setting the correlation id if we can't parse it from the diagnostic context
+            // We're not setting the correlation id if we can't parse it from the diagnostic context
             Logger.error(
                     "MicrosoftSTSOAuth2Strategy",
                     "Correlation id on diagnostic context is not a UUID.",
-                    ex
-            );
+                    ex);
         }
     }
 
     @Override
-    public MicrosoftStsTokenRequest createRefreshTokenRequest(@NonNull final AbstractAuthenticationScheme authScheme) throws ClientException {
+    public MicrosoftStsTokenRequest createRefreshTokenRequest(
+            @NonNull final AbstractAuthenticationScheme authScheme) throws ClientException {
         final String methodName = ":createRefreshTokenRequest";
-        Logger.verbose(
-                TAG + methodName,
-                "Creating refresh token request"
-        );
+        Logger.verbose(TAG + methodName, "Creating refresh token request");
 
         final MicrosoftStsTokenRequest request = new MicrosoftStsTokenRequest();
         request.setGrantType(TokenRequest.GrantTypes.REFRESH_TOKEN);
@@ -453,12 +411,10 @@ public class MicrosoftStsOAuth2Strategy
     }
 
     @Override
-    public MicrosoftStsTokenRequest createRopcTokenRequest(@NonNull final RopcTokenCommandParameters parameters) throws ClientException {
+    public MicrosoftStsTokenRequest createRopcTokenRequest(
+            @NonNull final RopcTokenCommandParameters parameters) throws ClientException {
         final String methodName = ":createPasswordTokenRequest";
-        Logger.verbose(
-                TAG + methodName,
-                "Creating password token request"
-        );
+        Logger.verbose(TAG + methodName, "Creating password token request");
 
         final MicrosoftStsRopcTokenRequest request = new MicrosoftStsRopcTokenRequest();
         request.setGrantType(TokenRequest.GrantTypes.PASSWORD);
@@ -471,8 +427,10 @@ public class MicrosoftStsOAuth2Strategy
         request.setScope(StringUtil.join(" ", parameters.getScopes()));
         setTokenRequestCorrelationId(request);
 
-        if (PopAuthenticationSchemeInternal.SCHEME_POP.equals(parameters.getAuthenticationScheme().getName())) {
-            throw new UnsupportedOperationException("MSAL Android supports ROPC on Bearer flows only for testing purposes.");
+        if (PopAuthenticationSchemeInternal.SCHEME_POP.equals(
+                parameters.getAuthenticationScheme().getName())) {
+            throw new UnsupportedOperationException(
+                    "MSAL Android supports ROPC on Bearer flows only for testing purposes.");
         }
 
         return request;
@@ -486,7 +444,7 @@ public class MicrosoftStsOAuth2Strategy
 
     @Override
     protected void validateTokenRequest(MicrosoftStsTokenRequest request) {
-        //TODO implement
+        // TODO implement
     }
 
     @Override
@@ -508,13 +466,16 @@ public class MicrosoftStsOAuth2Strategy
     }
 
     private HttpResponse performPKeyAuthRequest(
-            @NonNull final HttpResponse response,
-            @NonNull final MicrosoftStsTokenRequest request)
+            @NonNull final HttpResponse response, @NonNull final MicrosoftStsTokenRequest request)
             throws IOException, ClientException {
         final String methodName = "#performPkeyAuthRequest";
         final String requestBody = ObjectMapper.serializeObjectToFormUrlEncoded(request);
         final Map<String, String> headers = new TreeMap<>();
-        headers.put("client-request-id", DiagnosticContext.INSTANCE.getRequestContext().get(DiagnosticContext.CORRELATION_ID));
+        headers.put(
+                "client-request-id",
+                DiagnosticContext.INSTANCE
+                        .getRequestContext()
+                        .get(DiagnosticContext.CORRELATION_ID));
         headers.putAll(Device.getPlatformIdParameters());
         headers.put(PRODUCT, DiagnosticContext.INSTANCE.getRequestContext().get(PRODUCT));
         headers.put(VERSION, Device.getProductVersion());
@@ -529,22 +490,16 @@ public class MicrosoftStsOAuth2Strategy
         try {
             final PKeyAuthChallengeFactory factory = new PKeyAuthChallengeFactory();
             final URL authority = new URL(mTokenEndpoint);
-            final PKeyAuthChallenge pkeyAuthChallenge = factory.getPKeyAuthChallenge(
-                    challengeHeader,
-                    authority.toString()
-            );
+            final PKeyAuthChallenge pkeyAuthChallenge =
+                    factory.getPKeyAuthChallenge(challengeHeader, authority.toString());
             headers.putAll(pkeyAuthChallenge.getChallengeHeader());
             headers.put(HttpConstants.HeaderField.CONTENT_TYPE, TOKEN_REQUEST_CONTENT_TYPE);
 
             return httpClient.post(
-                    authority,
-                    headers,
-                    requestBody.getBytes(ObjectMapper.ENCODING_SCHEME),
-                    null
-            );
+                    authority, headers, requestBody.getBytes(ObjectMapper.ENCODING_SCHEME), null);
         } catch (final UnsupportedEncodingException exception) {
-            throw new ClientException(ErrorStrings.UNSUPPORTED_ENCODING,
-                    "Unsupported encoding", exception);
+            throw new ClientException(
+                    ErrorStrings.UNSUPPORTED_ENCODING, "Unsupported encoding", exception);
         }
     }
 
@@ -554,33 +509,29 @@ public class MicrosoftStsOAuth2Strategy
             throws ClientException {
         final String methodName = ":getTokenResultFromHttpResponse";
 
-        Logger.verbose(
-                TAG + methodName,
-                "Getting TokenResult from HttpResponse..."
-        );
+        Logger.verbose(TAG + methodName, "Getting TokenResult from HttpResponse...");
 
         MicrosoftStsTokenResponse tokenResponse = null;
         TokenErrorResponse tokenErrorResponse = null;
 
         if (response.getStatusCode() >= HttpURLConnection.HTTP_BAD_REQUEST) {
-            //An error occurred
-            tokenErrorResponse = ObjectMapper.deserializeJsonStringToObject(
-                    getBodyFromUnsuccessfulResponse(response.getBody()),
-                    MicrosoftTokenErrorResponse.class
-            );
+            // An error occurred
+            tokenErrorResponse =
+                    ObjectMapper.deserializeJsonStringToObject(
+                            getBodyFromUnsuccessfulResponse(response.getBody()),
+                            MicrosoftTokenErrorResponse.class);
             tokenErrorResponse.setStatusCode(response.getStatusCode());
 
             if (null != response.getHeaders()) {
                 tokenErrorResponse.setResponseHeadersJson(
-                        HeaderSerializationUtil.toJson(response.getHeaders())
-                );
+                        HeaderSerializationUtil.toJson(response.getHeaders()));
             }
             tokenErrorResponse.setResponseBody(response.getBody());
         } else {
-            tokenResponse = ObjectMapper.deserializeJsonStringToObject(
-                    getBodyFromSuccessfulResponse(response.getBody()),
-                    MicrosoftStsTokenResponse.class
-            );
+            tokenResponse =
+                    ObjectMapper.deserializeJsonStringToObject(
+                            getBodyFromSuccessfulResponse(response.getBody()),
+                            MicrosoftStsTokenResponse.class);
         }
 
         final TokenResult result = new TokenResult(tokenResponse, tokenErrorResponse);
@@ -595,9 +546,8 @@ public class MicrosoftStsOAuth2Strategy
                     && !cliTelemValues.isEmpty()) {
                 // Element should only contain 1 value...
                 final String cliTelemHeader = cliTelemValues.get(0);
-                final CliTelemInfo cliTelemInfo = CliTelemInfo.fromXMsCliTelemHeader(
-                        cliTelemHeader
-                );
+                final CliTelemInfo cliTelemInfo =
+                        CliTelemInfo.fromXMsCliTelemHeader(cliTelemHeader);
                 // Parse and set the result...
                 result.setCliTelemInfo(cliTelemInfo);
 
@@ -613,18 +563,21 @@ public class MicrosoftStsOAuth2Strategy
         return result;
     }
 
-    protected String getBodyFromSuccessfulResponse(@NonNull final String responseBody) throws ClientException {
+    protected String getBodyFromSuccessfulResponse(@NonNull final String responseBody)
+            throws ClientException {
         return responseBody;
     }
 
-    protected String getBodyFromUnsuccessfulResponse(@NonNull final String responseBody) throws ClientException {
+    protected String getBodyFromUnsuccessfulResponse(@NonNull final String responseBody)
+            throws ClientException {
         final String EMPTY_JSON_OBJECT = "{}";
         return responseBody.isEmpty() ? EMPTY_JSON_OBJECT : responseBody;
     }
 
     @Override
-    protected void validateTokenResponse(@NonNull final MicrosoftStsTokenRequest request,
-                                         @NonNull final MicrosoftStsTokenResponse response)
+    protected void validateTokenResponse(
+            @NonNull final MicrosoftStsTokenRequest request,
+            @NonNull final MicrosoftStsTokenResponse response)
             throws ClientException {
         validateAuthScheme(request, response);
         validateTokensAreInResponse(request, response);
@@ -637,8 +590,9 @@ public class MicrosoftStsOAuth2Strategy
      * @param response The idp response.
      * @throws ClientException
      */
-    private void validateAuthScheme(@NonNull final MicrosoftStsTokenRequest request,
-                                    @NonNull final MicrosoftStsTokenResponse response)
+    private void validateAuthScheme(
+            @NonNull final MicrosoftStsTokenRequest request,
+            @NonNull final MicrosoftStsTokenResponse response)
             throws ClientException {
         final String requestTokenType = request.getTokenType();
         final String responseAuthScheme = response.getTokenType();
@@ -647,10 +601,13 @@ public class MicrosoftStsOAuth2Strategy
         if (requestTokenType != null && !requestTokenType.equalsIgnoreCase(responseAuthScheme)) {
             throw new ClientException(
                     ClientException.AUTH_SCHEME_MISMATCH,
-                    "Expected: [" + requestTokenType + "]"
+                    "Expected: ["
+                            + requestTokenType
+                            + "]"
                             + "\n"
-                            + "Actual: [" + responseAuthScheme + "]"
-            );
+                            + "Actual: ["
+                            + responseAuthScheme
+                            + "]");
         }
     }
 
@@ -660,8 +617,9 @@ public class MicrosoftStsOAuth2Strategy
      * @param response The idp response.
      * @throws ClientException
      */
-    private void validateTokensAreInResponse(@NonNull final MicrosoftStsTokenRequest request,
-                                             @NonNull final MicrosoftStsTokenResponse response)
+    private void validateTokensAreInResponse(
+            @NonNull final MicrosoftStsTokenRequest request,
+            @NonNull final MicrosoftStsTokenResponse response)
             throws ClientException {
 
         String clientException = null;
@@ -669,20 +627,20 @@ public class MicrosoftStsOAuth2Strategy
         final String tokensMissingMessage = "Missing required tokens of type: {0}";
 
         // PRT interrupt flow do not return AT.
-        if (!StringUtil.containsSubString(request.getScope(), CLAIMS_UPDATE_RESOURCE) &&
-                StringUtil.isNullOrEmpty(response.getAccessToken())) {
+        if (!StringUtil.containsSubString(request.getScope(), CLAIMS_UPDATE_RESOURCE)
+                && StringUtil.isNullOrEmpty(response.getAccessToken())) {
             clientException = ClientException.TOKENS_MISSING;
             tokens = tokens.concat("access_token");
         }
 
-        if (!CLIENT_CREDENTIALS.equalsIgnoreCase(request.getGrantType()) &&
-                StringUtil.isNullOrEmpty(response.getIdToken())) {
+        if (!CLIENT_CREDENTIALS.equalsIgnoreCase(request.getGrantType())
+                && StringUtil.isNullOrEmpty(response.getIdToken())) {
             clientException = ClientException.TOKENS_MISSING;
             tokens = tokens.concat(" id_token");
         }
 
-        if (!CLIENT_CREDENTIALS.equalsIgnoreCase(request.getGrantType()) &&
-                StringUtil.isNullOrEmpty(response.getRefreshToken())) {
+        if (!CLIENT_CREDENTIALS.equalsIgnoreCase(request.getGrantType())
+                && StringUtil.isNullOrEmpty(response.getRefreshToken())) {
             clientException = ClientException.TOKENS_MISSING;
             tokens = tokens.concat(" refresh_token");
         }
@@ -701,15 +659,18 @@ public class MicrosoftStsOAuth2Strategy
                         .build()
                         .toString();
             } catch (final URISyntaxException e) {
-                throw new ClientException(ClientException.MALFORMED_URL,
-                        "Failed to construct token endpoint from getCloudInstanceHostName()", e);
+                throw new ClientException(
+                        ClientException.MALFORMED_URL,
+                        "Failed to construct token endpoint from getCloudInstanceHostName()",
+                        e);
             }
         }
 
         return mTokenEndpoint;
     }
 
-    private String getCloudSpecificTokenEndpoint(final MicrosoftAuthorizationResponse response) throws ClientException {
+    private String getCloudSpecificTokenEndpoint(final MicrosoftAuthorizationResponse response)
+            throws ClientException {
         if (StringUtil.isNullOrEmpty(response.getCloudInstanceHostName())) {
             return mTokenEndpoint;
         }
@@ -727,13 +688,10 @@ public class MicrosoftStsOAuth2Strategy
 
         IDevicePopManager devicePopManager = null;
         try {
-            devicePopManager = mStrategyParameters.getPlatformComponents().getDefaultDevicePopManager();
+            devicePopManager =
+                    mStrategyParameters.getPlatformComponents().getDefaultDevicePopManager();
         } catch (final ClientException e) {
-            Logger.error(
-                    TAG,
-                    e.getMessage(),
-                    e
-            );
+            Logger.error(TAG, e.getMessage(), e);
         }
 
         if (null != devicePopManager) {
@@ -741,11 +699,7 @@ public class MicrosoftStsOAuth2Strategy
                 try {
                     atPoPKid = devicePopManager.getAsymmetricKeyThumbprint();
                 } catch (final ClientException e) {
-                    Logger.error(
-                            TAG,
-                            "Key exists. But failed to load thumbprint.",
-                            e
-                    );
+                    Logger.error(TAG, "Key exists. But failed to load thumbprint.", e);
 
                     throw new RuntimeException(e);
                 }
@@ -754,18 +708,16 @@ public class MicrosoftStsOAuth2Strategy
                 throw new RuntimeException("Symmetric keys do not exist.");
             }
         } else {
-            Logger.warn(
-                    TAG,
-                    "DevicePopManager does not exist."
-            );
+            Logger.warn(TAG, "DevicePopManager does not exist.");
         }
 
         return atPoPKid;
     }
 
     @Override
-    public boolean validateCachedResult(@NonNull final AbstractAuthenticationScheme authScheme,
-                                        @NonNull final ICacheRecord cacheRecord) {
+    public boolean validateCachedResult(
+            @NonNull final AbstractAuthenticationScheme authScheme,
+            @NonNull final ICacheRecord cacheRecord) {
         super.validateCachedResult(authScheme, cacheRecord);
 
         if (authSchemeIsPoP(authScheme)) {

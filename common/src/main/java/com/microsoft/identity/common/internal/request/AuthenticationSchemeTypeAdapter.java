@@ -22,6 +22,10 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.request;
 
+import static com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme.SerializedNames.NAME;
+import static com.microsoft.identity.common.java.authscheme.BearerAuthenticationSchemeInternal.SCHEME_BEARER;
+import static com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeInternal.SCHEME_POP;
+
 import androidx.annotation.NonNull;
 
 import com.google.gson.Gson;
@@ -40,33 +44,31 @@ import com.microsoft.identity.common.logging.Logger;
 
 import java.lang.reflect.Type;
 
-import static com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme.SerializedNames.NAME;
-import static com.microsoft.identity.common.java.authscheme.BearerAuthenticationSchemeInternal.SCHEME_BEARER;
-import static com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeInternal.SCHEME_POP;
-
 /**
  * Gson de/serialization utility class for auth schemes.
  */
-public class AuthenticationSchemeTypeAdapter implements
-        JsonDeserializer<AbstractAuthenticationScheme>,
-        JsonSerializer<AbstractAuthenticationScheme> {
+public class AuthenticationSchemeTypeAdapter
+        implements JsonDeserializer<AbstractAuthenticationScheme>,
+                JsonSerializer<AbstractAuthenticationScheme> {
 
     private static final String TAG = AuthenticationSchemeTypeAdapter.class.getSimpleName();
 
-    private static Gson sRequestAdapterGsonInstance = new GsonBuilder()
-            .registerTypeAdapter(
-                    AbstractAuthenticationScheme.class,
-                    new AuthenticationSchemeTypeAdapter()
-            ).create();
+    private static Gson sRequestAdapterGsonInstance =
+            new GsonBuilder()
+                    .registerTypeAdapter(
+                            AbstractAuthenticationScheme.class,
+                            new AuthenticationSchemeTypeAdapter())
+                    .create();
 
-    public static Gson getGsonInstance(){
+    public static Gson getGsonInstance() {
         return sRequestAdapterGsonInstance;
     }
 
     @Override
-    public AbstractAuthenticationScheme deserialize(@NonNull final JsonElement json,
-                                                    @NonNull final Type typeOfT,
-                                                    @NonNull final JsonDeserializationContext context)
+    public AbstractAuthenticationScheme deserialize(
+            @NonNull final JsonElement json,
+            @NonNull final Type typeOfT,
+            @NonNull final JsonDeserializationContext context)
             throws JsonParseException {
         final JsonObject authScheme = json.getAsJsonObject();
         final JsonElement schemeName = authScheme.get(NAME);
@@ -80,19 +82,17 @@ public class AuthenticationSchemeTypeAdapter implements
                 return context.deserialize(json, PopAuthenticationSchemeInternal.class);
 
             default:
-                Logger.warn(
-                        TAG,
-                        "Unrecognized auth scheme. Deserializing as null."
-                );
+                Logger.warn(TAG, "Unrecognized auth scheme. Deserializing as null.");
 
                 return null;
         }
     }
 
     @Override
-    public JsonElement serialize(@NonNull final AbstractAuthenticationScheme src,
-                                 @NonNull final Type typeOfSrc,
-                                 @NonNull final JsonSerializationContext context) {
+    public JsonElement serialize(
+            @NonNull final AbstractAuthenticationScheme src,
+            @NonNull final Type typeOfSrc,
+            @NonNull final JsonSerializationContext context) {
 
         switch (src.getName()) {
             case SCHEME_BEARER:
@@ -102,10 +102,7 @@ public class AuthenticationSchemeTypeAdapter implements
                 return context.serialize(src, PopAuthenticationSchemeInternal.class);
 
             default:
-                Logger.warn(
-                        TAG,
-                        "Unrecognized auth scheme. Serializing as null."
-                );
+                Logger.warn(TAG, "Unrecognized auth scheme. Serializing as null.");
 
                 return null;
         }

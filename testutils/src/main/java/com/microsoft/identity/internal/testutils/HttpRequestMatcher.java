@@ -24,13 +24,13 @@ package com.microsoft.identity.internal.testutils;
 
 import com.microsoft.identity.common.java.net.HttpClient;
 
+import lombok.Builder;
+import lombok.NonNull;
+
 import java.net.URL;
 import java.util.Map;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
-
-import lombok.Builder;
-import lombok.NonNull;
 
 /**
  * Used to match http request based on headers, body, url and method. A request is considered as matched
@@ -39,41 +39,41 @@ import lombok.NonNull;
 @Builder
 public class HttpRequestMatcher {
 
-    @NonNull
-    @Builder.Default
-    private Predicate<Map<String, String>> headers = new Predicate<Map<String, String>>() {
-        @Override
-        public boolean test(Map<String, String> header) {
-            return true;
-        }
-    };
-    @NonNull
-    @Builder.Default
-    private Predicate<byte[]> body = new Predicate<byte[]>() {
-        @Override
-        public boolean test(byte[] content) {
-            return true;
-        }
-    };
+    @NonNull @Builder.Default
+    private Predicate<Map<String, String>> headers =
+            new Predicate<Map<String, String>>() {
+                @Override
+                public boolean test(Map<String, String> header) {
+                    return true;
+                }
+            };
 
-    @NonNull
-    @Builder.Default
-    private Predicate<URL> url = new Predicate<URL>() {
-        @Override
-        public boolean test(URL s) {
-            return true;
-        }
-    };
+    @NonNull @Builder.Default
+    private Predicate<byte[]> body =
+            new Predicate<byte[]>() {
+                @Override
+                public boolean test(byte[] content) {
+                    return true;
+                }
+            };
 
-    @NonNull
-    @Builder.Default
-    private Predicate<HttpClient.HttpMethod> method = new Predicate<HttpClient.HttpMethod>() {
-        @Override
-        public boolean test(HttpClient.HttpMethod s) {
-            return true;
-        }
-    };
+    @NonNull @Builder.Default
+    private Predicate<URL> url =
+            new Predicate<URL>() {
+                @Override
+                public boolean test(URL s) {
+                    return true;
+                }
+            };
 
+    @NonNull @Builder.Default
+    private Predicate<HttpClient.HttpMethod> method =
+            new Predicate<HttpClient.HttpMethod>() {
+                @Override
+                public boolean test(HttpClient.HttpMethod s) {
+                    return true;
+                }
+            };
 
     /**
      * Checks whether the request matches the predicates defined in this request matcher.
@@ -89,8 +89,10 @@ public class HttpRequestMatcher {
             @NonNull final URL url,
             final Map<String, String> requestHeaders,
             final byte[] requestContent) {
-        return this.method.test(method) && this.url.test(url)
-                && this.headers.test(requestHeaders) && this.body.test(requestContent);
+        return this.method.test(method)
+                && this.url.test(url)
+                && this.headers.test(requestHeaders)
+                && this.body.test(requestContent);
     }
 
     public static class HttpRequestMatcherBuilder {
@@ -174,12 +176,13 @@ public class HttpRequestMatcher {
          * @return the builder
          */
         public HttpRequestMatcherBuilder methodIs(HttpClient.HttpMethod method) {
-            method(new Predicate<HttpClient.HttpMethod>() {
-                @Override
-                public boolean test(HttpClient.HttpMethod _method) {
-                    return _method == method;
-                }
-            });
+            method(
+                    new Predicate<HttpClient.HttpMethod>() {
+                        @Override
+                        public boolean test(HttpClient.HttpMethod _method) {
+                            return _method == method;
+                        }
+                    });
             return this;
         }
 
@@ -190,12 +193,13 @@ public class HttpRequestMatcher {
          * @return the builder
          */
         public HttpRequestMatcherBuilder urlPattern(Pattern pattern) {
-            url(new Predicate<URL>() {
-                @Override
-                public boolean test(URL url) {
-                    return pattern.matcher(url.toExternalForm()).matches();
-                }
-            });
+            url(
+                    new Predicate<URL>() {
+                        @Override
+                        public boolean test(URL url) {
+                            return pattern.matcher(url.toExternalForm()).matches();
+                        }
+                    });
             return this;
         }
     }

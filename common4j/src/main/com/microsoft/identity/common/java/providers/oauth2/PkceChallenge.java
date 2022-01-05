@@ -25,16 +25,16 @@ package com.microsoft.identity.common.java.providers.oauth2;
 import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.java.util.StringUtil;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
+import lombok.Getter;
+import lombok.experimental.Accessors;
+
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
-
-import cz.msebera.android.httpclient.extras.Base64;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import lombok.Getter;
-import lombok.experimental.Accessors;
 
 /**
  * The client creates a code challenge derived from the code
@@ -52,7 +52,6 @@ import lombok.experimental.Accessors;
  *
  * @see <a href="https://tools.ietf.org/html/rfc7636#page-17">RFC-7636</a>
  */
-
 @Getter
 @Accessors(prefix = "m")
 public final class PkceChallenge implements Serializable {
@@ -107,7 +106,7 @@ public final class PkceChallenge implements Serializable {
     }
 
     static String generateCodeVerifier(byte[] verifierBytes) {
-        if (verifierBytes == null){
+        if (verifierBytes == null) {
             verifierBytes = new byte[CODE_VERIFIER_BYTE_SIZE];
             new SecureRandom().nextBytes(verifierBytes);
         }
@@ -125,7 +124,8 @@ public final class PkceChallenge implements Serializable {
         } catch (final UnsupportedEncodingException e) {
             throw new IllegalStateException(
                     "Every implementation of the Java platform is required to support ISO-8859-1."
-                            + "Consult the release documentation for your implementation.", e);
+                            + "Consult the release documentation for your implementation.",
+                    e);
         }
     }
 }

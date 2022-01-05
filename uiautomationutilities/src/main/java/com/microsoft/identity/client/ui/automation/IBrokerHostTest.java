@@ -26,7 +26,6 @@ import androidx.annotation.NonNull;
 
 import com.microsoft.identity.client.ui.automation.broker.BrokerHost;
 
-
 /**
  * An interface describing a test that can leverage a {@link BrokerHost} installed on the device.
  */
@@ -34,5 +33,4 @@ public interface IBrokerHostTest {
 
     @NonNull
     BrokerHost getBrokerHost();
-
 }

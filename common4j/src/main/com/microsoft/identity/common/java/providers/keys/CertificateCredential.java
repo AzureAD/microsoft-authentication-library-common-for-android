@@ -37,7 +37,8 @@ import java.security.cert.X509Certificate;
  */
 public final class CertificateCredential {
 
-    private static final int MIN_KEYSIZE_IN_BITS = 2048; //NOPMD Suppressing PMD warning for unused constant
+    private static final int MIN_KEYSIZE_IN_BITS =
+            2048; // NOPMD Suppressing PMD warning for unused constant
     private final PrivateKey mPrivateKey;
     private final String mClientId;
     private final X509Certificate mPublicCertificate;
@@ -102,7 +103,8 @@ public final class CertificateCredential {
          * @param keyStoreConfiguration KeyStoreConfiguration
          * @return CertificateCredentialBuilder
          */
-        public CertificateCredentialBuilder keyStoreConfiguration(KeyStoreConfiguration keyStoreConfiguration) {
+        public CertificateCredentialBuilder keyStoreConfiguration(
+                KeyStoreConfiguration keyStoreConfiguration) {
             mKeyStoreConfiguration = keyStoreConfiguration;
             return this;
         }
@@ -113,7 +115,8 @@ public final class CertificateCredential {
          * @param clientCertificateMetadata ClientCertificateMetadata
          * @return CertificateCredentialBuilder
          */
-        public CertificateCredentialBuilder clientCertificateMetadata(ClientCertificateMetadata clientCertificateMetadata) {
+        public CertificateCredentialBuilder clientCertificateMetadata(
+                ClientCertificateMetadata clientCertificateMetadata) {
             mClientCertificateMetdata = clientCertificateMetadata;
             return this;
         }
@@ -141,8 +144,8 @@ public final class CertificateCredential {
          * @throws CertificateException      thrown if one of a variety of certificate problems happen.
          */
         public CertificateCredential build()
-                throws NoSuchProviderException, KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException,
-                IOException, CertificateException {
+                throws NoSuchProviderException, KeyStoreException, NoSuchAlgorithmException,
+                        UnrecoverableKeyException, IOException, CertificateException {
 
             CertificateCredential cred = null;
 
@@ -151,7 +154,8 @@ public final class CertificateCredential {
                     cred = new CertificateCredential(this);
                 } else {
                     if (mClientCertificateMetdata != null && mKeyStoreConfiguration != null) {
-                        getCertificateInfoFromStore(mKeyStoreConfiguration, mClientCertificateMetdata);
+                        getCertificateInfoFromStore(
+                                mKeyStoreConfiguration, mClientCertificateMetdata);
                         cred = new CertificateCredential(this);
                     }
                 }
@@ -160,48 +164,48 @@ public final class CertificateCredential {
             validateCertificateCredential(cred);
 
             return cred;
-
         }
 
         private void validateCertificateCredential(CertificateCredential cred) {
-            //TODO: Add Logic for validating certificate credential - Verify not Null... which would be an invalid argument scenario
+            // TODO: Add Logic for validating certificate credential - Verify not Null... which
+            // would be an invalid argument scenario
             if (cred == null) {
-                throw new IllegalArgumentException("Client ID, Certificate and PrivateKey OR KeyStoreConfiguration and Certificate Metadata are required");
+                throw new IllegalArgumentException(
+                        "Client ID, Certificate and PrivateKey OR KeyStoreConfiguration and Certificate Metadata are required");
             }
-
         }
 
-        private void getCertificateInfoFromStore(KeyStoreConfiguration keyStoreConfiguration, ClientCertificateMetadata clientCertificateMetadata)
-                throws NoSuchProviderException, KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException,
-                IOException, CertificateException {
+        private void getCertificateInfoFromStore(
+                KeyStoreConfiguration keyStoreConfiguration,
+                ClientCertificateMetadata clientCertificateMetadata)
+                throws NoSuchProviderException, KeyStoreException, NoSuchAlgorithmException,
+                        UnrecoverableKeyException, IOException, CertificateException {
 
-            KeyStore keystore = KeyStore.getInstance(keyStoreConfiguration.getKeyStoreType(), keyStoreConfiguration.getKeyStoreProvider());
+            KeyStore keystore =
+                    KeyStore.getInstance(
+                            keyStoreConfiguration.getKeyStoreType(),
+                            keyStoreConfiguration.getKeyStoreProvider());
             keystore.load(null, null);
 
             PrivateKey key;
 
-            //TODO: Adding logging for the two different cases.  The Microsoft Certificate Store does not require a password
+            // TODO: Adding logging for the two different cases.  The Microsoft Certificate Store
+            // does not require a password
             if (clientCertificateMetadata.getPassword() == null) {
                 key = (PrivateKey) keystore.getKey(clientCertificateMetadata.getAlias(), null);
             } else {
-                key = (PrivateKey) keystore.getKey(clientCertificateMetadata.getAlias(),
-                        clientCertificateMetadata.getPassword());
+                key =
+                        (PrivateKey)
+                                keystore.getKey(
+                                        clientCertificateMetadata.getAlias(),
+                                        clientCertificateMetadata.getPassword());
             }
 
-            final X509Certificate publicCertificate = (X509Certificate) keystore
-                    .getCertificate(clientCertificateMetadata.getAlias());
+            final X509Certificate publicCertificate =
+                    (X509Certificate) keystore.getCertificate(clientCertificateMetadata.getAlias());
 
             mPrivateKey = key;
             mCertificate = publicCertificate;
-
         }
-
-
     }
-
-
 }
-
-
-
-

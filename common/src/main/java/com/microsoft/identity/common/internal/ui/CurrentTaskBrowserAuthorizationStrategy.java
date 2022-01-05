@@ -35,15 +35,17 @@ import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
 
-// Suppressing rawtype warnings due to the generic types OAuth2Strategy, AuthorizationRequest and AuthorizationResult
+// Suppressing rawtype warnings due to the generic types OAuth2Strategy, AuthorizationRequest and
+// AuthorizationResult
 @SuppressWarnings(WarningType.rawtype_warning)
 public class CurrentTaskBrowserAuthorizationStrategy<
-        GenericOAuth2Strategy extends OAuth2Strategy,
-        GenericAuthorizationRequest extends AuthorizationRequest>
+                GenericOAuth2Strategy extends OAuth2Strategy,
+                GenericAuthorizationRequest extends AuthorizationRequest>
         extends BrowserAuthorizationStrategy<GenericOAuth2Strategy, GenericAuthorizationRequest> {
-    public CurrentTaskBrowserAuthorizationStrategy(@NonNull Context applicationContext,
-                                                   @NonNull Activity activity,
-                                                   @Nullable Fragment fragment) {
+    public CurrentTaskBrowserAuthorizationStrategy(
+            @NonNull Context applicationContext,
+            @NonNull Activity activity,
+            @Nullable Fragment fragment) {
         super(applicationContext, activity, fragment);
     }
 

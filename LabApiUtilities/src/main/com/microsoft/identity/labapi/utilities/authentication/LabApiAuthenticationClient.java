@@ -35,28 +35,31 @@ import lombok.NonNull;
  */
 public class LabApiAuthenticationClient implements IAccessTokenSupplier {
 
-    private final static String SECRET_NAME_LAB_APP_ID = "LabVaultAppID";
-    private final static String SECRET_NAME_LAB_APP_SECRET = "LabVaultAppSecret";
-    private final static String SECRET_VERSION = "";
-    private final static String KEY_VAULT_API_VERSION = "2016-10-01";
-    private final static String SCOPE = "https://msidlab.com/.default";
+    private static final String SECRET_NAME_LAB_APP_ID = "LabVaultAppID";
+    private static final String SECRET_NAME_LAB_APP_SECRET = "LabVaultAppSecret";
+    private static final String SECRET_VERSION = "";
+    private static final String KEY_VAULT_API_VERSION = "2016-10-01";
+    private static final String SCOPE = "https://msidlab.com/.default";
 
-    private final static String TENANT_ID = "72f988bf-86f1-41af-91ab-2d7cd011db47";
+    private static final String TENANT_ID = "72f988bf-86f1-41af-91ab-2d7cd011db47";
 
-    private final static String AUTHORITY = "https://login.microsoftonline.com/" + TENANT_ID;
+    private static final String AUTHORITY = "https://login.microsoftonline.com/" + TENANT_ID;
 
     private final IConfidentialAuthClient mConfidentialAuthClient;
     private final KeyVaultAuthenticationClient mKeyVaultAuthenticationClient;
 
-    public LabApiAuthenticationClient(@NonNull final IConfidentialAuthClient confidentialAuthClient) {
+    public LabApiAuthenticationClient(
+            @NonNull final IConfidentialAuthClient confidentialAuthClient) {
         mConfidentialAuthClient = confidentialAuthClient;
         mKeyVaultAuthenticationClient = new KeyVaultAuthenticationClient(confidentialAuthClient);
     }
 
-    public LabApiAuthenticationClient(@NonNull final IConfidentialAuthClient confidentialAuthClient,
-                                      @NonNull final String clientSecret) {
+    public LabApiAuthenticationClient(
+            @NonNull final IConfidentialAuthClient confidentialAuthClient,
+            @NonNull final String clientSecret) {
         mConfidentialAuthClient = confidentialAuthClient;
-        mKeyVaultAuthenticationClient = new KeyVaultAuthenticationClient(confidentialAuthClient, clientSecret);
+        mKeyVaultAuthenticationClient =
+                new KeyVaultAuthenticationClient(confidentialAuthClient, clientSecret);
     }
 
     public LabApiAuthenticationClient() {
@@ -79,28 +82,33 @@ public class LabApiAuthenticationClient implements IAccessTokenSupplier {
             // we are going to use the KeyVault API to obtain the Lab App client id and
             // client secret
             final SecretsApi secretsApi = new SecretsApi();
-            labAppId = secretsApi.getSecret(
-                    SECRET_NAME_LAB_APP_ID, SECRET_VERSION, KEY_VAULT_API_VERSION
-            ).getValue();
+            labAppId =
+                    secretsApi
+                            .getSecret(
+                                    SECRET_NAME_LAB_APP_ID, SECRET_VERSION, KEY_VAULT_API_VERSION)
+                            .getValue();
 
-            labAppSecret = secretsApi.getSecret(
-                    SECRET_NAME_LAB_APP_SECRET, SECRET_VERSION, KEY_VAULT_API_VERSION
-            ).getValue();
+            labAppSecret =
+                    secretsApi
+                            .getSecret(
+                                    SECRET_NAME_LAB_APP_SECRET,
+                                    SECRET_VERSION,
+                                    KEY_VAULT_API_VERSION)
+                            .getValue();
         } catch (final ApiException e) {
             throw new LabApiException(LabError.FAILED_TO_GET_SECRET_FROM_KEYVAULT, e);
         }
 
-        final TokenParameters tokenParameters = TokenParameters
-                .builder()
-                .clientId(labAppId)
-                .authority(AUTHORITY)
-                .scope(SCOPE)
-                .build();
+        final TokenParameters tokenParameters =
+                TokenParameters.builder()
+                        .clientId(labAppId)
+                        .authority(AUTHORITY)
+                        .scope(SCOPE)
+                        .build();
 
         // obtain token for Lab Api using the client secret retrieved from KeyVault
-        final IAuthenticationResult authenticationResult = mConfidentialAuthClient.acquireToken(
-                labAppSecret, tokenParameters
-        );
+        final IAuthenticationResult authenticationResult =
+                mConfidentialAuthClient.acquireToken(labAppSecret, tokenParameters);
 
         return authenticationResult.getAccessToken();
     }

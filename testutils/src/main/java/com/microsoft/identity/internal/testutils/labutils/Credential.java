@@ -26,7 +26,6 @@ package com.microsoft.identity.internal.testutils.labutils;
 /**
  * Created by shoatman on 3/12/2018.
  */
-
 public class Credential {
 
     public String userName;

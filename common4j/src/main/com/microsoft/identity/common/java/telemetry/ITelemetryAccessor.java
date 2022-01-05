@@ -38,5 +38,4 @@ public interface ITelemetryAccessor {
      * be the data produced from {@link Telemetry} class.
      */
     List<Map<String, String>> getTelemetry();
-
 }

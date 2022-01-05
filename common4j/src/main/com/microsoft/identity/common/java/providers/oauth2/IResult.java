@@ -25,6 +25,8 @@ package com.microsoft.identity.common.java.providers.oauth2;
 public interface IResult {
 
     boolean getSuccess();
+
     IErrorResponse getErrorResponse();
+
     ISuccessResponse getSuccessResponse();
 }

@@ -33,12 +33,13 @@ public enum DiagnosticContext {
 
     // This is thread-safe.
     @SuppressFBWarnings("SE_BAD_FIELD_STORE")
-    private transient final ThreadLocal<IRequestContext> REQUEST_CONTEXT_THREAD_LOCAL =
+    private final transient ThreadLocal<IRequestContext> REQUEST_CONTEXT_THREAD_LOCAL =
             new ThreadLocal<IRequestContext>() {
                 @Override // This is the default value for the RequestContext if it's unset
                 protected RequestContext initialValue() {
                     final RequestContext defaultRequestContext = new RequestContext();
-                    defaultRequestContext.put(THREAD_ID, String.valueOf(Thread.currentThread().getId()));
+                    defaultRequestContext.put(
+                            THREAD_ID, String.valueOf(Thread.currentThread().getId()));
                     defaultRequestContext.put(THREAD_NAME, Thread.currentThread().getName());
                     defaultRequestContext.put(CORRELATION_ID, "UNSET");
                     return defaultRequestContext;
@@ -76,5 +77,4 @@ public enum DiagnosticContext {
     public void clear() {
         REQUEST_CONTEXT_THREAD_LOCAL.remove();
     }
-
 }

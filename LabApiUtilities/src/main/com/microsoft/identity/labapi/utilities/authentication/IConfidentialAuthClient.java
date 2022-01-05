@@ -52,7 +52,8 @@ public interface IConfidentialAuthClient {
      * @param tokenParameters the token parameters to use while acquiring token
      * @return an {@link IAuthenticationResult} containing the result of the token request
      */
-    IAuthenticationResult acquireToken(ClientAssertion clientAssertion, ITokenParameters tokenParameters);
+    IAuthenticationResult acquireToken(
+            ClientAssertion clientAssertion, ITokenParameters tokenParameters);
 
     /**
      * Acquire a token for a confidential client using a Certificate.
@@ -61,5 +62,6 @@ public interface IConfidentialAuthClient {
      * @param tokenParameters       the token parameters to use while acquiring token
      * @return an {@link IAuthenticationResult} containing the result of the token request
      */
-    IAuthenticationResult acquireToken(CertificateCredential certificateCredential, ITokenParameters tokenParameters);
+    IAuthenticationResult acquireToken(
+            CertificateCredential certificateCredential, ITokenParameters tokenParameters);
 }

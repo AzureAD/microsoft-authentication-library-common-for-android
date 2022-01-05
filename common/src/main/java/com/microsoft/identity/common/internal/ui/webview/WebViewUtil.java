@@ -23,6 +23,8 @@
 
 package com.microsoft.identity.common.internal.ui.webview;
 
+import static com.microsoft.identity.common.internal.ui.webview.ProcessUtil.AuthServiceProcess;
+
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.Build;
@@ -32,8 +34,6 @@ import android.webkit.WebView;
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.logging.Logger;
-
-import static com.microsoft.identity.common.internal.ui.webview.ProcessUtil.AuthServiceProcess;
 
 public class WebViewUtil {
     private static final String TAG = WebViewUtil.class.getSimpleName();
@@ -52,7 +52,9 @@ public class WebViewUtil {
                     WebView.setDataDirectorySuffix(AuthServiceProcess);
                 }
             } catch (final IllegalStateException e) {
-                Logger.warn(TAG + methodName, "WebView is already initialized. IllegalStateException is expected when setDataDirectorySuffix() is invoked");
+                Logger.warn(
+                        TAG + methodName,
+                        "WebView is already initialized. IllegalStateException is expected when setDataDirectorySuffix() is invoked");
             }
         }
     }
@@ -76,7 +78,8 @@ public class WebViewUtil {
             cookieManager.removeAllCookies(null);
             cookieManager.flush();
         } else {
-            final android.webkit.CookieSyncManager syncManager = android.webkit.CookieSyncManager.createInstance(context);
+            final android.webkit.CookieSyncManager syncManager =
+                    android.webkit.CookieSyncManager.createInstance(context);
             cookieManager.removeAllCookie();
             syncManager.sync();
         }
@@ -93,7 +96,8 @@ public class WebViewUtil {
             cookieManager.removeAllCookies(null);
             cookieManager.flush();
         } else {
-            final android.webkit.CookieSyncManager syncManager = android.webkit.CookieSyncManager.createInstance(context);
+            final android.webkit.CookieSyncManager syncManager =
+                    android.webkit.CookieSyncManager.createInstance(context);
             cookieManager.removeSessionCookie();
             syncManager.sync();
         }

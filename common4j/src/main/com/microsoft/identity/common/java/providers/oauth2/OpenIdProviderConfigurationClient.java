@@ -22,15 +22,21 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.providers.oauth2;
 
+import static com.microsoft.identity.common.java.exception.ServiceException.OPENID_PROVIDER_CONFIGURATION_FAILED_TO_LOAD;
+
 import com.google.gson.Gson;
 import com.microsoft.identity.common.java.exception.ServiceException;
-import com.microsoft.identity.common.java.util.StringUtil;
-import com.microsoft.identity.common.java.util.TaskCompletedCallbackWithError;
+import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.net.HttpClient;
 import com.microsoft.identity.common.java.net.HttpResponse;
 import com.microsoft.identity.common.java.net.UrlConnectionHttpClient;
-import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.util.CommonURIBuilder;
+import com.microsoft.identity.common.java.util.StringUtil;
+import com.microsoft.identity.common.java.util.TaskCompletedCallbackWithError;
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
+import lombok.NonNull;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -40,11 +46,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
-import static com.microsoft.identity.common.java.exception.ServiceException.OPENID_PROVIDER_CONFIGURATION_FAILED_TO_LOAD;
-
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import lombok.NonNull;
 
 /**
  * A class for pulling the OpenIdConfiguration document from the OpenID Provider server.
@@ -58,30 +59,34 @@ public class OpenIdProviderConfigurationClient {
     private static final HttpClient httpClient = UrlConnectionHttpClient.getDefaultInstance();
 
     public interface OpenIdProviderConfigurationCallback
-            extends TaskCompletedCallbackWithError<OpenIdProviderConfiguration, Exception> {
-    }
+            extends TaskCompletedCallbackWithError<OpenIdProviderConfiguration, Exception> {}
 
     private final String mIssuer;
     private final Gson mGson = new Gson();
 
-    public OpenIdProviderConfigurationClient(@NonNull final String issuer) throws URISyntaxException {
+    public OpenIdProviderConfigurationClient(@NonNull final String issuer)
+            throws URISyntaxException {
         mIssuer = new URI(sanitize(issuer)).toString();
     }
 
     @SuppressFBWarnings("RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE")
-    public OpenIdProviderConfigurationClient(@NonNull final String authority,
-                                             @NonNull final String path) throws URISyntaxException {
+    public OpenIdProviderConfigurationClient(
+            @NonNull final String authority, @NonNull final String path) throws URISyntaxException {
         this(authority, path, "");
     }
 
-    public OpenIdProviderConfigurationClient(@NonNull final String authority,
-                                             @NonNull final String path, @NonNull final String endpointVersion)
+    public OpenIdProviderConfigurationClient(
+            @NonNull final String authority,
+            @NonNull final String path,
+            @NonNull final String endpointVersion)
             throws URISyntaxException {
-        mIssuer = new CommonURIBuilder()
-                .setScheme("https")
-                .setHost(authority)
-                .setPathSegments(path, endpointVersion)
-                .build().toString();
+        mIssuer =
+                new CommonURIBuilder()
+                        .setScheme("https")
+                        .setHost(authority)
+                        .setPathSegments(path, endpointVersion)
+                        .build()
+                        .toString();
     }
 
     private String sanitize(@NonNull final String issuer) {
@@ -96,16 +101,17 @@ public class OpenIdProviderConfigurationClient {
 
     public void loadOpenIdProviderConfiguration(
             @NonNull final OpenIdProviderConfigurationCallback callback) {
-        sBackgroundExecutor.submit(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    callback.onTaskCompleted(loadOpenIdProviderConfiguration());
-                } catch (ServiceException e) {
-                    callback.onError(e);
-                }
-            }
-        });
+        sBackgroundExecutor.submit(
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            callback.onTaskCompleted(loadOpenIdProviderConfiguration());
+                        } catch (ServiceException e) {
+                            callback.onError(e);
+                        }
+                    }
+                });
     }
 
     /**
@@ -125,26 +131,16 @@ public class OpenIdProviderConfigurationClient {
 
             // If we found a result, return it...
             if (null != cacheResult) {
-                Logger.info(
-                        TAG + methodName,
-                        "Using cached metadata result."
-                );
+                Logger.info(TAG + methodName, "Using cached metadata result.");
                 return cacheResult;
             }
 
-            Logger.verbose(
-                    TAG + methodName,
-                    "Config URL is valid."
-            );
+            Logger.verbose(TAG + methodName, "Config URL is valid.");
 
-            Logger.verbosePII(
-                    TAG + methodName,
-                    "Using request URL: " + configUrl
-            );
+            Logger.verbosePII(TAG + methodName, "Using request URL: " + configUrl);
 
-            final HttpResponse providerConfigResponse = httpClient.get(configUrl.toURL(),
-                    new HashMap<String, String>(),
-                    null);
+            final HttpResponse providerConfigResponse =
+                    httpClient.get(configUrl.toURL(), new HashMap<String, String>(), null);
 
             final int statusCode = providerConfigResponse.getStatusCode();
 
@@ -154,13 +150,11 @@ public class OpenIdProviderConfigurationClient {
                         OPENID_PROVIDER_CONFIGURATION_FAILED_TO_LOAD,
                         "OpenId Provider Configuration metadata failed to load with status: "
                                 + statusCode,
-                        null
-                );
+                        null);
             }
 
-            final OpenIdProviderConfiguration parsedConfig = parseMetadata(
-                    providerConfigResponse.getBody()
-            );
+            final OpenIdProviderConfiguration parsedConfig =
+                    parseMetadata(providerConfigResponse.getBody());
 
             // Cache our config in memory for later
             cacheConfiguration(configUrl, parsedConfig);
@@ -170,18 +164,16 @@ public class OpenIdProviderConfigurationClient {
             throw new ServiceException(
                     OPENID_PROVIDER_CONFIGURATION_FAILED_TO_LOAD,
                     "IOException while requesting metadata",
-                    e
-            );
+                    e);
         }
     }
 
-    private void cacheConfiguration(@NonNull final URI configUrl,
-                                    @NonNull final OpenIdProviderConfiguration parsedConfig) {
+    private void cacheConfiguration(
+            @NonNull final URI configUrl, @NonNull final OpenIdProviderConfiguration parsedConfig) {
         sConfigCache.put(configUrl, parsedConfig);
     }
 
     private OpenIdProviderConfiguration parseMetadata(@NonNull final String body) {
         return mGson.fromJson(body, OpenIdProviderConfiguration.class);
     }
-
 }

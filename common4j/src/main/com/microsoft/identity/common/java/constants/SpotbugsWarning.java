@@ -31,5 +31,7 @@ public class SpotbugsWarning {
      * Public enum method unconditionally sets its field.
      */
     public static final String ME_ENUM_FIELD_SETTER = "ME_ENUM_FIELD_SETTER";
-    public static final String RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE";
+
+    public static final String RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE =
+            "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE";
 }

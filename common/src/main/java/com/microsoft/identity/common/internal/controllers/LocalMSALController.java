@@ -27,36 +27,32 @@ import android.text.TextUtils;
 import androidx.annotation.NonNull;
 import androidx.annotation.WorkerThread;
 
+import com.microsoft.identity.common.internal.commands.RefreshOnCommand;
+import com.microsoft.identity.common.internal.platform.DevicePoPUtils;
+import com.microsoft.identity.common.internal.telemetry.Telemetry;
+import com.microsoft.identity.common.internal.telemetry.events.ApiEndEvent;
+import com.microsoft.identity.common.internal.telemetry.events.ApiStartEvent;
+import com.microsoft.identity.common.java.WarningType;
+import com.microsoft.identity.common.java.authorities.Authority;
+import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
+import com.microsoft.identity.common.java.authscheme.IPoPAuthenticationSchemeParams;
+import com.microsoft.identity.common.java.cache.ICacheRecord;
+import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.DeviceCodeFlowCommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.GenerateShrCommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.RemoveAccountCommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.SilentTokenCommandParameters;
 import com.microsoft.identity.common.java.configuration.LibraryConfiguration;
+import com.microsoft.identity.common.java.constants.OAuth2ErrorCode;
+import com.microsoft.identity.common.java.controllers.BaseController;
 import com.microsoft.identity.common.java.controllers.CommandDispatcher;
+import com.microsoft.identity.common.java.dto.AccountRecord;
 import com.microsoft.identity.common.java.eststelemetry.PublicApiId;
 import com.microsoft.identity.common.java.exception.ArgumentException;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.exception.ServiceException;
-import com.microsoft.identity.common.java.cache.ICacheRecord;
-import com.microsoft.identity.common.internal.commands.RefreshOnCommand;
-import com.microsoft.identity.common.java.commands.parameters.DeviceCodeFlowCommandParameters;
-import com.microsoft.identity.common.java.commands.parameters.GenerateShrCommandParameters;
-import com.microsoft.identity.common.java.commands.parameters.RemoveAccountCommandParameters;
-import com.microsoft.identity.common.java.dto.AccountRecord;
-import com.microsoft.identity.common.internal.platform.DevicePoPUtils;
-import com.microsoft.identity.common.java.constants.OAuth2ErrorCode;
-import com.microsoft.identity.common.java.controllers.BaseController;
-import com.microsoft.identity.common.java.result.AcquireTokenResult;
-import com.microsoft.identity.common.java.result.GenerateShrResult;
-import com.microsoft.identity.common.java.result.LocalAuthenticationResult;
-import com.microsoft.identity.common.internal.telemetry.Telemetry;
-import com.microsoft.identity.common.internal.telemetry.events.ApiEndEvent;
-import com.microsoft.identity.common.internal.telemetry.events.ApiStartEvent;
-import com.microsoft.identity.common.java.util.ThreadUtils;
-import com.microsoft.identity.common.java.WarningType;
-import com.microsoft.identity.common.java.authorities.Authority;
-import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
-import com.microsoft.identity.common.java.authscheme.IPoPAuthenticationSchemeParams;
-import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
-import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCommandParameters;
-import com.microsoft.identity.common.java.commands.parameters.SilentTokenCommandParameters;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResponse;
@@ -71,18 +67,22 @@ import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParamet
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2TokenCache;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.java.request.SdkType;
+import com.microsoft.identity.common.java.result.AcquireTokenResult;
+import com.microsoft.identity.common.java.result.GenerateShrResult;
+import com.microsoft.identity.common.java.result.LocalAuthenticationResult;
 import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings;
-import com.microsoft.identity.common.java.util.ported.PropertyBag;
 import com.microsoft.identity.common.java.util.ResultUtil;
+import com.microsoft.identity.common.java.util.ThreadUtils;
+import com.microsoft.identity.common.java.util.ported.PropertyBag;
 import com.microsoft.identity.common.logging.Logger;
+
+import lombok.EqualsAndHashCode;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
-
-import lombok.EqualsAndHashCode;
 
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public class LocalMSALController extends BaseController {
@@ -98,92 +98,87 @@ public class LocalMSALController extends BaseController {
     @Override
     public AcquireTokenResult acquireToken(
             @NonNull final InteractiveTokenCommandParameters parameters)
-            throws ExecutionException, InterruptedException, ClientException, IOException, ArgumentException {
+            throws ExecutionException, InterruptedException, ClientException, IOException,
+                    ArgumentException {
         final String methodName = ":acquireToken";
 
-        Logger.verbose(
-                TAG + methodName,
-                "Acquiring token..."
-        );
+        Logger.verbose(TAG + methodName, "Acquiring token...");
 
         Telemetry.emit(
                 new ApiStartEvent()
                         .putProperties(parameters)
-                        .putApiId(TelemetryEventStrings.Api.LOCAL_ACQUIRE_TOKEN_INTERACTIVE)
-        );
+                        .putApiId(TelemetryEventStrings.Api.LOCAL_ACQUIRE_TOKEN_INTERACTIVE));
 
         final AcquireTokenResult acquireTokenResult = new AcquireTokenResult();
 
-        //00) Validate MSAL Parameters
+        // 00) Validate MSAL Parameters
         parameters.validate();
 
         // Add default scopes
         final Set<String> mergedScopes = addDefaultScopes(parameters);
 
-        final InteractiveTokenCommandParameters parametersWithScopes = parameters
-                .toBuilder()
-                .scopes(mergedScopes)
-                .build();
+        final InteractiveTokenCommandParameters parametersWithScopes =
+                parameters.toBuilder().scopes(mergedScopes).build();
 
         logParameters(TAG, parametersWithScopes);
 
-        //0) Get known authority result
-        parametersWithScopes.getPlatformComponents()
+        // 0) Get known authority result
+        parametersWithScopes
+                .getPlatformComponents()
                 .getPlatformUtil()
                 .throwIfNetworkNotAvailable(parametersWithScopes.isPowerOptCheckEnabled());
 
-        Authority.KnownAuthorityResult authorityResult = Authority.getKnownAuthorityResult(parametersWithScopes.getAuthority());
+        Authority.KnownAuthorityResult authorityResult =
+                Authority.getKnownAuthorityResult(parametersWithScopes.getAuthority());
 
-        //0.1 If not known throw resulting exception
+        // 0.1 If not known throw resulting exception
         if (!authorityResult.getKnown()) {
             Telemetry.emit(
                     new ApiEndEvent()
                             .putException(authorityResult.getClientException())
-                            .putApiId(TelemetryEventStrings.Api.LOCAL_ACQUIRE_TOKEN_INTERACTIVE)
-            );
+                            .putApiId(TelemetryEventStrings.Api.LOCAL_ACQUIRE_TOKEN_INTERACTIVE));
 
             throw authorityResult.getClientException();
         }
 
         // Build up params for Strategy construction
-        final OAuth2StrategyParameters strategyParameters = OAuth2StrategyParameters.builder()
-                .platformComponents(parameters.getPlatformComponents())
-                .build();
+        final OAuth2StrategyParameters strategyParameters =
+                OAuth2StrategyParameters.builder()
+                        .platformComponents(parameters.getPlatformComponents())
+                        .build();
 
-        //1) Get oAuth2Strategy for Authority Type
-        @SuppressWarnings(WarningType.rawtype_warning) final OAuth2Strategy oAuth2Strategy = parametersWithScopes
-                .getAuthority()
-                .createOAuth2Strategy(strategyParameters);
+        // 1) Get oAuth2Strategy for Authority Type
+        @SuppressWarnings(WarningType.rawtype_warning)
+        final OAuth2Strategy oAuth2Strategy =
+                parametersWithScopes.getAuthority().createOAuth2Strategy(strategyParameters);
 
-
-        //2) Request authorization interactively
-        @SuppressWarnings(WarningType.rawtype_warning) final AuthorizationResult result = performAuthorizationRequest(
-                oAuth2Strategy,
-                parametersWithScopes
-        );
+        // 2) Request authorization interactively
+        @SuppressWarnings(WarningType.rawtype_warning)
+        final AuthorizationResult result =
+                performAuthorizationRequest(oAuth2Strategy, parametersWithScopes);
         acquireTokenResult.setAuthorizationResult(result);
 
         ResultUtil.logResult(TAG, result);
 
         if (result.getAuthorizationStatus().equals(AuthorizationStatus.SUCCESS)) {
-            //3) Exchange authorization code for token
-            final TokenResult tokenResult = performTokenRequest(
-                    oAuth2Strategy,
-                    mAuthorizationRequest,
-                    result.getAuthorizationResponse(),
-                    parametersWithScopes
-            );
+            // 3) Exchange authorization code for token
+            final TokenResult tokenResult =
+                    performTokenRequest(
+                            oAuth2Strategy,
+                            mAuthorizationRequest,
+                            result.getAuthorizationResponse(),
+                            parametersWithScopes);
 
             acquireTokenResult.setTokenResult(tokenResult);
 
             if (tokenResult != null && tokenResult.getSuccess()) {
-                //4) Save tokens in token cache
-                final List<ICacheRecord> records = saveTokens(
-                        oAuth2Strategy,
-                        mAuthorizationRequest,
-                        tokenResult.getTokenResponse(),
-                        parametersWithScopes.getOAuth2TokenCache()
-                );
+                // 4) Save tokens in token cache
+                final List<ICacheRecord> records =
+                        saveTokens(
+                                oAuth2Strategy,
+                                mAuthorizationRequest,
+                                tokenResult.getTokenResponse(),
+                                parametersWithScopes.getOAuth2TokenCache());
 
                 // The first element in the returned list is the item we *just* saved, the rest of
                 // the elements are necessary to construct the full IAccount + TenantProfile
@@ -193,45 +188,48 @@ public class LocalMSALController extends BaseController {
                         new LocalAuthenticationResult(
                                 finalizeCacheRecordForResult(
                                         newestRecord,
-                                        parametersWithScopes.getAuthenticationScheme()
-                                ),
+                                        parametersWithScopes.getAuthenticationScheme()),
                                 records,
                                 SdkType.MSAL,
-                                false
-                        )
-                );
+                                false));
             }
         }
 
         Telemetry.emit(
                 new ApiEndEvent()
                         .putResult(acquireTokenResult)
-                        .putApiId(TelemetryEventStrings.Api.LOCAL_ACQUIRE_TOKEN_INTERACTIVE)
-        );
+                        .putApiId(TelemetryEventStrings.Api.LOCAL_ACQUIRE_TOKEN_INTERACTIVE));
 
         return acquireTokenResult;
     }
 
     // Suppressing rawtype warnings due to the generic types AuthorizationResult and OAuth2Strategy
     @SuppressWarnings(WarningType.rawtype_warning)
-    private AuthorizationResult performAuthorizationRequest(@NonNull final OAuth2Strategy strategy,
-                                                            @NonNull final InteractiveTokenCommandParameters parameters)
+    private AuthorizationResult performAuthorizationRequest(
+            @NonNull final OAuth2Strategy strategy,
+            @NonNull final InteractiveTokenCommandParameters parameters)
             throws ExecutionException, InterruptedException, ClientException {
 
-        parameters.getPlatformComponents()
+        parameters
+                .getPlatformComponents()
                 .getPlatformUtil()
                 .throwIfNetworkNotAvailable(parameters.isPowerOptCheckEnabled());
 
         parameters.getPlatformComponents().getAuthorizationStrategyFactory();
 
-        mAuthorizationStrategy = parameters.getPlatformComponents().getAuthorizationStrategyFactory().getAuthorizationStrategy(parameters);
+        mAuthorizationStrategy =
+                parameters
+                        .getPlatformComponents()
+                        .getAuthorizationStrategyFactory()
+                        .getAuthorizationStrategy(parameters);
         mAuthorizationRequest = getAuthorizationRequest(strategy, parameters);
 
-        // Suppressing unchecked warnings due to casting of AuthorizationRequest to GenericAuthorizationRequest and AuthorizationStrategy to GenericAuthorizationStrategy in the arguments of call to requestAuthorization method
-        @SuppressWarnings(WarningType.unchecked_warning) final Future<AuthorizationResult> future = strategy.requestAuthorization(
-                mAuthorizationRequest,
-                mAuthorizationStrategy
-        );
+        // Suppressing unchecked warnings due to casting of AuthorizationRequest to
+        // GenericAuthorizationRequest and AuthorizationStrategy to GenericAuthorizationStrategy in
+        // the arguments of call to requestAuthorization method
+        @SuppressWarnings(WarningType.unchecked_warning)
+        final Future<AuthorizationResult> future =
+                strategy.requestAuthorization(mAuthorizationRequest, mAuthorizationStrategy);
 
         final AuthorizationResult result = future.get();
 
@@ -239,28 +237,26 @@ public class LocalMSALController extends BaseController {
     }
 
     @Override
-    public void onFinishAuthorizationSession(int requestCode,
-                                             int resultCode,
-                                             @NonNull final PropertyBag data) {
+    public void onFinishAuthorizationSession(
+            int requestCode, int resultCode, @NonNull final PropertyBag data) {
         final String methodName = ":onFinishAuthorizationSession";
-        Logger.verbose(
-                TAG + methodName,
-                "Completing authorization..."
-        );
+        Logger.verbose(TAG + methodName, "Completing authorization...");
 
         Telemetry.emit(
                 new ApiStartEvent()
-                        .putApiId(TelemetryEventStrings.Api.LOCAL_COMPLETE_ACQUIRE_TOKEN_INTERACTIVE)
+                        .putApiId(
+                                TelemetryEventStrings.Api.LOCAL_COMPLETE_ACQUIRE_TOKEN_INTERACTIVE)
                         .put(TelemetryEventStrings.Key.RESULT_CODE, String.valueOf(resultCode))
-                        .put(TelemetryEventStrings.Key.REQUEST_CODE, String.valueOf(requestCode))
-        );
+                        .put(TelemetryEventStrings.Key.REQUEST_CODE, String.valueOf(requestCode)));
 
-        mAuthorizationStrategy.completeAuthorization(requestCode, RawAuthorizationResult.fromPropertyBag(data));
+        mAuthorizationStrategy.completeAuthorization(
+                requestCode, RawAuthorizationResult.fromPropertyBag(data));
 
         Telemetry.emit(
                 new ApiEndEvent()
-                        .putApiId(TelemetryEventStrings.Api.LOCAL_COMPLETE_ACQUIRE_TOKEN_INTERACTIVE)
-        );
+                        .putApiId(
+                                TelemetryEventStrings.Api
+                                        .LOCAL_COMPLETE_ACQUIRE_TOKEN_INTERACTIVE));
     }
 
     @Override
@@ -268,52 +264,54 @@ public class LocalMSALController extends BaseController {
             @NonNull final SilentTokenCommandParameters parameters)
             throws IOException, ClientException, ArgumentException, ServiceException {
         final String methodName = ":acquireTokenSilent";
-        Logger.verbose(
-                TAG + methodName,
-                "Acquiring token silently..."
-        );
+        Logger.verbose(TAG + methodName, "Acquiring token silently...");
 
         Telemetry.emit(
                 new ApiStartEvent()
                         .putProperties(parameters)
-                        .putApiId(TelemetryEventStrings.Api.LOCAL_ACQUIRE_TOKEN_SILENT)
-        );
+                        .putApiId(TelemetryEventStrings.Api.LOCAL_ACQUIRE_TOKEN_SILENT));
 
         final AcquireTokenResult acquireTokenSilentResult = new AcquireTokenResult();
 
-        //Validate MSAL Parameters
+        // Validate MSAL Parameters
         parameters.validate();
 
         // Add default scopes
         final Set<String> mergedScopes = addDefaultScopes(parameters);
 
-        final SilentTokenCommandParameters parametersWithScopes = parameters
-                .toBuilder()
-                .scopes(mergedScopes)
-                .build();
+        final SilentTokenCommandParameters parametersWithScopes =
+                parameters.toBuilder().scopes(mergedScopes).build();
 
-        @SuppressWarnings(WarningType.rawtype_warning) final OAuth2TokenCache tokenCache = parametersWithScopes.getOAuth2TokenCache();
+        @SuppressWarnings(WarningType.rawtype_warning)
+        final OAuth2TokenCache tokenCache = parametersWithScopes.getOAuth2TokenCache();
 
         final AccountRecord targetAccount = getCachedAccountRecord(parametersWithScopes);
 
         // Build up params for Strategy construction
-        final AbstractAuthenticationScheme authScheme = parametersWithScopes.getAuthenticationScheme();
-        final OAuth2StrategyParameters strategyParameters = OAuth2StrategyParameters.builder()
-                .platformComponents(parameters.getPlatformComponents())
-                .build();
+        final AbstractAuthenticationScheme authScheme =
+                parametersWithScopes.getAuthenticationScheme();
+        final OAuth2StrategyParameters strategyParameters =
+                OAuth2StrategyParameters.builder()
+                        .platformComponents(parameters.getPlatformComponents())
+                        .build();
 
-        @SuppressWarnings(WarningType.rawtype_warning) final OAuth2Strategy strategy = parametersWithScopes.getAuthority().createOAuth2Strategy(strategyParameters);
+        @SuppressWarnings(WarningType.rawtype_warning)
+        final OAuth2Strategy strategy =
+                parametersWithScopes.getAuthority().createOAuth2Strategy(strategyParameters);
 
-        // Suppressing unchecked warning of converting List<ICacheRecord> to List due to generic type not provided for tokenCache
-        @SuppressWarnings(WarningType.unchecked_warning) final List<ICacheRecord> cacheRecords = tokenCache.loadWithAggregatedAccountData(
-                parametersWithScopes.getClientId(),
-                TextUtils.join(" ", parametersWithScopes.getScopes()),
-                targetAccount,
-                authScheme
-        );
+        // Suppressing unchecked warning of converting List<ICacheRecord> to List due to generic
+        // type not provided for tokenCache
+        @SuppressWarnings(WarningType.unchecked_warning)
+        final List<ICacheRecord> cacheRecords =
+                tokenCache.loadWithAggregatedAccountData(
+                        parametersWithScopes.getClientId(),
+                        TextUtils.join(" ", parametersWithScopes.getScopes()),
+                        targetAccount,
+                        authScheme);
 
         // The first element is the 'fully-loaded' CacheRecord which may contain the AccountRecord,
-        // AccessTokenRecord, RefreshTokenRecord, and IdTokenRecord... (if all of those artifacts exist)
+        // AccessTokenRecord, RefreshTokenRecord, and IdTokenRecord... (if all of those artifacts
+        // exist)
         // subsequent CacheRecords represent other profiles (projections) of this principal in
         // other tenants. Those tokens will be 'sparse', meaning that their AT/RT will not be loaded
         final ICacheRecord fullCacheRecord = cacheRecords.get(0);
@@ -322,21 +320,18 @@ public class LocalMSALController extends BaseController {
                 && fullCacheRecord.getAccessToken().refreshOnIsActive()) {
             Logger.info(
                     TAG,
-                    "RefreshOn is active. This will extend your token usage in the rare case servers are not available."
-            );
+                    "RefreshOn is active. This will extend your token usage in the rare case servers are not available.");
         }
         if (LibraryConfiguration.getInstance().isRefreshInEnabled()
                 && fullCacheRecord.getAccessToken() != null
                 && fullCacheRecord.getAccessToken().shouldRefresh()) {
             if (!fullCacheRecord.getAccessToken().isExpired()) {
                 setAcquireTokenResult(acquireTokenSilentResult, parametersWithScopes, cacheRecords);
-                final RefreshOnCommand refreshOnCommand = new RefreshOnCommand(parameters, this, PublicApiId.MSAL_REFRESH_ON);
+                final RefreshOnCommand refreshOnCommand =
+                        new RefreshOnCommand(parameters, this, PublicApiId.MSAL_REFRESH_ON);
                 CommandDispatcher.submitAndForget(refreshOnCommand);
             } else {
-                Logger.warn(
-                        TAG + methodName,
-                        "Access token is expired. Removing from cache..."
-                );
+                Logger.warn(TAG + methodName, "Access token is expired. Removing from cache...");
                 // Remove the expired token
                 tokenCache.removeCredential(fullCacheRecord.getAccessToken());
                 renewAT(
@@ -345,14 +340,13 @@ public class LocalMSALController extends BaseController {
                         tokenCache,
                         strategy,
                         fullCacheRecord,
-                        TAG + methodName
-                );
+                        TAG + methodName);
             }
-        } else
-            if ((accessTokenIsNull(fullCacheRecord)
+        } else if ((accessTokenIsNull(fullCacheRecord)
                 || refreshTokenIsNull(fullCacheRecord)
                 || parametersWithScopes.isForceRefresh()
-                || !isRequestAuthorityRealmSameAsATRealm(parametersWithScopes.getAuthority(), fullCacheRecord.getAccessToken())
+                || !isRequestAuthorityRealmSameAsATRealm(
+                        parametersWithScopes.getAuthority(), fullCacheRecord.getAccessToken())
                 || !strategy.validateCachedResult(authScheme, fullCacheRecord))) {
             if (!refreshTokenIsNull(fullCacheRecord)) {
                 // No AT found, but the RT checks out, so we'll use it
@@ -362,29 +356,23 @@ public class LocalMSALController extends BaseController {
                         tokenCache,
                         strategy,
                         fullCacheRecord,
-                        TAG + methodName
-                );
+                        TAG + methodName);
             } else {
-                //TODO need the refactor, should just throw the ui required exception, rather than
+                // TODO need the refactor, should just throw the ui required exception, rather than
                 // wrap the exception later in the exception wrapper.
-                final ClientException exception = new ClientException(
-                        ErrorStrings.NO_TOKENS_FOUND,
-                        "No refresh token was found. "
-                );
+                final ClientException exception =
+                        new ClientException(
+                                ErrorStrings.NO_TOKENS_FOUND, "No refresh token was found. ");
 
                 Telemetry.emit(
                         new ApiEndEvent()
                                 .putException(exception)
-                                .putApiId(TelemetryEventStrings.Api.LOCAL_ACQUIRE_TOKEN_SILENT)
-                );
+                                .putApiId(TelemetryEventStrings.Api.LOCAL_ACQUIRE_TOKEN_SILENT));
 
                 throw exception;
             }
         } else if (fullCacheRecord.getAccessToken().isExpired()) {
-            Logger.warn(
-                    TAG + methodName,
-                    "Access token is expired. Removing from cache..."
-            );
+            Logger.warn(TAG + methodName, "Access token is expired. Removing from cache...");
             // Remove the expired token
             tokenCache.removeCredential(fullCacheRecord.getAccessToken());
             renewAT(
@@ -393,60 +381,48 @@ public class LocalMSALController extends BaseController {
                     tokenCache,
                     strategy,
                     fullCacheRecord,
-                    TAG + methodName
-            );
+                    TAG + methodName);
 
         } else {
-            Logger.verbose(
-                    TAG + methodName,
-                    "Returning silent result"
-            );
+            Logger.verbose(TAG + methodName, "Returning silent result");
             setAcquireTokenResult(acquireTokenSilentResult, parametersWithScopes, cacheRecords);
         }
 
         Telemetry.emit(
                 new ApiEndEvent()
                         .putResult(acquireTokenSilentResult)
-                        .putApiId(TelemetryEventStrings.Api.LOCAL_ACQUIRE_TOKEN_SILENT)
-        );
+                        .putApiId(TelemetryEventStrings.Api.LOCAL_ACQUIRE_TOKEN_SILENT));
 
         return acquireTokenSilentResult;
     }
 
-    private void setAcquireTokenResult(final AcquireTokenResult acquireTokenSilentResult,
-                                       final SilentTokenCommandParameters parametersWithScopes,
-                                       final List<ICacheRecord> cacheRecords) throws ClientException {
+    private void setAcquireTokenResult(
+            final AcquireTokenResult acquireTokenSilentResult,
+            final SilentTokenCommandParameters parametersWithScopes,
+            final List<ICacheRecord> cacheRecords)
+            throws ClientException {
         ICacheRecord fullCacheRecord = cacheRecords.get(0);
         acquireTokenSilentResult.setLocalAuthenticationResult(
                 new LocalAuthenticationResult(
                         finalizeCacheRecordForResult(
-                                fullCacheRecord,
-                                parametersWithScopes.getAuthenticationScheme()
-                        ),
+                                fullCacheRecord, parametersWithScopes.getAuthenticationScheme()),
                         cacheRecords,
                         SdkType.MSAL,
-                        true
-                )
-        );
+                        true));
     }
 
-    private void renewAT(@NonNull final SilentTokenCommandParameters parametersWithScopes,
-                         @NonNull final AcquireTokenResult acquireTokenSilentResult,
-                         @SuppressWarnings(WarningType.rawtype_warning) @NonNull final OAuth2TokenCache tokenCache,
-                         @SuppressWarnings(WarningType.rawtype_warning) @NonNull final OAuth2Strategy strategy,
-                         @NonNull final ICacheRecord cacheRecord,
-                         @NonNull final String tag) throws IOException, ClientException, ServiceException {
-        Logger.verbose(
-                TAG + tag,
-                "Renewing access token..."
-        );
+    private void renewAT(
+            @NonNull final SilentTokenCommandParameters parametersWithScopes,
+            @NonNull final AcquireTokenResult acquireTokenSilentResult,
+            @SuppressWarnings(WarningType.rawtype_warning) @NonNull
+                    final OAuth2TokenCache tokenCache,
+            @SuppressWarnings(WarningType.rawtype_warning) @NonNull final OAuth2Strategy strategy,
+            @NonNull final ICacheRecord cacheRecord,
+            @NonNull final String tag)
+            throws IOException, ClientException, ServiceException {
+        Logger.verbose(TAG + tag, "Renewing access token...");
         renewAccessToken(
-                parametersWithScopes,
-                acquireTokenSilentResult,
-                tokenCache,
-                strategy,
-                cacheRecord
-        );
+                parametersWithScopes, acquireTokenSilentResult, tokenCache, strategy, cacheRecord);
     }
 
     @Override
@@ -455,36 +431,36 @@ public class LocalMSALController extends BaseController {
         Telemetry.emit(
                 new ApiStartEvent()
                         .putProperties(parameters)
-                        .putApiId(TelemetryEventStrings.Api.LOCAL_GET_ACCOUNTS)
-        );
+                        .putApiId(TelemetryEventStrings.Api.LOCAL_GET_ACCOUNTS));
 
-        @SuppressWarnings(WarningType.unchecked_warning) final List<ICacheRecord> accountsInCache =
+        @SuppressWarnings(WarningType.unchecked_warning)
+        final List<ICacheRecord> accountsInCache =
                 parameters
                         .getOAuth2TokenCache()
                         .getAccountsWithAggregatedAccountData(
                                 null, // * wildcard
-                                parameters.getClientId()
-                        );
+                                parameters.getClientId());
 
         Telemetry.emit(
                 new ApiEndEvent()
                         .putApiId(TelemetryEventStrings.Api.LOCAL_GET_ACCOUNTS)
-                        .put(TelemetryEventStrings.Key.ACCOUNTS_NUMBER, Integer.toString(accountsInCache.size()))
-                        .put(TelemetryEventStrings.Key.IS_SUCCESSFUL, TelemetryEventStrings.Value.TRUE)
-        );
+                        .put(
+                                TelemetryEventStrings.Key.ACCOUNTS_NUMBER,
+                                Integer.toString(accountsInCache.size()))
+                        .put(
+                                TelemetryEventStrings.Key.IS_SUCCESSFUL,
+                                TelemetryEventStrings.Value.TRUE));
 
         return accountsInCache;
     }
 
     @Override
     @WorkerThread
-    public boolean removeAccount(
-            @NonNull final RemoveAccountCommandParameters parameters) {
+    public boolean removeAccount(@NonNull final RemoveAccountCommandParameters parameters) {
         Telemetry.emit(
                 new ApiStartEvent()
                         .putProperties(parameters)
-                        .putApiId(TelemetryEventStrings.Api.LOCAL_REMOVE_ACCOUNT)
-        );
+                        .putApiId(TelemetryEventStrings.Api.LOCAL_REMOVE_ACCOUNT));
 
         String realm = null;
 
@@ -492,20 +468,24 @@ public class LocalMSALController extends BaseController {
             realm = parameters.getAccount().getRealm();
         }
 
-        final boolean localRemoveAccountSuccess = !parameters
-                .getOAuth2TokenCache()
-                .removeAccount(
-                        null, // remove account from all environment
-                        parameters.getClientId(),
-                        parameters.getAccount() == null ? null : parameters.getAccount().getHomeAccountId(),
-                        realm
-                ).isEmpty();
+        final boolean localRemoveAccountSuccess =
+                !parameters
+                        .getOAuth2TokenCache()
+                        .removeAccount(
+                                null, // remove account from all environment
+                                parameters.getClientId(),
+                                parameters.getAccount() == null
+                                        ? null
+                                        : parameters.getAccount().getHomeAccountId(),
+                                realm)
+                        .isEmpty();
 
         Telemetry.emit(
                 new ApiEndEvent()
-                        .put(TelemetryEventStrings.Key.IS_SUCCESSFUL, String.valueOf(localRemoveAccountSuccess))
-                        .putApiId(TelemetryEventStrings.Api.LOCAL_REMOVE_ACCOUNT)
-        );
+                        .put(
+                                TelemetryEventStrings.Key.IS_SUCCESSFUL,
+                                String.valueOf(localRemoveAccountSuccess))
+                        .putApiId(TelemetryEventStrings.Api.LOCAL_REMOVE_ACCOUNT));
 
         return localRemoveAccountSuccess;
     }
@@ -514,7 +494,8 @@ public class LocalMSALController extends BaseController {
     public boolean getDeviceMode(CommandParameters parameters) throws Exception {
         final String methodName = ":getDeviceMode";
 
-        final String errorMessage = "LocalMSALController is not eligible to use the broker. Do not check sharedDevice mode and return false immediately.";
+        final String errorMessage =
+                "LocalMSALController is not eligible to use the broker. Do not check sharedDevice mode and return false immediately.";
         com.microsoft.identity.common.internal.logging.Logger.warn(TAG + methodName, errorMessage);
 
         return false;
@@ -526,29 +507,26 @@ public class LocalMSALController extends BaseController {
     }
 
     @Override
-    public boolean removeCurrentAccount(RemoveAccountCommandParameters parameters) throws Exception {
+    public boolean removeCurrentAccount(RemoveAccountCommandParameters parameters)
+            throws Exception {
         return removeAccount(parameters);
     }
 
     // Suppressing rawtype warnings due to the generic types AuthorizationResult and OAuth2Strategy
     @SuppressWarnings(WarningType.rawtype_warning)
     @Override
-    public AuthorizationResult deviceCodeFlowAuthRequest(final DeviceCodeFlowCommandParameters parameters)
+    public AuthorizationResult deviceCodeFlowAuthRequest(
+            final DeviceCodeFlowCommandParameters parameters)
             throws ServiceException, ClientException, IOException {
         // Logging start of method
         final String methodName = ":deviceCodeFlowAuthRequest";
-        Logger.verbose(
-                TAG + methodName,
-                "Device Code Flow: Authorizing user code..."
-        );
+        Logger.verbose(TAG + methodName, "Device Code Flow: Authorizing user code...");
 
         // Default scopes here
         final Set<String> mergedScopes = addDefaultScopes(parameters);
 
-        final DeviceCodeFlowCommandParameters parametersWithScopes = parameters
-                .toBuilder()
-                .scopes(mergedScopes)
-                .build();
+        final DeviceCodeFlowCommandParameters parametersWithScopes =
+                parameters.toBuilder().scopes(mergedScopes).build();
 
         logParameters(TAG, parametersWithScopes);
 
@@ -556,18 +534,21 @@ public class LocalMSALController extends BaseController {
         Telemetry.emit(
                 new ApiStartEvent()
                         .putProperties(parametersWithScopes)
-                        .putApiId(TelemetryEventStrings.Api.LOCAL_DEVICE_CODE_FLOW_ACQUIRE_URL_AND_CODE)
-        );
+                        .putApiId(
+                                TelemetryEventStrings.Api
+                                        .LOCAL_DEVICE_CODE_FLOW_ACQUIRE_URL_AND_CODE));
 
-        final Authority.KnownAuthorityResult authorityResult = Authority.getKnownAuthorityResult(parametersWithScopes.getAuthority());
+        final Authority.KnownAuthorityResult authorityResult =
+                Authority.getKnownAuthorityResult(parametersWithScopes.getAuthority());
 
         // If not known throw resulting exception
         if (!authorityResult.getKnown()) {
             Telemetry.emit(
                     new ApiEndEvent()
                             .putException(authorityResult.getClientException())
-                            .putApiId(TelemetryEventStrings.Api.LOCAL_DEVICE_CODE_FLOW_ACQUIRE_URL_AND_CODE)
-            );
+                            .putApiId(
+                                    TelemetryEventStrings.Api
+                                            .LOCAL_DEVICE_CODE_FLOW_ACQUIRE_URL_AND_CODE));
 
             throw authorityResult.getClientException();
         }
@@ -576,20 +557,22 @@ public class LocalMSALController extends BaseController {
 
         try {
             // Create OAuth2Strategy using commandParameters and strategyParameters
-            final OAuth2StrategyParameters strategyParameters = OAuth2StrategyParameters.builder()
-                    .platformComponents(parameters.getPlatformComponents())
-                    .build();
+            final OAuth2StrategyParameters strategyParameters =
+                    OAuth2StrategyParameters.builder()
+                            .platformComponents(parameters.getPlatformComponents())
+                            .build();
 
-            final OAuth2Strategy oAuth2Strategy = parametersWithScopes
-                    .getAuthority()
-                    .createOAuth2Strategy(strategyParameters);
+            final OAuth2Strategy oAuth2Strategy =
+                    parametersWithScopes.getAuthority().createOAuth2Strategy(strategyParameters);
 
             // DCF protocol step 1: Get user code
             // Populate global authorization request
             mAuthorizationRequest = getAuthorizationRequest(oAuth2Strategy, parametersWithScopes);
 
             // Call method defined in oAuth2Strategy to request authorization
-            authorizationResult = oAuth2Strategy.getDeviceCode((MicrosoftStsAuthorizationRequest) mAuthorizationRequest);
+            authorizationResult =
+                    oAuth2Strategy.getDeviceCode(
+                            (MicrosoftStsAuthorizationRequest) mAuthorizationRequest);
 
             validateServiceResult(authorizationResult);
 
@@ -597,45 +580,41 @@ public class LocalMSALController extends BaseController {
             Telemetry.emit(
                     new ApiEndEvent()
                             .putException(error)
-                            .putApiId(TelemetryEventStrings.Api.LOCAL_DEVICE_CODE_FLOW_ACQUIRE_URL_AND_CODE)
-            );
+                            .putApiId(
+                                    TelemetryEventStrings.Api
+                                            .LOCAL_DEVICE_CODE_FLOW_ACQUIRE_URL_AND_CODE));
             throw error;
         }
 
-        Logger.verbose(
-                TAG + methodName,
-                "Device Code Flow authorization step finished..."
-        );
+        Logger.verbose(TAG + methodName, "Device Code Flow authorization step finished...");
 
         ResultUtil.logResult(TAG, authorizationResult);
 
         // End telemetry with LOCAL_DEVICE_CODE_FLOW_ACQUIRE_URL_AND_CODE
         Telemetry.emit(
                 new ApiEndEvent()
-                        .putApiId(TelemetryEventStrings.Api.LOCAL_DEVICE_CODE_FLOW_ACQUIRE_URL_AND_CODE)
-        );
+                        .putApiId(
+                                TelemetryEventStrings.Api
+                                        .LOCAL_DEVICE_CODE_FLOW_ACQUIRE_URL_AND_CODE));
 
         return authorizationResult;
     }
 
     @Override
     public AcquireTokenResult acquireDeviceCodeFlowToken(
-            @SuppressWarnings(WarningType.rawtype_warning) final AuthorizationResult authorizationResult,
+            @SuppressWarnings(WarningType.rawtype_warning)
+                    final AuthorizationResult authorizationResult,
             final DeviceCodeFlowCommandParameters parameters)
             throws ServiceException, ClientException, IOException {
 
         // Logging start of method
         final String methodName = ":acquireDeviceCodeFlowToken";
-        Logger.verbose(
-                TAG + methodName,
-                "Device Code Flow: Polling for token..."
-        );
+        Logger.verbose(TAG + methodName, "Device Code Flow: Polling for token...");
 
         // Start telemetry with LOCAL_DEVICE_CODE_FLOW_POLLING
         Telemetry.emit(
                 new ApiStartEvent()
-                        .putApiId(TelemetryEventStrings.Api.LOCAL_DEVICE_CODE_FLOW_POLLING)
-        );
+                        .putApiId(TelemetryEventStrings.Api.LOCAL_DEVICE_CODE_FLOW_POLLING));
 
         // Create empty AcquireTokenResult object
         final AcquireTokenResult acquireTokenResult = new AcquireTokenResult();
@@ -644,31 +623,38 @@ public class LocalMSALController extends BaseController {
         acquireTokenResult.setAuthorizationResult(authorizationResult);
 
         // Fetch the Authorization Response
-        final MicrosoftStsAuthorizationResponse authorizationResponse = (MicrosoftStsAuthorizationResponse) authorizationResult.getAuthorizationResponse();
+        final MicrosoftStsAuthorizationResponse authorizationResponse =
+                (MicrosoftStsAuthorizationResponse) authorizationResult.getAuthorizationResponse();
 
         // DCF protocol step 2: Poll for token
         TokenResult tokenResult = null;
 
         try {
             // Create OAuth2Strategy using commandParameters and strategyParameters
-            final OAuth2StrategyParameters strategyParameters = OAuth2StrategyParameters.builder()
-                    .platformComponents(parameters.getPlatformComponents())
-                    .build();
+            final OAuth2StrategyParameters strategyParameters =
+                    OAuth2StrategyParameters.builder()
+                            .platformComponents(parameters.getPlatformComponents())
+                            .build();
 
-            @SuppressWarnings(WarningType.rawtype_warning) final OAuth2Strategy oAuth2Strategy = parameters
-                    .getAuthority()
-                    .createOAuth2Strategy(strategyParameters);
+            @SuppressWarnings(WarningType.rawtype_warning)
+            final OAuth2Strategy oAuth2Strategy =
+                    parameters.getAuthority().createOAuth2Strategy(strategyParameters);
 
             // Create token request outside of loop so it isn't re-created after every loop
-            // Suppressing unchecked warnings due to casting of AuthorizationRequest to GenericAuthorizationRequest and MicrosoftStsAuthorizationResponse to GenericAuthorizationResponse in the arguments of call to createTokenRequest method
-            @SuppressWarnings(WarningType.unchecked_warning) final MicrosoftStsTokenRequest tokenRequest = (MicrosoftStsTokenRequest) oAuth2Strategy.createTokenRequest(
-                    mAuthorizationRequest,
-                    authorizationResponse,
-                    parameters.getAuthenticationScheme()
-            );
+            // Suppressing unchecked warnings due to casting of AuthorizationRequest to
+            // GenericAuthorizationRequest and MicrosoftStsAuthorizationResponse to
+            // GenericAuthorizationResponse in the arguments of call to createTokenRequest method
+            @SuppressWarnings(WarningType.unchecked_warning)
+            final MicrosoftStsTokenRequest tokenRequest =
+                    (MicrosoftStsTokenRequest)
+                            oAuth2Strategy.createTokenRequest(
+                                    mAuthorizationRequest,
+                                    authorizationResponse,
+                                    parameters.getAuthenticationScheme());
 
             // Fetch wait interval
-            final int intervalInMilliseconds = Integer.parseInt(authorizationResponse.getInterval()) * 1000;
+            final int intervalInMilliseconds =
+                    Integer.parseInt(authorizationResponse.getInterval()) * 1000;
 
             String errorCode = ErrorStrings.DEVICE_CODE_FLOW_AUTHORIZATION_PENDING_ERROR_CODE;
 
@@ -676,13 +662,16 @@ public class LocalMSALController extends BaseController {
             while (authorizationPending(errorCode)) {
 
                 // Wait between polls
-                ThreadUtils.sleepSafely(intervalInMilliseconds, TAG,
+                ThreadUtils.sleepSafely(
+                        intervalInMilliseconds,
+                        TAG,
                         "Attempting to sleep thread during Device Code Flow token polling...");
 
                 errorCode = ""; // Reset error code
 
                 // Execute Token Request
-                // Suppressing unchecked warnings due to casting of MicrosoftStsTokenRequest to GenericTokenRequest in the arguments of call to requestToken method
+                // Suppressing unchecked warnings due to casting of MicrosoftStsTokenRequest to
+                // GenericTokenRequest in the arguments of call to requestToken method
                 @SuppressWarnings(WarningType.unchecked_warning)
                 TokenResult tokenResultFromRequestToken = oAuth2Strategy.requestToken(tokenRequest);
 
@@ -701,32 +690,27 @@ public class LocalMSALController extends BaseController {
             acquireTokenResult.setTokenResult(tokenResult);
 
             // If the token is valid, save it into token cache
-            final List<ICacheRecord> records = saveTokens(
-                    oAuth2Strategy,
-                    mAuthorizationRequest,
-                    acquireTokenResult.getTokenResult().getTokenResponse(),
-                    parameters.getOAuth2TokenCache()
-            );
+            final List<ICacheRecord> records =
+                    saveTokens(
+                            oAuth2Strategy,
+                            mAuthorizationRequest,
+                            acquireTokenResult.getTokenResult().getTokenResponse(),
+                            parameters.getOAuth2TokenCache());
 
             // Once the token is stored, fetch and assign the authentication result
             final ICacheRecord newestRecord = records.get(0);
             acquireTokenResult.setLocalAuthenticationResult(
                     new LocalAuthenticationResult(
                             finalizeCacheRecordForResult(
-                                    newestRecord,
-                                    parameters.getAuthenticationScheme()
-                            ),
+                                    newestRecord, parameters.getAuthenticationScheme()),
                             records,
                             SdkType.MSAL,
-                            false
-                    )
-            );
+                            false));
         } catch (Exception error) {
             Telemetry.emit(
                     new ApiEndEvent()
                             .putException(error)
-                            .putApiId(TelemetryEventStrings.Api.LOCAL_DEVICE_CODE_FLOW_POLLING)
-            );
+                            .putApiId(TelemetryEventStrings.Api.LOCAL_DEVICE_CODE_FLOW_POLLING));
             throw error;
         }
 
@@ -736,8 +720,7 @@ public class LocalMSALController extends BaseController {
         Telemetry.emit(
                 new ApiEndEvent()
                         .putResult(acquireTokenResult)
-                        .putApiId(TelemetryEventStrings.Api.LOCAL_DEVICE_CODE_FLOW_POLLING)
-        );
+                        .putApiId(TelemetryEventStrings.Api.LOCAL_DEVICE_CODE_FLOW_POLLING));
 
         return acquireTokenResult;
     }
@@ -753,7 +736,9 @@ public class LocalMSALController extends BaseController {
         final GenerateShrResult result;
         if (userHasLocalAccountRecord(cache, clientId, homeAccountId)) {
             // Perform the signing locally...
-            result = DevicePoPUtils.generateSignedHttpRequest(parameters.getPlatformComponents(), popSchemeParams);
+            result =
+                    DevicePoPUtils.generateSignedHttpRequest(
+                            parameters.getPlatformComponents(), popSchemeParams);
         } else {
             // Populate the error on the result and return...
             result = new GenerateShrResult();
@@ -772,9 +757,10 @@ public class LocalMSALController extends BaseController {
      * @param homeAccountId The home_account_id of the targeted user.
      * @return True, if an {@link AccountRecord} exists. False otherwise.
      */
-    private boolean userHasLocalAccountRecord(@NonNull final OAuth2TokenCache cache,
-                                              @NonNull final String clientId,
-                                              @NonNull final String homeAccountId) {
+    private boolean userHasLocalAccountRecord(
+            @NonNull final OAuth2TokenCache cache,
+            @NonNull final String clientId,
+            @NonNull final String homeAccountId) {
         // If we have an account for this user, then we will service this request locally
         return null != cache.getAccountByHomeAccountId(null, clientId, homeAccountId);
     }
@@ -807,7 +793,8 @@ public class LocalMSALController extends BaseController {
             // Check response code against pre-defined error codes
             switch (errorCode) {
                 case ErrorStrings.DEVICE_CODE_FLOW_AUTHORIZATION_DECLINED_ERROR_CODE:
-                    errorMessage = ErrorStrings.DEVICE_CODE_FLOW_AUTHORIZATION_DECLINED_ERROR_MESSAGE;
+                    errorMessage =
+                            ErrorStrings.DEVICE_CODE_FLOW_AUTHORIZATION_DECLINED_ERROR_MESSAGE;
                     break;
                 case ErrorStrings.DEVICE_CODE_FLOW_EXPIRED_TOKEN_ERROR_CODE:
                     errorMessage = ErrorStrings.DEVICE_CODE_FLOW_EXPIRED_TOKEN_ERROR_MESSAGE;
@@ -827,11 +814,7 @@ public class LocalMSALController extends BaseController {
 
             // Create a ServiceException object and throw it
             throw new ServiceException(
-                    errorCode,
-                    errorMessage,
-                    ServiceException.DEFAULT_STATUS_CODE,
-                    null
-            );
+                    errorCode, errorMessage, ServiceException.DEFAULT_STATUS_CODE, null);
         }
     }
 }

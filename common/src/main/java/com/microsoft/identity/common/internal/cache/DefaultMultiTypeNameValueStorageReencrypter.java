@@ -32,13 +32,16 @@ import java.util.Map;
 /**
  * Default implementation of {@link IMultiTypeNameValueStorageReencrypter}.
  */
-public class DefaultMultiTypeNameValueStorageReencrypter implements IMultiTypeNameValueStorageReencrypter {
+public class DefaultMultiTypeNameValueStorageReencrypter
+        implements IMultiTypeNameValueStorageReencrypter {
 
     @Override
-    public void reencrypt(@NonNull final IMultiTypeNameValueStorage fileManager,
-                          @NonNull final IStringEncrypter encrypter,
-                          @NonNull final IStringDecrypter decrypter,
-                          @NonNull final ReencryptionParams params) throws Exception {
+    public void reencrypt(
+            @NonNull final IMultiTypeNameValueStorage fileManager,
+            @NonNull final IStringEncrypter encrypter,
+            @NonNull final IStringDecrypter decrypter,
+            @NonNull final ReencryptionParams params)
+            throws Exception {
         final Map<String, String> cacheEntries = new HashMap<>(fileManager.getAll());
 
         for (final Map.Entry<String, String> entry : cacheEntries.entrySet()) {
@@ -77,21 +80,24 @@ public class DefaultMultiTypeNameValueStorageReencrypter implements IMultiTypeNa
     }
 
     @Override
-    public void reencryptAsync(@NonNull final IMultiTypeNameValueStorage fileManager,
-                               @NonNull final IStringEncrypter encrypter,
-                               @NonNull final IStringDecrypter decrypter,
-                               @NonNull final ReencryptionParams params,
-                               @NonNull final TaskCompletedCallbackWithError<Void, Exception> callback) {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    reencrypt(fileManager, encrypter, decrypter, params);
-                    callback.onTaskCompleted(null);
-                } catch (final Exception e) {
-                    callback.onError(e);
-                }
-            }
-        }).start();
+    public void reencryptAsync(
+            @NonNull final IMultiTypeNameValueStorage fileManager,
+            @NonNull final IStringEncrypter encrypter,
+            @NonNull final IStringDecrypter decrypter,
+            @NonNull final ReencryptionParams params,
+            @NonNull final TaskCompletedCallbackWithError<Void, Exception> callback) {
+        new Thread(
+                        new Runnable() {
+                            @Override
+                            public void run() {
+                                try {
+                                    reencrypt(fileManager, encrypter, decrypter, params);
+                                    callback.onTaskCompleted(null);
+                                } catch (final Exception e) {
+                                    callback.onError(e);
+                                }
+                            }
+                        })
+                .start();
     }
 }

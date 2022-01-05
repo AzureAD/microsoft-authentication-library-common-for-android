@@ -74,12 +74,11 @@ public class AzureActiveDirectoryOAuth2Configuration extends OAuth2Configuration
         mSlice = slice;
     }
 
-    public void setMultipleCloudsSupported(boolean supported){
+    public void setMultipleCloudsSupported(boolean supported) {
         mMultipleCloudsSupported = supported;
     }
 
-    public boolean getMultipleCloudsSupported(){
+    public boolean getMultipleCloudsSupported() {
         return mMultipleCloudsSupported;
     }
-
 }

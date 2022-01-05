@@ -26,23 +26,26 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
-import com.microsoft.identity.common.java.controllers.BaseController;
-import com.microsoft.identity.common.java.result.VoidResult;
+import com.microsoft.identity.common.java.commands.BaseCommand;
 import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.SilentTokenCommandParameters;
+import com.microsoft.identity.common.java.controllers.BaseController;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ServiceException;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
+import com.microsoft.identity.common.java.result.VoidResult;
 import com.microsoft.identity.common.logging.Logger;
-import com.microsoft.identity.common.java.commands.BaseCommand;
 
 import java.io.IOException;
 
-public class RefreshOnCommand extends BaseCommand<VoidResult>{
+public class RefreshOnCommand extends BaseCommand<VoidResult> {
 
     private static final String TAG = RefreshOnCommand.class.getSimpleName();
 
-    public RefreshOnCommand(@NonNull CommandParameters parameters, @NonNull BaseController controller, @NonNull String publicApiId) {
+    public RefreshOnCommand(
+            @NonNull CommandParameters parameters,
+            @NonNull BaseController controller,
+            @NonNull String publicApiId) {
         super(parameters, controller, new RefreshOnCallback(), publicApiId);
     }
 
@@ -53,13 +56,12 @@ public class RefreshOnCommand extends BaseCommand<VoidResult>{
         final BaseController controller = getDefaultController();
         Logger.verbose(
                 TAG + methodName,
-                "Executing with controller: "
-                        + controller.getClass().getSimpleName()
-        );
-        final SilentTokenCommandParameters commandParameters = (SilentTokenCommandParameters) getParameters();
+                "Executing with controller: " + controller.getClass().getSimpleName());
+        final SilentTokenCommandParameters commandParameters =
+                (SilentTokenCommandParameters) getParameters();
         final TokenResult result = controller.renewAccessToken(commandParameters);
 
-        if(!result.getSuccess()) {
+        if (!result.getSuccess()) {
             Log.e(TAG, result.getErrorResponse().getError());
         }
 

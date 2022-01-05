@@ -11,7 +11,8 @@ public class LabGuest {
     private final String homeDomain;
     private final List<String> guestLabTenants;
 
-    public LabGuest(String homeUpn, String homeDomain, String homeTenantId, List<String> guestLabTenants) {
+    public LabGuest(
+            String homeUpn, String homeDomain, String homeTenantId, List<String> guestLabTenants) {
         this.homeUpn = homeUpn;
         this.homeDomain = homeDomain;
         this.homeTenantId = homeTenantId;

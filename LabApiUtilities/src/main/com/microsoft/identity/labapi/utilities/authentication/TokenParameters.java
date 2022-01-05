@@ -22,8 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.labapi.utilities.authentication;
 
-import java.util.Set;
-
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -32,19 +30,17 @@ import lombok.NonNull;
 import lombok.Singular;
 import lombok.experimental.Accessors;
 
+import java.util.Set;
+
 @Getter
 @Accessors(prefix = "m")
 @Builder
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class TokenParameters implements ITokenParameters {
 
-    @NonNull
-    private final String mAuthority;
+    @NonNull private final String mAuthority;
 
-    @NonNull
-    @Singular
-    private final Set<String> mScopes;
+    @NonNull @Singular private final Set<String> mScopes;
 
-    @NonNull
-    private final String mClientId;
+    @NonNull private final String mClientId;
 }

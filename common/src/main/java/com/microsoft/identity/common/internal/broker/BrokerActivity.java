@@ -22,6 +22,14 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.broker;
 
+import static com.microsoft.identity.common.java.AuthenticationConstants.BrokerResponse.BROKER_ERROR_RESPONSE;
+import static com.microsoft.identity.common.java.AuthenticationConstants.BrokerResponse.BROKER_OPERATION_CANCELLED;
+import static com.microsoft.identity.common.java.AuthenticationConstants.BrokerResponse.BROKER_SUCCESS_RESPONSE;
+import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterAliases.RETURN_BROKER_INTERACTIVE_ACQUIRE_TOKEN_RESULT;
+import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterFields.REQUEST_CODE;
+import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterFields.RESULT_CODE;
+import static com.microsoft.identity.common.java.AuthenticationConstants.UIRequest.BROKER_FLOW;
+
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
@@ -32,17 +40,9 @@ import com.microsoft.identity.common.internal.result.IBrokerResultAdapter;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.request.SdkType;
-import com.microsoft.identity.common.java.util.ported.PropertyBag;
 import com.microsoft.identity.common.java.util.ported.LocalBroadcaster;
+import com.microsoft.identity.common.java.util.ported.PropertyBag;
 import com.microsoft.identity.common.logging.Logger;
-
-import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterAliases.RETURN_BROKER_INTERACTIVE_ACQUIRE_TOKEN_RESULT;
-import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterFields.REQUEST_CODE;
-import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterFields.RESULT_CODE;
-import static com.microsoft.identity.common.java.AuthenticationConstants.UIRequest.BROKER_FLOW;
-import static com.microsoft.identity.common.java.AuthenticationConstants.BrokerResponse.BROKER_OPERATION_CANCELLED;
-import static com.microsoft.identity.common.java.AuthenticationConstants.BrokerResponse.BROKER_ERROR_RESPONSE;
-import static com.microsoft.identity.common.java.AuthenticationConstants.BrokerResponse.BROKER_SUCCESS_RESPONSE;
 
 public final class BrokerActivity extends Activity {
 
@@ -56,7 +56,6 @@ public final class BrokerActivity extends Activity {
     private Boolean mBrokerIntentStarted = false;
     private Boolean mBrokerResultReceived = false;
 
-
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -67,7 +66,6 @@ public final class BrokerActivity extends Activity {
             mBrokerInteractiveRequestIntent = savedInstanceState.getParcelable(BROKER_INTENT);
             mBrokerIntentStarted = savedInstanceState.getBoolean(BROKER_INTENT_STARTED);
         }
-
     }
 
     @Override
@@ -78,7 +76,6 @@ public final class BrokerActivity extends Activity {
             mBrokerIntentStarted = true;
             startActivityForResult(mBrokerInteractiveRequestIntent, BROKER_INTENT_REQUEST_CODE);
         }
-
     }
 
     @Override
@@ -89,7 +86,8 @@ public final class BrokerActivity extends Activity {
     @Override
     protected void onDestroy() {
         // If the broker process crashes, onActivityResult() will not be triggered.
-        // (tested by throwing an exception in AccountChooserActivity, and by killing the activity via App Switcher).
+        // (tested by throwing an exception in AccountChooserActivity, and by killing the activity
+        // via App Switcher).
         if (!mBrokerResultReceived) {
             returnsExceptionOnActivityUnexpectedlyKilled();
         }
@@ -98,10 +96,14 @@ public final class BrokerActivity extends Activity {
     }
 
     private void returnsExceptionOnActivityUnexpectedlyKilled() {
-        final IBrokerResultAdapter resultAdapter = BrokerResultAdapterFactory.getBrokerResultAdapter(SdkType.MSAL);
-        final Bundle resultBundle = resultAdapter.bundleFromBaseException(
-                new ClientException(ErrorStrings.BROKER_REQUEST_CANCELLED,
-                        "The activity is killed unexpectedly."), null);
+        final IBrokerResultAdapter resultAdapter =
+                BrokerResultAdapterFactory.getBrokerResultAdapter(SdkType.MSAL);
+        final Bundle resultBundle =
+                resultAdapter.bundleFromBaseException(
+                        new ClientException(
+                                ErrorStrings.BROKER_REQUEST_CANCELLED,
+                                "The activity is killed unexpectedly."),
+                        null);
 
         final PropertyBag propertyBag = PropertyBagUtil.fromBundle(resultBundle);
         propertyBag.put(REQUEST_CODE, BROKER_FLOW);
@@ -129,11 +131,13 @@ public final class BrokerActivity extends Activity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 
         final String methodName = ":onActivityResult";
-        Logger.info(TAG + methodName,
+        Logger.info(
+                TAG + methodName,
                 "Result received from Broker "
-                        + "Request code: " + requestCode
-                        + " Result code: " + requestCode
-        );
+                        + "Request code: "
+                        + requestCode
+                        + " Result code: "
+                        + requestCode);
 
         mBrokerResultReceived = true;
 
@@ -151,7 +155,8 @@ public final class BrokerActivity extends Activity {
             LocalBroadcaster.INSTANCE.broadcast(
                     RETURN_BROKER_INTERACTIVE_ACQUIRE_TOKEN_RESULT, propertyBag);
         } else {
-            // This means the broker is unexpectedly killed. (tested by killing the broker process via adb).
+            // This means the broker is unexpectedly killed. (tested by killing the broker process
+            // via adb).
             returnsExceptionOnActivityUnexpectedlyKilled();
         }
 

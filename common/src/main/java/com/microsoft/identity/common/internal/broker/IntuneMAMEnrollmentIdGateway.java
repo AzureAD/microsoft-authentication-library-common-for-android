@@ -41,7 +41,8 @@ import lombok.NonNull;
 public class IntuneMAMEnrollmentIdGateway {
     static IntuneMAMEnrollmentIdGateway sInstance;
 
-    private static String CONTENT_URI = "content://com.microsoft.intune.mam.policy/mamserviceenrollments";
+    private static String CONTENT_URI =
+            "content://com.microsoft.intune.mam.policy/mamserviceenrollments";
     private static String SELECTION = "WHERE PackageName = ? AND Identity = ?";
     private static String[] PROJECTION = {"EnrollmentId"};
 
@@ -118,7 +119,8 @@ public class IntuneMAMEnrollmentIdGateway {
      * @param packageName name of the package requesting the token.
      * @return the enrollment id, or null if enrollment id can't be retrieved.
      */
-    public synchronized String getEnrollmentId(final Context context, final String userId, final String packageName) {
+    public synchronized String getEnrollmentId(
+            final Context context, final String userId, final String packageName) {
         // first look in the cache
         final CacheKey key = new CacheKey(userId, packageName);
         CacheEntry entry = mIdCache.get(key);
@@ -131,14 +133,16 @@ public class IntuneMAMEnrollmentIdGateway {
         return entry.enrollmentId;
     }
 
-    private String callContentProvider(final Context context, final String userId, final String packageName) {
+    private String callContentProvider(
+            final Context context, final String userId, final String packageName) {
         final String[] selectionArgs = {packageName, userId};
         final Uri contentURI = Uri.parse(CONTENT_URI);
 
         String result = null;
         try {
-            final Cursor found = context.getContentResolver().query(contentURI, PROJECTION,
-                    SELECTION, selectionArgs, null);
+            final Cursor found =
+                    context.getContentResolver()
+                            .query(contentURI, PROJECTION, SELECTION, selectionArgs, null);
 
             if (found != null) {
                 if (found.moveToFirst()) {

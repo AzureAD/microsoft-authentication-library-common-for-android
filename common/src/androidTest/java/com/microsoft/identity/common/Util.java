@@ -23,6 +23,9 @@
 
 package com.microsoft.identity.common;
 
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import android.content.pm.PackageInfo;
 import android.content.pm.Signature;
 import android.content.pm.SigningInfo;
@@ -33,9 +36,6 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
 /**
  * Util class for unit test.
  */
@@ -43,8 +43,7 @@ public final class Util {
     /**
      * Private constructor to prevent Util class from being initiated.
      */
-    private Util() {
-    }
+    private Util() {}
 
     static final String VALID_AUTHORITY = "https://login.microsoftonline.com/common";
 
@@ -63,7 +62,8 @@ public final class Util {
      * @param signatures the signatures to add
      * @return PackageInfo with signatures added
      */
-    public static PackageInfo addSignatures(final PackageInfo packageInfo, final Signature[] signatures) {
+    public static PackageInfo addSignatures(
+            final PackageInfo packageInfo, final Signature[] signatures) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
             packageInfo.signatures = signatures;
             return packageInfo;

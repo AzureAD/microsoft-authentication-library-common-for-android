@@ -39,6 +39,7 @@ import lombok.experimental.SuperBuilder;
 @Getter
 @SuperBuilder(toBuilder = true)
 @EqualsAndHashCode(callSuper = true)
-public class AndroidActivityInteractiveTokenCommandParameters extends InteractiveTokenCommandParameters {
-    private transient final Activity activity;
+public class AndroidActivityInteractiveTokenCommandParameters
+        extends InteractiveTokenCommandParameters {
+    private final transient Activity activity;
 }

@@ -26,15 +26,15 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.microsoft.identity.client.ui.automation.utils.AdbShellUtils;
 
-import java.util.Objects;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
+
+import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * An object that stores the current process information.
@@ -47,14 +47,18 @@ import lombok.experimental.Accessors;
 public class ProcessInfo {
 
     // static in order to calculate the application uid
-    private static final String packageName = ApplicationProvider.getApplicationContext().getPackageName();
+    private static final String packageName =
+            ApplicationProvider.getApplicationContext().getPackageName();
     private static int applicationUid = -1;
 
     private int mPid;
     private long mTotalSystemMemory;
     private long mUsedSystemMemory; // the memory being used by all the processes in the device
-    private long mFreeSystemMemory; // the free memory in the device, should be equal to mTotalSystemMemory - mUsedSystemMemory
-    private long mAvailableSystemMemory; // the free memory in the device that is available for processes to make use of
+    private long mFreeSystemMemory; // the free memory in the device, should be equal to
+    // mTotalSystemMemory - mUsedSystemMemory
+    private long
+            mAvailableSystemMemory; // the free memory in the device that is available for processes
+    // to make use of
     private double mCpuUsage;
     private double mMemoryUsage; // a percentage of the system memory
 
@@ -77,7 +81,8 @@ public class ProcessInfo {
             final Pattern pattern = Pattern.compile("userId=(\\d+)");
             final String shellCommand = "dumpsys package " + packageName;
 
-            final Matcher matcher = pattern.matcher(AdbShellUtils.executeShellCommand(shellCommand));
+            final Matcher matcher =
+                    pattern.matcher(AdbShellUtils.executeShellCommand(shellCommand));
 
             if (matcher.find()) {
                 applicationUid = Integer.parseInt(Objects.requireNonNull(matcher.group(1)));

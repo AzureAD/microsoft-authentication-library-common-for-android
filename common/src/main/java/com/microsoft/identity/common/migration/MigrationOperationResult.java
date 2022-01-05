@@ -24,12 +24,12 @@ package com.microsoft.identity.common.migration;
 
 import androidx.annotation.NonNull;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * The result of a cache reencryption operation.
@@ -40,22 +40,18 @@ class MigrationOperationResult implements IMigrationOperationResult {
     /**
      * The total number of records we attempted to migrate.
      */
-    @Getter
-    @Setter
-    private int mCountOfTotalRecords;
+    @Getter @Setter private int mCountOfTotalRecords;
 
     /**
      * The count of records that could not be successfully migrated.
      */
-    @Getter
-    private int mCountOfFailedRecords;
+    @Getter private int mCountOfFailedRecords;
 
     /**
      * Errors encountered during migration, a {@link Map} indicating unique errors + count of
      * occurrences.
      */
-    @Getter
-    private Map<String, Integer> mFailures = new HashMap<>();
+    @Getter private Map<String, Integer> mFailures = new HashMap<>();
 
     void addFailure(@NonNull final Exception exception) {
         final String exceptionKey = createExceptionKey(exception);

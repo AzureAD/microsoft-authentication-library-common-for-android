@@ -44,18 +44,20 @@ public final class ReflectionUtils {
      * @throws IllegalAccessException
      * @throws InvocationTargetException
      */
-    public static Method getTestMethod(Object object, final String methodName, Class<?>... paramtypes)
+    public static Method getTestMethod(
+            Object object, final String methodName, Class<?>... paramtypes)
             throws IllegalArgumentException, ClassNotFoundException, NoSuchMethodException,
-            InstantiationException, IllegalAccessException, InvocationTargetException {
+                    InstantiationException, IllegalAccessException, InvocationTargetException {
         Class<?> c = object.getClass();
         Method m = c.getDeclaredMethod(methodName, paramtypes);
         m.setAccessible(true);
         return m;
     }
 
-    public static Method getStaticTestMethod(Class<?> c, final String methodName, Class<?>... paramtypes)
+    public static Method getStaticTestMethod(
+            Class<?> c, final String methodName, Class<?>... paramtypes)
             throws IllegalArgumentException, ClassNotFoundException, NoSuchMethodException,
-            InstantiationException, IllegalAccessException, InvocationTargetException {
+                    InstantiationException, IllegalAccessException, InvocationTargetException {
         Method m = c.getDeclaredMethod(methodName, paramtypes);
         m.setAccessible(true);
         return m;
@@ -73,9 +75,9 @@ public final class ReflectionUtils {
      * @throws IllegalAccessException
      * @throws InvocationTargetException
      */
-    public static Object getNonPublicInstance(String name) throws ClassNotFoundException,
-            NoSuchMethodException, IllegalArgumentException, InstantiationException,
-            IllegalAccessException, InvocationTargetException {
+    public static Object getNonPublicInstance(String name)
+            throws ClassNotFoundException, NoSuchMethodException, IllegalArgumentException,
+                    InstantiationException, IllegalAccessException, InvocationTargetException {
         // full package name
         Class<?> c = Class.forName(name);
 
@@ -103,7 +105,7 @@ public final class ReflectionUtils {
 
     public static <T> T getterValue(Class<T> clazz, Object instance, String methodName)
             throws NoSuchMethodException, IllegalArgumentException, IllegalAccessException,
-            InvocationTargetException {
+                    InvocationTargetException {
         Method m = instance.getClass().getDeclaredMethod(methodName);
         Object object = m.invoke(instance, (Object[]) null);
         return clazz.cast(object);
@@ -111,7 +113,7 @@ public final class ReflectionUtils {
 
     public static void setterValue(Object authenticationRequest, String methodName, Object param)
             throws NoSuchMethodException, IllegalArgumentException, IllegalAccessException,
-            InvocationTargetException {
+                    InvocationTargetException {
         Method[] methods = authenticationRequest.getClass().getDeclaredMethods();
         Method targetMethod = null;
         // target only name for setters
@@ -131,7 +133,7 @@ public final class ReflectionUtils {
 
     public static Object getInstance(String className, Object... params)
             throws IllegalArgumentException, ClassNotFoundException, NoSuchMethodException,
-            InstantiationException, IllegalAccessException, InvocationTargetException {
+                    InstantiationException, IllegalAccessException, InvocationTargetException {
         Class<?> c = Class.forName(className);
         Class<?>[] paramTypes = getTypes(params);
         Constructor<?> constructorParams = c.getDeclaredConstructor(paramTypes);
@@ -145,7 +147,7 @@ public final class ReflectionUtils {
         if (params != null) {
             paramTypes = new Class<?>[params.length];
             for (int i = 0; i < params.length; i++) {
-                //paramTypes[i] = params[i].getClass();
+                // paramTypes[i] = params[i].getClass();
                 if (params[i].getClass().getSimpleName().equals("Boolean")) {
                     paramTypes[i] = boolean.class;
                 } else {
@@ -156,6 +158,4 @@ public final class ReflectionUtils {
 
         return paramTypes;
     }
-
 }
-

@@ -24,18 +24,19 @@ package com.microsoft.identity.common.java.dto;
 
 import com.google.gson.JsonElement;
 
+import lombok.NonNull;
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-
-import lombok.NonNull;
 
 /**
  * Base class for Objects to support the [de]/serialization of extra fields.
  */
 public abstract class AccountCredentialBase {
 
-    private transient Map<String, JsonElement> mAdditionalFields = Collections.synchronizedMap(new HashMap<String, JsonElement>());
+    private transient Map<String, JsonElement> mAdditionalFields =
+            Collections.synchronizedMap(new HashMap<String, JsonElement>());
 
     /**
      * Getter of additional fields.
@@ -66,7 +67,8 @@ public abstract class AccountCredentialBase {
         }
 
         if (null != other.getAdditionalFields()) {
-            for (final Map.Entry<String, JsonElement> entry : other.getAdditionalFields().entrySet()) {
+            for (final Map.Entry<String, JsonElement> entry :
+                    other.getAdditionalFields().entrySet()) {
                 // Only add elements not present in the existing collection, so that old data
                 // does not overwrite new data...
                 if (mAdditionalFields.containsKey(entry.getKey())) {
@@ -78,16 +80,13 @@ public abstract class AccountCredentialBase {
         }
     }
 
-    //CHECKSTYLE:OFF
+    // CHECKSTYLE:OFF
     // This method is generated. Checkstyle and/or PMD has been disabled.
     // This method *must* be regenerated if the class' structural definition changes through the
     // addition/subtraction of fields.
     @Override
     public String toString() {
-        return "AccountCredentialBase{"
-                + "mAdditionalFields="
-                + mAdditionalFields
-                + '}';
+        return "AccountCredentialBase{" + "mAdditionalFields=" + mAdditionalFields + '}';
     }
-    //CHECKSTYLE:ON
+    // CHECKSTYLE:ON
 }

@@ -22,18 +22,17 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.utils;
 
+import static androidx.test.platform.app.InstrumentationRegistry.getInstrumentation;
+
 import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.uiautomator.UiDevice;
 
-import com.microsoft.identity.client.ui.automation.app.OutlookApp;
 import com.microsoft.identity.client.ui.automation.logging.Logger;
 
 import org.junit.Assert;
 
 import java.io.IOException;
-
-import static androidx.test.platform.app.InstrumentationRegistry.getInstrumentation;
 
 /**
  * This class contains utility methods that can be used to interact with the ADB Shell from within
@@ -41,7 +40,7 @@ import static androidx.test.platform.app.InstrumentationRegistry.getInstrumentat
  */
 public class AdbShellUtils {
 
-    private final static String TAG = AdbShellUtils.class.getSimpleName();
+    private static final String TAG = AdbShellUtils.class.getSimpleName();
 
     public static String executeShellCommand(@NonNull final String command) {
         Logger.i(TAG, "Execute the given command:" + command + " on the shell..");
@@ -84,7 +83,12 @@ public class AdbShellUtils {
      * @param flags       the flags to use during installation of the app
      */
     public static void installPackage(@NonNull final String packageName, @NonNull String... flags) {
-        Logger.i(TAG, "Installs the given package:" + packageName + " on the device with the supplied flags:" + flags);
+        Logger.i(
+                TAG,
+                "Installs the given package:"
+                        + packageName
+                        + " on the device with the supplied flags:"
+                        + flags);
         final StringBuilder installCmdBuilder = new StringBuilder();
         installCmdBuilder.append("pm install ");
 
@@ -159,8 +163,8 @@ public class AdbShellUtils {
      * @param packageName     the package name of the APK to copy
      * @param destApkFileName the destination location where to copy the APK
      */
-    public static void copyApkForPackage(@NonNull final String packageName,
-                                         @NonNull final String destApkFileName) {
+    public static void copyApkForPackage(
+            @NonNull final String packageName, @NonNull final String destApkFileName) {
         Logger.i(TAG, "Copy APK of the " + packageName + " to the given location..");
         final String apkPath = getApkPath(packageName);
         final String sanitizedPath = apkPath.trim().replace("package:", "");

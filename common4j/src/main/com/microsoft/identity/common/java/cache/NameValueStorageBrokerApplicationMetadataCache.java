@@ -28,28 +28,34 @@ import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.util.StringUtil;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
+import lombok.NonNull;
+
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import edu.umd.cs.findbugs.annotations.Nullable;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import lombok.NonNull;
-
-@SuppressFBWarnings(value = SpotbugsWarning.RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE, justification = "Lombok inserts more null checks than we need")
+@SuppressFBWarnings(
+        value = SpotbugsWarning.RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE,
+        justification = "Lombok inserts more null checks than we need")
 public class NameValueStorageBrokerApplicationMetadataCache
         extends NameValueStorageFileManagerSimpleCacheImpl<BrokerApplicationMetadata>
         implements IBrokerApplicationMetadataCache {
 
-    private static final String TAG = NameValueStorageBrokerApplicationMetadataCache.class.getSimpleName();
+    private static final String TAG =
+            NameValueStorageBrokerApplicationMetadataCache.class.getSimpleName();
 
-    private static final String DEFAULT_APP_METADATA_CACHE_NAME = "com.microsoft.identity.app-meta-cache";
+    private static final String DEFAULT_APP_METADATA_CACHE_NAME =
+            "com.microsoft.identity.app-meta-cache";
 
     private static final String KEY_CACHE_LIST = "app-meta-cache";
 
-    public NameValueStorageBrokerApplicationMetadataCache(@NonNull final IPlatformComponents context) {
+    public NameValueStorageBrokerApplicationMetadataCache(
+            @NonNull final IPlatformComponents context) {
         super(context, DEFAULT_APP_METADATA_CACHE_NAME, KEY_CACHE_LIST, true);
     }
 
@@ -63,12 +69,7 @@ public class NameValueStorageBrokerApplicationMetadataCache
             allClientIds.add(metadata.getClientId());
         }
 
-        Logger.verbose(
-                TAG + methodName,
-                "Found ["
-                        + allClientIds.size()
-                        + "] client ids."
-        );
+        Logger.verbose(TAG + methodName, "Found [" + allClientIds.size() + "] client ids.");
 
         return allClientIds;
     }
@@ -123,21 +124,17 @@ public class NameValueStorageBrokerApplicationMetadataCache
             }
         }
 
-        Logger.verbose(
-                TAG + methodName,
-                "Found ["
-                        + allFociClientIds.size()
-                        + "] client ids."
-        );
+        Logger.verbose(TAG + methodName, "Found [" + allFociClientIds.size() + "] client ids.");
 
         return allFociClientIds;
     }
 
     @Nullable
     @Override
-    public BrokerApplicationMetadata getMetadata(@NonNull final String clientId,
-                                                 @NonNull final String environment,
-                                                 final int processUid) {
+    public BrokerApplicationMetadata getMetadata(
+            @NonNull final String clientId,
+            @NonNull final String environment,
+            final int processUid) {
         final String methodName = ":getMetadata";
 
         final List<BrokerApplicationMetadata> allMetadata = getAll();
@@ -147,10 +144,7 @@ public class NameValueStorageBrokerApplicationMetadataCache
             if (clientId.equals(metadata.getClientId())
                     && environment.equals(metadata.getEnvironment())
                     && processUid == metadata.getUid()) {
-                Logger.verbose(
-                        TAG + metadata,
-                        "Metadata located."
-                );
+                Logger.verbose(TAG + metadata, "Metadata located.");
 
                 result = metadata;
                 break;
@@ -164,15 +158,13 @@ public class NameValueStorageBrokerApplicationMetadataCache
                             + clientId
                             + ", "
                             + environment
-                            + "]"
-            );
+                            + "]");
         }
 
         return result;
     }
 
-    public void remove(@NonNull final String clientId,
-                       final int processUid) {
+    public void remove(@NonNull final String clientId, final int processUid) {
         final List<BrokerApplicationMetadata> allMetadata = getAll();
 
         for (final BrokerApplicationMetadata metadata : allMetadata) {

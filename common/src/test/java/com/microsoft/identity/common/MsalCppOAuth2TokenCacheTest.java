@@ -22,28 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common;
 
-import android.content.Context;
-
-import androidx.test.core.app.ApplicationProvider;
-
-import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.java.authscheme.BearerAuthenticationSchemeInternal;
-import com.microsoft.identity.common.java.cache.AccountDeletionRecord;
-import com.microsoft.identity.common.java.cache.ICacheRecord;
-import com.microsoft.identity.common.java.cache.MsalCppOAuth2TokenCache;
-import com.microsoft.identity.common.java.dto.AccountRecord;
-import com.microsoft.identity.common.java.dto.Credential;
-import com.microsoft.identity.common.java.dto.CredentialType;
-import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAccount;
-
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.robolectric.RobolectricTestRunner;
-
-import java.util.List;
 import static com.microsoft.identity.common.MicrosoftStsAccountCredentialAdapterTest.MOCK_ID_TOKEN_WITH_CLAIMS;
 import static com.microsoft.identity.common.MsalOAuth2TokenCacheTest.AccountCredentialTestBundle;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.CACHED_AT;
@@ -59,6 +37,29 @@ import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCa
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.TARGET;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.USERNAME;
 
+import android.content.Context;
+
+import androidx.test.core.app.ApplicationProvider;
+
+import com.microsoft.identity.common.java.authscheme.BearerAuthenticationSchemeInternal;
+import com.microsoft.identity.common.java.cache.AccountDeletionRecord;
+import com.microsoft.identity.common.java.cache.ICacheRecord;
+import com.microsoft.identity.common.java.cache.MsalCppOAuth2TokenCache;
+import com.microsoft.identity.common.java.dto.AccountRecord;
+import com.microsoft.identity.common.java.dto.Credential;
+import com.microsoft.identity.common.java.dto.CredentialType;
+import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAccount;
+
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.robolectric.RobolectricTestRunner;
+
+import java.util.List;
+
 @RunWith(RobolectricTestRunner.class)
 public class MsalCppOAuth2TokenCacheTest {
 
@@ -73,27 +74,29 @@ public class MsalCppOAuth2TokenCacheTest {
     public void setUp() throws Exception {
         // Context and related init
         mContext = ApplicationProvider.getApplicationContext();
-        mCppCache = MsalCppOAuth2TokenCache.create(AndroidPlatformComponents.createFromContext(mContext));
+        mCppCache =
+                MsalCppOAuth2TokenCache.create(
+                        AndroidPlatformComponents.createFromContext(mContext));
 
         // Credentials for testing
-        mTestBundle = new AccountCredentialTestBundle(
-                MicrosoftAccount.AUTHORITY_TYPE_MS_STS,
-                LOCAL_ACCOUNT_ID,
-                USERNAME,
-                HOME_ACCOUNT_ID,
-                ENVIRONMENT,
-                REALM,
-                TARGET,
-                CACHED_AT,
-                EXPIRES_ON,
-                SECRET,
-                CLIENT_ID,
-                SECRET,
-                MOCK_ID_TOKEN_WITH_CLAIMS,
-                null,
-                SESSION_KEY,
-                CredentialType.V1IdToken
-        );
+        mTestBundle =
+                new AccountCredentialTestBundle(
+                        MicrosoftAccount.AUTHORITY_TYPE_MS_STS,
+                        LOCAL_ACCOUNT_ID,
+                        USERNAME,
+                        HOME_ACCOUNT_ID,
+                        ENVIRONMENT,
+                        REALM,
+                        TARGET,
+                        CACHED_AT,
+                        EXPIRES_ON,
+                        SECRET,
+                        CLIENT_ID,
+                        SECRET,
+                        MOCK_ID_TOKEN_WITH_CLAIMS,
+                        null,
+                        SESSION_KEY,
+                        CredentialType.V1IdToken);
     }
 
     @After
@@ -109,11 +112,11 @@ public class MsalCppOAuth2TokenCacheTest {
         mCppCache.saveAccountRecord(generatedAccount);
 
         // Restore it
-        final AccountRecord restoredAccount = mCppCache.getAccount(
-                generatedAccount.getHomeAccountId(),
-                generatedAccount.getEnvironment(),
-                generatedAccount.getRealm()
-        );
+        final AccountRecord restoredAccount =
+                mCppCache.getAccount(
+                        generatedAccount.getHomeAccountId(),
+                        generatedAccount.getEnvironment(),
+                        generatedAccount.getRealm());
 
         Assert.assertNotNull(restoredAccount);
         Assert.assertEquals(generatedAccount, restoredAccount);
@@ -122,11 +125,11 @@ public class MsalCppOAuth2TokenCacheTest {
     @Test
     public void getAccountNullTest() throws ClientException {
         final AccountRecord generatedAccount = mTestBundle.mGeneratedAccount;
-        final AccountRecord restoredAccount = mCppCache.getAccount(
-                generatedAccount.getHomeAccountId(),
-                generatedAccount.getEnvironment(),
-                generatedAccount.getRealm()
-        );
+        final AccountRecord restoredAccount =
+                mCppCache.getAccount(
+                        generatedAccount.getHomeAccountId(),
+                        generatedAccount.getEnvironment(),
+                        generatedAccount.getRealm());
         Assert.assertNull(restoredAccount);
     }
 
@@ -166,21 +169,21 @@ public class MsalCppOAuth2TokenCacheTest {
         mCppCache.saveCredentials(null, mTestBundle.mGeneratedRefreshToken);
 
         // Call remove
-        final AccountDeletionRecord deletionRecord = mCppCache.removeAccount(
-                generatedAccount.getHomeAccountId(),
-                generatedAccount.getEnvironment(),
-                generatedAccount.getRealm()
-        );
+        final AccountDeletionRecord deletionRecord =
+                mCppCache.removeAccount(
+                        generatedAccount.getHomeAccountId(),
+                        generatedAccount.getEnvironment(),
+                        generatedAccount.getRealm());
 
         // Check the receipt
         Assert.assertEquals(generatedAccount, deletionRecord.get(0));
 
         // Try to restore it
-        final AccountRecord restoredAccount = mCppCache.getAccount(
-                generatedAccount.getHomeAccountId(),
-                generatedAccount.getEnvironment(),
-                generatedAccount.getRealm()
-        );
+        final AccountRecord restoredAccount =
+                mCppCache.getAccount(
+                        generatedAccount.getHomeAccountId(),
+                        generatedAccount.getEnvironment(),
+                        generatedAccount.getRealm());
 
         // Make sure it doesn't exist....
         Assert.assertNull(restoredAccount);
@@ -196,21 +199,21 @@ public class MsalCppOAuth2TokenCacheTest {
         mCppCache.saveCredentials(null, mTestBundle.mGeneratedRefreshToken);
 
         // Call remove with a different realm
-        final AccountDeletionRecord deletionRecord = mCppCache.removeAccount(
-                generatedAccount.getHomeAccountId(),
-                generatedAccount.getEnvironment(),
-                REALM2
-        );
+        final AccountDeletionRecord deletionRecord =
+                mCppCache.removeAccount(
+                        generatedAccount.getHomeAccountId(),
+                        generatedAccount.getEnvironment(),
+                        REALM2);
 
         // Check the receipt, should remove nothing
         Assert.assertEquals(0, deletionRecord.size());
 
         // Try to restore it
-        final AccountRecord restoredAccount = mCppCache.getAccount(
-                generatedAccount.getHomeAccountId(),
-                generatedAccount.getEnvironment(),
-                generatedAccount.getRealm()
-        );
+        final AccountRecord restoredAccount =
+                mCppCache.getAccount(
+                        generatedAccount.getHomeAccountId(),
+                        generatedAccount.getEnvironment(),
+                        generatedAccount.getRealm());
 
         // Make sure it still exists....
         Assert.assertNotNull(restoredAccount);
@@ -226,21 +229,18 @@ public class MsalCppOAuth2TokenCacheTest {
         mCppCache.saveCredentials(null, mTestBundle.mGeneratedRefreshToken);
 
         // Call remove
-        final AccountDeletionRecord deletionRecord = mCppCache.removeAccount(
-                generatedAccount.getHomeAccountId(),
-                "",
-                ""
-        );
+        final AccountDeletionRecord deletionRecord =
+                mCppCache.removeAccount(generatedAccount.getHomeAccountId(), "", "");
 
         // Check the receipt
         Assert.assertEquals(generatedAccount, deletionRecord.get(0));
 
         // Try to restore it
-        final AccountRecord restoredAccount = mCppCache.getAccount(
-                generatedAccount.getHomeAccountId(),
-                generatedAccount.getEnvironment(),
-                generatedAccount.getRealm()
-        );
+        final AccountRecord restoredAccount =
+                mCppCache.getAccount(
+                        generatedAccount.getHomeAccountId(),
+                        generatedAccount.getEnvironment(),
+                        generatedAccount.getRealm());
 
         // Make sure it doesn't exist....
         Assert.assertNull(restoredAccount);
@@ -261,27 +261,22 @@ public class MsalCppOAuth2TokenCacheTest {
         mCppCache.saveAccountRecord(generatedAccount);
 
         // Call remove
-        final AccountDeletionRecord deletionRecord = mCppCache.removeAccount(
-                generatedAccount.getHomeAccountId(),
-                "",
-                ""
-        );
+        final AccountDeletionRecord deletionRecord =
+                mCppCache.removeAccount(generatedAccount.getHomeAccountId(), "", "");
 
         // Check the receipt, should delete both
         Assert.assertEquals(2, deletionRecord.size());
 
         // Try to restore them
-        final AccountRecord restoredAccount = mCppCache.getAccount(
-                generatedAccount.getHomeAccountId(),
-                generatedAccount.getEnvironment(),
-                REALM
-        );
+        final AccountRecord restoredAccount =
+                mCppCache.getAccount(
+                        generatedAccount.getHomeAccountId(),
+                        generatedAccount.getEnvironment(),
+                        REALM);
 
-        final AccountRecord restoredAccount2 = mCppCache.getAccount(
-                generatedAccount.getHomeAccountId(),
-                "login.chinacloudapi.cn",
-                REALM2
-        );
+        final AccountRecord restoredAccount2 =
+                mCppCache.getAccount(
+                        generatedAccount.getHomeAccountId(), "login.chinacloudapi.cn", REALM2);
 
         // Make sure they don't exist....
         Assert.assertNull(restoredAccount);
@@ -297,21 +292,21 @@ public class MsalCppOAuth2TokenCacheTest {
         mCppCache.saveAccountRecord(generatedAccount);
 
         // Call remove
-        final AccountDeletionRecord deletionRecord = mCppCache.removeAccount(
-                generatedAccount.getHomeAccountId(),
-                generatedAccount.getEnvironment(),
-                generatedAccount.getRealm()
-        );
+        final AccountDeletionRecord deletionRecord =
+                mCppCache.removeAccount(
+                        generatedAccount.getHomeAccountId(),
+                        generatedAccount.getEnvironment(),
+                        generatedAccount.getRealm());
 
         // Check the receipt
         Assert.assertEquals(generatedAccount, deletionRecord.get(0));
 
         // Try to restore it
-        final AccountRecord restoredAccount = mCppCache.getAccount(
-                generatedAccount.getHomeAccountId(),
-                generatedAccount.getEnvironment(),
-                generatedAccount.getRealm()
-        );
+        final AccountRecord restoredAccount =
+                mCppCache.getAccount(
+                        generatedAccount.getHomeAccountId(),
+                        generatedAccount.getEnvironment(),
+                        generatedAccount.getRealm());
 
         // Make sure it doesn't exist....
         Assert.assertNull(restoredAccount);
@@ -327,20 +322,20 @@ public class MsalCppOAuth2TokenCacheTest {
 
         // Do not save any credentials for this account...
 
-        final AccountDeletionRecord deletionRecord = mCppCache.forceRemoveAccount(
-                generatedAccount.getHomeAccountId(),
-                generatedAccount.getEnvironment(),
-                generatedAccount.getRealm()
-        );
+        final AccountDeletionRecord deletionRecord =
+                mCppCache.forceRemoveAccount(
+                        generatedAccount.getHomeAccountId(),
+                        generatedAccount.getEnvironment(),
+                        generatedAccount.getRealm());
 
         Assert.assertEquals(1, deletionRecord.size());
 
         // Try to restore it
-        final AccountRecord restoredAccount = mCppCache.getAccount(
-                generatedAccount.getHomeAccountId(),
-                generatedAccount.getEnvironment(),
-                generatedAccount.getRealm()
-        );
+        final AccountRecord restoredAccount =
+                mCppCache.getAccount(
+                        generatedAccount.getHomeAccountId(),
+                        generatedAccount.getEnvironment(),
+                        generatedAccount.getRealm());
 
         // Make sure it doesn't exist....
         Assert.assertNull(restoredAccount);
@@ -356,20 +351,17 @@ public class MsalCppOAuth2TokenCacheTest {
 
         // Do not save any credentials for this account...
 
-        final AccountDeletionRecord deletionRecord = mCppCache.forceRemoveAccount(
-                generatedAccount.getHomeAccountId(),
-                "",
-                ""
-        );
+        final AccountDeletionRecord deletionRecord =
+                mCppCache.forceRemoveAccount(generatedAccount.getHomeAccountId(), "", "");
 
         Assert.assertEquals(1, deletionRecord.size());
 
         // Try to restore it
-        final AccountRecord restoredAccount = mCppCache.getAccount(
-                generatedAccount.getHomeAccountId(),
-                generatedAccount.getEnvironment(),
-                generatedAccount.getRealm()
-        );
+        final AccountRecord restoredAccount =
+                mCppCache.getAccount(
+                        generatedAccount.getHomeAccountId(),
+                        generatedAccount.getEnvironment(),
+                        generatedAccount.getRealm());
 
         // Make sure it doesn't exist....
         Assert.assertNull(restoredAccount);
@@ -378,11 +370,11 @@ public class MsalCppOAuth2TokenCacheTest {
     @Test
     public void removeNonexistentAccountTest() throws ClientException {
         final AccountRecord generatedAccount = mTestBundle.mGeneratedAccount;
-        final AccountDeletionRecord deletionRecord = mCppCache.removeAccount(
-                generatedAccount.getHomeAccountId(),
-                generatedAccount.getEnvironment(),
-                generatedAccount.getRealm()
-        );
+        final AccountDeletionRecord deletionRecord =
+                mCppCache.removeAccount(
+                        generatedAccount.getHomeAccountId(),
+                        generatedAccount.getEnvironment(),
+                        generatedAccount.getRealm());
         Assert.assertTrue(deletionRecord.isEmpty());
     }
 
@@ -396,30 +388,26 @@ public class MsalCppOAuth2TokenCacheTest {
                 generatedAccount,
                 mTestBundle.mGeneratedAccessToken,
                 mTestBundle.mGeneratedIdToken,
-                mTestBundle.mGeneratedRefreshToken
-        );
+                mTestBundle.mGeneratedRefreshToken);
 
         // Restore it
-        final AccountRecord restoredAccount = mCppCache.getAccount(
-                generatedAccount.getHomeAccountId(),
-                generatedAccount.getEnvironment(),
-                generatedAccount.getRealm()
-        );
+        final AccountRecord restoredAccount =
+                mCppCache.getAccount(
+                        generatedAccount.getHomeAccountId(),
+                        generatedAccount.getEnvironment(),
+                        generatedAccount.getRealm());
 
         Assert.assertNotNull(restoredAccount);
         Assert.assertEquals(generatedAccount, restoredAccount);
 
-        final ICacheRecord cacheRecord = mCppCache.load(
-                mTestBundle.mGeneratedIdToken.getClientId(),
-                mTestBundle.mGeneratedAccessToken.getTarget(),
-                generatedAccount,
-                new BearerAuthenticationSchemeInternal()
-        );
+        final ICacheRecord cacheRecord =
+                mCppCache.load(
+                        mTestBundle.mGeneratedIdToken.getClientId(),
+                        mTestBundle.mGeneratedAccessToken.getTarget(),
+                        generatedAccount,
+                        new BearerAuthenticationSchemeInternal());
 
-        Assert.assertEquals(
-                mTestBundle.mGeneratedAccessToken,
-                cacheRecord.getAccessToken()
-        );
+        Assert.assertEquals(mTestBundle.mGeneratedAccessToken, cacheRecord.getAccessToken());
     }
 
     @Test
@@ -433,30 +421,26 @@ public class MsalCppOAuth2TokenCacheTest {
                 mTestBundle.mGeneratedAccessToken,
                 mTestBundle.mGeneratedIdToken,
                 mTestBundle.mGeneratedRefreshToken,
-                mTestBundle.mGeneratedPrimaryRefreshToken
-        );
+                mTestBundle.mGeneratedPrimaryRefreshToken);
 
         // Restore it
-        final AccountRecord restoredAccount = mCppCache.getAccount(
-                generatedAccount.getHomeAccountId(),
-                generatedAccount.getEnvironment(),
-                generatedAccount.getRealm()
-        );
+        final AccountRecord restoredAccount =
+                mCppCache.getAccount(
+                        generatedAccount.getHomeAccountId(),
+                        generatedAccount.getEnvironment(),
+                        generatedAccount.getRealm());
 
         Assert.assertNotNull(restoredAccount);
         Assert.assertEquals(generatedAccount, restoredAccount);
 
-        final ICacheRecord cacheRecord = mCppCache.load(
-                mTestBundle.mGeneratedIdToken.getClientId(),
-                mTestBundle.mGeneratedAccessToken.getTarget(),
-                generatedAccount,
-                new BearerAuthenticationSchemeInternal()
-        );
+        final ICacheRecord cacheRecord =
+                mCppCache.load(
+                        mTestBundle.mGeneratedIdToken.getClientId(),
+                        mTestBundle.mGeneratedAccessToken.getTarget(),
+                        generatedAccount,
+                        new BearerAuthenticationSchemeInternal());
 
-        Assert.assertEquals(
-                mTestBundle.mGeneratedAccessToken,
-                cacheRecord.getAccessToken()
-        );
+        Assert.assertEquals(mTestBundle.mGeneratedAccessToken, cacheRecord.getAccessToken());
     }
 
     @Test
@@ -467,15 +451,14 @@ public class MsalCppOAuth2TokenCacheTest {
                 null,
                 mTestBundle.mGeneratedAccessToken,
                 mTestBundle.mGeneratedIdToken,
-                mTestBundle.mGeneratedRefreshToken
-        );
+                mTestBundle.mGeneratedRefreshToken);
 
         // Restore it
-        final AccountRecord restoredAccount = mCppCache.getAccount(
-                generatedAccount.getHomeAccountId(),
-                generatedAccount.getEnvironment(),
-                generatedAccount.getRealm()
-        );
+        final AccountRecord restoredAccount =
+                mCppCache.getAccount(
+                        generatedAccount.getHomeAccountId(),
+                        generatedAccount.getEnvironment(),
+                        generatedAccount.getRealm());
 
         // Account doesn't exist
         Assert.assertNull(restoredAccount);
@@ -496,15 +479,14 @@ public class MsalCppOAuth2TokenCacheTest {
                 null,
                 mTestBundle.mGeneratedAccessToken,
                 mTestBundle.mGeneratedIdToken,
-                mTestBundle.mGeneratedPrimaryRefreshToken
-        );
+                mTestBundle.mGeneratedPrimaryRefreshToken);
 
         // Restore it
-        final AccountRecord restoredAccount = mCppCache.getAccount(
-                generatedAccount.getHomeAccountId(),
-                generatedAccount.getEnvironment(),
-                generatedAccount.getRealm()
-        );
+        final AccountRecord restoredAccount =
+                mCppCache.getAccount(
+                        generatedAccount.getHomeAccountId(),
+                        generatedAccount.getEnvironment(),
+                        generatedAccount.getRealm());
 
         // Account doesn't exist
         Assert.assertNull(restoredAccount);
@@ -524,7 +506,6 @@ public class MsalCppOAuth2TokenCacheTest {
                 null,
                 mTestBundle.mGeneratedAccessToken,
                 mTestBundle.mGeneratedIdToken,
-                mTestBundle.mGeneratedRefreshToken
-        );
+                mTestBundle.mGeneratedRefreshToken);
     }
 }

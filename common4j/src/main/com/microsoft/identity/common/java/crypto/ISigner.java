@@ -24,9 +24,9 @@ package com.microsoft.identity.common.java.crypto;
 
 import com.microsoft.identity.common.java.exception.ClientException;
 
-import java.security.PrivateKey;
-
 import lombok.NonNull;
+
+import java.security.PrivateKey;
 
 /**
  * Interface for a Signer.
@@ -41,9 +41,11 @@ public interface ISigner {
      * @param dataToBeSigned       the data to be signed.
      * @return signed data.
      */
-    byte[] sign(@NonNull final PrivateKey key,
-                @NonNull final String signingAlgorithm,
-                byte[] dataToBeSigned) throws ClientException;
+    byte[] sign(
+            @NonNull final PrivateKey key,
+            @NonNull final String signingAlgorithm,
+            byte[] dataToBeSigned)
+            throws ClientException;
 
     /**
      * Signs with a HMac key.
@@ -53,7 +55,7 @@ public interface ISigner {
      * @param dataToBeSigned    the data to be signed.
      * @return signed data.
      */
-    byte[] signWithHMac(final byte[] keyData,
-                        @NonNull final String hmacAlgorithm,
-                        final byte[] dataToBeSigned) throws ClientException;
+    byte[] signWithHMac(
+            final byte[] keyData, @NonNull final String hmacAlgorithm, final byte[] dataToBeSigned)
+            throws ClientException;
 }

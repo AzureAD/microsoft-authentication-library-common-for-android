@@ -53,7 +53,6 @@ public enum SdkType {
             // value(SdkType.UNKNOWN) is intended for test-cases, eg. CommandDispatcherTest.java.
             return "";
         }
-
     }
 
     /**

@@ -29,8 +29,9 @@ public abstract class AbstractPromptHandler implements IPromptHandler {
     protected IOAuth2LoginComponentHandler loginComponentHandler;
     protected PromptHandlerParameters parameters;
 
-    public AbstractPromptHandler(@NonNull final IOAuth2LoginComponentHandler loginComponentHandler,
-                                 @NonNull final PromptHandlerParameters parameters) {
+    public AbstractPromptHandler(
+            @NonNull final IOAuth2LoginComponentHandler loginComponentHandler,
+            @NonNull final PromptHandlerParameters parameters) {
         this.loginComponentHandler = loginComponentHandler;
         this.parameters = parameters;
     }

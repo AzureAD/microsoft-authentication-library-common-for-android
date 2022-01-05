@@ -23,9 +23,8 @@
 package com.microsoft.identity.common.java.result;
 
 import com.microsoft.identity.common.java.WarningType;
-import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
-import com.microsoft.identity.common.java.result.ILocalAuthenticationResult;
+import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
 
 public class AcquireTokenResult {
 
@@ -60,12 +59,13 @@ public class AcquireTokenResult {
         return mAuthorizationResult;
     }
 
-    public void setAuthorizationResult(@SuppressWarnings(WarningType.rawtype_warning) AuthorizationResult authorizationResult) {
+    public void setAuthorizationResult(
+            @SuppressWarnings(WarningType.rawtype_warning)
+                    AuthorizationResult authorizationResult) {
         this.mAuthorizationResult = authorizationResult;
     }
 
     public Boolean getSucceeded() {
         return mSucceeded;
     }
-
 }

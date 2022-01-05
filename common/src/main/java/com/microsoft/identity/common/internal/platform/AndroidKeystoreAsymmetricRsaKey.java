@@ -22,16 +22,15 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.platform;
 
-import android.content.Context;
 import android.os.Build;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 
+import com.microsoft.identity.common.java.crypto.IDevicePopManager;
 import com.microsoft.identity.common.java.crypto.SecureHardwareState;
 import com.microsoft.identity.common.java.crypto.SigningAlgorithm;
 import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.java.crypto.IDevicePopManager;
 
 import java.security.cert.Certificate;
 import java.util.Date;
@@ -42,7 +41,8 @@ import java.util.Date;
 public class AndroidKeystoreAsymmetricRsaKey implements AsymmetricRsaKey {
 
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
-    public static final IDevicePopManager.Cipher RSA_ECB_PKCS_1_PADDING = IDevicePopManager.Cipher.RSA_ECB_PKCS1_PADDING;
+    public static final IDevicePopManager.Cipher RSA_ECB_PKCS_1_PADDING =
+            IDevicePopManager.Cipher.RSA_ECB_PKCS1_PADDING;
 
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     public static final SigningAlgorithm SHA_256_WITH_RSA = SigningAlgorithm.SHA_256_WITH_RSA;
@@ -63,8 +63,8 @@ public class AndroidKeystoreAsymmetricRsaKey implements AsymmetricRsaKey {
      * @param popManager The underlying {@link IDevicePopManager} to which we'll delegate.
      * @throws ClientException If asymmetric key generation fails.
      */
-    AndroidKeystoreAsymmetricRsaKey(@NonNull final IDevicePopManager popManager,
-                                    @NonNull final String alias)
+    AndroidKeystoreAsymmetricRsaKey(
+            @NonNull final IDevicePopManager popManager, @NonNull final String alias)
             throws ClientException {
         mDevicePopManager = popManager;
         mAlias = alias;

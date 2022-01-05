@@ -26,15 +26,15 @@ import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.util.StringUtil;
 
+import lombok.NonNull;
+
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import lombok.NonNull;
-
 public abstract class RequestTelemetry implements IRequestTelemetry {
 
-    private final static String TAG = RequestTelemetry.class.getSimpleName();
+    private static final String TAG = RequestTelemetry.class.getSimpleName();
 
     @SerializedName(SchemaConstants.SCHEMA_VERSION_KEY)
     private final String mSchemaVersion;
@@ -74,9 +74,8 @@ public abstract class RequestTelemetry implements IRequestTelemetry {
         if (StringUtil.isNullOrEmpty(mSchemaVersion)) {
             Logger.verbose(
                     TAG + methodName,
-                    "SCHEMA_VERSION is null or empty. " +
-                            "Telemetry Header String cannot be formed."
-            );
+                    "SCHEMA_VERSION is null or empty. "
+                            + "Telemetry Header String cannot be formed.");
 
             return null;
         }
@@ -115,7 +114,8 @@ public abstract class RequestTelemetry implements IRequestTelemetry {
      */
     @NonNull
     // This only being used to compute the platform telemetry header string
-    private String getHeaderStringForFields(final String[] fields, final Map<String, String> telemetry) {
+    private String getHeaderStringForFields(
+            final String[] fields, final Map<String, String> telemetry) {
         if (fields == null || telemetry == null) {
             return "";
         }

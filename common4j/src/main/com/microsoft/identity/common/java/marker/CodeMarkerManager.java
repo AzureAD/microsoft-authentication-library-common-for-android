@@ -39,13 +39,13 @@ public class CodeMarkerManager {
     private boolean enableCodeMarker = false;
     // MAX_SIZE_CODE_MARKER is the maximum number of markers this utility can have.
     private static final int MAX_SIZE_CODE_MARKER = 1000;
-    private final List<CodeMarker> codeMarkers = Collections.synchronizedList(new ArrayList<CodeMarker>());
-    //baseMilliSeconds is the time in milliseconds when first code marker was captured.
+    private final List<CodeMarker> codeMarkers =
+            Collections.synchronizedList(new ArrayList<CodeMarker>());
+    // baseMilliSeconds is the time in milliseconds when first code marker was captured.
     private long baseMilliSeconds = 0;
     private String scenarioCode = null;
 
-    private CodeMarkerManager() {
-    }
+    private CodeMarkerManager() {}
 
     private static class CodeMarkerHolder {
         static final CodeMarkerManager INSTANCE = new CodeMarkerManager();
@@ -78,7 +78,8 @@ public class CodeMarkerManager {
             final long timeDiff = currentMilliSeconds - baseMilliSeconds;
             final String date = dateFormat.format(new Date());
             final long threadId = Thread.currentThread().getId();
-            final CodeMarker codeMarker = new CodeMarker(applicableMarker, timeDiff, date, threadId);
+            final CodeMarker codeMarker =
+                    new CodeMarker(applicableMarker, timeDiff, date, threadId);
             codeMarkers.add(codeMarker);
         }
     }

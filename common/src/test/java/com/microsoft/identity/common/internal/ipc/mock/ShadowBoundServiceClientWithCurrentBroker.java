@@ -31,9 +31,9 @@ import android.os.RemoteException;
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.client.IMicrosoftAuthService;
-import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.internal.broker.BoundServiceClient;
 import com.microsoft.identity.common.internal.ipc.IpcStrategyTests;
+import com.microsoft.identity.common.java.exception.ClientException;
 
 import org.robolectric.annotation.Implements;
 
@@ -42,51 +42,62 @@ import java.util.concurrent.TimeoutException;
 
 @Implements(BoundServiceClient.class)
 public class ShadowBoundServiceClientWithCurrentBroker<T extends IInterface> {
-    protected @NonNull
-    T connect(@NonNull final String targetServicePackageName)
+    protected @NonNull T connect(@NonNull final String targetServicePackageName)
             throws ClientException, InterruptedException, TimeoutException, ExecutionException {
-        final IMicrosoftAuthService authService = new IMicrosoftAuthService() {
-            @Override public IBinder asBinder() {
-                return null;
-            }
+        final IMicrosoftAuthService authService =
+                new IMicrosoftAuthService() {
+                    @Override
+                    public IBinder asBinder() {
+                        return null;
+                    }
 
-            @Override public Bundle hello(Bundle bundle) throws RemoteException {
-                throw new RemoteException("Not Implemented");
-            }
+                    @Override
+                    public Bundle hello(Bundle bundle) throws RemoteException {
+                        throw new RemoteException("Not Implemented");
+                    }
 
-            @Override public Bundle getAccounts(Bundle bundle) throws RemoteException {
-                throw new RemoteException("Not Implemented");
-            }
+                    @Override
+                    public Bundle getAccounts(Bundle bundle) throws RemoteException {
+                        throw new RemoteException("Not Implemented");
+                    }
 
-            @Override public Bundle acquireTokenSilently(Bundle requestBundle) throws RemoteException {
-                throw new RemoteException("Not Implemented");
-            }
+                    @Override
+                    public Bundle acquireTokenSilently(Bundle requestBundle)
+                            throws RemoteException {
+                        throw new RemoteException("Not Implemented");
+                    }
 
-            @Override public Intent getIntentForInteractiveRequest() throws RemoteException {
-                return IpcStrategyTests.getMockInteractiveRequestResultIntent();
-            }
+                    @Override
+                    public Intent getIntentForInteractiveRequest() throws RemoteException {
+                        return IpcStrategyTests.getMockInteractiveRequestResultIntent();
+                    }
 
-            @Override public Bundle removeAccount(Bundle bundle) throws RemoteException {
-                throw new RemoteException("Not Implemented");
-            }
+                    @Override
+                    public Bundle removeAccount(Bundle bundle) throws RemoteException {
+                        throw new RemoteException("Not Implemented");
+                    }
 
-            @Override public Bundle getDeviceMode() throws RemoteException {
-                throw new RemoteException("Not Implemented");
-            }
+                    @Override
+                    public Bundle getDeviceMode() throws RemoteException {
+                        throw new RemoteException("Not Implemented");
+                    }
 
-            @Override public Bundle getCurrentAccount(Bundle bundle) throws RemoteException {
-                throw new RemoteException("Not Implemented");
-            }
+                    @Override
+                    public Bundle getCurrentAccount(Bundle bundle) throws RemoteException {
+                        throw new RemoteException("Not Implemented");
+                    }
 
-            @Override public Bundle removeAccountFromSharedDevice(Bundle bundle) throws RemoteException {
-                throw new RemoteException("Not Implemented");
-            }
+                    @Override
+                    public Bundle removeAccountFromSharedDevice(Bundle bundle)
+                            throws RemoteException {
+                        throw new RemoteException("Not Implemented");
+                    }
 
-            @Override
-            public Bundle generateSignedHttpRequest(Bundle bundle) throws RemoteException {
-                throw new RemoteException("Not Implemented");
-            }
-        };
+                    @Override
+                    public Bundle generateSignedHttpRequest(Bundle bundle) throws RemoteException {
+                        throw new RemoteException("Not Implemented");
+                    }
+                };
 
         @SuppressWarnings("unchecked")
         final T returnVal = (T) authService;

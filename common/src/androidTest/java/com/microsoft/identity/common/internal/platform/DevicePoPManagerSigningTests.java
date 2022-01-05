@@ -41,7 +41,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.util.Arrays;
 
-
 // Note: Test cannot use robolectric due to the following open issue
 // https://github.com/robolectric/robolectric/issues/1518
 @RunWith(Parameterized.class)

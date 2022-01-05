@@ -27,15 +27,16 @@ import com.microsoft.identity.common.java.logging.DiagnosticContext;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.util.StringUtil;
 
+import cz.msebera.httpclient.android.BuildConfig;
+
+import lombok.NonNull;
+
 import net.jcip.annotations.GuardedBy;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-
-import cz.msebera.httpclient.android.BuildConfig;
-import lombok.NonNull;
 
 /**
  * Helper class to add additional platform specific query parameters or headers for the request sent to eSTS.
@@ -64,7 +65,7 @@ public class Device {
 
     // Visible for testing only.
     @GuardedBy("sLock")
-    public static void clearDeviceMetadata(){
+    public static void clearDeviceMetadata() {
         sLock.writeLock().lock();
         try {
             sDeviceMetadata = null;
@@ -83,7 +84,8 @@ public class Device {
             if (sDeviceMetadata != null) {
                 platformParameters.put(PlatformIdParameters.CPU_PLATFORM, sDeviceMetadata.getCpu());
                 platformParameters.put(PlatformIdParameters.OS, sDeviceMetadata.getOsForEsts());
-                platformParameters.put(PlatformIdParameters.DEVICE_MODEL, sDeviceMetadata.getDeviceModel());
+                platformParameters.put(
+                        PlatformIdParameters.DEVICE_MODEL, sDeviceMetadata.getDeviceModel());
             } else {
                 platformParameters.put(PlatformIdParameters.CPU_PLATFORM, NOT_SET);
                 platformParameters.put(PlatformIdParameters.OS, NOT_SET);
@@ -100,10 +102,15 @@ public class Device {
     public static String getProductVersion() {
         final String methodName = ":getProductVersion";
 
-        final String version = DiagnosticContext.INSTANCE.getRequestContext().get(AuthenticationConstants.SdkPlatformFields.VERSION);
+        final String version =
+                DiagnosticContext.INSTANCE
+                        .getRequestContext()
+                        .get(AuthenticationConstants.SdkPlatformFields.VERSION);
         if (StringUtil.isNullOrEmpty(version)) {
             Logger.warn(TAG + methodName, "Product version is not set.", null);
-            return StringUtil.isNullOrEmpty(BuildConfig.VERSION_NAME) ? "1.5.9-default" : BuildConfig.VERSION_NAME + "-default";
+            return StringUtil.isNullOrEmpty(BuildConfig.VERSION_NAME)
+                    ? "1.5.9-default"
+                    : BuildConfig.VERSION_NAME + "-default";
         } else {
             return version;
         }
@@ -252,5 +259,4 @@ public class Device {
          */
         public static final String BROKER_VERSION = "x-client-brkrver";
     }
-
 }

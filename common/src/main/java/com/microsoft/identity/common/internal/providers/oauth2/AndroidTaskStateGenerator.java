@@ -30,18 +30,17 @@ import lombok.NonNull;
 
 /**
  * Encodes the Android Task ID (taskId) into the state sent as part of the authorization request.
-
+ *
  * This allows the activity/task used to initiate an interactive request to be linked back to when we receive the authorization result code.
  * This extends the DefaultStateGenerator in order to ensure the state generated is non-guessable.
-
+ *
  */
 public class AndroidTaskStateGenerator extends DefaultStateGenerator {
 
     private static final String SPLITTER = ":";
     private static final String TAG = "AndroidTaskStateGenerator";
 
-    @Getter
-    private int taskId;
+    @Getter private int taskId;
 
     public AndroidTaskStateGenerator(final int taskId) {
         this.taskId = taskId;

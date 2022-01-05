@@ -68,9 +68,8 @@ public interface ISettings {
      * @param username       the username of the account to add
      * @param password       the password of the account to add
      */
-    void addWorkAccount(final ITestBroker expectedBroker,
-                        final String username,
-                        final String password);
+    void addWorkAccount(
+            final ITestBroker expectedBroker, final String username, final String password);
 
     /**
      * Launch the date & time page in Settings app.
@@ -116,5 +115,4 @@ public interface ISettings {
      * @param packageName the package for which to open app info page
      */
     void launchAppInfoPage(String packageName);
-
 }

@@ -48,8 +48,7 @@ public class TelemetryConfiguration implements Serializable {
     @SerializedName(SerializedNames.DEBUG_ENABLED)
     private boolean mDebugEnabled = false;
 
-    public TelemetryConfiguration() {
-    }
+    public TelemetryConfiguration() {}
 
     /**
      * @return true to if the pii telemetry is enabled; false otherwise.

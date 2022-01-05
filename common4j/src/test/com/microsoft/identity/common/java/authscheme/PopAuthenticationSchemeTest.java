@@ -32,24 +32,35 @@ import java.util.Map;
 
 public class PopAuthenticationSchemeTest {
 
-    public static final PopAuthenticationSchemeInternal AUTHSCHEME_ONE = PopAuthenticationSchemeInternal.builder().httpMethod("GET").nonce("one")
-            .url(UrlUtil.makeUrlSilent("http://url"))
-            .build();
-    public static final PopAuthenticationSchemeInternal AUTHSCHEME_ONE_CLONE = PopAuthenticationSchemeInternal.builder().httpMethod("GET").nonce("one")
-            .url(UrlUtil.makeUrlSilent("http://url"))
-            .build();
-    public static final PopAuthenticationSchemeInternal AUTHSCHEME_TWO = PopAuthenticationSchemeInternal.builder().httpMethod("GET").url(UrlUtil.makeUrlSilent("http://url")).nonce("two").build();
+    public static final PopAuthenticationSchemeInternal AUTHSCHEME_ONE =
+            PopAuthenticationSchemeInternal.builder()
+                    .httpMethod("GET")
+                    .nonce("one")
+                    .url(UrlUtil.makeUrlSilent("http://url"))
+                    .build();
+    public static final PopAuthenticationSchemeInternal AUTHSCHEME_ONE_CLONE =
+            PopAuthenticationSchemeInternal.builder()
+                    .httpMethod("GET")
+                    .nonce("one")
+                    .url(UrlUtil.makeUrlSilent("http://url"))
+                    .build();
+    public static final PopAuthenticationSchemeInternal AUTHSCHEME_TWO =
+            PopAuthenticationSchemeInternal.builder()
+                    .httpMethod("GET")
+                    .url(UrlUtil.makeUrlSilent("http://url"))
+                    .nonce("two")
+                    .build();
 
     @Test
     public void testMappability() throws Exception {
         Map<PopAuthenticationSchemeInternal, Boolean> testMap = new HashMap<>();
-        
+
         testMap.put(AUTHSCHEME_ONE, true);
         Assert.assertEquals(1, testMap.size());
         testMap.put(AUTHSCHEME_TWO, true);
         Assert.assertEquals(2, testMap.size());
     }
-    
+
     @Test
     public void testHashCode_equals() throws Exception {
         Assert.assertEquals(AUTHSCHEME_ONE.hashCode(), AUTHSCHEME_ONE_CLONE.hashCode());
@@ -64,14 +75,17 @@ public class PopAuthenticationSchemeTest {
     public void testEquals_equals() throws Exception {
         Assert.assertEquals(AUTHSCHEME_ONE, AUTHSCHEME_ONE_CLONE);
     }
+
     @Test
     public void testEquals_notEqualNull() throws Exception {
         Assert.assertNotEquals(AUTHSCHEME_ONE, null);
     }
+
     @Test
     public void testEquals_equalsSame() throws Exception {
         Assert.assertEquals(AUTHSCHEME_ONE, AUTHSCHEME_ONE);
     }
+
     @Test
     public void testEquals_notEqualDifferenceInNonce() {
         Assert.assertNotEquals(AUTHSCHEME_ONE, AUTHSCHEME_TWO);

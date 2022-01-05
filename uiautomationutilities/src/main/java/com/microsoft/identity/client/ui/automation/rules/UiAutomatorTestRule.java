@@ -22,8 +22,6 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.rules;
 
-import android.util.Log;
-
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.UiDevice;
 
@@ -38,7 +36,7 @@ import org.junit.runners.model.Statement;
  */
 public class UiAutomatorTestRule implements TestRule {
 
-    private final static String TAG = UiAutomatorTestRule.class.getSimpleName();
+    private static final String TAG = UiAutomatorTestRule.class.getSimpleName();
 
     private UiDevice device;
 

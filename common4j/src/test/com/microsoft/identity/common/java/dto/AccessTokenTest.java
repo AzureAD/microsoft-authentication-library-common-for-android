@@ -22,13 +22,12 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.dto;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import org.junit.Test;
 
 import java.util.Calendar;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertFalse;
 
 public class AccessTokenTest {
 
@@ -56,19 +55,14 @@ public class AccessTokenTest {
     @Test
     public void testShouldNotRefreshWhenNoPropertiesAreSet() {
         final AccessTokenRecord accessToken = new AccessTokenRecord();
-        try{
+        try {
             accessToken.shouldRefresh();
-        } catch (Exception e){
+        } catch (Exception e) {
             assertTrue(e instanceof NumberFormatException);
         }
     }
 
     private String getCurrentTimeStr() {
-        return String.valueOf(
-                Calendar
-                        .getInstance()
-                        .getTime()
-                        .getTime() / 1000 - 10
-        );
+        return String.valueOf(Calendar.getInstance().getTime().getTime() / 1000 - 10);
     }
 }

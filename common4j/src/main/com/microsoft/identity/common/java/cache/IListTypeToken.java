@@ -35,5 +35,4 @@ public interface IListTypeToken {
      * @return The {@link Type}.
      */
     Type getListTypeToken();
-
 }

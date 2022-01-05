@@ -30,7 +30,8 @@ import lombok.NonNull;
 
 // Suppressing rawtype warnings due to the generic types IAuthorizationStrategy
 @SuppressWarnings(WarningType.rawtype_warning)
-public interface IAuthorizationStrategyFactory<GenericAuthorizationStrategy extends IAuthorizationStrategy> {
+public interface IAuthorizationStrategyFactory<
+        GenericAuthorizationStrategy extends IAuthorizationStrategy> {
 
     GenericAuthorizationStrategy getAuthorizationStrategy(
             @NonNull final InteractiveTokenCommandParameters parameters);

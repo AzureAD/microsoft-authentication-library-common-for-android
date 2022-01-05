@@ -22,17 +22,21 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.telemetry.events;
 
-import com.microsoft.identity.common.java.telemetry.Properties;
-import com.microsoft.identity.common.java.logging.DiagnosticContext;
-import lombok.NonNull;
-
 import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Key;
+
+import com.microsoft.identity.common.java.logging.DiagnosticContext;
+import com.microsoft.identity.common.java.telemetry.Properties;
+
+import lombok.NonNull;
 
 public class BaseEvent extends Properties {
     public BaseEvent() {
         super();
         occurs(System.currentTimeMillis());
-        correlationId(DiagnosticContext.INSTANCE.getRequestContext().get(DiagnosticContext.CORRELATION_ID));
+        correlationId(
+                DiagnosticContext.INSTANCE
+                        .getRequestContext()
+                        .get(DiagnosticContext.CORRELATION_ID));
     }
 
     @Override

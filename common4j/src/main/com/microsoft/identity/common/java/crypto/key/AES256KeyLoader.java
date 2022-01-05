@@ -52,7 +52,7 @@ public abstract class AES256KeyLoader extends AbstractSecretKeyLoader {
 
     @Override
     @NonNull
-    public String getCipherAlgorithm(){
+    public String getCipherAlgorithm() {
         return CIPHER_ALGORITHM;
     }
 

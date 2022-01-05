@@ -24,13 +24,14 @@ package com.microsoft.identity.common.java.commands;
 
 import com.google.gson.annotations.SerializedName;
 
-import java.util.Map;
-
 import edu.umd.cs.findbugs.annotations.Nullable;
+
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.Accessors;
+
+import java.util.Map;
 
 /**
  * A DTO for the results from an AcquirePrtSsoToken request.
@@ -88,5 +89,4 @@ public class AcquirePrtSsoTokenResult {
      */
     @SerializedName("telemetry")
     private final @NonNull Map<String, Object> mTelemetry;
-
 }

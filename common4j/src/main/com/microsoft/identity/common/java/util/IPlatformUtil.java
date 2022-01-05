@@ -23,15 +23,14 @@
 package com.microsoft.identity.common.java.util;
 
 import com.microsoft.identity.common.java.commands.ICommand;
-import com.microsoft.identity.common.java.eststelemetry.LastRequestTelemetryCache;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.ui.BrowserDescriptor;
 
-import java.util.List;
-
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
+
+import java.util.List;
 
 public interface IPlatformUtil {
 
@@ -57,7 +56,8 @@ public interface IPlatformUtil {
      *                                      False otherwise.
      * @throws ClientException throw network exception
      */
-    void throwIfNetworkNotAvailable(final boolean performPowerOptimizationCheck) throws ClientException;
+    void throwIfNetworkNotAvailable(final boolean performPowerOptimizationCheck)
+            throws ClientException;
 
     /**
      * Clear all cookies from embedded webview.

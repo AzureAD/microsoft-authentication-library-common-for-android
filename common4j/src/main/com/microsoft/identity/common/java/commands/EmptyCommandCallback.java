@@ -25,16 +25,13 @@ package com.microsoft.identity.common.java.commands;
 /**
  * A command callback that does nothing.
  */
-public class EmptyCommandCallback<T, U> implements CommandCallback<T, U>{
+public class EmptyCommandCallback<T, U> implements CommandCallback<T, U> {
     @Override
-    public void onCancel() {
-    }
+    public void onCancel() {}
 
     @Override
-    public void onTaskCompleted(T t) {
-    }
+    public void onTaskCompleted(T t) {}
 
     @Override
-    public void onError(U error) {
-    }
+    public void onError(U error) {}
 }

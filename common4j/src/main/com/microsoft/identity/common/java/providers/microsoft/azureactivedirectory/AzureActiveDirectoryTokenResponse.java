@@ -130,18 +130,26 @@ public class AzureActiveDirectoryTokenResponse extends MicrosoftTokenResponse {
         mExpiresOn = CopyUtil.copyIfNotNull(expiresOn);
     }
 
-    //CHECKSTYLE:OFF
+    // CHECKSTYLE:OFF
     // This method is generated. Checkstyle and/or PMD has been disabled.
     // This method *must* be regenerated if the class' structural definition changes through the
     // addition/subtraction of fields.
     @Override
     public String toString() {
-        return "AzureActiveDirectoryTokenResponse{" +
-                "mExpiresOn=" + mExpiresOn +
-                ", mResource='" + mResource + '\'' +
-                ", mNotBefore='" + mNotBefore + '\'' +
-                ", mSpeRing='" + mSpeRing + '\'' +
-                "} " + super.toString();
+        return "AzureActiveDirectoryTokenResponse{"
+                + "mExpiresOn="
+                + mExpiresOn
+                + ", mResource='"
+                + mResource
+                + '\''
+                + ", mNotBefore='"
+                + mNotBefore
+                + '\''
+                + ", mSpeRing='"
+                + mSpeRing
+                + '\''
+                + "} "
+                + super.toString();
     }
-    //CHECKSTYLE:ON
+    // CHECKSTYLE:ON
 }

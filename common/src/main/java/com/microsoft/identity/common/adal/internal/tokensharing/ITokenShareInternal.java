@@ -35,7 +35,8 @@ public interface ITokenShareInternal {
      * @return The {@link ITokenShareResultInternal}.
      * @throws Exception If the requested token cannot be found.
      */
-    ITokenShareResultInternal getOrgIdFamilyRefreshTokenWithMetadata(String identifier) throws Exception;
+    ITokenShareResultInternal getOrgIdFamilyRefreshTokenWithMetadata(String identifier)
+            throws Exception;
 
     /**
      * For the supplied user unique identifier (OID/upn/preferred_username), return the
@@ -67,7 +68,8 @@ public interface ITokenShareInternal {
      * @return The {@link ITokenShareResultInternal}.
      * @throws Exception If the requested token cannot be found.
      */
-    ITokenShareResultInternal getMsaFamilyRefreshTokenWithMetadata(String identifier) throws Exception;
+    ITokenShareResultInternal getMsaFamilyRefreshTokenWithMetadata(String identifier)
+            throws Exception;
 
     /**
      * For the provided MSA user id, retrieve the FRT belonging to this user (if exists).

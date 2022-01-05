@@ -33,5 +33,4 @@ public interface IPowerLiftIntegratedApp {
      * @return a String message containing PowerLift incident details
      */
     String createPowerLiftIncident();
-
 }

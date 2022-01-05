@@ -35,8 +35,7 @@ public class LabGuestAccountHelper {
                 userInfo.getHomeUPN(),
                 userInfo.getHomeDomain(),
                 userInfo.getHomeTenantID(),
-                guestLabTenants
-        );
+                guestLabTenants);
     }
 
     public static String getPasswordForGuestUser(final LabGuest guestUser) {

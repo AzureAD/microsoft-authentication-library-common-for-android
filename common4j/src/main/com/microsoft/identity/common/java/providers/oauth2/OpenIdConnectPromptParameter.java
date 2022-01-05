@@ -23,9 +23,9 @@
 
 package com.microsoft.identity.common.java.providers.oauth2;
 
-import java.util.Locale;
-
 import edu.umd.cs.findbugs.annotations.Nullable;
+
+import java.util.Locale;
 
 /**
  * The UI options that developer can pass during interactive token acquisition requests.
@@ -69,17 +69,17 @@ public enum OpenIdConnectPromptParameter {
         return this.name().toLowerCase(Locale.ROOT);
     }
 
-
     /**
      * Utility method to map Adal PromptBehavior with OpenIdConnectPromptParameter
      *
      * @param promptBehavior
      * @return
      */
-    public static OpenIdConnectPromptParameter _fromPromptBehavior(@Nullable final String promptBehavior) {
+    public static OpenIdConnectPromptParameter _fromPromptBehavior(
+            @Nullable final String promptBehavior) {
 
-        return promptBehavior != null && promptBehavior.equals("FORCE_PROMPT") ?
-                OpenIdConnectPromptParameter.LOGIN :
-                OpenIdConnectPromptParameter.UNSET;
+        return promptBehavior != null && promptBehavior.equals("FORCE_PROMPT")
+                ? OpenIdConnectPromptParameter.LOGIN
+                : OpenIdConnectPromptParameter.UNSET;
     }
 }

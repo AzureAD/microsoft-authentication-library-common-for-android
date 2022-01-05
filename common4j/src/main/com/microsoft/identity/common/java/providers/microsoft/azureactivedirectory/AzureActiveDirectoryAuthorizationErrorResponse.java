@@ -28,7 +28,8 @@ import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthoriza
  * Sub class of {@link MicrosoftAuthorizationErrorResponse}.
  * Encapsulates Azure Active Directory specific Authorization Result errors in addition to Microsoft error parameters.
  */
-public class AzureActiveDirectoryAuthorizationErrorResponse extends MicrosoftAuthorizationErrorResponse {
+public class AzureActiveDirectoryAuthorizationErrorResponse
+        extends MicrosoftAuthorizationErrorResponse {
 
     private String mErrorCodes;
 
@@ -38,7 +39,8 @@ public class AzureActiveDirectoryAuthorizationErrorResponse extends MicrosoftAut
      * @param error            Error string returned from the Authorization Server.
      * @param errorDescription Description string of the error.
      */
-    public AzureActiveDirectoryAuthorizationErrorResponse(final String error, final String errorDescription) {
+    public AzureActiveDirectoryAuthorizationErrorResponse(
+            final String error, final String errorDescription) {
         super(error, errorDescription);
     }
 
@@ -59,5 +61,4 @@ public class AzureActiveDirectoryAuthorizationErrorResponse extends MicrosoftAut
     public void setErrorCodes(final String errorCodes) {
         mErrorCodes = errorCodes;
     }
-
 }

@@ -40,34 +40,35 @@ public class AudienceDefaultCloudUrlTest {
     public void test_AccountsInOneOrganizationDefaultCloudUrl() {
 
         AzureActiveDirectoryAudience audience = new AccountsInOneOrganization();
-        Assert.assertEquals(AzureActiveDirectoryEnvironment.PRODUCTION_CLOUD_URL, audience.getCloudUrl());
+        Assert.assertEquals(
+                AzureActiveDirectoryEnvironment.PRODUCTION_CLOUD_URL, audience.getCloudUrl());
 
         audience = new AllAccounts();
-        Assert.assertEquals(AzureActiveDirectoryEnvironment.PRODUCTION_CLOUD_URL, audience.getCloudUrl());
-
+        Assert.assertEquals(
+                AzureActiveDirectoryEnvironment.PRODUCTION_CLOUD_URL, audience.getCloudUrl());
     }
 
     @Test
     public void test_AllAccountsDefaultCloudUrl() {
 
         AzureActiveDirectoryAudience audience = new AllAccounts();
-        Assert.assertEquals(AzureActiveDirectoryEnvironment.PRODUCTION_CLOUD_URL, audience.getCloudUrl());
-
+        Assert.assertEquals(
+                AzureActiveDirectoryEnvironment.PRODUCTION_CLOUD_URL, audience.getCloudUrl());
     }
 
     @Test
     public void test_AnyOrganizationAccountDefaultCloudUrl() {
 
         AzureActiveDirectoryAudience audience = new AllAccounts();
-        Assert.assertEquals(AzureActiveDirectoryEnvironment.PRODUCTION_CLOUD_URL, audience.getCloudUrl());
-
+        Assert.assertEquals(
+                AzureActiveDirectoryEnvironment.PRODUCTION_CLOUD_URL, audience.getCloudUrl());
     }
 
     @Test
     public void test_AnyPerosnalAccountDefaultCloudUrl() {
 
         AzureActiveDirectoryAudience audience = new AllAccounts();
-        Assert.assertEquals(AzureActiveDirectoryEnvironment.PRODUCTION_CLOUD_URL, audience.getCloudUrl());
-
+        Assert.assertEquals(
+                AzureActiveDirectoryEnvironment.PRODUCTION_CLOUD_URL, audience.getCloudUrl());
     }
 }

@@ -24,14 +24,14 @@ package com.microsoft.identity.common.java.util.ported;
 
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 
-import java.util.HashMap;
+import edu.umd.cs.findbugs.annotations.Nullable;
+
+import lombok.NonNull;
+
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-
-import edu.umd.cs.findbugs.annotations.Nullable;
-import lombok.NonNull;
 
 /**
  * A wrapper around Map
@@ -49,8 +49,7 @@ public class InMemoryStorage<T> implements INameValueStorage<T> {
         return mMap;
     }
 
-    public void put(@NonNull final String key,
-                    @Nullable final T value) {
+    public void put(@NonNull final String key, @Nullable final T value) {
         if (value == null) {
             mMap.remove(key);
             return;

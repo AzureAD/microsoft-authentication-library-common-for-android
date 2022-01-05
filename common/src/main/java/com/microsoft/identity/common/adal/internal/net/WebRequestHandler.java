@@ -22,6 +22,9 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.adal.internal.net;
 
+import static com.microsoft.identity.common.java.net.HttpConstants.HeaderField;
+import static com.microsoft.identity.common.java.net.HttpConstants.MediaType;
+
 import android.os.Build;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
@@ -31,9 +34,6 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.Map;
 import java.util.UUID;
-
-import static com.microsoft.identity.common.java.net.HttpConstants.HeaderField;
-import static com.microsoft.identity.common.java.net.HttpConstants.MediaType;
 
 /**
  * It uses one time async task. WebRequest are wrapped here to prevent multiple
@@ -58,26 +58,31 @@ public class WebRequestHandler implements IWebRequestHandler {
 
     @Override
     public HttpWebResponse sendGet(URL url, Map<String, String> headers) throws IOException {
-        final HttpWebRequest request = new HttpWebRequest(url, HttpWebRequest.REQUEST_METHOD_GET, updateHeaders(headers));
+        final HttpWebRequest request =
+                new HttpWebRequest(url, HttpWebRequest.REQUEST_METHOD_GET, updateHeaders(headers));
         return request.send();
     }
 
     @Override
-    public HttpWebResponse sendPost(URL url, Map<String, String> headers, byte[] content,
-                                    String contentType) throws IOException {
-        final HttpWebRequest request = new HttpWebRequest(
-                url,
-                HttpWebRequest.REQUEST_METHOD_POST,
-                updateHeaders(headers),
-                content,
-                contentType);
+    public HttpWebResponse sendPost(
+            URL url, Map<String, String> headers, byte[] content, String contentType)
+            throws IOException {
+        final HttpWebRequest request =
+                new HttpWebRequest(
+                        url,
+                        HttpWebRequest.REQUEST_METHOD_POST,
+                        updateHeaders(headers),
+                        content,
+                        contentType);
         return request.send();
     }
 
     private Map<String, String> updateHeaders(final Map<String, String> headers) {
 
         if (mRequestCorrelationId != null) {
-            headers.put(AuthenticationConstants.AAD.CLIENT_REQUEST_ID, mRequestCorrelationId.toString());
+            headers.put(
+                    AuthenticationConstants.AAD.CLIENT_REQUEST_ID,
+                    mRequestCorrelationId.toString());
         }
 
         headers.put(AuthenticationConstants.AAD.ADAL_ID_PLATFORM, "Android");
@@ -104,6 +109,4 @@ public class WebRequestHandler implements IWebRequestHandler {
             mCurrentClientVersion = clientVersion;
         }
     }
-
-
 }

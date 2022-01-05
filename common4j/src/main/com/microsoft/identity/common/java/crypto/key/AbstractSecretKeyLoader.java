@@ -22,9 +22,15 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.crypto.key;
 
+import static com.microsoft.identity.common.java.exception.ClientException.NO_SUCH_ALGORITHM;
+
 import com.microsoft.identity.common.java.crypto.StorageEncryptionManager;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.logging.Logger;
+
+import cz.msebera.android.httpclient.extras.Base64;
+
+import lombok.NonNull;
 
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -32,11 +38,6 @@ import java.security.SecureRandom;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
-
-import cz.msebera.android.httpclient.extras.Base64;
-import lombok.NonNull;
-
-import static com.microsoft.identity.common.java.exception.ClientException.NO_SUCH_ALGORITHM;
 
 /**
  * Abstracts how a {@link SecretKey} is loaded/cached/sourced/used.
@@ -97,17 +98,10 @@ public abstract class AbstractSecretKeyLoader {
             keygen.init(getKeySize(), new SecureRandom());
             return keygen.generateKey();
         } catch (final NoSuchAlgorithmException e) {
-            final ClientException clientException = new ClientException(
-                    NO_SUCH_ALGORITHM,
-                    e.getMessage(),
-                    e
-            );
+            final ClientException clientException =
+                    new ClientException(NO_SUCH_ALGORITHM, e.getMessage(), e);
 
-            Logger.error(
-                    TAG + methodName,
-                    clientException.getErrorCode(),
-                    e
-            );
+            Logger.error(TAG + methodName, clientException.getErrorCode(), e);
 
             throw clientException;
         }

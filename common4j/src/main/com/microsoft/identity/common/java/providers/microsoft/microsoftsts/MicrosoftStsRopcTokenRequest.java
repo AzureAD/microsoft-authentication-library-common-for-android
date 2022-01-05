@@ -38,5 +38,4 @@ public class MicrosoftStsRopcTokenRequest extends MicrosoftStsTokenRequest {
 
     @SerializedName("password")
     private String mPassword;
-
 }

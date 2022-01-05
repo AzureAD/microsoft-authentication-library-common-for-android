@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.java.net;
 
 import com.microsoft.identity.common.java.util.StringUtil;
+
 import lombok.NonNull;
 
 import java.io.IOException;
@@ -31,7 +32,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocket;
 
 /**
  * An interface providing access to resources backed by web requests.  This provides access to only
@@ -50,11 +50,13 @@ public interface HttpClient {
      * @return an HttpResponse with the result of the call.
      * @throws IOException if there was a communication problem.
      */
-    HttpResponse method(@NonNull String httpMethod,
-                        @NonNull URL requestUrl,
-                        @NonNull Map<String, String> requestHeaders,
-                        byte[] requestContent,
-                        SSLContext sslContext) throws IOException;
+    HttpResponse method(
+            @NonNull String httpMethod,
+            @NonNull URL requestUrl,
+            @NonNull Map<String, String> requestHeaders,
+            byte[] requestContent,
+            SSLContext sslContext)
+            throws IOException;
 
     /**
      * Execute an arbitrary method.
@@ -66,11 +68,13 @@ public interface HttpClient {
      * @return an HttpResponse with the result of the call.
      * @throws IOException if there was a communication problem.
      */
-    HttpResponse method(@NonNull HttpMethod httpMethod,
-                        @NonNull URL requestUrl,
-                        @NonNull Map<String, String> requestHeaders,
-                        byte[] requestContent,
-                        SSLContext sslContext) throws IOException;
+    HttpResponse method(
+            @NonNull HttpMethod httpMethod,
+            @NonNull URL requestUrl,
+            @NonNull Map<String, String> requestHeaders,
+            byte[] requestContent,
+            SSLContext sslContext)
+            throws IOException;
 
     /**
      * Execute an HTTP PUT request.
@@ -81,10 +85,12 @@ public interface HttpClient {
      * @return an HttpResponse with the result of the call.
      * @throws IOException if there was a communication problem.
      */
-    HttpResponse put(@NonNull URL requestUrl,
-                     @NonNull Map<String, String> requestHeaders,
-                     byte[] requestContent,
-                     SSLContext sslContext) throws IOException;
+    HttpResponse put(
+            @NonNull URL requestUrl,
+            @NonNull Map<String, String> requestHeaders,
+            byte[] requestContent,
+            SSLContext sslContext)
+            throws IOException;
 
     /**
      * Execute an HTTP PATCH request.
@@ -95,10 +101,12 @@ public interface HttpClient {
      * @return an HttpResponse with the result of the call.
      * @throws IOException if there was a communication problem.
      */
-    HttpResponse patch(@NonNull URL requestUrl,
-                       @NonNull Map<String, String> requestHeaders,
-                       byte[] requestContent,
-                       SSLContext sslContext) throws IOException;
+    HttpResponse patch(
+            @NonNull URL requestUrl,
+            @NonNull Map<String, String> requestHeaders,
+            byte[] requestContent,
+            SSLContext sslContext)
+            throws IOException;
 
     /**
      * Execute an HTTP OPTIONS request.
@@ -108,9 +116,11 @@ public interface HttpClient {
      * @return an HttpResponse with the result of the call.
      * @throws IOException if there was a communication problem.
      */
-    HttpResponse options(@NonNull URL requestUrl,
-                         @NonNull Map<String, String> requestHeaders,
-                         SSLContext sslContext) throws IOException;
+    HttpResponse options(
+            @NonNull URL requestUrl,
+            @NonNull Map<String, String> requestHeaders,
+            SSLContext sslContext)
+            throws IOException;
 
     /**
      * Execute an HTTP POST request.
@@ -121,10 +131,12 @@ public interface HttpClient {
      * @return an HttpResponse with the result of the call.
      * @throws IOException if there was a communication problem.
      */
-    HttpResponse post(@NonNull URL requestUrl,
-                      @NonNull Map<String, String> requestHeaders,
-                      byte[] requestContent,
-                      SSLContext sslContext) throws IOException;
+    HttpResponse post(
+            @NonNull URL requestUrl,
+            @NonNull Map<String, String> requestHeaders,
+            byte[] requestContent,
+            SSLContext sslContext)
+            throws IOException;
 
     /**
      * Execute an HTTP PATCH request.
@@ -135,10 +147,12 @@ public interface HttpClient {
      * @return an HttpResponse with the result of the call.
      * @throws IOException if there was a communication problem.
      */
-    HttpResponse delete(@NonNull URL requestUrl,
-                        @NonNull Map<String, String> requestHeaders,
-                        byte[] requestContent,
-                        SSLContext sslContext) throws IOException;
+    HttpResponse delete(
+            @NonNull URL requestUrl,
+            @NonNull Map<String, String> requestHeaders,
+            byte[] requestContent,
+            SSLContext sslContext)
+            throws IOException;
 
     /**
      * Execute an HTTP GET request.
@@ -148,9 +162,11 @@ public interface HttpClient {
      * @return an HttpResponse with the result of the call.
      * @throws IOException if there was a communication problem.
      */
-    HttpResponse get(@NonNull URL requestUrl,
-                     @NonNull Map<String, String> requestHeaders,
-                     SSLContext sslContext) throws IOException;
+    HttpResponse get(
+            @NonNull URL requestUrl,
+            @NonNull Map<String, String> requestHeaders,
+            SSLContext sslContext)
+            throws IOException;
 
     /**
      * Execute an HTTP HEAD request.
@@ -160,9 +176,11 @@ public interface HttpClient {
      * @return an HttpResponse with the result of the call.
      * @throws IOException if there was a communication problem.
      */
-    HttpResponse head(@NonNull URL requestUrl,
-                      @NonNull Map<String, String> requestHeaders,
-                      SSLContext sslContext) throws IOException;
+    HttpResponse head(
+            @NonNull URL requestUrl,
+            @NonNull Map<String, String> requestHeaders,
+            SSLContext sslContext)
+            throws IOException;
 
     /**
      * Execute an HTTP TRACE request.
@@ -172,9 +190,11 @@ public interface HttpClient {
      * @return an HttpResponse with the result of the call.
      * @throws IOException if there was a communication problem.
      */
-    HttpResponse trace(@NonNull URL requestUrl,
-                       @NonNull Map<String, String> requestHeaders,
-                       SSLContext sslContext) throws IOException;
+    HttpResponse trace(
+            @NonNull URL requestUrl,
+            @NonNull Map<String, String> requestHeaders,
+            SSLContext sslContext)
+            throws IOException;
 
     /**
      * An enumeration of the HTTP verbs supported by this client interface.
@@ -193,7 +213,7 @@ public interface HttpClient {
 
         static {
             validMethods = new LinkedHashMap<>(HttpMethod.values().length);
-            for (HttpMethod method: HttpMethod.values()) {
+            for (HttpMethod method : HttpMethod.values()) {
                 validMethods.put(method.name(), method);
             }
         }
@@ -209,6 +229,5 @@ public interface HttpClient {
             }
             throw new IllegalArgumentException("Unknown or unsupported HTTP method: " + httpMethod);
         }
-
     }
 }
