@@ -341,7 +341,7 @@ public class MsalOAuth2TokenCache<
 
         // Save the Account and Credentials...
         saveAccounts(accountToSave);
-        synchronized(sCacheLock) {
+        synchronized (sCacheLock) {
             saveCredentialsInternal(accessTokenToSave, refreshTokenToSave, idTokenToSave);
             // Remove old refresh tokens (except for the one we just saved) if it's MRRT or FRT
             removeAllRefreshTokensExcept(accountToSave, refreshTokenToSave);
