@@ -65,6 +65,8 @@ public class SecretKeyAccessor implements IManagedKeyAccessor<KeyStore.SecretKey
             final KeyStore.SecretKeyEntry entry = mKeyManager.getEntry();
             final SecretKey key = entry.getSecretKey();
             final Cipher c = Cipher.getInstance(mSuite.cipher().name());
+
+            // The iv length should move into the CipherSuite class
             byte[] iv = new byte[12];
             c.init(Cipher.ENCRYPT_MODE, key);
             AlgorithmParameterSpec spec = mSuite.cryptoSpec(c, iv);
