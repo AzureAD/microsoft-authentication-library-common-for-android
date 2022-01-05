@@ -56,7 +56,9 @@ import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.getR
 public abstract class AbstractTestBroker extends App implements ITestBroker {
 
     private final static String TAG = AbstractTestBroker.class.getSimpleName();
-
+    public final static IAppInstaller DEFAULT_BROKER_APP_INSTALLER = BuildConfig.INSTALL_SOURCE_LOCAL_APK
+            .equalsIgnoreCase(BuildConfig.BROKER_INSTALL_SOURCE)
+            ? new LocalApkInstaller() : new PlayStore();
     @Override
     public void uninstall() {
         super.uninstall();
@@ -76,9 +78,7 @@ public abstract class AbstractTestBroker extends App implements ITestBroker {
 
     public AbstractTestBroker(@NonNull final String packageName,
                               @NonNull final String appName) {
-        super(packageName, appName, BuildConfig.INSTALL_SOURCE_LOCAL_APK
-                .equalsIgnoreCase(BuildConfig.BROKER_INSTALL_SOURCE)
-                ? new LocalApkInstaller() : new PlayStore());
+        super(packageName, appName, DEFAULT_BROKER_APP_INSTALLER);
     }
 
     public AbstractTestBroker(@NonNull final String packageName,

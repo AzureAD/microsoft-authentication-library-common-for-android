@@ -26,7 +26,9 @@ import com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeInte
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallenge;
 import com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallengeFactory;
+import com.microsoft.identity.common.java.commands.parameters.RopcTokenCommandParameters;
 import com.microsoft.identity.common.java.crypto.IDevicePopManager;
+import com.microsoft.identity.common.java.exception.ArgumentException;
 import com.microsoft.identity.common.java.platform.Device;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationResponse;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenErrorResponse;
@@ -451,6 +453,32 @@ public class MicrosoftStsOAuth2Strategy
     }
 
     @Override
+    public MicrosoftStsTokenRequest createRopcTokenRequest(@NonNull final RopcTokenCommandParameters parameters) throws ClientException {
+        final String methodName = ":createPasswordTokenRequest";
+        Logger.verbose(
+                TAG + methodName,
+                "Creating password token request"
+        );
+
+        final MicrosoftStsRopcTokenRequest request = new MicrosoftStsRopcTokenRequest();
+        request.setGrantType(TokenRequest.GrantTypes.PASSWORD);
+
+        request.setUsername(parameters.getUsername());
+        request.setPassword(parameters.getPassword());
+        request.setClaims(parameters.getClaimsRequestJson());
+        request.setClientId(parameters.getClientId());
+        request.setRedirectUri(parameters.getRedirectUri());
+        request.setScope(StringUtil.join(" ", parameters.getScopes()));
+        setTokenRequestCorrelationId(request);
+
+        if (PopAuthenticationSchemeInternal.SCHEME_POP.equals(parameters.getAuthenticationScheme().getName())) {
+            throw new UnsupportedOperationException("MSAL Android supports ROPC on Bearer flows only for testing purposes.");
+        }
+
+        return request;
+    }
+
+    @Override
     protected void validateAuthorizationRequest(final MicrosoftStsAuthorizationRequest request) {
         // TODO implement
 
@@ -650,13 +678,13 @@ public class MicrosoftStsOAuth2Strategy
         if (!CLIENT_CREDENTIALS.equalsIgnoreCase(request.getGrantType()) &&
                 StringUtil.isNullOrEmpty(response.getIdToken())) {
             clientException = ClientException.TOKENS_MISSING;
-            tokens =  tokens.concat(" id_token");
+            tokens = tokens.concat(" id_token");
         }
 
         if (!CLIENT_CREDENTIALS.equalsIgnoreCase(request.getGrantType()) &&
                 StringUtil.isNullOrEmpty(response.getRefreshToken())) {
             clientException = ClientException.TOKENS_MISSING;
-            tokens =  tokens.concat(" refresh_token");
+            tokens = tokens.concat(" refresh_token");
         }
 
         if (clientException != null) {
