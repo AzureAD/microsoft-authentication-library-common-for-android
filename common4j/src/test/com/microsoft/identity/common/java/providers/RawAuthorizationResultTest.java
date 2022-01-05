@@ -99,6 +99,15 @@ public class RawAuthorizationResultTest {
     }
 
     @Test
+    public void testFromInteger() {
+        for (RawAuthorizationResult.ResultCode c : RawAuthorizationResult.ResultCode.values()) {
+            Assert.assertSame(c, RawAuthorizationResult.ResultCode.fromInteger(c.getCode()));
+        }
+        Assert.assertSame(UNKNOWN, RawAuthorizationResult.ResultCode.fromInteger(null));
+        Assert.assertSame(UNKNOWN, RawAuthorizationResult.ResultCode.fromInteger(Integer.MIN_VALUE));
+    }
+
+    @Test
     public void testFromException() {
         final RawAuthorizationResult result = RawAuthorizationResult.fromException(
                 new ClientException(MOCK_ERROR_CODE, MOCK_ERROR_MESSAGE)
