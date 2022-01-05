@@ -1,3 +1,8 @@
+Version 3.6.7
+----------
+- [PATCH] Add helper method to fix account id missing in msal get account (#1641)
+- [PATCH] Avoid key overwriting for apps using shared user id (#1662)
+
 Version 3.6.6
 ----------
 - [PATCH] Remove unsafe key thumbprint generator (#1655)
