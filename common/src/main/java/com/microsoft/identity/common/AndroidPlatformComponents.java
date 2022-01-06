@@ -86,7 +86,7 @@ import lombok.NonNull;
 /**
  * Android implementations of platform-dependent components in Common.
  */
-public class AndroidPlatformComponents implements IPlatformComponents {
+public class AndroidPlatformComponents extends AbstractPlatformComponents implements IPlatformComponents {
     private static final String TAG = AndroidPlatformComponents.class.getSimpleName();
 
     /**

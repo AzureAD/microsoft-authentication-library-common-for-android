@@ -22,6 +22,7 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.components;
 
+import com.microsoft.identity.common.AbstractPlatformComponents;
 import com.microsoft.identity.common.java.cache.IMultiTypeNameValueStorage;
 import com.microsoft.identity.common.java.cache.MapBackedPreferencesManager;
 import com.microsoft.identity.common.java.commands.ICommand;
@@ -80,7 +81,7 @@ import lombok.experimental.Accessors;
 @Builder
 @Getter
 @Accessors(prefix = "m")
-public class SettablePlatformComponents implements IPlatformComponents {
+public class SettablePlatformComponents extends AbstractPlatformComponents implements IPlatformComponents {
 
     public static final IDevicePopManager NONFUNCTIONAL_POP_MANAGER = new IDevicePopManager() {
         @Override

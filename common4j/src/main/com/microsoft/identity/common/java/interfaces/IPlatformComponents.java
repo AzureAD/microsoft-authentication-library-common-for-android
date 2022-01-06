@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.interfaces;
 
+import com.google.gson.Gson;
 import com.microsoft.identity.common.java.cache.IMultiTypeNameValueStorage;
 import com.microsoft.identity.common.java.crypto.IDevicePopManager;
 import com.microsoft.identity.common.java.crypto.IKeyAccessor;
@@ -129,6 +130,13 @@ public interface IPlatformComponents {
      */
     @NonNull
     IPlatformUtil getPlatformUtil();
+
+    /**
+     * Provide a vanilla-configured instance of Gson.
+     * @return an unconfigured GSON instance.
+     */
+    @NonNull
+    Gson getGson();
 
     /**
      * Get access to the platform specific KeyStoreAccessor.
