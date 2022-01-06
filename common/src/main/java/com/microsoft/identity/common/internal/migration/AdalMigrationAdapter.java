@@ -34,6 +34,7 @@ import androidx.annotation.VisibleForTesting;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
+import com.microsoft.identity.common.AbstractPlatformComponents;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.java.exception.ServiceException;
 import com.microsoft.identity.common.adal.internal.cache.ADALTokenCacheItem;
@@ -209,7 +210,7 @@ public class AdalMigrationAdapter implements IMigrationAdapter<MicrosoftAccount,
     Map<String, ADALTokenCacheItem> deserialize(final Map<String, String> tokenCacheItems) {
         final Map<String, ADALTokenCacheItem> result = new HashMap<>();
 
-        final Gson gson = new Gson();
+        final Gson gson = AbstractPlatformComponents.GSON;
         for (final Map.Entry<String, String> entry : tokenCacheItems.entrySet()) {
             try {
                 result.put(

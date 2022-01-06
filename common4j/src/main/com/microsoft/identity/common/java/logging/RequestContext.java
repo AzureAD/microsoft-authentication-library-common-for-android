@@ -23,13 +23,14 @@
 package com.microsoft.identity.common.java.logging;
 
 import com.google.gson.Gson;
+import com.microsoft.identity.common.AbstractPlatformComponents;
 
 import java.util.HashMap;
 
 public class RequestContext extends HashMap<String, String> implements IRequestContext {
 
     private static final long serialVersionUID = -2239604897244277047L;
-    private static final Gson mGson = new Gson();
+    private static final Gson mGson = AbstractPlatformComponents.GSON;
 
     @Override
     public String toJsonString() {

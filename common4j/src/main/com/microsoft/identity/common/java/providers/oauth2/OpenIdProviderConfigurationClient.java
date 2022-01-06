@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.java.providers.oauth2;
 
 import com.google.gson.Gson;
+import com.microsoft.identity.common.AbstractPlatformComponents;
 import com.microsoft.identity.common.java.exception.ServiceException;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.util.TaskCompletedCallbackWithError;
@@ -62,7 +63,7 @@ public class OpenIdProviderConfigurationClient {
     }
 
     private final String mIssuer;
-    private final Gson mGson = new Gson();
+    private final Gson mGson = AbstractPlatformComponents.GSON;
 
     public OpenIdProviderConfigurationClient(@NonNull final String issuer) throws URISyntaxException {
         mIssuer = new URI(sanitize(issuer)).toString();

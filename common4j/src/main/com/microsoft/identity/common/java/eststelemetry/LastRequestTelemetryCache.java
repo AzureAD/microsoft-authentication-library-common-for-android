@@ -26,6 +26,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
+import com.microsoft.identity.common.AbstractPlatformComponents;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.java.logging.Logger;
 
@@ -39,7 +40,7 @@ public class LastRequestTelemetryCache implements IRequestTelemetryCache<LastReq
 
     private final static String TAG = LastRequestTelemetryCache.class.getSimpleName();
 
-    private static final Gson mGson = new Gson();
+    private static final Gson mGson = AbstractPlatformComponents.GSON;
 
     // Storage for request telemetry data
     private final INameValueStorage<String> mStorage;

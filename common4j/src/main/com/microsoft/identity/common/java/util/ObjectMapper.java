@@ -32,6 +32,7 @@ import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.JsonWriter;
+import com.microsoft.identity.common.AbstractPlatformComponents;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.AuthenticationConstants;
 import com.microsoft.identity.common.java.commands.parameters.IHasExtraParameters;
@@ -271,7 +272,7 @@ public final class ObjectMapper {
     public static Map<String, String> constructMapFromObject(Object object) {
         String json = ObjectMapper.serializeObjectToJsonString(object);
         final Type stringMap = TypeToken.getParameterized(TreeMap.class, String.class, String.class).getType();
-        TreeMap<String, String> fields = new Gson().fromJson(json, stringMap);
+        TreeMap<String, String> fields = AbstractPlatformComponents.GSON.fromJson(json, stringMap);
         if (object instanceof IHasExtraParameters) {
             final IHasExtraParameters params = (IHasExtraParameters) object;
             val extraParams = params.getExtraParameters();

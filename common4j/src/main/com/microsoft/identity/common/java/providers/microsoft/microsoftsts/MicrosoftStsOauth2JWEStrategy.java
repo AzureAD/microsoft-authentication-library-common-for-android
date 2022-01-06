@@ -2,6 +2,7 @@ package com.microsoft.identity.common.java.providers.microsoft.microsoftsts;
 
 
 import com.google.gson.Gson;
+import com.microsoft.identity.common.AbstractPlatformComponents;
 import com.microsoft.identity.common.java.AuthenticationConstants;
 import com.microsoft.identity.common.java.crypto.IKeyAccessor;
 import com.microsoft.identity.common.java.crypto.RawKeyAccessor;
@@ -36,7 +37,7 @@ public class MicrosoftStsOauth2JWEStrategy extends MicrosoftStsOAuth2Strategy {
 
     private final IKeyAccessor mSessionKey;
     private final byte[] mSendingCtx;
-    private static final Gson GSON = new Gson();
+    private static final Gson GSON = AbstractPlatformComponents.GSON;
     private static final SecureRandom random;
     static {
         SecureRandom tmpRandom = new SecureRandom();

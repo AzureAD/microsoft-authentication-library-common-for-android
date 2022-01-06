@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.logging;
 
 import com.google.gson.Gson;
+import com.microsoft.identity.common.AbstractPlatformComponents;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.util.HashMap;
@@ -39,7 +40,7 @@ public class RequestContext extends HashMap<String, String> implements IRequestC
 
     private static final String TAG = RequestContext.class.getSimpleName();
 
-    private static final Gson mGson = new Gson();
+    private static final Gson sGson = AbstractPlatformComponents.GSON;
 
     private static boolean sLogDeprecationWarning = true;
 
@@ -53,6 +54,6 @@ public class RequestContext extends HashMap<String, String> implements IRequestC
                     + "Migrate usage to: com.microsoft.identity.common.logging.RequestContext");
         }
 
-        return mGson.toJson(this);
+        return sGson.toJson(this);
     }
 }

@@ -26,6 +26,7 @@ import lombok.NonNull;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.microsoft.identity.common.AbstractPlatformComponents;
 import com.microsoft.identity.common.java.authorities.Environment;
 import com.microsoft.identity.common.java.cache.HttpCache;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
@@ -247,7 +248,7 @@ public class AzureActiveDirectory
      */
     private static List<AzureActiveDirectoryCloud> deserializeClouds(final String jsonCloudArray) throws JSONException {
         final Type listType = TypeToken.getParameterized(List.class, AzureActiveDirectoryCloud.class).getType();
-        return new Gson().fromJson(jsonCloudArray, listType);
+        return AbstractPlatformComponents.GSON.fromJson(jsonCloudArray, listType);
     }
 
 }

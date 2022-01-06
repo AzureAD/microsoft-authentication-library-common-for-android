@@ -37,6 +37,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
+import com.microsoft.identity.common.AbstractPlatformComponents;
 import com.microsoft.identity.common.java.marker.CodeMarkerManager;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.google.gson.Gson;
@@ -153,7 +154,7 @@ public class DevicePopManager implements IDevicePopManager {
      */
     private static final String PRIVATE_KEY_NOT_FOUND = "Not an instance of a PrivateKeyEntry";
     public static final Type MAP_STRING_STRING_TYPE = TypeToken.getParameterized(Map.class, String.class, String.class).getType();
-    public static final Gson GSON = new Gson();
+    public static final Gson GSON = AbstractPlatformComponents.GSON;
 
     /**
      * Error message from underlying KeyStore that StrongBox HAL is unavailable.

@@ -28,6 +28,7 @@ import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.google.gson.Gson;
+import com.microsoft.identity.common.AbstractPlatformComponents;
 import com.microsoft.identity.common.adal.internal.cache.ADALTokenCacheItem;
 
 
@@ -129,7 +130,7 @@ public class AdalMigrationAdapterDeserializationTest {
     }
 
     private static String getAdalTokenCacheItemJson() {
-        return new Gson().toJson(getAdalTokenCacheItem());
+        return AbstractPlatformComponents.GSON.toJson(getAdalTokenCacheItem());
     }
 
     private static ADALTokenCacheItem getAdalTokenCacheItem() {
