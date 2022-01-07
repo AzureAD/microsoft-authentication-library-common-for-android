@@ -39,6 +39,15 @@ import lombok.NonNull;
 public enum XplatSymmetricCipher implements CryptoSuite {
 
     AES_GCM_NONE_HMACSHA256(SymmetricAlgorithm.Builder.of("AES/GCM/NoPadding"), "HmacSHA256", 256) {
+        /**
+         * This instance of cryptospec takes two arguments:
+         * <ol>
+         *     <li> an integer, the authentication tag length <string>in bits</strong></li>
+         *     <li> a byte array representing the initialization vector to use</li>
+         * </ol>
+         * @param args
+         * @return
+         */
         @Override
         public AlgorithmParameterSpec cryptoSpec(Object... args) {
             if (args.length != 2 || !(args[0] instanceof Integer)) {
@@ -49,6 +58,17 @@ public enum XplatSymmetricCipher implements CryptoSuite {
             return new GCMParameterSpec((Integer) args[0], iv);
         }
 
+        /**
+         * This initialize method had three different argument formulations:
+         * <ul>
+         * <li>a single argument, a byte array of the additional auth data</li>
+         * <li>a single argument, a byte buffer of the additional auth data</li>
+         * <li>three arguments, a byte array, start potition and length indicating the addtional
+         * auth data</li>
+         * </ul>
+         * @param cipher
+         * @param args
+         */
         @Override
         public void initialize(Cipher cipher, Object... args) {
                 if (args.length == 1 && args[0] instanceof byte[]) {

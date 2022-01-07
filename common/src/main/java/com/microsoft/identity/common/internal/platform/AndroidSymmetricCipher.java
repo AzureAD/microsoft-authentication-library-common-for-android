@@ -52,6 +52,20 @@ public enum AndroidSymmetricCipher implements CryptoSuite {
 
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN)
     AES_GCM_NONE_HMACSHA256(SymmetricAlgorithm.Builder.of("AES/GCM/NoPadding"), "HmacSHA256", 256) {
+        /**
+         * In android, some aspects of this cipher are not configurable in strongBox mode.  Specicially,
+         * the user may not supply an IV, so getting the IV in use involves getting an algorithm parameter spc
+         * This set has three argument formulations:
+         * <ul>
+         *     <li>a single argument where the argument is a byte array that is wrapped in ivparameterspec</li>
+         *     <li>two arguments, the first is the cipher and the second represents an byte array iv.
+         *     The iv is an output variable in this case.</li>
+         *     <li>Three arguments, where the first is the authentication tag size in bits, the second
+         *     is a byte array iv, the third and fourth represent the start position and length of the iv.</li>
+         * </ul>
+         * @param args
+         * @return
+         */
         @Override
         public AlgorithmParameterSpec cryptoSpec(Object... args) {
             if (args.length == 1 && args[0] instanceof byte[]) {
