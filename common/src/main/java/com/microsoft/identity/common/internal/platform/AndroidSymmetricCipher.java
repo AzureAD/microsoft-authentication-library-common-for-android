@@ -106,6 +106,17 @@ public enum AndroidSymmetricCipher implements CryptoSuite {
             }
         }
 
+        /**
+         * Similar to the {@link cryptoSpec} method, this one has multiple argument formulations.
+         * <ul>
+         *     <li>Nothing or null does nothing</li>
+         *     <li>A single byte array is interpreted as the additional auth data</li>
+         *     <li>A single byte buffer is interpreted as the additional auth data</li>
+         *     <li>A byte array, start index, and length are interpreted as the additional auth data</li>
+         * </ul>
+         * @param cipher
+         * @param args
+         */
         @Override
         public void initialize(Cipher cipher, Object... args) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
