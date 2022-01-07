@@ -148,6 +148,7 @@ sourceSets {
         java.srcDirs = ['src/main', "$project.buildDir/generated/source/buildConfig/main"]
         buildConfigField("String", "SLICE", "\"$sliceParameter\"")
         buildConfigField("String", "DC", "\"$dcParameter\"")
+        buildConfigField("String", "VERSION_NAME", "\"3.0.0\"")
     }
     test {
         java.srcDirs = ['src/test']
@@ -169,6 +170,7 @@ dependencies {
     testAnnotationProcessor "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
     testImplementation "junit:junit:$rootProject.ext.junitVersion"
     testImplementation "org.mockito:mockito-core:$rootProject.ext.mockitoCoreVersion"
+    testImplementation 'org.bouncycastle:bcprov-jdk16:1.46'
 }
 
 sourceCompatibility = "1.7"

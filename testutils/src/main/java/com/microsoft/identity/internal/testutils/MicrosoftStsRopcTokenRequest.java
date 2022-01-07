@@ -26,49 +26,29 @@ import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenRequest;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.experimental.Accessors;
+import lombok.experimental.SuperBuilder;
+
+@SuperBuilder
+@AllArgsConstructor
+@NoArgsConstructor
+@Getter
+@Setter
+@Accessors(prefix = "m")
 public class MicrosoftStsRopcTokenRequest extends MicrosoftStsTokenRequest {
 
+    /** The user's username */
     @Expose()
     @SerializedName("username")
     private String mUsername;
 
+    /** The user's password. */
     @Expose()
     @SerializedName("password")
     private String mPassword;
 
-    /**
-     * Gets the username
-     *
-     * @return the user's username
-     */
-    public String getUsername() {
-        return mUsername;
-    }
-
-    /**
-     * Sets the username
-     *
-     * @param username the user's username
-     */
-    public void setUsername(final String username) {
-        mUsername = username;
-    }
-
-    /**
-     * Gets the password
-     *
-     * @return the user's password
-     */
-    public String getPassword() {
-        return mPassword;
-    }
-
-    /**
-     * Sets the password
-     *
-     * @param password the user's password
-     */
-    public void setPassword(final String password) {
-        mPassword = password;
-    }
 }

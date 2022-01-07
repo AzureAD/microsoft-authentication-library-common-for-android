@@ -20,23 +20,28 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.platform;
+package com.microsoft.identity.common.java.commands.parameters;
 
-import com.microsoft.identity.common.java.crypto.IKeyAccessor;
-import com.microsoft.identity.common.java.crypto.IAndroidKeyStoreKeyManager;
+import com.microsoft.identity.common.java.exception.ArgumentException;
 
-import java.security.KeyStore;
+import java.util.Set;
 
-/**
- * An extension of the KeyAccessor interface that provides access to the key
- * manager that created the key.
- */
-public interface IManagedKeyAccessor<K extends KeyStore.Entry> extends IKeyAccessor {
-    /**
-     * If this key is managed, return a manager instance that can be used
-     * to perform operations on it.
-     * @return a IKeyManager for this key.  If this returns null, it should be
-     * regarded as an error.
-     */
-    IAndroidKeyStoreKeyManager<K> getManager();
+public interface ITokenCommandParameters extends ICommandParameters {
+    Set<String> getScopes();
+
+    void validate() throws ArgumentException;
+
+    com.microsoft.identity.common.java.dto.IAccountRecord getAccount();
+
+    com.microsoft.identity.common.java.authorities.Authority getAuthority();
+
+    String getClaimsRequestJson();
+
+    com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme getAuthenticationScheme();
+
+    boolean isForceRefresh();
+
+    String getLoginHint();
+
+    java.util.List<java.util.Map.Entry<String, String>> getExtraOptions();
 }

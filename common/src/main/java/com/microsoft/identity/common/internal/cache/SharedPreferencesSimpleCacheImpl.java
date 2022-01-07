@@ -28,6 +28,7 @@ import android.content.SharedPreferences;
 import androidx.annotation.NonNull;
 
 import com.google.gson.Gson;
+import com.microsoft.identity.common.AbstractPlatformComponents;
 import com.microsoft.identity.common.java.cache.IListTypeToken;
 import com.microsoft.identity.common.java.cache.ISimpleCache;
 import com.microsoft.identity.common.logging.Logger;
@@ -53,7 +54,7 @@ public abstract class SharedPreferencesSimpleCacheImpl<T> implements ISimpleCach
 
     private final SharedPreferences mSharedPrefs;
     private final String mKeySingleEntry;
-    private final Gson mGson = new Gson();
+    private final Gson mGson = AbstractPlatformComponents.GSON;
 
     public SharedPreferencesSimpleCacheImpl(@NonNull final Context context,
                                             @NonNull final String prefsName,

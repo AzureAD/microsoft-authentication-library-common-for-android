@@ -1,0 +1,119 @@
+package com.microsoft.identity.common.java.providers.microsoft.microsoftsts;
+
+import com.google.gson.Gson;
+import com.microsoft.identity.common.java.crypto.CryptoSuite;
+import com.microsoft.identity.common.java.crypto.IKeyAccessor;
+import com.microsoft.identity.common.java.crypto.RawKeyAccessor;
+import com.microsoft.identity.common.java.crypto.SecureHardwareState;
+import com.microsoft.identity.common.java.crypto.XplatSymmetricCipher;
+import com.microsoft.identity.common.java.exception.ClientException;
+
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.junit.Assert;
+import org.junit.Test;
+
+import java.security.Security;
+import java.security.cert.Certificate;
+import java.util.Arrays;
+import java.util.Map;
+import java.util.Random;
+
+import cz.msebera.android.httpclient.extras.Base64;
+
+public class MicrosoftStsOauth2JWEStrategyTest {
+
+    @Test
+    public void testDecryptionOfSample() throws Exception{
+        Assert.assertEquals(1, Security.insertProviderAt(new BouncyCastleProvider(), 1));
+
+
+        // Session Key Sample, base64 no padding, no wrap.
+        byte[] sessionKey = Base64.decode("vJpz/Q2VY+RN1d0dIHr2ViiPewFlWiv/kxWT1Ra4JDs", Base64.NO_PADDING | Base64.NO_WRAP);
+
+        // Payload sample
+        String sample = "eyJhbGciOiJkaXIiLCJlbmMiOiJBMjU2R0NNIiwiY3R4IjoiWjRYakxpUVlScU5NaWxnUHpMQTdzQ0J2Z3I0N3F6UUIifQ..vJsLNvtAutmvkWoU.quR3YVnGdRBrcsu6sAW3hgk6VsduDLPAo5N3oL9e66CGHjs4R7wr5W8kXR2X3FtUvwLMTxafIrituXVXUqjK9iy6jOWlMNIBWpqD1a4hsjJH6qkddRESdGjB65_b6j0emFfxWEzX9eH-XrgeXj2nUv-ZYBwl8ckuvWy48zNW_bPb4ShZCWIXYluNQqTy_PfyoOzCYMmiD16etqo50K7SzntYu1w3O-yFfYxHAqtuqZwSpqRLzgvQk4uisUER9NSob2r7jNnr2s-qqLBUSgg3ZCAtTEk6BXqwoh4YPY6svuXnokXJp4q1AgZ06CZmEamV2hS33cUMY-NyiEksHvGFFTgGcofXwO6Yh1xEuOPdQGaw4sdHMqx9-ueBiNJPoQODas4d7n0ZoxU0L6xIDoFCyelShczent_2gIq06Wb7A7-J9a3wV_fTRMAEaM1hFKr8GP-fq4rAh2sluFqDheSUvr1EnlSR-oTgsKatztPCC6D3_3m8zs8xGOSr84Y2pDyaqdSBvxaN__zyJ_Jr9MUTohW9SZmMT-khi7aTR9SAtZzLyrWIbZYADq5OBqYysiJhnaLAcblW9aXDJVhnobweV9jWlbqRt9gXqPgftcOyTY7JLMNDaqahaLJqAE6tLhQ_yR5gHqIkk2fgg_wWI42SuDU5amD_mqzaWMUBjuyb7VwwvvpTuLZ6RUyQ5wcKguPtzZ-XiGyjtlqhSQHwfB1-kaSBBu181a3WsSSftwqasuv-gfTAust7iW7dAXO_DBeOHywgXBuyYQDdiHKWq_tsHc6HlDVWwDkMurs530HvK09WBlwc1ES8jKKjosNE7zMvCRNhNmcvAjS-Nz2drHPUWNxCunAQ-zJ2T_bOK3Ocle1FjvwkD8cn21dipbrshpUPR-F6_m3HGkAGE7uy_iJV0AbxrA-BwymQ6rpmqlQUzJOgGzB1bG60LpxWqeh-MFzkZKDoyqwr4GhYILnHnNpsYByx0IdrY2hSc1TStJU1tKWYreE9-3MNlCRN7a5whblmX9dhYouNMQ6ZkmFDB9QX0sI2XGtEEQ0n9VLmbgKSViIQc14TCX6LdRW0JycXxGysGRDT_2z1C_R9ypsBzk0Q2-K2KQvhh1QT1cfVta4YXOtyCL4ZjmoFBGNwd1o6baZBlzGZPPxsLZ7ru4YI7pLj4-5U8urhD9z0QOWkG9KZ6vrlIZkqZC-UQG6f9zfmgjCvvc3YOtNteV1-S_vawuPSWnd3e46LWWppFIJoQF1qAGLVd-4dbGpGodypE_lPHAGA85wKWFr9YhDaxe1Qn7UUcd95dqPcRCKso4NR9ehj02KsI5MNFdoMSHx6WRUoGFXxvqZcaZbeXur8QmTRr5-wL1njBx8TmHMgM1QPBDcOC6VmygU2UMBlEOHQ_OCtifM4TB3wtT2Oxho4L39H2UgMR3McOWdea7MSczQd74JBjmkP6NHfR7N35jf3eq7q604ylM8Nxo3zye2jQDblBeBVHy52UPgW8_vDe6zmXoTM81pgyyrmqyMmR2s_kH_s0YBN0bSbjAtQfSGBuGGkJHWQ7mJTMIhVExDYfipleGaDjwtxxvPg9mOsbADmSlfM1TpiCYUifTNEBj0Whf870WgBCtadVgw8yZAK9gfNp0Kj2cunJbkW0qMohAhXBeUAy_v20L3xoBgWStNKcFzdXIZ8Y6fK2ETAlBCS2JmxnwP_CCOo96ukrlK69Czohv09YdfS3vJwHuFsXvdkDl_rcT_3v59TLcx1GY1A_wxWCiGa1Aw8gxGfKxNR704Z3_e163sBnP-HggciqCt3jNGA7ySDtZFtwMl82VWM5sxPskymhBncmgEO6TRA7HQAbMuYU_LYLz4rUZAhYSuteOT6__V5ymA-6CpbF0kYoHLh_Ri0KOYMjk_-SAR0gb1rtsEQPeA2DLVIDAgJUjbkmGdcrySDRrG6S_Icp26zvaa-wF_rucjKhdkMdNUV0Yi3j3DJsmVKSJu4bUXicivzGPn0aaVAfHtDuNvHPXik6AEyekuCwCsJw9OlZSfCQFHHEVZYuBnICUnguQW8WAQdiumMXu6wISEY5GVtqi1-gWX-Xe0XhwLENMkrUCGe0ljI4gGPcVjuVuSb052MU4_Ev5SHuJ-38SbzsuVF6bIbNDe8OFg0CVhDPDSl12zLZx7wZG-jWUVSSfpDAVqjuoMbLZYX7Z_kfB2m2IZ8vmZ6-2wA9Mbm66Z3Fky10ldVubG-KVMu2YJUlNcDlTUIGelLrNw9mzmj0Naohw3G6-z0_8uNQm6y8-ErIrB6elfwKcgVApi-iQXtYxL0IhzrJYWPLVBT9ieP0rD-pXQelJAnXHqxm6xMjYJHoth5IS5WP84REN8faPU0Jr516thuGFPfLiUoiyB3uUziuzzqVN-J-PKOFQLFGVZL_LsUR0A_V828vQym0wWq6ik-OPIAEnbbWLmZ0VgqubI5EgVcSWJqYVgawUFHNgjQYH48smpLp1IGzXfHCofI04HJHK696IKF-R07a-0BWULJfj4txEijPJLOVvya_2icYyPt7a7w3StavqVxCaMooigDz24bsy-PRON-1VK4AkoHRzzf_0ynq4gvrBLvI9ONX9AmzEESHTqhj5P-51vp5G-M_o00qKBZowBhD0Va6KNqTetzbex7aebjRQd5lp2xS5l2M73lGJdLC-VnnEcNMgLRglIqqOJChP6mHPK1rVq_nCr0svMTd0GvyM7C_mSgzGfU2lBE4bfUkbf21oZ5415vLEqi18AmJOTB6OkgMSItPpUdQCZZEipRDkNNJkqP9qxvJf6-x3sd_R1za9PE9EPgsnyt2t-N6r5nwClq4GUQqsdbvODZwLIVdnsoKxTR8iuIElOL0ToatFHEmMjwOYPp40FzUt7Hf26GiQ55TccvyUpGVYcAkA-mr2YgTI3z_BnQnDV6-aj8FuYH2CWa992mvzrvSF7gW2VNYAykMmdTKx1gFcIWzJb4Gw1i1T-IMhld_Djo89uN_7Hk4i1BNGnT41fmwJSHximpw3-hmJKtvksZ-zzo4CblfumnnxX6oZiIyWlT8d5tpntIQ1yLtARnwOMrNTCctAPM74_C6HBXAd3gpt0USUOlkm9j4XsChGlevAJ8wjOUtswtt0TeIj7O_R79O55smOq4HpDdvau_Qru0cCI-w4cM-k8uxse9gQiJA3_AmzyotWr0wrHNPgQXVu6rOIObwTvKm8MECMBuECbSmstFRIjyNpkCCQTfG4er-7sT4WPqzI-H_Ns9SxscQeHlXE35MaruqBBK5blXkA3YW3gPuYDkI9Im3FxLhsJN5BmnRuGRxuN0RjMSF1HZHKA4Ur-yYrx44eFfHfd7WsoXc9p987BAQzCvgJrnzQwv9lKEu1CzowqHwIoR6YeaKUvwjyoUFM2QdPqJCD-sMeuDtMN15tKn-4em2CThlQ122gbRsZEjquAEDj2z27Yyx_NH6PV7vSf34kKMeDJ2lUnQFiZLh_2WaUQz0njAy-1enr_2k3lm-sJE2LjgbnIri1yFw7McltGqPvY7GyizYMjgBi52TQrD_4teD6yll8SBkvhSfC-depLQfGovnuCyTL-gh2rvCVelX8kM6i-f3NBXfZJ3eNLIyfz91e5FuAd1gLOJpJ8S4MRrLaZLp6sBymejdjB7MIX2hjhFKoWwX0w8093Oq5yedKbVh1bvvZ_hOzvzvX4Rr-zD0nkjpkrUt-AYbnkz1gS9a4gMFI26Hy_S8Lpd9cyFE6aHOdhrXUWWAfT3mrgeCFtsOm-NzY8k92uuU9n1xRXUaDeNmZWCZhPE6DfD89jrvdFDAkshpBuXdh3ERiPQv4UkuW1zPQOrj3RCYEYd8y9Gp4sjAK303jF3k3U9uhqS9y0zyGW-eaDtu3HNiLb5dT-swSKi6Id7QuVklfawvqLRIJv7_S7FLAimLRt7cHtfTP0ElBL4B141n1v0J_Y5ObupW_6lXr0gY-Xb9ohIhKMR6XvQxXHQQ_pQnXtZ2wVElcWVXSXx_0O8plUsdlNAppIJkebjn4IrWAI24-AJWBNse8c8tRrl43I9tLGfL-xtiMSaZus4xQlsO6wc4zKjMBhU9bR1O8_Ib9Qqlx2l7hLffT3ChS2rvOGhPTLwKd271MIxiXhQ4MF8gcOsURrwJCo8M6Ws-bz4zVvLTInl7YzRuf0WUZA57fm63r0qOF7ou1iizah9Lw0cQQR3nDxvwJ5GeOLNZ_GK0c5z6_txMs36ekXBnWB6YAibUTC4jhC5TGncZrJODSpZUWp_C_7ywkowznzV08w1vnB8NOX5y4jBjFIoVX13Z0XcXp9uCFJkfO4OGU8BR6529Ai_WsrCbGUYVZPKDUkf1G_8mdcDjUfUmlY2dzs5ltlaSzIlbkHcbfwLiqQqwMPzqRbdhiAoXVGV35Iv5Se2ACXb5QBnuBdQ1G5AzuvkAm088iZ4wRTPmwTUS2d4Tc5PUUeiM7zHuuiAYQ3ElhjwP1OFOBxh6JIU1HEUbmSdV9Mooh62L6OAmIjU8u4OWfsQGTA8ZeTqn5TBfRUDzq27xUlCia4jKSXVrYksC_E_pyOIMkqC4G1YLjqGtHZpiT0oegnHYVXWZBsF08QLgdytz6O2uXdm7kRow9iiEF9ZbC9_yX6GDno7mUhQKqQEghlAiNrtF0Y71CR8u4XzJQuoZ74C1cPPfEHhOviTQ5udE6H6GMLqAT9allqSqQN_p-jj6VasERIl7Nl1fpl6u6hXUBTPhef77EUgpVnvOunjIPtRDOIwx_9CgrwviAlUfX3csB41vEpxjOxAds8h_IXRGsFU1u20o082ejguCA2VR_YTWd1E6owOB_u8MzLyHWMxZ2RAFA-MoWuZMrOX2NVs2MBfPOnEXuftin-p54dozSX1WpNl41SOG4r0uZgA2Ku62aUDKdc1-FytIM03xqmMHAOYAsP7Fe50SnuryeJqoFUo9vrIdHuWnbOdVtzpidsZOWA6DmRW5Lf_LqwlvqSSJMVtCC-Wtul7C7b2bfVp4JhedjboWVjX9ok_spIYoy9YoTTGm02e22OdmIJK53szgtYFm5jFsRJM_tV_Ug2ceoBnliR2PyrrhiBxxgDqhAIk0luDJNk_azcQEneUSaM2gaOG02qHW5T5PDSuUpp1MDDGBlqijQlxVWvE8_NMVg8RI-UkZZpTP5YMZh6ADxhbUswqFbwMQFu3xeiSOEJczLehPaIzLK7onhT_JhE_XmXTlofA5g84DWKSmr_k4mU9lThyPZ5N7aiHGx7fxgfyxCPhrvMH0lmUAx5dxCdKRk8dI7RX0_6wuNQOaW1tJRBtsICHcVmU-Aj7V4UmykmzVEJkiZgqlPIQ4I8UbLsWi7E7f76KAFeOVO6e8QyjYkvHvtoSuUNzogzyqKPTZ3gEDKQ3TEysRfTPMrTdcGISiruk6n1X_ZWw5KM-awVogdwnNgtQOrg9qrtfZ-d7OLovTykBD-vXsF2SLRrW40K2D61q924KuKLTXxTReK-BvhavaDlkXIqGFOVkyNDR9MXj8r2L_csIddKb65vpWANTqeOKGsp14MI2Rv3-34ti5pEvhbq01AV2mUMPphQx741GhVODOYNcUxiNwiR_1d2cKpQX5gUODwujVOlNOTtr0t3s_J1I0nZiTIG4fugOLRId0X8BMT09gsp8qGDqymoRl8bb8Np4Vv6Sjik3P3D0xPERXwFu_tOtaStuVnMRPms_G9QoZCOJfORupwPYhxPjWH25Rz6BJMpPBiOcjucyuiUjPrSu_8z9sF3bMn9PTWQABroifkrwDc8zHP4U2vO4giiWiXkmU9ziXmiBgooIVPZ3D2rwM4ChxkqqXPbl3yR6CU3DxITYifMepKIMYVsMKTqVg_Cj9UpesEdQLLmtL1VxBEublLtF7u--I65ly7tlk-6c9QWsWdXa8vKOwp6ou_jHdn9ywDQq7-59EUNK9HfychclN9mQdFRXXhzEgjYnNSmlmeBVR_oaRINp78QhHDxCfAP_hGbfaMhSZpQD395LrzPnVKR0E0SEOdNqz5tis75B_z_YasGO4ZQdaw9G0-NHgEMYYxB35-ZsXLg6GCgnPGLzeI1LAULMmw1JPyml97b6JhRTSniw-0Leuizf8_qIBaPnE83VKDCSRiaXq2tnqJCyabcEhmS4xTwPSrm8_aIQHpA4s1lGED0yQ3_SDgqyylf90Wg6N9H4BKK3k1dC9npiOfjNXAw0xEVh8xS2F4coVKFeoq-t2L16p-_XYf0t94y3wHrp55cnEsTVztTlo1tmiR4u734wPwXL8AowCRxaGOPROPKx-YTfK6jA6LLtJpx3oB2J78sCSEKqLhbpIsGXYt6EsoAPeW3ZQaMUxsN3Lbcar4P_h8j_pOZURm8VItcBCvM2OETqxfI_g1v1VRhrOtHqE4kpKz0ankOXwBDgQK5--PAr3d3-fYMlFY9sIKnxk4tbh0P4AvR0GGWIUmpSlzLX3ongKDwJxWDvYuKTcJs6UK7VN83B8xyf4RkdhDVEEQenKjvcO6FJzNTB5IQfP9MMULXassHjZQ-V1ukSDRjUc_Yyksvym2oE1To0Q7J42orGSN5MrFy6wOFzyLUuwHO7eFbdAZdCawfwrtFjdze4Njbvz8OkzWr7q5dd0XMmqfVXqVD6wnPITyGizAmfYmC6Vx6e8XnfPJOJAka5GdqICUP2hqWgCLGewcadUVlEWELPlK6qvh2JulDo8l38fUXAiezYG541zNqoCH-VuUgmyk5ZeIM9OBDDvhWefeOUONDIxTceZasj7GTMLfy6IWWBOJeDVao8G__HVGNX_bKmk99E5iqIpmoSCtC1n5MWBRzM_QaNBfZSsLcsRPcPonwxvskz3gQEXiOJCj6j-3W3Ex0caKDjJE8YF2v_tbyOvMpi45-OE4DsTCI4NScLFGRP0WmyDWdRmsziF3wNK1lOKiwNhYSvFDm3WmQnrvDVQTRVwfY9TZeAA03rhBArL8oJFzLzRz_OJHuNkEdyteyuoBuJmqmbPez7Jgmoj1rYJYFGUyreJVqUxyxDOYkh2xcJK0WJrBC4tNarMrSeqy8MNMu5sTaTiqVH9xHoImq3zmRyaJQni682iUr3HjJm9aT1MoeEuuCvtqJy7pYLjx-vFZlTXn03XdkhhyuZG9lmFlyGZmxcsKCOig5OtDsq-xovA0xWcyKYYY8KQjL25ufhiNTJK8IkYovYGg4Kw985BgPk6-JoNL86lQzp20gQhETrWbsqVT9R6o1VVqNKtgWDctKZui88hBhIUPUzwvA98ghpGpiA9mVb_dCIspDoxxKbuqV3D8xlj1oO16UlRfGeO4GGGxS6Qrbr47yCJBgu12ZjV4cDrwZBoS3DlFUsSzap-iVSKhTa8gTOAy757MVJW5IqWkjCacviiRuluLqZVhj2-WK4lWiuYLqW3mvprl5GJjWQwV4xAbmK2CDIBN_S6-JnUsL4_869aLtoXCPUAbuGKVKfNMRNGgl5Paaje_JHPuW4RPXBEKzkQK6muakaRDj2MaX0MdTgAZ3DG1Os3lwyNTgceAIGcGVW8PYGxjyWXW1rHxp_HtD3Q0EIE4rtKmZjXGPJzthr9jAX9X16mFZPJikll2udpZih4yECahk1h8fQWOztdwmYdnWmDmyXjzTz_JULcZ2kzEXtDZ3Eo0ES_Z7o6oLprns-sh0A4SlnC-0TxuwEZilM-WYVlTFavFf3_AY9CTbG7ZpOtosxcK30bS3pMab6z4rKNX--23KaIo3QSwhucTj_mB114GUoXiDi6OwUSs6LJxomz1-anUnhwYzniPh-7bMXZ9C9pS1JVfEF7b0IMUozH8tb7dr_mFFfwTAzPRWbq_ApH4m06yWlXq9rRwN6egdx3HB7ZJLsfZDV--I_GbfFhKUqE6BQ5bOjjffIjNwdNgpZ3VskDNAnt3VIyftMeC3H4zdpALWTOMYZ5G9WjIlyCTYSDWDDIpX4BkiKg7qu4RBEJm2hujdhwsCNdjWlxHWzZjZAUSMesMZ_hb49FT9rSoXOKjIvc2pMX31MsuP-75AxBOod27_0tdaJUhgrHvfxDNGhtiYZALNkcDhT-ut9_2w1yOz-k3Mdx25w7E19ZRz3cK6VGUc_lUWRECo_FITSxByt8Izltp5_bKvwL0nFHRTnRLAyrga1fIaud1ccHqOifkVGyM8nMhndSqlvHN1VL7AHyajPfPs4nJwzJy-x2EM0i4mTZ_kAvTkkOtBXX7WgDUT3MI6jW_AyToBA-67fehO39BA5B6mNtBPlfQHMjmss2njQY48bi-Tb5Y0OMZX3vMcY9hz-ZdvizchgwlPvcxo3SngWDVjnXkhKJrLYcY3O65wXjwMaB_iRrQV28R9UP4FKWrvBTtXTrcx69maR2Z5MvZ2YvWhfDNRw1E-IZcU8-rCIUgWCqBk00K4qDC7RN6C90LC_aDWXeWOH_qBGgwMxPmnVLuay7P-2_fiTcAvO7cvl18mT_rHvNS1spuB7wzLCd8Q_gxhLb-GauSSq6hcofnjf7R64SD1uVYU2JaA0Kgu91l6cke2sW6OHDUtku9daqKiaCEyLDk9a9yjsZK8P-icyr2sFcBheJ1LsrpOBnClZk6Df2SHAJuRv4qZZsOhd6jRaof2K75ZyqPXH-qAMFR7PDCdLzahjwrDrG4Kxerz2bw1r85gKq69gQ5LctoK0J43Uf8ZxtdL9-30T4N12ZiyL35AmPe5XwNezBETYPyFPETCGtC48fSvNibl8zEraii5RCCUWPpn0iy9IKlckPKEs4MQsCpHobkkEDGuJBFcdAOjinxy77yFWFdD9sFnnPE2xE_Dhfnh5xfy2wE347BrYnRfvNO5QidjnQFh0Us1JQvRBfyQVXEMAVFtlrb3AwDA3_OWNeWzBiWVvEa9q0-STV4C7-EfgfOjYmbGC3E8YNIRccSI2qZqjUmTGZu24nni9D_yqa32UD3pknaOfWP2E98M-b9IarWptyhRGni1i0udCqJPcKuyH4_R3MgycRU6vsucHKbDS9ZQFdhBwECnvofcz1X_WsXFgkGJkGuEbOgTwdDOmRPkdH3kf4gV_VndP_dseMIcLWybF_eLtifDL8pnoK0Ffe6_NG0yIeq_bzG4Z8ew3y8jIecdKjU_4kYINp3JzL4iKIcjga6FF9ABpHtHLHLNaFmVTjViNRbjGdG8YC-gnZuqYQsTZ7UqqO74HUUZLr9dfenP5A3fSrVN89TbZmx4o6ng1KTLBsAdIvR_QAgdYchhXU9ZDgRYRnUmz_07esX5E3wHiqobLnCeufm7M-ziqjiRJD9bTAHdMvTilQbduHv2KReelEIqb-VapgWXfDMoJY4MbJ85zg_RY9t2ueP9STptPOU7B4FuPx-dhwnuSdYfk4Ku0VZ36fRPPG3VxJH1DeEsWw6yOxZVinV64j3pM9DPZBnEj107WwSVfx5nEfuIUBYIi1UiN0_EVC0TBkX5ybpC3Vn-AVOW7NRNDTHYlJQANK0Zd7ixCvc2lS4LjAtNjmwcf4EFM0TqumL5rWcLhJpctY93j9MhiZZ0shGDX5LYDnPSb6tnIQK-aiFjK5_A5Ds_qrtF6gx56jg_s18wRypYv0YYFYsVRRINiF557Gm8L80pcrNFCTN-WE3Y_0WPH6oftf3t44rGmBFw_AM8oEusF72OBcfs9oJvpXknBl_bDtceK4mHLUN3d48ijc-y-228Dr5cH6hzJcjQPdPrP69S1fBviJgqA1RDUr3-M3K2Z96Nc0Aom2_-BSR7MQGU00AHtuPf6WrTal3j0o4AE9P3U-8J2f6B0oh7rhxVYtJgnaxwlAQg2XaKHYywVU7x364ZxeERlsQZZUtKoEzGP6G81QSI7-IKy0dNuoNhSaNHBn1QO_EBRaSgzXydPeGK9Sxsy1UrfxILOGQXtHBtrikQKd5nPYxH1aKvNXBRTRYKUgnBBB7a3HY5380Qvg361JoSG7-jFxBXJ81mx9IHQNIwB1TbpF9Y4cDfXoooCneyiOTkWQU9C96feXYcLvbCgWdon9Lt8IkDFPiVli7rZJ40Luoao3qo4pwau9J2sXlDLqQ6UCtjypgW-IBcOQcI1CAoMFhGZUlPHmzDNZ6px_rfQFNVS8duE6b_HzaCjdOCgnttN9Om6pn8xvzlFiclkMFd5fJXvrart-DUh41EjKyMqZlUND9v13DNO9yjBwuFc-cmUnKrwlhg2STBfHTaY71UaQk7x9pydvK9uRY_pLF2MCT1r-iM3TVlRVMrUAwKhZN12XOqn6oxRFhtwjgHrV2oyyhIQnfOWT0QYUw8VACqRak8kcFb-WDYhK7hOLhC6GHApQJb7TPfg4yoJ4eT9pOJ20Qo8sxkTV4IUUg7KcyJSWfxKKXGMXvVPHsOxlupJgMyr6DBMF9Oj16VFmwCz4VP9UbCsFmHp9dXqWWNo3UPFJqTSc-bfJhoasfCDcyGGKW3iv1yEn-GwfGYYDK2qRYIJ8WfWAjl7YnMiToZSr0w7XKjyZiFvKHhhIzYO-uOsnm571HDJiK47G3ZbywD3vfc3MglVndrTFF6TDen6LlfmAQXAg-bgdCO0OisSGYHxr22Ckr0kh-9KweDWqMFbAp--ApKigjfs-WlGJeVNfd3w9sOQ8_Z3J8jiZ6hPWdNzRL5v7BIXgEeLA6k6NxMqoQMk7MST96HlbjeFoefFDQWEM6afS3f-1z5x4nktSSI-uqhFeX9QxtcqKTkLzxF33pYXcMIhOihUghixKb9g-NvIQ9RDCZky784kj11DseknScFXdIfFHXIe_xYKpUy_j2nRZRWymhD2wrqFCK7vSin6kVgUbpA0Vq7h1hZicGKenUhzG2Ax0HTZ6qB4hdXNzgPFh7TxgrJI9dn261EPk3-236MGt2lOLE_tcUbRflI90A53ez1H3JGZundx1L_W-NcqtPM8qFVkIhrfGIWC-cVs9Jno2TfUdAIuZ4o497jy062PcmP-vWxiVOuj1OAZ__m8J3uc9C5_buMbJhnNP97zcJ7TOlk1lL5PnDZsiZbtfcI2Ngbnri6xbTKg7apfsjkD2DVf65fpK_jeZ9tGqwziF_ha5TAcICNI5wTHmVw49Wm9eFr3sbcC39L0SO4JvKGwdeEF2OJKWo5_XTSQuoJGQQPek9bz8z-rl_AalI_L4CV9cme2QXYdrXnlaHIcEzlvXICgbInOn1GaD3x51PAItQMybNwrmKiMBhChLZpSsxUqsF4DO4TObqgvSpnTuAJvQ9xk1jlIHEp3NxOF7dnbRn3ZyPHil6Ws7EDaaLUgc_1sg27HUY-z84U0ZTZHxACiMCz5adPbrh9mX1f1nb7Wm0SqfPZfy_R7A5p1MgVNEUbjfIoKcODax3-EqoUaa8xtvNLCcD8y6EWZZoxYAFRgeBjdNktbUyBzR4uqqJZwOOlZsdzxAK7OW7ZqLU2w5FuNmUK-h65mSzonL0xMA9jgwdek2PgUTpffP0bm_ri8hiXzgc1gYCdfZezkXFuT2ouIAwSp_rXW2OvH2BZ5_fIAZeGkLE8JgRyHH3-4UANVk23sq2ZMxviGKXn4sGitaTa_Oe69NrhsJ2DY0W_9VkSGPiwz4YNJstwWJ73-bMbRBtR9qFHaXf3VA-DwgA9frR7Q8kS0atXNeGffJZBd0WckJFA8KxLJsNziJ2zXZqf4epC8ph_vun0Ye-fIx1Ta5lqJvqKevgMg3buv__4PfLaUAgO2t6CkfG65WR1SNH6WT3hognI5NQjr7c_GkKSJHU5TQZuBpQyJAORIPxZ32ygT4fRDmnHsl0tIVykFfSeCQ74coT0yGaDP0tZ1FE47u3rJV6mGES46AqLMZalKBLe9diaEmnStATU9dV7ira4oELc66_cLkiLg_AtknPicN2p85i805aM_zvpv-8-FqKpvK1Si8etiCHQLdg6mN9-d3G3eCYM48EFcS-eb-hAUFDjBnfoCCQiO-lkurAFuYsHCliLoe4SMtrHyNVYkCGDVPfxrgF4hjsmU1dVRTjrLSfXiNQaUQwbYzZy_uXSS42rMhZFFeytDf-bZvhVj6jqhde7NGhLBm-9Z4zL7WITJlCB38exMCBDLckQ4C8HgTMgzsVEOhDcqHOH9-b_CmJwjqYVN5vzR0OiKAQc0wleVge09nWq5SqMuhtHQQATgoKvG-TbY9xcLkq2g5pzto3ZEYqtIm91SkYoPJzTmicU6tS8K-LBBACU6gIIAAP4tBGVeEDF_6A2p_JUESk6vqG4kU_8N-HMTB0DNVvHY7nMLJPBvyj6wFH1Dlsx0y3ocl9LsUu3zadSLwmpIRFCXmmtBmMC46FCPQ7aNP8XZq6ySos54CoDFSX7iC37rvffUmWMBgr7Cnrf85Aw2jf4mGMifS0YDiORWSvSroKqACxe6dv7r-b3oMZHx0HJj7fU9dRfKOZisoN0iUXhn7C5qVLlMmgGGNkMHrZjSLXzJlsWqDDCEARE5zghcjos2ZXyYiInxTGVrdF1peuTaHsNKufot9PBHPcvE0eQyNDrh5SO1ZXenX97l-r-C_POloecMiNLNy06qheRHwgk32W4nFJWQyzUuUMam3InHPFG7Te32khHDJQ8vn8ZeBXAaJN9hV9-P78w31n4jiV_a0lxTmkMSZVriK7q6sc1wOTTMXsAyFSFFippAzwKTRSX6-jN4XKMaaKutRJK7598Lp4EnXMTzvAyRcelnATRrM4MTIy_LcJWu4dBudVVANOV5qt4ffUR4zEu8ZOWhLNc5TzHJ-JUNd_L65nE4oSQ09P8rboxMez1FioJVNadyc-oBT7AeGtfyodDxXgesKUq48oR_ZL5OiH99wKcTgzMU9eCIPmYyeVdqSQWcGWXE5NcdYNpBHc0BIQMfZapLkb3BWnlNF4wq0jFiXdPLtk_D19YmMo144M4EfAQbyYdGU2htetebw5dvMdkDKo9TWU0I9s_lkzFPh5do-3OEx7OWiYhJ4E8iZHCoFFbRtfb19wLRHKq3dLc4vWxc6HNXMKQXtjrTtiUs52UZsn0YLplMUhr_OcUKXF0-zEjgJJi8PR8f-UYjio72CgTjpB0cuwmzHyVxQKLRX1xFDkGMmxAp2ayABalmA2cHgSzwvAJxb-H0Gb1DtutWrEhtzZAY8RWKTksms79D1YSEQoDjshwNfJV4mIPnscGlnMZeBMLd2eQ4fyZhTI67xbmXMzwSrCDy3SHwla3dj-FnWEmb4ZWLvQ3j601He0RRLccFGF27n2QB1fMPs6qhBw0900j26oNaZpLeX1inVj5ci-la5sbDB5V1LAkI-5V8E2AMbD1OiJL16zoJ0EmAoAdqugNP_O6QiU9lkl0Evjf8oH8B8Fc3neu2wGHvADTtR1dJQvE4xB1CJIGwAoso_hrOqJrIC20uZBU08Pzhkf9N5Tlmdmf4snQLTKei9XGM9ktb4L7YHpg1HrBi6ZCqXCE3HSKq7QMZ0cChvMqUsVXbVvCB2pMbrHciFHX4-A10_76os72wbO3b5Yn_2taiBGP-TMHKTkJc4P8Kv2oa3gKf6CvX7cfDoAKa6-bf5hOC6ubbFMZ-KGQyACQ6RNyX43OzgyHRuijgfTGl0geym9bRSFeipxPAiaQ-xZHFgN7idU44qopgdgwz8ID1GJYykrCeB967Cvv2EoZUKUje-xffQUrAx05IlgK5xHFHBJW-eV_hNNcETonul-R5KqJJeBoZ18nM7tSe1YQMlZdoylVQBE4zzMs-8SXSlBViOq3xMYO0lZcmJ9I0ilUWJMilibMDT8Q__1NR6L1srnCuDxWNrbdo_89OopJJINkf4hlwL5Rfxgyj9GUy4PfDqzLlJg.USHaEFmMorV2C5qq8YOrIA";
+
+        String response = MicrosoftStsOauth2JWEStrategy.decryptTokenResponse(sample, RawKeyAccessor.builder().key(sessionKey)
+                .suite(XplatSymmetricCipher.AES_GCM_NONE_HMACSHA256)
+                .build());
+        Assert.assertNotNull(response);
+        Map<String, String> responseMap = (Map<String, String>) new Gson().fromJson(response, Map.class);
+        Assert.assertNotNull(responseMap);
+    }
+
+    /**
+     * Since we are assembling a buffer, this test insures that the buffer is assembled correctly.
+     * @throws Exception
+     */
+    @Test
+    public void testBufferAssembly() throws Exception {
+        Random r = new Random();
+        final byte[] ivBytes = new byte[12];
+        r.nextBytes(ivBytes);
+        final byte[] ctx = new byte[70];
+        r.nextBytes(ctx);
+        final byte[] encryptedBytes = new byte[2048];
+        r.nextBytes(encryptedBytes);
+        final byte[] authenticationTag = new byte[16];
+        r.nextBytes(authenticationTag);
+        byte[] sessionKey = Base64.decode("vJpz/Q2VY+RN1d0dIHr2ViiPewFlWiv/kxWT1Ra4JDs", Base64.NO_PADDING | Base64.NO_WRAP);
+        RawKeyAccessor keyAccess = new RawKeyAccessor(XplatSymmetricCipher.AES_GCM_NONE_HMACSHA256, sessionKey, null) {
+            @Override
+            public byte[] encrypt(byte[] plaintext) throws ClientException {
+                return new byte[0];
+            }
+
+            @Override
+            public byte[] decrypt(byte[] ciphertext) throws ClientException {
+                Assert.fail("this method should not be called here");
+                return null;
+            }
+
+            @Override
+            public byte[] decrypt(byte[] ciphertext, byte[] authData) throws ClientException {
+                Assert.assertArrayEquals(ivBytes, Arrays.copyOfRange(ciphertext, 0, ivBytes.length));
+                Assert.assertArrayEquals(encryptedBytes, Arrays.copyOfRange(ciphertext, ivBytes.length, ciphertext.length-authenticationTag.length));
+                Assert.assertArrayEquals(authenticationTag, Arrays.copyOfRange(ciphertext, ciphertext.length-authenticationTag.length, ciphertext.length));
+                return new byte[0];
+            }
+
+            @Override
+            public byte[] sign(byte[] text) throws ClientException {
+                return new byte[0];
+            }
+
+            @Override
+            public boolean verify(byte[] text, byte[] signature) throws ClientException {
+                return false;
+            }
+
+            @Override
+            public byte[] getThumbprint() throws ClientException {
+                return new byte[0];
+            }
+
+            @Override
+            public Certificate[] getCertificateChain() {
+
+                return new Certificate[0];
+            }
+
+            @Override
+            public SecureHardwareState getSecureHardwareState()  {
+                return null;
+            }
+
+            @Override
+            public IKeyAccessor generateDerivedKey(byte[] label, byte[] ctx, CryptoSuite suite) throws ClientException {
+                return this;
+            }
+
+            @Override
+            public IKeyAccessor generateDerivedKey(byte[] label, byte[] ctx) throws ClientException {
+                return this;
+            }
+        };
+        MicrosoftStsOauth2JWEStrategy.deriveSessionKeyAndDecrypt(ivBytes, ctx, encryptedBytes,
+                authenticationTag, null, keyAccess);
+    }
+}

@@ -30,6 +30,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.google.gson.Gson;
+import com.microsoft.identity.common.AbstractPlatformComponents;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.HashMapExtensions;
 import com.microsoft.identity.common.adal.internal.util.JsonExtensions;
@@ -84,7 +85,7 @@ import static com.microsoft.identity.common.internal.util.GzipUtil.compressStrin
 public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
 
     private static final String TAG = MsalBrokerResultAdapter.class.getName();
-    public static final Gson GSON = new Gson();
+    public static final Gson GSON = AbstractPlatformComponents.GSON;
 
     @Override
     public @NonNull

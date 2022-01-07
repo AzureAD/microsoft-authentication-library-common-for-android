@@ -27,6 +27,7 @@ import static com.microsoft.identity.common.java.AuthenticationConstants.ENCODIN
 
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
+import com.microsoft.identity.common.AbstractPlatformComponents;
 import com.microsoft.identity.common.java.crypto.ISigner;
 import com.microsoft.identity.common.java.crypto.BasicSigner;
 import com.microsoft.identity.common.java.exception.ClientException;
@@ -133,7 +134,7 @@ public class JWSBuilder {
             throw new IllegalArgumentException("pubKey");
         }
 
-        Gson gson = new Gson();
+        Gson gson = AbstractPlatformComponents.GSON;
         Claims claims = new Claims();
         claims.mNonce = nonce;
         claims.mAudience = audience;

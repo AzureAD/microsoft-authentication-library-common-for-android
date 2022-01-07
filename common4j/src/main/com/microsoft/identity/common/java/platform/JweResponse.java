@@ -23,10 +23,13 @@
 
 package com.microsoft.identity.common.java.platform;
 
+import com.microsoft.identity.common.java.AuthenticationConstants;
 import com.microsoft.identity.common.java.util.StringUtil;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.nio.charset.StandardCharsets;
 
 import cz.msebera.android.httpclient.extras.Base64;
 import lombok.Builder;
@@ -34,6 +37,8 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 
+@Getter
+@Accessors(prefix="m")
 public class JweResponse {
 
     @Builder
@@ -67,6 +72,8 @@ public class JweResponse {
     String mPayload;
 
     String mAuthenticationTag;
+
+    byte[] mAdditionalAuthData;
 
     public JweHeader getJweHeader() {
         return mJweHeader;
@@ -105,7 +112,11 @@ public class JweResponse {
             response.mAuthenticationTag = split[4];
         }
 
-        byte[] headerDecodedBytes = Base64.decode(header, Base64.URL_SAFE);
+        byte[] headerDecodedBytes = Base64.decode(header, Base64.URL_SAFE | Base64.NO_WRAP);
+
+        // Per RFC https://tools.ietf.org/html/rfc7516#appendix-A.1.5, Authenticated data will be ASCII(BASE64URL(UTF8(JWE Protected Header)))
+        response.mAdditionalAuthData = split[0].getBytes(AuthenticationConstants.CHARSET_ASCII);
+
         String decodedHeader = StringUtil.fromByteArray(headerDecodedBytes);
 
         JSONObject jsonObject = new JSONObject(decodedHeader);

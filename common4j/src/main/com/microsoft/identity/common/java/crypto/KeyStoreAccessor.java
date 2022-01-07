@@ -20,28 +20,13 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.platform;
+package com.microsoft.identity.common.java.crypto;
 
-import android.content.Context;
-import android.os.Build;
-import android.security.keystore.KeyGenParameterSpec;
-import android.security.keystore.KeyProperties;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
-import com.microsoft.identity.common.AndroidPlatformComponents;
-import com.microsoft.identity.common.java.crypto.CryptoSuite;
-import com.microsoft.identity.common.java.crypto.IKeyAccessor;
-import com.microsoft.identity.common.java.crypto.RawKeyAccessor;
-import com.microsoft.identity.common.java.crypto.IAndroidKeyStoreKeyManager;
-import com.microsoft.identity.common.java.crypto.SecureHardwareState;
-import com.microsoft.identity.common.java.crypto.SigningAlgorithm;
+import com.microsoft.identity.common.internal.platform.SecretKeyAccessor;
 import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.internal.util.Supplier;
-import com.microsoft.identity.common.java.crypto.IDevicePopManager;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
-import com.microsoft.identity.common.logging.Logger;
+import com.microsoft.identity.common.java.logging.Logger;
+import com.microsoft.identity.common.java.util.ported.Supplier;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -51,7 +36,6 @@ import java.security.KeyStoreException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
-import java.security.ProviderException;
 import java.security.PublicKey;
 import java.security.UnrecoverableEntryException;
 import java.security.cert.Certificate;
@@ -66,23 +50,34 @@ import javax.crypto.KeyGenerator;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.experimental.Accessors;
+import lombok.experimental.SuperBuilder;
+
 /**
  * This class is a static factory providing access to KeyStore objects.  Since all of the construction
  * in DevicePopManager is package private, and we're really interested in only a few operations, just
  * construct new instances here, and expose an interface that gives us the functionality that we need.
  */
-public class KeyStoreAccessor {
+@SuperBuilder
+@Accessors(prefix = "m")
+@Getter
+@AllArgsConstructor
+public abstract class KeyStoreAccessor implements IKeyStoreAccessor {
     /**
      * The name of the KeyStore to use.
      */
-    private static final String ANDROID_KEYSTORE = "AndroidKeyStore";
+    private final String mKeyStoreName;
+    private final IPlatformComponents mPlatformComponents;
     public static final Charset UTF8 = Charset.forName("UTF-8");
-    private static final int KEY_PURPOSES =  KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT | KeyProperties.PURPOSE_SIGN ;
 
     /**
      * For a given alias, construct an accessor for a KeyStore backed entry given that alias.
      *
-     * @param context
+     * @param commonComponents
      * @param alias The key alias.
      * @param suite The cipher type of this key.
      * @return a key accessor for the use of that particular key.
@@ -91,9 +86,9 @@ public class KeyStoreAccessor {
      * @throws KeyStoreException
      * @throws IOException
      */
-    public static IKeyAccessor forAlias(@NonNull final Context context, @NonNull final String alias, @NonNull final CryptoSuite suite)
+    @Override
+    public IKeyAccessor forAlias(@NonNull final IPlatformComponents commonComponents, @NonNull final String alias, @NonNull final CryptoSuite suite)
             throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException, ClientException {
-        final IPlatformComponents commonComponents = AndroidPlatformComponents.createFromContext(context);
         final IDevicePopManager popManager = commonComponents.getDevicePopManager(alias);
         if (suite.cipher() instanceof IDevicePopManager.Cipher) {
             if (!popManager.asymmetricKeyExists()) {
@@ -101,28 +96,18 @@ public class KeyStoreAccessor {
             }
             return getKeyAccessor((IDevicePopManager.Cipher) suite.cipher(), suite.signingAlgorithm(), popManager);
         }
-        final KeyStore instance = KeyStore.getInstance(ANDROID_KEYSTORE);
-        final DeviceKeyManager<KeyStore.SecretKeyEntry> keyManager = new DeviceKeyManager<>(instance, alias, symmetricThumbprint(alias, instance));
-        return new SecretKeyAccessor(keyManager, suite) {
-            @Override
-            public byte[] sign(byte[] text) throws ClientException {
-                throw new UnsupportedOperationException("This key instance does not support signing");
-            }
-
-            @Override
-            public boolean verify(byte[] text, byte[] signature) throws ClientException {
-                throw new UnsupportedOperationException("This key instance does not support verification");
-            }
-        };
+        final KeyStore instance = KeyStore.getInstance(mKeyStoreName);
+        final IKeyStoreKeyManager<KeyStore.SecretKeyEntry> keyManager = mPlatformComponents.getSymmetricKeyManager(instance, alias, symmetricThumbprint(alias, instance));
+        return new SecretKeyAccessor(keyManager, suite);
     }
 
-    private static final IKeyAccessor getKeyAccessor(@NonNull final IDevicePopManager.Cipher cipher,
+    private IKeyAccessor getKeyAccessor(@NonNull final IDevicePopManager.Cipher cipher,
                                                     @NonNull final SigningAlgorithm signingAlg,
                                                     @NonNull final IDevicePopManager popManager) {
         return new AsymmetricKeyAccessor() {
 
             @Override
-            public IAndroidKeyStoreKeyManager<KeyStore.PrivateKeyEntry> getManager() {
+            public IKeyStoreKeyManager<KeyStore.PrivateKeyEntry> getManager() {
                 return popManager.getKeyManager();
             }
 
@@ -142,7 +127,17 @@ public class KeyStoreAccessor {
             }
 
             @Override
+            public byte[] encrypt(byte[] plaintext, Object... additionalAuthData) throws ClientException {
+                return new byte[0];
+            }
+
+            @Override
             public byte[] decrypt(byte[] ciphertext) throws ClientException {
+                return decrypt(ciphertext, null);
+            }
+
+            @Override
+            public byte[] decrypt(byte[] ciphertext, byte[] additionalAuthData) throws ClientException {
                 return popManager.decrypt(cipher, ciphertext);
             }
 
@@ -175,13 +170,18 @@ public class KeyStoreAccessor {
             public IKeyAccessor generateDerivedKey(byte[] label, byte[] ctx, CryptoSuite suite) throws ClientException {
                 throw new UnsupportedOperationException("This operation is not supported by asymmetric keys");
             }
+
+            @Override
+            public IKeyAccessor generateDerivedKey(byte[] label, byte[] ctx) throws ClientException {
+                throw new UnsupportedOperationException("This operation is not supported by asymmetric keys");
+            }
         };
     }
 
     /**
      * Construct an accessor for a KeyStore backed entry using a random alias.
      *
-     * @param context
+     * @param commonComponents
      * @param cipher The cipher type of this key.
      * @param signingAlg
      * @return a key accessor for the use of that particular key.
@@ -190,12 +190,12 @@ public class KeyStoreAccessor {
      * @throws KeyStoreException
      * @throws IOException
      */
-    public static IKeyAccessor newInstance(@NonNull final Context context,
-                                          @NonNull final IDevicePopManager.Cipher cipher,
-                                          @NonNull final SigningAlgorithm signingAlg)
+    @Override
+    public IKeyAccessor newInstance(@NonNull final IPlatformComponents commonComponents,
+                                    @NonNull final IDevicePopManager.Cipher cipher,
+                                    @NonNull final SigningAlgorithm signingAlg)
             throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException, ClientException {
         final String alias = UUID.randomUUID().toString();
-        final IPlatformComponents commonComponents = AndroidPlatformComponents.createFromContext(context);
         final IDevicePopManager popManager = commonComponents.getDevicePopManager(alias);
         popManager.generateAsymmetricKey();
         return getKeyAccessor(cipher, signingAlg, popManager);
@@ -211,73 +211,28 @@ public class KeyStoreAccessor {
      * @throws KeyStoreException
      * @throws IOException
      */
-    public static IKeyAccessor newInstance(@NonNull final SymmetricCipher cipher, @NonNull final boolean needRawAccess)
+    @Override
+    public IKeyAccessor newInstance(@NonNull final CryptoSuite cipher, final boolean needRawAccess)
             throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException, ClientException,
                    NoSuchProviderException, InvalidAlgorithmParameterException {
-        final String alias = UUID.randomUUID().toString();
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !needRawAccess) {
-            final KeyStore instance = KeyStore.getInstance(ANDROID_KEYSTORE);
-            instance.load(null);
-            final String[] params = cipher.cipher().name().split("/");
-            final KeyGenerator generator = KeyGenerator.getInstance(params[0], ANDROID_KEYSTORE);
-            KeyGenParameterSpec spec = null;
-            try {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                    spec = new KeyGenParameterSpec.Builder(alias, KEY_PURPOSES)
-                            .setIsStrongBoxBacked(true)
-                            .setKeySize(cipher.keySize())
-                            .setBlockModes(params[1])
-                            .setEncryptionPaddings(params[2])
-                            .setKeySize(cipher.keySize())
-                            .build();
-                } else {
-                    spec = new KeyGenParameterSpec.Builder(alias, KEY_PURPOSES)
-                            .setKeySize(cipher.keySize())
-                            .setBlockModes(params[1])
-                            .setEncryptionPaddings(params[2])
-                            .setKeySize(cipher.keySize())
-                            .build();
-                }
-                generator.init(spec);
-                generator.generateKey();
-            } catch (final ProviderException e) {
-                if (e.getClass().getSimpleName().equals("StrongBoxUnavailableException")) {
-                    spec = null;
-                } else {
-                    throw e;
-                }
-            }
-            if (spec == null) {
-                spec = new KeyGenParameterSpec.Builder(alias, KEY_PURPOSES)
-                        .setKeySize(cipher.keySize())
-                        .setBlockModes(params[1])
-                        .setEncryptionPaddings(params[2])
-                        .setKeySize(cipher.keySize())
-                        .build();
-                generator.init(spec);
-                generator.generateKey();
-            }
-
-            final DeviceKeyManager<KeyStore.SecretKeyEntry> keyManager = new DeviceKeyManager<>(instance, alias, symmetricThumbprint(alias, instance));
-            return new SecretKeyAccessor(keyManager, cipher) {
-                @Override
-                public byte[] sign(byte[] text) throws ClientException {
-                    throw new UnsupportedOperationException("This key instance does not support signing");
-                }
-
-                @Override
-                public boolean verify(byte[] text, byte[] signature) throws ClientException {
-                    throw new UnsupportedOperationException("This key instance does not support verification");
-                }
-            };
-        } else {
-            KeyGenerator generator = KeyGenerator.getInstance("AES");
-            generator.init(cipher.mKeySize);
+        if (needRawAccess) {
+            final String alias = UUID.randomUUID().toString();
+            KeyGenerator generator = KeyGenerator.getInstance(cipher.cipher().name().split("/")[0]);
+            generator.init(cipher.keySize());
             byte[] key = generator.generateKey().getEncoded();
             return RawKeyAccessor.builder()
                     .suite(cipher)
                     .key(key)
                     .alias(alias).build();
+        } else {
+            final String alias = UUID.randomUUID().toString();
+            KeyGenerator generator = KeyGenerator.getInstance(cipher.cipher().name().split("/")[0]);
+            generator.init(cipher.keySize());
+            KeyStore instance = KeyStore.getInstance(getKeyStoreName());
+
+            final IKeyStoreKeyManager<KeyStore.SecretKeyEntry> keyManager = mPlatformComponents.getSymmetricKeyManager(instance, alias, symmetricThumbprint(alias, instance));
+            return new SecretKeyAccessor(keyManager, cipher);
+
         }
     }
 
@@ -327,11 +282,12 @@ public class KeyStoreAccessor {
      * @return A key accessor for the imported session key
      * @throws ClientException if there is a failure while importing.
      */
-    public static IKeyAccessor importSymmetricKey(@NonNull final Context context,
-                                                 @NonNull final SymmetricCipher cipher,
-                                                 @NonNull final String keyAlias,
-                                                 @NonNull final String key_jwe,
-                                                 @NonNull final IKeyAccessor stk_accessor)
+    @Override
+    public IKeyAccessor importSymmetricKey(@NonNull final IPlatformComponents context,
+                                           @NonNull final CryptoSuite cipher,
+                                           @NonNull final String keyAlias,
+                                           @NonNull final String key_jwe,
+                                           @NonNull final IKeyAccessor stk_accessor)
             throws ParseException, CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException, ClientException {
         throw new UnsupportedOperationException("This operation is not yet supported");
     }

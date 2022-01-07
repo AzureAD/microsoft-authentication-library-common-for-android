@@ -33,6 +33,9 @@ import org.junit.Test;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyStore;
+import java.security.spec.AlgorithmParameterSpec;
+
+import javax.crypto.Cipher;
 
 public class RawKeyAccessorTest {
     @Test
@@ -46,38 +49,7 @@ public class RawKeyAccessorTest {
     }
 
     public RawKeyAccessor getAccessor() throws UnsupportedEncodingException {
-
-        return new RawKeyAccessor(new CryptoSuite() {
-            @Override
-            public SymmetricAlgorithm cipher() {
-                return SymmetricAlgorithm.Builder.of("AES/GCM/NoPadding");
-            }
-
-            @Override
-            public String macName() {
-                return "HmacSHA256";
-            }
-
-            @Override
-            public boolean isAsymmetric() {
-                return false;
-            }
-
-            @Override
-            public Class<? extends KeyStore.Entry> keyClass() {
-                return null;
-            }
-
-            @Override
-            public int keySize() {
-                return 256;
-            }
-
-            @Override
-            public SigningAlgorithm signingAlgorithm() {
-                return null;
-            }
-        }, "12345678123456781234567812345678".getBytes("UTF-8"), null);
+        return new RawKeyAccessor(AndroidSymmetricCipher.AES_GCM_NONE_HMACSHA256, "12345678123456781234567812345678".getBytes("UTF-8"), null);
     }
 
     @Test

@@ -24,6 +24,9 @@ package com.microsoft.identity.common.java.providers.microsoft.microsoftsts;
 
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenRequest;
 
+import lombok.experimental.SuperBuilder;
+
+@SuperBuilder
 public class MicrosoftStsTokenRequest extends MicrosoftTokenRequest {
     public MicrosoftStsTokenRequest() {
         super();

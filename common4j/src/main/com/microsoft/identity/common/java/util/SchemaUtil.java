@@ -226,7 +226,8 @@ public final class SchemaUtil {
     }
 
     /**
-     * Get tenant id claim from Id token , if not present returns the tenant id from client info
+     * Get tenant id claim from Id token, if not present returns the tenant id from client info.
+     * Returns null if either string is null or empty.
      *
      * @param clientInfoString : ClientInfo
      * @param idTokenString    : Id Token

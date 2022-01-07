@@ -74,6 +74,10 @@ public class AuthenticationConstants {
 
     public static final String SP800_108_LABEL = "AzureAD-SecureConversation";
 
+    public static final String SP800_108_LABEL_RTPOP_HMAC = "AzureAD-SecureConversation-BoundRT-HS256";
+
+    public static final String SP800_108_LABEL_V3 = "AzureAD-SecureConversation-BoundRT-AES-GCM-SHA256";
+
     /**
      * Default scopes for OAuth2.
      */

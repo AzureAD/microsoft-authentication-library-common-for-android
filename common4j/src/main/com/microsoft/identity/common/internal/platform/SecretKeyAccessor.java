@@ -1,34 +1,18 @@
-// Copyright (c) Microsoft Corporation.
-// All rights reserved.
-//
-// This code is licensed under the MIT License.
-//
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files(the "Software"), to deal
-// in the Software without restriction, including without limitation the rights
-// to use, copy, modify, merge, publish, distribute, sublicense, and / or sell
-// copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions :
-//
-// The above copyright notice and this permission notice shall be included in
-// all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-// THE SOFTWARE.
 package com.microsoft.identity.common.internal.platform;
 
-import android.os.Build;
-
-import androidx.annotation.RequiresApi;
+import static com.microsoft.identity.common.java.exception.ClientException.BAD_PADDING;
+import static com.microsoft.identity.common.java.exception.ClientException.INVALID_ALG_PARAMETER;
+import static com.microsoft.identity.common.java.exception.ClientException.INVALID_BLOCK_SIZE;
+import static com.microsoft.identity.common.java.exception.ClientException.INVALID_KEY;
+import static com.microsoft.identity.common.java.exception.ClientException.INVALID_PROTECTION_PARAMS;
+import static com.microsoft.identity.common.java.exception.ClientException.KEYSTORE_NOT_INITIALIZED;
+import static com.microsoft.identity.common.java.exception.ClientException.NO_SUCH_ALGORITHM;
+import static com.microsoft.identity.common.java.exception.ClientException.NO_SUCH_PADDING;
 
 import com.microsoft.identity.common.java.crypto.CryptoSuite;
-import com.microsoft.identity.common.java.crypto.IAndroidKeyStoreKeyManager;
 import com.microsoft.identity.common.java.crypto.IKeyAccessor;
+import com.microsoft.identity.common.java.crypto.IKeyStoreKeyManager;
+import com.microsoft.identity.common.java.crypto.IManagedKeyAccessor;
 import com.microsoft.identity.common.java.crypto.SecureHardwareState;
 import com.microsoft.identity.common.java.exception.ClientException;
 
@@ -40,7 +24,9 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableEntryException;
 import java.security.cert.Certificate;
+import java.security.spec.AlgorithmParameterSpec;
 import java.util.Arrays;
+import java.util.Random;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -49,37 +35,42 @@ import javax.crypto.Mac;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.GCMParameterSpec;
+import javax.crypto.spec.IvParameterSpec;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.experimental.Accessors;
+import lombok.experimental.SuperBuilder;
 
-import static com.microsoft.identity.common.java.exception.ClientException.BAD_PADDING;
-import static com.microsoft.identity.common.java.exception.ClientException.INVALID_ALG_PARAMETER;
-import static com.microsoft.identity.common.java.exception.ClientException.INVALID_BLOCK_SIZE;
-import static com.microsoft.identity.common.java.exception.ClientException.INVALID_KEY;
-import static com.microsoft.identity.common.java.exception.ClientException.INVALID_PROTECTION_PARAMS;
-import static com.microsoft.identity.common.java.exception.ClientException.KEYSTORE_NOT_INITIALIZED;
-import static com.microsoft.identity.common.java.exception.ClientException.NO_SUCH_ALGORITHM;
-import static com.microsoft.identity.common.java.exception.ClientException.NO_SUCH_PADDING;
-
-@Builder
+@SuperBuilder
 @Accessors(prefix = "m")
+@AllArgsConstructor
 public class SecretKeyAccessor implements IManagedKeyAccessor<KeyStore.SecretKeyEntry> {
     private static final Charset UTF8 = Charset.forName("UTF-8");
-    private final DeviceKeyManager<KeyStore.SecretKeyEntry> mKeyManager;
-    private final CryptoSuite suite;
-    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+    protected final IKeyStoreKeyManager<KeyStore.SecretKeyEntry> mKeyManager;
+    private final CryptoSuite mSuite;
+
     @Override
     public byte[] encrypt(@NonNull final byte[] plaintext) throws ClientException {
+        return encrypt(plaintext, null);
+    }
+
+    @Override
+    public byte[] encrypt(@NonNull final byte[] plaintext, @Nullable final Object... args) throws ClientException {
         final String errCode;
         final Exception exception;
         try {
             final KeyStore.SecretKeyEntry entry = mKeyManager.getEntry();
             final SecretKey key = entry.getSecretKey();
-            final Cipher c = Cipher.getInstance(suite.cipher().name());
+            final Cipher c = Cipher.getInstance(mSuite.cipher().name());
+
+            // The iv length should move into the CipherSuite class
+            byte[] iv = new byte[12];
             c.init(Cipher.ENCRYPT_MODE, key);
-            final byte[] iv = c.getIV();
+            AlgorithmParameterSpec spec = mSuite.cryptoSpec(c, iv);
+            mSuite.initialize(c, args);
             final byte[] enc = c.doFinal(plaintext);
             final byte[] out = new byte[iv.length + enc.length];
             System.arraycopy(iv, 0, out, 0, iv.length);
@@ -106,21 +97,29 @@ public class SecretKeyAccessor implements IManagedKeyAccessor<KeyStore.SecretKey
         } catch (final InvalidKeyException e) {
             errCode = INVALID_KEY;
             exception = e;
-        }
+        } /* catch (InvalidAlgorithmParameterException e) {
+            errCode = INVALID_ALG_PARAMETER;
+            exception = e;
+        } */
         throw new ClientException(errCode, exception.getMessage(), exception);
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     @Override
     public byte[] decrypt(@NonNull final byte[] ciphertext) throws ClientException {
+        return decrypt(ciphertext, null);
+    }
+
+    @Override
+    public byte[] decrypt(byte[] ciphertext, byte[] additionalAuthData) throws ClientException {
         final String errCode;
         final Exception exception;
         try {
             final KeyStore.SecretKeyEntry entry = mKeyManager.getEntry();
             final SecretKey key = entry.getSecretKey();
-            final Cipher c = Cipher.getInstance(suite.cipher().name());
-            final GCMParameterSpec ivSpec = new GCMParameterSpec(128, ciphertext, 0, 12);
+            final Cipher c = Cipher.getInstance(mSuite.cipher().name());
+            final AlgorithmParameterSpec ivSpec = mSuite.cryptoSpec(128, ciphertext, 0, 12);
             c.init(Cipher.DECRYPT_MODE, key, ivSpec);
+            mSuite.initialize(c, additionalAuthData);
             final byte[] out = Arrays.copyOfRange(ciphertext, 12, ciphertext.length);
             return c.doFinal(out);
         } catch (final UnrecoverableEntryException e) {
@@ -158,7 +157,7 @@ public class SecretKeyAccessor implements IManagedKeyAccessor<KeyStore.SecretKey
         try {
             final KeyStore.SecretKeyEntry entry = mKeyManager.getEntry();
             SecretKey key = entry.getSecretKey();
-            Mac c = Mac.getInstance(suite.macName());
+            Mac c = Mac.getInstance(mSuite.macName());
             c.init(key);
             return c.doFinal(text);
         } catch (final UnrecoverableEntryException e) {
@@ -203,7 +202,13 @@ public class SecretKeyAccessor implements IManagedKeyAccessor<KeyStore.SecretKey
     }
 
     @Override
-    public IAndroidKeyStoreKeyManager<KeyStore.SecretKeyEntry> getManager() {
+    public IKeyAccessor generateDerivedKey(byte[] label, byte[] ctx) throws ClientException {
+        return generateDerivedKey(label, ctx, mSuite);
+    }
+
+    @Override
+    public IKeyStoreKeyManager<KeyStore.SecretKeyEntry> getManager() {
         return mKeyManager;
     }
+
 }

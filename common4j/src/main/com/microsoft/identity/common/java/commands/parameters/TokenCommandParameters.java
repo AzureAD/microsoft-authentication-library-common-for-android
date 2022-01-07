@@ -42,7 +42,7 @@ import lombok.experimental.SuperBuilder;
 @Getter
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder(toBuilder = true)
-public class TokenCommandParameters extends CommandParameters {
+public class TokenCommandParameters extends CommandParameters implements ITokenCommandParameters {
 
     private static final String TAG = TokenCommandParameters.class.getSimpleName();
 
@@ -67,10 +67,12 @@ public class TokenCommandParameters extends CommandParameters {
 
     private final List<Map.Entry<String, String>> extraOptions;
 
+    @Override
     public Set<String> getScopes() {
         return this.scopes == null ? null : new HashSet<>(this.scopes);
     }
 
+    @Override
     public void validate() throws ArgumentException {
         final String methodName = ":validate";
 

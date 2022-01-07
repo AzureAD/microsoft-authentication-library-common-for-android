@@ -25,6 +25,7 @@ package com.microsoft.identity.common.java.cache;
 import lombok.NonNull;
 
 import com.google.gson.Gson;
+import com.microsoft.identity.common.AbstractPlatformComponents;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.java.logging.Logger;
@@ -58,7 +59,7 @@ public abstract class NameValueStorageFileManagerSimpleCacheImpl<T> implements I
     private final INameValueStorage<String> mStorage;
     private final String mKeySingleEntry;
     private final boolean mForceReinsertionOfDuplicates;
-    private final Gson mGson = new Gson();
+    private final Gson mGson = AbstractPlatformComponents.GSON;
 
     /**
      * Constructs a new NameValueStorageFileManagerSimpleCacheImpl. Convenience class for persisting
@@ -121,7 +122,7 @@ public abstract class NameValueStorageFileManagerSimpleCacheImpl<T> implements I
     }
 
     @Override
-    public boolean insert(final T t) {
+    public synchronized boolean insert(final T t) {
         return execWithTiming(new NamedRunnable<Boolean>() {
             @Override
             public String getName() {
@@ -149,7 +150,7 @@ public abstract class NameValueStorageFileManagerSimpleCacheImpl<T> implements I
     }
 
     @Override
-    public boolean remove(final T t) {
+    public synchronized boolean remove(final T t) {
         return execWithTiming(new NamedRunnable<Boolean>() {
             @Override
             public String getName() {

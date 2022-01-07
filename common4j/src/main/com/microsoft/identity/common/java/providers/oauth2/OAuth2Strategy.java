@@ -24,6 +24,7 @@ package com.microsoft.identity.common.java.providers.oauth2;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.microsoft.identity.common.AbstractPlatformComponents;
 import com.microsoft.identity.common.java.AuthenticationConstants;
 import com.microsoft.identity.common.java.BaseAccount;
 import com.microsoft.identity.common.java.WarningType;
@@ -47,6 +48,7 @@ import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.Micro
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResponse;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResult;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
 import com.microsoft.identity.common.java.telemetry.Telemetry;
 import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings;
 import com.microsoft.identity.common.java.telemetry.events.UiShownEvent;
@@ -208,7 +210,9 @@ public abstract class OAuth2Strategy
         headers.putAll(Device.getPlatformIdParameters());
         headers.put(AuthenticationConstants.SdkPlatformFields.PRODUCT,
                 DiagnosticContext.INSTANCE.getRequestContext().get(AuthenticationConstants.SdkPlatformFields.PRODUCT));
-        headers.put(AuthenticationConstants.SdkPlatformFields.VERSION, Device.getProductVersion());
+        final String productVersion = Device.getProductVersion();
+        headers.put(AuthenticationConstants.SdkPlatformFields.VERSION, (StringUtil.isNullOrEmpty(productVersion) ||
+                productVersion == "NOT_SET") ? "2.0.9-x1" : productVersion);
         headers.putAll(EstsTelemetry.getInstance().getTelemetryHeaders());
         headers.put(HttpConstants.HeaderField.CONTENT_TYPE, TOKEN_REQUEST_CONTENT_TYPE);
 
@@ -310,7 +314,7 @@ public abstract class OAuth2Strategy
         // Any code below 300 (HTTP_MULT_CHOICE) is considered a success
         if (response.getStatusCode() < HttpsURLConnection.HTTP_MULT_CHOICE) {
             // Get and parse response body
-            final HashMap<String, String> parsedResponseBody = new Gson().fromJson(
+            final HashMap<String, String> parsedResponseBody = AbstractPlatformComponents.GSON.fromJson(
                     response.getBody(),
                     TypeToken.getParameterized(HashMap.class, String.class, String.class)
                             .getType()
@@ -335,7 +339,7 @@ public abstract class OAuth2Strategy
         // Request failed
         else {
             // Get and parse response body
-            final HashMap<String, Object> parsedResponseBody = new Gson().fromJson(
+            final HashMap<String, Object> parsedResponseBody = AbstractPlatformComponents.GSON.fromJson(
                     response.getBody(),
                     TypeToken.getParameterized(HashMap.class, String.class, Object.class)
                             .getType()

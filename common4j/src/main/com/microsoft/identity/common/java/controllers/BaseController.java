@@ -25,6 +25,9 @@ package com.microsoft.identity.common.java.controllers;
 import static com.microsoft.identity.common.java.authorities.Authority.B2C;
 
 
+import com.microsoft.identity.common.java.commands.parameters.IInteractiveTokenCommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.ISilentTokenCommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.ITokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.RopcTokenCommandParameters;
 import com.microsoft.identity.common.java.foci.FociQueryUtilities;
 import com.microsoft.identity.common.java.cache.MsalOAuth2TokenCache;
@@ -34,14 +37,12 @@ import com.microsoft.identity.common.java.commands.parameters.GenerateShrCommand
 import com.microsoft.identity.common.java.commands.parameters.RemoveAccountCommandParameters;
 import com.microsoft.identity.common.java.constants.OAuth2ErrorCode;
 import com.microsoft.identity.common.java.constants.OAuth2SubErrorCode;
-import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsRopcTokenRequest;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters;
 import com.microsoft.identity.common.java.result.AcquireTokenResult;
 import com.microsoft.identity.common.java.result.GenerateShrResult;
 import com.microsoft.identity.common.java.result.LocalAuthenticationResult;
 import com.microsoft.identity.common.java.telemetry.Telemetry;
 import com.microsoft.identity.common.java.providers.oauth2.IResult;
-import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters;
 import com.microsoft.identity.common.java.telemetry.events.CacheEndEvent;
 import com.microsoft.identity.common.java.AuthenticationConstants;
 import com.microsoft.identity.common.java.WarningType;
@@ -254,7 +255,7 @@ public abstract class BaseController {
     //Suppressing rawtype warnings due to the generic type Builder
     @SuppressWarnings(WarningType.rawtype_warning)
     protected final AuthorizationRequest.Builder initializeAuthorizationRequestBuilder(@NonNull final AuthorizationRequest.Builder builder,
-                                                                                       @NonNull final TokenCommandParameters parameters) {
+                                                                                       @NonNull final ITokenCommandParameters parameters) {
         UUID correlationId = null;
 
         try {
@@ -325,7 +326,7 @@ public abstract class BaseController {
 
     // Suppressing unchecked warning as the generic type was not provided during constructing builder object.
     @SuppressWarnings(WarningType.unchecked_warning)
-    private void setBuilderProperties(@SuppressWarnings(WarningType.rawtype_warning) @NonNull AuthorizationRequest.Builder builder, @NonNull TokenCommandParameters parameters, InteractiveTokenCommandParameters interactiveTokenCommandParameters, HashMap<String, String> completeRequestHeaders) {
+    private void setBuilderProperties(@SuppressWarnings(WarningType.rawtype_warning) @NonNull AuthorizationRequest.Builder builder, @NonNull ITokenCommandParameters parameters, InteractiveTokenCommandParameters interactiveTokenCommandParameters, HashMap<String, String> completeRequestHeaders) {
         builder.setExtraQueryParams(
                 interactiveTokenCommandParameters.getExtraQueryStringParameters()
         ).setClaims(
@@ -358,7 +359,7 @@ public abstract class BaseController {
     // Suppressing rawtype warnings due to the generic type AuthorizationRequest, OAuth2Strategy and Builder
     @SuppressWarnings(WarningType.rawtype_warning)
     protected AuthorizationRequest getAuthorizationRequest(@NonNull final OAuth2Strategy strategy,
-                                                           @NonNull final TokenCommandParameters parameters) {
+                                                           @NonNull final ITokenCommandParameters parameters) {
         final AuthorizationRequest.Builder builder = strategy.createAuthorizationRequestBuilder(parameters.getAccount());
         initializeAuthorizationRequestBuilder(builder, parameters);
         return builder.build();
@@ -367,7 +368,7 @@ public abstract class BaseController {
     protected TokenResult performTokenRequest(@SuppressWarnings(WarningType.rawtype_warning) @NonNull final OAuth2Strategy strategy,
                                               @SuppressWarnings(WarningType.rawtype_warning) @NonNull final AuthorizationRequest request,
                                               @NonNull final AuthorizationResponse response,
-                                              @NonNull final InteractiveTokenCommandParameters parameters)
+                                              final IInteractiveTokenCommandParameters parameters)
             throws IOException, ClientException {
         final String methodName = ":performTokenRequest";
 
@@ -401,7 +402,7 @@ public abstract class BaseController {
         return tokenResult;
     }
 
-    protected void renewAccessToken(@NonNull final SilentTokenCommandParameters parameters,
+    protected void renewAccessToken(@NonNull final ISilentTokenCommandParameters parameters,
                                     @NonNull final AcquireTokenResult acquireTokenSilentResult,
                                     @SuppressWarnings(WarningType.rawtype_warning) @NonNull final OAuth2TokenCache tokenCache,
                                     @SuppressWarnings(WarningType.rawtype_warning) @NonNull final OAuth2Strategy strategy,
@@ -423,6 +424,10 @@ public abstract class BaseController {
                 parameters
         );
 
+        persistResult(parameters, acquireTokenSilentResult, tokenCache, strategy, cacheRecord, methodName, tokenResult);
+    }
+
+    protected void persistResult(ISilentTokenCommandParameters parameters, AcquireTokenResult acquireTokenSilentResult, OAuth2TokenCache tokenCache, OAuth2Strategy strategy, ICacheRecord cacheRecord, String methodName, TokenResult tokenResult) throws ClientException, ServiceException {
         acquireTokenSilentResult.setTokenResult(tokenResult);
 
         ResultUtil.logResult(TAG + methodName, tokenResult);
@@ -508,7 +513,7 @@ public abstract class BaseController {
         2) All arguments derived from SilentTokenCommandParameters
         3) New logic replacing old Access Token
      */
-    public TokenResult renewAccessToken(@NonNull final SilentTokenCommandParameters parameters)
+    public TokenResult renewAccessToken(@NonNull final ISilentTokenCommandParameters parameters)
             throws IOException, ClientException, ServiceException {
         final String methodName = ":renewAccessToken";
         Logger.info(
@@ -599,7 +604,7 @@ public abstract class BaseController {
         return tokenResult;
     }
 
-    public OAuth2Strategy getStrategy(@NonNull final SilentTokenCommandParameters parameters) throws ClientException {
+    public OAuth2Strategy getStrategy(@NonNull final ISilentTokenCommandParameters parameters) throws ClientException {
         final OAuth2StrategyParameters strategyParameters = OAuth2StrategyParameters.builder()
                 .platformComponents(parameters.getPlatformComponents())
                 .build();
@@ -607,7 +612,7 @@ public abstract class BaseController {
         return parameters.getAuthority().createOAuth2Strategy(strategyParameters);
     }
 
-    public ICacheRecord getCacheRecord(@NonNull final SilentTokenCommandParameters parameters) throws ClientException {
+    public ICacheRecord getCacheRecord(@NonNull final ISilentTokenCommandParameters parameters) throws ClientException {
         //Extract cache from parameters
         final AccountRecord targetAccount = getCachedAccountRecord(parameters);
         final AbstractAuthenticationScheme authScheme = parameters.getAuthenticationScheme();
@@ -624,7 +629,7 @@ public abstract class BaseController {
         return cacheRecords.get(0);
     }
 
-    public OAuth2TokenCache getTokenCache(@NonNull final SilentTokenCommandParameters parameters){
+    public OAuth2TokenCache getTokenCache(@NonNull final ISilentTokenCommandParameters parameters){
         //Extract cache from parameters
         return parameters.getOAuth2TokenCache();
     }
@@ -703,7 +708,7 @@ public abstract class BaseController {
     protected TokenResult performSilentTokenRequest(
             @SuppressWarnings(WarningType.rawtype_warning) @NonNull final OAuth2Strategy strategy,
             @NonNull final RefreshTokenRecord refreshToken,
-            @NonNull final SilentTokenCommandParameters parameters)
+            @NonNull final ISilentTokenCommandParameters parameters)
             throws ClientException, IOException {
         final String methodName = ":performSilentTokenRequest";
 
@@ -801,8 +806,12 @@ public abstract class BaseController {
         return null == idTokenRecord;
     }
 
-    protected Set<String> addDefaultScopes(@NonNull final TokenCommandParameters commandParameters) {
+    public Set<String> addDefaultScopes(@NonNull final TokenCommandParameters commandParameters) {
         final Set<String> requestScopes = commandParameters.getScopes();
+        return scopesWithDefaults(requestScopes);
+    }
+
+    public static Set<String> scopesWithDefaults(final @NonNull Set<String> requestScopes) {
         requestScopes.addAll(AuthenticationConstants.DEFAULT_SCOPES);
         // sanitize empty and null scopes
         requestScopes.removeAll(Arrays.asList("", null));
@@ -816,7 +825,7 @@ public abstract class BaseController {
      * @return
      */
     protected AccountRecord getCachedAccountRecord(
-            @NonNull final SilentTokenCommandParameters parameters) throws ClientException {
+            @NonNull final ISilentTokenCommandParameters parameters) throws ClientException {
         if (parameters.getAccount() == null) {
             throw new ClientException(
                     ErrorStrings.NO_ACCOUNT_FOUND,
@@ -897,7 +906,7 @@ public abstract class BaseController {
     }
 
     @Nullable
-    private AccountRecord getAccountWithFRTIfAvailable(@NonNull final SilentTokenCommandParameters parameters,
+    private AccountRecord getAccountWithFRTIfAvailable(@NonNull final ISilentTokenCommandParameters parameters,
                                                        @SuppressWarnings(WarningType.rawtype_warning) @NonNull final MsalOAuth2TokenCache msalOAuth2TokenCache) {
 
         final String homeAccountId = parameters.getAccount().getHomeAccountId();

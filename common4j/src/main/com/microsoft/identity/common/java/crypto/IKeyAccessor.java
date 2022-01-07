@@ -38,11 +38,27 @@ public interface IKeyAccessor {
     byte[] encrypt(byte[] plaintext) throws ClientException;
 
     /**
+     * Encrypt a plaintext blob, returning an encrypted byte array.
+     * @param plaintext the plaintext to encrypt.
+     * @param additionalAuthData additional data to initialize the cipher with.
+     * @return the encrypted byte array.
+     */
+    byte[] encrypt(byte[] plaintext, Object... additionalAuthData) throws ClientException;
+
+    /**
      * Decrypt a blob of ciphertext, returning the decrypted values.
      * @param ciphertext the blob of ciphertext to decrypt.
      * @return the decrypted byte array.
      */
     byte[] decrypt(byte[] ciphertext) throws ClientException;
+
+    /**
+     * Decrypt a blob of ciphertext, returning the decrypted values.
+     * @param ciphertext the blob of ciphertext to decrypt.
+     * @param additionalAuthData additional data to initialize the cipher with.
+     * @return the decrypted byte array.
+     */
+    byte[] decrypt(byte[] ciphertext, byte[] additionalAuthData) throws ClientException;
 
     /**
      * Sign a block of data, returning the signature.
@@ -85,4 +101,16 @@ public interface IKeyAccessor {
      * @throws ClientException if an underlying issue prevents the key generation.
      */
     IKeyAccessor generateDerivedKey(byte[] label, byte[] ctx, CryptoSuite suite) throws ClientException;
+
+    /**
+     * Using the provided {@link CryptoSuite}, generate a new derived key accessor given the label and the
+     * context.  This key will expose a null alias, and generally should not be stored. This key will
+     * implement the same cryptoSuite as its parent.
+     * @param label the "label" for the derivation.
+     * @param ctx the "context" for the derivation, typically random bytes.
+     * @return A {link KeyAccessor} that provides access to operations using the derived key.
+     * @throws ClientException if an underlying issue prevents the key generation.
+     */
+    IKeyAccessor generateDerivedKey(byte[] label, byte[] ctx) throws ClientException;
+
 }

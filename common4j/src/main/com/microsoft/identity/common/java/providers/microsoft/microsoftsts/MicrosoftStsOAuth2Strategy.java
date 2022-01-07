@@ -28,6 +28,7 @@ import com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallenge;
 import com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallengeFactory;
 import com.microsoft.identity.common.java.commands.parameters.RopcTokenCommandParameters;
 import com.microsoft.identity.common.java.crypto.IDevicePopManager;
+import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.exception.ArgumentException;
 import com.microsoft.identity.common.java.platform.Device;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationResponse;
@@ -56,6 +57,7 @@ import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.java.telemetry.CliTelemInfo;
+import com.microsoft.identity.common.java.util.HashMapExtensions;
 import com.microsoft.identity.common.java.util.HeaderSerializationUtil;
 import com.microsoft.identity.common.java.util.ResultUtil;
 import com.microsoft.identity.common.java.util.StringUtil;
@@ -81,12 +83,17 @@ import java.util.UUID;
 
 import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.APP_PACKAGE_NAME;
 import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.APP_VERSION;
+import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.CLIENT_REQUEST_ID;
 import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.CHALLENGE_REQUEST_HEADER;
+import static com.microsoft.identity.common.java.AuthenticationConstants.ENCODING_UTF8;
 import static com.microsoft.identity.common.java.AuthenticationConstants.OAuth2Scopes.CLAIMS_UPDATE_RESOURCE;
 import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.PRODUCT;
 import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.VERSION;
+import static com.microsoft.identity.common.java.net.HttpConstants.HeaderField.CONTENT_TYPE;
 import static com.microsoft.identity.common.java.net.HttpConstants.HeaderField.X_MS_CLITELEM;
 import static com.microsoft.identity.common.java.providers.oauth2.TokenRequest.GrantTypes.CLIENT_CREDENTIALS;
+
+import org.json.JSONException;
 
 // Suppressing rawtype warnings due to the generic type AuthorizationStrategy, AuthorizationResult, AuthorizationResultFactory and MicrosoftAuthorizationRequest
 @SuppressWarnings(WarningType.rawtype_warning)
@@ -106,6 +113,18 @@ public class MicrosoftStsOAuth2Strategy
                 TokenResult,
                 AuthorizationResult> {
 
+    /**
+     * The request message for a nonce request.
+     */
+    public static final String NONCE_REQUEST_MSG = "grant_type=srv_challenge";
+
+    /**
+     * The constant for the form encoded content type.
+     */
+    public static final String CONTENT_TYPE_FORM_URL_ENCODED = "application/x-www-form-urlencoded";
+    /**
+     * The logging tag.
+     */
     private static final String TAG = MicrosoftStsOAuth2Strategy.class.getSimpleName();
     /**
      * The default scope.  This effects of usint this are captured in documentation here
@@ -142,6 +161,46 @@ public class MicrosoftStsOAuth2Strategy
     @NonNull
     public static String getScopeFromResource(@NonNull final String resource) {
         return resource + RESOURCE_DEFAULT_SCOPE;
+    }
+
+    /**
+     * Helper method to get Nonce.
+     *
+     * @return String  nonce
+     */
+    public static String getNonce(final String tokenEndpoint, final String correlationId, final IPlatformComponents components)
+            throws IOException, JSONException {
+        final String methodName = ":getNonce";
+        Logger.info(TAG, "Starting to request for nonce.");
+        final long start = components.getPlatformUtil().getNanosecondTime();
+
+        String nonce = null;
+        final Map<String, String> headers = new TreeMap<>();
+        headers.put(CLIENT_REQUEST_ID, correlationId);
+        headers.put(CONTENT_TYPE, CONTENT_TYPE_FORM_URL_ENCODED);
+
+        final HttpResponse response = UrlConnectionHttpClient.getDefaultInstance().post(
+                new URL(tokenEndpoint),
+                headers,
+                NONCE_REQUEST_MSG.getBytes(ENCODING_UTF8),
+                null);
+
+        final long elapsed = components.getPlatformUtil().getNanosecondTime() - start;
+
+        if (response.getStatusCode() == HttpURLConnection.HTTP_OK) {
+            final Map<String, String> responseItems = HashMapExtensions.getJsonResponse(response);
+            nonce = responseItems.get("nonce");
+            if (nonce == null) {
+                nonce = responseItems.get("Nonce");
+            }
+        }
+        Logger.info(TAG + methodName,
+                "Nonce not null :" + (nonce != null)
+                        + " response code: " + response.getStatusCode()
+                        + ", requested in " + elapsed / 1000.0 + " us"
+        );
+
+        return nonce;
     }
 
     @Override
@@ -563,7 +622,7 @@ public class MicrosoftStsOAuth2Strategy
         TokenErrorResponse tokenErrorResponse = null;
 
         if (response.getStatusCode() >= HttpURLConnection.HTTP_BAD_REQUEST) {
-            //An error occurred
+            // An error occurred
             tokenErrorResponse = ObjectMapper.deserializeJsonStringToObject(
                     getBodyFromUnsuccessfulResponse(response.getBody()),
                     MicrosoftTokenErrorResponse.class

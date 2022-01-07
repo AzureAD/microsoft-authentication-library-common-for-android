@@ -24,6 +24,9 @@ package com.microsoft.identity.common.java.providers.oauth2;
 
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 
+import java.util.Collections;
+import java.util.Map;
+
 import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.Builder;
 import lombok.Getter;
@@ -38,4 +41,7 @@ import lombok.experimental.Accessors;
 public class OAuth2StrategyParameters {
     @Nullable
     private final transient IPlatformComponents mPlatformComponents;
+
+    @Builder.Default
+    private final transient Map<String, String> mProtocolData = Collections.emptyMap();
 }

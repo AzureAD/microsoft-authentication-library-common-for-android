@@ -40,7 +40,7 @@ import lombok.experimental.SuperBuilder;
 @Getter
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder(toBuilder = true)
-public class SilentTokenCommandParameters extends TokenCommandParameters {
+public class SilentTokenCommandParameters extends TokenCommandParameters implements ISilentTokenCommandParameters {
 
     private static final String TAG = SilentTokenCommandParameters.class.getSimpleName();
 

@@ -22,17 +22,21 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.components;
 
+import com.microsoft.identity.common.AbstractPlatformComponents;
 import com.microsoft.identity.common.java.cache.IMultiTypeNameValueStorage;
 import com.microsoft.identity.common.java.cache.MapBackedPreferencesManager;
 import com.microsoft.identity.common.java.commands.ICommand;
+import com.microsoft.identity.common.java.commands.parameters.IInteractiveTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCommandParameters;
 import com.microsoft.identity.common.java.crypto.CryptoSuite;
-import com.microsoft.identity.common.java.crypto.IAndroidKeyStoreKeyManager;
+import com.microsoft.identity.common.java.crypto.IKeyStoreAccessor;
+import com.microsoft.identity.common.java.crypto.IKeyStoreKeyManager;
 import com.microsoft.identity.common.java.crypto.IDevicePopManager;
 import com.microsoft.identity.common.java.crypto.IKeyAccessor;
 import com.microsoft.identity.common.java.crypto.SecureHardwareState;
 import com.microsoft.identity.common.java.crypto.SigningAlgorithm;
 import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.interfaces.CryptoProvider;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.providers.oauth2.IAuthorizationStrategy;
@@ -43,14 +47,20 @@ import com.microsoft.identity.common.java.util.IClockSkewManager;
 import com.microsoft.identity.common.java.util.IPlatformUtil;
 import com.microsoft.identity.common.java.util.TaskCompletedCallbackWithError;
 import com.microsoft.identity.common.java.util.ported.InMemoryStorage;
+import com.microsoft.identity.common.java.util.ported.Supplier;
 
+import java.io.IOException;
 import java.net.URL;
+import java.security.InvalidAlgorithmParameterException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.security.PublicKey;
 import java.security.UnrecoverableEntryException;
 import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
+import java.text.ParseException;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -71,7 +81,7 @@ import lombok.experimental.Accessors;
 @Builder
 @Getter
 @Accessors(prefix = "m")
-public class SettablePlatformComponents implements IPlatformComponents {
+public class SettablePlatformComponents extends AbstractPlatformComponents implements IPlatformComponents {
 
     public static final IDevicePopManager NONFUNCTIONAL_POP_MANAGER = new IDevicePopManager() {
         @Override
@@ -195,7 +205,7 @@ public class SettablePlatformComponents implements IPlatformComponents {
         }
 
         @Override
-        public IAndroidKeyStoreKeyManager<KeyStore.PrivateKeyEntry> getKeyManager() {
+        public IKeyStoreKeyManager<KeyStore.PrivateKeyEntry> getKeyManager() {
             throw new UnsupportedOperationException();
         }
     };
@@ -207,7 +217,17 @@ public class SettablePlatformComponents implements IPlatformComponents {
         }
 
         @Override
+        public byte[] encrypt(byte[] plaintext, Object... additionalAuthData) throws ClientException {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
         public byte[] decrypt(byte[] ciphertext) throws ClientException {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public byte[] decrypt(byte[] ciphertext, byte[] additionalAuthData) throws ClientException {
             throw new UnsupportedOperationException();
         }
 
@@ -238,6 +258,11 @@ public class SettablePlatformComponents implements IPlatformComponents {
 
         @Override
         public IKeyAccessor generateDerivedKey(byte[] label, byte[] ctx, CryptoSuite suite) throws ClientException {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public IKeyAccessor generateDerivedKey(byte[] label, byte[] ctx) throws ClientException {
             throw new UnsupportedOperationException();
         }
     };
@@ -356,10 +381,45 @@ public class SettablePlatformComponents implements IPlatformComponents {
         return ret;
     }
 
+    @Override
+    public IKeyStoreAccessor getKeyStore() {
+        return new IKeyStoreAccessor() {
+            @Override
+            public IKeyAccessor forAlias(@edu.umd.cs.findbugs.annotations.NonNull IPlatformComponents commonComponents, @edu.umd.cs.findbugs.annotations.NonNull String alias, @edu.umd.cs.findbugs.annotations.NonNull CryptoSuite suite) throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException, ClientException {
+                return null;
+            }
+
+            @Override
+            public IKeyAccessor newInstance(@edu.umd.cs.findbugs.annotations.NonNull IPlatformComponents commonComponents, @edu.umd.cs.findbugs.annotations.NonNull IDevicePopManager.Cipher cipher, @edu.umd.cs.findbugs.annotations.NonNull SigningAlgorithm signingAlg) throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException, ClientException {
+                return null;
+            }
+
+            @Override
+            public IKeyAccessor newInstance(@edu.umd.cs.findbugs.annotations.NonNull CryptoSuite cipher, @edu.umd.cs.findbugs.annotations.NonNull boolean needRawAccess) throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException, ClientException, NoSuchProviderException, InvalidAlgorithmParameterException {
+                return null;
+            }
+
+            @Override
+            public IKeyAccessor importSymmetricKey(@edu.umd.cs.findbugs.annotations.NonNull IPlatformComponents context, @edu.umd.cs.findbugs.annotations.NonNull CryptoSuite cipher, @edu.umd.cs.findbugs.annotations.NonNull String keyAlias, @edu.umd.cs.findbugs.annotations.NonNull String key_jwe, @edu.umd.cs.findbugs.annotations.NonNull IKeyAccessor stk_accessor) throws ParseException, CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException, ClientException {
+                return null;
+            }
+        };
+    }
+
+    @Override
+    public IKeyStoreKeyManager<KeyStore.SecretKeyEntry> getSymmetricKeyManager(@NonNull KeyStore keyStore, @NonNull String keyAlias, @NonNull Supplier<byte[]> thumbprintSupplier) throws KeyStoreException {
+        return null;
+    }
+
+    @Override
+    public CryptoProvider getCipherProvider() {
+        return null;
+    }
+
     @Builder.Default
     private final IAuthorizationStrategyFactory mAuthorizationStrategyFactory = new IAuthorizationStrategyFactory() {
         @Override
-        public IAuthorizationStrategy getAuthorizationStrategy(@NonNull InteractiveTokenCommandParameters parameters) {
+        public IAuthorizationStrategy getAuthorizationStrategy(@NonNull IInteractiveTokenCommandParameters parameters) {
             throw new UnsupportedOperationException();
         }
     };

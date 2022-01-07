@@ -26,17 +26,21 @@ import android.os.Build;
 
 import androidx.annotation.RequiresApi;
 
+import com.microsoft.identity.common.java.crypto.AsymmetricCipher;
 import com.microsoft.identity.common.java.crypto.CryptoSuite;
 import com.microsoft.identity.common.java.crypto.SigningAlgorithm;
 import com.microsoft.identity.common.java.crypto.AsymmetricAlgorithm;
 import com.microsoft.identity.common.java.crypto.IDevicePopManager;
 
 import java.security.KeyStore;
+import java.security.spec.AlgorithmParameterSpec;
+
+import javax.crypto.Cipher;
 
 /**
  * Definitions for Asymmetric Crypto suites.
  */
-public enum AsymmetricCipher implements CryptoSuite {
+public enum AndroidAsymmetricCipher implements AsymmetricCipher {
     RSA_NONE_OAEPWithSHA_1AndMGF1PaddingAndHmacSha256 {
         @Override
         public AsymmetricAlgorithm cipher() {
@@ -67,6 +71,16 @@ public enum AsymmetricCipher implements CryptoSuite {
         @Override
         public SigningAlgorithm signingAlgorithm() {
             return SigningAlgorithm.SHA_256_WITH_RSA;
+        }
+
+        @Override
+        public AlgorithmParameterSpec cryptoSpec(Object... args) {
+            return null;
+        }
+
+        @Override
+        public void initialize(Cipher cipher, Object... args) {
+
         }
     },
     RSA_ECB_PKCS1_PADDING_HMACSHA256 {
@@ -99,6 +113,16 @@ public enum AsymmetricCipher implements CryptoSuite {
         @Override
         public SigningAlgorithm signingAlgorithm() {
             return SigningAlgorithm.SHA_256_WITH_RSA;
+        }
+
+        @Override
+        public AlgorithmParameterSpec cryptoSpec(Object... args) {
+            return null;
+        }
+
+        @Override
+        public void initialize(Cipher cipher, Object... args) {
+
         }
     };
 }

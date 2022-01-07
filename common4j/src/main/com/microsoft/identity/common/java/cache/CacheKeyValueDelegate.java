@@ -28,6 +28,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.annotations.SerializedName;
+import com.microsoft.identity.common.AbstractPlatformComponents;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.dto.AccessTokenRecord;
 import com.microsoft.identity.common.java.dto.AccountCredentialBase;
@@ -79,7 +80,7 @@ public class CacheKeyValueDelegate implements ICacheKeyValueDelegate {
      * Default constructor of CacheKeyValueDelegate.
      */
     public CacheKeyValueDelegate() {
-        mGson = new Gson();
+        mGson = AbstractPlatformComponents.GSON;
         Logger.verbose(TAG, "Init: " + TAG);
     }
 

@@ -23,6 +23,9 @@
 package com.microsoft.identity.common.java.crypto;
 
 import java.security.KeyStore;
+import java.security.spec.AlgorithmParameterSpec;
+
+import javax.crypto.Cipher;
 
 /**
  * Interface for cryptoSuite definitions.  Designed to span the Cipher enum in use in DevicePopManager
@@ -58,4 +61,42 @@ public interface CryptoSuite {
      * @return the signing algorithm desired by this suite.
      */
     SigningAlgorithm signingAlgorithm();
+
+    /**
+     * @return an AlgorithmParameterSpec if needed, null if not required.  The atguments here are
+     * actually dependent on the cipher in question - in the case of AES-GCM, this is the signature
+     * size, the iv (as a byte[] buffer), and optionally the start and length of the iv in the buffer.
+     *
+     * This should be a map instead, and we should establish some names.
+     * <ul>
+     *     <li>iv - an initialization vector as byte[] buffer</li>
+     *     <li>ivStart, ivEnd - start and end position of the data in the iv buffer</li>
+     *     <li>cipher - the Cipher object being operated on</li>
+     * </ul>
+     *
+     * The reason for this is that we can reference classes in the platform-specific code that would
+     * cause the cross-platform code to need platform-specific functionality in order to be able to
+     * compile.  You can't talk about GCMParmeterSpec on Android pre-19, for instance.
+     */
+    AlgorithmParameterSpec cryptoSpec(Object... args);
+
+    /**
+     * Performs any extra initialization steps needed on this cipher.
+     * Some ciphers have extra initialization steps that need to be performed post Cipher.init.
+     * The most germane example is updateAAD in the GCM cipher series, which updates the cipher
+     * state based on a buffer of data in order to insist that it is known to both parties.  Similar
+     * to cryptoSpec, this should be a map:
+     *
+     * This should be a map instead, and we should establish some names.
+     *
+     * <ul>
+     *     <li>aad - an initialization vector as byte[] buffer</li>
+     *     <li>aadStart, aadEnd - start and end position of the data in the iv buffer</li>
+     *     <li>cipher - the Cipher object being operated on</li>
+     * </ul>
+     *
+     * Again, this is done to shield the cross-platform code from needing to know about platform
+     * details.
+     */
+    void initialize(Cipher cipher, Object... args);
 }

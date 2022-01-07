@@ -22,15 +22,22 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.interfaces;
 
+import com.google.gson.Gson;
 import com.microsoft.identity.common.java.cache.IMultiTypeNameValueStorage;
 import com.microsoft.identity.common.java.crypto.IDevicePopManager;
 import com.microsoft.identity.common.java.crypto.IKeyAccessor;
+import com.microsoft.identity.common.java.crypto.IKeyStoreAccessor;
+import com.microsoft.identity.common.java.crypto.IKeyStoreKeyManager;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.providers.oauth2.IStateGenerator;
 import com.microsoft.identity.common.java.util.IClockSkewManager;
 import com.microsoft.identity.common.java.util.IPlatformUtil;
 import com.microsoft.identity.common.java.strategies.IAuthorizationStrategyFactory;
+import com.microsoft.identity.common.java.util.ported.Supplier;
+
+import java.security.KeyStore;
+import java.security.KeyStoreException;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.NonNull;
@@ -123,4 +130,21 @@ public interface IPlatformComponents {
      */
     @NonNull
     IPlatformUtil getPlatformUtil();
+
+    /**
+     * Provide a vanilla-configured instance of Gson.
+     * @return an unconfigured GSON instance.
+     */
+    @NonNull
+    Gson getGson();
+
+    /**
+     * Get access to the platform specific KeyStoreAccessor.
+     */
+    IKeyStoreAccessor getKeyStore();
+
+    IKeyStoreKeyManager<KeyStore.SecretKeyEntry> getSymmetricKeyManager(@NonNull final KeyStore keyStore, @NonNull final String keyAlias,
+                                                                        @NonNull final Supplier<byte[]> thumbprintSupplier) throws KeyStoreException;
+
+    CryptoProvider getCipherProvider();
 }

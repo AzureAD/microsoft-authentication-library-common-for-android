@@ -27,6 +27,7 @@ import androidx.annotation.NonNull;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
+import com.microsoft.identity.common.AbstractPlatformComponents;
 import com.microsoft.identity.common.internal.broker.BrokerResult;
 import com.microsoft.identity.common.internal.util.ICacheRecordGsonAdapter;
 import com.microsoft.identity.common.java.cache.ICacheRecord;
@@ -65,7 +66,7 @@ public final class JsonExtensions {
      */
     public static String getJsonStringFromICacheRecordList(List<ICacheRecord> cacheRecords) {
         final Type listOfCacheRecords = TypeToken.getParameterized(List.class, ICacheRecord.class).getType();
-        return new Gson().toJson(cacheRecords, listOfCacheRecords);
+        return AbstractPlatformComponents.GSON.toJson(cacheRecords, listOfCacheRecords);
     }
 
     /**

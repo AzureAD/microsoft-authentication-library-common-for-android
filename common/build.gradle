@@ -42,12 +42,14 @@ android {
         debug {
             testCoverageEnabled false
             minifyEnabled false
+            buildConfigField("String", "VERSION_NAME", "\"${android.defaultConfig.versionName}\"")
         }
         release {
             minifyEnabled false
             debuggable false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
             consumerProguardFiles 'consumer-rules.pro'
+            buildConfigField("String", "VERSION_NAME", "\"${android.defaultConfig.versionName}\"")
         }
     }
 

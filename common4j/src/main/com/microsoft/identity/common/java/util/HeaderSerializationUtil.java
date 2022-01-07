@@ -26,6 +26,7 @@ import lombok.NonNull;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.microsoft.identity.common.AbstractPlatformComponents;
 
 import java.util.HashMap;
 import java.util.List;
@@ -34,11 +35,11 @@ import java.util.Map;
 public class HeaderSerializationUtil {
 
     public static String toJson(@NonNull final Map<String, List<String>> headersIn) {
-        return new Gson().toJson(headersIn);
+        return AbstractPlatformComponents.GSON.toJson(headersIn);
     }
 
     public static HashMap<String, List<String>> fromJson(@NonNull final String jsonIn) {
-        return new Gson()
+        return AbstractPlatformComponents.GSON
                 .fromJson(
                         jsonIn,
                         TypeToken.getParameterized(

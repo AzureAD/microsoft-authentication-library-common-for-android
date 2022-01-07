@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.java.strategies;
 
 import com.microsoft.identity.common.java.WarningType;
+import com.microsoft.identity.common.java.commands.parameters.IInteractiveTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCommandParameters;
 import com.microsoft.identity.common.java.providers.oauth2.IAuthorizationStrategy;
 
@@ -33,5 +34,5 @@ import lombok.NonNull;
 public interface IAuthorizationStrategyFactory<GenericAuthorizationStrategy extends IAuthorizationStrategy> {
 
     GenericAuthorizationStrategy getAuthorizationStrategy(
-            @NonNull final InteractiveTokenCommandParameters parameters);
+            @NonNull final IInteractiveTokenCommandParameters parameters);
 }
