@@ -89,9 +89,16 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
 
     @Override
     public void performSharedDeviceRegistration(@NonNull final String username,
-                                                @NonNull final String password) {
+                                                @NonNull final String password,
+                                                @NonNull final boolean expectedSuccess) {
         //TODO implement shared device registration for CP
         throw new UnsupportedOperationException("Not supported!");
+    }
+
+    @Override
+    public void performSharedDeviceRegistration(@NonNull final String username,
+                                                @NonNull final String password) {
+        performSharedDeviceRegistration(username, password, true);
     }
 
     @Nullable
