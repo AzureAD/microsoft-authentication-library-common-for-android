@@ -155,7 +155,10 @@ public class TestUtils {
             final int timeoutInSeconds)
             throws Exception {
         try {
-            return performOperationInThreadPool(request, operation, timeoutInSeconds);
+            final ResultType result =
+                    performOperationInThreadPool(request, operation, timeoutInSeconds);
+            Assert.assertNotNull("returned result should not be null", result);
+            return result;
         } catch (final Exception e) {
             Assert.fail("expected result to be returned");
             throw e;
