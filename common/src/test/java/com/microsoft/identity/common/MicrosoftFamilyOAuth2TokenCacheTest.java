@@ -22,31 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common;
 
-import androidx.test.core.app.ApplicationProvider;
-
-import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
-import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
-import com.microsoft.identity.common.java.authscheme.BearerAuthenticationSchemeInternal;
-import com.microsoft.identity.common.java.cache.ICacheRecord;
-import com.microsoft.identity.common.java.cache.MicrosoftFamilyOAuth2TokenCache;
-import com.microsoft.identity.common.java.dto.AccountRecord;
-import com.microsoft.identity.common.java.dto.CredentialType;
-import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAccount;
-import com.microsoft.identity.common.java.providers.microsoft.MicrosoftRefreshToken;
-import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
-import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
-import com.microsoft.identity.common.shadows.ShadowAndroidSdkStorageEncryptionManager;
-
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.robolectric.RobolectricTestRunner;
-import org.robolectric.annotation.Config;
-
-import java.util.UUID;
-
 import static com.microsoft.identity.common.MicrosoftStsAccountCredentialAdapterTest.MOCK_ID_TOKEN_WITH_CLAIMS;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.AUTHORITY_TYPE;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.CACHED_AT;
@@ -61,6 +36,41 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.when;
+
+import androidx.test.core.app.ApplicationProvider;
+
+import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
+import com.microsoft.identity.common.java.authscheme.BearerAuthenticationSchemeInternal;
+import com.microsoft.identity.common.java.cache.ICacheRecord;
+import com.microsoft.identity.common.java.cache.MicrosoftFamilyOAuth2TokenCache;
+import com.microsoft.identity.common.java.dto.AccessTokenRecord;
+import com.microsoft.identity.common.java.dto.AccountRecord;
+import com.microsoft.identity.common.java.dto.CredentialType;
+import com.microsoft.identity.common.java.dto.IdTokenRecord;
+import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
+import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAccount;
+import com.microsoft.identity.common.java.providers.microsoft.MicrosoftRefreshToken;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
+import com.microsoft.identity.common.shadows.ShadowAndroidSdkStorageEncryptionManager;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
+import org.robolectric.RobolectricTestRunner;
+import org.robolectric.annotation.Config;
+
+import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 @RunWith(RobolectricTestRunner.class)
 @Config(shadows = {ShadowAndroidSdkStorageEncryptionManager.class})
@@ -523,6 +533,152 @@ public class MicrosoftFamilyOAuth2TokenCacheTest extends MsalOAuth2TokenCacheTes
         assertNotNull(familyCacheRecord.getIdToken());
         assertNotNull(familyCacheRecord.getV1IdToken());
         assertNotNull(familyCacheRecord.getAccessToken());
+    }
+
+    @Test
+    public void testMultipleClientsUpdatingFociCacheConcurrently() throws ClientException, InterruptedException {
+        final String localAccountId = UUID.randomUUID().toString();
+        final String realm = UUID.randomUUID().toString();
+        final String randomHomeAccountId = localAccountId + "." + realm;
+        final String[] thread1 = {""};
+        final String[] thread2 = {""};
+        final AccountCredentialTestBundle frtTestBundle = new AccountCredentialTestBundle(
+                MicrosoftAccount.AUTHORITY_TYPE_MS_STS, localAccountId, "test.user@tenant.onmicrosoft.com",
+                randomHomeAccountId, ENVIRONMENT, realm, TARGET, CACHED_AT, EXPIRES_ON, SECRET, CLIENT_ID,
+                SECRET, MicrosoftStsAccountCredentialAdapterTest.MOCK_ID_TOKEN_WITH_CLAIMS, "1",
+                SESSION_KEY, CredentialType.IdToken);
+
+        when(mockCredentialAdapter.createAccount(mockStrategy, mockRequest,mockResponse)).thenReturn(frtTestBundle.mGeneratedAccount);
+        when(mockCredentialAdapter.createAccessToken(mockStrategy, mockRequest, mockResponse)).thenReturn(frtTestBundle.mGeneratedAccessToken);
+        when(mockCredentialAdapter.createRefreshToken(mockStrategy, mockRequest, mockResponse)).thenReturn(frtTestBundle.mGeneratedRefreshToken);
+        when(mockCredentialAdapter.createIdToken(mockStrategy, mockRequest, mockResponse)).thenReturn(frtTestBundle.mGeneratedIdToken);
+
+        // Save tokens in cache for a Foci client app, as mocked in frtTestBundle
+        mOauth2TokenCache.save(mockStrategy, mockRequest, mockResponse);
+
+        // Setup mocks for new tokens to be returned for two different foci client apps client_1 and client_2
+        // The idea is that these two applications will be running and saving tokens concurrently from two separate threads.
+        // The mocks return different tokens based on the thread names, to mock having two separte Refresh tokens
+        final AccountCredentialTestBundle frtTestBundle1 = new AccountCredentialTestBundle(
+                MicrosoftAccount.AUTHORITY_TYPE_MS_STS, localAccountId, "test.user@tenant.onmicrosoft.com",
+                randomHomeAccountId, ENVIRONMENT, realm, TARGET + " client1_scope", CACHED_AT, EXPIRES_ON, SECRET, "client_1",
+                SECRET, MicrosoftStsAccountCredentialAdapterTest.MOCK_ID_TOKEN_WITH_CLAIMS, "1",
+                SESSION_KEY, CredentialType.IdToken);
+
+        final AccountCredentialTestBundle frtTestBundle2 = new AccountCredentialTestBundle(
+                MicrosoftAccount.AUTHORITY_TYPE_MS_STS, localAccountId, "test.user@tenant.onmicrosoft.com",
+                randomHomeAccountId, ENVIRONMENT, realm, TARGET + " client2_scope", CACHED_AT, EXPIRES_ON, SECRET, "client_2",
+                SECRET, MicrosoftStsAccountCredentialAdapterTest.MOCK_ID_TOKEN_WITH_CLAIMS, "1", SESSION_KEY,
+                CredentialType.IdToken);
+
+        when(mockCredentialAdapter.createAccount(mockStrategy, mockRequest, mockResponse)).thenAnswer(new Answer<AccountRecord>() {
+            @Override
+            public AccountRecord answer(InvocationOnMock invocation) throws Throwable {
+                final String currentThread = Thread.currentThread().getName();
+                if(currentThread == thread1[0]) {
+                    return frtTestBundle1.mGeneratedAccount;
+                } else if(currentThread == thread2[0]) {
+                    return frtTestBundle2.mGeneratedAccount;
+                }
+                return null;
+            }
+        });
+        when(mockCredentialAdapter.createAccessToken(mockStrategy, mockRequest, mockResponse)).thenAnswer(new Answer<AccessTokenRecord>() {
+            @Override
+            public AccessTokenRecord answer(InvocationOnMock invocation) throws Throwable {
+                final String currentThread = Thread.currentThread().getName();
+                if(currentThread == thread1[0]) {
+                    frtTestBundle1.mGeneratedAccessToken.setSecret(SECRET + "AT2" + currentThread);
+                    return frtTestBundle1.mGeneratedAccessToken;
+                } else if(currentThread == thread2[0]) {
+                    frtTestBundle2.mGeneratedAccessToken.setSecret(SECRET + "AT2" + currentThread);
+                    return frtTestBundle2.mGeneratedAccessToken;
+                }
+                return null;
+            }
+        });
+        when(mockCredentialAdapter.createRefreshToken(mockStrategy, mockRequest, mockResponse)).thenAnswer(new Answer<RefreshTokenRecord>() {
+            @Override
+            public RefreshTokenRecord answer(InvocationOnMock invocation) throws Throwable {
+                final String currentThread = Thread.currentThread().getName();
+                if(currentThread == thread1[0]) {
+                    frtTestBundle1.mGeneratedRefreshToken.setSecret(SECRET + "RT2" + Thread.currentThread().getName());
+                    return frtTestBundle1.mGeneratedRefreshToken;
+                } else if(currentThread == thread2[0]) {
+                    frtTestBundle2.mGeneratedRefreshToken.setSecret(SECRET + "RT2" + Thread.currentThread().getName());
+                    return frtTestBundle2.mGeneratedRefreshToken;
+                }
+                return null;
+            }
+        });
+        when(mockCredentialAdapter.createIdToken(mockStrategy, mockRequest, mockResponse)).thenAnswer(new Answer<IdTokenRecord>() {
+            @Override
+            public IdTokenRecord answer(InvocationOnMock invocation) throws Throwable {
+                final String currentThread = Thread.currentThread().getName();
+                if(currentThread == thread1[0]) {
+                    return frtTestBundle1.mGeneratedIdToken;
+                } else if(currentThread == thread2[0]) {
+                    return frtTestBundle2.mGeneratedIdToken;
+                }
+                return null;
+            }
+        });
+
+        final CountDownLatch countDownLatch = new CountDownLatch(1);
+        // Submit runnable tasks to save tokens from two different threads concurrently
+        final Runnable runnable1 = new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    thread1[0] = Thread.currentThread().getName();
+                    countDownLatch.await();
+                    mOauth2TokenCache.save(mockStrategy, mockRequest, mockResponse);
+                } catch (ClientException | InterruptedException e) {
+                    throw new AssertionError(e.getMessage());
+                }
+            }
+        };
+
+        final Runnable runnable2 = new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    thread2[0] = Thread.currentThread().getName();
+                    countDownLatch.await();
+                    mOauth2TokenCache.save(mockStrategy, mockRequest, mockResponse);
+                } catch (ClientException | InterruptedException e) {
+                    throw new AssertionError(e.getMessage());
+                }
+            }
+        };
+
+        final ExecutorService executorService = Executors.newFixedThreadPool(5);
+        final Future runnableTask1 = executorService.submit(runnable1);
+        final Future runnableTask2 = executorService.submit(runnable2);
+        countDownLatch.countDown();
+        try{
+            runnableTask1.get();
+            runnableTask2.get();
+        } catch (ExecutionException e) {
+            throw new AssertionError(e.getMessage());
+        } finally {
+            executorService.shutdown();
+        }
+
+        // verify we are able to get Account, RT, AT and IdToken from the cache after both updates are done
+        final ICacheRecord cacheRecord1 = mOauth2TokenCache.loadByFamilyId("client_1", TARGET, frtTestBundle2.mGeneratedAccount, BEARER_SCHEME);
+
+        assertNotNull(cacheRecord1);
+        assertNotNull(cacheRecord1.getRefreshToken());
+        assertNotNull(cacheRecord1.getAccessToken());
+        assertNotNull(cacheRecord1.getIdToken());
+
+        final ICacheRecord cacheRecord2 = mOauth2TokenCache.loadByFamilyId("client_2", TARGET, frtTestBundle2.mGeneratedAccount, BEARER_SCHEME);
+
+        assertNotNull(cacheRecord2);
+        assertNotNull(cacheRecord2.getRefreshToken());
+        assertNotNull(cacheRecord2.getAccessToken());
+        assertNotNull(cacheRecord2.getIdToken());
     }
 
 }
