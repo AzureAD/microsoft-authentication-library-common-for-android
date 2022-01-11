@@ -31,6 +31,11 @@ import lombok.NonNull;
  */
 public interface IHttpClientWrapper {
 
+    /**
+     * Wrap the given {@link HttpClient} object.
+     * e.g. For test cases, we could wraps the given {@link HttpClient} object with a Mock HttpClient.
+     *      while we can just return the given object in prod code.
+     */
     @NonNull
     HttpClient wrap(@NonNull final HttpClient client);
 }
