@@ -33,8 +33,10 @@ import com.microsoft.identity.common.java.crypto.IKeyAccessor;
 import com.microsoft.identity.common.java.crypto.SecureHardwareState;
 import com.microsoft.identity.common.java.crypto.SigningAlgorithm;
 import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.interfaces.IHttpClientWrapper;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
+import com.microsoft.identity.common.java.net.DefaultHttpClientWrapper;
 import com.microsoft.identity.common.java.providers.oauth2.IAuthorizationStrategy;
 import com.microsoft.identity.common.java.providers.oauth2.IStateGenerator;
 import com.microsoft.identity.common.java.strategies.IAuthorizationStrategyFactory;
@@ -354,6 +356,11 @@ public class SettablePlatformComponents implements IPlatformComponents {
             ret = (INameValueStorage<String>) mStores.get(storeName);
         }
         return ret;
+    }
+
+    @Override
+    public @NonNull IHttpClientWrapper getHttpClientWrapper() {
+        return new DefaultHttpClientWrapper();
     }
 
     @Builder.Default
