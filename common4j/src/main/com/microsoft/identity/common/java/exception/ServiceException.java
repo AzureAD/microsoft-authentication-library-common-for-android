@@ -34,7 +34,12 @@ import edu.umd.cs.findbugs.annotations.Nullable;
 
 public class ServiceException extends BaseException {
 
-    public static final String sName =  ServiceException.class.getName();
+    // This is needed for backward compatibility with older versions of MSAL (pre 3.0.0)
+    // When MSAL converts the result bundle it looks for this value to know about exception type
+    // We moved the exception class to a new package with refactoring work,
+    // but need to keep this value to older package name to avoid breaking older MSAL clients.
+    public static final String sName =  "com.microsoft.identity.common.exception.ServiceException";
+
     private static final long serialVersionUID = 5139563940871615046L;
 
     public static final String OPENID_PROVIDER_CONFIGURATION_FAILED_TO_LOAD =
