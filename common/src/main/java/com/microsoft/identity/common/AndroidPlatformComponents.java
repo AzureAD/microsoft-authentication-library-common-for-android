@@ -37,7 +37,6 @@ import androidx.fragment.app.Fragment;
 import com.microsoft.identity.common.crypto.AndroidAuthSdkStorageEncryptionManager;
 import com.microsoft.identity.common.crypto.AndroidBrokerStorageEncryptionManager;
 import com.microsoft.identity.common.internal.net.cache.HttpCache;
-import com.microsoft.identity.common.java.broker.ICallValidator;
 import com.microsoft.identity.common.java.cache.IMultiTypeNameValueStorage;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
 import com.microsoft.identity.common.internal.platform.AndroidDeviceMetadata;
@@ -52,8 +51,10 @@ import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.crypto.IDevicePopManager;
 import com.microsoft.identity.common.java.crypto.IKeyAccessor;
 import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.interfaces.IHttpClientWrapper;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
+import com.microsoft.identity.common.java.net.DefaultHttpClientWrapper;
 import com.microsoft.identity.common.java.platform.Device;
 import com.microsoft.identity.common.java.providers.oauth2.IStateGenerator;
 import com.microsoft.identity.common.java.util.ClockSkewManager;
@@ -333,5 +334,10 @@ public class AndroidPlatformComponents implements IPlatformComponents {
     @Override
     public @NonNull IPlatformUtil getPlatformUtil() {
         return new AndroidPlatformUtil(mContext, mActivity);
+    }
+
+    @Override
+    public @NonNull IHttpClientWrapper getHttpClientWrapper() {
+        return new DefaultHttpClientWrapper();
     }
 }

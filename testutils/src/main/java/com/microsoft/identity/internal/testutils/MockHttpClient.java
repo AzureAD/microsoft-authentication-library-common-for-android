@@ -46,7 +46,6 @@ import java.util.function.Predicate;
  */
 public class MockHttpClient {
 
-
     /**
      * Store a map with HttpRequestMatcher as the key. This allows us to have different
      * interceptors for matching different request patterns.
@@ -156,7 +155,6 @@ public class MockHttpClient {
         });
     }
 
-
     /**
      * Quickly match all the http requests with the specified interceptor
      *
@@ -165,7 +163,6 @@ public class MockHttpClient {
     public void intercept(@NonNull final HttpRequestInterceptor interceptor) {
         intercept(HttpRequestMatcher.builder().build(), interceptor);
     }
-
 
     /**
      * Quickly match all the http requests that match the url specified
@@ -273,7 +270,6 @@ public class MockHttpClient {
         }
         MockHttpClient.interceptors.put(matcher, interceptor);
     }
-
 
     /**
      * Removes all the set http request interceptors for this mock instance
