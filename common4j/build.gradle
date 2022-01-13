@@ -8,7 +8,7 @@
 
 plugins {
     id 'java-library'
-    id 'com.microsoft.identity.buildsystem' version '0.2.2'
+    id 'com.microsoft.identity.buildsystem' version '0.2.3'
     id 'maven-publish'
 
     // the below build plugin allows to generate BuildConfig files in a JAVA gradle project.
@@ -26,6 +26,16 @@ if (project.hasProperty("sugar")) {
 
 buildSystem {
     desugar = desugarCode
+}
+
+def enableCodeCoverage = false
+
+if (project.hasProperty("codeCoverageEnabled")) {
+    enableCodeCoverage = codeCoverageEnabled.toBoolean()
+}
+
+codeCoverageReport {
+    coverage.enabled = enableCodeCoverage
 }
 
 repositories {
