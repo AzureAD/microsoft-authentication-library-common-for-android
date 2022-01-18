@@ -129,7 +129,7 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         // Our test context
         final Context context = androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().getTargetContext();
 
-        mApplicationMetadataCache = new SharedPreferencesBrokerApplicationMetadataCache(context);
+        mApplicationMetadataCache = SharedPreferencesBrokerApplicationMetadataCache.getInstance(context);
 
         // Test Configs for caches...
         initFociCache(context);
@@ -888,7 +888,7 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         final BrokerOAuth2TokenCache brokerOAuth2TokenCache = new BrokerOAuth2TokenCache(
                 context,
                 TEST_APP_UID,
-                new SharedPreferencesBrokerApplicationMetadataCache(context)
+                SharedPreferencesBrokerApplicationMetadataCache.getInstance(context)
         );
 
         assertEquals(
@@ -899,7 +899,7 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         final BrokerOAuth2TokenCache brokerOAuth2TokenCache2 = new BrokerOAuth2TokenCache(
                 context,
                 TEST_APP_UID,
-                new SharedPreferencesBrokerApplicationMetadataCache(context)
+                SharedPreferencesBrokerApplicationMetadataCache.getInstance(context)
         );
 
         assertEquals(

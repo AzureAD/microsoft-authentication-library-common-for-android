@@ -523,7 +523,8 @@ public class BrokerOAuth2TokenCache
                         + "]"
         );
 
-        final boolean success = mApplicationMetadataCache.insert(applicationMetadata);
+        //Insert or update was added to ensure that update operation was atomic
+        final boolean success = mApplicationMetadataCache.insertOrUpdate(applicationMetadata);
 
         Logger.info(
                 TAG + methodName,

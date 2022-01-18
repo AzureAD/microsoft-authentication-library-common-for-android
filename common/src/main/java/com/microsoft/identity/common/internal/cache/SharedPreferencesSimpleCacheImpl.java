@@ -26,14 +26,18 @@ import android.content.Context;
 import android.content.SharedPreferences;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresPermission;
 
 import com.google.gson.Gson;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * A simple metadata store definition that uses SharedPreferences to persist, read, update, and
@@ -53,7 +57,15 @@ public abstract class SharedPreferencesSimpleCacheImpl<T> implements ISimpleCach
     private final String mKeySingleEntry;
     private final Gson mGson = new Gson();
 
-    public SharedPreferencesSimpleCacheImpl(@NonNull final Context context,
+    //ReentrantReadWriteLock - https://docs.oracle.com/javase/7/docs/api/java/util/concurrent/locks/ReentrantReadWriteLock.html
+    protected final ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock();
+    protected final Lock readLock = readWriteLock.readLock();
+    protected final Lock writeLock = readWriteLock.writeLock();
+
+    //In memory copy of the cached list
+    protected List<T> mList = null;
+
+    protected SharedPreferencesSimpleCacheImpl(@NonNull final Context context,
                                             @NonNull final String prefsName,
                                             @NonNull final String singleKey) {
         Logger.verbose(
@@ -65,6 +77,8 @@ public abstract class SharedPreferencesSimpleCacheImpl<T> implements ISimpleCach
                 Context.MODE_PRIVATE
         );
         mKeySingleEntry = singleKey;
+        //Implementations of this class are singletons.... and construction is synchronized
+        mList = load();
     }
 
     /**
@@ -78,31 +92,42 @@ public abstract class SharedPreferencesSimpleCacheImpl<T> implements ISimpleCach
     public boolean insert(T t) {
         final String methodName = ":insert";
 
-        final Set<T> allMetadata = new HashSet<>(getAll());
-        Logger.verbose(
-                TAG + methodName,
-                "Existing metadata contained ["
-                        + allMetadata.size()
-                        + "] elements."
-        );
+        boolean success = false;
 
-        allMetadata.add(t);
+        writeLock.lock();
 
-        Logger.verbose(
-                TAG + methodName,
-                "New metadata set size: ["
-                        + allMetadata.size()
-                        + "]"
-        );
+        try {
 
-        final String json = mGson.toJson(allMetadata);
+            final Set<T> allMetadata = new HashSet<>(mList);
+            Logger.verbose(
+                    TAG + methodName,
+                    "Existing metadata contained ["
+                            + allMetadata.size()
+                            + "] elements."
+            );
 
-        Logger.verbose(
-                TAG + methodName,
-                "Writing cache entry."
-        );
+            allMetadata.add(t);
 
-        final boolean success = mSharedPrefs.edit().putString(mKeySingleEntry, json).commit();
+            Logger.verbose(
+                    TAG + methodName,
+                    "New metadata set size: ["
+                            + allMetadata.size()
+                            + "]"
+            );
+
+            final String json = mGson.toJson(allMetadata);
+
+            Logger.verbose(
+                    TAG + methodName,
+                    "Writing cache entry."
+            );
+
+            success = mSharedPrefs.edit().putString(mKeySingleEntry, json).commit();
+            //Put the updated list in memory
+            mList = load();
+        }finally {
+            writeLock.unlock();
+        }
 
         if (success) {
             Logger.verbose(
@@ -122,62 +147,78 @@ public abstract class SharedPreferencesSimpleCacheImpl<T> implements ISimpleCach
     @Override
     public boolean remove(T t) {
         final String methodName = ":remove";
+        boolean removed = false;
 
-        final Set<T> allMetadata = new HashSet<>(getAll());
+        writeLock.lock();
 
-        Logger.verbose(
-                TAG + methodName,
-                "Existing metadata contained ["
-                        + allMetadata.size()
-                        + "] elements."
-        );
-
-        final boolean removed = allMetadata.remove(t);
-
-        Logger.verbose(
-                TAG + methodName,
-                "New metadata set size: ["
-                        + allMetadata.size()
-                        + "]"
-        );
-
-        if (!removed) {
-            // Nothing to do, wasn't cached in the first place!
-            Logger.warn(
-                    TAG + methodName,
-                    "Nothing to delete -- cache entry is missing!"
-            );
-
-            return true;
-        } else {
-            final String json = mGson.toJson(allMetadata);
+        try {
+            final Set<T> allMetadata = new HashSet<>(mList);
 
             Logger.verbose(
                     TAG + methodName,
-                    "Writing new cache values..."
+                    "Existing metadata contained ["
+                            + allMetadata.size()
+                            + "] elements."
             );
 
-            final boolean written = mSharedPrefs.edit().putString(mKeySingleEntry, json).commit();
+            removed = allMetadata.remove(t);
 
             Logger.verbose(
                     TAG + methodName,
-                    "Updated cache contents written? ["
-                            + written
+                    "New metadata set size: ["
+                            + allMetadata.size()
                             + "]"
             );
 
-            return written;
+            if (!removed) {
+                // Nothing to do, wasn't cached in the first place!
+                Logger.warn(
+                        TAG + methodName,
+                        "Nothing to delete -- cache entry is missing!"
+                );
+
+                removed = true;
+            } else {
+                final String json = mGson.toJson(allMetadata);
+
+                Logger.verbose(
+                        TAG + methodName,
+                        "Writing new cache values..."
+                );
+
+                removed = mSharedPrefs.edit().putString(mKeySingleEntry, json).commit();
+
+                Logger.verbose(
+                        TAG + methodName,
+                        "Updated cache contents written? ["
+                                + removed
+                                + "]"
+                );
+
+            }
+            //Put the updated list in memory
+            mList = load();
+        }finally {
+            writeLock.unlock();
         }
+
+        return removed;
     }
 
-    @Override
-    public List<T> getAll() {
-        final String methodName = ":getAll";
+    public List<T> getAll(){
+        //Return copy of list
+        return new ArrayList<T>(mList);
+    }
+
+    protected List<T> load() {
+        final String methodName = ":load";
+        List<T> result = null;
+
         final String jsonList = mSharedPrefs.getString(mKeySingleEntry, EMPTY_ARRAY);
 
         final Type listType = getListTypeToken();
 
-        final List<T> result = mGson.fromJson(
+        result = mGson.fromJson(
                 jsonList,
                 listType
         );
@@ -195,8 +236,17 @@ public abstract class SharedPreferencesSimpleCacheImpl<T> implements ISimpleCach
     @Override
     public boolean clear() {
         final String methodName = ":clear";
+        boolean cleared = false;
 
-        final boolean cleared = mSharedPrefs.edit().clear().commit();
+        writeLock.lock();
+        try {
+            //Clear disk
+            cleared = mSharedPrefs.edit().clear().commit();
+            //clear memory
+            mList.clear();
+        }finally{
+            writeLock.unlock();
+        }
 
         if (!cleared) {
             Logger.warn(

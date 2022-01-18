@@ -59,4 +59,6 @@ public interface IBrokerApplicationMetadataCache extends ISimpleCache<BrokerAppl
      */
     @Nullable
     BrokerApplicationMetadata getMetadata(String clientId, String environment, int processUid);
+
+    boolean insertOrUpdate(BrokerApplicationMetadata metadata);
 }
