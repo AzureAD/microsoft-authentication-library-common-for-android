@@ -42,7 +42,7 @@ allprojects {
             url "https://identitydivision.pkgs.visualstudio.com/_packaging/AndroidADAL/maven/v1"
             credentials {
                 username project.vstsUsername
-                password project.vstsMavenAccessToken
+                password project.vstsPassword
             }
         }
         //Required for google published packages not published to maven central
