@@ -1,5 +1,6 @@
 V.Next
 ----------
+- [PATCH] Synchronize updating refresh token in cache (saving new and removing old) to avoid race condition (#1659)
 - [PATCH] Make it clear if adding a query param should overwrite or leave as is (#1581)
 - [PATCH] Handle the scenario where broker activity is killed wrongly. (#1568)
 - [MINOR] Add GetOsForMats to IDeviceMetadata (#1552)
