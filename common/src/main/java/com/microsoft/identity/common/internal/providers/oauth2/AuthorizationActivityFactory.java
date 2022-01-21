@@ -41,6 +41,7 @@ import java.util.HashMap;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.AUTHORIZATION_AGENT;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.AUTH_INTENT;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.POST_PAGE_LOADED_URL;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REDIRECT_URI;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_HEADERS;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_URL;
@@ -117,6 +118,37 @@ public class AuthorizationActivityFactory {
 
         if (authorizationAgent == AuthorizationAgent.WEBVIEW) {
             fragment = new WebViewAuthorizationFragment();
+            
+            Bundle bundle = new Bundle();
+            final WebViewAuthorizationFragment webViewAuthorizationFragment = (WebViewAuthorizationFragment) fragment;
+
+            if (intent.hasExtra(POST_PAGE_LOADED_URL)) {
+                bundle.putString(POST_PAGE_LOADED_URL, intent.getStringExtra(POST_PAGE_LOADED_URL));
+            }
+            if (intent.hasExtra(REQUEST_URL)) {
+                bundle.putString(REQUEST_URL, intent.getStringExtra(REQUEST_URL));
+            }
+            if (intent.hasExtra(REDIRECT_URI)) {
+                bundle.putString(REDIRECT_URI, intent.getStringExtra(REDIRECT_URI));
+            }
+            if (intent.hasExtra(REQUEST_HEADERS)) {
+                bundle.putSerializable(REQUEST_HEADERS, intent.getSerializableExtra(REQUEST_HEADERS));
+            }
+            if (intent.hasExtra(AUTHORIZATION_AGENT)) {
+                bundle.putSerializable(AUTHORIZATION_AGENT, intent.getSerializableExtra(AUTHORIZATION_AGENT));
+            }
+            if (intent.hasExtra(WEB_VIEW_ZOOM_CONTROLS_ENABLED)) {
+                bundle.putBoolean(WEB_VIEW_ZOOM_CONTROLS_ENABLED, intent.getBooleanExtra(WEB_VIEW_ZOOM_CONTROLS_ENABLED, false));
+            }
+            if (intent.hasExtra(WEB_VIEW_ZOOM_ENABLED)) {
+                bundle.putBoolean(WEB_VIEW_ZOOM_ENABLED, intent.getBooleanExtra(WEB_VIEW_ZOOM_ENABLED, false));
+            }
+            if (intent.hasExtra(DiagnosticContext.CORRELATION_ID)) {
+                bundle.putString(DiagnosticContext.CORRELATION_ID, intent.getStringExtra(DiagnosticContext.CORRELATION_ID));
+            }
+
+            webViewAuthorizationFragment.setInstanceState(bundle);
+
         } else {
             if (libraryConfig.isAuthorizationInCurrentTask()) {
                 fragment = new CurrentTaskBrowserAuthorizationFragment();
