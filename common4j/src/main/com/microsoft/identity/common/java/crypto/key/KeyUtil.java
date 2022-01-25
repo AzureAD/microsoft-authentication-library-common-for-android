@@ -30,6 +30,7 @@ import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
+import javax.annotation.Nullable;
 import javax.crypto.Mac;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
@@ -86,17 +87,34 @@ public class KeyUtil {
      * Derive a thumbprint from the given key.
      *
      * @param key SecretKey to calculate the thumbprint from.
+     *
      * @return a thumbprint. Will return {@link KeyUtil#UNKNOWN_THUMBPRINT} if it fails to derived one.
      */
-    public static String getKeyThumbPrint(final @NonNull SecretKey key) {
+    public static String getKeyThumbPrint(@NonNull final SecretKey key) {
         final String methodName = ":getKeyThumbPrint";
+        try {
+            return getKeyThumbPrintFromHmacKey(getHMacKey(key));
+        } catch (NoSuchAlgorithmException e) {
+            Logger.warn(TAG + methodName, "failed to calculate thumbprint:" + e.getMessage());
+            return UNKNOWN_THUMBPRINT;
+        }
+    }
+
+    /**
+     * Derive a thumbprint from the given hmac key.
+     *
+     * @param hmacKey hmacKey of the secretKey.
+     *
+     * @return a thumbprint. Will return {@link KeyUtil#UNKNOWN_THUMBPRINT} if it fails to derived one.
+     */
+    public static String getKeyThumbPrintFromHmacKey(@NonNull final SecretKey hmacKey) {
+        final String methodName = ":getKeyThumbPrintFromHmacKey";
         try {
             final byte[] thumbprintBytes = "012345678910111213141516".getBytes(ENCODING_UTF8);
 
             final Mac thumbprintMac = Mac.getInstance(HMAC_ALGORITHM);
-            thumbprintMac.init(getHMacKey(key));
+            thumbprintMac.init(hmacKey);
             byte[] thumbPrintFinal = thumbprintMac.doFinal(thumbprintBytes);
-
             return StringUtil.encodeUrlSafeString(thumbPrintFinal);
         } catch (final NoSuchAlgorithmException | InvalidKeyException e) {
             Logger.warn(TAG + methodName, "failed to calculate thumbprint:" + e.getMessage());

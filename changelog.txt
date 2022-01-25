@@ -1,6 +1,11 @@
 V.Next
 ----------
+- [MINOR] Update exception name to match older (pre-refactoring) value to avoid breaking older msal clients (#1668)
 - [PATCH] Synchronize updating refresh token in cache (saving new and removing old) to avoid race condition (#1659)
+- [PATCH] Remove unsafe key thumbprint generator (#1654)
+- [PATCH] Move getUidFromHomeAccountId to common4j (from broker4j) + rename a constant (#1643)
+- [PATCH] Make LocalBroadcaster.broadcast method to be asynchronous (#1639)
+- [MAJOR] Rename LobalBroadcasterAliases to LocalBroadcasterAliases (#1584)
 - [PATCH] Make it clear if adding a query param should overwrite or leave as is (#1581)
 - [PATCH] Handle the scenario where broker activity is killed wrongly. (#1568)
 - [MINOR] Add GetOsForMats to IDeviceMetadata (#1552)
@@ -61,6 +66,15 @@ V.Next
 - [PATCH] Fix extracting http response body (#1557)
 - [PATCH] Fix print stack trace for Throwable in Logs (#1556)
 - [PATCH] Support SSO token api (#1543)
+
+Version 3.6.7
+----------
+- [PATCH] Add helper method to fix account id missing in msal get account (#1641)
+- [PATCH] Avoid key overwriting for apps using shared user id (#1662)
+
+Version 3.6.6
+----------
+- [PATCH] Remove unsafe key thumbprint generator (#1655)
 
 Version 3.6.5
 ----------
