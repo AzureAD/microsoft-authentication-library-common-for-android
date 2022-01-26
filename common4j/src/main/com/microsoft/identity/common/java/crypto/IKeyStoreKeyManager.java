@@ -31,13 +31,15 @@ import java.security.UnrecoverableEntryException;
 import java.security.cert.Certificate;
 import java.util.Date;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
+
 /**
  * Mediate access to a specific instance of a piece of material stored in a KeyStore.  This
  * interface provides generic access to hardware storage for a given key entry, provides the
  * metadata that can be retrieved from the underlying storage mechanism of whatever variety.
  * @param <K> the type of KeyStore entry being managed.
  */
-public interface IAndroidKeyStoreKeyManager<K extends KeyStore.Entry> {
+public interface IKeyStoreKeyManager<K extends KeyStore.Entry> {
     /**
      * @return true if the key that is being managed exists.
      */
@@ -91,8 +93,7 @@ public interface IAndroidKeyStoreKeyManager<K extends KeyStore.Entry> {
     /**
      * @return a byte array key thumpbrint.
      */
-    byte[] getThumbprint();
-
+    byte[] getThumbprint() throws ClientException;
 
    /**
      * @return a certificate chain associated with this key, or null if no chain is tied to it.

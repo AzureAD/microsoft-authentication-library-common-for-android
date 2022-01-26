@@ -27,7 +27,7 @@ import com.microsoft.identity.common.java.cache.MapBackedPreferencesManager;
 import com.microsoft.identity.common.java.commands.ICommand;
 import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCommandParameters;
 import com.microsoft.identity.common.java.crypto.CryptoSuite;
-import com.microsoft.identity.common.java.crypto.IAndroidKeyStoreKeyManager;
+import com.microsoft.identity.common.java.crypto.IKeyStoreKeyManager;
 import com.microsoft.identity.common.java.crypto.IDevicePopManager;
 import com.microsoft.identity.common.java.crypto.IKeyAccessor;
 import com.microsoft.identity.common.java.crypto.SecureHardwareState;
@@ -195,7 +195,7 @@ public class SettablePlatformComponents implements IPlatformComponents {
         }
 
         @Override
-        public IAndroidKeyStoreKeyManager<KeyStore.PrivateKeyEntry> getKeyManager() {
+        public IKeyStoreKeyManager<KeyStore.PrivateKeyEntry> getKeyManager() {
             throw new UnsupportedOperationException();
         }
     };

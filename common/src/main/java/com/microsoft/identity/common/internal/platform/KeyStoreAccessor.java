@@ -33,12 +33,12 @@ import androidx.annotation.Nullable;
 import com.microsoft.identity.common.AndroidPlatformComponents;
 import com.microsoft.identity.common.java.crypto.CryptoSuite;
 import com.microsoft.identity.common.java.crypto.IKeyAccessor;
+import com.microsoft.identity.common.java.crypto.IKeyStoreKeyManager;
 import com.microsoft.identity.common.java.crypto.RawKeyAccessor;
-import com.microsoft.identity.common.java.crypto.IAndroidKeyStoreKeyManager;
 import com.microsoft.identity.common.java.crypto.SecureHardwareState;
 import com.microsoft.identity.common.java.crypto.SigningAlgorithm;
 import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.internal.util.Supplier;
+import com.microsoft.identity.common.java.util.Supplier;
 import com.microsoft.identity.common.java.crypto.IDevicePopManager;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.logging.Logger;
@@ -102,7 +102,7 @@ public class KeyStoreAccessor {
             return getKeyAccessor((IDevicePopManager.Cipher) suite.cipher(), suite.signingAlgorithm(), popManager);
         }
         final KeyStore instance = KeyStore.getInstance(ANDROID_KEYSTORE);
-        final DeviceKeyManager<KeyStore.SecretKeyEntry> keyManager = new DeviceKeyManager<>(instance, alias, symmetricThumbprint(alias, instance));
+        final AndroidDeviceKeyManager<KeyStore.SecretKeyEntry> keyManager = new AndroidDeviceKeyManager<>(instance, alias, symmetricThumbprint(alias, instance));
         return new SecretKeyAccessor(keyManager, suite) {
             @Override
             public byte[] sign(byte[] text) throws ClientException {
@@ -122,7 +122,7 @@ public class KeyStoreAccessor {
         return new AsymmetricKeyAccessor() {
 
             @Override
-            public IAndroidKeyStoreKeyManager<KeyStore.PrivateKeyEntry> getManager() {
+            public IKeyStoreKeyManager<KeyStore.PrivateKeyEntry> getManager() {
                 return popManager.getKeyManager();
             }
 
@@ -258,7 +258,7 @@ public class KeyStoreAccessor {
                 generator.generateKey();
             }
 
-            final DeviceKeyManager<KeyStore.SecretKeyEntry> keyManager = new DeviceKeyManager<>(instance, alias, symmetricThumbprint(alias, instance));
+            final AndroidDeviceKeyManager<KeyStore.SecretKeyEntry> keyManager = new AndroidDeviceKeyManager<>(instance, alias, symmetricThumbprint(alias, instance));
             return new SecretKeyAccessor(keyManager, cipher) {
                 @Override
                 public byte[] sign(byte[] text) throws ClientException {
