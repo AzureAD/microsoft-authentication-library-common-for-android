@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.java.util.ported;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
+import lombok.NonNull;
 
 /**
  * A set of utility classes for handling objects to avoid repetition of common patterns.  The idea here is that the barrier
@@ -46,6 +47,15 @@ public final class ObjectUtils {
      */
     public static boolean equals(@Nullable final Object o1, @Nullable final Object o2) {
         return (o1 == o2) || (o1 != null && o1.equals(o2));
+    }
+
+    /**
+     * A helper function for validating if the given object is null or empty.
+     */
+    public static void throwIfObjectIsNull(@NonNull final String objectName, @Nullable final Object object) throws IllegalStateException {
+        if (object == null) {
+            throw new IllegalStateException(objectName + " is null or empty.");
+        }
     }
 
 }
