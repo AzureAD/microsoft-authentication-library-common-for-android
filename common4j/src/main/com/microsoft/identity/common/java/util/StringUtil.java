@@ -421,7 +421,7 @@ public class StringUtil {
      * A helper function for validating if the given String is null or empty.
      */
     public static void throwIfStringIsNull(@NonNull final String objectName, @Nullable final String object) throws IllegalStateException {
-        if (StringUtil.isNullOrEmpty(object)) {
+        if (isNullOrEmpty(object)) {
             throw new IllegalStateException(objectName + " is null or empty.");
         }
     }
