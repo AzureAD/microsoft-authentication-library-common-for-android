@@ -103,7 +103,7 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
     }
 
     private static IKeyStoreKeyManager<KeyStore.PrivateKeyEntry> createKeyStoreKeyManager(@NonNull final String alias) throws CertificateException, NoSuchAlgorithmException, IOException, KeyStoreException {
-        final KeyStore instance = KeyStore.getInstance(KeyStore.getDefaultType());
+        final KeyStore instance = KeyStore.getInstance(ANDROID_KEYSTORE);
         instance.load(null);
         return AndroidDeviceKeyManager.<KeyStore.PrivateKeyEntry>builder()
                 .keyAlias(alias)
@@ -305,7 +305,7 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
             throws InvalidAlgorithmParameterException, NoSuchProviderException, NoSuchAlgorithmException {
         // Create the KeyPairGenerator
         final KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(
-                DevicePopManager.KeyPairGeneratorAlgorithms.RSA,
+                AndroidDevicePopManager.KeyPairGeneratorAlgorithms.RSA,
                 ANDROID_KEYSTORE
         );
 

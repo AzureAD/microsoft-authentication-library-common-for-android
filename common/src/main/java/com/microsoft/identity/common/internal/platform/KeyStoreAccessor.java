@@ -102,7 +102,7 @@ public class KeyStoreAccessor {
             return getKeyAccessor((IDevicePopManager.Cipher) suite.cipher(), suite.signingAlgorithm(), popManager);
         }
         final KeyStore instance = KeyStore.getInstance(ANDROID_KEYSTORE);
-        final AndroidDeviceKeyManager<KeyStore.SecretKeyEntry> keyManager = new AndroidDeviceKeyManager<>(instance, alias, symmetricThumbprint(alias, instance));
+        final AndroidDeviceKeyManager<KeyStore.SecretKeyEntry> keyManager = new AndroidDeviceKeyManager<>(instance, alias);
         return new SecretKeyAccessor(keyManager, suite) {
             @Override
             public byte[] sign(byte[] text) throws ClientException {
@@ -258,7 +258,7 @@ public class KeyStoreAccessor {
                 generator.generateKey();
             }
 
-            final AndroidDeviceKeyManager<KeyStore.SecretKeyEntry> keyManager = new AndroidDeviceKeyManager<>(instance, alias, symmetricThumbprint(alias, instance));
+            final AndroidDeviceKeyManager<KeyStore.SecretKeyEntry> keyManager = new AndroidDeviceKeyManager<>(instance, alias);
             return new SecretKeyAccessor(keyManager, cipher) {
                 @Override
                 public byte[] sign(byte[] text) throws ClientException {

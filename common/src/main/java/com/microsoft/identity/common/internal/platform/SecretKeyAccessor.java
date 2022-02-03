@@ -184,7 +184,7 @@ public class SecretKeyAccessor implements IManagedKeyAccessor<KeyStore.SecretKey
 
     @Override
     public byte[] getThumbprint() throws ClientException {
-        return mKeyManager.getThumbprint(null);
+        return mKeyManager.getThumbprint();
     }
 
     @Override

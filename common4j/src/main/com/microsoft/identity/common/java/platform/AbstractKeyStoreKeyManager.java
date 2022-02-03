@@ -41,6 +41,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.KeyPair;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
@@ -49,6 +50,12 @@ import java.security.cert.Certificate;
 import java.security.interfaces.RSAPublicKey;
 import java.util.Arrays;
 import java.util.Date;
+
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.SecretKey;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.Builder;
@@ -75,7 +82,6 @@ public abstract class AbstractKeyStoreKeyManager<K extends KeyStore.Entry> imple
 
     private final KeyStore.PasswordProtection mPasswordProtection;
 
-    @Builder
     public AbstractKeyStoreKeyManager(@NonNull final KeyStore keyStore,
                                       @NonNull final String keyAlias,
                                       @Nullable final KeyStore.PasswordProtection passwordProtection) throws KeyStoreException {
@@ -173,6 +179,8 @@ public abstract class AbstractKeyStoreKeyManager<K extends KeyStore.Entry> imple
 
             if (entry instanceof KeyStore.PrivateKeyEntry) {
                 return getRsaThumbprint((KeyStore.PrivateKeyEntry) entry).getBytes(UTF8);
+            } else if (entry instanceof KeyStore.SecretKeyEntry) {
+                return getSecretKeyThumbprint((KeyStore.SecretKeyEntry) entry);
             } else {
                 throw new UnsupportedOperationException("Get thumbprint currently not supported for " +
                         "key of type: " + entry.getClass().getCanonicalName());
@@ -236,6 +244,18 @@ public abstract class AbstractKeyStoreKeyManager<K extends KeyStore.Entry> imple
         final KeyPair rsaKeyPair = getKeyPairForEntry(entry);
         final RSAKey rsaKey = getRsaKeyForKeyPair(rsaKeyPair);
         return getThumbprintForRsaKey(rsaKey);
+    }
+
+    public static byte[] getSecretKeyThumbprint(@NonNull final KeyStore.SecretKeyEntry entry) {
+        try {
+            final SecretKey key = ((KeyStore.SecretKeyEntry) entry).getSecretKey();
+            final Cipher cipher = Cipher.getInstance(key.getAlgorithm());
+            final MessageDigest digest = MessageDigest.getInstance("SHA256");
+            return digest.digest(cipher.doFinal((key.getAlgorithm() + cipher.getBlockSize() + cipher.getParameters()).getBytes(UTF8)));
+        } catch (final NoSuchAlgorithmException | NoSuchPaddingException | BadPaddingException | IllegalBlockSizeException e) {
+            Logger.error("KeyAccessor:newInstance", null, "Exception while getting key entry", e);
+            return null;
+        }
     }
 
     /**
