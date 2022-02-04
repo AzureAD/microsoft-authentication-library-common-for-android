@@ -45,11 +45,16 @@ public final class TokenCacheItemSerializationAdapater
         implements JsonDeserializer<ADALTokenCacheItem>, JsonSerializer<ADALTokenCacheItem> {
 
     private static final String TAG = TokenCacheItemSerializationAdapater.class.getSimpleName();
-
+    
     @Override
     public JsonElement serialize(final ADALTokenCacheItem tokenCacheItem,
                                  final Type type,
-                                 final JsonSerializationContext context) {
+                                 final JsonSerializationContext context)
+            throws JsonParseException {
+        throwIfParameterNull(tokenCacheItem.getAuthority(), OAuth2.AUTHORITY);
+        throwIfParameterNull(tokenCacheItem.getRefreshToken(), OAuth2.REFRESH_TOKEN);
+        throwIfParameterNull(tokenCacheItem.getRawIdToken(), OAuth2.ID_TOKEN);
+        throwIfParameterNull(tokenCacheItem.getFamilyClientId(), OAuth2.ADAL_CLIENT_FAMILY_ID);
         JsonObject jsonObj = new JsonObject();
         jsonObj.add(OAuth2.AUTHORITY, new JsonPrimitive(tokenCacheItem.getAuthority()));
         jsonObj.add(OAuth2.REFRESH_TOKEN, new JsonPrimitive(tokenCacheItem.getRefreshToken()));
@@ -82,6 +87,12 @@ public final class TokenCacheItemSerializationAdapater
     private void throwIfParameterMissing(JsonObject json, String name) {
         if (!json.has(name)) {
             throw new JsonParseException(TAG + "Attribute " + name + " is missing for deserialization.");
+        }
+    }
+
+    private void throwIfParameterNull(String parameter, String name) {
+        if (null == parameter) {
+            throw new JsonParseException(TAG + "Attribute " + name + " is null for serialization.");
         }
     }
 }
