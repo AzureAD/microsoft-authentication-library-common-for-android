@@ -54,7 +54,7 @@ public final class ObjectUtils {
     /**
      * A helper function for validating if the given object is null or empty.
      */
-    public static void throwIfArgumentIsNull(final @Nullable String argument,
+    public static void throwIfArgumentIsNull(final @Nullable Object argument,
                                              final @NonNull String argumentName,
                                              final @NonNull String methodName) throws NullPointerException {
         if (argument == null) {
