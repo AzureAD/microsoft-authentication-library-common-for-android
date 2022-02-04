@@ -420,9 +420,12 @@ public class StringUtil {
     /**
      * A helper function for validating if the given String is null or empty.
      */
-    public static void throwIfStringIsNull(@NonNull final String objectName, @Nullable final String object) throws IllegalStateException {
-        if (isNullOrEmpty(object)) {
-            throw new IllegalStateException(objectName + " is null or empty.");
+    public static void throwIfArgumentIsNullOrEmpty(final @Nullable String argument,
+                                                    final @NonNull String argumentName,
+                                                    final @NonNull String methodName) throws NullPointerException {
+        if (isNullOrEmpty(argument)) {
+            Logger.error(TAG + methodName, argumentName + " is null or empty.", null);
+            throw new NullPointerException(argumentName + " is null or empty.");
         }
     }
 }
