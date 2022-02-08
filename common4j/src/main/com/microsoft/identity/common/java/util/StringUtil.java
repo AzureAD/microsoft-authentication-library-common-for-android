@@ -416,4 +416,16 @@ public class StringUtil {
         }
         return sb.toString();
     }
+
+    /**
+     * A helper function for validating if the given String is null or empty.
+     */
+    public static void throwIfArgumentIsNullOrEmpty(final @Nullable String argument,
+                                                    final @NonNull String argumentName,
+                                                    final @NonNull String methodName) throws NullPointerException {
+        if (isNullOrEmpty(argument)) {
+            Logger.error(TAG + methodName, argumentName + " is null or empty.", null);
+            throw new NullPointerException(argumentName + " is null or empty.");
+        }
+    }
 }
