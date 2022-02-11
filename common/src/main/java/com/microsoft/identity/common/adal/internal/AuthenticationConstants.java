@@ -996,7 +996,7 @@ public final class AuthenticationConstants {
          */
         public static final String INTUNE_APP_PACKAGE_NAME = "com.microsoft.intune";
 
-        /**
+        /**g
          * Azure Authenticator app package name.
          */
         public static final String AZURE_AUTHENTICATOR_APP_PACKAGE_NAME = "com.azure.authenticator";
@@ -1589,6 +1589,18 @@ public final class AuthenticationConstants {
          */
         public static final String AUTHORITY =
                 "content://com.microsoft.intune.shareduserlessdataclear/datacollection";
+
+        /**
+         * Intune CompanyPortal's ContentProvider String Authority constant for Clearing App policies.
+         */
+        public static final String AUTHORITY_COMPANY_PORTAL =
+                "content://com.microsoft.intune.omadm.authenticator";
+
+        /**
+         * Intune CompanyPortal's ContentProvider method constant for Clearing App policies.
+         */
+        public static final String METHOD_COMPANY_PORTAL =
+                "onGlobalSignOut";
 
         /**
          * A functional mapping in Intune's ContentProvider result Bundle for AppDataClearAction.
