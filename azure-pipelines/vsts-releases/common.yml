@@ -16,49 +16,9 @@ resources:
     ref: master
 
 jobs:
-- job: vsts_release
-  displayName: Publish common to internal feed
-  cancelTimeoutInMinutes: 1
-  pool:
-    name: Hosted Windows 2019 with VS2019
-  steps:
-  - checkout: self
-    clean: true
-    submodules: recursive
-    persistCredentials: True
-  - task: CmdLine@1
-    displayName: Set MVN AccessToken in Environment
-    inputs:
-      filename: echo
-      arguments: '##vso[task.setvariable variable=ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN]$(mvnAccessToken)'
-  - task: Gradle@1
-    name: Gradle1
-    displayName: Assemble Release
-    inputs:
-      tasks: 'clean common:assembleRelease'
-      publishJUnitResults: false
-      jdkArchitecture: x86
-      sqAnalysisBreakBuildIfQualityGateFailed: false
-  - task: Gradle@2
-    displayName: Publish
-    inputs:
-      tasks: common:publish
-      publishJUnitResults: false
-  - template: ../templates/steps/generate-sbom.yml
-    parameters:
-      project: common
-      buildDropPath: $(Build.SourcesDirectory)/common/build/
-      configuration: distReleaseRuntimeClasspath
-  - task: CopyFiles@2
-    name: CopyFiles1
-    displayName: Copy Files to Artifact Staging Directory
-    inputs:
-      SourceFolder: common\build\
-      TargetFolder: $(build.artifactstagingdirectory)
-  - task: PublishPipelineArtifact@1
-    name: PublishPipelineArtifacts1
-    displayName: 'Publish Artifact: Common Release'
-    inputs:
-      ArtifactName: CommonRelease
-      TargetPath: $(Build.SourcesDirectory)/common/build/
-...
+- template: ../templates/steps/vsts-release/vsts-release-template.yml
+  parameters:
+    project: common
+    envVstsMvnAndroidAccessTokenVar: ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN
+    assembleTask: assembleRelease
+    publishTask: publish

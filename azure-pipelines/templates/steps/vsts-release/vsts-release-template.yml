@@ -1,0 +1,57 @@
+# File: azure-pipelines\templates\steps\vsts-release\vsts-release-template.yml
+# Description: Job template to publish to VSTS
+# This templates require mvnAccessToken
+
+parameters:
+- name: project
+- name: envVstsMvnAndroidAccessTokenVar
+- name: assembleTask
+- name: publishTask
+
+jobs:
+- job: vsts_release
+  displayName: Publish  ${{ parameters.project }} to internal feed
+  cancelTimeoutInMinutes: 1
+  pool:
+    name: 1ES-AndroidPool-EOC
+  steps:
+  - checkout: ${{ parameters.project }}
+    clean: true
+    submodules: recursive
+    persistCredentials: True
+  - task: CmdLine@1
+    displayName: Set MVN AccessToken in Environment
+    inputs:
+      filename: echo
+      arguments: '##vso[task.setvariable variable=${{ parameters.envVstsMvnAndroidAccessTokenVar }}]$(mvnAccessToken)'
+  - task: Gradle@1
+    name: Gradle1
+    displayName: Assemble Release
+    inputs:
+      tasks: clean ${{ parameters.project }}:${{ parameters.assembleTask }}
+      publishJUnitResults: false
+      jdkArchitecture: x86
+      sqAnalysisBreakBuildIfQualityGateFailed: false
+  - task: Gradle@2
+    displayName: Publish to VSTS
+    inputs:
+      tasks: ${{ parameters.project }}:${{ parameters.publishTask }}
+      publishJUnitResults: false
+  - template: generate-sbom.yml
+    parameters:
+      project: ${{ parameters.project }}
+      buildDropPath: $(Build.SourcesDirectory)/${{ parameters.project }}/build/
+      configuration: distReleaseRuntimeClasspath
+  - task: CopyFiles@2
+    name: CopyFiles1
+    displayName: Copy Files to Artifact Staging Directory
+    inputs:
+      SourceFolder: ${{ parameters.project }}\build\
+      TargetFolder: $(build.artifactstagingdirectory)
+  - task: PublishPipelineArtifact@1
+    name: PublishPipelineArtifacts1
+    displayName: 'Publish Artifact: ${{ parameters.project }} Release'
+    inputs:
+      ArtifactName: ${{ parameters.project }}Release
+      TargetPath:  $(Build.ArtifactStagingDirectory)
+...
