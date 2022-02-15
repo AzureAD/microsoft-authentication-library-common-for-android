@@ -37,7 +37,7 @@ jobs:
     inputs:
       tasks: ${{ parameters.project }}:${{ parameters.publishTask }}
       publishJUnitResults: false
-  - template: generate-sbom.yml
+  - template: ../generate-sbom.yml
     parameters:
       project: ${{ parameters.project }}
       buildDropPath: $(Build.SourcesDirectory)/${{ parameters.project }}/build/
