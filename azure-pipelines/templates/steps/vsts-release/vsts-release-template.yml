@@ -15,7 +15,7 @@ jobs:
   pool:
     name: 1ES-AndroidPool-EOC
   steps:
-  - checkout: ${{ parameters.project }}
+  - checkout: self
     clean: true
     submodules: recursive
     persistCredentials: True
