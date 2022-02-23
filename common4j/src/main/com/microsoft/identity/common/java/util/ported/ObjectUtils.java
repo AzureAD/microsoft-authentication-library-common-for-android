@@ -22,7 +22,10 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.util.ported;
 
+import com.microsoft.identity.common.java.logging.Logger;
+
 import edu.umd.cs.findbugs.annotations.Nullable;
+import lombok.NonNull;
 
 /**
  * A set of utility classes for handling objects to avoid repetition of common patterns.  The idea here is that the barrier
@@ -31,7 +34,7 @@ import edu.umd.cs.findbugs.annotations.Nullable;
  * for that we should remove them.
  */
 public final class ObjectUtils {
-
+    private static String TAG = ObjectUtils.class.getSimpleName();
     //Private constructor to discourage instantiation.
     private ObjectUtils() {
     }
@@ -48,4 +51,15 @@ public final class ObjectUtils {
         return (o1 == o2) || (o1 != null && o1.equals(o2));
     }
 
+    /**
+     * A helper function for validating if the given object is null or empty.
+     */
+    public static void throwIfArgumentIsNull(final @Nullable Object argument,
+                                             final @NonNull String argumentName,
+                                             final @NonNull String methodName) throws NullPointerException {
+        if (argument == null) {
+            Logger.error(TAG + methodName, argumentName + " is null.", null);
+            throw new NullPointerException(argumentName + " is null.");
+        }
+    }
 }
