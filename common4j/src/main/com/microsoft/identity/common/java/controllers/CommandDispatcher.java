@@ -22,19 +22,6 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.controllers;
 
-import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterAliases.CANCEL_AUTHORIZATION_REQUEST;
-import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterAliases.RETURN_AUTHORIZATION_REQUEST_RESULT;
-import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterFields.REQUEST_CODE;
-import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterFields.RESULT_CODE;
-import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.PRODUCT;
-import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.VERSION;
-import static com.microsoft.identity.common.java.commands.SilentTokenCommand.ACQUIRE_TOKEN_SILENT_DEFAULT_TIMEOUT_MILLISECONDS;
-import static com.microsoft.identity.common.java.marker.PerfConstants.CodeMarkerConstants.ACQUIRE_TOKEN_SILENT_COMMAND_EXECUTION_END;
-import static com.microsoft.identity.common.java.marker.PerfConstants.CodeMarkerConstants.ACQUIRE_TOKEN_SILENT_COMMAND_EXECUTION_START;
-import static com.microsoft.identity.common.java.marker.PerfConstants.CodeMarkerConstants.ACQUIRE_TOKEN_SILENT_EXECUTOR_START;
-import static com.microsoft.identity.common.java.marker.PerfConstants.CodeMarkerConstants.ACQUIRE_TOKEN_SILENT_FUTURE_OBJECT_CREATION_END;
-import static com.microsoft.identity.common.java.marker.PerfConstants.CodeMarkerConstants.ACQUIRE_TOKEN_SILENT_START;
-
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.commands.BaseCommand;
 import com.microsoft.identity.common.java.commands.ICommandResult;
@@ -81,6 +68,19 @@ import java.util.concurrent.TimeoutException;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.NonNull;
+
+import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterAliases.CANCEL_AUTHORIZATION_REQUEST;
+import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterAliases.RETURN_AUTHORIZATION_REQUEST_RESULT;
+import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterFields.REQUEST_CODE;
+import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterFields.RESULT_CODE;
+import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.PRODUCT;
+import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.VERSION;
+import static com.microsoft.identity.common.java.commands.SilentTokenCommand.ACQUIRE_TOKEN_SILENT_DEFAULT_TIMEOUT_MILLISECONDS;
+import static com.microsoft.identity.common.java.marker.PerfConstants.CodeMarkerConstants.ACQUIRE_TOKEN_SILENT_COMMAND_EXECUTION_END;
+import static com.microsoft.identity.common.java.marker.PerfConstants.CodeMarkerConstants.ACQUIRE_TOKEN_SILENT_COMMAND_EXECUTION_START;
+import static com.microsoft.identity.common.java.marker.PerfConstants.CodeMarkerConstants.ACQUIRE_TOKEN_SILENT_EXECUTOR_START;
+import static com.microsoft.identity.common.java.marker.PerfConstants.CodeMarkerConstants.ACQUIRE_TOKEN_SILENT_FUTURE_OBJECT_CREATION_END;
+import static com.microsoft.identity.common.java.marker.PerfConstants.CodeMarkerConstants.ACQUIRE_TOKEN_SILENT_START;
 
 public class CommandDispatcher {
 
@@ -470,7 +470,7 @@ public class CommandDispatcher {
             //Handler handler, final BaseCommand command, BaseException baseException, AcquireTokenResult result
             if (result != null && result instanceof AcquireTokenResult) {
                 commandResult = getCommandResultFromTokenResult((AcquireTokenResult) result,
-                        correlationId);
+                        command.getParameters());
             } else if (result instanceof VoidResult) {
                 commandResult = new CommandResult(CommandResult.ResultStatus.VOID, result,
                         command.getParameters().getCorrelationId());
@@ -578,18 +578,18 @@ public class CommandDispatcher {
      *
      * @param result
      */
-    private static CommandResult getCommandResultFromTokenResult(@NonNull AcquireTokenResult result, @NonNull String correlationId) {
+    private static CommandResult getCommandResultFromTokenResult(@NonNull AcquireTokenResult result, @NonNull CommandParameters commandParameters) {
         //Token Commands
         if (result.getSucceeded()) {
             return new CommandResult<>(CommandResult.ResultStatus.COMPLETED,
-                    result.getLocalAuthenticationResult(), correlationId);
+                    result.getLocalAuthenticationResult(), commandParameters.getCorrelationId());
         } else {
             //Get MsalException from Authorization and/or Token Error Response
-            final BaseException baseException = ExceptionAdapter.exceptionFromAcquireTokenResult(result);
+            final BaseException baseException = ExceptionAdapter.exceptionFromAcquireTokenResult(result, commandParameters);
             if (baseException instanceof UserCancelException) {
-                return CommandResult.ofNull(CommandResult.ResultStatus.CANCEL, correlationId);
+                return CommandResult.ofNull(CommandResult.ResultStatus.CANCEL, commandParameters.getCorrelationId());
             } else {
-                return new CommandResult<>(CommandResult.ResultStatus.ERROR, baseException, correlationId);
+                return new CommandResult<>(CommandResult.ResultStatus.ERROR, baseException, commandParameters.getCorrelationId());
             }
         }
     }

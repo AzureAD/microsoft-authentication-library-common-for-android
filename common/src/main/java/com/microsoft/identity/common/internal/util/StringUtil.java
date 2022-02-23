@@ -28,6 +28,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
+import com.microsoft.identity.common.logging.Logger;
 
 import java.util.AbstractMap;
 import java.util.Iterator;
@@ -41,6 +42,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
  * String utilities.
  */
 public final class StringUtil {
+    private static final String TAG = StringUtil.class.getSimpleName();
 
     private StringUtil() {
         // Utility class.
@@ -135,6 +137,15 @@ public final class StringUtil {
                 && !StringExtensions.isNullOrBlank(uidUtidArray[INDEX_UTID])) {
             uid = uidUtidArray[INDEX_UID];
             utid = uidUtidArray[INDEX_UTID];
+        } else {
+            Logger.warn(TAG, "We had a home account id that could not be split correctly, " +
+                    "We expected it to split into " +
+                    EXPECTED_LENGTH + " parts but instead we had " + uidUtidArray.length + " when " +
+                    "splitting the string on dot ('.')");
+            Logger.warnPII(TAG, "We had a home account id that could not be split correctly, " +
+                    "Its value was: '" + homeAccountId + "', and we expected it to split into " +
+                    EXPECTED_LENGTH + " parts but instead we had " + uidUtidArray.length + " when " +
+                    "splitting the string on dot ('.')");
         }
 
         return new AbstractMap.SimpleEntry<>(uid, utid);

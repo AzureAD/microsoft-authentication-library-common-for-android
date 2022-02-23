@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.commands.parameters;
 
+import com.microsoft.identity.common.java.broker.IBrokerAccount;
 import com.microsoft.identity.common.java.request.BrokerRequestType;
 import com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache;
 import com.microsoft.identity.common.java.exception.ArgumentException;
@@ -50,6 +51,12 @@ public class BrokerInteractiveTokenCommandParameters extends InteractiveTokenCom
     private final Iterable<Map.Entry<String, String>> extraParameters;
 
     private final String enrollmentId;
+
+    //Needed to supply information that's needed for IntuneAppProtectionPolicyException
+    private final IBrokerAccount brokerAccount;
+    private final String homeAccountId;
+    private final String localAccountId;
+
 
     /**
      * Helper method to identify if the request originated from Broker itself or from client libraries.

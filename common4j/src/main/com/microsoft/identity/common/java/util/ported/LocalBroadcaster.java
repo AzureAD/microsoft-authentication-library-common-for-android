@@ -24,21 +24,23 @@ package com.microsoft.identity.common.java.util.ported;
 
 import com.microsoft.identity.common.java.logging.Logger;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import lombok.NonNull;
 
-public enum  LocalBroadcaster {
+public enum LocalBroadcaster {
     INSTANCE;
 
     private static final String TAG = LocalBroadcaster.class.getSimpleName();
+    private static final ExecutorService sBroadcastExecutor = Executors.newSingleThreadExecutor();
 
     public interface IReceiverCallback {
         void onReceive(@NonNull final PropertyBag propertyBag);
     }
 
-    final Map<String, IReceiverCallback> mReceivers = new HashMap<>();
+    final ConcurrentHashMap<String, IReceiverCallback> mReceivers = new ConcurrentHashMap<>();
 
     public void registerCallback(@NonNull final String alias, @NonNull final IReceiverCallback callback){
         final String methodName = ":registerCallback";
@@ -59,16 +61,19 @@ public enum  LocalBroadcaster {
         mReceivers.remove(alias);
     }
 
-    public void broadcast(@NonNull final String alias, @NonNull final PropertyBag propertyBag){
+    public void broadcast(@NonNull final String alias, @NonNull final PropertyBag propertyBag) {
         final String methodName = ":broadcast";
-        final IReceiverCallback receiver = mReceivers.get(alias);
-
-        if (receiver != null){
-            Logger.info(TAG + methodName, "broadcasting to alias: " + alias);
-            receiver.onReceive(propertyBag);
-        } else {
-            Logger.info(TAG + methodName, "No callback is registered with alias: " + alias +
-                    ". Do nothing.");
-        }
+        sBroadcastExecutor.execute(new Runnable() {
+            public void run() {
+                final IReceiverCallback receiver = mReceivers.get(alias);
+                if (receiver != null) {
+                    Logger.info(TAG + methodName, "broadcasting to alias: " + alias);
+                    receiver.onReceive(propertyBag);
+                } else {
+                    Logger.info(TAG + methodName, "No callback is registered with alias: " + alias +
+                            ". Do nothing.");
+                }
+            }
+        });
     }
 }

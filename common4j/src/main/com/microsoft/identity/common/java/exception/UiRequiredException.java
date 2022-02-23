@@ -29,7 +29,12 @@ package com.microsoft.identity.common.java.exception;
 
 public final class UiRequiredException extends ServiceException {
 
-    public static final String sName = UiRequiredException.class.getName();
+    // This is needed for backward compatibility with older versions of MSAL (pre 3.0.0)
+    // When MSAL converts the result bundle it looks for this value to know about exception type
+    // We moved the exception class to a new package with refactoring work,
+    // but need to keep this value to older package name to avoid breaking older MSAL clients.
+    public static final String sName = "com.microsoft.identity.common.exception.UiRequiredException";
+
     private static final long serialVersionUID = 3039442374738287255L;
 
     public UiRequiredException(final String errorCode, final String errorMessage) {
