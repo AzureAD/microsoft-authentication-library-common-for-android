@@ -11,9 +11,6 @@ parameters:
 - name: spotbugsCommand
   type: string
   default: spotbugsLocalDebug
-  values:
-  - spotbugsLocalDebug
-  - spotbugsMain
 - name: spotbugsCwdRoot
   type: string
   default: none
@@ -52,14 +49,12 @@ jobs:
       project: ${{ parameters.project }}
       buildDropPath: $(Build.SourcesDirectory)/${{ parameters.project }}/build/
       configuration: ${{ parameters.sbomConfiguration }}
-
   - template: ../spotbugs.yml
     parameters:
       project: ${{ parameters.project }}
       spotbugsCommand: ${{ parameters.spotbugsCommand }}
       ${{ if ne(parameters.spotbugsCwdRoot, 'none') }}:
-        cwd: {{ parameters.spotbugsCwdRoot }}
-
+        cwd: ${{ parameters.spotbugsCwdRoot }}
   - task: PublishPipelineArtifact@1
     displayName: 'Publish lint report'
     inputs:
