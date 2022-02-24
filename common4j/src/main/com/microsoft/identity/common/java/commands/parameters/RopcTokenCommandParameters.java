@@ -22,6 +22,9 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.commands.parameters;
 
+import com.microsoft.identity.common.java.exception.ArgumentException;
+import com.microsoft.identity.common.java.util.StringUtil;
+
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.experimental.Accessors;
@@ -34,4 +37,23 @@ import lombok.experimental.SuperBuilder;
 public class RopcTokenCommandParameters extends TokenCommandParameters {
     private final String mUsername;
     private final String mPassword;
+
+    @Override
+    public void validate() throws ArgumentException {
+        if (StringUtil.isNullOrEmpty(mUsername)) {
+            throw new ArgumentException(
+                    ArgumentException.ACQUIRE_TOKEN_WITH_PASSWORD_OPERATION_NAME,
+                    "mUsername", "Username is not set"
+            );
+        }
+
+        if (StringUtil.isNullOrEmpty(mPassword)) {
+            throw new ArgumentException(
+                    ArgumentException.ACQUIRE_TOKEN_WITH_PASSWORD_OPERATION_NAME,
+                    "mPassword", "Password is not set"
+            );
+        }
+
+        super.validate();
+    }
 }
