@@ -60,8 +60,6 @@ jobs:
     inputs:
       targetPath: $(Build.SourcesDirectory)\${{ parameters.project }}\build\reports
       ArtifactName: Lint Report
-  - task: securedevelopmentteam.vss-secure-development-tools.build-task-binskim.BinSkim@4
-    displayName: 'Run BinSkim '
   - task: PublishPipelineArtifact@1
     displayName: 'Publish Artifact: ${{ parameters.project }} Release'
     inputs:
