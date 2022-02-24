@@ -23,3 +23,5 @@ jobs:
     assembleTask: assemble
     publishTask: publish
     sbomConfiguration: runtimeClasspath
+    spotbugsCwdRoot: $(Build.SourcesDirectory)/common-java-root
+    spotbugsCommand: spotbugsMain

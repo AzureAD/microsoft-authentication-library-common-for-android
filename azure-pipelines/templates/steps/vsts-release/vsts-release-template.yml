@@ -8,6 +8,15 @@ parameters:
 - name: assembleTask
 - name: publishTask
 - name: sbomConfiguration
+- name: spotbugsCommand
+  type: string
+  default: spotbugsLocalDebug
+  values:
+  - spotbugsLocalDebug
+  - spotbugsMain
+- name: spotbugsCwdRoot
+  type: string
+  default: none
 
 jobs:
 - job: vsts_release
@@ -43,16 +52,24 @@ jobs:
       project: ${{ parameters.project }}
       buildDropPath: $(Build.SourcesDirectory)/${{ parameters.project }}/build/
       configuration: ${{ parameters.sbomConfiguration }}
-  - task: CopyFiles@2
-    name: CopyFiles1
-    displayName: Copy Files to Artifact Staging Directory
-    inputs:
-      SourceFolder: ${{ parameters.project }}\build\
-      TargetFolder: $(build.artifactstagingdirectory)
+
+  - template: ../spotbugs.yml
+    parameters:
+      project: ${{ parameters.project }}
+      spotbugsCommand: ${{ parameters.spotbugsCommand }}
+      ${{ if ne(parameters.spotbugsCwdRoot, 'none') }}:
+        cwd: {{ parameters.spotbugsCwdRoot }}
+
   - task: PublishPipelineArtifact@1
-    name: PublishPipelineArtifacts1
+    displayName: 'Publish lint report'
+    inputs:
+      targetPath: $(Build.SourcesDirectory)\${{ parameters.project }}\build\reports
+      ArtifactName: Lint Report
+  - task: securedevelopmentteam.vss-secure-development-tools.build-task-binskim.BinSkim@4
+    displayName: 'Run BinSkim '
+  - task: PublishPipelineArtifact@1
     displayName: 'Publish Artifact: ${{ parameters.project }} Release'
     inputs:
       ArtifactName: ${{ parameters.project }}Release
-      TargetPath:  $(Build.ArtifactStagingDirectory)
+      TargetPath:  $(Build.SourcesDirectory)\${{ parameters.project }}\build\outputs
 ...
