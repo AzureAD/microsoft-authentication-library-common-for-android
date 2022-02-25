@@ -54,7 +54,7 @@ jobs:
     displayName: 'Publish lint report'
     inputs:
       targetPath: $(Build.SourcesDirectory)\${{ parameters.project }}\build\reports
-      ArtifactName: Lint Report
+      ArtifactName: Lint Report and Spotbugs
   - task: PublishPipelineArtifact@1
     displayName: 'Publish Artifact: ${{ parameters.project }} Release'
     inputs:
