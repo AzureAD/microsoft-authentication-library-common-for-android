@@ -1,5 +1,6 @@
 V.Next
 ----------
+- [PATCH] Remove unsafe key thumbprint generator (#1654)
 - [MAJOR] Rename LobalBroadcasterAliases to LocalBroadcasterAliases (#1584)
 - [PATCH] Make it clear if adding a query param should overwrite or leave as is (#1581)
 - [PATCH] Handle the scenario where broker activity is killed wrongly. (#1568)
@@ -65,6 +66,8 @@ V.Next
 - [MINOR] Add flighting parameters to commmandParameters (#1562)
 - [MINOR] Hook telemetry to LocalAuthenticationResult and BaseException (#1636)
 - [PATCH] Fix accidental code change that disabled PoP for auth code grant flow (#1661)
+- [PATCH] Synchronize updating refresh token in cache (saving new and removing old) to avoid race condition (#1659)
+- [MINOR] Changes to support ROPC based E2E automation for linux (#1675)
 
 Version 3.6.3
 ----------

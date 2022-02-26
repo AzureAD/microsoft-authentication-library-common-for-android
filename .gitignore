@@ -87,6 +87,3 @@ Temporary Items
 .apdisk
 
 .vs/
-
-jacoco-agent.properties
-common/jacoco.exec

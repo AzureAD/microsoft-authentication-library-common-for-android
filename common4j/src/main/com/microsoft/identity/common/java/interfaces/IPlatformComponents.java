@@ -55,7 +55,7 @@ public interface IPlatformComponents {
     /**
      * Gets the default {@link IDevicePopManager}
      *
-     * @throws ClientException if it fails to initalize, or if the operation is not supported by the platform.
+     * @throws ClientException if it fails to initialize, or if the operation is not supported by the platform.
      */
     @NonNull
     IDevicePopManager getDefaultDevicePopManager() throws ClientException;
@@ -102,6 +102,12 @@ public interface IPlatformComponents {
      */
     IMultiTypeNameValueStorage getFileStore(String storeName);
 
+    /**
+     * Retrieve a multi-process safe name-value store with a given identifier.
+     *
+     * @param storeName The name of a new KeyValue store. May not be null.
+     * @return a INameValueStorage instance based around data stored with the same storeName.
+     */
     INameValueStorage<String> getMultiProcessStringStore(@NonNull String storeName);
 
     /**
@@ -123,4 +129,11 @@ public interface IPlatformComponents {
      */
     @NonNull
     IPlatformUtil getPlatformUtil();
+
+    /**
+     * Returns a wrapper of {@link com.microsoft.identity.common.java.net.HttpClient} objects.
+     * This will allow test cases to interject an interceptor - to mock HTTP requests/responses.
+     * */
+    @NonNull
+    IHttpClientWrapper getHttpClientWrapper();
 }

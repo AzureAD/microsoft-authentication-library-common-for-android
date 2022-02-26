@@ -1,11 +1,16 @@
 # File: azure-pipelines\code-coverage\common.yml
 # Description: Code coverage for common
-# Variable: 'mvnAccessToken' was defined in the Variables tab
+# Variable: 'mvnAccessToken' was defined in the variables tab
 # https://docs.microsoft.com/en-us/azure/devops/organizations/accounts/use-personal-access-tokens-to-authenticate
 # Variable: 'commonBranchName' common branch to be used when running the pipeline manually
 name: $(date:yyyyMMdd)$(rev:.r)
 
 trigger: none
+
+pr:
+  branches:
+    include:
+      - '*'
 
 variables:
 - name: robolectricSdkVersion
@@ -15,32 +20,35 @@ resources:
   repositories:
   - repository: self
     type: git
-    ref: dev
 
 pool:
   name: Hosted Windows 2019 with VS2019
 
 jobs:
-- job: commonCodeCoverage
-  displayName: Common code coverage
+- job: common_code_coverage
+  displayName: Common Code Coverage
   steps:
   - checkout: self
-    displayName: Checkout common repository
+    displayName: Checkout Common Repository
     clean: true
     submodules: recursive
     persistCredentials: True
   - template: ../templates/steps/automation-cert.yml
   - task: Gradle@1
-    displayName: Assemble common
+    displayName: Assemble Common
     inputs:
       tasks: clean common:assembleLocal
       publishJUnitResults: false
   - task: Gradle@2
-    displayName: Run common code coverage
+    displayName: Run Common Code Coverage
     inputs:
-      tasks: common:localDebugCommonUnitTestCoverageReport -Plabtest -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}}
+      tasks: common:localDebugCommonUnitTestCoverageReport -Plabtest -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}} -PcodeCoverageEnabled=true
   - task: PublishCodeCoverageResults@1
-    displayName: 'Publish code coverage report'
+    displayName: Publish Code Coverage Report
     inputs:
       summaryFileLocation: '$(Build.SourcesDirectory)\common\build\reports\jacoco\localDebugCommonUnitTestCoverageReport\localDebugCommonUnitTestCoverageReport.xml'
       reportDirectory: '$(Build.SourcesDirectory)\common\build\reports\jacoco\localDebugCommonUnitTestCoverageReport\html'
+  - bash: |
+      curl -Os https://uploader.codecov.io/latest/windows/codecov.exe
+      ./codecov.exe -v -t '$(codecovToken)' -B '$(System.PullRequest.SourceBranch)' -P '$(System.PullRequest.PullRequestNumber)' -f "./common/build/reports/jacoco/localDebugCommonUnitTestCoverageReport/localDebugCommonUnitTestCoverageReport.xml"
+    displayName: Upload Code Coverage to Codecov and the PR

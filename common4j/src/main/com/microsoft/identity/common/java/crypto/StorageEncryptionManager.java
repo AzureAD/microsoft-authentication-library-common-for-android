@@ -185,8 +185,7 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
     }
 
     @Override
-    @NonNull
-    public byte[] decrypt(@NonNull final byte[] cipherText) throws ClientException {
+    public byte[] decrypt(final byte[] cipherText) throws ClientException {
         final String methodName = ":decrypt";
         Logger.verbose(TAG + methodName, "Starting decryption");
 

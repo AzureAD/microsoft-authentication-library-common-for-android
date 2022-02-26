@@ -65,8 +65,8 @@ public class RopcTokenCommand extends TokenCommand {
             );
 
             return getDefaultController()
-                    .acquireToken(
-                            (InteractiveTokenCommandParameters) getParameters()
+                    .acquireTokenWithPassword(
+                            (RopcTokenCommandParameters) getParameters()
                     );
         } else {
             throw new IllegalArgumentException("Invalid operation parameters");
