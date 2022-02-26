@@ -111,27 +111,6 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
                 .build();
     }
 
-    /**
-     * Properties used by the self-signed certificate.
-     */
-    private static final class CertificateProperties {
-
-        /**
-         * The certification validity duration.
-         */
-        static final int CERTIFICATE_VALIDITY_YEARS = 99;
-
-        /**
-         * The serial number of the certificate.
-         */
-        static final BigInteger SERIAL_NUMBER = BigInteger.ONE;
-
-        /**
-         * The Common Name of the certificate.
-         */
-        static final String COMMON_NAME = "CN=device-pop";
-    }
-
     @Override
     public KeyPair generateNewRsaKeyPair(int keySize) throws UnsupportedOperationException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchProviderException {
         return generateNewRsaKeyPair(mContext, keySize);
@@ -462,7 +441,7 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
                                  final int keySize) throws InvalidAlgorithmParameterException {
         final Calendar calendar = Calendar.getInstance();
         final Date start = getNow(calendar);
-        calendar.add(Calendar.YEAR, AndroidDevicePopManager.CertificateProperties.CERTIFICATE_VALIDITY_YEARS);
+        calendar.add(Calendar.YEAR, AbstractDevicePopManager.CertificateProperties.CERTIFICATE_VALIDITY_YEARS);
         final Date end = calendar.getTime();
 
         final android.security.KeyPairGeneratorSpec.Builder specBuilder = new android.security.KeyPairGeneratorSpec.Builder(context)
@@ -480,15 +459,5 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
 
         final android.security.KeyPairGeneratorSpec spec = specBuilder.build();
         keyPairGenerator.initialize(spec);
-    }
-
-    /**
-     * Gets the current time as a {@link Date}.
-     *
-     * @param calendar The {@link Calendar} implementation to use.
-     * @return The current time.
-     */
-    private static Date getNow(@androidx.annotation.NonNull final Calendar calendar) {
-        return calendar.getTime();
     }
 }

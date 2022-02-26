@@ -51,6 +51,7 @@ import com.microsoft.identity.common.java.crypto.IKeyStoreKeyManager;
 import com.microsoft.identity.common.java.crypto.SecureHardwareState;
 import com.microsoft.identity.common.java.crypto.SigningAlgorithm;
 import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.marker.CodeMarkerManager;
 import com.microsoft.identity.common.java.util.StringUtil;
@@ -153,22 +154,28 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
     /**
      * Properties used by the self-signed certificate.
      */
-    private static final class CertificateProperties {
+    protected static final class CertificateProperties {
 
         /**
          * The certification validity duration.
          */
-        static final int CERTIFICATE_VALIDITY_YEARS = 99;
+        public static final int CERTIFICATE_VALIDITY_YEARS = 99;
 
         /**
          * The serial number of the certificate.
          */
-        static final BigInteger SERIAL_NUMBER = BigInteger.ONE;
+        public static final BigInteger SERIAL_NUMBER = BigInteger.ONE;
 
         /**
          * The Common Name of the certificate.
          */
-        static final String COMMON_NAME = "CN=device-pop";
+        public static final String COMMON_NAME = "CN=device-pop";
+
+        public static final String ORGANIZATION_UNIT = "Identity";
+
+        public static final String ORGANIZATION_NAME = "Microsoft Corporation";
+
+        public static final String COUNTRY = "US";
     }
 
     /**
@@ -333,6 +340,9 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
         } catch (final JOSEException e) {
             exception = e;
             errCode = THUMBPRINT_COMPUTATION_FAILURE;
+        } catch (final KeyStoreException e) {
+            exception = e;
+            errCode = KEYSTORE_NOT_INITIALIZED;
         } finally {
             sCodeMarkerManager.markCode(GENERATE_AT_POP_ASYMMETRIC_KEYPAIR_END);
         }
@@ -353,7 +363,7 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
     }
 
     public abstract KeyPair generateNewRsaKeyPair(int keySize) throws UnsupportedOperationException, InvalidAlgorithmParameterException,
-            NoSuchAlgorithmException, NoSuchProviderException;
+            NoSuchAlgorithmException, NoSuchProviderException, ClientException, KeyStoreException;
 
     @Override
     @Nullable
@@ -1024,7 +1034,7 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
      * @param calendar The {@link Calendar} implementation to use.
      * @return The current time.
      */
-    private static Date getNow(@NonNull final Calendar calendar) {
+    protected static Date getNow(@NonNull final Calendar calendar) {
         return calendar.getTime();
     }
 

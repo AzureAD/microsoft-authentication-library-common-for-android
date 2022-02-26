@@ -24,9 +24,11 @@ package com.microsoft.identity.common.java.crypto;
 
 import com.microsoft.identity.common.java.exception.ClientException;
 
+import java.security.KeyPair;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
 import java.security.UnrecoverableEntryException;
 import java.security.cert.Certificate;
 import java.util.Date;
@@ -89,6 +91,8 @@ public interface IKeyStoreKeyManager<K extends KeyStore.Entry> {
      * @throws ClientException if something goes wrong.
      */
     void importKey(byte[] jwk, String algorithm) throws ClientException;
+
+    void storeAsymmetricKey(PrivateKey privateKey, Certificate[] certChain) throws KeyStoreException, ClientException;
 
     /**
      * @return a byte array key thumpbrint.

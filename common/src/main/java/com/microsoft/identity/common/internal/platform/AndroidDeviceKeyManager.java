@@ -37,11 +37,13 @@ import com.microsoft.identity.common.java.util.Supplier;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.security.KeyFactory;
+import java.security.KeyPair;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.UnrecoverableEntryException;
+import java.security.cert.Certificate;
 import java.security.spec.InvalidKeySpecException;
 
 import javax.crypto.SecretKey;
@@ -64,6 +66,11 @@ public class AndroidDeviceKeyManager<K extends KeyStore.Entry> extends AbstractK
     @Builder
     public AndroidDeviceKeyManager(@NonNull final KeyStore keyStore, @NonNull final String keyAlias) throws KeyStoreException {
         super(keyStore, keyAlias, null);
+    }
+
+    @Override
+    public void storeAsymmetricKey(PrivateKey privateKey, Certificate[] certChain) {
+        throw new UnsupportedOperationException("This is not currently supported");
     }
 
     /**
