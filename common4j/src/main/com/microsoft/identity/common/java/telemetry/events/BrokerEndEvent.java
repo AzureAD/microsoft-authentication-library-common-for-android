@@ -20,19 +20,16 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.telemetry.events;
+package com.microsoft.identity.common.java.telemetry.events;
 
-import androidx.annotation.NonNull;
 
-import com.microsoft.identity.common.java.exception.BaseException;
-import com.microsoft.identity.common.java.exception.UserCancelException;
+import lombok.NonNull;
 
 import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Event;
 import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.EventType;
 import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Key;
-import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Value;
 
-public class BrokerEndEvent extends com.microsoft.identity.common.java.telemetry.events.BaseEvent {
+public class BrokerEndEvent extends ApiEndEvent {
     public BrokerEndEvent() {
         super();
         names(Event.BROKER_END_EVENT);
@@ -50,24 +47,6 @@ public class BrokerEndEvent extends com.microsoft.identity.common.java.telemetry
         return this;
     }
 
-    public BrokerEndEvent putException(@NonNull final BaseException exception) {
-        if (exception == null) {
-            return this;
-        }
-
-        if (exception instanceof UserCancelException) {
-            put(Key.USER_CANCEL, Value.TRUE);
-        }
-
-        put(Key.SERVER_ERROR_CODE, exception.getCliTelemErrorCode());
-        put(Key.SERVER_SUBERROR_CODE, exception.getCliTelemSubErrorCode());
-        put(Key.ERROR_CODE, exception.getErrorCode());
-        put(Key.SPE_RING, exception.getSpeRing());
-        put(Key.ERROR_DESCRIPTION, exception.getMessage()); //OII
-        put(Key.RT_AGE, exception.getRefreshTokenAge());
-        put(Key.IS_SUCCESSFUL, Value.FALSE);
-        return this;
-    }
 
     public BrokerEndEvent putErrorCode(@NonNull final String errorCode) {
         put(Key.ERROR_CODE, errorCode);

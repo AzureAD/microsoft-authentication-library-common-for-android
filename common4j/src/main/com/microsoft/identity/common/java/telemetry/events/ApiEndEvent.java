@@ -20,14 +20,16 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.telemetry.events;
+package com.microsoft.identity.common.java.telemetry.events;
 
-import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.exception.UserCancelException;
 import com.microsoft.identity.common.java.controllers.ExceptionAdapter;
 import com.microsoft.identity.common.java.result.AcquireTokenResult;
+import com.microsoft.identity.common.java.util.StringUtil;
+
+import lombok.NonNull;
 
 import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Event;
 import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.EventType;
@@ -86,8 +88,10 @@ public class ApiEndEvent extends com.microsoft.identity.common.java.telemetry.ev
     }
 
     @Override
-    public ApiEndEvent put(@NonNull final String propertyName, @NonNull final String propertyValue) {
-        super.put(propertyName, propertyValue);
+    public ApiEndEvent put(@NonNull final String propertyName, final String propertyValue) {
+        if(!StringUtil.isNullOrEmpty(propertyValue)) {
+            super.put(propertyName, propertyValue);
+        }
         return this;
     }
 

@@ -47,7 +47,8 @@ final public class TelemetryPiiOiiRules {
             Key.REQUEST_QUERY_PARAMS,
             Key.REDIRECT_URI,
             Key.SCOPE,
-            Key.CLAIM_REQUEST
+            Key.CLAIM_REQUEST,
+            Key.BROKER_LOCAL_ACCOUNT_ID
     };
 
     final private String[] oiiArray = {

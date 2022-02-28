@@ -20,27 +20,22 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.telemetry.events;
+package com.microsoft.identity.common.java.telemetry.events;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
-import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.java.authorities.Authority;
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
-import com.microsoft.identity.common.java.commands.parameters.BrokerInteractiveTokenCommandParameters;
-import com.microsoft.identity.common.java.commands.parameters.BrokerSilentTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.SilentTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.TokenCommandParameters;
-import com.microsoft.identity.common.internal.util.StringUtil;
-import com.microsoft.identity.common.logging.Logger;
+import com.microsoft.identity.common.java.logging.Logger;
+import com.microsoft.identity.common.java.util.StringUtil;
 
-import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.NoSuchAlgorithmException;
+
+import lombok.NonNull;
 
 import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Event;
 import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.EventType;
@@ -58,12 +53,13 @@ public class ApiStartEvent extends com.microsoft.identity.common.java.telemetry.
 
     @Override
     public ApiStartEvent put(@NonNull final String propertyName, final String propertyValue) {
-        super.put(propertyName, propertyValue);
+        if(!StringUtil.isNullOrEmpty(propertyValue)) {
+            super.put(propertyName, propertyValue);
+        }
         return this;
     }
 
-    public ApiStartEvent putProperties(
-            @Nullable final CommandParameters parameters) {
+    public ApiStartEvent putProperties( final CommandParameters parameters) {
         if (parameters == null) {
             return this;
         }
@@ -95,7 +91,7 @@ public class ApiStartEvent extends com.microsoft.identity.common.java.telemetry.
                 put(Key.AUTHORITY_TYPE, authority.getAuthorityTypeString());
             }
 
-            put(Key.CLAIM_REQUEST, StringUtil.isEmpty(
+            put(Key.CLAIM_REQUEST, StringUtil.isNullOrEmpty(
                     tokenCommandParameters.getClaimsRequestJson()) ? Value.FALSE : Value.TRUE
             );
 
@@ -151,15 +147,6 @@ public class ApiStartEvent extends com.microsoft.identity.common.java.telemetry.
                     String.valueOf(silentParameters.isForceRefresh())
             );
         }
-
-        if (parameters instanceof BrokerInteractiveTokenCommandParameters) {
-            //TODO when integrate the telemetry with broker.
-        }
-
-        if (parameters instanceof BrokerSilentTokenCommandParameters) {
-            //TODO when integrate the telemetry with broker.
-        }
-
         return this;
     }
 
@@ -185,8 +172,8 @@ public class ApiStartEvent extends com.microsoft.identity.common.java.telemetry.
 
     public ApiStartEvent putLoginHint(@NonNull final String loginHint) {
         try {
-            put(Key.LOGIN_HINT, StringExtensions.createHash(loginHint));
-        } catch (final NoSuchAlgorithmException | UnsupportedEncodingException exception) {
+            put(Key.LOGIN_HINT, StringUtil.createHash(loginHint));
+        } catch (final NoSuchAlgorithmException exception) {
             Logger.warn(TAG, exception.getMessage());
         }
 
@@ -209,7 +196,7 @@ public class ApiStartEvent extends com.microsoft.identity.common.java.telemetry.
         try {
             urlToSanitize = new URL(url);
         } catch (MalformedURLException e1) {
-            com.microsoft.identity.common.internal.logging.Logger.errorPII(
+            Logger.errorPII(
                     TAG,
                     "Url is invalid",
                     e1
@@ -249,4 +236,5 @@ public class ApiStartEvent extends com.microsoft.identity.common.java.telemetry.
 
         return logPath.toString();
     }
+
 }

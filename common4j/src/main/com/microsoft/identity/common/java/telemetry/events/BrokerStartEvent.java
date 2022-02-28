@@ -20,13 +20,16 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.telemetry.events;
+package com.microsoft.identity.common.java.telemetry.events;
+
+import com.microsoft.identity.common.java.commands.parameters.BrokerSilentTokenCommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
 
 import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Event;
 import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.EventType;
 import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Key;
 
-public class BrokerStartEvent extends com.microsoft.identity.common.java.telemetry.events.BaseEvent {
+public class BrokerStartEvent extends ApiStartEvent {
     public BrokerStartEvent() {
         super();
         names(Event.BROKER_START_EVENT);
@@ -40,6 +43,27 @@ public class BrokerStartEvent extends com.microsoft.identity.common.java.telemet
 
     public BrokerStartEvent putStrategy(final String strategyName) {
         put(Key.BROKER_STRATEGY, strategyName);
+        return this;
+    }
+
+    @Override
+    public BrokerStartEvent putProperties(CommandParameters parameters) {
+        super.putProperties(parameters);
+
+        if (parameters instanceof BrokerSilentTokenCommandParameters) {
+            final BrokerSilentTokenCommandParameters tokenCommandParameters = (BrokerSilentTokenCommandParameters) parameters;
+
+            put(Key.BROKER_PROTOCOL_VERSION, tokenCommandParameters.getBrokerVersion());
+            put(Key.USER_ID, tokenCommandParameters.getHomeAccountId()); // pii
+            put(Key.BROKER_CALLER_UID, String.valueOf(tokenCommandParameters.getCallerUid()));
+            put(Key.BROKER_CALLER_APP_VERSION, String.valueOf(tokenCommandParameters.getCallerAppVersion()));
+            put(Key.BROKER_CALLER_PACKAGE, String.valueOf(tokenCommandParameters.getCallerPackageName()));
+
+            put(Key.BROKER_LOCAL_ACCOUNT_ID, tokenCommandParameters.getLocalAccountId()); // pii
+            put(Key.NEGOTIATED_BROKER_VERSION, tokenCommandParameters.getNegotiatedBrokerProtocolVersion());
+
+        }
+
         return this;
     }
 }

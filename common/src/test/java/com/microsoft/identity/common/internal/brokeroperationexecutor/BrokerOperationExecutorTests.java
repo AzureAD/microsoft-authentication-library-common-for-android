@@ -40,7 +40,7 @@ import com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle;
 import com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy;
 import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.internal.controllers.BrokerOperationExecutor;
-import com.microsoft.identity.common.internal.telemetry.events.ApiEndEvent;
+import com.microsoft.identity.common.java.telemetry.events.ApiEndEvent;
 
 import org.junit.Assert;
 import org.junit.Test;

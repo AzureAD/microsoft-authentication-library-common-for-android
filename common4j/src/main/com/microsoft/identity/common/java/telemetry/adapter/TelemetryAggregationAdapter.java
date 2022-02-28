@@ -22,17 +22,18 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.telemetry.adapter;
 
-import lombok.NonNull;
-
-import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.telemetry.observers.ITelemetryAggregatedObserver;
 import com.microsoft.identity.common.java.telemetry.rules.TelemetryAggregationRules;
+import com.microsoft.identity.common.java.util.StringUtil;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import lombok.NonNull;
+
 import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Key;
+import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Key.EVENT_TIMESTAMP;
 
 public final class TelemetryAggregationAdapter implements ITelemetryAdapter<List<Map<String, String>>> {
     private ITelemetryAggregatedObserver mObserver;
@@ -70,6 +71,10 @@ public final class TelemetryAggregationAdapter implements ITelemetryAdapter<List
                         eventTypeCountKey,
                         String.valueOf(newEventTypeCountValue)
                 );
+
+                if (!aggregatedData.containsKey(EVENT_TIMESTAMP)) {
+                    aggregatedData.put(EVENT_TIMESTAMP, event.get(Key.OCCUR_TIME));
+                }
             }
 
             if (!StringUtil.isNullOrEmpty(event.get(Key.IS_SUCCESSFUL))) {

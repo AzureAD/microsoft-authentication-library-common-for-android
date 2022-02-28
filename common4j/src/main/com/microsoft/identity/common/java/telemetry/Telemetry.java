@@ -69,7 +69,7 @@ public class Telemetry {
     private boolean mIsDebugging;
 
     //if the telemetry configuration is not set
-    private final boolean mIsTelemetryEnabled;
+    public final boolean mIsTelemetryEnabled;
 
     protected Telemetry() {
         // Added for backcompat (with android-common code).
