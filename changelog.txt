@@ -1,3 +1,7 @@
+Version 3.6.8
+----------
+- [PATCH] Synchronize updating refresh token in cache (saving new and removing old) to avoid race condition (#1659, #1684)
+
 Version 3.6.7
 ----------
 - [PATCH] Add helper method to fix account id missing in msal get account (#1641)
