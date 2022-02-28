@@ -87,6 +87,8 @@ public class MsalOAuth2TokenCache
 
     private IAccountCredentialCache mAccountCredentialCache;
 
+    private static final Object sCacheLock = new Object();
+
     private final IAccountCredentialAdapter<
             GenericOAuth2Strategy,
             GenericAuthorizationRequest,
@@ -371,10 +373,13 @@ public class MsalOAuth2TokenCache
 
         // Save the Account and Credentials...
         saveAccounts(accountToSave);
-        saveCredentialsInternal(accessTokenToSave, refreshTokenToSave, idTokenToSave);
 
-        // Remove old refresh tokens (except for the one we just saved) if it's MRRT or FRT
-        removeAllRefreshTokensExcept(accountToSave, refreshTokenToSave);
+        synchronized (sCacheLock) {
+            saveCredentialsInternal(accessTokenToSave, refreshTokenToSave, idTokenToSave);
+
+            // Remove old refresh tokens (except for the one we just saved) if it's MRRT or FRT
+            removeAllRefreshTokensExcept(accountToSave, refreshTokenToSave);
+        }
 
         final CacheRecord.CacheRecordBuilder result = CacheRecord.builder();
         result.account(accountToSave);
@@ -1839,9 +1844,11 @@ public class MsalOAuth2TokenCache
         );
 
         saveAccounts(accountDto);
-        saveCredentialsInternal(idToken, rt);
 
-        removeAllRefreshTokensExcept(accountDto, rt);
+        synchronized (sCacheLock) {
+            saveCredentialsInternal(idToken, rt);
+            removeAllRefreshTokensExcept(accountDto, rt);
+        }
     }
 
     @Override
