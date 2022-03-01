@@ -171,10 +171,19 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
          */
         public static final String COMMON_NAME = "CN=device-pop";
 
+        /**
+         * The organization unit for the certificate.
+         */
         public static final String ORGANIZATION_UNIT = "Identity";
 
+        /**
+         * The name of the organization for the certificate.
+         */
         public static final String ORGANIZATION_NAME = "Microsoft Corporation";
 
+        /**
+         * The country code for the certificate.
+         */
         public static final String COUNTRY = "US";
     }
 
