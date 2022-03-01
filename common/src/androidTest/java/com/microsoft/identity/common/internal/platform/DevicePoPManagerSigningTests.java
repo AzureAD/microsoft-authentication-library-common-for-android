@@ -60,7 +60,7 @@ public class DevicePoPManagerSigningTests {
     @SuppressWarnings("unused")
     public DevicePoPManagerSigningTests(final SigningAlgorithm signingAlg)
             throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException {
-        devicePopManager = new DevicePopManager(ApplicationProvider.getApplicationContext());
+        devicePopManager = new AndroidDevicePopManager(ApplicationProvider.getApplicationContext());
         this.signingAlg = signingAlg;
     }
 

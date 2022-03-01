@@ -79,7 +79,7 @@ public class DevicePoPManagerTests {
             throws CertificateException, NoSuchAlgorithmException,
             KeyStoreException, IOException {
         mContext = InstrumentationRegistry.getTargetContext();
-        mDevicePopManager = new DevicePopManager(ApplicationProvider.getApplicationContext());
+        mDevicePopManager = new AndroidDevicePopManager(ApplicationProvider.getApplicationContext());
     }
 
     @After
