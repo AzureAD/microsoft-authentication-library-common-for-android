@@ -1020,6 +1020,8 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
             errCode = INVALID_PROTECTION_PARAMS;
         }
 
+        performCleanupIfMintShrFails(exception);
+
         final ClientException clientException = new ClientException(
                 errCode,
                 exception.getMessage(),
@@ -1034,6 +1036,12 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
 
         throw clientException;
     }
+
+    /**
+     * Perform any cleanup such as clear asymmetric key if unable to mint SHR with existing keys.
+     * @param e the exception that occurred while minting SHR
+     */
+    protected abstract void performCleanupIfMintShrFails(@NonNull final Exception e);
 
     //region Internal Functions
 

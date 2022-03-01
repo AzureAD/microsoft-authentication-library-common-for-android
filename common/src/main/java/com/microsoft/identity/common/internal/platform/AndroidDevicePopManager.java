@@ -32,6 +32,7 @@ import android.content.Context;
 import android.os.Build;
 import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyInfo;
+import android.security.keystore.KeyPermanentlyInvalidatedException;
 import android.security.keystore.KeyProperties;
 import android.security.keystore.StrongBoxUnavailableException;
 
@@ -139,6 +140,15 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
         }
 
         return SecureHardwareState.UNKNOWN_DOWNLEVEL;
+    }
+
+    @Override
+    protected void performCleanupIfMintShrFails(@NonNull final Exception e) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
+                && e.getCause() instanceof KeyPermanentlyInvalidatedException) {
+            Logger.warn(TAG, "Unable to access asymmetric key - clearing.");
+            clearAsymmetricKey();
+        }
     }
 
     /**
