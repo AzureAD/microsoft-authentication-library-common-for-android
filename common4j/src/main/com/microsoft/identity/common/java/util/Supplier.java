@@ -22,8 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.util;
 
-import com.microsoft.identity.common.java.exception.ClientException;
-
 /**
  * Represents an operation that returns a result, taking no arguments.
  *
