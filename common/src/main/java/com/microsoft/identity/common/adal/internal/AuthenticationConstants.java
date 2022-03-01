@@ -996,7 +996,7 @@ public final class AuthenticationConstants {
          */
         public static final String INTUNE_APP_PACKAGE_NAME = "com.microsoft.intune";
 
-        /**g
+        /**
          * Azure Authenticator app package name.
          */
         public static final String AZURE_AUTHENTICATOR_APP_PACKAGE_NAME = "com.azure.authenticator";
