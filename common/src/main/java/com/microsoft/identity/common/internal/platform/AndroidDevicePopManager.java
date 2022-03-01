@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.platform;
 
 import static com.microsoft.identity.common.adal.internal.cache.StorageHelper.applyKeyStoreLocaleWorkarounds;
+import static com.microsoft.identity.common.java.WarningType.NewApi;
 import static com.microsoft.identity.common.java.util.ported.DateUtilities.LOCALE_CHANGE_LOCK;
 import static com.microsoft.identity.common.java.util.ported.DateUtilities.isLocaleCalendarNonGregorian;
 
@@ -43,7 +44,6 @@ import com.microsoft.identity.common.logging.Logger;
 import com.nimbusds.jose.crypto.impl.RSAKeyUtils;
 
 import java.io.IOException;
-import java.math.BigInteger;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.KeyFactory;
 import java.security.KeyPair;
@@ -149,7 +149,7 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
      * @return The newly generated RSA KeyPair.
      * @throws UnsupportedOperationException
      */
-    @SuppressLint("NewApi")
+    @SuppressLint(NewApi)
     private KeyPair generateNewRsaKeyPair(@androidx.annotation.NonNull final Context context,
                                           final int minKeySize)
             throws UnsupportedOperationException, InvalidAlgorithmParameterException,
@@ -365,7 +365,7 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
         keyPairGenerator.initialize(spec);
     }
 
-    @SuppressLint("NewApi")
+    @SuppressLint(NewApi)
     @RequiresApi(Build.VERSION_CODES.N)
     @androidx.annotation.NonNull
     private KeyGenParameterSpec.Builder setAttestationChallenge(
@@ -379,7 +379,7 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
      * @param builder The builder.
      * @return A reference to the supplied builder instance.
      */
-    @SuppressLint("NewApi")
+    @SuppressLint(NewApi)
     @RequiresApi(Build.VERSION_CODES.P)
     @androidx.annotation.NonNull
     private static KeyGenParameterSpec.Builder applyHardwareIsolation(
@@ -433,7 +433,7 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
     }
 
 
-    @SuppressLint("NewApi")
+    @SuppressLint(NewApi)
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     @SuppressWarnings("deprecation")
     private void initializePre23(@androidx.annotation.NonNull final Context context,
