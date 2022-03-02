@@ -43,7 +43,7 @@ jobs:
   displayName: SDL and Maven Tasks
   cancelTimeoutInMinutes: 1
   pool:
-    name: Hosted Windows 2019 with VS2019
+    name: 1ES-AndroidPool-EOC
   steps:
   - checkout: self
     clean: true
@@ -112,7 +112,7 @@ jobs:
   cancelTimeoutInMinutes: 1
   dependsOn: sdl_maven
   pool:
-    vmImage: 'ubuntu-latest'
+    name: 1ES-AndroidPool-EOC
   steps:
   - ${{ if not(startsWith(parameters.project, 'common')) }}:
     - checkout: common
