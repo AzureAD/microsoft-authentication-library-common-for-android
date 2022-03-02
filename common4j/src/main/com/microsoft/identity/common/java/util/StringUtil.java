@@ -22,6 +22,9 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.util;
 
+import static com.microsoft.identity.common.java.AuthenticationConstants.ENCODING_UTF8;
+import static com.microsoft.identity.common.java.AuthenticationConstants.ENCODING_UTF8_STRING;
+
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.util.ported.ObjectUtils;
 
@@ -41,8 +44,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.TimeZone;
 import java.util.UUID;
@@ -52,9 +53,6 @@ import cz.msebera.android.httpclient.extras.Base64;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.NonNull;
-
-import static com.microsoft.identity.common.java.AuthenticationConstants.ENCODING_UTF8;
-import static com.microsoft.identity.common.java.AuthenticationConstants.ENCODING_UTF8_STRING;
 
 public class StringUtil {
     private static String TAG = StringUtil.class.getSimpleName();
@@ -121,6 +119,15 @@ public class StringUtil {
                 && !isNullOrEmpty(uidUtidArray[INDEX_UTID])) {
             uid = uidUtidArray[INDEX_UID];
             utid = uidUtidArray[INDEX_UTID];
+        } else {
+            Logger.warn(TAG, "We had a home account id that could not be split correctly, " +
+                    "We expected it to split into " +
+                    EXPECTED_LENGTH + " parts but instead we had " + uidUtidArray.length + " when " +
+                    "splitting the string on dot ('.')");
+            Logger.warnPII(TAG, "We had a home account id that could not be split correctly, " +
+                    "Its value was: '" + homeAccountId + "', and we expected it to split into " +
+                    EXPECTED_LENGTH + " parts but instead we had " + uidUtidArray.length + " when " +
+                    "splitting the string on dot ('.')");
         }
 
         return new AbstractMap.SimpleEntry<>(uid, utid);
