@@ -1591,6 +1591,18 @@ public final class AuthenticationConstants {
                 "content://com.microsoft.intune.shareduserlessdataclear/datacollection";
 
         /**
+         * Intune CompanyPortal's ContentProvider String Authority constant for Clearing App policies.
+         */
+        public static final String AUTHORITY_COMPANY_PORTAL =
+                "content://com.microsoft.intune.omadm.authenticator";
+
+        /**
+         * Intune CompanyPortal's ContentProvider method constant for Clearing App policies.
+         */
+        public static final String METHOD_COMPANY_PORTAL =
+                "onGlobalSignOut";
+
+        /**
          * A functional mapping in Intune's ContentProvider result Bundle for AppDataClearAction.
          */
         public static final String IS_APP_DATA_CLEAR_ACTION = "AppDataClearResult";
