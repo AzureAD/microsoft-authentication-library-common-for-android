@@ -36,6 +36,7 @@ import android.widget.ProgressBar;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.annotation.VisibleForTesting;
 import androidx.fragment.app.FragmentActivity;
 
@@ -61,6 +62,8 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_URL;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_ZOOM_CONTROLS_ENABLED;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_ZOOM_ENABLED;
+
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CERTAUTH_PREFIX;
 
 /**
  * Authorization fragment with embedded webview.
@@ -143,6 +146,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 activity,
                 new AuthorizationCompletionCallback(),
                 new OnPageLoadedCallback() {
+                    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
                     @Override
                     public void onPageLoaded(final String url) {
                         final String[] javascriptToExecute = new String[1];
@@ -166,6 +170,11 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                                 // our javascript may contain the '%' character, so we escape it again, to undo that.
                                 mWebView.loadUrl("javascript:" + javascriptToExecute[0].replace("%", "%25"));
                             }
+                        }
+
+                        //clearcerts if url has certauth
+                        if (url.startsWith(CERTAUTH_PREFIX)) {
+                            WebView.clearClientCertPreferences(null);
                         }
                     }
                 },
