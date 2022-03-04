@@ -1182,7 +1182,7 @@ public final class AuthenticationConstants {
         /**
          * String for certauth prefix.
          */
-        public static final String CERTAUTH_PREFIX = "https:/certauth";
+        public static final String CERTAUTH_PREFIX = "https://certauth";
 
         /**
          * Prefix in the redirect for PlayStore.
