@@ -498,6 +498,11 @@ public class AuthenticationConstants {
         public static final String REDIRECT_PREFIX = "msauth";
 
         /**
+         * String for certauth prefix.
+         */
+        public static final String CERTAUTH_PREFIX = "https://certauth";
+
+        /**
          * Device Registration redirect url host name
          */
         public static final String DEVICE_REGISTRATION_REDIRECT_URI_HOSTNAME = "wpj";

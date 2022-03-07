@@ -1180,11 +1180,6 @@ public final class AuthenticationConstants {
         public static final String REDIRECT_SSL_PREFIX = "https://";
 
         /**
-         * String for certauth prefix.
-         */
-        public static final String CERTAUTH_PREFIX = "https://certauth";
-
-        /**
          * Prefix in the redirect for PlayStore.
          */
         public static final String PLAY_STORE_INSTALL_PREFIX = "market://details?id=";

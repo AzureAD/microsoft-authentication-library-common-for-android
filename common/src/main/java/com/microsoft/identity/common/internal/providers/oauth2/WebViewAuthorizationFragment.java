@@ -63,7 +63,7 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_ZOOM_CONTROLS_ENABLED;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_ZOOM_ENABLED;
 
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CERTAUTH_PREFIX;
+import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.CERTAUTH_PREFIX;
 
 /**
  * Authorization fragment with embedded webview.
