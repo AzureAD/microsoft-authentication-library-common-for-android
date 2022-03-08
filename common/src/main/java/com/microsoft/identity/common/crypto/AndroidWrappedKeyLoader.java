@@ -221,7 +221,7 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
     /**
      * Encrypt the given unencrypted symmetric key with Keystore key and save to storage.
      */
-    private void saveSecretKeyToStorage(@NonNull SecretKey unencryptedKey) throws ClientException {
+    private void saveSecretKeyToStorage(@NonNull final SecretKey unencryptedKey) throws ClientException {
         final String methodName = ":saveSecretKeyToStorage";
         /*
          * !!WARNING!!
