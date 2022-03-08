@@ -105,6 +105,9 @@ public class PKeyAuthChallenge implements Serializable {
 
     private final String mSubmitUrl;
 
+    /**
+     * Generate a header to be returned with the PKeyAuth Response.
+     */
     public Map<String, String> getChallengeHeader() throws ClientException {
         final String methodName = ":getChallengeHeader";
 
@@ -133,14 +136,19 @@ public class PKeyAuthChallenge implements Serializable {
         }
 
         final IDeviceCertificate deviceCertProxy = getWPJAPIInstance(certClazz);
-        if (!deviceCertProxy.isValidIssuer(mCertAuthorities)
-                && !StringUtil.equalsIgnoreCase(deviceCertProxy.getThumbPrint(), mThumbprint)) {
+        if (deviceCertProxy.isValidIssuer(mCertAuthorities)){
             Logger.info(TAG + methodName,
-                    "Cannot find a certificate matching the provided authority.");
-            return getChallengeHeaderWithoutSignedJwt();
+                    "Found a certificate matching the provided authority.");
+            return getChallengeHeaderWithSignedJwt(deviceCertProxy);
         }
 
-        return getChallengeHeaderWithSignedJwt(deviceCertProxy);
+        if (StringUtil.equalsIgnoreCase(deviceCertProxy.getThumbPrint(), mThumbprint)){
+            Logger.info(TAG + methodName,
+                    "Found a certificate matching the provided thumbprint.");
+            return getChallengeHeaderWithSignedJwt(deviceCertProxy);
+        }
+
+        return getChallengeHeaderWithoutSignedJwt();
     }
 
     /**
@@ -158,17 +166,23 @@ public class PKeyAuthChallenge implements Serializable {
      * Generates a signed jwt and return it as part of the challenge header.
      */
     private Map<String, String> getChallengeHeaderWithSignedJwt(@NonNull final IDeviceCertificate deviceCertProxy) throws ClientException {
-        final String methodName = ":generateChallengeResponse";
+        final String methodName = ":getChallengeHeaderWithSignedJwt";
 
         final PrivateKey privateKey = deviceCertProxy.getPrivateKey();
         if (privateKey == null) {
             throw new ClientException(ErrorStrings.KEY_CHAIN_PRIVATE_KEY_EXCEPTION);
         }
+
         final PublicKey publicKey = deviceCertProxy.getPublicKey();
+        if (publicKey == null) {
+            throw new ClientException(ErrorStrings.KEY_CHAIN_PUBLIC_KEY_EXCEPTION);
+        }
+
         final X509Certificate certificate = deviceCertProxy.getCertificate();
         if (certificate == null) {
             throw new ClientException(ErrorStrings.KEY_CHAIN_CERTIFICATE_EXCEPTION);
         }
+
         final String jwt = (new JWSBuilder()).generateSignedJWT(
                 mNonce,
                 mSubmitUrl,

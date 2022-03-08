@@ -79,7 +79,7 @@ public class PKeyAuthChallengeFactory {
                 .submitUrl(parameters.get(SubmitUrl.name()));
 
         if (parameters.containsKey(CertAuthorities.name())) {
-            String authorities = parameters.get(CertAuthorities.name());
+            final String authorities = parameters.get(CertAuthorities.name());
             builder.certAuthorities(StringUtil.getStringTokens(authorities,
                     CHALLENGE_REQUEST_CERT_AUTH_DELIMITER));
         }
@@ -124,12 +124,6 @@ public class PKeyAuthChallengeFactory {
         }
 
         return builder.build();
-    }
-
-    private boolean isWorkplaceJoined() {
-        @SuppressWarnings("unchecked")
-        Class<IDeviceCertificate> certClass = (Class<IDeviceCertificate>) AuthenticationSettings.INSTANCE.getDeviceCertificateProxy();
-        return certClass != null;
     }
 
     private void validateHeaderForPkeyAuthChallenge(@NonNull final String header) throws ClientException {
