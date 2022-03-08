@@ -299,6 +299,7 @@ public class AdalBrokerResultAdapter implements IBrokerResultAdapter {
         );
 
         if (serviceException instanceof IntuneAppProtectionPolicyRequiredException) {
+            Logger.verbose(TAG, "Exception was IntuneAppProtectionPolicyRequired");
             setIntuneAppProtectionPropertiesToBundle(
                     resultBundle,
                     (IntuneAppProtectionPolicyRequiredException) serviceException
