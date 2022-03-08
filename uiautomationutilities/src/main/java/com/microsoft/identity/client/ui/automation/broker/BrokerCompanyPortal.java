@@ -164,7 +164,8 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
 
     @Override
     public void handleFirstRun() {
-        // nothing needed here
+        // click the I AGREE btn on privacy screen
+        UiAutomatorUtils.handleButtonClick("com.microsoft.windowsintune.companyportal:id/privacy_notice_agree_button");
     }
 
     @Override

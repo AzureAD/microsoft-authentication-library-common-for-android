@@ -24,7 +24,12 @@ package com.microsoft.identity.common.java.exception;
 
 public class ArgumentException extends BaseException {
 
-    public static final String sName =  ArgumentException.class.getName();
+    // This is needed for backward compatibility with older versions of MSAL (pre 3.0.0)
+    // When MSAL converts the result bundle it looks for this value to know about exception type
+    // We moved the exception class to a new package with refactoring work,
+    // but need to keep this value to older package name to avoid breaking older MSAL clients.
+    public static final String sName =  "com.microsoft.identity.common.exception.ArgumentException";
+
     private static final long serialVersionUID = -6399451133831073876L;
 
     public final static String ACQUIRE_TOKEN_OPERATION_NAME = "acquireToken";

@@ -22,6 +22,9 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.util;
 
+import static com.microsoft.identity.common.java.AuthenticationConstants.ENCODING_UTF8;
+import static com.microsoft.identity.common.java.AuthenticationConstants.ENCODING_UTF8_STRING;
+
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.util.ported.ObjectUtils;
 
@@ -41,19 +44,15 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.TimeZone;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 import cz.msebera.android.httpclient.extras.Base64;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.NonNull;
-
-import static com.microsoft.identity.common.java.AuthenticationConstants.ENCODING_UTF8;
-import static com.microsoft.identity.common.java.AuthenticationConstants.ENCODING_UTF8_STRING;
 
 public class StringUtil {
     private static String TAG = StringUtil.class.getSimpleName();
@@ -120,9 +119,58 @@ public class StringUtil {
                 && !isNullOrEmpty(uidUtidArray[INDEX_UTID])) {
             uid = uidUtidArray[INDEX_UID];
             utid = uidUtidArray[INDEX_UTID];
+        } else {
+            Logger.warn(TAG, "We had a home account id that could not be split correctly, " +
+                    "We expected it to split into " +
+                    EXPECTED_LENGTH + " parts but instead we had " + uidUtidArray.length + " when " +
+                    "splitting the string on dot ('.')");
+            Logger.warnPII(TAG, "We had a home account id that could not be split correctly, " +
+                    "Its value was: '" + homeAccountId + "', and we expected it to split into " +
+                    EXPECTED_LENGTH + " parts but instead we had " + uidUtidArray.length + " when " +
+                    "splitting the string on dot ('.')");
         }
 
         return new AbstractMap.SimpleEntry<>(uid, utid);
+    }
+
+    /**
+     * Helper method to get uid from home account id
+     * V2 home account format : <uid>.<utid>
+     * V1 : it's stored as <uid>
+     *
+     * @param homeAccountId
+     * @return valid uid or null if it's not in either of the format.
+     */
+    @Nullable
+    public static String getUIdFromHomeAccountId(@Nullable String homeAccountId) {
+        final String methodName = ":getUIdFromHomeAccountId";
+        final String DELIMITER_TENANTED_USER_ID = ".";
+        final int EXPECTED_ARGS_LEN = 2;
+        final int INDEX_USER_ID = 0;
+
+        if (!StringUtil.isNullOrEmpty(homeAccountId)) {
+            final String[] homeAccountIdSplit = homeAccountId.split(
+                    Pattern.quote(DELIMITER_TENANTED_USER_ID)
+            );
+
+            if (homeAccountIdSplit.length == EXPECTED_ARGS_LEN) {
+                Logger.info(TAG + methodName,
+                        "Home account id is tenanted, returning uid "
+                );
+                return homeAccountIdSplit[INDEX_USER_ID];
+            } else if (homeAccountIdSplit.length == 1) {
+                Logger.info(TAG + methodName,
+                        "Home account id not tenanted, it's the uid added by v1 broker "
+                );
+                return homeAccountIdSplit[INDEX_USER_ID];
+            }
+        }
+
+        Logger.warn(TAG + methodName,
+                "Home Account id doesn't have uid or tenant id information, returning null "
+        );
+
+        return null;
     }
 
     /**
@@ -372,6 +420,7 @@ public class StringUtil {
 
     /**
      * Given a byte array, return a base64-encoded String representing that byte array.
+     *
      * @param bytes the bytes to encode.
      * @return the Base64 representation of those bytes, without line-wrapping.
      */
@@ -389,8 +438,9 @@ public class StringUtil {
     /**
      * This is a reimplementation of String.join for the android platform.  Possibly this should
      * shift into PlatformUtils, which could rely on String.join dependent on the android API level.
+     *
      * @param separator a separator for the joined strings.
-     * @param segments a set of segments to join.
+     * @param segments  a set of segments to join.
      * @return a new char sequence constructed by joining the segments with the separator.
      */
     public static <T extends CharSequence> String join(final CharSequence separator, final @NonNull Iterable<T> segments) {

@@ -581,7 +581,7 @@ public class AuthenticationConstants {
         /**
          * Scope to get email claim as part of the ID Token
          */
-        public static final String EMAIL = "email";
+        public static final String EMAIL_SCOPE = "email";
 
         /**
          * Used in the interrupt flow. See BrokerJoinedAccountController for more info.
