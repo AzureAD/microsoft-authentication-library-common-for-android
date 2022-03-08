@@ -26,7 +26,6 @@ import lombok.NonNull;
 
 import com.microsoft.identity.common.java.AuthenticationSettings;
 import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.util.UrlUtil;
 
@@ -59,24 +58,31 @@ public class PKeyAuthChallengeFactory {
      * This parses the redirectURI for challenge components and produces
      * response object.
      *
+     * This is retrieved from response from auth endpoint
+     * (read: it would be triggered in interactive flow only).
+     *
      * @param redirectUri Location: urn:http-auth:CertAuth?Nonce=<noncevalue>
      *                    &CertAuthorities=<distinguished names of CAs>&Version=1.0
      *                    &SubmitUrl=<URL to submit response>&Context=<server state that
      *                    client must convey back>
      * @return Return PKeyAuth challenge object
      */
-    public PKeyAuthChallenge getPKeyAuthChallenge(@NonNull final String redirectUri) throws ClientException {
+    public PKeyAuthChallenge getPKeyAuthChallengeFromWebViewRedirect(@NonNull final String redirectUri) throws ClientException {
         //get the PKeyAuthChallenge from redirect Uri sent from authorization endpoint
         final Map<String, String> parameters = UrlUtil.getParameters(redirectUri);
-        validatePKeyAuthChallenge(parameters);
+        validatePKeyAuthChallengeFromWebViewRedirect(parameters);
 
-        final PKeyAuthChallenge.Builder builder = new PKeyAuthChallenge.Builder();
-        builder.setNonce(parameters.get(Nonce.name().toLowerCase(Locale.US)))
-                .setContext(parameters.get(Context.name()))
-                .setCertAuthorities(StringUtil.getStringTokens(
-                        parameters.get(CertAuthorities.name()), CHALLENGE_REQUEST_CERT_AUTH_DELIMITER))
-                .setVersion(parameters.get(Version.name()))
-                .setSubmitUrl(parameters.get(SubmitUrl.name()));
+        final PKeyAuthChallenge.PKeyAuthChallengeBuilder builder = new PKeyAuthChallenge.PKeyAuthChallengeBuilder();
+        builder.nonce(parameters.get(Nonce.name().toLowerCase(Locale.US)))
+                .context(parameters.get(Context.name()))
+                .version(parameters.get(Version.name()))
+                .submitUrl(parameters.get(SubmitUrl.name()));
+
+        if (parameters.containsKey(CertAuthorities.name())) {
+            final String authorities = parameters.get(CertAuthorities.name());
+            builder.certAuthorities(StringUtil.getStringTokens(authorities,
+                    CHALLENGE_REQUEST_CERT_AUTH_DELIMITER));
+        }
 
         return builder.build();
     }
@@ -84,50 +90,40 @@ public class PKeyAuthChallengeFactory {
     /**
      * Create the pkeyauth challenge with headers.
      *
+     * This is retrieved from response from token endpoint
+     * (read: it would be triggered in silent flow only).
+     *
      * @param header
      * @param authority
      * @throws ClientException
      * @throws UnsupportedEncodingException
      */
-    public PKeyAuthChallenge getPKeyAuthChallenge(@NonNull final String header, @NonNull final String authority)
+    public PKeyAuthChallenge getPKeyAuthChallengeFromTokenEndpointResponse(@NonNull final String header, @NonNull final String authority)
             throws ClientException, UnsupportedEncodingException {
         //get the PKeyAuthChallenge from http response headers sent from token endpoint
         validateHeaderForPkeyAuthChallenge(header);
         final Map<String, String> headerItems = getPKeyAuthHeader(header);
-        validatePKeyAuthChallenge(headerItems);
+        validatePKeyAuthChallengeFromTokenEndpointResponse(headerItems);
 
-        final PKeyAuthChallenge.Builder builder = new PKeyAuthChallenge.Builder();
-        builder.setSubmitUrl(authority)
-                .setNonce(headerItems.get(Nonce.name().toLowerCase(Locale.US)))
-                .setVersion(headerItems.get(Version.name()))
-                .setContext(headerItems.get(Context.name()));
+        final PKeyAuthChallenge.PKeyAuthChallengeBuilder builder = new PKeyAuthChallenge.PKeyAuthChallengeBuilder();
+        builder.submitUrl(authority)
+                .nonce(headerItems.get(Nonce.name().toLowerCase(Locale.US)))
+                .context(headerItems.get(Context.name()))
+                .version(headerItems.get(Version.name()));
 
         // When pkeyauth header is present, ADFS is always trying to device auth. When hitting token endpoint(device
         // challenge will be returned via 401 challenge), ADFS is sending back an empty cert thumbprint when they found
         // the device is not managed. To account for the behavior of how ADFS performs device auth, below code is checking
         // if it's already workplace joined before checking the existence of cert thumbprint or authority from returned challenge.
-        if (!isWorkplaceJoined()) {
-            Logger.info(TAG, "Device is not workplace joined. ");
-        } else if (!StringUtil.isNullOrEmpty(headerItems.get(CertThumbprint.name()))) {
-            Logger.info(TAG, "CertThumbprint exists in the device auth challenge.");
-            builder.setThumbprint(headerItems.get(CertThumbprint.name()));
+        if (!StringUtil.isNullOrEmpty(headerItems.get(CertThumbprint.name()))) {
+            builder.thumbprint(headerItems.get(CertThumbprint.name()));
         } else if (headerItems.containsKey(CertAuthorities.name())) {
-            Logger.info(TAG, "CertAuthorities exists in the device auth challenge.");
             String authorities = headerItems.get(CertAuthorities.name());
-            builder.setCertAuthorities(StringUtil.getStringTokens(authorities,
+            builder.certAuthorities(StringUtil.getStringTokens(authorities,
                     CHALLENGE_REQUEST_CERT_AUTH_DELIMITER));
-        } else {
-            throw new ClientException(DEVICE_CERTIFICATE_REQUEST_INVALID,
-                    "Both certThumbprint and cert authorities are not present");
         }
 
         return builder.build();
-    }
-
-    private boolean isWorkplaceJoined() {
-        @SuppressWarnings("unchecked")
-        Class<IDeviceCertificate> certClass = (Class<IDeviceCertificate>) AuthenticationSettings.INSTANCE.getDeviceCertificateProxy();
-        return certClass != null;
     }
 
     private void validateHeaderForPkeyAuthChallenge(@NonNull final String header) throws ClientException {
@@ -141,23 +137,35 @@ public class PKeyAuthChallengeFactory {
         }
     }
 
-    private void validatePKeyAuthChallenge(Map<String, String> headerItems) throws
+    // Validated the required fields.
+    private void validatePKeyAuthChallengeFromTokenEndpointResponse(Map<String, String> headerItems) throws
             ClientException {
         if (!(headerItems.containsKey(Nonce.name()) || headerItems
                 .containsKey(Nonce.name().toLowerCase(Locale.US)))) {
             throw new ClientException(DEVICE_CERTIFICATE_REQUEST_INVALID, "Nonce is empty.");
+        }
+        if (!headerItems.containsKey(Context.name())) {
+            throw new ClientException(DEVICE_CERTIFICATE_REQUEST_INVALID, "Context is empty");
+        }
+        if (!headerItems.containsKey(Version.name())) {
+            throw new ClientException(DEVICE_CERTIFICATE_REQUEST_INVALID, "Version name is empty");
+        }
+    }
+
+    private void validatePKeyAuthChallengeFromWebViewRedirect(Map<String, String> headerItems) throws
+            ClientException {
+        if (!(headerItems.containsKey(Nonce.name()) || headerItems
+                .containsKey(Nonce.name().toLowerCase(Locale.US)))) {
+            throw new ClientException(DEVICE_CERTIFICATE_REQUEST_INVALID, "Nonce is empty.");
+        }
+        if (!headerItems.containsKey(Context.name())) {
+            throw new ClientException(DEVICE_CERTIFICATE_REQUEST_INVALID, "Context is empty");
         }
         if (!headerItems.containsKey(Version.name())) {
             throw new ClientException(DEVICE_CERTIFICATE_REQUEST_INVALID, "Version name is empty");
         }
         if (!headerItems.containsKey(SubmitUrl.name())) {
             throw new ClientException(DEVICE_CERTIFICATE_REQUEST_INVALID, "SubmitUrl is empty");
-        }
-        if (!headerItems.containsKey(Context.name())) {
-            throw new ClientException(DEVICE_CERTIFICATE_REQUEST_INVALID, "Context is empty");
-        }
-        if (!headerItems.containsKey(CertAuthorities.name())) {
-            throw new ClientException(DEVICE_CERTIFICATE_REQUEST_INVALID, "CertAuthorities is empty");
         }
     }
 

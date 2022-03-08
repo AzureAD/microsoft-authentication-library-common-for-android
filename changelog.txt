@@ -1,5 +1,6 @@
 V.Next
 ----------
+- [PATCH] Fix silent flow pkeyauth, add build param to disable silent flow timeout during debugging (#1687)
 - [MINOR] Hook telemetry to LocalAuthenticationResult and BaseException (#1636)
 - [PATCH] Fix accidental code change that disabled PoP for auth code grant flow (#1661)
 - [MINOR] Add flighting parameters to commmandParameters (#1562)
