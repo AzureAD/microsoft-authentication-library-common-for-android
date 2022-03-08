@@ -22,6 +22,8 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.controllers;
 
+import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.PKEYAUTH_HEADER;
+import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.PKEYAUTH_VERSION;
 import static com.microsoft.identity.common.java.authorities.Authority.B2C;
 
 
@@ -34,14 +36,12 @@ import com.microsoft.identity.common.java.commands.parameters.GenerateShrCommand
 import com.microsoft.identity.common.java.commands.parameters.RemoveAccountCommandParameters;
 import com.microsoft.identity.common.java.constants.OAuth2ErrorCode;
 import com.microsoft.identity.common.java.constants.OAuth2SubErrorCode;
-import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsRopcTokenRequest;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters;
 import com.microsoft.identity.common.java.result.AcquireTokenResult;
 import com.microsoft.identity.common.java.result.GenerateShrResult;
 import com.microsoft.identity.common.java.result.LocalAuthenticationResult;
 import com.microsoft.identity.common.java.telemetry.Telemetry;
 import com.microsoft.identity.common.java.providers.oauth2.IResult;
-import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters;
 import com.microsoft.identity.common.java.telemetry.events.CacheEndEvent;
 import com.microsoft.identity.common.java.AuthenticationConstants;
 import com.microsoft.identity.common.java.WarningType;
@@ -306,6 +306,7 @@ public abstract class BaseController {
             completeRequestHeaders.put(AuthenticationConstants.AAD.APP_VERSION,
                     parameters.getApplicationVersion()
             );
+            completeRequestHeaders.put(PKEYAUTH_HEADER, PKEYAUTH_VERSION);
 
             // Add additional fields to the AuthorizationRequest.Builder to support interactive
             setBuilderProperties(builder, parameters, interactiveTokenCommandParameters, completeRequestHeaders);

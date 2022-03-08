@@ -142,7 +142,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             if (isPkeyAuthUrl(formattedURL)) {
                 Logger.info(TAG, "WebView detected request for pkeyauth challenge.");
                 final PKeyAuthChallengeFactory factory = new PKeyAuthChallengeFactory();
-                final PKeyAuthChallenge pKeyAuthChallenge = factory.getPKeyAuthChallenge(url);
+                final PKeyAuthChallenge pKeyAuthChallenge = factory.getPKeyAuthChallengeFromWebViewRedirect(url);
                 final PKeyAuthChallengeHandler pKeyAuthChallengeHandler = new PKeyAuthChallengeHandler(view, getCompletionCallback());
                 pKeyAuthChallengeHandler.processChallenge(pKeyAuthChallenge);
             } else if (isRedirectUrl(formattedURL)) {

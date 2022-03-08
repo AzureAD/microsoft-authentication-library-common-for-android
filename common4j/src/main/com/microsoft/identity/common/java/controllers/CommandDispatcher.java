@@ -35,6 +35,7 @@ import static com.microsoft.identity.common.java.marker.PerfConstants.CodeMarker
 import static com.microsoft.identity.common.java.marker.PerfConstants.CodeMarkerConstants.ACQUIRE_TOKEN_SILENT_FUTURE_OBJECT_CREATION_END;
 import static com.microsoft.identity.common.java.marker.PerfConstants.CodeMarkerConstants.ACQUIRE_TOKEN_SILENT_START;
 
+import com.microsoft.identity.common.java.BuildConfig;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.commands.BaseCommand;
 import com.microsoft.identity.common.java.commands.ICommandResult;
@@ -179,7 +180,11 @@ public class CommandDispatcher {
             throws BaseException {
         final CommandResult commandResult;
         try {
-            commandResult = submitSilentReturningFuture(command).get(ACQUIRE_TOKEN_SILENT_DEFAULT_TIMEOUT_MILLISECONDS, TimeUnit.MILLISECONDS);
+            if (BuildConfig.DISABLE_ACQUIRE_TOKEN_SILENT_TIMEOUT){
+                commandResult = submitSilentReturningFuture(command).get();
+            } else {
+                commandResult = submitSilentReturningFuture(command).get(ACQUIRE_TOKEN_SILENT_DEFAULT_TIMEOUT_MILLISECONDS, TimeUnit.MILLISECONDS);
+            }
         } catch (final InterruptedException | ExecutionException | TimeoutException e) {
             throw ExceptionAdapter.baseExceptionFromException(e);
         }
