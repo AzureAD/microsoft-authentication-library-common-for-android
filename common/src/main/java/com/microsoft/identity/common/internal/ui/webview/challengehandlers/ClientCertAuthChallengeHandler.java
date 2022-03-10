@@ -69,7 +69,7 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
                     public void alias(String alias) {
                         if (alias == null) {
                             Logger.info(TAG, "No certificate chosen by user, cancelling the TLS request.");
-                            request.cancel();
+                            request.ignore();
                             return;
                         }
 
