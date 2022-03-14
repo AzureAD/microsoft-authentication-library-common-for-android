@@ -117,7 +117,7 @@ public class AndroidKeyStoreUtil {
             applyKeyStoreLocaleWorkarounds(currentLocale);
 
             try {
-                Logger.verbose(TAG + methodName, "Generating KeyPair from KeyStore");
+                Logger.info(TAG + methodName, "Generating KeyPair from KeyStore");
 
                 // Generate a key with the given algorithm spec
                 final KeyPairGenerator generator = KeyPairGenerator.getInstance(algorithm, ANDROID_KEY_STORE_TYPE);

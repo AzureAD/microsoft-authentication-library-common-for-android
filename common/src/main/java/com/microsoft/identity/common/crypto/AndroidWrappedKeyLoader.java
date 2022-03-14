@@ -221,8 +221,31 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
     /**
      * Encrypt the given unencrypted symmetric key with Keystore key and save to storage.
      */
-    private void saveSecretKeyToStorage(@NonNull SecretKey unencryptedKey) throws ClientException {
-        final KeyPair keyPair = generateKeyStoreKeyPair();
+    private void saveSecretKeyToStorage(@NonNull final SecretKey unencryptedKey) throws ClientException {
+        final String methodName = ":saveSecretKeyToStorage";
+        /*
+         * !!WARNING!!
+         * Multiple apps as of Today (1/4/2022) can still share a linux user id, by configuring
+         * the sharedUserId attribute in their Android Manifest file.  If multiple apps reference
+         * the same value for sharedUserId and are signed with the same keys, they will use
+         * the same AndroidKeyStore and may obtain access to the files and shared preferences
+         * of other applications by invoking createPackageContext.
+         *
+         * Support for sharedUserId is deprecated, however some applications still use this Android capability.
+         * See: https://developer.android.com/guide/topics/manifest/manifest-element
+         *
+         * To address apps in this scenario we will attempt to load an existing KeyPair
+         * instead of immediately generating a new key pair.  This will use the same keypair
+         * to encrypt the symmetric key generated separately for each
+         * application using a shared linux user id... and avoid these applications from
+         * stomping/overwriting one another's keypair.
+         */
+        KeyPair keyPair = readKeyStoreKeyPair();
+        if(keyPair == null){
+            Logger.info(TAG + methodName, "No existing keypair. Generating a new one.");
+            keyPair = generateKeyStoreKeyPair();
+        }
+
         final byte[] keyWrapped = AndroidKeyStoreUtil.wrap(unencryptedKey, keyPair, WRAP_ALGORITHM);
         FileUtil.writeDataToFile(keyWrapped, getKeyFile());
     }
