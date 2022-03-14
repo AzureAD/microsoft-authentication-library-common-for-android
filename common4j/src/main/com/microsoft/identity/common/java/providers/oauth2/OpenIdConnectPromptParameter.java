@@ -58,7 +58,12 @@ public enum OpenIdConnectPromptParameter {
     /**
      * acquireToken will send prompt=consent to the authorize endpoint.  The user will be prompted to consent even if consent was granted before.
      */
-    CONSENT;
+    CONSENT,
+
+    /**
+     * acquireToken will send prompt=create to the authorize endpoint.  The use will be prompted to create a new account.
+     */
+    CREATE;
 
     @Override
     public String toString() {

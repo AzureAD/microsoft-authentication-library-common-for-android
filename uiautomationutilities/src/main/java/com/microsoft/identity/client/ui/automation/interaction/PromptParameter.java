@@ -29,5 +29,6 @@ public enum PromptParameter {
     SELECT_ACCOUNT,
     LOGIN,
     CONSENT,
+    CREATE,
     WHEN_REQUIRED
 }
