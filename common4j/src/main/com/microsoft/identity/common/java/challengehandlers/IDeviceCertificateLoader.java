@@ -20,19 +20,25 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java;
+package com.microsoft.identity.common.java.challengehandlers;
 
-import com.microsoft.identity.common.java.challengehandlers.IDeviceCertificateLoader;
+import edu.umd.cs.findbugs.annotations.Nullable;
 
-import lombok.Getter;
-import lombok.Setter;
-import lombok.experimental.Accessors;
+/**
+ * An interface for loading an {@link IDeviceCertificate} object (WorkplaceJoin cert)
+ * to perform cert-based device authentication in PKeyAuth flow.
+ */
+public interface IDeviceCertificateLoader {
 
-@Accessors(prefix = "m")
-public enum AuthenticationSettings {
-    INSTANCE;
-
-    @Getter
-    @Setter
-    private IDeviceCertificateLoader mCertificateLoader;
+    /**
+     * Loads an {@link IDeviceCertificate} object matching the provided tenant Id.
+     * If tenant ID is not provided, this will load the default certificate.
+     * (For MultipleWorkplaceJoinDataStore, this means the entry in the legacy space.
+     *  For (Legacy) WorkplaceJoinDataStore, this is the only entry it has.)
+     *
+     * @param tenantId an optional tenantID to perform look up.
+     * @return an {@link IDeviceCertificate} object.
+     * */
+    @Nullable
+    IDeviceCertificate loadCertificate (@Nullable final String tenantId);
 }
