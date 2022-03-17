@@ -45,9 +45,11 @@ public abstract class AbstractTelemetryContext extends Properties {
     }
 
     protected void addApplicationInfo(final String appName,
+                                      final String appPackageName,
                                       final String appVersion,
                                       final String appBuildCode){
         put(App.NAME, appName);
+        put(App.PACKAGE, appPackageName);
         put(App.VERSION, appVersion);
         put(App.BUILD, appBuildCode);
     }

@@ -24,7 +24,18 @@ package com.microsoft.identity.common.java.telemetry.relay;
 
 import com.microsoft.identity.common.java.telemetry.observers.ITelemetryAggregatedObserver;
 
-public interface ITelemetryRelayClient extends ITelemetryAggregatedObserver {
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import lombok.NonNull;
+
+/**
+ * Base class for relaying telemetry events.
+ */
+public abstract class AbstractTelemetryRelayClient implements ITelemetryAggregatedObserver {
+
+    private final List<ITelemetryEventFilter> predicates = new ArrayList<>();
 
     /**
      * Handle initialization of the relay client before being registered as an observer.
@@ -32,11 +43,44 @@ public interface ITelemetryRelayClient extends ITelemetryAggregatedObserver {
      * @throws TelemetryRelayClientException when initialization failed, with the appropriate
      *                                       error code.
      */
-    void initialize() throws TelemetryRelayClientException;
+    public abstract void initialize() throws TelemetryRelayClientException;
 
     /**
      * Handle detach from the telemetry system.
      * This would be where we de-register the relay system from sending any more events.
      */
-    void unInitialize();
+    public abstract void unInitialize();
+
+
+    /**
+     * Handle the relay of telemetry events.
+     *
+     * @param event the map containing the event key value pairs.
+     */
+    public abstract void relayTelemetryEvent(Map<String, String> event);
+
+
+    public void addFilter(@NonNull ITelemetryEventFilter predicate) {
+        predicates.add(predicate);
+    }
+
+    public void removeFilter(@NonNull ITelemetryEventFilter predicate) {
+        predicates.remove(predicate);
+    }
+
+    public boolean shouldRelayEvent(final Map<String, String> event) {
+        for (final ITelemetryEventFilter predicate : predicates) {
+            if (!predicate.shouldRelayEvent(event)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    @Override
+    public void onReceived(final Map<String, String> telemetryData) {
+        if (shouldRelayEvent(telemetryData)) {
+            relayTelemetryEvent(telemetryData);
+        }
+    }
 }

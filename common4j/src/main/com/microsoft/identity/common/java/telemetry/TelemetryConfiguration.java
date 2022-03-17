@@ -35,14 +35,14 @@ public class TelemetryConfiguration implements Serializable {
      */
     public static final class SerializedNames {
         public static final String PII_ENABLED = "pii_enabled";
-        public static final String NOTIFY_ON_FAILTURE_ONLY = "notify_on_failure_only";
+        public static final String NOTIFY_ON_FAILURE_ONLY = "notify_on_failure_only";
         public static final String DEBUG_ENABLED = "debug_enabled";
     }
 
     @SerializedName(SerializedNames.PII_ENABLED)
     private boolean mPiiEnabled = false;
 
-    @SerializedName(SerializedNames.NOTIFY_ON_FAILTURE_ONLY)
+    @SerializedName(SerializedNames.NOTIFY_ON_FAILURE_ONLY)
     private boolean mNotifyOnFailureOnly = true;
 
     @SerializedName(SerializedNames.DEBUG_ENABLED)

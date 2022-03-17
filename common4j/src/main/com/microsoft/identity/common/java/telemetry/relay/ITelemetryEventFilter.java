@@ -20,15 +20,19 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java.telemetry;
+package com.microsoft.identity.common.java.telemetry.relay;
 
-import com.microsoft.identity.common.java.util.ported.InMemoryStorage;
+import java.util.Map;
 
-class MockTelemetryContext extends AbstractTelemetryContext {
-    public MockTelemetryContext(){
-        super(new TelemetryPropertiesCache(new InMemoryStorage()));
-        addApplicationInfo("TestApp", "test.app.TestApp", "1.0", "100XXX");
-        addOsInfo("TestOS", "1.0");
-        addDeviceInfo("SomeManufacturer", "SomeModel", "SomeDevice");
-    }
+/**
+ * To filter events before relay.
+ */
+public interface ITelemetryEventFilter {
+    /**
+     * Given an event, return true to indicate that the event should be relayed.
+     *
+     * @param event the key-value pair of the telemetry event
+     * @return a boolean value signifying whether to relay the telemetry event
+     */
+    boolean shouldRelayEvent(Map<String, String> event);
 }

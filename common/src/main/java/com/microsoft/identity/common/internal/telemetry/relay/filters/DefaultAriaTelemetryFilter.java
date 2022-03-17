@@ -20,15 +20,24 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java.telemetry;
+package com.microsoft.identity.common.internal.telemetry.relay.filters;
 
-import com.microsoft.identity.common.java.util.ported.InMemoryStorage;
+import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings;
+import com.microsoft.identity.common.java.telemetry.relay.ITelemetryEventFilter;
 
-class MockTelemetryContext extends AbstractTelemetryContext {
-    public MockTelemetryContext(){
-        super(new TelemetryPropertiesCache(new InMemoryStorage()));
-        addApplicationInfo("TestApp", "test.app.TestApp", "1.0", "100XXX");
-        addOsInfo("TestOS", "1.0");
-        addDeviceInfo("SomeManufacturer", "SomeModel", "SomeDevice");
+import java.util.Map;
+
+/**
+ * A default filter predicate for Aria telemetry events
+ */
+public class DefaultAriaTelemetryFilter implements ITelemetryEventFilter {
+
+    @Override
+    public boolean shouldRelayEvent(Map<String, String> event) {
+        // TODO Add more rules.
+        final String apiId = event.get(TelemetryEventStrings.Key.API_ID);
+
+        // For now we just need the acquire token silent telemetry signal
+        return apiId != null && apiId.equals(TelemetryEventStrings.BrokerApi.ACQUIRE_TOKEN_SILENT);
     }
 }

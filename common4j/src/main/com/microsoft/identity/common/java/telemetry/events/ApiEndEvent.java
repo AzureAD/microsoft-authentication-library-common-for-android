@@ -23,10 +23,12 @@
 package com.microsoft.identity.common.java.telemetry.events;
 
 
+import com.microsoft.identity.common.java.controllers.ExceptionAdapter;
 import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.exception.UserCancelException;
-import com.microsoft.identity.common.java.controllers.ExceptionAdapter;
+import com.microsoft.identity.common.java.providers.oauth2.TokenErrorResponse;
 import com.microsoft.identity.common.java.result.AcquireTokenResult;
+import com.microsoft.identity.common.java.telemetry.CliTelemInfo;
 import com.microsoft.identity.common.java.util.StringUtil;
 
 import lombok.NonNull;
@@ -59,6 +61,19 @@ public class ApiEndEvent extends com.microsoft.identity.common.java.telemetry.ev
             put(Key.RT_AGE, result.getLocalAuthenticationResult().getRefreshTokenAge());
         }
 
+        if (result.getTokenResult() != null && !result.getTokenResult().getSuccess()) {
+            final TokenErrorResponse errorResponse = result.getTokenResult().getErrorResponse();
+            final CliTelemInfo telemetryInfo = result.getTokenResult().getCliTelemInfo();
+
+            put(Key.IS_SUCCESSFUL, Boolean.FALSE.toString());
+            put(Key.SERVER_ERROR_CODE, errorResponse.getError());
+            put(Key.SERVER_SUBERROR_CODE, errorResponse.getSubError());
+            put(Key.ERROR_DESCRIPTION, errorResponse.getErrorDescription());
+
+            put(Key.RT_AGE, telemetryInfo.getRefreshTokenAge());
+            put(Key.SPE_RING, telemetryInfo.getSpeRing());
+        }
+
         return this;
     }
 
@@ -89,7 +104,7 @@ public class ApiEndEvent extends com.microsoft.identity.common.java.telemetry.ev
 
     @Override
     public ApiEndEvent put(@NonNull final String propertyName, final String propertyValue) {
-        if(!StringUtil.isNullOrEmpty(propertyValue)) {
+        if (!StringUtil.isNullOrEmpty(propertyValue)) {
             super.put(propertyName, propertyValue);
         }
         return this;

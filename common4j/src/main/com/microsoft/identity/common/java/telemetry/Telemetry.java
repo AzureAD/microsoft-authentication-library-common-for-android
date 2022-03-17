@@ -31,7 +31,7 @@ import com.microsoft.identity.common.java.telemetry.events.BaseEvent;
 import com.microsoft.identity.common.java.telemetry.observers.ITelemetryAggregatedObserver;
 import com.microsoft.identity.common.java.telemetry.observers.ITelemetryDefaultObserver;
 import com.microsoft.identity.common.java.telemetry.observers.ITelemetryObserver;
-import com.microsoft.identity.common.java.telemetry.relay.ITelemetryRelayClient;
+import com.microsoft.identity.common.java.telemetry.relay.AbstractTelemetryRelayClient;
 import com.microsoft.identity.common.java.telemetry.relay.TelemetryRelayClientException;
 import com.microsoft.identity.common.java.telemetry.rules.TelemetryPiiOiiRules;
 import com.microsoft.identity.common.java.util.StringUtil;
@@ -58,10 +58,12 @@ import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings
 public class Telemetry {
     private final static String TAG = Telemetry.class.getSimpleName();
     private static volatile Telemetry sTelemetryInstance = null;
+    private static volatile AbstractTelemetryRelayClient mRelayClient = null;
 
     // Suppressing rawtype warnings due to the generic type ITelemetryObserver
     @SuppressWarnings(WarningType.rawtype_warning)
     private static Queue<ITelemetryObserver> mObservers;
+
 
     private Queue<Map<String, String>> mTelemetryRawDataMap;
     private TelemetryConfiguration mDefaultConfiguration;
@@ -127,7 +129,6 @@ public class Telemetry {
      * @param observer ITelemetryObserver
      */
     public synchronized void addObserver(@SuppressWarnings(WarningType.rawtype_warning) final ITelemetryObserver observer) {
-        final String methodName = ":addObserver";
         if (null == observer) {
             throw new IllegalArgumentException("Telemetry Observer instance cannot be null");
         }
@@ -135,20 +136,6 @@ public class Telemetry {
         // check to make sure we're not already dispatching elsewhere
         if (null == mObservers) {
             mObservers = new ConcurrentLinkedQueue<>();
-        }
-
-        if (observer instanceof ITelemetryRelayClient) {
-            ITelemetryRelayClient relayClient = (ITelemetryRelayClient) observer;
-
-            if (mObservers.contains(relayClient)) {
-                return;
-            }
-            try {
-                relayClient.initialize();
-            } catch (TelemetryRelayClientException exception) {
-                Logger.error(TAG + methodName, exception.getErrorCode() + " : unable to initialize telemetry relay client.", exception);
-                return;
-            }
         }
 
         mObservers.add(observer);
@@ -176,9 +163,6 @@ public class Telemetry {
         while (observerIterator.hasNext()) {
             final ITelemetryObserver<?> observer = observerIterator.next();
             if (observer.getClass() == cls) {
-                if (cls.isAssignableFrom(ITelemetryRelayClient.class)) {
-                    ((ITelemetryRelayClient) observerIterator.next()).unInitialize();
-                }
                 Logger.verbose(TAG, "The [" + cls.getSimpleName() + "] observer is removed.");
                 observerIterator.remove();
             }
@@ -201,10 +185,6 @@ public class Telemetry {
             return;
         }
 
-        if (observer instanceof ITelemetryRelayClient) {
-            ((ITelemetryRelayClient) observer).unInitialize();
-        }
-
         mObservers.remove(observer);
     }
 
@@ -212,12 +192,6 @@ public class Telemetry {
     public synchronized void removeAllObservers() {
         if (mObservers == null) {
             return;
-        }
-
-        for (ITelemetryObserver<?> observer : mObservers) {
-            if (observer instanceof ITelemetryRelayClient) {
-                ((ITelemetryRelayClient) observer).unInitialize();
-            }
         }
 
         mObservers.clear();
@@ -297,6 +271,10 @@ public class Telemetry {
         //Add the telemetry context to the telemetry data
         finalRawMap.add(applyPiiOiiRule(mTelemetryContext.getProperties()));
 
+        if (mRelayClient != null) {
+            new TelemetryAggregationAdapter(mRelayClient).process(finalRawMap);
+        }
+
         if (null == mObservers) {
             Logger.warn(TAG, "No telemetry observer set.");
             return;
@@ -311,6 +289,24 @@ public class Telemetry {
                 Logger.warn(TAG, "Unknown observer type: " + observer.getClass());
             }
         }
+    }
+
+    /**
+     * Provide a relay client to the telemetry instance.
+     */
+    public static void setTelemetryRelayClient(AbstractTelemetryRelayClient relayClient) {
+        mRelayClient = relayClient;
+        if (mRelayClient != null) {
+            try {
+                mRelayClient.initialize();
+            } catch (TelemetryRelayClientException e) {
+                Logger.error(TAG, "Unable to initialize telemetry relay client.", e);
+            }
+        }
+    }
+
+    public static AbstractTelemetryRelayClient getRelayClient() {
+        return mRelayClient;
     }
 
     /**

@@ -29,29 +29,37 @@ import com.microsoft.applications.telemetry.ILogger;
 import com.microsoft.applications.telemetry.LogConfiguration;
 import com.microsoft.applications.telemetry.LogManager;
 import com.microsoft.identity.common.internal.logging.Logger;
-import com.microsoft.identity.common.java.telemetry.relay.ITelemetryRelayClient;
+import com.microsoft.identity.common.internal.telemetry.relay.filters.DefaultAriaTelemetryFilter;
+import com.microsoft.identity.common.java.telemetry.relay.AbstractTelemetryRelayClient;
 import com.microsoft.identity.common.java.telemetry.relay.TelemetryRelayClientException;
 
 import java.util.Map;
 
-public class AriaTelemetryRelayClient implements ITelemetryRelayClient {
+/**
+ * A relay client to send events to Aria
+ */
+public class AriaTelemetryRelayClient extends AbstractTelemetryRelayClient {
     private static final String ARIA_TABLE = "android_event";
-
     private static final String TAG = AriaTelemetryRelayClient.class.getSimpleName();
+
+    private volatile static AriaTelemetryRelayClient mInstance = null;
 
     private ILogger logger;
     private final Context context;
     private final String ariaToken;
     private final LogConfiguration logConfiguration;
 
-    public AriaTelemetryRelayClient(Context context, String ariaToken) {
-        this(context, ariaToken, new LogConfiguration());
-    }
-
-    public AriaTelemetryRelayClient(Context context, String ariaToken, LogConfiguration logConfiguration) {
-        this.context = context;
+    private AriaTelemetryRelayClient(Context context, String ariaToken, LogConfiguration logConfiguration) {
+        this.context = context.getApplicationContext();
         this.ariaToken = ariaToken;
         this.logConfiguration = logConfiguration;
+    }
+
+    public static AriaTelemetryRelayClient getInstance(Context context, String ariaToken, LogConfiguration logConfiguration) {
+        if (mInstance == null) {
+            mInstance = new AriaTelemetryRelayClient(context, ariaToken, logConfiguration);
+        }
+        return mInstance;
     }
 
     public void setLogger(ILogger logger) {
@@ -76,12 +84,14 @@ public class AriaTelemetryRelayClient implements ITelemetryRelayClient {
                         TelemetryRelayClientException.INITIALIZATION_FAILED);
             }
         }
+
+        this.addFilter(new DefaultAriaTelemetryFilter());
     }
 
     @Override
-    public void onReceived(Map<String, String> telemetryData) {
+    public void relayTelemetryEvent(Map<String, String> event) {
         final EventProperties eventProperties = new EventProperties(ARIA_TABLE);
-        for (final Map.Entry<String, String> entry : telemetryData.entrySet()) {
+        for (final Map.Entry<String, String> entry : event.entrySet()) {
             eventProperties.setProperty(entry.getKey(), entry.getValue());
         }
         logger.logEvent(eventProperties);
@@ -94,5 +104,4 @@ public class AriaTelemetryRelayClient implements ITelemetryRelayClient {
         Logger.info(TAG + ":unInitialize", "Tearing down Aria relay client.");
         LogManager.flushAndTeardown();
     }
-
 }
