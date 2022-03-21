@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.net;
 
+import com.microsoft.identity.common.java.logging.Logger;
+
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
@@ -36,11 +38,7 @@ import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
-import lombok.AccessLevel;
-import lombok.Getter;
 import lombok.NonNull;
-import lombok.Setter;
-import lombok.Synchronized;
 import lombok.experimental.Accessors;
 
 /**
@@ -62,6 +60,7 @@ public class SSLSocketFactoryWrapper extends SSLSocketFactory {
     private static String sLastHandshakeTLSversion = "";
 
     static void setLastHandshakeTLSversion(@Nullable final String lastHandshakeTLSversion){
+        Logger.info("SSLSocketFactoryWrapper:setLastHandshakeTLSversion", "TLS version "+ lastHandshakeTLSversion);
         sLastHandshakeTLSversion = lastHandshakeTLSversion;
     }
 
