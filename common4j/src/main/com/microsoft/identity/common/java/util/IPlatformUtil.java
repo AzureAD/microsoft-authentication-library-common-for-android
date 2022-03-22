@@ -23,12 +23,14 @@
 package com.microsoft.identity.common.java.util;
 
 import com.microsoft.identity.common.java.commands.ICommand;
-import com.microsoft.identity.common.java.eststelemetry.LastRequestTelemetryCache;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.ui.BrowserDescriptor;
 
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
+
+import javax.net.ssl.KeyManagerFactory;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
@@ -97,4 +99,19 @@ public interface IPlatformUtil {
      * Posts a runnable for returning the command execution result.
      */
     void postCommandResult(@NonNull final Runnable runnable);
+
+    /**
+     * BouncyCastle doesn't play well with Conscrypt (Android 11's default SSLSocket implementation)
+     * https://developer.android.com/about/versions/11/behavior-changes-all#ssl-sockets-conscrypt
+     *
+     * This causes the DRS request TLS handshake to fail - 'key not found' - even if cert is provided.
+     *
+     * As a short-term work around, we're going to use the 'default' KeyManagerFactory in Android,
+     * and keeps using BouncyCastle in Linux.
+     *
+     * Long term, we're going to move away from platform's default implementation
+     * and use external libraries that are FIPS compliant.
+     *
+     * @return*/
+    KeyManagerFactory getSslContextKeyManagerFactory() throws NoSuchAlgorithmException;
 }
