@@ -61,6 +61,10 @@ public enum LocalBroadcaster {
         mReceivers.remove(alias);
     }
 
+    public boolean hasReceivers(@NonNull final String alias) {
+        return mReceivers.containsKey(alias);
+    }
+
     public void broadcast(@NonNull final String alias, @NonNull final PropertyBag propertyBag) {
         final String methodName = ":broadcast";
         sBroadcastExecutor.execute(new Runnable() {
