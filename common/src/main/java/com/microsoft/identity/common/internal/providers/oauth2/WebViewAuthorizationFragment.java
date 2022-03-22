@@ -172,7 +172,11 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                             }
                         }
 
-                        //clearcerts if url has certauth
+                        //methods `proceed` and `cancel` of ClientCertRequest cache choice,
+                        //so cert picker won't come up again for subsequent CBA attempts
+                        //In order to clear the client cert preferences, we check if url has certauth,
+                        //which means some CBA choice was made
+                        //addressing on-device CBA bug: https://identitydivision.visualstudio.com/Engineering/_workitems/edit/1776683
                         if (url.startsWith(CERTAUTH_PREFIX)) {
                             WebView.clearClientCertPreferences(null);
                         }
