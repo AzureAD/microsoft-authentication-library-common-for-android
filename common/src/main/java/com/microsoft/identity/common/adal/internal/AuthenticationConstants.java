@@ -1582,6 +1582,22 @@ public final class AuthenticationConstants {
 
     }
 
+    public static final class CompanyPortalContentProviderCall {
+
+        /**
+         * Intune CompanyPortal's ContentProvider String Authority constant for Clearing App policies.
+         */
+        public static final String COMPANY_PORTAL_CONTENT_PROVIDER_AUTHORITY =
+                "content://com.microsoft.intune.omadm.authenticator";
+
+        /**
+         * Intune CompanyPortal's ContentProvider method constant for Clearing App policies.
+         */
+        public static final String COMPANY_PORTAL_CONTENT_PROVIDER_METHOD_ON_GLOBAL_SIGNOUT =
+                "onGlobalSignOut";
+
+    }
+
     public static final class IntuneContentProviderCall {
 
         /**
