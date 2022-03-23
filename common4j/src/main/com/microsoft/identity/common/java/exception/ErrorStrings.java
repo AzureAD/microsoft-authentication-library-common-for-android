@@ -221,6 +221,11 @@ public final class ErrorStrings {
     public static final String KEY_CHAIN_PRIVATE_KEY_EXCEPTION = "Key Chain private key exception";
 
     /**
+     * Key Chain public key exception.
+     */
+    public static final String KEY_CHAIN_PUBLIC_KEY_EXCEPTION = "Key Chain public key exception";
+
+    /**
      * Key Chain certificate exception.
      */
     public static final String KEY_CHAIN_CERTIFICATE_EXCEPTION = "Key Chain certificate exception";

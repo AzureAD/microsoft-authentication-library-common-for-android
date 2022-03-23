@@ -41,7 +41,9 @@ public final class PublicApiId {
     // MultipleAccountPublicClientApplication
     //==============================================================================================
     public static final String MULTIPLE_ACCOUNT_PCA_ACQUIRE_TOKEN_SILENT_WITH_SCOPES_ACCOUNT_AUTHORITY = "27";
+    public static final String MULTIPLE_ACCOUNT_PCA_ACQUIRE_TOKEN_SILENT_WITH_PARAMETERS = "30";
     public static final String MULTIPLE_ACCOUNT_PCA_ACQUIRE_TOKEN_SILENT_ASYNC_WITH_SCOPES_ACCOUNT_AUTHORITY_CALLBACK = "28";
+    public static final String MULTIPLE_ACCOUNT_PCA_ACQUIRE_TOKEN_SILENT_ASYNC_WITH_PARAMETERS = "31";
 
     // BrokerClientApplication
     //==============================================================================================
@@ -60,13 +62,18 @@ public final class PublicApiId {
     //==============================================================================================
     public static final String SINGLE_ACCOUNT_PCA_SIGN_IN = "123";
     public static final String SINGLE_ACCOUNT_PCA_SIGN_IN_WITH_PROMPT = "130";
+    public static final String SINGLE_ACCOUNT_PCA_SIGN_IN_WITH_PARAMETERS = "132";
+    public static final String SINGLE_ACCOUNT_PCA_SIGN_IN_WITH_PARAMETERS_PROMPT = "133";
     public static final String SINGLE_ACCOUNT_PCA_EXISTING_SIGN_IN_WITH_PROMPT = "131";
+    public static final String SINGLE_ACCOUNT_PCA_EXISTING_SIGN_IN_WITH_PARAMETERS = "134";
+    public static final String SINGLE_ACCOUNT_PCA_EXISTING_SIGN_IN_WITH_PARAMETERS_PROMPT = "135";
     public static final String SINGLE_ACCOUNT_PCA_ACQUIRE_TOKEN_WITH_PARAMETERS = "124";
     public static final String SINGLE_ACCOUNT_PCA_ACQUIRE_TOKEN_WITH_ACTIVITY_SCOPES_CALLBACK = "125";
 
     // MultipleAccountPublicClientApplication
     //==============================================================================================
     public static final String MULTIPLE_ACCOUNT_PCA_ACQUIRE_TOKEN_WITH_ACTIVITY_SCOPES_LOGINHINT_CALLBACK = "126";
+    public static final String MULTIPLE_ACCOUNT_PCA_ACQUIRE_TOKEN_WITH_PARAMETERS = "136";
 
     // BrokerClientApplication
     //==============================================================================================

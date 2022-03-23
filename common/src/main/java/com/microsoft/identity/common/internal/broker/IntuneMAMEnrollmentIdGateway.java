@@ -146,6 +146,8 @@ public class IntuneMAMEnrollmentIdGateway {
                 }
 
                 found.close();
+            } else{
+                Logger.verbose(TAG + " callContentProvider", "Cursor was null.  The content provider may not be available. ");
             }
         } catch (final Exception e) {
             // We don't expect this to fail, since the implementation in the Company Portal

@@ -536,13 +536,16 @@ public class AuthenticationConstants {
 
         /**
          * Value of pkeyauth sent in the header.
+         *
+         * By declaring this, we're telling the server to use PKeyAuth instead of client TLS
+         * for device authentication (if there is any).
          */
-        public static final String CHALLENGE_TLS_INCAPABLE = "x-ms-PKeyAuth";
+        public static final String PKEYAUTH_HEADER = "x-ms-PKeyAuth";
 
         /**
          * Value of supported pkeyauth version.
          */
-        public static final String CHALLENGE_TLS_INCAPABLE_VERSION = "1.0";
+        public static final String PKEYAUTH_VERSION = "1.0";
 
         /**
          * Account type string.
@@ -583,7 +586,7 @@ public class AuthenticationConstants {
         /**
          * Scope to get email claim as part of the ID Token
          */
-        public static final String EMAIL = "email";
+        public static final String EMAIL_SCOPE = "email";
 
         /**
          * Used in the interrupt flow. See BrokerJoinedAccountController for more info.

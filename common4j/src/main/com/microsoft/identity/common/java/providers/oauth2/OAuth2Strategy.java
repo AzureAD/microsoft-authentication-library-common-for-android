@@ -71,6 +71,8 @@ import javax.net.ssl.HttpsURLConnection;
 import lombok.NonNull;
 
 import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.CLIENT_REQUEST_ID;
+import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.PKEYAUTH_HEADER;
+import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.PKEYAUTH_VERSION;
 import static com.microsoft.identity.common.java.AuthenticationConstants.OAuth2.ERROR;
 import static com.microsoft.identity.common.java.AuthenticationConstants.OAuth2.ERROR_DESCRIPTION;
 
@@ -211,6 +213,7 @@ public abstract class OAuth2Strategy
         headers.put(AuthenticationConstants.SdkPlatformFields.VERSION, Device.getProductVersion());
         headers.putAll(EstsTelemetry.getInstance().getTelemetryHeaders());
         headers.put(HttpConstants.HeaderField.CONTENT_TYPE, TOKEN_REQUEST_CONTENT_TYPE);
+        headers.put(PKEYAUTH_HEADER, PKEYAUTH_VERSION);
 
         if (request instanceof MicrosoftTokenRequest) {
             headers.put(
