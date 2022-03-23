@@ -59,7 +59,7 @@ public abstract class SharedPreferencesSimpleCacheImpl<T> implements ISimpleCach
                                             @NonNull final String prefsName,
                                             @NonNull final String singleKey) {
         Logger.verbose(
-                TAG + "::ctor",
+                TAG + "::constructor",
                 "Init"
         );
         mSharedPrefs = context.getSharedPreferences(

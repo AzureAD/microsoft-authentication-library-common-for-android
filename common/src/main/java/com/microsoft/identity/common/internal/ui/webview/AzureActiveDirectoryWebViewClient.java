@@ -136,49 +136,50 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      * @return false if we will not take action on the url.
      */
     private boolean handleUrl(final WebView view, final String url) {
+        final String methodName = ":handleUrl";
         final String formattedURL = url.toLowerCase(Locale.US);
 
         try {
             if (isPkeyAuthUrl(formattedURL)) {
-                Logger.info(TAG, "WebView detected request for pkeyauth challenge.");
+                Logger.info(TAG + methodName,"WebView detected request for pkeyauth challenge.");
                 final PKeyAuthChallengeFactory factory = new PKeyAuthChallengeFactory();
                 final PKeyAuthChallenge pKeyAuthChallenge = factory.getPKeyAuthChallengeFromWebViewRedirect(url);
                 final PKeyAuthChallengeHandler pKeyAuthChallengeHandler = new PKeyAuthChallengeHandler(view, getCompletionCallback());
                 pKeyAuthChallengeHandler.processChallenge(pKeyAuthChallenge);
             } else if (isRedirectUrl(formattedURL)) {
-                Logger.info(TAG, "Navigation starts with the redirect uri.");
+                Logger.info(TAG + methodName,"Navigation starts with the redirect uri.");
                 processRedirectUrl(view, url);
             } else if (isWebsiteRequestUrl(formattedURL)) {
-                Logger.info(TAG, "It is an external website request");
+                Logger.info(TAG + methodName,"It is an external website request");
                 processWebsiteRequest(view, url);
             } else if (isInstallRequestUrl(formattedURL)) {
-                Logger.info(TAG, "It is an install request");
+                Logger.info(TAG + methodName,"It is an install request");
                 processInstallRequest(view, url);
             } else if (isWebCpUrl(formattedURL)) {
-                Logger.info(TAG, "It is a request from WebCP");
+                Logger.info(TAG + methodName,"It is a request from WebCP");
                 processWebCpRequest(view, url);
             } else if (isPlayStoreUrl(formattedURL)) {
-                Logger.info(TAG, "Request to open PlayStore.");
+                Logger.info(TAG + methodName,"Request to open PlayStore.");
                 return processPlayStoreURL(view, url);
             } else if (isAuthAppMFAUrl(formattedURL)) {
-                Logger.info(TAG, "Request to link account with Authenticator.");
+                Logger.info(TAG + methodName,"Request to link account with Authenticator.");
                 processAuthAppMFAUrl(url);
             } else if (isInvalidRedirectUri(url)) {
-                Logger.info(TAG, "Check for Redirect Uri.");
+                Logger.info(TAG + methodName,"Check for Redirect Uri.");
                 processInvalidRedirectUri(view, url);
             } else if (isBlankPageRequest(formattedURL)) {
-                Logger.info(TAG, "It is an blank page request");
+                Logger.info(TAG + methodName,"It is an blank page request");
             } else if (isUriSSLProtected(formattedURL)) {
-                Logger.info(TAG, "Check for SSL protection");
+                Logger.info(TAG + methodName,"Check for SSL protection");
                 processSSLProtectionCheck(view, url);
             } else {
-                Logger.info(TAG, "This maybe a valid URI, but no special handling for this mentioned URI, hence deferring to WebView for loading.");
+                Logger.info(TAG + methodName,"This maybe a valid URI, but no special handling for this mentioned URI, hence deferring to WebView for loading.");
                 processInvalidUrl(url);
                 return false;
             }
         } catch (final ClientException exception) {
-            Logger.error(TAG, exception.getErrorCode(), null);
-            Logger.errorPII(TAG, exception.getMessage(), exception);
+            Logger.error(TAG + methodName,exception.getErrorCode(), null);
+            Logger.errorPII(TAG + methodName,exception.getMessage(), exception);
             returnError(exception.getErrorCode(), exception.getMessage());
             view.stopLoading();
         }
@@ -246,7 +247,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     }
 
     private void processWebsiteRequest(@NonNull final WebView view, @NonNull final String url) {
-        final String methodName = "#processWebsiteRequest";
+        final String methodName = ":processWebsiteRequest";
 
         view.stopLoading();
 
@@ -281,7 +282,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     }
 
     private boolean processPlayStoreURL(@NonNull final WebView view, @NonNull final String url) {
-        final String methodName = "#processPlayStoreURL";
+        final String methodName = ":processPlayStoreURL";
 
         view.stopLoading();
         if (!(url.startsWith(PLAY_STORE_INSTALL_PREFIX + COMPANY_PORTAL_APP_PACKAGE_NAME))
@@ -306,19 +307,19 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     }
 
     private void processAuthAppMFAUrl(String url) {
-        final String methodName = "#processAuthAppMFAUrl";
+        final String methodName = ":processAuthAppMFAUrl";
         Logger.verbose(TAG + methodName, "Linking Account in Broker for MFA.");
         try {
             final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             getActivity().startActivity(intent);
         } catch (android.content.ActivityNotFoundException e) {
-            Logger.error(TAG, "Failed to open the Authenticator application.", e);
+            Logger.error(TAG + methodName,"Failed to open the Authenticator application.", e);
         }
     }
 
     private void launchCompanyPortal() {
-        final String methodName = "#launchCompanyPortal";
+        final String methodName = ":launchCompanyPortal";
 
         Logger.verbose(TAG + methodName, "Sending intent to launch the CompanyPortal.");
         final Intent intent = new Intent();
@@ -332,7 +333,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     }
 
     private void openLinkInBrowser(final String url) {
-        final String methodName = "#openLinkInBrowser";
+        final String methodName = ":openLinkInBrowser";
         Logger.info(TAG + methodName, "Try to open url link in browser");
         final String link = url
                 .replace(AuthenticationConstants.Broker.BROWSER_EXT_PREFIX, "https://");
@@ -360,6 +361,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
     // i.e. msauth://wpj/?username=idlab1%40msidlab4.onmicrosoft.com&app_link=https%3a%2f%2fplay.google.com%2fstore%2fapps%2fdetails%3fid%3dcom.azure.authenticator%26referrer%3dcom.msft.identity.client.sample.local
     private void processInstallRequest(@NonNull final WebView view, @NonNull final String url) {
+        final String methodName = ":processInstallRequest";
 
         final RawAuthorizationResult result = RawAuthorizationResult.fromRedirectUri(url);
 
@@ -378,7 +380,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         final Map<String, String> parameters = StringExtensions.getUrlParameters(url);
         final String appLink = parameters.get(APP_LINK_KEY);
 
-        Logger.info(TAG, "Launching the link to app:" + appLink);
+        Logger.info(TAG + methodName,"Launching the link to app:" + appLink);
         getCompletionCallback().onChallengeResponseReceived(result);
 
         final Handler handler = new Handler();
@@ -399,10 +401,10 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
     private void processInvalidRedirectUri(@NonNull final WebView view,
                                            @NonNull final String url) {
-        final String methodName = "#processInvalidRedirectUri";
+        final String methodName = ":processInvalidRedirectUri";
 
         Logger.error(TAG + methodName, "The RedirectUri is not as expected.", null);
-        Logger.errorPII(TAG, String.format("Received %s and expected %s", url, mRedirectUrl), null);
+        Logger.errorPII(TAG + methodName,String.format("Received %s and expected %s", url, mRedirectUrl), null);
         returnError(ErrorStrings.DEVELOPER_REDIRECTURI_INVALID,
                 String.format("The RedirectUri is not as expected. Received %s and expected %s", url,
                         mRedirectUrl));
@@ -411,24 +413,27 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
     private void processSSLProtectionCheck(@NonNull final WebView view,
                                            @NonNull final String url) {
+        final String methodName = ":processSSLProtectionCheck";
         final String redactedUrl = removeQueryParametersOrRedact(url);
 
-        Logger.error(TAG, "The webView was redirected to an unsafe URL: " + redactedUrl, null);
+        Logger.error(TAG + methodName,"The webView was redirected to an unsafe URL: " + redactedUrl, null);
         returnError(ErrorStrings.WEBVIEW_REDIRECTURL_NOT_SSL_PROTECTED, "The webView was redirected to an unsafe URL.");
         view.stopLoading();
     }
 
     private void processInvalidUrl(@NonNull final String url) {
+        final String methodName = ":processInvalidUrl";
 
-        Logger.infoPII(TAG, "We are declining to override loading and redirect to invalid URL: '"
+        Logger.infoPII(TAG + methodName,"We are declining to override loading and redirect to invalid URL: '"
                 + removeQueryParametersOrRedact(url) + "' the user's url pattern is '" + mRedirectUrl + "'");
     }
 
     private String removeQueryParametersOrRedact(@NonNull final String url) {
+        final String methodName = ":removeQueryParametersOrRedact";
         try {
             return StringExtensions.removeQueryParameterFromUrl(url);
         } catch (final URISyntaxException e) {
-            Logger.errorPII(TAG, "Redirect URI has invalid syntax, unable to parse", e);
+            Logger.errorPII(TAG + methodName,"Redirect URI has invalid syntax, unable to parse", e);
             return "redacted";
         }
     }

@@ -48,7 +48,7 @@ public class DefaultMultiTypeNameValueStorageReencrypter implements IMultiTypeNa
                                                @NonNull final IStringEncrypter encrypter,
                                                @NonNull final IStringDecrypter decrypter,
                                                @NonNull final ReencryptionParams params) {
-        final String methodName = ":reencrypt (sync)";
+        final String methodName = ":reencrypt";
         final Map<String, String> cacheEntries = new HashMap<>(fileManager.getAll());
         Logger.verbose(TAG + methodName,
                 "Attempting to migrate cache entries: " + cacheEntries.size());

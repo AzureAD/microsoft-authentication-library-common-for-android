@@ -46,10 +46,10 @@ import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.
 
 /**
  * A strategy for communicating with the targeted broker via AccountManager's addAccount().
- *
+ * <p>
  * NOTE: SuppressLint is added because this API requires MANAGE_ACCOUNTS for API<= 22.
  * AccountManagerUtil.canUseAccountManagerOperation() will validate that.
- * */
+ */
 
 @SuppressLint("MissingPermission")
 public class AccountManagerAddAccountStrategy implements IIpcStrategy {
@@ -62,9 +62,12 @@ public class AccountManagerAddAccountStrategy implements IIpcStrategy {
     }
 
     @Override
-    @Nullable public Bundle communicateToBroker(final @NonNull BrokerOperationBundle brokerOperationBundle)
+    @Nullable
+    public Bundle communicateToBroker(final @NonNull BrokerOperationBundle brokerOperationBundle)
             throws BrokerCommunicationException {
-        final String methodName = brokerOperationBundle.getOperation().name();
+        final String methodName = ":communicateToBroker";
+        final String operationName = brokerOperationBundle.getOperation().name();
+        Logger.info(TAG + methodName, "Broker operation: " + operationName);
         try {
             final AccountManagerFuture<Bundle> resultBundle =
                     AccountManager.get(mContext)

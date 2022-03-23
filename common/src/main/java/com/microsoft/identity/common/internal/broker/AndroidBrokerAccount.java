@@ -126,7 +126,7 @@ public class AndroidBrokerAccount implements IBrokerAccount {
     private static Account getAccount(@NonNull final AccountManager accountManager,
                                       @Nullable final String accountName,
                                       @NonNull final String accountType) {
-        final String methodName = "getAccount";
+        final String methodName = ":getAccount";
         if (accountName == null) {
             return null;
         }

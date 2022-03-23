@@ -207,6 +207,7 @@ public class AdalMigrationAdapter implements IMigrationAdapter<MicrosoftAccount,
      */
     @VisibleForTesting
     Map<String, ADALTokenCacheItem> deserialize(final Map<String, String> tokenCacheItems) {
+        final String methodName = ":deserialize";
         final Map<String, ADALTokenCacheItem> result = new HashMap<>();
 
         final Gson gson = new Gson();
@@ -218,7 +219,7 @@ public class AdalMigrationAdapter implements IMigrationAdapter<MicrosoftAccount,
                 );
             } catch (final JsonSyntaxException e) {
                 Logger.warn(
-                        TAG,
+                        TAG + methodName,
                         "Failed to deserialize ADAL cache entry. Skipping."
                 );
             }

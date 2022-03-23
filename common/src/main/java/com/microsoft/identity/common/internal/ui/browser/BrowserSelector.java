@@ -58,14 +58,15 @@ public class BrowserSelector {
      * @return Browser selected to use.
      */
     public static Browser select(final Context context, final List<BrowserDescriptor> browserSafeList) throws ClientException {
+        final String methodName = ":select";
         final List<Browser> allBrowsers = getAllBrowsers(context);
-        Logger.verbose(TAG, "Select the browser to launch.");
+        Logger.verbose(TAG + methodName, "Select the browser to launch.");
 
         for (final Browser browser : allBrowsers) {
             for (final BrowserDescriptor browserDescriptor : browserSafeList) {
                 if (matches(browserDescriptor, browser)) {
                     Logger.info(
-                            TAG,
+                            TAG + methodName,
                             "Browser's package name: "
                                     + browser.getPackageName()
                                     + " version: "
@@ -75,7 +76,7 @@ public class BrowserSelector {
             }
         }
 
-        Logger.error(TAG, "No available browser installed on the device.", null);
+        Logger.error(TAG + methodName, "No available browser installed on the device.", null);
         throw new ClientException(ErrorStrings.NO_AVAILABLE_BROWSER_FOUND, "No available browser installed on the device.");
     }
 
@@ -120,6 +121,7 @@ public class BrowserSelector {
      * (i.e. their default browser, if set, should be the first entry in the list).
      */
     public static List<Browser> getAllBrowsers(final Context context) {
+        final String methodName = ":getAllBrowsers";
         //get the list of browsers
         final Intent BROWSER_INTENT = new Intent(
                 Intent.ACTION_VIEW,
@@ -156,7 +158,7 @@ public class BrowserSelector {
             }
         }
 
-        Logger.verbose(TAG, null, "Found " + browserList.size() + " browsers.");
+        Logger.verbose(TAG + methodName, null, "Found " + browserList.size() + " browsers.");
         return browserList;
     }
 

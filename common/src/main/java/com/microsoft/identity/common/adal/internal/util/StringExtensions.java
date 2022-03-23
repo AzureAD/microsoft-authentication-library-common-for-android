@@ -151,10 +151,11 @@ public final class StringExtensions {
      * @return HashMap
      */
     public static HashMap<String, String> getUrlParameters(String finalUrl) {
+        final String methodName = ":getUrlParameters";
         Uri response = Uri.parse(finalUrl);
         if (!HashMapExtensions.urlFormDecode(response.getFragment()).isEmpty()) {
-            Logger.warn(TAG, "Received url contains unexpected fragment parameters.");
-            Logger.warnPII(TAG, "Unexpected fragment: " + response.getFragment());
+            Logger.warn(TAG + methodName, "Received url contains unexpected fragment parameters.");
+            Logger.warnPII(TAG + methodName, "Unexpected fragment: " + response.getFragment());
         }
 
         return HashMapExtensions.urlFormDecode(response.getEncodedQuery());

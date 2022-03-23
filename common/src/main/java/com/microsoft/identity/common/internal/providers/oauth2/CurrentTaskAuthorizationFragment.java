@@ -72,7 +72,7 @@ public abstract class CurrentTaskAuthorizationFragment extends AuthorizationFrag
     @SuppressFBWarnings(FindBugsConstants.NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE)
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
-        final String methodName = "#onCreate";
+        final String methodName = ":onCreate";
         super.onCreate(savedInstanceState);
 
         // Register Broadcast receiver to cancel the auth request
@@ -121,7 +121,7 @@ public abstract class CurrentTaskAuthorizationFragment extends AuthorizationFrag
      * Initialize based on value provided in intent.
      */
     private static String setDiagnosticContextForNewThread(@NonNull final String correlationId) {
-        final String methodName = ":setDiagnosticContextForAuthorizationActivity";
+        final String methodName = "#setDiagnosticContextForAuthorizationActivity";
         final RequestContext rc = new RequestContext();
         rc.put(DiagnosticContext.CORRELATION_ID, correlationId);
         DiagnosticContext.setRequestContext(rc);
@@ -153,7 +153,8 @@ public abstract class CurrentTaskAuthorizationFragment extends AuthorizationFrag
     }
 
     void sendResult(@NonNull final RawAuthorizationResult result) {
-        Logger.info(TAG, "Sending result from Authorization Activity, resultCode: " + result.getResultCode());
+        final String methodName = ":sendResult";
+        Logger.info(TAG + methodName, "Sending result from Authorization Activity, resultCode: " + result.getResultCode());
 
         final PropertyBag propertyBag = RawAuthorizationResult.toPropertyBag(result);
         propertyBag.put(REQUEST_CODE, BROWSER_FLOW);
@@ -162,11 +163,12 @@ public abstract class CurrentTaskAuthorizationFragment extends AuthorizationFrag
     }
 
     void cancelAuthorization(final boolean isCancelledByUser) {
+        final String methodName = ":cancelAuthorization";
         if (isCancelledByUser) {
-            Logger.info(TAG, "Received Authorization flow cancelled by the user");
+            Logger.info(TAG + methodName, "Received Authorization flow cancelled by the user");
             sendResult(RawAuthorizationResult.ResultCode.CANCELLED);
         } else {
-            Logger.info(TAG, "Received Authorization flow cancel request from SDK");
+            Logger.info(TAG + methodName, "Received Authorization flow cancel request from SDK");
             sendResult(RawAuthorizationResult.ResultCode.SDK_CANCELLED);
         }
 

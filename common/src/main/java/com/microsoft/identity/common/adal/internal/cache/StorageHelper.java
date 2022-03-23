@@ -522,11 +522,12 @@ public class StorageHelper implements IStorageHelper {
     }
 
     private boolean logIfKeyHasChanged(@NonNull final SecretKey hmacKey) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
+        final String methodName = ":logIfKeyHasChanged";
         final String keyThumbPrint = getKeyThumbPrintFromHmacKey(hmacKey);
         if (!LAST_KNOWN_THUMBPRINT.get().equals(keyThumbPrint)) {
             LAST_KNOWN_THUMBPRINT.set(keyThumbPrint);
-            if(!FIRST_TIME.compareAndSet(false, true)) {
-                Logger.info(TAG + ":logIfKeyHasChanged", "Using key with thumbprint that has changed " + keyThumbPrint);
+            if (!FIRST_TIME.compareAndSet(false, true)) {
+                Logger.info(TAG + methodName, "Using key with thumbprint that has changed " + keyThumbPrint);
                 return true;
             }
         }
@@ -733,7 +734,7 @@ public class StorageHelper implements IStorageHelper {
              */
 
             KeyPair existingPair = readKeyPair();
-            if(existingPair != null){
+            if (existingPair != null) {
                 Logger.verbose(TAG + methodName, "Existing keypair was found.  Returning existing key rather than generating new one.");
                 return existingPair;
             }

@@ -29,9 +29,13 @@ public class BoundServiceStrategy<T extends IInterface> implements IIpcStrategy 
     }
 
     @Override
-    public @Nullable Bundle communicateToBroker(final @NonNull BrokerOperationBundle brokerOperationBundle)
+    public @Nullable
+    Bundle communicateToBroker(final @NonNull BrokerOperationBundle brokerOperationBundle)
             throws BrokerCommunicationException {
-        final String methodName = brokerOperationBundle.getOperation().name();
+        final String methodName = ":communicateToBroker";
+        final String operationName = brokerOperationBundle.getOperation().name();
+
+        Logger.info(TAG + methodName, "Broker operation: " + operationName);
 
         try {
             return mClient.performOperation(brokerOperationBundle);

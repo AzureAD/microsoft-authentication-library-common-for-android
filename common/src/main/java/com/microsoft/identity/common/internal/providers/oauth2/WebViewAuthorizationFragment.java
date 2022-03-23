@@ -131,7 +131,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        final String methodName = "#onCreateView";
+        final String methodName = ":onCreateView";
         final View view = inflater.inflate(R.layout.common_activity_authentication, container, false);
         mProgressBar = view.findViewById(R.id.common_auth_webview_progressbar);
 
@@ -153,7 +153,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                                     mPostPageLoadedJavascript);
                         } catch (final UnsupportedEncodingException e) {
                             // Encode url component failed, fallback.
-                            Logger.warn(TAG, "Inject expectedUrl failed.");
+                            Logger.warn(TAG + methodName, "Inject expectedUrl failed.");
                         }
                         // Inject the javascript string from testing. This should only be evaluated if we haven't sent
                         // an auth result already.
@@ -195,7 +195,8 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
      */
     @Override
     public boolean onBackPressed() {
-        Logger.info(TAG, "Back button is pressed");
+        final String methodName = ":onBackPressed";
+        Logger.info(TAG + methodName, "Back button is pressed");
 
         if (mWebView.canGoBack()) {
             mWebView.goBack();
@@ -263,15 +264,17 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     class AuthorizationCompletionCallback implements IAuthorizationCompletionCallback {
         @Override
         public void onChallengeResponseReceived(@NonNull final RawAuthorizationResult response) {
-            Logger.info(TAG, null, "onChallengeResponseReceived:" + response.getResultCode());
+            final String methodName = ":onChallengeResponseReceived";
+            Logger.info(TAG + methodName, null, "onChallengeResponseReceived:" + response.getResultCode());
             sendResult(response);
             finish();
         }
 
         @Override
         public void setPKeyAuthStatus(final boolean status) {
+            final String methodName = ":setPKeyAuthStatus";
             mPkeyAuthStatus = status;
-            Logger.info(TAG, null, "setPKeyAuthStatus:" + status);
+            Logger.info(TAG + methodName, null, "setPKeyAuthStatus:" + status);
         }
     }
 }

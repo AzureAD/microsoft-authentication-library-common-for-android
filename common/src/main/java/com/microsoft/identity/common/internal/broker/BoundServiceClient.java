@@ -154,7 +154,7 @@ public abstract class BoundServiceClient<T extends IInterface> {
                     null);
         }
 
-        Logger.info(TAG + "connect", "Android is establishing the bound service connection.");
+        Logger.info(TAG + methodName, "Android is establishing the bound service connection.");
         final IBinder binder = future.get(mTimeOutInSeconds, TimeUnit.SECONDS);
         return getInterfaceFromIBinder(binder);
     }

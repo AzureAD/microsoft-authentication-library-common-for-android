@@ -63,7 +63,7 @@ public class HttpCache {
     public static synchronized boolean initialize(@NonNull final File cacheDirectory,
                                                   @NonNull final String cacheFileName,
                                                   final long maxSizeBytes) {
-        final String methodName = ":initialize (File, Filename, Capacity)";
+        final String methodName = ":initialize(File, Filename, Capacity)";
         boolean success = false;
 
         if (HttpResponseCache.getInstalled() != null){

@@ -84,6 +84,7 @@ public class TokenShareUtility implements ITokenShareInternal {
 
         @NonNull
         static Environment toEnvironment(@NonNull final String envString) throws ClientException {
+            final String methodName = ":toEnvironment";
             switch (envString) {
                 case "login.microsoftonline.com":
                 case "login.windows.net":
@@ -99,7 +100,7 @@ public class TokenShareUtility implements ITokenShareInternal {
                 case "login.microsoftonline.de":
                     return Environment.BLACKFOREST;
                 default:
-                    Logger.warn(TAG, "Unable to map provided env to enum: " + envString);
+                    Logger.warn(TAG + methodName, "Unable to map provided env to enum: " + envString);
                     throw new ClientException("Unrecognized environment");
             }
         }
@@ -222,7 +223,7 @@ public class TokenShareUtility implements ITokenShareInternal {
 
     @Override
     public void saveOrgIdFamilyRefreshToken(@NonNull final String ssoStateSerializerBlob) throws Exception {
-        final String methodName = "saveOrgIdFamilyRefreshToken";
+        final String methodName = ":saveOrgIdFamilyRefreshToken";
 
         final Future<Map.Entry<MicrosoftAccount, MicrosoftRefreshToken>> resultFuture =
                 sBackgroundExecutor.submit(new Callable<Map.Entry<MicrosoftAccount, MicrosoftRefreshToken>>() {
@@ -297,7 +298,7 @@ public class TokenShareUtility implements ITokenShareInternal {
 
     @Override
     public void saveMsaFamilyRefreshToken(@NonNull final String refreshToken) throws Exception {
-        final String methodName = "saveMsaFamilyRefreshToken";
+        final String methodName = ":saveMsaFamilyRefreshToken";
 
         final Future<Map.Entry<MicrosoftAccount, MicrosoftRefreshToken>> resultFuture =
                 sBackgroundExecutor.submit(new Callable<Map.Entry<MicrosoftAccount, MicrosoftRefreshToken>>() {

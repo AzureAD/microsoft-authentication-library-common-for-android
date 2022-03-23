@@ -80,7 +80,7 @@ public abstract class AuthorizationFragment extends Fragment {
 
     @Override
     public void onCreate(@Nullable final Bundle savedInstanceState) {
-        final String methodName = "#onCreate";
+        final String methodName = ":onCreate";
         super.onCreate(savedInstanceState);
 
         // Register Broadcast receiver to cancel the auth request
@@ -88,7 +88,7 @@ public abstract class AuthorizationFragment extends Fragment {
         LocalBroadcaster.INSTANCE.registerCallback(CANCEL_AUTHORIZATION_REQUEST, mCancelRequestReceiver);
 
         if (savedInstanceState == null && mInstanceState == null) {
-            Logger.warn(TAG, "No stored state. Unable to handle response");
+            Logger.warn(TAG + methodName, "No stored state. Unable to handle response");
             finish();
             return;
         }
@@ -161,7 +161,7 @@ public abstract class AuthorizationFragment extends Fragment {
 
     @Override
     public void onDestroy() {
-        final String methodName = "#onDestroy";
+        final String methodName = ":onDestroy";
         Logger.info(TAG + methodName, "");
         if (!mAuthResultSent) {
             Logger.info(TAG + methodName,
@@ -188,7 +188,8 @@ public abstract class AuthorizationFragment extends Fragment {
     }
 
     void sendResult(@NonNull final RawAuthorizationResult result) {
-        Logger.info(TAG, "Sending result from Authorization Activity, resultCode: " + result.getResultCode());
+        final String methodName = ":sendResult";
+        Logger.info(TAG + methodName, "Sending result from Authorization Activity, resultCode: " + result.getResultCode());
 
         final PropertyBag propertyBag = RawAuthorizationResult.toPropertyBag(result);
         propertyBag.put(REQUEST_CODE, BROWSER_FLOW);
@@ -198,11 +199,12 @@ public abstract class AuthorizationFragment extends Fragment {
     }
 
     void cancelAuthorization(final boolean isCancelledByUser) {
+        final String methodName = ":cancelAuthorization";
         if (isCancelledByUser) {
-            Logger.info(TAG, "Received Authorization flow cancelled by the user");
+            Logger.info(TAG + methodName, "Received Authorization flow cancelled by the user");
             sendResult(RawAuthorizationResult.ResultCode.CANCELLED);
         } else {
-            Logger.info(TAG, "Received Authorization flow cancel request from SDK");
+            Logger.info(TAG + methodName, "Received Authorization flow cancel request from SDK");
             sendResult(RawAuthorizationResult.ResultCode.SDK_CANCELLED);
         }
 

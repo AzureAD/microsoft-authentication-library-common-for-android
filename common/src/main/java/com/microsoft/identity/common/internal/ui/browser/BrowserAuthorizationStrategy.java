@@ -151,6 +151,7 @@ public abstract class BrowserAuthorizationStrategy<
 
     @Override
     public void completeAuthorization(int requestCode, @NonNull final RawAuthorizationResult data) {
+        final String methodName = ":completeAuthorization";
         if (requestCode == BROWSER_FLOW) {
             dispose();
 
@@ -162,7 +163,7 @@ public abstract class BrowserAuthorizationStrategy<
                     );
             mAuthorizationResultFuture.setResult(result);
         } else {
-            Logger.warnPII(TAG, "Unknown request code " + requestCode);
+            Logger.warnPII(TAG + methodName, "Unknown request code " + requestCode);
         }
     }
 

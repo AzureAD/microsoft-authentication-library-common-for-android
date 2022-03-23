@@ -54,6 +54,7 @@ public class AndroidTelemetryContext extends AbstractTelemetryContext {
     }
 
     private void addApplicationInfo(@NonNull final Context context) {
+        final String methodName = ":addApplicationInfo";
         try {
             final PackageManager packageManager = context.getPackageManager();
             final PackageInfo packageInfo = packageManager.getPackageInfo(context.getPackageName(), 0);
@@ -64,7 +65,7 @@ public class AndroidTelemetryContext extends AbstractTelemetryContext {
                     String.valueOf(versionCode));
         } catch (final PackageManager.NameNotFoundException e) {
             //Not throw the exception to break the auth request when getting the app's telemetry
-            Logger.warn(TAG, "Unable to find the app's package name from PackageManager.");
+            Logger.warn(TAG + methodName, "Unable to find the app's package name from PackageManager.");
         }
     }
 

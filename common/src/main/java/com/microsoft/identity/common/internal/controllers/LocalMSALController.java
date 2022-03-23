@@ -321,7 +321,7 @@ public class LocalMSALController extends BaseController {
                 && fullCacheRecord.getAccessToken() != null
                 && fullCacheRecord.getAccessToken().refreshOnIsActive()) {
             Logger.info(
-                    TAG,
+                    TAG + methodName,
                     "RefreshOn is active. This will extend your token usage in the rare case servers are not available."
             );
         }
@@ -437,7 +437,7 @@ public class LocalMSALController extends BaseController {
                          @NonNull final ICacheRecord cacheRecord,
                          @NonNull final String tag) throws IOException, ClientException, ServiceException {
         Logger.verbose(
-                TAG + tag,
+                tag,
                 "Renewing access token..."
         );
         renewAccessToken(

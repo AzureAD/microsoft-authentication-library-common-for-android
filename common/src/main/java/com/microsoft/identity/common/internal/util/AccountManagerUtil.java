@@ -48,7 +48,7 @@ public final class AccountManagerUtil {
      * To verify if the caller can use to AccountManager to use broker.
      */
     public static boolean canUseAccountManagerOperation(final Context context) {
-        final String methodName = "canUseAccountManagerOperation:";
+        final String methodName = ":canUseAccountManagerOperation:";
 
         if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             // Check user policy

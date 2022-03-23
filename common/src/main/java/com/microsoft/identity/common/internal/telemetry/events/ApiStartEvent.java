@@ -184,10 +184,11 @@ public class ApiStartEvent extends com.microsoft.identity.common.java.telemetry.
     }
 
     public ApiStartEvent putLoginHint(@NonNull final String loginHint) {
+        final String methodName = ":putLoginHint";
         try {
             put(Key.LOGIN_HINT, StringExtensions.createHash(loginHint));
         } catch (final NoSuchAlgorithmException | UnsupportedEncodingException exception) {
-            Logger.warn(TAG, exception.getMessage());
+            Logger.warn(TAG + methodName, exception.getMessage());
         }
 
         return this;

@@ -57,10 +57,13 @@ public class ContentProviderStrategy implements IIpcStrategy {
     }
 
     @Override
-    public @Nullable Bundle communicateToBroker(final @NonNull BrokerOperationBundle brokerOperationBundle)
+    public @Nullable
+    Bundle communicateToBroker(final @NonNull BrokerOperationBundle brokerOperationBundle)
             throws BrokerCommunicationException {
+        final String methodName = ":communicateToBroker";
+        final String operationName = brokerOperationBundle.getOperation().name();
 
-        final String methodName = brokerOperationBundle.getOperation().name();
+        Logger.info(TAG + methodName, "Broker operation name: " + operationName);
 
         final Uri uri = getContentProviderURI(
                 brokerOperationBundle.getTargetBrokerAppPackageName(),

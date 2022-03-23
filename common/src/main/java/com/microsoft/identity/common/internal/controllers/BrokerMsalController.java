@@ -173,8 +173,10 @@ public class BrokerMsalController extends BaseController {
      * Order of objects in the list will reflects the order of strategies that will be used.
      */
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    protected @NonNull List<IIpcStrategy> getIpcStrategies(final Context applicationContext,
-                                                                final String activeBrokerPackageName) {
+    protected @NonNull
+    List<IIpcStrategy> getIpcStrategies(final Context applicationContext,
+                                        final String activeBrokerPackageName) {
+        final String methodName = ":getIpcStrategies";
         final List<IIpcStrategy> strategies = new ArrayList<>();
         final StringBuilder sb = new StringBuilder(100);
         sb.append("Broker Strategies added : ");
@@ -196,7 +198,7 @@ public class BrokerMsalController extends BaseController {
             strategies.add(new AccountManagerAddAccountStrategy(applicationContext));
         }
 
-        Logger.info(TAG, sb.toString());
+        Logger.info(TAG + methodName, sb.toString());
 
         return strategies;
     }
@@ -807,7 +809,7 @@ public class BrokerMsalController extends BaseController {
             browserPackageName = browser.getPackageName();
         } catch (final ClientException e) {
             // Best effort. If none is passed to broker, then it will let the OS decide.
-            Logger.error(TAG, e.getErrorCode(), e);
+            Logger.error(TAG + methodName, e.getErrorCode(), e);
         }
 
         try {
