@@ -140,6 +140,7 @@ jobs:
     inputs:
       secureFile: passphrase.txt
       retryCount: 5
+  - script: yum provides */shasum
   - task: Bash@3
     displayName: GPG Signing
     inputs:
