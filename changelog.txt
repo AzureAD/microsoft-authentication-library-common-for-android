@@ -1,3 +1,7 @@
+Version 4.0.4
+----------
+- [PATCH] Correct setAttestationChallenge to provide null rather than empty byte array (#1700)
+
 Version 4.0.3
 ----------
 - [PATCH] Use default provider in Android for creating SSLContext's KeyManagerFactory (#1697)
