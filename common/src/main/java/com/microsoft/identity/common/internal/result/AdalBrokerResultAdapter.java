@@ -44,12 +44,16 @@ import com.microsoft.identity.common.java.exception.UserCancelException;
 import com.microsoft.identity.common.java.result.ILocalAuthenticationResult;
 import com.microsoft.identity.common.java.util.SchemaUtil;
 import com.microsoft.identity.common.java.dto.IAccountRecord;
+import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.logging.Logger;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CliTelemInfo.RT_AGE;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CliTelemInfo.SERVER_ERROR;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CliTelemInfo.SERVER_SUBERROR;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CliTelemInfo.SPE_RING;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class AdalBrokerResultAdapter implements IBrokerResultAdapter {
 
@@ -337,22 +341,43 @@ public class AdalBrokerResultAdapter implements IBrokerResultAdapter {
                 AuthenticationConstants.Browser.RESPONSE_ERROR_CODE,
                 ADALError.AUTH_FAILED_INTUNE_POLICY_REQUIRED.name()
         );
+        final String tenantId = exception.getTenantId();
+        final String authorityUrl = exception.getAuthorityUrl();
+        final String accountUserId = exception.getAccountUserId();
+        final String accountUpn = exception.getAccountUpn();
+
+        List<String> nullFields = new ArrayList<>();
+        addNullOrEmptyFieldInformation(tenantId, "tenantId", nullFields);
+        addNullOrEmptyFieldInformation(authorityUrl, "authorityUrl", nullFields);
+        addNullOrEmptyFieldInformation(accountUserId, "accountUserId", nullFields);
+        addNullOrEmptyFieldInformation(accountUpn, "accountUpn", nullFields);
+        if (!nullFields.isEmpty()) {
+            Logger.error(TAG, "Some of the required fields for the Intune exception are not present: "
+                    + StringUtil.join(", ", nullFields), null);
+        }
         resultBundle.putString(
                 AuthenticationConstants.Broker.ACCOUNT_USERINFO_TENANTID,
-                exception.getTenantId()
+                tenantId
         );
         resultBundle.putString(
                 AuthenticationConstants.Broker.ACCOUNT_AUTHORITY,
-                exception.getAuthorityUrl()
+                authorityUrl
         );
         resultBundle.putString(
                 AuthenticationConstants.Broker.ACCOUNT_USERINFO_USERID,
-                exception.getAccountUserId()
+                accountUserId
         );
         resultBundle.putString(
                 AuthenticationConstants.Broker.ACCOUNT_NAME,
-                exception.getAccountUpn()
+                accountUpn
         );
+    }
+
+    private void addNullOrEmptyFieldInformation(final String field, final String fieldName,
+                                                final @NonNull List<String> nullFields) {
+        if (StringUtil.isNullOrEmpty(field)) {
+            nullFields.add(fieldName + " is " + ((field == null) ? "null" : "empty"));
+        }
     }
 
     /**
