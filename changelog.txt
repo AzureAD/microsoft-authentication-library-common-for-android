@@ -7,6 +7,7 @@ V.Next
 - [PATCH] Fix accidental code change that disabled PoP for auth code grant flow (#1661)
 - [MINOR] Add flighting parameters to commmandParameters (#1562)
 - [MINOR] Add ropc command and ropc flow to BaseController (#1539)
+- [PATCH] Move to commitNow() instead of commit() when removing authorization fragment from provided fragment manager.  Add exception handling/logging.  (#1695851)
 
 Version 4.0.1
 ----------
