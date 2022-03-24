@@ -82,13 +82,11 @@ public class BrowserSelector {
 
     private static boolean matches(@NonNull final BrowserDescriptor browserDescriptor,
                                    @NonNull Browser browser) {
-        final String methodTag = TAG + ":matches";
-
         final BrowserDescriptor descriptor;
         try {
             descriptor = (BrowserDescriptor) browserDescriptor;
         } catch (final ClassCastException e) {
-            Logger.error(methodTag, "Cannot cast IBrowserDescriptor to BrowserDescriptor", e);
+            Logger.error(TAG + ":matches", "Cannot cast IBrowserDescriptor to BrowserDescriptor", e);
             return false;
         }
 
