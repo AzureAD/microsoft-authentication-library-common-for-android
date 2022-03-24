@@ -112,6 +112,10 @@ public interface IPlatformUtil {
      * Long term, we're going to move away from platform's default implementation
      * and use external libraries that are FIPS compliant.
      *
-     * @return*/
+     * We use KeyManagerFactory to construct an {@link javax.net.ssl.SSLContext} object
+     * with a WPJ certificate - to authenticate into DRS (via TLS challenge).
+     *
+     * @link https://developer.android.com/reference/javax/net/ssl/KeyManagerFactory
+     **/
     KeyManagerFactory getSslContextKeyManagerFactory() throws NoSuchAlgorithmException;
 }
