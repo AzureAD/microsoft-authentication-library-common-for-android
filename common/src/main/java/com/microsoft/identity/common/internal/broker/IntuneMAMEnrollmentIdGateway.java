@@ -132,7 +132,7 @@ public class IntuneMAMEnrollmentIdGateway {
     }
 
     private String callContentProvider(final Context context, final String userId, final String packageName) {
-        final String methodName = ":callContentProvider";
+        final String methodTag = TAG + ":callContentProvider";
 
         final String[] selectionArgs = {packageName, userId};
         final Uri contentURI = Uri.parse(CONTENT_URI);
@@ -149,13 +149,13 @@ public class IntuneMAMEnrollmentIdGateway {
 
                 found.close();
             } else{
-                Logger.verbose(TAG + methodName, "Cursor was null.  The content provider may not be available. ");
+                Logger.verbose(methodTag, "Cursor was null.  The content provider may not be available. ");
             }
         } catch (final Exception e) {
             // We don't expect this to fail, since the implementation in the Company Portal
             // returns nulls instead of throwing exceptions.  This is a safety measure in
             // case the implementation changes or if there is a bug on the Company Portal side.
-            Logger.warn(TAG + methodName, "Unable to query enrollment id: " + e.getMessage());
+            Logger.warn(methodTag, "Unable to query enrollment id: " + e.getMessage());
         }
         return result;
     }

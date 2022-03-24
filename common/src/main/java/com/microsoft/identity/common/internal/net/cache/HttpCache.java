@@ -63,11 +63,11 @@ public class HttpCache {
     public static synchronized boolean initialize(@NonNull final File cacheDirectory,
                                                   @NonNull final String cacheFileName,
                                                   final long maxSizeBytes) {
-        final String methodName = ":initialize(File, Filename, Capacity)";
+        final String methodTag = TAG + ":initialize";
         boolean success = false;
 
         if (HttpResponseCache.getInstalled() != null){
-            Logger.verbose(TAG + methodName, "Cache is already initialized");
+            Logger.verbose(methodTag, "Cache is already initialized");
             return true;
         }
 
@@ -77,7 +77,7 @@ public class HttpCache {
             success = true;
         } catch (final IOException e) {
             Logger.error(
-                    TAG + methodName,
+                    methodTag,
                     "HTTP Response cache installation failed.",
                     e
             );
@@ -123,7 +123,7 @@ public class HttpCache {
      * Convenience function for {@link HttpResponseCache#flush()}.
      */
     public static void flush() {
-        final String methodName = ":flush";
+        final String methodTag = TAG + ":flush";
 
         final HttpResponseCache responseCache = getInstalled();
 
@@ -131,7 +131,7 @@ public class HttpCache {
             responseCache.flush();
         } else {
             Logger.warn(
-                    TAG + methodName,
+                    methodTag,
                     "Unable to flush cache because none is installed."
             );
         }

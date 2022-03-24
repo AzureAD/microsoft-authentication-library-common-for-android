@@ -122,7 +122,7 @@ public final class StringUtil {
      * Return value cannot be null, but its values (pair.first, pair.second) may be.
      */
     public static Map.Entry<String, String> getTenantInfo(@NonNull final String homeAccountId) {
-        final String methodName = ":getTenantInfo";
+        final String methodTag = TAG + ":getTenantInfo";
         // Split this value by its parts... <uid>.<utid>
         final int EXPECTED_LENGTH = 2;
         final int INDEX_UID = 0;
@@ -139,11 +139,11 @@ public final class StringUtil {
             uid = uidUtidArray[INDEX_UID];
             utid = uidUtidArray[INDEX_UTID];
         } else {
-            Logger.warn(TAG + methodName, "We had a home account id that could not be split correctly, " +
+            Logger.warn(methodTag, "We had a home account id that could not be split correctly, " +
                     "We expected it to split into " +
                     EXPECTED_LENGTH + " parts but instead we had " + uidUtidArray.length + " when " +
                     "splitting the string on dot ('.')");
-            Logger.warnPII(TAG + methodName, "We had a home account id that could not be split correctly, " +
+            Logger.warnPII(methodTag, "We had a home account id that could not be split correctly, " +
                     "Its value was: '" + homeAccountId + "', and we expected it to split into " +
                     EXPECTED_LENGTH + " parts but instead we had " + uidUtidArray.length + " when " +
                     "splitting the string on dot ('.')");

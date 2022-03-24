@@ -75,7 +75,7 @@ public class AndroidAuthSdkStorageEncryptionManager extends StorageEncryptionMan
 
     @Override
     public @NonNull List<AbstractSecretKeyLoader> getKeyLoaderForDecryption(@NonNull byte[] cipherText) {
-        final String methodName = ":getKeyLoaderForDecryption";
+        final String methodTag = TAG + ":getKeyLoaderForDecryption";
         if (mPredefinedKeyLoader != null &&
                 isEncryptedByThisKeyIdentifier(cipherText, PredefinedKeyLoader.USER_PROVIDED_KEY_IDENTIFIER)) {
             return Collections.<AbstractSecretKeyLoader>singletonList(mPredefinedKeyLoader);
@@ -85,7 +85,7 @@ public class AndroidAuthSdkStorageEncryptionManager extends StorageEncryptionMan
             return Collections.<AbstractSecretKeyLoader>singletonList(mKeyStoreKeyLoader);
         }
 
-        Logger.warn(TAG + methodName, "Cannot find a matching key to decrypt the given blob");
+        Logger.warn(methodTag, "Cannot find a matching key to decrypt the given blob");
         return Collections.emptyList();
     }
 }

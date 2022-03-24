@@ -137,7 +137,7 @@ public class ADALOAuth2TokenCache
             final AzureActiveDirectoryOAuth2Strategy strategy,
             final AzureActiveDirectoryAuthorizationRequest request,
             final AzureActiveDirectoryTokenResponse response) throws ClientException {
-        final String methodName = "save";
+        final String methodTag = TAG + "save";
         Logger.info(TAG + ":" + methodName, "Saving Tokens...");
 
         final String issuerCacheIdentifier = strategy.getIssuerCacheIdentifier(request);
@@ -356,7 +356,7 @@ public class ADALOAuth2TokenCache
                                        final String clientId,
                                        final ADALTokenCacheItem cacheItem,
                                        final String userId) {
-        final String methodName = "setItemToCacheForUser";
+        final String methodTag = TAG + "setItemToCacheForUser";
 
         Logger.info(TAG + ":" + methodName, "Setting cacheitem for RT entry.");
         setItem(CacheKey.createCacheKeyForRTEntry(issuer, resource, clientId, userId), cacheItem);

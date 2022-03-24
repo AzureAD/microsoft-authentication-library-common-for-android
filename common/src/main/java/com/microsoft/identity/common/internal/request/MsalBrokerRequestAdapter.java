@@ -79,8 +79,8 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
     @Override
     public BrokerRequest brokerRequestFromAcquireTokenParameters(@NonNull final InteractiveTokenCommandParameters parameters) {
-        final String methodName = ":brokerRequestFromAcquireTokenParameters";
-        Logger.info(TAG + methodName, "Constructing result bundle from AcquireTokenOperationParameters.");
+        final String methodTag = TAG + ":brokerRequestFromAcquireTokenParameters";
+        Logger.info(methodTag, "Constructing result bundle from AcquireTokenOperationParameters.");
 
         final String extraQueryStringParameter = parameters.getExtraQueryStringParameters() != null ?
                 QueryParamsAdapter._toJson(parameters.getExtraQueryStringParameters())
@@ -118,9 +118,9 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
     @Override
     public BrokerRequest brokerRequestFromSilentOperationParameters(@NonNull final SilentTokenCommandParameters parameters) {
-        final String methodName = ":brokerRequestFromSilentOperationParameters";
+        final String methodTag = TAG + ":brokerRequestFromSilentOperationParameters";
 
-        Logger.info(TAG + methodName, "Constructing result bundle from AcquireTokenSilentOperationParameters.");
+        Logger.info(methodTag, "Constructing result bundle from AcquireTokenSilentOperationParameters.");
         final String extraOptions = parameters.getExtraOptions() != null ?
                 QueryParamsAdapter._toJson(parameters.getExtraOptions()) : null;
 
@@ -236,26 +236,26 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
     private Bundle getRequestBundleFromBrokerRequest(@NonNull BrokerRequest brokerRequest,
                                                      @Nullable String negotiatedBrokerProtocolVersion) {
-        final String methodName = ":getRequestBundleFromBrokerRequest";
+        final String methodTag = TAG + ":getRequestBundleFromBrokerRequest";
         final Bundle requestBundle = new Bundle();
 
         if (BrokerProtocolVersionUtil.canCompressBrokerPayloads(negotiatedBrokerProtocolVersion)) {
             try {
                 final String jsonString = AuthenticationSchemeTypeAdapter.getGsonInstance().toJson(brokerRequest, BrokerRequest.class);
                 byte[] compressedBytes = compressString(jsonString);
-                Logger.info(TAG + methodName, "Broker Result, raw payload size:"
+                Logger.info(methodTag, "Broker Result, raw payload size:"
                         + jsonString.getBytes(AuthenticationConstants.CHARSET_UTF8).length + " ,compressed bytes size: " + compressedBytes.length
                 );
                 requestBundle.putByteArray(BROKER_REQUEST_V2_COMPRESSED, compressedBytes);
             } catch (IOException e) {
-                Logger.error(TAG + methodName, "Compression to bytes failed, sending broker request as json String", e);
+                Logger.error(methodTag, "Compression to bytes failed, sending broker request as json String", e);
                 requestBundle.putString(
                         BROKER_REQUEST_V2,
                         AuthenticationSchemeTypeAdapter.getGsonInstance().toJson(brokerRequest, BrokerRequest.class)
                 );
             }
         } else {
-            Logger.info(TAG + methodName, "Broker protocol version: " + negotiatedBrokerProtocolVersion +
+            Logger.info(methodTag, "Broker protocol version: " + negotiatedBrokerProtocolVersion +
                     " lower than compression changes, sending as string"
             );
             requestBundle.putString(

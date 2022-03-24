@@ -65,9 +65,9 @@ public class AccountManagerAddAccountStrategy implements IIpcStrategy {
     @Nullable
     public Bundle communicateToBroker(final @NonNull BrokerOperationBundle brokerOperationBundle)
             throws BrokerCommunicationException {
-        final String methodName = ":communicateToBroker";
+        final String methodTag = TAG + ":communicateToBroker";
         final String operationName = brokerOperationBundle.getOperation().name();
-        Logger.info(TAG + methodName, "Broker operation: " + operationName);
+        Logger.info(methodTag, "Broker operation: " + operationName+" brokerPackage: "+brokerOperationBundle.getTargetBrokerAppPackageName());
         try {
             final AccountManagerFuture<Bundle> resultBundle =
                     AccountManager.get(mContext)
@@ -80,10 +80,10 @@ public class AccountManagerAddAccountStrategy implements IIpcStrategy {
                                     null,
                                     ProcessUtil.getPreferredHandler());
 
-            Logger.verbose(TAG + methodName, "Received result from broker");
+            Logger.verbose(methodTag, "Received result from broker");
             return resultBundle.getResult();
         } catch (final AuthenticatorException | IOException | OperationCanceledException e) {
-            Logger.error(TAG + methodName, e.getMessage(), e);
+            Logger.error(methodTag, e.getMessage(), e);
             throw new BrokerCommunicationException(CONNECTION_ERROR, getType(), "Failed to connect to AccountManager", e);
         }
     }

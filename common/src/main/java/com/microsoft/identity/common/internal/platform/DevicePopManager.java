@@ -366,7 +366,7 @@ public class DevicePopManager implements IDevicePopManager {
 
     @Override
     public String generateAsymmetricKey() throws ClientException {
-        final String methodName = ":generateAsymmetricKey";
+        final String methodTag = TAG + ":generateAsymmetricKey";
         final Exception exception;
         final String errCode;
 
@@ -401,7 +401,7 @@ public class DevicePopManager implements IDevicePopManager {
         );
 
         Logger.error(
-                TAG + methodName,
+                methodTag,
                 clientException.getMessage(),
                 clientException
         );
@@ -422,7 +422,7 @@ public class DevicePopManager implements IDevicePopManager {
 
     @Override
     public String getRequestConfirmation() throws ClientException {
-        final String methodName = ":getRequestConfirmation";
+        final String methodTag = TAG + ":getRequestConfirmation";
         // The sync API is a wrapper around the async API
         // This likely shouldn't be called on the UI thread to avoid ANR
         // Device perf may vary, however -- some devices this may be OK.
@@ -456,7 +456,7 @@ public class DevicePopManager implements IDevicePopManager {
             }
         } catch (final InterruptedException e) {
             Logger.error(
-                    TAG + methodName,
+                    methodTag,
                     "Interrupted while waiting on callback.",
                     e
             );
@@ -471,7 +471,7 @@ public class DevicePopManager implements IDevicePopManager {
 
     @Override
     public void getRequestConfirmation(@NonNull final TaskCompletedCallbackWithError<String, ClientException> callback) {
-        final String methodName = ":getRequestConfirmation";
+        final String methodTag = TAG + ":getRequestConfirmation";
         sThreadExecutor.submit(new Runnable() {
             @Override
             public void run() {
@@ -513,7 +513,7 @@ public class DevicePopManager implements IDevicePopManager {
                 );
 
                 Logger.error(
-                        TAG + methodName,
+                        methodTag,
                         clientException.getMessage(),
                         clientException
                 );
@@ -535,13 +535,13 @@ public class DevicePopManager implements IDevicePopManager {
                        @NonNull final byte[] inputBytesToSign) throws ClientException {
         Exception exception;
         String errCode;
-        final String methodName = ":sign";
+        final String methodTag = TAG + ":sign";
         try {
             final KeyStore.Entry keyEntry = mKeyManager.getEntry();
 
             if (!(keyEntry instanceof KeyStore.PrivateKeyEntry)) {
                 Logger.warn(
-                        TAG + methodName,
+                        methodTag,
                         PRIVATE_KEY_NOT_FOUND
                 );
                 throw new ClientException(INVALID_KEY_MISSING);
@@ -575,7 +575,7 @@ public class DevicePopManager implements IDevicePopManager {
         );
 
         Logger.error(
-                TAG + methodName,
+                methodTag,
                 clientException.getMessage(),
                 clientException
         );
@@ -595,7 +595,7 @@ public class DevicePopManager implements IDevicePopManager {
     public boolean verify(@NonNull final SigningAlgorithm alg,
                           @NonNull final byte[] inputBytesToVerify,
                           @NonNull final byte[] signatureBytes) {
-        String methodName = ":verify";
+        String methodTag = TAG + ":verify";
         String errCode;
         Exception exception;
         try {
@@ -603,7 +603,7 @@ public class DevicePopManager implements IDevicePopManager {
 
             if (keyEntry == null) {
                 Logger.warn(
-                        TAG + methodName,
+                        methodTag,
                         PRIVATE_KEY_NOT_FOUND
                 );
                 return false;
@@ -631,7 +631,7 @@ public class DevicePopManager implements IDevicePopManager {
         }
 
         Logger.error(
-                TAG + methodName,
+                methodTag,
                 errCode,
                 exception
         );
@@ -649,7 +649,7 @@ public class DevicePopManager implements IDevicePopManager {
     public byte[] encrypt(@NonNull final Cipher cipher, @NonNull final byte[] plaintext) throws ClientException {
         String errCode;
         Exception exception;
-        final String methodName = ":encrypt";
+        final String methodTag = TAG + ":encrypt";
         try {
             // Load our key material
             final KeyStore.PrivateKeyEntry privateKeyEntry = mKeyManager.getEntry();
@@ -699,7 +699,7 @@ public class DevicePopManager implements IDevicePopManager {
         );
 
         Logger.error(
-                TAG + methodName,
+                methodTag,
                 errCode,
                 exception
         );
@@ -717,7 +717,7 @@ public class DevicePopManager implements IDevicePopManager {
     public byte[] decrypt(@NonNull Cipher cipher, byte[] ciphertext) throws ClientException {
         String errCode;
         Exception exception;
-        final String methodName = ":decrypt";
+        final String methodTag = TAG + ":decrypt";
         try {
             // Load our key material
             final KeyStore.PrivateKeyEntry privateKeyEntry = mKeyManager.getEntry();
@@ -768,7 +768,7 @@ public class DevicePopManager implements IDevicePopManager {
         );
 
         Logger.error(
-                TAG + methodName,
+                methodTag,
                 errCode,
                 exception
         );
@@ -778,7 +778,7 @@ public class DevicePopManager implements IDevicePopManager {
 
     @Override
     public SecureHardwareState getSecureHardwareState() throws ClientException {
-        final String methodName = ":getSecureHardwareState";
+        final String methodTag = TAG + ":getSecureHardwareState";
         final String errCode;
         final Exception exception;
 
@@ -803,7 +803,7 @@ public class DevicePopManager implements IDevicePopManager {
         );
 
         Logger.error(
-                TAG + methodName,
+                methodTag,
                 errCode,
                 exception
         );
@@ -814,7 +814,7 @@ public class DevicePopManager implements IDevicePopManager {
     @Override
     public @NonNull
     String getPublicKey(@NonNull final PublicKeyFormat format) throws ClientException {
-        final String methodName = ":getPublicKey";
+        final String methodTag = TAG + ":getPublicKey";
 
         switch (format) {
             case X_509_SubjectPublicKeyInfo_ASN_1:
@@ -829,7 +829,7 @@ public class DevicePopManager implements IDevicePopManager {
                 );
 
                 Logger.error(
-                        TAG + methodName,
+                        methodTag,
                         errMsg,
                         clientException
                 );
@@ -845,7 +845,7 @@ public class DevicePopManager implements IDevicePopManager {
 
     private @NonNull
     String getJwkPublicKey() throws ClientException {
-        final String methodName = ":getJwkPublicKey";
+        final String methodTag = TAG + ":getJwkPublicKey";
         final Exception exception;
         final String errCode;
 
@@ -870,7 +870,7 @@ public class DevicePopManager implements IDevicePopManager {
         );
 
         Logger.error(
-                TAG + methodName,
+                methodTag,
                 clientException.getMessage(),
                 clientException
         );
@@ -879,7 +879,7 @@ public class DevicePopManager implements IDevicePopManager {
     }
 
     private String getX509SubjectPublicKeyInfo() throws ClientException {
-        final String methodName = ":getX509SubjectPublicKeyInfo";
+        final String methodTag = TAG + ":getX509SubjectPublicKeyInfo";
         final Exception exception;
         final String errCode;
 
@@ -908,7 +908,7 @@ public class DevicePopManager implements IDevicePopManager {
         );
 
         Logger.error(
-                TAG + methodName,
+                methodTag,
                 clientException.getMessage(),
                 clientException
         );
@@ -971,7 +971,7 @@ public class DevicePopManager implements IDevicePopManager {
                                                  @Nullable final String accessToken,
                                                  @Nullable final String nonce,
                                                  @Nullable final String clientClaims) throws ClientException {
-        final String methodName = ":mintSignedHttpRequestInternal";
+        final String methodTag = TAG + ":mintSignedHttpRequestInternal";
         final Exception exception;
         final String errCode;
 
@@ -1061,7 +1061,7 @@ public class DevicePopManager implements IDevicePopManager {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
                 && exception.getCause() instanceof KeyPermanentlyInvalidatedException) {
-            Logger.warn(TAG + methodName, "Unable to access asymmetric key - clearing.");
+            Logger.warn(methodTag, "Unable to access asymmetric key - clearing.");
             clearAsymmetricKey();
         }
 
@@ -1072,7 +1072,7 @@ public class DevicePopManager implements IDevicePopManager {
         );
 
         Logger.error(
-                TAG + methodName,
+                methodTag,
                 clientException.getMessage(),
                 clientException
         );
@@ -1095,7 +1095,7 @@ public class DevicePopManager implements IDevicePopManager {
                                           final int minKeySize)
             throws UnsupportedOperationException, InvalidAlgorithmParameterException,
             NoSuchAlgorithmException, NoSuchProviderException {
-        final String methodName = ":generateNewRsakeyPair";
+        final String methodTag = TAG + ":generateNewRsakeyPair";
         final int MAX_RETRIES = 4;
 
         for (int ii = 0; ii < MAX_RETRIES; ii++) {
@@ -1118,7 +1118,7 @@ public class DevicePopManager implements IDevicePopManager {
                         tryStrongBox = false;
                         continue;
                     } else if (tryImport && e.getClass().getSimpleName().equals("SecureKeyImportUnavailableException")) {
-                        Logger.error(TAG + methodName, "Import unsupported - skipping import flags.", e);
+                        Logger.error(methodTag, "Import unsupported - skipping import flags.", e);
                         tryImport = false;
 
                         if (tryStrongBox && null != e.getCause() && isStrongBoxUnavailableException(e.getCause())) {
@@ -1129,7 +1129,7 @@ public class DevicePopManager implements IDevicePopManager {
 
                         continue;
                     } else if (trySetAttestationChallenge && FAILED_TO_GENERATE_ATTESTATION_CERTIFICATE_CHAIN.equalsIgnoreCase(e.getMessage())) {
-                        Logger.error(TAG + methodName, "Failed to generate attestation cert - skipping flag.", e);
+                        Logger.error(methodTag, "Failed to generate attestation cert - skipping flag.", e);
                         trySetAttestationChallenge = false;
 
                         continue;
@@ -1167,18 +1167,18 @@ public class DevicePopManager implements IDevicePopManager {
     }
 
     private static boolean isStrongBoxUnavailableException(@NonNull final Throwable t) {
-        final String methodName = ":isStrongBoxUnavailableException";
+        final String methodTag = TAG + ":isStrongBoxUnavailableException";
         final boolean isStrongBoxException = t.getClass().getSimpleName().equals(STRONG_BOX_UNAVAILABLE_EXCEPTION);
 
         if (isStrongBoxException) {
-            Logger.error(TAG + methodName, "StrongBox not supported.", t);
+            Logger.error(methodTag, "StrongBox not supported.", t);
         }
 
         return isStrongBoxException;
     }
 
     private SecureHardwareState getSecureHardwareState(@NonNull final KeyPair kp) {
-        final String methodName = ":getSecureHardwareState";
+        final String methodTag = TAG + ":getSecureHardwareState";
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             try {
                 final PrivateKey privateKey = kp.getPrivate();
@@ -1187,16 +1187,16 @@ public class DevicePopManager implements IDevicePopManager {
                 );
                 final KeyInfo info = factory.getKeySpec(privateKey, KeyInfo.class);
                 final boolean isInsideSecureHardware = info.isInsideSecureHardware();
-                Logger.info(TAG + methodName, "SecretKey is secure hardware backed? " + isInsideSecureHardware);
+                Logger.info(methodTag, "SecretKey is secure hardware backed? " + isInsideSecureHardware);
                 return isInsideSecureHardware
                         ? SecureHardwareState.TRUE_UNATTESTED
                         : SecureHardwareState.FALSE;
             } catch (final NoSuchAlgorithmException | NoSuchProviderException | InvalidKeySpecException e) {
-                Logger.error(TAG + methodName, "Failed to query secure hardware state.", e);
+                Logger.error(methodTag, "Failed to query secure hardware state.", e);
                 return SecureHardwareState.UNKNOWN_QUERY_ERROR;
             }
         } else {
-            Logger.info(TAG + methodName, "Cannot query secure hardware state (API unavailable <23)");
+            Logger.info(methodTag, "Cannot query secure hardware state (API unavailable <23)");
         }
 
         return SecureHardwareState.UNKNOWN_DOWNLEVEL;
@@ -1296,7 +1296,7 @@ public class DevicePopManager implements IDevicePopManager {
                               final int keySize,
                               final boolean useStrongbox,
                               final boolean trySetAttestationChallenge) throws InvalidAlgorithmParameterException {
-        final String methodName = ":initialize23";
+        final String methodTag = TAG + ":initialize23";
 
         KeyGenParameterSpec.Builder builder;
         builder = new KeyGenParameterSpec.Builder(
@@ -1325,7 +1325,7 @@ public class DevicePopManager implements IDevicePopManager {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && useStrongbox) {
             Logger.verbose(
-                    TAG + methodName,
+                    methodTag,
                     "Attempting to apply StrongBox isolation."
             );
             builder = applyHardwareIsolation(builder);
@@ -1364,7 +1364,7 @@ public class DevicePopManager implements IDevicePopManager {
                               final boolean useStrongbox,
                               final boolean enableImport,
                               final boolean trySetAttestationChallenge) throws InvalidAlgorithmParameterException {
-        final String methodName = ":initialize28";
+        final String methodTag = TAG + ":initialize28";
 
         int purposes = KeyProperties.PURPOSE_SIGN
                 | KeyProperties.PURPOSE_VERIFY
@@ -1394,7 +1394,7 @@ public class DevicePopManager implements IDevicePopManager {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && useStrongbox) {
             Logger.verbose(
-                    TAG + methodName,
+                    methodTag,
                     "Attempting to apply StrongBox isolation."
             );
             builder = applyHardwareIsolation(builder);

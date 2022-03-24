@@ -176,7 +176,7 @@ public class BrokerMsalController extends BaseController {
     protected @NonNull
     List<IIpcStrategy> getIpcStrategies(final Context applicationContext,
                                         final String activeBrokerPackageName) {
-        final String methodName = ":getIpcStrategies";
+        final String methodTag = TAG + ":getIpcStrategies";
         final List<IIpcStrategy> strategies = new ArrayList<>();
         final StringBuilder sb = new StringBuilder(100);
         sb.append("Broker Strategies added : ");
@@ -198,7 +198,7 @@ public class BrokerMsalController extends BaseController {
             strategies.add(new AccountManagerAddAccountStrategy(applicationContext));
         }
 
-        Logger.info(TAG + methodName, sb.toString());
+        Logger.info(methodTag, sb.toString());
 
         return strategies;
     }
@@ -261,7 +261,7 @@ public class BrokerMsalController extends BaseController {
     @Override
     public AcquireTokenResult acquireToken(final @NonNull InteractiveTokenCommandParameters parameters)
             throws BaseException, InterruptedException, ExecutionException {
-        final String methodName = ":acquireToken";
+        final String methodTag = TAG + ":acquireToken";
 
         Telemetry.emit(
                 new ApiStartEvent()
@@ -298,7 +298,7 @@ public class BrokerMsalController extends BaseController {
                          */
 
                         Logger.verbose(
-                                TAG + methodName,
+                                methodTag,
                                 "Received result from Broker..."
                         );
 
@@ -662,10 +662,10 @@ public class BrokerMsalController extends BaseController {
     @Override
     public @NonNull
     List<ICacheRecord> getCurrentAccount(final @NonNull CommandParameters parameters) throws BaseException {
-        final String methodName = ":getCurrentAccount";
+        final String methodTag = TAG + ":getCurrentAccount";
 
         if (!parameters.isSharedDevice()) {
-            Logger.verbose(TAG + methodName, "Not a shared device, invoke getAccounts() instead of getCurrentAccount()");
+            Logger.verbose(methodTag, "Not a shared device, invoke getAccounts() instead of getCurrentAccount()");
             return getAccounts(parameters);
         }
 
@@ -727,10 +727,10 @@ public class BrokerMsalController extends BaseController {
      */
     @Override
     public boolean removeCurrentAccount(final @NonNull RemoveAccountCommandParameters parameters) throws BaseException {
-        final String methodName = ":removeCurrentAccount";
+        final String methodTag = TAG + ":removeCurrentAccount";
 
         if (!parameters.isSharedDevice()) {
-            Logger.verbose(TAG + methodName, "Not a shared device, invoke removeAccount() instead of removeCurrentAccount()");
+            Logger.verbose(methodTag, "Not a shared device, invoke removeAccount() instead of removeCurrentAccount()");
             return removeAccount(parameters);
         }
 
@@ -801,7 +801,7 @@ public class BrokerMsalController extends BaseController {
      */
     private void logOutFromBrowser(final @NonNull Context context,
                                    final @NonNull RemoveAccountCommandParameters parameters) {
-        final String methodName = ":logOutFromBrowser";
+        final String methodTag = TAG + ":logOutFromBrowser";
 
         String browserPackageName = null;
         try {
@@ -809,7 +809,7 @@ public class BrokerMsalController extends BaseController {
             browserPackageName = browser.getPackageName();
         } catch (final ClientException e) {
             // Best effort. If none is passed to broker, then it will let the OS decide.
-            Logger.error(TAG + methodName, e.getErrorCode(), e);
+            Logger.error(methodTag, e.getErrorCode(), e);
         }
 
         try {
@@ -822,7 +822,7 @@ public class BrokerMsalController extends BaseController {
             context.startActivity(intent);
 
         } catch (final ActivityNotFoundException e) {
-            Logger.error(TAG + methodName,
+            Logger.error(methodTag,
                     "Failed to launch browser sign out with browser=[" + browserPackageName + "]. Skipping.", e);
         }
     }
@@ -959,16 +959,16 @@ public class BrokerMsalController extends BaseController {
      */
     private void saveMsaAccountToCache(final @NonNull Bundle resultBundle,
                                        @SuppressWarnings(WarningType.rawtype_warning) final @NonNull MsalOAuth2TokenCache msalOAuth2TokenCache) throws BaseException {
-        final String methodName = ":saveMsaAccountToCache";
+        final String methodTag = TAG + ":saveMsaAccountToCache";
 
         final BrokerResult brokerResult = new MsalBrokerResultAdapter().brokerResultFromBundle(resultBundle);
 
         if (resultBundle.getBoolean(AuthenticationConstants.Broker.BROKER_REQUEST_V2_SUCCESS) &&
                 AzureActiveDirectoryAudience.MSA_MEGA_TENANT_ID.equalsIgnoreCase(brokerResult.getTenantId())) {
-            Logger.info(TAG + methodName, "Result returned for MSA Account, saving to cache");
+            Logger.info(methodTag, "Result returned for MSA Account, saving to cache");
 
             if (StringUtil.isEmpty(brokerResult.getClientInfo())) {
-                Logger.error(TAG + methodName, "ClientInfo is empty.", null);
+                Logger.error(methodTag, "ClientInfo is empty.", null);
                 throw new ClientException(ErrorStrings.UNKNOWN_ERROR, "ClientInfo is empty.");
             }
 
@@ -991,7 +991,7 @@ public class BrokerMsalController extends BaseController {
 
                 msalOAuth2TokenCacheSetSingleSignOnState(msalOAuth2TokenCache, microsoftStsAccount, microsoftRefreshToken);
             } catch (ServiceException e) {
-                Logger.errorPII(TAG + methodName, "Exception while creating Idtoken or ClientInfo," +
+                Logger.errorPII(methodTag, "Exception while creating Idtoken or ClientInfo," +
                         " cannot save MSA account tokens", e
                 );
                 throw new ClientException(ErrorStrings.INVALID_JWT, e.getMessage(), e);

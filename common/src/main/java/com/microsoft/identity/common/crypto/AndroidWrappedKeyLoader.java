@@ -163,7 +163,7 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
 
     @Override
     protected SecretKey generateRandomKey() throws ClientException {
-        final String methodName = ":generateRandomKey";
+        final String methodTag = TAG + ":generateRandomKey";
 
         final SecretKey key = super.generateRandomKey();
         saveSecretKeyToStorage(key);
@@ -173,7 +173,7 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
                 false,
                 "New key is generated.");
 
-        Logger.info(TAG + methodName, "New key is generated with thumbprint: " +
+        Logger.info(methodTag, "New key is generated with thumbprint: " +
                 KeyUtil.getKeyThumbPrint(key));
 
         return key;
@@ -186,32 +186,32 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
      */
     @Nullable
     /* package */ SecretKey readSecretKeyFromStorage() throws ClientException {
-        final String methodName = ":readSecretKeyFromStorage";
+        final String methodTag = TAG + ":readSecretKeyFromStorage";
         try {
             final KeyPair keyPair = readKeyStoreKeyPair();
             if (keyPair == null) {
-                Logger.info(TAG + methodName, "key does not exist in keystore");
+                Logger.info(methodTag, "key does not exist in keystore");
                 deleteSecretKeyFromStorage();
                 return null;
             }
 
             final byte[] wrappedSecretKey = FileUtil.readFromFile(getKeyFile(), KEY_FILE_SIZE);
             if (wrappedSecretKey == null) {
-                Logger.warn(TAG + methodName, "Key file is empty");
+                Logger.warn(methodTag, "Key file is empty");
                 deleteSecretKeyFromStorage();
                 return null;
             }
 
             final SecretKey key = AndroidKeyStoreUtil.unwrap(wrappedSecretKey, getKeySpecAlgorithm(), keyPair, WRAP_ALGORITHM);
 
-            Logger.info(TAG + methodName, "New key is generated with thumbprint: " +
+            Logger.info(methodTag, "New key is generated with thumbprint: " +
                     KeyUtil.getKeyThumbPrint(key));
 
             return key;
         } catch (final ClientException e) {
             // Reset KeyPair info so that new request will generate correct KeyPairs.
             // All tokens with previous SecretKey are not possible to decrypt.
-            Logger.warn(TAG + methodName, "Error when loading key from Storage, " +
+            Logger.warn(methodTag, "Error when loading key from Storage, " +
                     "wipe all existing key data ");
             deleteSecretKeyFromStorage();
             throw e;
@@ -222,7 +222,7 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
      * Encrypt the given unencrypted symmetric key with Keystore key and save to storage.
      */
     private void saveSecretKeyToStorage(@NonNull final SecretKey unencryptedKey) throws ClientException {
-        final String methodName = ":saveSecretKeyToStorage";
+        final String methodTag = TAG + ":saveSecretKeyToStorage";
         /*
          * !!WARNING!!
          * Multiple apps as of Today (1/4/2022) can still share a linux user id, by configuring
@@ -242,7 +242,7 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
          */
         KeyPair keyPair = readKeyStoreKeyPair();
         if(keyPair == null){
-            Logger.info(TAG + methodName, "No existing keypair. Generating a new one.");
+            Logger.info(methodTag, "No existing keypair. Generating a new one.");
             keyPair = generateKeyStoreKeyPair();
         }
 
@@ -268,7 +268,7 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
     @NonNull
     private synchronized KeyPair generateKeyStoreKeyPair()
             throws ClientException {
-        final String methodName = ":generateKeyStoreKeyPair";
+        final String methodTag = TAG + ":generateKeyStoreKeyPair";
         try {
             logFlowStart(methodName, AuthenticationConstants.TelemetryEvents.KEYSTORE_WRITE_START);
             final KeyPair keyPair = AndroidKeyStoreUtil.generateKeyPair(
@@ -290,7 +290,7 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
     @Nullable
     private synchronized KeyPair readKeyStoreKeyPair()
             throws ClientException {
-        final String methodName = ":readKeyStoreKeyPair";
+        final String methodTag = TAG + ":readKeyStoreKeyPair";
         try {
             logFlowStart(methodName, AuthenticationConstants.TelemetryEvents.KEYSTORE_READ_START);
 
@@ -355,7 +355,7 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
                           @NonNull final String operationName,
                           final boolean isFailed,
                           @NonNull final String reason) {
-        Logger.verbose(TAG + methodName, operationName + ": " + reason);
+        Logger.verbose(methodTag, operationName + ": " + reason);
         if (mTelemetryCallback != null) {
             mTelemetryCallback.logEvent(operationName, isFailed, reason);
         }
@@ -363,7 +363,7 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
 
     private void logFlowStart(@NonNull final String methodName,
                               @NonNull final String operationName) {
-        Logger.verbose(TAG + methodName, operationName + " started.");
+        Logger.verbose(methodTag, operationName + " started.");
         if (mTelemetryCallback != null) {
             mTelemetryCallback.logEvent(operationName, false, "");
         }
@@ -372,7 +372,7 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
     private void logFlowSuccess(@NonNull final String methodName,
                                 @NonNull final String operationName,
                                 @NonNull final String reason) {
-        Logger.verbose(TAG + methodName, operationName + " successfully finished: " + reason);
+        Logger.verbose(methodTag, operationName + " successfully finished: " + reason);
         if (mTelemetryCallback != null) {
             mTelemetryCallback.logEvent(operationName, false, reason);
         }
@@ -382,7 +382,7 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
                               @NonNull final String operationName,
                               @NonNull final String reason,
                               @Nullable Exception e) {
-        Logger.error(TAG + methodName, operationName + " failed: " + reason, e);
+        Logger.error(methodTag, operationName + " failed: " + reason, e);
         if (mTelemetryCallback != null) {
             mTelemetryCallback.logEvent(operationName, true, reason);
         }

@@ -113,9 +113,9 @@ public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage 
             final String name,
             final IKeyAccessor encryptionManager) {
         if (encryptionManager == null) {
-            Logger.verbose(TAG+"::constructor", "Init: ");
+            Logger.verbose(TAG, "Init: ");
         } else {
-            Logger.verbose(TAG+"::constructor", "Init with storage helper:  " + TAG);
+            Logger.verbose(TAG, "Init with storage helper:  " + TAG);
         }
         mSharedPreferences = context.getSharedPreferences(name, Context.MODE_PRIVATE);
         mSharedPreferencesFileName = name;
@@ -193,9 +193,9 @@ public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage 
     }
 
     private void logWarningAndRemoveKey(String key) {
-        final String methodName = ":logWarningAndRemoveKey";
+        final String methodTag = TAG + ":logWarningAndRemoveKey";
         Logger.warn(
-                TAG + methodName,
+                methodTag,
                 "Failed to decrypt value! "
                         + "This usually signals an issue with KeyStore or the provided SecretKeys."
         );
@@ -294,9 +294,9 @@ public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage 
 
     @Override
     public void remove(final String key) {
-        final String methodName = ":remove";
+        final String methodTag = TAG + ":remove";
         Logger.info(
-                TAG + methodName,
+                methodTag,
                 "Removing cache key"
         );
         synchronized (cacheLock) {
@@ -307,7 +307,7 @@ public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage 
         }
 
         Logger.infoPII(
-                TAG + methodName,
+                methodTag,
                 "Removed cache key ["
                         + key
                         + "]"
@@ -328,7 +328,7 @@ public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage 
     private String encryptDecryptInternal(
             @NonNull final String inputText,
             final boolean encrypt) {
-        final String methodName = ":encryptDecryptInternal";
+        final String methodTag = TAG + ":encryptDecryptInternal";
 
         String result;
         try {
@@ -337,7 +337,7 @@ public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage 
                     : mEncryptionManager.decrypt(inputText);
         } catch (ClientException e) {
             Logger.error(
-                    TAG + methodName,
+                    methodTag,
                     "Failed to " + (encrypt ? "encrypt" : "decrypt") + " value",
                     encrypt
                             ? null // If we failed to encrypt, don't log the error as it may contain a token

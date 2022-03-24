@@ -295,7 +295,7 @@ public class KeyStoreAccessor {
      * @return A supplier that can compute the thumbprint for the key on demand.
      */
     public static Supplier<byte[]> symmetricThumbprint(@NonNull final String alias, @NonNull final KeyStore instance) {
-        final String methodName = ":symmetricThumbprint";
+        final String methodTag = TAG + ":symmetricThumbprint";
         return new Supplier<byte[]>() {
             @Nullable
             @Override
@@ -312,7 +312,7 @@ public class KeyStoreAccessor {
                     }
                 } catch (final KeyStoreException | BadPaddingException | NoSuchAlgorithmException
                         | IllegalBlockSizeException | UnrecoverableEntryException | NoSuchPaddingException e) {
-                    Logger.error(TAG + methodName, null, "Exception while getting key entry", e);
+                    Logger.error(methodTag, null, "Exception while getting key entry", e);
                     return null;
                 }
             }

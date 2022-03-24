@@ -78,11 +78,11 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
     @Override
     public Future<AuthorizationResult> requestAuthorization(GenericAuthorizationRequest authorizationRequest,
                                                             GenericOAuth2Strategy oAuth2Strategy) throws ClientException {
-        final String methodName = ":requestAuthorization";
+        final String methodTag = TAG + ":requestAuthorization";
         mAuthorizationResultFuture = new ResultFuture<>();
         mOAuth2Strategy = oAuth2Strategy;
         mAuthorizationRequest = authorizationRequest;
-        Logger.info(TAG + methodName,"Perform the authorization request with embedded webView.");
+        Logger.info(methodTag,"Perform the authorization request with embedded webView.");
         final URI requestUrl = authorizationRequest.getAuthorizationRequestAsHttpRequest();
         final Intent authIntent = buildAuthorizationActivityStartIntent(requestUrl);
 
@@ -106,7 +106,7 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
 
     @Override
     public void completeAuthorization(int requestCode, @NonNull final RawAuthorizationResult data) {
-        final String methodName = ":completeAuthorization";
+        final String methodTag = TAG + ":completeAuthorization";
         if (requestCode == BROWSER_FLOW) {
             if (mOAuth2Strategy != null && mAuthorizationResultFuture != null) {
 
@@ -119,14 +119,14 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
                         );
                 mAuthorizationResultFuture.setResult(result);
             } else {
-                Logger.warn(TAG + methodName,"SDK Cancel triggering before request is sent out. " +
+                Logger.warn(methodTag,"SDK Cancel triggering before request is sent out. " +
                         "Potentially due to an stale activity state, " +
                         "oAuth2Strategy null ? [" + (mOAuth2Strategy == null) + "]" +
                         "mAuthorizationResultFuture ? [" + (mAuthorizationResultFuture == null) + "]"
                 );
             }
         } else {
-            Logger.warnPII(TAG + methodName,"Unknown request code " + requestCode);
+            Logger.warnPII(methodTag,"Unknown request code " + requestCode);
         }
     }
 }

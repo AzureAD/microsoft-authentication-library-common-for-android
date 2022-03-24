@@ -146,8 +146,8 @@ public class CurrentTaskBrowserAuthorizationFragment extends CurrentTaskAuthoriz
     }
 
     public void completeAuthorizationInBrowserFlow(@NonNull final String customTabResponseUri) {
-        final String methodName = ":completeAuthorizationInBrowserFlow";
-        Logger.info(TAG + methodName, null, "Received redirect from customTab/browser.");
+        final String methodTag = TAG + ":completeAuthorizationInBrowserFlow";
+        Logger.info(methodTag, null, "Received redirect from customTab/browser.");
 
         final RawAuthorizationResult data = RawAuthorizationResult.fromRedirectUri(customTabResponseUri);
         switch (data.getResultCode()){

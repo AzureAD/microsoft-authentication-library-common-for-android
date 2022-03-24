@@ -48,10 +48,10 @@ public class BrowserBlocklist {
      * @return true if the browser is in the block list.
      */
     public boolean matches(@NonNull Browser targetBrowser) {
-        final String methodName = ":matches";
+        final String methodTag = TAG + ":matches";
         for (Browser browser : mBrowsers) {
             if (browser.equals(targetBrowser)) {
-                Logger.verbose(TAG + methodName, "The target browser is in the block list.");
+                Logger.verbose(methodTag, "The target browser is in the block list.");
                 return true;
             }
         }

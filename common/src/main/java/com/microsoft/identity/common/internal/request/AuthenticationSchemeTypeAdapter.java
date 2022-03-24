@@ -68,7 +68,7 @@ public class AuthenticationSchemeTypeAdapter implements
                                                     @NonNull final Type typeOfT,
                                                     @NonNull final JsonDeserializationContext context)
             throws JsonParseException {
-        final String methodName = ":deserialize";
+        final String methodTag = TAG + ":deserialize";
         final JsonObject authScheme = json.getAsJsonObject();
         final JsonElement schemeName = authScheme.get(NAME);
         final String schemeNameStr = schemeName.getAsString();
@@ -82,7 +82,7 @@ public class AuthenticationSchemeTypeAdapter implements
 
             default:
                 Logger.warn(
-                        TAG + methodName,
+                        methodTag,
                         "Unrecognized auth scheme. Deserializing as null."
                 );
 
@@ -94,7 +94,7 @@ public class AuthenticationSchemeTypeAdapter implements
     public JsonElement serialize(@NonNull final AbstractAuthenticationScheme src,
                                  @NonNull final Type typeOfSrc,
                                  @NonNull final JsonSerializationContext context) {
-        final String methodName = ":serialize";
+        final String methodTag = TAG + ":serialize";
 
         switch (src.getName()) {
             case SCHEME_BEARER:
@@ -105,7 +105,7 @@ public class AuthenticationSchemeTypeAdapter implements
 
             default:
                 Logger.warn(
-                        TAG + methodName,
+                        methodTag,
                         "Unrecognized auth scheme. Serializing as null."
                 );
 

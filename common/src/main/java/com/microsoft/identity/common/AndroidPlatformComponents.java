@@ -109,7 +109,7 @@ public class AndroidPlatformComponents implements IPlatformComponents {
      * It should be init separately, not as part of this class' construction.
      */
     private static synchronized void initializeStaticClasses(@NonNull final Context context) {
-        final String methodName = ":initializeStaticClasses";
+        final String methodTag = TAG + ":initializeStaticClasses";
         if (!sInitialized) {
             Device.setDeviceMetadata(new AndroidDeviceMetadata());
             Logger.setAndroidLogger();
@@ -117,7 +117,7 @@ public class AndroidPlatformComponents implements IPlatformComponents {
             if (cacheDir != null) {
                 HttpCache.initialize(cacheDir);
             } else {
-                Logger.warn(TAG + methodName, "Http caching is not enabled because the cache dir is null");
+                Logger.warn(methodTag, "Http caching is not enabled because the cache dir is null");
             }
             sInitialized = true;
         }
@@ -157,14 +157,14 @@ public class AndroidPlatformComponents implements IPlatformComponents {
     //       and shouldn't need process to decide which one to return.
     @Override
     public @NonNull IKeyAccessor getStorageEncryptionManager() {
-        final String methodName = ":getStorageEncryptionManager";
+        final String methodTag = TAG + ":getStorageEncryptionManager";
 
         if (ProcessUtil.isBrokerProcess(mContext)) {
-            Logger.info(TAG + methodName, "Returning AndroidBrokerStorageEncryptionManager");
+            Logger.info(methodTag, "Returning AndroidBrokerStorageEncryptionManager");
             return new AndroidBrokerStorageEncryptionManager(mContext, null);
         }
 
-        Logger.info(TAG + methodName, "Returning AndroidAuthSdkStorageEncryptionManager");
+        Logger.info(methodTag, "Returning AndroidAuthSdkStorageEncryptionManager");
         return new AndroidAuthSdkStorageEncryptionManager(mContext, null);
     }
 
