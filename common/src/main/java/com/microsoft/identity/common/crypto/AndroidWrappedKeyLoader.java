@@ -168,7 +168,7 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
         final SecretKey key = super.generateRandomKey();
         saveSecretKeyToStorage(key);
 
-        logEvent(methodName,
+        logEvent(methodTag,
                 AuthenticationConstants.TelemetryEvents.KEY_CREATED,
                 false,
                 "New key is generated.");
@@ -270,14 +270,14 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
             throws ClientException {
         final String methodTag = TAG + ":generateKeyStoreKeyPair";
         try {
-            logFlowStart(methodName, AuthenticationConstants.TelemetryEvents.KEYSTORE_WRITE_START);
+            logFlowStart(methodTag, AuthenticationConstants.TelemetryEvents.KEYSTORE_WRITE_START);
             final KeyPair keyPair = AndroidKeyStoreUtil.generateKeyPair(
                     WRAP_KEY_ALGORITHM,
                     getSpecForKeyStoreKey(mContext, mAlias));
-            logFlowSuccess(methodName, AuthenticationConstants.TelemetryEvents.KEYSTORE_WRITE_END, "");
+            logFlowSuccess(methodTag, AuthenticationConstants.TelemetryEvents.KEYSTORE_WRITE_END, "");
             return keyPair;
         } catch (final ClientException e) {
-            logFlowError(methodName, AuthenticationConstants.TelemetryEvents.KEYSTORE_WRITE_END, e.toString(), e);
+            logFlowError(methodTag, AuthenticationConstants.TelemetryEvents.KEYSTORE_WRITE_END, e.toString(), e);
             throw e;
         }
     }
@@ -292,17 +292,17 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
             throws ClientException {
         final String methodTag = TAG + ":readKeyStoreKeyPair";
         try {
-            logFlowStart(methodName, AuthenticationConstants.TelemetryEvents.KEYSTORE_READ_START);
+            logFlowStart(methodTag, AuthenticationConstants.TelemetryEvents.KEYSTORE_READ_START);
 
             final KeyPair keyPair = AndroidKeyStoreUtil.readKey(mAlias);
             if (keyPair == null) {
-                logFlowSuccess(methodName, AuthenticationConstants.TelemetryEvents.KEYSTORE_READ_END, "KeyStore is empty.");
+                logFlowSuccess(methodTag, AuthenticationConstants.TelemetryEvents.KEYSTORE_READ_END, "KeyStore is empty.");
             }
 
-            logFlowSuccess(methodName, AuthenticationConstants.TelemetryEvents.KEYSTORE_READ_END, "KeyStore KeyPair is loaded.");
+            logFlowSuccess(methodTag, AuthenticationConstants.TelemetryEvents.KEYSTORE_READ_END, "KeyStore KeyPair is loaded.");
             return keyPair;
         } catch (final ClientException e) {
-            logFlowError(methodName, AuthenticationConstants.TelemetryEvents.KEYSTORE_READ_END, e.toString(), e);
+            logFlowError(methodTag, AuthenticationConstants.TelemetryEvents.KEYSTORE_READ_END, e.toString(), e);
             throw e;
         }
     }
@@ -351,7 +351,7 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
      * Since Common isn't wired to telemetry yet at the point of implementation (July 18, 2019)
      * We use these functions to pass telemetry events to the calling ad-accounts.
      */
-    private void logEvent(@NonNull final String methodName,
+    private void logEvent(@NonNull final String methodTag,
                           @NonNull final String operationName,
                           final boolean isFailed,
                           @NonNull final String reason) {
@@ -361,7 +361,7 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
         }
     }
 
-    private void logFlowStart(@NonNull final String methodName,
+    private void logFlowStart(@NonNull final String methodTag,
                               @NonNull final String operationName) {
         Logger.verbose(methodTag, operationName + " started.");
         if (mTelemetryCallback != null) {
@@ -369,7 +369,7 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
         }
     }
 
-    private void logFlowSuccess(@NonNull final String methodName,
+    private void logFlowSuccess(@NonNull final String methodTag,
                                 @NonNull final String operationName,
                                 @NonNull final String reason) {
         Logger.verbose(methodTag, operationName + " successfully finished: " + reason);
@@ -378,7 +378,7 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
         }
     }
 
-    private void logFlowError(@NonNull final String methodName,
+    private void logFlowError(@NonNull final String methodTag,
                               @NonNull final String operationName,
                               @NonNull final String reason,
                               @Nullable Exception e) {
