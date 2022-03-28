@@ -72,7 +72,7 @@ public abstract class CurrentTaskAuthorizationFragment extends AuthorizationFrag
     @SuppressFBWarnings(FindBugsConstants.NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE)
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
-        final String methodName = "#onCreate";
+        final String methodTag = TAG + ":onCreate";
         super.onCreate(savedInstanceState);
 
         // Register Broadcast receiver to cancel the auth request
@@ -80,11 +80,11 @@ public abstract class CurrentTaskAuthorizationFragment extends AuthorizationFrag
         LocalBroadcaster.INSTANCE.registerCallback(CANCEL_AUTHORIZATION_REQUEST, mCancelRequestReceiver);
 
         if (savedInstanceState == null) {
-            Logger.verbose(TAG + methodName, "Extract state from the intent bundle.");
+            Logger.verbose(methodTag, "Extract state from the intent bundle.");
             extractState(mInstanceState);
         } else {
             // If activity is killed by the os, savedInstance will be the saved bundle.
-            Logger.verbose(TAG + methodName, "Extract state from the saved bundle.");
+            Logger.verbose(methodTag, "Extract state from the saved bundle.");
             extractState(savedInstanceState);
         }
     }
@@ -121,12 +121,12 @@ public abstract class CurrentTaskAuthorizationFragment extends AuthorizationFrag
      * Initialize based on value provided in intent.
      */
     private static String setDiagnosticContextForNewThread(@NonNull final String correlationId) {
-        final String methodName = ":setDiagnosticContextForAuthorizationActivity";
+        final String methodTag = TAG + ":setDiagnosticContextForAuthorizationActivity";
         final RequestContext rc = new RequestContext();
         rc.put(DiagnosticContext.CORRELATION_ID, correlationId);
         DiagnosticContext.setRequestContext(rc);
         Logger.verbose(
-                TAG + methodName,
+                methodTag,
                 "Initializing diagnostic context for CurrentTaskAuthorizationActivity"
         );
 
@@ -153,7 +153,8 @@ public abstract class CurrentTaskAuthorizationFragment extends AuthorizationFrag
     }
 
     void sendResult(@NonNull final RawAuthorizationResult result) {
-        Logger.info(TAG, "Sending result from Authorization Activity, resultCode: " + result.getResultCode());
+        final String methodTag = TAG + ":sendResult";
+        Logger.info(methodTag, "Sending result from Authorization Activity, resultCode: " + result.getResultCode());
 
         final PropertyBag propertyBag = RawAuthorizationResult.toPropertyBag(result);
         propertyBag.put(REQUEST_CODE, BROWSER_FLOW);
@@ -162,11 +163,12 @@ public abstract class CurrentTaskAuthorizationFragment extends AuthorizationFrag
     }
 
     void cancelAuthorization(final boolean isCancelledByUser) {
+        final String methodTag = TAG + ":cancelAuthorization";
         if (isCancelledByUser) {
-            Logger.info(TAG, "Received Authorization flow cancelled by the user");
+            Logger.info(methodTag, "Received Authorization flow cancelled by the user");
             sendResult(RawAuthorizationResult.ResultCode.CANCELLED);
         } else {
-            Logger.info(TAG, "Received Authorization flow cancel request from SDK");
+            Logger.info(methodTag, "Received Authorization flow cancel request from SDK");
             sendResult(RawAuthorizationResult.ResultCode.SDK_CANCELLED);
         }
 

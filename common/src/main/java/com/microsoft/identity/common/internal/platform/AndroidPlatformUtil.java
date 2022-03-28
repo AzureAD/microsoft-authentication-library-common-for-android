@@ -48,9 +48,12 @@ import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.ui.BrowserDescriptor;
 import com.microsoft.identity.common.java.util.IPlatformUtil;
 
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+
+import javax.net.ssl.KeyManagerFactory;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.AllArgsConstructor;
@@ -162,6 +165,11 @@ public class AndroidPlatformUtil implements IPlatformUtil {
         handler.post(runnable);
     }
 
+    @Override
+    public KeyManagerFactory getSslContextKeyManagerFactory() throws NoSuchAlgorithmException {
+        return KeyManagerFactory.getInstance("X509");
+    }
+
     /**
      * This method optionally re-orders tasks to bring the task that launched
      * the interactive activity to the foreground. This is useful when the activity provided
@@ -172,7 +180,7 @@ public class AndroidPlatformUtil implements IPlatformUtil {
      * @param command The BaseCommand.
      */
     private void optionallyReorderTasks(@NonNull final ICommand<?> command) {
-        final String methodName = ":optionallyReorderTasks";
+        final String methodTag = TAG + ":optionallyReorderTasks";
         if (command instanceof InteractiveTokenCommand) {
             if (mActivity == null){
                 throw new IllegalStateException("Activity cannot be null in an interactive session.");
@@ -190,14 +198,14 @@ public class AndroidPlatformUtil implements IPlatformUtil {
                 if (activityManager != null) {
                     activityManager.moveTaskToFront(mActivity.getTaskId(), 0);
                 } else {
-                    Logger.warn(TAG + methodName, "ActivityManager was null; Unable to bring task for the foreground.");
+                    Logger.warn(methodTag, "ActivityManager was null; Unable to bring task for the foreground.");
                 }
             }
         }
     }
 
     private static boolean hasTaskAffinity(@NonNull final Activity activity) {
-        final String methodName = ":hasTaskAffinity";
+        final String methodTag = TAG + ":hasTaskAffinity";
         final PackageManager packageManager = activity.getPackageManager();
         try {
             final ComponentName componentName = activity.getComponentName();
@@ -208,7 +216,7 @@ public class AndroidPlatformUtil implements IPlatformUtil {
             return startActivityInfo.taskAffinity != null;
         } catch (final PackageManager.NameNotFoundException e) {
             Logger.warn(
-                    TAG + methodName,
+                    methodTag,
                     "Unable to get ActivityInfo for activity provided to start authorization."
             );
 

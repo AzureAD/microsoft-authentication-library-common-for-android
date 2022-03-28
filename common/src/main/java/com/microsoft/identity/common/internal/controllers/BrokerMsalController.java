@@ -22,6 +22,79 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.controllers;
 
+import android.app.Activity;
+import android.content.ActivityNotFoundException;
+import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
+import android.os.Bundle;
+import android.text.TextUtils;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
+
+import com.microsoft.identity.common.AndroidPlatformComponents;
+import com.microsoft.identity.common.PropertyBagUtil;
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
+import com.microsoft.identity.common.internal.broker.BrokerActivity;
+import com.microsoft.identity.common.internal.broker.BrokerResult;
+import com.microsoft.identity.common.internal.broker.BrokerValidator;
+import com.microsoft.identity.common.internal.broker.MicrosoftAuthClient;
+import com.microsoft.identity.common.internal.broker.ipc.AccountManagerAddAccountStrategy;
+import com.microsoft.identity.common.internal.broker.ipc.BoundServiceStrategy;
+import com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle;
+import com.microsoft.identity.common.internal.broker.ipc.ContentProviderStrategy;
+import com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy;
+import com.microsoft.identity.common.internal.cache.HelloCache;
+import com.microsoft.identity.common.internal.commands.parameters.AndroidActivityInteractiveTokenCommandParameters;
+import com.microsoft.identity.common.internal.request.MsalBrokerRequestAdapter;
+import com.microsoft.identity.common.internal.result.MsalBrokerResultAdapter;
+import com.microsoft.identity.common.internal.telemetry.Telemetry;
+import com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings;
+import com.microsoft.identity.common.internal.telemetry.events.ApiEndEvent;
+import com.microsoft.identity.common.internal.telemetry.events.ApiStartEvent;
+import com.microsoft.identity.common.internal.ui.browser.Browser;
+import com.microsoft.identity.common.internal.ui.browser.BrowserSelector;
+import com.microsoft.identity.common.internal.util.AccountManagerUtil;
+import com.microsoft.identity.common.internal.util.StringUtil;
+import com.microsoft.identity.common.java.WarningType;
+import com.microsoft.identity.common.java.authorities.AzureActiveDirectoryAudience;
+import com.microsoft.identity.common.java.cache.ICacheRecord;
+import com.microsoft.identity.common.java.cache.MsalOAuth2TokenCache;
+import com.microsoft.identity.common.java.commands.AcquirePrtSsoTokenResult;
+import com.microsoft.identity.common.java.commands.parameters.AcquirePrtSsoTokenCommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.DeviceCodeFlowCommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.GenerateShrCommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.RemoveAccountCommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.RopcTokenCommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.SilentTokenCommandParameters;
+import com.microsoft.identity.common.java.controllers.BaseController;
+import com.microsoft.identity.common.java.exception.BaseException;
+import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.exception.ErrorStrings;
+import com.microsoft.identity.common.java.exception.ServiceException;
+import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
+import com.microsoft.identity.common.java.providers.microsoft.MicrosoftRefreshToken;
+import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.ClientInfo;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAccount;
+import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
+import com.microsoft.identity.common.java.providers.oauth2.IDToken;
+import com.microsoft.identity.common.java.result.AcquireTokenResult;
+import com.microsoft.identity.common.java.result.GenerateShrResult;
+import com.microsoft.identity.common.java.util.ResultFuture;
+import com.microsoft.identity.common.java.util.ported.LocalBroadcaster;
+import com.microsoft.identity.common.java.util.ported.PropertyBag;
+import com.microsoft.identity.common.logging.Logger;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
+
+import lombok.EqualsAndHashCode;
+
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CLIENT_ADVERTISED_MAXIMUM_BP_VERSION_KEY;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CLIENT_CONFIGURED_MINIMUM_BP_VERSION_KEY;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.MSAL_TO_BROKER_PROTOCOL_NAME;
@@ -39,79 +112,6 @@ import static com.microsoft.identity.common.internal.controllers.BrokerOperation
 import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterAliases.RETURN_BROKER_INTERACTIVE_ACQUIRE_TOKEN_RESULT;
 import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterFields.REQUEST_CODE;
 import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterFields.RESULT_CODE;
-
-import android.app.Activity;
-import android.content.ActivityNotFoundException;
-import android.content.Context;
-import android.content.Intent;
-import android.net.Uri;
-import android.os.Bundle;
-import android.text.TextUtils;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.VisibleForTesting;
-
-import com.microsoft.identity.common.AndroidPlatformComponents;
-import com.microsoft.identity.common.PropertyBagUtil;
-import com.microsoft.identity.common.java.commands.AcquirePrtSsoTokenResult;
-import com.microsoft.identity.common.java.WarningType;
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
-import com.microsoft.identity.common.internal.broker.BrokerActivity;
-import com.microsoft.identity.common.internal.broker.BrokerResult;
-import com.microsoft.identity.common.internal.broker.BrokerValidator;
-import com.microsoft.identity.common.internal.broker.MicrosoftAuthClient;
-import com.microsoft.identity.common.internal.broker.ipc.AccountManagerAddAccountStrategy;
-import com.microsoft.identity.common.internal.broker.ipc.BoundServiceStrategy;
-import com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle;
-import com.microsoft.identity.common.internal.broker.ipc.ContentProviderStrategy;
-import com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy;
-import com.microsoft.identity.common.internal.cache.HelloCache;
-import com.microsoft.identity.common.java.cache.MsalOAuth2TokenCache;
-import com.microsoft.identity.common.internal.commands.parameters.AndroidActivityInteractiveTokenCommandParameters;
-import com.microsoft.identity.common.java.commands.parameters.AcquirePrtSsoTokenCommandParameters;
-import com.microsoft.identity.common.java.commands.parameters.DeviceCodeFlowCommandParameters;
-import com.microsoft.identity.common.java.commands.parameters.GenerateShrCommandParameters;
-import com.microsoft.identity.common.java.commands.parameters.RemoveAccountCommandParameters;
-import com.microsoft.identity.common.internal.request.MsalBrokerRequestAdapter;
-import com.microsoft.identity.common.java.commands.parameters.RopcTokenCommandParameters;
-import com.microsoft.identity.common.java.controllers.BaseController;
-import com.microsoft.identity.common.java.result.AcquireTokenResult;
-import com.microsoft.identity.common.java.result.GenerateShrResult;
-import com.microsoft.identity.common.internal.result.MsalBrokerResultAdapter;
-import com.microsoft.identity.common.internal.telemetry.Telemetry;
-import com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings;
-import com.microsoft.identity.common.internal.telemetry.events.ApiEndEvent;
-import com.microsoft.identity.common.internal.telemetry.events.ApiStartEvent;
-import com.microsoft.identity.common.internal.ui.browser.Browser;
-import com.microsoft.identity.common.internal.ui.browser.BrowserSelector;
-import com.microsoft.identity.common.internal.util.AccountManagerUtil;
-import com.microsoft.identity.common.internal.util.StringUtil;
-import com.microsoft.identity.common.java.authorities.AzureActiveDirectoryAudience;
-import com.microsoft.identity.common.java.cache.ICacheRecord;
-import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
-import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCommandParameters;
-import com.microsoft.identity.common.java.commands.parameters.SilentTokenCommandParameters;
-import com.microsoft.identity.common.java.exception.BaseException;
-import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.java.exception.ErrorStrings;
-import com.microsoft.identity.common.java.exception.ServiceException;
-import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
-import com.microsoft.identity.common.java.providers.microsoft.MicrosoftRefreshToken;
-import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.ClientInfo;
-import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAccount;
-import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
-import com.microsoft.identity.common.java.providers.oauth2.IDToken;
-import com.microsoft.identity.common.java.util.ResultFuture;
-import com.microsoft.identity.common.java.util.ported.PropertyBag;
-import com.microsoft.identity.common.java.util.ported.LocalBroadcaster;
-import com.microsoft.identity.common.logging.Logger;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.ExecutionException;
-
-import lombok.EqualsAndHashCode;
 
 /**
  * The implementation of MSAL Controller for Broker.
@@ -173,8 +173,10 @@ public class BrokerMsalController extends BaseController {
      * Order of objects in the list will reflects the order of strategies that will be used.
      */
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    protected @NonNull List<IIpcStrategy> getIpcStrategies(final Context applicationContext,
-                                                                final String activeBrokerPackageName) {
+    protected @NonNull
+    List<IIpcStrategy> getIpcStrategies(final Context applicationContext,
+                                        final String activeBrokerPackageName) {
+        final String methodTag = TAG + ":getIpcStrategies";
         final List<IIpcStrategy> strategies = new ArrayList<>();
         final StringBuilder sb = new StringBuilder(100);
         sb.append("Broker Strategies added : ");
@@ -196,7 +198,7 @@ public class BrokerMsalController extends BaseController {
             strategies.add(new AccountManagerAddAccountStrategy(applicationContext));
         }
 
-        Logger.info(TAG, sb.toString());
+        Logger.info(methodTag, sb.toString());
 
         return strategies;
     }
@@ -259,7 +261,7 @@ public class BrokerMsalController extends BaseController {
     @Override
     public AcquireTokenResult acquireToken(final @NonNull InteractiveTokenCommandParameters parameters)
             throws BaseException, InterruptedException, ExecutionException {
-        final String methodName = ":acquireToken";
+        final String methodTag = TAG + ":acquireToken";
 
         Telemetry.emit(
                 new ApiStartEvent()
@@ -296,7 +298,7 @@ public class BrokerMsalController extends BaseController {
                          */
 
                         Logger.verbose(
-                                TAG + methodName,
+                                methodTag,
                                 "Received result from Broker..."
                         );
 
@@ -728,7 +730,7 @@ public class BrokerMsalController extends BaseController {
         final String methodName = ":removeCurrentAccount";
 
         if (!parameters.isSharedDevice()) {
-            Logger.verbose(TAG + methodName, "Not a shared device, invoke removeAccount() instead of removeCurrentAccount()");
+            Logger.verbose(methodName, "Not a shared device, invoke removeAccount() instead of removeCurrentAccount()");
             return removeAccount(parameters);
         }
 
@@ -799,7 +801,7 @@ public class BrokerMsalController extends BaseController {
      */
     private void logOutFromBrowser(final @NonNull Context context,
                                    final @NonNull RemoveAccountCommandParameters parameters) {
-        final String methodName = ":logOutFromBrowser";
+        final String methodTag = TAG + ":logOutFromBrowser";
 
         String browserPackageName = null;
         try {
@@ -807,7 +809,7 @@ public class BrokerMsalController extends BaseController {
             browserPackageName = browser.getPackageName();
         } catch (final ClientException e) {
             // Best effort. If none is passed to broker, then it will let the OS decide.
-            Logger.error(TAG, e.getErrorCode(), e);
+            Logger.error(methodTag, e.getErrorCode(), e);
         }
 
         try {
@@ -820,7 +822,7 @@ public class BrokerMsalController extends BaseController {
             context.startActivity(intent);
 
         } catch (final ActivityNotFoundException e) {
-            Logger.error(TAG + methodName,
+            Logger.error(methodTag,
                     "Failed to launch browser sign out with browser=[" + browserPackageName + "]. Skipping.", e);
         }
     }
@@ -957,16 +959,16 @@ public class BrokerMsalController extends BaseController {
      */
     private void saveMsaAccountToCache(final @NonNull Bundle resultBundle,
                                        @SuppressWarnings(WarningType.rawtype_warning) final @NonNull MsalOAuth2TokenCache msalOAuth2TokenCache) throws BaseException {
-        final String methodName = ":saveMsaAccountToCache";
+        final String methodTag = TAG + ":saveMsaAccountToCache";
 
         final BrokerResult brokerResult = new MsalBrokerResultAdapter().brokerResultFromBundle(resultBundle);
 
         if (resultBundle.getBoolean(AuthenticationConstants.Broker.BROKER_REQUEST_V2_SUCCESS) &&
                 AzureActiveDirectoryAudience.MSA_MEGA_TENANT_ID.equalsIgnoreCase(brokerResult.getTenantId())) {
-            Logger.info(TAG + methodName, "Result returned for MSA Account, saving to cache");
+            Logger.info(methodTag, "Result returned for MSA Account, saving to cache");
 
             if (StringUtil.isEmpty(brokerResult.getClientInfo())) {
-                Logger.error(TAG + methodName, "ClientInfo is empty.", null);
+                Logger.error(methodTag, "ClientInfo is empty.", null);
                 throw new ClientException(ErrorStrings.UNKNOWN_ERROR, "ClientInfo is empty.");
             }
 
@@ -989,7 +991,7 @@ public class BrokerMsalController extends BaseController {
 
                 msalOAuth2TokenCacheSetSingleSignOnState(msalOAuth2TokenCache, microsoftStsAccount, microsoftRefreshToken);
             } catch (ServiceException e) {
-                Logger.errorPII(TAG + methodName, "Exception while creating Idtoken or ClientInfo," +
+                Logger.errorPII(methodTag, "Exception while creating Idtoken or ClientInfo," +
                         " cannot save MSA account tokens", e
                 );
                 throw new ClientException(ErrorStrings.INVALID_JWT, e.getMessage(), e);

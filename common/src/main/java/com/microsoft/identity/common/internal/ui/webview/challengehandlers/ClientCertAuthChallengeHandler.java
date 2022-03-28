@@ -50,6 +50,7 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     @Override
     public Void processChallenge(@NonNull final ClientCertRequest request) {
+        final String methodTag = TAG + ":processChallenge";
         final Principal[] acceptableCertIssuers = request.getPrincipals();
 
         // When ADFS server sends null or empty issuers, we'll continue with cert prompt.
@@ -57,7 +58,7 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
             for (Principal issuer : acceptableCertIssuers) {
                 if (issuer.getName().contains(ACCEPTABLE_ISSUER)) {
                     //Checking if received acceptable issuers contain "CN=MS-Organization-Access"
-                    Logger.info(TAG, "Cancelling the TLS request, not respond to TLS challenge triggered by device authentication.");
+                    Logger.info(methodTag,"Cancelling the TLS request, not respond to TLS challenge triggered by device authentication.");
                     request.cancel();
                     return null;
                 }
@@ -68,7 +69,7 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
                     @Override
                     public void alias(String alias) {
                         if (alias == null) {
-                            Logger.info(TAG, "No certificate chosen by user, cancelling the TLS request.");
+                            Logger.info(methodTag,"No certificate chosen by user, cancelling the TLS request.");
                             request.cancel();
                             return;
                         }
@@ -79,13 +80,13 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
                             final PrivateKey privateKey = KeyChain.getPrivateKey(
                                     mActivity, alias);
 
-                            Logger.info(TAG, "Certificate is chosen by user, proceed with TLS request.");
+                            Logger.info(methodTag,"Certificate is chosen by user, proceed with TLS request.");
                             request.proceed(privateKey, certChain);
                             return;
                         } catch (final KeyChainException e) {
-                            Logger.errorPII(TAG, "KeyChain exception", e);
+                            Logger.errorPII(methodTag,"KeyChain exception", e);
                         } catch (final InterruptedException e) {
-                            Logger.errorPII(TAG, "InterruptedException exception", e);
+                            Logger.errorPII(methodTag,"InterruptedException exception", e);
                         }
 
                         request.cancel();
