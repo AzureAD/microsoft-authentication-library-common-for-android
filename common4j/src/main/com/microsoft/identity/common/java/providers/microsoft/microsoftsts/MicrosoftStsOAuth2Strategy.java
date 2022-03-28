@@ -28,7 +28,6 @@ import com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallenge;
 import com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallengeFactory;
 import com.microsoft.identity.common.java.commands.parameters.RopcTokenCommandParameters;
 import com.microsoft.identity.common.java.crypto.IDevicePopManager;
-import com.microsoft.identity.common.java.exception.ArgumentException;
 import com.microsoft.identity.common.java.platform.Device;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationResponse;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenErrorResponse;
@@ -529,7 +528,7 @@ public class MicrosoftStsOAuth2Strategy
         try {
             final PKeyAuthChallengeFactory factory = new PKeyAuthChallengeFactory();
             final URL authority = new URL(mTokenEndpoint);
-            final PKeyAuthChallenge pkeyAuthChallenge = factory.getPKeyAuthChallenge(
+            final PKeyAuthChallenge pkeyAuthChallenge = factory.getPKeyAuthChallengeFromTokenEndpointResponse(
                     challengeHeader,
                     authority.toString()
             );

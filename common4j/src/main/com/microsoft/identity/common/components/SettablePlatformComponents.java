@@ -58,6 +58,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import javax.net.ssl.KeyManagerFactory;
+
 import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.Builder;
 import lombok.Getter;
@@ -424,6 +426,11 @@ public class SettablePlatformComponents implements IPlatformComponents {
 
         @Override
         public void postCommandResult(@NonNull Runnable runnable) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public KeyManagerFactory getSslContextKeyManagerFactory() {
             throw new UnsupportedOperationException();
         }
     };

@@ -715,6 +715,29 @@ public class StorageHelper implements IStorageHelper {
             final Locale currentLocale = Locale.getDefault();
             applyKeyStoreLocaleWorkarounds(currentLocale);
 
+            /*
+            !!WARNING!!
+
+            Multiple apps as of Today (1/4/2022) can still share a linux user id, by configuring the sharedUserId attribute in their
+            Android Manifest file.  If multiple apps reference the same value for sharedUserId and are signed with the same keys
+            they will use the same AndroidKeyStore and may obtain access to the files and shared preferences of other applications
+            by invoking createPackageContext.
+
+            Support for sharedUserId is deprecated, however some applications still use this Android capability.
+            See: https://developer.android.com/guide/topics/manifest/manifest-element
+
+            To address apps in this scenario we will attempt to load an existing KeyPair instead of immediately generating
+            a new key pair.  This will use the same keypair to encrypt the symmetric key generated separately for each
+            application using a shared linux user id... and avoid these applications from "stomping"/overwriting
+            one another's keypair
+             */
+
+            KeyPair existingPair = readKeyPair();
+            if(existingPair != null){
+                Logger.verbose(TAG + methodName, "Existing keypair was found.  Returning existing key rather than generating new one.");
+                return existingPair;
+            }
+
             try {
                 logFlowStart(methodName, AuthenticationConstants.TelemetryEvents.KEYSTORE_WRITE_START);
 

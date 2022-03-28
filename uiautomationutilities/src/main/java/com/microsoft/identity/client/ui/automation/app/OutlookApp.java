@@ -115,10 +115,10 @@ public class OutlookApp extends App implements IFirstPartyApp {
                         @NonNull final FirstPartyAppPromptHandlerParameters promptHandlerParameters) {
         Logger.i(TAG, "Sign-In on the APP..");
         // enter email in edit text email field
-        UiAutomatorUtils.handleInput("com.microsoft.office.outlook:id/edit_text_email", username);
+        UiAutomatorUtils.handleInput("com.microsoft.office.outlook:id/auto_complete_input_email", username);
 
         // click continue
-        UiAutomatorUtils.handleButtonClick("com.microsoft.office.outlook:id/btn_continue");
+        UiAutomatorUtils.handleButtonClick("com.microsoft.office.outlook:id/btn_primary_button");
 
         Logger.i(TAG, "Handle Sign-In Prompt on the APP..");
         // handle login prompt

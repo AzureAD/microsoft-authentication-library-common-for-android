@@ -135,10 +135,6 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
                 "com.azure.authenticator:id/shared_device_registration_button"
         );
 
-        // There is a data privacy dialog that shows up when shared device registration finishes.
-        // But why? This should really not pop up at this time.
-        UiAutomatorUtils.handleButtonClick("android:id/button1");
-
         final UiDevice device =
                 UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 

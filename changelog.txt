@@ -1,6 +1,28 @@
 V.Next
 ----------
+- [PATCH] Update gson version to 2.8.9 (#1694)
+- [PATCH] Fix silent flow pkeyauth, add build param to disable silent flow timeout during debugging (#1687)
+- [MINOR] Hook telemetry to LocalAuthenticationResult and BaseException (#1636)
+- [PATCH] Fix accidental code change that disabled PoP for auth code grant flow (#1661)
+- [MINOR] Add flighting parameters to commmandParameters (#1562)
+- [MINOR] Add ropc command and ropc flow to BaseController (#1539)
+- [PATCH] Correct setAttestationChallenge to provide null rather than empty byte array (#1814725)
+
+Version 4.0.3
+----------
+- [PATCH] Use default provider in Android for creating SSLContext's KeyManagerFactory (#1697, #1698)
+
+Version 4.0.2
+----------
+- [PATCH] Port #1662 into the new common4j class - since StorageHelper is no longer used (#1689, #1690) 
+
+Version 4.0.1
+----------
+- [MINOR] Update exception name to match older (pre-refactoring) value to avoid breaking older msal clients (#1668)
+- [PATCH] Synchronize updating refresh token in cache (saving new and removing old) to avoid race condition (#1659)
 - [PATCH] Remove unsafe key thumbprint generator (#1654)
+- [PATCH] Move getUidFromHomeAccountId to common4j (from broker4j) + rename a constant (#1643)
+- [PATCH] Make LocalBroadcaster.broadcast method to be asynchronous (#1639)
 - [MAJOR] Rename LobalBroadcasterAliases to LocalBroadcasterAliases (#1584)
 - [PATCH] Make it clear if adding a query param should overwrite or leave as is (#1581)
 - [PATCH] Handle the scenario where broker activity is killed wrongly. (#1568)
@@ -56,7 +78,6 @@ V.Next
 - [MINOR] Migrate authorization completion callback to common4j (#1522)
 - [PATCH] Remove deprecation logging in Logger class (#1502)
 - [MINOR] Migrate broker application metadata cache to common4j (#1530)
-- [MINOR] Add ropc command and ropc flow to BaseController (#1539)
 - [PATCH] Replace unsafe TypeToken instance with TypeToken#getParameterized (#1485)
 - [MINOR] Add more operation names to ArgumentException (#1553)
 - [MINOR] Add msal linux sdk type (#1554)
@@ -69,6 +90,24 @@ V.Next
 - [PATCH] Synchronize updating refresh token in cache (saving new and removing old) to avoid race condition (#1659)
 - [MINOR] Changes to support ROPC based E2E automation for linux (#1675)
 - [MAJOR] Move IKeyStoreKeyManager and IDevicePopManager to common4j (#1683)
+
+Version 3.6.7
+----------
+- [PATCH] Add helper method to fix account id missing in msal get account (#1641)
+- [PATCH] Avoid key overwriting for apps using shared user id (#1662)
+
+Version 3.6.6
+----------
+- [PATCH] Remove unsafe key thumbprint generator (#1655)
+
+Version 3.6.5
+----------
+- [PATCH] Fixing removeAccount method for msal cpp when the realm is empty (#1422)
+
+Version 3.6.4
+----------
+- [PATCH] Fix race condition (#1609)
+- [PATCH] Changes to handle IntuneAppProtectionException in common rather than broker (#1579)
 
 Version 3.6.3
 ----------

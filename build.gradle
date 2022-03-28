@@ -22,38 +22,19 @@ allprojects {
     Order of repositories is important.
      */
     repositories {
-        /*
-        This is the project main repository and contains all of the packages we publish.
-        This azure devops feed also has an upstream to Maven Central as well as several other
-        internal azure devops respositories
-
-        NOTE: This repository is not currently available to our public CI (Travis)
-         */
+        google()
+        mavenCentral()
+        // Adding here because Travis cannot access AndroidADAL feed.
+        maven {
+            url 'https://pkgs.dev.azure.com/MicrosoftDeviceSDK/DuoSDK-Public/_packaging/Duo-SDK-Feed/maven/v1'
+        }
         maven {
             name "vsts-maven-adal-android"
-            url 'https://identitydivision.pkgs.visualstudio.com/IDDP/_packaging/Android/maven/v1'
+            url "https://identitydivision.pkgs.visualstudio.com/_packaging/AndroidADAL/maven/v1"
             credentials {
                 username project.vstsUsername
                 password project.vstsPassword
             }
-        }
-        //Required for google published packages not published to maven central
-        google()
-        /*
-        Required for Android Studio / Android Tools (for example: linter) packages not published
-        to maven central.
-
-        NOTE: When building in Travis packages will be pulled from here
-         */
-        mavenCentral()
-        /*
-        Required since the DUO sdk is not published to any of the other large android
-        repositories... which is odd.
-
-        NOTE: This is required for Travis.
-         */
-        maven {
-            url 'https://pkgs.dev.azure.com/MicrosoftDeviceSDK/DuoSDK-Public/_packaging/Duo-SDK-Feed/maven/v1'
         }
     }
 
