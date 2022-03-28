@@ -110,12 +110,12 @@ public class BrokerOperationBundle {
     }
 
     private String getAccountManagerAddAccountOperationKey() throws BrokerCommunicationException{
-        final String methodName = ":getAccountManagerAddAccountOperationKey";
+        final String methodTag = TAG + ":getAccountManagerAddAccountOperationKey";
 
         String accountManagerKey = operation.getAccountManagerOperation();
         if (accountManagerKey == null) {
             final String errorMessage = "Operation " + operation.name() + " is not supported by AccountManager addAccount().";
-            Logger.warn(TAG + methodName, errorMessage);
+            Logger.warn(methodTag, errorMessage);
             throw new BrokerCommunicationException(
                     OPERATION_NOT_SUPPORTED_ON_CLIENT_SIDE,
                     ACCOUNT_MANAGER_ADD_ACCOUNT,
@@ -126,12 +126,12 @@ public class BrokerOperationBundle {
     }
 
     public String getContentProviderPath() throws BrokerCommunicationException {
-        final String methodName = ":getContentProviderUriPath";
+        final String methodTag = TAG + ":getContentProviderUriPath";
 
         final API contentApi = operation.getContentApi();
         if (contentApi == null) {
             final String errorMessage = "Operation " + operation.name() + " is not supported by ContentProvider.";
-            Logger.warn(TAG + methodName, errorMessage);
+            Logger.warn(methodTag, errorMessage);
             throw new BrokerCommunicationException(
                     OPERATION_NOT_SUPPORTED_ON_CLIENT_SIDE,
                     CONTENT_PROVIDER,

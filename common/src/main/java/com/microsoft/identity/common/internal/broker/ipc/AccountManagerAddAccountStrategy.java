@@ -46,10 +46,10 @@ import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.
 
 /**
  * A strategy for communicating with the targeted broker via AccountManager's addAccount().
- *
+ * <p>
  * NOTE: SuppressLint is added because this API requires MANAGE_ACCOUNTS for API<= 22.
  * AccountManagerUtil.canUseAccountManagerOperation() will validate that.
- * */
+ */
 
 @SuppressLint("MissingPermission")
 public class AccountManagerAddAccountStrategy implements IIpcStrategy {
@@ -62,9 +62,12 @@ public class AccountManagerAddAccountStrategy implements IIpcStrategy {
     }
 
     @Override
-    @Nullable public Bundle communicateToBroker(final @NonNull BrokerOperationBundle brokerOperationBundle)
+    @Nullable
+    public Bundle communicateToBroker(final @NonNull BrokerOperationBundle brokerOperationBundle)
             throws BrokerCommunicationException {
-        final String methodName = brokerOperationBundle.getOperation().name();
+        final String methodTag = TAG + ":communicateToBroker";
+        final String operationName = brokerOperationBundle.getOperation().name();
+        Logger.info(methodTag, "Broker operation: " + operationName+" brokerPackage: "+brokerOperationBundle.getTargetBrokerAppPackageName());
         try {
             final AccountManagerFuture<Bundle> resultBundle =
                     AccountManager.get(mContext)
@@ -77,10 +80,10 @@ public class AccountManagerAddAccountStrategy implements IIpcStrategy {
                                     null,
                                     ProcessUtil.getPreferredHandler());
 
-            Logger.verbose(TAG + methodName, "Received result from broker");
+            Logger.verbose(methodTag, "Received result from broker");
             return resultBundle.getResult();
         } catch (final AuthenticatorException | IOException | OperationCanceledException e) {
-            Logger.error(TAG + methodName, e.getMessage(), e);
+            Logger.error(methodTag, e.getMessage(), e);
             throw new BrokerCommunicationException(CONNECTION_ERROR, getType(), "Failed to connect to AccountManager", e);
         }
     }

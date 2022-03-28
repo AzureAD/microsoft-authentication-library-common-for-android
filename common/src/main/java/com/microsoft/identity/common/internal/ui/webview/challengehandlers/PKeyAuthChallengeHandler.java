@@ -51,6 +51,7 @@ public final class PKeyAuthChallengeHandler implements IChallengeHandler<PKeyAut
 
     @Override
     public Void processChallenge(final PKeyAuthChallenge pKeyAuthChallenge) {
+        final String methodTag = TAG + ":processChallenge";
         mWebView.stopLoading();
         mChallengeCallback.setPKeyAuthStatus(true);
 
@@ -62,8 +63,8 @@ public final class PKeyAuthChallengeHandler implements IChallengeHandler<PKeyAut
                 @Override
                 public void run() {
                     String loadUrl = pKeyAuthChallenge.getSubmitUrl();
-                    Logger.info(TAG, "Respond to pkeyAuth challenge");
-                    Logger.infoPII(TAG, "Challenge submit url:" + pKeyAuthChallenge.getSubmitUrl());
+                    Logger.info(methodTag, "Respond to pkeyAuth challenge");
+                    Logger.infoPII(methodTag, "Challenge submit url:" + pKeyAuthChallenge.getSubmitUrl());
 
                     mWebView.loadUrl(loadUrl, header);
                 }

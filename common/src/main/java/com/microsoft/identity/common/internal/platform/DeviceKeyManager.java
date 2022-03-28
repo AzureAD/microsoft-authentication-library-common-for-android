@@ -80,13 +80,14 @@ public class DeviceKeyManager<K extends KeyStore.Entry> implements IAndroidKeySt
 
     @Override
     public boolean exists() {
+        final String methodTag = TAG + ":exists";
         boolean exists = false;
 
         try {
             exists = mKeyStore.containsAlias(mKeyAlias);
         } catch (final KeyStoreException e) {
             Logger.error(
-                    TAG,
+                    methodTag,
                     "Error while querying KeyStore",
                     e
             );
@@ -103,11 +104,12 @@ public class DeviceKeyManager<K extends KeyStore.Entry> implements IAndroidKeySt
 
     @Override
     public Date getCreationDate() throws ClientException {
+        final String methodTag = TAG + ":getCreationDate";
         try {
             return mKeyStore.getCreationDate(mKeyAlias);
         } catch (final KeyStoreException e) {
             Logger.error(
-                    TAG,
+                    methodTag,
                     "Error while getting creation date for alias " + mKeyAlias,
                     e
             );
@@ -117,6 +119,7 @@ public class DeviceKeyManager<K extends KeyStore.Entry> implements IAndroidKeySt
 
     @Override
     public boolean clear() {
+        final String methodTag = TAG + ":clear";
         boolean deleted = false;
 
         try {
@@ -124,7 +127,7 @@ public class DeviceKeyManager<K extends KeyStore.Entry> implements IAndroidKeySt
             deleted = true;
         } catch (final KeyStoreException e) {
             Logger.error(
-                    TAG,
+                    methodTag,
                     "Error while clearing KeyStore",
                     e
             );
@@ -160,6 +163,7 @@ public class DeviceKeyManager<K extends KeyStore.Entry> implements IAndroidKeySt
 
     @Override
     public Certificate[] getCertificateChain() throws ClientException {
+        final String methodTag = TAG + ":getCertificateChain";
         final Exception exception;
         final String errCode;
 
@@ -177,7 +181,7 @@ public class DeviceKeyManager<K extends KeyStore.Entry> implements IAndroidKeySt
         );
 
         Logger.error(
-                TAG,
+                methodTag,
                 clientException.getMessage(),
                 clientException
         );
@@ -194,6 +198,7 @@ public class DeviceKeyManager<K extends KeyStore.Entry> implements IAndroidKeySt
      */
     @Override
     public SecureHardwareState getSecureHardwareState() throws ClientException {
+        final String methodTag = TAG + ":getSecureHardwareState";
         final String errCode;
         final Exception exception;
 
@@ -208,16 +213,16 @@ public class DeviceKeyManager<K extends KeyStore.Entry> implements IAndroidKeySt
                         );
                         final KeyInfo info = factory.getKeySpec(privateKey, KeyInfo.class);
                         final boolean isInsideSecureHardware = info.isInsideSecureHardware();
-                        Logger.info(TAG, "PrivateKey is secure hardware backed? " + isInsideSecureHardware);
+                        Logger.info(methodTag, "PrivateKey is secure hardware backed? " + isInsideSecureHardware);
                         return isInsideSecureHardware
                                 ? SecureHardwareState.TRUE_UNATTESTED
                                 : SecureHardwareState.FALSE;
                     } catch (final NoSuchAlgorithmException | InvalidKeySpecException e) {
-                        Logger.error(TAG, "Failed to query secure hardware state.", e);
+                        Logger.error(methodTag, "Failed to query secure hardware state.", e);
                         return SecureHardwareState.UNKNOWN_QUERY_ERROR;
                     }
                 } else {
-                    Logger.info(TAG, "Cannot query secure hardware state (API unavailable <23)");
+                    Logger.info(methodTag, "Cannot query secure hardware state (API unavailable <23)");
                 }
 
                 return SecureHardwareState.UNKNOWN_DOWNLEVEL;
@@ -230,16 +235,16 @@ public class DeviceKeyManager<K extends KeyStore.Entry> implements IAndroidKeySt
                         );
                         final KeyInfo info = (KeyInfo) factory.getKeySpec(privateKey, KeyInfo.class);
                         final boolean isInsideSecureHardware = info.isInsideSecureHardware();
-                        Logger.info(TAG, "SecretKey is secure hardware backed? " + isInsideSecureHardware);
+                        Logger.info(methodTag, "SecretKey is secure hardware backed? " + isInsideSecureHardware);
                         return isInsideSecureHardware
                                 ? SecureHardwareState.TRUE_UNATTESTED
                                 : SecureHardwareState.FALSE;
                     } catch (final NoSuchAlgorithmException | InvalidKeySpecException e) {
-                        Logger.error(TAG, "Failed to query secure hardware state.", e);
+                        Logger.error(methodTag, "Failed to query secure hardware state.", e);
                         return SecureHardwareState.UNKNOWN_QUERY_ERROR;
                     }
                 } else {
-                    Logger.info(TAG, "Cannot query secure hardware state (API unavailable <23)");
+                    Logger.info(methodTag, "Cannot query secure hardware state (API unavailable <23)");
                 }
                 return SecureHardwareState.UNKNOWN_DOWNLEVEL;
             } else {
@@ -263,7 +268,7 @@ public class DeviceKeyManager<K extends KeyStore.Entry> implements IAndroidKeySt
         );
 
         Logger.error(
-                TAG + ":getSecureHardwareState",
+                methodTag,
                 errCode,
                 exception
         );

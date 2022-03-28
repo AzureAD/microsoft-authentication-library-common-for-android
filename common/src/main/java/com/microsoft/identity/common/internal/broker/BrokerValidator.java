@@ -59,8 +59,9 @@ public class BrokerValidator {
     private static boolean sShouldTrustDebugBrokers = BuildConfig.DEBUG;
 
     public static void setShouldTrustDebugBrokers(final boolean shouldTrustDebugBrokers) {
+        final String methodTag = TAG + ":setShouldTrustDebugBrokers";
         if (!BuildConfig.DEBUG && shouldTrustDebugBrokers) {
-            Logger.warn(TAG, "You are forcing to trust debug brokers in non-debug builds.");
+            Logger.warn(methodTag, "You are forcing to trust debug brokers in non-debug builds.");
         }
         BrokerValidator.sShouldTrustDebugBrokers = shouldTrustDebugBrokers;
     }
@@ -125,11 +126,11 @@ public class BrokerValidator {
      * @return True if the certificate hash is known. False otherwise.
      */
     public boolean verifySignature(final String brokerPackageName) {
-        final String methodName = ":verifySignature";
+        final String methodTag = TAG + ":verifySignature";
         try {
             return verifySignatureAndThrow(brokerPackageName) != null;
         } catch (final ClientException e) {
-            Logger.error(TAG + methodName, e.getErrorCode() + ": " + e.getMessage(), e);
+            Logger.error(methodTag, e.getErrorCode() + ": " + e.getMessage(), e);
         }
 
         return false;
@@ -225,7 +226,7 @@ public class BrokerValidator {
     public static boolean isValidBrokerRedirect(@Nullable final String redirectUri,
                                                 @NonNull final Context context,
                                                 @NonNull final String packageName) {
-        final String methodName = ":isValidBrokerRedirect";
+        final String methodTag = TAG + ":isValidBrokerRedirect";
         final String expectedBrokerRedirectUri = getBrokerRedirectUri(context, packageName);
         boolean isValidBrokerRedirect = StringUtil.equalsIgnoreCase(redirectUri, expectedBrokerRedirectUri);
         if (packageName.equals(AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME)) {
@@ -241,7 +242,7 @@ public class BrokerValidator {
 
         if (!isValidBrokerRedirect) {
             Logger.error(
-                    TAG + methodName,
+                    methodTag,
                     "Broker redirect uri is invalid. Expected: "
                             + expectedBrokerRedirectUri
                             + " Actual: "

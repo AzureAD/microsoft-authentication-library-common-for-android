@@ -112,7 +112,7 @@ public class AndroidBrokerStorageEncryptionManager extends StorageEncryptionMana
 
     @Override
     public @NonNull List<AbstractSecretKeyLoader> getKeyLoaderForDecryption(@NonNull byte[] cipherText) {
-        final String methodName = ":getKeyLoaderForDecryption";
+        final String methodTag = TAG + ":getKeyLoaderForDecryption";
         final String packageName = getPackageName();
 
         final ArrayList<AbstractSecretKeyLoader> keyLoaders = new ArrayList<>();
@@ -128,7 +128,7 @@ public class AndroidBrokerStorageEncryptionManager extends StorageEncryptionMana
                 keyLoaders.add(mLegacyCPKeyLoader);
                 return keyLoaders;
             } else {
-                Logger.warn(TAG + methodName, "Unexpected Broker package name. Cannot load key.");
+                Logger.warn(methodTag, "Unexpected Broker package name. Cannot load key.");
                 throw new IllegalStateException("Unexpected Broker package name. Cannot load key.");
             }
         }
@@ -138,14 +138,14 @@ public class AndroidBrokerStorageEncryptionManager extends StorageEncryptionMana
             return keyLoaders;
         }
 
-        Logger.warn(TAG + methodName, "Cannot find a matching key to decrypt the given blob");
+        Logger.warn(methodTag, "Cannot find a matching key to decrypt the given blob");
         return keyLoaders;
     }
 
     @Override
     protected void handleDecryptionFailure(@NonNull final String keyAlias,
                                            @NonNull final Exception exception) {
-        final String methodName = ":handleDecryptionFailure";
+        final String methodTag = TAG + ":handleDecryptionFailure";
         final SharedPreferences sharedPreferences = PreferenceManager.
                 getDefaultSharedPreferences(mContext);
         final String previousActiveBroker = sharedPreferences.getString(
@@ -160,7 +160,7 @@ public class AndroidBrokerStorageEncryptionManager extends StorageEncryptionMana
                     + " Active broker: " + activeBroker
                     + " Exception: " + exception.toString();
 
-            Logger.info(TAG + methodName, message);
+            Logger.info(methodTag, message);
 
             if (mTelemetryCallback != null) {
                 mTelemetryCallback.logEvent(

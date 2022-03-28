@@ -58,14 +58,14 @@ public class RemoveAccountCommand extends BaseCommand<Boolean> {
 
     @Override
     public Boolean execute() throws Exception {
-        final String methodName = ":execute";
+        final String methodTag = TAG + ":execute";
 
         boolean result = false;
 
         for (int ii = 0; ii < getControllers().size(); ii++) {
             final BaseController controller = getControllers().get(ii);
             com.microsoft.identity.common.internal.logging.Logger.verbose(
-                    TAG + methodName,
+                    methodTag,
                     "Executing with controller: "
                             + controller.getClass().getSimpleName()
             );

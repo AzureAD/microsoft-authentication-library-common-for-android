@@ -1,5 +1,6 @@
 V.Next
 ----------
+- [PATCH] Ensure consistent logging tags (#1701)
 - [PATCH] Update gson version to 2.8.9 (#1694)
 - [PATCH] Fix silent flow pkeyauth, add build param to disable silent flow timeout during debugging (#1687)
 - [MINOR] Hook telemetry to LocalAuthenticationResult and BaseException (#1636)
