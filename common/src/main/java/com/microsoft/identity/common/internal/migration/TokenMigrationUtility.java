@@ -53,6 +53,7 @@ public class TokenMigrationUtility<T extends BaseAccount, U extends RefreshToken
                         final Map<String, String> credentials,
                         final IShareSingleSignOnState<T, U> destination,
                         final TokenMigrationCallback callback) {
+        final String methodTag = TAG + ":_import";
         // Do all work on a background thread
         sBackgroundExecutor.execute(new Runnable() {
             @Override
@@ -68,10 +69,10 @@ public class TokenMigrationUtility<T extends BaseAccount, U extends RefreshToken
                                 accountTokenKeyValuePair.getKey(),
                                 accountTokenKeyValuePair.getValue()
                         );
-                        accountsAdded ++;
+                        accountsAdded++;
                     } catch (ClientException e) {
                         Logger.warn(
-                                TAG,
+                                methodTag,
                                 "Failed to save account/refresh token . Skipping "
                         );
                     }

@@ -55,9 +55,9 @@ public class DeviceCodeFlowCommand extends TokenCommand {
 
     @Override
     public AcquireTokenResult execute() throws Exception {
-        final String methodName = ":execute";
+        final String methodTag = TAG + ":execute";
         Logger.verbose(
-                TAG + methodName,
+                methodTag,
                 "Device Code Flow command initiating..."
         );
 
@@ -80,7 +80,7 @@ public class DeviceCodeFlowCommand extends TokenCommand {
             expiredDate.setTime(expiredDate.getTime() + expiredInInMilliseconds);
         } catch (final NumberFormatException e) {
             // Shouldn't happen, but if it does, we don't want to fail the request because of this.
-            Logger.error(TAG + methodName, "Failed to parse authorizationResponse.getExpiresIn()", e);
+            Logger.error(methodTag, "Failed to parse authorizationResponse.getExpiresIn()", e);
         }
 
         // Communicate with user app and provide authentication information
@@ -96,7 +96,7 @@ public class DeviceCodeFlowCommand extends TokenCommand {
         final AcquireTokenResult tokenResult = controller.acquireDeviceCodeFlowToken(authorizationResult, commandParameters);
 
         Logger.verbose(
-                TAG + methodName,
+                methodTag,
                 "Device Code Flow command exiting with token..."
         );
 

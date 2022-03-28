@@ -48,11 +48,11 @@ public class RefreshOnCommand extends BaseCommand<VoidResult>{
 
     @Override
     public VoidResult execute() throws IOException, ClientException, ServiceException {
-        final String methodName = ":execute";
+        final String methodTag = TAG + ":execute";
 
         final BaseController controller = getDefaultController();
         Logger.verbose(
-                TAG + methodName,
+                methodTag,
                 "Executing with controller: "
                         + controller.getClass().getSimpleName()
         );
