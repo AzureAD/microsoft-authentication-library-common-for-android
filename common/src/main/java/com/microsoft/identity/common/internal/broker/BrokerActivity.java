@@ -22,14 +22,6 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.broker;
 
-import static com.microsoft.identity.common.java.AuthenticationConstants.BrokerResponse.BROKER_ERROR_RESPONSE;
-import static com.microsoft.identity.common.java.AuthenticationConstants.BrokerResponse.BROKER_OPERATION_CANCELLED;
-import static com.microsoft.identity.common.java.AuthenticationConstants.BrokerResponse.BROKER_SUCCESS_RESPONSE;
-import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterAliases.RETURN_BROKER_INTERACTIVE_ACQUIRE_TOKEN_RESULT;
-import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterFields.REQUEST_CODE;
-import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterFields.RESULT_CODE;
-import static com.microsoft.identity.common.java.AuthenticationConstants.UIRequest.BROKER_FLOW;
-
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
@@ -40,9 +32,17 @@ import com.microsoft.identity.common.internal.result.IBrokerResultAdapter;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.request.SdkType;
-import com.microsoft.identity.common.java.util.ported.LocalBroadcaster;
 import com.microsoft.identity.common.java.util.ported.PropertyBag;
+import com.microsoft.identity.common.java.util.ported.LocalBroadcaster;
 import com.microsoft.identity.common.logging.Logger;
+
+import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterAliases.RETURN_BROKER_INTERACTIVE_ACQUIRE_TOKEN_RESULT;
+import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterFields.REQUEST_CODE;
+import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterFields.RESULT_CODE;
+import static com.microsoft.identity.common.java.AuthenticationConstants.UIRequest.BROKER_FLOW;
+import static com.microsoft.identity.common.java.AuthenticationConstants.BrokerResponse.BROKER_OPERATION_CANCELLED;
+import static com.microsoft.identity.common.java.AuthenticationConstants.BrokerResponse.BROKER_ERROR_RESPONSE;
+import static com.microsoft.identity.common.java.AuthenticationConstants.BrokerResponse.BROKER_SUCCESS_RESPONSE;
 
 public final class BrokerActivity extends Activity {
 
@@ -90,7 +90,7 @@ public final class BrokerActivity extends Activity {
     protected void onDestroy() {
         // If the broker process crashes, onActivityResult() will not be triggered.
         // (tested by throwing an exception in AccountChooserActivity, and by killing the activity via App Switcher).
-        if (isFinishing() && !mBrokerResultReceived) {
+        if (!mBrokerResultReceived) {
             returnsExceptionOnActivityUnexpectedlyKilled();
         }
 
