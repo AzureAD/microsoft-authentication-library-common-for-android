@@ -1,5 +1,6 @@
 V.Next
 ----------
+- [PATCH] Adding orientation flag to BrokerActivity android:configChanges to prevent it from getting restarted on orientation change (#1705)
 - [PATCH] Ensure consistent logging tags (#1701)
 - [PATCH] Update gson version to 2.8.9 (#1694)
 - [PATCH] Fix silent flow pkeyauth, add build param to disable silent flow timeout during debugging (#1687)
