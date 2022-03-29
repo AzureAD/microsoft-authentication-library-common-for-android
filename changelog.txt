@@ -1,6 +1,8 @@
 V.Next
 ----------
 - [PATCH] Clears client cert preferences so that multiple CBA login attempts can be completed in same session (#1688)
+- [PATCH] Fixing potential deadlock state in executor service for interactive requests (#1696)
+- [PATCH] Ensure consistent logging tags (#1701)
 - [PATCH] Update gson version to 2.8.9 (#1694)
 - [PATCH] Port #1662 into the new common4j class - since StorageHelper is no longer used (#1689) 
 - [PATCH] Fix silent flow pkeyauth, add build param to disable silent flow timeout during debugging (#1687)
