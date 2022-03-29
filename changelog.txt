@@ -1,6 +1,6 @@
 V.Next
 ----------
-- [PATCH] Adding orientation flag to BrokerActivity android:configChanges to prevent it from getting restarted on orientation change (#1705)
+- [PATCH] Fixing potential deadlock state in executor service for interactive requests (#1696)
 - [PATCH] Ensure consistent logging tags (#1701)
 - [PATCH] Update gson version to 2.8.9 (#1694)
 - [PATCH] Fix silent flow pkeyauth, add build param to disable silent flow timeout during debugging (#1687)
@@ -8,7 +8,11 @@ V.Next
 - [PATCH] Fix accidental code change that disabled PoP for auth code grant flow (#1661)
 - [MINOR] Add flighting parameters to commmandParameters (#1562)
 - [MINOR] Add ropc command and ropc flow to BaseController (#1539)
-- [PATCH] Correct setAttestationChallenge to provide null rather than empty byte array (#1814725)
+
+Version 4.0.4
+----------
+- [PATCH] Adding orientation flag to BrokerActivity android:configChanges to prevent it from getting restarted on orientation change (#1705)
+- [PATCH] Correct setAttestationChallenge to provide null rather than empty byte array (#1700)
 
 Version 4.0.3
 ----------
