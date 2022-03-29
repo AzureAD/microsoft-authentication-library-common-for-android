@@ -8,11 +8,12 @@ V.Next
 - [PATCH] Fix accidental code change that disabled PoP for auth code grant flow (#1661)
 - [MINOR] Add flighting parameters to commmandParameters (#1562)
 - [MINOR] Add ropc command and ropc flow to BaseController (#1539)
+- [PATCH] Ensure a device pop manager is provided when PoPAuthenticationScheme is requested of the broker (#1814728)
 
 Version 4.0.4
 ----------
 - [PATCH] Adding orientation flag to BrokerActivity android:configChanges to prevent it from getting restarted on orientation change (#1705)
-- [PATCH] Correct setAttestationChallenge to provide null rather than empty byte array (#1700)
+- [PATCH] Correct setAttestationChallenge to provide null rather than empty byte array (#1814725)
 
 Version 4.0.3
 ----------
