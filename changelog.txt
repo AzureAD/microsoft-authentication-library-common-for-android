@@ -7,6 +7,7 @@ V.Next
 - [MINOR] Add flighting parameters to commmandParameters (#1562)
 - [MINOR] Add ropc command and ropc flow to BaseController (#1539)
 - [PATCH] Correct setAttestationChallenge to provide null rather than empty byte array (#1814725)
+- [MAJOR] Move IKeyStoreKeyManager and IDevicePopManager to common4j (#1683)
 
 Version 4.0.3
 ----------
@@ -84,12 +85,6 @@ Version 4.0.1
 - [PATCH] Fix extracting http response body (#1557)
 - [PATCH] Fix print stack trace for Throwable in Logs (#1556)
 - [PATCH] Support SSO token api (#1543)
-- [MINOR] Add flighting parameters to commmandParameters (#1562)
-- [MINOR] Hook telemetry to LocalAuthenticationResult and BaseException (#1636)
-- [PATCH] Fix accidental code change that disabled PoP for auth code grant flow (#1661)
-- [PATCH] Synchronize updating refresh token in cache (saving new and removing old) to avoid race condition (#1659)
-- [MINOR] Changes to support ROPC based E2E automation for linux (#1675)
-- [MAJOR] Move IKeyStoreKeyManager and IDevicePopManager to common4j (#1683)
 
 Version 3.6.7
 ----------
