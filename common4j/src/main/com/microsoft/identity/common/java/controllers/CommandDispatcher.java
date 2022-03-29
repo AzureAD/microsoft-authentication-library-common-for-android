@@ -639,8 +639,9 @@ public class CommandDispatcher {
                         Logger.info(TAG + methodName,
                                 "The previous interactive request was queued but never got processed and is blocking the interactive thread. " +
                                         "Restarting the interactive executor service to enable processing interactive requests again.");
-                        sInteractiveExecutor.shutdownNow();
+                        List<Runnable> cancelledRequests = sInteractiveExecutor.shutdownNow();
                         sInteractiveExecutor = Executors.newSingleThreadExecutor();
+                        Logger.info(TAG + methodName, "Cancelled execution of " + cancelledRequests.size() + " interactive requests.");
                     }
                 }
 
