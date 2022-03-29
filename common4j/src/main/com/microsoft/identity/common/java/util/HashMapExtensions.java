@@ -40,9 +40,24 @@ public class HashMapExtensions {
      * @throws JSONException
      */
     public static HashMap<String, String> getJsonResponse(HttpResponse webResponse) throws JSONException {
-        final HashMap<String, String> response = new HashMap<>();
         if (webResponse != null && !StringUtil.isNullOrEmpty(webResponse.getBody())) {
-            final JSONObject jsonObject = new JSONObject(webResponse.getBody());
+            return getJsonResponseFromResponseBody(webResponse.getBody());
+        }
+        return new HashMap<>();
+    }
+
+
+    /**
+     * Get key value pairs from response.
+     *
+     * @param responseBody {@link HttpResponse}'s body.
+     * @return HashMap
+     * @throws JSONException
+     */
+    public static HashMap<String, String> getJsonResponseFromResponseBody(String responseBody) throws JSONException {
+        final HashMap<String, String> response = new HashMap<>();
+        if (!StringUtil.isNullOrEmpty(responseBody)) {
+            final JSONObject jsonObject = new JSONObject(responseBody);
             final Iterator<String> keyIterator = jsonObject.keys();
             while (keyIterator.hasNext()) {
                 String key = keyIterator.next();
@@ -51,5 +66,4 @@ public class HashMapExtensions {
         }
         return response;
     }
-
 }

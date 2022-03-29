@@ -292,10 +292,10 @@ public class TokenCacheItemMigrationAdapter {
     @NonNull
     public static Map<String, List<ADALTokenCacheItem>> splitTokensByClientId(
             @NonNull final List<ADALTokenCacheItem> cacheItemsIn) {
-        final String methodName = ":splitTokensByClientId";
+        final String methodTag = TAG + ":splitTokensByClientId";
 
         Logger.verbose(
-                TAG + methodName,
+                methodTag,
                 "Splitting ["
                         + cacheItemsIn.size()
                         + "] cache items."
@@ -329,7 +329,7 @@ public class TokenCacheItemMigrationAdapter {
      */
     public static Map<String, List<ADALTokenCacheItem>> preferentiallySelectTokens(
             @NonNull final Map<String, List<ADALTokenCacheItem>> tokensByClientId) {
-        final String methodName = ":preferentiallySelectTokens";
+        final String methodTag = TAG + ":preferentiallySelectTokens";
         // Key is client id
         final Map<String, List<ADALTokenCacheItem>> result = new HashMap<>();
 
@@ -341,7 +341,7 @@ public class TokenCacheItemMigrationAdapter {
 
             if (null == refreshToken) {
                 Logger.verbose(
-                        TAG + methodName,
+                        methodTag,
                         "FRT was null. Try MRRT."
                 );
 
@@ -350,7 +350,7 @@ public class TokenCacheItemMigrationAdapter {
 
             if (null == refreshToken) {
                 Logger.verbose(
-                        TAG + methodName,
+                        methodTag,
                         "MRRT was null. Try RT."
                 );
 
@@ -366,7 +366,7 @@ public class TokenCacheItemMigrationAdapter {
                 result.get(clientId).add(refreshToken);
             } else {
                 Logger.warn(
-                        TAG + methodName,
+                        methodTag,
                         "Refresh token could not be located."
                 );
             }
@@ -385,7 +385,7 @@ public class TokenCacheItemMigrationAdapter {
     @Nullable
     public static ADALTokenCacheItem findRt(
             @NonNull final List<ADALTokenCacheItem> cacheItems) {
-        final String methodName = ":findRt";
+        final String methodTag = TAG + ":findRt";
         ADALTokenCacheItem result = null;
 
         for (final ADALTokenCacheItem cacheItem : cacheItems) {
@@ -393,7 +393,7 @@ public class TokenCacheItemMigrationAdapter {
                 result = cacheItem;
 
                 Logger.verbose(
-                        TAG + methodName,
+                        methodTag,
                         "RT found."
                 );
 
@@ -414,7 +414,7 @@ public class TokenCacheItemMigrationAdapter {
     @Nullable
     public static ADALTokenCacheItem findMrrt(
             @NonNull final List<ADALTokenCacheItem> cacheItems) {
-        final String methodName = ":findMrrt";
+        final String methodTag = TAG + ":findMrrt";
         ADALTokenCacheItem result = null;
 
         for (final ADALTokenCacheItem cacheItem : cacheItems) {
@@ -423,7 +423,7 @@ public class TokenCacheItemMigrationAdapter {
                 result = cacheItem;
 
                 Logger.verbose(
-                        TAG + methodName,
+                        methodTag,
                         "Mrrt found."
                 );
 
@@ -444,7 +444,7 @@ public class TokenCacheItemMigrationAdapter {
     @Nullable
     public static ADALTokenCacheItem findFrt(
             @NonNull final List<ADALTokenCacheItem> cacheItems) {
-        final String methodName = ":findFrt";
+        final String methodTag = TAG + ":findFrt";
         ADALTokenCacheItem result = null;
 
         for (final ADALTokenCacheItem cacheItem : cacheItems) {
@@ -453,7 +453,7 @@ public class TokenCacheItemMigrationAdapter {
                 result = cacheItem;
 
                 Logger.verbose(
-                        TAG + methodName,
+                        methodTag,
                         "Frt found."
                 );
 
