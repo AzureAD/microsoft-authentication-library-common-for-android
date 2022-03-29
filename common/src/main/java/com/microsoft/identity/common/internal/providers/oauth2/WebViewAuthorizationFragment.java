@@ -36,7 +36,6 @@ import android.widget.ProgressBar;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
 import androidx.annotation.VisibleForTesting;
 import androidx.fragment.app.FragmentActivity;
 
@@ -152,7 +151,6 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 activity,
                 new AuthorizationCompletionCallback(),
                 new OnPageLoadedCallback() {
-                    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
                     @Override
                     public void onPageLoaded(final String url) {
                         final String[] javascriptToExecute = new String[1];
