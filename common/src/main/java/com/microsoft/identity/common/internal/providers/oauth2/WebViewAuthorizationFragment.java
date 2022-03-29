@@ -63,8 +63,6 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_ZOOM_CONTROLS_ENABLED;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_ZOOM_ENABLED;
 
-import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.CERTAUTH_PREFIX;
-
 /**
  * Authorization fragment with embedded webview.
  */
@@ -102,6 +100,14 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         final FragmentActivity activity = getActivity();
         if (activity != null) {
             WebViewUtil.setDataDirectorySuffix(activity.getApplicationContext());
+        }
+        //For CBA, we need to clear the certificate choice cache here so that
+        // the user will be able to login with multiple accounts with CBA
+        //addressing on-device CBA bug: https://identitydivision.visualstudio.com/Engineering/_workitems/edit/1776683
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            WebView.clearClientCertPreferences(null);
+        } else {
+            Logger.info(TAG, null, "onCreate:" + "Client Cert Preferences cache not cleared due to SDK version < 21 (LOLLIPOP)");
         }
     }
 
@@ -171,15 +177,6 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                                 mWebView.loadUrl("javascript:" + javascriptToExecute[0].replace("%", "%25"));
                             }
                         }
-
-                        //methods `proceed` and `cancel` of ClientCertRequest cache choice,
-                        //so cert picker won't come up again for subsequent CBA attempts
-                        //In order to clear the client cert preferences, we check if url has certauth,
-                        //which means some CBA choice was made
-                        //addressing on-device CBA bug: https://identitydivision.visualstudio.com/Engineering/_workitems/edit/1776683
-                        if (url.startsWith(CERTAUTH_PREFIX)) {
-                            WebView.clearClientCertPreferences(null);
-                        }
                     }
                 },
                 mRedirectUri);
@@ -212,6 +209,15 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
 
         if (mWebView.canGoBack()) {
             mWebView.goBack();
+            //For CBA, we need to clear the certificate choice cache here so that
+            // if the cert picker is exited (`cancel()`) or the flow has an error,
+            //the user can still try to login again with a cert.
+            //addressing on-device CBA bug: https://identitydivision.visualstudio.com/Engineering/_workitems/edit/1776683
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                WebView.clearClientCertPreferences(null);
+            } else {
+                Logger.info(TAG, null, "onBackPressed:" + "Client Cert Preferences cache not cleared due to SDK version < 21 (LOLLIPOP)");
+            }
         } else {
             cancelAuthorization(true);
         }

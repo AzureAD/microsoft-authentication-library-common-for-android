@@ -69,8 +69,7 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
                     public void alias(String alias) {
                         if (alias == null) {
                             Logger.info(TAG, "No certificate chosen by user, cancelling the TLS request.");
-                            //`ignore` instead of `cancel` since ignore seems to have less issues with clearClientCertPreferences method
-                            request.ignore();
+                            request.cancel();
                             return;
                         }
 
