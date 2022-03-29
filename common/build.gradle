@@ -131,7 +131,7 @@ dependencies {
         transitive = false
     }
 
-    distApi("com.microsoft.identity:common4j:1.0.3") {
+    distApi("com.microsoft.identity:common4j:1.0.4") {
         transitive = false
     }
 

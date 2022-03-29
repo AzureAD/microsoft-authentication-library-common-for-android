@@ -1,3 +1,7 @@
+Version 4.0.5
+----------
+- [PATCH] Ensure a device pop manager is provided when PoPAuthenticationScheme is requested of the broker (#1706)
+
 Version 4.0.4
 ----------
 - [PATCH] Adding orientation flag to BrokerActivity android:configChanges to prevent it from getting restarted on orientation change (#1705)
