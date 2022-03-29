@@ -636,6 +636,9 @@ public class CommandDispatcher {
                         // for "CANCEL_AUTHORIZATION_REQUEST". This results in the sInteractiveExecutor thread being in deadlock
                         // state and not able to process any more interactive requests. To get out of this deadlock and be able to
                         // process future interactive request we need to shutdown and restart the sInteractiveExecutor executor service.
+                        Logger.info(TAG + methodName,
+                                "The previous interactive request was queued but never got processed and is blocking the interactive thread. " +
+                                        "Restarting the interactive executor service to enable processing interactive requests again.");
                         sInteractiveExecutor.shutdownNow();
                         sInteractiveExecutor = Executors.newSingleThreadExecutor();
                     }
