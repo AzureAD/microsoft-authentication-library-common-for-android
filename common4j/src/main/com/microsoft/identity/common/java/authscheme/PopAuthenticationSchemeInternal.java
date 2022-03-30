@@ -165,6 +165,10 @@ public class PopAuthenticationSchemeInternal
         mClockSkewManager = clockSkewManager;
     }
 
+    public void setDevicePopManager(@NonNull final IDevicePopManager devicePopManager){
+        mPopManager = devicePopManager;
+    }
+
     @Override
     @Nullable
     public String getHttpMethod() {

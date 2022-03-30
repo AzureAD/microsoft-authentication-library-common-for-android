@@ -15,7 +15,8 @@
 
         <!-- Activity to invoke an interactive request to the intent passed by ad-accounts(Broker) -->
         <activity
-            android:name="com.microsoft.identity.common.internal.broker.BrokerActivity" />
+            android:name="com.microsoft.identity.common.internal.broker.BrokerActivity"
+            android:configChanges="orientation|screenSize|screenLayout" />
     </application>
 
     <!-- Required for API Level 30 to make sure we can detect browsers and other apps we want to

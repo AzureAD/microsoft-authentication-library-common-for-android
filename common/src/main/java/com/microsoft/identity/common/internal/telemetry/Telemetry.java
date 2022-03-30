@@ -101,6 +101,7 @@ public class Telemetry extends com.microsoft.identity.common.java.telemetry.Tele
         }
 
         public Builder withContext(final Context context) {
+            final String methodTag = TAG + ":withContext";
             if (context == null) {
                 throw new IllegalArgumentException("Context must not be null.");
             }
@@ -117,7 +118,7 @@ public class Telemetry extends com.microsoft.identity.common.java.telemetry.Tele
                 int flags = context.getPackageManager().getApplicationInfo(packageName, 0).flags;
                 mIsDebugging = (flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0;
             } catch (final PackageManager.NameNotFoundException exception) {
-                Logger.warn(TAG, "The application is not found from PackageManager.");
+                Logger.warn(methodTag, "The application is not found from PackageManager.");
                 mIsDebugging = BuildConfig.DEBUG;
             }
 

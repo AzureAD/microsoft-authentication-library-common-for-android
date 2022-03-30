@@ -58,14 +58,15 @@ public class BrowserSelector {
      * @return Browser selected to use.
      */
     public static Browser select(final Context context, final List<BrowserDescriptor> browserSafeList) throws ClientException {
+        final String methodTag = TAG + ":select";
         final List<Browser> allBrowsers = getAllBrowsers(context);
-        Logger.verbose(TAG, "Select the browser to launch.");
+        Logger.verbose(methodTag, "Select the browser to launch.");
 
         for (final Browser browser : allBrowsers) {
             for (final BrowserDescriptor browserDescriptor : browserSafeList) {
                 if (matches(browserDescriptor, browser)) {
                     Logger.info(
-                            TAG,
+                            methodTag,
                             "Browser's package name: "
                                     + browser.getPackageName()
                                     + " version: "
@@ -75,19 +76,17 @@ public class BrowserSelector {
             }
         }
 
-        Logger.error(TAG, "No available browser installed on the device.", null);
+        Logger.error(methodTag, "No available browser installed on the device.", null);
         throw new ClientException(ErrorStrings.NO_AVAILABLE_BROWSER_FOUND, "No available browser installed on the device.");
     }
 
     private static boolean matches(@NonNull final BrowserDescriptor browserDescriptor,
                                    @NonNull Browser browser) {
-        final String methodName = ":matches";
-
         final BrowserDescriptor descriptor;
         try {
             descriptor = (BrowserDescriptor) browserDescriptor;
         } catch (final ClassCastException e) {
-            Logger.error(TAG + methodName, "Cannot cast IBrowserDescriptor to BrowserDescriptor", e);
+            Logger.error(TAG + ":matches", "Cannot cast IBrowserDescriptor to BrowserDescriptor", e);
             return false;
         }
 
@@ -120,6 +119,7 @@ public class BrowserSelector {
      * (i.e. their default browser, if set, should be the first entry in the list).
      */
     public static List<Browser> getAllBrowsers(final Context context) {
+        final String methodTag = TAG + ":getAllBrowsers";
         //get the list of browsers
         final Intent BROWSER_INTENT = new Intent(
                 Intent.ACTION_VIEW,
@@ -156,7 +156,7 @@ public class BrowserSelector {
             }
         }
 
-        Logger.verbose(TAG, null, "Found " + browserList.size() + " browsers.");
+        Logger.verbose(methodTag, null, "Found " + browserList.size() + " browsers.");
         return browserList;
     }
 

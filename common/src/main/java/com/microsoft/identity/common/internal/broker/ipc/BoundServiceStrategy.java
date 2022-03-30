@@ -29,16 +29,20 @@ public class BoundServiceStrategy<T extends IInterface> implements IIpcStrategy 
     }
 
     @Override
-    public @Nullable Bundle communicateToBroker(final @NonNull BrokerOperationBundle brokerOperationBundle)
+    public @Nullable
+    Bundle communicateToBroker(final @NonNull BrokerOperationBundle brokerOperationBundle)
             throws BrokerCommunicationException {
-        final String methodName = brokerOperationBundle.getOperation().name();
+        final String methodTag = TAG + ":communicateToBroker";
+        final String operationName = brokerOperationBundle.getOperation().name();
+
+        Logger.info(methodTag, "Broker operation: " + operationName+ " brokerPackage: " + brokerOperationBundle.getTargetBrokerAppPackageName());
 
         try {
             return mClient.performOperation(brokerOperationBundle);
         } catch (final RemoteException | InterruptedException | ExecutionException | TimeoutException | RuntimeException e) {
             // We know for a fact that in some OEM, bind service might throw a runtime exception.
             final String errorDescription = "Error occurred while awaiting (get) return of bound Service with " + mClient.getClass().getSimpleName();
-            Logger.error(TAG + methodName, errorDescription, e);
+            Logger.error(methodTag, errorDescription, e);
             throw new BrokerCommunicationException(CONNECTION_ERROR, getType(), errorDescription, e);
         } finally {
             mClient.disconnect();

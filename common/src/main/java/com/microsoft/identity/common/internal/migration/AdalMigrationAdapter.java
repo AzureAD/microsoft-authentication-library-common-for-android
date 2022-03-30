@@ -162,7 +162,7 @@ public class AdalMigrationAdapter implements IMigrationAdapter<MicrosoftAccount,
      */
     @Nullable
     public static MicrosoftAccount createAccount(@NonNull final ADALTokenCacheItem refreshToken) {
-        final String methodName = ":createAccount";
+        final String methodTag = TAG + ":createAccount";
         try {
             final String rawIdToken = refreshToken.getRawIdToken();
             final String uid = refreshToken.getUserInfo().getUserId();
@@ -186,12 +186,12 @@ public class AdalMigrationAdapter implements IMigrationAdapter<MicrosoftAccount,
         } catch (MalformedURLException | ServiceException e) {
             final String errorMsg = "Failed to create Account";
             Logger.error(
-                    TAG + methodName,
+                    methodTag,
                     errorMsg,
                     null
             );
             Logger.errorPII(
-                    TAG + methodName,
+                    methodTag,
                     errorMsg,
                     e
             );
@@ -207,6 +207,7 @@ public class AdalMigrationAdapter implements IMigrationAdapter<MicrosoftAccount,
      */
     @VisibleForTesting
     Map<String, ADALTokenCacheItem> deserialize(final Map<String, String> tokenCacheItems) {
+        final String methodTag = TAG + ":deserialize";
         final Map<String, ADALTokenCacheItem> result = new HashMap<>();
 
         final Gson gson = new Gson();
@@ -218,7 +219,7 @@ public class AdalMigrationAdapter implements IMigrationAdapter<MicrosoftAccount,
                 );
             } catch (final JsonSyntaxException e) {
                 Logger.warn(
-                        TAG,
+                        methodTag,
                         "Failed to deserialize ADAL cache entry. Skipping."
                 );
             }
@@ -233,14 +234,14 @@ public class AdalMigrationAdapter implements IMigrationAdapter<MicrosoftAccount,
      * @return True, if the metadata loads successfully. False otherwise.
      */
     public static boolean loadCloudDiscoveryMetadata() {
-        final String methodName = ":loadCloudDiscoveryMetadata";
+        final String methodTag = TAG + ":loadCloudDiscoveryMetadata";
 
         if (!AzureActiveDirectory.isInitialized()) {
             try {
                 AzureActiveDirectory.performCloudDiscovery();
             } catch (final IOException | URISyntaxException e) {
                 Logger.error(
-                        TAG + methodName,
+                        methodTag,
                         "Failed to load instance discovery metadata",
                         e
                 );

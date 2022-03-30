@@ -318,6 +318,14 @@ public class ExceptionAdapter {
             );
         }
 
+        if (e instanceof InterruptedException) {
+            return new ClientException(
+                    ClientException.INTERRUPTED_OPERATION,
+                    "SDK cancelled operation, the thread execution was interrupted",
+                    e
+            );
+        }
+
         if (e instanceof BaseException) {
             return (BaseException) e;
         }
