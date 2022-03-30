@@ -1,5 +1,6 @@
 V.Next
 ----------
+- [MINOR] Add prompt=create support.
 - [PATCH] Fixing potential deadlock state in executor service for interactive requests (#1696)
 - [PATCH] Ensure consistent logging tags (#1701)
 - [PATCH] Update gson version to 2.8.9 (#1694)
