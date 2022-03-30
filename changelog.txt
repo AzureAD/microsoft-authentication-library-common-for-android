@@ -1,6 +1,7 @@
 V.Next
 ----------
 - [MINOR] Add prompt=create support. (#1707)
+- [PATCH] Clears client cert preferences so that multiple CBA login attempts can be completed in same session (#1688)
 - [PATCH] Fixing potential deadlock state in executor service for interactive requests (#1696)
 - [PATCH] Ensure consistent logging tags (#1701)
 - [PATCH] Update gson version to 2.8.9 (#1694)
@@ -9,6 +10,7 @@ V.Next
 - [PATCH] Fix accidental code change that disabled PoP for auth code grant flow (#1661)
 - [MINOR] Add flighting parameters to commmandParameters (#1562)
 - [MINOR] Add ropc command and ropc flow to BaseController (#1539)
+- [PATCH] Move to commitNow() instead of commit() when removing authorization fragment from provided fragment manager.  Add exception handling/logging.  (#1695851)
 - [PATCH] Ensure a device pop manager is provided when PoPAuthenticationScheme is requested of the broker (#1706)
 
 Version 4.0.4
