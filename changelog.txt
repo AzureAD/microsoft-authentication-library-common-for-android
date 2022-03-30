@@ -1,3 +1,7 @@
+Version 3.6.9
+----------
+- [PATCH] Move to commitNow() instead of commit() when removing authorization fragment from provided fragment manager.  Add exception handling/logging.  (#1695851)
+
 Version 3.6.8
 ----------
 - [PATCH] Synchronize updating refresh token in cache (saving new and removing old) to avoid race condition (#1659, #1684)

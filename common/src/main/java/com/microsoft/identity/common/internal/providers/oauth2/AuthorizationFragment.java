@@ -107,6 +107,7 @@ public abstract class AuthorizationFragment extends Fragment {
     }
 
     void finish() {
+        final String methodName = "#finish";
         //We're finished here... stop listening for request cancellation
         LocalBroadcastManager.getInstance(getContext()).unregisterReceiver(mCancelRequestReceiver);
 
@@ -116,12 +117,26 @@ public abstract class AuthorizationFragment extends Fragment {
         } else {
             // The calling activity is not owned by MSAL/Broker.
             // Just remove this fragment.
-            if (getFragmentManager() != null) {
-                getFragmentManager()
-                        .beginTransaction()
-                        .setTransitionStyle(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
-                        .remove(this)
-                        .commit();
+            try {
+                final FragmentManager fragmentManager = getFragmentManager();
+                if (fragmentManager != null) {
+                    fragmentManager
+                            .beginTransaction()
+                            .setTransitionStyle(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
+                            .remove(this)
+                            .commitNow();
+                }
+            } catch(Exception e){
+                /*
+                MATS Telemetry indicated that the normal call to commit() which is async occasionally
+                results in an IllegalStateException.  Current theory is that because we previously were
+                user commit() rather than commitNow() that the fragment manager that we were removing
+                ourselves from was already gone...
+
+                Logging being added here to hopefully to make a more definitive determination of root cause.
+                https://identitydivision.visualstudio.com/Engineering/_workitems/edit/1695851
+                 */
+                Logger.error(TAG + methodName, "Logged as error to capture 'cause'; Exception occurred when removing ourselves from provided FragmentManager", e);
             }
         }
     }
