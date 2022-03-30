@@ -96,6 +96,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        final String methodTag = TAG + ":onCreate";
         final FragmentActivity activity = getActivity();
         if (activity != null) {
             WebViewUtil.setDataDirectorySuffix(activity.getApplicationContext());
@@ -106,7 +107,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             WebView.clearClientCertPreferences(null);
         } else {
-            Logger.info(TAG, null, "onCreate:" + "Client Cert Preferences cache not cleared due to SDK version < 21 (LOLLIPOP)");
+            Logger.warn(methodTag, "Client Cert Preferences cache not cleared due to SDK version < 21 (LOLLIPOP)");
         }
     }
 
@@ -215,7 +216,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 WebView.clearClientCertPreferences(null);
             } else {
-                Logger.info(TAG, null, "onBackPressed:" + "Client Cert Preferences cache not cleared due to SDK version < 21 (LOLLIPOP)");
+                Logger.warn(methodTag, "Client Cert Preferences cache not cleared due to SDK version < 21 (LOLLIPOP)");
             }
         } else {
             cancelAuthorization(true);
