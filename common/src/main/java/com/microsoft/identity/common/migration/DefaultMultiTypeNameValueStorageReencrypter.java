@@ -48,9 +48,9 @@ public class DefaultMultiTypeNameValueStorageReencrypter implements IMultiTypeNa
                                                @NonNull final IStringEncrypter encrypter,
                                                @NonNull final IStringDecrypter decrypter,
                                                @NonNull final ReencryptionParams params) {
-        final String methodName = ":reencrypt (sync)";
+        final String methodTag = TAG + ":reencrypt";
         final Map<String, String> cacheEntries = new HashMap<>(fileManager.getAll());
-        Logger.verbose(TAG + methodName,
+        Logger.verbose(methodTag,
                 "Attempting to migrate cache entries: " + cacheEntries.size());
         final MigrationOperationResult result = new MigrationOperationResult();
         result.setCountOfTotalRecords(cacheEntries.size());
@@ -79,7 +79,7 @@ public class DefaultMultiTypeNameValueStorageReencrypter implements IMultiTypeNa
         clearEntriesMarkedForRemoval(fileManager, cacheEntries, keysMarkedForRemoval);
 
         if (shouldAbort.get()) {
-            Logger.info(TAG + methodName, "Aborting after decrypt.");
+            Logger.info(methodTag, "Aborting after decrypt.");
             return result;
         }
 
@@ -104,12 +104,12 @@ public class DefaultMultiTypeNameValueStorageReencrypter implements IMultiTypeNa
         clearEntriesMarkedForRemoval(fileManager, cacheEntries, keysMarkedForRemoval);
 
         if (shouldAbort.get()) {
-            Logger.info(TAG + methodName, "Aborting after reencrypt.");
+            Logger.info(methodTag, "Aborting after reencrypt.");
             return result;
         }
 
         // Write the newly encrypted records...
-        Logger.info(TAG + methodName, "Writing reencrypted cache entries.");
+        Logger.info(methodTag, "Writing reencrypted cache entries.");
         for (final Map.Entry<String, String> cacheEntry : cacheEntries.entrySet()) {
             fileManager.put(cacheEntry.getKey(), cacheEntry.getValue());
         }
@@ -148,27 +148,27 @@ public class DefaultMultiTypeNameValueStorageReencrypter implements IMultiTypeNa
                                     @NonNull final Set<String> keysMarkedForRemoval,
                                     @NonNull final Set<String> skipKeys,
                                     @NonNull AtomicBoolean shouldAbort) {
-        final String methodName = ":applyCacheMutation";
+        final String methodTag = TAG + ":applyCacheMutation";
         for (final Map.Entry<String, String> cacheEntry : cacheEntries.entrySet()) {
             try {
                 if (skipKeys.contains(cacheEntry.getKey())) {
-                    Logger.warn(TAG + methodName, "Skipping entry.");
+                    Logger.warn(methodTag, "Skipping entry.");
                     continue;
                 }
                 callable.call(cacheEntry);
             } catch (final Exception e) {
-                Logger.error(TAG + methodName, "Error during mutation", e);
-                Logger.errorPII(TAG + methodName, "Failed key: " + cacheEntry.getKey(), e);
+                Logger.error(methodTag, "Error during mutation", e);
+                Logger.errorPII(methodTag, "Failed key: " + cacheEntry.getKey(), e);
                 inputResult.addFailure(e);
                 skipKeys.add(cacheEntry.getKey());
 
                 if (params.eraseEntryOnError()) {
-                    Logger.warn(TAG + methodName, "Marking key for removal.");
+                    Logger.warn(methodTag, "Marking key for removal.");
                     keysMarkedForRemoval.add(cacheEntry.getKey());
                 }
 
                 if (params.eraseAllOnError()) {
-                    Logger.warn(TAG + methodName, "Marking all keys for removal.");
+                    Logger.warn(methodTag, "Marking all keys for removal.");
                     keysMarkedForRemoval.addAll(cacheEntries.keySet());
                     shouldAbort.set(true);
                     break;
@@ -185,8 +185,8 @@ public class DefaultMultiTypeNameValueStorageReencrypter implements IMultiTypeNa
     private void clearEntriesMarkedForRemoval(@NonNull final INameValueStorage<String> fileManager,
                                               @NonNull final Map<String, String> cacheEntries,
                                               @NonNull final Set<String> keysMarkedForRemoval) {
-        final String methodName = ":clearEntriesMarkedForRemoval";
-        Logger.warn(TAG + methodName, "Removing entries marked for removal");
+        final String methodTag = TAG + ":clearEntriesMarkedForRemoval";
+        Logger.warn(methodTag, "Removing entries marked for removal");
         for (final String removedKey : keysMarkedForRemoval) {
             cacheEntries.remove(removedKey);
             fileManager.remove(removedKey);

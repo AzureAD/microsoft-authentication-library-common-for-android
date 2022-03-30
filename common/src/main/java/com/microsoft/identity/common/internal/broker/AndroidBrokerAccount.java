@@ -67,11 +67,11 @@ public class AndroidBrokerAccount implements IBrokerAccount {
      */
     @NonNull
     public static AndroidBrokerAccount cast(@NonNull final IBrokerAccount account) {
-        final String methodName = ":cast";
+        final String methodTag = TAG + ":cast";
         try {
             return (AndroidBrokerAccount) account;
         } catch (final ClassCastException e) {
-            Logger.error(TAG + methodName,
+            Logger.error(methodTag,
                     "Expected an AndroidBrokerAccount, but got " + e.getClass().getSimpleName(), e);
             throw e;
         }
@@ -86,17 +86,17 @@ public class AndroidBrokerAccount implements IBrokerAccount {
     public static AndroidBrokerAccount create(@NonNull final AccountManager accountManager,
                                               @NonNull final String accountName,
                                               @NonNull final String accountType) {
-        final String methodName = ":create";
+        final String methodTag = TAG + ":create";
 
         Account account = getAccount(accountManager, accountName, accountType);
         if (account == null) {
             account = new Account(accountName, accountType);
-            Logger.verbose(TAG + methodName, "Creating account.");
-            Logger.verbosePII(TAG + methodName, "Creating account with name :" + account.name);
+            Logger.verbose(methodTag, "Creating account.");
+            Logger.verbosePII(methodTag, "Creating account with name :" + account.name);
             accountManager.addAccountExplicitly(account, null, null);
         } else {
-            Logger.verbose(TAG + methodName, "Account found.");
-            Logger.verbosePII(TAG + methodName, ACCOUNT_NAME + ":" + account.name);
+            Logger.verbose(methodTag, "Account found.");
+            Logger.verbosePII(methodTag, ACCOUNT_NAME + ":" + account.name);
         }
 
         // On Android O and above, GET_ACCOUNTS permission is being replaced by accountVisibility.
@@ -126,7 +126,7 @@ public class AndroidBrokerAccount implements IBrokerAccount {
     private static Account getAccount(@NonNull final AccountManager accountManager,
                                       @Nullable final String accountName,
                                       @NonNull final String accountType) {
-        final String methodName = "getAccount";
+        final String methodTag = TAG + ":getAccount";
         if (accountName == null) {
             return null;
         }
@@ -136,12 +136,12 @@ public class AndroidBrokerAccount implements IBrokerAccount {
         if (accountList != null) {
             for (final Account existingAcct : accountList) {
                 if (existingAcct.name.equalsIgnoreCase(accountName)) {
-                    Logger.verbose(TAG + methodName, "Account found.");
+                    Logger.verbose(methodTag, "Account found.");
                     return existingAcct;
                 }
             }
         } else {
-            Logger.verbose(TAG + methodName, "Account list null.");
+            Logger.verbose(methodTag, "Account list null.");
         }
 
         return null;

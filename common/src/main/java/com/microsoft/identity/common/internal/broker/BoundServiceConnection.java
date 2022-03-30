@@ -44,7 +44,8 @@ public class BoundServiceConnection implements android.content.ServiceConnection
 
     @Override
     public void onServiceConnected(ComponentName name, IBinder service) {
-        Logger.info(TAG, name.getClassName() + " is connected.");
+        final String methodTag = TAG + ":onServiceConnected";
+        Logger.info(methodTag, name.getClassName() + " is connected.");
         mFuture.setResult(service);
     }
 
@@ -64,6 +65,7 @@ public class BoundServiceConnection implements android.content.ServiceConnection
 
     @Override
     public void onServiceDisconnected(@NonNull final ComponentName name) {
-        Logger.info(TAG, name.getClassName() + " is disconnected.");
+        final String methodTag = TAG + ":onServiceDisconnected";
+        Logger.info(methodTag, name.getClassName() + " is disconnected.");
     }
 }

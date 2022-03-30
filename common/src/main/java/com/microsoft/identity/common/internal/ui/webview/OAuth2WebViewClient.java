@@ -99,9 +99,10 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
     @Override
     public void onReceivedHttpAuthRequest(WebView view, final HttpAuthHandler handler,
                                           String host, String realm) {
+        final String methodTag = TAG + ":onReceivedHttpAuthRequest";
         // Create a dialog to ask for credentials and post it to the handler.
-        Logger.info(TAG, "Receive the http auth request. Start the dialog to ask for creds. ");
-        Logger.infoPII(TAG, "Host:" + host);
+        Logger.info(methodTag,"Receive the http auth request. Start the dialog to ask for creds. ");
+        Logger.infoPII(methodTag,"Host:" + host);
 
         //TODO TelemetryEvent.setNTLM(true); after the Telemetry is finished in common.
         // Use ChallengeFactory to produce a NtlmChallenge
@@ -143,11 +144,11 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
     public void onReceivedError(@NonNull final WebView view,
                                 @NonNull final WebResourceRequest request,
                                 @NonNull final WebResourceError error) {
-        final String methodName = "onReceivedError (23)";
+        final String methodTag = TAG + ":onReceivedError";
         final boolean isForMainFrame = request.isForMainFrame();
 
-        Logger.warn(TAG + methodName, "WebResourceError - isForMainFrame? " + isForMainFrame);
-        Logger.warnPII(TAG + methodName, "Failing url: " + request.getUrl());
+        Logger.warn(methodTag, "WebResourceError - isForMainFrame? " + isForMainFrame);
+        Logger.warnPII(methodTag, "Failing url: " + request.getUrl());
 
         if (request.isForMainFrame()) {
             sendErrorToCallback(view, error.getErrorCode(), error.getDescription().toString());
@@ -202,29 +203,31 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
     public void onPageStarted(final WebView view,
                               final String url,
                               final Bitmap favicon) {
+        final String methodTag = TAG + ":onPageStarted";
         checkStartUrl(url);
-        Logger.info(TAG, "WebView starts loading.");
+        Logger.info(methodTag,"WebView starts loading.");
         super.onPageStarted(view, url, favicon);
     }
 
     private void checkStartUrl(final String url) {
+        final String methodTag = TAG + ":checkStartUrl";
         if (StringUtil.isEmpty(url)) {
-            Logger.info(TAG, "onPageStarted: Null url for page to load.");
+            Logger.info(methodTag,"onPageStarted: Null url for page to load.");
             return;
         }
 
         final Uri uri = Uri.parse(url);
         if (uri.isOpaque()) {
-            Logger.info(TAG, "onPageStarted: Non-hierarchical loading uri.");
-            Logger.infoPII(TAG, "start url: " + url);
+            Logger.info(methodTag,"onPageStarted: Non-hierarchical loading uri.");
+            Logger.infoPII(methodTag,"start url: " + url);
         } else if (StringUtil.isEmpty(uri.getQueryParameter(AuthenticationConstants.OAuth2.CODE))) {
-            Logger.info(TAG, "onPageStarted: URI has no auth code ('"
+            Logger.info(methodTag,"onPageStarted: URI has no auth code ('"
                     + AuthenticationConstants.OAuth2.CODE + "') query parameter.");
-            Logger.infoPII(TAG, "Scheme:" + uri.getScheme() + " Host: " + uri.getHost()
+            Logger.infoPII(methodTag,"Scheme:" + uri.getScheme() + " Host: " + uri.getHost()
                     + " Path: " + uri.getPath());
         } else {
-            Logger.info(TAG, "Auth code is returned for the loading url.");
-            Logger.infoPII(TAG, "Scheme:" + uri.getScheme() + " Host: " + uri.getHost()
+            Logger.info(methodTag,"Auth code is returned for the loading url.");
+            Logger.infoPII(methodTag,"Scheme:" + uri.getScheme() + " Host: " + uri.getHost()
                     + " Path: " + uri.getPath());
         }
     }

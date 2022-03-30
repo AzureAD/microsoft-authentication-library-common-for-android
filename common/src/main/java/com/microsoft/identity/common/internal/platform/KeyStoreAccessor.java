@@ -72,19 +72,20 @@ import javax.crypto.SecretKey;
  * construct new instances here, and expose an interface that gives us the functionality that we need.
  */
 public class KeyStoreAccessor {
+    private static final String TAG = KeyStoreAccessor.class.getSimpleName();
     /**
      * The name of the KeyStore to use.
      */
     private static final String ANDROID_KEYSTORE = "AndroidKeyStore";
     public static final Charset UTF8 = Charset.forName("UTF-8");
-    private static final int KEY_PURPOSES =  KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT | KeyProperties.PURPOSE_SIGN ;
+    private static final int KEY_PURPOSES = KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT | KeyProperties.PURPOSE_SIGN;
 
     /**
      * For a given alias, construct an accessor for a KeyStore backed entry given that alias.
      *
      * @param context
-     * @param alias The key alias.
-     * @param suite The cipher type of this key.
+     * @param alias   The key alias.
+     * @param suite   The cipher type of this key.
      * @return a key accessor for the use of that particular key.
      * @throws CertificateException
      * @throws NoSuchAlgorithmException
@@ -117,8 +118,8 @@ public class KeyStoreAccessor {
     }
 
     private static final IKeyAccessor getKeyAccessor(@NonNull final IDevicePopManager.Cipher cipher,
-                                                    @NonNull final SigningAlgorithm signingAlg,
-                                                    @NonNull final IDevicePopManager popManager) {
+                                                     @NonNull final SigningAlgorithm signingAlg,
+                                                     @NonNull final IDevicePopManager popManager) {
         return new AsymmetricKeyAccessor() {
 
             @Override
@@ -182,7 +183,7 @@ public class KeyStoreAccessor {
      * Construct an accessor for a KeyStore backed entry using a random alias.
      *
      * @param context
-     * @param cipher The cipher type of this key.
+     * @param cipher     The cipher type of this key.
      * @param signingAlg
      * @return a key accessor for the use of that particular key.
      * @throws CertificateException
@@ -191,8 +192,8 @@ public class KeyStoreAccessor {
      * @throws IOException
      */
     public static IKeyAccessor newInstance(@NonNull final Context context,
-                                          @NonNull final IDevicePopManager.Cipher cipher,
-                                          @NonNull final SigningAlgorithm signingAlg)
+                                           @NonNull final IDevicePopManager.Cipher cipher,
+                                           @NonNull final SigningAlgorithm signingAlg)
             throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException, ClientException {
         final String alias = UUID.randomUUID().toString();
         final IPlatformComponents commonComponents = AndroidPlatformComponents.createFromContext(context);
@@ -203,7 +204,8 @@ public class KeyStoreAccessor {
 
     /**
      * Construct an accessor for a KeyStore backed entry using a random alias.
-     * @param cipher The cipher type of this key.
+     *
+     * @param cipher        The cipher type of this key.
      * @param needRawAccess whether we need access to the raw key for, as an example, using it for SP800 derivation
      * @return a key accessor for the use of that particular key.
      * @throws CertificateException
@@ -213,7 +215,7 @@ public class KeyStoreAccessor {
      */
     public static IKeyAccessor newInstance(@NonNull final SymmetricCipher cipher, @NonNull final boolean needRawAccess)
             throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException, ClientException,
-                   NoSuchProviderException, InvalidAlgorithmParameterException {
+            NoSuchProviderException, InvalidAlgorithmParameterException {
         final String alias = UUID.randomUUID().toString();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !needRawAccess) {
             final KeyStore instance = KeyStore.getInstance(ANDROID_KEYSTORE);
@@ -287,11 +289,13 @@ public class KeyStoreAccessor {
      * encrypt a fixed value based on the cipher parameters with the key, and take a SHA256 digest
      * of it.  This could be inspection resistant enough to identify different keys without exposing
      * the actual key.
-     * @param alias The alias of the key to thumbprint.
+     *
+     * @param alias    The alias of the key to thumbprint.
      * @param instance the KeyStore to get the key from.
      * @return A supplier that can compute the thumbprint for the key on demand.
      */
     public static Supplier<byte[]> symmetricThumbprint(@NonNull final String alias, @NonNull final KeyStore instance) {
+        final String methodTag = TAG + ":symmetricThumbprint";
         return new Supplier<byte[]>() {
             @Nullable
             @Override
@@ -308,7 +312,7 @@ public class KeyStoreAccessor {
                     }
                 } catch (final KeyStoreException | BadPaddingException | NoSuchAlgorithmException
                         | IllegalBlockSizeException | UnrecoverableEntryException | NoSuchPaddingException e) {
-                    Logger.error("KeyAccessor:newInstance", null, "Exception while getting key entry", e);
+                    Logger.error(methodTag, null, "Exception while getting key entry", e);
                     return null;
                 }
             }
@@ -318,20 +322,21 @@ public class KeyStoreAccessor {
     /**
      * Import a symmetric key into the appropriate keystore.  Currently not implemented until we
      * discover how to use this key - current protocols preclude the use of the keystore.
-     * @param context The android application context - this is only actually important for downlevel
-     *                and could be forked.
-     * @param cipher the SymmetricCipher being imported.
-     * @param keyAlias the alias under which to import the cipher
-     * @param key_jwe the JWE string containing the key.
+     *
+     * @param context      The android application context - this is only actually important for downlevel
+     *                     and could be forked.
+     * @param cipher       the SymmetricCipher being imported.
+     * @param keyAlias     the alias under which to import the cipher
+     * @param key_jwe      the JWE string containing the key.
      * @param stk_accessor the accessor for the STK to use to decrypt the key, if required.
      * @return A key accessor for the imported session key
      * @throws ClientException if there is a failure while importing.
      */
     public static IKeyAccessor importSymmetricKey(@NonNull final Context context,
-                                                 @NonNull final SymmetricCipher cipher,
-                                                 @NonNull final String keyAlias,
-                                                 @NonNull final String key_jwe,
-                                                 @NonNull final IKeyAccessor stk_accessor)
+                                                  @NonNull final SymmetricCipher cipher,
+                                                  @NonNull final String keyAlias,
+                                                  @NonNull final String key_jwe,
+                                                  @NonNull final IKeyAccessor stk_accessor)
             throws ParseException, CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException, ClientException {
         throw new UnsupportedOperationException("This operation is not yet supported");
     }
