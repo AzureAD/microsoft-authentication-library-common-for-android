@@ -24,6 +24,7 @@ package com.microsoft.identity.common.java;
 
 import com.microsoft.identity.common.java.challengehandlers.IDeviceCertificateLoader;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
@@ -32,6 +33,8 @@ import lombok.experimental.Accessors;
 public enum AuthenticationSettings {
     INSTANCE;
 
+    @SuppressFBWarnings(value = "ME_ENUM_FIELD_SETTER",
+            justification = "by design (for now), allowing common to use the data initialized by broker.")
     @Getter
     @Setter
     private IDeviceCertificateLoader mCertificateLoader;

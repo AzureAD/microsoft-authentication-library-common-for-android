@@ -59,7 +59,7 @@ import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.
 @Builder
 @Getter
 @Accessors(prefix = "m")
-public class PKeyAuthChallenge implements Serializable {
+public class PKeyAuthChallenge {
     private static final String TAG = PKeyAuthChallenge.class.getSimpleName();
 
     enum RequestField {
@@ -102,6 +102,9 @@ public class PKeyAuthChallenge implements Serializable {
      */
     private final String mVersion;
 
+    /**
+     * The url to submit PKeyAuth response to.
+     */
     private final String mSubmitUrl;
 
     @Builder.Default
