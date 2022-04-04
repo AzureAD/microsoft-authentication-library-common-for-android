@@ -112,7 +112,7 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
     /**
      * The PoP alias in the designated KeyStore -- default val used by non-OneAuth Android platform.
      */
-    protected static final String DEFAULT_KEYSTORE_ENTRY_ALIAS = "microsoft-device-pop";
+    public static final String DEFAULT_KEYSTORE_ENTRY_ALIAS = "microsoft-device-pop";
 
     /**
      * The NIST advised min keySize for RSA pairs.
