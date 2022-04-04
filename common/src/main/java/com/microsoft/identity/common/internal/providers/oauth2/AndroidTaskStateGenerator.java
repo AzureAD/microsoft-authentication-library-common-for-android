@@ -56,13 +56,14 @@ public class AndroidTaskStateGenerator extends DefaultStateGenerator {
     }
 
     public static int getTaskFromState(String state) {
+        final String methodTag = TAG + ":getTaskFromState";
         String[] parts = state.split(SPLITTER);
         int returnValue = 0;
         if (parts.length >= 2) {
             try {
                 returnValue = Integer.parseInt(parts[0]);
             } catch (NumberFormatException ex) {
-                Logger.error(TAG, "Unable to parse state", ex);
+                Logger.error(methodTag, "Unable to parse state", ex);
             }
         }
         return returnValue;

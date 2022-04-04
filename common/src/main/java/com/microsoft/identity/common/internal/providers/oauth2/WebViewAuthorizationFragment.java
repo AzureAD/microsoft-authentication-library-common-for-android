@@ -96,9 +96,18 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        final String methodTag = TAG + ":onCreate";
         final FragmentActivity activity = getActivity();
         if (activity != null) {
             WebViewUtil.setDataDirectorySuffix(activity.getApplicationContext());
+        }
+        //For CBA, we need to clear the certificate choice cache here so that
+        // the user will be able to login with multiple accounts with CBA
+        //addressing on-device CBA bug: https://identitydivision.visualstudio.com/Engineering/_workitems/edit/1776683
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            WebView.clearClientCertPreferences(null);
+        } else {
+            Logger.warn(methodTag, "Client Cert Preferences cache not cleared due to SDK version < 21 (LOLLIPOP)");
         }
     }
 
@@ -131,7 +140,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        final String methodName = "#onCreateView";
+        final String methodTag = TAG + ":onCreateView";
         final View view = inflater.inflate(R.layout.common_activity_authentication, container, false);
         mProgressBar = view.findViewById(R.id.common_auth_webview_progressbar);
 
@@ -153,7 +162,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                                     mPostPageLoadedJavascript);
                         } catch (final UnsupportedEncodingException e) {
                             // Encode url component failed, fallback.
-                            Logger.warn(TAG, "Inject expectedUrl failed.");
+                            Logger.warn(methodTag, "Inject expectedUrl failed.");
                         }
                         // Inject the javascript string from testing. This should only be evaluated if we haven't sent
                         // an auth result already.
@@ -175,8 +184,8 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         mWebView.post(new Runnable() {
             @Override
             public void run() {
-                Logger.info(TAG + methodName, "Launching embedded WebView for acquiring auth code.");
-                Logger.infoPII(TAG + methodName, "The start url is " + mAuthorizationRequestUrl);
+                Logger.info(methodTag, "Launching embedded WebView for acquiring auth code.");
+                Logger.infoPII(methodTag, "The start url is " + mAuthorizationRequestUrl);
                 mWebView.loadUrl(mAuthorizationRequestUrl, mRequestHeaders);
 
                 // The first page load could take time, and we do not want to just show a blank page.
@@ -195,10 +204,20 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
      */
     @Override
     public boolean onBackPressed() {
-        Logger.info(TAG, "Back button is pressed");
+        final String methodTag = TAG + ":onBackPressed";
+        Logger.info(methodTag, "Back button is pressed");
 
         if (mWebView.canGoBack()) {
             mWebView.goBack();
+            //For CBA, we need to clear the certificate choice cache here so that
+            // if the cert picker is exited (`cancel()`) or the flow has an error,
+            //the user can still try to login again with a cert.
+            //addressing on-device CBA bug: https://identitydivision.visualstudio.com/Engineering/_workitems/edit/1776683
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                WebView.clearClientCertPreferences(null);
+            } else {
+                Logger.warn(methodTag, "Client Cert Preferences cache not cleared due to SDK version < 21 (LOLLIPOP)");
+            }
         } else {
             cancelAuthorization(true);
         }
@@ -263,15 +282,17 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     class AuthorizationCompletionCallback implements IAuthorizationCompletionCallback {
         @Override
         public void onChallengeResponseReceived(@NonNull final RawAuthorizationResult response) {
-            Logger.info(TAG, null, "onChallengeResponseReceived:" + response.getResultCode());
+            final String methodTag = TAG + ":onChallengeResponseReceived";
+            Logger.info(methodTag, null, "onChallengeResponseReceived:" + response.getResultCode());
             sendResult(response);
             finish();
         }
 
         @Override
         public void setPKeyAuthStatus(final boolean status) {
+            final String methodTag = TAG + ":setPKeyAuthStatus";
             mPkeyAuthStatus = status;
-            Logger.info(TAG, null, "setPKeyAuthStatus:" + status);
+            Logger.info(methodTag, null, "setPKeyAuthStatus:" + status);
         }
     }
 }

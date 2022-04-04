@@ -81,6 +81,7 @@ public class AndroidDeviceKeyManager<K extends KeyStore.Entry> extends AbstractK
      */
     @Override
     public SecureHardwareState getSecureHardwareState() throws ClientException {
+        final String methodTag = TAG + ":getSecureHardwareState";
         final String errCode;
         final Exception exception;
 
@@ -95,16 +96,16 @@ public class AndroidDeviceKeyManager<K extends KeyStore.Entry> extends AbstractK
                         );
                         final KeyInfo info = factory.getKeySpec(privateKey, KeyInfo.class);
                         final boolean isInsideSecureHardware = info.isInsideSecureHardware();
-                        Logger.info(TAG, "PrivateKey is secure hardware backed? " + isInsideSecureHardware);
+                        Logger.info(methodTag, "PrivateKey is secure hardware backed? " + isInsideSecureHardware);
                         return isInsideSecureHardware
                                 ? SecureHardwareState.TRUE_UNATTESTED
                                 : SecureHardwareState.FALSE;
                     } catch (final NoSuchAlgorithmException | InvalidKeySpecException e) {
-                        Logger.error(TAG, "Failed to query secure hardware state.", e);
+                        Logger.error(methodTag, "Failed to query secure hardware state.", e);
                         return SecureHardwareState.UNKNOWN_QUERY_ERROR;
                     }
                 } else {
-                    Logger.info(TAG, "Cannot query secure hardware state (API unavailable <23)");
+                    Logger.info(methodTag, "Cannot query secure hardware state (API unavailable <23)");
                 }
 
                 return SecureHardwareState.UNKNOWN_DOWNLEVEL;
@@ -117,16 +118,16 @@ public class AndroidDeviceKeyManager<K extends KeyStore.Entry> extends AbstractK
                         );
                         final KeyInfo info = (KeyInfo) factory.getKeySpec(privateKey, KeyInfo.class);
                         final boolean isInsideSecureHardware = info.isInsideSecureHardware();
-                        Logger.info(TAG, "SecretKey is secure hardware backed? " + isInsideSecureHardware);
+                        Logger.info(methodTag, "SecretKey is secure hardware backed? " + isInsideSecureHardware);
                         return isInsideSecureHardware
                                 ? SecureHardwareState.TRUE_UNATTESTED
                                 : SecureHardwareState.FALSE;
                     } catch (final NoSuchAlgorithmException | InvalidKeySpecException e) {
-                        Logger.error(TAG, "Failed to query secure hardware state.", e);
+                        Logger.error(methodTag, "Failed to query secure hardware state.", e);
                         return SecureHardwareState.UNKNOWN_QUERY_ERROR;
                     }
                 } else {
-                    Logger.info(TAG, "Cannot query secure hardware state (API unavailable <23)");
+                    Logger.info(methodTag, "Cannot query secure hardware state (API unavailable <23)");
                 }
                 return SecureHardwareState.UNKNOWN_DOWNLEVEL;
             } else {
@@ -150,7 +151,7 @@ public class AndroidDeviceKeyManager<K extends KeyStore.Entry> extends AbstractK
         );
 
         Logger.error(
-                TAG + ":getSecureHardwareState",
+                methodTag,
                 errCode,
                 exception
         );

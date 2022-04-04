@@ -326,6 +326,7 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
 
     @Override
     public String generateAsymmetricKey() throws ClientException {
+        final String methodTag = TAG + ":generateAsymmetricKey";
         final Exception exception;
         final String errCode;
 
@@ -363,7 +364,7 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
         );
 
         Logger.error(
-                TAG,
+                methodTag,
                 clientException.getMessage(),
                 clientException
         );
@@ -387,6 +388,7 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
 
     @Override
     public String getRequestConfirmation() throws ClientException {
+        final String methodTag = TAG + ":getRequestConfirmation";
         // The sync API is a wrapper around the async API
         // This likely shouldn't be called on the UI thread to avoid ANR
         // Device perf may vary, however -- some devices this may be OK.
@@ -420,7 +422,7 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
             }
         } catch (final InterruptedException e) {
             Logger.error(
-                    TAG,
+                    methodTag,
                     "Interrupted while waiting on callback.",
                     e
             );
@@ -435,6 +437,7 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
 
     @Override
     public void getRequestConfirmation(@NonNull final TaskCompletedCallbackWithError<String, ClientException> callback) {
+        final String methodTag = TAG + ":getRequestConfirmation";
         sThreadExecutor.submit(new Runnable() {
             @Override
             public void run() {
@@ -476,7 +479,7 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
                 );
 
                 Logger.error(
-                        TAG,
+                        methodTag,
                         clientException.getMessage(),
                         clientException
                 );
@@ -498,13 +501,13 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
                        @NonNull final byte[] inputBytesToSign) throws ClientException {
         Exception exception;
         String errCode;
-        final String methodName = ":sign";
+        final String methodTag = TAG + ":sign";
         try {
             final KeyStore.Entry keyEntry = mKeyManager.getEntry();
 
             if (!(keyEntry instanceof KeyStore.PrivateKeyEntry)) {
                 Logger.warn(
-                        TAG + methodName,
+                        methodTag,
                         PRIVATE_KEY_NOT_FOUND
                 );
                 throw new ClientException(INVALID_KEY_MISSING);
@@ -538,7 +541,7 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
         );
 
         Logger.error(
-                TAG + methodName,
+                methodTag,
                 clientException.getMessage(),
                 clientException
         );
@@ -558,7 +561,7 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
     public boolean verify(@NonNull final SigningAlgorithm alg,
                           @NonNull final byte[] inputBytesToVerify,
                           @NonNull final byte[] signatureBytes) {
-        String methodName = ":verify";
+        String methodTag = TAG + ":verify";
         String errCode;
         Exception exception;
         try {
@@ -566,7 +569,7 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
 
             if (keyEntry == null) {
                 Logger.warn(
-                        TAG + methodName,
+                        methodTag,
                         PRIVATE_KEY_NOT_FOUND
                 );
                 return false;
@@ -594,7 +597,7 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
         }
 
         Logger.error(
-                TAG + methodName,
+                methodTag,
                 errCode,
                 exception
         );
@@ -612,7 +615,7 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
     public byte[] encrypt(@NonNull final Cipher cipher, @NonNull final byte[] plaintext) throws ClientException {
         String errCode;
         Exception exception;
-        final String methodName = ":encrypt";
+        final String methodTag = TAG + ":encrypt";
         try {
             // Load our key material
             final KeyStore.PrivateKeyEntry privateKeyEntry = mKeyManager.getEntry();
@@ -662,7 +665,7 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
         );
 
         Logger.error(
-                TAG + methodName,
+                methodTag,
                 errCode,
                 exception
         );
@@ -680,7 +683,7 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
     public byte[] decrypt(@NonNull Cipher cipher, byte[] ciphertext) throws ClientException {
         String errCode;
         Exception exception;
-        final String methodName = ":decrypt";
+        final String methodTag = TAG + ":decrypt";
         try {
             // Load our key material
             final KeyStore.PrivateKeyEntry privateKeyEntry = mKeyManager.getEntry();
@@ -731,7 +734,7 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
         );
 
         Logger.error(
-                TAG + methodName,
+                methodTag,
                 errCode,
                 exception
         );
@@ -741,6 +744,7 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
 
     @Override
     public SecureHardwareState getSecureHardwareState() throws ClientException {
+        final String methodTag = TAG + ":getSecureHardwareState";
         final String errCode;
         final Exception exception;
 
@@ -765,7 +769,7 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
         );
 
         Logger.error(
-                TAG + ":getSecureHardwareState",
+                methodTag,
                 errCode,
                 exception
         );
@@ -778,7 +782,7 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
     @Override
     public @NonNull
     String getPublicKey(@NonNull final PublicKeyFormat format) throws ClientException {
-        final String methodName = ":getPublicKey";
+        final String methodTag = TAG + ":getPublicKey";
 
         switch (format) {
             case X_509_SubjectPublicKeyInfo_ASN_1:
@@ -793,7 +797,7 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
                 );
 
                 Logger.error(
-                        TAG + methodName,
+                        methodTag,
                         errMsg,
                         clientException
                 );
@@ -809,6 +813,7 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
 
     private @NonNull
     String getJwkPublicKey() throws ClientException {
+        final String methodTag = TAG + ":getJwkPublicKey";
         final Exception exception;
         final String errCode;
 
@@ -833,7 +838,7 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
         );
 
         Logger.error(
-                TAG,
+                methodTag,
                 clientException.getMessage(),
                 clientException
         );
@@ -842,6 +847,7 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
     }
 
     private String getX509SubjectPublicKeyInfo() throws ClientException {
+        final String methodTag = TAG + ":getX509SubjectPublicKeyInfo";
         final Exception exception;
         final String errCode;
 
@@ -870,7 +876,7 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
         );
 
         Logger.error(
-                TAG,
+                methodTag,
                 clientException.getMessage(),
                 clientException
         );
@@ -933,6 +939,7 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
                                                  @Nullable final String accessToken,
                                                  @Nullable final String nonce,
                                                  @Nullable final String clientClaims) throws ClientException {
+        final String methodTag = TAG + ":mintSignedHttpRequestInternal";
         final Exception exception;
         final String errCode;
 
@@ -1029,7 +1036,7 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
         );
 
         Logger.error(
-                TAG,
+                methodTag,
                 clientException.getMessage(),
                 clientException
         );

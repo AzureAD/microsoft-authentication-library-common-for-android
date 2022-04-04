@@ -49,7 +49,7 @@ public class RequestContext extends HashMap<String, String> implements IRequestC
         if (sLogDeprecationWarning) {
             // only log 1x
             sLogDeprecationWarning = false;
-            Logger.warn(TAG, "This class is deprecated. "
+            Logger.warn(TAG + ":toJsonString", "This class is deprecated. "
                     + "Migrate usage to: com.microsoft.identity.common.logging.RequestContext");
         }
 
