@@ -24,7 +24,6 @@ package com.microsoft.identity.common.java.crypto;
 
 import com.microsoft.identity.common.java.exception.ClientException;
 
-import java.security.KeyPair;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -33,12 +32,11 @@ import java.security.UnrecoverableEntryException;
 import java.security.cert.Certificate;
 import java.util.Date;
 
-import edu.umd.cs.findbugs.annotations.Nullable;
-
 /**
  * Mediate access to a specific instance of a piece of material stored in a KeyStore.  This
  * interface provides generic access to hardware storage for a given key entry, provides the
  * metadata that can be retrieved from the underlying storage mechanism of whatever variety.
+ *
  * @param <K> the type of KeyStore entry being managed.
  */
 public interface IKeyStoreKeyManager<K extends KeyStore.Entry> {
@@ -51,6 +49,7 @@ public interface IKeyStoreKeyManager<K extends KeyStore.Entry> {
      * Given a particular key thumbprint, determine whether it matches the one specified
      * produced by this key.  The thumprint in question is usually a well-known value encrypted
      * with the key, and may include certain parameters with which the cipher is initialized.
+     *
      * @param thumbprint A key thumprint.
      * @return True if this keys thumprint maches the one provided.
      */
@@ -71,27 +70,38 @@ public interface IKeyStoreKeyManager<K extends KeyStore.Entry> {
     /**
      * Remove this key from the storage mechanism containing it.  After this method is called,
      * other functionality on this object may fail.
+     *
      * @return true if the removal was successful.
      */
     boolean clear();
 
     /**
      * Retrieve a reference to the material stored in this location.
+     *
      * @return the keyStore entry for this key or null if it cannot be located.
      * @throws UnrecoverableEntryException if the key cannot be read from the storage mechanism.
-     * @throws NoSuchAlgorithmException if the algorithm required by the key cannot be supported.
-     * @throws KeyStoreException if the underlying KeyStore has not been initialized/
+     * @throws NoSuchAlgorithmException    if the algorithm required by the key cannot be supported.
+     * @throws KeyStoreException           if the underlying KeyStore has not been initialized/
      */
     K getEntry() throws UnrecoverableEntryException, NoSuchAlgorithmException, KeyStoreException;
 
     /**
      * Import a key.
-     * @param jwk the jwk to import.
+     *
+     * @param jwk       the jwk to import.
      * @param algorithm the algortihm in use.
      * @throws ClientException if something goes wrong.
      */
     void importKey(byte[] jwk, String algorithm) throws ClientException;
 
+    /**
+     * Store an asymmetric key into the key store.
+     *
+     * @param privateKey the private key of the asymmetric key
+     * @param certChain  the cert chain of the asymmetric key
+     * @throws KeyStoreException if something goes wrong with key store
+     * @throws ClientException   if something goes wrong while storing asymmetric key
+     */
     void storeAsymmetricKey(PrivateKey privateKey, Certificate[] certChain) throws KeyStoreException, ClientException;
 
     /**
@@ -99,7 +109,7 @@ public interface IKeyStoreKeyManager<K extends KeyStore.Entry> {
      */
     byte[] getThumbprint() throws ClientException;
 
-   /**
+    /**
      * @return a certificate chain associated with this key, or null if no chain is tied to it.
      */
     Certificate[] getCertificateChain() throws ClientException;

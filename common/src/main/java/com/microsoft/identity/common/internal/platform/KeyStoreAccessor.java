@@ -104,7 +104,7 @@ public class KeyStoreAccessor {
         }
         final KeyStore instance = KeyStore.getInstance(ANDROID_KEYSTORE);
         final AndroidDeviceKeyManager<KeyStore.SecretKeyEntry> keyManager = new AndroidDeviceKeyManager<>(instance, alias);
-        return new SecretKeyAccessor(keyManager, suite) {
+        return new AndroidSecretKeyAccessor(keyManager, suite) {
             @Override
             public byte[] sign(byte[] text) throws ClientException {
                 throw new UnsupportedOperationException("This key instance does not support signing");
@@ -261,7 +261,7 @@ public class KeyStoreAccessor {
             }
 
             final AndroidDeviceKeyManager<KeyStore.SecretKeyEntry> keyManager = new AndroidDeviceKeyManager<>(instance, alias);
-            return new SecretKeyAccessor(keyManager, cipher) {
+            return new AndroidSecretKeyAccessor(keyManager, cipher) {
                 @Override
                 public byte[] sign(byte[] text) throws ClientException {
                     throw new UnsupportedOperationException("This key instance does not support signing");

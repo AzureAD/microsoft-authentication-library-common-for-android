@@ -65,7 +65,7 @@ import static com.microsoft.identity.common.java.exception.ClientException.NO_SU
 
 @Builder
 @Accessors(prefix = "m")
-public class SecretKeyAccessor implements IManagedKeyAccessor<KeyStore.SecretKeyEntry> {
+public class AndroidSecretKeyAccessor implements IManagedKeyAccessor<KeyStore.SecretKeyEntry> {
     private static final Charset UTF8 = Charset.forName("UTF-8");
     private final AndroidDeviceKeyManager<KeyStore.SecretKeyEntry> mKeyManager;
     private final CryptoSuite suite;
