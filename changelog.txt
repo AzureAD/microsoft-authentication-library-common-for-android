@@ -1,5 +1,6 @@
 V.Next
 ----------
+- [MINOR] Support TenantID value from eSTS in PKeyAuth flows (#1712)
 - [MINOR] Implement cert loader for both multiple and legacy WPJ data store in PKeyAuth (#1711)
 - [MINOR] Add prompt=create support. (#1707)
 - [PATCH] Clears client cert preferences so that multiple CBA login attempts can be completed in same session (#1688)
