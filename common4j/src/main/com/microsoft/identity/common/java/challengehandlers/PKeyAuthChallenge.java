@@ -41,6 +41,7 @@ import java.util.List;
 import java.util.Map;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.experimental.Accessors;
@@ -89,12 +90,14 @@ public class PKeyAuthChallenge {
      * The mCertAuthorities could be empty when either no certificate or no permission for ADFS
      * service account for the Device container in AD.
      */
+    @Nullable
     private final List<String> mCertAuthorities;
 
     /**
      * The thumbprint of the device certificate that the client MUST present in order to complete proof of possession.
      * This is used by the client in order to determine the right certificate to be presented by the client in order to perform device authentication.
      */
+    @Nullable
     private final String mThumbprint;
 
     /**
@@ -109,6 +112,12 @@ public class PKeyAuthChallenge {
 
     @Builder.Default
     private final JWSBuilder mJwsBuilder = new JWSBuilder();
+
+    /**
+     * Home tenant ID of the account that is being challenged.
+     */
+    @Nullable
+    private final String mTenantId;
 
     /**
      * Generate a header to be returned with the PKeyAuth Response.
@@ -135,8 +144,7 @@ public class PKeyAuthChallenge {
             return getChallengeHeaderWithoutSignedJwt();
         }
 
-        /// TODO: provides tenantId when eSTS starts sending us one.
-        final IDeviceCertificate deviceCertProxy = certificateLoader.loadCertificate(null);
+        final IDeviceCertificate deviceCertProxy = certificateLoader.loadCertificate(mTenantId);
         if (deviceCertProxy == null) {
             Logger.warn(TAG + methodName, "Device Certificate not found.");
             return getChallengeHeaderWithoutSignedJwt();

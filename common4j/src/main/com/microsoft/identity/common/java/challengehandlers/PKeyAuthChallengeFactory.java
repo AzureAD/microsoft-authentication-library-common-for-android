@@ -41,6 +41,7 @@ import static com.microsoft.identity.common.java.challengehandlers.PKeyAuthChall
 import static com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallenge.RequestField.Context;
 import static com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallenge.RequestField.Nonce;
 import static com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallenge.RequestField.SubmitUrl;
+import static com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallenge.RequestField.TenantId;
 import static com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallenge.RequestField.Version;
 import static com.microsoft.identity.common.java.exception.ErrorStrings.DEVICE_CERTIFICATE_REQUEST_INVALID;
 
@@ -76,7 +77,8 @@ public class PKeyAuthChallengeFactory {
         builder.nonce(parameters.get(Nonce.name().toLowerCase(Locale.US)))
                 .context(parameters.get(Context.name()))
                 .version(parameters.get(Version.name()))
-                .submitUrl(parameters.get(SubmitUrl.name()));
+                .submitUrl(parameters.get(SubmitUrl.name()))
+                .tenantId(parameters.get(TenantId.name()));
 
         if (parameters.containsKey(CertAuthorities.name())) {
             final String authorities = parameters.get(CertAuthorities.name());
@@ -109,7 +111,8 @@ public class PKeyAuthChallengeFactory {
         builder.submitUrl(authority)
                 .nonce(headerItems.get(Nonce.name().toLowerCase(Locale.US)))
                 .context(headerItems.get(Context.name()))
-                .version(headerItems.get(Version.name()));
+                .version(headerItems.get(Version.name()))
+                .tenantId(headerItems.get(TenantId.name()));
 
         // When pkeyauth header is present, ADFS is always trying to device auth. When hitting token endpoint(device
         // challenge will be returned via 401 challenge), ADFS is sending back an empty cert thumbprint when they found
