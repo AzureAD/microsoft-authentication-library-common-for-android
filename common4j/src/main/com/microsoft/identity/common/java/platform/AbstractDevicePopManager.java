@@ -42,6 +42,9 @@ import static com.microsoft.identity.common.java.exception.ClientException.THUMB
 import static com.microsoft.identity.common.java.exception.ClientException.UNKNOWN_EXPORT_FORMAT;
 import static com.microsoft.identity.common.java.marker.PerfConstants.CodeMarkerConstants.GENERATE_AT_POP_ASYMMETRIC_KEYPAIR_END;
 import static com.microsoft.identity.common.java.marker.PerfConstants.CodeMarkerConstants.GENERATE_AT_POP_ASYMMETRIC_KEYPAIR_START;
+import static com.microsoft.identity.common.java.platform.AbstractKeyStoreKeyManager.getKeyPairForEntry;
+import static com.microsoft.identity.common.java.platform.AbstractKeyStoreKeyManager.getRsaKeyForKeyPair;
+import static com.microsoft.identity.common.java.platform.AbstractKeyStoreKeyManager.getThumbprintForRsaKey;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -268,44 +271,7 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
 
     @Override
     public String getAsymmetricKeyThumbprint() throws ClientException {
-        final Exception exception;
-        final String errCode;
-
-        try {
-            final KeyStore.PrivateKeyEntry entry = mKeyManager.getEntry();
-            return getRsaThumbprint(entry);
-        } catch (final KeyStoreException e) {
-            exception = e;
-            errCode = KEYSTORE_NOT_INITIALIZED;
-        } catch (final NoSuchAlgorithmException e) {
-            exception = e;
-            errCode = NO_SUCH_ALGORITHM;
-        } catch (final UnrecoverableEntryException e) {
-            exception = e;
-            errCode = INVALID_PROTECTION_PARAMS;
-        } catch (final JOSEException e) {
-            exception = e;
-            errCode = THUMBPRINT_COMPUTATION_FAILURE;
-        }
-
-        throw new ClientException(
-                errCode,
-                exception.getMessage(),
-                exception
-        );
-    }
-
-    /**
-     * Given an RSA private key entry, get the RSA thumbprint.
-     *
-     * @param entry the entry to compute the thumbprint for.
-     * @return A String that would be identicative of this specific key.
-     * @throws JOSEException If there is a computation problem.
-     */
-    public static String getRsaThumbprint(@NonNull final KeyStore.PrivateKeyEntry entry) throws JOSEException {
-        final KeyPair rsaKeyPair = getKeyPairForEntry(entry);
-        final RSAKey rsaKey = getRsaKeyForKeyPair(rsaKeyPair);
-        return getThumbprintForRsaKey(rsaKey);
+        return new String(mKeyManager.getThumbprint(), UTF8);
     }
 
     @Override
@@ -1063,18 +1029,6 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
     }
 
     /**
-     * For the supplied {@link KeyStore.Entry}, get a corresponding {@link KeyPair} instance.
-     *
-     * @param entry The Keystore.Entry to use.
-     * @return The resulting KeyPair.
-     */
-    private static KeyPair getKeyPairForEntry(@NonNull final KeyStore.PrivateKeyEntry entry) {
-        final PrivateKey privateKey = entry.getPrivateKey();
-        final PublicKey publicKey = entry.getCertificate().getPublicKey();
-        return new KeyPair(publicKey, privateKey);
-    }
-
-    /**
      * @return the public key for this particular keyStore entry.
      * @throws UnrecoverableEntryException
      * @throws NoSuchAlgorithmException
@@ -1083,18 +1037,6 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
     public PublicKey getPublicKey() throws UnrecoverableEntryException, NoSuchAlgorithmException, KeyStoreException {
         final KeyStore.PrivateKeyEntry keyEntry = mKeyManager.getEntry();
         return keyEntry.getCertificate().getPublicKey();
-    }
-
-    /**
-     * Gets the corresponding {@link RSAKey} for the supplied {@link KeyPair}.
-     *
-     * @param keyPair The KeyPair to use.
-     * @return The resulting RSAKey.
-     */
-    private static RSAKey getRsaKeyForKeyPair(@NonNull final KeyPair keyPair) {
-        return new RSAKey.Builder((RSAPublicKey) keyPair.getPublic())
-                .keyUse(null)
-                .build();
     }
 
     /**
@@ -1112,11 +1054,6 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
                         .toString();
 
         return base64UrlEncode(thumbprintMinifiedJson);
-    }
-
-    private static String getThumbprintForRsaKey(@NonNull RSAKey rsaKey) throws JOSEException {
-        final Base64URL thumbprint = rsaKey.computeThumbprint();
-        return thumbprint.toString();
     }
 
     /**

@@ -71,8 +71,8 @@ import javax.crypto.SecretKey;
  * in DevicePopManager is package private, and we're really interested in only a few operations, just
  * construct new instances here, and expose an interface that gives us the functionality that we need.
  */
-public class KeyStoreAccessor {
-    private static final String TAG = KeyStoreAccessor.class.getSimpleName();
+public class AndroidKeyStoreAccessor {
+    private static final String TAG = AndroidKeyStoreAccessor.class.getSimpleName();
     /**
      * The name of the KeyStore to use.
      */
@@ -281,42 +281,6 @@ public class KeyStoreAccessor {
                     .key(key)
                     .alias(alias).build();
         }
-    }
-
-    /**
-     * Compute a thumbprint of a symmetric key for a given alias.  The impetus here is that the key
-     * itself is inaccessible, but we would still like to identify a particular instance.  We can
-     * encrypt a fixed value based on the cipher parameters with the key, and take a SHA256 digest
-     * of it.  This could be inspection resistant enough to identify different keys without exposing
-     * the actual key.
-     *
-     * @param alias    The alias of the key to thumbprint.
-     * @param instance the KeyStore to get the key from.
-     * @return A supplier that can compute the thumbprint for the key on demand.
-     */
-    public static Supplier<byte[]> symmetricThumbprint(@NonNull final String alias, @NonNull final KeyStore instance) {
-        final String methodTag = TAG + ":symmetricThumbprint";
-        return new Supplier<byte[]>() {
-            @Nullable
-            @Override
-            public byte[] get() {
-                try {
-                    KeyStore.Entry entry = instance.getEntry(alias, null);
-                    if (entry instanceof KeyStore.SecretKeyEntry) {
-                        final SecretKey key = ((KeyStore.SecretKeyEntry) entry).getSecretKey();
-                        final Cipher cipher = Cipher.getInstance(key.getAlgorithm());
-                        final MessageDigest digest = MessageDigest.getInstance("SHA256");
-                        return digest.digest(cipher.doFinal((key.getAlgorithm() + cipher.getBlockSize() + cipher.getParameters()).getBytes(UTF8)));
-                    } else {
-                        return null;
-                    }
-                } catch (final KeyStoreException | BadPaddingException | NoSuchAlgorithmException
-                        | IllegalBlockSizeException | UnrecoverableEntryException | NoSuchPaddingException e) {
-                    Logger.error(methodTag, null, "Exception while getting key entry", e);
-                    return null;
-                }
-            }
-        };
     }
 
     /**

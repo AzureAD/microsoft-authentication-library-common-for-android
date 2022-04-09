@@ -70,7 +70,7 @@ import static com.microsoft.identity.common.java.crypto.IDevicePopManager.Public
 // https://github.com/robolectric/robolectric/issues/1518
 //todo: Investigate if these tests can be migrated to common4j
 @RunWith(AndroidJUnit4.class)
-public class DevicePoPManagerTests {
+public class AndroidDevicePoPManagerTests {
 
     private Context mContext;
     private IDevicePopManager mDevicePopManager;

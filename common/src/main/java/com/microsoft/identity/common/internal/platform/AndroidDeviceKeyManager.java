@@ -69,7 +69,13 @@ public class AndroidDeviceKeyManager<K extends KeyStore.Entry> extends AbstractK
     }
 
     @Override
-    public void storeAsymmetricKey(PrivateKey privateKey, Certificate[] certChain) {
+    public void storeAsymmetricKey(@NonNull final PrivateKey privateKey, @NonNull final Certificate[] certChain) {
+        // Android Keystore stores the key in the keystore during key generation and we don't need
+        // to explicitly invoke setKeyEntry. Other KeyStores such as the BKS keystore doesn't do
+        // that and we need to explicitly invoke setKeyEntry and that's where this method comes in.
+        // I implemented the functionality in the abstract class because if we add more
+        // implementations in the future then they probably work similar to BKS implementation
+        // because most KeyStores require calling setKeyEntry to save the key into the key store).
         throw new UnsupportedOperationException("This is not currently supported");
     }
 

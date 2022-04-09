@@ -29,15 +29,12 @@ import static com.microsoft.identity.common.java.exception.ClientException.THUMB
 
 import com.microsoft.identity.common.java.crypto.IKeyStoreKeyManager;
 import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.java.exception.TerminalException;
 import com.microsoft.identity.common.java.logging.Logger;
-import com.microsoft.identity.common.java.util.Supplier;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.util.Base64URL;
 
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.security.KeyPair;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -58,7 +55,6 @@ import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.Accessors;
@@ -148,7 +144,6 @@ public abstract class AbstractKeyStoreKeyManager<K extends KeyStore.Entry> imple
 
         return deleted;
     }
-
 
     /**
      * Retrieve the entry stored in this particular alias.
@@ -246,6 +241,12 @@ public abstract class AbstractKeyStoreKeyManager<K extends KeyStore.Entry> imple
         return getThumbprintForRsaKey(rsaKey);
     }
 
+    /**
+     * Given a {@link java.security.KeyStore.SecretKeyEntry}, get the thumbprint.
+     *
+     * @param entry the {@link java.security.KeyStore.SecretKeyEntry}
+     * @return the thumbprint of the key
+     */
     public static byte[] getSecretKeyThumbprint(@NonNull final KeyStore.SecretKeyEntry entry) {
         try {
             final SecretKey key = ((KeyStore.SecretKeyEntry) entry).getSecretKey();
@@ -264,7 +265,7 @@ public abstract class AbstractKeyStoreKeyManager<K extends KeyStore.Entry> imple
      * @param entry The Keystore.Entry to use.
      * @return The resulting KeyPair.
      */
-    private static KeyPair getKeyPairForEntry(@NonNull final KeyStore.PrivateKeyEntry entry) {
+    public static KeyPair getKeyPairForEntry(@NonNull final KeyStore.PrivateKeyEntry entry) {
         final PrivateKey privateKey = entry.getPrivateKey();
         final PublicKey publicKey = entry.getCertificate().getPublicKey();
         return new KeyPair(publicKey, privateKey);
@@ -276,13 +277,25 @@ public abstract class AbstractKeyStoreKeyManager<K extends KeyStore.Entry> imple
      * @param keyPair The KeyPair to use.
      * @return The resulting RSAKey.
      */
-    private static RSAKey getRsaKeyForKeyPair(@NonNull final KeyPair keyPair) {
-        return new RSAKey.Builder((RSAPublicKey) keyPair.getPublic())
-                .keyUse(null)
-                .build();
+    public static RSAKey getRsaKeyForKeyPair(@NonNull final KeyPair keyPair) {
+        if (keyPair.getPublic() instanceof RSAPublicKey) {
+            return new RSAKey.Builder((RSAPublicKey) keyPair.getPublic())
+                    .keyUse(null)
+                    .build();
+        } else {
+            throw new UnsupportedOperationException("Cannot get RSAKey for " +
+                    "key of type: " + keyPair.getPublic().getClass().getCanonicalName());
+        }
     }
 
-    private static String getThumbprintForRsaKey(@NonNull RSAKey rsaKey) throws JOSEException {
+    /**
+     * Given a {@link RSAKey}, compute its thumbprint.
+     *
+     * @param rsaKey the {@link RSAKey}
+     * @return the thumbprint of the key
+     * @throws JOSEException if an error occurs while computing thumbprint
+     */
+    public static String getThumbprintForRsaKey(@NonNull RSAKey rsaKey) throws JOSEException {
         final Base64URL thumbprint = rsaKey.computeThumbprint();
         return thumbprint.toString();
     }
