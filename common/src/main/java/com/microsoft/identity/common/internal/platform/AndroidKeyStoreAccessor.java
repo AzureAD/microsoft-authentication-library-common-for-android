@@ -72,7 +72,7 @@ import javax.crypto.SecretKey;
  * construct new instances here, and expose an interface that gives us the functionality that we need.
  */
 public class AndroidKeyStoreAccessor {
-    private static final String TAG = AndroidKeyStoreAccessor.class.getSimpleName();
+    
     /**
      * The name of the KeyStore to use.
      */
