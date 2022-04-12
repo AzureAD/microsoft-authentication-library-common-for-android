@@ -1,5 +1,5 @@
 def getVersionFile() {
-    return file("../versioning/version.properties")
+    return file("./versioning/version.properties")
 }
 
 def getVersionProps() {
