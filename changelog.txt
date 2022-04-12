@@ -1,5 +1,6 @@
 V.Next
 ----------
+- [PATCH] Add null check to avoid NPE when checking for AccountTypesWithManagementDisabled (#1713)
 - [MINOR] Add prompt=create support. (#1707)
 - [PATCH] Clears client cert preferences so that multiple CBA login attempts can be completed in same session (#1688)
 - [PATCH] Fixing potential deadlock state in executor service for interactive requests (#1696)
