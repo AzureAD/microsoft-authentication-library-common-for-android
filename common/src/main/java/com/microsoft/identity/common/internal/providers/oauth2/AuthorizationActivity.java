@@ -23,12 +23,18 @@
 package com.microsoft.identity.common.internal.providers.oauth2;
 
 import android.os.Bundle;
+import android.util.Log;
+import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import com.microsoft.identity.common.internal.ui.DualScreenActivity;
 import com.microsoft.identity.common.logging.Logger;
+import com.yubico.yubikit.android.YubiKitManager;
+import com.yubico.yubikit.android.transport.usb.UsbConfiguration;
+import com.yubico.yubikit.android.transport.usb.UsbYubiKeyDevice;
+import com.yubico.yubikit.core.util.Callback;
 
 public class AuthorizationActivity extends DualScreenActivity {
 
@@ -50,6 +56,26 @@ public class AuthorizationActivity extends DualScreenActivity {
             Logger.error(methodTag, "Did not receive AuthorizationFragment from factory", ex);
         }
         setFragment(mFragment);
+
+        //test for YubiKit acknowledging YubiKey plugging in and unplugging
+        final YubiKitManager yubiKitManager = new YubiKitManager(getApplicationContext());
+        yubiKitManager.startUsbDiscovery(new UsbConfiguration(), new Callback<UsbYubiKeyDevice>() {
+            @Override
+            public void invoke(UsbYubiKeyDevice device) {
+                Toast.makeText(getApplicationContext(), "A device was connected", Toast.LENGTH_LONG).show();
+                Logger.info(methodTag, device.toString() + " plugged in");
+                Log.i(TAG, "\"" + device.toString() + "\" Plugged In");
+                device.setOnClosed(new Runnable() {
+                    @Override
+                    public void run() {
+                        Logger.info(methodTag, "YubiKey disconnected");
+                        Log.i(TAG, "YubiKey Disconnected");
+                    }
+                });
+            }
+        });
+
+
     }
 
     @Override
