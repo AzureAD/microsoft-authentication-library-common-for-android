@@ -875,8 +875,7 @@ public abstract class BaseController {
                     "No accounts found for clientId ["
                             + clientId
                             + ", "
-                            + "]",
-                    null
+                            + "]"
             );
             Logger.errorPII(
                     TAG,
