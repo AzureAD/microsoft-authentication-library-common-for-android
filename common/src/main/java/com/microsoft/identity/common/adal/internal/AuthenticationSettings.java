@@ -237,34 +237,6 @@ public enum AuthenticationSettings {
     }
 
     /**
-     * set class for work place join related API. This is only used from
-     * Authenticator side.
-     *
-     * @param clazz class for workplace join
-     */
-    public void setDeviceCertificateProxyClass(@SuppressWarnings(WarningType.rawtype_warning) Class clazz) {
-        com.microsoft.identity.common.java.AuthenticationSettings.INSTANCE.setDeviceCertificateProxyClass(clazz);
-    }
-
-    /**
-     * get class for work place join related API. This is only used from the
-     * Broker side.
-     *
-     * @return Class
-     */
-    public Class<?> getDeviceCertificateProxy() {
-        return com.microsoft.identity.common.java.AuthenticationSettings.INSTANCE.getDeviceCertificateProxy();
-    }
-
-    /**
-     * remove class for work place join related API. This is only used from
-     * Authenticator side.
-     */
-    public void removeDeviceCertificateProxy() {
-        com.microsoft.identity.common.java.AuthenticationSettings.INSTANCE.removeDeviceCertificateProxy();
-    }
-
-    /**
      * get package name to setup intent for AuthenticationActivity.
      *
      * @return Package name for activity
