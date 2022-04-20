@@ -1,5 +1,6 @@
 V.Next
 ----------
+- [MINOR] Support TenantID value from eSTS in PKeyAuth flows (#1712)
 - [MINOR] Implement cert loader for both multiple and legacy WPJ data store in PKeyAuth (#1711)
 - [PATCH] Add null check to avoid NPE when checking for AccountTypesWithManagementDisabled (#1713)
 - [MINOR] Add prompt=create support. (#1707)
