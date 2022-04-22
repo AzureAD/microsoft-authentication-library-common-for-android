@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.providers.oauth2;
 
 import android.os.Bundle;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -64,6 +65,13 @@ public abstract class AuthorizationFragment extends Fragment {
      */
     protected boolean mAuthResultSent = false;
 
+    private OnBackPressedCallback mBackPressedCallback = new OnBackPressedCallback(true) {
+        @Override
+        public void handleOnBackPressed() {
+            handleBackButtonPressed();
+        }
+    };
+
     /**
      * Listens to an operation cancellation event.
      */
@@ -87,6 +95,8 @@ public abstract class AuthorizationFragment extends Fragment {
         // if another incoming request is launched by the app
         LocalBroadcaster.INSTANCE.registerCallback(CANCEL_AUTHORIZATION_REQUEST, mCancelRequestReceiver);
 
+        requireActivity().getOnBackPressedDispatcher().addCallback(mBackPressedCallback);
+
         if (savedInstanceState == null && mInstanceState == null) {
             Logger.warn(methodTag, "No stored state. Unable to handle response");
             finish();
@@ -106,6 +116,8 @@ public abstract class AuthorizationFragment extends Fragment {
     void finish() {
         final String methodName = "#finish";
         LocalBroadcaster.INSTANCE.unregisterCallback(CANCEL_AUTHORIZATION_REQUEST);
+        mBackPressedCallback.remove();
+
         final FragmentActivity activity = getActivity();
         if (activity instanceof AuthorizationActivity) {
             activity.finish();
@@ -189,12 +201,8 @@ public abstract class AuthorizationFragment extends Fragment {
         super.onDestroy();
     }
 
-    /**
-     * NOTE: Fragment-only mode will not support this, as we don't own the activity.
-     * This must be invoked by AuthorizationActivity.onBackPressed().
-     */
-    public boolean onBackPressed() {
-        return false;
+    public void handleBackButtonPressed() {
+        cancelAuthorization(true);
     }
 
     void sendResult(final RawAuthorizationResult.ResultCode resultCode) {
