@@ -498,6 +498,8 @@ public class MicrosoftStsOAuth2Strategy
                 && response.getHeaders() != null
                 && response.getHeaders().containsKey(CHALLENGE_REQUEST_HEADER)) {
             // Received the device certificate challenge request. It is sent in 401 header.
+            // This is triggered whenever we're trying to redeem an AT with an RT without deviceid claim,
+            // and the AT requires device auth.
             Logger.info(TAG + methodName, "Receiving device certificate challenge request. ");
 
             return performPKeyAuthRequest(response, request);
