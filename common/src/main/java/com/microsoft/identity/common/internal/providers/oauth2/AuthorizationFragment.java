@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.providers.oauth2;
 
 import android.os.Bundle;
+import android.view.View;
 
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
@@ -65,13 +66,6 @@ public abstract class AuthorizationFragment extends Fragment {
      */
     protected boolean mAuthResultSent = false;
 
-    private OnBackPressedCallback mBackPressedCallback = new OnBackPressedCallback(true) {
-        @Override
-        public void handleOnBackPressed() {
-            handleBackButtonPressed();
-        }
-    };
-
     /**
      * Listens to an operation cancellation event.
      */
@@ -95,8 +89,6 @@ public abstract class AuthorizationFragment extends Fragment {
         // if another incoming request is launched by the app
         LocalBroadcaster.INSTANCE.registerCallback(CANCEL_AUTHORIZATION_REQUEST, mCancelRequestReceiver);
 
-        requireActivity().getOnBackPressedDispatcher().addCallback(mBackPressedCallback);
-
         if (savedInstanceState == null && mInstanceState == null) {
             Logger.warn(methodTag, "No stored state. Unable to handle response");
             finish();
@@ -113,10 +105,20 @@ public abstract class AuthorizationFragment extends Fragment {
         }
     }
 
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        requireActivity().getOnBackPressedDispatcher().addCallback(getViewLifecycleOwner(), new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                handleBackButtonPressed();
+            }
+        });
+    }
+
     void finish() {
         final String methodName = "#finish";
         LocalBroadcaster.INSTANCE.unregisterCallback(CANCEL_AUTHORIZATION_REQUEST);
-        mBackPressedCallback.remove();
 
         final FragmentActivity activity = getActivity();
         if (activity instanceof AuthorizationActivity) {
