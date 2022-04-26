@@ -27,7 +27,7 @@ import android.text.TextUtils;
 import androidx.annotation.NonNull;
 import androidx.annotation.WorkerThread;
 
-import com.microsoft.identity.common.java.configuration.LibraryConfiguration;
+import com.microsoft.identity.common.globalsettings.GlobalSettings;
 import com.microsoft.identity.common.java.controllers.CommandDispatcher;
 import com.microsoft.identity.common.java.eststelemetry.PublicApiId;
 import com.microsoft.identity.common.java.exception.ArgumentException;
@@ -317,7 +317,7 @@ public class LocalMSALController extends BaseController {
         // subsequent CacheRecords represent other profiles (projections) of this principal in
         // other tenants. Those tokens will be 'sparse', meaning that their AT/RT will not be loaded
         final ICacheRecord fullCacheRecord = cacheRecords.get(0);
-        if (LibraryConfiguration.getInstance().isRefreshInEnabled()
+        if (GlobalSettings.getInstance().isRefreshInEnabled()
                 && fullCacheRecord.getAccessToken() != null
                 && fullCacheRecord.getAccessToken().refreshOnIsActive()) {
             Logger.info(
@@ -325,7 +325,7 @@ public class LocalMSALController extends BaseController {
                     "RefreshOn is active. This will extend your token usage in the rare case servers are not available."
             );
         }
-        if (LibraryConfiguration.getInstance().isRefreshInEnabled()
+        if (GlobalSettings.getInstance().isRefreshInEnabled()
                 && fullCacheRecord.getAccessToken() != null
                 && fullCacheRecord.getAccessToken().shouldRefresh()) {
             if (!fullCacheRecord.getAccessToken().isExpired()) {

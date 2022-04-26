@@ -25,7 +25,6 @@ package com.microsoft.identity.common.java.configuration;
 import com.microsoft.identity.common.java.logging.Logger;
 
 import lombok.NonNull;
-
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -33,10 +32,13 @@ import lombok.Getter;
 /**
  * Holds configuration settings that are global in scope.
  * Apply to all public client application instances and all requests.
+ *
+ * @deprecated This class is now replaced with GlobalSettings.
  */
 @Getter
 @EqualsAndHashCode()
 @Builder()
+@Deprecated
 public class LibraryConfiguration {
 
     private static final String TAG = LibraryConfiguration.class.getSimpleName();

@@ -43,8 +43,8 @@ import com.microsoft.identity.common.java.commands.InteractiveTokenCommand;
 import com.microsoft.identity.common.java.commands.SilentTokenCommand;
 import com.microsoft.identity.common.java.commands.parameters.BrokerInteractiveTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.SilentTokenCommandParameters;
-import com.microsoft.identity.common.java.configuration.LibraryConfiguration;
 import com.microsoft.identity.common.java.eststelemetry.EstsTelemetry;
 import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.exception.ClientException;
@@ -625,8 +625,10 @@ public class CommandDispatcher {
             final String methodName = ":beginInteractive";
             synchronized (sLock) {
 
+                final boolean authorizationInCurrentTask = ((InteractiveTokenCommandParameters) command.getParameters()).isAuthorizationInCurrentTask();
+
                 //Cancel interactive request if authorizationInCurrentTask() returns true OR this is a broker request.
-                if (LibraryConfiguration.getInstance().isAuthorizationInCurrentTask() || command.getParameters() instanceof BrokerInteractiveTokenCommandParameters) {
+                if (authorizationInCurrentTask || command.getParameters() instanceof BrokerInteractiveTokenCommandParameters) {
                     // Send a broadcast to cancel if any active auth request is present.
                     if(LocalBroadcaster.INSTANCE.hasReceivers(CANCEL_AUTHORIZATION_REQUEST)) {
                         LocalBroadcaster.INSTANCE.broadcast(CANCEL_AUTHORIZATION_REQUEST, new PropertyBag());

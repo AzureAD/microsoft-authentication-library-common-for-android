@@ -62,12 +62,24 @@ public class InteractiveTokenCommandParameters extends TokenCommandParameters {
     @Expose()
     private final boolean handleNullTaskAffinity;
 
+    private final boolean authorizationInCurrentTask;
+
+    private final boolean refreshInEnabled;
+
     private final List<Map.Entry<String, String>> extraQueryStringParameters;
 
     private final List<String> extraScopesToConsent;
 
     public boolean getHandleNullTaskAffinity(){
         return handleNullTaskAffinity;
+    }
+
+    public boolean isAuthorizationInCurrentTask() {
+        return authorizationInCurrentTask;
+    }
+
+    public boolean isRefreshInEnabled() {
+        return refreshInEnabled;
     }
 
     public List<Map.Entry<String, String>> getExtraQueryStringParameters() {

@@ -28,13 +28,13 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
+import com.microsoft.identity.common.globalsettings.GlobalSettings;
 import com.microsoft.identity.common.internal.ui.browser.DefaultBrowserAuthorizationStrategy;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.commands.parameters.BrokerInteractiveTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCommandParameters;
-import com.microsoft.identity.common.java.configuration.LibraryConfiguration;
 import com.microsoft.identity.common.java.providers.oauth2.IAuthorizationStrategy;
 import com.microsoft.identity.common.internal.ui.browser.BrowserSelector;
 import com.microsoft.identity.common.internal.ui.webview.EmbeddedWebViewAuthorizationStrategy;
@@ -101,7 +101,7 @@ public class AndroidAuthorizationStrategyFactory implements IAuthorizationStrate
 
     private IAuthorizationStrategy getBrowserAuthorizationStrategy(@NonNull final boolean isBrokerRequest,
                                                                    @NonNull final List<BrowserDescriptor> browserSafeList) {
-        if (LibraryConfiguration.getInstance().isAuthorizationInCurrentTask()) {
+        if (GlobalSettings.getInstance().isAuthorizationInCurrentTask()) {
             final CurrentTaskBrowserAuthorizationStrategy currentTaskBrowserAuthorizationStrategy =
                     new CurrentTaskBrowserAuthorizationStrategy(
                             mContext,
