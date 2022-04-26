@@ -209,6 +209,10 @@ public class GlobalSettings {
      * Part of replacing LibraryConfiguration class in common.
      */
     public boolean isRefreshInEnabled() {
+        if (mGlobalSettingsConfiguration == null) {
+            return false;
+        }
+
         return mGlobalSettingsConfiguration.isRefreshInEnabled();
     }
 
@@ -217,7 +221,7 @@ public class GlobalSettings {
      * Part of replacing LibraryConfiguration class.
      */
     public boolean isAuthorizationInCurrentTask() {
-        if (mGlobalSettingsConfiguration.isAuthorizationInCurrentTask() == null) {
+        if (mGlobalSettingsConfiguration == null) {
             return false;
         }
 
