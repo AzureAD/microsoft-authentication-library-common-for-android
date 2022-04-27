@@ -200,8 +200,8 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
 
     @Override
     public void handleBackButtonPressed() {
-        final String methodTag = TAG + ":onBackPressed";
-        Logger.info(TAG, "Back button is pressed");
+        final String methodTag = TAG + ":handleBackButtonPressed";
+        Logger.info(methodTag, "Back button is pressed");
 
         if (mWebView.canGoBack()) {
             mWebView.goBack();
