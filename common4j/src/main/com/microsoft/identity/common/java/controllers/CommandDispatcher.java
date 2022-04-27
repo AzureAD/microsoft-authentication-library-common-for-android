@@ -380,9 +380,9 @@ public class CommandDispatcher {
         final String TAG = tag + ":" + parameters.getClass().getSimpleName();
 
         //TODO:1315871 - conversion of PublicApiId in readable form.
-        Logger.info(TAG, DiagnosticContext.INSTANCE.getRequestContext().toJsonString(),
-                "Starting request for correlation id : ##" + correlationId
-                        + ", with PublicApiId : " + publicApiId);
+        Logger.info(TAG, "Starting request with request context: "
+                        + DiagnosticContext.INSTANCE.getRequestContext().toJsonString()
+                        + ", with PublicApiId: " + publicApiId);
 
         if (Logger.isAllowPii()) {
             Logger.infoPII(TAG, ObjectMapper.serializeObjectToJsonString(parameters));
