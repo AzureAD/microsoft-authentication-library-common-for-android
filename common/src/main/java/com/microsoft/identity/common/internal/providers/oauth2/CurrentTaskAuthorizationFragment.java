@@ -140,14 +140,6 @@ public abstract class CurrentTaskAuthorizationFragment extends AuthorizationFrag
         super.onDestroy();
     }
 
-    /**
-     * NOTE: Fragment-only mode will not support this, as we don't own the activity.
-     * This must be invoked by AuthorizationActivity.onBackPressed().
-     */
-    public boolean onBackPressed() {
-        return false;
-    }
-
     void sendResult(final RawAuthorizationResult.ResultCode resultCode) {
         sendResult(RawAuthorizationResult.fromResultCode(resultCode));
     }
