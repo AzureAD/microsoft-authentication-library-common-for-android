@@ -135,7 +135,7 @@ public class Logger {
                     }
                 });
 
-        com.microsoft.identity.common.java.logging.Logger.setPlatformString(" Android " + Build.VERSION.SDK_INT);
+        com.microsoft.identity.common.java.logging.Logger.setPlatformString("Android " + Build.VERSION.SDK_INT);
     }
 
     /**
