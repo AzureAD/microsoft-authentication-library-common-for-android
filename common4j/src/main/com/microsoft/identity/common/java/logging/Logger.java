@@ -35,6 +35,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
@@ -427,11 +428,11 @@ public class Logger {
      * If diagnosticMetadata doesn't exist:
      * <library_version> [<timestamp>] <log_message>
      */
-    private static String formatMessage(final String diagnosticMetadata,
-                                        final String platformString,
-                                        final String message,
+    private static String formatMessage(@Nullable final String diagnosticMetadata,
+                                        @Nullable final String platformString,
+                                        @Nullable final String message,
                                         @NonNull final String dateTimeStamp,
-                                        final Throwable throwable) {
+                                        @Nullable final Throwable throwable) {
         final String logMessage = StringUtil.isNullOrEmpty(message) ? "N/A" : message;
         return "[" + dateTimeStamp
                 + (StringUtil.isNullOrEmpty(diagnosticMetadata) ? " " : " - " + diagnosticMetadata + " ")
@@ -454,7 +455,7 @@ public class Logger {
      *
      * @return String The concatenation of thread_name and correlation_id to serve as the required metadata in the log lines.
      */
-    private static synchronized String getDiagnosticContextMetadata(String correlationId) {
+    private static synchronized String getDiagnosticContextMetadata(@Nullable String correlationId) {
         String threadName = DiagnosticContext.INSTANCE.getRequestContext().get(DiagnosticContext.THREAD_NAME);
 
         if (StringUtil.isNullOrEmpty(threadName)) {
