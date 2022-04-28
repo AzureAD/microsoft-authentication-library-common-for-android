@@ -32,6 +32,8 @@ import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.logging.Logger;
 
+import com.microsoft.identity.common.java.challengehandlers.IChallengeHandler;
+
 import java.util.Map;
 
 public final class PKeyAuthChallengeHandler implements IChallengeHandler<PKeyAuthChallenge, Void> {
@@ -86,5 +88,11 @@ public final class PKeyAuthChallengeHandler implements IChallengeHandler<PKeyAut
         }
 
         return null;
+    }
+
+
+    @Override
+    public void stopYubiKitManagerUsbDiscovery() {
+        //Do nothing
     }
 }

@@ -30,6 +30,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
+import android.util.Log;
 import android.webkit.ClientCertRequest;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
@@ -40,7 +41,7 @@ import androidx.annotation.RequiresApi;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.broker.PackageHelper;
-import com.microsoft.identity.common.internal.ui.webview.challengehandlers.ClientCertAuthChallengeHandler;
+import com.microsoft.identity.common.java.challengehandlers.IChallengeHandler;
 import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallenge;
 import com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallengeFactory;
@@ -78,12 +79,16 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     public static final String ERROR_DESCRIPTION = "error_description";
     private final String mRedirectUrl;
 
+    private IChallengeHandler<ClientCertRequest, Void> mClientCertAuthChallengeHandler;
+
     public AzureActiveDirectoryWebViewClient(@NonNull final Activity activity,
                                              @NonNull final IAuthorizationCompletionCallback completionCallback,
                                              @NonNull final OnPageLoadedCallback pageLoadedCallback,
-                                             @NonNull final String redirectUrl) {
+                                             @NonNull final String redirectUrl,
+                                             @NonNull IChallengeHandler<ClientCertRequest, Void> clientCertAuthChallengeHandler) {
         super(activity, completionCallback, pageLoadedCallback);
         mRedirectUrl = redirectUrl;
+        mClientCertAuthChallengeHandler = clientCertAuthChallengeHandler;
     }
 
     /**
@@ -454,7 +459,8 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     @Override
     public void onReceivedClientCertRequest(WebView view,
                                             final ClientCertRequest clientCertRequest) {
-        final ClientCertAuthChallengeHandler clientCertAuthChallengeHandler = new ClientCertAuthChallengeHandler(getActivity());
-        clientCertAuthChallengeHandler.processChallenge(clientCertRequest);
+        //If broker app is present, should be instance of BrokerClientCertAuthChallengeHandler.
+        //Otherwise, should be ClientCertAuthChallengeHandler.
+        mClientCertAuthChallengeHandler.processChallenge(clientCertRequest);
     }
 }

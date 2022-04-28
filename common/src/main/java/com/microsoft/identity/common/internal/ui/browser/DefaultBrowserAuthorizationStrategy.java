@@ -30,7 +30,9 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import com.microsoft.identity.common.internal.ui.webview.challengehandlers.ClientCertAuthChallengeHandler;
 import com.microsoft.identity.common.java.WarningType;
+import com.microsoft.identity.common.java.challengehandlers.IChallengeHandler;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
 
@@ -65,4 +67,8 @@ public class DefaultBrowserAuthorizationStrategy<
         }
     }
 
+    @Override
+    public void setClientCertAuthChallengeHandler(IChallengeHandler clientCertAuthChallengeHandler) {
+        //do nothing
+    }
 }

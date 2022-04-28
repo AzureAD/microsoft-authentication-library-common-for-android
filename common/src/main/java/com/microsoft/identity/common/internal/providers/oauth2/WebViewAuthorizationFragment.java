@@ -30,6 +30,7 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.ClientCertRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.widget.ProgressBar;
@@ -46,6 +47,7 @@ import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.ui.webview.AzureActiveDirectoryWebViewClient;
 import com.microsoft.identity.common.internal.ui.webview.OnPageLoadedCallback;
 import com.microsoft.identity.common.internal.ui.webview.WebViewUtil;
+import com.microsoft.identity.common.java.challengehandlers.IChallengeHandler;
 import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.logging.Logger;
@@ -92,6 +94,9 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     private boolean webViewZoomControlsEnabled;
 
     private boolean webViewZoomEnabled;
+
+    //For injection into AzureActiveDirectoryWebViewClient
+    private IChallengeHandler<ClientCertRequest, Void> mClientCertAuthChallengeHandler;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -178,7 +183,8 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                         }
                     }
                 },
-                mRedirectUri);
+                mRedirectUri,
+                mClientCertAuthChallengeHandler);
         setUpWebView(view, webViewClient);
 
         mWebView.post(new Runnable() {
@@ -262,6 +268,13 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         mWebView.getSettings().setSupportZoom(webViewZoomEnabled);
         mWebView.setVisibility(View.INVISIBLE);
         mWebView.setWebViewClient(webViewClient);
+    }
+
+    /**
+     * Allows for setting of local mClientCertAuthChallengeHandler from activity.
+     */
+    public void injectClientCertAuthChallengeHandler(IChallengeHandler<ClientCertRequest, Void> challengeHandler) {
+        mClientCertAuthChallengeHandler = challengeHandler;
     }
 
     /**

@@ -37,6 +37,7 @@ import androidx.fragment.app.Fragment;
 import com.microsoft.identity.common.crypto.AndroidAuthSdkStorageEncryptionManager;
 import com.microsoft.identity.common.crypto.AndroidBrokerStorageEncryptionManager;
 import com.microsoft.identity.common.internal.net.cache.HttpCache;
+import com.microsoft.identity.common.internal.ui.webview.challengehandlers.ClientCertAuthChallengeHandler;
 import com.microsoft.identity.common.java.cache.IMultiTypeNameValueStorage;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
 import com.microsoft.identity.common.internal.platform.AndroidDeviceMetadata;
@@ -48,6 +49,7 @@ import com.microsoft.identity.common.internal.util.ProcessUtil;
 import com.microsoft.identity.common.internal.util.SharedPrefStringNameValueStorage;
 import com.microsoft.identity.common.internal.util.SharedPreferenceLongStorage;
 import com.microsoft.identity.common.java.WarningType;
+import com.microsoft.identity.common.java.challengehandlers.IChallengeHandler;
 import com.microsoft.identity.common.java.crypto.IDevicePopManager;
 import com.microsoft.identity.common.java.crypto.IKeyAccessor;
 import com.microsoft.identity.common.java.exception.ClientException;
@@ -338,5 +340,17 @@ public class AndroidPlatformComponents implements IPlatformComponents {
     @Override
     public @NonNull IHttpClientWrapper getHttpClientWrapper() {
         return new DefaultHttpClientWrapper();
+    }
+
+    /**
+     * @return an instance of an {@link ClientCertAuthChallengeHandler}.
+     */
+    @Override
+    public IChallengeHandler<?,?> getClientCertAuthChallengeHandler() {
+        if (mActivity == null) {
+            throw new IllegalStateException("ChallengeHandler requires an activity");
+        }
+        //Does not include handling of smartcard CBA.
+        return new ClientCertAuthChallengeHandler(mActivity);
     }
 }

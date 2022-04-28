@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.java.providers.oauth2;
 
 import com.microsoft.identity.common.java.WarningType;
+import com.microsoft.identity.common.java.challengehandlers.IChallengeHandler;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 
@@ -54,4 +55,11 @@ public interface IAuthorizationStrategy<
      * @param data
      */
     void completeAuthorization(int requestCode, @NonNull final RawAuthorizationResult data);
+
+    /**
+     * Set the local clientCertAuthChallengeHandler to challengeHandler.
+     *
+     * @param clientCertAuthChallengeHandler: A ChallengeHandler that implements CBA.
+     */
+    void setClientCertAuthChallengeHandler(IChallengeHandler clientCertAuthChallengeHandler);
 }

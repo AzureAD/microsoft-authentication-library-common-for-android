@@ -24,23 +24,27 @@ package com.microsoft.identity.common.internal.providers.oauth2;
 
 import android.os.Bundle;
 import android.util.Log;
+import android.webkit.ClientCertRequest;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import com.microsoft.identity.common.internal.ui.DualScreenActivity;
+import com.microsoft.identity.common.java.challengehandlers.IChallengeHandler;
 import com.microsoft.identity.common.logging.Logger;
-import com.yubico.yubikit.android.YubiKitManager;
-import com.yubico.yubikit.android.transport.usb.UsbConfiguration;
-import com.yubico.yubikit.android.transport.usb.UsbYubiKeyDevice;
-import com.yubico.yubikit.core.util.Callback;
+
+import java.util.concurrent.locks.ReentrantLock;
 
 public class AuthorizationActivity extends DualScreenActivity {
 
     public static final String TAG = AuthorizationActivity.class.getSimpleName();
 
     private AuthorizationFragment mFragment;
+
+    //Holds ChallengeHander that handles CBA.
+    public static IChallengeHandler<ClientCertRequest, Void> sClientCertAuthChallengeHandler;
+    public static final ReentrantLock sLock = new ReentrantLock();
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -51,29 +55,19 @@ public class AuthorizationActivity extends DualScreenActivity {
         if (fragment instanceof AuthorizationFragment) {
             mFragment = (AuthorizationFragment) fragment;
             mFragment.setInstanceState(getIntent().getExtras());
+            if (mFragment instanceof WebViewAuthorizationFragment) {
+                sLock.lock();
+                try {
+                    ((WebViewAuthorizationFragment) mFragment).injectClientCertAuthChallengeHandler(sClientCertAuthChallengeHandler);
+                } finally {
+                    sLock.unlock();
+                }
+            }
         } else {
             final IllegalStateException ex = new IllegalStateException("Unexpected fragment type.");
             Logger.error(methodTag, "Did not receive AuthorizationFragment from factory", ex);
         }
         setFragment(mFragment);
-
-        //test for YubiKit acknowledging YubiKey plugging in and unplugging
-        final YubiKitManager yubiKitManager = new YubiKitManager(getApplicationContext());
-        yubiKitManager.startUsbDiscovery(new UsbConfiguration(), new Callback<UsbYubiKeyDevice>() {
-            @Override
-            public void invoke(UsbYubiKeyDevice device) {
-                Toast.makeText(getApplicationContext(), "A device was connected", Toast.LENGTH_LONG).show();
-                Logger.info(methodTag, device.toString() + " plugged in");
-                Log.i(TAG, "\"" + device.toString() + "\" Plugged In");
-                device.setOnClosed(new Runnable() {
-                    @Override
-                    public void run() {
-                        Logger.info(methodTag, "YubiKey disconnected");
-                        Log.i(TAG, "YubiKey Disconnected");
-                    }
-                });
-            }
-        });
 
 
     }
@@ -82,6 +76,21 @@ public class AuthorizationActivity extends DualScreenActivity {
     public void onBackPressed() {
         if (!mFragment.onBackPressed()) {
             super.onBackPressed();
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        //If mChallengeHandler is of type BrokerClientCertAuthChallengeHandler, make sure to stop the YubiKitManager's Usb Discovery.
+        //This method does nothing for all other ChallengeHandlers.
+        sLock.lock();
+        try {
+            if (sClientCertAuthChallengeHandler != null) {
+                sClientCertAuthChallengeHandler.stopYubiKitManagerUsbDiscovery();
+            }
+        } finally {
+            sLock.unlock();
         }
     }
 }

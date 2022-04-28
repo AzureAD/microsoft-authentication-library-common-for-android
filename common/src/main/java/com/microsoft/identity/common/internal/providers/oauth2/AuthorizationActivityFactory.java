@@ -26,10 +26,12 @@ package com.microsoft.identity.common.internal.providers.oauth2;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.webkit.ClientCertRequest;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
+import com.microsoft.identity.common.java.challengehandlers.IChallengeHandler;
 import com.microsoft.identity.common.java.configuration.LibraryConfiguration;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.telemetry.events.UiStartEvent;
@@ -85,6 +87,69 @@ public class AuthorizationActivityFactory {
                 intent = new Intent(context, CurrentTaskAuthorizationActivity.class);
         } else {
                 intent = new Intent(context, AuthorizationActivity.class);
+        }
+
+        intent.putExtra(AUTH_INTENT, authIntent);
+        intent.putExtra(REQUEST_URL, requestUrl);
+        intent.putExtra(REDIRECT_URI, redirectUri);
+        intent.putExtra(REQUEST_HEADERS, requestHeaders);
+        intent.putExtra(AUTHORIZATION_AGENT, authorizationAgent);
+        intent.putExtra(WEB_VIEW_ZOOM_CONTROLS_ENABLED, webViewZoomControlsEnabled);
+        intent.putExtra(WEB_VIEW_ZOOM_ENABLED, webViewZoomEnabled);
+        intent.putExtra(DiagnosticContext.CORRELATION_ID, DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID));
+        return intent;
+    }
+
+    /**
+     * Return the correct authorization activity based on library configuration.
+     * Overload of original GetAuthorizationActivityIntent that also takes an IChallengeHandler as a parameter.
+     *
+     * @param context                    Android application context
+     * @param authIntent                 Android intent used by the authorization activity to launch the specific implementation of authorization (BROWSER, EMBEDDED)
+     * @param requestUrl                 The authorization request in URL format
+     * @param redirectUri                The expected redirect URI associated with the authorization request
+     * @param requestHeaders             Additional HTTP headers included with the authorization request
+     * @param authorizationAgent         The means by which authorization should be performed (EMBEDDED, WEBVIEW) NOTE: This should move to library configuration
+     * @param webViewZoomEnabled         This parameter is specific to embedded and controls whether webview zoom is enabled... NOTE: Needs refactoring
+     * @param webViewZoomControlsEnabled This parameter is specific to embedded and controls whether webview zoom controls are enabled... NOTE: Needs refactoring
+     * @param clientCertAuthChallengeHandler Handles certificate authentication challenges within AuthorizationActivity
+     * @return An android Intent which will be used by Android to create an AuthorizationActivity
+     */
+    public static Intent getAuthorizationActivityIntent(final Context context,
+                                                        final Intent authIntent,
+                                                        final String requestUrl,
+                                                        final String redirectUri,
+                                                        final HashMap<String, String> requestHeaders,
+                                                        final AuthorizationAgent authorizationAgent,
+                                                        final boolean webViewZoomEnabled,
+                                                        final boolean webViewZoomControlsEnabled,
+                                                        IChallengeHandler<ClientCertRequest, Void> clientCertAuthChallengeHandler) {
+        Intent intent;
+        final LibraryConfiguration libraryConfig = LibraryConfiguration.getInstance();
+        if (ProcessUtil.isBrokerProcess(context)) {
+            //Lock before changing static variable.
+            BrokerAuthorizationActivity.sLock.lock();
+            try {
+                BrokerAuthorizationActivity.sClientCertAuthChallengeHandler = clientCertAuthChallengeHandler;
+                intent = new Intent(context, BrokerAuthorizationActivity.class);
+            } finally {
+                BrokerAuthorizationActivity.sLock.unlock();
+            }
+        } else if (libraryConfig.isAuthorizationInCurrentTask() && !authorizationAgent.equals(AuthorizationAgent.WEBVIEW)) {
+            // We exclude the case when the authorization agent is already selected as WEBVIEW because of confusion
+            // that results from attempting to use the CurrentTaskAuthorizationActivity in that case, because as webview
+            // already uses the current task, attempting to manually simulate that behavior ends up supplying an incorrect
+            // Fragment to the activity.
+            intent = new Intent(context, CurrentTaskAuthorizationActivity.class);
+        } else {
+            //Lock before changing static variable
+            AuthorizationActivity.sLock.lock();
+            try {
+                AuthorizationActivity.sClientCertAuthChallengeHandler = clientCertAuthChallengeHandler;
+                intent = new Intent(context, AuthorizationActivity.class);
+            } finally {
+                AuthorizationActivity.sLock.unlock();
+            }
         }
 
         intent.putExtra(AUTH_INTENT, authIntent);

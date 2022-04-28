@@ -24,6 +24,7 @@ package com.microsoft.identity.common.components;
 
 import com.microsoft.identity.common.java.cache.IMultiTypeNameValueStorage;
 import com.microsoft.identity.common.java.cache.MapBackedPreferencesManager;
+import com.microsoft.identity.common.java.challengehandlers.IChallengeHandler;
 import com.microsoft.identity.common.java.commands.ICommand;
 import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCommandParameters;
 import com.microsoft.identity.common.java.crypto.CryptoSuite;
@@ -363,6 +364,11 @@ public class SettablePlatformComponents implements IPlatformComponents {
     @Override
     public @NonNull IHttpClientWrapper getHttpClientWrapper() {
         return new DefaultHttpClientWrapper();
+    }
+
+    @Override
+    public IChallengeHandler<?,?> getClientCertAuthChallengeHandler() {
+        return null;
     }
 
     @Builder.Default

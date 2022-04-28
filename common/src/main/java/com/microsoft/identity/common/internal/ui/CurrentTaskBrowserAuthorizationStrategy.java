@@ -32,6 +32,7 @@ import androidx.fragment.app.Fragment;
 
 import com.microsoft.identity.common.internal.ui.browser.BrowserAuthorizationStrategy;
 import com.microsoft.identity.common.java.WarningType;
+import com.microsoft.identity.common.java.challengehandlers.IChallengeHandler;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
 
@@ -50,5 +51,10 @@ public class CurrentTaskBrowserAuthorizationStrategy<
     @Override
     protected void setIntentFlag(@NonNull final Intent intent) {
         // do nothing
+    }
+
+    @Override
+    public void setClientCertAuthChallengeHandler(IChallengeHandler clientCertAuthChallengeHandler) {
+        //do nothing
     }
 }

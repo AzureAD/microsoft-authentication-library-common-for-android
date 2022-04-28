@@ -34,6 +34,8 @@ import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.logging.Logger;
 
+import com.microsoft.identity.common.java.challengehandlers.IChallengeHandler;
+
 /**
  * Http authorization handler for NTLM challenge on web view.
  */
@@ -104,5 +106,11 @@ public final class NtlmChallengeHandler implements IChallengeHandler<NtlmChallen
         Logger.info(methodTag,"Sending intent to cancel authentication activity");
         mChallengeCallback.onChallengeResponseReceived(
                 RawAuthorizationResult.fromResultCode(RawAuthorizationResult.ResultCode.CANCELLED));
+    }
+
+
+    @Override
+    public void stopYubiKitManagerUsbDiscovery() {
+        //Do nothing
     }
 }

@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.java.interfaces;
 
 import com.microsoft.identity.common.java.cache.IMultiTypeNameValueStorage;
+import com.microsoft.identity.common.java.challengehandlers.IChallengeHandler;
 import com.microsoft.identity.common.java.crypto.IDevicePopManager;
 import com.microsoft.identity.common.java.crypto.IKeyAccessor;
 import com.microsoft.identity.common.java.exception.ClientException;
@@ -34,6 +35,7 @@ import com.microsoft.identity.common.java.strategies.IAuthorizationStrategyFacto
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.NonNull;
+import sun.net.www.content.text.Generic;
 
 /**
  * Common components for each platforms.
@@ -133,7 +135,14 @@ public interface IPlatformComponents {
     /**
      * Returns a wrapper of {@link com.microsoft.identity.common.java.net.HttpClient} objects.
      * This will allow test cases to interject an interceptor - to mock HTTP requests/responses.
-     * */
+     */
     @NonNull
     IHttpClientWrapper getHttpClientWrapper();
+
+    /**
+     * Returns an IChallengeHandler that handles Certificate Based Authentication (CBA).
+     * Created in order to inject handling of smartcard CBA (which uses YubiKit SDK) from Broker to Common.
+     */
+    @NonNull
+    IChallengeHandler<?,?> getClientCertAuthChallengeHandler();
 }

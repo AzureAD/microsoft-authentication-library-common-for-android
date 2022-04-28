@@ -20,7 +20,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.ui.webview.challengehandlers;
+package com.microsoft.identity.common.java.challengehandlers;
 
 /**
  * Abstract Factory class which can be extended to process difference type of challenges.
@@ -34,4 +34,11 @@ public interface IChallengeHandler<GenericChallenge, GenericResponse> {
      * @return GenericResponse
      */
     GenericResponse processChallenge(GenericChallenge genericChallenge);
+
+    /**
+     * If YubiKitManager is present, stops YubiKitManager from discovering new devices.
+     * Added for access to YubiKitManager in BrokerClientCertAuthChallengeHandler.
+     *
+     */
+    void stopYubiKitManagerUsbDiscovery();
 }

@@ -25,12 +25,14 @@ package com.microsoft.identity.common.internal.providers.oauth2;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.webkit.ClientCertRequest;
 
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
 import com.microsoft.identity.common.java.WarningType;
+import com.microsoft.identity.common.java.challengehandlers.IChallengeHandler;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.java.providers.oauth2.IAuthorizationStrategy;
@@ -80,6 +82,40 @@ public abstract class AndroidAuthorizationStrategy<
         if (fragment != null) {
             final Fragment authFragment = AuthorizationActivityFactory.getAuthorizationFragmentFromStartIntent(intent);
 
+            final FragmentManager fragmentManager = fragment.getFragmentManager();
+            if (fragmentManager == null) {
+                throw new ClientException(ClientException.UNKNOWN_ERROR, "Fragment Manager is null");
+            }
+
+            fragmentManager.beginTransaction()
+                    .setTransitionStyle(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
+                    .add(fragment.getId(), authFragment, Fragment.class.getName())
+                    .commit();
+            return;
+        }
+
+        final Activity activity = mReferencedActivity.get();
+        if (activity == null) {
+            throw new ClientException(ClientException.UNKNOWN_ERROR, "Referenced activity is null");
+        }
+        activity.startActivity(intent);
+    }
+
+    /**
+     * Overload of original launchIntent.
+     * challengeHandler handles CBA.
+     * If fragment is provided, add AuthorizationFragment on top of that fragment.
+     * Otherwise, launch AuthorizationActivity.
+     */
+    protected void launchIntent(@NonNull Intent intent, IChallengeHandler<ClientCertRequest, Void> clientCertAuthChallengeHandler) throws ClientException {
+        final Fragment fragment = mReferencedFragment.get();
+
+        if (fragment != null) {
+            final Fragment authFragment = AuthorizationActivityFactory.getAuthorizationFragmentFromStartIntent(intent);
+            //If authFragment is of class WebViewAuthorizationFragment, set mClientCertAuthChallengeHandler variable to challengeHandler
+            if (authFragment instanceof WebViewAuthorizationFragment) {
+                ((WebViewAuthorizationFragment) authFragment).injectClientCertAuthChallengeHandler(clientCertAuthChallengeHandler);
+            }
             final FragmentManager fragmentManager = fragment.getFragmentManager();
             if (fragmentManager == null) {
                 throw new ClientException(ClientException.UNKNOWN_ERROR, "Fragment Manager is null");

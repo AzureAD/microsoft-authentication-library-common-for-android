@@ -32,6 +32,7 @@ import android.webkit.ClientCertRequest;
 
 import androidx.annotation.NonNull;
 
+import com.microsoft.identity.common.java.challengehandlers.IChallengeHandler;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.security.Principal;
@@ -99,5 +100,10 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
                 null);
 
         return null;
+    }
+
+    @Override
+    public void stopYubiKitManagerUsbDiscovery() {
+        //Do nothing
     }
 }

@@ -33,6 +33,7 @@ import androidx.fragment.app.Fragment;
 import com.microsoft.identity.common.internal.providers.oauth2.AndroidAuthorizationStrategy;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivityFactory;
 import com.microsoft.identity.common.java.WarningType;
+import com.microsoft.identity.common.java.challengehandlers.IChallengeHandler;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
@@ -60,6 +61,8 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
     private GenericOAuth2Strategy mOAuth2Strategy; //NOPMD
     private GenericAuthorizationRequest mAuthorizationRequest; //NOPMD
 
+    private IChallengeHandler mClientCertAuthChallengeHandler;
+
     /**
      * Constructor of EmbeddedWebViewAuthorizationStrategy.
      *
@@ -86,7 +89,7 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
         final URI requestUrl = authorizationRequest.getAuthorizationRequestAsHttpRequest();
         final Intent authIntent = buildAuthorizationActivityStartIntent(requestUrl);
 
-        launchIntent(authIntent);
+        launchIntent(authIntent, mClientCertAuthChallengeHandler);
         return mAuthorizationResultFuture;
     }
 
@@ -101,7 +104,8 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
                     mAuthorizationRequest.getRequestHeaders(),
                     AuthorizationAgent.WEBVIEW,
                     mAuthorizationRequest.isWebViewZoomEnabled(),
-                    mAuthorizationRequest.isWebViewZoomControlsEnabled());
+                    mAuthorizationRequest.isWebViewZoomControlsEnabled(),
+                    mClientCertAuthChallengeHandler);
     }
 
     @Override
@@ -129,4 +133,10 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
             Logger.warnPII(methodTag,"Unknown request code " + requestCode);
         }
     }
+
+    @Override
+    public void setClientCertAuthChallengeHandler(IChallengeHandler clientCertAuthChallengeHandler) {
+        mClientCertAuthChallengeHandler = clientCertAuthChallengeHandler;
+    }
+
 }
