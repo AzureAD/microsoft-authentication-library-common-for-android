@@ -27,8 +27,8 @@ import android.webkit.WebView;
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallenge;
-import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
+import com.microsoft.identity.common.java.ui.IChallengeHandler;
 import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.logging.Logger;
 

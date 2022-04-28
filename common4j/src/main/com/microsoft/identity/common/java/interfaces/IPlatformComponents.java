@@ -28,6 +28,7 @@ import com.microsoft.identity.common.java.crypto.IKeyAccessor;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.providers.oauth2.IStateGenerator;
+import com.microsoft.identity.common.java.ui.IChallengeHandler;
 import com.microsoft.identity.common.java.util.IClockSkewManager;
 import com.microsoft.identity.common.java.util.IPlatformUtil;
 import com.microsoft.identity.common.java.strategies.IAuthorizationStrategyFactory;
@@ -136,4 +137,11 @@ public interface IPlatformComponents {
      * */
     @NonNull
     IHttpClientWrapper getHttpClientWrapper();
+
+    /**
+     * Returns an IChallengeHandler that handles Certificate Based Authentication (CBA).
+     * Created in order to inject handling of smartcard CBA (which uses YubiKit SDK) from Broker to Common.
+     */
+    @NonNull
+    IChallengeHandler<?,?> getClientCertAuthChallengeHandler();
 }

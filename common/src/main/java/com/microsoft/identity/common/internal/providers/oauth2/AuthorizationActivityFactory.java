@@ -33,6 +33,7 @@ import androidx.fragment.app.Fragment;
 import com.microsoft.identity.common.java.configuration.LibraryConfiguration;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.telemetry.events.UiStartEvent;
+import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.ui.AuthorizationAgent;
 import com.microsoft.identity.common.internal.util.ProcessUtil;
 import com.microsoft.identity.common.logging.DiagnosticContext;
@@ -72,7 +73,8 @@ public class AuthorizationActivityFactory {
                                                         final HashMap<String, String> requestHeaders,
                                                         final AuthorizationAgent authorizationAgent,
                                                         final boolean webViewZoomEnabled,
-                                                        final boolean webViewZoomControlsEnabled) {
+                                                        final boolean webViewZoomControlsEnabled,
+                                                        final IPlatformComponents components) {
         Intent intent;
         final LibraryConfiguration libraryConfig = LibraryConfiguration.getInstance();
         if (ProcessUtil.isBrokerProcess(context)) {
@@ -95,6 +97,7 @@ public class AuthorizationActivityFactory {
         intent.putExtra(WEB_VIEW_ZOOM_CONTROLS_ENABLED, webViewZoomControlsEnabled);
         intent.putExtra(WEB_VIEW_ZOOM_ENABLED, webViewZoomEnabled);
         intent.putExtra(DiagnosticContext.CORRELATION_ID, DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID));
+        intent.putExtra(CLIENT_CERT_REQUEST_CLASS_NAME, components.getClientCertAuthChallengeHandler().getClass().getCanonicalName());
         return intent;
     }
 

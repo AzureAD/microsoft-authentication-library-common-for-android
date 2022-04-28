@@ -44,7 +44,7 @@ public class AuthorizationActivity extends DualScreenActivity {
         final Fragment fragment = AuthorizationActivityFactory.getAuthorizationFragmentFromStartIntent(getIntent());
         if (fragment instanceof AuthorizationFragment) {
             mFragment = (AuthorizationFragment) fragment;
-            mFragment.setInstanceState(getIntent().getExtras());
+            mFragment.setArguments(getIntent().getExtras());
         } else {
             final IllegalStateException ex = new IllegalStateException("Unexpected fragment type.");
             Logger.error(methodTag, "Did not receive AuthorizationFragment from factory", ex);

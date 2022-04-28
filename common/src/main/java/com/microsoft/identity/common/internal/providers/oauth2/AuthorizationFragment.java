@@ -55,11 +55,6 @@ public abstract class AuthorizationFragment extends Fragment {
     private static final String TAG = AuthorizationFragment.class.getSimpleName();
 
     /**
-     * The bundle containing values for initializing this fragment.
-     */
-    private Bundle mInstanceState;
-
-    /**
      * Determines if authentication result has been sent.
      */
     protected boolean mAuthResultSent = false;
@@ -74,10 +69,6 @@ public abstract class AuthorizationFragment extends Fragment {
         }
     };
 
-    void setInstanceState(@NonNull final Bundle instanceStateBundle) {
-        mInstanceState = instanceStateBundle;
-    }
-
     @Override
     public void onCreate(@Nullable final Bundle savedInstanceState) {
         final String methodTag = TAG + ":onCreate";
@@ -86,21 +77,14 @@ public abstract class AuthorizationFragment extends Fragment {
         // Register Broadcast receiver to cancel the auth request
         // if another incoming request is launched by the app
         LocalBroadcaster.INSTANCE.registerCallback(CANCEL_AUTHORIZATION_REQUEST, mCancelRequestReceiver);
-
-        if (savedInstanceState == null && mInstanceState == null) {
+        if (savedInstanceState == null) {
             Logger.warn(methodTag, "No stored state. Unable to handle response");
             finish();
             return;
         }
-
-        if (savedInstanceState == null) {
-            Logger.verbose(methodTag, "Extract state from the intent bundle.");
-            extractState(mInstanceState);
-        } else {
-            // If activity is killed by the os, savedInstance will be the saved bundle.
-            Logger.verbose(methodTag, "Extract state from the saved bundle.");
-            extractState(savedInstanceState);
-        }
+        
+        Logger.verbose(methodTag, "Extract state from the saved bundle.");
+        extractState(savedInstanceState);
     }
 
     void finish() {

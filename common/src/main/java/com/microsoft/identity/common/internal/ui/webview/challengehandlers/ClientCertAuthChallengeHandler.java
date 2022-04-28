@@ -32,6 +32,7 @@ import android.webkit.ClientCertRequest;
 
 import androidx.annotation.NonNull;
 
+import com.microsoft.identity.common.java.ui.IChallengeHandler;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.security.Principal;
@@ -41,7 +42,7 @@ import java.security.cert.X509Certificate;
 public final class ClientCertAuthChallengeHandler implements IChallengeHandler<ClientCertRequest, Void> {
     private static final String TAG = ClientCertAuthChallengeHandler.class.getSimpleName();
     private static final String ACCEPTABLE_ISSUER = "CN=MS-Organization-Access";
-    private Activity mActivity;
+    private final Activity mActivity;
 
     public ClientCertAuthChallengeHandler(@NonNull final Activity activity) {
         mActivity = activity;

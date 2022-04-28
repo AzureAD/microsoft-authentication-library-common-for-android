@@ -30,6 +30,7 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.ClientCertRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.widget.ProgressBar;
@@ -40,6 +41,8 @@ import androidx.annotation.VisibleForTesting;
 import androidx.fragment.app.FragmentActivity;
 
 import com.microsoft.identity.common.R;
+import com.microsoft.identity.common.internal.ui.webview.challengehandlers.ClientCertAuthChallengeHandler;
+import com.microsoft.identity.common.java.ui.IChallengeHandler;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
@@ -48,6 +51,7 @@ import com.microsoft.identity.common.internal.ui.webview.OnPageLoadedCallback;
 import com.microsoft.identity.common.internal.ui.webview.WebViewUtil;
 import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
+import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.util.HashMap;
@@ -93,6 +97,8 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
 
     private boolean webViewZoomEnabled;
 
+    private IChallengeHandler<ClientCertRequest, Void> mClientCertAuthChallengeHandler;
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -101,6 +107,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         if (activity != null) {
             WebViewUtil.setDataDirectorySuffix(activity.getApplicationContext());
         }
+
         //For CBA, we need to clear the certificate choice cache here so that
         // the user will be able to login with multiple accounts with CBA
         //addressing on-device CBA bug: https://identitydivision.visualstudio.com/Engineering/_workitems/edit/1776683
@@ -109,19 +116,6 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         } else {
             Logger.warn(methodTag, "Client Cert Preferences cache not cleared due to SDK version < 21 (LOLLIPOP)");
         }
-    }
-
-    @Override
-    public void onSaveInstanceState(@NonNull Bundle outState) {
-        super.onSaveInstanceState(outState);
-        outState.putParcelable(AUTH_INTENT, mAuthIntent);
-        outState.putBoolean(PKEYAUTH_STATUS, mPkeyAuthStatus);
-        outState.putString(REDIRECT_URI, mRedirectUri);
-        outState.putString(REQUEST_URL, mAuthorizationRequestUrl);
-        outState.putSerializable(REQUEST_HEADERS, mRequestHeaders);
-        outState.putSerializable(POST_PAGE_LOADED_URL, mPostPageLoadedJavascript);
-        outState.putBoolean(WEB_VIEW_ZOOM_CONTROLS_ENABLED, webViewZoomControlsEnabled);
-        outState.putBoolean(WEB_VIEW_ZOOM_ENABLED, webViewZoomEnabled);
     }
 
     @Override
@@ -135,6 +129,26 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         mPostPageLoadedJavascript = state.getString(POST_PAGE_LOADED_URL);
         webViewZoomEnabled = state.getBoolean(WEB_VIEW_ZOOM_ENABLED, true);
         webViewZoomControlsEnabled = state.getBoolean(WEB_VIEW_ZOOM_CONTROLS_ENABLED, true);
+        mClientCertAuthChallengeHandler = extractClientCertAuthHandler(state);
+    }
+
+    @SuppressWarnings("unchecked")
+    private IChallengeHandler<ClientCertRequest, Void> extractClientCertAuthHandler(@NonNull final Bundle state){
+        final String challengeHandlerClassName = state.getString(CLIENT_CERT_REQUEST_CLASS_NAME, null);
+        if (!StringUtil.isNullOrEmpty(challengeHandlerClassName)) {
+            try {
+                final Class<?> challengeHandlerClass = Class.forName(challengeHandlerClassName);
+                mClientCertAuthChallengeHandler = (IChallengeHandler<ClientCertRequest, Void>) challengeHandlerClass.newInstance();
+            } catch (ClassNotFoundException e) {
+                // Log. Do nothing
+            } catch (IllegalAccessException e) {
+                // Log. Do nothing
+            } catch (java.lang.InstantiationException e) {
+                // Log. Do nothing
+            }
+        }
+
+        return new ClientCertAuthChallengeHandler(getActivity());
     }
 
     @Nullable
@@ -148,6 +162,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         if (activity == null) {
             return null;
         }
+
         final AzureActiveDirectoryWebViewClient webViewClient = new AzureActiveDirectoryWebViewClient(
                 activity,
                 new AuthorizationCompletionCallback(),
@@ -178,7 +193,9 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                         }
                     }
                 },
-                mRedirectUri);
+                mRedirectUri,
+                mClientCertAuthChallengeHandler);
+
         setUpWebView(view, webViewClient);
 
         mWebView.post(new Runnable() {
