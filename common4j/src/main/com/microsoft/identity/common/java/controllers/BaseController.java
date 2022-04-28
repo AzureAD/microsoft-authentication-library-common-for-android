@@ -870,23 +870,20 @@ public abstract class BaseController {
         }
 
         if (null == targetAccount) {
-            Logger.info(
-                    TAG,
-                    "No accounts found for clientId ["
-                            + clientId
-                            + ", "
-                            + "]",
-                    null
-            );
-            Logger.errorPII(
-                    TAG,
-                    "No accounts found for clientId, homeAccountId: ["
-                            + clientId
-                            + ", "
-                            + homeAccountId
-                            + "]",
-                    null
-            );
+            if (Logger.isAllowPii()) {
+                Logger.errorPII(
+                        TAG,
+                        "No accounts found for clientId [" + clientId + "], homeAccountId [" + homeAccountId + "]",
+                        null
+                );
+            } else {
+                Logger.error(
+                        TAG,
+                        "No accounts found for clientId [" + clientId +"]",
+                        null
+                );
+            }
+
             throw new ClientException(
                     ErrorStrings.NO_ACCOUNT_FOUND,
                     "No cached accounts found for the supplied "
