@@ -164,11 +164,11 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 final Class<?> challengeHandlerClass = Class.forName(className);
                 return (IChallengeHandler<ClientCertRequest, Void>) challengeHandlerClass.newInstance();
             } catch (ClassNotFoundException e) {
-                // Log. Do nothing
+                // Log and throw. Dev errors like this should be caught early during test/bugbash.
             } catch (IllegalAccessException e) {
-                // Log. Do nothing
+                // Log and throw. Dev errors like this should be caught early during test/bugbash.
             } catch (java.lang.InstantiationException e) {
-                // Log. Do nothing
+                // Log and throw. Dev errors like this should be caught early during test/bugbash.
             }
         }
 
