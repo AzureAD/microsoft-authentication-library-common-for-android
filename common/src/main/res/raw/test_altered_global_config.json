@@ -1,0 +1,21 @@
+{
+  "minimum_required_broker_protocol_version": "2.0",
+  "web_view_zoom_controls_enabled": false,
+  "web_view_zoom_enabled": false,
+  "power_opt_check_for_network_req_enabled": false,
+  "handle_null_taskaffinity": true,
+  "authorization_in_current_task": true,
+  "logging": {
+    "pii_enabled": true,
+    "log_level": "INFO",
+    "logcat_enabled": false
+  },
+  "browser_safelist": [
+    {
+      "browser_package_name": "org.mozilla.firefox",
+      "browser_signature_hashes": [
+        "2gCe6pR_AO_Q2Vu8Iep-4AsiKNnUHQxu0FaDHO_qa178GByKybdT_BuE8_dYk99G5Uvx_gdONXAOO2EaXidpVQ=="
+      ]
+    }
+  ]
+}
