@@ -55,6 +55,8 @@ import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.logging.Logger;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -162,12 +164,17 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         if (!StringUtil.isNullOrEmpty(className)) {
             try {
                 final Class<?> challengeHandlerClass = Class.forName(className);
-                return (IChallengeHandler<ClientCertRequest, Void>) challengeHandlerClass.newInstance();
+                final Constructor<?> constructor = challengeHandlerClass.getDeclaredConstructor(Activity.class);
+                return (IChallengeHandler<ClientCertRequest, Void>) constructor.newInstance(activity);
             } catch (ClassNotFoundException e) {
                 // Log and throw. Dev errors like this should be caught early during test/bugbash.
             } catch (IllegalAccessException e) {
                 // Log and throw. Dev errors like this should be caught early during test/bugbash.
             } catch (java.lang.InstantiationException e) {
+                // Log and throw. Dev errors like this should be caught early during test/bugbash.
+            } catch (NoSuchMethodException e) {
+                // Log and throw. Dev errors like this should be caught early during test/bugbash.
+            } catch (InvocationTargetException e) {
                 // Log and throw. Dev errors like this should be caught early during test/bugbash.
             }
         }
