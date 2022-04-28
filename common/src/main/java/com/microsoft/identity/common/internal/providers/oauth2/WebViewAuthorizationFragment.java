@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.providers.oauth2;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
@@ -97,7 +98,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
 
     private boolean webViewZoomEnabled;
 
-    private IChallengeHandler<ClientCertRequest, Void> mClientCertAuthChallengeHandler;
+    private String mClientCertChallengeHandlerClassName;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -116,6 +117,28 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         } else {
             Logger.warn(methodTag, "Client Cert Preferences cache not cleared due to SDK version < 21 (LOLLIPOP)");
         }
+
+        if (getArguments() != null) {
+            savedInstanceState = getArguments();
+            setArguments(null);
+        }
+
+        if (savedInstanceState != null) {
+            extractState(savedInstanceState);
+        }
+    }
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putParcelable(AUTH_INTENT, mAuthIntent);
+        outState.putBoolean(PKEYAUTH_STATUS, mPkeyAuthStatus);
+        outState.putString(REDIRECT_URI, mRedirectUri);
+        outState.putString(REQUEST_URL, mAuthorizationRequestUrl);
+        outState.putSerializable(REQUEST_HEADERS, mRequestHeaders);
+        outState.putSerializable(POST_PAGE_LOADED_URL, mPostPageLoadedJavascript);
+        outState.putBoolean(WEB_VIEW_ZOOM_CONTROLS_ENABLED, webViewZoomControlsEnabled);
+        outState.putBoolean(WEB_VIEW_ZOOM_ENABLED, webViewZoomEnabled);
+        outState.putString(CLIENT_CERT_REQUEST_CLASS_NAME, mClientCertChallengeHandlerClassName);
     }
 
     @Override
@@ -129,16 +152,17 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         mPostPageLoadedJavascript = state.getString(POST_PAGE_LOADED_URL);
         webViewZoomEnabled = state.getBoolean(WEB_VIEW_ZOOM_ENABLED, true);
         webViewZoomControlsEnabled = state.getBoolean(WEB_VIEW_ZOOM_CONTROLS_ENABLED, true);
-        mClientCertAuthChallengeHandler = extractClientCertAuthHandler(state);
+        mClientCertChallengeHandlerClassName = state.getString(CLIENT_CERT_REQUEST_CLASS_NAME, null);
     }
 
     @SuppressWarnings("unchecked")
-    private IChallengeHandler<ClientCertRequest, Void> extractClientCertAuthHandler(@NonNull final Bundle state){
-        final String challengeHandlerClassName = state.getString(CLIENT_CERT_REQUEST_CLASS_NAME, null);
-        if (!StringUtil.isNullOrEmpty(challengeHandlerClassName)) {
+    private static IChallengeHandler<ClientCertRequest, Void> getClientCertAuthHandler(
+            @NonNull final Activity activity,
+            @Nullable final String className){
+        if (!StringUtil.isNullOrEmpty(className)) {
             try {
-                final Class<?> challengeHandlerClass = Class.forName(challengeHandlerClassName);
-                mClientCertAuthChallengeHandler = (IChallengeHandler<ClientCertRequest, Void>) challengeHandlerClass.newInstance();
+                final Class<?> challengeHandlerClass = Class.forName(className);
+                return (IChallengeHandler<ClientCertRequest, Void>) challengeHandlerClass.newInstance();
             } catch (ClassNotFoundException e) {
                 // Log. Do nothing
             } catch (IllegalAccessException e) {
@@ -148,7 +172,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
             }
         }
 
-        return new ClientCertAuthChallengeHandler(getActivity());
+        return new ClientCertAuthChallengeHandler(activity);
     }
 
     @Nullable
@@ -194,7 +218,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                     }
                 },
                 mRedirectUri,
-                mClientCertAuthChallengeHandler);
+                getClientCertAuthHandler(activity, mClientCertChallengeHandlerClassName));
 
         setUpWebView(view, webViewClient);
 
