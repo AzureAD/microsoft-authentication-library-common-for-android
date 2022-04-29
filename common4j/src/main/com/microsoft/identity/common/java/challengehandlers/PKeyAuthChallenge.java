@@ -22,17 +22,17 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.challengehandlers;
 
+import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.CHALLENGE_RESPONSE_HEADER;
+import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.CHALLENGE_RESPONSE_TYPE;
+import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.PKEYAUTH_VERSION;
+
 import com.microsoft.identity.common.java.AuthenticationSettings;
-import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.util.JWSBuilder;
 import com.microsoft.identity.common.java.util.StringUtil;
 
-import java.io.Serializable;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.cert.X509Certificate;
@@ -45,11 +45,6 @@ import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.experimental.Accessors;
-import sun.rmi.runtime.Log;
-
-import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.CHALLENGE_RESPONSE_HEADER;
-import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.CHALLENGE_RESPONSE_TYPE;
-import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.PKEYAUTH_VERSION;
 
 /**
  * A class/builder that represents PKeyAuth challenge.
