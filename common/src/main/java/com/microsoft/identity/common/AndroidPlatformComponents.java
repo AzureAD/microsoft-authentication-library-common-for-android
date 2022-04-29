@@ -56,6 +56,7 @@ import com.microsoft.identity.common.java.interfaces.IHttpClientWrapper;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.net.DefaultHttpClientWrapper;
+import com.microsoft.identity.common.java.net.ISslProvider;
 import com.microsoft.identity.common.java.platform.Device;
 import com.microsoft.identity.common.java.providers.oauth2.IStateGenerator;
 import com.microsoft.identity.common.java.util.ClockSkewManager;

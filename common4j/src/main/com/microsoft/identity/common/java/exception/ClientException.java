@@ -223,6 +223,11 @@ public class ClientException extends BaseException {
     public static final String CERTIFICATE_LOAD_FAILURE = "certificate_load_failure";
 
     /**
+     * Emitted if we fail to parse a certificate.
+     */
+    public static final String CERTIFICATE_PARSE_FAILURE = "certificate_parse_failure";
+
+    /**
      * Emitted when the Protection Params provided to the KeyStore are invalid or insufficient.
      * This error will be emitted if the underlying key material has been cleared or removed from
      * the keystore.

@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.crypto;
 
+import com.microsoft.identity.common.java.exception.ClientException;
+
 import java.io.UnsupportedEncodingException;
 import java.security.NoSuchProviderException;
 import java.security.cert.CertificateException;
@@ -39,5 +41,5 @@ public interface ICertificateGeneratorFunction {
      * @throws UnsupportedEncodingException if the certificate is encoded in an unknown format.
      * @throws NoSuchProviderException if the provider for the certificate could not be found.
      */
-    X509Certificate apply(String certificateData) throws CertificateException, UnsupportedEncodingException, NoSuchProviderException;
+    X509Certificate apply(String certificateData) throws CertificateException, UnsupportedEncodingException, NoSuchProviderException, ClientException;
 }
