@@ -44,8 +44,9 @@ import java.util.Arrays;
 
 // Note: Test cannot use robolectric due to the following open issue
 // https://github.com/robolectric/robolectric/issues/1518
+//todo: Investigate if these tests can be migrated to common4j
 @RunWith(Parameterized.class)
-public class DevicePoPManagerSigningTests {
+public class AndroidDevicePoPManagerSigningTests {
 
     private static final String DATA_TO_SIGN = "The quick brown fox jumped over the lazy dog.";
 
@@ -58,9 +59,9 @@ public class DevicePoPManagerSigningTests {
     }
 
     @SuppressWarnings("unused")
-    public DevicePoPManagerSigningTests(final SigningAlgorithm signingAlg)
+    public AndroidDevicePoPManagerSigningTests(final SigningAlgorithm signingAlg)
             throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException {
-        devicePopManager = new DevicePopManager(ApplicationProvider.getApplicationContext());
+        devicePopManager = new AndroidDevicePopManager(ApplicationProvider.getApplicationContext());
         this.signingAlg = signingAlg;
     }
 

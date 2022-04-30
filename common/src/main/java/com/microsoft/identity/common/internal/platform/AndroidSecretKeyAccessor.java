@@ -27,7 +27,7 @@ import android.os.Build;
 import androidx.annotation.RequiresApi;
 
 import com.microsoft.identity.common.java.crypto.CryptoSuite;
-import com.microsoft.identity.common.java.crypto.IAndroidKeyStoreKeyManager;
+import com.microsoft.identity.common.java.crypto.IKeyStoreKeyManager;
 import com.microsoft.identity.common.java.crypto.IKeyAccessor;
 import com.microsoft.identity.common.java.crypto.SecureHardwareState;
 import com.microsoft.identity.common.java.exception.ClientException;
@@ -65,9 +65,9 @@ import static com.microsoft.identity.common.java.exception.ClientException.NO_SU
 
 @Builder
 @Accessors(prefix = "m")
-public class SecretKeyAccessor implements IManagedKeyAccessor<KeyStore.SecretKeyEntry> {
+public class AndroidSecretKeyAccessor implements IManagedKeyAccessor<KeyStore.SecretKeyEntry> {
     private static final Charset UTF8 = Charset.forName("UTF-8");
-    private final DeviceKeyManager<KeyStore.SecretKeyEntry> mKeyManager;
+    private final AndroidDeviceKeyManager<KeyStore.SecretKeyEntry> mKeyManager;
     private final CryptoSuite suite;
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     @Override
@@ -203,7 +203,7 @@ public class SecretKeyAccessor implements IManagedKeyAccessor<KeyStore.SecretKey
     }
 
     @Override
-    public IAndroidKeyStoreKeyManager<KeyStore.SecretKeyEntry> getManager() {
+    public IKeyStoreKeyManager<KeyStore.SecretKeyEntry> getManager() {
         return mKeyManager;
     }
 }

@@ -39,10 +39,12 @@ import lombok.experimental.Accessors;
 public class TerminalException extends RuntimeException implements IErrorInformation {
 
     private final String mErrorCode;
+
     /**
      * Construct a TerminalException with a message and cause.
-     * @param message the exception message.
-     * @param cause the causing exception.  Should not be null.
+     *
+     * @param message   the exception message.
+     * @param cause     the causing exception.  Should not be null.
      * @param errorCode the error code.  May not be null.  This should be an error string from {@link ClientException}.
      */
     public TerminalException(final @Nullable String message,
@@ -54,12 +56,35 @@ public class TerminalException extends RuntimeException implements IErrorInforma
 
     /**
      * Construct a TerminalException with a cause.
-     * @param cause the causing exception.  Should not be null.
+     *
+     * @param cause     the causing exception.  Should not be null.
      * @param errorCode the error code.  May not be null.  This should be an error string from {@link ClientException}.
      */
     public TerminalException(final @NonNull Throwable cause,
                              final @NonNull String errorCode) {
         super(cause);
+        this.mErrorCode = errorCode;
+    }
+
+    /**
+     * Construct a TerminalException.
+     *
+     * @param errorCode the error code.  May not be null.
+     */
+    public TerminalException(final @NonNull String errorCode) {
+        super();
+        this.mErrorCode = errorCode;
+    }
+
+    /**
+     * Construct a TerminalException with a message.
+     *
+     * @param message   the exception message.
+     * @param errorCode the error code.  May not be null.  This should be an error string from {@link ClientException}.
+     */
+    public TerminalException(final @Nullable String message,
+                             final @NonNull String errorCode) {
+        super(message);
         this.mErrorCode = errorCode;
     }
 }
