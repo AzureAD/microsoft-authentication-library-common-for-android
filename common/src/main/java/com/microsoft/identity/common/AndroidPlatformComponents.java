@@ -320,6 +320,7 @@ public class AndroidPlatformComponents implements IPlatformComponents {
                 .context(mContext)
                 .activity(mActivity)
                 .fragment(mFragment)
+                .platformComponents(this)
                 .build();
     }
 

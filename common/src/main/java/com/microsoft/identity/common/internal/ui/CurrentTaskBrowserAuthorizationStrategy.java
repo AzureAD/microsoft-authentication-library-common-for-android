@@ -52,9 +52,4 @@ public class CurrentTaskBrowserAuthorizationStrategy<
     protected void setIntentFlag(@NonNull final Intent intent) {
         // do nothing
     }
-
-    @Override
-    public void setClientCertAuthChallengeHandler(IChallengeHandler clientCertAuthChallengeHandler) {
-        //do nothing
-    }
 }

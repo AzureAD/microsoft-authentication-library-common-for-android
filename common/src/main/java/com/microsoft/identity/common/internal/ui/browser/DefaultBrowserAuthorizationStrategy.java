@@ -66,9 +66,4 @@ public class DefaultBrowserAuthorizationStrategy<
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         }
     }
-
-    @Override
-    public void setClientCertAuthChallengeHandler(IChallengeHandler clientCertAuthChallengeHandler) {
-        //do nothing
-    }
 }

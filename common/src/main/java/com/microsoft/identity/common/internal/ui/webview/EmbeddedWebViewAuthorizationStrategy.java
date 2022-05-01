@@ -25,6 +25,7 @@ package com.microsoft.identity.common.internal.ui.webview;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.webkit.ClientCertRequest;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -61,7 +62,7 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
     private GenericOAuth2Strategy mOAuth2Strategy; //NOPMD
     private GenericAuthorizationRequest mAuthorizationRequest; //NOPMD
 
-    private IChallengeHandler mClientCertAuthChallengeHandler;
+    private final IChallengeHandler<ClientCertRequest, Void> mClientCertAuthChallengeHandler;
 
     /**
      * Constructor of EmbeddedWebViewAuthorizationStrategy.
@@ -70,8 +71,10 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
      */
     public EmbeddedWebViewAuthorizationStrategy(@NonNull Context applicationContext,
                                                 @NonNull Activity activity,
-                                                @Nullable Fragment fragment) {
+                                                @Nullable Fragment fragment,
+                                                @NonNull IChallengeHandler<ClientCertRequest, Void> clientCertAuthChallengeHandler) {
         super(applicationContext, activity, fragment);
+        mClientCertAuthChallengeHandler = clientCertAuthChallengeHandler;
     }
 
     /**
@@ -133,10 +136,4 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
             Logger.warnPII(methodTag,"Unknown request code " + requestCode);
         }
     }
-
-    @Override
-    public void setClientCertAuthChallengeHandler(IChallengeHandler clientCertAuthChallengeHandler) {
-        mClientCertAuthChallengeHandler = clientCertAuthChallengeHandler;
-    }
-
 }

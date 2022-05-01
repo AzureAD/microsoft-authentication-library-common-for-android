@@ -56,10 +56,4 @@ public interface IAuthorizationStrategy<
      */
     void completeAuthorization(int requestCode, @NonNull final RawAuthorizationResult data);
 
-    /**
-     * Set the local clientCertAuthChallengeHandler to challengeHandler.
-     *
-     * @param clientCertAuthChallengeHandler: A ChallengeHandler that implements CBA.
-     */
-    void setClientCertAuthChallengeHandler(IChallengeHandler clientCertAuthChallengeHandler);
 }

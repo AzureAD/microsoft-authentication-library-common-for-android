@@ -227,10 +227,6 @@ public class LocalMSALController extends BaseController {
         parameters.getPlatformComponents().getAuthorizationStrategyFactory();
 
         mAuthorizationStrategy = parameters.getPlatformComponents().getAuthorizationStrategyFactory().getAuthorizationStrategy(parameters);
-        //if authorizationStrategy is an EmbeddedWebViewAuthorizationStrategy, set clientCertAuthChallengeHandler variable in strategy.
-        if (mAuthorizationStrategy instanceof EmbeddedWebViewAuthorizationStrategy) {
-            mAuthorizationStrategy.setClientCertAuthChallengeHandler(parameters.getPlatformComponents().getClientCertAuthChallengeHandler());
-        };
         mAuthorizationRequest = getAuthorizationRequest(strategy, parameters);
 
         // Suppressing unchecked warnings due to casting of AuthorizationRequest to GenericAuthorizationRequest and AuthorizationStrategy to GenericAuthorizationStrategy in the arguments of call to requestAuthorization method

@@ -30,11 +30,13 @@ import androidx.fragment.app.Fragment;
 
 import com.microsoft.identity.common.internal.ui.browser.DefaultBrowserAuthorizationStrategy;
 import com.microsoft.identity.common.java.WarningType;
+import com.microsoft.identity.common.java.challengehandlers.IChallengeHandler;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.commands.parameters.BrokerInteractiveTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCommandParameters;
 import com.microsoft.identity.common.java.configuration.LibraryConfiguration;
+import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.providers.oauth2.IAuthorizationStrategy;
 import com.microsoft.identity.common.internal.ui.browser.BrowserSelector;
 import com.microsoft.identity.common.internal.ui.webview.EmbeddedWebViewAuthorizationStrategy;
@@ -58,6 +60,7 @@ public class AndroidAuthorizationStrategyFactory implements IAuthorizationStrate
     private final Context mContext;
     private final Activity mActivity;
     private final Fragment mFragment;
+    private final IPlatformComponents mPlatformComponents;
 
     @Override
     public IAuthorizationStrategy getAuthorizationStrategy(
@@ -128,7 +131,8 @@ public class AndroidAuthorizationStrategyFactory implements IAuthorizationStrate
         return new EmbeddedWebViewAuthorizationStrategy(
                 mContext,
                 mActivity,
-                mFragment);
+                mFragment,
+                mPlatformComponents.getClientCertAuthChallengeHandler());
     }
 
     private AuthorizationAgent validAuthorizationAgent(final AuthorizationAgent agent) {
