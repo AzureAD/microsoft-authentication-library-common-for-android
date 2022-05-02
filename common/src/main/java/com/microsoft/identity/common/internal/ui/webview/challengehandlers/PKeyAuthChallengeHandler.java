@@ -87,9 +87,4 @@ public final class PKeyAuthChallengeHandler implements IChallengeHandler<PKeyAut
 
         return null;
     }
-
-    @Override
-    public void stopYubiKitManagerUsbDiscovery() {
-        //do nothing
-    }
 }

@@ -100,9 +100,4 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
 
         return null;
     }
-
-    @Override
-    public void stopYubiKitManagerUsbDiscovery() {
-        //do nothing
-    }
 }

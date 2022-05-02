@@ -105,9 +105,4 @@ public final class NtlmChallengeHandler implements IChallengeHandler<NtlmChallen
         mChallengeCallback.onChallengeResponseReceived(
                 RawAuthorizationResult.fromResultCode(RawAuthorizationResult.ResultCode.CANCELLED));
     }
-
-    @Override
-    public void stopYubiKitManagerUsbDiscovery() {
-        //do nothing
-    }
 }

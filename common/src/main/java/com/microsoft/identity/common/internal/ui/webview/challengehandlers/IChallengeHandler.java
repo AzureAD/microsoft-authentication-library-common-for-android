@@ -34,10 +34,4 @@ public interface IChallengeHandler<GenericChallenge, GenericResponse> {
      * @return GenericResponse
      */
     GenericResponse processChallenge(GenericChallenge genericChallenge);
-
-    /**
-     * In the case of EoClientCertAuthChallengeHandler, wrapper to stop YubiKitManager instance from detecting any more Usb devices.
-     * All other class implementations do nothing.
-     */
-    void stopYubiKitManagerUsbDiscovery();
 }
