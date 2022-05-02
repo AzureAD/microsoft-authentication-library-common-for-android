@@ -67,7 +67,8 @@ public class EoClientCertAuthChallengeHandler implements IChallengeHandler<Clien
         });
 
     }
-
+    //processChallenge is the same for now.
+    //But this method will eventually include logic for YubiKeys as well.
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     @Override
     public Void processChallenge(@NonNull final ClientCertRequest request) {
@@ -122,6 +123,7 @@ public class EoClientCertAuthChallengeHandler implements IChallengeHandler<Clien
         return null;
     }
 
+    //Allows AzureActiveDirectoryWebViewCLient to stop mYubiKitManager's discovery mode.
     public void stopYubiKitManagerUsbDiscovery() {
         //Stop UsbDiscovery for YubiKitManager
         //Should be called when host fragment is destroyed.
