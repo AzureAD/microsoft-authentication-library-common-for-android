@@ -74,6 +74,8 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
 
     private WebView mWebView;
 
+    private AzureActiveDirectoryWebViewClient mAADWebViewClient;
+
     private ProgressBar mProgressBar;
 
     private Intent mAuthIntent;
@@ -148,7 +150,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         if (activity == null) {
             return null;
         }
-        final AzureActiveDirectoryWebViewClient webViewClient = new AzureActiveDirectoryWebViewClient(
+        mAADWebViewClient = new AzureActiveDirectoryWebViewClient(
                 activity,
                 new AuthorizationCompletionCallback(),
                 new OnPageLoadedCallback() {
@@ -179,7 +181,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                     }
                 },
                 mRedirectUri);
-        setUpWebView(view, webViewClient);
+        setUpWebView(view, mAADWebViewClient);
 
         mWebView.post(new Runnable() {
             @Override
@@ -262,6 +264,16 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         mWebView.getSettings().setSupportZoom(webViewZoomEnabled);
         mWebView.setVisibility(View.INVISIBLE);
         mWebView.setWebViewClient(webViewClient);
+    }
+
+    /**
+     * NOTE: In the case that AADWebViewClient is using EoClientCertAuthChallengeHandler to handle CBA,
+     * the YubiKitManager needs to stop discovering Usb devices upon fragment destroy.
+     */
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        mAADWebViewClient.stopYubiKitManagerUsbDiscovery();
     }
 
     /**

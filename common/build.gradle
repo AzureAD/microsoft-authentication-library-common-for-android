@@ -135,6 +135,8 @@ dependencies {
     implementation "com.google.code.gson:gson:$rootProject.ext.gsonVersion"
     implementation "androidx.browser:browser:$rootProject.ext.browserVersion"
     implementation "androidx.constraintlayout:constraintlayout:$rootProject.ext.constraintLayoutVersion"
+    //For Executive Order work
+    implementation "com.yubico.yubikit:android:$rootProject.ext.yubikitAndroidVersion"
 
     compileOnly 'com.github.spotbugs:spotbugs-annotations:4.3.0'
 

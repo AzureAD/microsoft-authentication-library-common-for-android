@@ -28,23 +28,44 @@ import android.os.Build;
 import android.security.KeyChain;
 import android.security.KeyChainAliasCallback;
 import android.security.KeyChainException;
+import android.util.Log;
 import android.webkit.ClientCertRequest;
 
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.logging.Logger;
+import com.yubico.yubikit.android.YubiKitManager;
+import com.yubico.yubikit.android.transport.usb.UsbConfiguration;
+import com.yubico.yubikit.android.transport.usb.UsbYubiKeyDevice;
+import com.yubico.yubikit.core.util.Callback;
 
 import java.security.Principal;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 
-public final class ClientCertAuthChallengeHandler implements IChallengeHandler<ClientCertRequest, Void> {
-    private static final String TAG = ClientCertAuthChallengeHandler.class.getSimpleName();
+public class EoClientCertAuthChallengeHandler implements IChallengeHandler<ClientCertRequest, Void> {
+    private static final String TAG = EoClientCertAuthChallengeHandler.class.getSimpleName();
     private static final String ACCEPTABLE_ISSUER = "CN=MS-Organization-Access";
     private Activity mActivity;
+    private final YubiKitManager mYubiKitManager;
 
-    public ClientCertAuthChallengeHandler(@NonNull final Activity activity) {
+    public EoClientCertAuthChallengeHandler(@NonNull final Activity activity) {
         mActivity = activity;
+        //Create and start YubiKitManager
+        mYubiKitManager = new YubiKitManager(mActivity.getApplicationContext());
+        mYubiKitManager.startUsbDiscovery(new UsbConfiguration(), new Callback<UsbYubiKeyDevice>() {
+            @Override
+            public void invoke(UsbYubiKeyDevice device) {
+                Log.i(TAG, "A YubiKey device was connected");
+                device.setOnClosed(new Runnable() {
+                    @Override
+                    public void run() {
+                        Log.i(TAG, "A YubiKey device was disconnected");
+                    }
+                });
+            }
+        });
+
     }
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
@@ -57,7 +78,7 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
         if (acceptableCertIssuers != null) {
             for (Principal issuer : acceptableCertIssuers) {
                 if (issuer.getName().contains(ACCEPTABLE_ISSUER)) {
-                    //Checking if received acceptable issuers contain "CN=MS-Organization-Access"
+                    //Checking if received acceptable issuers contain "CN=MS-Organization-Access"z
                     Logger.info(methodTag,"Cancelling the TLS request, not respond to TLS challenge triggered by device authentication.");
                     request.cancel();
                     return null;
@@ -101,8 +122,9 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
         return null;
     }
 
-    @Override
     public void stopYubiKitManagerUsbDiscovery() {
-        //do nothing
+        //Stop UsbDiscovery for YubiKitManager
+        //Should be called when host fragment is destroyed.
+        mYubiKitManager.stopUsbDiscovery();
     }
 }
