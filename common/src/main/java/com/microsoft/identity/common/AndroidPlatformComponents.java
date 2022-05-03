@@ -37,11 +37,11 @@ import androidx.fragment.app.Fragment;
 import com.microsoft.identity.common.crypto.AndroidAuthSdkStorageEncryptionManager;
 import com.microsoft.identity.common.crypto.AndroidBrokerStorageEncryptionManager;
 import com.microsoft.identity.common.internal.net.cache.HttpCache;
+import com.microsoft.identity.common.internal.platform.AndroidDevicePopManager;
 import com.microsoft.identity.common.java.cache.IMultiTypeNameValueStorage;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
 import com.microsoft.identity.common.internal.platform.AndroidDeviceMetadata;
 import com.microsoft.identity.common.internal.platform.AndroidPlatformUtil;
-import com.microsoft.identity.common.internal.platform.DevicePopManager;
 import com.microsoft.identity.common.internal.providers.oauth2.AndroidTaskStateGenerator;
 import com.microsoft.identity.common.internal.ui.AndroidAuthorizationStrategyFactory;
 import com.microsoft.identity.common.internal.util.ProcessUtil;
@@ -198,9 +198,9 @@ public class AndroidPlatformComponents implements IPlatformComponents {
 
         try {
             if (alias == null) {
-                return new DevicePopManager(mContext);
+                return new AndroidDevicePopManager(mContext);
             } else {
-                return new DevicePopManager(mContext, alias);
+                return new AndroidDevicePopManager(mContext, alias);
             }
         } catch (final KeyStoreException e) {
             exception = e;
