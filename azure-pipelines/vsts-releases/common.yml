@@ -38,7 +38,7 @@ jobs:
     name: Gradle1
     displayName: Assemble Release
     inputs:
-      tasks: 'clean common:assembleRelease'
+      tasks: 'clean common:assembleRelease -Pdc=ESTS-PUB-WUS2-AZ1-FD000-TEST1'
       publishJUnitResults: false
       jdkArchitecture: x86
       sqAnalysisBreakBuildIfQualityGateFailed: false
