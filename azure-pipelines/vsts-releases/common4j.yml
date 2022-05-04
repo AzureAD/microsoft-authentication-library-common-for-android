@@ -35,7 +35,7 @@ jobs:
     name: Gradle1
     displayName: Assemble Release
     inputs:
-      tasks: common4j:clean common4j:assemble
+      tasks: common4j:clean common4j:assemble -Pslice=testslice
       publishJUnitResults: false
       jdkArchitecture: x86
       sqAnalysisBreakBuildIfQualityGateFailed: false
