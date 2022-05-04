@@ -20,7 +20,7 @@ jobs:
   parameters:
     project: common4j
     envVstsMvnAndroidAccessTokenVar: ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN
-    assembleTask: assemble
+    assembleTask: assemble -Pslice=testslice
     publishTask: publish
     sbomConfiguration: runtimeClasspath
     spotbugsCwdRoot: $(Build.SourcesDirectory)/common-java-root

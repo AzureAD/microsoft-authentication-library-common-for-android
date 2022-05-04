@@ -20,6 +20,6 @@ jobs:
   parameters:
     project: common
     envVstsMvnAndroidAccessTokenVar: ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN
-    assembleTask: assembleRelease
+    assembleTask: assembleRelease -Pslice=testslice
     publishTask: publish
     sbomConfiguration: distReleaseRuntimeClasspath
