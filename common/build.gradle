@@ -137,6 +137,7 @@ dependencies {
     implementation "androidx.constraintlayout:constraintlayout:$rootProject.ext.constraintLayoutVersion"
     //For Executive Order work
     implementation "com.yubico.yubikit:android:$rootProject.ext.yubikitAndroidVersion"
+    implementation "com.yubico.yubikit:piv:$rootProject.ext.yubikitAndroidVersion"
 
     compileOnly 'com.github.spotbugs:spotbugs-annotations:4.3.0'
 
