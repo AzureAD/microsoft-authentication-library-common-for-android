@@ -266,10 +266,8 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         mWebView.setWebViewClient(webViewClient);
     }
 
-    /**
-     * NOTE: In the case that AADWebViewClient is using EoClientCertAuthChallengeHandler to handle CBA,
-     * the YubiKitManager needs to stop discovering Usb devices upon fragment destroy.
-     */
+    // In the case that AADWebViewClient is using EoClientCertAuthChallengeHandler to handle CBA,
+    // the YubiKitManager needs to stop discovering Usb devices upon fragment destroy.
     @Override
     public void onDestroy() {
         super.onDestroy();
