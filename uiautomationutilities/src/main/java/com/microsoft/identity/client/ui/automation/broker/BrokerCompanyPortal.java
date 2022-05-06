@@ -71,11 +71,6 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
         localApkFileName = COMPANY_PORTAL_APK;
     }
 
-    public BrokerCompanyPortal(@NonNull final IAppInstaller appInstaller) {
-        super(COMPANY_PORTAL_APP_PACKAGE_NAME, COMPANY_PORTAL_APP_NAME, appInstaller);
-        localApkFileName = COMPANY_PORTAL_APK;
-    }
-
     @Override
     public void performDeviceRegistration(@NonNull final String username,
                                           @NonNull final String password) {
@@ -165,7 +160,8 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
     @Override
     public void handleFirstRun() {
         // click the I AGREE btn on privacy screen
-        UiAutomatorUtils.handleButtonClick("com.microsoft.windowsintune.companyportal:id/privacy_notice_agree_button");
+        // First run of CP from playstore does not have a privacy screen
+        // UiAutomatorUtils.handleButtonClick("com.microsoft.windowsintune.companyportal:id/privacy_notice_agree_button");
     }
 
     @Override
