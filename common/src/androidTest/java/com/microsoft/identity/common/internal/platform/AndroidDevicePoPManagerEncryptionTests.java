@@ -50,8 +50,9 @@ import static com.microsoft.identity.common.java.crypto.IDevicePopManager.Cipher
 
 // Note: Test cannot use robolectric due to the following open issue
 // https://github.com/robolectric/robolectric/issues/1518
+//todo: Investigate if these tests can be migrated to common4j
 @RunWith(Parameterized.class)
-public class DevicePoPManagerEncryptionTests {
+public class AndroidDevicePoPManagerEncryptionTests {
 
     private static final String DATA_TO_ENCRYPT = "The quick brown fox jumped over the lazy dog.";
 
@@ -78,9 +79,9 @@ public class DevicePoPManagerEncryptionTests {
         return ciphers;
     }
 
-    public DevicePoPManagerEncryptionTests(final IDevicePopManager.Cipher cipher)
+    public AndroidDevicePoPManagerEncryptionTests(final IDevicePopManager.Cipher cipher)
             throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException {
-        devicePopManager = new DevicePopManager(ApplicationProvider.getApplicationContext());
+        devicePopManager = new AndroidDevicePopManager(ApplicationProvider.getApplicationContext());
         this.cipher = cipher;
     }
 
