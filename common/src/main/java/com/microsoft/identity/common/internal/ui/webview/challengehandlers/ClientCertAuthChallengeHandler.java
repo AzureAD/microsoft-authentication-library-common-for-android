@@ -38,7 +38,7 @@ import java.security.Principal;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 
-public final class ClientCertAuthChallengeHandler implements IChallengeHandler<ClientCertRequest, Void> {
+public class ClientCertAuthChallengeHandler implements IChallengeHandler<ClientCertRequest, Void> {
     private static final String TAG = ClientCertAuthChallengeHandler.class.getSimpleName();
     private static final String ACCEPTABLE_ISSUER = "CN=MS-Organization-Access";
     private Activity mActivity;
@@ -51,6 +51,15 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
     @Override
     public Void processChallenge(@NonNull final ClientCertRequest request) {
         final String methodTag = TAG + ":processChallenge";
+        return handleOnDeviceCertAuth(request, TAG);
+    }
+
+    // Handles the logic for on-device certificate based authentication.
+    // Makes use of Android's KeyChain.choosePrivateKeyAlias method,
+    // which shows a cert picker that allows users to choose their on-device user certificate to authenticate with.
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    public Void handleOnDeviceCertAuth(@NonNull final ClientCertRequest request, String tag) {
+        final String methodTag = tag + ":handleOnDeviceCertAuth";
         final Principal[] acceptableCertIssuers = request.getPrincipals();
 
         // When ADFS server sends null or empty issuers, we'll continue with cert prompt.
