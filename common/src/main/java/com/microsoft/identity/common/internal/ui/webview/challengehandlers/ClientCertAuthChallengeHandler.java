@@ -50,7 +50,7 @@ public class ClientCertAuthChallengeHandler implements IChallengeHandler<ClientC
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     @Override
     public Void processChallenge(@NonNull final ClientCertRequest request) {
-        final String methodTag = TAG + ":processChallenge";
+        //final String methodTag = TAG + ":processChallenge";
         return handleOnDeviceCertAuth(request, TAG);
     }
 

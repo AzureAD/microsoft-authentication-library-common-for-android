@@ -77,7 +77,7 @@ public class EoClientCertAuthChallengeHandler extends ClientCertAuthChallengeHan
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     @Override
     public Void processChallenge(@NonNull final ClientCertRequest request) {
-        final String methodTag = TAG + ":processChallenge";
+        //final String methodTag = TAG + ":processChallenge";
         return handleOnDeviceCertAuth(request, TAG);
     }
 
