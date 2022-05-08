@@ -20,48 +20,17 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.labapi.utilities.client;
-
-import com.microsoft.identity.internal.test.labapi.model.ConfigInfo;
-import com.microsoft.identity.labapi.utilities.constants.UserType;
-
-import lombok.Builder;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.experimental.Accessors;
+package com.microsoft.identity.labapi.utilities.authentication.client;
 
 /**
- * An account object model that will used to represent accounts used for testing purposes.
+ * A factory that can return an implementation of an {@link IConfidentialAuthClient}
  */
-@Getter
-@Accessors(prefix = "m")
-@Builder
-@EqualsAndHashCode
-public class LabAccount implements ILabAccount {
+public interface IConfidentialAuthClientFactory {
 
-    @NonNull
-    private final String mUsername;
-
-    @NonNull
-    private final String mPassword;
-
-    @NonNull
-    private final UserType mUserType;
-
-    @NonNull
-    private final String mHomeTenantId;
-
-    // nullable
-    private final ConfigInfo mConfigInfo;
-
-    @Override
-    public String getAssociatedClientId() {
-        return mConfigInfo.getAppInfo().getAppId();
-    }
-
-    @Override
-    public String getAuthority() {
-        return mConfigInfo.getLabInfo().getAuthority();
-    }
+    /**
+     * Obtain an instance of an {@link IConfidentialAuthClient}.
+     *
+     * @return the Confidential Auth Client to use.
+     */
+    IConfidentialAuthClient getConfidentialAuthClient();
 }

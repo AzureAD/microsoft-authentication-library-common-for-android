@@ -39,7 +39,7 @@ public interface ILabClient {
      * @return a {@link LabAccount} object
      * @throws LabApiException if an error occurs while trying to fetch account from lab
      */
-    LabAccount getLabAccount(LabQuery labQuery) throws LabApiException;
+    ILabAccount getLabAccount(LabQuery labQuery) throws LabApiException;
 
     /**
      * Loads existing account(s) from Lab Api based on the provided query.
@@ -48,7 +48,7 @@ public interface ILabClient {
      * @return a list of {@link LabAccount} objects
      * @throws LabApiException if an error occurs while trying to fetch account(s) from lab
      */
-    List<LabAccount> getLabAccounts(LabQuery labQuery) throws LabApiException;
+    List<ILabAccount> getLabAccounts(LabQuery labQuery) throws LabApiException;
 
     /**
      * Create and return a new temp AAD user using Lab Api.
@@ -57,7 +57,7 @@ public interface ILabClient {
      * @return a {@link LabAccount} object
      * @throws LabApiException if an error occurs while trying to fetch account from lab
      */
-    LabAccount createTempAccount(TempUserType tempUserType) throws LabApiException;
+    ILabAccount createTempAccount(TempUserType tempUserType) throws LabApiException;
 
     /**
      * Get the value of a secret from Lab Api. This primarily includes secrets like passwords for
@@ -68,4 +68,8 @@ public interface ILabClient {
      * @throws LabApiException if an error occurs while trying to load secret from lab
      */
     String getSecret(String secretName) throws LabApiException;
+
+    boolean deleteDevice(String upn, String deviceId) throws LabApiException;
+
+    boolean deleteDevice(String upn, String deviceId, int numDeleteAttempts, long waitTimeBeforeEachDeleteAttempt) throws LabApiException;
 }

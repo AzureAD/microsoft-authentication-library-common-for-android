@@ -57,4 +57,12 @@ public interface ILabAccount {
      * @return a String representing the account's home tenant id
      */
     String getHomeTenantId();
+
+    /**
+     * A client id that can be used alongside this account to get a token.
+     * @return a String representing a client id
+     */
+    String getAssociatedClientId();
+
+    String getAuthority();
 }
