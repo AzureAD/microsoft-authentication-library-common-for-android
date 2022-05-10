@@ -40,7 +40,7 @@ public class NetworkMarkerManager {
 
     private static final List<NetworkMarker> mNetworkMarkers = Collections.synchronizedList(new ArrayList<NetworkMarker>());
     private static final Map<String, NetworkState[]> mNetworkMarkerOverride = Collections.synchronizedMap(new HashMap<String, NetworkState[]>());
-    private static final NetworkStatesHandler networkStatesHandler = new NetworkStatesHandler();
+    private static final NetworkStatesManager networkStatesManager = new NetworkStatesManager();
 
     private static boolean mEnabled = false;
     private static NetworkMarker mCurrentMarker = null;
@@ -87,7 +87,7 @@ public class NetworkMarkerManager {
                 Logger.info(TAG + methodName, "Nothing to clear since there is no current marker");
                 return;
             }
-            networkStatesHandler.clear();
+            networkStatesManager.clear();
             mCurrentMarker = null;
         }
     }
@@ -123,7 +123,7 @@ public class NetworkMarkerManager {
             mNetworkMarkers.add(networkMarker);
             mCurrentMarker = networkMarker;
             if (networkStates.length > 0) {
-                networkStatesHandler.apply(networkMarker);
+                networkStatesManager.apply(networkMarker);
             }
         }
     }
@@ -146,12 +146,12 @@ public class NetworkMarkerManager {
 
     public static void setStateChangeHandler(@NonNull INetworkStateChangeHandler stateChangeHandler) {
         mStateChangeHandler = stateChangeHandler;
-        networkStatesHandler.setStateChangeHandler(mStateChangeHandler);
+        networkStatesManager.setStateChangeHandler(mStateChangeHandler);
     }
 
     public static void removeStateChangeHandler() {
         mStateChangeHandler = null;
-        networkStatesHandler.setStateChangeHandler(null);
+        networkStatesManager.setStateChangeHandler(null);
         setEnabled(false);
 
         Logger.warn(TAG + ":removeStateChangeHandler", "Network state change handler has been removed.");
@@ -161,7 +161,7 @@ public class NetworkMarkerManager {
         mEnabled = enabled;
         Logger.info(TAG + ":setEnabled", (enabled ? "Enabling" : "Disabling") + " the network marker manager.");
         if (!enabled) {
-            networkStatesHandler.clear();
+            networkStatesManager.clear();
         }
     }
 

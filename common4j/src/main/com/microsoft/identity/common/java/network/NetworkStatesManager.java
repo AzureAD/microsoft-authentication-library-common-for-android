@@ -8,8 +8,8 @@ import java.util.concurrent.TimeUnit;
 
 import lombok.NonNull;
 
-public class NetworkStatesHandler implements Runnable {
-    private static final String TAG = NetworkStatesHandler.class.getSimpleName();
+public class NetworkStatesManager implements Runnable {
+    private static final String TAG = NetworkStatesManager.class.getSimpleName();
     private static final int NETWORK_WAIT_TIMEOUT_SECONDS = 20;
 
     private final Thread networkStateThread = new Thread(this);
