@@ -1,6 +1,6 @@
 V.Next
 ----------
-- [MINOR] Adding YubiKit SDK dependency; CBA now handled by EoClientCertAuthChallenge Handler for most devices; added keyboard flag to android:configChanges for all activities that could interact with a YubiKey. (#1729)
+- [MINOR] Adding YubiKit SDK dependency; added keyboard flag to android:configChanges for all activities that could interact with a YubiKey. (#1729)
 - [PATCH] Add exception handling in Content Provider strategy, for broker communication (#1722)
 - [MINOR] Support TenantID value from eSTS in PKeyAuth flows (#1712)
 - [MINOR] Implement cert loader for both multiple and legacy WPJ data store in PKeyAuth (#1711)

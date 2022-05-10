@@ -41,8 +41,6 @@ import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.broker.PackageHelper;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.ClientCertAuthChallengeHandler;
-import com.microsoft.identity.common.internal.ui.webview.challengehandlers.EoClientCertAuthChallengeHandler;
-import com.microsoft.identity.common.internal.ui.webview.challengehandlers.IChallengeHandler;
 import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallenge;
 import com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallengeFactory;
@@ -79,7 +77,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     public static final String ERROR_SUBCODE = "error_subcode";
     public static final String ERROR_DESCRIPTION = "error_description";
     private final String mRedirectUrl;
-    private final IChallengeHandler<ClientCertRequest, Void> mClientCertAuthChallengeHandler;
+    private final ClientCertAuthChallengeHandler mClientCertAuthChallengeHandler;
 
     public AzureActiveDirectoryWebViewClient(@NonNull final Activity activity,
                                              @NonNull final IAuthorizationCompletionCallback completionCallback,
@@ -87,14 +85,8 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                                              @NonNull final String redirectUrl) {
         super(activity, completionCallback, pageLoadedCallback);
         mRedirectUrl = redirectUrl;
-        //If api level is 19 or above, use EoClientCertAuthChallengeHander
-        //Otherwise, use regular ClientCertAuthChallengeHandler
-        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            //Creating EoClientCertAuthChallengeHandler starts YubiKitManager usb discovery
-            mClientCertAuthChallengeHandler = new EoClientCertAuthChallengeHandler(getActivity());
-        } else {
-            mClientCertAuthChallengeHandler = new ClientCertAuthChallengeHandler(getActivity());
-        }
+        //Creating ClientCertAuthChallengeHandler starts YubiKitManager usb discovery
+        mClientCertAuthChallengeHandler = new ClientCertAuthChallengeHandler(getActivity());
     }
 
     /**
@@ -469,11 +461,11 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     }
 
     /**
-     * In the case of EoClientCertAuthChallengeHandler, a wrapper to stop YubiKitManager instance from detecting any more Usb devices.
+     * A wrapper to stop YubiKitManager instance from detecting any more Usb devices.
      */
     public void stopYubiKitManagerUsbDiscovery() {
-        if (mClientCertAuthChallengeHandler instanceof EoClientCertAuthChallengeHandler) {
-            ((EoClientCertAuthChallengeHandler)mClientCertAuthChallengeHandler).stopYubiKitManagerUsbDiscovery();
+        if (mClientCertAuthChallengeHandler != null) {
+            mClientCertAuthChallengeHandler.stopYubiKitManagerUsbDiscovery();
         }
     }
 }
