@@ -1,6 +1,7 @@
 V.Next
 ----------
 - [MINOR] Adding YubiKit SDK dependency; added keyboard flag to android:configChanges for all activities that could interact with a YubiKey. (#1729)
+- [MINOR] Support WordApp local apk install in UI automation flows (#1732)
 - [PATCH] Add exception handling in Content Provider strategy, for broker communication (#1722)
 - [MINOR] Support TenantID value from eSTS in PKeyAuth flows (#1712)
 - [MINOR] Implement cert loader for both multiple and legacy WPJ data store in PKeyAuth (#1711)
