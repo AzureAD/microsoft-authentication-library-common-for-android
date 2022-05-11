@@ -148,6 +148,27 @@ public class LoggerTest {
         }, false);
     }
 
+    @Test(timeout = TEST_TIME_OUT_IN_MILLISECONDS)
+    public void logWithRequestContextGuard() throws InterruptedException {
+        final Logger.LogLevel logLevel = Logger.LogLevel.VERBOSE;
+        final boolean containsPII = false;
+        final String newCorrelationId = "NEW_CORRELATION_ID";
+        final String newThreadName = Thread.currentThread().getName();
+
+        try (RequestContextGuard guard = new RequestContextGuard(newCorrelationId)) {
+            guard.initialize();
+            Logger.setAllowPii(false);
+            testLogger(tag, logLevel, newCorrelationId, newThreadName, containsPII, new IOperationToTest() {
+                @Override
+                public void execute() {
+                    Logger.verbose(tag, "");
+                }
+            }, false);
+        }
+
+        Assert.assertEquals("UNSET", DiagnosticContext.INSTANCE.getRequestContext().get(DiagnosticContext.CORRELATION_ID));
+    }
+
     // Each thread should print a different thread name (and correlation ID, if set differently) to the log.
     @Test(timeout = TEST_TIME_OUT_IN_MILLISECONDS)
     public void logWithDiagnosticContext_Multithread() throws InterruptedException {
@@ -195,6 +216,58 @@ public class LoggerTest {
         }, false);
 
         Assert.assertNotEquals(threadName_2[0], threadName_1);
+    }
+
+    // Each thread should print a different thread name (and correlation ID, if set differently) to the log.
+    @Test(timeout = TEST_TIME_OUT_IN_MILLISECONDS)
+    public void logWithRequestContextGuard_Multithread() throws InterruptedException {
+        final Logger.LogLevel logLevel = Logger.LogLevel.VERBOSE;
+        final boolean containsPII = false;
+
+        final String correlationId_1 = "CORRELATIONID_1";
+        final String correlationId_2 = "CORRELATIONID_2";
+        final String threadName_1 = Thread.currentThread().getName();
+
+        try (RequestContextGuard guard = new RequestContextGuard(correlationId_1)) {
+            guard.initialize();
+            final CountDownLatch countDownLatch = new CountDownLatch(1);
+            final String[] threadName_2 = {null};
+
+            // Spin a background thread.
+            new Thread(new Runnable() {
+                @SneakyThrows
+                @Override
+                public void run() {
+                    threadName_2[0] = Thread.currentThread().getName();
+
+                    try (RequestContextGuard guard2 = new RequestContextGuard(correlationId_2)) {
+                        guard2.initialize();
+                        final RequestContext requestContext = new RequestContext();
+                        requestContext.put(DiagnosticContext.CORRELATION_ID, correlationId_2);
+                        DiagnosticContext.INSTANCE.setRequestContext(requestContext);
+
+                        testLogger(tag, logLevel, correlationId_2, threadName_2[0], containsPII, new IOperationToTest() {
+                            @Override
+                            public void execute() {
+                                Logger.verbose(tag, "");
+                            }
+                        }, false);
+                        countDownLatch.countDown();
+                    }
+                }
+            }).start();
+
+            countDownLatch.await();
+            testLogger(tag, logLevel, correlationId_1, threadName_1, containsPII, new IOperationToTest() {
+                @Override
+                public void execute() {
+                    Logger.verbose(tag, "");
+                }
+            }, false);
+            Assert.assertNotEquals(threadName_2[0], threadName_1);
+        }
+
+        Assert.assertEquals("UNSET", DiagnosticContext.INSTANCE.getRequestContext().get(DiagnosticContext.CORRELATION_ID));
     }
 
     private interface IOperationToTest {
