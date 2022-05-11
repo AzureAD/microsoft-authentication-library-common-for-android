@@ -79,6 +79,7 @@ dependencies {
     testImplementation "junit:junit:$rootProject.ext.junitVersion"
     compileOnly "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
     annotationProcessor "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
+    implementation 'commons-lang:commons-lang:2.6'
 
     testCompileOnly "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
     testAnnotationProcessor "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
