@@ -22,6 +22,11 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.broker;
 
+import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.BROKER_ACCOUNT_TYPE;
+import static com.microsoft.identity.common.java.exception.ClientException.NO_SUCH_ALGORITHM;
+import static com.microsoft.identity.common.java.exception.ErrorStrings.APP_PACKAGE_NAME_NOT_FOUND;
+import static com.microsoft.identity.common.java.exception.ErrorStrings.BROKER_VERIFICATION_FAILED;
+
 import android.accounts.AccountManager;
 import android.accounts.AuthenticatorDescription;
 import android.annotation.SuppressLint;
@@ -33,9 +38,9 @@ import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.BuildConfig;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
-import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.internal.util.PackageUtils;
 import com.microsoft.identity.common.internal.util.StringUtil;
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.io.IOException;
@@ -48,24 +53,15 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.BROKER_ACCOUNT_TYPE;
-import static com.microsoft.identity.common.java.exception.ClientException.NO_SUCH_ALGORITHM;
-import static com.microsoft.identity.common.java.exception.ErrorStrings.APP_PACKAGE_NAME_NOT_FOUND;
-import static com.microsoft.identity.common.java.exception.ErrorStrings.BROKER_VERIFICATION_FAILED;
-
 public class BrokerValidator {
 
     private static final String TAG = "BrokerValidator";
 
-    private static boolean sShouldTrustDebugBrokers = BuildConfig.DEBUG;
+    private boolean mShouldTrustDebugBrokers = BuildConfig.DEBUG;
 
     private static final List<DebugBrokerTrustingApp> appsWithDebugBrokerSupport = Collections.unmodifiableList(
             Arrays.asList(DebugBrokerTrustingApp.MSAL_AUTOMATION_APP, DebugBrokerTrustingApp.MSAL_TEST_APP)
     );
-
-    public static boolean getShouldTrustDebugBrokers() {
-        return sShouldTrustDebugBrokers;
-    }
 
     private final Context mContext;
 
@@ -78,7 +74,6 @@ public class BrokerValidator {
         mContext = context;
     }
 
-
     /**
      * Set whether the application can trust debug brokers in non-debug builds.
      * Only applications that have been listed in {@link BrokerValidator#appsWithDebugBrokerSupport} can trust debug brokers in release mode.
@@ -89,7 +84,7 @@ public class BrokerValidator {
         final String methodTag = TAG + ":setShouldTrustDebugBrokers";
 
         if (BuildConfig.DEBUG || !shouldTrustDebugBrokers) {
-            BrokerValidator.sShouldTrustDebugBrokers = shouldTrustDebugBrokers;
+            mShouldTrustDebugBrokers = shouldTrustDebugBrokers;
             return;
         }
 
@@ -103,12 +98,17 @@ public class BrokerValidator {
 
         if (canEnableDebugBrokers) {
             Logger.info(methodTag, "Trusting debug brokers in a non-debug build. ");
-            BrokerValidator.sShouldTrustDebugBrokers = true;
+            mShouldTrustDebugBrokers = true;
         } else {
             throw new RuntimeException(
                     "Cannot trust debug brokers in non-debug builds."
             );
         }
+    }
+
+
+    public boolean getShouldTrustDebugBrokers() {
+        return mShouldTrustDebugBrokers;
     }
 
     /**
@@ -172,7 +172,7 @@ public class BrokerValidator {
      * @return a Set of {@link BrokerData}
      */
     public Set<BrokerData> getValidBrokers() {
-        final Set<BrokerData> validBrokers = sShouldTrustDebugBrokers
+        final Set<BrokerData> validBrokers = mShouldTrustDebugBrokers
                 ? BrokerData.getAllBrokers()
                 : BrokerData.getProdBrokers();
 

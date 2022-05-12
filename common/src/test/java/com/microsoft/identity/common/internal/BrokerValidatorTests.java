@@ -87,7 +87,7 @@ public class BrokerValidatorTests {
     public void testShouldTrustDebugBrokersInDebugMode() {
         mBrokerValidator.setShouldTrustDebugBrokers(true);
 
-        Assert.assertTrue(BrokerValidator.getShouldTrustDebugBrokers());
+        Assert.assertTrue(mBrokerValidator.getShouldTrustDebugBrokers());
     }
 
     @Test
@@ -103,7 +103,7 @@ public class BrokerValidatorTests {
 
         // should not throw if setting to false
         mBrokerValidator.setShouldTrustDebugBrokers(false);
-        Assert.assertFalse(BrokerValidator.getShouldTrustDebugBrokers());
+        Assert.assertFalse(mBrokerValidator.getShouldTrustDebugBrokers());
     }
 
     @Test
