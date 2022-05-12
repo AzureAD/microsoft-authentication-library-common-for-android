@@ -457,7 +457,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     @Override
     public void onReceivedClientCertRequest(WebView view,
                                             final ClientCertRequest clientCertRequest) {
-        mClientCertAuthChallengeHandler.processChallenge(clientCertRequest);
+        if (mClientCertAuthChallengeHandler != null) {
+            mClientCertAuthChallengeHandler.processChallenge(clientCertRequest);
+        }
     }
 
     /**
