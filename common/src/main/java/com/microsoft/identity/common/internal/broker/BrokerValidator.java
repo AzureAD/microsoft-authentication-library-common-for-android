@@ -34,7 +34,6 @@ import androidx.annotation.Nullable;
 import com.microsoft.identity.common.BuildConfig;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.util.PackageUtils;
 import com.microsoft.identity.common.internal.util.StringUtil;
 import com.microsoft.identity.common.logging.Logger;
@@ -43,6 +42,8 @@ import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.X509Certificate;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -58,13 +59,9 @@ public class BrokerValidator {
 
     private static boolean sShouldTrustDebugBrokers = BuildConfig.DEBUG;
 
-    public static void setShouldTrustDebugBrokers(final boolean shouldTrustDebugBrokers) {
-        final String methodTag = TAG + ":setShouldTrustDebugBrokers";
-        if (!BuildConfig.DEBUG && shouldTrustDebugBrokers) {
-            Logger.warn(methodTag, "You are forcing to trust debug brokers in non-debug builds.");
-        }
-        BrokerValidator.sShouldTrustDebugBrokers = shouldTrustDebugBrokers;
-    }
+    private static final List<DebugBrokerTrustingApp> appsWithDebugBrokerSupport = Collections.unmodifiableList(
+            Arrays.asList(DebugBrokerTrustingApp.MSAL_AUTOMATION_APP, DebugBrokerTrustingApp.MSAL_TEST_APP)
+    );
 
     public static boolean getShouldTrustDebugBrokers() {
         return sShouldTrustDebugBrokers;
@@ -79,6 +76,39 @@ public class BrokerValidator {
      */
     public BrokerValidator(final Context context) {
         mContext = context;
+    }
+
+
+    /**
+     * Set whether the application can trust debug brokers in non-debug builds.
+     * Only applications that have been listed in {@link BrokerValidator#appsWithDebugBrokerSupport} can trust debug brokers in release mode.
+     *
+     * @param shouldTrustDebugBrokers a boolean value that represents whether the application can trust debug brokers in non-debug builds.
+     */
+    public void setShouldTrustDebugBrokers(final boolean shouldTrustDebugBrokers) {
+        final String methodTag = TAG + ":setShouldTrustDebugBrokers";
+
+        if (BuildConfig.DEBUG || !shouldTrustDebugBrokers) {
+            BrokerValidator.sShouldTrustDebugBrokers = shouldTrustDebugBrokers;
+            return;
+        }
+
+        boolean canEnableDebugBrokers = false;
+        for (int i = 0; i < appsWithDebugBrokerSupport.size(); i++) {
+            if (appsWithDebugBrokerSupport.get(i).verify(mContext)) {
+                canEnableDebugBrokers = true;
+                break;
+            }
+        }
+
+        if (canEnableDebugBrokers) {
+            Logger.info(methodTag, "Trusting debug brokers in a non-debug build. ");
+            BrokerValidator.sShouldTrustDebugBrokers = true;
+        } else {
+            throw new RuntimeException(
+                    "Cannot trust debug brokers in non-debug builds."
+            );
+        }
     }
 
     /**
@@ -151,6 +181,7 @@ public class BrokerValidator {
 
     /**
      * Get an iterator of access to valid broker signatures.
+     *
      * @return an iterator of access to valid broker signatures.
      */
     public Iterator<String> getValidBrokerSignatures() {
@@ -233,7 +264,7 @@ public class BrokerValidator {
             final PackageHelper info = new PackageHelper(context.getPackageManager());
             final String signatureDigest = info.getCurrentSignatureForPackage(packageName);
             if (BrokerData.MICROSOFT_AUTHENTICATOR_PROD.signatureHash.equals(signatureDigest)
-                || BrokerData.MICROSOFT_AUTHENTICATOR_DEBUG.signatureHash.equals(signatureDigest)) {
+                    || BrokerData.MICROSOFT_AUTHENTICATOR_DEBUG.signatureHash.equals(signatureDigest)) {
                 // If the caller is the Authenticator, check if the redirect uri matches with either
                 // the one generated with package name and signature or broker redirect uri.
                 isValidBrokerRedirect |= StringUtil.equalsIgnoreCase(redirectUri, AuthenticationConstants.Broker.BROKER_REDIRECT_URI);

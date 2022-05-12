@@ -4,6 +4,7 @@ V.Next
 - [PATCH] Add exception handling in Content Provider strategy, for broker communication (#1722)
 - [MINOR] Support TenantID value from eSTS in PKeyAuth flows (#1712)
 - [MINOR] Implement cert loader for both multiple and legacy WPJ data store in PKeyAuth (#1711)
+- [PATCH] Throw RuntimeException when debug brokers are trusted in RELEASE mode (#1651)
 
 Version 4.1.0
 ----------

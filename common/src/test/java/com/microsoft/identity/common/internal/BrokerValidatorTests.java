@@ -22,16 +22,27 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal;
 
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+
 import androidx.test.core.app.ApplicationProvider;
 
+import com.microsoft.identity.common.BuildConfig;
 import com.microsoft.identity.common.internal.broker.BrokerData;
 import com.microsoft.identity.common.internal.broker.BrokerValidator;
+import com.microsoft.identity.common.internal.broker.DebugBrokerTrustingApp;
+import com.microsoft.identity.common.shadows.ShadowPackageHelper;
 
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.function.ThrowingRunnable;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
+import org.robolectric.Shadows;
+import org.robolectric.annotation.Config;
+import org.robolectric.shadows.ShadowPackageManager;
+import org.robolectric.util.ReflectionHelpers;
 
 import java.util.Set;
 
@@ -39,6 +50,9 @@ import java.util.Set;
  * Unit Tests for {@link BrokerValidator}.
  */
 @RunWith(RobolectricTestRunner.class)
+@Config(
+        shadows = ShadowPackageHelper.class
+)
 public class BrokerValidatorTests {
 
     private BrokerValidator mBrokerValidator;
@@ -46,11 +60,12 @@ public class BrokerValidatorTests {
     @Before
     public void setup() {
         mBrokerValidator = new BrokerValidator(ApplicationProvider.getApplicationContext());
+        ReflectionHelpers.setStaticField(BuildConfig.class, "DEBUG", true);
     }
 
     @Test
     public void testGetValidBrokersInDebugMode() {
-        BrokerValidator.setShouldTrustDebugBrokers(true);
+        mBrokerValidator.setShouldTrustDebugBrokers(true);
         final Set<BrokerData> brokerData = mBrokerValidator.getValidBrokers();
         Assert.assertEquals(4, brokerData.size());
         Assert.assertTrue(brokerData.contains(BrokerData.BROKER_HOST));
@@ -61,11 +76,46 @@ public class BrokerValidatorTests {
 
     @Test
     public void testGetValidBrokersInReleaseMode() {
-        BrokerValidator.setShouldTrustDebugBrokers(false);
+        mBrokerValidator.setShouldTrustDebugBrokers(false);
         final Set<BrokerData> brokerData = mBrokerValidator.getValidBrokers();
         Assert.assertEquals(2, brokerData.size());
         Assert.assertTrue(brokerData.contains(BrokerData.COMPANY_PORTAL));
         Assert.assertTrue(brokerData.contains(BrokerData.MICROSOFT_AUTHENTICATOR_PROD));
     }
 
+    @Test
+    public void testShouldTrustDebugBrokersInDebugMode() {
+        mBrokerValidator.setShouldTrustDebugBrokers(true);
+
+        Assert.assertTrue(BrokerValidator.getShouldTrustDebugBrokers());
+    }
+
+    @Test
+    public void testShouldTrustDebugBrokersInReleaseMode() {
+        ReflectionHelpers.setStaticField(BuildConfig.class, "DEBUG", false);
+
+        Assert.assertThrows("Cannot trust debug brokers in non-debug builds.", RuntimeException.class, new ThrowingRunnable() {
+            @Override
+            public void run() throws Throwable {
+                mBrokerValidator.setShouldTrustDebugBrokers(true);
+            }
+        });
+
+        // should not throw if setting to false
+        mBrokerValidator.setShouldTrustDebugBrokers(false);
+        Assert.assertFalse(BrokerValidator.getShouldTrustDebugBrokers());
+    }
+
+    @Test
+    @Config(
+            packageName = "com.microsoft.identity.client.msal.testapp"
+    )
+    public void testShouldTrustDebugBrokersForTestApps() {
+        ReflectionHelpers.setStaticField(BuildConfig.class, "DEBUG", false);
+
+        ShadowPackageHelper.putSignatureHash(
+                DebugBrokerTrustingApp.MSAL_TEST_APP.getPackageName(), DebugBrokerTrustingApp.MSAL_TEST_APP.getSignatureHash()
+        );
+        mBrokerValidator.setShouldTrustDebugBrokers(true);
+    }
 }
