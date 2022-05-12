@@ -152,13 +152,13 @@ public class LoggerTest {
     public void logWithRequestContextGuard() throws InterruptedException {
         final Logger.LogLevel logLevel = Logger.LogLevel.VERBOSE;
         final boolean containsPII = false;
-        final String newCorrelationId = "NEW_CORRELATION_ID";
-        final String newThreadName = Thread.currentThread().getName();
+        final String correlationId = "CORRELATION_ID";
+        final String threadName = Thread.currentThread().getName();
 
-        try (RequestContextGuard guard = new RequestContextGuard(newCorrelationId)) {
+        try (RequestContextGuard guard = new RequestContextGuard(correlationId)) {
             guard.initialize();
             Logger.setAllowPii(false);
-            testLogger(tag, logLevel, newCorrelationId, newThreadName, containsPII, new IOperationToTest() {
+            testLogger(tag, logLevel, correlationId, threadName, containsPII, new IOperationToTest() {
                 @Override
                 public void execute() {
                     Logger.verbose(tag, "");
