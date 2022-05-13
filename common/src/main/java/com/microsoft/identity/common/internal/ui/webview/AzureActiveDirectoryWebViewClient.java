@@ -77,6 +77,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     public static final String ERROR_SUBCODE = "error_subcode";
     public static final String ERROR_DESCRIPTION = "error_description";
     private final String mRedirectUrl;
+    private final ClientCertAuthChallengeHandler mClientCertAuthChallengeHandler;
 
     public AzureActiveDirectoryWebViewClient(@NonNull final Activity activity,
                                              @NonNull final IAuthorizationCompletionCallback completionCallback,
@@ -84,6 +85,8 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                                              @NonNull final String redirectUrl) {
         super(activity, completionCallback, pageLoadedCallback);
         mRedirectUrl = redirectUrl;
+        //Creating ClientCertAuthChallengeHandler starts YubiKitManager usb discovery
+        mClientCertAuthChallengeHandler = new ClientCertAuthChallengeHandler(getActivity());
     }
 
     /**
@@ -454,7 +457,23 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     @Override
     public void onReceivedClientCertRequest(WebView view,
                                             final ClientCertRequest clientCertRequest) {
-        final ClientCertAuthChallengeHandler clientCertAuthChallengeHandler = new ClientCertAuthChallengeHandler(getActivity());
-        clientCertAuthChallengeHandler.processChallenge(clientCertRequest);
+        final String methodTag = TAG + ":onReceivedClientCertRequest";
+        if (mClientCertAuthChallengeHandler != null) {
+            mClientCertAuthChallengeHandler.processChallenge(clientCertRequest);
+        } else {
+            Logger.error(methodTag, "ClientCertRequest cannot be handled due to mClientCertAuthChallengeHandler being null.", null);
+        }
+    }
+
+    /**
+     * A wrapper to stop YubiKitManager instance from detecting any more Usb devices.
+     */
+    public void stopYubiKitManagerUsbDiscovery() {
+        final String methodTag = TAG + ":stopYubiKitManagerUsbDiscovery";
+        if (mClientCertAuthChallengeHandler != null) {
+            mClientCertAuthChallengeHandler.stopYubiKitManagerUsbDiscovery();
+        } else {
+            Logger.error(methodTag, "YubiKitManager usb discovery not stopped due to mClientCertAuthChallengeHandler being null", null);
+        }
     }
 }

@@ -33,24 +33,54 @@ import android.webkit.ClientCertRequest;
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.logging.Logger;
+import com.yubico.yubikit.android.YubiKitManager;
+import com.yubico.yubikit.android.transport.usb.UsbConfiguration;
+import com.yubico.yubikit.android.transport.usb.UsbYubiKeyDevice;
+import com.yubico.yubikit.core.util.Callback;
 
 import java.security.Principal;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 
+//Handles Certificate Based Authentication by means of certificates provisioned onto YubiKeys or the devices themselves.
+//Note that CBA requires API >= 21 (YubiKit SDK min API = 19; ClientCertRequest class available with API > 21)
 public final class ClientCertAuthChallengeHandler implements IChallengeHandler<ClientCertRequest, Void> {
     private static final String TAG = ClientCertAuthChallengeHandler.class.getSimpleName();
     private static final String ACCEPTABLE_ISSUER = "CN=MS-Organization-Access";
     private Activity mActivity;
+    private final YubiKitManager mYubiKitManager;
 
     public ClientCertAuthChallengeHandler(@NonNull final Activity activity) {
         mActivity = activity;
+        //Create and start YubiKitManager
+        mYubiKitManager = new YubiKitManager(mActivity.getApplicationContext());
+        mYubiKitManager.startUsbDiscovery(new UsbConfiguration(), new Callback<UsbYubiKeyDevice>() {
+            @Override
+            public void invoke(UsbYubiKeyDevice device) {
+                Logger.info(TAG, "A YubiKey device was connected");
+                device.setOnClosed(new Runnable() {
+                    @Override
+                    public void run() {
+                        Logger.info(TAG, "A YubiKey device was disconnected");
+                    }
+                });
+            }
+        });
     }
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     @Override
     public Void processChallenge(@NonNull final ClientCertRequest request) {
-        final String methodTag = TAG + ":processChallenge";
+        //final String methodTag = TAG + ":processChallenge";
+        return handleOnDeviceCertAuth(request);
+    }
+
+    // Handles the logic for on-device certificate based authentication.
+    // Makes use of Android's KeyChain.choosePrivateKeyAlias method,
+    // which shows a cert picker that allows users to choose their on-device user certificate to authenticate with.
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    public Void handleOnDeviceCertAuth(@NonNull final ClientCertRequest request) {
+        final String methodTag = TAG + ":handleOnDeviceCertAuth";
         final Principal[] acceptableCertIssuers = request.getPrincipals();
 
         // When ADFS server sends null or empty issuers, we'll continue with cert prompt.
@@ -99,5 +129,12 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
                 null);
 
         return null;
+    }
+
+    //Allows AzureActiveDirectoryWebViewCLient to stop mYubiKitManager's discovery mode.
+    public void stopYubiKitManagerUsbDiscovery() {
+        //Stop UsbDiscovery for YubiKitManager
+        //Should be called when host fragment is destroyed.
+        mYubiKitManager.stopUsbDiscovery();
     }
 }
