@@ -30,8 +30,8 @@ import com.microsoft.identity.common.java.cache.ICacheRecord;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
@@ -92,6 +92,7 @@ public class BrokerResult {
         static final String SPE_RING = "spe_ring";
         static final String CLI_TELEM_ERRORCODE = "cli_telem_error_code";
         static final String CLI_TELEM_SUB_ERROR_CODE = "cli_telem_suberror_code";
+        static final String TELEMETRY_DATA = "telemetry_data";
     }
 
     private static final long serialVersionUID = 8606631820514878489L;
@@ -315,6 +316,10 @@ public class BrokerResult {
     private final List<ICacheRecord> mTenantProfileData;
 
     @Nullable
+    @SerializedName(SerializedNames.TELEMETRY_DATA)
+    private final List<Map<String, String>> mTelemetry;
+
+    @Nullable
     @SerializedName(SerializedNames.BROKER_EXCEPTION_TYPE)
     private final String mExceptionType;
 
@@ -352,6 +357,7 @@ public class BrokerResult {
         mCliTelemErrorCode = builder.mCliTelemErrorCode;
         mCliTelemSubErrorCode = builder.mCliTelemSubErrorCode;
         mExceptionType = builder.mExceptionType;
+        mTelemetry = builder.mTelemetry;
     }
 
     public String getExceptionType() {
@@ -484,6 +490,10 @@ public class BrokerResult {
         return mAccessToken;
     }
 
+    public List<Map<String, String>> getTelemetry() {
+        return mTelemetry;
+    }
+
     public static class Builder {
         private String mAccessToken;
         private String mIdToken;
@@ -508,6 +518,7 @@ public class BrokerResult {
         private String mNegotiatedBrokerProtocolVersion;
         private List<ICacheRecord> mTenantProfileData;
         private boolean mServicedFromCache;
+        private List<Map<String, String>> mTelemetry;
 
         // Exception parameters
         private String mErrorCode;
@@ -690,6 +701,13 @@ public class BrokerResult {
 
         public Builder exceptionType(String exceptionType) {
             this.mExceptionType = exceptionType;
+            return this;
+        }
+
+        public Builder telemetryData(final List<Map<String, String>> telemetryData) {
+            if (telemetryData != null) {
+               this.mTelemetry = telemetryData;
+            }
             return this;
         }
     }

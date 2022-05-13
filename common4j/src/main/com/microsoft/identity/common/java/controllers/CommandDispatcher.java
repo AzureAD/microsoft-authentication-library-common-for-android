@@ -538,7 +538,9 @@ public class CommandDispatcher {
                             commandCallbackOnTaskCompleted(command, result);
                             break;
                         case CANCEL:
-                            command.getCallback().onCancel();
+                            UserCancelException userCancelException = new UserCancelException(ErrorStrings.USER_CANCELLED, "Request cancelled by user");
+                            userCancelException.setTelemetry(result.getTelemetryMap());
+                            command.getCallback().onError(userCancelException);
                             break;
                         default:
 

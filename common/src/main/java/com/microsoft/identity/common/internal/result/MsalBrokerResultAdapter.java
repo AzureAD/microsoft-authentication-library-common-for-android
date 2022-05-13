@@ -22,6 +22,18 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.result;
 
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_ACCOUNTS;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_ACCOUNTS_COMPRESSED;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_ACTIVITY_NAME;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_DEVICE_MODE;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_GENERATE_SHR_RESULT;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_GENERATE_SSO_TOKEN_RESULT;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_PACKAGE_NAME;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_RESULT_V2_COMPRESSED;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY;
+import static com.microsoft.identity.common.internal.util.GzipUtil.compressString;
+import static com.microsoft.identity.common.java.exception.ClientException.INVALID_BROKER_BUNDLE;
+
 import android.accounts.AccountManager;
 import android.content.Intent;
 import android.os.Bundle;
@@ -33,10 +45,17 @@ import com.google.gson.Gson;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.HashMapExtensions;
 import com.microsoft.identity.common.adal.internal.util.JsonExtensions;
-import com.microsoft.identity.common.java.commands.AcquirePrtSsoTokenResult;
+import com.microsoft.identity.common.internal.broker.BrokerResult;
 import com.microsoft.identity.common.internal.request.AuthenticationSchemeTypeAdapter;
+import com.microsoft.identity.common.internal.util.BrokerProtocolVersionUtil;
+import com.microsoft.identity.common.internal.util.GzipUtil;
+import com.microsoft.identity.common.internal.util.StringUtil;
+import com.microsoft.identity.common.java.cache.ICacheRecord;
+import com.microsoft.identity.common.java.commands.AcquirePrtSsoTokenResult;
 import com.microsoft.identity.common.java.constants.OAuth2ErrorCode;
 import com.microsoft.identity.common.java.constants.OAuth2SubErrorCode;
+import com.microsoft.identity.common.java.dto.AccessTokenRecord;
+import com.microsoft.identity.common.java.dto.IAccountRecord;
 import com.microsoft.identity.common.java.exception.ArgumentException;
 import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.exception.ClientException;
@@ -45,37 +64,18 @@ import com.microsoft.identity.common.java.exception.IntuneAppProtectionPolicyReq
 import com.microsoft.identity.common.java.exception.ServiceException;
 import com.microsoft.identity.common.java.exception.UiRequiredException;
 import com.microsoft.identity.common.java.exception.UserCancelException;
-import com.microsoft.identity.common.internal.broker.BrokerResult;
-import com.microsoft.identity.common.java.cache.ICacheRecord;
-import com.microsoft.identity.common.java.dto.AccessTokenRecord;
-import com.microsoft.identity.common.java.dto.IAccountRecord;
 import com.microsoft.identity.common.java.request.SdkType;
-import com.microsoft.identity.common.internal.util.BrokerProtocolVersionUtil;
-import com.microsoft.identity.common.internal.util.GzipUtil;
 import com.microsoft.identity.common.java.result.AcquireTokenResult;
 import com.microsoft.identity.common.java.result.GenerateShrResult;
 import com.microsoft.identity.common.java.result.ILocalAuthenticationResult;
 import com.microsoft.identity.common.java.result.LocalAuthenticationResult;
 import com.microsoft.identity.common.java.util.HeaderSerializationUtil;
-import com.microsoft.identity.common.internal.util.StringUtil;
 import com.microsoft.identity.common.logging.Logger;
 
 import org.json.JSONException;
 
 import java.io.IOException;
 import java.util.List;
-
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_ACCOUNTS;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_ACCOUNTS_COMPRESSED;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_ACTIVITY_NAME;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_DEVICE_MODE;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_GENERATE_SHR_RESULT;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_GENERATE_SSO_TOKEN_RESULT;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_PACKAGE_NAME;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_RESULT_V2_COMPRESSED;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY;
-import static com.microsoft.identity.common.java.exception.ClientException.INVALID_BROKER_BUNDLE;
-import static com.microsoft.identity.common.internal.util.GzipUtil.compressString;
 
 /**
  * For Broker: constructs result bundle.
@@ -144,7 +144,8 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                 .cliTelemErrorCode(exception.getCliTelemErrorCode())
                 .cliTelemSubErrorCode(exception.getCliTelemSubErrorCode())
                 .speRing(exception.getSpeRing())
-                .refreshTokenAge(exception.getRefreshTokenAge());
+                .refreshTokenAge(exception.getRefreshTokenAge())
+                .telemetryData(exception.getTelemetry());
 
         if (exception instanceof ServiceException) {
             final ServiceException serviceException = (ServiceException) exception;
@@ -358,6 +359,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         baseException.setCorrelationId(brokerResult.getCorrelationId());
         baseException.setSpeRing(brokerResult.getSpeRing());
         baseException.setRefreshTokenAge(brokerResult.getRefreshTokenAge());
+        baseException.setTelemetry(brokerResult.getTelemetry());
 
         return baseException;
     }
