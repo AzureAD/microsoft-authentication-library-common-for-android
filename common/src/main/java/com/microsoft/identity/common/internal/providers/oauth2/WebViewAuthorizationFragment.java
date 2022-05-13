@@ -271,8 +271,11 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     @Override
     public void onDestroy() {
         super.onDestroy();
+        final String methodTag = TAG + ":onDestroy";
         if (mAADWebViewClient != null) {
             mAADWebViewClient.stopYubiKitManagerUsbDiscovery();
+        } else {
+            Logger.error(methodTag, "YubiKitManager usb discovery not stopped due to mAADWebViewClient being null", null);
         }
     }
 

@@ -42,6 +42,8 @@ import java.security.Principal;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 
+//Handles Certificate Based Authentication by means of certificates provisioned onto YubiKeys or the devices themselves.
+//Note that CBA requires API >= 21 (YubiKit SDK min API = 19; ClientCertRequest class available with API > 21)
 public final class ClientCertAuthChallengeHandler implements IChallengeHandler<ClientCertRequest, Void> {
     private static final String TAG = ClientCertAuthChallengeHandler.class.getSimpleName();
     private static final String ACCEPTABLE_ISSUER = "CN=MS-Organization-Access";
