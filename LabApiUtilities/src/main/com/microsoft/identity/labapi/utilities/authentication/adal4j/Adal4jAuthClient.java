@@ -35,9 +35,12 @@ import java.util.concurrent.Future;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 
+/**
+ * An implementation of {@link IPublicAuthClient} using ADAL4J library.
+ */
 public class Adal4jAuthClient implements IPublicAuthClient {
 
-    final ExecutorService service = Executors.newFixedThreadPool(3);;
+    final ExecutorService service = Executors.newFixedThreadPool(3);
 
     @Override
     @SneakyThrows
@@ -49,7 +52,12 @@ public class Adal4jAuthClient implements IPublicAuthClient {
         );
 
         final Future<AuthenticationResult> future = context.acquireToken(
-                tokenParameters.getResource(), tokenParameters.getClientId(), username, password, null);
+                tokenParameters.getResource(),
+                tokenParameters.getClientId(),
+                username,
+                password,
+                null
+        );
         return new Adal4jAuthenticationResult(future.get());
     }
 }

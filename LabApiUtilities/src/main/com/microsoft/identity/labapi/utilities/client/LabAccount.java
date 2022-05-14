@@ -53,6 +53,7 @@ public class LabAccount implements ILabAccount {
     private final String mHomeTenantId;
 
     // nullable
+    // dependency for Nullable annotation not currently added to LabApiUtilities
     private final ConfigInfo mConfigInfo;
 
     @Override

@@ -101,8 +101,6 @@ public class Msal4jAuthClient implements IConfidentialAuthClient, IPublicAuthCli
                         .builder(tokenParameters.getScopes(), username, password.toCharArray())
                         .build();
 
-        // Try to acquire a token via username/password. If successful, you should see
-        // the token and account information printed out to console
         final com.microsoft.aad.msal4j.IAuthenticationResult result =
                 pca.acquireToken(parameters).get();
 

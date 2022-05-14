@@ -69,7 +69,28 @@ public interface ILabClient {
      */
     String getSecret(String secretName) throws LabApiException;
 
+    /**
+     * Delete the specified device from AAD using the Lab Api.
+     *
+     * @param upn      the upn of the owner of this device
+     * @param deviceId the device id of the device to be deleted
+     * @return a boolean indicated if device has been deleted
+     * @throws LabApiException if an error occurs while trying to delete the device
+     */
     boolean deleteDevice(String upn, String deviceId) throws LabApiException;
 
+    /**
+     * Attempts deleting the specified device from AAD using the Lab Api up to specified number of
+     * attempts. The primary reason for this overload is that device objects take some time to sync
+     * in the directory and so a delete attempt made right after registration may not be successful,
+     * and multiple attempts to delete the record can result in eventual success.
+     *
+     * @param upn                             the upn of the owner of this device
+     * @param deviceId                        the device id of the device to be deleted
+     * @param numDeleteAttempts               the number times Lab Api should attempt to delete the device
+     * @param waitTimeBeforeEachDeleteAttempt the amount of time to wait before each delete attempt
+     * @return a boolean indicated if device has been deleted
+     * @throws LabApiException if an error occurs while trying to delete the device
+     */
     boolean deleteDevice(String upn, String deviceId, int numDeleteAttempts, long waitTimeBeforeEachDeleteAttempt) throws LabApiException;
 }
