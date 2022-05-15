@@ -27,10 +27,12 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.client.ui.automation.logging.Logger;
-import com.microsoft.identity.internal.testutils.labutils.LabUserHelper;
-import com.microsoft.identity.internal.testutils.labutils.LabUserQuery;
+import com.microsoft.identity.labapi.utilities.authentication.LabApiAuthenticationClient;
+import com.microsoft.identity.labapi.utilities.client.LabAccount;
+import com.microsoft.identity.labapi.utilities.client.LabClient;
+import com.microsoft.identity.labapi.utilities.client.LabQuery;
+import com.microsoft.identity.labapi.utilities.constants.TempUserType;
 
-import org.junit.Assert;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
@@ -46,12 +48,12 @@ public class LoadLabUserTestRule implements TestRule {
 
     public static final long TEMP_USER_WAIT_TIME = TimeUnit.SECONDS.toMillis(20);
 
-    private LabUserQuery query;
+    private LabQuery query;
     private String tempUserType;
 
     private String upn;
 
-    public LoadLabUserTestRule(@NonNull final LabUserQuery query) {
+    public LoadLabUserTestRule(@NonNull final LabQuery query) {
         this.query = query;
     }
 
@@ -65,12 +67,18 @@ public class LoadLabUserTestRule implements TestRule {
             @Override
             public void evaluate() throws Throwable {
                 Logger.i(TAG, "Applying rule....");
+                final LabApiAuthenticationClient authenticationClient = new LabApiAuthenticationClient(
+                        "Uav7Q~g06Hwymk8I5WVc1iMLv4UieVDa4XDpB"
+                );
+                final LabClient labClient = new LabClient(authenticationClient);
                 if (query != null) {
                     Logger.i(TAG, "Loading Existing User for Test..");
-                    upn = LabUserHelper.loadUserForTest(query);
+                    final LabAccount labAccount = labClient.getLabAccount(query);
+                    upn = labAccount.getUsername();
                 } else if (tempUserType != null) {
                     Logger.i(TAG, "Loading Temp User for Test....");
-                    upn = LabUserHelper.loadTempUser(tempUserType);
+                    final LabAccount labAccount = labClient.createTempAccount(TempUserType.valueOf(tempUserType));
+                    upn = labAccount.getUsername();
                     try {
                         // temp user takes some time to actually being created even though it may be
                         // returned by the LAB API. Adding a wait here before we proceed with the test.

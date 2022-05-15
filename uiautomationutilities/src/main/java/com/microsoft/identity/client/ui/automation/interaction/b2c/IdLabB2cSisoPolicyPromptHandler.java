@@ -31,7 +31,6 @@ import com.microsoft.identity.client.ui.automation.interaction.IOAuth2LoginCompo
 import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.AadLoginComponentHandler;
 import com.microsoft.identity.client.ui.automation.logging.Logger;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
-import com.microsoft.identity.internal.testutils.labutils.LabConstants;
 
 /**
  * A Prompt handler for MSIDLAB B2C SISO Policy.
@@ -78,14 +77,16 @@ public class IdLabB2cSisoPolicyPromptHandler extends AbstractPromptHandler {
 
     protected static IOAuth2LoginComponentHandler getAppropriateLoginComponentHandler(@NonNull final B2CPromptHandlerParameters parameters) {
         Logger.i(TAG, "Get Appropriate Login Component Handler..");
-        switch (parameters.getB2cProvider().getProviderName()) {
-            case LabConstants.B2CProvider.LOCAL:
+
+        switch (com.microsoft.identity.labapi.utilities.constants.B2CProvider.valueOf(
+                parameters.getB2cProvider().getProviderName())) {
+            case LOCAL:
                 return new B2CIdLabLocalLoginComponentHandler();
-            case LabConstants.B2CProvider.GOOGLE:
+            case GOOGLE:
                 return new GoogleLoginComponentHandler();
-            case LabConstants.B2CProvider.FACEBOOK:
+            case FACEBOOK:
                 return new FacebookLoginComponentHandler();
-            case LabConstants.B2CProvider.MICROSOFT:
+            case MICROSOFT:
                 return new AadLoginComponentHandler();
             default:
                 throw new UnsupportedOperationException("Unsupported B2C Provider for this policy");

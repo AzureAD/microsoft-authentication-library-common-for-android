@@ -26,14 +26,14 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.microsoft.identity.client.ui.automation.logging.Logger;
-import com.microsoft.identity.internal.testutils.labutils.LabConstants;
+
 
 public enum B2CProvider {
 
-    Google(LabConstants.B2CProvider.GOOGLE, "GoogleExchange", "google.com"),
-    Facebook(LabConstants.B2CProvider.FACEBOOK, "FacebookExchange", "facebook.com"),
-    MSA(LabConstants.B2CProvider.MICROSOFT, "MicrosoftAccountExchange", "live.com"),
-    Local(LabConstants.B2CProvider.LOCAL, null, null);
+    Google(com.microsoft.identity.labapi.utilities.constants.B2CProvider.GOOGLE.toString(), "GoogleExchange", "google.com"),
+    Facebook(com.microsoft.identity.labapi.utilities.constants.B2CProvider.FACEBOOK.toString(), "FacebookExchange", "facebook.com"),
+    MSA(com.microsoft.identity.labapi.utilities.constants.B2CProvider.MICROSOFT.toString(), "MicrosoftAccountExchange", "live.com"),
+    Local(com.microsoft.identity.labapi.utilities.constants.B2CProvider.LOCAL.toString(), null, null);
 
     private final static String TAG = "B2CProvider";
     private final String providerName;
