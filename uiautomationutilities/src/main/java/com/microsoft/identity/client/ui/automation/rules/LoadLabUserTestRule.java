@@ -110,4 +110,8 @@ public class LoadLabUserTestRule implements TestRule {
         return mLabAccount;
     }
 
+    public LabClient getLabClient() {
+        return mLabClient;
+    }
+
 }
