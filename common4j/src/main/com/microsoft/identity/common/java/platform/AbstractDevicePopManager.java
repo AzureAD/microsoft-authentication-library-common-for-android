@@ -20,95 +20,8 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.internal.platform;
+package com.microsoft.identity.common.java.platform;
 
-import android.annotation.SuppressLint;
-import android.content.Context;
-import android.os.Build;
-import android.security.keystore.KeyGenParameterSpec;
-import android.security.keystore.KeyInfo;
-import android.security.keystore.KeyPermanentlyInvalidatedException;
-import android.security.keystore.KeyProperties;
-import android.security.keystore.StrongBoxUnavailableException;
-import android.text.TextUtils;
-import android.util.Base64;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
-
-import com.microsoft.identity.common.java.marker.CodeMarkerManager;
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
-import com.microsoft.identity.common.internal.util.Supplier;
-import com.microsoft.identity.common.java.crypto.IDevicePopManager;
-import com.microsoft.identity.common.java.crypto.IAndroidKeyStoreKeyManager;
-import com.microsoft.identity.common.java.crypto.SecureHardwareState;
-import com.microsoft.identity.common.java.crypto.SigningAlgorithm;
-import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.java.util.TaskCompletedCallbackWithError;
-import com.microsoft.identity.common.logging.Logger;
-import com.nimbusds.jose.JOSEException;
-import com.nimbusds.jose.JWSAlgorithm;
-import com.nimbusds.jose.JWSHeader;
-import com.nimbusds.jose.crypto.RSASSASigner;
-import com.nimbusds.jose.crypto.impl.RSAKeyUtils;
-import com.nimbusds.jose.jwk.RSAKey;
-import com.nimbusds.jose.util.Base64URL;
-import com.nimbusds.jwt.JWTClaimsSet;
-import com.nimbusds.jwt.SignedJWT;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.IOException;
-import java.lang.reflect.Type;
-import java.math.BigInteger;
-import java.net.URL;
-import java.nio.charset.Charset;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
-import java.security.KeyFactory;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
-import java.security.PrivateKey;
-import java.security.ProviderException;
-import java.security.PublicKey;
-import java.security.Signature;
-import java.security.SignatureException;
-import java.security.UnrecoverableEntryException;
-import java.security.cert.Certificate;
-import java.security.cert.CertificateException;
-import java.security.interfaces.RSAPublicKey;
-import java.security.spec.AlgorithmParameterSpec;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.RSAKeyGenParameterSpec;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Map;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
-import javax.security.auth.x500.X500Principal;
-
-import lombok.SneakyThrows;
-
-import static com.microsoft.identity.common.java.marker.PerfConstants.CodeMarkerConstants.GENERATE_AT_POP_ASYMMETRIC_KEYPAIR_END;
-import static com.microsoft.identity.common.java.marker.PerfConstants.CodeMarkerConstants.GENERATE_AT_POP_ASYMMETRIC_KEYPAIR_START;
-import static com.microsoft.identity.common.adal.internal.cache.StorageHelper.applyKeyStoreLocaleWorkarounds;
-import static com.microsoft.identity.common.java.util.ported.DateUtilities.LOCALE_CHANGE_LOCK;
-import static com.microsoft.identity.common.java.util.ported.DateUtilities.isLocaleCalendarNonGregorian;
 import static com.microsoft.identity.common.java.exception.ClientException.ANDROID_KEYSTORE_UNAVAILABLE;
 import static com.microsoft.identity.common.java.exception.ClientException.BAD_KEY_SIZE;
 import static com.microsoft.identity.common.java.exception.ClientException.BAD_PADDING;
@@ -127,21 +40,82 @@ import static com.microsoft.identity.common.java.exception.ClientException.NO_SU
 import static com.microsoft.identity.common.java.exception.ClientException.SIGNING_FAILURE;
 import static com.microsoft.identity.common.java.exception.ClientException.THUMBPRINT_COMPUTATION_FAILURE;
 import static com.microsoft.identity.common.java.exception.ClientException.UNKNOWN_EXPORT_FORMAT;
+import static com.microsoft.identity.common.java.marker.PerfConstants.CodeMarkerConstants.GENERATE_AT_POP_ASYMMETRIC_KEYPAIR_END;
+import static com.microsoft.identity.common.java.marker.PerfConstants.CodeMarkerConstants.GENERATE_AT_POP_ASYMMETRIC_KEYPAIR_START;
+import static com.microsoft.identity.common.java.platform.AbstractKeyStoreKeyManager.getKeyPairForEntry;
+import static com.microsoft.identity.common.java.platform.AbstractKeyStoreKeyManager.getRsaKeyForKeyPair;
+import static com.microsoft.identity.common.java.platform.AbstractKeyStoreKeyManager.getThumbprintForRsaKey;
 
-/**
- * Concrete class providing convenience functions around AndroidKeystore to support PoP.
- */
-@SuppressWarnings("PMD.AvoidDuplicateLiterals")
-public class DevicePopManager implements IDevicePopManager {
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+import com.microsoft.identity.common.java.AuthenticationConstants;
+import com.microsoft.identity.common.java.crypto.IDevicePopManager;
+import com.microsoft.identity.common.java.crypto.IKeyStoreKeyManager;
+import com.microsoft.identity.common.java.crypto.SecureHardwareState;
+import com.microsoft.identity.common.java.crypto.SigningAlgorithm;
+import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.exception.ErrorStrings;
+import com.microsoft.identity.common.java.logging.Logger;
+import com.microsoft.identity.common.java.marker.CodeMarkerManager;
+import com.microsoft.identity.common.java.util.StringUtil;
+import com.microsoft.identity.common.java.util.TaskCompletedCallbackWithError;
+import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jose.JWSAlgorithm;
+import com.nimbusds.jose.JWSHeader;
+import com.nimbusds.jose.crypto.RSASSASigner;
+import com.nimbusds.jose.jwk.RSAKey;
+import com.nimbusds.jose.util.Base64URL;
+import com.nimbusds.jwt.JWTClaimsSet;
+import com.nimbusds.jwt.SignedJWT;
 
-    private static final String TAG = DevicePopManager.class.getSimpleName();
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
+import java.lang.reflect.Type;
+import java.math.BigInteger;
+import java.net.URL;
+import java.nio.charset.Charset;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.KeyPair;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.Signature;
+import java.security.SignatureException;
+import java.security.UnrecoverableEntryException;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
+import java.security.interfaces.RSAPublicKey;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+
+import cz.msebera.android.httpclient.extras.Base64;
+import edu.umd.cs.findbugs.annotations.Nullable;
+import lombok.NonNull;
+
+public abstract class AbstractDevicePopManager implements IDevicePopManager {
+    private static final String TAG = AbstractDevicePopManager.class.getSimpleName();
 
     private static final Charset UTF8 = Charset.forName("UTF-8");
 
     /**
      * The PoP alias in the designated KeyStore -- default val used by non-OneAuth Android platform.
      */
-    private static final String DEFAULT_KEYSTORE_ENTRY_ALIAS = "microsoft-device-pop";
+    public static final String DEFAULT_KEYSTORE_ENTRY_ALIAS = "microsoft-device-pop";
 
     /**
      * The NIST advised min keySize for RSA pairs.
@@ -161,15 +135,9 @@ public class DevicePopManager implements IDevicePopManager {
     public static final String STRONG_BOX_UNAVAILABLE_EXCEPTION = "StrongBoxUnavailableException";
 
     /**
-     * Error message from underlying KeyStore that an attestation certificate could not be
-     * generated, typically due to lack of API support via {@link KeyGenParameterSpec.Builder#setAttestationChallenge(byte[])}.
-     */
-    public static final String FAILED_TO_GENERATE_ATTESTATION_CERTIFICATE_CHAIN = "Failed to generate attestation certificate chain";
-
-    /**
      * Manager class for interacting with key storage mechanism.
      */
-    private final IAndroidKeyStoreKeyManager<KeyStore.PrivateKeyEntry> mKeyManager;
+    protected final IKeyStoreKeyManager<KeyStore.PrivateKeyEntry> mKeyManager;
 
     /**
      * The name of the KeyStore to use.
@@ -189,22 +157,37 @@ public class DevicePopManager implements IDevicePopManager {
     /**
      * Properties used by the self-signed certificate.
      */
-    private static final class CertificateProperties {
+    protected static final class CertificateProperties {
 
         /**
          * The certification validity duration.
          */
-        static final int CERTIFICATE_VALIDITY_YEARS = 99;
+        public static final int CERTIFICATE_VALIDITY_YEARS = 99;
 
         /**
          * The serial number of the certificate.
          */
-        static final BigInteger SERIAL_NUMBER = BigInteger.ONE;
+        public static final BigInteger SERIAL_NUMBER = BigInteger.ONE;
 
         /**
          * The Common Name of the certificate.
          */
-        static final String COMMON_NAME = "CN=device-pop";
+        public static final String COMMON_NAME = "CN=device-pop";
+
+        /**
+         * The organization unit for the certificate.
+         */
+        public static final String ORGANIZATION_UNIT = "Identity";
+
+        /**
+         * The name of the organization for the certificate.
+         */
+        public static final String ORGANIZATION_NAME = "Microsoft Corporation";
+
+        /**
+         * The country code for the certificate.
+         */
+        public static final String COUNTRY = "US";
     }
 
     /**
@@ -262,38 +245,18 @@ public class DevicePopManager implements IDevicePopManager {
     /**
      * Algorithms supported by this KeyPairGenerator.
      */
-    static final class KeyPairGeneratorAlgorithms {
-        static final String RSA = "RSA";
-    }
-
-    private final Context mContext;
-
-    public DevicePopManager(@NonNull final Context context) throws KeyStoreException, CertificateException,
-            NoSuchAlgorithmException, IOException {
-        this(context, DEFAULT_KEYSTORE_ENTRY_ALIAS);
+    protected static final class KeyPairGeneratorAlgorithms {
+        public static final String RSA = "RSA";
     }
 
     @Override
-    public IAndroidKeyStoreKeyManager<KeyStore.PrivateKeyEntry> getKeyManager() {
+    public IKeyStoreKeyManager<KeyStore.PrivateKeyEntry> getKeyManager() {
         return mKeyManager;
     }
 
-    public DevicePopManager(@NonNull final Context context,
-                            @NonNull final String alias) throws KeyStoreException, CertificateException,
+    public AbstractDevicePopManager(@NonNull final IKeyStoreKeyManager<KeyStore.PrivateKeyEntry> keyManager) throws KeyStoreException, CertificateException,
             NoSuchAlgorithmException, IOException {
-        final KeyStore instance = KeyStore.getInstance(ANDROID_KEYSTORE);
-        instance.load(null);
-        mKeyManager = DeviceKeyManager.<KeyStore.PrivateKeyEntry>builder().keyAlias(alias)
-                .keyStore(instance)
-                .thumbprintSupplier(new Supplier<byte[]>() {
-                    @SneakyThrows(ClientException.class)
-                    @Override
-                    public byte[] get() {
-                        return getAsymmetricKeyThumbprint().getBytes(UTF8);
-                    }
-                })
-                .build();
-        mContext = context;
+        mKeyManager = keyManager;
     }
 
     @Override
@@ -308,44 +271,7 @@ public class DevicePopManager implements IDevicePopManager {
 
     @Override
     public String getAsymmetricKeyThumbprint() throws ClientException {
-        final Exception exception;
-        final String errCode;
-
-        try {
-            final KeyStore.PrivateKeyEntry entry = mKeyManager.getEntry();
-            return getRsaThumbprint(entry);
-        } catch (final KeyStoreException e) {
-            exception = e;
-            errCode = KEYSTORE_NOT_INITIALIZED;
-        } catch (final NoSuchAlgorithmException e) {
-            exception = e;
-            errCode = NO_SUCH_ALGORITHM;
-        } catch (final UnrecoverableEntryException e) {
-            exception = e;
-            errCode = INVALID_PROTECTION_PARAMS;
-        } catch (final JOSEException e) {
-            exception = e;
-            errCode = THUMBPRINT_COMPUTATION_FAILURE;
-        }
-
-        throw new ClientException(
-                errCode,
-                exception.getMessage(),
-                exception
-        );
-    }
-
-    /**
-     * Given an RSA private key entry, get the RSA thumbprint.
-     *
-     * @param entry the entry to compute the thumbprint for.
-     * @return A String that would be identicative of this specific key.
-     * @throws JOSEException If there is a computation problem.
-     */
-    public static String getRsaThumbprint(@NonNull final KeyStore.PrivateKeyEntry entry) throws JOSEException {
-        final KeyPair rsaKeyPair = getKeyPairForEntry(entry);
-        final RSAKey rsaKey = getRsaKeyForKeyPair(rsaKeyPair);
-        return getThumbprintForRsaKey(rsaKey);
+        return new String(mKeyManager.getThumbprint(), UTF8);
     }
 
     @Override
@@ -372,7 +298,7 @@ public class DevicePopManager implements IDevicePopManager {
 
         try {
             sCodeMarkerManager.markCode(GENERATE_AT_POP_ASYMMETRIC_KEYPAIR_START);
-            final KeyPair keyPair = generateNewRsaKeyPair(mContext, RSA_KEY_SIZE);
+            final KeyPair keyPair = generateNewRsaKeyPair(RSA_KEY_SIZE);
             final RSAKey rsaKey = getRsaKeyForKeyPair(keyPair);
             return getThumbprintForRsaKey(rsaKey);
         } catch (final UnsupportedOperationException e) {
@@ -390,6 +316,9 @@ public class DevicePopManager implements IDevicePopManager {
         } catch (final JOSEException e) {
             exception = e;
             errCode = THUMBPRINT_COMPUTATION_FAILURE;
+        } catch (final KeyStoreException e) {
+            exception = e;
+            errCode = KEYSTORE_NOT_INITIALIZED;
         } finally {
             sCodeMarkerManager.markCode(GENERATE_AT_POP_ASYMMETRIC_KEYPAIR_END);
         }
@@ -408,6 +337,9 @@ public class DevicePopManager implements IDevicePopManager {
 
         throw clientException;
     }
+
+    public abstract KeyPair generateNewRsaKeyPair(int keySize) throws UnsupportedOperationException, InvalidAlgorithmParameterException,
+            NoSuchAlgorithmException, NoSuchProviderException, ClientException, KeyStoreException;
 
     @Override
     @Nullable
@@ -811,6 +743,8 @@ public class DevicePopManager implements IDevicePopManager {
         throw clientException;
     }
 
+    protected abstract SecureHardwareState getSecureHardwareState(@NonNull final KeyPair kp);
+
     @Override
     public @NonNull
     String getPublicKey(@NonNull final PublicKeyFormat format) throws ClientException {
@@ -980,7 +914,7 @@ public class DevicePopManager implements IDevicePopManager {
 
             // This is supported/allowed only to support the generateShr API. By definition, all
             // AT/PoP requests will contain an access token, but an SPO signed-cookie will not.
-            if (!TextUtils.isEmpty(accessToken)) {
+            if (!StringUtil.isNullOrEmpty(accessToken)) {
                 claimsBuilder.claim(
                         SignedHttpRequestJwtClaims.ACCESS_TOKEN,
                         accessToken
@@ -1001,28 +935,28 @@ public class DevicePopManager implements IDevicePopManager {
                     getDevicePopJwkMinifiedJson()
             );
 
-            if (!TextUtils.isEmpty(requestUrl.getPath())) {
+            if (!StringUtil.isNullOrEmpty(requestUrl.getPath())) {
                 claimsBuilder.claim(
                         SignedHttpRequestJwtClaims.HTTP_PATH,
                         requestUrl.getPath()
                 );
             }
 
-            if (!TextUtils.isEmpty(httpMethod)) {
+            if (!StringUtil.isNullOrEmpty(httpMethod)) {
                 claimsBuilder.claim(
                         SignedHttpRequestJwtClaims.HTTP_METHOD,
                         httpMethod
                 );
             }
 
-            if (!TextUtils.isEmpty(nonce)) {
+            if (!StringUtil.isNullOrEmpty(nonce)) {
                 claimsBuilder.claim(
                         SignedHttpRequestJwtClaims.NONCE,
                         nonce
                 );
             }
 
-            if (!TextUtils.isEmpty(clientClaims)) {
+            if (!StringUtil.isNullOrEmpty(clientClaims)) {
                 claimsBuilder.claim(
                         SignedHttpRequestJwtClaims.CLIENT_CLAIMS,
                         clientClaims
@@ -1059,11 +993,7 @@ public class DevicePopManager implements IDevicePopManager {
             errCode = INVALID_PROTECTION_PARAMS;
         }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
-                && exception.getCause() instanceof KeyPermanentlyInvalidatedException) {
-            Logger.warn(methodTag, "Unable to access asymmetric key - clearing.");
-            clearAsymmetricKey();
-        }
+        performCleanupIfMintShrFails(exception);
 
         final ClientException clientException = new ClientException(
                 errCode,
@@ -1080,369 +1010,13 @@ public class DevicePopManager implements IDevicePopManager {
         throw clientException;
     }
 
+    /**
+     * Perform any cleanup such as clear asymmetric key if unable to mint SHR with existing keys.
+     * @param e the exception that occurred while minting SHR
+     */
+    protected abstract void performCleanupIfMintShrFails(@NonNull final Exception e);
+
     //region Internal Functions
-
-    /**
-     * Generates a new RSA KeyPair of the specified lenth.
-     *
-     * @param context    The current application Context.
-     * @param minKeySize The minimum keysize to use.
-     * @return The newly generated RSA KeyPair.
-     * @throws UnsupportedOperationException
-     */
-    @SuppressLint("NewApi")
-    private KeyPair generateNewRsaKeyPair(@NonNull final Context context,
-                                          final int minKeySize)
-            throws UnsupportedOperationException, InvalidAlgorithmParameterException,
-            NoSuchAlgorithmException, NoSuchProviderException {
-        final String methodTag = TAG + ":generateNewRsakeyPair";
-        final int MAX_RETRIES = 4;
-
-        for (int ii = 0; ii < MAX_RETRIES; ii++) {
-            KeyPair kp = null;
-            boolean tryStrongBox = true;
-            boolean tryImport = true;
-            boolean trySetAttestationChallenge = true;
-            boolean generated = false;
-            while (!generated) {
-                try {
-                    kp = generateNewKeyPair(context, tryStrongBox, tryImport, trySetAttestationChallenge);
-                    generated = true;
-                } catch (final ProviderException e) {
-                    // This mechanism is terrible.  But there are stern warnings that even attempting to
-                    // mention these classes in a catch clause might cause failures. So we're going to look
-                    // at the exception names.
-
-
-                    if (tryStrongBox && isStrongBoxUnavailableException(e)) {
-                        tryStrongBox = false;
-                        continue;
-                    } else if (tryImport && e.getClass().getSimpleName().equals("SecureKeyImportUnavailableException")) {
-                        Logger.error(methodTag, "Import unsupported - skipping import flags.", e);
-                        tryImport = false;
-
-                        if (tryStrongBox && null != e.getCause() && isStrongBoxUnavailableException(e.getCause())) {
-                            // On some devices (notably, Huawei Mate 9 Pro), StrongBox errors are
-                            // the cause of the surfaced SecureKeyImportUnavailableException.
-                            tryStrongBox = false;
-                        }
-
-                        continue;
-                    } else if (trySetAttestationChallenge && FAILED_TO_GENERATE_ATTESTATION_CERTIFICATE_CHAIN.equalsIgnoreCase(e.getMessage())) {
-                        Logger.error(methodTag, "Failed to generate attestation cert - skipping flag.", e);
-                        trySetAttestationChallenge = false;
-
-                        continue;
-                    }
-
-                    // We were unsuccessful, cleanup after ourselves and throw...
-                    clearAsymmetricKey();
-                    throw e;
-                }
-            }
-
-            // Due to a bug in some versions of Android, keySizes may not be exactly as specified
-            // To generate a 2048-bit key, two primes of length 1024 are multiplied -- this product
-            // may be 2047 in length in some cases which causes Nimbus to throw an IllegalArgumentException.
-            // To avoid this, check the keysize prior to returning the generated KeyPair.
-
-            // Since this seems to be nondeterministic in nature, attempt this a maximum of 4 times.
-            final int length = RSAKeyUtils.keyBitLength(kp.getPrivate());
-
-            // If the key material is hidden (HSM or otherwise) the length is -1
-            if (length >= minKeySize || length < 0) {
-                // Log out secure hardware state -- we don't need the result here
-                getSecureHardwareState(kp);
-
-                return kp;
-            }
-        }
-
-        // Clean up... we generated a cert, but it cannot be used.
-        clearAsymmetricKey();
-
-        throw new UnsupportedOperationException(
-                "Failed to generate valid KeyPair. Attempted " + MAX_RETRIES + " times."
-        );
-    }
-
-    private static boolean isStrongBoxUnavailableException(@NonNull final Throwable t) {
-        final String methodTag = TAG + ":isStrongBoxUnavailableException";
-        final boolean isStrongBoxException = t.getClass().getSimpleName().equals(STRONG_BOX_UNAVAILABLE_EXCEPTION);
-
-        if (isStrongBoxException) {
-            Logger.error(methodTag, "StrongBox not supported.", t);
-        }
-
-        return isStrongBoxException;
-    }
-
-    private SecureHardwareState getSecureHardwareState(@NonNull final KeyPair kp) {
-        final String methodTag = TAG + ":getSecureHardwareState";
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            try {
-                final PrivateKey privateKey = kp.getPrivate();
-                final KeyFactory factory = KeyFactory.getInstance(
-                        privateKey.getAlgorithm(), ANDROID_KEYSTORE
-                );
-                final KeyInfo info = factory.getKeySpec(privateKey, KeyInfo.class);
-                final boolean isInsideSecureHardware = info.isInsideSecureHardware();
-                Logger.info(methodTag, "SecretKey is secure hardware backed? " + isInsideSecureHardware);
-                return isInsideSecureHardware
-                        ? SecureHardwareState.TRUE_UNATTESTED
-                        : SecureHardwareState.FALSE;
-            } catch (final NoSuchAlgorithmException | NoSuchProviderException | InvalidKeySpecException e) {
-                Logger.error(methodTag, "Failed to query secure hardware state.", e);
-                return SecureHardwareState.UNKNOWN_QUERY_ERROR;
-            }
-        } else {
-            Logger.info(methodTag, "Cannot query secure hardware state (API unavailable <23)");
-        }
-
-        return SecureHardwareState.UNKNOWN_DOWNLEVEL;
-    }
-
-    /**
-     * Generates a new {@link KeyPair}.
-     *
-     * @param context                    The application Context.
-     * @param useStrongbox               True if StrongBox should be used, false otherwise.
-     * @param trySetAttestationChallenge
-     * @return The newly generated KeyPair.
-     * @throws InvalidAlgorithmParameterException If the designated crypto algorithm is not
-     *                                            supported for the designated parameters.
-     * @throws NoSuchAlgorithmException           If the designated crypto algorithm is not supported.
-     * @throws NoSuchProviderException            If the designated crypto provider cannot be found.
-     * @throws StrongBoxUnavailableException      If StrongBox is unavailable.
-     */
-    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
-    private KeyPair generateNewKeyPair(@NonNull final Context context, final boolean useStrongbox,
-                                       final boolean enableImport, final boolean trySetAttestationChallenge)
-            throws InvalidAlgorithmParameterException, NoSuchAlgorithmException,
-            NoSuchProviderException, StrongBoxUnavailableException {
-        synchronized (isLocaleCalendarNonGregorian(Locale.getDefault()) ? LOCALE_CHANGE_LOCK : new Object()) {
-            // See: https://issuetracker.google.com/issues/37095309
-            final Locale currentLocale = Locale.getDefault();
-            applyKeyStoreLocaleWorkarounds(currentLocale);
-
-            try {
-                final KeyPairGenerator kpg = getInitializedRsaKeyPairGenerator(
-                        context,
-                        RSA_KEY_SIZE,
-                        useStrongbox,
-                        enableImport,
-                        trySetAttestationChallenge
-                );
-                final KeyPair keyPair = kpg.generateKeyPair();
-
-                return keyPair;
-            } finally {
-                // Reset our locale to the default
-                Locale.setDefault(currentLocale);
-            }
-        }
-    }
-
-    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
-    private KeyPairGenerator getInitializedRsaKeyPairGenerator(@NonNull final Context context,
-                                                               final int keySize,
-                                                               final boolean useStrongbox,
-                                                               final boolean enableImport,
-                                                               final boolean trySetAttestationChallenge)
-            throws InvalidAlgorithmParameterException, NoSuchProviderException, NoSuchAlgorithmException {
-        // Create the KeyPairGenerator
-        final KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(
-                KeyPairGeneratorAlgorithms.RSA,
-                ANDROID_KEYSTORE
-        );
-
-        // Initialize it!
-        initialize(context, keyPairGenerator, keySize, useStrongbox, enableImport, trySetAttestationChallenge);
-
-        return keyPairGenerator;
-    }
-
-    /**
-     * Initialize the provided {@link KeyPairGenerator}.
-     *
-     * @param context                    The current application Context.
-     * @param keyPairGenerator           The KeyPairGenerator to initialize.
-     * @param keySize                    The RSA keysize.
-     * @param useStrongbox               True if StrongBox should be used, false otherwise. Please note that
-     *                                   StrongBox may not be supported on all devices.
-     * @param enableImport               True if imports to the underlying KeyStore are allowed.
-     * @param trySetAttestationChallenge True if we should attempt to generate an attestation challenge cert.
-     * @throws InvalidAlgorithmParameterException
-     */
-    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
-    private void initialize(@NonNull final Context context,
-                            @NonNull final KeyPairGenerator keyPairGenerator,
-                            final int keySize,
-                            final boolean useStrongbox,
-                            final boolean enableImport,
-                            final boolean trySetAttestationChallenge) throws InvalidAlgorithmParameterException {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-            initializePre23(context, keyPairGenerator, keySize);
-        } else if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
-            initialize23(keyPairGenerator, keySize, useStrongbox, trySetAttestationChallenge);
-        } else {
-            initialize28(keyPairGenerator, keySize, useStrongbox, enableImport, trySetAttestationChallenge);
-        }
-    }
-
-    @SuppressLint("InlinedApi")
-    @RequiresApi(api = Build.VERSION_CODES.M)
-    private void initialize23(@NonNull final KeyPairGenerator keyPairGenerator,
-                              final int keySize,
-                              final boolean useStrongbox,
-                              final boolean trySetAttestationChallenge) throws InvalidAlgorithmParameterException {
-        final String methodTag = TAG + ":initialize23";
-
-        KeyGenParameterSpec.Builder builder;
-        builder = new KeyGenParameterSpec.Builder(
-                mKeyManager.getKeyAlias(),
-                KeyProperties.PURPOSE_SIGN
-                        | KeyProperties.PURPOSE_VERIFY
-                        | KeyProperties.PURPOSE_ENCRYPT
-                        | KeyProperties.PURPOSE_DECRYPT
-        )
-                .setKeySize(keySize)
-                .setSignaturePaddings(
-                        KeyProperties.SIGNATURE_PADDING_RSA_PKCS1
-                )
-                .setDigests(
-                        KeyProperties.DIGEST_NONE,
-                        KeyProperties.DIGEST_SHA1,
-                        KeyProperties.DIGEST_SHA256
-                ).setEncryptionPaddings(
-                        KeyProperties.ENCRYPTION_PADDING_RSA_OAEP,
-                        KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1
-                );
-
-        if (trySetAttestationChallenge && Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            builder = setAttestationChallenge(builder);
-        }
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && useStrongbox) {
-            Logger.verbose(
-                    methodTag,
-                    "Attempting to apply StrongBox isolation."
-            );
-            builder = applyHardwareIsolation(builder);
-        }
-
-        final AlgorithmParameterSpec spec = builder.build();
-        keyPairGenerator.initialize(spec);
-    }
-
-    @SuppressLint("NewApi")
-    @RequiresApi(Build.VERSION_CODES.N)
-    @NonNull
-    /**
-     * Key attestation should ideally happen with the support of a separate server that you trust.
-     * In that use case an attestationChallenge should be generated by that server.  The challenge will
-     * be included as extension data in the attestation certificate associated with the generated key pair
-     * And that attestation certificate can be validated server side
-     *
-     * Currently we don't need to support attestation so the challenge should be set to null
-     *
-     * Refer to: <a href="https://developer.android.com/reference/android/security/keystore/KeyGenParameterSpec.Builder#setAttestationChallenge(byte[])">setAttestationChallenge</a>
-     * Refer to: <a href="https://developer.android.com/training/articles/security-key-attestation">Verifying hardware-backed key pairs with Key Attestation</a>
-     */
-    private KeyGenParameterSpec.Builder setAttestationChallenge(
-            @NonNull final KeyGenParameterSpec.Builder builder) {
-        return builder.setAttestationChallenge(null);
-    }
-
-    /**
-     * Applies hardware backed security to the supplied {@link KeyGenParameterSpec.Builder}.
-     *
-     * @param builder The builder.
-     * @return A reference to the supplied builder instance.
-     */
-    @SuppressLint("NewApi")
-    @RequiresApi(Build.VERSION_CODES.P)
-    @NonNull
-    private static KeyGenParameterSpec.Builder applyHardwareIsolation(
-            @NonNull final KeyGenParameterSpec.Builder builder) {
-        return builder.setIsStrongBoxBacked(true);
-    }
-
-    @SuppressLint("InlinedApi")
-    @RequiresApi(api = Build.VERSION_CODES.P)
-    private void initialize28(@NonNull final KeyPairGenerator keyPairGenerator,
-                              final int keySize,
-                              final boolean useStrongbox,
-                              final boolean enableImport,
-                              final boolean trySetAttestationChallenge) throws InvalidAlgorithmParameterException {
-        final String methodTag = TAG + ":initialize28";
-
-        int purposes = KeyProperties.PURPOSE_SIGN
-                | KeyProperties.PURPOSE_VERIFY
-                | KeyProperties.PURPOSE_ENCRYPT
-                | KeyProperties.PURPOSE_DECRYPT;
-        if (enableImport && Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            purposes |= KeyProperties.PURPOSE_WRAP_KEY;
-        }
-        KeyGenParameterSpec.Builder builder = new KeyGenParameterSpec.Builder(
-                mKeyManager.getKeyAlias(), purposes)
-                .setKeySize(keySize)
-                .setSignaturePaddings(
-                        KeyProperties.SIGNATURE_PADDING_RSA_PKCS1
-                )
-                .setDigests(
-                        KeyProperties.DIGEST_NONE,
-                        KeyProperties.DIGEST_SHA1,
-                        KeyProperties.DIGEST_SHA256
-                ).setEncryptionPaddings(
-                        KeyProperties.ENCRYPTION_PADDING_RSA_OAEP,
-                        KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1
-                );
-
-        if (trySetAttestationChallenge && Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            builder = setAttestationChallenge(builder);
-        }
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && useStrongbox) {
-            Logger.verbose(
-                    methodTag,
-                    "Attempting to apply StrongBox isolation."
-            );
-            builder = applyHardwareIsolation(builder);
-        }
-
-        final AlgorithmParameterSpec spec = builder.build();
-        keyPairGenerator.initialize(spec);
-    }
-
-
-    @SuppressLint("NewApi")
-    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
-    @SuppressWarnings("deprecation")
-    private void initializePre23(@NonNull final Context context,
-                                 @NonNull final KeyPairGenerator keyPairGenerator,
-                                 final int keySize) throws InvalidAlgorithmParameterException {
-        final Calendar calendar = Calendar.getInstance();
-        final Date start = getNow(calendar);
-        calendar.add(Calendar.YEAR, CertificateProperties.CERTIFICATE_VALIDITY_YEARS);
-        final Date end = calendar.getTime();
-
-        final android.security.KeyPairGeneratorSpec.Builder specBuilder = new android.security.KeyPairGeneratorSpec.Builder(context)
-                .setAlias(mKeyManager.getKeyAlias())
-                .setStartDate(start)
-                .setEndDate(end)
-                .setSerialNumber(CertificateProperties.SERIAL_NUMBER)
-                .setSubject(new X500Principal(CertificateProperties.COMMON_NAME));
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            specBuilder.setAlgorithmParameterSpec(
-                    new RSAKeyGenParameterSpec(keySize, RSAKeyGenParameterSpec.F4)
-            );
-        }
-
-        final android.security.KeyPairGeneratorSpec spec = specBuilder.build();
-        keyPairGenerator.initialize(spec);
-    }
 
     /**
      * Gets the current time as a {@link Date}.
@@ -1450,20 +1024,8 @@ public class DevicePopManager implements IDevicePopManager {
      * @param calendar The {@link Calendar} implementation to use.
      * @return The current time.
      */
-    private static Date getNow(@NonNull final Calendar calendar) {
+    protected static Date getNow(@NonNull final Calendar calendar) {
         return calendar.getTime();
-    }
-
-    /**
-     * For the supplied {@link KeyStore.Entry}, get a corresponding {@link KeyPair} instance.
-     *
-     * @param entry The Keystore.Entry to use.
-     * @return The resulting KeyPair.
-     */
-    private static KeyPair getKeyPairForEntry(@NonNull final KeyStore.PrivateKeyEntry entry) {
-        final PrivateKey privateKey = entry.getPrivateKey();
-        final PublicKey publicKey = entry.getCertificate().getPublicKey();
-        return new KeyPair(publicKey, privateKey);
     }
 
     /**
@@ -1475,18 +1037,6 @@ public class DevicePopManager implements IDevicePopManager {
     public PublicKey getPublicKey() throws UnrecoverableEntryException, NoSuchAlgorithmException, KeyStoreException {
         final KeyStore.PrivateKeyEntry keyEntry = mKeyManager.getEntry();
         return keyEntry.getCertificate().getPublicKey();
-    }
-
-    /**
-     * Gets the corresponding {@link RSAKey} for the supplied {@link KeyPair}.
-     *
-     * @param keyPair The KeyPair to use.
-     * @return The resulting RSAKey.
-     */
-    private static RSAKey getRsaKeyForKeyPair(@NonNull final KeyPair keyPair) {
-        return new RSAKey.Builder((RSAPublicKey) keyPair.getPublic())
-                .keyUse(null)
-                .build();
     }
 
     /**
@@ -1504,11 +1054,6 @@ public class DevicePopManager implements IDevicePopManager {
                         .toString();
 
         return base64UrlEncode(thumbprintMinifiedJson);
-    }
-
-    private static String getThumbprintForRsaKey(@NonNull RSAKey rsaKey) throws JOSEException {
-        final Base64URL thumbprint = rsaKey.computeThumbprint();
-        return thumbprint.toString();
     }
 
     /**
@@ -1545,5 +1090,4 @@ public class DevicePopManager implements IDevicePopManager {
 
         return wrappedJwk;
     }
-    //endregion
 }

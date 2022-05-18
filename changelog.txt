@@ -1,5 +1,13 @@
 V.Next
 ----------
+- [MAJOR] Adding YubiKit SDK, which requires Java Version 8 and will thus bump up Java version overall to 8; added keyboard flag to android:configChanges for all activities that could interact with a YubiKey. (#1729)
+- [MINOR] Support WordApp local apk install in UI automation flows (#1732)
+- [PATCH] Add exception handling in Content Provider strategy, for broker communication (#1722)
+- [MINOR] Support TenantID value from eSTS in PKeyAuth flows (#1712)
+- [MINOR] Implement cert loader for both multiple and legacy WPJ data store in PKeyAuth (#1711)
+
+Version 4.1.0
+----------
 - [PATCH] Add null check to avoid NPE when checking for AccountTypesWithManagementDisabled (#1713)
 - [MINOR] Add prompt=create support. (#1707)
 - [PATCH] Clears client cert preferences so that multiple CBA login attempts can be completed in same session (#1688)
@@ -12,7 +20,11 @@ V.Next
 - [MINOR] Add flighting parameters to commmandParameters (#1562)
 - [MINOR] Add ropc command and ropc flow to BaseController (#1539)
 - [PATCH] Move to commitNow() instead of commit() when removing authorization fragment from provided fragment manager.  Add exception handling/logging.  (#1695851)
+
+Version 4.0.5
+----------
 - [PATCH] Ensure a device pop manager is provided when PoPAuthenticationScheme is requested of the broker (#1706)
+- [MAJOR] Move IKeyStoreKeyManager and IDevicePopManager to common4j (#1683)
 
 Version 4.0.4
 ----------

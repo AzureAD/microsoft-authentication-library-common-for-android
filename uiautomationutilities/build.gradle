@@ -46,6 +46,8 @@ android {
     // defaults to LocalApkFile - the file must be pushed to the device before tests
     def brokerInstallationSource = installSourcePlayStore
 
+    def wordAppInstallationSource = installSourcePlayStore
+
     if (project.hasProperty("brokerSource")) {
         if (brokerSource.equalsIgnoreCase(installSourcePlayStore)) {
             brokerInstallationSource = installSourcePlayStore
@@ -58,6 +60,17 @@ android {
         }
     }
 
+    if (project.hasProperty("wordAppSource")) {
+        if (wordAppSource.equalsIgnoreCase(installSourcePlayStore)) {
+            wordAppInstallationSource = installSourcePlayStore
+        } else if (wordAppSource.equalsIgnoreCase(installSourceLocalApk)) {
+            wordAppInstallationSource = installSourceLocalApk
+        } else {
+            throw new InvalidUserDataException("Unsupported word app source provided: "
+                    + wordAppSource
+                    + " Only the following wordAppSource sources are supported: PlayStore , LocalApk");
+        }
+    }
 
     defaultConfig {
         multiDexEnabled true
@@ -68,6 +81,7 @@ android {
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "BROKER_INSTALL_SOURCE", "\"$brokerInstallationSource\"")
+        buildConfigField("String", "WORD_APP_INSTALL_SOURCE", "\"$wordAppInstallationSource\"")
         buildConfigField("String", "INSTALL_SOURCE_PLAY_STORE", "\"$installSourcePlayStore\"")
         buildConfigField("String", "INSTALL_SOURCE_LOCAL_APK", "\"$installSourceLocalApk\"")
         buildConfigField("boolean", "PREFER_PRE_INSTALLED_APKS", "$usePreInstalledApks")

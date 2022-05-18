@@ -33,12 +33,12 @@ import androidx.annotation.Nullable;
 import com.microsoft.identity.common.AndroidPlatformComponents;
 import com.microsoft.identity.common.java.crypto.CryptoSuite;
 import com.microsoft.identity.common.java.crypto.IKeyAccessor;
+import com.microsoft.identity.common.java.crypto.IKeyStoreKeyManager;
 import com.microsoft.identity.common.java.crypto.RawKeyAccessor;
-import com.microsoft.identity.common.java.crypto.IAndroidKeyStoreKeyManager;
 import com.microsoft.identity.common.java.crypto.SecureHardwareState;
 import com.microsoft.identity.common.java.crypto.SigningAlgorithm;
 import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.internal.util.Supplier;
+import com.microsoft.identity.common.java.util.Supplier;
 import com.microsoft.identity.common.java.crypto.IDevicePopManager;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.logging.Logger;
@@ -71,8 +71,8 @@ import javax.crypto.SecretKey;
  * in DevicePopManager is package private, and we're really interested in only a few operations, just
  * construct new instances here, and expose an interface that gives us the functionality that we need.
  */
-public class KeyStoreAccessor {
-    private static final String TAG = KeyStoreAccessor.class.getSimpleName();
+public class AndroidKeyStoreAccessor {
+    
     /**
      * The name of the KeyStore to use.
      */
@@ -103,8 +103,8 @@ public class KeyStoreAccessor {
             return getKeyAccessor((IDevicePopManager.Cipher) suite.cipher(), suite.signingAlgorithm(), popManager);
         }
         final KeyStore instance = KeyStore.getInstance(ANDROID_KEYSTORE);
-        final DeviceKeyManager<KeyStore.SecretKeyEntry> keyManager = new DeviceKeyManager<>(instance, alias, symmetricThumbprint(alias, instance));
-        return new SecretKeyAccessor(keyManager, suite) {
+        final AndroidDeviceKeyManager<KeyStore.SecretKeyEntry> keyManager = new AndroidDeviceKeyManager<>(instance, alias);
+        return new AndroidSecretKeyAccessor(keyManager, suite) {
             @Override
             public byte[] sign(byte[] text) throws ClientException {
                 throw new UnsupportedOperationException("This key instance does not support signing");
@@ -123,7 +123,7 @@ public class KeyStoreAccessor {
         return new AsymmetricKeyAccessor() {
 
             @Override
-            public IAndroidKeyStoreKeyManager<KeyStore.PrivateKeyEntry> getManager() {
+            public IKeyStoreKeyManager<KeyStore.PrivateKeyEntry> getManager() {
                 return popManager.getKeyManager();
             }
 
@@ -260,8 +260,8 @@ public class KeyStoreAccessor {
                 generator.generateKey();
             }
 
-            final DeviceKeyManager<KeyStore.SecretKeyEntry> keyManager = new DeviceKeyManager<>(instance, alias, symmetricThumbprint(alias, instance));
-            return new SecretKeyAccessor(keyManager, cipher) {
+            final AndroidDeviceKeyManager<KeyStore.SecretKeyEntry> keyManager = new AndroidDeviceKeyManager<>(instance, alias);
+            return new AndroidSecretKeyAccessor(keyManager, cipher) {
                 @Override
                 public byte[] sign(byte[] text) throws ClientException {
                     throw new UnsupportedOperationException("This key instance does not support signing");
@@ -281,42 +281,6 @@ public class KeyStoreAccessor {
                     .key(key)
                     .alias(alias).build();
         }
-    }
-
-    /**
-     * Compute a thumbprint of a symmetric key for a given alias.  The impetus here is that the key
-     * itself is inaccessible, but we would still like to identify a particular instance.  We can
-     * encrypt a fixed value based on the cipher parameters with the key, and take a SHA256 digest
-     * of it.  This could be inspection resistant enough to identify different keys without exposing
-     * the actual key.
-     *
-     * @param alias    The alias of the key to thumbprint.
-     * @param instance the KeyStore to get the key from.
-     * @return A supplier that can compute the thumbprint for the key on demand.
-     */
-    public static Supplier<byte[]> symmetricThumbprint(@NonNull final String alias, @NonNull final KeyStore instance) {
-        final String methodTag = TAG + ":symmetricThumbprint";
-        return new Supplier<byte[]>() {
-            @Nullable
-            @Override
-            public byte[] get() {
-                try {
-                    KeyStore.Entry entry = instance.getEntry(alias, null);
-                    if (entry instanceof KeyStore.SecretKeyEntry) {
-                        final SecretKey key = ((KeyStore.SecretKeyEntry) entry).getSecretKey();
-                        final Cipher cipher = Cipher.getInstance(key.getAlgorithm());
-                        final MessageDigest digest = MessageDigest.getInstance("SHA256");
-                        return digest.digest(cipher.doFinal((key.getAlgorithm() + cipher.getBlockSize() + cipher.getParameters()).getBytes(UTF8)));
-                    } else {
-                        return null;
-                    }
-                } catch (final KeyStoreException | BadPaddingException | NoSuchAlgorithmException
-                        | IllegalBlockSizeException | UnrecoverableEntryException | NoSuchPaddingException e) {
-                    Logger.error(methodTag, null, "Exception while getting key entry", e);
-                    return null;
-                }
-            }
-        };
     }
 
     /**
