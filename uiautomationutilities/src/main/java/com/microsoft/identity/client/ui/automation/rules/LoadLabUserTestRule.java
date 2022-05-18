@@ -54,14 +54,21 @@ public class LoadLabUserTestRule implements TestRule {
 
     protected LabClient mLabClient;
     protected LabAccount mLabAccount;
-    private String upn;
 
     public LoadLabUserTestRule(@NonNull final LabQuery query) {
         this.query = query;
+        final LabApiAuthenticationClient authenticationClient = new LabApiAuthenticationClient(
+                BuildConfig.LAB_CLIENT_SECRET
+        );
+        mLabClient = new LabClient(authenticationClient);
     }
 
     public LoadLabUserTestRule(@NonNull final String tempUserType) {
         this.tempUserType = tempUserType;
+        final LabApiAuthenticationClient authenticationClient = new LabApiAuthenticationClient(
+                BuildConfig.LAB_CLIENT_SECRET
+        );
+        mLabClient = new LabClient(authenticationClient);
     }
 
     @Override
@@ -70,15 +77,12 @@ public class LoadLabUserTestRule implements TestRule {
             @Override
             public void evaluate() throws Throwable {
                 Logger.i(TAG, "Applying rule....");
-                createLabClient();
                 if (query != null) {
                     Logger.i(TAG, "Loading Existing User for Test..");
                     mLabAccount = mLabClient.getLabAccount(query);
-                    upn = mLabAccount.getUsername();
                 } else if (tempUserType != null) {
                     Logger.i(TAG, "Loading Temp User for Test....");
                     mLabAccount = mLabClient.createTempAccount(TempUserType.valueOf(tempUserType));
-                    upn = mLabAccount.getUsername();
                     try {
                         // temp user takes some time to actually being created even though it may be
                         // returned by the LAB API. Adding a wait here before we proceed with the test.
@@ -93,17 +97,6 @@ public class LoadLabUserTestRule implements TestRule {
                 base.evaluate();
             }
         };
-    }
-
-    private void createLabClient() {
-        final LabApiAuthenticationClient authenticationClient = new LabApiAuthenticationClient(
-                BuildConfig.LAB_CLIENT_SECRET
-        );
-        mLabClient = new LabClient(authenticationClient);
-    }
-
-    public String getLabUserUpn() {
-        return upn;
     }
 
     public LabAccount getLabAccount() {

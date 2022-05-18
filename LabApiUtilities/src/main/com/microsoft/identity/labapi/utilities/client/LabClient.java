@@ -188,7 +188,7 @@ public class LabClient implements ILabClient {
         return getSecret(secretName);
     }
 
-    public Boolean resetPassword(@NonNull final String upn) {
+    public boolean resetPassword(@NonNull final String upn) throws LabApiException {
         ResetApi resetApi = new ResetApi();
         try {
             final CustomSuccessResponse resetResponse = resetApi.apiResetPut(upn, ResetOperation.PASSWORD.toString());
@@ -197,7 +197,7 @@ public class LabClient implements ILabClient {
                     .toLowerCase();
             return resetResponse.getResult().toLowerCase().contains(expectedResult);
         } catch (ApiException | InterruptedException e) {
-            throw new RuntimeException("Error resetting lab user password", e);
+            throw new LabApiException(LabError.FAILED_TO_RESET_PASSWORD, e);
         }
     }
 

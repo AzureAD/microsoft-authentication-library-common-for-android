@@ -27,6 +27,8 @@ import com.microsoft.identity.labapi.utilities.exception.LabApiException;
 
 import java.util.List;
 
+import lombok.NonNull;
+
 /**
  * An interface describing the operations that need to be performed by a Lab Api Client.
  */
@@ -68,4 +70,6 @@ public interface ILabClient {
      * @throws LabApiException if an error occurs while trying to load secret from lab
      */
     String getSecret(String secretName) throws LabApiException;
+
+    boolean resetPassword(String upn) throws LabApiException;
 }
