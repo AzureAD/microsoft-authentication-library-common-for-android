@@ -44,6 +44,6 @@ public interface ILabTest {
      *
      * @return The type of temp user as denoted in {@link TempUserType}
      */
-    String getTempUserType();
+    TempUserType getTempUserType();
 
 }

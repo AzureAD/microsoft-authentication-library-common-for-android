@@ -33,12 +33,12 @@ import java.util.List;
 
 /**
  * Class to facilitate loading guest accounts from the lab api.
- * Takes a lab config object and creates a {@link LabGuest} object to facilitate performing
+ * Takes a lab config object and creates a {@link LabGuestAccount} object to facilitate performing
  * operations on guest accounts.
  */
 public class LabGuestAccountHelper {
 
-    public static LabGuest loadGuestAccountFromLab(final LabQuery query) throws LabApiException {
+    public static LabGuestAccount loadGuestAccountFromLab(final LabQuery query) throws LabApiException {
         final LabApiAuthenticationClient authenticationClient = new LabApiAuthenticationClient(
                 BuildConfig.LAB_CLIENT_SECRET
         );
@@ -57,7 +57,7 @@ public class LabGuestAccountHelper {
 
         final UserInfo userInfo = configInfo.getUserInfo();
 
-        return new LabGuest(
+        return new LabGuestAccount(
                 userInfo.getHomeUPN(),
                 userInfo.getHomeDomain(),
                 userInfo.getHomeTenantID(),
@@ -65,7 +65,7 @@ public class LabGuestAccountHelper {
         );
     }
 
-    public static String getPasswordForGuestUser(final LabGuest guestUser) throws LabApiException {
+    public static String getPasswordForGuestUser(final LabGuestAccount guestUser) throws LabApiException {
         final LabApiAuthenticationClient authenticationClient = new LabApiAuthenticationClient(
                 BuildConfig.LAB_CLIENT_SECRET
         );

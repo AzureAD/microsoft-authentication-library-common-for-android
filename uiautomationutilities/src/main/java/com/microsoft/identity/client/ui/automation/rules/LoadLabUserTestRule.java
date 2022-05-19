@@ -50,7 +50,7 @@ public class LoadLabUserTestRule implements TestRule {
     public static final long TEMP_USER_WAIT_TIME = TimeUnit.SECONDS.toMillis(20);
 
     private LabQuery query;
-    private String tempUserType;
+    private TempUserType tempUserType;
 
     protected LabClient mLabClient;
     protected LabAccount mLabAccount;
@@ -63,7 +63,7 @@ public class LoadLabUserTestRule implements TestRule {
         mLabClient = new LabClient(authenticationClient);
     }
 
-    public LoadLabUserTestRule(@NonNull final String tempUserType) {
+    public LoadLabUserTestRule(@NonNull final TempUserType tempUserType) {
         this.tempUserType = tempUserType;
         final LabApiAuthenticationClient authenticationClient = new LabApiAuthenticationClient(
                 BuildConfig.LAB_CLIENT_SECRET
@@ -82,7 +82,7 @@ public class LoadLabUserTestRule implements TestRule {
                     mLabAccount = mLabClient.getLabAccount(query);
                 } else if (tempUserType != null) {
                     Logger.i(TAG, "Loading Temp User for Test....");
-                    mLabAccount = mLabClient.createTempAccount(TempUserType.valueOf(tempUserType));
+                    mLabAccount = mLabClient.createTempAccount(tempUserType);
                     try {
                         // temp user takes some time to actually being created even though it may be
                         // returned by the LAB API. Adding a wait here before we proceed with the test.
