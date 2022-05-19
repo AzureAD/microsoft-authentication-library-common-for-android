@@ -181,9 +181,7 @@ dependencies {
     implementation "androidx.test.uiautomator:uiautomator:$rootProject.ext.uiAutomatorVersion"
     implementation "androidx.test:monitor:$rootProject.ext.androidxTestMonitorVersion"
     implementation "androidx.test:core:$rootProject.ext.androidxTestCoreVersion"
-    implementation(project(":LabApiUtilities")) {
-        exclude module: 'appcompat'
-    }
+    implementation(project(":LabApiUtilities"))
     compileOnly "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
     annotationProcessor "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
     androidTestImplementation "androidx.test:runner:$rootProject.ext.androidxTestRunnerVersion"

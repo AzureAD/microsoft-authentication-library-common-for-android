@@ -62,6 +62,24 @@ public interface ILabClient {
     LabAccount createTempAccount(TempUserType tempUserType) throws LabApiException;
 
     /**
+     * Loads guest account from Lab Api based on the provided query.
+     *
+     * @param labQuery parameters that determine what kind of guest account to fetch
+     * @return a {@link LabGuestAccount} object
+     * @throws LabApiException if an error occurs while trying to fetch guest account from lab
+     */
+    LabGuestAccount loadGuestAccountFromLab(final LabQuery labQuery) throws LabApiException;
+
+    /**
+     * Get the password for a guest account.
+     *
+     * @param guestUser the guest account to be fetched from
+     * @return a String containing the password for the guest account
+     * @throws LabApiException if an error occurs while trying to fetch the password
+     */
+    String getPasswordForGuestUser(final LabGuestAccount guestUser) throws LabApiException;
+
+    /**
      * Get the value of a secret from Lab Api. This primarily includes secrets like passwords for
      * accounts but may also be used for any other secret that the Lab has stored in their KeyVault.
      *
@@ -71,5 +89,12 @@ public interface ILabClient {
      */
     String getSecret(String secretName) throws LabApiException;
 
+    /**
+     * Reset the password for the username given, then reset it back to the original password.
+     *
+     * @param upn username of the user that will have their password reset
+     * @return boolean showing if the reset was successful
+     * @throws LabApiException if an error occurs while password is being reset
+     */
     boolean resetPassword(String upn) throws LabApiException;
 }

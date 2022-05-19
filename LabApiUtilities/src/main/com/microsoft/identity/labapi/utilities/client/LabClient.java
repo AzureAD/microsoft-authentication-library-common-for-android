@@ -32,6 +32,8 @@ import com.microsoft.identity.internal.test.labapi.model.ConfigInfo;
 import com.microsoft.identity.internal.test.labapi.model.CustomSuccessResponse;
 import com.microsoft.identity.internal.test.labapi.model.SecretResponse;
 import com.microsoft.identity.internal.test.labapi.model.TempUser;
+import com.microsoft.identity.internal.test.labapi.model.UserInfo;
+import com.microsoft.identity.labapi.utilities.BuildConfig;
 import com.microsoft.identity.labapi.utilities.authentication.LabApiAuthenticationClient;
 import com.microsoft.identity.labapi.utilities.constants.TempUserType;
 import com.microsoft.identity.labapi.utilities.constants.ResetOperation;
@@ -100,7 +102,7 @@ public class LabClient implements ILabClient {
         );
     }
 
-    List<ConfigInfo> fetchConfigsFromLab(@NonNull final LabQuery query) throws LabApiException {
+    private List<ConfigInfo> fetchConfigsFromLab(@NonNull final LabQuery query) throws LabApiException {
         Configuration.getDefaultApiClient().setAccessToken(
                 mLabApiAuthenticationClient.getAccessToken()
         );
@@ -161,6 +163,34 @@ public class LabClient implements ILabClient {
     }
 
     @Override
+    public LabGuestAccount loadGuestAccountFromLab(LabQuery labQuery) throws LabApiException {
+        final List<ConfigInfo> configInfoList = fetchConfigsFromLab(labQuery);
+
+        List<String> guestLabTenants = new ArrayList<>();
+        for (ConfigInfo configInfo : configInfoList) {
+            guestLabTenants.add(configInfo.getUserInfo().getTenantID());
+        }
+
+        // pick one config info object to obtain home tenant information
+        // doesn't matter which one as all have the same home tenant
+        final ConfigInfo configInfo = configInfoList.get(0);
+        final UserInfo userInfo = configInfo.getUserInfo();
+
+        return new LabGuestAccount(
+                userInfo.getHomeUPN(),
+                userInfo.getHomeDomain(),
+                userInfo.getHomeTenantID(),
+                guestLabTenants
+        );
+    }
+
+    @Override
+    public String getPasswordForGuestUser(LabGuestAccount guestUser) throws LabApiException {
+        final String labName = guestUser.getHomeDomain().split("\\.")[0];
+        return getSecret(labName);
+    }
+
+    @Override
     public String getSecret(@NonNull final String secretName) throws LabApiException {
         Configuration.getDefaultApiClient().setAccessToken(
                 mLabApiAuthenticationClient.getAccessToken()
@@ -189,13 +219,16 @@ public class LabClient implements ILabClient {
     }
 
     public boolean resetPassword(@NonNull final String upn) throws LabApiException {
-        ResetApi resetApi = new ResetApi();
+        final ResetApi resetApi = new ResetApi();
         try {
             final CustomSuccessResponse resetResponse = resetApi.apiResetPut(upn, ResetOperation.PASSWORD.toString());
-            Thread.sleep(PASSWORD_RESET_WAIT_DURATION);
             final String expectedResult = ("Password reset successful for user : " + upn)
                     .toLowerCase();
-            return resetResponse.getResult().toLowerCase().contains(expectedResult);
+            final boolean result = resetResponse.getResult().toLowerCase().contains(expectedResult);
+            if (result) {
+                Thread.sleep(PASSWORD_RESET_WAIT_DURATION);
+            }
+            return result;
         } catch (ApiException | InterruptedException e) {
             throw new LabApiException(LabError.FAILED_TO_RESET_PASSWORD, e);
         }
