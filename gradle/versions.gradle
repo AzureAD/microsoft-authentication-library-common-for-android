@@ -43,7 +43,6 @@ ext {
     uiAutomatorVersion = "2.2.0"
     msal4jVersion = "1.10.0"
     mseberaApacheHttpClientVersion = "4.5.8"
-    yubikitAndroidVersion = "2.0.0"
 
     // TODO: adal automation test app.
     supportLibraryVersion = "27.1.+"
