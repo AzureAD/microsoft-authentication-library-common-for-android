@@ -31,9 +31,6 @@ import com.microsoft.identity.labapi.utilities.exception.LabApiException;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.Arrays;
-import java.util.concurrent.TimeUnit;
-
 public class LabClientTest {
 
     @Test
@@ -103,24 +100,6 @@ public class LabClientTest {
             Assert.assertTrue(labAccount.getUsername().toLowerCase().contains("msidlab4"));
             Assert.assertEquals(UserType.CLOUD, labAccount.getUserType());
         } catch (final LabApiException e) {
-            throw new AssertionError(e);
-        }
-    }
-
-    @Test
-    public void canResetPassword() {
-        final LabApiAuthenticationClient authenticationClient = new LabApiAuthenticationClient(
-                TestBuildConfig.LAB_CLIENT_SECRET
-        );
-
-        final LabClient labClient = new LabClient(authenticationClient);
-
-        try {
-            final LabAccount labAccount = labClient.createTempAccount(TempUserType.BASIC);
-            Thread.sleep(TimeUnit.MINUTES.toMillis(1));
-            Assert.assertTrue(labClient.resetPassword(labAccount.getUsername()));
-
-        } catch (final LabApiException | InterruptedException e) {
             throw new AssertionError(e);
         }
     }

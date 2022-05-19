@@ -100,7 +100,7 @@ public class LabClient implements ILabClient {
         );
     }
 
-     List<ConfigInfo> fetchConfigsFromLab(@NonNull final LabQuery query) throws LabApiException {
+    List<ConfigInfo> fetchConfigsFromLab(@NonNull final LabQuery query) throws LabApiException {
         Configuration.getDefaultApiClient().setAccessToken(
                 mLabApiAuthenticationClient.getAccessToken()
         );
