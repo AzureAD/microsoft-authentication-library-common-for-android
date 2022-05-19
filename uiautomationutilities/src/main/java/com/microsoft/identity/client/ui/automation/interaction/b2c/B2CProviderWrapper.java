@@ -26,16 +26,17 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.microsoft.identity.client.ui.automation.logging.Logger;
+import com.microsoft.identity.labapi.utilities.constants.B2CProvider;
 
 
-public enum B2CProvider {
+public enum B2CProviderWrapper {
 
-    Google(com.microsoft.identity.labapi.utilities.constants.B2CProvider.GOOGLE.toString(), "GoogleExchange", "google.com"),
-    Facebook(com.microsoft.identity.labapi.utilities.constants.B2CProvider.FACEBOOK.toString(), "FacebookExchange", "facebook.com"),
-    MSA(com.microsoft.identity.labapi.utilities.constants.B2CProvider.MICROSOFT.toString(), "MicrosoftAccountExchange", "live.com"),
-    Local(com.microsoft.identity.labapi.utilities.constants.B2CProvider.LOCAL.toString(), null, null);
+    Google(B2CProvider.GOOGLE.toString(), "GoogleExchange", "google.com"),
+    Facebook(B2CProvider.FACEBOOK.toString(), "FacebookExchange", "facebook.com"),
+    MSA(B2CProvider.MICROSOFT.toString(), "MicrosoftAccountExchange", "live.com"),
+    Local(B2CProvider.LOCAL.toString(), null, null);
 
-    private final static String TAG = "B2CProvider";
+    private final static String TAG = "B2CProviderWrapper";
     private final String providerName;
 
     @Nullable // should be null for LOCAL B2C provider
@@ -44,10 +45,10 @@ public enum B2CProvider {
     @Nullable // should be null for LOCAL B2C provider
     private final String domainHint; // this can be used as query param to /authorize endpoint
 
-    B2CProvider(@NonNull final String providerName,
-                @Nullable final String idpSelectionBtnResourceId,
-                @Nullable final String domainHint) {
-        Logger.i(TAG, "Initializing B2CProvider for " + idpSelectionBtnResourceId + " ..");
+    B2CProviderWrapper(@NonNull final String providerName,
+                       @Nullable final String idpSelectionBtnResourceId,
+                       @Nullable final String domainHint) {
+        Logger.i(TAG, "Initializing B2CProviderWrapper for " + idpSelectionBtnResourceId + " ..");
         this.providerName = providerName;
         this.idpSelectionBtnResourceId = idpSelectionBtnResourceId;
         this.domainHint = domainHint;

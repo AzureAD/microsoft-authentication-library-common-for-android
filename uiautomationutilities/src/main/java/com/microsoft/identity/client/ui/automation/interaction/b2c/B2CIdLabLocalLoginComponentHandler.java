@@ -36,7 +36,7 @@ public class B2CIdLabLocalLoginComponentHandler extends AbstractB2CLoginComponen
 
     @Override
     protected String getHandlerName() {
-        return B2CProvider.Local.getProviderName();
+        return B2CProviderWrapper.Local.getProviderName();
     }
 
     @Override

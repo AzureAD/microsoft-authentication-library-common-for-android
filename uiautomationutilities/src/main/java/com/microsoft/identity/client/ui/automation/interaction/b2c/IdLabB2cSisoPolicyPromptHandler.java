@@ -49,9 +49,9 @@ public class IdLabB2cSisoPolicyPromptHandler extends AbstractPromptHandler {
         final B2CPromptHandlerParameters b2CPromptHandlerParameters =
                 (B2CPromptHandlerParameters) parameters;
 
-        final B2CProvider b2CProvider = b2CPromptHandlerParameters.getB2cProvider();
+        final B2CProviderWrapper b2CProvider = b2CPromptHandlerParameters.getB2cProvider();
 
-        final boolean isExternalIdP = b2CProvider != B2CProvider.Local;
+        final boolean isExternalIdP = b2CProvider != B2CProviderWrapper.Local;
 
         if (isExternalIdP) {
             assert b2CProvider.getIdpSelectionBtnResourceId() != null;
@@ -69,7 +69,7 @@ public class IdLabB2cSisoPolicyPromptHandler extends AbstractPromptHandler {
             loginComponentHandler.handlePasswordField(password);
 
             if (loginComponentHandler instanceof GoogleLoginComponentHandler &&
-                    b2CProvider == B2CProvider.Google){
+                    b2CProvider == B2CProviderWrapper.Google){
                 ((GoogleLoginComponentHandler) loginComponentHandler).handleRecoveryEmail();
             }
         }
@@ -78,15 +78,14 @@ public class IdLabB2cSisoPolicyPromptHandler extends AbstractPromptHandler {
     protected static IOAuth2LoginComponentHandler getAppropriateLoginComponentHandler(@NonNull final B2CPromptHandlerParameters parameters) {
         Logger.i(TAG, "Get Appropriate Login Component Handler..");
 
-        switch (com.microsoft.identity.labapi.utilities.constants.B2CProvider.fromName(
-                parameters.getB2cProvider().getProviderName())) {
-            case LOCAL:
+        switch (parameters.getB2cProvider()) {
+            case Local:
                 return new B2CIdLabLocalLoginComponentHandler();
-            case GOOGLE:
+            case Google:
                 return new GoogleLoginComponentHandler();
-            case FACEBOOK:
+            case Facebook:
                 return new FacebookLoginComponentHandler();
-            case MICROSOFT:
+            case MSA:
                 return new AadLoginComponentHandler();
             default:
                 throw new UnsupportedOperationException("Unsupported B2C Provider for this policy");
