@@ -78,7 +78,7 @@ public class IdLabB2cSisoPolicyPromptHandler extends AbstractPromptHandler {
     protected static IOAuth2LoginComponentHandler getAppropriateLoginComponentHandler(@NonNull final B2CPromptHandlerParameters parameters) {
         Logger.i(TAG, "Get Appropriate Login Component Handler..");
 
-        switch (com.microsoft.identity.labapi.utilities.constants.B2CProvider.valueOf(
+        switch (com.microsoft.identity.labapi.utilities.constants.B2CProvider.fromName(
                 parameters.getB2cProvider().getProviderName())) {
             case LOCAL:
                 return new B2CIdLabLocalLoginComponentHandler();
