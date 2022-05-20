@@ -22,131 +22,22 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2;
 
-import android.os.Bundle;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.fragment.app.FragmentActivity;
-import androidx.fragment.app.FragmentTransaction;
-
-import com.microsoft.identity.common.internal.telemetry.Telemetry;
-import com.microsoft.identity.common.internal.telemetry.events.UiEndEvent;
-import com.microsoft.identity.common.internal.util.FindBugsConstants;
-import com.microsoft.identity.common.java.logging.RequestContext;
-import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
-import com.microsoft.identity.common.java.util.ported.PropertyBag;
-import com.microsoft.identity.common.java.util.ported.LocalBroadcaster;
-import com.microsoft.identity.common.logging.DiagnosticContext;
-import com.microsoft.identity.common.logging.Logger;
-
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-
-import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterAliases.CANCEL_AUTHORIZATION_REQUEST;
 import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterAliases.RETURN_AUTHORIZATION_REQUEST_RESULT;
 import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterFields.REQUEST_CODE;
 import static com.microsoft.identity.common.java.AuthenticationConstants.UIRequest.BROWSER_FLOW;
 
+import androidx.annotation.NonNull;
+
+import com.microsoft.identity.common.internal.telemetry.Telemetry;
+import com.microsoft.identity.common.internal.telemetry.events.UiEndEvent;
+import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
+import com.microsoft.identity.common.java.util.ported.LocalBroadcaster;
+import com.microsoft.identity.common.java.util.ported.PropertyBag;
+import com.microsoft.identity.common.logging.Logger;
+
 public abstract class CurrentTaskAuthorizationFragment extends AuthorizationFragment {
 
     private static final String TAG = CurrentTaskAuthorizationFragment.class.getSimpleName();
-
-    /**
-     * The bundle containing values for initializing this fragment.
-     */
-    private Bundle mInstanceState;
-
-    /**
-     * Listens to an operation cancellation event.
-     */
-    private final LocalBroadcaster.IReceiverCallback mCancelRequestReceiver = new LocalBroadcaster.IReceiverCallback() {
-        @Override
-        public void onReceive(@NonNull final PropertyBag propertyBag) {
-            cancelAuthorization(propertyBag.getOrDefault(CANCEL_AUTHORIZATION_REQUEST, false));
-        }
-    };
-
-    void setInstanceState(@NonNull final Bundle instanceStateBundle) {
-        mInstanceState = instanceStateBundle;
-    }
-
-    @SuppressFBWarnings(FindBugsConstants.NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE)
-    @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        final String methodTag = TAG + ":onCreate";
-        super.onCreate(savedInstanceState);
-
-        // Register Broadcast receiver to cancel the auth request
-        // if another incoming request is launched by the app
-        LocalBroadcaster.INSTANCE.registerCallback(CANCEL_AUTHORIZATION_REQUEST, mCancelRequestReceiver);
-
-        if (savedInstanceState == null) {
-            Logger.verbose(methodTag, "Extract state from the intent bundle.");
-            extractState(mInstanceState);
-        } else {
-            // If activity is killed by the os, savedInstance will be the saved bundle.
-            Logger.verbose(methodTag, "Extract state from the saved bundle.");
-            extractState(savedInstanceState);
-        }
-    }
-
-    @SuppressFBWarnings(FindBugsConstants.NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE)
-    void finish() {
-        final FragmentActivity activity = getActivity();
-        if (activity instanceof AuthorizationActivity) {
-            activity.finish();
-        } else {
-            // The calling activity is not owned by MSAL/Broker.
-            // Just remove this fragment.
-            if (getFragmentManager() != null) {
-                getFragmentManager()
-                        .beginTransaction()
-                        .setTransitionStyle(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
-                        .remove(this)
-                        .commit();
-            }
-        }
-    }
-
-    /**
-     * Get the state form the provided bundle and act on it as needed
-     *
-     * @param state a bundle containing data provided when the activity was created
-     */
-    void extractState(@NonNull final Bundle state) {
-        setDiagnosticContextForNewThread(state.getString(DiagnosticContext.CORRELATION_ID));
-    }
-
-    /**
-     * When authorization fragment is launched.  It may be launched on a new thread.
-     * Initialize based on value provided in intent.
-     */
-    private static String setDiagnosticContextForNewThread(@NonNull final String correlationId) {
-        final String methodTag = TAG + ":setDiagnosticContextForAuthorizationActivity";
-        final RequestContext rc = new RequestContext();
-        rc.put(DiagnosticContext.CORRELATION_ID, correlationId);
-        DiagnosticContext.setRequestContext(rc);
-        Logger.verbose(
-                methodTag,
-                "Initializing diagnostic context for CurrentTaskAuthorizationActivity"
-        );
-
-        return correlationId;
-    }
-
-    @SuppressFBWarnings(FindBugsConstants.NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE)
-    @Override
-    public void onDestroy() {
-        LocalBroadcaster.INSTANCE.unregisterCallback(CANCEL_AUTHORIZATION_REQUEST);
-        super.onDestroy();
-    }
-
-    /**
-     * NOTE: Fragment-only mode will not support this, as we don't own the activity.
-     * This must be invoked by AuthorizationActivity.onBackPressed().
-     */
-    public boolean onBackPressed() {
-        return false;
-    }
 
     void sendResult(final RawAuthorizationResult.ResultCode resultCode) {
         sendResult(RawAuthorizationResult.fromResultCode(resultCode));
