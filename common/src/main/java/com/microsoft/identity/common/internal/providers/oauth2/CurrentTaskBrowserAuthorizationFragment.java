@@ -50,9 +50,9 @@ import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.APP
 /**
  * Authorization fragment with customTabs or browsers.
  */
-public class CurrentTaskBrowserAuthorizationFragment extends CurrentTaskAuthorizationFragment {
+public class CurrentTaskBrowserAuthorizationFragment extends AuthorizationFragment {
 
-    private static final String TAG = BrowserAuthorizationFragment.class.getSimpleName();
+    private static final String TAG = CurrentTaskBrowserAuthorizationFragment.class.getSimpleName();
 
     private static final String BROWSER_FLOW_STARTED = "browserFlowStarted";
 
