@@ -227,7 +227,7 @@ public class AndroidPlatformComponents implements IPlatformComponents {
     }
 
     @Override
-    public IBroadcaster getBroadcaster() throws ClientException {
+    public synchronized IBroadcaster getBroadcaster() throws ClientException {
         if (null == mBroadcaster) {
             mBroadcaster = new AndroidBroadcaster(mContext);
         }
