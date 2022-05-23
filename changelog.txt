@@ -1,7 +1,6 @@
-Version 5.0.0
+V.Next
 ----------
-- [MAJOR] Adding YubiKit SDK, which requires Java Version 8 and will thus bump up Java version overall to 8 (#1729)
-- [MAJOR] Move IKeyStoreKeyManager and IDevicePopManager to common4j (#1683)
+- [MINOR] Support WordApp local apk install in UI automation flows (#1732)
 - [PATCH] Add exception handling in Content Provider strategy, for broker communication (#1722)
 - [MINOR] Support TenantID value from eSTS in PKeyAuth flows (#1712)
 - [MINOR] Implement cert loader for both multiple and legacy WPJ data store in PKeyAuth (#1711)
@@ -24,6 +23,7 @@ Version 4.1.0
 Version 4.0.5
 ----------
 - [PATCH] Ensure a device pop manager is provided when PoPAuthenticationScheme is requested of the broker (#1706)
+- [MAJOR] Move IKeyStoreKeyManager and IDevicePopManager to common4j (#1683)
 
 Version 4.0.4
 ----------
