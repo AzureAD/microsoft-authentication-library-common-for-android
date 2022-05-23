@@ -1,4 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
     <color name="msal_loading" tools:override="true">#0078D4</color>
+    <color name="dialogTitleText">#0078D4</color>
+    <color name="dialogRadioButton">#0078D4</color>
+    <color name="dialogButtonText">#0078D4</color>
+    <color name="certIssuerTitle">#212121</color>
 </resources>
