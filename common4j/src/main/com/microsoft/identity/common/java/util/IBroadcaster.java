@@ -25,11 +25,16 @@ package com.microsoft.identity.common.java.util;
 import com.microsoft.identity.common.java.util.ported.PropertyBag;
 
 /**
- * An interface via which to access the ability to send device OS profile wide broadcasts
- * (These broadcasts are not currently restricted to a particular set of receivers)
+ * An interface via which to access the ability to send device OS profile wide broadcasts.
+ * (These broadcasts are not currently restricted to a particular set of receivers.)
  */
 public interface IBroadcaster {
 
+    /**
+     * Sends a device operating system profile wide broadcast.
+     * @param broadcastId a string identifier for the broadcast
+     * @param propertyBag optional additional information to include in the broadcast
+     */
     void sendBroadcast(String broadcastId, PropertyBag propertyBag);
 
 }

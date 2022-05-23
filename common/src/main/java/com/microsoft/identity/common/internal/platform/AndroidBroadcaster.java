@@ -34,19 +34,21 @@ import com.microsoft.identity.common.java.util.ported.PropertyBag;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 
+/**
+ * Android implementation of IBroadcaster.
+ */
 @AllArgsConstructor
 public class AndroidBroadcaster implements IBroadcaster {
 
     @NonNull
-    private Context mContext;
+    private final Context mContext;
 
     @Override
-    public void sendBroadcast(@NonNull String broadcastId, @Nullable PropertyBag propertyBag) {
-        Intent intent = new Intent();
+    public void sendBroadcast(@NonNull final String broadcastId, @Nullable final PropertyBag propertyBag) {
+        final Intent intent = new Intent();
         intent.setAction(broadcastId);
         if(propertyBag != null) {
-            for (String key :
-                    propertyBag.keySet()) {
+            for (final String key : propertyBag.keySet()) {
                 intent.putExtra(key, propertyBag.<Parcelable[]>get(key));
             }
         }
