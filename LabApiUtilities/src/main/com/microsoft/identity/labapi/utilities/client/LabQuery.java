@@ -49,7 +49,6 @@ import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
 import java.lang.reflect.Field;
-import java.util.logging.Logger;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -57,7 +56,6 @@ import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NonNull;
-import lombok.ToString;
 import lombok.experimental.Accessors;
 
 /**

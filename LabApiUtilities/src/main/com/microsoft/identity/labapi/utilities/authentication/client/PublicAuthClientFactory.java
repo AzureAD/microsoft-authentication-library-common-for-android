@@ -28,7 +28,7 @@ import com.microsoft.identity.labapi.utilities.authentication.adal4j.Adal4jAuthC
  * An {@link IPublicAuthClientFactory} that can return an implementation of an
  * {@link IPublicAuthClient}.
  * <p>
- * Currently it only returns a default implementation that is using msal4j.
+ * Currently it only returns a default implementation that is using adal4j.
  */
 public enum PublicAuthClientFactory implements IPublicAuthClientFactory {
     INSTANCE;
