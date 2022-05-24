@@ -28,7 +28,6 @@ import java.io.Serializable;
 import java.util.Set;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
-import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.Accessors;
 
