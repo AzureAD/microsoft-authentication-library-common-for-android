@@ -29,14 +29,15 @@ import static com.yubico.yubikit.piv.Slot.SIGNATURE;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
-import android.app.PendingIntent;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.os.AsyncTask;
+import android.content.res.ColorStateList;
 import android.os.Build;
 import android.security.KeyChain;
 import android.security.KeyChainAliasCallback;
 import android.security.KeyChainException;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -48,7 +49,6 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.RadioButton;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -311,11 +311,13 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
         mActivity.runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                final EditText editText = new EditText(mActivity);
+                //Inflate Pin EditText layout
+                final View pinLayout = mActivity.getLayoutInflater().inflate(R.layout.pin_textview_layout, null);
+                //Start building dialog
                 AlertDialog.Builder builder = new AlertDialog.Builder(mActivity, R.style.CertAlertDialogTheme)
                         .setTitle("Unlock smartcard")
                         .setMessage("Enter the smartcard PIN to access the certificate and sign in")
-                        .setView(editText)
+                        .setView(pinLayout)
                         .setPositiveButton("Unlock", null)
                         .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
                             @Override
@@ -325,6 +327,32 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
                         });
                 final AlertDialog dialog = builder.create();
                 dialog.show();
+
+                //Since I don't want to deal with adding the dependencies associated with TextInputLayout,
+                // going to manually show the error message and color using a listener on the pin EditText.
+                final EditText editText = pinLayout.findViewById(R.id.pinEditText);
+                final TextView errorTextView = pinLayout.findViewById(R.id.errorTextView);
+                editText.addTextChangedListener(new TextWatcher() {
+                    @Override
+                    public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                        if (start == 0) {
+                            //Reset back to blue and no error text.
+                            errorTextView.setText("");
+                            editText.setBackgroundTintList(ColorStateList.valueOf(mActivity.getResources().getColor(R.color.dialogPinEditText)));
+                        }
+                    }
+
+                    @Override
+                    public void onTextChanged(CharSequence s, int start, int before, int count) {
+                        //Do nothing
+                    }
+
+                    @Override
+                    public void afterTextChanged(Editable s) {
+                        //Do nothing
+                    }
+                });
+
                 //Need to show dialog before we can get a reference and override the positive button's behavior.
                 dialog.getButton(DialogInterface.BUTTON_POSITIVE).setOnClickListener(new View.OnClickListener() {
                     @Override
@@ -359,9 +387,11 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
                                         Logger.errorPII(methodTag,"BadResponseException", e);
                                     } catch (InvalidPinException e) {
                                         // An incorrect Pin attempt. Update Dialog to indicate that an incorrect attempt was made.
-                                        // But if the number of pin attempts remaining is now 0, we should instead display the dialog
-                                        // informing the user that they have made too many incorrect attempts.
-                                        Log.i(TAG, "onClick: Incorrect. remaining" + --pinAttempts);
+                                        // TODO: But if the number of pin attempts remaining is now 0, we should instead display the dialog informing the user that they have made too many incorrect attempts.
+                                        Log.i(methodTag, "Incorrect. remaining" + --pinAttempts);
+                                        editText.getText().clear();
+                                        editText.setBackgroundTintList(ColorStateList.valueOf(mActivity.getResources().getColor(R.color.dialogPinErrorText)));
+                                        errorTextView.setText("The PIN you entered was incorrect");
 
                                     }
 

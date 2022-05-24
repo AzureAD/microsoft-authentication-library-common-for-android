@@ -2,7 +2,10 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <color name="msal_loading" tools:override="true">#0078D4</color>
     <color name="dialogTitleText">#0078D4</color>
+    <color name="dialogMessageText">#919191</color>
     <color name="dialogRadioButton">#0078D4</color>
     <color name="dialogButtonText">#0078D4</color>
+    <color name="dialogPinEditText">#0078D4</color>
     <color name="certIssuerTitle">#212121</color>
+    <color name="dialogPinErrorText">#D92C2C</color>
 </resources>
