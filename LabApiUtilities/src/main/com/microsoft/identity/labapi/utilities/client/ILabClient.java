@@ -39,7 +39,7 @@ public interface ILabClient {
      * @return a {@link LabAccount} object
      * @throws LabApiException if an error occurs while trying to fetch account from lab
      */
-    LabAccount getLabAccount(LabQuery labQuery) throws LabApiException;
+    ILabAccount getLabAccount(LabQuery labQuery) throws LabApiException;
 
     /**
      * Loads existing account(s) from Lab Api based on the provided query.
@@ -48,7 +48,7 @@ public interface ILabClient {
      * @return a list of {@link LabAccount} objects
      * @throws LabApiException if an error occurs while trying to fetch account(s) from lab
      */
-    List<LabAccount> getLabAccounts(LabQuery labQuery) throws LabApiException;
+    List<ILabAccount> getLabAccounts(LabQuery labQuery) throws LabApiException;
 
     /**
      * Create and return a new temp AAD user using Lab Api.
@@ -57,7 +57,7 @@ public interface ILabClient {
      * @return a {@link LabAccount} object
      * @throws LabApiException if an error occurs while trying to fetch account from lab
      */
-    LabAccount createTempAccount(TempUserType tempUserType) throws LabApiException;
+    ILabAccount createTempAccount(TempUserType tempUserType) throws LabApiException;
 
     /**
      * Get the value of a secret from Lab Api. This primarily includes secrets like passwords for
@@ -68,4 +68,29 @@ public interface ILabClient {
      * @throws LabApiException if an error occurs while trying to load secret from lab
      */
     String getSecret(String secretName) throws LabApiException;
+
+    /**
+     * Delete the specified device from AAD using the Lab Api.
+     *
+     * @param upn      the upn of the owner of this device
+     * @param deviceId the device id of the device to be deleted
+     * @return a boolean indicated if device has been deleted
+     * @throws LabApiException if an error occurs while trying to delete the device
+     */
+    boolean deleteDevice(String upn, String deviceId) throws LabApiException;
+
+    /**
+     * Attempts deleting the specified device from AAD using the Lab Api up to specified number of
+     * attempts. The primary reason for this overload is that device objects take some time to sync
+     * in the directory and so a delete attempt made right after registration may not be successful,
+     * and multiple attempts to delete the record can result in eventual success.
+     *
+     * @param upn                             the upn of the owner of this device
+     * @param deviceId                        the device id of the device to be deleted
+     * @param numDeleteAttempts               the number times Lab Api should attempt to delete the device
+     * @param waitTimeBeforeEachDeleteAttempt the amount of time to wait before each delete attempt
+     * @return a boolean indicated if device has been deleted
+     * @throws LabApiException if an error occurs while trying to delete the device
+     */
+    boolean deleteDevice(String upn, String deviceId, int numDeleteAttempts, long waitTimeBeforeEachDeleteAttempt) throws LabApiException;
 }

@@ -41,10 +41,11 @@ public class TokenParameters implements ITokenParameters {
     @NonNull
     private final String mAuthority;
 
-    @NonNull
     @Singular
     private final Set<String> mScopes;
 
     @NonNull
     private final String mClientId;
+
+    private final String mResource;
 }

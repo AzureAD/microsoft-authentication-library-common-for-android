@@ -20,49 +20,20 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.labapi.utilities.client;
+package com.microsoft.identity.labapi.utilities.authentication;
 
-import com.microsoft.identity.internal.test.labapi.model.ConfigInfo;
-import com.microsoft.identity.labapi.utilities.constants.UserType;
-
-import lombok.Builder;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.experimental.Accessors;
+import com.microsoft.identity.labapi.utilities.exception.LabApiException;
 
 /**
- * An account object model that will used to represent accounts used for testing purposes.
+ * An interface describing a refresh token accessor i.e. anyone that has the ability to return a
+ * valid (unexpired) refresh token.
  */
-@Getter
-@Accessors(prefix = "m")
-@Builder
-@EqualsAndHashCode
-public class LabAccount implements ILabAccount {
+public interface IRefreshTokenSupplier {
 
-    @NonNull
-    private final String mUsername;
-
-    @NonNull
-    private final String mPassword;
-
-    @NonNull
-    private final UserType mUserType;
-
-    @NonNull
-    private final String mHomeTenantId;
-
-    // nullable
-    // dependency for Nullable annotation not currently added to LabApiUtilities
-    private final ConfigInfo mConfigInfo;
-
-    @Override
-    public String getAssociatedClientId() {
-        return mConfigInfo.getAppInfo().getAppId();
-    }
-
-    @Override
-    public String getAuthority() {
-        return mConfigInfo.getLabInfo().getAuthority();
-    }
+    /**
+     * Obtain a valid refresh token.
+     *
+     * @return a String representing a refresh token
+     */
+    String getRefreshToken() throws LabApiException;
 }
