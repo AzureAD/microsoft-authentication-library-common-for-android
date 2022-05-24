@@ -26,9 +26,12 @@ import com.microsoft.aad.msal4j.ClientCredentialFactory;
 import com.microsoft.aad.msal4j.ClientCredentialParameters;
 import com.microsoft.aad.msal4j.ConfidentialClientApplication;
 import com.microsoft.aad.msal4j.IClientCredential;
+import com.microsoft.aad.msal4j.PublicClientApplication;
+import com.microsoft.aad.msal4j.UserNamePasswordParameters;
 import com.microsoft.identity.labapi.utilities.authentication.IAuthenticationResult;
-import com.microsoft.identity.labapi.utilities.authentication.IConfidentialAuthClient;
+import com.microsoft.identity.labapi.utilities.authentication.client.IConfidentialAuthClient;
 import com.microsoft.identity.labapi.utilities.authentication.ITokenParameters;
+import com.microsoft.identity.labapi.utilities.authentication.client.IPublicAuthClient;
 import com.microsoft.identity.labapi.utilities.authentication.common.CertificateCredential;
 import com.microsoft.identity.labapi.utilities.authentication.common.ClientAssertion;
 
@@ -38,20 +41,20 @@ import lombok.SneakyThrows;
 /**
  * An {@link IConfidentialAuthClient} that uses MSAL4J for token acquisition.
  */
-public class Msal4jConfidentialAuthClient implements IConfidentialAuthClient {
+public class Msal4jAuthClient implements IConfidentialAuthClient, IPublicAuthClient {
 
     @Override
     public IAuthenticationResult acquireToken(@NonNull final String clientSecret,
                                               @NonNull final ITokenParameters tokenParameters) {
         final IClientCredential credential = ClientCredentialFactory.createFromSecret(clientSecret);
-        return acquireToken(credential, tokenParameters);
+        return acquireTokenForConfidentialClient(credential, tokenParameters);
     }
 
     @Override
     public IAuthenticationResult acquireToken(@NonNull final ClientAssertion clientAssertion,
                                               @NonNull final ITokenParameters tokenParameters) {
         final IClientCredential credential = ClientCredentialFactory.createFromClientAssertion(clientAssertion.getClientAssertion());
-        return acquireToken(credential, tokenParameters);
+        return acquireTokenForConfidentialClient(credential, tokenParameters);
     }
 
     @Override
@@ -60,12 +63,12 @@ public class Msal4jConfidentialAuthClient implements IConfidentialAuthClient {
         final IClientCredential credential = ClientCredentialFactory.createFromCertificate(
                 certificateCredential.getPrivateKey(), certificateCredential.getPublicCertificate()
         );
-        return acquireToken(credential, tokenParameters);
+        return acquireTokenForConfidentialClient(credential, tokenParameters);
     }
 
     @SneakyThrows
-    private IAuthenticationResult acquireToken(@NonNull final IClientCredential clientCredential,
-                                               @NonNull final ITokenParameters tokenParameters) {
+    private IAuthenticationResult acquireTokenForConfidentialClient(@NonNull final IClientCredential clientCredential,
+                                                                    @NonNull final ITokenParameters tokenParameters) {
         final ConfidentialClientApplication app =
                 ConfidentialClientApplication
                         .builder(tokenParameters.getClientId(), clientCredential)
@@ -78,6 +81,28 @@ public class Msal4jConfidentialAuthClient implements IConfidentialAuthClient {
 
         final com.microsoft.aad.msal4j.IAuthenticationResult result =
                 app.acquireToken(clientCredentialParameters).get();
+
+        return new Msal4jAuthenticationResult(result);
+    }
+
+    @Override
+    @SneakyThrows
+    public IAuthenticationResult acquireToken(@NonNull final String username,
+                                              @NonNull final String password,
+                                              @NonNull final ITokenParameters tokenParameters) {
+        final PublicClientApplication pca = PublicClientApplication.builder(tokenParameters.getClientId())
+                .authority(tokenParameters.getAuthority())
+                // no token cache needed for now
+                //.setTokenCacheAccessAspect(tokenCacheAspect)
+                .build();
+
+        final UserNamePasswordParameters parameters =
+                UserNamePasswordParameters
+                        .builder(tokenParameters.getScopes(), username, password.toCharArray())
+                        .build();
+
+        final com.microsoft.aad.msal4j.IAuthenticationResult result =
+                pca.acquireToken(parameters).get();
 
         return new Msal4jAuthenticationResult(result);
     }
