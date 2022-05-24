@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.labapi.utilities.authentication;
 
+import com.microsoft.identity.labapi.utilities.authentication.client.ConfidentialAuthClientFactory;
+import com.microsoft.identity.labapi.utilities.authentication.client.IConfidentialAuthClient;
 import com.microsoft.identity.labapi.utilities.jwt.IJWTParser;
 import com.microsoft.identity.labapi.utilities.jwt.JWTParserFactory;
 import com.microsoft.identity.labapi.utilities.TestBuildConfig;
