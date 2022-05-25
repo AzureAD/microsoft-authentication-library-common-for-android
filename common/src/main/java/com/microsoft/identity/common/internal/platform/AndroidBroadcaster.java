@@ -20,49 +20,39 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.labapi.utilities.client;
+package com.microsoft.identity.common.internal.platform;
 
-import com.microsoft.identity.internal.test.labapi.model.ConfigInfo;
-import com.microsoft.identity.labapi.utilities.constants.UserType;
+import android.content.Context;
+import android.content.Intent;
+import android.os.Parcelable;
 
-import lombok.Builder;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
+import androidx.annotation.Nullable;
+
+import com.microsoft.identity.common.java.util.IBroadcaster;
+import com.microsoft.identity.common.java.util.ported.PropertyBag;
+
+import lombok.AllArgsConstructor;
 import lombok.NonNull;
-import lombok.experimental.Accessors;
 
 /**
- * An account object model that will used to represent accounts used for testing purposes.
+ * Android implementation of IBroadcaster.
  */
-@Getter
-@Accessors(prefix = "m")
-@Builder
-@EqualsAndHashCode
-public class LabAccount implements ILabAccount {
+@AllArgsConstructor
+public class AndroidBroadcaster implements IBroadcaster {
 
     @NonNull
-    private final String mUsername;
-
-    @NonNull
-    private final String mPassword;
-
-    @NonNull
-    private final UserType mUserType;
-
-    @NonNull
-    private final String mHomeTenantId;
-
-    // nullable
-    // dependency for Nullable annotation not currently added to LabApiUtilities
-    private final ConfigInfo mConfigInfo;
+    private final Context mContext;
 
     @Override
-    public String getAssociatedClientId() {
-        return mConfigInfo.getAppInfo().getAppId();
+    public void sendBroadcast(@NonNull final String broadcastId, @Nullable final PropertyBag propertyBag) {
+        final Intent intent = new Intent();
+        intent.setAction(broadcastId);
+        if(propertyBag != null) {
+            for (final String key : propertyBag.keySet()) {
+                intent.putExtra(key, propertyBag.<Parcelable[]>get(key));
+            }
+        }
+        mContext.sendBroadcast(intent);
     }
 
-    @Override
-    public String getAuthority() {
-        return mConfigInfo.getLabInfo().getAuthority();
-    }
 }
