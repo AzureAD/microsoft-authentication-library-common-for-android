@@ -7,6 +7,7 @@ V.Next
 - [MINOR] Implement cert loader for both multiple and legacy WPJ data store in PKeyAuth (#1711)
 - [PATCH] Fix SDK Cancel when using authorization in current task (#1743)
 - [MINOR] Added support for broadcasting to applications installed on the device. (#1744)
+- [PATCH] Fix APPLICATION_CANCELLED by handling back button press (#1725)
 
 Version 4.1.0
 ----------
