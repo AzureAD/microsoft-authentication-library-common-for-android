@@ -37,6 +37,7 @@ import androidx.fragment.app.Fragment;
 import com.microsoft.identity.common.crypto.AndroidAuthSdkStorageEncryptionManager;
 import com.microsoft.identity.common.crypto.AndroidBrokerStorageEncryptionManager;
 import com.microsoft.identity.common.internal.net.cache.HttpCache;
+import com.microsoft.identity.common.internal.platform.AndroidBroadcaster;
 import com.microsoft.identity.common.internal.platform.AndroidDevicePopManager;
 import com.microsoft.identity.common.java.cache.IMultiTypeNameValueStorage;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
@@ -58,6 +59,7 @@ import com.microsoft.identity.common.java.net.DefaultHttpClientWrapper;
 import com.microsoft.identity.common.java.platform.Device;
 import com.microsoft.identity.common.java.providers.oauth2.IStateGenerator;
 import com.microsoft.identity.common.java.util.ClockSkewManager;
+import com.microsoft.identity.common.java.util.IBroadcaster;
 import com.microsoft.identity.common.java.util.IClockSkewManager;
 import com.microsoft.identity.common.java.util.IPlatformUtil;
 import com.microsoft.identity.common.java.util.ported.Predicate;
@@ -97,6 +99,7 @@ public class AndroidPlatformComponents implements IPlatformComponents {
 
     private IClockSkewManager mClockSkewManager;
     private IDevicePopManager mDefaultDevicePoPManager;
+    private IBroadcaster mBroadcaster;
 
     /**
      * True if all of the platform-dependent static classes have been initialized.
@@ -222,6 +225,15 @@ public class AndroidPlatformComponents implements IPlatformComponents {
                 exception
         );
     }
+
+    @Override
+    public synchronized IBroadcaster getBroadcaster() throws ClientException {
+        if (null == mBroadcaster) {
+            mBroadcaster = new AndroidBroadcaster(mContext);
+        }
+        return mBroadcaster;
+    }
+
 
     @Override
     public <T> INameValueStorage<T> getNameValueStore(final @NonNull String storeName, final @NonNull Class<T> clazz) {
