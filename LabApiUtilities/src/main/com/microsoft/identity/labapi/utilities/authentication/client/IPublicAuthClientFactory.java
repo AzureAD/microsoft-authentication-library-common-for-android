@@ -20,17 +20,17 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.labapi.utilities.authentication;
+package com.microsoft.identity.labapi.utilities.authentication.client;
 
 /**
- * A factory that can return an implementation of an {@link IConfidentialAuthClient}
+ * A factory that can return an implementation of an {@link IPublicAuthClient}
  */
-public interface IConfidentialAuthClientFactory {
+public interface IPublicAuthClientFactory {
 
     /**
-     * Obtain an instance of an {@link IConfidentialAuthClient}.
+     * Obtain an instance of an {@link IPublicAuthClient}.
      *
-     * @return the Confidential Auth Client to use.
+     * @return the Public Auth Client to use.
      */
-    IConfidentialAuthClient getConfidentialAuthClient();
+    IPublicAuthClient getPublicAuthClient();
 }

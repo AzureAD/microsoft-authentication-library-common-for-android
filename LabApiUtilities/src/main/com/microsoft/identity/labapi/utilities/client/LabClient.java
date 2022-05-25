@@ -26,6 +26,7 @@ import com.microsoft.identity.internal.test.labapi.ApiException;
 import com.microsoft.identity.internal.test.labapi.Configuration;
 import com.microsoft.identity.internal.test.labapi.api.ConfigApi;
 import com.microsoft.identity.internal.test.labapi.api.CreateTempUserApi;
+import com.microsoft.identity.internal.test.labapi.api.DeleteDeviceApi;
 import com.microsoft.identity.internal.test.labapi.api.LabSecretApi;
 import com.microsoft.identity.internal.test.labapi.api.ResetApi;
 import com.microsoft.identity.internal.test.labapi.model.ConfigInfo;
@@ -43,6 +44,7 @@ import com.microsoft.identity.labapi.utilities.exception.LabError;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 import lombok.AccessLevel;
@@ -62,7 +64,7 @@ public class LabClient implements ILabClient {
     private static final int TEMP_USER_API_READ_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(15);
 
     @Override
-    public LabAccount getLabAccount(@NonNull final LabQuery labQuery) throws LabApiException {
+    public ILabAccount getLabAccount(@NonNull final LabQuery labQuery) throws LabApiException {
         final List<ConfigInfo> configInfos = fetchConfigsFromLab(labQuery);
         // for each query, lab actually returns a list of accounts..all of which fit the criteria..
         // usually we only need one such account, and hence over here we are just picking the first
@@ -72,10 +74,10 @@ public class LabClient implements ILabClient {
     }
 
     @Override
-    public List<LabAccount> getLabAccounts(@NonNull final LabQuery labQuery) throws LabApiException {
+    public List<ILabAccount> getLabAccounts(@NonNull final LabQuery labQuery) throws LabApiException {
         final List<ConfigInfo> configInfos = fetchConfigsFromLab(labQuery);
 
-        final List<LabAccount> labAccounts = new ArrayList<>(configInfos.size());
+        final List<ILabAccount> labAccounts = new ArrayList<>(configInfos.size());
 
         for (final ConfigInfo configInfo : configInfos) {
             labAccounts.add(getLabAccountObject(configInfo));
@@ -84,7 +86,7 @@ public class LabClient implements ILabClient {
         return labAccounts;
     }
 
-    private LabAccount getLabAccountObject(@NonNull final ConfigInfo configInfo) throws LabApiException {
+    private ILabAccount getLabAccountObject(@NonNull final ConfigInfo configInfo) throws LabApiException {
         // for guest accounts the UPN is located under homeUpn field
         String username = configInfo.getUserInfo().getHomeUPN();
         if (username == null || username.equals("") || username.equalsIgnoreCase("None")) {
@@ -94,12 +96,13 @@ public class LabClient implements ILabClient {
 
         final String password = getPassword(configInfo);
 
-        return new LabAccount(
-                username,
-                password,
-                UserType.fromName(configInfo.getUserInfo().getUserType()),
-                configInfo.getUserInfo().getHomeTenantID()
-        );
+        return new LabAccount.LabAccountBuilder()
+                .username(username)
+                .password(password)
+                .userType(UserType.fromName(configInfo.getUserInfo().getUserType()))
+                .homeTenantId(configInfo.getUserInfo().getHomeTenantID())
+                .configInfo(configInfo)
+                .build();
     }
 
     private List<ConfigInfo> fetchConfigsFromLab(@NonNull final LabQuery query) throws LabApiException {
@@ -142,7 +145,7 @@ public class LabClient implements ILabClient {
     }
 
     @Override
-    public LabAccount createTempAccount(@NonNull final TempUserType tempUserType) throws LabApiException {
+    public ILabAccount createTempAccount(@NonNull final TempUserType tempUserType) throws LabApiException {
         Configuration.getDefaultApiClient().setAccessToken(
                 mLabApiAuthenticationClient.getAccessToken()
         );
@@ -158,8 +161,13 @@ public class LabClient implements ILabClient {
 
         final String password = getPassword(tempUser);
 
-        // all temp users created by Lab Api are currently cloud users
-        return new LabAccount(tempUser.getUpn(), password, UserType.CLOUD, tempUser.getTenantId());
+        return new LabAccount.LabAccountBuilder()
+                .username(tempUser.getUpn())
+                .password(password)
+                // all temp users created by Lab Api are currently cloud users
+                .userType(UserType.CLOUD)
+                .homeTenantId(tempUser.getTenantId())
+                .build();
     }
 
     @Override
@@ -203,6 +211,74 @@ public class LabClient implements ILabClient {
         } catch (final com.microsoft.identity.internal.test.labapi.ApiException ex) {
             throw new LabApiException(LabError.FAILED_TO_GET_SECRET_FROM_LAB, ex);
         }
+    }
+
+    @Override
+    public boolean deleteDevice(@NonNull final String upn,
+                                @NonNull final String deviceId) throws LabApiException {
+        Configuration.getDefaultApiClient().setAccessToken(
+                mLabApiAuthenticationClient.getAccessToken()
+        );
+        final DeleteDeviceApi deleteDeviceApi = new DeleteDeviceApi();
+
+        try {
+            final CustomSuccessResponse successResponse = deleteDeviceApi.apiDeleteDeviceDelete(
+                    upn, deviceId
+            );
+
+            // we probably need a more sophisticated logger integrated into LabApi
+            // for now this is fine
+            System.out.println(successResponse.getResult());
+
+            final String expectedResult = String.format(
+                    "Device : %s, successfully deleted from AAD.", deviceId
+            );
+            return expectedResult.equalsIgnoreCase(successResponse.getResult());
+        } catch (final com.microsoft.identity.internal.test.labapi.ApiException ex) {
+            throw new LabApiException(
+                    LabError.FAILED_TO_DELETE_DEVICE, ex,
+                    ex.getResponseBody() != null ? ex.getResponseBody() : "Response body missing from Exception"
+            );
+        }
+    }
+
+    @Override
+    public boolean deleteDevice(@NonNull final String upn,
+                                @NonNull final String deviceId,
+                                final int numDeleteAttempts,
+                                final long waitTimeBeforeEachDeleteAttempt) throws LabApiException {
+        for (int i = 0; i < numDeleteAttempts; i++) {
+            System.out.printf(Locale.ENGLISH, "Delete device attempt #%d%n", (i + 1));
+            // Lab may not find the device right away so we try every 2 seconds
+            // we do 5 attempts, if that doesn't work then we fail
+            try {
+                Thread.sleep(waitTimeBeforeEachDeleteAttempt);
+            } catch (final InterruptedException e) {
+                e.printStackTrace();
+            }
+
+            try {
+                if (deleteDevice(upn, deviceId)) {
+                    return true;
+                }
+            } catch (final LabApiException labApiException) {
+                // if not the last attempt, then just print the error to console
+                if (i < (numDeleteAttempts - 1)) {
+                    System.out.printf(
+                            Locale.ENGLISH,
+                            "Delete device attempt #%d%n failed: %s", (i + 1),
+                            labApiException
+                    );
+                } else {
+                    // last attempt, just throw the exception back
+                    throw labApiException;
+                }
+            }
+
+        }
+
+        // there was no error, but device still not deleted
+        return false;
     }
 
     private String getPassword(@NonNull final ConfigInfo configInfo) throws LabApiException {
