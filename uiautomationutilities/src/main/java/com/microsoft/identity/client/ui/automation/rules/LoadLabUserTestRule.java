@@ -22,14 +22,13 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.rules;
 
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.client.ui.automation.logging.Logger;
 import com.microsoft.identity.labapi.utilities.BuildConfig;
 import com.microsoft.identity.labapi.utilities.authentication.LabApiAuthenticationClient;
-import com.microsoft.identity.labapi.utilities.client.LabAccount;
+import com.microsoft.identity.labapi.utilities.client.ILabAccount;
 import com.microsoft.identity.labapi.utilities.client.LabClient;
 import com.microsoft.identity.labapi.utilities.client.LabQuery;
 import com.microsoft.identity.labapi.utilities.constants.TempUserType;
@@ -53,7 +52,7 @@ public class LoadLabUserTestRule implements TestRule {
     private TempUserType tempUserType;
 
     protected LabClient mLabClient;
-    protected LabAccount mLabAccount;
+    protected ILabAccount mLabAccount;
 
     public LoadLabUserTestRule(@NonNull final LabQuery query) {
         this.query = query;
@@ -99,7 +98,7 @@ public class LoadLabUserTestRule implements TestRule {
         };
     }
 
-    public LabAccount getLabAccount() {
+    public ILabAccount getLabAccount() {
         return mLabAccount;
     }
 
