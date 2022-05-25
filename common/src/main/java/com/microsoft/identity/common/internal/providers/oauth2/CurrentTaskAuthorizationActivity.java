@@ -115,13 +115,6 @@ public class CurrentTaskAuthorizationActivity extends DualScreenActivity {
         }
     }
 
-    @Override
-    public void onBackPressed() {
-        if (!mFragment.onBackPressed()) {
-            super.onBackPressed();
-        }
-    }
-
     /**
      * This is invoked when an existing activity is re-used and provided with a new intent with additional information
      * NOTE: It's important that you use setIntent to update the intent associated with the activity.  Otherwise subsequent calls to
