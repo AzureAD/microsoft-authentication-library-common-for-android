@@ -76,7 +76,7 @@ stages:
     - checkout: OneAuth
       displayName: Checkout OneAuth repository
       clean: true
-    #   submodules: recursive
+      submodules: true
       persistCredentials: True
     - task: CmdLine@2
       displayName: Checkout common submodule $(commonBranch)
@@ -102,10 +102,12 @@ stages:
       displayName: Assemble OneAuth
       inputs:
         cwd: $(Agent.BuildDirectory)/s/OneAuthWrapper
+        gradleWrapperFile: $(Agent.BuildDIrectory)/s/OneAuthWrapper/gradlew.bat
         tasks: clean OneAuth:assembleLocal
     - task: Gradle@2
       displayName: Run OneAuth Unit tests
       inputs:
         cwd: $(Agent.BuildDirectory)/s/OneAuthWrapper
+        gradleWrapperFile: $(Agent.BuildDIrectory)/s/OneAuthWrapper/gradlew.bat
         tasks: OneAuth:testLocalDebugUnitTest -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}}
     
