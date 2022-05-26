@@ -17,7 +17,7 @@ resources:
   - repository: OneAuth
     type: git
     name: OneAuth/OneAuth-Experiments
-    ref: master
+    ref: oneauthwrapper
     endpoint: OneAuthServiceConnection
   
 
@@ -76,7 +76,7 @@ stages:
     - checkout: OneAuth
       displayName: Checkout OneAuth repository
       clean: true
-    #   submodules: recursive
+      submodules: recursive
       persistCredentials: True
     - task: CmdLine@2
       displayName: Checkout common submodule $(commonBranch)
