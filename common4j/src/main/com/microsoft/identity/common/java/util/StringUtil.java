@@ -343,7 +343,7 @@ public class StringUtil {
     }
 
     public static String decodeUrlSafeString(@NonNull final String stringToDecode) {
-        return new String(Base64.decode(toByteArray(stringToDecode), Base64.NO_WRAP | Base64.NO_PADDING | Base64.URL_SAFE));
+        return new String(Base64.decode(toByteArray(stringToDecode), Base64.NO_WRAP | Base64.NO_PADDING | Base64.URL_SAFE), ENCODING_UTF8);
     }
 
     /**
