@@ -233,7 +233,7 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
      * @return a string representing a Base64 encoded state parameter.
      */
     public String getEncodedState() {
-        return StringUtil.encodeUrlSafeString(mState);
+        return mState == null ? null : StringUtil.encodeUrlSafeString(mState);
     }
 
     //CHECKSTYLE:OFF
@@ -256,10 +256,13 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
     public URI getAuthorizationRequestAsHttpRequest() throws ClientException {
         try {
             final CommonURIBuilder builder = new CommonURIBuilder(getAuthorizationEndpoint());
-            builder.setParameter("state", getEncodedState()); // pass the URL safe state to the URL builder.
-
             builder.addParametersIfAbsent(ObjectMapper.serializeObjectHashMap(this));
             builder.addParametersIfAbsent(mExtraQueryParams);
+
+            if (!StringUtil.isNullOrEmpty(mState)) {
+                builder.setParameter("state", getEncodedState()); // pass the URL safe state to the URL builder.
+            }
+
             return builder.build();
         } catch (final URISyntaxException e) {
             throw new ClientException(ClientException.MALFORMED_URL, e.getMessage(), e);

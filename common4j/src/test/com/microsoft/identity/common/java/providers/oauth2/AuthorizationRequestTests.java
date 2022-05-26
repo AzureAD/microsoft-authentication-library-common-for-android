@@ -86,11 +86,12 @@ public class AuthorizationRequestTests {
                         "?response_type=" + MOCK_RESPONSE_TYPE +
                         "&client_id=" + MOCK_CLIENT_ID +
                         "&redirect_uri=" + MOCK_REDIRECT_URI +
-                        "&state=" + MOCK_STATE_ENCODED +
                         "&scope=" + MOCK_SCOPE_ENCODED +
                         "&claims=" + MOCK_CLAIMS_ENCODED +
                         "&" + MOCK_QUERY_1 + "=" + MOCK_VALUE_1 +
-                        "&" + MOCK_QUERY_2 + "=" + MOCK_VALUE_2,
+                        "&" + MOCK_QUERY_2 + "=" + MOCK_VALUE_2 +
+                        "&state=" + MOCK_STATE_ENCODED
+                ,
                 request.getAuthorizationRequestAsHttpRequest().toString());
 
         Assert.assertEquals(2, request.getRequestHeaders().size());
