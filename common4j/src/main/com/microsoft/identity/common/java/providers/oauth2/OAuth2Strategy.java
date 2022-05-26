@@ -322,7 +322,7 @@ public abstract class OAuth2Strategy
             // Create response and result objects
             // "code" can be left null since it's DCF
             final MicrosoftStsAuthorizationResponse authorizationResponse =
-                    new MicrosoftStsAuthorizationResponse(null, authorizationRequest.getState(), parsedResponseBody);
+                    new MicrosoftStsAuthorizationResponse(null, authorizationRequest.getEncodedState(), parsedResponseBody);
 
             // MicrosoftSTAuthorizationResultFactory not used since no Intent is being created
             final AuthorizationResult authorizationResult = new MicrosoftStsAuthorizationResult(AuthorizationStatus.SUCCESS, authorizationResponse);

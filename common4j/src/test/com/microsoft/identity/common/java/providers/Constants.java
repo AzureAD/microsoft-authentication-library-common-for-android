@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.java.providers;
 
 import com.microsoft.identity.common.java.providers.oauth2.PkceChallenge;
+import com.microsoft.identity.common.java.util.StringUtil;
 
 import java.util.AbstractMap;
 import java.util.ArrayList;
@@ -38,6 +39,7 @@ public class Constants {
     public static final String MOCK_RESPONSE_TYPE = "MOCK_RESPONSE_TYPE";
     public static final String MOCK_REDIRECT_URI = "MOCK_REDIRECT_URI";
     public static final String MOCK_STATE = "MOCK_STATE";
+    public static final String MOCK_STATE_ENCODED = "TU9DS19TVEFURQ";
     public static final String MOCK_SCOPE = "MOCK_SCOPE MOCK_SCOPE2";
     public static final String MOCK_SCOPE_ENCODED = "MOCK_SCOPE+MOCK_SCOPE2";
     public static final String MOCK_QUERY_1 = "MOCK_QUERY_1";
@@ -55,7 +57,7 @@ public class Constants {
         put(MOCK_HEADER_2, MOCK_VALUE_2);
     }};
     public static final String MOCK_AUTH_CODE = "some_authorization_code";
-    public static final String MOCK_AUTH_CODE_AND_STATE = "code=" + MOCK_AUTH_CODE + "&state=" + MOCK_STATE;
+    public static final String MOCK_AUTH_CODE_AND_STATE = "code=" + MOCK_AUTH_CODE + "&state=" + MOCK_STATE_ENCODED;
     public static final String MOCK_ERROR_CODE = "mock_error_code";
     public static final String MOCK_ERROR_MESSAGE = "mock_error_msg";
     public static final String MOCK_ERROR_DESCRIPTION = "access_denied_error_description";

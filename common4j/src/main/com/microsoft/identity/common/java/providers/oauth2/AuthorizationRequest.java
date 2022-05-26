@@ -24,14 +24,19 @@ package com.microsoft.identity.common.java.providers.oauth2;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+import com.microsoft.identity.common.java.AuthenticationConstants;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.util.CommonURIBuilder;
 import com.microsoft.identity.common.java.util.ObjectMapper;
+import com.microsoft.identity.common.java.util.StringUtil;
 
 import java.io.Serializable;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -48,6 +53,9 @@ import lombok.experimental.Accessors;
 @Getter
 @Accessors(prefix = "m")
 public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> implements Serializable {
+
+    private static final String TAG = AuthorizationRequest.class.getSimpleName();
+
     /**
      * Serial version id.
      */
@@ -219,6 +227,15 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
         public abstract AuthorizationRequest build();
     }
 
+    /**
+     * Base64 encode the state parameter to make it URL safe.
+     *
+     * @return a string representing a Base64 encoded state parameter.
+     */
+    public String getEncodedState() {
+        return StringUtil.encodeUrlSafeString(mState);
+    }
+
     //CHECKSTYLE:OFF
     @Override
     public String toString() {
@@ -239,6 +256,8 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
     public URI getAuthorizationRequestAsHttpRequest() throws ClientException {
         try {
             final CommonURIBuilder builder = new CommonURIBuilder(getAuthorizationEndpoint());
+            builder.setParameter("state", getEncodedState()); // pass the URL safe state to the URL builder.
+
             builder.addParametersIfAbsent(ObjectMapper.serializeObjectHashMap(this));
             builder.addParametersIfAbsent(mExtraQueryParams);
             return builder.build();

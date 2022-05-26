@@ -85,7 +85,7 @@ public abstract class AuthorizationResultFactory
                             MicrosoftAuthorizationErrorResponse.AUTHORIZATION_FAILED,
                             MicrosoftAuthorizationErrorResponse.AUTHORIZATION_SERVER_INVALID_RESPONSE);
                 }
-                return parseRedirectUriAndCreateAuthorizationResult(url, request.getState());
+                return parseRedirectUriAndCreateAuthorizationResult(url, request.getEncodedState());
 
             case NON_OAUTH_ERROR:
                 // This is purely client side error, possible return could be chrome_not_installed or the request intent is

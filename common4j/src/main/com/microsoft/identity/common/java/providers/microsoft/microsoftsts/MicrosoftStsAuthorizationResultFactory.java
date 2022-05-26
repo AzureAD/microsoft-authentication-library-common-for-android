@@ -34,7 +34,6 @@ import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.util.UrlUtil;
 
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.Map;
 
 import static com.microsoft.identity.common.java.AuthenticationConstants.OAuth2.CODE;
