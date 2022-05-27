@@ -24,14 +24,19 @@ package com.microsoft.identity.common.java.providers.oauth2;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+import com.microsoft.identity.common.java.AuthenticationConstants;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.util.CommonURIBuilder;
 import com.microsoft.identity.common.java.util.ObjectMapper;
+import com.microsoft.identity.common.java.util.StringUtil;
 
 import java.io.Serializable;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -48,6 +53,9 @@ import lombok.experimental.Accessors;
 @Getter
 @Accessors(prefix = "m")
 public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> implements Serializable {
+
+    private static final String TAG = AuthorizationRequest.class.getSimpleName();
+
     /**
      * Serial version id.
      */
@@ -85,6 +93,8 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
      * typically used for preventing cross-site request forgery attacks. The value can also
      * encode information about the user's state in the app before the authentication request
      * occurred, such as the page or view they were on.
+     * <p>
+     * Note that the value stored here will be Base64 encoded
      */
     @Expose()
     @SerializedName("state")
@@ -127,7 +137,7 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
         mResponseType = builder.mResponseType;
         mClientId = builder.mClientId;
         mRedirectUri = builder.mRedirectUri;
-        mState = builder.mState;
+        mState = builder.mState == null ? null : StringUtil.encodeUrlSafeString(builder.mState);
         mScope = builder.mScope;
 
         // Suppressing unchecked warning of casting List to List<Pair<String,String>>. This warning is raised as the generic type was not provided during constructing builder object.

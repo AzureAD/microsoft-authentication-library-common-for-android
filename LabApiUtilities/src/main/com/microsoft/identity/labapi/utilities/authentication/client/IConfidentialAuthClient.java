@@ -20,8 +20,10 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.labapi.utilities.authentication;
+package com.microsoft.identity.labapi.utilities.authentication.client;
 
+import com.microsoft.identity.labapi.utilities.authentication.IAuthenticationResult;
+import com.microsoft.identity.labapi.utilities.authentication.ITokenParameters;
 import com.microsoft.identity.labapi.utilities.authentication.common.CertificateCredential;
 import com.microsoft.identity.labapi.utilities.authentication.common.ClientAssertion;
 

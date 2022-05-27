@@ -20,26 +20,20 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.labapi.utilities.constants;
+package com.microsoft.identity.labapi.utilities.authentication;
 
-public enum AzureEnvironment {
-    AZURE_B2C_CLOUD(LabConstants.AzureEnvironment.AZURE_B2C_CLOUD),
-    AZURE_CHINA_CLOUD(LabConstants.AzureEnvironment.AZURE_CHINA_CLOUD),
-    AZURE_CLOUD(LabConstants.AzureEnvironment.AZURE_CLOUD),
-    AZURE_GERMANY_CLOUD(LabConstants.AzureEnvironment.AZURE_GERMANY_CLOUD),
-    AZURE_GERMANY_CLOUD_MIGRATED(LabConstants.AzureEnvironment.AZURE_GERMANY_CLOUD_MIGRATED),
-    AZURE_PPE(LabConstants.AzureEnvironment.AZURE_PPE),
-    AZURE_US_GOVERNMENT(LabConstants.AzureEnvironment.AZURE_US_GOVERNMENT),
-    AZURE_US_GOVERNMENT_MIGRATED(LabConstants.AzureEnvironment.AZURE_US_GOVERNMENT_MIGRATED);
+import com.microsoft.identity.labapi.utilities.exception.LabApiException;
 
-    final String value;
+/**
+ * An interface describing a refresh token accessor i.e. anyone that has the ability to return a
+ * valid (unexpired) refresh token.
+ */
+public interface IRefreshTokenSupplier {
 
-    AzureEnvironment(final String value) {
-        this.value = value;
-    }
-
-    @Override
-    public String toString() {
-        return value;
-    }
+    /**
+     * Obtain a valid refresh token.
+     *
+     * @return a String representing a refresh token
+     */
+    String getRefreshToken() throws LabApiException;
 }

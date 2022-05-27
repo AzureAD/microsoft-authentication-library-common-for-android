@@ -28,6 +28,7 @@ import com.microsoft.identity.common.java.crypto.IKeyAccessor;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.providers.oauth2.IStateGenerator;
+import com.microsoft.identity.common.java.util.IBroadcaster;
 import com.microsoft.identity.common.java.util.IClockSkewManager;
 import com.microsoft.identity.common.java.util.IPlatformUtil;
 import com.microsoft.identity.common.java.strategies.IAuthorizationStrategyFactory;
@@ -63,10 +64,18 @@ public interface IPlatformComponents {
     /**
      * Gets a {@link IDevicePopManager} associated to the alias.
      *
-     * @throws ClientException if it fails to initalize, or if the operation is not supported by the platform.
+     * @throws ClientException if it fails to initialize, or if the operation is not supported by the platform.
      */
     @NonNull
     IDevicePopManager getDevicePopManager(@Nullable final String alias) throws ClientException;
+
+    /**
+     * Gets a {@link com.microsoft.identity.common.java.util.IBroadcaster} associated to the alias.
+     *
+     * @throws ClientException if it fails to initialize, or if the operation is not supported by the platform.
+     */
+    @NonNull
+    IBroadcaster getBroadcaster() throws ClientException;
 
     /**
      * Retrieve a name-value store with a given identifier.

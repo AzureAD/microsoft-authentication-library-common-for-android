@@ -26,16 +26,17 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.microsoft.identity.client.ui.automation.logging.Logger;
-import com.microsoft.identity.internal.testutils.labutils.LabConstants;
+import com.microsoft.identity.labapi.utilities.constants.B2CProvider;
 
-public enum B2CProvider {
 
-    Google(LabConstants.B2CProvider.GOOGLE, "GoogleExchange", "google.com"),
-    Facebook(LabConstants.B2CProvider.FACEBOOK, "FacebookExchange", "facebook.com"),
-    MSA(LabConstants.B2CProvider.MICROSOFT, "MicrosoftAccountExchange", "live.com"),
-    Local(LabConstants.B2CProvider.LOCAL, null, null);
+public enum B2CProviderWrapper {
 
-    private final static String TAG = "B2CProvider";
+    Google(B2CProvider.GOOGLE.toString(), "GoogleExchange", "google.com"),
+    Facebook(B2CProvider.FACEBOOK.toString(), "FacebookExchange", "facebook.com"),
+    MSA(B2CProvider.MICROSOFT.toString(), "MicrosoftAccountExchange", "live.com"),
+    Local(B2CProvider.LOCAL.toString(), null, null);
+
+    private final static String TAG = "B2CProviderWrapper";
     private final String providerName;
 
     @Nullable // should be null for LOCAL B2C provider
@@ -44,10 +45,10 @@ public enum B2CProvider {
     @Nullable // should be null for LOCAL B2C provider
     private final String domainHint; // this can be used as query param to /authorize endpoint
 
-    B2CProvider(@NonNull final String providerName,
-                @Nullable final String idpSelectionBtnResourceId,
-                @Nullable final String domainHint) {
-        Logger.i(TAG, "Initializing B2CProvider for " + idpSelectionBtnResourceId + " ..");
+    B2CProviderWrapper(@NonNull final String providerName,
+                       @Nullable final String idpSelectionBtnResourceId,
+                       @Nullable final String domainHint) {
+        Logger.i(TAG, "Initializing B2CProviderWrapper for " + idpSelectionBtnResourceId + " ..");
         this.providerName = providerName;
         this.idpSelectionBtnResourceId = idpSelectionBtnResourceId;
         this.domainHint = domainHint;

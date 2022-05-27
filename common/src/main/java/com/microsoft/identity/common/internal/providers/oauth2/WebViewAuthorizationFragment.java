@@ -74,6 +74,8 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
 
     private WebView mWebView;
 
+    private AzureActiveDirectoryWebViewClient mAADWebViewClient;
+
     private ProgressBar mProgressBar;
 
     private Intent mAuthIntent;
@@ -148,7 +150,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         if (activity == null) {
             return null;
         }
-        final AzureActiveDirectoryWebViewClient webViewClient = new AzureActiveDirectoryWebViewClient(
+        mAADWebViewClient = new AzureActiveDirectoryWebViewClient(
                 activity,
                 new AuthorizationCompletionCallback(),
                 new OnPageLoadedCallback() {
@@ -179,7 +181,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                     }
                 },
                 mRedirectUri);
-        setUpWebView(view, webViewClient);
+        setUpWebView(view, mAADWebViewClient);
 
         mWebView.post(new Runnable() {
             @Override
@@ -198,13 +200,9 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         return view;
     }
 
-    /**
-     * NOTE: Fragment-only mode will not support this, as we don't own the activity.
-     * This must be invoked by AuthorizationActivity.onBackPressed().
-     */
     @Override
-    public boolean onBackPressed() {
-        final String methodTag = TAG + ":onBackPressed";
+    public void handleBackButtonPressed() {
+        final String methodTag = TAG + ":handleBackButtonPressed";
         Logger.info(methodTag, "Back button is pressed");
 
         if (mWebView.canGoBack()) {
@@ -221,8 +219,6 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         } else {
             cancelAuthorization(true);
         }
-
-        return true;
     }
 
     /**
@@ -262,6 +258,19 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         mWebView.getSettings().setSupportZoom(webViewZoomEnabled);
         mWebView.setVisibility(View.INVISIBLE);
         mWebView.setWebViewClient(webViewClient);
+    }
+
+    // For ClientCertAuthChallengeHandler within AADWebViewClient,
+    // the YubiKitManager needs to stop discovering Usb devices upon fragment destroy.
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        final String methodTag = TAG + ":onDestroy";
+        if (mAADWebViewClient != null) {
+            mAADWebViewClient.stopYubiKitManagerUsbDiscovery();
+        } else {
+            Logger.error(methodTag, "YubiKitManager usb discovery not stopped due to mAADWebViewClient being null", null);
+        }
     }
 
     /**

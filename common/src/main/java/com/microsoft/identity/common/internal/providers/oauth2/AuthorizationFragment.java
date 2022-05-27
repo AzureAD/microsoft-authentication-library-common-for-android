@@ -23,7 +23,9 @@
 package com.microsoft.identity.common.internal.providers.oauth2;
 
 import android.os.Bundle;
+import android.view.View;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -103,9 +105,21 @@ public abstract class AuthorizationFragment extends Fragment {
         }
     }
 
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        requireActivity().getOnBackPressedDispatcher().addCallback(getViewLifecycleOwner(), new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                handleBackButtonPressed();
+            }
+        });
+    }
+
     void finish() {
         final String methodName = "#finish";
         LocalBroadcaster.INSTANCE.unregisterCallback(CANCEL_AUTHORIZATION_REQUEST);
+
         final FragmentActivity activity = getActivity();
         if (activity instanceof AuthorizationActivity) {
             activity.finish();
@@ -189,12 +203,8 @@ public abstract class AuthorizationFragment extends Fragment {
         super.onDestroy();
     }
 
-    /**
-     * NOTE: Fragment-only mode will not support this, as we don't own the activity.
-     * This must be invoked by AuthorizationActivity.onBackPressed().
-     */
-    public boolean onBackPressed() {
-        return false;
+    public void handleBackButtonPressed() {
+        cancelAuthorization(true);
     }
 
     void sendResult(final RawAuthorizationResult.ResultCode resultCode) {
