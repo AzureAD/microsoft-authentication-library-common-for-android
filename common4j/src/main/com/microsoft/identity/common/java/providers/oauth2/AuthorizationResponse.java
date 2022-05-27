@@ -82,7 +82,7 @@ public class AuthorizationResponse implements ISuccessResponse {
      */
     public AuthorizationResponse(final String code, final String state) {
         mCode = code;
-        mState = StringUtil.isNullOrEmpty(state) ? state : StringUtil.decodeUrlSafeString(state);
+        mState = state;
     }
 
     /**
@@ -104,7 +104,7 @@ public class AuthorizationResponse implements ISuccessResponse {
     }
 
     /**
-     * Gets the response state.
+     * Gets the response Base64 encoded state.
      *
      * @return The state to get.
      */

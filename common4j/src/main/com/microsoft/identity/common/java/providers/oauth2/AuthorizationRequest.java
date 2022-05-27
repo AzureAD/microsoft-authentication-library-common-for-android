@@ -93,6 +93,8 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
      * typically used for preventing cross-site request forgery attacks. The value can also
      * encode information about the user's state in the app before the authentication request
      * occurred, such as the page or view they were on.
+     * <p>
+     * Note that the value stored here will be Base64 encoded
      */
     @Expose()
     @SerializedName("state")
@@ -135,7 +137,7 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
         mResponseType = builder.mResponseType;
         mClientId = builder.mClientId;
         mRedirectUri = builder.mRedirectUri;
-        mState = builder.mState;
+        mState = StringUtil.encodeUrlSafeString(builder.mState);
         mScope = builder.mScope;
 
         // Suppressing unchecked warning of casting List to List<Pair<String,String>>. This warning is raised as the generic type was not provided during constructing builder object.
@@ -227,15 +229,6 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
         public abstract AuthorizationRequest build();
     }
 
-    /**
-     * Base64 encode the state parameter to make it URL safe.
-     *
-     * @return a string representing a Base64 encoded state parameter.
-     */
-    public String getEncodedState() {
-        return mState == null ? null : StringUtil.encodeUrlSafeString(mState);
-    }
-
     //CHECKSTYLE:OFF
     @Override
     public String toString() {
@@ -258,11 +251,6 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
             final CommonURIBuilder builder = new CommonURIBuilder(getAuthorizationEndpoint());
             builder.addParametersIfAbsent(ObjectMapper.serializeObjectHashMap(this));
             builder.addParametersIfAbsent(mExtraQueryParams);
-
-            if (!StringUtil.isNullOrEmpty(mState)) {
-                builder.setParameter("state", getEncodedState()); // pass the URL safe state to the URL builder.
-            }
-
             return builder.build();
         } catch (final URISyntaxException e) {
             throw new ClientException(ClientException.MALFORMED_URL, e.getMessage(), e);

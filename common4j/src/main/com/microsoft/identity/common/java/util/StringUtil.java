@@ -342,10 +342,6 @@ public class StringUtil {
         return Base64.encodeToString(toByteArray(stringToEncode), Base64.NO_WRAP | Base64.NO_PADDING | Base64.URL_SAFE);
     }
 
-    public static String decodeUrlSafeString(@NonNull final String stringToDecode) {
-        return new String(Base64.decode(toByteArray(stringToDecode), Base64.NO_WRAP | Base64.NO_PADDING | Base64.URL_SAFE), ENCODING_UTF8);
-    }
-
     /**
      * Create the Hash string of the message.
      *
