@@ -20,44 +20,39 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.client.ui.automation.interaction.b2c;
+package com.microsoft.identity.labapi.utilities.client;
 
-import androidx.annotation.NonNull;
-
-import com.microsoft.identity.client.ui.automation.logging.Logger;
-import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
+import java.util.List;
 
 /**
- * A login component handler for B2C Local IdP.
+ * A Class to facilitate writing tests for Guest Accounts.
  */
-public class B2CIdLabLocalLoginComponentHandler extends AbstractB2CLoginComponentHandler {
+public class LabGuestAccount {
+    private final String homeUpn;
+    private final String homeTenantId;
+    private final String homeDomain;
+    private final List<String> guestLabTenants;
 
-    private final static String TAG = B2CIdLabLocalLoginComponentHandler.class.getSimpleName();
-
-    @Override
-    protected String getHandlerName() {
-        return B2CProviderWrapper.Local.getProviderName();
+    public LabGuestAccount(String homeUpn, String homeDomain, String homeTenantId, List<String> guestLabTenants) {
+        this.homeUpn = homeUpn;
+        this.homeDomain = homeDomain;
+        this.homeTenantId = homeTenantId;
+        this.guestLabTenants = guestLabTenants;
     }
 
-    @Override
-    public void handleEmailField(@NonNull final String username) {
-        UiAutomatorUtils.handleInput("logonIdentifier", username);
+    public String getHomeUpn() {
+        return homeUpn;
     }
 
-    @Override
-    public void handlePasswordField(@NonNull final String password) {
-        Logger.i(TAG, "Handle B2C IdLab Local Login Password UI..");
-        UiAutomatorUtils.handleInput("password", password);
-        handleNextButton();
+    public String getHomeDomain() {
+        return homeDomain;
     }
 
-    @Override
-    public void handleBackButton() {
-        UiAutomatorUtils.pressBack();
+    public String getHomeTenantId() {
+        return homeTenantId;
     }
 
-    @Override
-    public void handleNextButton() {
-        UiAutomatorUtils.handleButtonClick("next");
+    public List<String> getGuestLabTenants() {
+        return guestLabTenants;
     }
 }

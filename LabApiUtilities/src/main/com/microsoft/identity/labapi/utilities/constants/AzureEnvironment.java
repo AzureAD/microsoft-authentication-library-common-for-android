@@ -27,8 +27,10 @@ public enum AzureEnvironment {
     AZURE_CHINA_CLOUD(LabConstants.AzureEnvironment.AZURE_CHINA_CLOUD),
     AZURE_CLOUD(LabConstants.AzureEnvironment.AZURE_CLOUD),
     AZURE_GERMANY_CLOUD(LabConstants.AzureEnvironment.AZURE_GERMANY_CLOUD),
+    AZURE_GERMANY_CLOUD_MIGRATED(LabConstants.AzureEnvironment.AZURE_GERMANY_CLOUD_MIGRATED),
     AZURE_PPE(LabConstants.AzureEnvironment.AZURE_PPE),
-    AZURE_US_GOVERNMENT(LabConstants.AzureEnvironment.AZURE_US_GOVERNMENT);
+    AZURE_US_GOVERNMENT(LabConstants.AzureEnvironment.AZURE_US_GOVERNMENT),
+    AZURE_US_GOVERNMENT_MIGRATED(LabConstants.AzureEnvironment.AZURE_US_GOVERNMENT_MIGRATED);
 
     final String value;
 

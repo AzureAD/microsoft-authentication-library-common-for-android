@@ -28,12 +28,16 @@ import com.microsoft.identity.internal.test.labapi.api.ConfigApi;
 import com.microsoft.identity.internal.test.labapi.api.CreateTempUserApi;
 import com.microsoft.identity.internal.test.labapi.api.DeleteDeviceApi;
 import com.microsoft.identity.internal.test.labapi.api.LabSecretApi;
+import com.microsoft.identity.internal.test.labapi.api.ResetApi;
 import com.microsoft.identity.internal.test.labapi.model.ConfigInfo;
 import com.microsoft.identity.internal.test.labapi.model.CustomSuccessResponse;
 import com.microsoft.identity.internal.test.labapi.model.SecretResponse;
 import com.microsoft.identity.internal.test.labapi.model.TempUser;
+import com.microsoft.identity.internal.test.labapi.model.UserInfo;
+import com.microsoft.identity.labapi.utilities.BuildConfig;
 import com.microsoft.identity.labapi.utilities.authentication.LabApiAuthenticationClient;
 import com.microsoft.identity.labapi.utilities.constants.TempUserType;
+import com.microsoft.identity.labapi.utilities.constants.ResetOperation;
 import com.microsoft.identity.labapi.utilities.constants.UserType;
 import com.microsoft.identity.labapi.utilities.exception.LabApiException;
 import com.microsoft.identity.labapi.utilities.exception.LabError;
@@ -51,6 +55,7 @@ import lombok.NonNull;
 public class LabClient implements ILabClient {
 
     private final LabApiAuthenticationClient mLabApiAuthenticationClient;
+    private final long PASSWORD_RESET_WAIT_DURATION = TimeUnit.MINUTES.toMillis(1);
 
     /**
      * Temp users API provided by Lab team can often take more than 10 seconds to return...hence, we
@@ -166,6 +171,34 @@ public class LabClient implements ILabClient {
     }
 
     @Override
+    public LabGuestAccount loadGuestAccountFromLab(LabQuery labQuery) throws LabApiException {
+        final List<ConfigInfo> configInfoList = fetchConfigsFromLab(labQuery);
+
+        List<String> guestLabTenants = new ArrayList<>();
+        for (ConfigInfo configInfo : configInfoList) {
+            guestLabTenants.add(configInfo.getUserInfo().getTenantID());
+        }
+
+        // pick one config info object to obtain home tenant information
+        // doesn't matter which one as all have the same home tenant
+        final ConfigInfo configInfo = configInfoList.get(0);
+        final UserInfo userInfo = configInfo.getUserInfo();
+
+        return new LabGuestAccount(
+                userInfo.getHomeUPN(),
+                userInfo.getHomeDomain(),
+                userInfo.getHomeTenantID(),
+                guestLabTenants
+        );
+    }
+
+    @Override
+    public String getPasswordForGuestUser(LabGuestAccount guestUser) throws LabApiException {
+        final String labName = guestUser.getHomeDomain().split("\\.")[0];
+        return getSecret(labName);
+    }
+
+    @Override
     public String getSecret(@NonNull final String secretName) throws LabApiException {
         Configuration.getDefaultApiClient().setAccessToken(
                 mLabApiAuthenticationClient.getAccessToken()
@@ -259,6 +292,22 @@ public class LabClient implements ILabClient {
     private String getPassword(final String credentialVaultKeyName) throws LabApiException {
         final String secretName = getLabSecretName(credentialVaultKeyName);
         return getSecret(secretName);
+    }
+
+    public boolean resetPassword(@NonNull final String upn) throws LabApiException {
+        final ResetApi resetApi = new ResetApi();
+        try {
+            final CustomSuccessResponse resetResponse = resetApi.apiResetPut(upn, ResetOperation.PASSWORD.toString());
+            final String expectedResult = ("Password reset successful for user : " + upn)
+                    .toLowerCase();
+            final boolean result = resetResponse.getResult().toLowerCase().contains(expectedResult);
+            if (result) {
+                Thread.sleep(PASSWORD_RESET_WAIT_DURATION);
+            }
+            return result;
+        } catch (ApiException | InterruptedException e) {
+            throw new LabApiException(LabError.FAILED_TO_RESET_PASSWORD, e);
+        }
     }
 
     private String getLabSecretName(final String credentialVaultKeyName) {

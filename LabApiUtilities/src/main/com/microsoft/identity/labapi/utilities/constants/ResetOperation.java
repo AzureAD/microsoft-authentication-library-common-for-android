@@ -20,44 +20,20 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.client.ui.automation.interaction.b2c;
+package com.microsoft.identity.labapi.utilities.constants;
 
-import androidx.annotation.NonNull;
+public enum ResetOperation {
+    MFA(LabConstants.ResetOperation.MFA),
+    PASSWORD(LabConstants.ResetOperation.PASSWORD);
 
-import com.microsoft.identity.client.ui.automation.logging.Logger;
-import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
+    final String value;
 
-/**
- * A login component handler for B2C Local IdP.
- */
-public class B2CIdLabLocalLoginComponentHandler extends AbstractB2CLoginComponentHandler {
-
-    private final static String TAG = B2CIdLabLocalLoginComponentHandler.class.getSimpleName();
-
-    @Override
-    protected String getHandlerName() {
-        return B2CProviderWrapper.Local.getProviderName();
+    ResetOperation(final String value) {
+        this.value = value;
     }
 
     @Override
-    public void handleEmailField(@NonNull final String username) {
-        UiAutomatorUtils.handleInput("logonIdentifier", username);
-    }
-
-    @Override
-    public void handlePasswordField(@NonNull final String password) {
-        Logger.i(TAG, "Handle B2C IdLab Local Login Password UI..");
-        UiAutomatorUtils.handleInput("password", password);
-        handleNextButton();
-    }
-
-    @Override
-    public void handleBackButton() {
-        UiAutomatorUtils.pressBack();
-    }
-
-    @Override
-    public void handleNextButton() {
-        UiAutomatorUtils.handleButtonClick("next");
+    public String toString() {
+        return value;
     }
 }
