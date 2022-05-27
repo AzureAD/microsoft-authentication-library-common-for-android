@@ -8,6 +8,7 @@ V.Next
 - [PATCH] Fix SDK Cancel when using authorization in current task (#1743)
 - [MINOR] Added support for broadcasting to applications installed on the device. (#1744)
 - [PATCH] Fix APPLICATION_CANCELLED by handling back button press (#1725)
+- [PATCH] Added Base64 encode for the AuthorizationRequest state parameter (#1750)
 
 Version 4.1.0
 ----------
