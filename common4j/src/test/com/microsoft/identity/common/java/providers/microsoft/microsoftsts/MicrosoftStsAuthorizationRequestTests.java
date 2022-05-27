@@ -142,8 +142,8 @@ public class MicrosoftStsAuthorizationRequestTests {
                         "&response_type=code" +
                         "&client_id=" + DEFAULT_TEST_CLIENT_ID +
                         "&redirect_uri=" + DEFAULT_TEST_REDIRECT_URI_ENCODED +
-                        "&scope=" + DEFAULT_TEST_SCOPE_ENCODED +
                         "&state=" + MOCK_STATE_ENCODED +
+                        "&scope=" + DEFAULT_TEST_SCOPE_ENCODED +
                         "&" + MOCK_FLIGHT_QUERY_1 + "=" + MOCK_FLIGHT_VALUE_1 +
                         "&" + MOCK_FLIGHT_QUERY_2 + "=" + MOCK_FLIGHT_VALUE_2 +
                         "&slice=" + DEFAULT_TEST_SLICE_PARAMETER +

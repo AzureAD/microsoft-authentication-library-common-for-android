@@ -137,7 +137,7 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
         mResponseType = builder.mResponseType;
         mClientId = builder.mClientId;
         mRedirectUri = builder.mRedirectUri;
-        mState = StringUtil.encodeUrlSafeString(builder.mState);
+        mState = builder.mState == null ? null : StringUtil.encodeUrlSafeString(builder.mState);
         mScope = builder.mScope;
 
         // Suppressing unchecked warning of casting List to List<Pair<String,String>>. This warning is raised as the generic type was not provided during constructing builder object.
