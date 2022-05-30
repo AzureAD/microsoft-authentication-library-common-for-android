@@ -42,6 +42,8 @@ import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 import org.junit.Assert;
 
 import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT;
+import java.util.ArrayList;
+import java.util.List;
 
 public class BrokerHost extends AbstractTestBroker {
 
@@ -51,7 +53,7 @@ public class BrokerHost extends AbstractTestBroker {
     public final static String BROKER_HOST_APK = "BrokerHost.apk";
     public final static String BROKER_HOST_APK_PROD = "BrokerHostProd.apk";
     public final static String BROKER_HOST_APK_RC = "BrokerHostRC.apk";
-    
+
     public BrokerHost() {
         super(BROKER_HOST_APP_PACKAGE_NAME, BROKER_HOST_APP_NAME, new LocalApkInstaller());
         localApkFileName = BROKER_HOST_APK;
@@ -185,7 +187,7 @@ public class BrokerHost extends AbstractTestBroker {
         Logger.i(TAG, "Obtain Device Id..");
         final String resourceButtonId = "com.microsoft.identity.testuserapp:id/buttonDeviceId";
         final String textId = "DeviceId";
-        return basicButtonHandler(resourceButtonId,textId);
+        return basicButtonHandler(resourceButtonId, textId);
     }
 
     @Override
@@ -232,7 +234,7 @@ public class BrokerHost extends AbstractTestBroker {
         Logger.i(TAG, "Get Account Upn..");
         final String resourceButtonId = "com.microsoft.identity.testuserapp:id/buttonGetWpjUpn";
         final String textId = "UPN";
-        return basicButtonHandler(resourceButtonId,textId);
+        return basicButtonHandler(resourceButtonId, textId);
     }
 
     @Nullable
@@ -240,7 +242,7 @@ public class BrokerHost extends AbstractTestBroker {
         Logger.i(TAG, "Get Device State ..");
         final String resourceButtonId = "com.microsoft.identity.testuserapp:id/buttonDeviceState";
         final String textId = "DeviceState";
-        return basicButtonHandler(resourceButtonId,textId);
+        return basicButtonHandler(resourceButtonId, textId);
     }
 
     @Nullable
@@ -248,7 +250,7 @@ public class BrokerHost extends AbstractTestBroker {
         Logger.i(TAG, "Check if device is shared..");
         final String resourceButtonId = "com.microsoft.identity.testuserapp:id/buttonIsDeviceShared";
         final String textId = "DeviceShared";
-        final String isDeviceSharedText= basicButtonHandler(resourceButtonId,textId);
+        final String isDeviceSharedText = basicButtonHandler(resourceButtonId, textId);
         return "Device is shared".equalsIgnoreCase(isDeviceSharedText);
     }
 
@@ -257,11 +259,11 @@ public class BrokerHost extends AbstractTestBroker {
         Logger.i(TAG, "Wpj Leave ..");
         final String resourceButtonId = "com.microsoft.identity.testuserapp:id/buttonLeave";
         final String textId = "wpjLeave";
-        return basicButtonHandler(resourceButtonId,textId);
+        return basicButtonHandler(resourceButtonId, textId);
     }
 
     @Nullable
-    private final String basicButtonHandler(@NonNull final String resourceButtonId, @NonNull final String textId){
+    private final String basicButtonHandler(@NonNull final String resourceButtonId, @NonNull final String textId) {
         launch(); // launch Broker Host app
 
         if (shouldHandleFirstRun) {
@@ -275,7 +277,40 @@ public class BrokerHost extends AbstractTestBroker {
                 "android:id/message"
         );
         Assert.assertTrue(dialogBox.exists());
+        return getDialogBoxText(dialogBox, textId);
+    }
 
+    @Override
+    public void setFlights(@Nullable final String flightsJson) {
+        Logger.i(TAG, "Set Flights..");
+        launch();
+        // scroll to find the set flights button
+        UiAutomatorUtils.obtainChildInScrollable("Set Flights");
+        // input flights string in flights input box
+        UiAutomatorUtils.handleInput("com.microsoft.identity.testuserapp:id/editTextFlights", flightsJson);
+        // Click Set Flights button
+        UiAutomatorUtils.handleButtonClick("com.microsoft.identity.testuserapp:id/setFlightsButton");
+    }
+
+    @Override
+    public String getFlights() {
+        Logger.i(TAG, "Get Flights..");
+        final String resourceButtonId = "com.microsoft.identity.testuserapp:id/getFlightsButton";
+        final String text = "Get Flights";
+        launch();
+        // scroll to find the get flights button
+        UiAutomatorUtils.obtainChildInScrollable(text);
+        UiAutomatorUtils.handleButtonClick(resourceButtonId);
+        try {
+            final UiObject flightsObj = UiAutomatorUtils.obtainUiObjectWithResourceId("com.microsoft.identity.testuserapp:id/editTextFlights");
+            String flightsJson = flightsObj.getText();
+            return flightsJson;
+        } catch (UiObjectNotFoundException e) {
+            throw new AssertionError(e);
+        }
+    }
+
+    private String getDialogBoxText(UiObject dialogBox, String textId) {
         try {
             // get the textId if it is there, else return null (in case of error)
             final String[] dialogBoxText = dialogBox.getText().split(":");
@@ -292,16 +327,111 @@ public class BrokerHost extends AbstractTestBroker {
             UiAutomatorUtils.handleButtonClick("android:id/button1");
         }
     }
-
-    @Override
-    public void setFlights(@Nullable final String flightsJson) {
-        Logger.i(TAG, "Set Flights..");
+    /**
+     * Gets all the accounts added
+     */
+    public List<String> getAllAccounts(boolean expectingMultipleAccounts) {
         launch();
-        // Make the set flights UI visible on screen
-        UiAutomatorUtils.obtainChildInScrollable("Set Flights");
-        // input flights string in flights input box
-        UiAutomatorUtils.handleInput("com.microsoft.identity.testuserapp:id/editTextFlights", flightsJson);
-        // Click Set Flights button
-        UiAutomatorUtils.handleButtonClick("com.microsoft.identity.testuserapp:id/setFlightsButton");
+
+        final String resourceButtonId = "com.microsoft.identity.testuserapp:id/buttonGetAccounts";
+        final String textId = "AccountName";
+        if (shouldHandleFirstRun) {
+            handleFirstRun(); // handle first run experience
+        }
+        UiAutomatorUtils.handleButtonClick(resourceButtonId);
+        // Look for the dialog box
+        final UiObject dialogBox = UiAutomatorUtils.obtainUiObjectWithResourceId(
+                "android:id/message"
+        );
+        Assert.assertTrue(dialogBox.exists());
+
+        // As of now we are testing only for 2 accounts.
+        List<String> accounts = new ArrayList<>();
+        final String accountName = getDialogBoxText(dialogBox, textId);
+        if (accountName != null) {
+            accounts.add(accountName);
+        }
+        if (expectingMultipleAccounts) {
+            final String accountName2 = getDialogBoxText(dialogBox, textId);
+            if (accountName2 != null)
+                accounts.add(accountName2);
+        }
+        return accounts;
+    }
+
+    /**
+     * Removes the added account
+     */
+    public void removeAccount(String username) {
+        final UiObject removeAccount = UiAutomatorUtils.obtainUiObjectWithResourceId(
+                "com.microsoft.identity.testuserapp:id/buttonRemoveAccount"
+        );
+        UiAutomatorUtils.obtainChildInScrollable("someone@contoso.com");
+        UiAutomatorUtils.handleInput("com.microsoft.identity.testuserapp:id/editTextUsername", username);
+        try {
+            removeAccount.click();
+        } catch (UiObjectNotFoundException e) {
+            throw new AssertionError(e);
+        }
+    }
+
+    /**
+     * Decode the sso token and look for the requested nonce
+     */
+    public void confirmNoncePresent() {
+        // fill the nonce
+        UiAutomatorUtils.obtainChildInScrollable("nonce");
+        UiAutomatorUtils.handleInput("com.microsoft.identity.testuserapp:id/editTextNonce", "testNonce");
+
+        // click on sso token
+        UiAutomatorUtils.handleButtonClick("com.microsoft.identity.testuserapp:id/buttonGetSsoToken");
+        final UiObject ssoToken = UiAutomatorUtils.obtainUiObjectWithResourceId(
+                "com.microsoft.identity.testuserapp:id/sso_token"
+        );
+
+        try {
+            Assert.assertNotEquals(ssoToken.getText(), "");
+            UiAutomatorUtils.handleButtonClick("com.microsoft.identity.testuserapp:id/btnCookieDecode");
+            final UiObject decodeObj = UiAutomatorUtils.obtainUiObjectWithResourceId(
+                    "com.microsoft.identity.testuserapp:id/sso_token"
+            );
+            Assert.assertNotEquals(decodeObj.getText(), "");
+
+            final String decodedTxt = decodeObj.getText();
+            // confirm decoded string has the nonce
+            if (decodedTxt.contains("request_nonce")) {
+                final String[] str = decodedTxt.split("request_nonce => ");
+                if (str.length > 1) {
+                    Assert.assertEquals(str[1].trim(), "testNonce");
+                } else {
+                    Assert.fail("decoded token does not contain correct nonce");
+                }
+            } else {
+                Assert.fail("decoded token does not contain correct nonce");
+            }
+        } catch (UiObjectNotFoundException e) {
+            throw new AssertionError(e);
+        }
+    }
+
+    /**
+     * Confirm that the calling app is not verified
+     */
+    public void confirmCallingAppNotVerified() {
+        // Look for the dialog box
+        final UiObject dialogBox = UiAutomatorUtils.obtainUiObjectWithResourceId(
+                "android:id/message"
+        );
+        Assert.assertTrue(dialogBox.exists());
+        try {
+            if (!dialogBox.getText().contains("Calling app could not be verified")) {
+                Assert.fail("Could not find the string 'calling app could not be verified' in the msg displayed in the dialog");
+            }
+        } catch (UiObjectNotFoundException e) {
+            throw new AssertionError(e);
+        } finally {
+            // dismiss dialog
+            UiAutomatorUtils.handleButtonClick("android:id/button1");
+        }
     }
 }
