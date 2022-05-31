@@ -20,26 +20,21 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.labapi.utilities.constants;
+package com.microsoft.identity.labapi.utilities.authentication.client;
 
-public enum AzureEnvironment {
-    AZURE_B2C_CLOUD(LabConstants.AzureEnvironment.AZURE_B2C_CLOUD),
-    AZURE_CHINA_CLOUD(LabConstants.AzureEnvironment.AZURE_CHINA_CLOUD),
-    AZURE_CLOUD(LabConstants.AzureEnvironment.AZURE_CLOUD),
-    AZURE_GERMANY_CLOUD(LabConstants.AzureEnvironment.AZURE_GERMANY_CLOUD),
-    AZURE_GERMANY_CLOUD_MIGRATED(LabConstants.AzureEnvironment.AZURE_GERMANY_CLOUD_MIGRATED),
-    AZURE_PPE(LabConstants.AzureEnvironment.AZURE_PPE),
-    AZURE_US_GOVERNMENT(LabConstants.AzureEnvironment.AZURE_US_GOVERNMENT),
-    AZURE_US_GOVERNMENT_MIGRATED(LabConstants.AzureEnvironment.AZURE_US_GOVERNMENT_MIGRATED);
+import com.microsoft.identity.labapi.utilities.authentication.adal4j.Adal4jAuthClient;
 
-    final String value;
-
-    AzureEnvironment(final String value) {
-        this.value = value;
-    }
+/**
+ * An {@link IPublicAuthClientFactory} that can return an implementation of an
+ * {@link IPublicAuthClient}.
+ * <p>
+ * Currently it only returns a default implementation that is using adal4j.
+ */
+public enum PublicAuthClientFactory implements IPublicAuthClientFactory {
+    INSTANCE;
 
     @Override
-    public String toString() {
-        return value;
+    public IPublicAuthClient getPublicAuthClient() {
+        return new Adal4jAuthClient();
     }
 }

@@ -20,26 +20,39 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.labapi.utilities.constants;
+package com.microsoft.identity.common.internal.platform;
 
-public enum AzureEnvironment {
-    AZURE_B2C_CLOUD(LabConstants.AzureEnvironment.AZURE_B2C_CLOUD),
-    AZURE_CHINA_CLOUD(LabConstants.AzureEnvironment.AZURE_CHINA_CLOUD),
-    AZURE_CLOUD(LabConstants.AzureEnvironment.AZURE_CLOUD),
-    AZURE_GERMANY_CLOUD(LabConstants.AzureEnvironment.AZURE_GERMANY_CLOUD),
-    AZURE_GERMANY_CLOUD_MIGRATED(LabConstants.AzureEnvironment.AZURE_GERMANY_CLOUD_MIGRATED),
-    AZURE_PPE(LabConstants.AzureEnvironment.AZURE_PPE),
-    AZURE_US_GOVERNMENT(LabConstants.AzureEnvironment.AZURE_US_GOVERNMENT),
-    AZURE_US_GOVERNMENT_MIGRATED(LabConstants.AzureEnvironment.AZURE_US_GOVERNMENT_MIGRATED);
+import android.content.Context;
+import android.content.Intent;
+import android.os.Parcelable;
 
-    final String value;
+import androidx.annotation.Nullable;
 
-    AzureEnvironment(final String value) {
-        this.value = value;
-    }
+import com.microsoft.identity.common.java.util.IBroadcaster;
+import com.microsoft.identity.common.java.util.ported.PropertyBag;
+
+import lombok.AllArgsConstructor;
+import lombok.NonNull;
+
+/**
+ * Android implementation of IBroadcaster.
+ */
+@AllArgsConstructor
+public class AndroidBroadcaster implements IBroadcaster {
+
+    @NonNull
+    private final Context mContext;
 
     @Override
-    public String toString() {
-        return value;
+    public void sendBroadcast(@NonNull final String broadcastId, @Nullable final PropertyBag propertyBag) {
+        final Intent intent = new Intent();
+        intent.setAction(broadcastId);
+        if(propertyBag != null) {
+            for (final String key : propertyBag.keySet()) {
+                intent.putExtra(key, propertyBag.<Parcelable[]>get(key));
+            }
+        }
+        mContext.sendBroadcast(intent);
     }
+
 }

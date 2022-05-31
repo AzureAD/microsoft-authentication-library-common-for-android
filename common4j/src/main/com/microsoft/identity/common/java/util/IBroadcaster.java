@@ -20,21 +20,21 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.labapi.utilities.authentication;
+package com.microsoft.identity.common.java.util;
 
-import com.microsoft.identity.labapi.utilities.authentication.msal4j.Msal4jConfidentialAuthClient;
+import com.microsoft.identity.common.java.util.ported.PropertyBag;
 
 /**
- * An {@link IConfidentialAuthClientFactory} that can return an implementation of an
- * {@link IConfidentialAuthClient}.
- * <p>
- * Currently it only returns a default implementation that is using msal4j.
+ * An interface via which to access the ability to send device OS profile wide broadcasts.
+ * (These broadcasts are not currently restricted to a particular set of receivers.)
  */
-public enum ConfidentialAuthClientFactory implements IConfidentialAuthClientFactory {
-    INSTANCE;
+public interface IBroadcaster {
 
-    @Override
-    public IConfidentialAuthClient getConfidentialAuthClient() {
-        return new Msal4jConfidentialAuthClient();
-    }
+    /**
+     * Sends a device operating system profile wide broadcast.
+     * @param broadcastId a string identifier for the broadcast
+     * @param propertyBag optional additional information to include in the broadcast
+     */
+    void sendBroadcast(String broadcastId, PropertyBag propertyBag);
+
 }

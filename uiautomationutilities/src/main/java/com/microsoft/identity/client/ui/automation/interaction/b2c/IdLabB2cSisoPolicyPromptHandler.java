@@ -31,7 +31,6 @@ import com.microsoft.identity.client.ui.automation.interaction.IOAuth2LoginCompo
 import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.AadLoginComponentHandler;
 import com.microsoft.identity.client.ui.automation.logging.Logger;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
-import com.microsoft.identity.internal.testutils.labutils.LabConstants;
 
 /**
  * A Prompt handler for MSIDLAB B2C SISO Policy.
@@ -50,9 +49,9 @@ public class IdLabB2cSisoPolicyPromptHandler extends AbstractPromptHandler {
         final B2CPromptHandlerParameters b2CPromptHandlerParameters =
                 (B2CPromptHandlerParameters) parameters;
 
-        final B2CProvider b2CProvider = b2CPromptHandlerParameters.getB2cProvider();
+        final B2CProviderWrapper b2CProvider = b2CPromptHandlerParameters.getB2cProvider();
 
-        final boolean isExternalIdP = b2CProvider != B2CProvider.Local;
+        final boolean isExternalIdP = b2CProvider != B2CProviderWrapper.Local;
 
         if (isExternalIdP) {
             assert b2CProvider.getIdpSelectionBtnResourceId() != null;
@@ -70,7 +69,7 @@ public class IdLabB2cSisoPolicyPromptHandler extends AbstractPromptHandler {
             loginComponentHandler.handlePasswordField(password);
 
             if (loginComponentHandler instanceof GoogleLoginComponentHandler &&
-                    b2CProvider == B2CProvider.Google){
+                    b2CProvider == B2CProviderWrapper.Google){
                 ((GoogleLoginComponentHandler) loginComponentHandler).handleRecoveryEmail();
             }
         }
@@ -78,14 +77,15 @@ public class IdLabB2cSisoPolicyPromptHandler extends AbstractPromptHandler {
 
     protected static IOAuth2LoginComponentHandler getAppropriateLoginComponentHandler(@NonNull final B2CPromptHandlerParameters parameters) {
         Logger.i(TAG, "Get Appropriate Login Component Handler..");
-        switch (parameters.getB2cProvider().getProviderName()) {
-            case LabConstants.B2CProvider.LOCAL:
+
+        switch (parameters.getB2cProvider()) {
+            case Local:
                 return new B2CIdLabLocalLoginComponentHandler();
-            case LabConstants.B2CProvider.GOOGLE:
+            case Google:
                 return new GoogleLoginComponentHandler();
-            case LabConstants.B2CProvider.FACEBOOK:
+            case Facebook:
                 return new FacebookLoginComponentHandler();
-            case LabConstants.B2CProvider.MICROSOFT:
+            case MSA:
                 return new AadLoginComponentHandler();
             default:
                 throw new UnsupportedOperationException("Unsupported B2C Provider for this policy");

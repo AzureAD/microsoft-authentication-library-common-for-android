@@ -32,8 +32,6 @@ import androidx.test.uiautomator.UiSelector;
 import com.microsoft.identity.client.ui.automation.logging.Logger;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
-import org.junit.Assert;
-
 /**
  * A login component handler for Google IdP.
  */
@@ -47,7 +45,7 @@ public class GoogleLoginComponentHandler extends AbstractB2CLoginComponentHandle
 
     @Override
     protected String getHandlerName() {
-        return B2CProvider.Google.getProviderName();
+        return B2CProviderWrapper.Google.getProviderName();
     }
 
     @Override

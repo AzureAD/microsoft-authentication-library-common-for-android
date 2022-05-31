@@ -41,6 +41,7 @@ import com.microsoft.identity.common.java.providers.oauth2.IAuthorizationStrateg
 import com.microsoft.identity.common.java.providers.oauth2.IStateGenerator;
 import com.microsoft.identity.common.java.strategies.IAuthorizationStrategyFactory;
 import com.microsoft.identity.common.java.ui.BrowserDescriptor;
+import com.microsoft.identity.common.java.util.IBroadcaster;
 import com.microsoft.identity.common.java.util.IClockSkewManager;
 import com.microsoft.identity.common.java.util.IPlatformUtil;
 import com.microsoft.identity.common.java.util.TaskCompletedCallbackWithError;
@@ -291,6 +292,11 @@ public class SettablePlatformComponents implements IPlatformComponents {
     @Override
     public @NonNull IDevicePopManager getDevicePopManager(@Nullable String alias) throws ClientException {
         return mDevicePopManager;
+    }
+
+    @Override
+    public IBroadcaster getBroadcaster() throws ClientException {
+        return null;
     }
 
     private final IDevicePopManager mDefaultDevicePopManager = NONFUNCTIONAL_POP_MANAGER;
