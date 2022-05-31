@@ -1,7 +1,6 @@
 package com.microsoft.identity.common.internal.ui.webview.challengehandlers;
 
 import android.app.Activity;
-import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.view.LayoutInflater;
@@ -22,21 +21,19 @@ import com.microsoft.identity.common.R;
 import java.util.List;
 
 //Builds and shows a dialog that allows the user to select a certificate they would like to use to authenticate.
-public class SmartcardCertPickerDialog {
+public class SmartcardCertPickerDialog extends SmartcardDialog {
 
     private List<ClientCertAuthChallengeHandler.YubiKitCertDetails> mCertList;
-    private Activity mActivity;
-    private Dialog mDialog;
     private PositiveButtonListener mPositiveButtonListener;
     private NegativeButtonListener mNegativeButtonListener;
 
     public SmartcardCertPickerDialog(List<ClientCertAuthChallengeHandler.YubiKitCertDetails> certList, Activity activity) {
+        super(activity);
         mCertList = certList;
-        mActivity = activity;
         createDialog();
     }
 
-    private void createDialog() {
+    protected void createDialog() {
         //Create CertDetailsAdapter
         final CertDetailsAdapter certAdapter = new CertDetailsAdapter(mActivity, mCertList);
         //Must build dialog on UI thread
@@ -94,16 +91,6 @@ public class SmartcardCertPickerDialog {
                     }
                 });
                 mDialog = alertDialog;
-            }
-        });
-    }
-
-
-    public void show() {
-        mActivity.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                mDialog.show();
             }
         });
     }

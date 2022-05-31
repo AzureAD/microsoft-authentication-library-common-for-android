@@ -1,7 +1,6 @@
 package com.microsoft.identity.common.internal.ui.webview.challengehandlers;
 
 import android.app.Activity;
-import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.res.ColorStateList;
 import android.os.Build;
@@ -17,20 +16,18 @@ import androidx.appcompat.app.AlertDialog;
 import com.microsoft.identity.common.R;
 
 //Builds and shows a dialog that prompts the user to provide a PIN in order to verify ownership of the YubiKey.
-public class SmartcardPinDialog {
+public class SmartcardPinDialog extends SmartcardDialog {
 
-    private Activity mActivity;
-    private Dialog mDialog;
     private View mPinLayout;
     private PositiveButtonListener mPositiveButtonListener;
     private NegativeButtonListener mNegativeButtonListener;
 
     public SmartcardPinDialog(Activity activity) {
-        mActivity = activity;
+        super(activity);
         createDialog();
     }
 
-    private void createDialog() {
+    protected void createDialog() {
         //Must build dialog on UI thread
         mActivity.runOnUiThread(new Runnable() {
             @Override
@@ -74,6 +71,7 @@ public class SmartcardPinDialog {
 
     //In order to add custom UI for errors, the positive button must be overwritten.
     //But the dialog needs to be shown before we can get a reference and override the positive button's behavior.
+    @Override
     public void show() {
         mActivity.runOnUiThread(new Runnable() {
             @Override
@@ -111,10 +109,6 @@ public class SmartcardPinDialog {
                 });
             }
         });
-    }
-
-    public void dismiss() {
-        mDialog.dismiss();
     }
 
     //Update Dialog to indicate that an incorrect attempt was made.
