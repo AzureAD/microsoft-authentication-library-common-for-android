@@ -100,7 +100,8 @@ stages:
         workingDirectory: $(Agent.BuildDirectory)/s/OneAuthWrapper/OneAuth
     - task: MavenAuthenticate@0
       inputs:
-        artifactsFeeds: 'IDDP'
+        artifactsFeeds: 'AndroidADAL'
+        mavenServiceConnections: 'AndroidADAL'
     - task: Gradle@2
       displayName: Assemble OneAuth
       inputs:
