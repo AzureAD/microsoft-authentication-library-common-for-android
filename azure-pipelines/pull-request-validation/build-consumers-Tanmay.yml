@@ -104,6 +104,9 @@ stages:
         cwd: $(Agent.BuildDirectory)/s/OneAuthWrapper
         gradleWrapperFile: $(Agent.BuildDIrectory)/s/OneAuthWrapper/gradlew.bat
         tasks: clean OneAuth:assembleLocal
+    - task: MavenAuthenticate@0
+      inputs:
+        artifactsFeeds: 'IDDP'
     - task: Gradle@2
       displayName: Run OneAuth Unit tests
       inputs:
