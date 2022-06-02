@@ -89,11 +89,11 @@ stages:
           git rev-parse HEAD
         workingDirectory: $(Agent.BuildDirectory)/s/OneAuthWrapper/common
     - task: CmdLine@2
-      displayName: Checkout OneAuth submodule $(oneAuthBranchName)
+      displayName: Checkout OneAuth submodule android/changes-to-gradle-files #$(oneAuthBranchName)
       inputs:
         script: |
           git fetch
-          git checkout $(oneAuthBranchName)
+          git checkout android/changes-to-gradle-files
           git pull
           git status
           git rev-parse HEAD
