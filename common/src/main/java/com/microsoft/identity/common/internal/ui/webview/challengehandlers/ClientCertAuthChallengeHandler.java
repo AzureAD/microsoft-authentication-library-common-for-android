@@ -71,13 +71,10 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
     private Activity mActivity;
     private final YubiKitManager mYubiKitManager;
     private UsbYubiKeyDevice mDevice;
-    //Lockd to help facilitate synchronization
+    private SmartcardDialog mCurrentDialog;
+    //Locks to help facilitate synchronization
     private static final Object deviceLock = new Object();
     private static final Object smartcardDialogLock = new Object();
-
-    private SmartcardDialog mCurrentDialog;
-
-    //private ResultFuture<YubiKitCertDetails> mCertPickerResultFuture;
 
     //creating nested class to hold details of a Certificate needed for the picker,
     // including subject, issuer, and slot.
@@ -169,7 +166,19 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
                             //If so, go directly to Error dialog.
                             if (piv.getPinAttempts() == 0) {
                                 SmartcardMaxFailedAttemptsDialog maxFailedAttemptsDialog = new SmartcardMaxFailedAttemptsDialog(mActivity);
+                                maxFailedAttemptsDialog.setPositiveButtonListener(new SmartcardMaxFailedAttemptsDialog.PositiveButtonListener() {
+                                    @Override
+                                    public void onClick() {
+                                        //Reset currentDialog to null
+                                        synchronized (smartcardDialogLock) {
+                                            mCurrentDialog = null;
+                                        }
+                                    }
+                                });
                                 maxFailedAttemptsDialog.show();
+                                synchronized (smartcardDialogLock) {
+                                    mCurrentDialog = maxFailedAttemptsDialog;
+                                }
                                 request.cancel();
                                 Logger.infoPII(methodTag,  "User has reached the maximum failed attempts allowed.");
                                 return;
@@ -191,13 +200,14 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
                                 Logger.infoPII(methodTag,  "No PIV certificates found on YubiKey device.");
                                 return;
                             }
-                            //Show Smartcard cert picker, which also handles the rest of the smartcard CBA flow.
+                            //Build and show Smartcard cert picker, which also handles the rest of the smartcard CBA flow.
                             final SmartcardCertPickerDialog certPickerDialog = new SmartcardCertPickerDialog(certList, mActivity);
                             certPickerDialog.setPositiveButtonListener(getSmartcardCertPickerDialogPositiveButtonListener(request));
                             certPickerDialog.setNegativeButtonListener(new SmartcardCertPickerDialog.NegativeButtonListener() {
                                 @Override
                                 public void onClick() {
                                     request.cancel();
+                                    mCurrentDialog = null;
                                 }
                             });
                             certPickerDialog.setCancelCbaCallback(new SmartcardCertPickerDialog.CancelCbaCallback() {
@@ -209,16 +219,19 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
 
                             certPickerDialog.show();
                             //Set current dialog to certPickerDialog
-                            synchronized (mCurrentDialog) {
+                            synchronized (smartcardDialogLock) {
                                 mCurrentDialog = certPickerDialog;
                             }
 
                         } catch(IOException e) {
                             Logger.errorPII(methodTag, "IOException", e);
+                            request.cancel();
                         } catch (ApduException e) {
                             Logger.errorPII(methodTag, "ApduException", e);
+                            request.cancel();
                         } catch (ApplicationNotAvailableException e) {
                             Logger.errorPII(methodTag, "ApplicationNotAvailableException", e);
+                            request.cancel();
                         }
                     }
                 });
@@ -264,6 +277,7 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
                     public void onClick() {
                         request.cancel();
                         pinDialog.dismiss();
+                        mCurrentDialog = null;
                     }
                 });
                 pinDialog.setCancelCbaCallback(new SmartcardPinDialog.CancelCbaCallback() {
@@ -356,10 +370,16 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
 
                             } catch(IOException e) {
                                 Logger.errorPII(methodTag, "IOException", e);
+                                request.cancel();
+                                pinDialog.dismiss();
                             } catch (ApduException e) {
                                 Logger.errorPII(methodTag, "ApduException", e);
+                                request.cancel();
+                                pinDialog.dismiss();
                             } catch (ApplicationNotAvailableException e) {
                                 Logger.errorPII(methodTag, "ApplicationNotAvailableException", e);
+                                request.cancel();
+                                pinDialog.dismiss();
                             }
                         }
                     });
