@@ -16,6 +16,9 @@ public abstract class SmartcardDialog {
     //Dialog objects must be built/interacted with on the UI thread.
     abstract void createDialog();
 
+    //Should dismiss dialog and call the appropriate methods to help cancel the CBA flow.
+    abstract void onCancelCba();
+
     //Show mDialog on the main thread.
     public void show() {
         mActivity.runOnUiThread(new Runnable() {

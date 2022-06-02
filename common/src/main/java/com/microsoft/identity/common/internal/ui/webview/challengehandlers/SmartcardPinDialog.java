@@ -21,9 +21,13 @@ public class SmartcardPinDialog extends SmartcardDialog {
     private View mPinLayout;
     private PositiveButtonListener mPositiveButtonListener;
     private NegativeButtonListener mNegativeButtonListener;
+    private CancelCbaCallback mCancelCbaCallback;
 
     public SmartcardPinDialog(Activity activity) {
         super(activity);
+        mPositiveButtonListener = null;
+        mNegativeButtonListener = null;
+        mCancelCbaCallback = null;
         createDialog();
     }
 
@@ -67,6 +71,14 @@ public class SmartcardPinDialog extends SmartcardDialog {
                 mDialog = dialog;
             }
         });
+    }
+
+    @Override
+    public void onCancelCba() {
+        //Call CancelCbaCallback's onCancel
+        mCancelCbaCallback.onCancel();
+        //Dismiss dialog
+        dismiss();
     }
 
     //In order to add custom UI for errors, the positive button must be overwritten.
@@ -152,12 +164,20 @@ public class SmartcardPinDialog extends SmartcardDialog {
         mNegativeButtonListener = listener;
     }
 
+    public void setCancelCbaCallback(CancelCbaCallback callback) {
+        mCancelCbaCallback = callback;
+    }
+
     public interface PositiveButtonListener {
         void onClick(String pin);
     }
 
     public interface NegativeButtonListener {
         void onClick();
+    }
+
+    public interface CancelCbaCallback {
+        void onCancel();
     }
 
 }

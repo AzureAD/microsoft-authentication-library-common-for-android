@@ -6,6 +6,7 @@ import android.content.DialogInterface;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.ClientCertRequest;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
@@ -26,10 +27,14 @@ public class SmartcardCertPickerDialog extends SmartcardDialog {
     private List<ClientCertAuthChallengeHandler.YubiKitCertDetails> mCertList;
     private PositiveButtonListener mPositiveButtonListener;
     private NegativeButtonListener mNegativeButtonListener;
+    private CancelCbaCallback mCancelCbaCallback;
 
     public SmartcardCertPickerDialog(List<ClientCertAuthChallengeHandler.YubiKitCertDetails> certList, Activity activity) {
         super(activity);
         mCertList = certList;
+        mPositiveButtonListener = null;
+        mNegativeButtonListener = null;
+        mCancelCbaCallback = null;
         createDialog();
     }
 
@@ -95,6 +100,14 @@ public class SmartcardCertPickerDialog extends SmartcardDialog {
         });
     }
 
+    @Override
+    public void onCancelCba() {
+        //Call CancelCbaCallback's onCancel
+        mCancelCbaCallback.onCancel();
+        //Dismiss dialog
+        dismiss();
+    }
+
     //Listener interfaces and setters for the dialog buttons.
     public void setPositiveButtonListener(PositiveButtonListener listener) {
         mPositiveButtonListener = listener;
@@ -104,12 +117,20 @@ public class SmartcardCertPickerDialog extends SmartcardDialog {
         mNegativeButtonListener = listener;
     }
 
+    public void setCancelCbaCallback(CancelCbaCallback callback) {
+        mCancelCbaCallback = callback;
+    }
+
     public interface PositiveButtonListener {
         void onClick(ClientCertAuthChallengeHandler.YubiKitCertDetails certDetails);
     }
 
     public interface NegativeButtonListener {
         void onClick();
+    }
+
+    public interface CancelCbaCallback {
+        void onCancel();
     }
 
     // Adapter for LisView within smartcard certificate picker dialog.

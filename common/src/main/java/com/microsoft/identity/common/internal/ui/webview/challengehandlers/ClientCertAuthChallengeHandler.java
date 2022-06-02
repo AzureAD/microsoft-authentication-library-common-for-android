@@ -40,6 +40,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 
+import com.microsoft.identity.common.java.util.ResultFuture;
 import com.microsoft.identity.common.logging.Logger;
 import com.yubico.yubikit.android.YubiKitManager;
 import com.yubico.yubikit.android.transport.usb.UsbConfiguration;
@@ -70,8 +71,13 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
     private Activity mActivity;
     private final YubiKitManager mYubiKitManager;
     private UsbYubiKeyDevice mDevice;
-    //Lock to help facilitate mDevice synchronization
+    //Lockd to help facilitate synchronization
     private static final Object deviceLock = new Object();
+    private static final Object smartcardDialogLock = new Object();
+
+    private SmartcardDialog mCurrentDialog;
+
+    //private ResultFuture<YubiKitCertDetails> mCertPickerResultFuture;
 
     //creating nested class to hold details of a Certificate needed for the picker,
     // including subject, issuer, and slot.
@@ -105,6 +111,11 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
             //set mDevice to null
             mDevice = null;
         }
+
+        //Set mCurrentDialog to null
+        synchronized (smartcardDialogLock) {
+            mCurrentDialog = null;
+        }
         //Create and start YubiKitManager for UsbDiscovery mode.
         //When in Usb Discovery mode, Yubikeys that plug into the device will be accessible
         // once the user provides permission via the Android permission dialog.
@@ -122,6 +133,14 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
                             synchronized (deviceLock) {
                                 Logger.info(TAG, "A YubiKey device was disconnected");
                                 mDevice = null;
+                                //Call onCancel on current dialog, if dialog is showing.
+                                synchronized (smartcardDialogLock) {
+                                    if (mCurrentDialog != null) {
+                                        mCurrentDialog.onCancelCba();
+                                        //Reset dialog to null
+                                        mCurrentDialog = null;
+                                    }
+                                }
                             }
                         }
                     });
@@ -181,8 +200,18 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
                                     request.cancel();
                                 }
                             });
+                            certPickerDialog.setCancelCbaCallback(new SmartcardCertPickerDialog.CancelCbaCallback() {
+                                @Override
+                                public void onCancel() {
+                                    request.cancel();
+                                }
+                            });
 
                             certPickerDialog.show();
+                            //Set current dialog to certPickerDialog
+                            synchronized (mCurrentDialog) {
+                                mCurrentDialog = certPickerDialog;
+                            }
 
                         } catch(IOException e) {
                             Logger.errorPII(methodTag, "IOException", e);
@@ -222,20 +251,11 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
 
     //Upon a positive button click in the cert picker, sets up the PIN prompt dialog.
     public SmartcardCertPickerDialog.PositiveButtonListener getSmartcardCertPickerDialogPositiveButtonListener(final ClientCertRequest request) {
-        final String methodTag = TAG + ":getSmartcardCertPickerDialogPositiveButtonListener";
+        //final String methodTag = TAG + ":getSmartcardCertPickerDialogPositiveButtonListener";
         return new SmartcardCertPickerDialog.PositiveButtonListener() {
             @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
             @Override
             public void onClick(final YubiKitCertDetails certDetails) {
-                //Ensure that YubiKey has not been removed too early by checking if mDevice is equal to null
-                synchronized (deviceLock) {
-                    if (mDevice == null) {
-                        //If YubiKey has been taken out, cancel flow.
-                        request.cancel();
-                        Logger.infoPII(methodTag,  "Initial YubiKey device was disconnected.");
-                        return;
-                    }
-                }
                 //Need to prompt user for pin and verify pin. The positive button listener will handle the rest of the CBA flow.
                 final SmartcardPinDialog pinDialog = new SmartcardPinDialog(mActivity);
                 pinDialog.setPositiveButtonListener(getSmartcardPinDialogPositiveButtonListener(certDetails, pinDialog, request));
@@ -246,7 +266,17 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
                         pinDialog.dismiss();
                     }
                 });
+                pinDialog.setCancelCbaCallback(new SmartcardPinDialog.CancelCbaCallback() {
+                    @Override
+                    public void onCancel() {
+                        request.cancel();
+                    }
+                });
                 pinDialog.show();
+                //Set currentDialog to pinDialog
+                synchronized (smartcardDialogLock) {
+                    mCurrentDialog = pinDialog;
+                }
             }
         };
     }
@@ -260,13 +290,6 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
             @Override
             public void onClick(final String pin) {
                 synchronized (deviceLock) {
-                    //Make sure YubiKey is still plugged in
-                    if (mDevice == null) {
-                        request.cancel();
-                        pinDialog.dismiss();
-                        Logger.infoPII(methodTag,  "Initial YubiKey device was disconnected.");
-                        return;
-                    }
                     // Need to request a SmartCardConnection in order to access certs on YubiKey.
                     mDevice.requestConnection(UsbSmartCardConnection.class, new Callback<Result<UsbSmartCardConnection, IOException>>() {
                         @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
@@ -289,6 +312,10 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
                                         @Override
                                         public void run() {
                                             Toast.makeText(mActivity.getApplicationContext(), "Success!", Toast.LENGTH_LONG).show();
+                                            //Reset currentDialog to null
+                                            synchronized (smartcardDialogLock) {
+                                                mCurrentDialog = null;
+                                            }
                                         }
                                     });
                                     request.cancel();
@@ -302,11 +329,23 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
                                     if (pinAttemptsRemaining == 0) {
                                         //We must display a dialog informing the user that they have made too many incorrect attempts,
                                         // and the user will need to figure out a way to reset their key outside of our library.
-                                        SmartcardMaxFailedAttemptsDialog maxFailedAttemptsDialog = new SmartcardMaxFailedAttemptsDialog(mActivity);
-                                        maxFailedAttemptsDialog.show();
-                                        Logger.infoPII(methodTag,  "User has reached the maximum failed attempts allowed.");
                                         request.cancel();
                                         pinDialog.dismiss();
+                                        SmartcardMaxFailedAttemptsDialog maxFailedAttemptsDialog = new SmartcardMaxFailedAttemptsDialog(mActivity);
+                                        maxFailedAttemptsDialog.setPositiveButtonListener(new SmartcardMaxFailedAttemptsDialog.PositiveButtonListener() {
+                                            @Override
+                                            public void onClick() {
+                                                //Reset currentDialog to null
+                                                synchronized (smartcardDialogLock) {
+                                                    mCurrentDialog = null;
+                                                }
+                                            }
+                                        });
+                                        maxFailedAttemptsDialog.show();
+                                        synchronized (smartcardDialogLock) {
+                                            mCurrentDialog = maxFailedAttemptsDialog;
+                                        }
+                                        Logger.infoPII(methodTag,  "User has reached the maximum failed attempts allowed.");
                                     } else {
                                         //Update Dialog to indicate that an incorrect attempt was made.
                                         pinDialog.setErrorMode();
