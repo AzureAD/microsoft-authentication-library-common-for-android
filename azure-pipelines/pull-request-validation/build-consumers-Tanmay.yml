@@ -102,6 +102,11 @@ stages:
       displayName: Authenticate to the IdentityDivision Android Maven feed
       inputs:
         MavenServiceConnections: IdentityDivision
+    - task: MavenAuthenticate@0
+      displayName: Authenticate to the IdentityDivision Android Maven feed
+      inputs:
+        artifactsFeeds: 'AndroidADAL, IDDP'
+        mavenServiceConnections: 'AndroidADALEngineering'
     - task: Gradle@2
       displayName: Assemble OneAuth
       inputs:
