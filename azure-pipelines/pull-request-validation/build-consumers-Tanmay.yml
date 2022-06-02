@@ -103,7 +103,7 @@ stages:
       inputs:
         MavenServiceConnections: IdentityDivision
     - task: Gradle@2
-      displayName: Assemble OneAuth
+      displayName: Assemble OneAuth --debug
       inputs:
         cwd: $(Agent.BuildDirectory)/s/OneAuthWrapper
         gradleWrapperFile: $(Agent.BuildDIrectory)/s/OneAuthWrapper/gradlew.bat
