@@ -70,6 +70,8 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
     private Activity mActivity;
     private final YubiKitManager mYubiKitManager;
     private UsbYubiKeyDevice mDevice;
+    //Lock to help facilitate mDevice synchronization
+    private static final Object deviceLock = new Object();
 
     //creating nested class to hold details of a Certificate needed for the picker,
     // including subject, issuer, and slot.
@@ -99,8 +101,10 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
 
     public ClientCertAuthChallengeHandler(@NonNull final Activity activity) {
         mActivity = activity;
-        //set mDevice to null
-        mDevice = null;
+        synchronized (deviceLock) {
+            //set mDevice to null
+            mDevice = null;
+        }
         //Create and start YubiKitManager for UsbDiscovery mode.
         //When in Usb Discovery mode, Yubikeys that plug into the device will be accessible
         // once the user provides permission via the Android permission dialog.
@@ -109,15 +113,19 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
             @Override
             public void invoke(UsbYubiKeyDevice device) {
                 Logger.info(TAG, "A YubiKey device was connected");
-                //set device
-                mDevice = device;
-                mDevice.setOnClosed(new Runnable() {
-                    @Override
-                    public void run() {
-                        Logger.info(TAG, "A YubiKey device was disconnected");
-                        mDevice = null;
-                    }
-                });
+                synchronized (deviceLock) {
+                    //set device
+                    mDevice = device;
+                    mDevice.setOnClosed(new Runnable() {
+                        @Override
+                        public void run() {
+                            synchronized (deviceLock) {
+                                Logger.info(TAG, "A YubiKey device was disconnected");
+                                mDevice = null;
+                            }
+                        }
+                    });
+                }
             }
         });
     }
@@ -129,69 +137,67 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
     public Void processChallenge(@NonNull final ClientCertRequest request) {
         final String methodTag = TAG + ":processChallenge";
         // Check if a YubiKey device has been discovered and has permission to be connected.
-        if (mDevice != null) {
-            //Keep track of YubiKey that is initially plugged in to make sure a different one isn't plugged in later.
-            final UsbYubiKeyDevice initialDevice = mDevice;
-            //A connection to the YubiKey needs to be made in order to read the certificates off it.
-            mDevice.requestConnection(UsbSmartCardConnection.class, new Callback<Result<UsbSmartCardConnection, IOException>>() {
-                @Override
-                public void invoke(Result<UsbSmartCardConnection, IOException> value) {
-                    try {
-                        final SmartCardConnection c = value.getValue();
-                        PivSession piv = new PivSession(c);
-                        //Check if too many PIN attempts have been made.
-                        //If so, go directly to Error dialog.
-                        if (piv.getPinAttempts() == 0) {
-                            SmartcardMaxFailedAttemptsDialog maxFailedAttemptsDialog = new SmartcardMaxFailedAttemptsDialog(mActivity);
-                            maxFailedAttemptsDialog.show();
-                            request.cancel();
-                            Logger.infoPII(methodTag,  "User has reached the maximum failed attempts allowed.");
-                            return;
-                        }
-                        //Create ArrayList that contains cert details only pertinent to the cert picker.
-                        final ArrayList<YubiKitCertDetails> certList = new ArrayList<>();
-                        //We need to check every slot. If a slot is empty, an ApduException is called, in which case, we'll ignore it.
-                        //AUTHENTICATION (9A)
-                        getAndPutCertDetailsInList(AUTHENTICATION, piv, certList);
-                        //SIGNATURE (9C)
-                        getAndPutCertDetailsInList(SIGNATURE, piv, certList);
-                        //KEY_MANAGEMENT (9D)
-                        getAndPutCertDetailsInList(KEY_MANAGEMENT, piv, certList);
-                        //CARD_AUTH (9E)
-                        getAndPutCertDetailsInList(CARD_AUTH, piv, certList);
-                        //If no certs were found, cancel flow.
-                        if (certList.isEmpty()) {
-                            request.cancel();
-                            Logger.infoPII(methodTag,  "No PIV certificates found on YubiKey device.");
-                            return;
-                        }
-                        //Show Smartcard cert picker, which also handles the rest of the smartcard CBA flow.
-                        final SmartcardCertPickerDialog certPickerDialog = new SmartcardCertPickerDialog(certList, mActivity);
-                        certPickerDialog.setPositiveButtonListener(getSmartcardCertPickerDialogPositiveButtonListener(initialDevice, request));
-                        certPickerDialog.setNegativeButtonListener(new SmartcardCertPickerDialog.NegativeButtonListener() {
-                            @Override
-                            public void onClick() {
+        synchronized (deviceLock) {
+            if (mDevice != null) {
+                //A connection to the YubiKey needs to be made in order to read the certificates off it.
+                mDevice.requestConnection(UsbSmartCardConnection.class, new Callback<Result<UsbSmartCardConnection, IOException>>() {
+                    @Override
+                    public void invoke(Result<UsbSmartCardConnection, IOException> value) {
+                        try {
+                            final SmartCardConnection c = value.getValue();
+                            PivSession piv = new PivSession(c);
+                            //Check if too many PIN attempts have been made.
+                            //If so, go directly to Error dialog.
+                            if (piv.getPinAttempts() == 0) {
+                                SmartcardMaxFailedAttemptsDialog maxFailedAttemptsDialog = new SmartcardMaxFailedAttemptsDialog(mActivity);
+                                maxFailedAttemptsDialog.show();
                                 request.cancel();
+                                Logger.infoPII(methodTag,  "User has reached the maximum failed attempts allowed.");
+                                return;
                             }
-                        });
+                            //Create ArrayList that contains cert details only pertinent to the cert picker.
+                            final ArrayList<YubiKitCertDetails> certList = new ArrayList<>();
+                            //We need to check every slot. If a slot is empty, an ApduException is called, in which case, we'll ignore it.
+                            //AUTHENTICATION (9A)
+                            getAndPutCertDetailsInList(AUTHENTICATION, piv, certList);
+                            //SIGNATURE (9C)
+                            getAndPutCertDetailsInList(SIGNATURE, piv, certList);
+                            //KEY_MANAGEMENT (9D)
+                            getAndPutCertDetailsInList(KEY_MANAGEMENT, piv, certList);
+                            //CARD_AUTH (9E)
+                            getAndPutCertDetailsInList(CARD_AUTH, piv, certList);
+                            //If no certs were found, cancel flow.
+                            if (certList.isEmpty()) {
+                                request.cancel();
+                                Logger.infoPII(methodTag,  "No PIV certificates found on YubiKey device.");
+                                return;
+                            }
+                            //Show Smartcard cert picker, which also handles the rest of the smartcard CBA flow.
+                            final SmartcardCertPickerDialog certPickerDialog = new SmartcardCertPickerDialog(certList, mActivity);
+                            certPickerDialog.setPositiveButtonListener(getSmartcardCertPickerDialogPositiveButtonListener(request));
+                            certPickerDialog.setNegativeButtonListener(new SmartcardCertPickerDialog.NegativeButtonListener() {
+                                @Override
+                                public void onClick() {
+                                    request.cancel();
+                                }
+                            });
 
-                        certPickerDialog.show();
+                            certPickerDialog.show();
 
-                    } catch(IOException e) {
-                        Logger.errorPII(methodTag, "IOException", e);
-                    } catch (ApduException e) {
-                        Logger.errorPII(methodTag, "ApduException", e);
-                    } catch (ApplicationNotAvailableException e) {
-                        Logger.errorPII(methodTag, "ApplicationNotAvailableException", e);
+                        } catch(IOException e) {
+                            Logger.errorPII(methodTag, "IOException", e);
+                        } catch (ApduException e) {
+                            Logger.errorPII(methodTag, "ApduException", e);
+                        } catch (ApplicationNotAvailableException e) {
+                            Logger.errorPII(methodTag, "ApplicationNotAvailableException", e);
+                        }
                     }
-                }
-            });
-            return null;
+                });
+                return null;
+            }
         }
-        // Else, proceed with user certificates stored on device.
-        else {
-            return handleOnDeviceCertAuth(request);
-        }
+        //Else, proceed with user certificates stored on device.
+        return handleOnDeviceCertAuth(request);
     }
 
     //Helper method created to handle reading certificates off YubiKey.
@@ -215,22 +221,24 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
     }
 
     //Upon a positive button click in the cert picker, sets up the PIN prompt dialog.
-    public SmartcardCertPickerDialog.PositiveButtonListener getSmartcardCertPickerDialogPositiveButtonListener(final UsbYubiKeyDevice initialDevice, final ClientCertRequest request) {
+    public SmartcardCertPickerDialog.PositiveButtonListener getSmartcardCertPickerDialogPositiveButtonListener(final ClientCertRequest request) {
         final String methodTag = TAG + ":getSmartcardCertPickerDialogPositiveButtonListener";
         return new SmartcardCertPickerDialog.PositiveButtonListener() {
             @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
             @Override
             public void onClick(final YubiKitCertDetails certDetails) {
-                //Ensure that YubiKey has not been removed too early by checking if mDevice is equal to the initialDevice.
-                if (mDevice != initialDevice) {
-                    //If YubiKey has been taken out, cancel flow.
-                    request.cancel();
-                    Logger.infoPII(methodTag,  "Initial YubiKey device was disconnected.");
-                    return;
+                //Ensure that YubiKey has not been removed too early by checking if mDevice is equal to null
+                synchronized (deviceLock) {
+                    if (mDevice == null) {
+                        //If YubiKey has been taken out, cancel flow.
+                        request.cancel();
+                        Logger.infoPII(methodTag,  "Initial YubiKey device was disconnected.");
+                        return;
+                    }
                 }
                 //Need to prompt user for pin and verify pin. The positive button listener will handle the rest of the CBA flow.
                 final SmartcardPinDialog pinDialog = new SmartcardPinDialog(mActivity);
-                pinDialog.setPositiveButtonListener(getSmartcardPinDialogPositiveButtonListener(certDetails, pinDialog, initialDevice, request));
+                pinDialog.setPositiveButtonListener(getSmartcardPinDialogPositiveButtonListener(certDetails, pinDialog, request));
                 pinDialog.setNegativeButtonListener(new SmartcardPinDialog.NegativeButtonListener() {
                     @Override
                     public void onClick() {
@@ -244,78 +252,79 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
     }
 
     //Upon a positive button click in the PIN prompt, verify the provided PIN and handle the results.
-    public SmartcardPinDialog.PositiveButtonListener getSmartcardPinDialogPositiveButtonListener(final YubiKitCertDetails certDetails, final SmartcardPinDialog pinDialog, final UsbYubiKeyDevice initialDevice, final ClientCertRequest request) {
+    public SmartcardPinDialog.PositiveButtonListener getSmartcardPinDialogPositiveButtonListener(final YubiKitCertDetails certDetails, final SmartcardPinDialog pinDialog,final ClientCertRequest request) {
         final String methodTag = TAG + ":getSmartcardPinDialogPositiveButtonListener";
 
         return new SmartcardPinDialog.PositiveButtonListener() {
             @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
             @Override
             public void onClick(final String pin) {
-                //verify
-                //Make sure YubiKey is still plugged in and is the same initial device.
-                if (mDevice != initialDevice) {
-                    request.cancel();
-                    pinDialog.dismiss();
-                    Logger.infoPII(methodTag,  "Initial YubiKey device was disconnected.");
-                    return;
-                }
-                // Need to request a SmartCardConnection in order to access certs on YubiKey.
-                mDevice.requestConnection(UsbSmartCardConnection.class, new Callback<Result<UsbSmartCardConnection, IOException>>() {
-                    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-                    @Override
-                    public void invoke(Result<UsbSmartCardConnection, IOException> value) {
-                        try {
-                            final SmartCardConnection c = value.getValue();
-                            final PivSession piv = new PivSession(c);
-                            //Call YubiKit method to verify PIN.
+                synchronized (deviceLock) {
+                    //Make sure YubiKey is still plugged in
+                    if (mDevice == null) {
+                        request.cancel();
+                        pinDialog.dismiss();
+                        Logger.infoPII(methodTag,  "Initial YubiKey device was disconnected.");
+                        return;
+                    }
+                    // Need to request a SmartCardConnection in order to access certs on YubiKey.
+                    mDevice.requestConnection(UsbSmartCardConnection.class, new Callback<Result<UsbSmartCardConnection, IOException>>() {
+                        @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+                        @Override
+                        public void invoke(Result<UsbSmartCardConnection, IOException> value) {
                             try {
-                                piv.verifyPin(pin.toCharArray());
-                                //If pin is successfully verified, we will get the certificate and perform the rest of the logic for authentication.
-                                X509Certificate cert = piv.getCertificate(certDetails.getSlot());
-                                //TODO: do a confirmation that the cert retrieved above is the same cert that was picked earlier by comparing with YubiKitCertDetails
-                                //TODO: Complete authentication using cert and YubiKit sdk.
-                                //NOTE: below is for testing. This would get replaced by the logic for actual authentication.
-                                //START of code for testing
-                                Logger.infoPII(methodTag,  cert.getSubjectDN().getName());
-                                mActivity.runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        Toast.makeText(mActivity.getApplicationContext(), "Success!", Toast.LENGTH_LONG).show();
-                                    }
-                                });
-                                request.cancel();
-                                pinDialog.dismiss();
-                                //END of code for testing
-                            } catch (InvalidPinException e) {
-                                // An incorrect Pin attempt.
-                                // We need to retrieve the number of pin attempts before proceeding.
-                                int pinAttemptsRemaining = piv.getPinAttempts();
-                                // If the number of attempts is 0, no more attempts will be allowed.
-                                if (pinAttemptsRemaining == 0) {
-                                    //We must display a dialog informing the user that they have made too many incorrect attempts,
-                                    // and the user will need to figure out a way to reset their key outside of our library.
-                                    SmartcardMaxFailedAttemptsDialog maxFailedAttemptsDialog = new SmartcardMaxFailedAttemptsDialog(mActivity);
-                                    maxFailedAttemptsDialog.show();
-                                    Logger.infoPII(methodTag,  "User has reached the maximum failed attempts allowed.");
+                                final SmartCardConnection c = value.getValue();
+                                final PivSession piv = new PivSession(c);
+                                //Call YubiKit method to verify PIN.
+                                try {
+                                    piv.verifyPin(pin.toCharArray());
+                                    //If pin is successfully verified, we will get the certificate and perform the rest of the logic for authentication.
+                                    X509Certificate cert = piv.getCertificate(certDetails.getSlot());
+                                    //TODO: do a confirmation that the cert retrieved above is the same cert that was picked earlier by comparing with YubiKitCertDetails
+                                    //TODO: Complete authentication using cert and YubiKit sdk.
+                                    //NOTE: below is for testing. This would get replaced by the logic for actual authentication.
+                                    //START of code for testing
+                                    Logger.infoPII(methodTag,  cert.getSubjectDN().getName());
+                                    mActivity.runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            Toast.makeText(mActivity.getApplicationContext(), "Success!", Toast.LENGTH_LONG).show();
+                                        }
+                                    });
                                     request.cancel();
                                     pinDialog.dismiss();
-                                } else {
-                                    //Update Dialog to indicate that an incorrect attempt was made.
-                                    pinDialog.setErrorMode();
+                                    //END of code for testing
+                                } catch (InvalidPinException e) {
+                                    // An incorrect Pin attempt.
+                                    // We need to retrieve the number of pin attempts before proceeding.
+                                    int pinAttemptsRemaining = piv.getPinAttempts();
+                                    // If the number of attempts is 0, no more attempts will be allowed.
+                                    if (pinAttemptsRemaining == 0) {
+                                        //We must display a dialog informing the user that they have made too many incorrect attempts,
+                                        // and the user will need to figure out a way to reset their key outside of our library.
+                                        SmartcardMaxFailedAttemptsDialog maxFailedAttemptsDialog = new SmartcardMaxFailedAttemptsDialog(mActivity);
+                                        maxFailedAttemptsDialog.show();
+                                        Logger.infoPII(methodTag,  "User has reached the maximum failed attempts allowed.");
+                                        request.cancel();
+                                        pinDialog.dismiss();
+                                    } else {
+                                        //Update Dialog to indicate that an incorrect attempt was made.
+                                        pinDialog.setErrorMode();
+                                    }
+                                } catch (BadResponseException e) {
+                                    Logger.errorPII(methodTag,"BadResponseException", e);
                                 }
-                            } catch (BadResponseException e) {
-                                Logger.errorPII(methodTag,"BadResponseException", e);
-                            }
 
-                        } catch(IOException e) {
-                            Logger.errorPII(methodTag, "IOException", e);
-                        } catch (ApduException e) {
-                            Logger.errorPII(methodTag, "ApduException", e);
-                        } catch (ApplicationNotAvailableException e) {
-                            Logger.errorPII(methodTag, "ApplicationNotAvailableException", e);
+                            } catch(IOException e) {
+                                Logger.errorPII(methodTag, "IOException", e);
+                            } catch (ApduException e) {
+                                Logger.errorPII(methodTag, "ApduException", e);
+                            } catch (ApplicationNotAvailableException e) {
+                                Logger.errorPII(methodTag, "ApplicationNotAvailableException", e);
+                            }
                         }
-                    }
-                });
+                    });
+                }
             }
         };
 
