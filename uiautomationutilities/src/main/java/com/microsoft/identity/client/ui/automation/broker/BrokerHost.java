@@ -30,6 +30,7 @@ import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObjectNotFoundException;
 import androidx.test.uiautomator.UiSelector;
 
+import com.google.gson.Gson;
 import com.microsoft.identity.client.ui.automation.constants.DeviceAdmin;
 import com.microsoft.identity.client.ui.automation.installer.LocalApkInstaller;
 import com.microsoft.identity.client.ui.automation.interaction.PromptHandlerParameters;
@@ -42,8 +43,13 @@ import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 import org.junit.Assert;
 
 import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT;
+
+import android.util.Base64;
+
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class BrokerHost extends AbstractTestBroker {
 
@@ -80,7 +86,7 @@ public class BrokerHost extends AbstractTestBroker {
 
         try {
             joinBtn.click();
-        } catch (UiObjectNotFoundException e) {
+        } catch (final UiObjectNotFoundException e) {
             throw new AssertionError(e);
         }
 
@@ -115,7 +121,7 @@ public class BrokerHost extends AbstractTestBroker {
 
         try {
             joinBtn.click();
-        } catch (UiObjectNotFoundException e) {
+        } catch (final UiObjectNotFoundException e) {
             throw new AssertionError(e);
         }
 
@@ -298,19 +304,19 @@ public class BrokerHost extends AbstractTestBroker {
         final String resourceButtonId = "com.microsoft.identity.testuserapp:id/getFlightsButton";
         final String text = "Get Flights";
         launch();
-        // scroll to find the get flights button
-        UiAutomatorUtils.obtainChildInScrollable(text);
-        UiAutomatorUtils.handleButtonClick(resourceButtonId);
+
         try {
+            // scroll to find the get flights button and click
+            final UiObject getFlightsButton = UiAutomatorUtils.obtainChildInScrollable(text);
+            getFlightsButton.click();
             final UiObject flightsObj = UiAutomatorUtils.obtainUiObjectWithResourceId("com.microsoft.identity.testuserapp:id/editTextFlights");
-            String flightsJson = flightsObj.getText();
-            return flightsJson;
-        } catch (UiObjectNotFoundException e) {
+            return flightsObj.getText();
+        } catch (final UiObjectNotFoundException e) {
             throw new AssertionError(e);
         }
     }
 
-    private String getDialogBoxText(UiObject dialogBox, String textId) {
+    private String getDialogBoxText(@NonNull final UiObject dialogBox, @NonNull final String textId) {
         try {
             // get the textId if it is there, else return null (in case of error)
             final String[] dialogBoxText = dialogBox.getText().split(":");
@@ -327,10 +333,11 @@ public class BrokerHost extends AbstractTestBroker {
             UiAutomatorUtils.handleButtonClick("android:id/button1");
         }
     }
+
     /**
      * Gets all the accounts added
      */
-    public List<String> getAllAccounts(boolean expectingMultipleAccounts) {
+    public List<String> getAllAccounts(final boolean expectingMultipleAccounts) {
         launch();
 
         final String resourceButtonId = "com.microsoft.identity.testuserapp:id/buttonGetAccounts";
@@ -362,55 +369,66 @@ public class BrokerHost extends AbstractTestBroker {
     /**
      * Removes the added account
      */
-    public void removeAccount(String username) {
-        final UiObject removeAccount = UiAutomatorUtils.obtainUiObjectWithResourceId(
-                "com.microsoft.identity.testuserapp:id/buttonRemoveAccount"
-        );
-        UiAutomatorUtils.obtainChildInScrollable("someone@contoso.com");
-        UiAutomatorUtils.handleInput("com.microsoft.identity.testuserapp:id/editTextUsername", username);
+    public void removeAccount(@NonNull final String username) {
         try {
+            final UiObject removeAccount = UiAutomatorUtils.obtainUiObjectWithResourceId(
+                    "com.microsoft.identity.testuserapp:id/buttonRemoveAccount"
+            );
+            final UiObject accountNameTxtBox = UiAutomatorUtils.obtainChildInScrollable("someone@contoso.com");
+            accountNameTxtBox.setText(username);
             removeAccount.click();
-        } catch (UiObjectNotFoundException e) {
+        } catch (final UiObjectNotFoundException e) {
             throw new AssertionError(e);
         }
     }
 
     /**
-     * Decode the sso token and look for the requested nonce
+     * Acquire SSO token with provided nonce
      */
-    public void confirmNoncePresent() {
-        // fill the nonce
-        UiAutomatorUtils.obtainChildInScrollable("nonce");
-        UiAutomatorUtils.handleInput("com.microsoft.identity.testuserapp:id/editTextNonce", "testNonce");
-
-        // click on sso token
-        UiAutomatorUtils.handleButtonClick("com.microsoft.identity.testuserapp:id/buttonGetSsoToken");
-        final UiObject ssoToken = UiAutomatorUtils.obtainUiObjectWithResourceId(
-                "com.microsoft.identity.testuserapp:id/sso_token"
-        );
-
+    public String acquireSSOToken(@NonNull final String nonce) {
         try {
-            Assert.assertNotEquals(ssoToken.getText(), "");
-            UiAutomatorUtils.handleButtonClick("com.microsoft.identity.testuserapp:id/btnCookieDecode");
-            final UiObject decodeObj = UiAutomatorUtils.obtainUiObjectWithResourceId(
+            // Fill the nonce
+            final UiObject nonceTxtBox = UiAutomatorUtils.obtainChildInScrollable("nonce");
+            nonceTxtBox.setText(nonce);
+
+            // Click on sso token button
+            UiAutomatorUtils.handleButtonClick("com.microsoft.identity.testuserapp:id/buttonGetSsoToken");
+
+            // Get SSOToken
+            final UiObject ssoToken = UiAutomatorUtils.obtainUiObjectWithResourceId(
                     "com.microsoft.identity.testuserapp:id/sso_token"
             );
-            Assert.assertNotEquals(decodeObj.getText(), "");
+            final String ssoTokenTxt = ssoToken.getText();
+            Assert.assertNotEquals(ssoTokenTxt, "");
+            return ssoTokenTxt;
+        } catch (final UiObjectNotFoundException e) {
+            throw new AssertionError(e);
+        }
+    }
 
-            final String decodedTxt = decodeObj.getText();
-            // confirm decoded string has the nonce
-            if (decodedTxt.contains("request_nonce")) {
-                final String[] str = decodedTxt.split("request_nonce => ");
-                if (str.length > 1) {
-                    Assert.assertEquals(str[1].trim(), "testNonce");
-                } else {
-                    Assert.fail("decoded token does not contain correct nonce");
-                }
+    /**
+     * Decode SSO token and verify the expected nonce
+     */
+    public void decodeSSOTokenAndVerifyNonce(@NonNull final String ssoToken, @NonNull final String nonce) {
+        String token = new String(Base64.decode(ssoToken.split("\\.")[1], Base64.NO_WRAP));
+        final Map<Object, Object> map = new Gson().fromJson(token, Map.class);
+        StringBuilder sb = new StringBuilder();
+        final Set<Map.Entry<Object, Object>> set = map.entrySet();
+        for (Map.Entry<Object, Object> e : set) {
+            sb.append(e.getKey()).append(" => ")
+                    .append(e.getValue())
+                    .append('\n');
+        }
+        final String decodedToken = sb.toString();
+        if (decodedToken.contains("request_nonce")) {
+            final String[] str = decodedToken.split("request_nonce => ");
+            if (str.length > 1) {
+                Assert.assertEquals(str[1].trim(), nonce);
             } else {
                 Assert.fail("decoded token does not contain correct nonce");
             }
-        } catch (UiObjectNotFoundException e) {
-            throw new AssertionError(e);
+        } else {
+            Assert.fail("decoded token does not contain correct nonce");
         }
     }
 
@@ -427,7 +445,7 @@ public class BrokerHost extends AbstractTestBroker {
             if (!dialogBox.getText().contains("Calling app could not be verified")) {
                 Assert.fail("Could not find the string 'calling app could not be verified' in the msg displayed in the dialog");
             }
-        } catch (UiObjectNotFoundException e) {
+        } catch (final UiObjectNotFoundException e) {
             throw new AssertionError(e);
         } finally {
             // dismiss dialog
