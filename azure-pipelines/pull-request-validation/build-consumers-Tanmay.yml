@@ -79,6 +79,16 @@ stages:
       submodules: true
       persistCredentials: True
     - task: CmdLine@2
+      displayName: Checkout oneAuthWrapper submodule oneauthwrapper
+      inputs:
+        script: |
+          git fetch
+          git checkout oneauthwrapper
+          git pull
+          git status
+          git rev-parse HEAD
+        workingDirectory: $(Agent.BuildDirectory)/s/OneAuthWrapper
+    - task: CmdLine@2
       displayName: Checkout common submodule $(commonBranch)
       inputs:
         script: |
