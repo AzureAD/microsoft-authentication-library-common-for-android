@@ -99,9 +99,9 @@ stages:
           git rev-parse HEAD
         workingDirectory: $(Agent.BuildDirectory)/s/OneAuthWrapper/OneAuth
     - task: MavenAuthenticate@0
+      displayName: Authenticate to the IdentityDivision Android Maven feed
       inputs:
-        artifactsFeeds: 'AndroidADAL'
-        mavenServiceConnections: 'AndroidADAL'
+        MavenServiceConnections: IdentityDivision
     - task: Gradle@2
       displayName: Assemble OneAuth
       inputs:
