@@ -112,7 +112,7 @@ stages:
       inputs:
         cwd: $(Agent.BuildDirectory)/s/OneAuthWrapper
         gradleWrapperFile: $(Agent.BuildDIrectory)/s/OneAuthWrapper/gradlew.bat
-        tasks: clean OneAuth:assembleLocal --debug
+        tasks: clean OneAuth:assembleLocal
     - task: Gradle@2
       displayName: Run OneAuth Unit tests
       inputs:
