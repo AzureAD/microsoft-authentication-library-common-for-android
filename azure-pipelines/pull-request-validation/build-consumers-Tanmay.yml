@@ -99,11 +99,11 @@ stages:
           git rev-parse HEAD
         workingDirectory: $(Agent.BuildDirectory)/s/OneAuthWrapper/common
     - task: CmdLine@2
-      displayName: Checkout OneAuth submodule android/changes-to-gradle-files #$(oneAuthBranchName)
+      displayName: Checkout OneAuth submodule $(oneAuthBranchName)
       inputs:
         script: |
           git fetch
-          git checkout android/changes-to-gradle-files
+          git checkout $(oneAuthBranchName)
           git pull
           git status
           git rev-parse HEAD
@@ -112,11 +112,6 @@ stages:
       displayName: Authenticate to the IdentityDivision Android Maven feed
       inputs:
         MavenServiceConnections: IdentityDivision
-    - task: MavenAuthenticate@0
-      displayName: Authenticate to the IdentityDivision Android Maven feed
-      inputs:
-        artifactsFeeds: 'AndroidADAL, IDDP'
-        mavenServiceConnections: 'AndroidADALEngineering'
     - task: Gradle@2
       displayName: Assemble OneAuth
       inputs:
