@@ -20,7 +20,36 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.telemetry.events;
+package com.microsoft.identity.common.java.telemetry.relay;
 
-public class ApiEndEvent extends com.microsoft.identity.common.java.telemetry.events.ApiEndEvent {
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.experimental.Accessors;
+
+@EqualsAndHashCode(callSuper = true)
+@Data()
+@Accessors(prefix = "m")
+public class TelemetryRelayException extends Exception {
+    private static final long serialVersionUID = -1543623857511895210L;
+
+    public static final String INITIALIZATION_FAILED = "initialization_failed";
+    public static final String NOT_INITIALIZED = "not_initialized";
+
+    private String mErrorCode;
+
+    public TelemetryRelayException(final @Nullable String message, final @Nonnull Throwable cause, final @Nonnull String errorCode) {
+        super(message, cause);
+        this.mErrorCode = errorCode;
+    }
+
+    public TelemetryRelayException(final @Nonnull Throwable cause, final @Nonnull String errorCode) {
+        this(null, cause, errorCode);
+    }
+
+    public TelemetryRelayException(final @Nonnull String message, final @Nonnull String errorCode) {
+        this(message, null, errorCode);
+    }
 }

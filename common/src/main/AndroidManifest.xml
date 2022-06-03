@@ -11,11 +11,11 @@
         <!-- Because Android detects plugged in YubiKeys as keyboard config changes, configChanges must have `keyboardHidden` and `keyboard` -->
         <activity
             android:name="com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity"
-            android:configChanges="orientation|keyboardHidden|screenSize|smallestScreenSize|screenLayout|keyboard" />
+            android:configChanges="orientation|keyboardHidden|screenSize|smallestScreenSize|screenLayout" />
 
         <activity
             android:name="com.microsoft.identity.common.internal.providers.oauth2.CurrentTaskAuthorizationActivity"
-            android:configChanges="orientation|keyboardHidden|screenSize|smallestScreenSize|screenLayout|keyboard" />
+            android:configChanges="orientation|keyboardHidden|screenSize|smallestScreenSize|screenLayout" />
 
         <!-- Activity to invoke an interactive request to the intent passed by ad-accounts(Broker) -->
         <activity
