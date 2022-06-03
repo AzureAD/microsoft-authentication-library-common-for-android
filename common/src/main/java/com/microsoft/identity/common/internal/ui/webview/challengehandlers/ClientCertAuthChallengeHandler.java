@@ -78,7 +78,7 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
 
     //creating nested class to hold details of a Certificate needed for the picker,
     // including subject, issuer, and slot.
-    public class YubiKitCertDetails implements Serializable {
+    public static class YubiKitCertDetails {
         private final String issuerText;
         private final String subjectText;
         private final Slot slot;
