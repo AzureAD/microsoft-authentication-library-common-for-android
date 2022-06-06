@@ -61,11 +61,16 @@ public class AuthorityDeserializer implements JsonDeserializer<Authority> {
                     // The developer might supply authority_url instead of audience.
                     // In that case, we'll try our best to map the audience here.
                     if (aadAuthority != null && aadAuthority.mAuthorityUrlString != null) {
-                        final CommonURIBuilder uri = new CommonURIBuilder(URI.create(aadAuthority.mAuthorityUrlString));
-                        final String cloudUrl = uri.getScheme() + "://" + uri.getHost();
-                        final String tenant = uri.getLastPathSegment();
-                        if (!TextUtils.isEmpty(tenant)) {
-                            aadAuthority.mAudience = AzureActiveDirectoryAudience.getAzureActiveDirectoryAudience(cloudUrl, tenant);
+                        try {
+                            final CommonURIBuilder uri = new CommonURIBuilder(URI.create(aadAuthority.mAuthorityUrlString));
+                            final String cloudUrl = uri.getScheme() + "://" + uri.getHost();
+                            final String tenant = uri.getLastPathSegment();
+                            if (!TextUtils.isEmpty(tenant)) {
+                                aadAuthority.mAudience = AzureActiveDirectoryAudience.getAzureActiveDirectoryAudience(cloudUrl, tenant);
+                            }
+                        } catch (final IllegalArgumentException e) {
+                            // Do nothing
+                            Logger.error(TAG + methodName, e.getMessage(), e);
                         }
                     }
                     return aadAuthority;
