@@ -36,6 +36,8 @@ import java.lang.reflect.Type;
 import java.net.URI;
 import java.util.List;
 
+import cz.msebera.android.httpclient.util.TextUtils;
+
 @Immutable
 public class AuthorityDeserializer implements JsonDeserializer<Authority> {
 
@@ -58,25 +60,14 @@ public class AuthorityDeserializer implements JsonDeserializer<Authority> {
 
                     // The developer might supply authority_url instead of audience.
                     // In that case, we'll try our best to map the audience here.
-
-                    if (aadAuthority != null) {
-                        try {
-                            // Use authority_url provided by the developer, otherwise, use the audience cloudUrl from aadAuthority.getAuthorityUri()
-                            final URI authorityUri = aadAuthority.mAuthorityUrlString == null
-                                    ? aadAuthority.getAuthorityUri() : URI.create(aadAuthority.mAuthorityUrlString);
-                            final CommonURIBuilder uri = new CommonURIBuilder(authorityUri);
-                            final String cloudUrl = uri.getScheme() + "://" + uri.getHost();
-                            final List<String> pathSegments = uri.getPathSegments();
-                            if (pathSegments.size() > 0) {
-                                final String tenant = pathSegments.get(pathSegments.size() - 1);
-                                aadAuthority.mAudience = AzureActiveDirectoryAudience.getAzureActiveDirectoryAudience(cloudUrl, tenant);
-                            }
-                        } catch (final IllegalArgumentException e) {
-                            // Do nothing.
-                            Logger.error(TAG + methodName, e.getMessage(), e);
+                    if (aadAuthority != null && aadAuthority.mAuthorityUrlString != null) {
+                        final CommonURIBuilder uri = new CommonURIBuilder(URI.create(aadAuthority.mAuthorityUrlString));
+                        final String cloudUrl = uri.getScheme() + "://" + uri.getHost();
+                        final String tenant = uri.getLastPathSegment();
+                        if (!TextUtils.isEmpty(tenant)) {
+                            aadAuthority.mAudience = AzureActiveDirectoryAudience.getAzureActiveDirectoryAudience(cloudUrl, tenant);
                         }
                     }
-
                     return aadAuthority;
                 case "B2C":
                     Logger.verbose(
