@@ -1,0 +1,40 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+trigger: none # Non-PR branches
+pr:
+  branches:
+    include:
+      - '*'
+
+jobs:
+  - job: RunOfficeTagger
+    displayName: Run Office Tagger
+    timeoutInMinutes: 10
+    cancelTimeoutInMinutes: 1
+    pool:
+      vmImage: windows-2019
+    steps:
+      - checkout: self
+        clean: true
+        persistCredentials: true
+
+      - task: UsePythonVersion@0
+        displayName: 'Use Python 3.x'
+
+      - task: PythonScript@0
+        displayName: Extract the Github PAT
+        inputs:
+          scriptSource: inline
+          script: |
+            from base64 import b64decode
+            from subprocess import run, PIPE
+            auth_header = run(["git", "config", "http.$(Build.Repository.URI).extraheader"], text=True, check=True, stdout=PIPE).stdout
+            _, pat = b64decode(auth_header.replace("AUTHORIZATION: basic ", "")).decode("utf-8").split(":")
+            print(f"##vso[task.setvariable variable=Office-Tagger-Github-PAT;]{pat}")
+      - task: OfficeGitTagger@6
+        displayName: 'Office Git Tagger'
+        inputs:
+          configfilepath: 'scripts/tagger_config.json'
+        env:
+          GITHUB_PAT: $(Office-Tagger-Github-PAT)

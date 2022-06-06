@@ -270,6 +270,7 @@ public class Logger {
      */
     public static void info(final String tag,
                             final String message) {
+        Logger.emit(0, String.format("%s - %s", tag, message));
         log(tag, Logger.LogLevel.INFO, getDiagnosticContextMetadata(), message, null, false);
     }
 
@@ -349,6 +350,15 @@ public class Logger {
     public static void verbosePII(final String tag,
                                   final String message) {
         log(tag, LogLevel.VERBOSE, getDiagnosticContextMetadata(), message, null, true);
+    }
+
+    /**
+     * Info log with integer tag.
+     * @param tag
+     * @param message
+     */
+    public static void emit(int tag, final String message) {
+        log(Integer.toString(tag), LogLevel.INFO, getDiagnosticContextMetadata(), message, null, false);
     }
 
     /**

@@ -1,0 +1,8 @@
+{
+  "TagFileManagedPattern": [{
+    "Functions": [
+      "Logger.emit"
+    ],
+    "Type": "ULS"
+  }]
+}
