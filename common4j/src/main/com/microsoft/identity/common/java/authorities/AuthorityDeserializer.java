@@ -33,6 +33,7 @@ import com.microsoft.identity.common.java.util.CommonURIBuilder;
 import net.jcip.annotations.Immutable;
 
 import java.lang.reflect.Type;
+import java.net.URI;
 import java.util.List;
 
 @Immutable
@@ -60,12 +61,15 @@ public class AuthorityDeserializer implements JsonDeserializer<Authority> {
 
                     if (aadAuthority != null) {
                         try {
-                            final CommonURIBuilder uri = new CommonURIBuilder(aadAuthority.getAuthorityUri());
+                            // Use authority_url provided by the developer, otherwise, use the audience cloudUrl from aadAuthority.getAuthorityUri()
+                            final URI authorityUri = aadAuthority.mAuthorityUrlString == null
+                                    ? aadAuthority.getAuthorityUri() : URI.create(aadAuthority.mAuthorityUrlString);
+                            final CommonURIBuilder uri = new CommonURIBuilder(authorityUri);
                             final String cloudUrl = uri.getScheme() + "://" + uri.getHost();
                             final List<String> pathSegments = uri.getPathSegments();
                             if (pathSegments.size() > 0) {
-                                aadAuthority.mAudience = AzureActiveDirectoryAudience.getAzureActiveDirectoryAudience(cloudUrl,
-                                        pathSegments.get(pathSegments.size() - 1));
+                                final String tenant = pathSegments.get(pathSegments.size() - 1);
+                                aadAuthority.mAudience = AzureActiveDirectoryAudience.getAzureActiveDirectoryAudience(cloudUrl, tenant);
                             }
                         } catch (final IllegalArgumentException e) {
                             // Do nothing.

@@ -9,6 +9,7 @@ V.Next
 - [MINOR] Added support for broadcasting to applications installed on the device. (#1744)
 - [PATCH] Fix APPLICATION_CANCELLED by handling back button press (#1725)
 - [PATCH] Added Base64 encode for the AuthorizationRequest state parameter (#1750)
+- [PATCH] Fix missing authority_url when creating the authority audience (#)
 
 Version 4.1.0
 ----------
