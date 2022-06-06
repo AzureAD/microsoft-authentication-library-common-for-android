@@ -117,11 +117,11 @@ stages:
       inputs:
         cwd: $(Agent.BuildDirectory)/s/OneAuthWrapper
         gradleWrapperFile: $(Agent.BuildDIrectory)/s/OneAuthWrapper/gradlew.bat
-        tasks: clean OneAuth:assembleLocal
+        tasks: clean assembleOneAuth
     - task: Gradle@2
       displayName: Run OneAuth Unit tests
       inputs:
         cwd: $(Agent.BuildDirectory)/s/OneAuthWrapper
         gradleWrapperFile: $(Agent.BuildDIrectory)/s/OneAuthWrapper/gradlew.bat
-        tasks: OneAuth:testLocalDebugUnitTest -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}}
+        tasks: runOneAuthTests
     
