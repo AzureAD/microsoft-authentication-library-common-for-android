@@ -110,8 +110,6 @@ stages:
         workingDirectory: $(Agent.BuildDirectory)/s/OneAuthWrapper/OneAuth
     - task: MavenAuthenticate@0
       displayName: Authenticate to the IdentityDivision Android Maven feed
-      inputs:
-        MavenServiceConnections: IdentityDivision
     - task: Bash@3
       displayName: Install ninja
       inputs:
