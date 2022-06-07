@@ -42,6 +42,7 @@ import java.util.UUID;
 
 import static com.microsoft.identity.common.java.providers.Constants.MOCK_PKCE_CHALLENGE;
 import static com.microsoft.identity.common.java.providers.Constants.MOCK_STATE;
+import static com.microsoft.identity.common.java.providers.Constants.MOCK_STATE_ENCODED;
 
 @RunWith(JUnit4.class)
 public class MicrosoftAuthorizationRequestTest {
@@ -88,7 +89,7 @@ public class MicrosoftAuthorizationRequestTest {
                         "&instance_aware=" + MOCK_MULTIPLE_CLOUD_AWARE +
                 // Base class fields start here.
                         "&response_type=code" +
-                        "&state=" + MOCK_STATE,
+                        "&state=" + MOCK_STATE_ENCODED,
                 request.getAuthorizationRequestAsHttpRequest().toString());
     }
 

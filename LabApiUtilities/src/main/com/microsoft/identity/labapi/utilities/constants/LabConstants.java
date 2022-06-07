@@ -98,8 +98,10 @@ public class LabConstants {
         public static final String AZURE_CHINA_CLOUD = "azurechinacloud";
         public static final String AZURE_CLOUD = "azurecloud";
         public static final String AZURE_GERMANY_CLOUD = "azuregermanycloud";
+        public static final String AZURE_GERMANY_CLOUD_MIGRATED = "azuregermanycloudmigrated";
         public static final String AZURE_PPE = "azureppe";
         public static final String AZURE_US_GOVERNMENT = "azureusgovernment";
+        public static final String AZURE_US_GOVERNMENT_MIGRATED = "azureusgovernmentmigrated";
     }
 
     static final class GuestHomeAzureEnvironment {
