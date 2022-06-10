@@ -306,8 +306,7 @@ public abstract class BaseController {
             completeRequestHeaders.put(AuthenticationConstants.AAD.APP_VERSION,
                     parameters.getApplicationVersion()
             );
-            // ADO:TODO:1934500 - Reverting this change as this is considered a "breaking change" fix.
-            //completeRequestHeaders.put(PKEYAUTH_HEADER, PKEYAUTH_VERSION);
+            completeRequestHeaders.put(PKEYAUTH_HEADER, PKEYAUTH_VERSION);
 
             // Add additional fields to the AuthorizationRequest.Builder to support interactive
             setBuilderProperties(builder, parameters, interactiveTokenCommandParameters, completeRequestHeaders);
