@@ -39,9 +39,7 @@ import com.microsoft.identity.client.ui.automation.powerlift.IPowerLiftIntegrate
 import com.microsoft.identity.client.ui.automation.constants.DeviceAdmin;
 import com.microsoft.identity.client.ui.automation.device.settings.ISettings;
 import com.microsoft.identity.client.ui.automation.device.settings.SamsungSettings;
-import com.microsoft.identity.client.ui.automation.interaction.PromptHandlerParameters;
 import com.microsoft.identity.client.ui.automation.interaction.PromptParameter;
-import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.AadPromptHandler;
 import com.microsoft.identity.client.ui.automation.logging.Logger;
 import com.microsoft.identity.client.ui.automation.utils.CommonUtils;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
@@ -53,7 +51,7 @@ import java.util.Random;
 import lombok.Getter;
 
 import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT;
-import static org.junit.Assert.fail;
+
 
 /**
  * A model for interacting with the Company Portal Broker App during UI Test.
@@ -173,7 +171,7 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
     }
 
     public void enrollDevice(@NonNull final String username,
-                             @NonNull final String password, @NonNull final boolean isFederated) {
+                             @NonNull final String password, @NonNull final Boolean isFederated) {
         Logger.i(TAG, "Enroll Device for the given account..");
         launch(); // launch CP app
 
@@ -193,14 +191,7 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
                     .build();
 
             final MicrosoftStsPromptHandler microsoftStsPromptHandler = new MicrosoftStsPromptHandler(promptHandlerParameters);
-
-            Logger.i(TAG, "Handle prompt in ADFS login page for enrolling device..");
-            // handle AAD login page for username
-            UiAutomatorUtils.handleInput("i0116", username);
-            UiAutomatorUtils.handleButtonClick("idSIButton9");
-
-            // handle ADFS login page for password
-            microsoftStsPromptHandler.getLoginComponentHandler().handlePasswordField(password);
+            ((AdfsLoginComponentHandler) microsoftStsPromptHandler.getLoginComponentHandler()).handleEnrollmentPrompt(username, password);
         } else {
             final MicrosoftStsPromptHandlerParameters promptHandlerParameters = MicrosoftStsPromptHandlerParameters.builder()
                     .prompt(PromptParameter.LOGIN)
