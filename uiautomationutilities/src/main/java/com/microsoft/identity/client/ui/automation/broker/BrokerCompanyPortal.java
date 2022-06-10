@@ -171,7 +171,7 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
     }
 
     public void enrollDevice(@NonNull final String username,
-                             @NonNull final String password, @NonNull final Boolean isFederated) {
+                             @NonNull final String password, final boolean isFederated) {
         Logger.i(TAG, "Enroll Device for the given account..");
         launch(); // launch CP app
 
