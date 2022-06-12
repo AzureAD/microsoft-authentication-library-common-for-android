@@ -28,7 +28,6 @@ import android.content.DialogInterface;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.webkit.ClientCertRequest;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
@@ -43,14 +42,21 @@ import com.microsoft.identity.common.R;
 
 import java.util.List;
 
-//Builds and shows a dialog that allows the user to select a certificate they would like to use to authenticate.
+/**
+ * Builds and shows a dialog that allows the user to select a certificate they would like to use to authenticate.
+ */
 public class SmartcardCertPickerDialog extends SmartcardDialog {
 
-    private List<ClientCertAuthChallengeHandler.YubiKitCertDetails> mCertList;
+    private final List<ClientCertAuthChallengeHandler.YubiKitCertDetails> mCertList;
     private PositiveButtonListener mPositiveButtonListener;
     private NegativeButtonListener mNegativeButtonListener;
     private CancelCbaCallback mCancelCbaCallback;
 
+    /**
+     * Creates new instance of SmartcardCertPickerDialog.
+     * @param certList List of ClientCertAuthChallengeHandler.YubiKitCertDetails compiled from certificates on YubiKey.
+     * @param activity Host activity.
+     */
     public SmartcardCertPickerDialog(List<ClientCertAuthChallengeHandler.YubiKitCertDetails> certList, Activity activity) {
         super(activity);
         mCertList = certList;
@@ -60,6 +66,9 @@ public class SmartcardCertPickerDialog extends SmartcardDialog {
         createDialog();
     }
 
+    /**
+     * Builds an AlertDialog that displays the details of the certificates in a single choice ListView and prompts the user to choose a certificate to proceed.
+     */
     protected void createDialog() {
         //Create CertDetailsAdapter
         final CertDetailsAdapter certAdapter = new CertDetailsAdapter(mActivity, mCertList);
@@ -122,6 +131,9 @@ public class SmartcardCertPickerDialog extends SmartcardDialog {
         });
     }
 
+    /**
+     * Handles scenario when CBA is canceled unexpectedly (for example. when a YubiKey is unplugged while a dialog is showing).
+     */
     @Override
     public void onCancelCba() {
         //Call CancelCbaCallback's onCancel
@@ -130,32 +142,54 @@ public class SmartcardCertPickerDialog extends SmartcardDialog {
         dismiss();
     }
 
-    //Listener interfaces and setters for the dialog buttons.
+    /**
+     * Sets listener for positive button.
+     * @param listener Implemented PositiveButtonListener.
+     */
     public void setPositiveButtonListener(PositiveButtonListener listener) {
         mPositiveButtonListener = listener;
     }
 
+    /**
+     * Sets listener for negative button.
+     * @param listener Implemented NegativeButtonListener.
+     */
     public void setNegativeButtonListener(NegativeButtonListener listener) {
         mNegativeButtonListener = listener;
     }
 
+    /**
+     * Sets callback for onCancelCba.
+     * @param callback Code to be run when onCancelCba is called.
+     */
     public void setCancelCbaCallback(CancelCbaCallback callback) {
         mCancelCbaCallback = callback;
     }
 
+    /**
+     * Listener interface for a positive button click.
+     */
     public interface PositiveButtonListener {
         void onClick(ClientCertAuthChallengeHandler.YubiKitCertDetails certDetails);
     }
 
+    /**
+     * Listener interface for a negative button click.
+     */
     public interface NegativeButtonListener {
         void onClick();
     }
 
+    /**
+     * Callback interface for when CBA is cancelled unexpectedly.
+     */
     public interface CancelCbaCallback {
         void onCancel();
     }
 
-    // Adapter for LisView within smartcard certificate picker dialog.
+    /**
+     * YubiKitCertDetails Adapter for ListView within smartcard certificate picker dialog.
+     */
     public static class CertDetailsAdapter extends ArrayAdapter<ClientCertAuthChallengeHandler.YubiKitCertDetails> {
 
         public CertDetailsAdapter(@NonNull Context context, @NonNull List<ClientCertAuthChallengeHandler.YubiKitCertDetails> certs) {

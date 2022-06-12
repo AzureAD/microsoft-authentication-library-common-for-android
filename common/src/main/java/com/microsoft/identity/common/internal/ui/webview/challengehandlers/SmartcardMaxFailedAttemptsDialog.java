@@ -29,17 +29,26 @@ import androidx.appcompat.app.AlertDialog;
 
 import com.microsoft.identity.common.R;
 
-//Show simple dialog when the user has incorrectly attempted to enter their PIN the maximum amount of times allowed.
+/**
+ * Show simple dialog when the user has incorrectly entered their PIN the maximum amount of times allowed.
+ */
 public class SmartcardMaxFailedAttemptsDialog extends SmartcardDialog {
 
     private PositiveButtonListener mPositiveButtonListener;
 
+    /**
+     * Create new instance of SmartcardMaxFailedAttemptsDialog.
+     * @param activity Host activity.
+     */
     public SmartcardMaxFailedAttemptsDialog(Activity activity) {
         super(activity);
         mPositiveButtonListener = null;
         createDialog();
     }
 
+    /**
+     * Builds an AlertDialog that informs user that they have incorrectly entered their PIN the maximum amount of times allowed..
+     */
     protected void createDialog() {
         mActivity.runOnUiThread(new Runnable() {
             @Override
@@ -74,16 +83,25 @@ public class SmartcardMaxFailedAttemptsDialog extends SmartcardDialog {
         });
     }
 
+    /**
+     * Handles scenario when CBA is canceled unexpectedly (for example. when a YubiKey is unplugged while a dialog is showing).
+     */
     @Override
     void onCancelCba() {
         dismiss();
     }
 
-    //Listener interfaces and setters for the dialog buttons.
+    /**
+     * Sets listener for positive button.
+     * @param listener Implemented PositiveButtonListener.
+     */
     public void setPositiveButtonListener(PositiveButtonListener listener) {
         mPositiveButtonListener = listener;
     }
 
+    /**
+     * Listener interface for a positive button click.
+     */
     public interface PositiveButtonListener {
         void onClick();
     }

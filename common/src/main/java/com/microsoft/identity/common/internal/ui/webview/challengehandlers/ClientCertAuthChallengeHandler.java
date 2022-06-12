@@ -335,7 +335,6 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
             @Override
             public void onClick() {
                 request.cancel();
-                dismissAndResetCurrentDialog();
             }
         });
         pinDialog.setCancelCbaCallback(new SmartcardPinDialog.CancelCbaCallback() {
@@ -379,24 +378,20 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
                                 verifySmartcardPin(pin.toCharArray(), certDetails, request, piv);
                             } catch(final IOException e) {
                                 Logger.error(methodTag, "IOException", e);
-                                request.cancel();
-                                dismissAndResetCurrentDialog();
-                                //TODO: create and show error dialog here. dismissAndResetCurrentDialog() can be merged into error dialog logic.
+                                CancelCbaAndResetCurrentDialog();
+                                //TODO: create and show error dialog here.
                             } catch (final ApduException e) {
                                 Logger.error(methodTag, "ApduException", e);
-                                request.cancel();
-                                dismissAndResetCurrentDialog();
-                                //TODO: create and show error dialog here. dismissAndResetCurrentDialog() can be merged into error dialog logic.
+                                CancelCbaAndResetCurrentDialog();
+                                //TODO: create and show error dialog here.
                             } catch (final ApplicationNotAvailableException e) {
                                 Logger.error(methodTag, "ApplicationNotAvailableException", e);
-                                request.cancel();
-                                dismissAndResetCurrentDialog();
-                                //TODO: create and show error dialog here. dismissAndResetCurrentDialog() can be merged into error dialog logic.
+                                CancelCbaAndResetCurrentDialog();
+                                //TODO: create and show error dialog here.
                             } catch (final BadResponseException e) {
                                 Logger.error(methodTag, "BadResponseException", e);
-                                request.cancel();
-                                dismissAndResetCurrentDialog();
-                                //TODO: create and show error dialog here. dismissAndResetCurrentDialog() can be merged into error dialog logic.
+                                CancelCbaAndResetCurrentDialog();
+                                //TODO: create and show error dialog here.
                             }
                         }
                     });
@@ -407,12 +402,12 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
     }
 
     /**
-     * Dismisses and resets the current dialog that is showing.
+     * Call current dialog's onCancelCba method and reset it back to null.
      */
-    private void dismissAndResetCurrentDialog() {
+    private void CancelCbaAndResetCurrentDialog() {
         synchronized (smartcardDialogLock) {
             if (mCurrentDialog != null) {
-                mCurrentDialog.dismiss();
+                mCurrentDialog.onCancelCba();
                 mCurrentDialog = null;
             }
         }

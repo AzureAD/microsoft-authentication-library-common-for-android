@@ -37,7 +37,9 @@ import androidx.appcompat.app.AlertDialog;
 
 import com.microsoft.identity.common.R;
 
-//Builds and shows a dialog that prompts the user to provide a PIN in order to verify ownership of the YubiKey.
+/**
+ * Builds and shows a dialog that prompts the user to provide a PIN in order to verify ownership of the YubiKey.
+ */
 public class SmartcardPinDialog extends SmartcardDialog {
 
     private View mPinLayout;
@@ -45,6 +47,10 @@ public class SmartcardPinDialog extends SmartcardDialog {
     private NegativeButtonListener mNegativeButtonListener;
     private CancelCbaCallback mCancelCbaCallback;
 
+    /**
+     * Creates new instance of SmartcardPinDialog.
+     * @param activity Host activity.
+     */
     public SmartcardPinDialog(Activity activity) {
         super(activity);
         mPositiveButtonListener = null;
@@ -53,6 +59,10 @@ public class SmartcardPinDialog extends SmartcardDialog {
         createDialog();
     }
 
+    /**
+     * Builds an AlertDialog that prompts the user to enter their YubiKey PIN.
+     * Note that the positive button listener is set after the dialog is shown in the overridden show method.
+     */
     protected void createDialog() {
         //Must build dialog on UI thread
         mActivity.runOnUiThread(new Runnable() {
@@ -95,6 +105,9 @@ public class SmartcardPinDialog extends SmartcardDialog {
         });
     }
 
+    /**
+     * Handles scenario when CBA is canceled unexpectedly (for example. when a YubiKey is unplugged while a dialog is showing).
+     */
     @Override
     public void onCancelCba() {
         //Call CancelCbaCallback's onCancel
@@ -103,8 +116,10 @@ public class SmartcardPinDialog extends SmartcardDialog {
         dismiss();
     }
 
-    //In order to add custom UI for errors, the positive button must be overwritten.
-    //But the dialog needs to be shown before we can get a reference and override the positive button's behavior.
+    /**
+     * In order to add custom UI for errors, the positive button must be overwritten.
+     * Note that the dialog needs to be shown before we can get a reference and override the positive button's behavior.
+     */
     @Override
     public void show() {
         mActivity.runOnUiThread(new Runnable() {
@@ -145,7 +160,9 @@ public class SmartcardPinDialog extends SmartcardDialog {
         });
     }
 
-    //Update Dialog to indicate that an incorrect attempt was made.
+    /**
+     * Update Dialog to indicate that an incorrect attempt was made.
+     */
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     public void setErrorMode() {
         mActivity.runOnUiThread(new Runnable() {
@@ -162,7 +179,9 @@ public class SmartcardPinDialog extends SmartcardDialog {
         });
     }
 
-    //Reset Dialog's UI to original non-error state.
+    /**
+     * Reset Dialog's UI to original non-error state.
+     */
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     public void resetErrorMode() {
         mActivity.runOnUiThread(new Runnable() {
@@ -177,27 +196,47 @@ public class SmartcardPinDialog extends SmartcardDialog {
         });
     }
 
-    //Listener interfaces and setters for the dialog buttons.
+    /**
+     * Sets listener for positive button.
+     * @param listener Implemented PositiveButtonListener.
+     */
     public void setPositiveButtonListener(PositiveButtonListener listener) {
         mPositiveButtonListener = listener;
     }
 
+    /**
+     * Sets listener for negative button.
+     * @param listener Implemented NegativeButtonListener.
+     */
     public void setNegativeButtonListener(NegativeButtonListener listener) {
         mNegativeButtonListener = listener;
     }
 
+    /**
+     * Sets callback for onCancelCba.
+     * @param callback Code to be run when onCancelCba is called.
+     */
     public void setCancelCbaCallback(CancelCbaCallback callback) {
         mCancelCbaCallback = callback;
     }
 
+    /**
+     * Listener interface for a positive button click.
+     */
     public interface PositiveButtonListener {
         void onClick(String pin);
     }
 
+    /**
+     * Listener interface for a negative button click.
+     */
     public interface NegativeButtonListener {
         void onClick();
     }
 
+    /**
+     * Callback interface for when CBA is cancelled unexpectedly.
+     */
     public interface CancelCbaCallback {
         void onCancel();
     }
