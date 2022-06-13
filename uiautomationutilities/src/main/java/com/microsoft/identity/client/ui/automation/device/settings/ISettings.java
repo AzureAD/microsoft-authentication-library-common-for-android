@@ -73,6 +73,19 @@ public interface ISettings {
                         final String password);
 
     /**
+     * Add the supplied account to the device via Account Manager.
+     *
+     * @param expectedBroker  the broker expected to be used for the account type
+     * @param username        the username of the account to add
+     * @param password        the password of the account to add
+     * @param isFederatedUser whether the user is federated user or not
+     */
+    void addWorkAccount(final ITestBroker expectedBroker,
+                        final String username,
+                        final String password,
+                        final boolean isFederatedUser);
+
+    /**
      * Launch the date & time page in Settings app.
      */
     void launchDateTimeSettingsPage();
