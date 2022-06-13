@@ -445,12 +445,10 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
             X509Certificate cert = piv.getCertificate(certDetails.getSlot());
             //TODO: do a confirmation that the cert retrieved above is the same cert that was picked earlier by comparing with YubiKitCertDetails
             //TODO: Complete authentication using cert and YubiKit sdk.
-            //TODO: Delete test code below between START and END comments (should be replaced with actual authentication)
             //Keystore
-            Security.insertProviderAt(new PivProvider(piv), 1);
             PivProvider pivProvider = new PivProvider(piv);
+            Security.insertProviderAt(pivProvider, 1);
             KeyStore keyStore = KeyStore.getInstance("YKPiv", pivProvider);
-            //TODO: look up why this init is needed
             keyStore.load(null);
             //try private key
             Slot slot = certDetails.getSlot();
