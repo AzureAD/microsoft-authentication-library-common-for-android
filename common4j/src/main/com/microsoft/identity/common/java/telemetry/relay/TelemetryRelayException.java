@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.telemetry.relay;
 
+import com.microsoft.identity.common.java.exception.BaseException;
+
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
@@ -29,20 +31,20 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
 
+/**
+ * An exception class for the telemetry pipeline.
+ */
 @EqualsAndHashCode(callSuper = true)
 @Data()
 @Accessors(prefix = "m")
-public class TelemetryRelayException extends Exception {
+public class TelemetryRelayException extends BaseException  {
     private static final long serialVersionUID = -1543623857511895210L;
 
     public static final String INITIALIZATION_FAILED = "initialization_failed";
     public static final String NOT_INITIALIZED = "not_initialized";
 
-    private String mErrorCode;
-
     public TelemetryRelayException(final @Nullable String message, final @Nonnull Throwable cause, final @Nonnull String errorCode) {
-        super(message, cause);
-        this.mErrorCode = errorCode;
+        super(errorCode, message, cause);
     }
 
     public TelemetryRelayException(final @Nonnull Throwable cause, final @Nonnull String errorCode) {

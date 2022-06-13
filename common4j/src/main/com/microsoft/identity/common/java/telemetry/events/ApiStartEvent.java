@@ -157,24 +157,6 @@ public class ApiStartEvent extends BaseEvent {
 
         if (parameters instanceof BrokerSilentTokenCommandParameters) {
             final BrokerSilentTokenCommandParameters silentParameters = (BrokerSilentTokenCommandParameters) parameters;
-
-            put(Key.USER_ID, silentParameters.getHomeAccountId()); //Pii
-            put(
-                    Key.IS_FORCE_REFRESH,
-                    String.valueOf(silentParameters.isForceRefresh())
-            );
-            put(
-                    Key.CALLER_APP_PACKAGE_NAME,
-                    silentParameters.getCallerPackageName()
-            );
-            put(
-                    Key.CALLER_APP_VERSION,
-                    silentParameters.getCallerAppVersion()
-            );
-            put(
-                    Key.CALLER_APP_UID,
-                    String.valueOf(silentParameters.getCallerUid())
-            );
         }
 
         return this;

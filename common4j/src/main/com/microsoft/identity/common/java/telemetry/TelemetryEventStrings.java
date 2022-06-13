@@ -64,8 +64,6 @@ public class TelemetryEventStrings {
         public static final String BROKER_START_EVENT = "broker_start_event";
         public static final String BROKER_END_EVENT = "broker_end_event";
 
-        public static final String BROKER_STRATEGY_EVENT = "broker_strategy_event";
-
         public static final String DEPRECATED_API_USAGE_EVENT = "deprecated_api_usage_event";
     }
 
@@ -139,14 +137,14 @@ public class TelemetryEventStrings {
         public static final String REQUEST_QUERY_PARAMS = EVENT_PREFIX + "query_params";
         public static final String USER_AGENT = EVENT_PREFIX + "user_agent";
         public static final String HTTP_ERROR_DOMAIN = EVENT_PREFIX + "http_error_domain"; //msal only
-        public static final String AUTHORITY = EVENT_PREFIX + "authority";
-        public static final String GRANT_TYPE = EVENT_PREFIX + "grant_type"; //msal only
-        public static final String REQUEST_CODE = EVENT_PREFIX + "request_code"; //msal only
-        public static final String RESULT_CODE = EVENT_PREFIX + "result_code"; //msal only
-        public static final String USER_CANCEL = EVENT_PREFIX + "user_cancel";
+        public static final String AUTHORITY = EVENT_PREFIX +"authority";
+        public static final String GRANT_TYPE = EVENT_PREFIX +"grant_type"; //msal only
+        public static final String REQUEST_CODE = EVENT_PREFIX +"request_code"; //msal only
+        public static final String RESULT_CODE = EVENT_PREFIX +"result_code"; //msal only
+        public static final String USER_CANCEL = EVENT_PREFIX +"user_cancel";
         public static final String UI_VISIBLE = EVENT_PREFIX + "ui_visible";
-        public static final String UI_CANCELLED = EVENT_PREFIX + "ui_cancelled"; //msal only
-        public static final String UI_COMPLETE = EVENT_PREFIX + "ui_complete"; //msal only
+        public static final String UI_CANCELLED = EVENT_PREFIX +"ui_cancelled"; //msal only
+        public static final String UI_COMPLETE = EVENT_PREFIX +"ui_complete"; //msal only
         public static final String SERVER_ERROR_CODE = EVENT_PREFIX + "server_error_code";
         public static final String SERVER_SUBERROR_CODE = EVENT_PREFIX + "server_sub_error_code";
         public static final String RT_AGE = EVENT_PREFIX + "rt_age";
@@ -162,10 +160,6 @@ public class TelemetryEventStrings {
         public static final String CLASS_NAME = EVENT_PREFIX + "class_name";
         public static final String CLASS_METHOD = EVENT_PREFIX + "class_method";
         public static final String PACKAGE_NAME = EVENT_PREFIX + "package_name";
-        public static final String CALLER_APP_PACKAGE_NAME = EVENT_PREFIX + "caller_app_package_name";
-        public static final String CALLER_APP_VERSION = EVENT_PREFIX + "caller_app_version";
-        public static final String CALLER_APP_UID = EVENT_PREFIX + "caller_app_uid";
-        public static final String IPC_STRATEGY = EVENT_PREFIX + "ipc_strategy";
     }
 
     public static final class Value {
@@ -210,8 +204,5 @@ public class TelemetryEventStrings {
         public static final String LOCAL_DEVICE_CODE_FLOW_ACQUIRE_URL_AND_CODE = "108";
         public static final String LOCAL_DEVICE_CODE_FLOW_POLLING = "109";
     }
-
-    public static final class BrokerApi {
-        public static final String ACQUIRE_TOKEN_SILENT = "301";
-    }
 }
+
