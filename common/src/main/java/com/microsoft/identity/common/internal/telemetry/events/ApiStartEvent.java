@@ -27,7 +27,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 /**
  * Deprecated. Use {@link com.microsoft.identity.common.java.telemetry.events.ApiStartEvent} instead.
  **/
-@SuppressFBWarnings("NM_SAME_SIMPLE_NAME_AS_INTERFACE")
+@SuppressFBWarnings("NM_SAME_SIMPLE_NAME_AS_SUPERCLASS")
 @Deprecated
 public class ApiStartEvent extends com.microsoft.identity.common.java.telemetry.events.ApiStartEvent {
 }
