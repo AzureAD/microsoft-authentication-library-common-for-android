@@ -54,10 +54,20 @@ import com.yubico.yubikit.core.util.Result;
 import com.yubico.yubikit.piv.InvalidPinException;
 import com.yubico.yubikit.piv.PivSession;
 import com.yubico.yubikit.piv.Slot;
+import com.yubico.yubikit.piv.jca.PivPrivateKey;
+import com.yubico.yubikit.piv.jca.PivProvider;
 
 import java.io.IOException;
+import java.security.Key;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.security.Principal;
 import java.security.PrivateKey;
+import java.security.Security;
+import java.security.UnrecoverableKeyException;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.List;
@@ -436,24 +446,24 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
             //TODO: do a confirmation that the cert retrieved above is the same cert that was picked earlier by comparing with YubiKitCertDetails
             //TODO: Complete authentication using cert and YubiKit sdk.
             //TODO: Delete test code below between START and END comments (should be replaced with actual authentication)
-            //NOTE: below is for testing. This would get replaced by the logic for actual authentication.
-            //TODO:START of code for testing
-            Logger.infoPII(methodTag, "Using cert object here as a placeholder for when it's needed for authentication: " + cert.getSubjectDN());
-            mActivity.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    Toast.makeText(mActivity.getApplicationContext(), "Success!", Toast.LENGTH_LONG).show();
-                    //Reset currentDialog to null
-                    synchronized (smartcardDialogLock) {
-                        mCurrentDialog = null;
-                    }
-                }
-            });
-            request.cancel();
+            //Keystore
+            Security.insertProviderAt(new PivProvider(piv), 1);
+            PivProvider pivProvider = new PivProvider(piv);
+            KeyStore keyStore = KeyStore.getInstance("YKPiv", pivProvider);
+            //TODO: look up why this init is needed
+            keyStore.load(null);
+            //try private key
+            Slot slot = certDetails.getSlot();
+            String alias = slot.getStringAlias();
+            PivPrivateKey privateKey = (PivPrivateKey) keyStore.getKey(alias, pin);
+            //X509Certificate[] chain = (X509Certificate[]) keyStore.getCertificateChain(alias); <- This line ends up blocking on line 129 of UsbYubiKeyDevice
+            X509Certificate[] chain = new X509Certificate[]{cert};
             synchronized (smartcardDialogLock) {
                 mCurrentDialog.dismiss();
+                mCurrentDialog = null;
             }
-            //TODO: END of code for testing
+            request.proceed(privateKey, chain);
+
         } catch (final InvalidPinException e) {
             // An incorrect Pin attempt.
             // We need to retrieve the number of pin attempts before proceeding.
@@ -474,6 +484,14 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
                     ((SmartcardPinDialog) mCurrentDialog).setErrorMode();
                 }
             }
+        } catch (UnrecoverableKeyException e) {
+            e.printStackTrace();
+        } catch (CertificateException e) {
+            e.printStackTrace();
+        } catch (KeyStoreException e) {
+            e.printStackTrace();
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
         }
     }
 
