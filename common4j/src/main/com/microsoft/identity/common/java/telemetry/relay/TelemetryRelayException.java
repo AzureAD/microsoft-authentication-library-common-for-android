@@ -43,7 +43,7 @@ public class TelemetryRelayException extends BaseException  {
     public static final String INITIALIZATION_FAILED = "initialization_failed";
     public static final String NOT_INITIALIZED = "not_initialized";
 
-    public TelemetryRelayException(final @Nullable String message, final @Nonnull Throwable cause, final @Nonnull String errorCode) {
+    public TelemetryRelayException(final @Nullable String message, final Throwable cause, final @Nonnull String errorCode) {
         super(errorCode, message, cause);
     }
 
