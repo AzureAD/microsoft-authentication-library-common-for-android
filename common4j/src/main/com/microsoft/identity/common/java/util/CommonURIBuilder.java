@@ -164,7 +164,9 @@ public class CommonURIBuilder extends cz.msebera.android.httpclient.client.utils
      */
     public String getLastPathSegment() {
         final List<String> pathSegments = getPathSegments();
-        if (pathSegments.isEmpty()) return "";
+        if (pathSegments.isEmpty()) {
+            return "";
+        }
 
         return pathSegments.get(pathSegments.size() - 1);
     }

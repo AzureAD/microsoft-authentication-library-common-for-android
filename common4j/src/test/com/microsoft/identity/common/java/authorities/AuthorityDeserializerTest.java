@@ -56,6 +56,7 @@ public class AuthorityDeserializerTest {
         final Authority authority = gson.fromJson(B2C_AUTHORITY, Authority.class);
 
         Assert.assertTrue(authority instanceof AzureActiveDirectoryB2CAuthority);
+        Assert.assertEquals("https://login.microsoftonline.com/tfp/msidlabb2c.onmicrosoft.com/B2C_1_SISOPolicy/", authority.getAuthorityUri().toString());
     }
 
     @Test
