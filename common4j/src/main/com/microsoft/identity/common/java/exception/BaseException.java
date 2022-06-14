@@ -23,6 +23,8 @@
 package com.microsoft.identity.common.java.exception;
 
 import com.microsoft.identity.common.java.telemetry.ITelemetryAccessor;
+import com.microsoft.identity.common.java.telemetry.Telemetry;
+import com.microsoft.identity.common.java.telemetry.events.ErrorEvent;
 import com.microsoft.identity.common.java.util.StringUtil;
 
 import java.util.ArrayList;
@@ -42,7 +44,7 @@ public class BaseException extends Exception implements IErrorInformation, ITele
     // When MSAL converts the result bundle it looks for this value to know about exception type
     // We moved the exception class to a new package with refactoring work,
     // but need to keep this value to older package name to avoid breaking older MSAL clients.
-    public static final String sName =  "com.microsoft.identity.common.exception.BaseException";
+    public static final String sName = "com.microsoft.identity.common.exception.BaseException";
 
     private static final long serialVersionUID = -5166242728507796770L;
 
@@ -68,6 +70,8 @@ public class BaseException extends Exception implements IErrorInformation, ITele
     private String mErrorCode;
 
     private String mCorrelationId;
+
+    private int mErrorTag = -1;
 
     // The username of the account that owns the flow.
     @Nullable
@@ -98,7 +102,17 @@ public class BaseException extends Exception implements IErrorInformation, ITele
      * @param errorCode The error code contained in the exception.
      */
     public BaseException(final String errorCode) {
-        mErrorCode = errorCode;
+        this(-1, errorCode);
+    }
+
+    /**
+     * Initiates the {@link BaseException} with error code and error tag
+     *
+     * @param errorCode The error code contained in the exception
+     * @param errorTag  The error tag for the exception
+     */
+    public BaseException(final int errorTag, final String errorCode) {
+        this(errorTag, errorCode, null);
     }
 
     /**
@@ -108,8 +122,18 @@ public class BaseException extends Exception implements IErrorInformation, ITele
      * @param errorMessage The error message contained in the exception.
      */
     public BaseException(final String errorCode, final String errorMessage) {
-        super(errorMessage);
-        mErrorCode = errorCode;
+        this(-1, errorCode, errorMessage);
+    }
+
+    /**
+     * Initiates the {@link BaseException} with error code and error message.
+     *
+     * @param errorCode    The error code contained in the exception.
+     * @param errorMessage The error message contained in the exception.
+     * @param errorTag     The error tag for the exception
+     */
+    public BaseException(final int errorTag, final String errorCode, final String errorMessage) {
+        this(errorTag, errorCode, errorMessage, null);
     }
 
     /**
@@ -121,8 +145,28 @@ public class BaseException extends Exception implements IErrorInformation, ITele
      */
     public BaseException(final String errorCode, final String errorMessage,
                          final Throwable throwable) {
+        this(-1, errorCode, errorMessage, throwable);
+    }
+
+    /**
+     * Initiates the {@link BaseException} with error code, error message and throwable.
+     *
+     * @param errorCode    The error code contained in the exception.
+     * @param errorMessage The error message contained in the exception.
+     * @param throwable    The {@link Throwable} contains the cause for the exception.
+     * @param errorTag     The error tag for the exception
+     */
+    public BaseException(final int errorTag, final String errorCode, final String errorMessage,
+                         final Throwable throwable) {
         super(errorMessage, throwable);
+        mErrorTag = errorTag;
         mErrorCode = errorCode;
+
+        // Emit error event whenever an exception is created.
+        Telemetry.emit(
+                new ErrorEvent()
+                        .putException(this)
+        );
     }
 
     /**
@@ -202,6 +246,15 @@ public class BaseException extends Exception implements IErrorInformation, ITele
 
     public String getExceptionName() {
         return sName;
+    }
+
+    public BaseException setErrorTag(final int errorTag) {
+        this.mErrorTag = errorTag;
+        return this;
+    }
+
+    public int getErrorTag() {
+        return this.mErrorTag;
     }
 
     public boolean isCacheable() {

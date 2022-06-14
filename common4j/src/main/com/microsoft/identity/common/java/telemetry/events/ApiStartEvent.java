@@ -152,11 +152,25 @@ public class ApiStartEvent extends BaseEvent {
         }
 
         if (parameters instanceof BrokerInteractiveTokenCommandParameters) {
-            //TODO when integrate the telemetry with broker.
+            final BrokerInteractiveTokenCommandParameters interactiveParameters = (BrokerInteractiveTokenCommandParameters) parameters;
+
+            put(Key.BROKER_VERSION, interactiveParameters.getBrokerVersion());
+            put(Key.BROKER_PROTOCOL_VERSION, interactiveParameters.getNegotiatedBrokerProtocolVersion());
+
+            put(Key.CALLER_APP_VERSION, interactiveParameters.getCallerAppVersion());
+            put(Key.CALLER_APP_PACKAGE_NAME, interactiveParameters.getCallerPackageName());
+            put(Key.CALLER_APP_UUID, String.valueOf(interactiveParameters.getCallerUid()));
         }
 
         if (parameters instanceof BrokerSilentTokenCommandParameters) {
             final BrokerSilentTokenCommandParameters silentParameters = (BrokerSilentTokenCommandParameters) parameters;
+
+            put(Key.BROKER_VERSION, silentParameters.getBrokerVersion());
+            put(Key.BROKER_PROTOCOL_VERSION, silentParameters.getNegotiatedBrokerProtocolVersion());
+
+            put(Key.CALLER_APP_VERSION, silentParameters.getCallerAppVersion());
+            put(Key.CALLER_APP_PACKAGE_NAME, silentParameters.getCallerPackageName());
+            put(Key.CALLER_APP_UUID, String.valueOf(silentParameters.getCallerUid()));
         }
 
         return this;

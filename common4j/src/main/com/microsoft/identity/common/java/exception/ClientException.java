@@ -156,7 +156,7 @@ public class ClientException extends BaseException {
     public static final String AUTHORITY_VALIDATION_NOT_SUPPORTED = "authority_validation_not_supported";
 
     /**
-     * Note: after MSAL 0.2.0 this error is no longer relevant.
+     * Note: after MSAL 0.2.0 this error is no inter relevant.
      * chrome_not_installed: Chrome is not installed on the device. The sdk uses chrome custom tab for
      * authorization requests if available, and will fall back to chrome browser.
      */
@@ -339,11 +339,31 @@ public class ClientException extends BaseException {
     /**
      * Constructor of ClientException.
      *
+     * @param errorCode String
+     */
+    public ClientException(final int errorTag, final String errorCode) {
+        super(errorTag, errorCode);
+    }
+
+    /**
+     * Constructor of ClientException.
+     *
      * @param errorCode    String
      * @param errorMessage String
      */
     public ClientException(final String errorCode, final String errorMessage) {
         super(errorCode, errorMessage);
+    }
+
+    /**
+     * Constructor of ClientException.
+     *
+     * @param errorTag     Long
+     * @param errorCode    String
+     * @param errorMessage String
+     */
+    public ClientException(final int errorTag, final String errorCode, final String errorMessage) {
+        super(errorTag, errorCode, errorMessage);
     }
 
     /**
@@ -355,6 +375,18 @@ public class ClientException extends BaseException {
      */
     public ClientException(final String errorCode, final String errorMessage, final Throwable throwable) {
         super(errorCode, errorMessage, throwable);
+    }
+
+    /**
+     * Constructor of ClientException.
+     *
+     * @param errorTag     Long
+     * @param errorCode    String
+     * @param errorMessage String
+     * @param throwable    Throwable
+     */
+    public ClientException(final int errorTag, final String errorCode, final String errorMessage, final Throwable throwable) {
+        super(errorTag, errorCode, errorMessage, throwable);
     }
 
     @Override
