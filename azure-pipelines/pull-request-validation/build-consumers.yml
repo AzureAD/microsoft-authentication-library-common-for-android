@@ -242,8 +242,13 @@ stages:
             git status
             git rev-parse HEAD
           workingDirectory: $(Agent.BuildDirectory)/s/OneAuth
+
       - task: MavenAuthenticate@0
         displayName: Authenticate to the IdentityDivision Android Maven feed
+        inputs:
+          artifactsFeeds: 'AndroidADAL, IDDP'
+          mavenServiceConnections: 'AndroidADALEngineering'
+
       - task: Bash@3
         displayName: Install ninja
         inputs:
