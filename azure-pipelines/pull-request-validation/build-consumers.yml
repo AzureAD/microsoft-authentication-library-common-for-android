@@ -32,7 +32,7 @@ resources:
   - repository: OneAuth
     type: git
     name: OneAuth/OneAuthAndroidCommonWrapper
-    ref: main
+    ref: matyu/modules
     endpoint: OneAuthServiceConnection_2
 
 stages:
@@ -217,7 +217,7 @@ stages:
         inputs:
           script: |
             git fetch
-            git checkout main
+            git checkout matyu/modules
             git pull
             git status
             git rev-parse HEAD
