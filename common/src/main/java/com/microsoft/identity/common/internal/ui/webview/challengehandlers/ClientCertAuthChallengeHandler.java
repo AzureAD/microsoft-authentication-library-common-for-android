@@ -70,7 +70,9 @@ import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.Callable;
 
 /**
  * Handles Certificate Based Authentication by means of certificates provisioned onto YubiKeys or the devices themselves.
@@ -137,6 +139,9 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
                             synchronized (deviceLock) {
                                 Logger.verbose(TAG, "A YubiKey device was disconnected");
                                 mDevice = null;
+                                //Remove the YKPiv security provider if it was added.
+                                //Note that Security.removeProvider will silently return if YKPiv doesn't exist.
+                                Security.removeProvider("YKPiv");
                                 //Call onCancel on current dialog, if dialog is showing.
                                 synchronized (smartcardDialogLock) {
                                     if (mCurrentDialog != null) {
@@ -388,19 +393,19 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
                                 verifySmartcardPin(pin.toCharArray(), certDetails, request, piv);
                             } catch(final IOException e) {
                                 Logger.error(methodTag, "IOException", e);
-                                CancelCbaAndResetCurrentDialog();
+                                cancelCbaAndResetCurrentDialog();
                                 //TODO: create and show error dialog here.
                             } catch (final ApduException e) {
                                 Logger.error(methodTag, "ApduException", e);
-                                CancelCbaAndResetCurrentDialog();
+                                cancelCbaAndResetCurrentDialog();
                                 //TODO: create and show error dialog here.
                             } catch (final ApplicationNotAvailableException e) {
                                 Logger.error(methodTag, "ApplicationNotAvailableException", e);
-                                CancelCbaAndResetCurrentDialog();
+                                cancelCbaAndResetCurrentDialog();
                                 //TODO: create and show error dialog here.
                             } catch (final BadResponseException e) {
                                 Logger.error(methodTag, "BadResponseException", e);
-                                CancelCbaAndResetCurrentDialog();
+                                cancelCbaAndResetCurrentDialog();
                                 //TODO: create and show error dialog here.
                             }
                         }
@@ -414,7 +419,7 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
     /**
      * Call current dialog's onCancelCba method and reset it back to null.
      */
-    private void CancelCbaAndResetCurrentDialog() {
+    private void cancelCbaAndResetCurrentDialog() {
         synchronized (smartcardDialogLock) {
             if (mCurrentDialog != null) {
                 mCurrentDialog.onCancelCba();
@@ -444,24 +449,15 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
             //If pin is successfully verified, we will get the certificate and perform the rest of the logic for authentication.
             X509Certificate cert = piv.getCertificate(certDetails.getSlot());
             //TODO: do a confirmation that the cert retrieved above is the same cert that was picked earlier by comparing with YubiKitCertDetails
-            //TODO: Complete authentication using cert and YubiKit sdk.
-            //Keystore
-            PivProvider pivProvider = new PivProvider(piv);
-            Security.insertProviderAt(pivProvider, 1);
-            KeyStore keyStore = KeyStore.getInstance("YKPiv", pivProvider);
-            keyStore.load(null);
-            //try private key
-            Slot slot = certDetails.getSlot();
-            String alias = slot.getStringAlias();
-            PivPrivateKey privateKey = (PivPrivateKey) keyStore.getKey(alias, pin);
-            //X509Certificate[] chain = (X509Certificate[]) keyStore.getCertificateChain(alias); <- This line ends up blocking on line 129 of UsbYubiKeyDevice
-            X509Certificate[] chain = new X509Certificate[]{cert};
-            synchronized (smartcardDialogLock) {
-                mCurrentDialog.dismiss();
-                mCurrentDialog = null;
+            //TODO: Ask team which X509Certificate parameters should be compared in order to ensure chosen cert is the same as extracted cert.
+            if (!cert.getSubjectDN().getName().equals(certDetails.getSubjectText()) || !cert.getIssuerDN().getName().equals(certDetails.getIssuerText())) {
+                Logger.info(methodTag, "Cert retrieved from slot does not match cert originally selected from picker.");
+                cancelCbaAndResetCurrentDialog();
+                //TODO: create and show error dialog here.
+                return;
             }
-            request.proceed(privateKey, chain);
-
+            //Complete authentication using cert and YubiKit sdk.
+            useSmartcardCertForAuth(cert, pin, certDetails.getSlot(), piv, request);
         } catch (final InvalidPinException e) {
             // An incorrect Pin attempt.
             // We need to retrieve the number of pin attempts before proceeding.
@@ -482,14 +478,6 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
                     ((SmartcardPinDialog) mCurrentDialog).setErrorMode();
                 }
             }
-        } catch (UnrecoverableKeyException e) {
-            e.printStackTrace();
-        } catch (CertificateException e) {
-            e.printStackTrace();
-        } catch (KeyStoreException e) {
-            e.printStackTrace();
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
         }
     }
 
@@ -513,6 +501,73 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
             mCurrentDialog = maxFailedAttemptsDialog;
             maxFailedAttemptsDialog.show();
         }
+    }
+
+    //TODO: Add doc comments
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    private void useSmartcardCertForAuth(X509Certificate cert, char[] pin, Slot slot, PivSession piv, ClientCertRequest request) {
+        final String methodTag = TAG + "useSmartcardCertForAuth:";
+        //Need to add a PivProvider instance to the beginning of the array of Security providers.
+        //Note that this provider is removed when the UsbYubiKeyDevice connection is closed.
+        Security.insertProviderAt(new PivProvider(getPivProviderCallback()), 1);
+        try {
+            //Using KeyStore methods in order to generate PivPrivateKey.
+            //Loading null is needed for initialization.
+            KeyStore keyStore = KeyStore.getInstance("YKPiv", new PivProvider(piv));
+            keyStore.load(null);
+            String alias = slot.getStringAlias();
+            PivPrivateKey privateKey = (PivPrivateKey) keyStore.getKey(alias, pin);
+            //Cert chain only needs the cert to be used for authentication.
+            X509Certificate[] chain = new X509Certificate[]{cert};
+            //Dismiss the PIN dialog.
+            synchronized (smartcardDialogLock) {
+                mCurrentDialog.dismiss();
+                mCurrentDialog = null;
+            }
+            //Call proceed on ClientCertRequest with privateKey and cert chain.
+            request.proceed(privateKey, chain);
+        } catch (UnrecoverableKeyException e) {
+            Logger.error(methodTag, "UnrecoverableKeyException", e);
+            cancelCbaAndResetCurrentDialog();
+            //TODO: create and show error dialog here.
+        } catch (CertificateException e) {
+            Logger.error(methodTag, "CertificateException", e);
+            cancelCbaAndResetCurrentDialog();
+            //TODO: create and show error dialog here.
+        } catch (KeyStoreException e) {
+            Logger.error(methodTag, "KeyStoreException", e);
+            cancelCbaAndResetCurrentDialog();
+            //TODO: create and show error dialog here.
+        } catch (IOException e) {
+            Logger.error(methodTag, "IOException", e);
+            cancelCbaAndResetCurrentDialog();
+            //TODO: create and show error dialog here.
+        } catch (NoSuchAlgorithmException e) {
+            Logger.error(methodTag, "NoSuchAlgorithmException", e);
+            cancelCbaAndResetCurrentDialog();
+            //TODO: create and show error dialog here.
+        }
+    }
+    //TODO: add doc comments
+    private Callback<Callback<Result<PivSession, Exception>>> getPivProviderCallback() {
+        return new Callback<Callback<Result<PivSession, Exception>>>() {
+            @Override
+            public void invoke(@NonNull final Callback<Result<PivSession, Exception>> callback) {
+                synchronized (deviceLock) {
+                    mDevice.requestConnection(UsbSmartCardConnection.class, new Callback<Result<UsbSmartCardConnection, IOException>>() {
+                        @Override
+                        public void invoke(@NonNull final Result<UsbSmartCardConnection, IOException> value) {
+                            callback.invoke(Result.of(new Callable<PivSession>() {
+                                @Override
+                                public PivSession call() throws Exception {
+                                    return new PivSession(value.getValue());
+                                }
+                            }));
+                        }
+                    });
+                }
+            }
+        };
     }
 
     /**
