@@ -14,21 +14,21 @@ variables:
 
 resources:
   repositories:
-  - repository: msal
-    type: github
-    name: AzureAD/microsoft-authentication-library-for-android
-    ref: dev
-    endpoint: ANDROID_GITHUB
-  - repository: broker
-    type: github
-    name: AzureAD/ad-accounts-for-android
-    ref: dev
-    endpoint: ANDROID_GITHUB
-  - repository: adal
-    type: github
-    name: AzureAD/azure-activedirectory-library-for-android
-    ref: dev
-    endpoint: ANDROID_GITHUB
+  # - repository: msal
+  #   type: github
+  #   name: AzureAD/microsoft-authentication-library-for-android
+  #   ref: dev
+  #   endpoint: ANDROID_GITHUB
+  # - repository: broker
+  #   type: github
+  #   name: AzureAD/ad-accounts-for-android
+  #   ref: dev
+  #   endpoint: ANDROID_GITHUB
+  # - repository: adal
+  #   type: github
+  #   name: AzureAD/azure-activedirectory-library-for-android
+  #   ref: dev
+  #   endpoint: ANDROID_GITHUB
   - repository: OneAuth
     type: git
     name: OneAuth/OneAuthAndroidCommonWrapper
