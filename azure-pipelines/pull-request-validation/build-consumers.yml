@@ -31,8 +31,8 @@ resources:
     endpoint: ANDROID_GITHUB
   - repository: OneAuth
       type: git
-      name: OneAuth/OneAuth-Experiments
-      ref: oneauthwrapper
+      name: OneAuth/OneAuthAndroidCommonWrapper
+      ref: main
       endpoint: OneAuthServiceConnection
 
 stages:
@@ -213,15 +213,15 @@ stages:
         submodules: true
         persistCredentials: True
       - task: CmdLine@2
-        displayName: Checkout oneAuthWrapper submodule oneauthwrapper
+        displayName: Checkout OneAuthAndroidCommonWrapper
         inputs:
           script: |
             git fetch
-            git checkout oneauthwrapper
+            git checkout main
             git pull
             git status
             git rev-parse HEAD
-          workingDirectory: $(Agent.BuildDirectory)/s/OneAuthWrapper
+          workingDirectory: $(Agent.BuildDirectory)/s/
       - task: CmdLine@2
         displayName: Checkout common submodule $(commonBranch)
         inputs:
@@ -231,7 +231,7 @@ stages:
             git pull
             git status
             git rev-parse HEAD
-          workingDirectory: $(Agent.BuildDirectory)/s/OneAuthWrapper/common
+          workingDirectory: $(Agent.BuildDirectory)/s/common
       - task: CmdLine@2
         displayName: Checkout OneAuth submodule $(oneAuthBranchName)
         inputs:
@@ -241,9 +241,11 @@ stages:
             git pull
             git status
             git rev-parse HEAD
-          workingDirectory: $(Agent.BuildDirectory)/s/OneAuthWrapper/OneAuth
+          workingDirectory: $(Agent.BuildDirectory)/s/OneAuth
       - task: MavenAuthenticate@0
         displayName: Authenticate to the IdentityDivision Android Maven feed
+        inputs:
+          artifactsFeeds: IDDP
       - task: Bash@3
         displayName: Install ninja
         inputs:
@@ -259,12 +261,12 @@ stages:
       - task: Gradle@2
         displayName: Assemble OneAuth
         inputs:
-          cwd: $(Agent.BuildDirectory)/s/OneAuthWrapper
-          gradleWrapperFile: $(Agent.BuildDIrectory)/s/OneAuthWrapper/gradlew.bat
+          cwd: $(Agent.BuildDirectory)/s/
+          gradleWrapperFile: $(Agent.BuildDIrectory)/s/gradlew.bat
           tasks: clean assembleOneAuth
       - task: Gradle@2
         displayName: Run OneAuth Unit tests
         inputs:
-          cwd: $(Agent.BuildDirectory)/s/OneAuthWrapper
-          gradleWrapperFile: $(Agent.BuildDIrectory)/s/OneAuthWrapper/gradlew.bat
+          cwd: $(Agent.BuildDirectory)/s/
+          gradleWrapperFile: $(Agent.BuildDIrectory)/s/gradlew.bat
           tasks: runOneAuthTests
