@@ -33,7 +33,7 @@ resources:
     type: git
     name: OneAuth/OneAuthAndroidCommonWrapper
     ref: main
-    endpoint: OneAuthServiceConnection
+    endpoint: OneAuthServiceConnection_2
 
 stages:
 - stage: validateConsumers
