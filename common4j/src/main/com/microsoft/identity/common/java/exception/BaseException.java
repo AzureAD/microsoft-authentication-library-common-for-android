@@ -71,8 +71,6 @@ public class BaseException extends Exception implements IErrorInformation, ITele
 
     private String mCorrelationId;
 
-    private int mErrorTag = -1;
-
     // The username of the account that owns the flow.
     @Nullable
     private String mUsername;
@@ -94,6 +92,7 @@ public class BaseException extends Exception implements IErrorInformation, ITele
      * Default constructor.
      */
     protected BaseException() {
+        this(null);
     }
 
     /**
@@ -102,17 +101,7 @@ public class BaseException extends Exception implements IErrorInformation, ITele
      * @param errorCode The error code contained in the exception.
      */
     public BaseException(final String errorCode) {
-        this(-1, errorCode);
-    }
-
-    /**
-     * Initiates the {@link BaseException} with error code and error tag
-     *
-     * @param errorCode The error code contained in the exception
-     * @param errorTag  The error tag for the exception
-     */
-    public BaseException(final int errorTag, final String errorCode) {
-        this(errorTag, errorCode, null);
+        this(errorCode, null);
     }
 
     /**
@@ -122,18 +111,7 @@ public class BaseException extends Exception implements IErrorInformation, ITele
      * @param errorMessage The error message contained in the exception.
      */
     public BaseException(final String errorCode, final String errorMessage) {
-        this(-1, errorCode, errorMessage);
-    }
-
-    /**
-     * Initiates the {@link BaseException} with error code and error message.
-     *
-     * @param errorCode    The error code contained in the exception.
-     * @param errorMessage The error message contained in the exception.
-     * @param errorTag     The error tag for the exception
-     */
-    public BaseException(final int errorTag, final String errorCode, final String errorMessage) {
-        this(errorTag, errorCode, errorMessage, null);
+        this(errorCode, errorMessage, null);
     }
 
     /**
@@ -145,27 +123,12 @@ public class BaseException extends Exception implements IErrorInformation, ITele
      */
     public BaseException(final String errorCode, final String errorMessage,
                          final Throwable throwable) {
-        this(-1, errorCode, errorMessage, throwable);
-    }
-
-    /**
-     * Initiates the {@link BaseException} with error code, error message and throwable.
-     *
-     * @param errorCode    The error code contained in the exception.
-     * @param errorMessage The error message contained in the exception.
-     * @param throwable    The {@link Throwable} contains the cause for the exception.
-     * @param errorTag     The error tag for the exception
-     */
-    public BaseException(final int errorTag, final String errorCode, final String errorMessage,
-                         final Throwable throwable) {
         super(errorMessage, throwable);
-        mErrorTag = errorTag;
         mErrorCode = errorCode;
 
         // Emit error event whenever an exception is created.
         Telemetry.emit(
-                new ErrorEvent()
-                        .putException(this)
+                new ErrorEvent().putException(this)
         );
     }
 
@@ -246,15 +209,6 @@ public class BaseException extends Exception implements IErrorInformation, ITele
 
     public String getExceptionName() {
         return sName;
-    }
-
-    public BaseException setErrorTag(final int errorTag) {
-        this.mErrorTag = errorTag;
-        return this;
-    }
-
-    public int getErrorTag() {
-        return this.mErrorTag;
     }
 
     public boolean isCacheable() {

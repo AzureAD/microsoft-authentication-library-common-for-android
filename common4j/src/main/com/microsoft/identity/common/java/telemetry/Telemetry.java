@@ -256,11 +256,7 @@ public class Telemetry {
             Map<String, String> event = iterator.next();
             if (TelemetryEventStrings.EventType.ERROR_EVENT.equalsIgnoreCase(event.get(Key.EVENT_TYPE))) {
                 finalRawMap.add(applyPiiOiiRule(event));
-                // Remove errors that do not have a correlation id.
-                // Those that have, we will flush them along events with the same correlation id
-                if (StringUtil.isNullOrEmpty(event.get(Key.CORRELATION_ID))) {
-                    iterator.remove();
-                }
+                iterator.remove();
             }
         }
 
@@ -288,15 +284,13 @@ public class Telemetry {
             return;
         }
 
-
-        // Flush errors first.
-        flushErrors();
-
         final List<Map<String, String>> finalRawMap = new CopyOnWriteArrayList<>();
 
         for (Iterator<Map<String, String>> iterator = mTelemetryRawDataMap.iterator(); iterator.hasNext(); ) {
             Map<String, String> event = iterator.next();
-            if (correlationId.equalsIgnoreCase(event.get(Key.CORRELATION_ID))) {
+            // flush error events too
+            if (correlationId.equalsIgnoreCase(event.get(Key.CORRELATION_ID))
+                    || TelemetryEventStrings.EventType.ERROR_EVENT.equals(event.get(Key.EVENT_TYPE))) {
                 finalRawMap.add(applyPiiOiiRule(event));
                 iterator.remove();
             }
