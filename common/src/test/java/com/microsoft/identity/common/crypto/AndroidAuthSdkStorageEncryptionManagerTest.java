@@ -22,6 +22,10 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.crypto;
 
+import static com.microsoft.identity.common.crypto.MockData.PREDEFINED_KEY;
+import static com.microsoft.identity.common.crypto.MockData.TEXT_ENCRYPTED_BY_ANDROID_WRAPPED_KEY;
+import static com.microsoft.identity.common.crypto.MockData.TEXT_ENCRYPTED_BY_PREDEFINED_KEY;
+
 import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
@@ -41,10 +45,6 @@ import java.util.List;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
-
-import static com.microsoft.identity.common.crypto.MockData.PREDEFINED_KEY;
-import static com.microsoft.identity.common.crypto.MockData.TEXT_ENCRYPTED_BY_ANDROID_WRAPPED_KEY;
-import static com.microsoft.identity.common.crypto.MockData.TEXT_ENCRYPTED_BY_PREDEFINED_KEY;
 
 @RunWith(RobolectricTestRunner.class)
 public class AndroidAuthSdkStorageEncryptionManagerTest {
@@ -112,9 +112,13 @@ public class AndroidAuthSdkStorageEncryptionManagerTest {
     @Test
     public void testGetDecryptionKey_ForDataEncryptedWithPreDefinedKey() {
         final AndroidAuthSdkStorageEncryptionManager manager = new AndroidAuthSdkStorageEncryptionManager(context, null);
-        final List<AbstractSecretKeyLoader> keyLoaderList = manager.getKeyLoaderForDecryption(TEXT_ENCRYPTED_BY_PREDEFINED_KEY);
-
-        Assert.assertEquals(0, keyLoaderList.size());
+        try {
+            final List<AbstractSecretKeyLoader> keyLoaderList = manager.getKeyLoaderForDecryption(TEXT_ENCRYPTED_BY_PREDEFINED_KEY);
+        } catch (IllegalStateException ex) {
+            Assert.assertEquals(
+                    "Cipher Text is encrypted by USER_PROVIDED_KEY_IDENTIFIER, but mPredefinedKeyLoader is null.",
+                    ex.getMessage());
+        }
     }
 
     /**

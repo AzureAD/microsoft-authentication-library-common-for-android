@@ -1,3 +1,7 @@
+Version 4.2.0-hf1
+----------
+- [PATCH] Add additional logging/exception to identify root cause for office union app crash (#1762)
+
 Version 4.2.0
 ----------
 - [PATCH] Add exception handling in Content Provider strategy, for broker communication (#1722)
