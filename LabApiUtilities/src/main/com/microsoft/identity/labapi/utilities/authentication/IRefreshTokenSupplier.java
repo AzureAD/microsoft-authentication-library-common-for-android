@@ -22,15 +22,18 @@
 // THE SOFTWARE.
 package com.microsoft.identity.labapi.utilities.authentication;
 
+import com.microsoft.identity.labapi.utilities.exception.LabApiException;
+
 /**
- * A factory that can return an implementation of an {@link IConfidentialAuthClient}
+ * An interface describing a refresh token accessor i.e. anyone that has the ability to return a
+ * valid (unexpired) refresh token.
  */
-public interface IConfidentialAuthClientFactory {
+public interface IRefreshTokenSupplier {
 
     /**
-     * Obtain an instance of an {@link IConfidentialAuthClient}.
+     * Obtain a valid refresh token.
      *
-     * @return the Confidential Auth Client to use.
+     * @return a String representing a refresh token
      */
-    IConfidentialAuthClient getConfidentialAuthClient();
+    String getRefreshToken() throws LabApiException;
 }

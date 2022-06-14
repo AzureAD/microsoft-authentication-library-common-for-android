@@ -47,6 +47,7 @@ import static com.microsoft.identity.common.java.providers.Constants.MOCK_ERROR_
 import static com.microsoft.identity.common.java.providers.Constants.MOCK_FRAGMENT_STRING;
 import static com.microsoft.identity.common.java.providers.Constants.MOCK_REDIRECT_URI;
 import static com.microsoft.identity.common.java.providers.Constants.MOCK_STATE;
+import static com.microsoft.identity.common.java.providers.Constants.MOCK_STATE_ENCODED;
 import static com.microsoft.identity.common.java.providers.Constants.MOCK_WPJ_USERNAME;
 import static com.microsoft.identity.common.java.providers.Constants.WPJ_REQUIRED_REDIRECT_URI;
 import static org.junit.Assert.assertEquals;
@@ -258,7 +259,7 @@ public class MicrosoftStsAuthorizationResultFactoryTest {
         final AuthorizationResult result = mAuthorizationResultFactory.createAuthorizationResult(
                 RawAuthorizationResult.fromRedirectUri(
                         MOCK_REDIRECT_URI
-                                + "?" + "code=authorization_code&state=" + MOCK_STATE
+                                + "?" + "code=authorization_code&state=" + MOCK_STATE_ENCODED
                                 + MOCK_FRAGMENT_STRING
                 ), getMstsAuthorizationRequest());
         assertNotNull(result);

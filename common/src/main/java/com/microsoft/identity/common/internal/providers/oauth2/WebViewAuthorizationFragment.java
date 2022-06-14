@@ -200,13 +200,9 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         return view;
     }
 
-    /**
-     * NOTE: Fragment-only mode will not support this, as we don't own the activity.
-     * This must be invoked by AuthorizationActivity.onBackPressed().
-     */
     @Override
-    public boolean onBackPressed() {
-        final String methodTag = TAG + ":onBackPressed";
+    public void handleBackButtonPressed() {
+        final String methodTag = TAG + ":handleBackButtonPressed";
         Logger.info(methodTag, "Back button is pressed");
 
         if (mWebView.canGoBack()) {
@@ -223,8 +219,6 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         } else {
             cancelAuthorization(true);
         }
-
-        return true;
     }
 
     /**

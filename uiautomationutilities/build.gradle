@@ -181,15 +181,8 @@ dependencies {
     implementation "androidx.test.uiautomator:uiautomator:$rootProject.ext.uiAutomatorVersion"
     implementation "androidx.test:monitor:$rootProject.ext.androidxTestMonitorVersion"
     implementation "androidx.test:core:$rootProject.ext.androidxTestCoreVersion"
-    if (findProject(":testutils") != null) {
-        //Use project reference if available
-        implementation(project(":testutils")) {
-            transitive = true
-        }
-    } else {
-        //Always use the latest release
-        implementation(group: 'com.microsoft.identity', name: 'testutils', version: '0.0.+')
-    }
+    implementation(project(":LabApiUtilities"))
+    implementation "com.google.code.gson:gson:$rootProject.ext.gsonVersion"
     compileOnly "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
     annotationProcessor "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
     androidTestImplementation "androidx.test:runner:$rootProject.ext.androidxTestRunnerVersion"

@@ -20,26 +20,17 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.labapi.utilities.constants;
+package com.microsoft.identity.labapi.utilities.authentication.client;
 
-public enum AzureEnvironment {
-    AZURE_B2C_CLOUD(LabConstants.AzureEnvironment.AZURE_B2C_CLOUD),
-    AZURE_CHINA_CLOUD(LabConstants.AzureEnvironment.AZURE_CHINA_CLOUD),
-    AZURE_CLOUD(LabConstants.AzureEnvironment.AZURE_CLOUD),
-    AZURE_GERMANY_CLOUD(LabConstants.AzureEnvironment.AZURE_GERMANY_CLOUD),
-    AZURE_GERMANY_CLOUD_MIGRATED(LabConstants.AzureEnvironment.AZURE_GERMANY_CLOUD_MIGRATED),
-    AZURE_PPE(LabConstants.AzureEnvironment.AZURE_PPE),
-    AZURE_US_GOVERNMENT(LabConstants.AzureEnvironment.AZURE_US_GOVERNMENT),
-    AZURE_US_GOVERNMENT_MIGRATED(LabConstants.AzureEnvironment.AZURE_US_GOVERNMENT_MIGRATED);
+/**
+ * A factory that can return an implementation of an {@link IConfidentialAuthClient}
+ */
+public interface IConfidentialAuthClientFactory {
 
-    final String value;
-
-    AzureEnvironment(final String value) {
-        this.value = value;
-    }
-
-    @Override
-    public String toString() {
-        return value;
-    }
+    /**
+     * Obtain an instance of an {@link IConfidentialAuthClient}.
+     *
+     * @return the Confidential Auth Client to use.
+     */
+    IConfidentialAuthClient getConfidentialAuthClient();
 }

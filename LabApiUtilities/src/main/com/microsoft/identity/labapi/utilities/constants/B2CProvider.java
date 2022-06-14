@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.labapi.utilities.constants;
 
+import lombok.NonNull;
+
 public enum B2CProvider {
     NONE(LabConstants.B2CProvider.NONE),
     AMAZON(LabConstants.B2CProvider.AMAZON),
@@ -40,5 +42,9 @@ public enum B2CProvider {
     @Override
     public String toString() {
         return value;
+    }
+
+    public static B2CProvider fromName(@NonNull final String name) {
+        return valueOf(B2CProvider.class, name.toUpperCase());
     }
 }
