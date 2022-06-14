@@ -30,10 +30,10 @@ resources:
     ref: dev
     endpoint: ANDROID_GITHUB
   - repository: OneAuth
-      type: git
-      name: OneAuth/OneAuth-Experiments
-      ref: oneauthwrapper
-      endpoint: OneAuthServiceConnection
+    type: git
+    name: OneAuth/OneAuth-Experiments
+    ref: oneauthwrapper
+    endpoint: OneAuthServiceConnection
 
 stages:
 - stage: validateConsumers
