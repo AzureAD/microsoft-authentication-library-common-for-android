@@ -196,6 +196,11 @@ public class ApiStartEvent extends BaseEvent {
         return this;
     }
 
+    public ApiStartEvent putWorkPlaceJoined(final boolean isWorkPlaceJoined) {
+        put(Key.IS_WPJ_JOINED, String.valueOf(isWorkPlaceJoined));
+        return this;
+    }
+
     public ApiStartEvent putLoginHint(@NonNull final String loginHint) {
         final String methodTag = TAG + ":putLoginHint";
         try {

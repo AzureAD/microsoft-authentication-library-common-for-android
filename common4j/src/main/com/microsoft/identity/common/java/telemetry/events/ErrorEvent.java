@@ -31,7 +31,7 @@ public class ErrorEvent extends BaseEvent {
         final String tag = exception.getClass().getSimpleName() + exception.getMessage() + stackTraceElement.getClassName() + stackTraceElement.getMethodName();
 
         // we add Integer.MAX_VALUE to ensure we don't get negatives. This is to ensure consistency and avoid confusion in the tags generated.
-        // if we allow negatives we would generate tags like tag_-123456 and tag_123456, which may seem as similar.
+        // For example, if we allow negatives we would generate tags like tag_-123456 and tag_123456, which may seem as similar.
         return ERROR_TAG_PREFIX + (((long) tag.hashCode()) + Integer.MAX_VALUE);
     }
 
@@ -78,6 +78,7 @@ public class ErrorEvent extends BaseEvent {
 
         put(TelemetryEventStrings.Key.ERROR_CLASS_NAME, exception.getClass().getSimpleName());
         put(TelemetryEventStrings.Key.ERROR_DESCRIPTION, exception.getMessage()); // pii
+        put(TelemetryEventStrings.Key.IS_ERROR_EVENT, TelemetryEventStrings.Value.TRUE);
 
         if (exception instanceof BaseException) {
             final BaseException adaptedException = (BaseException) exception;
