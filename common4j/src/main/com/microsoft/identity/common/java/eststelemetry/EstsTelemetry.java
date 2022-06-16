@@ -56,10 +56,15 @@ public class EstsTelemetry {
     private static final String LAST_REQUEST_TELEMETRY_STORAGE_FILE =
             "com.microsoft.identity.client.last_request_telemetry";
 
+    private static final String SUPPLEMENTAL_TELEMETRY_DATA_CACHE_FILE_NAME =
+            "com.microsoft.identity.client.supplemental_telemetry_data_cache";
+
     private static volatile EstsTelemetry sEstsTelemetryInstance = null;
     private LastRequestTelemetryCache mLastRequestTelemetryCache;
     private final INameValueStorage<CurrentRequestTelemetry> mTelemetryMap;
     private final INameValueStorage<Set<FailedRequest>> mSentFailedRequests;
+
+    private INameValueStorage<String> mSupplementalTelemetryDataCache;
 
     EstsTelemetry() {
         this(new InMemoryStorage<CurrentRequestTelemetry>(),
@@ -115,6 +120,12 @@ public class EstsTelemetry {
             this.mLastRequestTelemetryCache = new LastRequestTelemetryCache(
                     platformComponents.getNameValueStore(LAST_REQUEST_TELEMETRY_STORAGE_FILE, String.class));
         }
+
+        if (mSupplementalTelemetryDataCache == null) {
+            mSupplementalTelemetryDataCache = platformComponents.getNameValueStore(
+                    SUPPLEMENTAL_TELEMETRY_DATA_CACHE_FILE_NAME, String.class
+            );
+        }
     }
 
     /**
@@ -164,7 +175,31 @@ public class EstsTelemetry {
         final CurrentRequestTelemetry currentTelemetryInstance = getCurrentTelemetryInstance(correlationId);
         if (currentTelemetryInstance != null) {
             currentTelemetryInstance.put(key, compliantValueString);
+        } else if (mSupplementalTelemetryDataCache != null) {
+            mSupplementalTelemetryDataCache.put(key, compliantValueString);
         }
+    }
+
+    /**
+     * Emit the provided telemetry field. The field will be saved in {@link RequestTelemetry} object
+     * associated to the current request.
+     *
+     * @param key   the key associated to the telemetry field
+     * @param value the value associated to the telemetry field
+     */
+    public void emit(final String key, final int value) {
+        emit(key, String.valueOf(value));
+    }
+
+    /**
+     * Emit the provided telemetry field. The field will be saved in {@link RequestTelemetry} object
+     * associated to the current request.
+     *
+     * @param key   the key associated to the telemetry field
+     * @param value the value associated to the telemetry field
+     */
+    public void emit(final String key, final long value) {
+        emit(key, String.valueOf(value));
     }
 
     /**
@@ -232,6 +267,11 @@ public class EstsTelemetry {
 
             // headers have been logged by sts - we don't need to hold on to this data - let's wipe
             lastRequestTelemetry.wipeFailedRequestAndErrorForSubList(failedRequestSentSet);
+
+            if (mSupplementalTelemetryDataCache != null) {
+                // headers have been logged by sts - we don't need to hold on to this data - let's wipe
+                mSupplementalTelemetryDataCache.clear();
+            }
         }
 
         // get the error encountered during execution of this command
@@ -364,6 +404,11 @@ public class EstsTelemetry {
             Logger.warn(TAG + methodName, "currentTelemetry for correlation ID:" +
                     correlationId + " is null.");
             return null;
+        }
+
+        // we are collecting telemetry so now add these to primary Map
+        if (mSupplementalTelemetryDataCache != null) {
+            EstsTelemetry.getInstance().emit(mSupplementalTelemetryDataCache.getAll());
         }
 
         return currentTelemetry.getCompleteHeaderString();

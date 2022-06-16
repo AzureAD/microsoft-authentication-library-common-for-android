@@ -25,6 +25,8 @@ package com.microsoft.identity.common.java.eststelemetry;
 import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings;
 
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * This class defines the schema for server-side telemetry
@@ -54,6 +56,16 @@ public class SchemaConstants {
         public static final String FRT_STATUS = TelemetryEventStrings.Key.FRT_STATUS;
         public static final String MRRT_STATUS = TelemetryEventStrings.Key.MRRT_STATUS;
         public static final String ALL_TELEMETRY_DATA_SENT = "is_all_telemetry_data_sent";
+
+        // flw fields
+        public static final String REG_TYPE = "reg_type";
+        public static final String REG_SOURCE = "reg_source";
+        public static final String FLW_SIGNOUT_APP = "flw_signout_app";
+        public static final String FLW_SIGNIN_APP = "flw_signin_app";
+        public static final String REG_NUM = "reg_num";
+        public static final String CLOUD_NUM = "cloud_num";
+        public static final String REG_SEQ_NUM = "reg_seq_num";
+        public static final String REQ_PURPOSE = "req_purpose";
     }
 
     public static final class Value {
@@ -74,7 +86,15 @@ public class SchemaConstants {
             SchemaConstants.Key.AT_STATUS,
             SchemaConstants.Key.RT_STATUS,
             SchemaConstants.Key.FRT_STATUS,
-            SchemaConstants.Key.MRRT_STATUS
+            SchemaConstants.Key.MRRT_STATUS,
+//            Key.REG_TYPE,
+//            Key.REG_SOURCE,
+//            Key.FLW_SIGNOUT_APP,
+//            Key.FLW_SIGNIN_APP,
+//            Key.REG_NUM,
+//            Key.CLOUD_NUM,
+//            Key.REG_SEQ_NUM,
+//            Key.REQ_PURPOSE,
     };
 
     /**
@@ -86,6 +106,13 @@ public class SchemaConstants {
             SchemaConstants.Key.ALL_TELEMETRY_DATA_SENT
     };
 
+    /**
+     * This array defines the platform fields for which multiple values are allowed.
+     */
+    private static final Set<String> multiValuePlatformFields = new HashSet<String>() {{
+        add(Key.REG_SOURCE);
+    }};
+
     static boolean isCurrentPlatformField(final String key) {
         return Arrays.asList(currentRequestPlatformFields).contains(key);
     }
@@ -94,6 +121,9 @@ public class SchemaConstants {
         return Arrays.asList(lastRequestPlatformFields).contains(key);
     }
 
+    static boolean areMultipleValuesAllowedForThisPlatformField(final String key) {
+        return multiValuePlatformFields.contains(key);
+    }
 
     static String[] getCurrentRequestPlatformFields() {
         return currentRequestPlatformFields;

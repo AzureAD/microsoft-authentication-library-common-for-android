@@ -26,9 +26,23 @@ import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.util.StringUtil;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 import lombok.NonNull;
 
@@ -42,9 +56,13 @@ public abstract class RequestTelemetry implements IRequestTelemetry {
     @SerializedName("platform_telemetry")
     private final ConcurrentMap<String, String> mPlatformTelemetry;
 
+    @SerializedName("platform_telemetry_multi")
+    private final ConcurrentMap<String, Collection<String>> mPlatformTelemetryMultiVal;
+
     RequestTelemetry(@NonNull final String schemaVersion) {
         mSchemaVersion = schemaVersion;
         mPlatformTelemetry = new ConcurrentHashMap<>();
+        mPlatformTelemetryMultiVal = new ConcurrentHashMap<>();
     }
 
     private boolean isPlatformTelemetryField(final String key) {
@@ -59,7 +77,16 @@ public abstract class RequestTelemetry implements IRequestTelemetry {
 
     final void putInPlatformTelemetry(final String key, final String value) {
         if (isPlatformTelemetryField(key)) {
-            mPlatformTelemetry.putIfAbsent(key, value);
+            if (SchemaConstants.areMultipleValuesAllowedForThisPlatformField(key)) {
+                Collection<String> valuesForThisKey = mPlatformTelemetryMultiVal.get(key);
+                if (valuesForThisKey == null) {
+                    valuesForThisKey = new ConcurrentLinkedQueue<>();
+                }
+                valuesForThisKey.add(value);
+                mPlatformTelemetryMultiVal.put(key, valuesForThisKey);
+            } else {
+                mPlatformTelemetry.putIfAbsent(key, value);
+            }
         }
     }
 
@@ -100,7 +127,15 @@ public abstract class RequestTelemetry implements IRequestTelemetry {
             platformFields = SchemaConstants.getLastRequestPlatformFields();
         }
 
-        return getHeaderStringForFields(platformFields, mPlatformTelemetry);
+        final Map<String, Collection<String>> mergedTelemetry = new ConcurrentHashMap<>();
+
+        for (final Map.Entry<String, String> entry : mPlatformTelemetry.entrySet()) {
+            mergedTelemetry.put(entry.getKey(), Collections.singleton(entry.getValue()));
+        }
+
+        mergedTelemetry.putAll(mPlatformTelemetryMultiVal);
+
+        return getHeaderStringForFields(platformFields, mergedTelemetry);
     }
 
     /**
@@ -115,24 +150,26 @@ public abstract class RequestTelemetry implements IRequestTelemetry {
      */
     @NonNull
     // This only being used to compute the platform telemetry header string
-    private String getHeaderStringForFields(final String[] fields, final Map<String, String> telemetry) {
+    private String getHeaderStringForFields(final String[] fields, final Map<String, Collection<String>> telemetry) {
         if (fields == null || telemetry == null) {
             return "";
         }
 
-        StringBuilder sb = new StringBuilder();
+        final List<String> renderedValuesList = new ArrayList<>();
 
-        for (int i = 0; i < fields.length; i++) {
-            final String key = fields[i];
-            final String value = telemetry.get(key);
-            final String compliantValueString = TelemetryUtils.getSchemaCompliantString(value);
-            sb.append(compliantValueString);
-            if (i != fields.length - 1) {
-                sb.append(',');
+        for (final String field : fields) {
+            final Iterable<String> values = telemetry.get(field);
+            if (values == null) {
+                renderedValuesList.add(TelemetryUtils.getSchemaCompliantString(null));
+                continue;
+            }
+
+            for (final String value : values) {
+                renderedValuesList.add(TelemetryUtils.getSchemaCompliantString(value));
             }
         }
 
-        return sb.toString();
+        return StringUtil.join(SchemaConstants.SEPARATOR_COMMA, renderedValuesList);
     }
 
     @Override
