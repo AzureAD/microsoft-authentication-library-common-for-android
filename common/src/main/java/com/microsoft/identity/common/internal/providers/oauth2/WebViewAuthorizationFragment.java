@@ -273,7 +273,6 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         }
     }
 
-
     /**
      * Extracts request headers from the given bundle object.
      */
