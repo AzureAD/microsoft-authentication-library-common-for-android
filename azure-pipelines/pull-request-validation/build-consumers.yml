@@ -246,8 +246,7 @@ stages:
       - task: MavenAuthenticate@0
         displayName: Authenticate to the IdentityDivision Android Maven feed
         inputs:
-          artifactsFeeds: 'IDDP'
-          # mavenServiceConnections: 'AndroidADALEngineering'
+          MavenServiceConnections: IdentityDivision
 
       - task: Bash@3
         displayName: Install ninja
@@ -264,12 +263,12 @@ stages:
       - task: Gradle@2
         displayName: Assemble OneAuth
         inputs:
-          cwd: $(Agent.BuildDirectory)/s/OneAuthAndroidCommonWrapper
-          gradleWrapperFile: $(Agent.BuildDIrectory)/s/OneAuthAndroidCommonWrapper/gradlew.bat
+          cwd: $(Agent.BuildDirectory)/s/
+          gradleWrapperFile: $(Agent.BuildDIrectory)/s/gradlew.bat
           tasks: clean assembleOneAuth
       - task: Gradle@2
         displayName: Run OneAuth Unit tests
         inputs:
-          cwd: $(Agent.BuildDirectory)/s/OneAuthAndroidCommonWrapper
-          gradleWrapperFile: $(Agent.BuildDIrectory)/s/OneAuthAndroidCommonWrapper/gradlew.bat
+          cwd: $(Agent.BuildDirectory)/s/
+          gradleWrapperFile: $(Agent.BuildDIrectory)/s/gradlew.bat
           tasks: runOneAuthTests
