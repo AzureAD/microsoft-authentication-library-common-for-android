@@ -37,25 +37,30 @@ import androidx.appcompat.app.AlertDialog;
 
 import com.microsoft.identity.common.R;
 
+import lombok.NonNull;
+
 /**
  * Builds and shows a dialog that prompts the user to provide a PIN in order to verify ownership of the YubiKey.
  */
 public class SmartcardPinDialog extends SmartcardDialog {
 
     private View mPinLayout;
-    private PositiveButtonListener mPositiveButtonListener;
-    private NegativeButtonListener mNegativeButtonListener;
-    private CancelCbaCallback mCancelCbaCallback;
+    private final PositiveButtonListener mPositiveButtonListener;
+    private final NegativeButtonListener mNegativeButtonListener;
+    private final CancelCbaCallback mCancelCbaCallback;
 
     /**
      * Creates new instance of SmartcardPinDialog.
      * @param activity Host activity.
      */
-    public SmartcardPinDialog(Activity activity) {
+    public SmartcardPinDialog(@NonNull final PositiveButtonListener positiveButtonListener,
+                              @NonNull final NegativeButtonListener negativeButtonListener,
+                              @NonNull final CancelCbaCallback cancelCbaCallback,
+                              @NonNull final Activity activity) {
         super(activity);
-        mPositiveButtonListener = null;
-        mNegativeButtonListener = null;
-        mCancelCbaCallback = null;
+        mPositiveButtonListener = positiveButtonListener;
+        mNegativeButtonListener = negativeButtonListener;
+        mCancelCbaCallback = cancelCbaCallback;
         createDialog();
     }
 
@@ -72,8 +77,11 @@ public class SmartcardPinDialog extends SmartcardDialog {
                 mPinLayout = mActivity.getLayoutInflater().inflate(R.layout.pin_textview_layout, null);
                 //Start building dialog
                 AlertDialog.Builder builder = new AlertDialog.Builder(mActivity, R.style.CertAlertDialogTheme)
+                        //Sets topmost text of dialog.
                         .setTitle(R.string.smartcard_pin_dialog_title)
+                        //Sets subtext of the title.
                         .setMessage(R.string.smartcard_pin_dialog_message)
+                        //Sets custom layout for body of dialog.
                         .setView(mPinLayout)
                         //Setting positive button listener to null for now, but will override to handle custom UI behavior after dialog is shown (in the show method).
                         .setPositiveButton(R.string.smartcard_pin_dialog_positive_button, null)
@@ -81,9 +89,7 @@ public class SmartcardPinDialog extends SmartcardDialog {
                         .setNegativeButton(R.string.smartcard_pin_dialog_negative_button, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                if (mNegativeButtonListener != null) {
-                                    mNegativeButtonListener.onClick();
-                                }
+                                mNegativeButtonListener.onClick();
                             }
                         });
                 //Create dialog
@@ -95,9 +101,7 @@ public class SmartcardPinDialog extends SmartcardDialog {
                 dialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
                     @Override
                     public void onCancel(DialogInterface dialog) {
-                        if (mNegativeButtonListener != null) {
-                            mNegativeButtonListener.onClick();
-                        }
+                        mNegativeButtonListener.onClick();
                     }
                 });
                 mDialog = dialog;
@@ -151,9 +155,7 @@ public class SmartcardPinDialog extends SmartcardDialog {
                 ((AlertDialog)mDialog).getButton(DialogInterface.BUTTON_POSITIVE).setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        if (mPositiveButtonListener != null) {
-                            mPositiveButtonListener.onClick(pinEditText.getText().toString());
-                        }
+                        mPositiveButtonListener.onClick(pinEditText.getText().toString());
                     }
                 });
             }
@@ -169,11 +171,11 @@ public class SmartcardPinDialog extends SmartcardDialog {
             @Override
             public void run() {
                 //Clear edittext, turn edittext bar red, and show red error message.
-                EditText pinEditText = mPinLayout.findViewById(R.id.pinEditText);
+                final EditText pinEditText = mPinLayout.findViewById(R.id.pinEditText);
                 pinEditText.getText().clear();
                 pinEditText.setBackgroundTintList(ColorStateList.valueOf(mActivity.getResources().getColor(R.color.dialogErrorText)));
 
-                TextView errorTextView = mPinLayout.findViewById(R.id.errorTextView);
+                final TextView errorTextView = mPinLayout.findViewById(R.id.errorTextView);
                 errorTextView.setText(R.string.smartcard_pin_dialog_error_message);
             }
         });
@@ -188,43 +190,19 @@ public class SmartcardPinDialog extends SmartcardDialog {
             @Override
             public void run() {
                 //Reset back to blue and don't show error text.
-                TextView errorTextView = mPinLayout.findViewById(R.id.errorTextView);
+                final TextView errorTextView = mPinLayout.findViewById(R.id.errorTextView);
                 errorTextView.setText("");
-                EditText pinEditText = mPinLayout.findViewById(R.id.pinEditText);
+                final EditText pinEditText = mPinLayout.findViewById(R.id.pinEditText);
                 pinEditText.setBackgroundTintList(ColorStateList.valueOf(mActivity.getResources().getColor(R.color.dialogPinEditText)));
             }
         });
     }
 
     /**
-     * Sets listener for positive button.
-     * @param listener Implemented PositiveButtonListener.
-     */
-    public void setPositiveButtonListener(PositiveButtonListener listener) {
-        mPositiveButtonListener = listener;
-    }
-
-    /**
-     * Sets listener for negative button.
-     * @param listener Implemented NegativeButtonListener.
-     */
-    public void setNegativeButtonListener(NegativeButtonListener listener) {
-        mNegativeButtonListener = listener;
-    }
-
-    /**
-     * Sets callback for onCancelCba.
-     * @param callback Code to be run when onCancelCba is called.
-     */
-    public void setCancelCbaCallback(CancelCbaCallback callback) {
-        mCancelCbaCallback = callback;
-    }
-
-    /**
      * Listener interface for a positive button click.
      */
     public interface PositiveButtonListener {
-        void onClick(String pin);
+        void onClick(@NonNull final String pin);
     }
 
     /**

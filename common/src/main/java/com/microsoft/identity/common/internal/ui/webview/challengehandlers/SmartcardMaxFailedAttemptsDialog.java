@@ -25,6 +25,7 @@ package com.microsoft.identity.common.internal.ui.webview.challengehandlers;
 import android.app.Activity;
 import android.content.DialogInterface;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 
 import com.microsoft.identity.common.R;
@@ -34,15 +35,16 @@ import com.microsoft.identity.common.R;
  */
 public class SmartcardMaxFailedAttemptsDialog extends SmartcardDialog {
 
-    private PositiveButtonListener mPositiveButtonListener;
+    private final PositiveButtonListener mPositiveButtonListener;
 
     /**
      * Create new instance of SmartcardMaxFailedAttemptsDialog.
      * @param activity Host activity.
      */
-    public SmartcardMaxFailedAttemptsDialog(Activity activity) {
+    public SmartcardMaxFailedAttemptsDialog(@NonNull final PositiveButtonListener positiveButtonListener,
+                                            @NonNull final Activity activity) {
         super(activity);
-        mPositiveButtonListener = null;
+        mPositiveButtonListener = positiveButtonListener;
         createDialog();
     }
 
@@ -55,8 +57,11 @@ public class SmartcardMaxFailedAttemptsDialog extends SmartcardDialog {
             public void run() {
                 //Start building dialog
                 AlertDialog.Builder builder = new AlertDialog.Builder(mActivity, R.style.ErrorAlertDialogTheme)
+                        //Sets topmost text of dialog.
                         .setTitle(R.string.smartcard_max_attempt_dialog_title)
+                        //Sets subtext of the title.
                         .setMessage(R.string.smartcard_max_attempt_dialog_message)
+                        //In most cases, will set local dialog variable to null.
                         .setPositiveButton(R.string.smartcard_max_attempt_dialog_positive_button, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
@@ -89,14 +94,6 @@ public class SmartcardMaxFailedAttemptsDialog extends SmartcardDialog {
     @Override
     void onCancelCba() {
         dismiss();
-    }
-
-    /**
-     * Sets listener for positive button.
-     * @param listener Implemented PositiveButtonListener.
-     */
-    public void setPositiveButtonListener(PositiveButtonListener listener) {
-        mPositiveButtonListener = listener;
     }
 
     /**

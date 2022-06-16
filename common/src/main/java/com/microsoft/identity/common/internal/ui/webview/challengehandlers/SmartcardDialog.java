@@ -25,19 +25,21 @@ package com.microsoft.identity.common.internal.ui.webview.challengehandlers;
 import android.app.Activity;
 import android.app.Dialog;
 
+import androidx.annotation.NonNull;
+
 /**
  * Lists the main methods needed to show a simple dialog in ClientCertAuthChallengeHandler.
  * Button listeners can be implemented in child classes.
  */
 public abstract class SmartcardDialog {
-    protected Activity mActivity;
+    protected final Activity mActivity;
     protected Dialog mDialog;
 
     /**
      * Creates new instance of SmartcardDialog.
      * @param activity Host activity.
      */
-    public SmartcardDialog(Activity activity) {
+    public SmartcardDialog(@NonNull final Activity activity) {
         mActivity = activity;
         mDialog = null;
     }
