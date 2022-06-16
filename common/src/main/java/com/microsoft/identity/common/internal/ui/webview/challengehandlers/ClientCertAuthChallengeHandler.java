@@ -33,7 +33,6 @@ import android.os.Build;
 import android.security.KeyChain;
 import android.security.KeyChainAliasCallback;
 import android.security.KeyChainException;
-import android.util.Log;
 import android.webkit.ClientCertRequest;
 import android.widget.Toast;
 
@@ -305,25 +304,27 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
      * @param request ClientCertRequest received from AzureActiveDirectoryWebViewClient.onReceivedClientCertRequest.
      */
     private void showSmartcardCertPickerDialog(@NonNull final List<YubiKitCertDetails> certList, @NonNull final ClientCertRequest request) {
-        final SmartcardCertPickerDialog certPickerDialog = new SmartcardCertPickerDialog(certList, mActivity);
-        certPickerDialog.setPositiveButtonListener(getSmartcardCertPickerDialogPositiveButtonListener(request));
-        certPickerDialog.setNegativeButtonListener(new SmartcardCertPickerDialog.NegativeButtonListener() {
-            @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-            @Override
-            public void onClick() {
-                request.cancel();
-                synchronized (sSmartcardDialogLock) {
-                    mCurrentDialog = null;
-                }
-            }
-        });
-        certPickerDialog.setCancelCbaCallback(new SmartcardCertPickerDialog.CancelCbaCallback() {
-            @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-            @Override
-            public void onCancel() {
-                request.cancel();
-            }
-        });
+        final SmartcardCertPickerDialog certPickerDialog = new SmartcardCertPickerDialog(
+                certList,
+                getSmartcardCertPickerDialogPositiveButtonListener(request),
+                new SmartcardCertPickerDialog.NegativeButtonListener() {
+                    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+                    @Override
+                    public void onClick() {
+                        request.cancel();
+                        synchronized (sSmartcardDialogLock) {
+                            mCurrentDialog = null;
+                        }
+                    }
+                },
+                new SmartcardCertPickerDialog.CancelCbaCallback() {
+                    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+                    @Override
+                    public void onCancel() {
+                        request.cancel();
+                    }
+                },
+                mActivity);
         //Set current dialog to certPickerDialog and show.
         synchronized (sSmartcardDialogLock) {
             mCurrentDialog = certPickerDialog;
@@ -341,7 +342,7 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
         return new SmartcardCertPickerDialog.PositiveButtonListener() {
             @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
             @Override
-            public void onClick(final YubiKitCertDetails certDetails) {
+            public void onClick(@NonNull final YubiKitCertDetails certDetails) {
                 //Need to prompt user for pin and verify pin. The positive button listener will handle the rest of the CBA flow.
                 showPinDialog(certDetails, request);
             }
@@ -354,22 +355,23 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
      * @param request ClientCertRequest received from AzureActiveDirectoryWebViewClient.onReceivedClientCertRequest.
      */
     private void showPinDialog(@NonNull final YubiKitCertDetails certDetails, @NonNull final ClientCertRequest request) {
-        final SmartcardPinDialog pinDialog = new SmartcardPinDialog(mActivity);
-        pinDialog.setPositiveButtonListener(getSmartcardPinDialogPositiveButtonListener(certDetails, request));
-        pinDialog.setNegativeButtonListener(new SmartcardPinDialog.NegativeButtonListener() {
-            @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-            @Override
-            public void onClick() {
-                request.cancel();
-            }
-        });
-        pinDialog.setCancelCbaCallback(new SmartcardPinDialog.CancelCbaCallback() {
-            @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-            @Override
-            public void onCancel() {
-                request.cancel();
-            }
-        });
+        final SmartcardPinDialog pinDialog = new SmartcardPinDialog(
+                getSmartcardPinDialogPositiveButtonListener(certDetails, request),
+                new SmartcardPinDialog.NegativeButtonListener() {
+                    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+                    @Override
+                    public void onClick() {
+                        request.cancel();
+                    }
+                },
+                new SmartcardPinDialog.CancelCbaCallback() {
+                    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+                    @Override
+                    public void onCancel() {
+                        request.cancel();
+                    }
+                },
+                mActivity);
         //Set currentDialog to pinDialog and show.
         synchronized (sSmartcardDialogLock) {
             mCurrentDialog = pinDialog;
@@ -390,7 +392,7 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
         return new SmartcardPinDialog.PositiveButtonListener() {
             @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
             @Override
-            public void onClick(final String pin) {
+            public void onClick(@NonNull final String pin) {
                 synchronized (sDeviceLock) {
                     //Show error dialog and cancel flow if mDevice is null.
                     if (mDevice == null) {
@@ -513,16 +515,17 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
      * Sets up and shows dialog when user has exceeded the max attempts allowed to enter their YubiKey PIN.
      */
     private void showMaxAttemptsDialog(){
-        final SmartcardMaxFailedAttemptsDialog maxFailedAttemptsDialog = new SmartcardMaxFailedAttemptsDialog(mActivity);
-        maxFailedAttemptsDialog.setPositiveButtonListener(new SmartcardMaxFailedAttemptsDialog.PositiveButtonListener() {
-            @Override
-            public void onClick() {
-                //Reset currentDialog to null
-                synchronized (sSmartcardDialogLock) {
-                    mCurrentDialog = null;
-                }
-            }
-        });
+        final SmartcardMaxFailedAttemptsDialog maxFailedAttemptsDialog = new SmartcardMaxFailedAttemptsDialog(
+                new SmartcardMaxFailedAttemptsDialog.PositiveButtonListener() {
+                    @Override
+                    public void onClick() {
+                        //Reset currentDialog to null
+                        synchronized (sSmartcardDialogLock) {
+                            mCurrentDialog = null;
+                        }
+                    }
+                },
+                mActivity);
         //set current dialog to maxFailedAttemptsDialog and show.
         synchronized (sSmartcardDialogLock) {
             mCurrentDialog = maxFailedAttemptsDialog;

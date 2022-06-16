@@ -10,7 +10,7 @@
         android:id="@+id/pinEditText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:inputType="numberPassword"
+        android:inputType="textPassword"
         android:maxLines="1"
         android:lines="1"
         android:hint="@string/smartcard_pin_layout_edittext_hint"

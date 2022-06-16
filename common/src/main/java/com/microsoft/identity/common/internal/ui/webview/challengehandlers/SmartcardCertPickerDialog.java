@@ -48,21 +48,25 @@ import java.util.List;
 public class SmartcardCertPickerDialog extends SmartcardDialog {
 
     private final List<ClientCertAuthChallengeHandler.YubiKitCertDetails> mCertList;
-    private PositiveButtonListener mPositiveButtonListener;
-    private NegativeButtonListener mNegativeButtonListener;
-    private CancelCbaCallback mCancelCbaCallback;
+    private final PositiveButtonListener mPositiveButtonListener;
+    private final NegativeButtonListener mNegativeButtonListener;
+    private final CancelCbaCallback mCancelCbaCallback;
 
     /**
      * Creates new instance of SmartcardCertPickerDialog.
      * @param certList List of ClientCertAuthChallengeHandler.YubiKitCertDetails compiled from certificates on YubiKey.
      * @param activity Host activity.
      */
-    public SmartcardCertPickerDialog(List<ClientCertAuthChallengeHandler.YubiKitCertDetails> certList, Activity activity) {
+    public SmartcardCertPickerDialog(@NonNull final List<ClientCertAuthChallengeHandler.YubiKitCertDetails> certList,
+                                     @NonNull final PositiveButtonListener positiveButtonListener,
+                                     @NonNull final NegativeButtonListener negativeButtonListener,
+                                     @NonNull final CancelCbaCallback cancelCbaCallback,
+                                     @NonNull final Activity activity) {
         super(activity);
         mCertList = certList;
-        mPositiveButtonListener = null;
-        mNegativeButtonListener = null;
-        mCancelCbaCallback = null;
+        mPositiveButtonListener = positiveButtonListener;
+        mNegativeButtonListener = negativeButtonListener;
+        mCancelCbaCallback = cancelCbaCallback;
         createDialog();
     }
 
@@ -78,18 +82,19 @@ public class SmartcardCertPickerDialog extends SmartcardDialog {
             public void run() {
                 //Start building the dialog.
                 AlertDialog.Builder builder = new AlertDialog.Builder(mActivity, R.style.CertAlertDialogTheme)
+                        //Set topmost text of dialog.
                         .setTitle(R.string.smartcard_cert_dialog_title)
+                        //Creates and sets a ListView which gets rows from the provided CertDetails adapter. The first row is checked by default.
+                        //We don't pass through a listener, as the radio button check logic is handled after dialog is created.
                         .setSingleChoiceItems(certAdapter, 0, null)
                         //Positive button will pass along the certDetails of the selected row.
                         .setPositiveButton(R.string.smartcard_cert_dialog_positive_button, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(final DialogInterface dialog, int which) {
                                 //Get the certificate details of the checked row.
-                                int checkedPosition = ((AlertDialog) dialog).getListView().getCheckedItemPosition();
+                                final int checkedPosition = ((AlertDialog) dialog).getListView().getCheckedItemPosition();
                                 final ClientCertAuthChallengeHandler.YubiKitCertDetails certDetails = certAdapter.getItem(checkedPosition);
-                                if (mPositiveButtonListener != null) {
-                                    mPositiveButtonListener.onClick(certDetails);
-                                }
+                                mPositiveButtonListener.onClick(certDetails);
                             }
                         })
                         //Negative button should end up cancelling flow.
@@ -97,9 +102,7 @@ public class SmartcardCertPickerDialog extends SmartcardDialog {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
                                 //On request by user, cancel flow.
-                                if (mNegativeButtonListener != null) {
-                                    mNegativeButtonListener.onClick();
-                                }
+                                mNegativeButtonListener.onClick();
                             }
                         });
                 // Create dialog.
@@ -121,9 +124,7 @@ public class SmartcardCertPickerDialog extends SmartcardDialog {
                 alertDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
                     @Override
                     public void onCancel(DialogInterface dialog) {
-                        if (mNegativeButtonListener != null) {
-                            mNegativeButtonListener.onClick();
-                        }
+                        mNegativeButtonListener.onClick();
                     }
                 });
                 mDialog = alertDialog;
@@ -143,34 +144,10 @@ public class SmartcardCertPickerDialog extends SmartcardDialog {
     }
 
     /**
-     * Sets listener for positive button.
-     * @param listener Implemented PositiveButtonListener.
-     */
-    public void setPositiveButtonListener(PositiveButtonListener listener) {
-        mPositiveButtonListener = listener;
-    }
-
-    /**
-     * Sets listener for negative button.
-     * @param listener Implemented NegativeButtonListener.
-     */
-    public void setNegativeButtonListener(NegativeButtonListener listener) {
-        mNegativeButtonListener = listener;
-    }
-
-    /**
-     * Sets callback for onCancelCba.
-     * @param callback Code to be run when onCancelCba is called.
-     */
-    public void setCancelCbaCallback(CancelCbaCallback callback) {
-        mCancelCbaCallback = callback;
-    }
-
-    /**
      * Listener interface for a positive button click.
      */
     public interface PositiveButtonListener {
-        void onClick(ClientCertAuthChallengeHandler.YubiKitCertDetails certDetails);
+        void onClick(@NonNull final ClientCertAuthChallengeHandler.YubiKitCertDetails certDetails);
     }
 
     /**
