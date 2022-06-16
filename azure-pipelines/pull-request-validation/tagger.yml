@@ -39,6 +39,5 @@ jobs:
           ServiceEndpoint: 'MSIDLABS_ANDROID_KV'
           KeyVaultName: 'ADALTestInfo'
           SecretName: 'AndroidAutomationRunnerAppSecret'
-        condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
         env:
           GITHUB_PAT: $(Office-Tagger-Github-PAT)
