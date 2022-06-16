@@ -34,7 +34,6 @@ import android.security.KeyChain;
 import android.security.KeyChainAliasCallback;
 import android.security.KeyChainException;
 import android.webkit.ClientCertRequest;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
@@ -53,13 +52,22 @@ import com.yubico.yubikit.core.util.Result;
 import com.yubico.yubikit.piv.InvalidPinException;
 import com.yubico.yubikit.piv.PivSession;
 import com.yubico.yubikit.piv.Slot;
+import com.yubico.yubikit.piv.jca.PivPrivateKey;
+import com.yubico.yubikit.piv.jca.PivProvider;
 
 import java.io.IOException;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.security.Principal;
 import java.security.PrivateKey;
+import java.security.Security;
+import java.security.UnrecoverableKeyException;
+import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Callable;
 
 /**
  * Handles Certificate Based Authentication by means of certificates provisioned onto YubiKeys or the devices themselves.
@@ -144,6 +152,9 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
                             synchronized (sDeviceLock) {
                                 Logger.verbose(TAG, "A YubiKey device was disconnected");
                                 mDevice = null;
+                                //Remove the YKPiv security provider if it was added.
+                                //Note that Security.removeProvider will silently return if YKPiv doesn't exist.
+                                Security.removeProvider("YKPiv");
                                 //Call onCancel on current dialog, if dialog is showing.
                                 synchronized (sSmartcardDialogLock) {
                                     if (mCurrentDialog != null) {
@@ -412,19 +423,19 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
                                 verifySmartcardPin(pin.toCharArray(), certDetails, request, piv);
                             } catch(final IOException e) {
                                 Logger.error(methodTag, e.getMessage(), e);
-                                CancelCbaAndResetCurrentDialog();
+                                cancelCbaAndResetCurrentDialog();
                                 //TODO: create and show error dialog here.
                             } catch (final ApduException e) {
                                 Logger.error(methodTag, e.getMessage(), e);
-                                CancelCbaAndResetCurrentDialog();
+                                cancelCbaAndResetCurrentDialog();
                                 //TODO: create and show error dialog here.
                             } catch (final ApplicationNotAvailableException e) {
                                 Logger.error(methodTag, e.getMessage(), e);
-                                CancelCbaAndResetCurrentDialog();
+                                cancelCbaAndResetCurrentDialog();
                                 //TODO: create and show error dialog here.
                             } catch (final BadResponseException e) {
                                 Logger.error(methodTag, e.getMessage(), e);
-                                CancelCbaAndResetCurrentDialog();
+                                cancelCbaAndResetCurrentDialog();
                                 //TODO: create and show error dialog here.
                             }
                         }
@@ -438,7 +449,7 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
     /**
      * Call current dialog's onCancelCba method and reset it back to null.
      */
-    private void CancelCbaAndResetCurrentDialog() {
+    private void cancelCbaAndResetCurrentDialog() {
         synchronized (sSmartcardDialogLock) {
             if (mCurrentDialog != null) {
                 mCurrentDialog.onCancelCba();
@@ -466,28 +477,19 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
         try {
             piv.verifyPin(pin);
             //If pin is successfully verified, we will get the certificate and perform the rest of the logic for authentication.
-            final X509Certificate cert = piv.getCertificate(certDetails.getSlot());
             //TODO: do a confirmation that the cert retrieved above is the same cert that was picked earlier by comparing with YubiKitCertDetails
             //TODO: Complete authentication using cert and YubiKit sdk.
-            //TODO: Delete test code below between START and END comments (should be replaced with actual authentication)
-            //NOTE: below is for testing. This would get replaced by the logic for actual authentication.
-            //TODO:START of code for testing
-            Logger.infoPII(methodTag, "Using cert object here as a placeholder for when it's needed for authentication: " + cert.getSubjectDN());
-            mActivity.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    Toast.makeText(mActivity.getApplicationContext(), "Success!", Toast.LENGTH_LONG).show();
-                    //Reset currentDialog to null
-                    synchronized (sSmartcardDialogLock) {
-                        mCurrentDialog = null;
-                    }
-                }
-            });
-            request.cancel();
-            synchronized (sSmartcardDialogLock) {
-                mCurrentDialog.dismiss();
+            final X509Certificate cert = piv.getCertificate(certDetails.getSlot());
+            //TODO: do a confirmation that the cert retrieved above is the same cert that was picked earlier by comparing with YubiKitCertDetails
+            //TODO: Ask team which X509Certificate parameters should be compared in order to ensure chosen cert is the same as extracted cert.
+            if (!cert.getSubjectDN().getName().equals(certDetails.getSubjectText()) || !cert.getIssuerDN().getName().equals(certDetails.getIssuerText())) {
+                Logger.info(methodTag, "Cert retrieved from slot does not match cert originally selected from picker.");
+                cancelCbaAndResetCurrentDialog();
+                //TODO: create and show error dialog here.
+                return;
             }
-            //TODO: END of code for testing
+            //Complete authentication using cert and YubiKit sdk.
+            useSmartcardCertForAuth(cert, pin, certDetails.getSlot(), piv, request);
         } catch (final InvalidPinException e) {
             // An incorrect Pin attempt.
             // We need to retrieve the number of pin attempts before proceeding.
@@ -509,6 +511,73 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
                 }
             }
         }
+    }
+
+    //TODO: Add doc comments
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    private void useSmartcardCertForAuth(X509Certificate cert, char[] pin, Slot slot, PivSession piv, ClientCertRequest request) {
+        final String methodTag = TAG + "useSmartcardCertForAuth:";
+        //Need to add a PivProvider instance to the beginning of the array of Security providers.
+        //Note that this provider is removed when the UsbYubiKeyDevice connection is closed.
+        Security.insertProviderAt(new PivProvider(getPivProviderCallback()), 1);
+        try {
+            //Using KeyStore methods in order to generate PivPrivateKey.
+            //Loading null is needed for initialization.
+            KeyStore keyStore = KeyStore.getInstance("YKPiv", new PivProvider(piv));
+            keyStore.load(null);
+            String alias = slot.getStringAlias();
+            PivPrivateKey privateKey = (PivPrivateKey) keyStore.getKey(alias, pin);
+            //Cert chain only needs the cert to be used for authentication.
+            X509Certificate[] chain = new X509Certificate[]{cert};
+            //Dismiss the PIN dialog.
+            synchronized (sSmartcardDialogLock) {
+                mCurrentDialog.dismiss();
+                mCurrentDialog = null;
+            }
+            //Call proceed on ClientCertRequest with privateKey and cert chain.
+            request.proceed(privateKey, chain);
+        } catch (UnrecoverableKeyException e) {
+            Logger.error(methodTag, e.getMessage(), e);
+            cancelCbaAndResetCurrentDialog();
+            //TODO: create and show error dialog here.
+        } catch (CertificateException e) {
+            Logger.error(methodTag, e.getMessage(), e);
+            cancelCbaAndResetCurrentDialog();
+            //TODO: create and show error dialog here.
+        } catch (KeyStoreException e) {
+            Logger.error(methodTag, e.getMessage(), e);
+            cancelCbaAndResetCurrentDialog();
+            //TODO: create and show error dialog here.
+        } catch (IOException e) {
+            Logger.error(methodTag, e.getMessage(), e);
+            cancelCbaAndResetCurrentDialog();
+            //TODO: create and show error dialog here.
+        } catch (NoSuchAlgorithmException e) {
+            Logger.error(methodTag, e.getMessage(), e);
+            cancelCbaAndResetCurrentDialog();
+            //TODO: create and show error dialog here.
+        }
+    }
+    //TODO: add doc comments
+    private Callback<Callback<Result<PivSession, Exception>>> getPivProviderCallback() {
+        return new Callback<Callback<Result<PivSession, Exception>>>() {
+            @Override
+            public void invoke(@NonNull final Callback<Result<PivSession, Exception>> callback) {
+                synchronized (sDeviceLock) {
+                    mDevice.requestConnection(UsbSmartCardConnection.class, new Callback<Result<UsbSmartCardConnection, IOException>>() {
+                        @Override
+                        public void invoke(@NonNull final Result<UsbSmartCardConnection, IOException> value) {
+                            callback.invoke(Result.of(new Callable<PivSession>() {
+                                @Override
+                                public PivSession call() throws Exception {
+                                    return new PivSession(value.getValue());
+                                }
+                            }));
+                        }
+                    });
+                }
+            }
+        };
     }
 
     /**
