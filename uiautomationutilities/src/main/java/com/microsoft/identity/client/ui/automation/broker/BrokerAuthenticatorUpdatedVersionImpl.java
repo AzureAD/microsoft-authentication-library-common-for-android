@@ -114,8 +114,8 @@ public class BrokerAuthenticatorUpdatedVersionImpl extends BrokerMicrosoftAuthen
         performDeviceRegistrationHelper(
                 username,
                 password,
-                "com.azure.authenticator:id/shared_device_registration_email_input",
-                "com.azure.authenticator:id/shared_device_registration_button"
+                "sharedWorkPlaceTextField",
+                "sharedWorkPlaceRegisterButton"
         );
 
         final UiDevice device =
