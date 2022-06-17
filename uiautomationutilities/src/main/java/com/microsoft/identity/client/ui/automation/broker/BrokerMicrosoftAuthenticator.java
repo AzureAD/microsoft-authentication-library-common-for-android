@@ -51,7 +51,8 @@ import lombok.Getter;
 import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT;
 
 /**
- * A model for interacting with the Microsoft Authenticator Broker App during UI Test.
+ * Serves as the base class interacting with the Microsoft Authenticator Broker App during UI Test. The base class should be extended
+ * by BrokerAuthenticatorUpdatedVersionImpl, BrokerAuthenticatorPreviousVersionImpl
  */
 @Getter
 public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements ITestBroker, IPowerLiftIntegratedApp {
@@ -62,9 +63,9 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
 
     private final static String INCIDENT_MSG = "Broker Automation Incident";
 
-    public static final String TAG = BrokerMicrosoftAuthenticator.class.getSimpleName();
+    private static final String TAG = BrokerMicrosoftAuthenticator.class.getSimpleName();
 
-    private boolean isInSharedDeviceMode = false;
+    protected boolean isInSharedDeviceMode = false;
 
     public BrokerMicrosoftAuthenticator() {
         super(AUTHENTICATOR_APP_PACKAGE_NAME, AUTHENTICATOR_APP_NAME);
@@ -77,79 +78,13 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
     }
 
     @Override
-    public void performDeviceRegistration(@NonNull final String username,
-                                          @NonNull final String password) {
-        Logger.i(TAG, "Performing Device Registration for the given account..");
-        performDeviceRegistrationHelper(
-                username,
-                password,
-                "com.azure.authenticator:id/email_input",
-                "com.azure.authenticator:id/register_button"
-        );
-
-
-        try {
-            // after device registration, make sure that we see the unregister btn to confirm successful
-            // registration
-            final UiObject unRegisterBtn = UiAutomatorUtils.obtainUiObjectWithResourceId(
-                    "com.azure.authenticator:id/unregister_button"
-            );
-            Assert.assertTrue(
-                    "Microsoft Authenticator - Unregister Button appears.",
-                    unRegisterBtn.exists()
-            );
-
-            Assert.assertTrue(
-                    "Microsoft Authenticator - Unregister Button is clickable.",
-                    unRegisterBtn.isClickable()
-            );
-
-            // after device registration, make sure that the current registration upn matches with
-            // with what was passed in
-            final UiObject currentRegistration = UiAutomatorUtils.obtainUiObjectWithResourceId(
-                    "com.azure.authenticator:id/current_registered_email"
-            );
-
-            Assert.assertTrue(
-                    "Microsoft Authenticator - Registered account info appears.",
-                    currentRegistration.exists()
-            );
-
-            Assert.assertTrue(
-                    "Microsoft Authenticator - Registered account upn matches provided upn.",
-                    currentRegistration.getText().equalsIgnoreCase(username)
-            );
-        } catch (final UiObjectNotFoundException e) {
-            throw new AssertionError(e);
-        }
+    public void performDeviceRegistration(String username, String password) {
+        // implemented in sub-classes
     }
 
     @Override
-    public void performSharedDeviceRegistration(@NonNull final String username,
-                                                @NonNull final String password) {
-        Logger.i(TAG, "Performing Shared Device Registration for the given account..");
-        performDeviceRegistrationHelper(
-                username,
-                password,
-                "com.azure.authenticator:id/shared_device_registration_email_input",
-                "com.azure.authenticator:id/shared_device_registration_button"
-        );
-
-        final UiDevice device =
-                UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
-
-        final UiSelector sharedDeviceConfirmationSelector = new UiSelector()
-                .descriptionContains("Shared Device Mode")
-                .className("android.widget.ImageView");
-
-        //confirm that we are in Shared Device Mode inside Authenticator
-        final UiObject sharedDeviceConfirmation = device.findObject(sharedDeviceConfirmationSelector);
-        sharedDeviceConfirmation.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
-        Assert.assertTrue(
-                "Microsoft Authenticator - Shared Device Confirmation page appears.",
-                sharedDeviceConfirmation.exists());
-
-        isInSharedDeviceMode = true;
+    public void performSharedDeviceRegistration(String username, String password) {
+        // implemented in sub-classes
     }
 
     @Nullable
@@ -313,16 +248,25 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
         if (shouldHandleFirstRun) {
             handleFirstRun(); // handle first run experience
         }
+        goToDeviceRegistrationPage();
 
-        // click the 3 dot menu icon in top right
-        UiAutomatorUtils.handleButtonClick("com.azure.authenticator:id/menu_overflow");
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+            // grant the GET ACCOUNTS permission if needed
+            grantPermission(Manifest.permission.GET_ACCOUNTS);
+        }
+    }
 
+    protected void goToDeviceRegistrationPage() {
+        // scroll down the recycler view to find device registration btn
         try {
+            // click the 3 dot menu icon in top right
+            UiAutomatorUtils.handleButtonClick("com.azure.authenticator:id/menu_overflow");
+
+
             // select Settings from drop down
             final UiObject settings = UiAutomatorUtils.obtainUiObjectWithText("Settings");
             settings.click();
 
-            // scroll down the recycler view to find device registration btn
             final UiObject deviceRegistration = UiAutomatorUtils.obtainChildInScrollable(
                     "com.azure.authenticator:id/recycler_view",
                     "Device registration"
@@ -332,11 +276,6 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
 
             // click the device registration button
             deviceRegistration.click();
-
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-                // grant the GET ACCOUNTS permission if needed
-                grantPermission(Manifest.permission.GET_ACCOUNTS);
-            }
         } catch (final UiObjectNotFoundException e) {
             throw new AssertionError(e);
         }
