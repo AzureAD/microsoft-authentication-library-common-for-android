@@ -60,6 +60,11 @@ android {
             consumerProguardFiles 'consumer-rules.pro'
         }
     }
+    //Upgrading to Java 8 in order to use YubiKit SDK
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
 
     lintOptions {
         abortOnError true
