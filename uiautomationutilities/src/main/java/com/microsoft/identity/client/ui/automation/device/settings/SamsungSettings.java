@@ -119,8 +119,10 @@ public class SamsungSettings extends BaseSettings {
     }
 
     @Override
-    public void addWorkAccount(@NonNull final ITestBroker broker, @NonNull final String username,
-                               @NonNull final String password, final boolean isFederatedUser) {
+    public void addWorkAccount(@NonNull final ITestBroker broker,
+                               @NonNull final String username,
+                               @NonNull final String password,
+                               final boolean isFederatedUser) {
         Logger.i(TAG, "Adding Work Account on Samsung Device..");
         launchAddAccountPage();
 

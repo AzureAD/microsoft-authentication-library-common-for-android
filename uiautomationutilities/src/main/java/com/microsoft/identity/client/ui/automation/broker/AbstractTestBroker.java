@@ -41,6 +41,7 @@ import com.microsoft.identity.client.ui.automation.interaction.PromptHandlerPara
 import com.microsoft.identity.client.ui.automation.interaction.PromptParameter;
 import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.AadPromptHandler;
 import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.AdfsLoginComponentHandler;
+import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.AdfsPromptHandler;
 import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.MicrosoftStsPromptHandler;
 import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.MicrosoftStsPromptHandlerParameters;
 import com.microsoft.identity.client.ui.automation.logging.Logger;
@@ -134,19 +135,18 @@ public abstract class AbstractTestBroker extends App implements ITestBroker {
         );
 
         if (isFederatedUser) {
-            final MicrosoftStsPromptHandlerParameters promptHandlerParameters = MicrosoftStsPromptHandlerParameters.builder()
+            final PromptHandlerParameters promptHandlerParameters = PromptHandlerParameters.builder()
                     .prompt(PromptParameter.LOGIN)
                     .consentPageExpected(false)
                     .expectingLoginPageAccountPicker(false)
                     .sessionExpected(false)
-                    .isFederated(true)
                     .loginHint(null)
                     .build();
 
-            final MicrosoftStsPromptHandler microsoftStsPromptHandler = new MicrosoftStsPromptHandler(promptHandlerParameters);
-            AdfsLoginComponentHandler adfsLoginComponentHandler = ((AdfsLoginComponentHandler) microsoftStsPromptHandler.getLoginComponentHandler());
-            // Handle prompt in ADFS login page
-            adfsLoginComponentHandler.handlePrompt(username, password);
+            final AdfsPromptHandler adfsPromptHandler = new AdfsPromptHandler(promptHandlerParameters);
+            Logger.i(TAG, "Handle prompt of ADFS login page for Device Registration..");
+            // handle ADFS login page
+            adfsPromptHandler.handlePrompt(username, password);
         } else {
             final PromptHandlerParameters promptHandlerParameters = PromptHandlerParameters.builder()
                     .broker(this)

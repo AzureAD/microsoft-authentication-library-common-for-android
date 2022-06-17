@@ -121,7 +121,8 @@ public class GoogleSettings extends BaseSettings {
 
     public void addWorkAccount(@NonNull final ITestBroker broker,
                                @NonNull final String username,
-                               @NonNull final String password, final boolean isFederatedUser) {
+                               @NonNull final String password,
+                               final boolean isFederatedUser) {
         Logger.i(TAG, "Adding Work Account on Google Device..");
         launchAddAccountPage();
 
