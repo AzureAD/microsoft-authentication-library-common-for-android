@@ -63,6 +63,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.Principal;
 import java.security.PrivateKey;
 import java.security.Security;
+import java.security.Signature;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
@@ -161,7 +162,7 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
                                 mDevice = null;
                                 //Remove the YKPiv security provider if it was added.
                                 //Note that Security.removeProvider will silently return if YKPiv doesn't exist.
-                                Security.removeProvider(mActivity.getString(R.string.pivprovider_name));
+                                Security.removeProvider("YKPiv");
                                 //Call onCancel on current dialog, if dialog is showing.
                                 synchronized (sSmartcardDialogLock) {
                                     if (mCurrentDialog != null) {
@@ -252,22 +253,7 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
                     //Build and show Smartcard cert picker, which also handles the rest of the smartcard CBA flow.
                     showSmartcardCertPickerDialog(certList, request);
 
-                } catch(final IOException e) {
-                    Logger.error(methodTag, e.getMessage(), e);
-                    request.cancel();
-                    //Show general error dialog.
-                    showErrorDialog(R.string.smartcard_general_error_dialog_title, R.string.smartcard_general_error_dialog_message);
-                } catch (final ApduException e) {
-                    Logger.error(methodTag, e.getMessage(), e);
-                    request.cancel();
-                    //Show general error dialog.
-                    showErrorDialog(R.string.smartcard_general_error_dialog_title, R.string.smartcard_general_error_dialog_message);
-                } catch (final ApplicationNotAvailableException e) {
-                    Logger.error(methodTag, e.getMessage(), e);
-                    request.cancel();
-                    //Show general error dialog.
-                    showErrorDialog(R.string.smartcard_general_error_dialog_title, R.string.smartcard_general_error_dialog_message);
-                } catch (BadResponseException e) {
+                } catch(final IOException | ApduException | ApplicationNotAvailableException | BadResponseException e) {
                     Logger.error(methodTag, e.getMessage(), e);
                     request.cancel();
                     //Show general error dialog.
@@ -443,22 +429,7 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
                                 final PivSession piv = new PivSession(c);
                                 //Verify PIN and handle results
                                 verifySmartcardPin(pin.toCharArray(), certDetails, request, piv);
-                            } catch(final IOException e) {
-                                Logger.error(methodTag, e.getMessage(), e);
-                                cancelCbaAndResetCurrentDialog();
-                                //Show general error dialog.
-                                showErrorDialog(R.string.smartcard_general_error_dialog_title, R.string.smartcard_general_error_dialog_message);
-                            } catch (final ApduException e) {
-                                Logger.error(methodTag, e.getMessage(), e);
-                                cancelCbaAndResetCurrentDialog();
-                                //Show general error dialog.
-                                showErrorDialog(R.string.smartcard_general_error_dialog_title, R.string.smartcard_general_error_dialog_message);
-                            } catch (final ApplicationNotAvailableException e) {
-                                Logger.error(methodTag, e.getMessage(), e);
-                                cancelCbaAndResetCurrentDialog();
-                                //Show general error dialog.
-                                showErrorDialog(R.string.smartcard_general_error_dialog_title, R.string.smartcard_general_error_dialog_message);
-                            } catch (final BadResponseException e) {
+                            } catch(final IOException | ApduException | ApplicationNotAvailableException | BadResponseException e) {
                                 Logger.error(methodTag, e.getMessage(), e);
                                 cancelCbaAndResetCurrentDialog();
                                 //Show general error dialog.
@@ -559,7 +530,7 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
         try {
             //Using KeyStore methods in order to generate PivPrivateKey.
             //Loading null is needed for initialization.
-            KeyStore keyStore = KeyStore.getInstance(mActivity.getString(R.string.pivprovider_name), new PivProvider(piv));
+            KeyStore keyStore = KeyStore.getInstance("YKPiv", new PivProvider(piv));
             keyStore.load(null);
             //PivPrivateKey implements PrivateKey
             PivPrivateKey pivPrivateKey = (PivPrivateKey) keyStore.getKey(slotAlias, pin);
@@ -572,27 +543,7 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
             }
             //Call proceed on ClientCertRequest with PivPrivateKey and cert chain.
             request.proceed(pivPrivateKey, chain);
-        } catch (UnrecoverableKeyException e) {
-            Logger.error(methodTag, e.getMessage(), e);
-            cancelCbaAndResetCurrentDialog();
-            //Show general error dialog.
-            showErrorDialog(R.string.smartcard_general_error_dialog_title, R.string.smartcard_general_error_dialog_message);
-        } catch (CertificateException e) {
-            Logger.error(methodTag, e.getMessage(), e);
-            cancelCbaAndResetCurrentDialog();
-            //Show general error dialog.
-            showErrorDialog(R.string.smartcard_general_error_dialog_title, R.string.smartcard_general_error_dialog_message);
-        } catch (KeyStoreException e) {
-            Logger.error(methodTag, e.getMessage(), e);
-            cancelCbaAndResetCurrentDialog();
-            //Show general error dialog.
-            showErrorDialog(R.string.smartcard_general_error_dialog_title, R.string.smartcard_general_error_dialog_message);
-        } catch (IOException e) {
-            Logger.error(methodTag, e.getMessage(), e);
-            cancelCbaAndResetCurrentDialog();
-            //Show general error dialog.
-            showErrorDialog(R.string.smartcard_general_error_dialog_title, R.string.smartcard_general_error_dialog_message);
-        } catch (NoSuchAlgorithmException e) {
+        } catch (UnrecoverableKeyException | CertificateException | KeyStoreException | IOException | NoSuchAlgorithmException e) {
             Logger.error(methodTag, e.getMessage(), e);
             cancelCbaAndResetCurrentDialog();
             //Show general error dialog.

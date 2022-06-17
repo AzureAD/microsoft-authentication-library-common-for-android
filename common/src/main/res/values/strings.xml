@@ -34,6 +34,4 @@
 
     <string name="smartcard_general_error_dialog_title">Try again later</string>
     <string name="smartcard_general_error_dialog_message">An unexpected error has occurred. Please try again later.</string>
-
-    <string name="pivprovider_name">YKPiv</string>
 </resources>
