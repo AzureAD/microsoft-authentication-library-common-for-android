@@ -35,22 +35,28 @@ public class BrokerMicrosoftAuthenticatorFactory {
 
     public final static String LATEST_VERSION_NUMBER = "6.2206.3949";
 
-    public BrokerMicrosoftAuthenticator getAuthenticator() {
-        final Context context = ApplicationProvider.getApplicationContext();
-        try {
-            PackageInfo packageInfo = context.getPackageManager().getPackageInfo("com.azure.authenticator", 0);
-            // authenticator app follows version number format - V.YYMM.XXXX
-            // V is the major version, YYMM are last two digits of an year followed by month
-            // XXXX is number of hours passed after Jan1st 00.00 of current year
-            // String comparison of versions should work for this format
-            if (packageInfo.versionName.compareTo(LATEST_VERSION_NUMBER) >= 0) {
-                // Use latest automation code as this is the new updated authenticator app
-                return new BrokerAuthenticatorUpdatedVersionImpl();
-            } else {
-                return new BrokerAuthenticatorPreviousVersionImpl();
+    public ITestBroker getAuthenticator(ITestBroker mBroker) {
+        // Extra if condition to check if the passed class is only BrokerMicrosoftAuthenticator
+        if (mBroker.getClass().equals(BrokerMicrosoftAuthenticator.class)) {
+            final Context context = ApplicationProvider.getApplicationContext();
+            try {
+                PackageInfo packageInfo = context.getPackageManager().getPackageInfo("com.azure.authenticator", 0);
+                // authenticator app follows version number format - V.YYMM.XXXX
+                // V is the major version, YYMM are last two digits of an year followed by month
+                // XXXX is number of hours passed after Jan1st 00.00 of current year
+                // String comparison of versions should work for this format
+                if (packageInfo.versionName.compareTo(LATEST_VERSION_NUMBER) >= 0) {
+                    // Use latest automation code as this is the new updated authenticator app
+                    return new BrokerAuthenticatorUpdatedVersionImpl();
+                } else {
+                    return new BrokerAuthenticatorPreviousVersionImpl();
+                }
+            } catch (final PackageManager.NameNotFoundException e) {
+                throw new AssertionError(e);
             }
-        } catch (final PackageManager.NameNotFoundException e) {
-            throw new AssertionError(e);
+        }
+        else {
+            return mBroker;
         }
     }
 }
