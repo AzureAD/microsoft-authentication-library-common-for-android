@@ -52,7 +52,8 @@ import lombok.Getter;
 import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT;
 
 /**
- * A model for interacting with the Microsoft Authenticator Broker App during UI Test.
+ * Serves as the base class interacting with the Microsoft Authenticator Broker App during UI Test. The base class should be extended
+ * by BrokerAuthenticatorUpdatedVersionImpl, BrokerAuthenticatorPreviousVersionImpl
  */
 @Getter
 public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements ITestBroker, IPowerLiftIntegratedApp {
@@ -63,9 +64,9 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
 
     private final static String INCIDENT_MSG = "Broker Automation Incident";
 
-    public static final String TAG = BrokerMicrosoftAuthenticator.class.getSimpleName();
+    private static final String TAG = BrokerMicrosoftAuthenticator.class.getSimpleName();
 
-    private boolean isInSharedDeviceMode = false;
+    protected boolean isInSharedDeviceMode = false;
 
     public BrokerMicrosoftAuthenticator() {
         super(AUTHENTICATOR_APP_PACKAGE_NAME, AUTHENTICATOR_APP_NAME);
@@ -321,16 +322,25 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
         if (shouldHandleFirstRun) {
             handleFirstRun(); // handle first run experience
         }
+        goToDeviceRegistrationPage();
 
-        // click the 3 dot menu icon in top right
-        UiAutomatorUtils.handleButtonClick("com.azure.authenticator:id/menu_overflow");
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+            // grant the GET ACCOUNTS permission if needed
+            grantPermission(Manifest.permission.GET_ACCOUNTS);
+        }
+    }
 
+    protected void goToDeviceRegistrationPage() {
+        // scroll down the recycler view to find device registration btn
         try {
+            // click the 3 dot menu icon in top right
+            UiAutomatorUtils.handleButtonClick("com.azure.authenticator:id/menu_overflow");
+
+
             // select Settings from drop down
             final UiObject settings = UiAutomatorUtils.obtainUiObjectWithText("Settings");
             settings.click();
 
-            // scroll down the recycler view to find device registration btn
             final UiObject deviceRegistration = UiAutomatorUtils.obtainChildInScrollable(
                     "com.azure.authenticator:id/recycler_view",
                     "Device registration"
@@ -340,11 +350,6 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
 
             // click the device registration button
             deviceRegistration.click();
-
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-                // grant the GET ACCOUNTS permission if needed
-                grantPermission(Manifest.permission.GET_ACCOUNTS);
-            }
         } catch (final UiObjectNotFoundException e) {
             throw new AssertionError(e);
         }

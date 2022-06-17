@@ -78,7 +78,7 @@ public class BrokerSupportRule implements TestRule {
                     Logger.i(TAG, "Received supported broker annotation with value: " + supportedBrokerClasses.toString());
                     Assume.assumeTrue(
                             "Ignoring test as not applicable with supplied broker",
-                            supportedBrokerClasses.contains(mBroker.getClass())
+                            (supportedBrokerClasses.contains(mBroker.getClass()) || supportedBrokerClasses.contains(mBroker.getClass().getSuperclass()))
                     );
                 }
 
