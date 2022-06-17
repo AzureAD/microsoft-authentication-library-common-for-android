@@ -56,13 +56,9 @@ public abstract class RequestTelemetry implements IRequestTelemetry {
     @SerializedName("platform_telemetry")
     private final ConcurrentMap<String, String> mPlatformTelemetry;
 
-    @SerializedName("platform_telemetry_multi")
-    private final ConcurrentMap<String, Collection<String>> mPlatformTelemetryMultiVal;
-
     RequestTelemetry(@NonNull final String schemaVersion) {
         mSchemaVersion = schemaVersion;
         mPlatformTelemetry = new ConcurrentHashMap<>();
-        mPlatformTelemetryMultiVal = new ConcurrentHashMap<>();
     }
 
     private boolean isPlatformTelemetryField(final String key) {
@@ -77,16 +73,7 @@ public abstract class RequestTelemetry implements IRequestTelemetry {
 
     final void putInPlatformTelemetry(final String key, final String value) {
         if (isPlatformTelemetryField(key)) {
-            if (SchemaConstants.areMultipleValuesAllowedForThisPlatformField(key)) {
-                Collection<String> valuesForThisKey = mPlatformTelemetryMultiVal.get(key);
-                if (valuesForThisKey == null) {
-                    valuesForThisKey = new ConcurrentLinkedQueue<>();
-                }
-                valuesForThisKey.add(value);
-                mPlatformTelemetryMultiVal.put(key, valuesForThisKey);
-            } else {
-                mPlatformTelemetry.putIfAbsent(key, value);
-            }
+            mPlatformTelemetry.putIfAbsent(key, value);
         }
     }
 
@@ -127,15 +114,7 @@ public abstract class RequestTelemetry implements IRequestTelemetry {
             platformFields = SchemaConstants.getLastRequestPlatformFields();
         }
 
-        final Map<String, Collection<String>> mergedTelemetry = new ConcurrentHashMap<>();
-
-        for (final Map.Entry<String, String> entry : mPlatformTelemetry.entrySet()) {
-            mergedTelemetry.put(entry.getKey(), Collections.singleton(entry.getValue()));
-        }
-
-        mergedTelemetry.putAll(mPlatformTelemetryMultiVal);
-
-        return getHeaderStringForFields(platformFields, mergedTelemetry);
+        return getHeaderStringForFields(platformFields, mPlatformTelemetry);
     }
 
     /**
@@ -150,26 +129,24 @@ public abstract class RequestTelemetry implements IRequestTelemetry {
      */
     @NonNull
     // This only being used to compute the platform telemetry header string
-    private String getHeaderStringForFields(final String[] fields, final Map<String, Collection<String>> telemetry) {
+    private String getHeaderStringForFields(final String[] fields, final Map<String, String> telemetry) {
         if (fields == null || telemetry == null) {
             return "";
         }
 
-        final List<String> renderedValuesList = new ArrayList<>();
+        StringBuilder sb = new StringBuilder();
 
-        for (final String field : fields) {
-            final Iterable<String> values = telemetry.get(field);
-            if (values == null) {
-                renderedValuesList.add(TelemetryUtils.getSchemaCompliantString(null));
-                continue;
-            }
-
-            for (final String value : values) {
-                renderedValuesList.add(TelemetryUtils.getSchemaCompliantString(value));
+        for (int i = 0; i < fields.length; i++) {
+            final String key = fields[i];
+            final String value = telemetry.get(key);
+            final String compliantValueString = TelemetryUtils.getSchemaCompliantString(value);
+            sb.append(compliantValueString);
+            if (i != fields.length - 1) {
+                sb.append(',');
             }
         }
 
-        return StringUtil.join(SchemaConstants.SEPARATOR_COMMA, renderedValuesList);
+        return sb.toString();
     }
 
     @Override

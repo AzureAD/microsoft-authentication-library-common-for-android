@@ -189,8 +189,8 @@ dependencies {
     testImplementation "org.mockito:mockito-core:$rootProject.ext.mockitoCoreVersion"
 }
 
-sourceCompatibility = "1.8"
-targetCompatibility = "1.8"
+sourceCompatibility = "1.7"
+targetCompatibility = "1.7"
 
 buildConfig {
     // forces the package (of the generated BuildConfig file). Defaults to '${project.group}'

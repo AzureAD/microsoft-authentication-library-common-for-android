@@ -106,23 +106,12 @@ public class SchemaConstants {
             SchemaConstants.Key.ALL_TELEMETRY_DATA_SENT
     };
 
-    /**
-     * This array defines the platform fields for which multiple values are allowed.
-     */
-    private static final Set<String> multiValuePlatformFields = new HashSet<String>() {{
-        add(Key.REG_SOURCE);
-    }};
-
     static boolean isCurrentPlatformField(final String key) {
         return Arrays.asList(currentRequestPlatformFields).contains(key);
     }
 
     static boolean isLastPlatformField(final String key) {
         return Arrays.asList(lastRequestPlatformFields).contains(key);
-    }
-
-    static boolean areMultipleValuesAllowedForThisPlatformField(final String key) {
-        return multiValuePlatformFields.contains(key);
     }
 
     static String[] getCurrentRequestPlatformFields() {
