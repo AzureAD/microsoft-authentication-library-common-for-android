@@ -51,6 +51,9 @@ public class SmartcardPinDialog extends SmartcardDialog {
 
     /**
      * Creates new instance of SmartcardPinDialog.
+     * @param positiveButtonListener Implemented Listener for a positive button click.
+     * @param negativeButtonListener Implemented Listener for a negative button click.
+     * @param cancelCbaCallback Implemented Callback for when CBA is cancelled unexpectedly.
      * @param activity Host activity.
      */
     public SmartcardPinDialog(@NonNull final PositiveButtonListener positiveButtonListener,

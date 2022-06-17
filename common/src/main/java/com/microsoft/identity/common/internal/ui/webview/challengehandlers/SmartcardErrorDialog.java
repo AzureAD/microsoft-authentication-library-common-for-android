@@ -31,25 +31,34 @@ import androidx.appcompat.app.AlertDialog;
 import com.microsoft.identity.common.R;
 
 /**
- * Show simple dialog when the user has incorrectly entered their PIN the maximum amount of times allowed.
+ * Show simple dialog when the user has encountered an error or unexpected exception.
  */
-public class SmartcardMaxFailedAttemptsDialog extends SmartcardDialog {
+public class SmartcardErrorDialog extends SmartcardDialog {
 
+    private final int mTitleStringResourceId;
+    private final int mMessageStringResourceId;
     private final PositiveButtonListener mPositiveButtonListener;
 
     /**
-     * Create new instance of SmartcardMaxFailedAttemptsDialog.
+     * Create new instance of SmartcardErrorDialog.
+     * @param titleStringResourceId String resource id for text to be displayed as the title in dialog.
+     * @param messageStringResourceId String resource id for text to be displayed as the message in dialog.
+     * @param positiveButtonListener Implemented Listener for a positive button click.
      * @param activity Host activity.
      */
-    public SmartcardMaxFailedAttemptsDialog(@NonNull final PositiveButtonListener positiveButtonListener,
-                                            @NonNull final Activity activity) {
+    public SmartcardErrorDialog(@NonNull final int titleStringResourceId,
+                                @NonNull final int messageStringResourceId,
+                                @NonNull final PositiveButtonListener positiveButtonListener,
+                                @NonNull final Activity activity) {
         super(activity);
+        mTitleStringResourceId = titleStringResourceId;
+        mMessageStringResourceId = messageStringResourceId;
         mPositiveButtonListener = positiveButtonListener;
         createDialog();
     }
 
     /**
-     * Builds an AlertDialog that informs user that they have incorrectly entered their PIN the maximum amount of times allowed..
+     * Builds an AlertDialog which informs users that they have encountered an error or unexpected exception.
      */
     protected void createDialog() {
         mActivity.runOnUiThread(new Runnable() {
@@ -58,16 +67,14 @@ public class SmartcardMaxFailedAttemptsDialog extends SmartcardDialog {
                 //Start building dialog
                 AlertDialog.Builder builder = new AlertDialog.Builder(mActivity, R.style.ErrorAlertDialogTheme)
                         //Sets topmost text of dialog.
-                        .setTitle(R.string.smartcard_max_attempt_dialog_title)
+                        .setTitle(mTitleStringResourceId)
                         //Sets subtext of the title.
-                        .setMessage(R.string.smartcard_max_attempt_dialog_message)
+                        .setMessage(mMessageStringResourceId)
                         //In most cases, will set local dialog variable to null.
-                        .setPositiveButton(R.string.smartcard_max_attempt_dialog_positive_button, new DialogInterface.OnClickListener() {
+                        .setPositiveButton(R.string.smartcard_error_dialog_positive_button, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                if (mPositiveButtonListener != null) {
-                                    mPositiveButtonListener.onClick();
-                                }
+                                mPositiveButtonListener.onClick();
                             }
                         });
                 AlertDialog dialog = builder.create();
@@ -78,9 +85,7 @@ public class SmartcardMaxFailedAttemptsDialog extends SmartcardDialog {
                 dialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
                     @Override
                     public void onCancel(DialogInterface dialog) {
-                        if (mPositiveButtonListener != null) {
-                            mPositiveButtonListener.onClick();
-                        }
+                        mPositiveButtonListener.onClick();
                     }
                 });
                 mDialog = dialog;
@@ -93,6 +98,8 @@ public class SmartcardMaxFailedAttemptsDialog extends SmartcardDialog {
      */
     @Override
     void onCancelCba() {
+        //Handle cancelling the same as the positive button.
+        mPositiveButtonListener.onClick();
         dismiss();
     }
 
