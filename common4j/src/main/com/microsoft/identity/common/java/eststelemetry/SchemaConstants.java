@@ -94,7 +94,7 @@ public class SchemaConstants {
 //            Key.REG_NUM,
 //            Key.CLOUD_NUM,
 //            Key.REG_SEQ_NUM,
-//            Key.REQ_PURPOSE,
+//            Key.REQ_PURPOSE
     };
 
     /**
@@ -106,12 +106,21 @@ public class SchemaConstants {
             SchemaConstants.Key.ALL_TELEMETRY_DATA_SENT
     };
 
+    private static final String[] allowedFieldsForOfflineEmit = new String[]{
+            Key.FLW_SIGNIN_APP,
+            Key.FLW_SIGNOUT_APP
+    };
+
     static boolean isCurrentPlatformField(final String key) {
         return Arrays.asList(currentRequestPlatformFields).contains(key);
     }
 
     static boolean isLastPlatformField(final String key) {
         return Arrays.asList(lastRequestPlatformFields).contains(key);
+    }
+
+    static boolean isOfflineEmitAllowedForThisField(final String key) {
+        return Arrays.asList(allowedFieldsForOfflineEmit).contains(key);
     }
 
     static String[] getCurrentRequestPlatformFields() {

@@ -175,7 +175,7 @@ public class EstsTelemetry {
         final CurrentRequestTelemetry currentTelemetryInstance = getCurrentTelemetryInstance(correlationId);
         if (currentTelemetryInstance != null) {
             currentTelemetryInstance.put(key, compliantValueString);
-        } else if (mSupplementalTelemetryDataCache != null) {
+        } else if (mSupplementalTelemetryDataCache != null && SchemaConstants.isOfflineEmitAllowedForThisField(key)) {
             mSupplementalTelemetryDataCache.put(key, compliantValueString);
         }
     }
