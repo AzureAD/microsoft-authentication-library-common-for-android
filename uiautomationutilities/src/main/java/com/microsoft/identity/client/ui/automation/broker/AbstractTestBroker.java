@@ -40,6 +40,10 @@ import com.microsoft.identity.client.ui.automation.installer.PlayStore;
 import com.microsoft.identity.client.ui.automation.interaction.PromptHandlerParameters;
 import com.microsoft.identity.client.ui.automation.interaction.PromptParameter;
 import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.AadPromptHandler;
+import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.AdfsLoginComponentHandler;
+import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.AdfsPromptHandler;
+import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.MicrosoftStsPromptHandler;
+import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.MicrosoftStsPromptHandlerParameters;
 import com.microsoft.identity.client.ui.automation.logging.Logger;
 import com.microsoft.identity.client.ui.automation.utils.CommonUtils;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
@@ -59,6 +63,7 @@ public abstract class AbstractTestBroker extends App implements ITestBroker {
     public final static IAppInstaller DEFAULT_BROKER_APP_INSTALLER = BuildConfig.INSTALL_SOURCE_LOCAL_APK
             .equalsIgnoreCase(BuildConfig.BROKER_INSTALL_SOURCE)
             ? new LocalApkInstaller() : new PlayStore();
+
     @Override
     public void uninstall() {
         super.uninstall();
@@ -112,7 +117,7 @@ public abstract class AbstractTestBroker extends App implements ITestBroker {
 
     @Override
     public void performJoinViaJoinActivity(@NonNull final String username,
-                                           @NonNull final String password) {
+                                           @NonNull final String password, final boolean isFederatedUser) {
         Logger.i(TAG, "Perform Join Via Join Activity for the given account..");
         // Enter username
         UiAutomatorUtils.handleInput(
@@ -129,18 +134,39 @@ public abstract class AbstractTestBroker extends App implements ITestBroker {
                 )
         );
 
-        final PromptHandlerParameters promptHandlerParameters = PromptHandlerParameters.builder()
-                .broker(this)
-                .prompt(PromptParameter.SELECT_ACCOUNT)
-                .loginHint(username)
-                .sessionExpected(false)
-                .build();
+        if (isFederatedUser) {
+            final PromptHandlerParameters promptHandlerParameters = PromptHandlerParameters.builder()
+                    .prompt(PromptParameter.LOGIN)
+                    .consentPageExpected(false)
+                    .expectingLoginPageAccountPicker(false)
+                    .sessionExpected(false)
+                    .loginHint(null)
+                    .build();
 
-        final AadPromptHandler aadPromptHandler = new AadPromptHandler(promptHandlerParameters);
+            final AdfsPromptHandler adfsPromptHandler = new AdfsPromptHandler(promptHandlerParameters);
+            Logger.i(TAG, "Handle prompt of ADFS login page for Device Registration..");
+            // handle ADFS login page
+            adfsPromptHandler.handlePrompt(username, password);
+        } else {
+            final PromptHandlerParameters promptHandlerParameters = PromptHandlerParameters.builder()
+                    .broker(this)
+                    .prompt(PromptParameter.SELECT_ACCOUNT)
+                    .loginHint(username)
+                    .sessionExpected(false)
+                    .build();
 
-        Logger.i(TAG, "Handle prompt in AAD login page for Join Via Join Activity..");
-        // Handle prompt in AAD login page
-        aadPromptHandler.handlePrompt(username, password);
+            final AadPromptHandler aadPromptHandler = new AadPromptHandler(promptHandlerParameters);
+
+            Logger.i(TAG, "Handle prompt in AAD login page for Join Via Join Activity..");
+            // Handle prompt in AAD login page
+            aadPromptHandler.handlePrompt(username, password);
+        }
+    }
+
+    @Override
+    public void performJoinViaJoinActivity(@NonNull final String username,
+                                           @NonNull final String password) {
+        performJoinViaJoinActivity(username, password, false);
     }
 
     @Override
