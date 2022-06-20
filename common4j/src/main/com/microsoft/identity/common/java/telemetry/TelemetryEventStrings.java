@@ -168,11 +168,10 @@ public class TelemetryEventStrings {
         public static final String IPC_STRATEGY = EVENT_PREFIX + "ipc_strategy";
         public static final String ERROR_TAG = EVENT_PREFIX + "error_tag";
         public static final String ERROR_CLASS_NAME = EVENT_PREFIX + "error_class_name";
-        public static final String ERROR_STACK_TRACE = EVENT_PREFIX + "error_stack_trace";
+        public static final String ERROR_COUNT = EVENT_PREFIX + "error_count";
         public static final String ERROR_LOCATION_CLASS_NAME = EVENT_PREFIX + "error_location_class_name";
         public static final String ERROR_LOCATION_METHOD_NAME = EVENT_PREFIX + "error_location_method_name";
         public static final String ERROR_LOCATION_LINE_NUMBER = EVENT_PREFIX + "error_location_line_number";
-        public static final String IS_ERROR_EVENT = EVENT_PREFIX + "is_error_event";
         public static final String IS_WPJ_JOINED = EVENT_PREFIX + "is_wpj_joined";
     }
 

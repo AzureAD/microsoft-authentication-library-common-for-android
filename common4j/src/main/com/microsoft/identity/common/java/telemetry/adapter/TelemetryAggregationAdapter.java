@@ -58,13 +58,6 @@ public class TelemetryAggregationAdapter implements ITelemetryAdapter<List<Map<S
         for (Map<String, String> event : rawData) {
             final String eventName = event.get(Key.EVENT_NAME);
             final String eventType = event.get(Key.EVENT_TYPE);
-            final String correlationId = event.get(Key.CORRELATION_ID);
-
-            // Events without a correlation id will be sent out without aggregation.
-            if (StringUtil.isNullOrEmpty(correlationId)) {
-                mObserver.onReceived(applyAggregationRule(event));
-                continue;
-            }
 
             if (StringUtil.isNullOrEmpty(eventName)) {
                 aggregatedData.putAll(applyAggregationRule(event));
