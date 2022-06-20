@@ -64,6 +64,7 @@ public class MicrosoftSTSClientCredentialsGrantTest {
         final String audience = MSSTS_CLIENT_ASSERTION_AUDIENCE;
 
         final MicrosoftClientAssertion assertion = MicrosoftClientAssertion.builder()
+                .clientId(CLIENT_ID)
                 .audience(audience)
                 .certificateCredential(credential)
                 .build();

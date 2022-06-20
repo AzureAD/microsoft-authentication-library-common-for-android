@@ -108,6 +108,7 @@ class KeyVaultAuthHelper extends ConfidentialClientHelper {
                 new ClientCertificateMetadata(CERTIFICATE_ALIAS, null));
 
         MicrosoftClientAssertion assertion = MicrosoftClientAssertion.builder()
+                .clientId(CLIENT_ID)
                 .audience(MSSTS_CLIENT_ASSERTION_AUDIENCE)
                 .certificateCredential(certificateCredential)
                 .build();
