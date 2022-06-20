@@ -34,7 +34,7 @@ import java.util.Map;
 
 import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Key;
 
-public final class TelemetryAggregationAdapter implements ITelemetryAdapter<List<Map<String, String>>> {
+public class TelemetryAggregationAdapter implements ITelemetryAdapter<List<Map<String, String>>> {
     private ITelemetryAggregatedObserver mObserver;
     private static final String START = "start";
     private static final String END = "end";
@@ -48,6 +48,10 @@ public final class TelemetryAggregationAdapter implements ITelemetryAdapter<List
     }
 
     public void process(@NonNull final List<Map<String, String>> rawData) {
+        mObserver.onReceived(aggregateEvent(rawData));
+    }
+
+    protected Map<String, String> aggregateEvent(@NonNull final List<Map<String, String>> rawData) {
         final Map<String, String> aggregatedData = new HashMap<>();
         final Map<String, String> responseTimeMap = new HashMap<>();
 
@@ -86,10 +90,10 @@ public final class TelemetryAggregationAdapter implements ITelemetryAdapter<List
 
         calculateEventResponseTime(responseTimeMap, aggregatedData);
 
-        mObserver.onReceived(aggregatedData);
+        return aggregatedData;
     }
 
-    private Map<String, String> applyAggregationRule(@NonNull final Map<String, String> properties) {
+    protected Map<String, String> applyAggregationRule(@NonNull final Map<String, String> properties) {
         final Map<String, String> nonPiiProperties = new HashMap<>();
         for (Map.Entry<String, String> entry : properties.entrySet()) {
             if (!StringUtil.isNullOrEmpty(entry.getValue())

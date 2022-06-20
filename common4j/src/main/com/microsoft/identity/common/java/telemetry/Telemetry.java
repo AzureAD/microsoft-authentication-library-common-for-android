@@ -23,6 +23,8 @@
 package com.microsoft.identity.common.java.telemetry;
 
 import com.microsoft.identity.common.java.WarningType;
+import com.microsoft.identity.common.java.telemetry.adapter.BrokerTelemetryAdapter;
+import com.microsoft.identity.common.java.telemetry.observers.IBrokerTelemetryObserver;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.telemetry.adapter.TelemetryAggregationAdapter;
 import com.microsoft.identity.common.java.telemetry.adapter.TelemetryDefaultAdapter;
@@ -275,7 +277,9 @@ public class Telemetry {
         }
 
         for (@SuppressWarnings(WarningType.rawtype_warning) ITelemetryObserver observer : mObservers) {
-            if (observer instanceof ITelemetryAggregatedObserver) {
+            if (observer instanceof IBrokerTelemetryObserver) {
+                new BrokerTelemetryAdapter((IBrokerTelemetryObserver) observer).process(finalRawMap);
+            } else if (observer instanceof ITelemetryAggregatedObserver) {
                 new TelemetryAggregationAdapter((ITelemetryAggregatedObserver) observer).process(finalRawMap);
             } else if (observer instanceof ITelemetryDefaultObserver) {
                 new TelemetryDefaultAdapter((ITelemetryDefaultObserver) observer).process(finalRawMap);
