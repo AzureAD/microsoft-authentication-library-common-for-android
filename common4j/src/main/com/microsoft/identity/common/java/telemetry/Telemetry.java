@@ -238,32 +238,6 @@ public class Telemetry {
     }
 
     /**
-     * Flush telemetry error events. These do not require a correlation id, so we pick all events that have their
-     * type as TelemetryEventStrings.EventType.ERROR_EVENT
-     */
-    public void flushErrors() {
-        if (!mIsTelemetryEnabled) {
-            return;
-        }
-
-        if (!mDefaultConfiguration.isDebugEnabled() && mIsDebugging) {
-            return;
-        }
-
-        final List<Map<String, String>> finalRawMap = new CopyOnWriteArrayList<>();
-
-        for (Iterator<Map<String, String>> iterator = mTelemetryRawDataMap.iterator(); iterator.hasNext(); ) {
-            Map<String, String> event = iterator.next();
-            if (TelemetryEventStrings.EventType.ERROR_EVENT.equalsIgnoreCase(event.get(Key.EVENT_TYPE))) {
-                finalRawMap.add(applyPiiOiiRule(event));
-                iterator.remove();
-            }
-        }
-
-        processRawMap(finalRawMap);
-    }
-
-    /**
      * Flush the telemetry data based on the correlation id to the observers.
      *
      * @param correlationId The correlation id should either passed by the client app through the API call

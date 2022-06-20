@@ -28,6 +28,7 @@ public class TelemetryEventStrings {
     public static final class App {
         public static final String BUILD = EVENT_PREFIX + "application_build";
         public static final String NAME = EVENT_PREFIX + "application_name";
+        public static final String PACKAGE = EVENT_PREFIX + "application_package";
         public static final String VERSION = EVENT_PREFIX + "application_version";
     }
 
