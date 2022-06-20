@@ -132,4 +132,11 @@ public class ResultFuture<T> implements Future<T> {
 
         mConsumers.add(consumerToAdd);
     }
+
+    @
+
+    @Override
+    protected void finalize() throws Throwable {
+        super.finalize();
+    }
 }
