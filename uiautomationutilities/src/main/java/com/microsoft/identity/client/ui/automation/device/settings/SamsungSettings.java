@@ -115,6 +115,14 @@ public class SamsungSettings extends BaseSettings {
     public void addWorkAccount(@NonNull final ITestBroker broker,
                                @NonNull final String username,
                                @NonNull final String password) {
+        addWorkAccount(broker, username, password, false);
+    }
+
+    @Override
+    public void addWorkAccount(@NonNull final ITestBroker broker,
+                               @NonNull final String username,
+                               @NonNull final String password,
+                               final boolean isFederatedUser) {
         Logger.i(TAG, "Adding Work Account on Samsung Device..");
         launchAddAccountPage();
 
@@ -129,7 +137,7 @@ public class SamsungSettings extends BaseSettings {
             workAccount.click();
 
             // add work account by performing join via the broker
-            broker.performJoinViaJoinActivity(username, password);
+            broker.performJoinViaJoinActivity(username, password, isFederatedUser);
 
             // activate broker app as admin
             activateAdmin();

@@ -36,6 +36,7 @@ import com.microsoft.identity.client.ui.automation.installer.LocalApkInstaller;
 import com.microsoft.identity.client.ui.automation.interaction.PromptHandlerParameters;
 import com.microsoft.identity.client.ui.automation.interaction.PromptParameter;
 import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.AadPromptHandler;
+import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.AdfsPromptHandler;
 import com.microsoft.identity.client.ui.automation.logging.Logger;
 import com.microsoft.identity.client.ui.automation.utils.CommonUtils;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
@@ -73,7 +74,11 @@ public class BrokerHost extends AbstractTestBroker {
     @Override
     public void performDeviceRegistration(@NonNull final String username,
                                           @NonNull final String password) {
+        performDeviceRegistration(username, password, false);
+    }
 
+    @Override
+    public void performDeviceRegistration(String username, String password, boolean isFederatedUser) {
         Logger.i(TAG, "Performing Device Registration for the given account..");
         performDeviceRegistrationHelper(username);
 
@@ -89,7 +94,6 @@ public class BrokerHost extends AbstractTestBroker {
         } catch (final UiObjectNotFoundException e) {
             throw new AssertionError(e);
         }
-
         final PromptHandlerParameters promptHandlerParameters = PromptHandlerParameters.builder()
                 .prompt(PromptParameter.LOGIN)
                 .broker(this)
@@ -100,11 +104,17 @@ public class BrokerHost extends AbstractTestBroker {
                 .loginHint(username)
                 .build();
 
-        final AadPromptHandler aadPromptHandler = new AadPromptHandler(promptHandlerParameters);
-
-        Logger.i(TAG, "Handle prompt of AAD login page for Device Registration..");
-        // handle AAD login page
-        aadPromptHandler.handlePrompt(username, password);
+        if (isFederatedUser) {
+            final AdfsPromptHandler adfsPromptHandler = new AdfsPromptHandler(promptHandlerParameters);
+            Logger.i(TAG, "Handle prompt of ADFS login page for Device Registration..");
+            // handle ADFS login page
+            adfsPromptHandler.handlePrompt(username, password);
+        } else {
+            final AadPromptHandler aadPromptHandler = new AadPromptHandler(promptHandlerParameters);
+            Logger.i(TAG, "Handle prompt of AAD login page for Device Registration..");
+            // handle AAD login page
+            aadPromptHandler.handlePrompt(username, password);
+        }
 
         postJoinConfirmHelper(username);
     }
@@ -269,7 +279,8 @@ public class BrokerHost extends AbstractTestBroker {
     }
 
     @Nullable
-    private final String basicButtonHandler(@NonNull final String resourceButtonId, @NonNull final String textId) {
+    private final String basicButtonHandler(@NonNull final String resourceButtonId,
+                                            @NonNull final String textId) {
         launch(); // launch Broker Host app
 
         if (shouldHandleFirstRun) {
@@ -316,7 +327,8 @@ public class BrokerHost extends AbstractTestBroker {
         }
     }
 
-    private String getDialogBoxText(@NonNull final UiObject dialogBox, @NonNull final String textId) {
+    private String getDialogBoxText(@NonNull final UiObject dialogBox,
+                                    @NonNull final String textId) {
         try {
             // get the textId if it is there, else return null (in case of error)
             final String[] dialogBoxText = dialogBox.getText().split(":");
@@ -409,7 +421,8 @@ public class BrokerHost extends AbstractTestBroker {
     /**
      * Decode SSO token and verify the expected nonce
      */
-    public void decodeSSOTokenAndVerifyNonce(@NonNull final String ssoToken, @NonNull final String nonce) {
+    public void decodeSSOTokenAndVerifyNonce(@NonNull final String ssoToken,
+                                             @NonNull final String nonce) {
         String token = new String(Base64.decode(ssoToken.split("\\.")[1], Base64.NO_WRAP));
         final Map<Object, Object> map = new Gson().fromJson(token, Map.class);
         StringBuilder sb = new StringBuilder();

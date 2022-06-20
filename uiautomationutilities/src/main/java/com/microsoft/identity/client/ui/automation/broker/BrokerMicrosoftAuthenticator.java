@@ -36,6 +36,7 @@ import androidx.test.uiautomator.UiObjectNotFoundException;
 import androidx.test.uiautomator.UiSelector;
 
 import com.microsoft.identity.client.ui.automation.installer.IAppInstaller;
+import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.AdfsPromptHandler;
 import com.microsoft.identity.client.ui.automation.powerlift.IPowerLiftIntegratedApp;
 import com.microsoft.identity.client.ui.automation.constants.DeviceAdmin;
 import com.microsoft.identity.client.ui.automation.interaction.PromptHandlerParameters;
@@ -79,12 +80,18 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
     @Override
     public void performDeviceRegistration(@NonNull final String username,
                                           @NonNull final String password) {
+        performDeviceRegistration(username, password, false);
+    }
+
+    @Override
+    public void performDeviceRegistration(String username, String password, boolean isFederatedUser) {
         Logger.i(TAG, "Performing Device Registration for the given account..");
         performDeviceRegistrationHelper(
                 username,
                 password,
                 "com.azure.authenticator:id/email_input",
-                "com.azure.authenticator:id/register_button"
+                "com.azure.authenticator:id/register_button",
+                isFederatedUser
         );
 
 
@@ -132,7 +139,8 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
                 username,
                 password,
                 "com.azure.authenticator:id/shared_device_registration_email_input",
-                "com.azure.authenticator:id/shared_device_registration_button"
+                "com.azure.authenticator:id/shared_device_registration_button",
+                false
         );
 
         final UiDevice device =
@@ -345,7 +353,8 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
     private void performDeviceRegistrationHelper(@NonNull final String username,
                                                  @NonNull final String password,
                                                  @NonNull final String emailInputResourceId,
-                                                 @NonNull final String registerBtnResourceId) {
+                                                 @NonNull final String registerBtnResourceId,
+                                                 final boolean isFederatedUser) {
         Logger.i(TAG, "Execution of Helper for Device Registration..");
         // open device registration page
         openDeviceRegistrationPage();
@@ -369,11 +378,18 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
                 .loginHint(username)
                 .build();
 
-        final AadPromptHandler aadPromptHandler = new AadPromptHandler(promptHandlerParameters);
+        if (isFederatedUser) {
+            final AdfsPromptHandler adfsPromptHandler = new AdfsPromptHandler(promptHandlerParameters);
+            Logger.i(TAG, "Handle prompt of ADFS login page for Device Registration..");
+            // handle ADFS login page
+            adfsPromptHandler.handlePrompt(username, password);
+        } else {
+            final AadPromptHandler aadPromptHandler = new AadPromptHandler(promptHandlerParameters);
 
-        Logger.i(TAG, "Handle AAD Login page prompt for Device Registration..");
-        // handle AAD login page
-        aadPromptHandler.handlePrompt(username, password);
+            Logger.i(TAG, "Handle AAD Login page prompt for Device Registration..");
+            // handle AAD login page
+            aadPromptHandler.handlePrompt(username, password);
+        }
     }
 
     @Override

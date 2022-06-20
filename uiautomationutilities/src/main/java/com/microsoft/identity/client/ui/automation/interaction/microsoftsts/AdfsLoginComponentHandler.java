@@ -54,7 +54,5 @@ public class AdfsLoginComponentHandler extends AadLoginComponentHandler {
         // handle AAD login page for username
         UiAutomatorUtils.handleInput("i0116", username);
         UiAutomatorUtils.handleButtonClick("idSIButton9");
-
-        handlePasswordField(password);
     }
 }
