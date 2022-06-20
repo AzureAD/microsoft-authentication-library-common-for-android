@@ -100,4 +100,9 @@ public abstract class AbstractTelemetryRelayClient<T> implements ITelemetryObser
      * This method can be invoked when the application is being closed.
      */
     public abstract void flushAndTeardown();
+
+    /**
+     * Flush any pending telemetry events in memory to disk.
+     */
+    public abstract void flush();
 }
