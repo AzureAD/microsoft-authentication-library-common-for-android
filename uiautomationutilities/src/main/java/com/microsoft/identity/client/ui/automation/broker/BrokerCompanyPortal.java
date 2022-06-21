@@ -47,6 +47,7 @@ import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 import org.junit.Assert;
 
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
 
 import lombok.Getter;
 
@@ -64,6 +65,8 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
     public final static String COMPANY_PORTAL_APP_PACKAGE_NAME = "com.microsoft.windowsintune.companyportal";
     public final static String COMPANY_PORTAL_APP_NAME = "Intune Company Portal";
     public final static String COMPANY_PORTAL_APK = "CompanyPortal.apk";
+
+    private final long ENROLLMENT_SETUP_WAIT_DURATION = TimeUnit.MINUTES.toMillis(1);
 
     private boolean enrollmentPerformedSuccessfully;
 
@@ -185,7 +188,7 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
 
     public void enrollDevice(@NonNull final String username,
                              @NonNull final String password,
-                             final boolean isFederated) {
+                             final boolean isFederated){
         Logger.i(TAG, "Enroll Device for the given account..");
         launch(); // launch CP app
 
@@ -249,6 +252,12 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
         // if on a Samsung device, also need to handle enrollment in Knox
         if (deviceSettings instanceof SamsungSettings) {
             ((SamsungSettings) deviceSettings).enrollInKnox();
+        }
+
+        try {
+            Thread.sleep(ENROLLMENT_SETUP_WAIT_DURATION);
+        } catch (InterruptedException e) {
+            Assert.fail(e.getMessage());
         }
 
         // make sure we are on the page to complete setup
