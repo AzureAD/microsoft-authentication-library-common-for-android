@@ -61,6 +61,11 @@ public class ApiStartEvent extends BaseEvent {
         return this;
     }
 
+    public ApiStartEvent putBrokerVersion(final String brokerVersion) {
+        put(Key.BROKER_VERSION, brokerVersion);
+        return this;
+    }
+
     public ApiStartEvent putProperties(
             @Nullable final CommandParameters parameters) {
         if (parameters == null) {

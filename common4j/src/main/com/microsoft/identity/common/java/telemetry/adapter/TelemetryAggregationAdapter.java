@@ -24,6 +24,7 @@ package com.microsoft.identity.common.java.telemetry.adapter;
 
 import lombok.NonNull;
 
+import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.telemetry.observers.ITelemetryAggregatedObserver;
 import com.microsoft.identity.common.java.telemetry.rules.TelemetryAggregationRules;
@@ -76,10 +77,11 @@ public class TelemetryAggregationAdapter implements ITelemetryAdapter<List<Map<S
                 );
             }
 
-            if (!StringUtil.isNullOrEmpty(event.get(Key.IS_SUCCESSFUL))) {
+            if (!StringUtil.isNullOrEmpty(event.get(Key.IS_SUCCESSFUL)) || eventName.contains(END)) {
+                final String isSuccessful = event.get(Key.IS_SUCCESSFUL);
                 aggregatedData.put(
                         eventType + Key.IS_SUCCESSFUL,
-                        event.get(Key.IS_SUCCESSFUL)
+                        StringUtil.isNullOrEmpty(isSuccessful) ? TelemetryEventStrings.Value.FALSE : isSuccessful
                 );
             }
 

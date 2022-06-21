@@ -48,9 +48,7 @@ public class ApiEndEvent extends BaseEvent {
             return this;
         }
 
-        if (result.getSucceeded() != null) {
-            put(Key.IS_SUCCESSFUL, result.getSucceeded().toString());
-        }
+        put(Key.IS_SUCCESSFUL, result.getSucceeded() ? Value.TRUE : Value.FALSE);
 
         if (null != result.getLocalAuthenticationResult()) {
             put(Key.USER_ID, result.getLocalAuthenticationResult().getUniqueId()); //pii
@@ -88,15 +86,13 @@ public class ApiEndEvent extends BaseEvent {
     }
 
     @Override
-    public ApiEndEvent put(@NonNull final String propertyName,final String propertyValue) {
+    public ApiEndEvent put(@NonNull final String propertyName, final String propertyValue) {
         super.put(propertyName, propertyValue);
         return this;
     }
 
     public ApiEndEvent isApiCallSuccessful(final Boolean isSuccessful) {
-        if (isSuccessful != null) {
-            put(Key.IS_SUCCESSFUL, isSuccessful.toString());
-        }
+        put(Key.IS_SUCCESSFUL, isSuccessful ? Value.TRUE: Value.FALSE );
         return this;
     }
 
