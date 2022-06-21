@@ -31,6 +31,7 @@ import androidx.annotation.Nullable;
 public class BrokerProtocolVersionUtil {
 
     public static final String MSAL_TO_BROKER_PROTOCOL_COMPRESSION_CHANGES_MINIMUM_VERSION = "5.0";
+    public static final String MSAL_TO_BROKER_PROTOCOL_ACCOUNT_FROM_PRT_CHANGES_MINIMUM_VERSION = "8.0";
 
     public static boolean canCompressBrokerPayloads(@Nullable String negotiatedBrokerProtocol) {
         if (StringUtil.isEmpty(negotiatedBrokerProtocol)) {
@@ -40,6 +41,17 @@ public class BrokerProtocolVersionUtil {
         return StringUtil.isFirstVersionLargerOrEqual(
                 negotiatedBrokerProtocol,
                 MSAL_TO_BROKER_PROTOCOL_COMPRESSION_CHANGES_MINIMUM_VERSION);
+
+    }
+
+    public static boolean canFociAppsConstructAccountsFromPrtIdTokens(@Nullable String negotiatedBrokerProtocol) {
+        if (StringUtil.isEmpty(negotiatedBrokerProtocol)) {
+            return false;
+        }
+
+        return StringUtil.isFirstVersionLargerOrEqual(
+                negotiatedBrokerProtocol,
+                MSAL_TO_BROKER_PROTOCOL_ACCOUNT_FROM_PRT_CHANGES_MINIMUM_VERSION);
 
     }
 }

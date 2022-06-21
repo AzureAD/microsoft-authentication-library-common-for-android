@@ -1383,6 +1383,7 @@ public final class AuthenticationConstants {
         private static final String VERSION_3 = "3.0";
         private static final String VERSION_6 = "6.0";
         private static final String VERSION_7 = "7.0";
+        private static final String VERSION_8 = "8.0";
         private static final String BROKER_VERSION_1 = ONE_POINT_ZERO;
         private static final String BROKER_VERSION_2 = TWO_POINT_ZERO;
 
@@ -1401,7 +1402,7 @@ public final class AuthenticationConstants {
             MSAL_HELLO(MSAL_HELLO_PATH, null, VERSION_3),
             ACQUIRE_TOKEN_INTERACTIVE(MSAL_ACQUIRE_TOKEN_INTERACTIVE_PATH, null, VERSION_3),
             ACQUIRE_TOKEN_SILENT(MSAL_ACQUIRE_TOKEN_SILENT_PATH, null, VERSION_3),
-            GET_ACCOUNTS(MSAL_GET_ACCOUNTS_PATH, null, VERSION_3),
+            GET_ACCOUNTS(MSAL_GET_ACCOUNTS_PATH, null, VERSION_8),
             REMOVE_ACCOUNT(MSAL_REMOVE_ACCOUNT_PATH, null, VERSION_3),
             GET_CURRENT_ACCOUNT_SHARED_DEVICE(MSAL_GET_CURRENT_ACCOUNT_SHARED_DEVICE_PATH, null, VERSION_3),
             GET_DEVICE_MODE(MSAL_GET_DEVICE_MODE_PATH, null, VERSION_3),
