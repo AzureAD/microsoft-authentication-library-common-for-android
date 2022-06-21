@@ -23,7 +23,10 @@ package com.microsoft.identity.common.java.telemetry.adapter;
 
 import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings;
 import com.microsoft.identity.common.java.telemetry.observers.IBrokerTelemetryObserver;
+import com.microsoft.identity.common.java.util.StringUtil;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,9 +40,6 @@ import lombok.NonNull;
  * We then send out the error events as single events since the {@link TelemetryAggregationAdapter} will pick the last error event
  * and add combine it with the aggregated event. This means that the event sent by {@link TelemetryAggregationAdapter} only contains
  * the last error that was dispatched.
- * <p>
- * On the server side, we will perform an INNER JOIN based on the correlation id in order to identify all the events that were
- * captured in the flow.
  */
 public class BrokerTelemetryAdapter extends TelemetryAggregationAdapter {
     public BrokerTelemetryAdapter(@NonNull IBrokerTelemetryObserver observer) {
@@ -48,37 +48,66 @@ public class BrokerTelemetryAdapter extends TelemetryAggregationAdapter {
 
     @Override
     public void process(@NonNull List<Map<String, String>> rawData) {
-        super.process(rawData);
+        final Map<String, String> aggregatedMap = aggregateEvent(rawData);
 
-        Map<String, Map<String, String>> errorEvents = new HashMap<>();
+        // Filter out the error events first
+        final List<Map<String, String>> errorEvents = filterErrorEvents(rawData, aggregatedMap);
 
-        // aggregate error events by counting the number of occurrences of the error.
-        for (Map<String, String> event : rawData) {
-            final String eventType = event.get(TelemetryEventStrings.Key.EVENT_TYPE);
-
-            if (TelemetryEventStrings.EventType.ERROR_EVENT.equals(eventType)) {
-                final String errorTag = event.get(TelemetryEventStrings.Key.ERROR_TAG);
-
-                if (errorEvents.containsKey(errorTag)) {
-                    final Map<String, String> errorEventMap = errorEvents.get(errorTag);
-                    errorEventMap.put(
-                            TelemetryEventStrings.Key.ERROR_COUNT,
-                            String.valueOf(
-                                    Integer.parseInt(errorEventMap.get(TelemetryEventStrings.Key.ERROR_COUNT)) + 1
-                            )
-                    );
-                } else {
-                    final Map<String, String> errorEventMap = applyAggregationRule(event);
-                    errorEventMap.put(TelemetryEventStrings.Key.ERROR_COUNT, String.valueOf(1));
-
-                    errorEvents.put(errorTag, errorEventMap);
-                }
-            }
-        }
-
-        // send out the error events
-        for (Map<String, String> errorEvent : errorEvents.values()) {
+        // count the number of hits of the errors
+        final List<Map<String, String>> countedErrors = countErrors(errorEvents);
+        // publish the event
+        for (Map<String, String> errorEvent : countedErrors) {
             getObserver().onReceived(errorEvent);
         }
+
+        // send out the aggregated event separately. This contains the tag of the error event that was
+        // fired last, hence in case of a failure, we know which error caused it.
+        getObserver().onReceived(aggregatedMap);
+    }
+
+    /**
+     * Filters out error events from the list of events
+     */
+    private List<Map<String, String>> filterErrorEvents(List<Map<String, String>> rawData, Map<String, String> aggregatedMap) {
+        final List<Map<String, String>> errorEvents = new ArrayList<>();
+
+        for (Map<String, String> event : rawData) {
+            if (TelemetryEventStrings.EventType.ERROR_EVENT.equals(event.get(TelemetryEventStrings.Key.EVENT_TYPE))) {
+                final Map<String, String> errorEvent = new HashMap<>(aggregatedMap);
+                errorEvent.putAll(event);
+                errorEvent.put(TelemetryEventStrings.Key.CORRELATION_ID, aggregatedMap.get(TelemetryEventStrings.Key.CORRELATION_ID));
+                errorEvent.put(TelemetryEventStrings.Key.IS_ERROR_EVENT, TelemetryEventStrings.Value.TRUE);
+
+                errorEvents.add(errorEvent);
+            }
+        }
+        return errorEvents;
+    }
+
+    /**
+     * Errors with the same tag are essentially the same error, we don't need to send them to telemetry as different errors. Therefore
+     * we shall add an {@link TelemetryEventStrings.Key#ERROR_COUNT} key that denotes the number of hits of the error.
+     *
+     * @param errorEvents the list of error events
+     * @return a list containing unique error events (by tag) with a field denoting the number of hits of the error.
+     */
+    private List<Map<String, String>> countErrors(List<Map<String, String>> errorEvents) {
+        final Map<String, Map<String, String>> countedErrors = new HashMap<>();
+
+        for (Map<String, String> errorEvent : errorEvents) {
+            final String errorTag = errorEvent.get(TelemetryEventStrings.Key.ERROR_TAG);
+
+            int errorCount = 1;
+            final Map<String, String> errorProperties = countedErrors.containsKey(errorTag) ? countedErrors.get(errorTag) : applyAggregationRule(errorEvent);
+
+            if (countedErrors.containsKey(errorTag)) {
+                errorCount += Integer.parseInt(errorProperties.get(TelemetryEventStrings.Key.ERROR_COUNT));
+            } else {
+                countedErrors.put(errorTag, errorProperties);
+            }
+            errorProperties.put(TelemetryEventStrings.Key.ERROR_COUNT, String.valueOf(errorCount));
+        }
+
+        return new ArrayList<>(countedErrors.values());
     }
 }

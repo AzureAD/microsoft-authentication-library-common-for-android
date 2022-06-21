@@ -68,6 +68,8 @@ public class ErrorEvent extends BaseEvent {
             }
 
             put(TelemetryEventStrings.Key.ERROR_CODE, adaptedException.getErrorCode());
+            put(TelemetryEventStrings.Key.SERVER_ERROR_CODE, adaptedException.getCliTelemErrorCode());
+            put(TelemetryEventStrings.Key.SERVER_SUBERROR_CODE, adaptedException.getCliTelemSubErrorCode());
         }
 
         return this;

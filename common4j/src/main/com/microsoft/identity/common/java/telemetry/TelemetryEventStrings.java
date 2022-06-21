@@ -173,6 +173,7 @@ public class TelemetryEventStrings {
         public static final String ERROR_LOCATION_METHOD_NAME = EVENT_PREFIX + "error_location_method_name";
         public static final String ERROR_LOCATION_LINE_NUMBER = EVENT_PREFIX + "error_location_line_number";
         public static final String IS_WPJ_JOINED = EVENT_PREFIX + "is_wpj_joined";
+        public static final String IS_ERROR_EVENT = EVENT_PREFIX + "is_error_event";
     }
 
     public static final class Value {
@@ -197,6 +198,7 @@ public class TelemetryEventStrings {
         public static final String ACCOUNT_MANAGER = "account_manager";
         public static final String BOUND_SERVICE = "bound_service";
         public static final String CONTENT_PROVIDER = "content_provider";
+        public static final String UNSET = "UNSET";
     }
 
     public static final class Api {
