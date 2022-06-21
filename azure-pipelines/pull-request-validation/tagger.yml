@@ -38,6 +38,6 @@ jobs:
           configfilepath: 'scripts/tagger_config.json'
           ServiceEndpoint: 'MSIDLABS_ANDROID_KV'
           KeyVaultName: 'ADALTestInfo'
-          SecretName: 'AndroidAutomationRunnerAppSecret'
+          SecretName: 'Office-Tagger-Github-PAT'
         env:
           GITHUB_PAT: $(Office-Tagger-Github-PAT)
