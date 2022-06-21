@@ -31,6 +31,7 @@ import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.logging.DiagnosticContext;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.result.ILocalAuthenticationResult;
+import com.microsoft.identity.common.java.util.SchemaUtil;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.util.ported.InMemoryStorage;
 
@@ -200,6 +201,17 @@ public class EstsTelemetry {
      */
     public void emit(final String key, final long value) {
         emit(key, String.valueOf(value));
+    }
+
+    /**
+     * Emit the provided telemetry field. The field will be saved in {@link RequestTelemetry} object
+     * associated to the current request.
+     *
+     * @param key   the key associated to the telemetry field
+     * @param value the value associated to the telemetry field
+     */
+    public void emit(final String key, final boolean value) {
+        emit(key, TelemetryUtils.getSchemaCompliantStringFromBoolean(value));
     }
 
     /**
