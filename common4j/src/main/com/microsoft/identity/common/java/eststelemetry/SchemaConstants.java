@@ -57,7 +57,8 @@ public class SchemaConstants {
         public static final String MRRT_STATUS = TelemetryEventStrings.Key.MRRT_STATUS;
         public static final String ALL_TELEMETRY_DATA_SENT = "is_all_telemetry_data_sent";
 
-        // flw fields
+        // flw and multiple reg fields
+        public static final String IS_SHARED_DEVICE = "isSharedScenario";
         public static final String REG_TYPE = "reg_type";
         public static final String REG_SOURCE = "reg_source";
         public static final String FLW_SIGNOUT_APP = "flw_signout_app";
@@ -81,14 +82,19 @@ public class SchemaConstants {
      * Failure do so will break the schema.
      */
     private static final String[] currentRequestPlatformFields = new String[]{
-            Key.REG_TYPE,
-            Key.REG_SOURCE,
-            Key.FLW_SIGNOUT_APP,
-            Key.FLW_SIGNIN_APP,
+            // shared fields between Android and iOS
+            Key.IS_SHARED_DEVICE,
+            // Multiple WPJ shared fields between Android and iOS
             Key.REG_NUM,
             Key.CLOUD_NUM,
             Key.REG_SEQ_NUM,
             Key.REQ_PURPOSE,
+            // flw shared fields between Android and iOS
+            Key.REG_TYPE,
+            Key.REG_SOURCE,
+            Key.FLW_SIGNOUT_APP,
+            Key.FLW_SIGNIN_APP,
+            // Android custom platform fields
             SchemaConstants.Key.ACCOUNT_STATUS,
             SchemaConstants.Key.ID_TOKEN_STATUS,
             SchemaConstants.Key.AT_STATUS,
