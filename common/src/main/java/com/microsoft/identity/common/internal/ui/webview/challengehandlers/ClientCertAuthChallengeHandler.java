@@ -669,9 +669,7 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
                     //Show error dialog and cancel flow if mDevice is null.
                     if (mDevice == null) {
                         Logger.info(methodTag, "Instance UsbYubiKitDevice variable (mDevice) is null.");
-                        //Show general error dialog.
-                        dialogHolder.showErrorDialog(R.string.smartcard_general_error_dialog_title, R.string.smartcard_general_error_dialog_message);
-                        request.cancel();
+                        //TODO: want to see if we can show an error dialog somehow in this scenario.
                         //Invoke result failure.
                         callback.invoke(Result.failure(new Exception("Exception: Instance UsbYubiKitDevice variable (mDevice) is null.")));
                         return;
