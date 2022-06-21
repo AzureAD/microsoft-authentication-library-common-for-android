@@ -50,6 +50,15 @@ public interface ITestBroker extends IApp {
     void performDeviceRegistration(String username, String password);
 
     /**
+     * Perform device registration with supplied username.
+     *
+     * @param username username of the account to use for registration
+     * @param password password of the account to use for registration
+     * @param isFederatedUser set to true if the user is a federated user
+     */
+    void performDeviceRegistration(String username, String password, boolean isFederatedUser);
+
+    /**
      * Perform shared device registration with supplied username. This user must be a cloud device
      * admin for the registration to actually succeed.
      *
@@ -65,6 +74,15 @@ public interface ITestBroker extends IApp {
      * @param password password of the account to use for registration
      */
     void performJoinViaJoinActivity(String username, String password);
+
+    /**
+     * Perform device registration from the Join Activity using the supplied user account.
+     *
+     * @param username username of the account to use for registration
+     * @param password password of the account to use for registration
+     * @param isFederatedUser true if it is a federated user
+     */
+    void performJoinViaJoinActivity(String username, String password, boolean isFederatedUser);
 
     /**
      * Confirm that device registered with the supplied UPN by comparing it with the UPN

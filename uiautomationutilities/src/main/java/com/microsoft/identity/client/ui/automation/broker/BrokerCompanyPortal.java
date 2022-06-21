@@ -89,6 +89,19 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
     }
 
     @Override
+    public void performDeviceRegistration(@NonNull final String username,
+                                          @NonNull final String password,
+                                          final boolean isFederatedUser) {
+        Logger.i(TAG, "Perform Device Registration for the given federate account..");
+        TestContext.getTestContext().getTestDevice().getSettings().addWorkAccount(
+                this,
+                username,
+                password,
+                isFederatedUser
+        );
+    }
+
+    @Override
     public void performSharedDeviceRegistration(@NonNull final String username,
                                                 @NonNull final String password) {
         //TODO implement shared device registration for CP
@@ -171,7 +184,8 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
     }
 
     public void enrollDevice(@NonNull final String username,
-                             @NonNull final String password, final boolean isFederated) {
+                             @NonNull final String password,
+                             final boolean isFederated) {
         Logger.i(TAG, "Enroll Device for the given account..");
         launch(); // launch CP app
 
