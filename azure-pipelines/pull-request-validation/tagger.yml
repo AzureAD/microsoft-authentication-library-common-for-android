@@ -37,14 +37,7 @@ jobs:
         displayName: 'Office Git Tagger'
         inputs:
           configfilepath: 'scripts/tagger_config.json'
-        env:
-          GITHUB_PAT: $(Office-Tagger-Github-PAT)
-
-      - task: OfficeGitTagger@7
-        displayName: 'Office Git Tagger'
-        inputs:
-          configfilepath: 'scripts/tagger_config.json'
-          ServiceEndpoint: 'MSIDLABS_ANDROID_KV'
+          ServiceEndpoint: 'MSID_LABS_PPE'
           KeyVaultName: 'ADALTestInfo'
           SecretName: 'Office-Tagger-Github-PAT'
         env:
