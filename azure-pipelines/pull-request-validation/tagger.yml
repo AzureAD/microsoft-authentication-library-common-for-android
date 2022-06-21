@@ -32,6 +32,14 @@ jobs:
             auth_header = run(["git", "config", "http.$(Build.Repository.URI).extraheader"], text=True, check=True, stdout=PIPE).stdout
             _, pat = b64decode(auth_header.replace("AUTHORIZATION: basic ", "")).decode("utf-8").split(":")
             print(f"##vso[task.setvariable variable=Office-Tagger-Github-PAT;]{pat}")
+
+      - task: OfficeGitTagger@7
+        displayName: 'Office Git Tagger'
+        inputs:
+          configfilepath: 'scripts/tagger_config.json'
+        env:
+          GITHUB_PAT: $(Office-Tagger-Github-PAT)
+
       - task: OfficeGitTagger@7
         displayName: 'Office Git Tagger'
         inputs:
