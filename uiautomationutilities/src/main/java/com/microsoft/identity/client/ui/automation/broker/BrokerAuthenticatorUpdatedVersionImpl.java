@@ -32,9 +32,6 @@ import androidx.test.uiautomator.UiObjectNotFoundException;
 import androidx.test.uiautomator.UiSelector;
 
 import com.microsoft.identity.client.ui.automation.TestContext;
-import com.microsoft.identity.client.ui.automation.interaction.PromptHandlerParameters;
-import com.microsoft.identity.client.ui.automation.interaction.PromptParameter;
-import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.AadPromptHandler;
 import com.microsoft.identity.client.ui.automation.logging.Logger;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
@@ -108,6 +105,7 @@ public class BrokerAuthenticatorUpdatedVersionImpl extends BrokerMicrosoftAuthen
         }
     }
 
+    @Override
     public void performSharedDeviceRegistration(@NonNull final String username,
                                                 @NonNull final String password) {
         Logger.i(TAG, "Performing Shared Device Registration for the given account..");
@@ -133,40 +131,6 @@ public class BrokerAuthenticatorUpdatedVersionImpl extends BrokerMicrosoftAuthen
                 sharedDeviceConfirmation.exists());
 
         isInSharedDeviceMode = true;
-    }
-
-    private void performDeviceRegistrationHelper(@NonNull final String username,
-                                                 @NonNull final String password,
-                                                 @NonNull final String emailInputResourceId,
-                                                 @NonNull final String registerBtnResourceId) {
-        Logger.i(TAG, "Execution of Helper for Device Registration..");
-        // open device registration page
-        openDeviceRegistrationPage();
-
-        // enter email
-        UiAutomatorUtils.handleInput(
-                emailInputResourceId,
-                username
-        );
-
-        // click register
-        UiAutomatorUtils.handleButtonClick(registerBtnResourceId);
-
-        final PromptHandlerParameters promptHandlerParameters = PromptHandlerParameters.builder()
-                .prompt(PromptParameter.LOGIN)
-                .broker(this)
-                .consentPageExpected(false)
-                .expectingBrokerAccountChooserActivity(false)
-                .expectingLoginPageAccountPicker(false)
-                .sessionExpected(false)
-                .loginHint(username)
-                .build();
-
-        final AadPromptHandler aadPromptHandler = new AadPromptHandler(promptHandlerParameters);
-
-        Logger.i(TAG, "Handle AAD Login page prompt for Device Registration..");
-        // handle AAD login page
-        aadPromptHandler.handlePrompt(username, password);
     }
 
     @Override
