@@ -20,16 +20,12 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.internal.testutils;
+package com.microsoft.identity.http;
 
-import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.java.net.AbstractHttpClient;
 import com.microsoft.identity.common.java.net.HttpClient;
 import com.microsoft.identity.common.java.net.HttpResponse;
-import com.microsoft.identity.common.java.net.UrlConnectionHttpClient;
-import com.microsoft.identity.internal.testutils.HttpRequestInterceptor;
-import com.microsoft.identity.internal.testutils.MockHttpClient;
 
 import java.io.IOException;
 import java.net.URL;
@@ -37,6 +33,7 @@ import java.util.Map;
 
 import javax.net.ssl.SSLContext;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.NonNull;
 
 /**

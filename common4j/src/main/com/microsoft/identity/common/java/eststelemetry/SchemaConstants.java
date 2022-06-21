@@ -81,20 +81,20 @@ public class SchemaConstants {
      * Failure do so will break the schema.
      */
     private static final String[] currentRequestPlatformFields = new String[]{
+            Key.REG_TYPE,
+            Key.REG_SOURCE,
+            Key.FLW_SIGNOUT_APP,
+            Key.FLW_SIGNIN_APP,
+            Key.REG_NUM,
+            Key.CLOUD_NUM,
+            Key.REG_SEQ_NUM,
+            Key.REQ_PURPOSE,
             SchemaConstants.Key.ACCOUNT_STATUS,
             SchemaConstants.Key.ID_TOKEN_STATUS,
             SchemaConstants.Key.AT_STATUS,
             SchemaConstants.Key.RT_STATUS,
             SchemaConstants.Key.FRT_STATUS,
             SchemaConstants.Key.MRRT_STATUS,
-//            Key.REG_TYPE,
-//            Key.REG_SOURCE,
-//            Key.FLW_SIGNOUT_APP,
-//            Key.FLW_SIGNIN_APP,
-//            Key.REG_NUM,
-//            Key.CLOUD_NUM,
-//            Key.REG_SEQ_NUM,
-//            Key.REQ_PURPOSE
     };
 
     /**

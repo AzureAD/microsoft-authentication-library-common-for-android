@@ -20,7 +20,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.internal.testutils;
+package com.microsoft.identity.http;
 
 import com.microsoft.identity.common.java.interfaces.IHttpClientWrapper;
 import com.microsoft.identity.common.java.net.HttpClient;
@@ -30,7 +30,7 @@ import lombok.NonNull;
 /**
  * Wraps any given {@link HttpClient} with {@link InterceptedHttpClient},
  * allowing it to work with {@link MockHttpClient}.
- * */
+ */
 public class InterceptedHttpClientWrapper implements IHttpClientWrapper {
     @Override
     public @NonNull HttpClient wrap(@NonNull final HttpClient client) {
