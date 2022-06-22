@@ -20,33 +20,23 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java.eststelemetry;
+package com.microsoft.identity.common.java.commands.parameters;
 
-import lombok.NonNull;
+import com.microsoft.identity.common.java.broker.IBrokerAccount;
 
-import com.microsoft.identity.common.java.util.StringUtil;
-import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings;
+public interface IBrokerTokenCommandParameters {
 
-public class TelemetryUtils {
+    String getCallerPackageName();
 
-    static boolean getBooleanFromSchemaString(final String val) {
-        return val != null && val.equals(SchemaConstants.Value.TRUE);
-    }
+    int getCallerUid();
 
-    static String getSchemaCompliantStringFromBoolean(final boolean val) {
-        return val ? SchemaConstants.Value.TRUE : SchemaConstants.Value.FALSE;
-    }
+    String getCallerAppVersion();
 
-    @NonNull
-    static String getSchemaCompliantString(final String s) {
-        if (StringUtil.isNullOrEmpty(s)) {
-            return SchemaConstants.Value.EMPTY;
-        } else if (s.equals(TelemetryEventStrings.Value.TRUE)) {
-            return SchemaConstants.Value.TRUE;
-        } else if (s.equals(TelemetryEventStrings.Value.FALSE)) {
-            return SchemaConstants.Value.FALSE;
-        } else {
-            return s;
-        }
-    }
+    String getBrokerVersion();
+
+    IBrokerAccount getBrokerAccount();
+
+    String getHomeAccountId();
+
+    String getLocalAccountId();
 }

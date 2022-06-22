@@ -24,9 +24,9 @@ package com.microsoft.identity.common.java.eststelemetry;
 
 import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings;
 
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.List;
 
 /**
  * This class defines the schema for server-side telemetry
@@ -81,59 +81,88 @@ public class SchemaConstants {
      * NOTE: These fields must always be listed in the correct order in this array.
      * Failure do so will break the schema.
      */
-    private static final String[] currentRequestPlatformFields = new String[]{
-            // shared fields between Android and iOS
-            Key.IS_SHARED_DEVICE,
-            // Multiple WPJ shared fields between Android and iOS
-            Key.REG_NUM,
-            Key.CLOUD_NUM,
-            Key.REG_SEQ_NUM,
-            Key.REQ_PURPOSE,
-            // flw shared fields between Android and iOS
-            Key.REG_TYPE,
-            Key.REG_SOURCE,
-            Key.FLW_SIGNOUT_APP,
-            Key.FLW_SIGNIN_APP,
+    private static final List<String> currentRequestAndroidPlatformFields = Arrays.asList(
             // Android custom platform fields
             SchemaConstants.Key.ACCOUNT_STATUS,
             SchemaConstants.Key.ID_TOKEN_STATUS,
             SchemaConstants.Key.AT_STATUS,
             SchemaConstants.Key.RT_STATUS,
             SchemaConstants.Key.FRT_STATUS,
-            SchemaConstants.Key.MRRT_STATUS,
-    };
+            SchemaConstants.Key.MRRT_STATUS
+    );
+
+    /**
+     * This array defines the platform schema for current request
+     * NOTE: These fields must always be listed in the correct order in this array.
+     * Failure do so will break the schema.
+     */
+    private static final List<String> currentRequestSharedFlwPlatformFieldsForAndroidAndiOSBroker = Arrays.asList(
+            // flw shared fields between Android and iOS
+            Key.IS_SHARED_DEVICE,
+            Key.REG_TYPE,
+            Key.REG_SOURCE,
+            Key.FLW_SIGNOUT_APP,
+            Key.FLW_SIGNIN_APP
+    );
+
+    /**
+     * This array defines the platform schema for current request
+     * NOTE: These fields must always be listed in the correct order in this array.
+     * Failure do so will break the schema.
+     */
+    private static final List<String> currentRequestSharedMultipleWpjPlatformFieldsForAndroidAndiOSBroker = Arrays.asList(
+            // Multiple WPJ shared fields between Android and iOS
+            Key.IS_SHARED_DEVICE,
+            Key.REG_NUM,
+            Key.CLOUD_NUM,
+            Key.REG_SEQ_NUM,
+            Key.REQ_PURPOSE,
+            Key.REG_SOURCE
+    );
 
     /**
      * This array defines the platform schema for last request
      * NOTE: These fields must always be listed in the correct order in this array.
      * Failure do so will break the schema.
      */
-    private static final String[] lastRequestPlatformFields = new String[]{
+    private static final List<String> lastRequestPlatformFields = Arrays.asList(
             SchemaConstants.Key.ALL_TELEMETRY_DATA_SENT
-    };
+    );
 
-    private static final String[] allowedFieldsForOfflineEmit = new String[]{
+    private static final List<String> allowedFieldsForOfflineEmit = Arrays.asList(
             Key.FLW_SIGNIN_APP,
             Key.FLW_SIGNOUT_APP
-    };
+    );
 
     static boolean isCurrentPlatformField(final String key) {
-        return Arrays.asList(currentRequestPlatformFields).contains(key);
+        return currentRequestAndroidPlatformFields.contains(key) ||
+                currentRequestSharedFlwPlatformFieldsForAndroidAndiOSBroker.contains(key) ||
+                currentRequestSharedMultipleWpjPlatformFieldsForAndroidAndiOSBroker.contains(key);
     }
 
     static boolean isLastPlatformField(final String key) {
-        return Arrays.asList(lastRequestPlatformFields).contains(key);
+        return lastRequestPlatformFields.contains(key);
     }
 
     static boolean isOfflineEmitAllowedForThisField(final String key) {
-        return Arrays.asList(allowedFieldsForOfflineEmit).contains(key);
+        return allowedFieldsForOfflineEmit.contains(key);
     }
 
-    static String[] getCurrentRequestPlatformFields() {
-        return currentRequestPlatformFields;
+    static List<String> getCurrentRequestPlatformFields(final boolean isSharedDeviceScenario) {
+        final List<String> consolidatedPlatformFields = new ArrayList<>();
+
+        if (isSharedDeviceScenario) {
+            consolidatedPlatformFields.addAll(currentRequestSharedFlwPlatformFieldsForAndroidAndiOSBroker);
+        } else {
+            consolidatedPlatformFields.addAll(currentRequestSharedMultipleWpjPlatformFieldsForAndroidAndiOSBroker);
+        }
+
+        consolidatedPlatformFields.addAll(currentRequestAndroidPlatformFields);
+
+        return consolidatedPlatformFields;
     }
 
-    static String[] getLastRequestPlatformFields() {
+    static List<String> getLastRequestPlatformFields() {
         return lastRequestPlatformFields;
     }
 }
