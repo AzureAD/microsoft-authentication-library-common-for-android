@@ -33,6 +33,14 @@ jobs:
             _, pat = b64decode(auth_header.replace("AUTHORIZATION: basic ", "")).decode("utf-8").split(":")
             print(f"##vso[task.setvariable variable=Office-Tagger-Github-PAT;]{pat}")
 
+      - task: PowerShell@2
+        inputs:
+          targetType: 'inline'
+          script: |
+            # Write your PowerShell commands here.
+            Write-Host $env:SYSTEM_PULLREQUEST_PULLREQUESTID
+            Write-Host "Done"
+
       - task: OfficeGitTagger@7
         displayName: 'Office Git Tagger'
         inputs:
