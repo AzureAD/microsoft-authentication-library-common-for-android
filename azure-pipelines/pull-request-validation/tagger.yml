@@ -40,6 +40,6 @@ jobs:
           ServiceEndpoint: 'MSIDLABS_ANDROID_KV'
           KeyVaultName: 'ADALTestInfo'
           SecretName: 'Office-Tagger-Github-PAT'
-        condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
+        condition: and(succeeded(), eq(variables['Build.Reason'], 'Manual'))
         env:
           GITHUB_PAT: $(Office-Tagger-Github-PAT)
