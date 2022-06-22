@@ -46,7 +46,10 @@ public abstract class App implements IApp {
     private final static String TAG = App.class.getSimpleName();
 
     @Setter
-    private IAppInstaller appInstaller;
+    private final IAppInstaller appInstaller;
+
+    @Setter
+    private final IAppInstaller updateAppInstaller;
 
     private final String packageName;
 
@@ -54,6 +57,7 @@ public abstract class App implements IApp {
     private String appName;
 
     protected String localApkFileName = null;
+    protected String localUpdateApkFileName = null;
 
     /**
      * Indicates whether the first run experience should be handled in the UI. This value can
@@ -66,6 +70,7 @@ public abstract class App implements IApp {
     public App(@NonNull final String packageName) {
         this.packageName = packageName;
         this.appInstaller = new PlayStore();
+        this.updateAppInstaller = new PlayStore();
     }
 
     public App(@NonNull final String packageName, @NonNull final String appName) {
@@ -76,6 +81,8 @@ public abstract class App implements IApp {
     public App(@NonNull final String packageName, @NonNull final IAppInstaller appInstaller) {
         this.appInstaller = appInstaller;
         this.packageName = packageName;
+        // update installer is PlayStore by default
+        this.updateAppInstaller = new PlayStore();
     }
 
     public App(@NonNull final String packageName,
@@ -84,6 +91,18 @@ public abstract class App implements IApp {
         this.appInstaller = appInstaller;
         this.packageName = packageName;
         this.appName = appName;
+        // update installer is PlayStore by default
+        this.updateAppInstaller = new PlayStore();
+    }
+
+    public App(@NonNull final String packageName,
+               @NonNull final String appName,
+               @NonNull final IAppInstaller appInstaller,
+               @NonNull final IAppInstaller updateAppInstaller) {
+        this.appInstaller = appInstaller;
+        this.packageName = packageName;
+        this.appName = appName;
+        this.updateAppInstaller = updateAppInstaller;
     }
 
     @Override
@@ -106,6 +125,21 @@ public abstract class App implements IApp {
     @Override
     public void launch() {
         CommonUtils.launchApp(packageName);
+    }
+
+    @Override
+    public void update () {
+        if (updateAppInstaller instanceof LocalApkInstaller && !TextUtils.isEmpty(localUpdateApkFileName)) {
+            Logger.i(TAG, "Installing the " + this.appName + " from local apk..");
+            updateAppInstaller.installApp(localUpdateApkFileName);
+        } else {
+            Logger.i(TAG, "Installing the " + this.appName + " from Play Store..");
+            updateAppInstaller.installApp(packageName);
+        }
+
+        // the app is just installed, first run should be handled
+        // this value can (should) be changed to false by child classes as appropriate
+        shouldHandleFirstRun = true;
     }
 
     @Override
