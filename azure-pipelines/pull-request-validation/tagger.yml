@@ -38,8 +38,6 @@ jobs:
           targetType: 'inline'
           script: |
             # Write your PowerShell commands here.
-            Write-Host "$env:Office-Tagger-Github-PAT"
-            Write-Host "$(Office-Tagger-Github-PAT)"
             Write-Host "Done"
 
       - task: OfficeGitTagger@7
