@@ -77,7 +77,7 @@ public class SchemaConstants {
 
 
     /**
-     * This array defines the platform schema for current request
+     * This array defines the "Android only" platform fields for current request.
      * NOTE: These fields must always be listed in the correct order in this array.
      * Failure do so will break the schema.
      */
@@ -92,7 +92,8 @@ public class SchemaConstants {
     );
 
     /**
-     * This array defines the platform schema for current request
+     * This array defines the "Android and iOS shared" platform fields for current request in the
+     * FLW scenario.
      * NOTE: These fields must always be listed in the correct order in this array.
      * Failure do so will break the schema.
      */
@@ -106,7 +107,8 @@ public class SchemaConstants {
     );
 
     /**
-     * This array defines the platform schema for current request
+     * This array defines the "Android and iOS shared" platform fields for current request in the
+     * Multiple Registration scenario.
      * NOTE: These fields must always be listed in the correct order in this array.
      * Failure do so will break the schema.
      */
@@ -129,25 +131,58 @@ public class SchemaConstants {
             SchemaConstants.Key.ALL_TELEMETRY_DATA_SENT
     );
 
+    /**
+     * This array defines fields for which emitting is allowed outside of a DiagnosticContext.
+     * Unfortunately, we have lots of code that is executed outside of a DiagnosticContext i.e.
+     * ThreadLocal is not populated with a correlation Id. Since the current telemetry design is
+     * strictly around DiagnosticContext, therefore we need this supplemental cache to capture these
+     * fields that are emitted in code that is running outside that context.
+     */
     private static final List<String> allowedFieldsForOfflineEmit = Arrays.asList(
             Key.FLW_SIGNIN_APP,
             Key.FLW_SIGNOUT_APP
     );
 
+    /**
+     * Indicates if the supplied field is part of the platform field schema for current request.
+     *
+     * @param key the key that needs to be checked
+     * @return a boolean indicating if the field if part of current request platform schema
+     */
     static boolean isCurrentPlatformField(final String key) {
         return currentRequestAndroidPlatformFields.contains(key) ||
                 currentRequestSharedFlwPlatformFieldsForAndroidAndiOSBroker.contains(key) ||
                 currentRequestSharedMultipleWpjPlatformFieldsForAndroidAndiOSBroker.contains(key);
     }
 
+    /**
+     * Indicates if the supplied field is part of the platform field schema for last request.
+     *
+     * @param key the key that needs to be checked
+     * @return a boolean indicating if the field if part of last request platform schema
+     */
     static boolean isLastPlatformField(final String key) {
         return lastRequestPlatformFields.contains(key);
     }
 
+    /**
+     * Indicates if this field is allowed to be emitted outside of a DiagnosticContext.
+     * Unfortunately, we have lots of code that is executed outside of a DiagnosticContext i.e.
+     * ThreadLocal is not populated with a correlation Id. Since the current telemetry design is
+     * strictly around DiagnosticContext, therefore we need this supplemental cache to capture these
+     * fields that are emitted in code that is running outside that context.
+     */
     static boolean isOfflineEmitAllowedForThisField(final String key) {
         return allowedFieldsForOfflineEmit.contains(key);
     }
 
+    /**
+     * Get all the "ordered" platform fields for the current request.
+     *
+     * @param isSharedDeviceScenario a boolean that indicates if we're capturing telemetry in shared
+     *                               device scenario
+     * @return a {@link List} of ordered current request platform fields
+     */
     static List<String> getCurrentRequestPlatformFields(final boolean isSharedDeviceScenario) {
         final List<String> consolidatedPlatformFields = new ArrayList<>();
 
@@ -162,6 +197,11 @@ public class SchemaConstants {
         return consolidatedPlatformFields;
     }
 
+    /**
+     * Get all the "ordered" platform fields for the last request.
+     *
+     * @return a {@link List} of ordered last request platform fields
+     */
     static List<String> getLastRequestPlatformFields() {
         return lastRequestPlatformFields;
     }

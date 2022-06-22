@@ -33,6 +33,10 @@ import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 
+/**
+ * An {@link HttpRequestInterceptor} that allows to re-write the http request and then proceeds
+ * with the modified request.
+ */
 @AllArgsConstructor
 public abstract class HttpRequestRewriter implements HttpRequestInterceptor {
 
@@ -44,19 +48,43 @@ public abstract class HttpRequestRewriter implements HttpRequestInterceptor {
                                          @NonNull final Map<String, String> requestHeaders,
                                          @Nullable final byte[] requestContent) throws IOException {
         return mOriginalClient.method(
-                getModifiedHttpMethod(httpMethod),
-                getModifiedRequestUrl(requestUrl),
-                getModifiedRequestHeaders(requestHeaders),
-                getModifiedRequestContent(requestContent),
+                rewriteHttpMethod(httpMethod),
+                rewriteRequestUrl(requestUrl),
+                rewriteRequestHeaders(requestHeaders),
+                rewriteRequestContent(requestContent),
                 null
         );
     }
 
-    public abstract HttpClient.HttpMethod getModifiedHttpMethod(@NonNull final HttpClient.HttpMethod httpMethod);
+    /**
+     * Rewrites the HTTP Method for this request.
+     *
+     * @param httpMethod the original HTTP method
+     * @return the modified HTTP method
+     */
+    public abstract HttpClient.HttpMethod rewriteHttpMethod(@NonNull final HttpClient.HttpMethod httpMethod);
 
-    public abstract URL getModifiedRequestUrl(@NonNull final URL requestUrl);
+    /**
+     * Rewrites the URL for this request.
+     *
+     * @param requestUrl the original request URL
+     * @return the modified request URL
+     */
+    public abstract URL rewriteRequestUrl(@NonNull final URL requestUrl);
 
-    public abstract Map<String, String> getModifiedRequestHeaders(@NonNull final Map<String, String> requestHeaders);
+    /**
+     * Rewrites the headers for this request.
+     *
+     * @param requestHeaders the original request headers
+     * @return the modified request headers
+     */
+    public abstract Map<String, String> rewriteRequestHeaders(@NonNull final Map<String, String> requestHeaders);
 
-    public abstract byte[] getModifiedRequestContent(@Nullable final byte[] requestContent);
+    /**
+     * Rewrites the content for this request.
+     *
+     * @param requestContent the original request content
+     * @return the modified request content
+     */
+    public abstract byte[] rewriteRequestContent(@Nullable final byte[] requestContent);
 }

@@ -65,6 +65,14 @@ public class EstsTelemetry {
     private final INameValueStorage<CurrentRequestTelemetry> mTelemetryMap;
     private final INameValueStorage<Set<FailedRequest>> mSentFailedRequests;
 
+    /**
+     * A supplemental cache that can used to store telemetry that is captured outside of the
+     * "DiagnosticContext". Unfortunately, we have lots of code that is executed outside of a
+     * DiagnosticContext i.e. ThreadLocal is not populated with a correlation Id. Since the current
+     * telemetry design is strictly around DiagnosticContext, therefore we need this supplemental
+     * cache to capture these fields that are emitted in code that is running outside that context.
+     * This fields are the ones determined by {@link SchemaConstants#isOfflineEmitAllowedForThisField(String)}.
+     */
     private INameValueStorage<String> mSupplementalTelemetryDataCache;
 
     EstsTelemetry() {

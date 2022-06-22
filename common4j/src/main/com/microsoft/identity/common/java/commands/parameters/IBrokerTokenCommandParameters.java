@@ -24,19 +24,57 @@ package com.microsoft.identity.common.java.commands.parameters;
 
 import com.microsoft.identity.common.java.broker.IBrokerAccount;
 
+/**
+ * An interface that describes token command parameters for broker.
+ */
 public interface IBrokerTokenCommandParameters {
 
+    /**
+     * Get the package name of the calling application.
+     *
+     * @return a String representing caller package name
+     */
     String getCallerPackageName();
 
+    /**
+     * Get the uid of the calling application.
+     *
+     * @return an int representing caller uid
+     */
     int getCallerUid();
 
+    /**
+     * Get the app version of the calling application.
+     *
+     * @return a String representing caller app version
+     */
     String getCallerAppVersion();
 
+    /**
+     * Get the broker version.
+     *
+     * @return a String representing broker version
+     */
     String getBrokerVersion();
 
+    /**
+     * Get the broker account to use for this request
+     *
+     * @return an {@link IBrokerAccount} to use
+     */
     IBrokerAccount getBrokerAccount();
 
+    /**
+     * Get the home account id of account to use for the request
+     *
+     * @return a String representing home account id
+     */
     String getHomeAccountId();
 
+    /**
+     * Get the local account id of account to use for the request
+     *
+     * @return a String representing local account id
+     */
     String getLocalAccountId();
 }
