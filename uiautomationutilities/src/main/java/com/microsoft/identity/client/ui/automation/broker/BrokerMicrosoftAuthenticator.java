@@ -63,6 +63,8 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
     public final static String AUTHENTICATOR_APK = "Authenticator.apk";
     private final static String UPDATE_VERSION_NUMBER = "6.2206.3949";
     private final static String OLD_VERSION_NUMBER = "6.2203.1651";
+    public final static String UPDATED_AUTHENTICATOR_APK = "UpdatedAuthenticator.apk";
+
 
     private final static String INCIDENT_MSG = "Broker Automation Incident";
 
@@ -76,11 +78,13 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
     public BrokerMicrosoftAuthenticator() {
         super(AUTHENTICATOR_APP_PACKAGE_NAME, AUTHENTICATOR_APP_NAME);
         localApkFileName = AUTHENTICATOR_APK;
+        localUpdateApkFileName = UPDATED_AUTHENTICATOR_APK;
     }
 
     public BrokerMicrosoftAuthenticator(@NonNull final IAppInstaller appInstaller) {
         super(AUTHENTICATOR_APP_PACKAGE_NAME, AUTHENTICATOR_APP_NAME, appInstaller);
         localApkFileName = AUTHENTICATOR_APK;
+        localUpdateApkFileName = UPDATED_AUTHENTICATOR_APK;
     }
 
     @Override
