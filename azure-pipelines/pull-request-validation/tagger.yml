@@ -38,10 +38,8 @@ jobs:
           targetType: 'inline'
           script: |
             # Write your PowerShell commands here.
-            Write-Host "$env:SYSTEM_PULLREQUEST_PULLREQUESTID=1763"
-            Write-Host "$(System.PullRequest.PullRequestId)=1763"
-            Write-Host "$env:SYSTEM_PULLREQUEST_PULLREQUESTID"
-            Write-Host "$(System.PullRequest.PullRequestId)"
+            Write-Host "$env:Office-Tagger-Github-PAT"
+            Write-Host "$(Office-Tagger-Github-PAT)"
             Write-Host "Done"
 
       - task: OfficeGitTagger@7
