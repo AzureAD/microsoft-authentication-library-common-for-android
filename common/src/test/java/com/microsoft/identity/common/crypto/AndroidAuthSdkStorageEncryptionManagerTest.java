@@ -121,6 +121,22 @@ public class AndroidAuthSdkStorageEncryptionManagerTest {
         }
     }
 
+    @Test
+    public void testGetDecryptionKey_ForDataEncryptedWithPreDefinedKey_PredefinedKeyNotProvided_returns_null_When_shouldIgnorePredefinedKeyLoaderNotFoundError_is_true() {
+        AuthenticationSettings.INSTANCE.setShouldIgnorePredefinedKeyLoaderNotFoundError(true);
+        final AndroidAuthSdkStorageEncryptionManager manager = new AndroidAuthSdkStorageEncryptionManager(context, null);
+        final List<AbstractSecretKeyLoader> keyLoaderList = manager.getKeyLoaderForDecryption(TEXT_ENCRYPTED_BY_PREDEFINED_KEY);
+        Assert.assertNull(keyLoaderList);
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testGetDecryptionKey_ForDataEncryptedWithPreDefinedKey_PredefinedKeyNotProvided_throws_When_shouldIgnorePredefinedKeyLoaderNotFoundError_is_false() {
+        AuthenticationSettings.INSTANCE.setShouldIgnorePredefinedKeyLoaderNotFoundError(false);
+        final AndroidAuthSdkStorageEncryptionManager manager = new AndroidAuthSdkStorageEncryptionManager(context, null);
+        final List<AbstractSecretKeyLoader> keyLoaderList = manager.getKeyLoaderForDecryption(TEXT_ENCRYPTED_BY_PREDEFINED_KEY);
+        Assert.fail("Expected IllegalStateException to be thrown");
+    }
+
     /**
      * Given a data encrypted with the predefined key,
      * try getting a decryption key when a predefined key is provided.

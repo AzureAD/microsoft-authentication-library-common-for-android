@@ -32,6 +32,7 @@ import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 
 import static com.microsoft.identity.common.java.AuthenticationConstants.ENCODING_UTF8;
 import static com.microsoft.identity.common.java.crypto.MockData.PREDEFINED_KEY;
@@ -92,6 +93,20 @@ public class StorageEncryptionManagerTest {
                 }});
         manager.decrypt(TEXT_ENCRYPTED_BY_PREDEFINED_KEY);
         Assert.fail("decrypt() should throw an exception but it succeeds.");
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testDecrypt_empty_KeyLoader_throws() throws ClientException {
+        final StorageEncryptionManager manager = new MockStorageEncryptionManager(PREDEFINED_KEY_IV, null, Collections.<AbstractSecretKeyLoader>emptyList());
+        manager.decrypt(TEXT_ENCRYPTED_BY_PREDEFINED_KEY);
+        Assert.fail("decrypt() should throw an exception but it succeeds.");
+    }
+
+    @Test
+    public void testDecrypt_returns_cipherText_if_keyloader_is_null() throws ClientException {
+        final StorageEncryptionManager manager = new MockStorageEncryptionManager(PREDEFINED_KEY_IV, null, null);
+        final byte[] plainBytes = manager.decrypt(TEXT_ENCRYPTED_BY_PREDEFINED_KEY);
+        Assert.assertEquals(TEXT_ENCRYPTED_BY_PREDEFINED_KEY, plainBytes);
     }
 
     @Test(expected = ClientException.class)
