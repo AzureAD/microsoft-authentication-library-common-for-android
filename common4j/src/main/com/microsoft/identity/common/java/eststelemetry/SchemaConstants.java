@@ -133,7 +133,7 @@ public class SchemaConstants {
 
     /**
      * This array defines fields for which emitting is allowed outside of a DiagnosticContext.
-     * Unfortunately, we have lots of code that is executed outside of a DiagnosticContext i.e.
+     * We have lots of code that is executed outside of a DiagnosticContext i.e.
      * ThreadLocal is not populated with a correlation Id. Since the current telemetry design is
      * strictly around DiagnosticContext, therefore we need this supplemental cache to capture these
      * fields that are emitted in code that is running outside that context.
@@ -167,7 +167,7 @@ public class SchemaConstants {
 
     /**
      * Indicates if this field is allowed to be emitted outside of a DiagnosticContext.
-     * Unfortunately, we have lots of code that is executed outside of a DiagnosticContext i.e.
+     * We have lots of code that is executed outside of a DiagnosticContext i.e.
      * ThreadLocal is not populated with a correlation Id. Since the current telemetry design is
      * strictly around DiagnosticContext, therefore we need this supplemental cache to capture these
      * fields that are emitted in code that is running outside that context.
