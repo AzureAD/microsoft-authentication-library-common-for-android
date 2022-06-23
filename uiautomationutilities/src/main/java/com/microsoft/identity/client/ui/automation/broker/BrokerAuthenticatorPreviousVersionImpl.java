@@ -31,9 +31,6 @@ import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObjectNotFoundException;
 import androidx.test.uiautomator.UiSelector;
 
-import com.microsoft.identity.client.ui.automation.interaction.PromptHandlerParameters;
-import com.microsoft.identity.client.ui.automation.interaction.PromptParameter;
-import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.AadPromptHandler;
 import com.microsoft.identity.client.ui.automation.logging.Logger;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
@@ -49,14 +46,16 @@ public class BrokerAuthenticatorPreviousVersionImpl extends BrokerMicrosoftAuthe
 
     @Override
     public void performDeviceRegistration(@NonNull final String username,
-                                          @NonNull final String password) {
+                                          @NonNull final String password,
+                                          final boolean isFederatedUser) {
 
         Logger.i(TAG, "Performing Device Registration for the given account..");
         performDeviceRegistrationHelper(
                 username,
                 password,
                 "com.azure.authenticator:id/email_input",
-                "com.azure.authenticator:id/register_button"
+                "com.azure.authenticator:id/register_button",
+                isFederatedUser
         );
 
         try {
@@ -102,7 +101,8 @@ public class BrokerAuthenticatorPreviousVersionImpl extends BrokerMicrosoftAuthe
                 username,
                 password,
                 "com.azure.authenticator:id/shared_device_registration_email_input",
-                "com.azure.authenticator:id/shared_device_registration_button"
+                "com.azure.authenticator:id/shared_device_registration_button",
+                false
         );
 
         final UiDevice device =

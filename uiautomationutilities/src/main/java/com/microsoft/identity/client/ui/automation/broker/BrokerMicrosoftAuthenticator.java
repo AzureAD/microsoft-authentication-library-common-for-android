@@ -88,7 +88,9 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
     }
 
     @Override
-    public void performDeviceRegistration(String username, String password, boolean isFederatedUser) {
+    public void performDeviceRegistration(@NonNull final String username,
+                                          @NonNull final String password,
+                                          final boolean isFederatedUser) {
         brokerMicrosoftAuthenticatorImpl.performDeviceRegistration(username, password, isFederatedUser);
     }
 
@@ -96,8 +98,6 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
     public void performSharedDeviceRegistration(@NonNull final String username,
                                                 @NonNull final String password) {
         brokerMicrosoftAuthenticatorImpl.performSharedDeviceRegistration(username, password);
-    public void performDeviceRegistration(String username, String password) {
-        brokerMicrosoftAuthenticatorImpl.performDeviceRegistration(username, password);
     }
     
 
