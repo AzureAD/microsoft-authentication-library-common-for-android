@@ -26,20 +26,14 @@ import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
 
-import com.microsoft.identity.common.java.providers.keys.CertificateCredential;
-import com.microsoft.identity.common.java.providers.keys.ClientCertificateMetadata;
-import com.microsoft.identity.common.java.providers.keys.KeyStoreConfiguration;
-import com.microsoft.identity.common.java.providers.microsoft.MicrosoftClientAssertion;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenRequest;
 import com.microsoft.identity.common.java.providers.oauth2.TokenRequest;
 import com.microsoft.identity.internal.test.keyvault.Configuration;
-
-import java.io.IOException;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
-import java.security.UnrecoverableKeyException;
-import java.security.cert.CertificateException;
+import com.microsoft.identity.labapi.utilities.authentication.common.CertificateCredential;
+import com.microsoft.identity.labapi.utilities.authentication.common.ClientCertificateMetadata;
+import com.microsoft.identity.labapi.utilities.authentication.common.KeyStoreConfiguration;
+import com.microsoft.identity.labapi.utilities.authentication.common.MicrosoftClientAssertion;
+import com.microsoft.identity.labapi.utilities.exception.LabApiException;
 
 class KeyVaultAuthHelper extends ConfidentialClientHelper {
 
@@ -58,8 +52,7 @@ class KeyVaultAuthHelper extends ConfidentialClientHelper {
     }
 
     private KeyVaultAuthHelper() {
-        final String secret = com.microsoft.identity.internal.testutils.BuildConfig.LAB_CLIENT_SECRET;
-        mSecret = secret;
+        mSecret = com.microsoft.identity.internal.testutils.BuildConfig.LAB_CLIENT_SECRET;
     }
 
     public static ConfidentialClientHelper getInstanceWithSecret(String secret) {
@@ -83,7 +76,7 @@ class KeyVaultAuthHelper extends ConfidentialClientHelper {
     }
 
     @Override
-    public TokenRequest createTokenRequest() throws CertificateException, UnrecoverableKeyException, NoSuchAlgorithmException, KeyStoreException, NoSuchProviderException, IOException {
+    public TokenRequest createTokenRequest() throws LabApiException {
         if (TextUtils.isEmpty(mSecret)) {
             return createTokenRequestWithClientAssertion();
         } else {
@@ -109,13 +102,16 @@ class KeyVaultAuthHelper extends ConfidentialClientHelper {
         return tr;
     }
 
-    private TokenRequest createTokenRequestWithClientAssertion() throws CertificateException, UnrecoverableKeyException, NoSuchAlgorithmException, KeyStoreException, NoSuchProviderException, IOException {
-        CertificateCredential certificateCredential = new CertificateCredential.CertificateCredentialBuilder(CLIENT_ID)
-                .clientCertificateMetadata(new ClientCertificateMetadata(CERTIFICATE_ALIAS, null))
-                .keyStoreConfiguration(new KeyStoreConfiguration(KEYSTORE_TYPE, KEYSTORE_PROVIDER, null))
-                .build();
+    private TokenRequest createTokenRequestWithClientAssertion() throws LabApiException {
+        CertificateCredential certificateCredential = CertificateCredential.create(
+                new KeyStoreConfiguration(KEYSTORE_TYPE, KEYSTORE_PROVIDER, null),
+                new ClientCertificateMetadata(CERTIFICATE_ALIAS, null));
 
-        MicrosoftClientAssertion assertion = new MicrosoftClientAssertion(MSSTS_CLIENT_ASSERTION_AUDIENCE, certificateCredential);
+        MicrosoftClientAssertion assertion = MicrosoftClientAssertion.builder()
+                .clientId(CLIENT_ID)
+                .audience(MSSTS_CLIENT_ASSERTION_AUDIENCE)
+                .certificateCredential(certificateCredential)
+                .build();
 
         TokenRequest tr = new MicrosoftStsTokenRequest();
 
