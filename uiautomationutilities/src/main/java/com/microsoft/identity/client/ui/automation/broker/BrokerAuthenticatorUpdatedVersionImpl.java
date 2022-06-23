@@ -54,10 +54,13 @@ public class BrokerAuthenticatorUpdatedVersionImpl extends BrokerMicrosoftAuthen
 
         Logger.i(TAG, "Performing Device Registration for the given account..");
         if (isExpectingMFA) {
+            // TO-DO after authenticator app removes the MFA prompt during registration,
+            // we can remove this flag (isExpectingMFA) or set it to false
             TestContext.getTestContext().getTestDevice().getSettings().addWorkAccount(
                     this,
                     username,
-                    password
+                    password,
+                    isFederatedUser
             );
         }
         else {

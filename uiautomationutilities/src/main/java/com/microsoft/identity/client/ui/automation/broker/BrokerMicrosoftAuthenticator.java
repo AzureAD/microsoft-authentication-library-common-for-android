@@ -99,7 +99,7 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
                                                 @NonNull final String password) {
         brokerMicrosoftAuthenticatorImpl.performSharedDeviceRegistration(username, password);
     }
-    
+
 
     @Nullable
     @Override
@@ -296,10 +296,10 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
     }
 
     protected void performDeviceRegistrationHelper(@NonNull final String username,
-                                                 @NonNull final String password,
-                                                 @NonNull final String emailInputResourceId,
-                                                 @NonNull final String registerBtnResourceId,
-                                                 final boolean isFederatedUser) {
+                                                   @NonNull final String password,
+                                                   @NonNull final String emailInputResourceId,
+                                                   @NonNull final String registerBtnResourceId,
+                                                   final boolean isFederatedUser) {
         Logger.i(TAG, "Execution of Helper for Device Registration..");
         // open device registration page
         openDeviceRegistrationPage();
