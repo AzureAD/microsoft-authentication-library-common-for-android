@@ -259,7 +259,7 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
         Logger.i(TAG, "Open the device registration page in the Authenticator App..");
         launch(); // launch Authenticator app
 
-        if (shouldHandleFirstRun) {
+        if (brokerMicrosoftAuthenticatorImpl.shouldHandleFirstRun) {
             handleFirstRun(); // handle first run experience
         }
         goToDeviceRegistrationPage();
@@ -295,7 +295,7 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
         }
     }
 
-    private void performDeviceRegistrationHelper(@NonNull final String username,
+    protected void performDeviceRegistrationHelper(@NonNull final String username,
                                                  @NonNull final String password,
                                                  @NonNull final String emailInputResourceId,
                                                  @NonNull final String registerBtnResourceId,

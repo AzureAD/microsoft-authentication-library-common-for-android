@@ -121,39 +121,4 @@ public class BrokerAuthenticatorPreviousVersionImpl extends BrokerMicrosoftAuthe
 
         isInSharedDeviceMode = true;
     }
-
-
-    private void performDeviceRegistrationHelper(@NonNull final String username,
-                                                 @NonNull final String password,
-                                                 @NonNull final String emailInputResourceId,
-                                                 @NonNull final String registerBtnResourceId) {
-        Logger.i(TAG, "Execution of Helper for Device Registration..");
-        // open device registration page
-        openDeviceRegistrationPage();
-
-        // enter email
-        UiAutomatorUtils.handleInput(
-                emailInputResourceId,
-                username
-        );
-
-        // click register
-        UiAutomatorUtils.handleButtonClick(registerBtnResourceId);
-
-        final PromptHandlerParameters promptHandlerParameters = PromptHandlerParameters.builder()
-                .prompt(PromptParameter.LOGIN)
-                .broker(this)
-                .consentPageExpected(false)
-                .expectingBrokerAccountChooserActivity(false)
-                .expectingLoginPageAccountPicker(false)
-                .sessionExpected(false)
-                .loginHint(username)
-                .build();
-
-        final AadPromptHandler aadPromptHandler = new AadPromptHandler(promptHandlerParameters);
-
-        Logger.i(TAG, "Handle AAD Login page prompt for Device Registration..");
-        // handle AAD login page
-        aadPromptHandler.handlePrompt(username, password);
-    }
 }
