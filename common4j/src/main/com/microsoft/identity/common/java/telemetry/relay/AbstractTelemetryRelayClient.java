@@ -60,13 +60,6 @@ public abstract class AbstractTelemetryRelayClient<T> implements ITelemetryObser
     }
 
     /**
-     * Remove an event filter from the list of filters
-     */
-    public void removeFilter(ITelemetryEventFilter<T> filter) {
-        this.eventFilters.remove(filter);
-    }
-
-    /**
      * Add an event filter to the list of filters
      */
     public void addFilter(ITelemetryEventFilter<T> filter) {
@@ -74,35 +67,7 @@ public abstract class AbstractTelemetryRelayClient<T> implements ITelemetryObser
     }
 
     /**
-     * Clear all the filters in this relay client
-     */
-    public void clearFilters() {
-        this.eventFilters.clear();
-    }
-
-    /**
-     * Initialize the relay client. This should only happen once.
-     */
-    public abstract void initialize() throws TelemetryRelayException;
-
-    /**
-     * Returns true if the relay client has been initialized.
-     */
-    public abstract boolean isInitialized();
-
-    /**
      * Invoked when an event is ready to be relayed
      */
     public abstract void relayEvent(final T eventData) throws TelemetryRelayException;
-
-    /**
-     * Flush any pending telemetry events in memory to disk and shutdown the telemetry system.
-     * This method can be invoked when the application is being closed.
-     */
-    public abstract void flushAndTeardown();
-
-    /**
-     * Flush any pending telemetry events in memory to disk.
-     */
-    public abstract void flush();
 }

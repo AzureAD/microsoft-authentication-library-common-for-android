@@ -226,10 +226,6 @@ public class ApiStartEvent extends BaseEvent {
      * @return the sanitized URL.
      */
     private static String sanitizeUrlForTelemetry(@NonNull final URL url) {
-        if (url == null) {
-            return null;
-        }
-
         final String authority = url.getAuthority();
         final String[] splitArray = url.getPath().split("/");
 
