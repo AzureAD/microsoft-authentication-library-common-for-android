@@ -51,6 +51,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 public class BrokerHost extends AbstractTestBroker {
 
@@ -116,7 +117,11 @@ public class BrokerHost extends AbstractTestBroker {
             aadPromptHandler.handlePrompt(username, password);
         }
 
-        postJoinConfirmHelper(username);
+        try {
+            postJoinConfirmHelper(username);
+        } catch (InterruptedException e) {
+            Assert.fail(e.getMessage());
+        }
     }
 
     @Override
@@ -152,7 +157,11 @@ public class BrokerHost extends AbstractTestBroker {
         // handle AAD login page
         aadPromptHandler.handlePrompt(username, password);
 
-        postJoinConfirmHelper(username);
+        try {
+            postJoinConfirmHelper(username);
+        } catch (InterruptedException e) {
+            Assert.fail(e.getMessage());
+        }
     }
 
     private void performDeviceRegistrationHelper(@NonNull final String username) {
@@ -170,8 +179,12 @@ public class BrokerHost extends AbstractTestBroker {
         );
     }
 
-    private void postJoinConfirmHelper(@NonNull final String expectedUpn) {
+    private void postJoinConfirmHelper(@NonNull final String expectedUpn) throws InterruptedException {
         Logger.i(TAG, "Confirming that Shared Device Registration is successfull or not..");
+
+        // Adding brief wait to increase reliability of test
+        Thread.sleep(TimeUnit.SECONDS.toMillis(5));
+
         // Look for join op completion dialog
         final UiObject joinFinishDialog = UiAutomatorUtils.obtainUiObjectWithResourceId(
                 "android:id/message"
@@ -180,6 +193,7 @@ public class BrokerHost extends AbstractTestBroker {
         Assert.assertTrue(joinFinishDialog.exists());
 
         try {
+
             // Obtain the text from the dialog box
             final String joinFinishDialogText = joinFinishDialog.getText();
             final String joinStatus = joinFinishDialogText.split(":")[1];
@@ -188,6 +202,9 @@ public class BrokerHost extends AbstractTestBroker {
 
             // dismiss the dialog
             UiAutomatorUtils.handleButtonClick("android:id/button1");
+
+            // Adding brief wait to increase reliability of test
+            Thread.sleep(TimeUnit.SECONDS.toMillis(5));
 
             // compare the UPN to make sure joined with the expected account
             final String joinedUpn = getAccountUpn();
