@@ -29,19 +29,20 @@ import android.content.pm.PackageManager;
 import androidx.test.core.app.ApplicationProvider;
 
 /**
- * Factory class to create broker implementations based on the version of Authenticator app under test
+ * Factory class to create broker implementations based on the version of Broker app under test
  */
-public class BrokerMicrosoftAuthenticatorFactory {
+public class BrokerImplFactory {
 
     public final static String LATEST_VERSION_NUMBER = "6.2206.3949";
 
     /**
-     *
-     * @param broker handle to interacting with the Broker App during UI Test.
-     * @return broker implementation based on version of the app installed
+     * Set broker implementation based on the version of the app installed
+     * @param appName appName of the app installed that acts as brokerImpl
      */
-    public ITestBroker getAuthenticator(ITestBroker broker) {
-        if (broker instanceof BrokerMicrosoftAuthenticator) {
+    public static void setBrokerImpl(String appName) {
+        // Currently, added version check for authenticator and assigning impl
+        // This can be extended to other broker apps as well.
+        if (appName == BrokerMicrosoftAuthenticator.AUTHENTICATOR_APP_NAME) {
             final Context context = ApplicationProvider.getApplicationContext();
             try {
                 PackageInfo packageInfo = context.getPackageManager().getPackageInfo("com.azure.authenticator", 0);
@@ -51,14 +52,13 @@ public class BrokerMicrosoftAuthenticatorFactory {
                 // String comparison of versions should work for this format
                 if (packageInfo.versionName.compareTo(LATEST_VERSION_NUMBER) >= 0) {
                     // Use latest automation code as this is the new updated authenticator app
-                    return new BrokerAuthenticatorUpdatedVersionImpl();
+                    BrokerMicrosoftAuthenticator.brokerMicrosoftAuthenticatorImpl = new BrokerAuthenticatorUpdatedVersionImpl();
                 } else {
-                    return new BrokerAuthenticatorPreviousVersionImpl();
+                    BrokerMicrosoftAuthenticator.brokerMicrosoftAuthenticatorImpl = new BrokerAuthenticatorPreviousVersionImpl();
                 }
             } catch (final PackageManager.NameNotFoundException e) {
                 throw new AssertionError(e);
             }
         }
-        return broker;
     }
 }

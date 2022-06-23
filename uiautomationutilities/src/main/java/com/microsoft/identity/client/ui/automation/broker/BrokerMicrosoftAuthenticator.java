@@ -67,6 +67,9 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
 
     protected boolean isInSharedDeviceMode = false;
 
+    public static BrokerMicrosoftAuthenticator brokerMicrosoftAuthenticatorImpl;
+
+
     public BrokerMicrosoftAuthenticator() {
         super(AUTHENTICATOR_APP_PACKAGE_NAME, AUTHENTICATOR_APP_NAME);
         localApkFileName = AUTHENTICATOR_APK;
@@ -79,12 +82,12 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
 
     @Override
     public void performDeviceRegistration(String username, String password) {
-        // implemented in sub-classes
+        brokerMicrosoftAuthenticatorImpl.performDeviceRegistration(username, password);
     }
 
     @Override
     public void performSharedDeviceRegistration(String username, String password) {
-        // implemented in sub-classes
+        brokerMicrosoftAuthenticatorImpl.performSharedDeviceRegistration(username, password);
     }
 
     @Nullable
