@@ -68,6 +68,9 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
 
     protected boolean isInSharedDeviceMode = false;
 
+    public static BrokerMicrosoftAuthenticator brokerMicrosoftAuthenticatorImpl;
+
+
     public BrokerMicrosoftAuthenticator() {
         super(AUTHENTICATOR_APP_PACKAGE_NAME, AUTHENTICATOR_APP_NAME);
         localApkFileName = AUTHENTICATOR_APK;
@@ -86,80 +89,17 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
 
     @Override
     public void performDeviceRegistration(String username, String password, boolean isFederatedUser) {
-        Logger.i(TAG, "Performing Device Registration for the given account..");
-        performDeviceRegistrationHelper(
-                username,
-                password,
-                "com.azure.authenticator:id/email_input",
-                "com.azure.authenticator:id/register_button",
-                isFederatedUser
-        );
-
-
-        try {
-            // after device registration, make sure that we see the unregister btn to confirm successful
-            // registration
-            final UiObject unRegisterBtn = UiAutomatorUtils.obtainUiObjectWithResourceId(
-                    "com.azure.authenticator:id/unregister_button"
-            );
-            Assert.assertTrue(
-                    "Microsoft Authenticator - Unregister Button appears.",
-                    unRegisterBtn.exists()
-            );
-
-            Assert.assertTrue(
-                    "Microsoft Authenticator - Unregister Button is clickable.",
-                    unRegisterBtn.isClickable()
-            );
-
-            // after device registration, make sure that the current registration upn matches with
-            // with what was passed in
-            final UiObject currentRegistration = UiAutomatorUtils.obtainUiObjectWithResourceId(
-                    "com.azure.authenticator:id/current_registered_email"
-            );
-
-            Assert.assertTrue(
-                    "Microsoft Authenticator - Registered account info appears.",
-                    currentRegistration.exists()
-            );
-
-            Assert.assertTrue(
-                    "Microsoft Authenticator - Registered account upn matches provided upn.",
-                    currentRegistration.getText().equalsIgnoreCase(username)
-            );
-        } catch (final UiObjectNotFoundException e) {
-            throw new AssertionError(e);
-        }
+        brokerMicrosoftAuthenticatorImpl.performDeviceRegistration(username, password, isFederatedUser);
     }
 
     @Override
     public void performSharedDeviceRegistration(@NonNull final String username,
                                                 @NonNull final String password) {
-        Logger.i(TAG, "Performing Shared Device Registration for the given account..");
-        performDeviceRegistrationHelper(
-                username,
-                password,
-                "com.azure.authenticator:id/shared_device_registration_email_input",
-                "com.azure.authenticator:id/shared_device_registration_button",
-                false
-        );
-
-        final UiDevice device =
-                UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
-
-        final UiSelector sharedDeviceConfirmationSelector = new UiSelector()
-                .descriptionContains("Shared Device Mode")
-                .className("android.widget.ImageView");
-
-        //confirm that we are in Shared Device Mode inside Authenticator
-        final UiObject sharedDeviceConfirmation = device.findObject(sharedDeviceConfirmationSelector);
-        sharedDeviceConfirmation.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
-        Assert.assertTrue(
-                "Microsoft Authenticator - Shared Device Confirmation page appears.",
-                sharedDeviceConfirmation.exists());
-
-        isInSharedDeviceMode = true;
+        brokerMicrosoftAuthenticatorImpl.performSharedDeviceRegistration(username, password);
+    public void performDeviceRegistration(String username, String password) {
+        brokerMicrosoftAuthenticatorImpl.performDeviceRegistration(username, password);
     }
+    
 
     @Nullable
     @Override
