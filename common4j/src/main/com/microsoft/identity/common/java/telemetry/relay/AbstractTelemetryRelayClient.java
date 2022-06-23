@@ -28,6 +28,8 @@ import com.microsoft.identity.common.java.telemetry.observers.ITelemetryObserver
 import java.util.ArrayList;
 import java.util.List;
 
+import lombok.NonNull;
+
 /**
  * A relay client gives the flexibility to send telemetry events to a database.
  * It extends a {@link ITelemetryObserver} and applies filter on every event captured before relaying the event to the database.
@@ -69,5 +71,5 @@ public abstract class AbstractTelemetryRelayClient<T> implements ITelemetryObser
     /**
      * Invoked when an event is ready to be relayed
      */
-    public abstract void relayEvent(final T eventData) throws TelemetryRelayException;
+    public abstract void relayEvent(@NonNull final T eventData) throws TelemetryRelayException;
 }
