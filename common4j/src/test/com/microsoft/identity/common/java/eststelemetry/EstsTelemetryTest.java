@@ -119,7 +119,7 @@ public class EstsTelemetryTest {
         final Map<String, String> headers = telemetry.getTelemetryHeaders();
 
         Assert.assertEquals(2, headers.size());
-        Assert.assertEquals("2|" + apiId + ",1|1,0,1,1,0,0", headers.get(CURRENT_REQUEST_HEADER_NAME));
+        Assert.assertEquals("2|" + apiId + ",1|,,,,,,1,0,1,1,0,0", headers.get(CURRENT_REQUEST_HEADER_NAME));
         Assert.assertEquals("2|0|||1", headers.get(LAST_REQUEST_HEADER_NAME));
     }
 
@@ -331,7 +331,7 @@ public class EstsTelemetryTest {
         final Map<String, String> headers = telemetry.getTelemetryHeaders();
 
         Assert.assertEquals(2, headers.size());
-        Assert.assertEquals("2|API_ID,0|,,,,,", headers.get(CURRENT_REQUEST_HEADER_NAME));
+        Assert.assertEquals("2|API_ID,0|,,,,,,,,,,,", headers.get(CURRENT_REQUEST_HEADER_NAME));
         Assert.assertEquals("2|0|||1", headers.get(LAST_REQUEST_HEADER_NAME));
     }
 
@@ -359,7 +359,7 @@ public class EstsTelemetryTest {
         final Map<String, String> headers = telemetry.getTelemetryHeaders();
 
         Assert.assertEquals(2, headers.size());
-        Assert.assertEquals("2|API_ID,0|,,,,,", headers.get(CURRENT_REQUEST_HEADER_NAME));
+        Assert.assertEquals("2|API_ID,0|,,,,,,,,,,,", headers.get(CURRENT_REQUEST_HEADER_NAME));
         Assert.assertEquals("2|5|API_1,COL_ID_1,API_2,COL_ID_2,API_3,COL_ID_3,API_4,COL_ID_4,API_5,COL_ID_5|ERR_1,ERR_2,ERR_3,ERR_4,ERR_5|1",
                 headers.get(LAST_REQUEST_HEADER_NAME));
     }
@@ -424,7 +424,7 @@ public class EstsTelemetryTest {
         final Map<String, String> headers = telemetry.getTelemetryHeaders();
 
         Assert.assertEquals(2, headers.size());
-        Assert.assertEquals("2|" + apiId + ",1|,,,,,", headers.get(CURRENT_REQUEST_HEADER_NAME));
+        Assert.assertEquals("2|" + apiId + ",1|,,,,,,,,,,,", headers.get(CURRENT_REQUEST_HEADER_NAME));
         Assert.assertEquals("2|2|||1", headers.get(LAST_REQUEST_HEADER_NAME));
     }
 
