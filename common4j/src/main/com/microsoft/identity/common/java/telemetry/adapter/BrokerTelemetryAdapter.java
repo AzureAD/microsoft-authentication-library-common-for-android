@@ -53,7 +53,7 @@ public class BrokerTelemetryAdapter extends TelemetryAggregationAdapter {
         // Filter out the error events first
         final List<Map<String, String>> errorEvents = filterErrorEvents(rawData, aggregatedMap);
 
-        // count the number of hits of the errors
+        // collect the number of hits of the errors
         final List<Map<String, String>> countedErrors = countErrors(errorEvents);
         // publish the event
         for (Map<String, String> errorEvent : countedErrors) {
@@ -68,14 +68,13 @@ public class BrokerTelemetryAdapter extends TelemetryAggregationAdapter {
     /**
      * Filters out error events from the list of events
      */
-    private List<Map<String, String>> filterErrorEvents(List<Map<String, String>> rawData, Map<String, String> aggregatedMap) {
+    private List<Map<String, String>> filterErrorEvents(@NonNull final List<Map<String, String>> rawData, @NonNull final Map<String, String> aggregatedMap) {
         final List<Map<String, String>> errorEvents = new ArrayList<>();
 
         for (Map<String, String> event : rawData) {
             if (TelemetryEventStrings.EventType.ERROR_EVENT.equals(event.get(TelemetryEventStrings.Key.EVENT_TYPE))) {
                 final Map<String, String> errorEvent = new HashMap<>(aggregatedMap);
                 errorEvent.putAll(event);
-                errorEvent.put(TelemetryEventStrings.Key.CORRELATION_ID, aggregatedMap.get(TelemetryEventStrings.Key.CORRELATION_ID));
                 errorEvent.put(TelemetryEventStrings.Key.IS_ERROR_EVENT, TelemetryEventStrings.Value.TRUE);
 
                 errorEvents.add(errorEvent);
@@ -91,7 +90,7 @@ public class BrokerTelemetryAdapter extends TelemetryAggregationAdapter {
      * @param errorEvents the list of error events
      * @return a list containing unique error events (by tag) with a field denoting the number of hits of the error.
      */
-    private List<Map<String, String>> countErrors(List<Map<String, String>> errorEvents) {
+    private List<Map<String, String>> countErrors(@NonNull final List<Map<String, String>> errorEvents) {
         final Map<String, Map<String, String>> countedErrors = new HashMap<>();
 
         for (Map<String, String> errorEvent : errorEvents) {

@@ -43,6 +43,13 @@ public class ApiEndEvent extends BaseEvent {
         types(EventType.API_EVENT);
     }
 
+    public ApiEndEvent(@NonNull final String apiId) {
+        super();
+        names(Event.API_END_EVENT);
+        types(EventType.API_EVENT);
+        putApiId(apiId);
+    }
+
     public ApiEndEvent putResult(@Nullable final AcquireTokenResult result) {
         if (result == null) {
             return this;
@@ -55,7 +62,9 @@ public class ApiEndEvent extends BaseEvent {
             put(Key.TENANT_ID, result.getLocalAuthenticationResult().getTenantId()); //pii
             put(Key.SPE_RING, result.getLocalAuthenticationResult().getSpeRing());
             put(Key.RT_AGE, result.getLocalAuthenticationResult().getRefreshTokenAge());
+            correlationId(result.getLocalAuthenticationResult().getCorrelationId());
         }
+
 
         return this;
     }
@@ -92,7 +101,7 @@ public class ApiEndEvent extends BaseEvent {
     }
 
     public ApiEndEvent isApiCallSuccessful(final Boolean isSuccessful) {
-        put(Key.IS_SUCCESSFUL, isSuccessful ? Value.TRUE: Value.FALSE );
+        put(Key.IS_SUCCESSFUL, isSuccessful ? Value.TRUE : Value.FALSE);
         return this;
     }
 

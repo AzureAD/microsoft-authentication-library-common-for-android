@@ -55,6 +55,13 @@ public class ApiStartEvent extends BaseEvent {
         types(EventType.API_EVENT);
     }
 
+    public ApiStartEvent(@NonNull final String apiId) {
+        super();
+        names(Event.API_START_EVENT);
+        types(EventType.API_EVENT);
+        putApiId(apiId);
+    }
+
     @Override
     public ApiStartEvent put(@NonNull final String propertyName, final String propertyValue) {
         super.put(propertyName, propertyValue);
@@ -159,23 +166,21 @@ public class ApiStartEvent extends BaseEvent {
         if (parameters instanceof BrokerInteractiveTokenCommandParameters) {
             final BrokerInteractiveTokenCommandParameters interactiveParameters = (BrokerInteractiveTokenCommandParameters) parameters;
 
-            put(Key.BROKER_VERSION, interactiveParameters.getBrokerVersion());
             put(Key.BROKER_PROTOCOL_VERSION, interactiveParameters.getNegotiatedBrokerProtocolVersion());
 
-            put(Key.CALLER_APP_VERSION, interactiveParameters.getCallerAppVersion());
-            put(Key.CALLER_APP_PACKAGE_NAME, interactiveParameters.getCallerPackageName());
-            put(Key.CALLER_APP_UUID, String.valueOf(interactiveParameters.getCallerUid()));
+            put(Key.CALLER_APP_VERSION, interactiveParameters.getCallerAppVersion()); // oii
+            put(Key.CALLER_APP_PACKAGE_NAME, interactiveParameters.getCallerPackageName()); // oii
+            put(Key.CALLER_APP_UUID, String.valueOf(interactiveParameters.getCallerUid())); // oii
         }
 
         if (parameters instanceof BrokerSilentTokenCommandParameters) {
             final BrokerSilentTokenCommandParameters silentParameters = (BrokerSilentTokenCommandParameters) parameters;
 
-            put(Key.BROKER_VERSION, silentParameters.getBrokerVersion());
             put(Key.BROKER_PROTOCOL_VERSION, silentParameters.getNegotiatedBrokerProtocolVersion());
 
-            put(Key.CALLER_APP_VERSION, silentParameters.getCallerAppVersion());
-            put(Key.CALLER_APP_PACKAGE_NAME, silentParameters.getCallerPackageName());
-            put(Key.CALLER_APP_UUID, String.valueOf(silentParameters.getCallerUid()));
+            put(Key.CALLER_APP_VERSION, silentParameters.getCallerAppVersion()); // oii
+            put(Key.CALLER_APP_PACKAGE_NAME, silentParameters.getCallerPackageName()); // oii
+            put(Key.CALLER_APP_UUID, String.valueOf(silentParameters.getCallerUid())); // oii
         }
 
         return this;

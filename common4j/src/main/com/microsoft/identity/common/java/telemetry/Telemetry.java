@@ -262,9 +262,7 @@ public class Telemetry {
 
         for (Iterator<Map<String, String>> iterator = mTelemetryRawDataMap.iterator(); iterator.hasNext(); ) {
             Map<String, String> event = iterator.next();
-            // flush error events too
-            if (correlationId.equalsIgnoreCase(event.get(Key.CORRELATION_ID))
-                    || TelemetryEventStrings.EventType.ERROR_EVENT.equals(event.get(Key.EVENT_TYPE))) {
+            if (correlationId.equalsIgnoreCase(event.get(Key.CORRELATION_ID))) {
                 finalRawMap.add(applyPiiOiiRule(event));
                 iterator.remove();
             }

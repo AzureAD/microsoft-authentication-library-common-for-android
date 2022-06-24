@@ -77,13 +77,11 @@ public class TelemetryAggregationAdapter implements ITelemetryAdapter<List<Map<S
                 );
             }
 
-            if (!StringUtil.isNullOrEmpty(event.get(Key.IS_SUCCESSFUL)) || eventName.contains(END)) {
-                final String isSuccessful = event.get(Key.IS_SUCCESSFUL);
-                aggregatedData.put(
-                        eventType + Key.IS_SUCCESSFUL,
-                        StringUtil.isNullOrEmpty(isSuccessful) ? TelemetryEventStrings.Value.FALSE : isSuccessful
-                );
-            }
+            final String isSuccessful = event.containsKey(Key.IS_SUCCESSFUL) ? event.get(Key.IS_SUCCESSFUL) : TelemetryEventStrings.Value.FALSE;
+            aggregatedData.put(
+                    eventType + Key.IS_SUCCESSFUL,
+                    StringUtil.isNullOrEmpty(isSuccessful) ? TelemetryEventStrings.Value.FALSE : isSuccessful
+            );
 
             trackEventResponseTime(responseTimeMap, event);
 

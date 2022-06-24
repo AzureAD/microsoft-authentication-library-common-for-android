@@ -38,7 +38,7 @@ public class BaseEvent extends Properties {
     }
 
     @Override
-    public Properties put(String key, String value) {
+    public Properties put(@NonNull final String key, final String value) {
         if(!StringUtil.isNullOrEmpty(value)) {
             return super.put(key, value);
         }
