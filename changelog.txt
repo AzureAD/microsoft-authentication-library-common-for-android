@@ -1,6 +1,6 @@
 Version 4.2.0-hf2
 ----------
-- [PATCH] Ignore predefined key not set error if shouldIgnorePredefinedKeyLoaderNotFoundError flag is set (#1775)
+- [PATCH] [Adal] Ignore failure in updating unified/msal cache if ignoreKeyLoaderNotFoundError flag is set (#1775)
 
 Version 4.2.0-hf1
 ----------
