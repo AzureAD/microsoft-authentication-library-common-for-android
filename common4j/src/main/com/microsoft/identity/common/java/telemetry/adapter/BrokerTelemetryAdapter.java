@@ -71,7 +71,7 @@ public class BrokerTelemetryAdapter extends TelemetryAggregationAdapter {
     private List<Map<String, String>> filterErrorEvents(@NonNull final List<Map<String, String>> rawData, @NonNull final Map<String, String> aggregatedMap) {
         final List<Map<String, String>> errorEvents = new ArrayList<>();
 
-        for (Map<String, String> event : rawData) {
+        for (final Map<String, String> event : rawData) {
             if (TelemetryEventStrings.EventType.ERROR_EVENT.equals(event.get(TelemetryEventStrings.Key.EVENT_TYPE))) {
                 final Map<String, String> errorEvent = new HashMap<>(aggregatedMap);
                 errorEvent.putAll(event);
