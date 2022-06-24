@@ -66,7 +66,7 @@ public class BrokerTelemetryAdapter extends TelemetryAggregationAdapter {
     }
 
     /**
-     * Filters out error events from the list of events
+     * Filters out error events from the list of events.
      */
     private List<Map<String, String>> filterErrorEvents(@NonNull final List<Map<String, String>> rawData, @NonNull final Map<String, String> aggregatedMap) {
         final List<Map<String, String>> errorEvents = new ArrayList<>();
