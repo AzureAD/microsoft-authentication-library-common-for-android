@@ -102,11 +102,11 @@ public class StorageEncryptionManagerTest {
         Assert.fail("decrypt() should throw an exception but it succeeds.");
     }
 
-    @Test
-    public void testDecrypt_null_keyloader_returns_cipherText() throws ClientException {
+    @Test(expected = IllegalStateException.class)
+    public void testDecrypt_null_keyloader_throws() throws ClientException {
         final StorageEncryptionManager manager = new MockStorageEncryptionManager(PREDEFINED_KEY_IV, null, null);
         final byte[] plainBytes = manager.decrypt(TEXT_ENCRYPTED_BY_PREDEFINED_KEY);
-        Assert.assertEquals(TEXT_ENCRYPTED_BY_PREDEFINED_KEY, plainBytes);
+        Assert.fail("decrypt() should throw an exception but it succeeds.");
     }
 
     @Test(expected = ClientException.class)
