@@ -416,6 +416,7 @@ public enum AuthenticationSettings {
      * Method to suppress errors where KeyLoader is not found to decrypt the cache content
      * @param shouldIgnore if true, ignores keyloader not found errors
      */
+    @SuppressFBWarnings(ME_ENUM_FIELD_SETTER)
     public void setIgnoreKeyLoaderNotFoundError(boolean shouldIgnore) {
         mIgnoreKeyLoaderNotFoundError = shouldIgnore;
     }
