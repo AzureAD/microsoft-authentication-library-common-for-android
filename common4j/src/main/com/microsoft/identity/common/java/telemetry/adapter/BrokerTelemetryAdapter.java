@@ -56,7 +56,7 @@ public class BrokerTelemetryAdapter extends TelemetryAggregationAdapter {
         // collect the number of hits of the errors
         final List<Map<String, String>> countedErrors = countErrors(errorEvents);
         // publish the event
-        for (Map<String, String> errorEvent : countedErrors) {
+        for (final Map<String, String> errorEvent : countedErrors) {
             getObserver().onReceived(errorEvent);
         }
 
