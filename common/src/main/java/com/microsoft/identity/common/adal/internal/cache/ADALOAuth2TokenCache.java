@@ -175,11 +175,19 @@ public class ADALOAuth2TokenCache
         for (final IShareSingleSignOnState<MicrosoftAccount, MicrosoftRefreshToken> sharedSsoCache : mSharedSSOCaches) {
             try {
                 sharedSsoCache.setSingleSignOnState(account, refreshToken);
-            } catch (final ClientException | IllegalStateException e) {
+            } catch (final ClientException e) {
                 Logger.errorPII(TAG,
                         "Exception setting single sign on state for account " + account.getUsername(),
                         e
                 );
+            } catch (final IllegalStateException e) {
+                Logger.errorPII(TAG,
+                        "Exception setting single sign on state for account " + account.getUsername(),
+                        e
+                );
+                if (!AuthenticationSettings.INSTANCE.getIgnoreKeyLoaderNotFoundError()) {
+                    throw e;
+                }
             }
         }
 

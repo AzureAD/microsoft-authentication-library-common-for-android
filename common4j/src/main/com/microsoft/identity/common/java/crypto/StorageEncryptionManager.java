@@ -199,14 +199,8 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
         }
 
         final List<AbstractSecretKeyLoader> keysForDecryption = getKeyLoaderForDecryption(cipherText);
-        if (keysForDecryption == null) {
-            Logger.warn(TAG + methodName,
-                    "No key found to decrypt the cipher text. returning the cipher text as-is");
-            return cipherText;
-        }
-
-        if (keysForDecryption.size() == 0) {
-            throw new IllegalStateException("KeyLoader list must not be empty.");
+        if (keysForDecryption == null || keysForDecryption.size() == 0) {
+            throw new IllegalStateException("KeyLoader list must not be null or empty.");
         }
 
         final ClientException exceptionToThrowIfAllFails = new ClientException(ErrorStrings.DECRYPTION_FAILED,

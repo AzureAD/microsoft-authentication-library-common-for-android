@@ -122,20 +122,11 @@ public class AndroidAuthSdkStorageEncryptionManagerTest {
         }
     }
 
-    @Test
-    public void testGetDecryptionKey_ForUnencryptedText_returns_null_When_ignoreKeyLoaderNotFoundError_is_true() {
-        AuthenticationSettings.INSTANCE.setIgnoreKeyLoaderNotFoundError(true);
-        final AndroidAuthSdkStorageEncryptionManager manager = new AndroidAuthSdkStorageEncryptionManager(context, null);
-        final List<AbstractSecretKeyLoader> keyLoaderList = manager.getKeyLoaderForDecryption("Unencrypted".getBytes(ENCODING_UTF8));
-        Assert.assertNull(keyLoaderList);
-    }
-
-    @Test(expected = IllegalStateException.class)
-    public void testGetDecryptionKey_ForUnencryptedText_throws_When_ignoreKeyLoaderNotFoundError_is_false() {
+    public void testGetDecryptionKey_ForUnencryptedText_returns_empty_keyloader() {
         AuthenticationSettings.INSTANCE.setIgnoreKeyLoaderNotFoundError(false);
         final AndroidAuthSdkStorageEncryptionManager manager = new AndroidAuthSdkStorageEncryptionManager(context, null);
         final List<AbstractSecretKeyLoader> keyLoaderList = manager.getKeyLoaderForDecryption("Unencrypted".getBytes(ENCODING_UTF8));
-        Assert.fail("Expected IllegalStateException to be thrown");
+        Assert.assertEquals(0, keyLoaderList.size());
     }
 
     /**
