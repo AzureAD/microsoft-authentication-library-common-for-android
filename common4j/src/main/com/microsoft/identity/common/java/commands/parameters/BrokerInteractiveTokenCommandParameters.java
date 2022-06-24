@@ -56,6 +56,7 @@ public class BrokerInteractiveTokenCommandParameters extends InteractiveTokenCom
     private final IBrokerAccount brokerAccount;
     private final String homeAccountId;
     private final String localAccountId;
+    private final String tenantIdRequestingBrt;
 
 
     /**

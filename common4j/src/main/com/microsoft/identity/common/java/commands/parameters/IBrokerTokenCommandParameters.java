@@ -23,6 +23,9 @@
 package com.microsoft.identity.common.java.commands.parameters;
 
 import com.microsoft.identity.common.java.broker.IBrokerAccount;
+import com.microsoft.identity.common.java.request.BrokerRequestType;
+
+import edu.umd.cs.findbugs.annotations.Nullable;
 
 /**
  * An interface that describes token command parameters for broker.
@@ -77,4 +80,9 @@ public interface IBrokerTokenCommandParameters {
      * @return a String representing local account id
      */
     String getLocalAccountId();
+
+    BrokerRequestType getRequestType();
+
+    @Nullable
+    String getTenantIdRequestingBrt();
 }

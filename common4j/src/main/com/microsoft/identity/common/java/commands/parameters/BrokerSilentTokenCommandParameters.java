@@ -25,6 +25,7 @@ package com.microsoft.identity.common.java.commands.parameters;
 import com.microsoft.identity.common.java.broker.IBrokerAccount;
 import com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache;
 import com.microsoft.identity.common.java.exception.ArgumentException;
+import com.microsoft.identity.common.java.request.BrokerRequestType;
 import com.microsoft.identity.common.java.util.StringUtil;
 
 import lombok.EqualsAndHashCode;
@@ -47,6 +48,8 @@ public class BrokerSilentTokenCommandParameters extends SilentTokenCommandParame
     private final int sleepTimeBeforePrtAcquisition;
 
     private final String negotiatedBrokerProtocolVersion;
+    private final BrokerRequestType requestType;
+    private final String tenantIdRequestingBrt;
 
     @Override
     public void validate() throws ArgumentException {
