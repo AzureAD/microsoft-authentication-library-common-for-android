@@ -424,7 +424,7 @@ public enum AuthenticationSettings {
      * Method to check whether to suppress errors where KeyLoader is not found to decrypt
      * the cache content.
      */
-    public boolean getIgnoreKeyLoaderNotFoundError() {
+    public boolean shouldIgnoreKeyLoaderNotFoundError() {
         return mIgnoreKeyLoaderNotFoundError;
     }
 }

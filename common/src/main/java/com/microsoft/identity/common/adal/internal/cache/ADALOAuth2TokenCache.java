@@ -185,7 +185,7 @@ public class ADALOAuth2TokenCache
                         "Exception setting single sign on state for account " + account.getUsername(),
                         e
                 );
-                if (!AuthenticationSettings.INSTANCE.getIgnoreKeyLoaderNotFoundError()) {
+                if (!AuthenticationSettings.INSTANCE.shouldIgnoreKeyLoaderNotFoundError()) {
                     throw e;
                 }
             }
