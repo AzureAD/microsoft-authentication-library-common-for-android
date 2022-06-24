@@ -1,3 +1,7 @@
+Version 4.2.0-hf2
+----------
+- [PATCH] [Adal] Ignore failure in updating unified/msal cache if ignoreKeyLoaderNotFoundError flag is set (#1775)
+
 Version 4.2.0-hf1
 ----------
 - [PATCH] Add additional logging/exception to identify root cause for office union app crash (#1762)

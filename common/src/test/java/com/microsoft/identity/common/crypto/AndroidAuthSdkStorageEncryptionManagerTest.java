@@ -25,6 +25,7 @@ package com.microsoft.identity.common.crypto;
 import static com.microsoft.identity.common.crypto.MockData.PREDEFINED_KEY;
 import static com.microsoft.identity.common.crypto.MockData.TEXT_ENCRYPTED_BY_ANDROID_WRAPPED_KEY;
 import static com.microsoft.identity.common.crypto.MockData.TEXT_ENCRYPTED_BY_PREDEFINED_KEY;
+import static com.microsoft.identity.common.java.AuthenticationConstants.ENCODING_UTF8;
 
 import android.content.Context;
 
@@ -119,6 +120,13 @@ public class AndroidAuthSdkStorageEncryptionManagerTest {
                     "Cipher Text is encrypted by USER_PROVIDED_KEY_IDENTIFIER, but mPredefinedKeyLoader is null.",
                     ex.getMessage());
         }
+    }
+
+    public void testGetDecryptionKey_ForUnencryptedText_returns_empty_keyloader() {
+        AuthenticationSettings.INSTANCE.setIgnoreKeyLoaderNotFoundError(false);
+        final AndroidAuthSdkStorageEncryptionManager manager = new AndroidAuthSdkStorageEncryptionManager(context, null);
+        final List<AbstractSecretKeyLoader> keyLoaderList = manager.getKeyLoaderForDecryption("Unencrypted".getBytes(ENCODING_UTF8));
+        Assert.assertEquals(0, keyLoaderList.size());
     }
 
     /**

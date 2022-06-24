@@ -91,6 +91,6 @@ public class AndroidAuthSdkStorageEncryptionManager extends StorageEncryptionMan
         }
 
         Logger.warn(methodTag, "Cannot find a matching key to decrypt the given blob");
-        throw new IllegalStateException("Unknown keyIdentifier for cipher text: " + keyIdentifier);
+        return Collections.emptyList();
     }
 }
