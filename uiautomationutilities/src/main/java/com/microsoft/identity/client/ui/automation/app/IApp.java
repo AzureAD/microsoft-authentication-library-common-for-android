@@ -83,4 +83,9 @@ public interface IApp {
      * Copy Installed APK to supplied destination.
      */
     void copyApk(String destApkFileName);
+
+    /**
+     * Determines the implementation to use based on the app version
+     */
+    void setAppImpl();
 }

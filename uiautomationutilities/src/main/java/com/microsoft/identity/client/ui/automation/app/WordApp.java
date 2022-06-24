@@ -66,6 +66,11 @@ public class WordApp extends App implements IFirstPartyApp {
     }
 
     @Override
+    public void setAppImpl() {
+        // nothing needed here
+    }
+
+    @Override
     public void addFirstAccount(@NonNull final String username,
                                 @NonNull final String password,
                                 @NonNull final FirstPartyAppPromptHandlerParameters promptHandlerParameters) {

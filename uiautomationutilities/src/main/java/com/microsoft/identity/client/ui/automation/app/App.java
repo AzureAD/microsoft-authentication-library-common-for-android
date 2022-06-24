@@ -26,7 +26,6 @@ import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
 
-import com.microsoft.identity.client.ui.automation.broker.BrokerImplFactory;
 import com.microsoft.identity.client.ui.automation.installer.IAppInstaller;
 import com.microsoft.identity.client.ui.automation.installer.LocalApkInstaller;
 import com.microsoft.identity.client.ui.automation.installer.PlayStore;
@@ -103,7 +102,8 @@ public abstract class App implements IApp {
         // this value can (should) be changed to false by child classes as appropriate
         shouldHandleFirstRun = true;
 
-        BrokerImplFactory.setBrokerImpl(this.appName);
+        // setting app implementation for the installed app based on version
+        setAppImpl();
     }
 
     @Override

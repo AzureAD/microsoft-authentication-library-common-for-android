@@ -94,6 +94,7 @@ public class BrokerAuthenticatorPreviousVersionImpl extends BrokerMicrosoftAuthe
         }
     }
 
+    @Override
     public void performSharedDeviceRegistration(@NonNull final String username,
                                                 @NonNull final String password) {
         Logger.i(TAG, "Performing Shared Device Registration for the given account..");
@@ -120,5 +121,59 @@ public class BrokerAuthenticatorPreviousVersionImpl extends BrokerMicrosoftAuthe
                 sharedDeviceConfirmation.exists());
 
         isInSharedDeviceMode = true;
+    }
+
+    @Override
+    protected void goToDeviceRegistrationPage() {
+        // scroll down the recycler view to find device registration btn
+        try {
+            // click the 3 dot menu icon in top right
+            UiAutomatorUtils.handleButtonClick("com.azure.authenticator:id/menu_overflow");
+
+
+            // select Settings from drop down
+            final UiObject settings = UiAutomatorUtils.obtainUiObjectWithText("Settings");
+            settings.click();
+
+            final UiObject deviceRegistration = UiAutomatorUtils.obtainChildInScrollable(
+                    "com.azure.authenticator:id/recycler_view",
+                    "Device registration"
+            );
+
+            assert deviceRegistration != null;
+
+            // click the device registration button
+            deviceRegistration.click();
+        } catch (final UiObjectNotFoundException e) {
+            throw new AssertionError(e);
+        }
+    }
+
+    @Override
+    public void enableBrowserAccess() {
+        Logger.i(TAG, "Enable Browser Access..");
+        // open device registration page
+        openDeviceRegistrationPage();
+
+        // Click enable browser access
+        UiAutomatorUtils.handleButtonClick(
+                "com.azure.authenticator:id/enable_browser_access_button"
+        );
+
+        // click continue in Dialog
+        UiAutomatorUtils.handleButtonClick("android:id/button1");
+
+        final UiDevice device =
+                UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+
+        // Install cert
+        final UiObject certInstaller = device.findObject(new UiSelector().packageName("com.android.certinstaller"));
+        certInstaller.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
+        Assert.assertTrue(
+                "Microsoft Authenticator - cert installer dialog appears.",
+                certInstaller.exists()
+        );
+
+        UiAutomatorUtils.handleButtonClick("android:id/button1");
     }
 }

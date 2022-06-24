@@ -110,6 +110,7 @@ public class BrokerAuthenticatorUpdatedVersionImpl extends BrokerMicrosoftAuthen
         }
     }
 
+    @Override
     public void performSharedDeviceRegistration(@NonNull final String username,
                                                 @NonNull final String password) {
         Logger.i(TAG, "Performing Shared Device Registration for the given account..");
@@ -161,5 +162,33 @@ public class BrokerAuthenticatorUpdatedVersionImpl extends BrokerMicrosoftAuthen
         } catch (final UiObjectNotFoundException e) {
             throw new AssertionError(e);
         }
+    }
+
+    @Override
+    public void enableBrowserAccess() {
+        Logger.i(TAG, "Enable Browser Access..");
+        // open device registration page
+        openDeviceRegistrationPage();
+
+        // Click enable browser access
+        UiAutomatorUtils.handleButtonClick(
+                "enableBrowserText"
+        );
+
+        // click continue in Dialog
+        UiAutomatorUtils.handleButtonClick("android:id/button1");
+
+        final UiDevice device =
+                UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+
+        // Install cert
+        final UiObject certInstaller = device.findObject(new UiSelector().packageName("com.android.certinstaller"));
+        certInstaller.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
+        Assert.assertTrue(
+                "Microsoft Authenticator - cert installer dialog appears.",
+                certInstaller.exists()
+        );
+
+        UiAutomatorUtils.handleButtonClick("android:id/button1");
     }
 }

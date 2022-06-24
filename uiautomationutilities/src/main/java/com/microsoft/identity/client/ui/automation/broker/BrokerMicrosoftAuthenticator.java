@@ -23,17 +23,18 @@
 package com.microsoft.identity.client.ui.automation.broker;
 
 import android.Manifest;
+import android.content.Context;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.widget.Button;
 import android.widget.EditText;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.test.platform.app.InstrumentationRegistry;
-import androidx.test.uiautomator.UiDevice;
+import androidx.test.core.app.ApplicationProvider;
 import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObjectNotFoundException;
-import androidx.test.uiautomator.UiSelector;
 
 import com.microsoft.identity.client.ui.automation.installer.IAppInstaller;
 import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.AdfsPromptHandler;
@@ -49,7 +50,7 @@ import org.junit.Assert;
 
 import lombok.Getter;
 
-import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT;
+
 
 /**
  * Serves as the base class interacting with the Microsoft Authenticator Broker App during UI Test. The base class should be extended
@@ -61,6 +62,7 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
     public final static String AUTHENTICATOR_APP_PACKAGE_NAME = "com.azure.authenticator";
     public final static String AUTHENTICATOR_APP_NAME = "Microsoft Authenticator";
     public final static String AUTHENTICATOR_APK = "Authenticator.apk";
+    private final static String LATEST_VERSION_NUMBER = "6.2206.3949";
 
     private final static String INCIDENT_MSG = "Broker Automation Incident";
 
@@ -68,7 +70,7 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
 
     protected boolean isInSharedDeviceMode = false;
 
-    public static BrokerMicrosoftAuthenticator brokerMicrosoftAuthenticatorImpl;
+    private BrokerMicrosoftAuthenticator brokerMicrosoftAuthenticatorImpl;
 
 
     public BrokerMicrosoftAuthenticator() {
@@ -122,30 +124,7 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
 
     @Override
     public void enableBrowserAccess() {
-        Logger.i(TAG, "Enable Browser Access..");
-        // open device registration page
-        openDeviceRegistrationPage();
-
-        // Click enable browser access
-        UiAutomatorUtils.handleButtonClick(
-                "com.azure.authenticator:id/enable_browser_access_button"
-        );
-
-        // click continue in Dialog
-        UiAutomatorUtils.handleButtonClick("android:id/button1");
-
-        final UiDevice device =
-                UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
-
-        // Install cert
-        final UiObject certInstaller = device.findObject(new UiSelector().packageName("com.android.certinstaller"));
-        certInstaller.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
-        Assert.assertTrue(
-                "Microsoft Authenticator - cert installer dialog appears.",
-                certInstaller.exists()
-        );
-
-        UiAutomatorUtils.handleButtonClick("android:id/button1");
+        brokerMicrosoftAuthenticatorImpl.enableBrowserAccess();
     }
 
     @Override
@@ -259,7 +238,7 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
         Logger.i(TAG, "Open the device registration page in the Authenticator App..");
         launch(); // launch Authenticator app
 
-        if (brokerMicrosoftAuthenticatorImpl.shouldHandleFirstRun) {
+        if (shouldHandleFirstRun) {
             handleFirstRun(); // handle first run experience
         }
         goToDeviceRegistrationPage();
@@ -271,28 +250,7 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
     }
 
     protected void goToDeviceRegistrationPage() {
-        // scroll down the recycler view to find device registration btn
-        try {
-            // click the 3 dot menu icon in top right
-            UiAutomatorUtils.handleButtonClick("com.azure.authenticator:id/menu_overflow");
-
-
-            // select Settings from drop down
-            final UiObject settings = UiAutomatorUtils.obtainUiObjectWithText("Settings");
-            settings.click();
-
-            final UiObject deviceRegistration = UiAutomatorUtils.obtainChildInScrollable(
-                    "com.azure.authenticator:id/recycler_view",
-                    "Device registration"
-            );
-
-            assert deviceRegistration != null;
-
-            // click the device registration button
-            deviceRegistration.click();
-        } catch (final UiObjectNotFoundException e) {
-            throw new AssertionError(e);
-        }
+        brokerMicrosoftAuthenticatorImpl.goToDeviceRegistrationPage();
     }
 
     protected void performDeviceRegistrationHelper(@NonNull final String username,
@@ -345,5 +303,25 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
         // the skip button
         UiAutomatorUtils.handleButtonClick("com.azure.authenticator:id/frx_skip_button");
         shouldHandleFirstRun = false;
+    }
+
+    @Override
+    public void setAppImpl() {
+        final Context context = ApplicationProvider.getApplicationContext();
+        try {
+            PackageInfo packageInfo = context.getPackageManager().getPackageInfo("com.azure.authenticator", 0);
+            // authenticator app follows version number format - V.YYMM.XXXX
+            // V is the major version, YYMM are last two digits of an year followed by month
+            // XXXX is number of hours passed after Jan1st 00.00 of current year
+            // String comparison of versions should work for this format
+            if (packageInfo.versionName.compareTo(LATEST_VERSION_NUMBER) >= 0) {
+                // Use latest automation code as this is the new updated authenticator app
+                brokerMicrosoftAuthenticatorImpl = new BrokerAuthenticatorUpdatedVersionImpl();
+            } else {
+                brokerMicrosoftAuthenticatorImpl = new BrokerAuthenticatorPreviousVersionImpl();
+            }
+        } catch (final PackageManager.NameNotFoundException e) {
+            throw new AssertionError(e);
+        }
     }
 }
