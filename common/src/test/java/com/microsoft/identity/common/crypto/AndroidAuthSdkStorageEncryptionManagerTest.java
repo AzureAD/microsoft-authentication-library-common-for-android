@@ -25,6 +25,7 @@ package com.microsoft.identity.common.crypto;
 import static com.microsoft.identity.common.crypto.MockData.PREDEFINED_KEY;
 import static com.microsoft.identity.common.crypto.MockData.TEXT_ENCRYPTED_BY_ANDROID_WRAPPED_KEY;
 import static com.microsoft.identity.common.crypto.MockData.TEXT_ENCRYPTED_BY_PREDEFINED_KEY;
+import static com.microsoft.identity.common.java.AuthenticationConstants.ENCODING_UTF8;
 
 import android.content.Context;
 
@@ -122,18 +123,18 @@ public class AndroidAuthSdkStorageEncryptionManagerTest {
     }
 
     @Test
-    public void testGetDecryptionKey_ForDataEncryptedWithPreDefinedKey_PredefinedKeyNotProvided_returns_null_When_shouldIgnorePredefinedKeyLoaderNotFoundError_is_true() {
-        AuthenticationSettings.INSTANCE.setShouldIgnorePredefinedKeyLoaderNotFoundError(true);
+    public void testGetDecryptionKey_ForUnencryptedText_returns_null_When_ignoreKeyLoaderNotFoundError_is_true() {
+        AuthenticationSettings.INSTANCE.setIgnoreKeyLoaderNotFoundError(true);
         final AndroidAuthSdkStorageEncryptionManager manager = new AndroidAuthSdkStorageEncryptionManager(context, null);
-        final List<AbstractSecretKeyLoader> keyLoaderList = manager.getKeyLoaderForDecryption(TEXT_ENCRYPTED_BY_PREDEFINED_KEY);
+        final List<AbstractSecretKeyLoader> keyLoaderList = manager.getKeyLoaderForDecryption("Unencrypted".getBytes(ENCODING_UTF8));
         Assert.assertNull(keyLoaderList);
     }
 
     @Test(expected = IllegalStateException.class)
-    public void testGetDecryptionKey_ForDataEncryptedWithPreDefinedKey_PredefinedKeyNotProvided_throws_When_shouldIgnorePredefinedKeyLoaderNotFoundError_is_false() {
-        AuthenticationSettings.INSTANCE.setShouldIgnorePredefinedKeyLoaderNotFoundError(false);
+    public void testGetDecryptionKey_ForUnencryptedText_throws_When_ignoreKeyLoaderNotFoundError_is_false() {
+        AuthenticationSettings.INSTANCE.setIgnoreKeyLoaderNotFoundError(false);
         final AndroidAuthSdkStorageEncryptionManager manager = new AndroidAuthSdkStorageEncryptionManager(context, null);
-        final List<AbstractSecretKeyLoader> keyLoaderList = manager.getKeyLoaderForDecryption(TEXT_ENCRYPTED_BY_PREDEFINED_KEY);
+        final List<AbstractSecretKeyLoader> keyLoaderList = manager.getKeyLoaderForDecryption("Unencrypted".getBytes(ENCODING_UTF8));
         Assert.fail("Expected IllegalStateException to be thrown");
     }
 

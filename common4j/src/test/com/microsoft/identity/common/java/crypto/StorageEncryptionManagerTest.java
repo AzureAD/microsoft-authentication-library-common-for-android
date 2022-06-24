@@ -103,7 +103,7 @@ public class StorageEncryptionManagerTest {
     }
 
     @Test
-    public void testDecrypt_returns_cipherText_if_keyloader_is_null() throws ClientException {
+    public void testDecrypt_null_keyloader_returns_cipherText() throws ClientException {
         final StorageEncryptionManager manager = new MockStorageEncryptionManager(PREDEFINED_KEY_IV, null, null);
         final byte[] plainBytes = manager.decrypt(TEXT_ENCRYPTED_BY_PREDEFINED_KEY);
         Assert.assertEquals(TEXT_ENCRYPTED_BY_PREDEFINED_KEY, plainBytes);

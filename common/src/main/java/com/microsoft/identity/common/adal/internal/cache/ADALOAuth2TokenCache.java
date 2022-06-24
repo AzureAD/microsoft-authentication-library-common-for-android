@@ -175,7 +175,7 @@ public class ADALOAuth2TokenCache
         for (final IShareSingleSignOnState<MicrosoftAccount, MicrosoftRefreshToken> sharedSsoCache : mSharedSSOCaches) {
             try {
                 sharedSsoCache.setSingleSignOnState(account, refreshToken);
-            } catch (ClientException e) {
+            } catch (final ClientException | IllegalStateException e) {
                 Logger.errorPII(TAG,
                         "Exception setting single sign on state for account " + account.getUsername(),
                         e

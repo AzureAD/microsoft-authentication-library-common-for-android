@@ -81,8 +81,6 @@ public class AndroidAuthSdkStorageEncryptionManager extends StorageEncryptionMan
         if (PredefinedKeyLoader.USER_PROVIDED_KEY_IDENTIFIER.equalsIgnoreCase(keyIdentifier)) {
             if (mPredefinedKeyLoader != null) {
                 return Collections.<AbstractSecretKeyLoader>singletonList(mPredefinedKeyLoader);
-            } else if (AuthenticationSettings.INSTANCE.getShouldIgnorePredefinedKeyLoaderNotFoundError()) {
-                return null;
             } else {
                 throw new IllegalStateException(
                         "Cipher Text is encrypted by USER_PROVIDED_KEY_IDENTIFIER, " +
@@ -93,6 +91,10 @@ public class AndroidAuthSdkStorageEncryptionManager extends StorageEncryptionMan
         }
 
         Logger.warn(methodTag, "Cannot find a matching key to decrypt the given blob");
+        if (AuthenticationSettings.INSTANCE.getIgnoreKeyLoaderNotFoundError()) {
+            return null;
+        }
+
         throw new IllegalStateException("Unknown keyIdentifier for cipher text: " + keyIdentifier);
     }
 }

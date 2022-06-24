@@ -94,7 +94,7 @@ public enum AuthenticationSettings {
 
     private int mReadTimeOut = DEFAULT_READ_CONNECT_TIMEOUT;
 
-    private boolean mShouldIgnorePredefinedKeyLoaderNotFoundError = false;
+    private boolean mIgnoreKeyLoaderNotFoundError = false;
 
     /**
      * Get bytes to derive secretKey to use in encrypt/decrypt.
@@ -413,18 +413,18 @@ public enum AuthenticationSettings {
     }
 
     /**
-     * Method to suppress errors where predefinedKeyLoader is not found to decrypt the cache content
-     * @param shouldIgnorePredefinedKeyLoaderNotFoundError if true, suppresses the error
+     * Method to suppress errors where KeyLoader is not found to decrypt the cache content
+     * @param shouldIgnore if true, ignores keyloader not found errors
      */
-    public void setShouldIgnorePredefinedKeyLoaderNotFoundError(boolean shouldIgnorePredefinedKeyLoaderNotFoundError) {
-        mShouldIgnorePredefinedKeyLoaderNotFoundError = shouldIgnorePredefinedKeyLoaderNotFoundError;
+    public void setIgnoreKeyLoaderNotFoundError(boolean shouldIgnore) {
+        mIgnoreKeyLoaderNotFoundError = shouldIgnore;
     }
 
     /**
-     * Method to check whether to suppress errors where predefinedKeyLoader is not found to decrypt
+     * Method to check whether to suppress errors where KeyLoader is not found to decrypt
      * the cache content.
      */
-    public boolean getShouldIgnorePredefinedKeyLoaderNotFoundError() {
-        return mShouldIgnorePredefinedKeyLoaderNotFoundError;
+    public boolean getIgnoreKeyLoaderNotFoundError() {
+        return mIgnoreKeyLoaderNotFoundError;
     }
 }
