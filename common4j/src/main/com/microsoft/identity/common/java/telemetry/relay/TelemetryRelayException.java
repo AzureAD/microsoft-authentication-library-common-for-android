@@ -20,14 +20,38 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.telemetry.events;
+package com.microsoft.identity.common.java.telemetry.relay;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import com.microsoft.identity.common.java.exception.BaseException;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.experimental.Accessors;
 
 /**
- * Deprecated. Use {@link com.microsoft.identity.common.java.telemetry.events.ApiEndEvent} instead.
- **/
-@SuppressFBWarnings("NM_SAME_SIMPLE_NAME_AS_SUPERCLASS")
-@Deprecated
-public class ApiEndEvent extends com.microsoft.identity.common.java.telemetry.events.ApiEndEvent {
+ * An exception class for the telemetry pipeline.
+ */
+@EqualsAndHashCode(callSuper = true)
+@Data()
+@Accessors(prefix = "m")
+public class TelemetryRelayException extends BaseException  {
+    private static final long serialVersionUID = -1543623857511895210L;
+
+    public static final String INITIALIZATION_FAILED = "initialization_failed";
+    public static final String NOT_INITIALIZED = "not_initialized";
+
+    public TelemetryRelayException(final @Nullable String message, final Throwable cause, final @Nonnull String errorCode) {
+        super(errorCode, message, cause);
+    }
+
+    public TelemetryRelayException(final @Nonnull Throwable cause, final @Nonnull String errorCode) {
+        this(null, cause, errorCode);
+    }
+
+    public TelemetryRelayException(final @Nonnull String message, final @Nonnull String errorCode) {
+        this(message, null, errorCode);
+    }
 }
