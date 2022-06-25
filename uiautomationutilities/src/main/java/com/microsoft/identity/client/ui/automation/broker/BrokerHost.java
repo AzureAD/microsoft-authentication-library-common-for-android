@@ -190,7 +190,7 @@ public class BrokerHost extends AbstractTestBroker {
                 "android:id/message"
         );
 
-        Assert.assertTrue(joinFinishDialog.exists());
+        Assert.assertTrue("Assert join finish dialog", joinFinishDialog.exists());
 
         try {
 
@@ -198,7 +198,7 @@ public class BrokerHost extends AbstractTestBroker {
             final String joinFinishDialogText = joinFinishDialog.getText();
             final String joinStatus = joinFinishDialogText.split(":")[1];
             // The status should be successful
-            Assert.assertTrue("SUCCESSFUL".equalsIgnoreCase(joinStatus));
+            Assert.assertTrue("Assert the status is successful", "SUCCESSFUL".equalsIgnoreCase(joinStatus));
 
             // dismiss the dialog
             UiAutomatorUtils.handleButtonClick("android:id/button1");
@@ -208,7 +208,7 @@ public class BrokerHost extends AbstractTestBroker {
 
             // compare the UPN to make sure joined with the expected account
             final String joinedUpn = getAccountUpn();
-            Assert.assertTrue(expectedUpn.equalsIgnoreCase(joinedUpn));
+            Assert.assertTrue("Assert that the joined account is the expected account", expectedUpn.equalsIgnoreCase(joinedUpn));
         } catch (final UiObjectNotFoundException e) {
             throw new AssertionError(e);
         }
@@ -310,7 +310,7 @@ public class BrokerHost extends AbstractTestBroker {
         final UiObject dialogBox = UiAutomatorUtils.obtainUiObjectWithResourceId(
                 "android:id/message"
         );
-        Assert.assertTrue(dialogBox.exists());
+        Assert.assertTrue("Assert dialog box after button click", dialogBox.exists());
         return getDialogBoxText(dialogBox, textId);
     }
 
@@ -379,7 +379,7 @@ public class BrokerHost extends AbstractTestBroker {
         final UiObject dialogBox = UiAutomatorUtils.obtainUiObjectWithResourceId(
                 "android:id/message"
         );
-        Assert.assertTrue(dialogBox.exists());
+        Assert.assertTrue("Assert get all accounts dialog box exists", dialogBox.exists());
 
         // As of now we are testing only for 2 accounts.
         List<String> accounts = new ArrayList<>();
@@ -428,7 +428,7 @@ public class BrokerHost extends AbstractTestBroker {
                     "com.microsoft.identity.testuserapp:id/sso_token"
             );
             final String ssoTokenTxt = ssoToken.getText();
-            Assert.assertNotEquals(ssoTokenTxt, "");
+            Assert.assertNotEquals("Assert sso token is not empty", ssoTokenTxt, "");
             return ssoTokenTxt;
         } catch (final UiObjectNotFoundException e) {
             throw new AssertionError(e);
@@ -470,7 +470,7 @@ public class BrokerHost extends AbstractTestBroker {
         final UiObject dialogBox = UiAutomatorUtils.obtainUiObjectWithResourceId(
                 "android:id/message"
         );
-        Assert.assertTrue(dialogBox.exists());
+        Assert.assertTrue("Assert not verified dialog box", dialogBox.exists());
         try {
             if (!dialogBox.getText().contains("Calling app could not be verified")) {
                 Assert.fail("Could not find the string 'calling app could not be verified' in the msg displayed in the dialog");
