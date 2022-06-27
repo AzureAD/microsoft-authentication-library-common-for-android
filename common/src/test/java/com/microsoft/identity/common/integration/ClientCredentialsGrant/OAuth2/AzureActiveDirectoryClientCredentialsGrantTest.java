@@ -23,16 +23,16 @@
 package com.microsoft.identity.common.integration.ClientCredentialsGrant.OAuth2;
 
 import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.java.providers.keys.CertificateCredential;
-import com.microsoft.identity.common.java.providers.keys.ClientCertificateMetadata;
-import com.microsoft.identity.common.java.providers.keys.KeyStoreConfiguration;
-import com.microsoft.identity.common.java.providers.microsoft.MicrosoftClientAssertion;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryOAuth2Configuration;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryOAuth2Strategy;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryTokenRequest;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
+import com.microsoft.identity.labapi.utilities.authentication.common.CertificateCredential;
+import com.microsoft.identity.labapi.utilities.authentication.common.ClientCertificateMetadata;
+import com.microsoft.identity.labapi.utilities.authentication.common.KeyStoreConfiguration;
+import com.microsoft.identity.labapi.utilities.authentication.common.MicrosoftClientAssertion;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -63,16 +63,20 @@ public class AzureActiveDirectoryClientCredentialsGrantTest {
     private final static String AAD_CLIENT_ASSERTION_AUDIENCE = "https://login.microsoftonline.com/microsoft.com/oauth2/token";
 
     @Test
-    public void test_ClientCredentials() throws CertificateException, UnrecoverableKeyException, NoSuchAlgorithmException, KeyStoreException, NoSuchProviderException, IOException, ClientException {
+    public void test_ClientCredentials() throws Exception {
 
-        final CertificateCredential credential = new CertificateCredential.CertificateCredentialBuilder(CLIENT_ID)
-                .clientCertificateMetadata(new ClientCertificateMetadata(CERTIFICATE_ALIAS, null))
-                .keyStoreConfiguration(new KeyStoreConfiguration(KEYSTORE_TYPE, KEYSTORE_PROVIDER, null))
-                .build();
+        final CertificateCredential credential = CertificateCredential.create(
+                        new KeyStoreConfiguration(KEYSTORE_TYPE, KEYSTORE_PROVIDER, null),
+                new ClientCertificateMetadata(CERTIFICATE_ALIAS, null)
+                );
 
         final String audience = AAD_CLIENT_ASSERTION_AUDIENCE;
 
-        final MicrosoftClientAssertion assertion = new MicrosoftClientAssertion(audience, credential);
+        final MicrosoftClientAssertion assertion = MicrosoftClientAssertion.builder()
+                .clientId(CLIENT_ID)
+                .audience(audience)
+                .certificateCredential(credential)
+                .build();
 
         final AzureActiveDirectoryTokenRequest tr = new AzureActiveDirectoryTokenRequest();
 

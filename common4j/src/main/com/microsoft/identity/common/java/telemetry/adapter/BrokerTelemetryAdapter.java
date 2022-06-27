@@ -1,4 +1,3 @@
-// Copyright (c) Microsoft Corporation.
 // All rights reserved.
 //
 // This code is licensed under the MIT License.
@@ -20,14 +19,18 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.telemetry.events;
+package com.microsoft.identity.common.java.telemetry.adapter;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import com.microsoft.identity.common.java.telemetry.observers.IBrokerTelemetryObserver;
+
+import lombok.NonNull;
 
 /**
- * Deprecated. Use {@link com.microsoft.identity.common.java.telemetry.events.ApiEndEvent} instead.
- **/
-@SuppressFBWarnings("NM_SAME_SIMPLE_NAME_AS_SUPERCLASS")
-@Deprecated
-public class ApiEndEvent extends com.microsoft.identity.common.java.telemetry.events.ApiEndEvent {
+ * Adapter to aggregate events for broker telemetry. We make use of the {@link TelemetryAggregationAdapter} which
+ * aggregates the events into MATS format.
+ */
+public class BrokerTelemetryAdapter extends TelemetryAggregationAdapter {
+    public BrokerTelemetryAdapter(@NonNull IBrokerTelemetryObserver observer) {
+        super(observer);
+    }
 }
