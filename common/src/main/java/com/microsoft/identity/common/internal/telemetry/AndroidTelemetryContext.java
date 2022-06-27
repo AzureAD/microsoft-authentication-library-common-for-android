@@ -63,11 +63,17 @@ public class AndroidTelemetryContext extends AbstractTelemetryContext {
 
             final ApplicationInfo applicationInfo = context.getApplicationInfo();
             // we should capture the application name as well.
-            final String applicationName = applicationInfo.labelRes == 0 ?
-                    applicationInfo.nonLocalizedLabel.toString() : context.getString(applicationInfo.labelRes);
+            String applicationName = "";
+            String packageName = "";
+
+            if (applicationInfo != null) {
+                applicationName = applicationInfo.labelRes == 0 && applicationInfo.nonLocalizedLabel != null ?
+                        applicationInfo.nonLocalizedLabel.toString() : context.getString(applicationInfo.labelRes);
+                packageName = applicationInfo.packageName;
+            }
 
             super.addApplicationInfo(
-                    applicationInfo.packageName,
+                    packageName,
                     applicationName,
                     packageInfo.versionName,
                     String.valueOf(versionCode)
