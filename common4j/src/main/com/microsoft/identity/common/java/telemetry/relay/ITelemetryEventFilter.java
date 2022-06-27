@@ -1,4 +1,3 @@
-// Copyright (c) Microsoft Corporation.
 // All rights reserved.
 //
 // This code is licensed under the MIT License.
@@ -20,14 +19,19 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.telemetry.events;
-
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+package com.microsoft.identity.common.java.telemetry.relay;
 
 /**
- * Deprecated. Use {@link com.microsoft.identity.common.java.telemetry.events.ApiEndEvent} instead.
- **/
-@SuppressFBWarnings("NM_SAME_SIMPLE_NAME_AS_SUPERCLASS")
-@Deprecated
-public class ApiEndEvent extends com.microsoft.identity.common.java.telemetry.events.ApiEndEvent {
+ * An interface that describes an event filter for a telemetry relay client {@link AbstractTelemetryRelayClient}
+ * @param <T> the event data
+ */
+public interface ITelemetryEventFilter<T> {
+
+    /**
+     * Invoked when a new event is captured by the telemetry.
+     * @param telemetryEvent the telemetry event data
+     *
+     * @return a boolean representing whether the event should be relayed.
+     */
+    boolean shouldRelay(T telemetryEvent);
 }
