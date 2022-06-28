@@ -12,6 +12,7 @@ jobs:
     displayName: Run Office Tagger
     timeoutInMinutes: 10
     cancelTimeoutInMinutes: 1
+    condition: eq(variables['Build.Reason'], 'PullRequest')
     pool:
       vmImage: windows-2019
     steps:
