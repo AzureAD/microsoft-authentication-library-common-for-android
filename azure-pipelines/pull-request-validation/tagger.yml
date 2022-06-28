@@ -40,6 +40,7 @@ jobs:
             # Write your PowerShell commands here.
             Write-Host "Done"
             Write-Host $(Build.Repository.URI)
+            Write-Host $(Office-Tagger-Github-PAT)
 
       - task: OfficeGitTagger@7
         displayName: 'Office Git Tagger'
