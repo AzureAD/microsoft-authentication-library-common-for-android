@@ -345,7 +345,7 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
         final String methodTag = TAG + ":handleSmartcardCertAuth";
         //Show error dialog and cancel flow if mDevice is null.
         if (mDevice == null) {
-            Logger.info(methodTag, "Instance UsbYubiKitDevice variable (mDevice) is null.");
+            Logger.info(methodTag, "Instance UsbYubiKitDevice variable (mDevice) is null.(occurs before a cert picker is shown)");
             //Show general error dialog.
             mDialogHolder.showErrorDialog(R.string.smartcard_general_error_dialog_title, R.string.smartcard_general_error_dialog_message);
             request.cancel();
@@ -412,7 +412,7 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
         final String methodTag = TAG + "getActivePivSessionAsync:";
         //If mDevice is null, show a general error dialog and cancel request.
         if (mDevice == null) {
-            Logger.info(methodTag, "Instance UsbYubiKitDevice variable (mDevice) is null.");
+            Logger.info(methodTag, "Instance UsbYubiKitDevice variable (mDevice) is null. (Occurs before a UsbSmartCardConnection is requested)");
             mDialogHolder.showErrorDialog(R.string.smartcard_general_error_dialog_title, R.string.smartcard_general_error_dialog_message);
             request.cancel();
             return;
@@ -535,7 +535,7 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
                 synchronized (sDeviceLock) {
                     //Show error dialog and cancel flow if mDevice is null.
                     if (mDevice == null) {
-                        Logger.info(methodTag, "Instance UsbYubiKitDevice variable (mDevice) is null.");
+                        Logger.info(methodTag, "Instance UsbYubiKitDevice variable (mDevice) is null. (Occurs before YubiKey PIN can be verified)");
                         //Show general error dialog.
                         mDialogHolder.showErrorDialog(R.string.smartcard_general_error_dialog_title, R.string.smartcard_general_error_dialog_message);
                         request.cancel();
@@ -672,7 +672,7 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
                 synchronized (sDeviceLock) {
                     //Show error dialog and cancel flow if mDevice is null.
                     if (mDevice == null) {
-                        Logger.info(methodTag, "Instance UsbYubiKitDevice variable (mDevice) is null.");
+                        Logger.info(methodTag, "Instance UsbYubiKitDevice variable (mDevice) is null. (Occurs before attempting to create a PivSession)");
                         //TODO: want to see if we can show an error dialog somehow in this scenario.
                         //Invoke result failure.
                         callback.invoke(Result.failure(new Exception("Exception: Instance UsbYubiKitDevice variable (mDevice) is null.")));
