@@ -271,6 +271,7 @@ public class Logger {
     public static void info(final String tag,
                             final String message) {
         Logger.emit(0, String.format("%s - %s", tag, message));
+        Logger.emit(0, String.format("%s - %s", tag, message));
         log(tag, Logger.LogLevel.INFO, getDiagnosticContextMetadata(), message, null, false);
     }
 
