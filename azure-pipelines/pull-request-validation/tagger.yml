@@ -39,6 +39,7 @@ jobs:
           script: |
             # Write your PowerShell commands here.
             Write-Host "Done"
+            Write-Host $(Build.Repository.URI)
 
       - task: OfficeGitTagger@7
         displayName: 'Office Git Tagger'
