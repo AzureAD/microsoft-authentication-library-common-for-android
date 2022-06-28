@@ -1,4 +1,3 @@
-// Copyright (c) Microsoft Corporation.
 // All rights reserved.
 //
 // This code is licensed under the MIT License.
@@ -20,47 +19,19 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java.providers.keys;
-
-import com.microsoft.identity.common.java.util.CopyUtil;
-
-import java.util.Arrays;
-import java.util.Collections;
+package com.microsoft.identity.common.java.telemetry.relay;
 
 /**
- * Configuration information for the client certificate to be used.
+ * An interface that describes an event filter for a telemetry relay client {@link AbstractTelemetryRelayClient}
+ * @param <T> the event data
  */
-public class ClientCertificateMetadata {
-    private final String mAlias;
-    private final char[] mPassword;
+public interface ITelemetryEventFilter<T> {
 
     /**
-     * Constructor of ClientCertificateMetadata.
+     * Invoked when a new event is captured by the telemetry.
+     * @param telemetryEvent the telemetry event data
      *
-     * @param alias    String
-     * @param password char[]
+     * @return a boolean representing whether the event should be relayed.
      */
-    public ClientCertificateMetadata(String alias, char[] password) {
-        mAlias = alias;
-        mPassword = CopyUtil.copyIfNotNull(password);
-    }
-
-    /**
-     * Get alias.
-     *
-     * @return String
-     */
-    public String getAlias() {
-        return mAlias;
-    }
-
-    /**
-     * Get password.
-     *
-     * @return char[]
-     */
-    public char[] getPassword() {
-        return CopyUtil.copyIfNotNull(mPassword);
-    }
-
+    boolean shouldRelay(T telemetryEvent);
 }

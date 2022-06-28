@@ -32,13 +32,14 @@ import androidx.test.uiautomator.UiSelector;
 
 import com.microsoft.identity.client.ui.automation.TestContext;
 import com.microsoft.identity.client.ui.automation.installer.IAppInstaller;
+import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.AdfsLoginComponentHandler;
+import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.MicrosoftStsPromptHandler;
+import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.MicrosoftStsPromptHandlerParameters;
 import com.microsoft.identity.client.ui.automation.powerlift.IPowerLiftIntegratedApp;
 import com.microsoft.identity.client.ui.automation.constants.DeviceAdmin;
 import com.microsoft.identity.client.ui.automation.device.settings.ISettings;
 import com.microsoft.identity.client.ui.automation.device.settings.SamsungSettings;
-import com.microsoft.identity.client.ui.automation.interaction.PromptHandlerParameters;
 import com.microsoft.identity.client.ui.automation.interaction.PromptParameter;
-import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.AadPromptHandler;
 import com.microsoft.identity.client.ui.automation.logging.Logger;
 import com.microsoft.identity.client.ui.automation.utils.CommonUtils;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
@@ -50,7 +51,7 @@ import java.util.Random;
 import lombok.Getter;
 
 import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT;
-import static org.junit.Assert.fail;
+
 
 /**
  * A model for interacting with the Company Portal Broker App during UI Test.
@@ -84,6 +85,19 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
                 this,
                 username,
                 password
+        );
+    }
+
+    @Override
+    public void performDeviceRegistration(@NonNull final String username,
+                                          @NonNull final String password,
+                                          final boolean isFederatedUser) {
+        Logger.i(TAG, "Perform Device Registration for the given federate account..");
+        TestContext.getTestContext().getTestDevice().getSettings().addWorkAccount(
+                this,
+                username,
+                password,
+                isFederatedUser
         );
     }
 
@@ -169,9 +183,9 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
         // UiAutomatorUtils.handleButtonClick("com.microsoft.windowsintune.companyportal:id/privacy_notice_agree_button");
     }
 
-    @Override
     public void enrollDevice(@NonNull final String username,
-                             @NonNull final String password) {
+                             @NonNull final String password,
+                             final boolean isFederated) {
         Logger.i(TAG, "Enroll Device for the given account..");
         launch(); // launch CP app
 
@@ -180,19 +194,33 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
         // click Sign In button on CP welcome page
         UiAutomatorUtils.handleButtonClick("com.microsoft.windowsintune.companyportal:id/sign_in_button");
 
-        final PromptHandlerParameters promptHandlerParameters = PromptHandlerParameters.builder()
-                .prompt(PromptParameter.LOGIN)
-                .consentPageExpected(false)
-                .expectingLoginPageAccountPicker(false)
-                .sessionExpected(false)
-                .loginHint(null)
-                .build();
+        if (isFederated) {
+            final MicrosoftStsPromptHandlerParameters promptHandlerParameters = MicrosoftStsPromptHandlerParameters.builder()
+                    .prompt(PromptParameter.LOGIN)
+                    .consentPageExpected(false)
+                    .expectingLoginPageAccountPicker(false)
+                    .sessionExpected(false)
+                    .isFederated(true)
+                    .loginHint(null)
+                    .build();
 
-        final AadPromptHandler aadPromptHandler = new AadPromptHandler(promptHandlerParameters);
+            final MicrosoftStsPromptHandler microsoftStsPromptHandler = new MicrosoftStsPromptHandler(promptHandlerParameters);
+            ((AdfsLoginComponentHandler) microsoftStsPromptHandler.getLoginComponentHandler()).handleEnrollmentPrompt(username, password);
+        } else {
+            final MicrosoftStsPromptHandlerParameters promptHandlerParameters = MicrosoftStsPromptHandlerParameters.builder()
+                    .prompt(PromptParameter.LOGIN)
+                    .consentPageExpected(false)
+                    .expectingLoginPageAccountPicker(false)
+                    .sessionExpected(false)
+                    .loginHint(null)
+                    .build();
 
-        Logger.i(TAG, "Handle prompt in AAD login page for enrolling device..");
-        // handle AAD login page
-        aadPromptHandler.handlePrompt(username, password);
+            final MicrosoftStsPromptHandler microsoftStsPromptHandler = new MicrosoftStsPromptHandler(promptHandlerParameters);
+
+            Logger.i(TAG, "Handle prompt in AAD login page for enrolling device..");
+            // handle AAD login page
+            microsoftStsPromptHandler.handlePrompt(username, password);
+        }
 
         // click the activate device admin btn
         final UiObject accessSetupScreen = UiAutomatorUtils.obtainUiObjectWithText("Access Setup");
@@ -256,6 +284,12 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
 
         // Enrollment has been performed successfully
         enrollmentPerformedSuccessfully = true;
+    }
+
+    @Override
+    public void enrollDevice(@NonNull final String username,
+                             @NonNull final String password) {
+        enrollDevice(username, password, false);
     }
 
     @Override
