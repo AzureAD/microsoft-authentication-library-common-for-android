@@ -38,6 +38,7 @@ import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResponse
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.java.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResponse;
+import com.microsoft.identity.labapi.utilities.exception.LabApiException;
 
 import java.io.IOException;
 import java.security.KeyStoreException;
@@ -59,15 +60,12 @@ abstract class ConfidentialClientHelper {
     private String mAccessToken;
 
     abstract TokenRequest createTokenRequest()
-            throws CertificateException, UnrecoverableKeyException, NoSuchAlgorithmException,
-            KeyStoreException, NoSuchProviderException, IOException;
+            throws LabApiException;
 
     abstract void setupApiClientWithAccessToken(String accessToken);
 
     private String getAccessToken()
-            throws UnrecoverableKeyException, NoSuchAlgorithmException,
-            KeyStoreException, NoSuchProviderException, IOException,
-            CertificateException {
+            throws LabApiException, IOException {
         if (mAccessToken == null) {
             mAccessToken = requestAccessTokenForAutomation();
         }
@@ -79,9 +77,7 @@ abstract class ConfidentialClientHelper {
      * Yep.  Hardcoding this method to retrieve access token for MSIDLABS
      */
     private String requestAccessTokenForAutomation()
-            throws CertificateException, UnrecoverableKeyException,
-            NoSuchAlgorithmException, KeyStoreException, NoSuchProviderException,
-            IOException {
+            throws IOException, LabApiException {
         String accessToken = null;
 
         final TokenRequest tokenRequest = this.createTokenRequest();

@@ -181,7 +181,7 @@ public class BrokerOperationExecutor {
         final String telemetryApiId = operation.getTelemetryApiId();
         if (telemetryApiId != null) {
             final ApiEndEvent apiEndEvent = new ApiEndEvent();
-            final ApiEndEvent successEvent = apiEndEvent
+            final ApiEndEvent successEvent = (ApiEndEvent) apiEndEvent
                     .putApiId(telemetryApiId)
                     .isApiCallSuccessful(Boolean.TRUE);
             operation.putValueInSuccessEvent(successEvent, result);

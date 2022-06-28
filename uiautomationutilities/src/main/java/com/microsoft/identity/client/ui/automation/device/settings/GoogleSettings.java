@@ -116,6 +116,13 @@ public class GoogleSettings extends BaseSettings {
     public void addWorkAccount(@NonNull final ITestBroker broker,
                                @NonNull final String username,
                                @NonNull final String password) {
+        addWorkAccount(broker, username, password, false);
+    }
+
+    public void addWorkAccount(@NonNull final ITestBroker broker,
+                               @NonNull final String username,
+                               @NonNull final String password,
+                               final boolean isFederatedUser) {
         Logger.i(TAG, "Adding Work Account on Google Device..");
         launchAddAccountPage();
 
@@ -127,7 +134,7 @@ public class GoogleSettings extends BaseSettings {
             workAccount.click();
 
             // perform Join using the supplied broker
-            broker.performJoinViaJoinActivity(username, password);
+            broker.performJoinViaJoinActivity(username, password, isFederatedUser);
 
             final UiDevice device =
                     UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
@@ -245,7 +252,6 @@ public class GoogleSettings extends BaseSettings {
                 Text
         );
     }
-
 
     private UiObject obtainDisableAdminButton(final DeviceAdmin deviceAdmin) {
         Logger.i(TAG, "Obtain Disable Admin Button on Google Device..");
