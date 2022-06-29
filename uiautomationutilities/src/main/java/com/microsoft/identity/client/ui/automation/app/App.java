@@ -130,10 +130,10 @@ public abstract class App implements IApp {
     @Override
     public void update() {
         if (updateAppInstaller instanceof LocalApkInstaller && !TextUtils.isEmpty(localUpdateApkFileName)) {
-            Logger.i(TAG, "Installing the " + this.appName + " from local apk..");
-            AdbShellUtils.updatePackage(packageName, "-t", "-r", "-d");
+            Logger.i(TAG, "Updating the " + this.appName + " from local apk..");
+            AdbShellUtils.updatePackage(LocalApkInstaller.LOCAL_APK_PATH_PREFIX + localApkFileName, "-t", "-r", "-d");
         } else {
-            Logger.i(TAG, "Installing the " + this.appName + " from Play Store..");
+            Logger.i(TAG, "Updating the " + this.appName + " from Play Store..");
             ((PlayStore) updateAppInstaller).updateApp(packageName);
         }
     }
