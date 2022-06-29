@@ -34,7 +34,6 @@ import com.microsoft.identity.internal.test.labapi.model.CustomSuccessResponse;
 import com.microsoft.identity.internal.test.labapi.model.SecretResponse;
 import com.microsoft.identity.internal.test.labapi.model.TempUser;
 import com.microsoft.identity.internal.test.labapi.model.UserInfo;
-import com.microsoft.identity.labapi.utilities.BuildConfig;
 import com.microsoft.identity.labapi.utilities.authentication.LabApiAuthenticationClient;
 import com.microsoft.identity.labapi.utilities.constants.TempUserType;
 import com.microsoft.identity.labapi.utilities.constants.ResetOperation;
@@ -160,6 +159,13 @@ public class LabClient implements ILabClient {
         }
 
         final String password = getPassword(tempUser);
+
+        // Adding a wait to finish temp user creation
+        try {
+            Thread.sleep(TimeUnit.SECONDS.toMillis(8));
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
         return new LabAccount.LabAccountBuilder()
                 .username(tempUser.getUpn())
@@ -302,12 +308,44 @@ public class LabClient implements ILabClient {
                     .toLowerCase();
             final boolean result = resetResponse.getResult().toLowerCase().contains(expectedResult);
             if (result) {
-                Thread.sleep(PASSWORD_RESET_WAIT_DURATION);
+                try {
+                    Thread.sleep(PASSWORD_RESET_WAIT_DURATION);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
             return result;
-        } catch (ApiException | InterruptedException e) {
+        } catch (ApiException e) {
             throw new LabApiException(LabError.FAILED_TO_RESET_PASSWORD, e);
         }
+    }
+
+    public boolean resetPassword(@NonNull final String upn,
+                                 final int resetAttempts) throws LabApiException {
+        for (int i = 0; i < resetAttempts; i++) {
+            System.out.printf(Locale.ENGLISH, "Password reset attempt #%d%n", (i + 1));
+
+            try {
+                if (resetPassword(upn)) {
+                    return true;
+                }
+            } catch (final LabApiException labApiException) {
+                // if not the last attempt, then just print the error to console
+                if (i < (resetAttempts - 1)) {
+                    System.out.printf(
+                            Locale.ENGLISH,
+                            "Password reset attempt #%d%n failed: %s", (i + 1),
+                            labApiException
+                    );
+                } else {
+                    // last attempt, just throw the exception back
+                    throw labApiException;
+                }
+            }
+        }
+
+        // there was no error, but password was not reset
+        return false;
     }
 
     private String getLabSecretName(final String credentialVaultKeyName) {

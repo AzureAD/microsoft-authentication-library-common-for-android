@@ -193,7 +193,6 @@ public class BrokerHost extends AbstractTestBroker {
         Assert.assertTrue("Assert join finish dialog", joinFinishDialog.exists());
 
         try {
-
             // Obtain the text from the dialog box
             final String joinFinishDialogText = joinFinishDialog.getText();
             final String joinStatus = joinFinishDialogText.split(":")[1];
@@ -318,6 +317,14 @@ public class BrokerHost extends AbstractTestBroker {
     public void setFlights(@Nullable final String flightsJson) {
         Logger.i(TAG, "Set Flights..");
         launch();
+
+        // Sleep for a bit to finish launching brokerHost before scrolling to set Flights
+        try {
+            Thread.sleep(TimeUnit.SECONDS.toMillis(5));
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
         // scroll to find the set flights button
         UiAutomatorUtils.obtainChildInScrollable("Set Flights");
         // input flights string in flights input box

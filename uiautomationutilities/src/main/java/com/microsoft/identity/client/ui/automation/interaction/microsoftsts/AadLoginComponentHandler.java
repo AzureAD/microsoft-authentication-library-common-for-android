@@ -103,7 +103,7 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
         Logger.i(TAG, "Confirm Consent on Consent Page Received..");
         final UiObject consentScreen = getConsentScreen();
         Assert.assertTrue(
-                "Consent screen appears",
+                "Consent screen does not appear",
                 consentScreen.waitForExists(FIND_UI_ELEMENT_TIMEOUT)
         );
     }
