@@ -120,7 +120,7 @@ public class BrokerHost extends AbstractTestBroker {
         try {
             postJoinConfirmHelper(username);
         } catch (InterruptedException e) {
-            Assert.fail(e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -160,7 +160,7 @@ public class BrokerHost extends AbstractTestBroker {
         try {
             postJoinConfirmHelper(username);
         } catch (InterruptedException e) {
-            Assert.fail(e.getMessage());
+            e.printStackTrace();
         }
     }
 
