@@ -53,6 +53,7 @@ import com.microsoft.identity.labapi.utilities.jwt.JWTParserFactory;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
@@ -100,11 +101,13 @@ public class LocalMsalControllerTest {
         );
     }
 
+    @Ignore("Ignoring as the maven pipeline doesn't lab cert/secret enabled currently.")
     @Test
     public void testCanGetTokenViaRopc() throws Exception {
         acquireTokenUsingRopc();
     }
 
+    @Ignore("Ignoring as the maven pipeline doesn't lab cert/secret enabled currently.")
     @Test
     public void testCanGetTokenSilentlyAfterPerformingRopc() throws Exception {
         final ILocalAuthenticationResult result1 = acquireTokenUsingRopc();
