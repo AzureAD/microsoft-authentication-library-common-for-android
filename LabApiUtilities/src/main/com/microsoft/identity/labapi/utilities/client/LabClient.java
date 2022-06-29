@@ -55,6 +55,7 @@ public class LabClient implements ILabClient {
 
     private final LabApiAuthenticationClient mLabApiAuthenticationClient;
     private final long PASSWORD_RESET_WAIT_DURATION = TimeUnit.MINUTES.toMillis(1);
+    private final long LAB_API_RETRY_WAIT = TimeUnit.SECONDS.toMillis(5);
 
     /**
      * Temp users API provided by Lab team can often take more than 10 seconds to return...hence, we
@@ -145,6 +146,28 @@ public class LabClient implements ILabClient {
 
     @Override
     public ILabAccount createTempAccount(@NonNull final TempUserType tempUserType) throws LabApiException {
+        // Adding a second attempt here, api sometimes fails to create the temp user.
+        try {
+            return createTempAccountInternal(tempUserType);
+        } catch (LabApiException e){
+            if (e.getErrorCode().equals(LabError.FAILED_TO_CREATE_TEMP_USER)){
+
+                // Wait for a bit
+                try {
+                    Thread.sleep(LAB_API_RETRY_WAIT);
+                } catch (InterruptedException e2) {
+                    e2.printStackTrace();
+                }
+
+                // Try to create the temp account again
+                return createTempAccountInternal(tempUserType);
+            } else {
+                throw e;
+            }
+        }
+    }
+
+    private ILabAccount createTempAccountInternal(@NonNull final TempUserType tempUserType) throws LabApiException {
         Configuration.getDefaultApiClient().setAccessToken(
                 mLabApiAuthenticationClient.getAccessToken()
         );
@@ -162,7 +185,7 @@ public class LabClient implements ILabClient {
 
         // Adding a wait to finish temp user creation
         try {
-            Thread.sleep(TimeUnit.SECONDS.toMillis(8));
+            Thread.sleep(TimeUnit.SECONDS.toMillis(5));
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -201,7 +224,26 @@ public class LabClient implements ILabClient {
     @Override
     public String getPasswordForGuestUser(LabGuestAccount guestUser) throws LabApiException {
         final String labName = guestUser.getHomeDomain().split("\\.")[0];
-        return getSecret(labName);
+
+        // Adding a second attempt here, api sometimes fails to get the lab secret.
+        try {
+            return getSecret(labName);
+        } catch (LabApiException e){
+            if (e.getErrorCode().equals(LabError.FAILED_TO_GET_SECRET_FROM_LAB)){
+
+                // Wait for a bit
+                try {
+                    Thread.sleep(LAB_API_RETRY_WAIT);
+                } catch (InterruptedException e2) {
+                    e2.printStackTrace();
+                }
+
+                // Try to get the secret again
+                return getSecret(labName);
+            } else {
+                throw e;
+            }
+        }
     }
 
     @Override
@@ -297,7 +339,26 @@ public class LabClient implements ILabClient {
 
     private String getPassword(final String credentialVaultKeyName) throws LabApiException {
         final String secretName = getLabSecretName(credentialVaultKeyName);
-        return getSecret(secretName);
+
+        // Adding a second attempt here, api sometimes fails to get the lab secret.
+        try {
+            return getSecret(secretName);
+        } catch (LabApiException e){
+            if (e.getErrorCode().equals(LabError.FAILED_TO_GET_SECRET_FROM_LAB)){
+
+                // Wait for a bit
+                try {
+                    Thread.sleep(LAB_API_RETRY_WAIT);
+                } catch (InterruptedException e2) {
+                    e2.printStackTrace();
+                }
+
+                // Try to get the secret again
+                return getSecret(secretName);
+            } else {
+                throw e;
+            }
+        }
     }
 
     public boolean resetPassword(@NonNull final String upn) throws LabApiException {
