@@ -38,6 +38,7 @@ import com.microsoft.identity.internal.test.labapi.model.TempUser;
 import com.microsoft.identity.internal.test.labapi.model.UserInfo;
 import com.microsoft.identity.labapi.utilities.BuildConfig;
 import com.microsoft.identity.labapi.utilities.authentication.LabApiAuthenticationClient;
+import com.microsoft.identity.labapi.utilities.constants.ProtectionPolicy;
 import com.microsoft.identity.labapi.utilities.constants.TempUserType;
 import com.microsoft.identity.labapi.utilities.constants.ResetOperation;
 import com.microsoft.identity.labapi.utilities.constants.UserType;
@@ -325,10 +326,10 @@ public class LabClient implements ILabClient {
      * @param policy Enable Policy can be used for GlobalMFA, MAMCA, MDMCA, MFAONSPO, MFAONEXO. (optional)
      * @return boolean value indicating policy enabled or not.
      */
-    public boolean enablePolicy(@NonNull final String upn, @NonNull final String policy) {
+    public boolean enablePolicy(@NonNull final String upn, @NonNull final ProtectionPolicy policy) {
         final EnablePolicyApi enablePolicyApi = new EnablePolicyApi();
         try {
-            final CustomSuccessResponse customSuccessResponse = enablePolicyApi.apiEnablePolicyPut(upn, policy);
+            final CustomSuccessResponse customSuccessResponse = enablePolicyApi.apiEnablePolicyPut(upn, policy.toString());
             final String expectedResult = (policy + " Enabled for user : " + upn).toLowerCase();
             final String result = customSuccessResponse.getResult();
             if (result != null) {
@@ -348,10 +349,10 @@ public class LabClient implements ILabClient {
      * @param policy Disable Policy can be used for GlobalMFA, MAMCA, MDMCA, MFAONSPO, MFAONEXO. (optional)
      * @return boolean value indicating policy is disabled or not for the upn.
      */
-    public boolean disablePolicy(@NonNull final String upn, @NonNull final String policy) {
+    public boolean disablePolicy(@NonNull final String upn, @NonNull final ProtectionPolicy policy) {
         final DisablePolicyApi disablePolicyApi = new DisablePolicyApi();
         try {
-            final CustomSuccessResponse customSuccessResponse = disablePolicyApi.apiDisablePolicyPut(upn, policy);
+            final CustomSuccessResponse customSuccessResponse = disablePolicyApi.apiDisablePolicyPut(upn, policy.toString());
             final String expectedResult = (policy + " Disabled for user : " + upn).toLowerCase();
             final String result = customSuccessResponse.getResult();
             if (result != null) {
