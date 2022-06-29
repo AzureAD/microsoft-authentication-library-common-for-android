@@ -213,7 +213,8 @@ public abstract class OAuth2Strategy
         headers.put(AuthenticationConstants.SdkPlatformFields.VERSION, Device.getProductVersion());
         headers.putAll(EstsTelemetry.getInstance().getTelemetryHeaders());
         headers.put(HttpConstants.HeaderField.CONTENT_TYPE, TOKEN_REQUEST_CONTENT_TYPE);
-        headers.put(PKEYAUTH_HEADER, PKEYAUTH_VERSION);
+        // ADO:TODO:1934500 - Reverting this change as this is considered a "breaking change" fix.
+        //headers.put(PKEYAUTH_HEADER, PKEYAUTH_VERSION);
 
         if (request instanceof MicrosoftTokenRequest) {
             headers.put(
