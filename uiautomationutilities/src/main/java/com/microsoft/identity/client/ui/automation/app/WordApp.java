@@ -66,7 +66,7 @@ public class WordApp extends App implements IFirstPartyApp {
     }
 
     @Override
-    public void setAppImpl() {
+    public void initialiseAppImpl() {
         // nothing needed here
     }
 

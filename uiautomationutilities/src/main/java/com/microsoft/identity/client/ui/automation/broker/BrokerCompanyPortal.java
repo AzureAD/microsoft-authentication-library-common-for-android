@@ -183,11 +183,6 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
         // UiAutomatorUtils.handleButtonClick("com.microsoft.windowsintune.companyportal:id/privacy_notice_agree_button");
     }
 
-    @Override
-    public void setAppImpl() {
-        // nothing needed here
-    }
-
     public void enrollDevice(@NonNull final String username,
                              @NonNull final String password,
                              final boolean isFederated) {
@@ -418,5 +413,10 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
         } catch (final UiObjectNotFoundException e) {
             throw new AssertionError(e);
         }
+    }
+
+    @Override
+    protected void initialiseAppImpl() {
+       // nothing needed here
     }
 }

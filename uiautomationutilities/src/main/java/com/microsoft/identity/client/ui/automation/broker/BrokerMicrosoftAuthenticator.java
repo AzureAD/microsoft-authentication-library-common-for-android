@@ -51,7 +51,6 @@ import org.junit.Assert;
 import lombok.Getter;
 
 
-
 /**
  * Serves as the base class interacting with the Microsoft Authenticator Broker App during UI Test. The base class should be extended
  * by BrokerAuthenticatorUpdatedVersionImpl, BrokerAuthenticatorPreviousVersionImpl
@@ -306,7 +305,7 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
     }
 
     @Override
-    public void setAppImpl() {
+    protected void initialiseAppImpl() {
         final Context context = ApplicationProvider.getApplicationContext();
         try {
             PackageInfo packageInfo = context.getPackageManager().getPackageInfo("com.azure.authenticator", 0);
@@ -314,11 +313,15 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
             // V is the major version, YYMM are last two digits of an year followed by month
             // XXXX is number of hours passed after Jan1st 00.00 of current year
             // String comparison of versions should work for this format
-            if (packageInfo.versionName.compareTo(LATEST_VERSION_NUMBER) >= 0) {
+            final String authenticatorAppVersion = packageInfo.versionName;
+            Logger.i(TAG, "Version of Authenticator app installed is " + authenticatorAppVersion);
+            if (authenticatorAppVersion.compareTo(LATEST_VERSION_NUMBER) >= 0) {
                 // Use latest automation code as this is the new updated authenticator app
                 brokerMicrosoftAuthenticatorImpl = new BrokerAuthenticatorUpdatedVersionImpl();
+                Logger.i(TAG, "Using updated implementation of authenticator");
             } else {
                 brokerMicrosoftAuthenticatorImpl = new BrokerAuthenticatorPreviousVersionImpl();
+                Logger.i(TAG, "Using previous implementation of authenticator");
             }
         } catch (final PackageManager.NameNotFoundException e) {
             throw new AssertionError(e);

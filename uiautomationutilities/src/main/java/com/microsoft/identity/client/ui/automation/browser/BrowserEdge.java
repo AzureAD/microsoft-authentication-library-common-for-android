@@ -69,7 +69,7 @@ public class BrowserEdge extends App implements IBrowser {
     }
 
     @Override
-    public void setAppImpl() {
+    public void initialiseAppImpl() {
         // nothing needed here
     }
 

@@ -103,8 +103,13 @@ public abstract class App implements IApp {
         shouldHandleFirstRun = true;
 
         // setting app implementation for the installed app based on version
-        setAppImpl();
+        initialiseAppImpl();
     }
+
+    /**
+     * Initialise implementation of app based on version
+     */
+    abstract protected void initialiseAppImpl();
 
     @Override
     public void launch() {

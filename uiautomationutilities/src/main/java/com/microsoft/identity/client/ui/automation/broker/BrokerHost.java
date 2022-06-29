@@ -246,7 +246,7 @@ public class BrokerHost extends AbstractTestBroker {
     }
 
     @Override
-    public void setAppImpl() {
+    public void initialiseAppImpl() {
         // nothing needed here
     }
 

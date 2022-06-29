@@ -59,7 +59,7 @@ public class AzureSampleApp extends App {
     }
 
     @Override
-    public void setAppImpl() {
+    public void initialiseAppImpl() {
        // nothing required
     }
 

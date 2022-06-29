@@ -52,7 +52,7 @@ public class OutlookApp extends App implements IFirstPartyApp {
     }
 
     @Override
-    public void setAppImpl() {
+    public void initialiseAppImpl() {
         // nothing required
     }
 
