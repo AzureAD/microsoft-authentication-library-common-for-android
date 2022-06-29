@@ -61,7 +61,8 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
     public final static String AUTHENTICATOR_APP_PACKAGE_NAME = "com.azure.authenticator";
     public final static String AUTHENTICATOR_APP_NAME = "Microsoft Authenticator";
     public final static String AUTHENTICATOR_APK = "Authenticator.apk";
-    private final static String LATEST_VERSION_NUMBER = "6.2206.3949";
+    private final static String UPDATE_VERSION_NUMBER = "6.2206.3949";
+    private final static String OLD_VERSION_NUMBER = "6.2203.1651";
 
     private final static String INCIDENT_MSG = "Broker Automation Incident";
 
@@ -315,13 +316,15 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
             // String comparison of versions should work for this format
             final String authenticatorAppVersion = packageInfo.versionName;
             Logger.i(TAG, "Version of Authenticator app installed is " + authenticatorAppVersion);
-            if (authenticatorAppVersion.compareTo(LATEST_VERSION_NUMBER) >= 0) {
+            if (authenticatorAppVersion.compareTo(UPDATE_VERSION_NUMBER) >= 0) {
                 // Use latest automation code as this is the new updated authenticator app
                 brokerMicrosoftAuthenticatorImpl = new BrokerAuthenticatorUpdatedVersionImpl();
                 Logger.i(TAG, "Using updated implementation of authenticator");
-            } else {
+            } else if (authenticatorAppVersion.compareTo(OLD_VERSION_NUMBER) <= 0) {
                 brokerMicrosoftAuthenticatorImpl = new BrokerAuthenticatorPreviousVersionImpl();
                 Logger.i(TAG, "Using previous implementation of authenticator");
+            } else {
+                Assert.fail("Authenticator app version is not supported");
             }
         } catch (final PackageManager.NameNotFoundException e) {
             throw new AssertionError(e);
