@@ -136,18 +136,14 @@ public abstract class App implements IApp {
     }
 
     @Override
-    public void update () {
+    public void update() {
         if (updateAppInstaller instanceof LocalApkInstaller && !TextUtils.isEmpty(localUpdateApkFileName)) {
             Logger.i(TAG, "Installing the " + this.appName + " from local apk..");
-            updateAppInstaller.installApp(localUpdateApkFileName);
+            AdbShellUtils.updatePackage(packageName, "-t", "-r", "-d");
         } else {
             Logger.i(TAG, "Installing the " + this.appName + " from Play Store..");
-            updateAppInstaller.installApp(packageName);
+            ((PlayStore) updateAppInstaller).updateApp(packageName);
         }
-
-        // the app is just installed, first run should be handled
-        // this value can (should) be changed to false by child classes as appropriate
-        shouldHandleFirstRun = true;
     }
 
     @Override

@@ -187,4 +187,49 @@ public class PlayStore implements IAppInstaller {
         installAppFromMarketPage();
     }
 
+    public void updateApp(@NonNull final String searchHint) {
+        if (isStringPackageName(searchHint)) {
+            launchMarketPageForPackage(searchHint);
+        } else {
+            searchAppOnGooglePlay(searchHint);
+            selectGooglePlayAppFromAppName();
+        }
+
+        updateAppFromMarketPage();
+    }
+
+    private void updateAppFromMarketPage() {
+        Logger.i(TAG, "Update App From Market Page..");
+        try {
+            updateAppFromMarketPageInternal();
+        } catch (final UiObjectNotFoundException e) {
+            acceptGooglePlayTermsOfService();
+            try {
+                updateAppFromMarketPageInternal();
+            } catch (UiObjectNotFoundException ex) {
+                throw new AssertionError(e);
+            }
+        }
+    }
+
+    private void updateAppFromMarketPageInternal() throws UiObjectNotFoundException {
+        Logger.i(TAG, "Update App From Market Page Internal..");
+        final UiDevice device = UiDevice.getInstance(getInstrumentation());
+
+        final UiObject updateBtn = device.findObject(
+                new UiSelector().className(Button.class).text("Update").enabled(true)
+        );
+
+        updateBtn.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
+
+        updateBtn.click();
+
+        final UiObject openButton = device.findObject(
+                new UiSelector().className(Button.class).text("Open").enabled(true)
+        );
+
+        // if we see open button, then we know that the update is complete
+        // using same timeout as that used for install
+        openButton.waitForExists(PLAY_STORE_INSTALL_APP_TIMEOUT);
+    }
 }

@@ -100,6 +100,28 @@ public class AdbShellUtils {
     }
 
     /**
+     * Updates the supplied package on the device with the supplied flags.
+     *
+     * @param packageName the name of the package to update
+     * @param flags       the flags to use during for update of the app
+     */
+    public static void updatePackage(@NonNull final String packageName, @NonNull String... flags) {
+        Logger.i(TAG, "Updates the given package:" + packageName + " on the device with the supplied flags:" + flags);
+        final StringBuilder updateCmdBuilder = new StringBuilder();
+        updateCmdBuilder.append("pm install ");
+
+        for (final String flag : flags) {
+            updateCmdBuilder.append(flag);
+            updateCmdBuilder.append(" ");
+        }
+
+        updateCmdBuilder.append(packageName);
+        final String result = executeShellCommand(updateCmdBuilder.toString());
+        Assert.assertNotNull(result);
+        Assert.assertEquals("Success", result.trim());
+    }
+
+    /**
      * Remove the supplied package name from the device.
      *
      * @param packageName the package name to remove
