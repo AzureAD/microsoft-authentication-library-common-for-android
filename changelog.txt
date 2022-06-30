@@ -1,3 +1,7 @@
+Version 5.0.0-kroger-sdm-test-1
+----------
+- [MINOR] Remove launching logout endpoint in default browser for SDM signout
+
 Version 5.0.0-kroger-sdm-test
 ----------
 - [MINOR] Skip launching logout endpoint in browser for SDM signout, if default browser is Edge
