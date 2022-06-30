@@ -177,6 +177,12 @@ public class BrokerHost extends AbstractTestBroker {
                 "com.microsoft.identity.testuserapp:id/editTextUsername",
                 username
         );
+
+        try {
+            Thread.sleep(TimeUnit.SECONDS.toMillis(4));
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     private void postJoinConfirmHelper(@NonNull final String expectedUpn) throws InterruptedException {
