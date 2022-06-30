@@ -465,15 +465,4 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         }
     }
 
-    /**
-     * A wrapper to stop YubiKitManager instance from detecting any more Usb devices.
-     */
-    public void stopYubiKitManagerUsbDiscovery() {
-        final String methodTag = TAG + ":stopYubiKitManagerUsbDiscovery";
-        if (mClientCertAuthChallengeHandler != null) {
-            mClientCertAuthChallengeHandler.stopYubiKitManagerUsbDiscovery();
-        } else {
-            Logger.error(methodTag, "YubiKitManager usb discovery not stopped due to mClientCertAuthChallengeHandler being null", null);
-        }
-    }
 }
