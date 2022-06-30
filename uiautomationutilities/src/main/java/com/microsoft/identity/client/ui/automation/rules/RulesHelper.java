@@ -111,8 +111,8 @@ public class RulesHelper {
             Log.i(TAG, "Adding DeviceEnrollmentFailureRecoveryRule");
             ruleChain = ruleChain.around(new DeviceEnrollmentFailureRecoveryRule());
 
-            Log.i(TAG, "Adding UncaughtExceptionHandlerRule");
-            ruleChain = ruleChain.around(new UncaughtExceptionHandlerRule());
+//            Log.i(TAG, "Adding UncaughtExceptionHandlerRule");
+//            ruleChain = ruleChain.around(new UncaughtExceptionHandlerRule());
         }
 
         return ruleChain;
