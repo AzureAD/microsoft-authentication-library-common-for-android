@@ -53,7 +53,8 @@ public class BrokerCommunicationException extends BaseException {
         }
 
         @Override
-        public @NonNull String toString(){
+        public @NonNull
+        String toString() {
             return this.name;
         }
     }
@@ -80,7 +81,7 @@ public class BrokerCommunicationException extends BaseException {
 
     @Override
     public String getMessage() {
-        return "[" + category.toString() +"] [" +  strategyType.toString() +"] :" + super.getMessage();
+        return String.format("[%s] [%s] :%s", category == null ? "" : category.toString(), strategyType == null ? "" : strategyType.toString(), super.getMessage());
     }
 
     @Override
