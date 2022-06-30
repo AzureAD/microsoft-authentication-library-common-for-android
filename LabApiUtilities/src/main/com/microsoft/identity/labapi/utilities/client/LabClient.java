@@ -387,6 +387,12 @@ public class LabClient implements ILabClient {
             System.out.printf(Locale.ENGLISH, "Password reset attempt #%d%n", (i + 1));
 
             try {
+                Thread.sleep(TimeUnit.SECONDS.toMillis(5));
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+            try {
                 if (resetPassword(upn)) {
                     return true;
                 }
