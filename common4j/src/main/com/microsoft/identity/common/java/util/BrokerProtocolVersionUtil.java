@@ -21,9 +21,12 @@
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
 
-package com.microsoft.identity.common.internal.util;
+package com.microsoft.identity.common.java.util;
 
-import androidx.annotation.Nullable;
+
+import javax.annotation.Nullable;
+
+import lombok.NonNull;
 
 /**
  * Class to provide util methods to compare different features with respect to Broker Protocol version.
@@ -33,25 +36,49 @@ public class BrokerProtocolVersionUtil {
     public static final String MSAL_TO_BROKER_PROTOCOL_COMPRESSION_CHANGES_MINIMUM_VERSION = "5.0";
     public static final String MSAL_TO_BROKER_PROTOCOL_ACCOUNT_FROM_PRT_CHANGES_MINIMUM_VERSION = "8.0";
 
+    /**
+     * Verifies if negotiated broker protocol version allows to decompressing/compressing broker payloads.
+     *
+     * @param negotiatedBrokerProtocol negotiated protocol version, result of hello handshake.
+     * @return true if the negotiated protocol version is larger or equal than
+     * the {@link BrokerProtocolVersionUtil#MSAL_TO_BROKER_PROTOCOL_COMPRESSION_CHANGES_MINIMUM_VERSION}.
+     */
     public static boolean canCompressBrokerPayloads(@Nullable String negotiatedBrokerProtocol) {
-        if (StringUtil.isEmpty(negotiatedBrokerProtocol)) {
-            return false;
-        }
-
-        return StringUtil.isFirstVersionLargerOrEqual(
+        return isNegotiatedBrokerProtocolLargerOrEqualThanRequiredBrokerProtocol(
                 negotiatedBrokerProtocol,
                 MSAL_TO_BROKER_PROTOCOL_COMPRESSION_CHANGES_MINIMUM_VERSION);
-
     }
 
+    /**
+     * Verifies if negotiated broker protocol version allows FOCI apps to construct accounts from PRT Id token.
+     *
+     * @param negotiatedBrokerProtocol negotiated protocol version, result of hello handshake.
+     * @return true if the negotiated protocol version is larger or equal than
+     * the {@link BrokerProtocolVersionUtil#MSAL_TO_BROKER_PROTOCOL_ACCOUNT_FROM_PRT_CHANGES_MINIMUM_VERSION}.
+     */
     public static boolean canFociAppsConstructAccountsFromPrtIdTokens(@Nullable String negotiatedBrokerProtocol) {
-        if (StringUtil.isEmpty(negotiatedBrokerProtocol)) {
-            return false;
-        }
-
-        return StringUtil.isFirstVersionLargerOrEqual(
+        return isNegotiatedBrokerProtocolLargerOrEqualThanRequiredBrokerProtocol(
                 negotiatedBrokerProtocol,
                 MSAL_TO_BROKER_PROTOCOL_ACCOUNT_FROM_PRT_CHANGES_MINIMUM_VERSION);
+    }
 
+    /**
+     * Verify if the negotiated broker protocol id larger or equal that the requiredBrokerProtocol.
+     *
+     * @param negotiatedBrokerProtocol negotiated protocol version, result of hello handshake
+     * @param requiredBrokerProtocol   minimun required protocol version for the feature.
+     * @return true if the negotiated broker protocol larger or equal than required broker protocol,
+     * false otherwise.
+     */
+    protected static boolean isNegotiatedBrokerProtocolLargerOrEqualThanRequiredBrokerProtocol(
+            @Nullable final String negotiatedBrokerProtocol,
+            @NonNull final String requiredBrokerProtocol) {
+
+        if (StringUtil.isNullOrEmpty(negotiatedBrokerProtocol)) {
+            return false;
+        }
+        return StringUtil.isFirstVersionLargerOrEqual(
+                negotiatedBrokerProtocol,
+                requiredBrokerProtocol);
     }
 }

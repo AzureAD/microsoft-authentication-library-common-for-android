@@ -32,10 +32,10 @@ import android.os.Build;
 
 import androidx.annotation.NonNull;
 
-import com.microsoft.identity.common.internal.util.StringUtil;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.ui.BrowserDescriptor;
+import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.logging.Logger;
 import com.microsoft.identity.common.internal.broker.PackageHelper;
 
@@ -98,12 +98,12 @@ public class BrowserSelector {
             return false;
         }
 
-        if (!StringUtil.isEmpty(descriptor.getVersionLowerBound())
+        if (!StringUtil.isNullOrEmpty(descriptor.getVersionLowerBound())
                 && StringUtil.compareSemanticVersion(browser.getVersion(), descriptor.getVersionLowerBound()) == -1) {
             return false;
         }
 
-        if (!StringUtil.isEmpty(descriptor.getVersionUpperBound())
+        if (!StringUtil.isNullOrEmpty(descriptor.getVersionUpperBound())
                 && StringUtil.compareSemanticVersion(browser.getVersion(), descriptor.getVersionUpperBound()) == 1) {
             return false;
         }

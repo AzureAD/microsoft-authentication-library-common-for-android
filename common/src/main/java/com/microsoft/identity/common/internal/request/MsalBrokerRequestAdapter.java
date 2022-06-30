@@ -51,9 +51,8 @@ import com.microsoft.identity.common.java.commands.parameters.AcquirePrtSsoToken
 import com.microsoft.identity.common.java.commands.parameters.GenerateShrCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.RemoveAccountCommandParameters;
 import com.microsoft.identity.common.java.ui.BrowserDescriptor;
-import com.microsoft.identity.common.internal.util.BrokerProtocolVersionUtil;
+import com.microsoft.identity.common.java.util.BrokerProtocolVersionUtil;
 import com.microsoft.identity.common.java.util.QueryParamsAdapter;
-import com.microsoft.identity.common.internal.util.StringUtil;
 import com.microsoft.identity.common.java.authorities.AzureActiveDirectoryAuthority;
 import com.microsoft.identity.common.java.authscheme.AuthenticationSchemeFactory;
 import com.microsoft.identity.common.java.authscheme.INameable;
@@ -66,6 +65,7 @@ import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
 import com.microsoft.identity.common.java.providers.oauth2.OpenIdConnectPromptParameter;
 import com.microsoft.identity.common.java.ui.AuthorizationAgent;
+import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.io.IOException;
@@ -182,7 +182,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 MSAL_TO_BROKER_PROTOCOL_VERSION_CODE
         );
 
-        if (!StringUtil.isEmpty(parameters.getRequiredBrokerProtocolVersion())) {
+        if (!StringUtil.isNullOrEmpty(parameters.getRequiredBrokerProtocolVersion())) {
             requestBundle.putString(
                     CLIENT_CONFIGURED_MINIMUM_BP_VERSION_KEY,
                     parameters.getRequiredBrokerProtocolVersion()
