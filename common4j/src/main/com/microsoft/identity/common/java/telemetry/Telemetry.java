@@ -258,7 +258,7 @@ public class Telemetry {
             return;
         }
 
-        List<Map<String, String>> finalRawMap = new CopyOnWriteArrayList<>();
+        final List<Map<String, String>> finalRawMap = new CopyOnWriteArrayList<>();
 
         for (Iterator<Map<String, String>> iterator = mTelemetryRawDataMap.iterator(); iterator.hasNext(); ) {
             Map<String, String> event = iterator.next();
@@ -268,6 +268,13 @@ public class Telemetry {
             }
         }
 
+        processRawMap(finalRawMap);
+    }
+
+    /**
+     * Pass the final raw map to the observers.
+     */
+    private void processRawMap(final List<Map<String, String>> finalRawMap) {
         //Add the telemetry context to the telemetry data
         finalRawMap.add(applyPiiOiiRule(mTelemetryContext.getProperties()));
 
