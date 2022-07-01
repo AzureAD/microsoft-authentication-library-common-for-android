@@ -2,6 +2,7 @@ V.Next
 ----------
 - [MAJOR] Bumped MSAL Broker Protocol version to 8.0, GET_ACCOUNTS endpoint requires minimum_required_broker_protocol_version of 8.0+ to return an account constructed from PRT id token to FOCI apps. (#1771)
 - [MINOR] Add telemetry relay client (#1757)
+- [MINOR] Add telemetry error events (#1768)
 - [MAJOR] Adding YubiKit SDK, which requires Java Version 8 and will thus bump up Java version overall to 8; added keyboard flag to android:configChanges for all activities that could interact with a YubiKey. (#1729)
 - [MINOR] Support WordApp local apk install in UI automation flows (#1732)
 - [PATCH] Fix SDK Cancel when using authorization in current task (#1743)

@@ -22,11 +22,13 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.telemetry.events;
 
-import com.microsoft.identity.common.java.telemetry.Properties;
-import com.microsoft.identity.common.java.logging.DiagnosticContext;
-import lombok.NonNull;
-
 import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Key;
+
+import com.microsoft.identity.common.java.logging.DiagnosticContext;
+import com.microsoft.identity.common.java.telemetry.Properties;
+import com.microsoft.identity.common.java.util.StringUtil;
+
+import lombok.NonNull;
 
 public class BaseEvent extends Properties {
     public BaseEvent() {
@@ -36,8 +38,11 @@ public class BaseEvent extends Properties {
     }
 
     @Override
-    public Properties put(String key, String value) {
-        return super.put(key, value);
+    public Properties put(@NonNull final String key, final String value) {
+        if(!StringUtil.isNullOrEmpty(value)) {
+            return super.put(key, value);
+        }
+        return this;
     }
 
     @Override
@@ -61,7 +66,7 @@ public class BaseEvent extends Properties {
      * @param eventName String of the event name
      * @return the event object
      */
-    public BaseEvent names(@NonNull String eventName) {
+    public BaseEvent names(String eventName) {
         put(Key.EVENT_NAME, eventName);
         return this;
     }
@@ -94,7 +99,9 @@ public class BaseEvent extends Properties {
      * @return the event object
      */
     public BaseEvent correlationId(final String correlationId) {
-        put(Key.CORRELATION_ID, correlationId);
+        if (!StringUtil.isNullOrEmpty(correlationId)) {
+            put(Key.CORRELATION_ID, correlationId);
+        }
         return this;
     }
 }

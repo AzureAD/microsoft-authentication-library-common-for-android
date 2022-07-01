@@ -44,7 +44,7 @@ public abstract class AbstractTelemetryRelayClient<T> implements ITelemetryObser
     private final List<ITelemetryEventFilter<T>> eventFilters = new ArrayList<>();
 
     @Override
-    public void onReceived(T telemetryData) {
+    public synchronized void onReceived(T telemetryData) {
         final String methodTag = TAG + ":onReceived";
 
         for (final ITelemetryEventFilter<T> filter : eventFilters) {
@@ -72,4 +72,9 @@ public abstract class AbstractTelemetryRelayClient<T> implements ITelemetryObser
      * Invoked when an event is ready to be relayed
      */
     public abstract void relayEvent(@NonNull final T eventData) throws TelemetryRelayException;
+
+    /**
+     * Flush telemetry events to the database
+     */
+    public abstract void flush();
 }
