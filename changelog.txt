@@ -1,4 +1,4 @@
-V.Next
+Version 6.0.0
 ----------
 - [MINOR] Add telemetry relay client (#1757)
 - [MINOR] Add telemetry error events (#1768)
