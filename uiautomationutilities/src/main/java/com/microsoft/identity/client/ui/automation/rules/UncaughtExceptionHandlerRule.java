@@ -29,6 +29,7 @@ public class UncaughtExceptionHandlerRule implements TestRule {
                         @Override
                         public void uncaughtException(Thread t, Throwable e) {
                             Log.i(TAG, "Exception caught from " + t.getName());
+                            e.printStackTrace();
                             caughtThrowables.add(e);
                         }
                     };
