@@ -20,15 +20,28 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java.telemetry;
+package com.microsoft.identity.common.java.telemetry.events;
 
-import com.microsoft.identity.common.java.util.ported.InMemoryStorage;
+import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings;
 
-class MockTelemetryContext extends AbstractTelemetryContext {
-    public MockTelemetryContext(){
-        super(new TelemetryPropertiesCache(new InMemoryStorage()));
-        addApplicationInfo("com.testapp", "TestApp", "1.0", "100XXX");
-        addOsInfo("TestOS", "1.0");
-        addDeviceInfo("SomeManufacturer", "SomeModel", "SomeDevice");
+import lombok.NonNull;
+
+/**
+ * A generic broker event. This can be used to emit any kind of event in the broker. e.g. an event with the IPC strategy.
+ */
+public class BrokerEvent extends BaseEvent {
+    public BrokerEvent(final String eventName) {
+        super();
+        types(TelemetryEventStrings.EventType.BROKER_EVENT);
+        names(eventName);
+    }
+
+    public BrokerEvent() {
+        this(null);
+    }
+
+    public BrokerEvent putIPCStrategy(@NonNull String ipcStrategy) {
+        put(TelemetryEventStrings.Key.IPC_STRATEGY, ipcStrategy);
+        return this;
     }
 }
