@@ -64,14 +64,21 @@ public class GoogleSettings extends BaseSettings {
             assert adminAppListItem != null;
             adminAppListItem.click();
 
-            // scroll down the recycler view to find btn to deactivate admin
-            final UiObject deactivateBtn = UiAutomatorUtils.obtainChildInScrollable(
-                    android.widget.ScrollView.class,
-                    "Deactivate this device admin app"
-            );
+            // Check if work profile is present
+            final UiObject removeWorkProfileBtn = UiAutomatorUtils.obtainUiObjectWithExactText("Remove work profile");
 
-            // click the deactivate admin btn
-            deactivateBtn.click();
+            if (removeWorkProfileBtn.waitForExists(TimeUnit.SECONDS.toSeconds(5))) {
+                removeWorkProfileBtn.click();
+            } else {
+                // scroll down the recycler view to find btn to deactivate admin
+                final UiObject deactivateBtn = UiAutomatorUtils.obtainChildInScrollable(
+                        android.widget.ScrollView.class,
+                        "Deactivate this device admin app"
+                );
+
+                // click the deactivate admin btn
+                deactivateBtn.click();
+            }
 
             // Click confirmation
             UiAutomatorUtils.handleButtonClick("android:id/button1");
