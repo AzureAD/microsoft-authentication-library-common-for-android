@@ -71,13 +71,13 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
     public BrokerMicrosoftAuthenticator() {
         super(AUTHENTICATOR_APP_PACKAGE_NAME, AUTHENTICATOR_APP_NAME);
         localApkFileName = AUTHENTICATOR_APK;
-        localUpdateApkFileName = UPDATED_AUTHENTICATOR_APK;
+        //localUpdateApkFileName = UPDATED_AUTHENTICATOR_APK;
     }
 
     public BrokerMicrosoftAuthenticator(@NonNull final IAppInstaller appInstaller) {
         super(AUTHENTICATOR_APP_PACKAGE_NAME, AUTHENTICATOR_APP_NAME, appInstaller);
         localApkFileName = AUTHENTICATOR_APK;
-        localUpdateApkFileName = UPDATED_AUTHENTICATOR_APK;
+        //localUpdateApkFileName = UPDATED_AUTHENTICATOR_APK;
     }
 
     @Override

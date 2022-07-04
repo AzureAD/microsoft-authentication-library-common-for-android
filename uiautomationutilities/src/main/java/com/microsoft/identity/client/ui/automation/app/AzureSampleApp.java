@@ -52,7 +52,7 @@ public class AzureSampleApp extends App {
     public AzureSampleApp() {
         super(AZURE_SAMPLE_PACKAGE_NAME, AZURE_SAMPLE_APP_NAME, new LocalApkInstaller());
         localApkFileName = AZURE_SAMPLE_APK;
-        localUpdateApkFileName = UPDATED_AZURE_SAMPLE_APK;
+       // localUpdateApkFileName = UPDATED_AZURE_SAMPLE_APK;
     }
 
     @Override
