@@ -27,6 +27,8 @@ import com.microsoft.identity.internal.test.labapi.Configuration;
 import com.microsoft.identity.internal.test.labapi.api.ConfigApi;
 import com.microsoft.identity.internal.test.labapi.api.CreateTempUserApi;
 import com.microsoft.identity.internal.test.labapi.api.DeleteDeviceApi;
+import com.microsoft.identity.internal.test.labapi.api.DisablePolicyApi;
+import com.microsoft.identity.internal.test.labapi.api.EnablePolicyApi;
 import com.microsoft.identity.internal.test.labapi.api.LabSecretApi;
 import com.microsoft.identity.internal.test.labapi.api.ResetApi;
 import com.microsoft.identity.internal.test.labapi.model.ConfigInfo;
@@ -35,6 +37,7 @@ import com.microsoft.identity.internal.test.labapi.model.SecretResponse;
 import com.microsoft.identity.internal.test.labapi.model.TempUser;
 import com.microsoft.identity.internal.test.labapi.model.UserInfo;
 import com.microsoft.identity.labapi.utilities.authentication.LabApiAuthenticationClient;
+import com.microsoft.identity.labapi.utilities.constants.ProtectionPolicy;
 import com.microsoft.identity.labapi.utilities.constants.TempUserType;
 import com.microsoft.identity.labapi.utilities.constants.ResetOperation;
 import com.microsoft.identity.labapi.utilities.constants.UserType;
@@ -418,5 +421,51 @@ public class LabClient implements ILabClient {
     private String getLabSecretName(final String credentialVaultKeyName) {
         final String[] parts = credentialVaultKeyName.split("/");
         return parts[parts.length - 1];
+    }
+
+    /**
+     * Enable CA/Special Policies for any Locked User.
+     * Enable Policy can be used for GlobalMFA, MAMCA, MDMCA, MFAONSPO, MFAONEXO.   Also test users can have more than 1 policy assigned to the same user.
+     *
+     * @param upn    Enter a valid Locked User UPN (optional)
+     * @param policy Enable Policy can be used for GlobalMFA, MAMCA, MDMCA, MFAONSPO, MFAONEXO. (optional)
+     * @return boolean value indicating policy enabled or not.
+     */
+    public boolean enablePolicy(@NonNull final String upn, @NonNull final ProtectionPolicy policy) {
+        final EnablePolicyApi enablePolicyApi = new EnablePolicyApi();
+        try {
+            final CustomSuccessResponse customSuccessResponse = enablePolicyApi.apiEnablePolicyPut(upn, policy.toString());
+            final String expectedResult = (policy + " Enabled for user : " + upn).toLowerCase();
+            final String result = customSuccessResponse.getResult();
+            if (result != null) {
+                return result.toLowerCase().contains(expectedResult);
+            }
+            return false;
+        } catch (final ApiException e) {
+            throw new AssertionError(e);
+        }
+    }
+
+    /**
+     * Disable CA/Special Policies for any Locked User.
+     * Disable Policy can be used for GlobalMFA, MAMCA, MDMCA, MFAONSPO, MFAONEXO.   Also test users can have more than 1 policy assigned to the same user.
+     *
+     * @param upn    Enter a valid Locked User UPN (optional)
+     * @param policy Disable Policy can be used for GlobalMFA, MAMCA, MDMCA, MFAONSPO, MFAONEXO. (optional)
+     * @return boolean value indicating policy is disabled or not for the upn.
+     */
+    public boolean disablePolicy(@NonNull final String upn, @NonNull final ProtectionPolicy policy) {
+        final DisablePolicyApi disablePolicyApi = new DisablePolicyApi();
+        try {
+            final CustomSuccessResponse customSuccessResponse = disablePolicyApi.apiDisablePolicyPut(upn, policy.toString());
+            final String expectedResult = (policy + " Disabled for user : " + upn).toLowerCase();
+            final String result = customSuccessResponse.getResult();
+            if (result != null) {
+                return result.toLowerCase().contains(expectedResult);
+            }
+            return false;
+        } catch (final ApiException e) {
+            throw new AssertionError(e);
+        }
     }
 }
