@@ -595,8 +595,9 @@ public final class AuthenticationConstants {
 
         /**
          * The newest Msal-To-Broker protocol version.
+         * @see <a href="ttps://identitydivision.visualstudio.com/DevEx/_git/AuthLibrariesApiReview?path=/%5BAndroid%5D%20Broker%20API/broker_protocol_versions.md">Android Auth Broker Protocol Versions</a>
          */
-        public static final String MSAL_TO_BROKER_PROTOCOL_VERSION_CODE = computeMaxMsalBrokerProtocol();
+        public static final String MSAL_TO_BROKER_PROTOCOL_VERSION_CODE = "8.0";
 
         /**
          * A client id for requesting the SSO token.
@@ -607,27 +608,6 @@ public final class AuthenticationConstants {
          * The key indicating that this is an ssoUrl parameter in a Bundle.
          */
         public static final String BROKER_SSO_URL_KEY = "ssoUrl";
-
-        @VisibleForTesting
-        public static String computeMaxMsalBrokerProtocol() {
-            String stringVersion = BrokerContentProvider.BROKER_VERSION_1;
-            float protocolVersion = 1.0f;
-            for (final BrokerContentProvider.API api : BrokerContentProvider.API.values()) {
-                final String version = api.getMsalVersion();
-                if (version != null) {
-                    try {
-                        final float candVersion = Float.parseFloat(version);
-                        if (candVersion > protocolVersion) {
-                            protocolVersion = candVersion;
-                            stringVersion = version;
-                        }
-                    } catch (final NumberFormatException nfe) {
-                        Logger.error(TAG + ":<static initialization>", "Invalid value for protocol version", nfe);
-                    }
-                }
-            }
-            return stringVersion;
-        }
 
         /**
          * The BrokerAPI-To-Broker protocol name.
@@ -1402,7 +1382,7 @@ public final class AuthenticationConstants {
             MSAL_HELLO(MSAL_HELLO_PATH, null, VERSION_3),
             ACQUIRE_TOKEN_INTERACTIVE(MSAL_ACQUIRE_TOKEN_INTERACTIVE_PATH, null, VERSION_3),
             ACQUIRE_TOKEN_SILENT(MSAL_ACQUIRE_TOKEN_SILENT_PATH, null, VERSION_3),
-            GET_ACCOUNTS(MSAL_GET_ACCOUNTS_PATH, null, VERSION_8),
+            GET_ACCOUNTS(MSAL_GET_ACCOUNTS_PATH, null, VERSION_3),
             REMOVE_ACCOUNT(MSAL_REMOVE_ACCOUNT_PATH, null, VERSION_3),
             GET_CURRENT_ACCOUNT_SHARED_DEVICE(MSAL_GET_CURRENT_ACCOUNT_SHARED_DEVICE_PATH, null, VERSION_3),
             GET_DEVICE_MODE(MSAL_GET_DEVICE_MODE_PATH, null, VERSION_3),
