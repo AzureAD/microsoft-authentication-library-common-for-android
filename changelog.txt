@@ -1,5 +1,6 @@
 Version 5.0.1
 ----------
+- [PATCH] [Adal] Ignore failure in updating unified/msal cache if ignoreKeyLoaderNotFoundError flag is set (#1781)
 - [PATCH] Fix APPLICATION_CANCELLED by handling back button press (#1725)
 
 Version 5.0.0

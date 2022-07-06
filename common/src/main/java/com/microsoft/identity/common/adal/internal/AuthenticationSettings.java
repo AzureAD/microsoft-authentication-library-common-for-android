@@ -94,6 +94,8 @@ public enum AuthenticationSettings {
 
     private int mReadTimeOut = DEFAULT_READ_CONNECT_TIMEOUT;
 
+    private boolean mIgnoreKeyLoaderNotFoundError = false;
+
     /**
      * Get bytes to derive secretKey to use in encrypt/decrypt.
      *
@@ -408,5 +410,22 @@ public enum AuthenticationSettings {
      */
     public boolean getDisableWebViewHardwareAcceleration() {
         return mEnableHardwareAcceleration;
+    }
+
+    /**
+     * Method to suppress errors where KeyLoader is not found to decrypt the cache content
+     * @param shouldIgnore if true, ignores keyloader not found errors
+     */
+    @SuppressFBWarnings(ME_ENUM_FIELD_SETTER)
+    public void setIgnoreKeyLoaderNotFoundError(boolean shouldIgnore) {
+        mIgnoreKeyLoaderNotFoundError = shouldIgnore;
+    }
+
+    /**
+     * Method to check whether to suppress errors where KeyLoader is not found to decrypt
+     * the cache content.
+     */
+    public boolean shouldIgnoreKeyLoaderNotFoundError() {
+        return mIgnoreKeyLoaderNotFoundError;
     }
 }
