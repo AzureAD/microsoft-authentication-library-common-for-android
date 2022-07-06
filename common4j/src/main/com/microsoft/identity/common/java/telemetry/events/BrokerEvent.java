@@ -20,14 +20,28 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.telemetry.events;
+package com.microsoft.identity.common.java.telemetry.events;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings;
+
+import lombok.NonNull;
 
 /**
- * Deprecated. Use {@link com.microsoft.identity.common.java.telemetry.events.ApiEndEvent} instead.
- **/
-@SuppressFBWarnings("NM_SAME_SIMPLE_NAME_AS_SUPERCLASS")
-@Deprecated
-public class ApiEndEvent extends com.microsoft.identity.common.java.telemetry.events.ApiEndEvent {
+ * A generic broker event. This can be used to emit any kind of event in the broker. e.g. an event with the IPC strategy.
+ */
+public class BrokerEvent extends BaseEvent {
+    public BrokerEvent(final String eventName) {
+        super();
+        types(TelemetryEventStrings.EventType.BROKER_EVENT);
+        names(eventName);
+    }
+
+    public BrokerEvent() {
+        this(null);
+    }
+
+    public BrokerEvent putIPCStrategy(@NonNull String ipcStrategy) {
+        put(TelemetryEventStrings.Key.IPC_STRATEGY, ipcStrategy);
+        return this;
+    }
 }

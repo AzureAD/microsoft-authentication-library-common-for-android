@@ -45,4 +45,14 @@ public class AdfsLoginComponentHandler extends AadLoginComponentHandler {
         UiAutomatorUtils.handleInput("passwordInput", password);
         UiAutomatorUtils.handleButtonClick("submitButton");
     }
+
+    /**
+     * Enters username, password in email, password fields of an enrollment page
+     */
+    public void handleEnrollmentPrompt(@NonNull final String username, @NonNull final String password) {
+        Logger.i(TAG, "Handle prompt in ADFS login page for enrolling");
+        // handle AAD login page for username
+        UiAutomatorUtils.handleInput("i0116", username);
+        UiAutomatorUtils.handleButtonClick("idSIButton9");
+    }
 }

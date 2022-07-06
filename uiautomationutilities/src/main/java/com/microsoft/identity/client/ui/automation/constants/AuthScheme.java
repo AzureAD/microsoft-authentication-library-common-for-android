@@ -20,28 +20,9 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.client.ui.automation.sdk;
+package com.microsoft.identity.client.ui.automation.constants;
 
-import android.app.Activity;
-
-import com.microsoft.identity.client.ui.automation.constants.AuthScheme;
-
-import lombok.Getter;
-import lombok.experimental.SuperBuilder;
-
-/**
- * A wrapper class for all the parameters that are required to acquire token
- * either interactively or silently.
- */
-@Getter
-@SuperBuilder
-public class AuthTestParams {
-
-    private final String loginHint;
-    private final String resource;
-    private final String clientId;
-    private final String redirectUri;
-    private final String authority;
-    private final Activity activity;
-    private final AuthScheme authScheme;
+public enum AuthScheme {
+    BEARER,
+    POP
 }
