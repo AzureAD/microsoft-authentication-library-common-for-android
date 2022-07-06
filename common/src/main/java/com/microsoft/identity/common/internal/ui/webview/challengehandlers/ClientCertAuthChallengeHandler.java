@@ -87,40 +87,30 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
     private static final Object sDeviceLock = new Object();
 
     /**
-     * Holds details of a certificate needed for the certificate picker, including subject, issuer, and slot.
+     * Holds certificate found on YubiKey and its corresponding slot.
      */
     public static class YubiKitCertDetails {
-        private final String issuerText;
-        private final String subjectText;
+        private final X509Certificate cert;
         private final Slot slot;
 
         /**
          * Creates new instance of YubiKitCertDetails.
-         * @param issuerText Name of the entity that signed and issued the certificate.
-         * @param subjectText Distinguished name of the subject.
+         * @param cert Certificate found on YubiKey.
          * @param slot PIV slot on YubiKey where certificate is located.
          */
-        public YubiKitCertDetails(String issuerText, String subjectText, Slot slot) {
-            this.issuerText = issuerText;
-            this.subjectText = subjectText;
+        public YubiKitCertDetails(X509Certificate cert, Slot slot) {
+            this.cert = cert;
             this.slot = slot;
         }
 
         /**
-         * Gets issuer name.
-         * @return Issuer name.
+         * Gets certificate.
+         * @return certificate.
          */
-        public String getIssuerText() {
-            return issuerText;
+        public X509Certificate getCertificate() {
+            return cert;
         }
 
-        /**
-         * Gets subject name.
-         * @return Subject name.
-         */
-        public String getSubjectText() {
-            return subjectText;
-        }
 
         /**
          * Gets PIV Slot where certificate is located.
@@ -220,14 +210,6 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     private void handleSmartcardCertAuth(@NonNull final ClientCertRequest request) {
         final String methodTag = TAG + ":handleSmartcardCertAuth";
-        //Show error dialog and cancel flow if mDevice is null.
-        if (mDevice == null) {
-            Logger.error(methodTag, MDEVICE_NULL_ERROR_MESSAGE, null);
-            //Show general error dialog.
-            mDialogHolder.showErrorDialog(R.string.smartcard_general_error_dialog_title, R.string.smartcard_general_error_dialog_message);
-            request.cancel();
-            return;
-        }
         //A connection to the YubiKey needs to be made in order to read the certificates off it.
         getActivePivSessionAsync(request, new IPivSessionCallback() {
             @Override
@@ -352,8 +334,8 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
         final String methodTag = TAG + ":getAndPutCertDetailsInList";
         try {
             final X509Certificate cert =  piv.getCertificate(slot);
-            //If there are no exceptions, add details of this cert to our certList.
-            certList.add(new YubiKitCertDetails(cert.getIssuerX500Principal().getName(), cert.getSubjectX500Principal().getName(), slot));
+            //If there are no exceptions, add this cert to our certList.
+            certList.add(new YubiKitCertDetails(cert, slot));
         } catch (final ApduException e) {
             //If sw is 0x6a82 (27266), This is a FILE_NOT_FOUND error, which we should ignore since this means the slot is merely empty.
             if (e.getSw() == 0x6a82) {
@@ -410,14 +392,6 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
             @Override
             public void onClick(@NonNull final String pin) {
                 synchronized (sDeviceLock) {
-                    //Show error dialog and cancel flow if mDevice is null.
-                    if (mDevice == null) {
-                        Logger.error(methodTag, MDEVICE_NULL_ERROR_MESSAGE, null);
-                        //Show general error dialog.
-                        mDialogHolder.showErrorDialog(R.string.smartcard_general_error_dialog_title, R.string.smartcard_general_error_dialog_message);
-                        request.cancel();
-                        return;
-                    }
                     // Need to request a PivSession in order to access certs on YubiKey.
                     getActivePivSessionAsync(request, new IPivSessionCallback() {
                         @Override
@@ -457,18 +431,9 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
         //Call YubiKit method to verify PIN.
         try {
             piv.verifyPin(pin);
-            //If pin is successfully verified, we will get the certificate and perform the rest of the logic for authentication.
-            final X509Certificate cert = piv.getCertificate(certDetails.getSlot());
-            //Do a confirmation that the cert retrieved above is the same cert that was picked earlier by comparing with YubiKitCertDetails.
-            if (!cert.getSubjectDN().getName().equals(certDetails.getSubjectText()) || !cert.getIssuerDN().getName().equals(certDetails.getIssuerText())) {
-                Logger.error(methodTag, "Cert retrieved from slot does not match cert originally selected from picker.", null);
-                //Show general error dialog.
-                mDialogHolder.showErrorDialog(R.string.smartcard_general_error_dialog_title, R.string.smartcard_general_error_dialog_message);
-                request.cancel();
-                return;
-            }
+            //If pin is successfully verified, we will use the certificate to perform the rest of the logic for authentication.
             //Complete authentication using cert and YubiKit sdk.
-            useSmartcardCertForAuth(cert, pin, certDetails.getSlot().getStringAlias(), piv, request);
+            useSmartcardCertForAuth(certDetails.getCertificate(), pin, certDetails.getSlot().getStringAlias(), piv, request);
         } catch (final InvalidPinException e) {
             // An incorrect Pin attempt.
             // We need to retrieve the number of pin attempts before proceeding.

@@ -40,6 +40,7 @@ import androidx.appcompat.app.AlertDialog;
 
 import com.microsoft.identity.common.R;
 
+import java.security.cert.X509Certificate;
 import java.util.List;
 
 /**
@@ -187,9 +188,9 @@ public class SmartcardCertPickerDialog extends SmartcardDialog {
             TextView subjectText = item.findViewById(R.id.subjectText);
             TextView issuerText = item.findViewById(R.id.issuerText);
             // Fill in the TextViews with the subject and issuer values.
-            ClientCertAuthChallengeHandler.YubiKitCertDetails currentCert = getItem(position);
-            subjectText.setText(currentCert.getSubjectText());
-            issuerText.setText(currentCert.getIssuerText());
+            X509Certificate currentCert = getItem(position).getCertificate();
+            subjectText.setText(currentCert.getSubjectDN().getName());
+            issuerText.setText(currentCert.getIssuerDN().getName());
             //Set radio button to be checked/unchecked based on ListView.
             ListView listView = (ListView) parent;
             RadioButton radioButton = item.findViewById(R.id.radioButton);
