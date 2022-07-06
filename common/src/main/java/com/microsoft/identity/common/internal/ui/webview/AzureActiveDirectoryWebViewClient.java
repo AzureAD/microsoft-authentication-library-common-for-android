@@ -41,6 +41,8 @@ import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.broker.PackageHelper;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.ClientCertAuthChallengeHandler;
+import com.microsoft.identity.common.java.crypto.ICryptoFactory;
+import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallenge;
 import com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallengeFactory;
@@ -78,15 +80,18 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     public static final String ERROR_DESCRIPTION = "error_description";
     private final String mRedirectUrl;
     private final ClientCertAuthChallengeHandler mClientCertAuthChallengeHandler;
+    private final ICryptoFactory mCryptoFactory;
 
     public AzureActiveDirectoryWebViewClient(@NonNull final Activity activity,
                                              @NonNull final IAuthorizationCompletionCallback completionCallback,
                                              @NonNull final OnPageLoadedCallback pageLoadedCallback,
-                                             @NonNull final String redirectUrl) {
+                                             @NonNull final String redirectUrl,
+                                             @NonNull final ICryptoFactory cryptoFactory) {
         super(activity, completionCallback, pageLoadedCallback);
         mRedirectUrl = redirectUrl;
         //Creating ClientCertAuthChallengeHandler starts YubiKitManager usb discovery
         mClientCertAuthChallengeHandler = new ClientCertAuthChallengeHandler(getActivity());
+        mCryptoFactory = cryptoFactory;
     }
 
     /**
@@ -145,7 +150,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         try {
             if (isPkeyAuthUrl(formattedURL)) {
                 Logger.info(methodTag,"WebView detected request for pkeyauth challenge.");
-                final PKeyAuthChallengeFactory factory = new PKeyAuthChallengeFactory();
+                final PKeyAuthChallengeFactory factory = new PKeyAuthChallengeFactory(mCryptoFactory);
                 final PKeyAuthChallenge pKeyAuthChallenge = factory.getPKeyAuthChallengeFromWebViewRedirect(url);
                 final PKeyAuthChallengeHandler pKeyAuthChallengeHandler = new PKeyAuthChallengeHandler(view, getCompletionCallback());
                 pKeyAuthChallengeHandler.processChallenge(pKeyAuthChallenge);

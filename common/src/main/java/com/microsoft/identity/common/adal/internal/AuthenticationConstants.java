@@ -657,7 +657,9 @@ public final class AuthenticationConstants {
                     }
                 }
             }
+
             return stringVersion;
+
         }
 
         /**
@@ -1649,6 +1651,8 @@ public final class AuthenticationConstants {
         public static final String WEB_VIEW_ZOOM_CONTROLS_ENABLED = "com.microsoft.identity.web.view.zoom.controls.enabled";
 
         public static final String WEB_VIEW_ZOOM_ENABLED = "com.microsoft.identity.web.view.zoom.enabled";
+
+        public static final String CRYPTO_FACTORY_CLASS_NAME = "com.microsoft.identity.crypto.factory.class.name";
     }
 
     public static final class AuthorizationIntentAction {

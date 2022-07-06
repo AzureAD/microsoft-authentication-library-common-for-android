@@ -27,6 +27,8 @@ import com.microsoft.identity.common.java.cache.MapBackedPreferencesManager;
 import com.microsoft.identity.common.java.commands.ICommand;
 import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCommandParameters;
 import com.microsoft.identity.common.java.crypto.CryptoSuite;
+import com.microsoft.identity.common.java.crypto.DefaultCryptoFactory;
+import com.microsoft.identity.common.java.crypto.ICryptoFactory;
 import com.microsoft.identity.common.java.crypto.IKeyStoreKeyManager;
 import com.microsoft.identity.common.java.crypto.IDevicePopManager;
 import com.microsoft.identity.common.java.crypto.IKeyAccessor;
@@ -369,6 +371,11 @@ public class SettablePlatformComponents implements IPlatformComponents {
     @Override
     public @NonNull IHttpClientWrapper getHttpClientWrapper() {
         return new DefaultHttpClientWrapper();
+    }
+
+    @Override
+    public @NonNull ICryptoFactory getCryptoFactory() {
+        return new DefaultCryptoFactory();
     }
 
     @Builder.Default

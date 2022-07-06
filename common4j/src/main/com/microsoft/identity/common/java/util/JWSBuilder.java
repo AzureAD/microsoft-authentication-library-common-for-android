@@ -40,7 +40,9 @@ import java.security.cert.X509Certificate;
 
 import cz.msebera.android.httpclient.extras.Base64;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import lombok.AllArgsConstructor;
 
+@AllArgsConstructor
 /**
  * JWS response builder for certificate challenge response.
  */
@@ -59,8 +61,7 @@ public class JWSBuilder {
 
     private static final String TAG = "JWSBuilder";
 
-    private static final ISigner sSigner = new BasicSigner();
-
+    private final ISigner mSigner;
     /**
      * Payload for JWS.
      */
@@ -108,8 +109,9 @@ public class JWSBuilder {
     /**
      * Generate the signed JWT.
      */
-    public String generateSignedJWT(String nonce, String audience, PrivateKey privateKey,
-                                    PublicKey pubKey, X509Certificate cert) throws ClientException {
+    public String generateSignedJWT(
+            String nonce, String audience, PrivateKey privateKey,
+            PublicKey pubKey, X509Certificate cert) throws ClientException {
         // http://tools.ietf.org/html/draft-ietf-jose-json-web-signature-25
         // In the JWS Compact Serialization, a JWS object is represented as the
         // combination of these three string values,
@@ -166,7 +168,7 @@ public class JWSBuilder {
                     + "."
                     + StringUtil.encodeUrlSafeString(claimsJsonString);
             signature = StringUtil.encodeUrlSafeString(
-                    sSigner.sign(privateKey, SIGNING_ALGORITHM, signingInput.getBytes(ENCODING_UTF8)));
+                    mSigner.sign(privateKey, SIGNING_ALGORITHM, signingInput.getBytes(ENCODING_UTF8)));
         } catch (final CertificateEncodingException e) {
             throw new ClientException(ErrorStrings.CERTIFICATE_ENCODING_ERROR,
                     "Certificate encoding error", e);

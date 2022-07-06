@@ -528,7 +528,8 @@ public class MicrosoftStsOAuth2Strategy
         Logger.infoPII(TAG + methodName, "Challenge header: " + challengeHeader);
 
         try {
-            final PKeyAuthChallengeFactory factory = new PKeyAuthChallengeFactory();
+            final PKeyAuthChallengeFactory factory = new PKeyAuthChallengeFactory(
+                    mStrategyParameters.getPlatformComponents().getCryptoFactory());
             final URL authority = new URL(mTokenEndpoint);
             final PKeyAuthChallenge pkeyAuthChallenge = factory.getPKeyAuthChallengeFromTokenEndpointResponse(
                     challengeHeader,

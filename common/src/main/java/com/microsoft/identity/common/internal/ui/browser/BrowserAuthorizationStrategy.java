@@ -33,6 +33,7 @@ import androidx.fragment.app.Fragment;
 
 import com.microsoft.identity.common.internal.providers.oauth2.AndroidAuthorizationStrategy;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivityFactory;
+import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.ui.AuthorizationAgent;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.exception.ClientException;
@@ -65,8 +66,10 @@ public abstract class BrowserAuthorizationStrategy<
     private boolean mDisposed;
     private GenericOAuth2Strategy mOAuth2Strategy; //NOPMD
     private GenericAuthorizationRequest mAuthorizationRequest; //NOPMD
+    private IPlatformComponents mComponents;
 
-    public BrowserAuthorizationStrategy(@NonNull Context applicationContext,
+    public BrowserAuthorizationStrategy(@NonNull final IPlatformComponents components,
+                                        @NonNull Context applicationContext,
                                         @NonNull Activity activity,
                                         @Nullable Fragment fragment) {
         super(applicationContext, activity, fragment);
@@ -134,6 +137,7 @@ public abstract class BrowserAuthorizationStrategy<
                 mAuthorizationRequest.getRedirectUri(),
                 mAuthorizationRequest.getRequestHeaders(),
                 AuthorizationAgent.BROWSER,
+                mComponents.getCryptoFactory(),
                 true,
                 true);
         setIntentFlag(intent);

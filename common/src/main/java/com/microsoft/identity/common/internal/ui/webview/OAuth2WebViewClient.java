@@ -32,10 +32,12 @@ import android.webkit.HttpAuthHandler;
 import android.webkit.SslErrorHandler;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
+import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.annotation.VisibleForTesting;
 
@@ -54,6 +56,7 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
+//https://www.droidcon.com/2022/03/17/android-security-enabling-certificate-transparency-checks-in-webviews/
 public abstract class OAuth2WebViewClient extends WebViewClient {
     /* constants */
     private static final String TAG = OAuth2WebViewClient.class.getSimpleName();

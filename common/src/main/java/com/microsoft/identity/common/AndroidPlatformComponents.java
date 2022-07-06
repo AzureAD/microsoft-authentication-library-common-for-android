@@ -49,6 +49,8 @@ import com.microsoft.identity.common.internal.util.ProcessUtil;
 import com.microsoft.identity.common.internal.util.SharedPrefStringNameValueStorage;
 import com.microsoft.identity.common.internal.util.SharedPreferenceLongStorage;
 import com.microsoft.identity.common.java.WarningType;
+import com.microsoft.identity.common.java.crypto.DefaultCryptoFactory;
+import com.microsoft.identity.common.java.crypto.ICryptoFactory;
 import com.microsoft.identity.common.java.crypto.IDevicePopManager;
 import com.microsoft.identity.common.java.crypto.IKeyAccessor;
 import com.microsoft.identity.common.java.exception.ClientException;
@@ -56,7 +58,6 @@ import com.microsoft.identity.common.java.interfaces.IHttpClientWrapper;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.net.DefaultHttpClientWrapper;
-import com.microsoft.identity.common.java.net.ISslProvider;
 import com.microsoft.identity.common.java.platform.Device;
 import com.microsoft.identity.common.java.providers.oauth2.IStateGenerator;
 import com.microsoft.identity.common.java.util.ClockSkewManager;
@@ -328,6 +329,7 @@ public class AndroidPlatformComponents implements IPlatformComponents {
     @Override
     public @NonNull IAuthorizationStrategyFactory getAuthorizationStrategyFactory() {
         return AndroidAuthorizationStrategyFactory.builder()
+                .platformComponents(this)
                 .context(mContext)
                 .activity(mActivity)
                 .fragment(mFragment)
@@ -351,5 +353,10 @@ public class AndroidPlatformComponents implements IPlatformComponents {
     @Override
     public @NonNull IHttpClientWrapper getHttpClientWrapper() {
         return new DefaultHttpClientWrapper();
+    }
+
+    @Override
+    public @NonNull ICryptoFactory getCryptoFactory() {
+        return new DefaultCryptoFactory();
     }
 }

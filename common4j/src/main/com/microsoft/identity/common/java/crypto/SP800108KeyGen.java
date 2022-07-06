@@ -87,7 +87,6 @@ public class SP800108KeyGen {
 
         do {
             dataInput = updateDataInput(ctr, fixedInput);
-            hmacSHA256.reset();
             hmacSHA256.init(keySpec);
             hmacSHA256.update(dataInput);
             cHMAC = hmacSHA256.doFinal();

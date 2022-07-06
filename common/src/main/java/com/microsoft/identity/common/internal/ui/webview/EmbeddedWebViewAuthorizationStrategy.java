@@ -34,6 +34,7 @@ import com.microsoft.identity.common.internal.providers.oauth2.AndroidAuthorizat
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivityFactory;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
@@ -59,16 +60,19 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
     private ResultFuture<AuthorizationResult> mAuthorizationResultFuture;
     private GenericOAuth2Strategy mOAuth2Strategy; //NOPMD
     private GenericAuthorizationRequest mAuthorizationRequest; //NOPMD
+    private IPlatformComponents mComponents;
 
     /**
      * Constructor of EmbeddedWebViewAuthorizationStrategy.
      *
      * @param activity The app activity which invoke the interactive auth request.
      */
-    public EmbeddedWebViewAuthorizationStrategy(@NonNull Context applicationContext,
+    public EmbeddedWebViewAuthorizationStrategy(@NonNull final IPlatformComponents components,
+                                                @NonNull Context applicationContext,
                                                 @NonNull Activity activity,
                                                 @Nullable Fragment fragment) {
         super(applicationContext, activity, fragment);
+        mComponents = components;
     }
 
     /**
@@ -100,6 +104,7 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
                     mAuthorizationRequest.getRedirectUri(),
                     mAuthorizationRequest.getRequestHeaders(),
                     AuthorizationAgent.WEBVIEW,
+                    mComponents.getCryptoFactory(),
                     mAuthorizationRequest.isWebViewZoomEnabled(),
                     mAuthorizationRequest.isWebViewZoomControlsEnabled());
     }

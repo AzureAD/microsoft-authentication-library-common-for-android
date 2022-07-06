@@ -53,6 +53,7 @@ import javax.crypto.SecretKey;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.NonNull;
 
+import static com.microsoft.identity.common.java.exception.ClientException.UNKNOWN_ERROR;
 import static com.microsoft.identity.common.java.util.ported.DateUtilities.LOCALE_CHANGE_LOCK;
 import static com.microsoft.identity.common.java.util.ported.DateUtilities.isLocaleCalendarNonGregorian;
 import static com.microsoft.identity.common.java.exception.ClientException.ANDROID_KEYSTORE_UNAVAILABLE;
@@ -234,6 +235,9 @@ public class AndroidKeyStoreUtil {
             exception = e;
         } catch (final UnrecoverableKeyException e) {
             errCode = INVALID_KEY_MISSING;
+            exception = e;
+        } catch (final Exception e){
+            errCode = UNKNOWN_ERROR;
             exception = e;
         }
 

@@ -22,10 +22,14 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.challengehandlers;
 
+import lombok.AllArgsConstructor;
 import lombok.NonNull;
 
 import com.microsoft.identity.common.java.AuthenticationSettings;
+import com.microsoft.identity.common.java.crypto.BasicSigner;
+import com.microsoft.identity.common.java.crypto.ICryptoFactory;
 import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.util.JWSBuilder;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.util.UrlUtil;
 
@@ -45,6 +49,7 @@ import static com.microsoft.identity.common.java.challengehandlers.PKeyAuthChall
 import static com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallenge.RequestField.Version;
 import static com.microsoft.identity.common.java.exception.ErrorStrings.DEVICE_CERTIFICATE_REQUEST_INVALID;
 
+@AllArgsConstructor
 /**
  * Factory method to get new PKeyAuthChallenge object.
  */
@@ -54,6 +59,8 @@ public class PKeyAuthChallengeFactory {
      * Certificate authorities are passed with delimiter.
      */
     private static final String CHALLENGE_REQUEST_CERT_AUTH_DELIMITER = ";";
+
+    private final ICryptoFactory mCryptoFactory;
 
     /**
      * This parses the redirectURI for challenge components and produces
@@ -75,6 +82,7 @@ public class PKeyAuthChallengeFactory {
 
         final PKeyAuthChallenge.PKeyAuthChallengeBuilder builder = new PKeyAuthChallenge.PKeyAuthChallengeBuilder();
         builder.nonce(parameters.get(Nonce.name().toLowerCase(Locale.US)))
+                .jwsBuilder(new JWSBuilder(new BasicSigner(mCryptoFactory)))
                 .context(parameters.get(Context.name()))
                 .version(parameters.get(Version.name()))
                 .submitUrl(parameters.get(SubmitUrl.name()))
@@ -109,6 +117,7 @@ public class PKeyAuthChallengeFactory {
 
         final PKeyAuthChallenge.PKeyAuthChallengeBuilder builder = new PKeyAuthChallenge.PKeyAuthChallengeBuilder();
         builder.submitUrl(authority)
+                .jwsBuilder(new JWSBuilder(new BasicSigner(mCryptoFactory)))
                 .nonce(headerItems.get(Nonce.name().toLowerCase(Locale.US)))
                 .context(headerItems.get(Context.name()))
                 .version(headerItems.get(Version.name()))

@@ -335,11 +335,11 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
         }
 
         if (urlConnection instanceof HttpsURLConnection) {
-            final SSLSocketFactory factory =
-                    request.getSslContext() != null ?
-                            new SSLSocketFactoryWrapper(request.getSslContext().getSocketFactory(), supportedSslProtocol) :
-                            getDefaultWrapper();
-            ((HttpsURLConnection) urlConnection).setSSLSocketFactory(factory);
+//            final SSLSocketFactory factory =
+//                    request.getSslContext() != null ?
+//                            new SSLSocketFactoryWrapper(request.getSslContext().getSocketFactory(), supportedSslProtocol) :
+//                            getDefaultWrapper();
+//            ((HttpsURLConnection) urlConnection).setSSLSocketFactory(factory);
         } else if ("https".equalsIgnoreCase(request.getRequestUrl().getProtocol())) {
             throw new IllegalStateException("Trying to initiate a HTTPS request, but didn't get back HttpsURLConnection");
         } else if ("http".equalsIgnoreCase(request.getRequestUrl().getProtocol())) {

@@ -35,6 +35,7 @@ import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.commands.parameters.BrokerInteractiveTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCommandParameters;
 import com.microsoft.identity.common.java.configuration.LibraryConfiguration;
+import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.providers.oauth2.IAuthorizationStrategy;
 import com.microsoft.identity.common.internal.ui.browser.BrowserSelector;
 import com.microsoft.identity.common.internal.ui.webview.EmbeddedWebViewAuthorizationStrategy;
@@ -58,6 +59,7 @@ public class AndroidAuthorizationStrategyFactory implements IAuthorizationStrate
     private final Context mContext;
     private final Activity mActivity;
     private final Fragment mFragment;
+    private final IPlatformComponents mPlatformComponents;
 
     @Override
     public IAuthorizationStrategy getAuthorizationStrategy(
@@ -104,6 +106,7 @@ public class AndroidAuthorizationStrategyFactory implements IAuthorizationStrate
         if (LibraryConfiguration.getInstance().isAuthorizationInCurrentTask()) {
             final CurrentTaskBrowserAuthorizationStrategy currentTaskBrowserAuthorizationStrategy =
                     new CurrentTaskBrowserAuthorizationStrategy(
+                            mPlatformComponents,
                             mContext,
                             mActivity,
                             mFragment);
@@ -112,6 +115,7 @@ public class AndroidAuthorizationStrategyFactory implements IAuthorizationStrate
             return currentTaskBrowserAuthorizationStrategy;
         } else {
             final DefaultBrowserAuthorizationStrategy defaultBrowserAuthorizationStrategy = new DefaultBrowserAuthorizationStrategy(
+                    mPlatformComponents,
                     mContext,
                     mActivity,
                     mFragment,
@@ -126,6 +130,7 @@ public class AndroidAuthorizationStrategyFactory implements IAuthorizationStrate
     @SuppressWarnings(WarningType.unchecked_warning)
     private IAuthorizationStrategy getGenericAuthorizationStrategy() {
         return new EmbeddedWebViewAuthorizationStrategy(
+                mPlatformComponents,
                 mContext,
                 mActivity,
                 mFragment);

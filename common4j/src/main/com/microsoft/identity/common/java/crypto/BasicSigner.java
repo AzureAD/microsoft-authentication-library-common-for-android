@@ -35,14 +35,18 @@ import java.security.SignatureException;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
+import lombok.AllArgsConstructor;
 import lombok.NonNull;
 
 /**
  * A basic Signer class.
  */
+@AllArgsConstructor
 public class BasicSigner implements ISigner{
 
     private static final String TAG = BasicSigner.class.getSimpleName();
+
+    private final ICryptoFactory mCryptoFactory;
 
     @Override
     public byte[] sign(@NonNull final PrivateKey key,
@@ -50,12 +54,10 @@ public class BasicSigner implements ISigner{
                        final byte[] dataToBeSigned) throws ClientException {
         final Signature signer;
         try {
-            signer = Signature.getInstance(signingAlgorithm);
+            signer = mCryptoFactory.getSignature(signingAlgorithm);
             signer.initSign(key);
             signer.update(dataToBeSigned);
             return signer.sign();
-        } catch (final NoSuchAlgorithmException e) {
-            throw new ClientException(ClientException.NO_SUCH_ALGORITHM, e.getMessage(), e);
         } catch (final SignatureException e) {
             throw new ClientException(ClientException.SIGNING_FAILURE, e.getMessage(), e);
         } catch (final InvalidKeyException e) {
@@ -68,14 +70,10 @@ public class BasicSigner implements ISigner{
                                final byte[] dataToBeSigned) throws ClientException {
         final String methodName = "signWithDerivedKey";
         try {
-            final Mac sha256HMAC = Mac.getInstance(hmacAlgorithm);
+            final Mac sha256HMAC = mCryptoFactory.getMac(hmacAlgorithm);
             final SecretKeySpec secretKey = new SecretKeySpec(keyData, hmacAlgorithm);
             sha256HMAC.init(secretKey);
             return sha256HMAC.doFinal(dataToBeSigned);
-        } catch (final NoSuchAlgorithmException e) {
-            final String errorString = hmacAlgorithm + " algorithm does not exist " + e.getMessage();
-            Logger.error(TAG + methodName, errorString, e);
-            throw new ClientException(ClientException.NO_SUCH_ALGORITHM, errorString, e);
         } catch (final IllegalStateException e) {
             Logger.error(TAG + methodName, e.getMessage(), e);
             throw new ClientException(ErrorStrings.ENCRYPTION_ERROR, e.getMessage(), e);

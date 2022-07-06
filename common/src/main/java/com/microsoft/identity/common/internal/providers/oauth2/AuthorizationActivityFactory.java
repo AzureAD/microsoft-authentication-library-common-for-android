@@ -33,14 +33,17 @@ import androidx.fragment.app.Fragment;
 import com.microsoft.identity.common.java.configuration.LibraryConfiguration;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.telemetry.events.UiStartEvent;
+import com.microsoft.identity.common.java.crypto.ICryptoFactory;
 import com.microsoft.identity.common.java.ui.AuthorizationAgent;
 import com.microsoft.identity.common.internal.util.ProcessUtil;
 import com.microsoft.identity.common.logging.DiagnosticContext;
 
+import java.security.cert.Certificate;
 import java.util.HashMap;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.AUTHORIZATION_AGENT;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.AUTH_INTENT;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.CRYPTO_FACTORY_CLASS_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REDIRECT_URI;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_HEADERS;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_URL;
@@ -71,6 +74,7 @@ public class AuthorizationActivityFactory {
                                                         final String redirectUri,
                                                         final HashMap<String, String> requestHeaders,
                                                         final AuthorizationAgent authorizationAgent,
+                                                        final ICryptoFactory cryptoFactory,
                                                         final boolean webViewZoomEnabled,
                                                         final boolean webViewZoomControlsEnabled) {
         Intent intent;
@@ -94,6 +98,7 @@ public class AuthorizationActivityFactory {
         intent.putExtra(AUTHORIZATION_AGENT, authorizationAgent);
         intent.putExtra(WEB_VIEW_ZOOM_CONTROLS_ENABLED, webViewZoomControlsEnabled);
         intent.putExtra(WEB_VIEW_ZOOM_ENABLED, webViewZoomEnabled);
+        intent.putExtra(CRYPTO_FACTORY_CLASS_NAME, cryptoFactory.getClass().getName());
         intent.putExtra(DiagnosticContext.CORRELATION_ID, DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID));
         return intent;
     }

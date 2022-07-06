@@ -27,6 +27,8 @@ import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.
 import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.PKEYAUTH_VERSION;
 
 import com.microsoft.identity.common.java.AuthenticationSettings;
+import com.microsoft.identity.common.java.crypto.ICryptoFactory;
+import com.microsoft.identity.common.java.crypto.ISigner;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.logging.Logger;
@@ -105,8 +107,7 @@ public class PKeyAuthChallenge {
      */
     private final String mSubmitUrl;
 
-    @Builder.Default
-    private final JWSBuilder mJwsBuilder = new JWSBuilder();
+    private final JWSBuilder mJwsBuilder;
 
     /**
      * Home tenant ID of the account that is being challenged.

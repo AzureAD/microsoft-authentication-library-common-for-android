@@ -31,6 +31,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import com.microsoft.identity.common.java.WarningType;
+import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
 
@@ -43,11 +44,12 @@ public class DefaultBrowserAuthorizationStrategy<
 
     private final boolean mIsRequestFromBroker;
 
-    public DefaultBrowserAuthorizationStrategy(@NonNull Context applicationContext,
+    public DefaultBrowserAuthorizationStrategy(@NonNull final IPlatformComponents components,
+                                               @NonNull Context applicationContext,
                                                @NonNull Activity activity,
                                                @Nullable Fragment fragment,
                                                boolean isRequestFromBroker) {
-        super(applicationContext, activity, fragment);
+        super(components, applicationContext, activity, fragment);
         mIsRequestFromBroker = isRequestFromBroker;
     }
 
