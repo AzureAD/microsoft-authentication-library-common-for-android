@@ -51,11 +51,4 @@ public class AuthorizationActivity extends DualScreenActivity {
         }
         setFragment(mFragment);
     }
-
-    @Override
-    public void onBackPressed() {
-        if (!mFragment.onBackPressed()) {
-            super.onBackPressed();
-        }
-    }
 }

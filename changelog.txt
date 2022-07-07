@@ -1,10 +1,18 @@
+Version 5.0.1
+----------
+- [PATCH] [Adal] Ignore failure in updating unified/msal cache if ignoreKeyLoaderNotFoundError flag is set (#1781)
+- [PATCH] Fix APPLICATION_CANCELLED by handling back button press (#1725)
+
 Version 5.0.0
 ----------
 - [MAJOR] Move IKeyStoreKeyManager and IDevicePopManager to common4j (#1683)
+- [MINOR] Added support for broadcasting to applications installed on the device.
+
+Version 4.2.0
+----------
 - [PATCH] Add exception handling in Content Provider strategy, for broker communication (#1722)
 - [MINOR] Support TenantID value from eSTS in PKeyAuth flows (#1712)
 - [MINOR] Implement cert loader for both multiple and legacy WPJ data store in PKeyAuth (#1711)
-- [MINOR] Added support for broadcasting to applications installed on the device.
 
 Version 4.1.0
 ----------
