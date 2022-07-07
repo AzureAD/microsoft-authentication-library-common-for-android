@@ -52,13 +52,13 @@ public class BrokerProtocolVersionUtil {
     /**
      * Verifies if negotiated broker protocol version allows FOCI apps to construct accounts from PRT Id token.
      *
-     * @param negotiatedBrokerProtocol negotiated protocol version, result of hello handshake.
-     * @return true if the negotiated protocol version is larger or equal than
+     * @param clientRequiredBrokerProtocolVersion client protocol version.
+     * @return true if the client protocol version is larger or equal than
      * the {@link BrokerProtocolVersionUtil#MSAL_TO_BROKER_PROTOCOL_ACCOUNT_FROM_PRT_CHANGES_MINIMUM_VERSION}.
      */
-    public static boolean canFociAppsConstructAccountsFromPrtIdTokens(@Nullable String negotiatedBrokerProtocol) {
+    public static boolean canFociAppsConstructAccountsFromPrtIdTokens(@Nullable String clientRequiredBrokerProtocolVersion) {
         return isNegotiatedBrokerProtocolLargerOrEqualThanRequiredBrokerProtocol(
-                negotiatedBrokerProtocol,
+                clientRequiredBrokerProtocolVersion,
                 MSAL_TO_BROKER_PROTOCOL_ACCOUNT_FROM_PRT_CHANGES_MINIMUM_VERSION);
     }
 

@@ -657,6 +657,11 @@ public final class AuthenticationConstants {
         public static final String NEGOTIATED_BP_VERSION_KEY = "common.broker.protocol.version.name";
 
         /**
+         * The Boolean to send when FOCI apps are allowed to construct accounts from PRT id token in getAccounts.
+         */
+        public static final String FOCI_APPS_CAN_CONSTRUCT_ACCOUNTS_FROM_PRT_ID_TOKEN_KEY = "can.construct.accounts.from.prt.id.token";
+
+        /**
          * String of broker protocol version with PRT support.
          */
         public static final String BROKER_PROTOCOL_VERSION = "v2";
