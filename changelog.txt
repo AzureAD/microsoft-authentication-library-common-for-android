@@ -1,6 +1,7 @@
 V.Next
 ----------
 - [MAJOR] Bumped MSAL Broker Protocol version to 8.0, GET_ACCOUNTS endpoint requires minimum_required_broker_protocol_version of 8.0+ to return an account constructed from PRT id token to FOCI apps. (#1771)
+- [PATCH] [Adal] Ignore failure in updating unified/msal cache if ignoreKeyLoaderNotFoundError flag is set (#1781)
 - [MINOR] Add telemetry relay client (#1757)
 - [MINOR] Add telemetry error events (#1768)
 - [MAJOR] Adding YubiKit SDK, which requires Java Version 8 and will thus bump up Java version overall to 8; added keyboard flag to android:configChanges for all activities that could interact with a YubiKey. (#1729)
