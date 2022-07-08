@@ -59,16 +59,6 @@ public class BrokerInteractiveTokenCommandParameters extends InteractiveTokenCom
     private final String tenantIdRequestingBrt;
 
 
-    /**
-     * Helper method to identify if the request originated from Broker itself or from client libraries.
-     *
-     * @return : true if request is the request is originated from Broker, false otherwise
-     */
-    public boolean isRequestFromBroker() {
-        return requestType == BrokerRequestType.BROKER_RT_REQUEST ||
-                requestType == BrokerRequestType.RESOLVE_INTERRUPT;
-    }
-
     @Override
     public void validate() throws ArgumentException {
         super.validate();

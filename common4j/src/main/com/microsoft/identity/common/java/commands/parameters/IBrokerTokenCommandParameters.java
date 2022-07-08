@@ -85,4 +85,14 @@ public interface IBrokerTokenCommandParameters {
 
     @Nullable
     String getTenantIdRequestingBrt();
+
+    /**
+     * Helper method to identify if the request originated from Broker itself or from client libraries.
+     *
+     * @return : true if request is the request is originated from Broker, false otherwise
+     */
+    default boolean isRequestFromBroker() {
+        return getRequestType() == BrokerRequestType.BROKER_RT_REQUEST ||
+                getRequestType() == BrokerRequestType.RESOLVE_INTERRUPT;
+    }
 }
