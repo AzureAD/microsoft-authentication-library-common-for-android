@@ -154,11 +154,28 @@ public class DefaultCryptoFactory implements ICryptoFactory {
     }
 
     @Override
+    public void setProviderForWebView() {
+        // do nothing.
+    }
+
+    @Override
+    public void unsetProviderForWebView() {
+        // do nothing.
+    }
+
+    @Override
     public void overrideDefaultProvider(@NonNull final Provider provider) {
         mLock.writeLock().lock();
         if (mOverriddenDefaultProvider != null) {
             Security.removeProvider(mOverriddenDefaultProvider.getName());
+            mOverriddenDefaultProvider = null;
         }
+
+        if (Security.getProvider(provider.getName()) != null) {
+            // The provider already exists in the list.
+            return;
+        }
+
         mOverriddenDefaultProvider = provider;
         Security.insertProviderAt(mOverriddenDefaultProvider, 1);
     }
@@ -167,8 +184,10 @@ public class DefaultCryptoFactory implements ICryptoFactory {
     public void removeOverriddenDefaultProvider() {
         mLock.writeLock().lock();
         try {
-            Security.removeProvider(mOverriddenDefaultProvider.getName());
-            mOverriddenDefaultProvider = null;
+            if (mOverriddenDefaultProvider != null) {
+                Security.removeProvider(mOverriddenDefaultProvider.getName());
+                mOverriddenDefaultProvider = null;
+            }
         } finally {
             mLock.writeLock().unlock();
         }

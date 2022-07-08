@@ -151,7 +151,6 @@ public class ProviderFactory {
         }
     }
 
-
     @NonNull
     public static CertificateFactory getCertificateFactory(@NonNull final String algorithm,
                                                            @Nullable final Provider provider) throws ClientException {
