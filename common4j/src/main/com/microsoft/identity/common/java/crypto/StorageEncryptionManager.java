@@ -22,12 +22,24 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.crypto;
 
+import static com.microsoft.identity.common.java.AuthenticationConstants.ENCODING_UTF8;
+import static com.microsoft.identity.common.java.crypto.key.KeyUtil.HMAC_ALGORITHM;
+import static com.microsoft.identity.common.java.exception.ClientException.BAD_PADDING;
+import static com.microsoft.identity.common.java.exception.ClientException.DATA_MALFORMED;
+import static com.microsoft.identity.common.java.exception.ClientException.HMAC_MISMATCH;
+import static com.microsoft.identity.common.java.exception.ClientException.INVALID_ALG_PARAMETER;
+import static com.microsoft.identity.common.java.exception.ClientException.INVALID_BLOCK_SIZE;
+import static com.microsoft.identity.common.java.exception.ClientException.INVALID_KEY;
+import static com.microsoft.identity.common.java.exception.ClientException.NO_SUCH_ALGORITHM;
+import static com.microsoft.identity.common.java.exception.ClientException.NO_SUCH_PADDING;
+import static com.microsoft.identity.common.java.exception.ClientException.UNEXPECTED_HMAC_LENGTH;
+
 import com.microsoft.identity.common.java.crypto.key.AbstractSecretKeyLoader;
 import com.microsoft.identity.common.java.crypto.key.KeyUtil;
+import com.microsoft.identity.common.java.crypto.key.PredefinedKeyLoader;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.logging.Logger;
-import com.microsoft.identity.common.java.util.StringUtil;
 
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
@@ -46,18 +58,6 @@ import javax.crypto.spec.IvParameterSpec;
 
 import cz.msebera.android.httpclient.extras.Base64;
 import lombok.NonNull;
-
-import static com.microsoft.identity.common.java.AuthenticationConstants.ENCODING_UTF8;
-import static com.microsoft.identity.common.java.crypto.key.KeyUtil.HMAC_ALGORITHM;
-import static com.microsoft.identity.common.java.exception.ClientException.BAD_PADDING;
-import static com.microsoft.identity.common.java.exception.ClientException.DATA_MALFORMED;
-import static com.microsoft.identity.common.java.exception.ClientException.HMAC_MISMATCH;
-import static com.microsoft.identity.common.java.exception.ClientException.INVALID_ALG_PARAMETER;
-import static com.microsoft.identity.common.java.exception.ClientException.INVALID_BLOCK_SIZE;
-import static com.microsoft.identity.common.java.exception.ClientException.INVALID_KEY;
-import static com.microsoft.identity.common.java.exception.ClientException.NO_SUCH_ALGORITHM;
-import static com.microsoft.identity.common.java.exception.ClientException.NO_SUCH_PADDING;
-import static com.microsoft.identity.common.java.exception.ClientException.UNEXPECTED_HMAC_LENGTH;
 
 /**
  * Encrypts/Decrypts data (to be stored into storage).
@@ -377,6 +377,35 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
         } catch (final Exception e) {
             Logger.verbose(TAG + methodName, e.getMessage());
             return false;
+        }
+    }
+
+    /**
+     * Returns Key identifier which was used for cipherText encryption.
+     *
+     * @param cipherText    the cipherText to be verified against.
+     */
+    protected static String getKeyIdentifierFromCipherText(
+            @NonNull final byte[] cipherText) {
+        final String methodName = ":getKeyIdentifierFromCipherText";
+
+        final byte[] bytes;
+        final int keyIdentifierLength = PredefinedKeyLoader.USER_PROVIDED_KEY_IDENTIFIER.length();
+
+        try {
+            bytes = stripEncodeVersionFromCipherText(cipherText);
+
+            final String keyIdentifier = new String(
+                    bytes,
+                    0,
+                    keyIdentifierLength,
+                    ENCODING_UTF8
+            );
+
+            return keyIdentifier;
+        } catch (final Exception e) {
+            Logger.verbose(TAG + methodName, e.getMessage());
+            return "EXCEPTION OCCURRED GETTING KEY IDENTIFIER";
         }
     }
 

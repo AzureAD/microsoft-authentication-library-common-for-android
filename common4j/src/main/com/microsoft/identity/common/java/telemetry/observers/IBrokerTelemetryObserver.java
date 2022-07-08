@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation.
+
 // All rights reserved.
 //
 // This code is licensed under the MIT License.
@@ -20,14 +20,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.telemetry.events;
+package com.microsoft.identity.common.java.telemetry.observers;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-
-/**
- * Deprecated. Use {@link com.microsoft.identity.common.java.telemetry.events.ApiEndEvent} instead.
- **/
-@SuppressFBWarnings("NM_SAME_SIMPLE_NAME_AS_SUPERCLASS")
-@Deprecated
-public class ApiEndEvent extends com.microsoft.identity.common.java.telemetry.events.ApiEndEvent {
+public interface IBrokerTelemetryObserver extends ITelemetryAggregatedObserver {
 }
