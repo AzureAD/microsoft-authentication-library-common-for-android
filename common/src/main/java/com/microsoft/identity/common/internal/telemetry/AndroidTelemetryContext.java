@@ -69,11 +69,12 @@ public class AndroidTelemetryContext extends AbstractTelemetryContext {
 
             if (applicationInfo != null) {
                 packageName = applicationInfo.packageName;
-                try {
-                    applicationName = context.getString(applicationInfo.labelRes);
-                } catch (Resources.NotFoundException exception) {
+
+                if (applicationInfo.labelRes == 0) {
                     applicationName = applicationInfo.nonLocalizedLabel == null ? packageName :
                             applicationInfo.nonLocalizedLabel.toString();
+                } else {
+                    applicationName = context.getString(applicationInfo.labelRes);
                 }
             }
 
