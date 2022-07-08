@@ -76,12 +76,17 @@ public class AndroidAuthSdkStorageEncryptionManager extends StorageEncryptionMan
     @Override
     public @NonNull List<AbstractSecretKeyLoader> getKeyLoaderForDecryption(@NonNull byte[] cipherText) {
         final String methodTag = TAG + ":getKeyLoaderForDecryption";
-        if (mPredefinedKeyLoader != null &&
-                isEncryptedByThisKeyIdentifier(cipherText, PredefinedKeyLoader.USER_PROVIDED_KEY_IDENTIFIER)) {
-            return Collections.<AbstractSecretKeyLoader>singletonList(mPredefinedKeyLoader);
-        }
 
-        if (isEncryptedByThisKeyIdentifier(cipherText, AndroidWrappedKeyLoader.KEY_IDENTIFIER)) {
+        final String keyIdentifier = getKeyIdentifierFromCipherText(cipherText);
+        if (PredefinedKeyLoader.USER_PROVIDED_KEY_IDENTIFIER.equalsIgnoreCase(keyIdentifier)) {
+            if (mPredefinedKeyLoader != null) {
+                return Collections.<AbstractSecretKeyLoader>singletonList(mPredefinedKeyLoader);
+            } else {
+                throw new IllegalStateException(
+                        "Cipher Text is encrypted by USER_PROVIDED_KEY_IDENTIFIER, " +
+                                "but mPredefinedKeyLoader is null.");
+            }
+        } else if (AndroidWrappedKeyLoader.KEY_IDENTIFIER.equalsIgnoreCase(keyIdentifier)) {
             return Collections.<AbstractSecretKeyLoader>singletonList(mKeyStoreKeyLoader);
         }
 
