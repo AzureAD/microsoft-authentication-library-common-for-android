@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.ui.browser;
 
+import static com.microsoft.identity.common.java.util.BrokerProtocolVersionUtil.compareSemanticVersion;
+
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
@@ -32,10 +34,10 @@ import android.os.Build;
 
 import androidx.annotation.NonNull;
 
-import com.microsoft.identity.common.internal.util.StringUtil;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.ui.BrowserDescriptor;
+import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.logging.Logger;
 import com.microsoft.identity.common.internal.broker.PackageHelper;
 
@@ -98,13 +100,13 @@ public class BrowserSelector {
             return false;
         }
 
-        if (!StringUtil.isEmpty(descriptor.getVersionLowerBound())
-                && StringUtil.compareSemanticVersion(browser.getVersion(), descriptor.getVersionLowerBound()) == -1) {
+        if (!StringUtil.isNullOrEmpty(descriptor.getVersionLowerBound())
+                && compareSemanticVersion(browser.getVersion(), descriptor.getVersionLowerBound()) == -1) {
             return false;
         }
 
-        if (!StringUtil.isEmpty(descriptor.getVersionUpperBound())
-                && StringUtil.compareSemanticVersion(browser.getVersion(), descriptor.getVersionUpperBound()) == 1) {
+        if (!StringUtil.isNullOrEmpty(descriptor.getVersionUpperBound())
+                && compareSemanticVersion(browser.getVersion(), descriptor.getVersionUpperBound()) == 1) {
             return false;
         }
 
