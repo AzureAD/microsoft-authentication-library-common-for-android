@@ -43,21 +43,28 @@ public class ApiEndEvent extends BaseEvent {
         types(EventType.API_EVENT);
     }
 
+    public ApiEndEvent(@NonNull final String apiId) {
+        super();
+        names(Event.API_END_EVENT);
+        types(EventType.API_EVENT);
+        putApiId(apiId);
+    }
+
     public ApiEndEvent putResult(@Nullable final AcquireTokenResult result) {
         if (result == null) {
             return this;
         }
 
-        if (result.getSucceeded() != null) {
-            put(Key.IS_SUCCESSFUL, result.getSucceeded().toString());
-        }
+        put(Key.IS_SUCCESSFUL, result.getSucceeded() ? Value.TRUE : Value.FALSE);
 
         if (null != result.getLocalAuthenticationResult()) {
             put(Key.USER_ID, result.getLocalAuthenticationResult().getUniqueId()); //pii
             put(Key.TENANT_ID, result.getLocalAuthenticationResult().getTenantId()); //pii
             put(Key.SPE_RING, result.getLocalAuthenticationResult().getSpeRing());
             put(Key.RT_AGE, result.getLocalAuthenticationResult().getRefreshTokenAge());
+            correlationId(result.getLocalAuthenticationResult().getCorrelationId());
         }
+
 
         return this;
     }
@@ -88,15 +95,13 @@ public class ApiEndEvent extends BaseEvent {
     }
 
     @Override
-    public ApiEndEvent put(@NonNull final String propertyName,final String propertyValue) {
+    public ApiEndEvent put(@NonNull final String propertyName, final String propertyValue) {
         super.put(propertyName, propertyValue);
         return this;
     }
 
     public ApiEndEvent isApiCallSuccessful(final Boolean isSuccessful) {
-        if (isSuccessful != null) {
-            put(Key.IS_SUCCESSFUL, isSuccessful.toString());
-        }
+        put(Key.IS_SUCCESSFUL, isSuccessful ? Value.TRUE : Value.FALSE);
         return this;
     }
 

@@ -159,7 +159,7 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
      * @return The newly generated RSA KeyPair.
      * @throws UnsupportedOperationException
      */
-    @SuppressLint(NewApi)
+    @SuppressLint("NewApi")
     private KeyPair generateNewRsaKeyPair(@androidx.annotation.NonNull final Context context,
                                           final int minKeySize)
             throws UnsupportedOperationException, InvalidAlgorithmParameterException,
