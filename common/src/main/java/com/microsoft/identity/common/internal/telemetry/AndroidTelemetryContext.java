@@ -26,6 +26,7 @@ import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.content.res.Resources;
 import android.os.Build;
 
 import androidx.core.content.pm.PackageInfoCompat;
@@ -67,9 +68,13 @@ public class AndroidTelemetryContext extends AbstractTelemetryContext {
             String packageName = "";
 
             if (applicationInfo != null) {
-                applicationName = applicationInfo.labelRes == 0 && applicationInfo.nonLocalizedLabel != null ?
-                        applicationInfo.nonLocalizedLabel.toString() : context.getString(applicationInfo.labelRes);
                 packageName = applicationInfo.packageName;
+                try {
+                    applicationName = context.getString(applicationInfo.labelRes);
+                } catch (Resources.NotFoundException exception) {
+                    applicationName = applicationInfo.nonLocalizedLabel == null ? packageName :
+                            applicationInfo.nonLocalizedLabel.toString();
+                }
             }
 
             super.addApplicationInfo(
