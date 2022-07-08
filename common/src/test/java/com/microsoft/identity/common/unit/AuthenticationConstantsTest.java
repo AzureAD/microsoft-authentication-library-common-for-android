@@ -10,8 +10,4 @@ public class AuthenticationConstantsTest {
     public void testComputeMaxBrokerHostVersion() {
         Assert.assertEquals("2.0", AuthenticationConstants.Broker.computeMaxHostBrokerProtocol());
     }
-    @Test
-    public void testComputeMaxMsalVersion() {
-        Assert.assertEquals("7.0", AuthenticationConstants.Broker.computeMaxMsalBrokerProtocol());
-    }
 }
