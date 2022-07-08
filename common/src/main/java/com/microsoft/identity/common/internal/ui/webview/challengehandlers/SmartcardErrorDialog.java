@@ -100,7 +100,6 @@ public class SmartcardErrorDialog extends SmartcardDialog {
     void onCancelCba() {
         //Handle cancelling the same as the positive button.
         mDismissCallback.onClick();
-        dismiss();
     }
 
     /**
