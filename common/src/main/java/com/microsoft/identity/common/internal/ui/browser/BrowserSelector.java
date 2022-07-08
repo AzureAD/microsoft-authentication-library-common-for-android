@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.ui.browser;
 
+import static com.microsoft.identity.common.java.util.BrokerProtocolVersionUtil.compareSemanticVersion;
+
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
@@ -99,12 +101,12 @@ public class BrowserSelector {
         }
 
         if (!StringUtil.isNullOrEmpty(descriptor.getVersionLowerBound())
-                && StringUtil.compareSemanticVersion(browser.getVersion(), descriptor.getVersionLowerBound()) == -1) {
+                && compareSemanticVersion(browser.getVersion(), descriptor.getVersionLowerBound()) == -1) {
             return false;
         }
 
         if (!StringUtil.isNullOrEmpty(descriptor.getVersionUpperBound())
-                && StringUtil.compareSemanticVersion(browser.getVersion(), descriptor.getVersionUpperBound()) == 1) {
+                && compareSemanticVersion(browser.getVersion(), descriptor.getVersionUpperBound()) == 1) {
             return false;
         }
 

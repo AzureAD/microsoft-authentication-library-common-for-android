@@ -43,7 +43,7 @@ public class BrokerProtocolVersionUtil {
      * @return true if the negotiated protocol version is larger or equal than
      * the {@link BrokerProtocolVersionUtil#MSAL_TO_BROKER_PROTOCOL_COMPRESSION_CHANGES_MINIMUM_VERSION}.
      */
-    public static boolean canCompressBrokerPayloads(@Nullable String negotiatedBrokerProtocol) {
+    public static final boolean canCompressBrokerPayloads(@Nullable String negotiatedBrokerProtocol) {
         return isNegotiatedBrokerProtocolLargerOrEqualThanRequiredBrokerProtocol(
                 negotiatedBrokerProtocol,
                 MSAL_TO_BROKER_PROTOCOL_COMPRESSION_CHANGES_MINIMUM_VERSION);
@@ -56,7 +56,7 @@ public class BrokerProtocolVersionUtil {
      * @return true if the client protocol version is larger or equal than
      * the {@link BrokerProtocolVersionUtil#MSAL_TO_BROKER_PROTOCOL_ACCOUNT_FROM_PRT_CHANGES_MINIMUM_VERSION}.
      */
-    public static boolean canFociAppsConstructAccountsFromPrtIdTokens(@Nullable String clientRequiredBrokerProtocolVersion) {
+    public static final boolean canFociAppsConstructAccountsFromPrtIdTokens(@Nullable String clientRequiredBrokerProtocolVersion) {
         return isNegotiatedBrokerProtocolLargerOrEqualThanRequiredBrokerProtocol(
                 clientRequiredBrokerProtocolVersion,
                 MSAL_TO_BROKER_PROTOCOL_ACCOUNT_FROM_PRT_CHANGES_MINIMUM_VERSION);
@@ -70,15 +70,68 @@ public class BrokerProtocolVersionUtil {
      * @return true if the negotiated broker protocol larger or equal than required broker protocol,
      * false otherwise.
      */
-    protected static boolean isNegotiatedBrokerProtocolLargerOrEqualThanRequiredBrokerProtocol(
+    protected static final boolean isNegotiatedBrokerProtocolLargerOrEqualThanRequiredBrokerProtocol(
             @Nullable final String negotiatedBrokerProtocol,
             @NonNull final String requiredBrokerProtocol) {
 
         if (StringUtil.isNullOrEmpty(negotiatedBrokerProtocol)) {
             return false;
         }
-        return StringUtil.isFirstVersionLargerOrEqual(
+        return isFirstVersionLargerOrEqual(
                 negotiatedBrokerProtocol,
                 requiredBrokerProtocol);
     }
+
+    /**
+     * Returns true if the first semantic version is smaller or equal to the second version.
+     */
+    public static final boolean isFirstVersionSmallerOrEqual(@NonNull final String first,
+                                                             @Nullable final String second) {
+        return compareSemanticVersion(first, second) <= 0;
+    }
+
+    /**
+     * Returns true if the first semantic version is larger or equal to the second version.
+     */
+    public static final boolean isFirstVersionLargerOrEqual(@NonNull final String first,
+                                                            @Nullable final String second) {
+        return compareSemanticVersion(first, second) >= 0;
+    }
+
+    /**
+     * The function to compare the two versions.
+     *
+     * @param thisVersion
+     * @param thatVersion
+     * @return int -1 if thisVersion is smaller than thatVersion,
+     * 1 if thisVersion is larger than thatVersion,
+     * 0 if thisVersion is equal to thatVersion.
+     */
+    public static final int compareSemanticVersion(@NonNull final String thisVersion,
+                                                   @Nullable final String thatVersion) {
+        if (thatVersion == null) {
+            return 1;
+        }
+
+        final String[] thisParts = thisVersion.split("\\.");
+        final String[] thatParts = thatVersion.split("\\.");
+
+        final int length = Math.max(thisParts.length, thatParts.length);
+
+        for (int i = 0; i < length; i++) {
+            int thisPart = i < thisParts.length ? Integer.parseInt(thisParts[i]) : 0;
+            int thatPart = i < thatParts.length ? Integer.parseInt(thatParts[i]) : 0;
+
+            if (thisPart < thatPart) {
+                return -1;
+            }
+
+            if (thisPart > thatPart) {
+                return 1;
+            }
+        }
+
+        return 0;
+    }
+
 }
