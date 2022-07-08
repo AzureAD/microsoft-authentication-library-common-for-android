@@ -50,26 +50,22 @@ public class SmartcardCertPickerDialog extends SmartcardDialog {
 
     private final List<ClientCertAuthChallengeHandler.YubiKitCertDetails> mCertList;
     private final PositiveButtonListener mPositiveButtonListener;
-    private final NegativeButtonListener mNegativeButtonListener;
     private final CancelCbaCallback mCancelCbaCallback;
 
     /**
      * Creates new instance of SmartcardCertPickerDialog.
      * @param certList List of ClientCertAuthChallengeHandler.YubiKitCertDetails compiled from certificates on YubiKey.
      * @param positiveButtonListener Implemented Listener for a positive button click.
-     * @param negativeButtonListener Implemented Listener for a negative button click.
-     * @param cancelCbaCallback Implemented Callback for when CBA is cancelled unexpectedly.
+     * @param cancelCbaCallback Implemented Callback for when CBA is being cancelled.
      * @param activity Host activity.
      */
     public SmartcardCertPickerDialog(@NonNull final List<ClientCertAuthChallengeHandler.YubiKitCertDetails> certList,
                                      @NonNull final PositiveButtonListener positiveButtonListener,
-                                     @NonNull final NegativeButtonListener negativeButtonListener,
                                      @NonNull final CancelCbaCallback cancelCbaCallback,
                                      @NonNull final Activity activity) {
         super(activity);
         mCertList = certList;
         mPositiveButtonListener = positiveButtonListener;
-        mNegativeButtonListener = negativeButtonListener;
         mCancelCbaCallback = cancelCbaCallback;
         createDialog();
     }
@@ -106,7 +102,7 @@ public class SmartcardCertPickerDialog extends SmartcardDialog {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
                                 //On request by user, cancel flow.
-                                mNegativeButtonListener.onClick();
+                                mCancelCbaCallback.onCancel();
                             }
                         });
                 // Create dialog.
@@ -128,7 +124,7 @@ public class SmartcardCertPickerDialog extends SmartcardDialog {
                 alertDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
                     @Override
                     public void onCancel(DialogInterface dialog) {
-                        mNegativeButtonListener.onClick();
+                        mCancelCbaCallback.onCancel();
                     }
                 });
                 mDialog = alertDialog;
@@ -143,8 +139,6 @@ public class SmartcardCertPickerDialog extends SmartcardDialog {
     public void onCancelCba() {
         //Call CancelCbaCallback's onCancel
         mCancelCbaCallback.onCancel();
-        //Dismiss dialog
-        dismiss();
     }
 
     /**
@@ -155,14 +149,7 @@ public class SmartcardCertPickerDialog extends SmartcardDialog {
     }
 
     /**
-     * Listener interface for a negative button click.
-     */
-    public interface NegativeButtonListener {
-        void onClick();
-    }
-
-    /**
-     * Callback interface for when CBA is cancelled unexpectedly.
+     * Callback interface for when CBA is being cancelled.
      */
     public interface CancelCbaCallback {
         void onCancel();

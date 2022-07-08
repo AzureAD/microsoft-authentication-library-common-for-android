@@ -236,18 +236,11 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
                     mDialogHolder.showCertPickerDialog(
                             certList,
                             getSmartcardCertPickerDialogPositiveButtonListener(request),
-                            new SmartcardCertPickerDialog.NegativeButtonListener() {
-                                @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-                                @Override
-                                public void onClick() {
-                                    mDialogHolder.dismissDialog();
-                                    request.cancel();
-                                }
-                            },
                             new SmartcardCertPickerDialog.CancelCbaCallback() {
                                 @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
                                 @Override
                                 public void onCancel() {
+                                    mDialogHolder.dismissDialog();
                                     request.cancel();
                                 }
                             });
@@ -359,18 +352,11 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
                 //Need to prompt user for pin and verify pin. The positive button listener will handle the rest of the CBA flow.
                 mDialogHolder.showPinDialog(
                         getSmartcardPinDialogPositiveButtonListener(certDetails, request),
-                        new SmartcardPinDialog.NegativeButtonListener() {
-                            @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-                            @Override
-                            public void onClick() {
-                                mDialogHolder.dismissDialog();
-                                request.cancel();
-                            }
-                        },
                         new SmartcardPinDialog.CancelCbaCallback() {
                             @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
                             @Override
                             public void onCancel() {
+                                mDialogHolder.dismissDialog();
                                 request.cancel();
                             }
                         });

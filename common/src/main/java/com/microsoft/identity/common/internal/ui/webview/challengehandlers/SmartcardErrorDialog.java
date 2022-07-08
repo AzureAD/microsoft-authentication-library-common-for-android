@@ -37,23 +37,23 @@ public class SmartcardErrorDialog extends SmartcardDialog {
 
     private final int mTitleStringResourceId;
     private final int mMessageStringResourceId;
-    private final PositiveButtonListener mPositiveButtonListener;
+    private final DismissCallback mDismissCallback;
 
     /**
      * Create new instance of SmartcardErrorDialog.
      * @param titleStringResourceId String resource id for text to be displayed as the title in dialog.
      * @param messageStringResourceId String resource id for text to be displayed as the message in dialog.
-     * @param positiveButtonListener Implemented Listener for a positive button click.
+     * @param dismissCallback Implemented callback for when dialog is to be dismissed (positive button click or back button).
      * @param activity Host activity.
      */
-    public SmartcardErrorDialog(@NonNull final int titleStringResourceId,
-                                @NonNull final int messageStringResourceId,
-                                @NonNull final PositiveButtonListener positiveButtonListener,
+    public SmartcardErrorDialog(final int titleStringResourceId,
+                                final int messageStringResourceId,
+                                @NonNull final DismissCallback dismissCallback,
                                 @NonNull final Activity activity) {
         super(activity);
         mTitleStringResourceId = titleStringResourceId;
         mMessageStringResourceId = messageStringResourceId;
-        mPositiveButtonListener = positiveButtonListener;
+        mDismissCallback = dismissCallback;
         createDialog();
     }
 
@@ -74,7 +74,7 @@ public class SmartcardErrorDialog extends SmartcardDialog {
                         .setPositiveButton(R.string.smartcard_error_dialog_positive_button, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                mPositiveButtonListener.onClick();
+                                mDismissCallback.onClick();
                             }
                         });
                 AlertDialog dialog = builder.create();
@@ -85,7 +85,7 @@ public class SmartcardErrorDialog extends SmartcardDialog {
                 dialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
                     @Override
                     public void onCancel(DialogInterface dialog) {
-                        mPositiveButtonListener.onClick();
+                        mDismissCallback.onClick();
                     }
                 });
                 mDialog = dialog;
@@ -99,14 +99,14 @@ public class SmartcardErrorDialog extends SmartcardDialog {
     @Override
     void onCancelCba() {
         //Handle cancelling the same as the positive button.
-        mPositiveButtonListener.onClick();
+        mDismissCallback.onClick();
         dismiss();
     }
 
     /**
-     * Listener interface for a positive button click.
+     * Callback interface for when dialog is to be dismissed (usually by positive button click or back button).
      */
-    public interface PositiveButtonListener {
+    public interface DismissCallback {
         void onClick();
     }
 }

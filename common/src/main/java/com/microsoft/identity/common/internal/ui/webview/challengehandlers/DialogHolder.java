@@ -34,17 +34,14 @@ public class DialogHolder {
      * Build and show picker that prompts user to select a certificate for authentication.
      * @param certList List of YubiKitCertDetails that contains cert details only pertinent to the cert picker.
      * @param positiveButtonListener A PositiveButtonListener to be set for a SmartcardCertPickerDialog.
-     * @param negativeButtonListener A NegativeButtonListener to be set for a SmartcardCertPickerDialog.
-     * @param cancelCbaCallback      A Callback that holds code to be run when a YubiKey unexpectedly unplugs.
+     * @param cancelCbaCallback      A Callback that holds code to be run when CBA is being cancelled.
      */
     public synchronized void showCertPickerDialog(@NonNull final List<ClientCertAuthChallengeHandler.YubiKitCertDetails> certList,
                                                   @NonNull final SmartcardCertPickerDialog.PositiveButtonListener positiveButtonListener,
-                                                  @NonNull final SmartcardCertPickerDialog.NegativeButtonListener negativeButtonListener,
                                                   @NonNull final SmartcardCertPickerDialog.CancelCbaCallback cancelCbaCallback) {
         final SmartcardCertPickerDialog certPickerDialog = new SmartcardCertPickerDialog(
                 certList,
                 positiveButtonListener,
-                negativeButtonListener,
                 cancelCbaCallback,
                 mActivity);
         //Show cert picker dialog.
@@ -54,15 +51,12 @@ public class DialogHolder {
     /**
      * Build and show PIN dialog that prompts user to type in their PIN for their YubiKey.
      * @param positiveButtonListener A PositiveButtonListener to be set for a SmartcardPinDialog.
-     * @param negativeButtonListener A NegativeButtonListener to be set for a SmartcardPinDialog.
-     * @param cancelCbaCallback      A Callback that holds code to be run when a YubiKey unexpectedly unplugs.
+     * @param cancelCbaCallback      A Callback that holds code to be run when CBA is being cancelled.
      */
     public synchronized void showPinDialog(@NonNull final SmartcardPinDialog.PositiveButtonListener positiveButtonListener,
-                                           @NonNull final SmartcardPinDialog.NegativeButtonListener negativeButtonListener,
                                            @NonNull final SmartcardPinDialog.CancelCbaCallback cancelCbaCallback) {
         final SmartcardPinDialog pinDialog = new SmartcardPinDialog(
                 positiveButtonListener,
-                negativeButtonListener,
                 cancelCbaCallback,
                 mActivity);
         //Show PinDialog, which should always be called after a positive button press.
@@ -78,11 +72,11 @@ public class DialogHolder {
         showDialog(new SmartcardErrorDialog(
                 titleStringResourceId,
                 messageStringResourceId,
-                new SmartcardErrorDialog.PositiveButtonListener() {
+                new SmartcardErrorDialog.DismissCallback() {
                     @Override
                     public void onClick() {
-                        //Reset currentDialog to null
-                        mCurrentDialog = null;
+                        //Call dismissDialog
+                        dismissDialog();
                     }
                 },
                 mActivity));
