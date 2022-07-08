@@ -23,17 +23,18 @@
 package com.microsoft.identity.client.ui.automation.broker;
 
 import android.Manifest;
+import android.content.Context;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.widget.Button;
 import android.widget.EditText;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.test.platform.app.InstrumentationRegistry;
-import androidx.test.uiautomator.UiDevice;
+import androidx.test.core.app.ApplicationProvider;
 import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObjectNotFoundException;
-import androidx.test.uiautomator.UiSelector;
 
 import com.microsoft.identity.client.ui.automation.installer.IAppInstaller;
 import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.AdfsPromptHandler;
@@ -49,10 +50,10 @@ import org.junit.Assert;
 
 import lombok.Getter;
 
-import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT;
 
 /**
- * A model for interacting with the Microsoft Authenticator Broker App during UI Test.
+ * Serves as the base class interacting with the Microsoft Authenticator Broker App during UI Test. The base class should be extended
+ * by BrokerAuthenticatorUpdatedVersionImpl, BrokerAuthenticatorPreviousVersionImpl
  */
 @Getter
 public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements ITestBroker, IPowerLiftIntegratedApp {
@@ -60,12 +61,17 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
     public final static String AUTHENTICATOR_APP_PACKAGE_NAME = "com.azure.authenticator";
     public final static String AUTHENTICATOR_APP_NAME = "Microsoft Authenticator";
     public final static String AUTHENTICATOR_APK = "Authenticator.apk";
+    private final static String UPDATE_VERSION_NUMBER = "6.2206.3949";
+    private final static String OLD_VERSION_NUMBER = "6.2203.1651";
 
     private final static String INCIDENT_MSG = "Broker Automation Incident";
 
-    public static final String TAG = BrokerMicrosoftAuthenticator.class.getSimpleName();
+    private static final String TAG = BrokerMicrosoftAuthenticator.class.getSimpleName();
 
-    private boolean isInSharedDeviceMode = false;
+    protected boolean isInSharedDeviceMode = false;
+
+    private BrokerMicrosoftAuthenticator brokerMicrosoftAuthenticatorImpl;
+
 
     public BrokerMicrosoftAuthenticator() {
         super(AUTHENTICATOR_APP_PACKAGE_NAME, AUTHENTICATOR_APP_NAME);
@@ -84,81 +90,18 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
     }
 
     @Override
-    public void performDeviceRegistration(String username, String password, boolean isFederatedUser) {
-        Logger.i(TAG, "Performing Device Registration for the given account..");
-        performDeviceRegistrationHelper(
-                username,
-                password,
-                "com.azure.authenticator:id/email_input",
-                "com.azure.authenticator:id/register_button",
-                isFederatedUser
-        );
-
-
-        try {
-            // after device registration, make sure that we see the unregister btn to confirm successful
-            // registration
-            final UiObject unRegisterBtn = UiAutomatorUtils.obtainUiObjectWithResourceId(
-                    "com.azure.authenticator:id/unregister_button"
-            );
-            Assert.assertTrue(
-                    "Microsoft Authenticator - Unregister Button appears.",
-                    unRegisterBtn.exists()
-            );
-
-            Assert.assertTrue(
-                    "Microsoft Authenticator - Unregister Button is clickable.",
-                    unRegisterBtn.isClickable()
-            );
-
-            // after device registration, make sure that the current registration upn matches with
-            // with what was passed in
-            final UiObject currentRegistration = UiAutomatorUtils.obtainUiObjectWithResourceId(
-                    "com.azure.authenticator:id/current_registered_email"
-            );
-
-            Assert.assertTrue(
-                    "Microsoft Authenticator - Registered account info appears.",
-                    currentRegistration.exists()
-            );
-
-            Assert.assertTrue(
-                    "Microsoft Authenticator - Registered account upn matches provided upn.",
-                    currentRegistration.getText().equalsIgnoreCase(username)
-            );
-        } catch (final UiObjectNotFoundException e) {
-            throw new AssertionError(e);
-        }
+    public void performDeviceRegistration(@NonNull final String username,
+                                          @NonNull final String password,
+                                          final boolean isFederatedUser) {
+        brokerMicrosoftAuthenticatorImpl.performDeviceRegistration(username, password, isFederatedUser);
     }
 
     @Override
     public void performSharedDeviceRegistration(@NonNull final String username,
                                                 @NonNull final String password) {
-        Logger.i(TAG, "Performing Shared Device Registration for the given account..");
-        performDeviceRegistrationHelper(
-                username,
-                password,
-                "com.azure.authenticator:id/shared_device_registration_email_input",
-                "com.azure.authenticator:id/shared_device_registration_button",
-                false
-        );
-
-        final UiDevice device =
-                UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
-
-        final UiSelector sharedDeviceConfirmationSelector = new UiSelector()
-                .descriptionContains("Shared Device Mode")
-                .className("android.widget.ImageView");
-
-        //confirm that we are in Shared Device Mode inside Authenticator
-        final UiObject sharedDeviceConfirmation = device.findObject(sharedDeviceConfirmationSelector);
-        sharedDeviceConfirmation.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
-        Assert.assertTrue(
-                "Microsoft Authenticator - Shared Device Confirmation page appears.",
-                sharedDeviceConfirmation.exists());
-
-        isInSharedDeviceMode = true;
+        brokerMicrosoftAuthenticatorImpl.performSharedDeviceRegistration(username, password);
     }
+
 
     @Nullable
     @Override
@@ -181,30 +124,7 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
 
     @Override
     public void enableBrowserAccess() {
-        Logger.i(TAG, "Enable Browser Access..");
-        // open device registration page
-        openDeviceRegistrationPage();
-
-        // Click enable browser access
-        UiAutomatorUtils.handleButtonClick(
-                "com.azure.authenticator:id/enable_browser_access_button"
-        );
-
-        // click continue in Dialog
-        UiAutomatorUtils.handleButtonClick("android:id/button1");
-
-        final UiDevice device =
-                UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
-
-        // Install cert
-        final UiObject certInstaller = device.findObject(new UiSelector().packageName("com.android.certinstaller"));
-        certInstaller.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
-        Assert.assertTrue(
-                "Microsoft Authenticator - cert installer dialog appears.",
-                certInstaller.exists()
-        );
-
-        UiAutomatorUtils.handleButtonClick("android:id/button1");
+        brokerMicrosoftAuthenticatorImpl.enableBrowserAccess();
     }
 
     @Override
@@ -321,40 +241,23 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
         if (shouldHandleFirstRun) {
             handleFirstRun(); // handle first run experience
         }
+        goToDeviceRegistrationPage();
 
-        // click the 3 dot menu icon in top right
-        UiAutomatorUtils.handleButtonClick("com.azure.authenticator:id/menu_overflow");
-
-        try {
-            // select Settings from drop down
-            final UiObject settings = UiAutomatorUtils.obtainUiObjectWithText("Settings");
-            settings.click();
-
-            // scroll down the recycler view to find device registration btn
-            final UiObject deviceRegistration = UiAutomatorUtils.obtainChildInScrollable(
-                    "com.azure.authenticator:id/recycler_view",
-                    "Device registration"
-            );
-
-            assert deviceRegistration != null;
-
-            // click the device registration button
-            deviceRegistration.click();
-
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-                // grant the GET ACCOUNTS permission if needed
-                grantPermission(Manifest.permission.GET_ACCOUNTS);
-            }
-        } catch (final UiObjectNotFoundException e) {
-            throw new AssertionError(e);
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+            // grant the GET ACCOUNTS permission if needed
+            grantPermission(Manifest.permission.GET_ACCOUNTS);
         }
     }
 
-    private void performDeviceRegistrationHelper(@NonNull final String username,
-                                                 @NonNull final String password,
-                                                 @NonNull final String emailInputResourceId,
-                                                 @NonNull final String registerBtnResourceId,
-                                                 final boolean isFederatedUser) {
+    protected void goToDeviceRegistrationPage() {
+        brokerMicrosoftAuthenticatorImpl.goToDeviceRegistrationPage();
+    }
+
+    protected void performDeviceRegistrationHelper(@NonNull final String username,
+                                                   @NonNull final String password,
+                                                   @NonNull final String emailInputResourceId,
+                                                   @NonNull final String registerBtnResourceId,
+                                                   final boolean isFederatedUser) {
         Logger.i(TAG, "Execution of Helper for Device Registration..");
         // open device registration page
         openDeviceRegistrationPage();
@@ -400,5 +303,31 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
         // the skip button
         UiAutomatorUtils.handleButtonClick("com.azure.authenticator:id/frx_skip_button");
         shouldHandleFirstRun = false;
+    }
+
+    @Override
+    protected void initialiseAppImpl() {
+        final Context context = ApplicationProvider.getApplicationContext();
+        try {
+            PackageInfo packageInfo = context.getPackageManager().getPackageInfo("com.azure.authenticator", 0);
+            // authenticator app follows version number format - V.YYMM.XXXX
+            // V is the major version, YYMM are last two digits of an year followed by month
+            // XXXX is number of hours passed after Jan1st 00.00 of current year
+            // String comparison of versions should work for this format
+            final String authenticatorAppVersion = packageInfo.versionName;
+            Logger.i(TAG, "Version of Authenticator app installed is " + authenticatorAppVersion);
+            if (authenticatorAppVersion.compareTo(UPDATE_VERSION_NUMBER) >= 0) {
+                // Use latest automation code as this is the new updated authenticator app
+                brokerMicrosoftAuthenticatorImpl = new BrokerAuthenticatorUpdatedVersionImpl();
+                Logger.i(TAG, "Using updated implementation of authenticator");
+            } else if (authenticatorAppVersion.compareTo(OLD_VERSION_NUMBER) <= 0) {
+                brokerMicrosoftAuthenticatorImpl = new BrokerAuthenticatorPreviousVersionImpl();
+                Logger.i(TAG, "Using previous implementation of authenticator");
+            } else {
+                Assert.fail("Authenticator app version is not supported");
+            }
+        } catch (final PackageManager.NameNotFoundException e) {
+            throw new AssertionError(e);
+        }
     }
 }

@@ -414,4 +414,9 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
             throw new AssertionError(e);
         }
     }
+
+    @Override
+    protected void initialiseAppImpl() {
+       // nothing needed here
+    }
 }
