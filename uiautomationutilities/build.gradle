@@ -42,9 +42,13 @@ android {
 
     def final installSourcePlayStore = "PlayStore"
     def final installSourceLocalApk = "LocalApk"
+    def final updateSourcePlayStore = "PlayStore"
+    def final updateSourceLocalApk = "LocalApk"
 
     // defaults to LocalApkFile - the file must be pushed to the device before tests
     def brokerInstallationSource = installSourcePlayStore
+
+    def brokerUpdationSource = updateSourcePlayStore
 
     def wordAppInstallationSource = installSourcePlayStore
 
@@ -56,6 +60,18 @@ android {
         } else {
             throw new InvalidUserDataException("Unspported broker source provided: "
                     + brokerSource
+                    + " Only the following broker sources are supported: PlayStore , LocalApk");
+        }
+    }
+
+    if (project.hasProperty("brokerUpdateSource")) {
+        if (brokerUpdateSource.equalsIgnoreCase(updateSourcePlayStore)) {
+            brokerUpdationSource = updateSourcePlayStore
+        } else if (brokerUpdateSource.equalsIgnoreCase(updateSourceLocalApk)) {
+            brokerUpdationSource = updateSourceLocalApk
+        } else {
+            throw new InvalidUserDataException("Unspported update broker source provided: "
+                    + brokerUpdateSource
                     + " Only the following broker sources are supported: PlayStore , LocalApk");
         }
     }
@@ -81,10 +97,14 @@ android {
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "BROKER_INSTALL_SOURCE", "\"$brokerInstallationSource\"")
+        buildConfigField("String", "BROKER_UPDATE_SOURCE", "\"$brokerUpdationSource\"")
         buildConfigField("String", "WORD_APP_INSTALL_SOURCE", "\"$wordAppInstallationSource\"")
         buildConfigField("String", "INSTALL_SOURCE_PLAY_STORE", "\"$installSourcePlayStore\"")
         buildConfigField("String", "INSTALL_SOURCE_LOCAL_APK", "\"$installSourceLocalApk\"")
+        buildConfigField("String", "UPDATE_SOURCE_PLAY_STORE", "\"$updateSourcePlayStore\"")
+        buildConfigField("String", "UPDATE_SOURCE_LOCAL_APK", "\"$updateSourceLocalApk\"")
         buildConfigField("boolean", "PREFER_PRE_INSTALLED_APKS", "$usePreInstalledApks")
+
 
         // Specifies a sorted list of flavors that the plugin should try to use from
         // a given dimension. The following tells the plugin that, when encountering
