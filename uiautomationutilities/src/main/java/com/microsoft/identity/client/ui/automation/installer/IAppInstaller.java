@@ -34,4 +34,10 @@ public interface IAppInstaller {
      */
     void installApp(final String appHint);
 
+    /**
+     * Updates the supplied app on the device.
+     *
+     * @param appHint The app name or the package name of the app to update
+     */
+    void updateApp(final String appHint);
 }

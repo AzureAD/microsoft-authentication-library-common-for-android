@@ -70,7 +70,7 @@ public abstract class App implements IApp {
     public App(@NonNull final String packageName) {
         this.packageName = packageName;
         this.appInstaller = new PlayStore();
-        this.updateAppInstaller = new PlayStore();
+        this.updateAppInstaller = new LocalApkInstaller();
     }
 
     public App(@NonNull final String packageName, @NonNull final String appName) {
@@ -82,7 +82,7 @@ public abstract class App implements IApp {
         this.appInstaller = appInstaller;
         this.packageName = packageName;
         // update installer is PlayStore by default
-        this.updateAppInstaller = new PlayStore();
+        this.updateAppInstaller = new LocalApkInstaller();
     }
 
     public App(@NonNull final String packageName,
@@ -92,7 +92,7 @@ public abstract class App implements IApp {
         this.packageName = packageName;
         this.appName = appName;
         // update installer is PlayStore by default
-        this.updateAppInstaller = new PlayStore();
+        this.updateAppInstaller = new LocalApkInstaller();
     }
 
     public App(@NonNull final String packageName,
@@ -148,13 +148,15 @@ public abstract class App implements IApp {
 
     @Override
     public void update() {
+        String appHint;
         if (updateAppInstaller instanceof LocalApkInstaller && !TextUtils.isEmpty(localApkFileName)) {
             Logger.i(TAG, "Updating the " + this.appName + " from local apk..");
-            AdbShellUtils.updatePackage(LocalApkInstaller.LOCAL_APK_PATH_PREFIX + localApkFileName, "-t", "-r", "-d");
+            appHint = localApkFileName;
         } else {
             Logger.i(TAG, "Updating the " + this.appName + " from Play Store..");
-            ((PlayStore) updateAppInstaller).updateApp(packageName);
+            appHint = packageName;
         }
+        updateAppInstaller.updateApp(appHint);
     }
 
     @Override
