@@ -64,7 +64,7 @@ public abstract class AbstractTestBroker extends App implements ITestBroker {
             .equalsIgnoreCase(BuildConfig.BROKER_INSTALL_SOURCE)
             ? new LocalApkInstaller() : new PlayStore();
     public final static IAppInstaller DEFAULT_BROKER_APP_UPDATE_INSTALLER = BuildConfig.INSTALL_SOURCE_LOCAL_APK
-            .equalsIgnoreCase(BuildConfig.BROKER_INSTALL_SOURCE)
+            .equalsIgnoreCase(BuildConfig.BROKER_UPDATE_SOURCE)
             ? new LocalApkInstaller() : new PlayStore();
 
     @Override

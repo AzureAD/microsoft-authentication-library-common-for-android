@@ -47,12 +47,19 @@ public class AzureSampleApp extends App {
     private static final String AZURE_SAMPLE_PACKAGE_NAME = "com.azuresamples.msalandroidapp";
     private static final String AZURE_SAMPLE_APP_NAME = "Azure Sample";
     public final static String AZURE_SAMPLE_APK = "AzureSample.apk";
-    public final static String UPDATED_AZURE_SAMPLE_APK = "UpdatedAzureSample.apk";
+    public final static String OLD_AZURE_SAMPLE_APK = "OldAzureSample.apk";
 
     public AzureSampleApp() {
         super(AZURE_SAMPLE_PACKAGE_NAME, AZURE_SAMPLE_APP_NAME, new LocalApkInstaller());
         localApkFileName = AZURE_SAMPLE_APK;
-        localUpdateApkFileName = UPDATED_AZURE_SAMPLE_APK;
+    }
+
+    public AzureSampleApp(final boolean isOldApk) {
+        super(AZURE_SAMPLE_PACKAGE_NAME, AZURE_SAMPLE_APP_NAME, new LocalApkInstaller());
+        localApkFileName = AZURE_SAMPLE_APK;
+        if (isOldApk) {
+            localOldApkFileName = OLD_AZURE_SAMPLE_APK;
+        }
     }
 
     @Override
