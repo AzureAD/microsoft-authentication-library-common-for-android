@@ -45,7 +45,7 @@ public class BrokerProtocolVersionUtilTest {
         final String requiredBrokerProtocol = "5.0";
         Assert.assertTrue(
                 BrokerProtocolVersionUtil
-                        .isNegotiatedBrokerProtocolLargerOrEqualThanRequiredBrokerProtocol(
+                        .isProvidedBrokerProtocolLargerOrEqualThanRequiredBrokerProtocol(
                                 negotiatedBrokerProtocol,
                                 requiredBrokerProtocol)
         );
@@ -57,7 +57,7 @@ public class BrokerProtocolVersionUtilTest {
         final String requiredBrokerProtocol = "10.0";
         Assert.assertFalse(
                 BrokerProtocolVersionUtil
-                        .isNegotiatedBrokerProtocolLargerOrEqualThanRequiredBrokerProtocol(
+                        .isProvidedBrokerProtocolLargerOrEqualThanRequiredBrokerProtocol(
                                 negotiatedBrokerProtocol,
                                 requiredBrokerProtocol)
         );
@@ -69,7 +69,7 @@ public class BrokerProtocolVersionUtilTest {
         final String requiredBrokerProtocol = "10.0";
         Assert.assertTrue(
                 BrokerProtocolVersionUtil
-                        .isNegotiatedBrokerProtocolLargerOrEqualThanRequiredBrokerProtocol(
+                        .isProvidedBrokerProtocolLargerOrEqualThanRequiredBrokerProtocol(
                                 negotiatedBrokerProtocol,
                                 requiredBrokerProtocol)
         );
@@ -81,7 +81,7 @@ public class BrokerProtocolVersionUtilTest {
         final String requiredBrokerProtocol = "10.0";
         Assert.assertFalse(
                 BrokerProtocolVersionUtil
-                        .isNegotiatedBrokerProtocolLargerOrEqualThanRequiredBrokerProtocol(
+                        .isProvidedBrokerProtocolLargerOrEqualThanRequiredBrokerProtocol(
                                 negotiatedBrokerProtocol,
                                 requiredBrokerProtocol)
         );

@@ -1160,6 +1160,11 @@ public final class AuthenticationConstants {
         public static final String BROKER_REQUEST_V2_SUCCESS = "broker_request_v2_success";
 
         /**
+         * String to send true if the request should send the PkeyAuth header to the token endpoint, false otherwise.
+         */
+        public static final String SHOULD_SEND_PKEYAUTH_HEADER_TO_THE_TOKEN_ENDPOINT = "should.send.pkeyauth.header";
+
+        /**
          * String for ssl prefix.
          */
         public static final String REDIRECT_SSL_PREFIX = "https://";
