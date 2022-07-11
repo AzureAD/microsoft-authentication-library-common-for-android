@@ -1,5 +1,6 @@
 V.Next
 ----------
+- [PATCH] Fix msal failing tests due to telemetry context (1788)
 - [MAJOR] Bumped MSAL Broker Protocol version to 8.0, GET_ACCOUNTS endpoint requires minimum_required_broker_protocol_version of 8.0+ to return an account constructed from PRT id token to FOCI apps. (#1771)
 - [MAJOR] [Msal] Remove launching logout endpoint in default browser for shared device mode signout flow
 - [PATCH] [Adal] Ignore failure in updating unified/msal cache if ignoreKeyLoaderNotFoundError flag is set (#1781)
@@ -12,7 +13,6 @@ V.Next
 - [PATCH] Fix APPLICATION_CANCELLED by handling back button press (#1725)
 - [PATCH] Added Base64 encode for the AuthorizationRequest state parameter (#1750)
 - [PATCH] Fix missing authority_url when creating the authority audience (#1753)
-- [PATCH] Fix msal failing tests due to telemetry context
 
 Version 5.0.0
 ----------
