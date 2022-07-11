@@ -135,7 +135,7 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
                                     @Nullable final Integer readTimeoutMs,
                                     @Nullable final Supplier<Integer> connectTimeoutMsSupplier,
                                     @Nullable final Supplier<Integer> readTimeoutMsSupplier,
-                                    @Nullable final List<String> supportedSslProtocol,
+                                    @Nullable final List<String> supportedSslProtocols,
                                     @Nullable final SSLContext sslContext) {
 
         this.retryPolicy = retryPolicy != null ?
