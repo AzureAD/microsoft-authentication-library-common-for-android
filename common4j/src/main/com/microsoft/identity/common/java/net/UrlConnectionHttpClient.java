@@ -92,7 +92,7 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
     private final IRetryPolicy<HttpResponse> retryPolicy;
 
     /**
-     * Retry policy of this HttpClient. Default is {@link NoRetryPolicy}.
+     * Size of the stream buffer.
      */
     private final int streamBufferSize;
 
@@ -149,8 +149,8 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
         this.connectTimeoutMsSupplier = connectTimeoutMsSupplier;
         this.readTimeoutMsSupplier = readTimeoutMsSupplier;
 
-        final List<String> protocol = supportedSslProtocol != null ?
-                supportedSslProtocol : SSLSocketFactoryWrapper.SUPPORTED_SSL_PROTOCOLS;
+        final List<String> protocol = supportedSslProtocols != null ?
+                supportedSslProtocols : SSLSocketFactoryWrapper.SUPPORTED_SSL_PROTOCOLS;
 
         if (sslContext == null) {
             // TODO: Build the default SSLContext ourselves with the defined JSSE provider.
