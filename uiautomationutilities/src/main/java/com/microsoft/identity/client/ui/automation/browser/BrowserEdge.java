@@ -68,6 +68,11 @@ public class BrowserEdge extends App implements IBrowser {
         sleep();// need to use sleep due to Edge animations
     }
 
+    @Override
+    public void initialiseAppImpl() {
+        // nothing needed here
+    }
+
     public void navigateTo(@NonNull final String url) {
         Logger.i(TAG, "Navigate to the given URL:" + url + " in the browser..");
         //  Click on the search bar in the browser UI

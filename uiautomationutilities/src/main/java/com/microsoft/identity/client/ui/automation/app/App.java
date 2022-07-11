@@ -101,7 +101,15 @@ public abstract class App implements IApp {
         // the app is just installed, first run should be handled
         // this value can (should) be changed to false by child classes as appropriate
         shouldHandleFirstRun = true;
+
+        // setting app implementation for the installed app based on version
+        initialiseAppImpl();
     }
+
+    /**
+     * Initialise implementation of app based on version
+     */
+    abstract protected void initialiseAppImpl();
 
     @Override
     public void launch() {
