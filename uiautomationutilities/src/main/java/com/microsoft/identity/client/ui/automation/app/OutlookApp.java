@@ -52,6 +52,11 @@ public class OutlookApp extends App implements IFirstPartyApp {
     }
 
     @Override
+    public void initialiseAppImpl() {
+        // nothing required
+    }
+
+    @Override
     public void addFirstAccount(@NonNull final String username,
                                 @NonNull final String password,
                                 @NonNull final FirstPartyAppPromptHandlerParameters promptHandlerParameters) {

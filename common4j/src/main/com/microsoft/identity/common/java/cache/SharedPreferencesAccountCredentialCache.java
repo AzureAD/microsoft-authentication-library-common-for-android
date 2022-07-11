@@ -217,19 +217,20 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
             }
         });
         final Map<String, AccountRecord> accounts = new HashMap<>();
+        if (cacheValues != null) {
+            while (cacheValues.hasNext()) {
+                Map.Entry<String, ?> cacheValue = cacheValues.next();
+                final String cacheKey = cacheValue.getKey();
+                final AccountRecord account = mCacheValueDelegate.fromCacheValue(
+                        cacheValue.getValue().toString(),
+                        AccountRecord.class
+                );
 
-        while (cacheValues.hasNext()) {
-            Map.Entry<String, ?> cacheValue = cacheValues.next();
-            final String cacheKey = cacheValue.getKey();
-            final AccountRecord account = mCacheValueDelegate.fromCacheValue(
-                    cacheValue.getValue().toString(),
-                    AccountRecord.class
-            );
-
-            if (null == account) {
-                Logger.warn(TAG, ACCOUNT_RECORD_DESERIALIZATION_FAILED);
-            } else {
-                accounts.put(cacheKey, account);
+                if (null == account) {
+                    Logger.warn(TAG, ACCOUNT_RECORD_DESERIALIZATION_FAILED);
+                } else {
+                    accounts.put(cacheKey, account);
+                }
             }
         }
 
