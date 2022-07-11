@@ -39,6 +39,9 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 
 import com.microsoft.identity.common.R;
+import com.microsoft.identity.common.internal.telemetry.Telemetry;
+import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings;
+import com.microsoft.identity.common.java.telemetry.events.BaseEvent;
 import com.microsoft.identity.common.logging.Logger;
 import com.yubico.yubikit.android.YubiKitManager;
 import com.yubico.yubikit.android.transport.usb.UsbConfiguration;
@@ -79,6 +82,7 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
     private static final String TAG = ClientCertAuthChallengeHandler.class.getSimpleName();
     private static final String ACCEPTABLE_ISSUER = "CN=MS-Organization-Access";
     private static final String MDEVICE_NULL_ERROR_MESSAGE = "Instance UsbYubiKitDevice variable (mDevice) is null.";
+    private static final String YKPIV = "YKPiv";
     private final Activity mActivity;
     private final YubiKitManager mYubiKitManager;
     private UsbYubiKeyDevice mDevice;
@@ -163,7 +167,7 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
                                 mDevice = null;
                                 //Remove the YKPiv security provider if it was added.
                                 //Note that Security.removeProvider will silently return if YKPiv doesn't exist.
-                                Security.removeProvider("YKPiv");
+                                Security.removeProvider(YKPIV);
                                 //Show an error dialog only if a dialog is still showing.
                                 if (mDialogHolder.isDialogShowing()) {
                                     //Call Cancel Cba callback
@@ -455,12 +459,31 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
         final String methodTag = TAG + "useSmartcardCertForAuth:";
         //Need to add a PivProvider instance to the beginning of the array of Security providers in order for signature logic to occur.
         //Note that this provider is removed when the UsbYubiKeyDevice connection is closed.
+        //First check if a PivProvider instance is already present in the static list.
+        if (Security.getProvider(YKPIV) != null) {
+            //Remove existing PivProvider.
+            Security.removeProvider(YKPIV);
+            //Telemet and log this, as the PivProvider instance is either unexpectedly being added elsewhere
+            // or it isn't being removed properly upon CBA flow termination.
+            Telemetry.emit((BaseEvent) new BaseEvent().put(
+                    TelemetryEventStrings.Key.IS_EXISTING_PIVPROVIDER_PRESENT,
+                    String.valueOf(true)
+            ));
+            Logger.info(methodTag, "Existing PivProvider was present in Security static list.");
+        } else {
+            //Telemet and log that PivProvider is not already present in Security static list, which is expected.
+            Telemetry.emit((BaseEvent) new BaseEvent().put(
+                    TelemetryEventStrings.Key.IS_EXISTING_PIVPROVIDER_PRESENT,
+                    String.valueOf(false)
+            ));
+            Logger.info(methodTag, "Existing PivProvider was NOT present in Security static list.");
+        }
         //The position parameter is 1-based (1 maps to index 0).
         Security.insertProviderAt(new PivProvider(getPivProviderCallback()), 1);
         try {
             //Using KeyStore methods in order to generate PivPrivateKey.
             //Loading null is needed for initialization.
-            final KeyStore keyStore = KeyStore.getInstance("YKPiv", new PivProvider(piv));
+            final KeyStore keyStore = KeyStore.getInstance(YKPIV, new PivProvider(piv));
             keyStore.load(null);
             //Make sure Key is of type PivPrivateKey
             final Key key = keyStore.getKey(slotAlias, pin);

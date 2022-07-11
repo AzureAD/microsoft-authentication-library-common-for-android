@@ -174,6 +174,7 @@ public class TelemetryEventStrings {
         public static final String ERROR_LOCATION_LINE_NUMBER = EVENT_PREFIX + "error_location_line_number";
         public static final String IS_WPJ_JOINED = EVENT_PREFIX + "is_wpj_joined";
         public static final String IS_ERROR_EVENT = EVENT_PREFIX + "is_error_event";
+        public static final String IS_EXISTING_PIVPROVIDER_PRESENT = EVENT_PREFIX + "is_existing_pivprovider_present";
     }
 
     public static final class Value {
