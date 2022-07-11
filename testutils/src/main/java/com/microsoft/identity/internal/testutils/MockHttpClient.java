@@ -125,7 +125,7 @@ public class MockHttpClient {
                     @Override
                     public HttpResponse performIntercept(@NonNull HttpClient.HttpMethod httpMethod, @NonNull  URL requestUrl, @NonNull Map<String, String> requestHeaders, @Nullable byte[] requestContent) throws IOException {
                         if (sSaveRequests.get()) {
-                            sInterceptedRequests.add(new HttpRequest(url, requestHeaders, method.name(), requestContent, null, null));
+                            sInterceptedRequests.add(new HttpRequest(url, requestHeaders, method.name(), requestContent, null));
                         }
                         return httpRequestInterceptor.performIntercept(httpMethod, requestUrl, requestHeaders, requestContent);
                     }
