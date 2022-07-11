@@ -166,16 +166,24 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
                                 Logger.verbose(TAG, "A YubiKey device was disconnected");
                                 mDevice = null;
                                 //Remove the YKPiv security provider if it was added.
-                                //Note that Security.removeProvider will silently return if YKPiv doesn't exist.
-                                Security.removeProvider(YKPIV);
+                                if (Security.getProvider(YKPIV) != null) {
+                                    //Remove provider.
+                                    Security.removeProvider(YKPIV);
+                                    //Telemet and log that PivProvider is being removed from Security static list.
+                                    Telemetry.emit((BaseEvent) new BaseEvent().put(
+                                            TelemetryEventStrings.Key.PIVPROVIDER_REMOVED,
+                                            String.valueOf(true)
+                                    ));
+                                    Logger.info(TAG, "An instance of PivProvider was removed from Security static list.");
+                                }
                                 //Show an error dialog only if a dialog is still showing.
                                 if (mDialogHolder.isDialogShowing()) {
                                     //Call Cancel Cba callback
                                     mDialogHolder.onCancelCba();
                                     //Show dialog informing users that they have unplugged their device too early.
                                     mDialogHolder.showErrorDialog(R.string.smartcard_early_unplug_dialog_title, R.string.smartcard_early_unplug_dialog_message);
+                                    Logger.verbose(TAG, "YubiKey was disconnected while dialog was still displayed.");
                                 }
-                                Logger.verbose(TAG, "YubiKey was disconnected while dialog was still displayed.");
                             }
                         }
                     });
@@ -470,16 +478,15 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
                     String.valueOf(true)
             ));
             Logger.info(methodTag, "Existing PivProvider was present in Security static list.");
-        } else {
-            //Telemet and log that PivProvider is not already present in Security static list, which is expected.
-            Telemetry.emit((BaseEvent) new BaseEvent().put(
-                    TelemetryEventStrings.Key.IS_EXISTING_PIVPROVIDER_PRESENT,
-                    String.valueOf(false)
-            ));
-            Logger.info(methodTag, "Existing PivProvider was NOT present in Security static list.");
         }
         //The position parameter is 1-based (1 maps to index 0).
         Security.insertProviderAt(new PivProvider(getPivProviderCallback()), 1);
+        //Telemet and log that PivProvider is being added to Security static list.
+        Telemetry.emit((BaseEvent) new BaseEvent().put(
+                TelemetryEventStrings.Key.PIVPROVIDER_ADDED,
+                String.valueOf(true)
+        ));
+        Logger.info(methodTag, "An instance of PivProvider was added to Security static list.");
         try {
             //Using KeyStore methods in order to generate PivPrivateKey.
             //Loading null is needed for initialization.
