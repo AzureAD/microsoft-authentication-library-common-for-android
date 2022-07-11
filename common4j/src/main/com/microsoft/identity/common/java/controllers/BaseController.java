@@ -386,7 +386,6 @@ public abstract class BaseController {
         if (tokenRequest instanceof MicrosoftTokenRequest) {
             ((MicrosoftTokenRequest) tokenRequest).setClientAppName(parameters.getApplicationName());
             ((MicrosoftTokenRequest) tokenRequest).setClientAppVersion(parameters.getApplicationVersion());
-            //((MicrosoftTokenRequest) tokenRequest).setNegotiatedProtocolVersion(parameters.getRequiredBrokerProtocolVersion());
         }
 
         if (parameters instanceof IHasExtraParameters) {

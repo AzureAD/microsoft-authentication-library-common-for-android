@@ -142,4 +142,32 @@ public class BrokerProtocolVersionUtilTest {
                 BrokerProtocolVersionUtil.canFociAppsConstructAccountsFromPrtIdTokens(null)
         );
     }
+
+    @Test
+    public void testCanSendPKeyAuthHeaderToTheTokenEndpoint_NegotiatedLargerThanRequired(){
+        Assert.assertTrue(
+                BrokerProtocolVersionUtil.canSendPKeyAuthHeaderToTheTokenEndpoint("10.0")
+        );
+    }
+
+    @Test
+    public void testCanSendPKeyAuthHeaderToTheTokenEndpoint_NegotiatedEqualToRequired(){
+        Assert.assertTrue(
+                BrokerProtocolVersionUtil.canFociAppsConstructAccountsFromPrtIdTokens("9.0")
+        );
+    }
+
+    @Test
+    public void testCanSendPKeyAuthHeaderToTheTokenEndpoint_NegotiatedSmallerThanRequired(){
+        Assert.assertFalse(
+                BrokerProtocolVersionUtil.canFociAppsConstructAccountsFromPrtIdTokens("8.0")
+        );
+    }
+
+    @Test
+    public void testCanSendPKeyAuthHeaderToTheTokenEndpoint_NegotiatedNull(){
+        Assert.assertFalse(
+                BrokerProtocolVersionUtil.canFociAppsConstructAccountsFromPrtIdTokens(null)
+        );
+    }
 }

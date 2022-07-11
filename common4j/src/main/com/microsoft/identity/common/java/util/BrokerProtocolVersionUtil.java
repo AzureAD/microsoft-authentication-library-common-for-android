@@ -35,7 +35,7 @@ public class BrokerProtocolVersionUtil {
 
     public static final String MSAL_TO_BROKER_PROTOCOL_COMPRESSION_CHANGES_MINIMUM_VERSION = "5.0";
     public static final String MSAL_TO_BROKER_PROTOCOL_ACCOUNT_FROM_PRT_CHANGES_MINIMUM_VERSION = "8.0";
-    public static final String MSAL_TO_BROKER_PROTOCOL_PKEYAUTH_HEADER_CHANGES_MINIMUM_VERSION = "8.0";
+    public static final String MSAL_TO_BROKER_PROTOCOL_PKEYAUTH_HEADER_CHANGES_MINIMUM_VERSION = "9.0";
 
     /**
      * Verifies if negotiated broker protocol version allows to decompressing/compressing broker payloads.
@@ -66,7 +66,7 @@ public class BrokerProtocolVersionUtil {
     /**
      * Verifies if client required broker protocol version allows FOCI apps to construct accounts from PRT Id token.
      *
-     * @param clientAppProtocolVersion broker protocol version of the calling app.
+     * @param clientRequiredBrokerProtocolVersion broker protocol version of the calling app.
      * @return true if the broker protocol version of the calling app is larger or equal than
      * the {@link BrokerProtocolVersionUtil#MSAL_TO_BROKER_PROTOCOL_PKEYAUTH_HEADER_CHANGES_MINIMUM_VERSION}.
      */
