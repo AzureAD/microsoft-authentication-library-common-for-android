@@ -53,11 +53,10 @@ public class InterceptedHttpClient extends AbstractHttpClient {
     public HttpResponse method(@NonNull final HttpMethod httpMethod,
                                @NonNull final URL requestUrl,
                                @NonNull final Map<String, String> requestHeaders,
-                               @Nullable final byte[] requestContent,
-                               @Nullable final SSLContext sslContext) throws IOException {
+                               @Nullable final byte[] requestContent) throws IOException {
         final HttpRequestInterceptor interceptor = MockHttpClient.getInterceptor(httpMethod, requestUrl, requestHeaders, requestContent);
         if (interceptor == null) {
-            return mClient.method(httpMethod, requestUrl, requestHeaders, requestContent, sslContext);
+            return mClient.method(httpMethod, requestUrl, requestHeaders, requestContent);
         } else {
             return interceptor.performIntercept(httpMethod, requestUrl, requestHeaders, requestContent);
         }
