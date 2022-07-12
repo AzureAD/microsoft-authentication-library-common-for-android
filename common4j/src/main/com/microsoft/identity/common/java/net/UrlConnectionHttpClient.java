@@ -80,9 +80,9 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
     private static final Object TAG = UrlConnectionHttpClient.class.getName();
 
     protected static final int RETRY_TIME_WAITING_PERIOD_MSEC = 1000;
-    public static final int DEFAULT_CONNECT_TIME_OUT_MS = 30000;
-    public static final int DEFAULT_READ_TIME_OUT_MS = 30000;
-    public static final int DEFAULT_STREAM_BUFFER_SIZE_BYTE = 1024;
+    protected static final int DEFAULT_CONNECT_TIME_OUT_MS = 30000;
+    protected static final int DEFAULT_READ_TIME_OUT_MS = 30000;
+    protected static final int DEFAULT_STREAM_BUFFER_SIZE_BYTE = 1024;
 
     private static final transient AtomicReference<UrlConnectionHttpClient> defaultReference = new AtomicReference<>(null);
 
