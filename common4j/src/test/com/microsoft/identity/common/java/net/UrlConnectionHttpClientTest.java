@@ -1211,7 +1211,7 @@ public final class UrlConnectionHttpClientTest {
     @Test(expected = SSLHandshakeException.class)
     public void testConnectingToTLS13ServerWhileEnforcing12OnClientSide() throws IOException {
         final UrlConnectionHttpClient client = UrlConnectionHttpClient.builder()
-                .supportedSslProtocol(Arrays.asList("TLSv1.3"))
+                .supportedSslProtocols(Arrays.asList("TLSv1.3"))
                 .build();
 
         final HttpResponse response = client.method(
@@ -1227,7 +1227,7 @@ public final class UrlConnectionHttpClientTest {
     @Test
     public void testSpecifyingSupportedSSLVersion() throws IOException {
         final UrlConnectionHttpClient client = UrlConnectionHttpClient.builder()
-                .supportedSslProtocol(Arrays.asList("TLSv1.2"))
+                .supportedSslProtocols(Arrays.asList("TLSv1.2"))
                 .build();
 
         // Microsoft.com supports TLS 1.3
