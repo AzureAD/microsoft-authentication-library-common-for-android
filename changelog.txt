@@ -1,5 +1,6 @@
 Version 6.0.0
 ----------
+- [PATCH] Fix msal failing tests due to telemetry context (1788)
 - [MAJOR] Bumped MSAL Broker Protocol version to 8.0, GET_ACCOUNTS endpoint requires minimum_required_broker_protocol_version of 8.0+ to return an account constructed from PRT id token to FOCI apps. (#1771)
 - [MAJOR] [Msal] Remove launching logout endpoint in default browser for shared device mode signout flow
 - [PATCH] [Adal] Ignore failure in updating unified/msal cache if ignoreKeyLoaderNotFoundError flag is set (#1781)
