@@ -31,7 +31,7 @@ public interface ITelemetryEventFilter<T> {
      * Invoked when a new event is captured by the telemetry.
      * @param telemetryEvent the telemetry event data
      *
-     * @return a boolean representing whether the event should be relayed.
+     * @return an event with filtered fields. Return null if the event is to be ignored completely.
      */
-    boolean shouldRelay(T telemetryEvent);
+    T apply(T telemetryEvent);
 }
