@@ -82,7 +82,7 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
     private static final String TAG = ClientCertAuthChallengeHandler.class.getSimpleName();
     private static final String ACCEPTABLE_ISSUER = "CN=MS-Organization-Access";
     private static final String MDEVICE_NULL_ERROR_MESSAGE = "Instance UsbYubiKitDevice variable (mDevice) is null.";
-    private static final String YKPIV = "YKPiv";
+    private static final String YUBIKEY_PROVIDER = "YKPiv";
     private final Activity mActivity;
     private final YubiKitManager mYubiKitManager;
     private UsbYubiKeyDevice mDevice;
@@ -166,15 +166,22 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
                                 Logger.verbose(TAG, "A YubiKey device was disconnected");
                                 mDevice = null;
                                 //Remove the YKPiv security provider if it was added.
-                                if (Security.getProvider(YKPIV) != null) {
+                                if (Security.getProvider(YUBIKEY_PROVIDER) != null) {
                                     //Remove provider.
-                                    Security.removeProvider(YKPIV);
+                                    Security.removeProvider(YUBIKEY_PROVIDER);
                                     //Telemet and log that PivProvider is being removed from Security static list.
                                     Telemetry.emit((BaseEvent) new BaseEvent().put(
                                             TelemetryEventStrings.Key.PIVPROVIDER_REMOVED,
                                             String.valueOf(true)
                                     ));
-                                    Logger.info(TAG, "An instance of PivProvider was removed from Security static list.");
+                                    Logger.info(TAG, "An instance of PivProvider was removed from Security static list upon YubiKey device connection being closed.");
+                                } else {
+                                    //Telemet and log that PivProvider is not present in Security static list and therefore is not being removed.
+                                    Telemetry.emit((BaseEvent) new BaseEvent().put(
+                                            TelemetryEventStrings.Key.PIVPROVIDER_REMOVED,
+                                            String.valueOf(false)
+                                    ));
+                                    Logger.info(TAG, "An instance of PivProvider was not present in Security static list upon YubiKey device connection being closed.");
                                 }
                                 //Show an error dialog only if a dialog is still showing.
                                 if (mDialogHolder.isDialogShowing()) {
@@ -468,29 +475,32 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
         //Need to add a PivProvider instance to the beginning of the array of Security providers in order for signature logic to occur.
         //Note that this provider is removed when the UsbYubiKeyDevice connection is closed.
         //First check if a PivProvider instance is already present in the static list.
-        if (Security.getProvider(YKPIV) != null) {
+        if (Security.getProvider(YUBIKEY_PROVIDER) != null) {
             //Remove existing PivProvider.
-            Security.removeProvider(YKPIV);
-            //Telemet and log this, as the PivProvider instance is either unexpectedly being added elsewhere
+            Security.removeProvider(YUBIKEY_PROVIDER);
+            //Telemet and log. The PivProvider instance is either unexpectedly being added elsewhere
             // or it isn't being removed properly upon CBA flow termination.
             Telemetry.emit((BaseEvent) new BaseEvent().put(
                     TelemetryEventStrings.Key.IS_EXISTING_PIVPROVIDER_PRESENT,
                     String.valueOf(true)
             ));
             Logger.info(methodTag, "Existing PivProvider was present in Security static list.");
+        } else {
+            //Telemet and log. This is expected behavior.
+            Telemetry.emit((BaseEvent) new BaseEvent().put(
+                    TelemetryEventStrings.Key.IS_EXISTING_PIVPROVIDER_PRESENT,
+                    String.valueOf(false)
+            ));
+            Logger.info(methodTag, "Security static list does not have existing PivProvider.");
         }
         //The position parameter is 1-based (1 maps to index 0).
         Security.insertProviderAt(new PivProvider(getPivProviderCallback()), 1);
-        //Telemet and log that PivProvider is being added to Security static list.
-        Telemetry.emit((BaseEvent) new BaseEvent().put(
-                TelemetryEventStrings.Key.PIVPROVIDER_ADDED,
-                String.valueOf(true)
-        ));
+        //Log that PivProvider is being added to Security static list.
         Logger.info(methodTag, "An instance of PivProvider was added to Security static list.");
         try {
             //Using KeyStore methods in order to generate PivPrivateKey.
             //Loading null is needed for initialization.
-            final KeyStore keyStore = KeyStore.getInstance(YKPIV, new PivProvider(piv));
+            final KeyStore keyStore = KeyStore.getInstance(YUBIKEY_PROVIDER, new PivProvider(piv));
             keyStore.load(null);
             //Make sure Key is of type PivPrivateKey
             final Key key = keyStore.getKey(slotAlias, pin);
@@ -509,7 +519,7 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
             mDialogHolder.dismissDialog();
             //Call proceed on ClientCertRequest with PivPrivateKey and cert chain.
             request.proceed(pivPrivateKey, chain);
-        } catch (UnrecoverableKeyException | CertificateException | KeyStoreException | IOException | NoSuchAlgorithmException e) {
+        } catch (final UnrecoverableKeyException | CertificateException | KeyStoreException | IOException | NoSuchAlgorithmException e) {
             Logger.error(methodTag, e.getMessage(), e);
             //Show general error dialog.
             mDialogHolder.showErrorDialog(R.string.smartcard_general_error_dialog_title, R.string.smartcard_general_error_dialog_message);
