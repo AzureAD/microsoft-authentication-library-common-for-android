@@ -40,7 +40,7 @@ public abstract class AbstractTelemetryRelayClient<T> implements ITelemetryObser
     private ITelemetryEventFilter<T> mEventFilter = null;
 
     @Override
-    public synchronized void onReceived(T telemetryData) {
+    public void onReceived(T telemetryData) {
         final String methodTag = TAG + ":onReceived";
 
         T filteredData = telemetryData;
