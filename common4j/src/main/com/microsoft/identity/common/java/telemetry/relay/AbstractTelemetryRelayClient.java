@@ -59,7 +59,7 @@ public abstract class AbstractTelemetryRelayClient<T> implements ITelemetryObser
     }
 
     /**
-     * Add an event filter
+     * Add an event filter.
      */
     public void setFilter(ITelemetryEventFilter<T> filter) {
         this.mEventFilter = filter;
