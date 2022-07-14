@@ -40,6 +40,7 @@ import com.microsoft.identity.common.java.commands.parameters.DeviceCodeFlowComm
 import com.microsoft.identity.common.java.commands.parameters.GenerateShrCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.RemoveAccountCommandParameters;
 import com.microsoft.identity.common.java.dto.AccountRecord;
+import com.microsoft.identity.common.java.exception.UiRequiredException;
 import com.microsoft.identity.common.java.platform.DevicePoPUtils;
 import com.microsoft.identity.common.java.constants.OAuth2ErrorCode;
 import com.microsoft.identity.common.java.controllers.BaseController;
@@ -365,9 +366,7 @@ public class LocalMSALController extends BaseController {
                         methodTag
                 );
             } else {
-                //TODO need the refactor, should just throw the ui required exception, rather than
-                // wrap the exception later in the exception wrapper.
-                final ClientException exception = new ClientException(
+                final UiRequiredException exception = new UiRequiredException(
                         ErrorStrings.NO_TOKENS_FOUND,
                         "No refresh token was found. "
                 );
