@@ -13,6 +13,7 @@ Version 6.0.0
 - [PATCH] Fix APPLICATION_CANCELLED by handling back button press (#1725)
 - [PATCH] Added Base64 encode for the AuthorizationRequest state parameter (#1750)
 - [PATCH] Fix missing authority_url when creating the authority audience (#1753)
+- [PATCH] Add filter for broker telemetry event fields. (#1793)
 
 Version 5.0.0
 ----------
