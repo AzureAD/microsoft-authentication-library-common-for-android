@@ -58,6 +58,11 @@ public class BrowserChrome extends App implements IBrowser {
     }
 
     @Override
+    public void initialiseAppImpl() {
+        // nothing needed here
+    }
+
+    @Override
     public void navigateTo(@NonNull final String url) {
         Logger.i(TAG, "Navigate to the URL in the browser..");
         UiAutomatorUtils.handleButtonClick("com.android.chrome:id/search_box_text");

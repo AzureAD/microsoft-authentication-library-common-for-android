@@ -267,6 +267,11 @@ public class BrokerHost extends AbstractTestBroker {
         // nothing needed here
     }
 
+    @Override
+    public void initialiseAppImpl() {
+        // nothing needed here
+    }
+
     @Nullable
     public String getAccountUpn() {
         Logger.i(TAG, "Get Account Upn..");

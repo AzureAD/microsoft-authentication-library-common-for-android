@@ -60,6 +60,11 @@ public class AzureSampleApp extends App {
         // nothing required
     }
 
+    @Override
+    public void initialiseAppImpl() {
+       // nothing required
+    }
+
     /**
      * Sign in into the Azure Sample App. Please note that this method performs sign in into the
      * Single Account Mode Fragment in the Sample App.
