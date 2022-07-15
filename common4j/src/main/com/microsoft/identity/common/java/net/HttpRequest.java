@@ -64,10 +64,6 @@ public class HttpRequest {
     @Accessors(prefix = "m")
     private final String mRequestMethod;
 
-    @Getter
-    @Accessors(prefix = "m")
-    public SSLContext mSslContext;
-
     private final Map<String, String> mRequestHeaders = new HashMap<>();
 
     Map<String, String> getRequestHeaders() {
@@ -82,20 +78,17 @@ public class HttpRequest {
      * @param requestHeaders     Headers used to send the http request.
      * @param requestContent     Post message sent in the post request.
      * @param requestContentType Request content type.
-     * @param sslContext         an optional {@link SSLContext} object.
      */
     public HttpRequest(@NonNull final URL requestUrl,
                        @NonNull final Map<String, String> requestHeaders,
                        @NonNull final String requestMethod,
                        final byte[] requestContent,
-                       final String requestContentType,
-                       final SSLContext sslContext) {
+                       final String requestContentType) {
         mRequestUrl = requestUrl;
         mRequestHeaders.put(HOST, requestUrl.getAuthority());
         mRequestHeaders.putAll(requestHeaders);
         mRequestMethod = requestMethod;
         mRequestContent = requestContent != null ? Arrays.copyOf(requestContent, requestContent.length) : null;
         mRequestContentType = requestContentType;
-        mSslContext = sslContext;
     }
 }
