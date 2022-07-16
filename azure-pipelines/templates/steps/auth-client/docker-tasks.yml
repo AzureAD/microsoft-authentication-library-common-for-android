@@ -9,9 +9,6 @@ parameters:
 - name: EnvVstsMvnAccount
   default: ''
 
-variables:
-  - group: AndroidAuthClientSecrets
-
 steps:
 - task: PostBuildCleanup@3
   condition: always()
@@ -25,6 +22,7 @@ steps:
   condition: ne('${{ parameters.EnvVstsMvnAccount }}', '')
   displayName: set mvnAccessToken in env.file
 - script: echo LAB_SECRET=$(AndroidAutomationRunnerAppSecret)" >> env.list
+  condition: ne('${{ variables.AndroidAutomationRunnerAppSecret }}', '')
   displayName: set labsecret in env.file
 - script: docker --version
   displayName: Docker Version
