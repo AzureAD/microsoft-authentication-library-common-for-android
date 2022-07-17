@@ -22,7 +22,7 @@ steps:
   condition: ne('${{ parameters.EnvVstsMvnAccount }}', '')
   displayName: set mvnAccessToken in env.file
 - script: echo "LAB_SECRET=$(AndroidAutomationRunnerAppSecret)" >> env.list
-  condition: ne("$(AndroidAutomationRunnerAppSecret)", "")
+  condition: ne(variables['AndroidAutomationRunnerAppSecret'], '')
   displayName: set lab secret in env.file
 - script: docker --version
   displayName: Docker Version
