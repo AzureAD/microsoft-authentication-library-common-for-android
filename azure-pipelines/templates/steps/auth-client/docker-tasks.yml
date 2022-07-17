@@ -21,10 +21,8 @@ steps:
 - script: echo "${{ parameters.EnvVstsMvnAccount }}=$(mvnAccessToken)" >> env.list
   condition: ne('${{ parameters.EnvVstsMvnAccount }}', '')
   displayName: set mvnAccessToken in env.file
-- script: echo LAB_SECRET=$(AndroidAutomationRunnerAppSecret)" >> env.list
+- script: echo "LAB_SECRET=$(AndroidAutomationRunnerAppSecret)" >> env.list
   displayName: set labsecret in env.file
-- script: echo "$(AndroidAuthClient-Internal-Maven-Username)"
-- script: echo "$(AndroidAutomationRunnerAppSecret)"
 - script: docker --version
   displayName: Docker Version
 - script: |
