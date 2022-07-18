@@ -46,20 +46,19 @@ public class SmartcardPinDialog extends SmartcardDialog {
 
     private View mPinLayout;
     private final PositiveButtonListener mPositiveButtonListener;
-    private final NegativeButtonListener mNegativeButtonListener;
     private final CancelCbaCallback mCancelCbaCallback;
 
     /**
      * Creates new instance of SmartcardPinDialog.
+     * @param positiveButtonListener Implemented Listener for a positive button click.
+     * @param cancelCbaCallback Implemented Callback for when CBA is being cancelled.
      * @param activity Host activity.
      */
     public SmartcardPinDialog(@NonNull final PositiveButtonListener positiveButtonListener,
-                              @NonNull final NegativeButtonListener negativeButtonListener,
                               @NonNull final CancelCbaCallback cancelCbaCallback,
                               @NonNull final Activity activity) {
         super(activity);
         mPositiveButtonListener = positiveButtonListener;
-        mNegativeButtonListener = negativeButtonListener;
         mCancelCbaCallback = cancelCbaCallback;
         createDialog();
     }
@@ -89,7 +88,7 @@ public class SmartcardPinDialog extends SmartcardDialog {
                         .setNegativeButton(R.string.smartcard_pin_dialog_negative_button, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                mNegativeButtonListener.onClick();
+                                mCancelCbaCallback.onCancel();
                             }
                         });
                 //Create dialog
@@ -101,7 +100,7 @@ public class SmartcardPinDialog extends SmartcardDialog {
                 dialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
                     @Override
                     public void onCancel(DialogInterface dialog) {
-                        mNegativeButtonListener.onClick();
+                        mCancelCbaCallback.onCancel();
                     }
                 });
                 mDialog = dialog;
@@ -116,8 +115,6 @@ public class SmartcardPinDialog extends SmartcardDialog {
     public void onCancelCba() {
         //Call CancelCbaCallback's onCancel
         mCancelCbaCallback.onCancel();
-        //Dismiss dialog
-        dismiss();
     }
 
     /**
@@ -206,14 +203,7 @@ public class SmartcardPinDialog extends SmartcardDialog {
     }
 
     /**
-     * Listener interface for a negative button click.
-     */
-    public interface NegativeButtonListener {
-        void onClick();
-    }
-
-    /**
-     * Callback interface for when CBA is cancelled unexpectedly.
+     * Callback interface for when CBA is being cancelled.
      */
     public interface CancelCbaCallback {
         void onCancel();

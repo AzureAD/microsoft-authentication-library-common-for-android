@@ -21,7 +21,17 @@
     <string name="smartcard_pin_dialog_error_message">The PIN you entered was incorrect</string>
     <string name="smartcard_pin_layout_edittext_hint">PIN</string>
 
+    <string name="smartcard_error_dialog_positive_button">OK</string>
+
     <string name="smartcard_max_attempt_dialog_title">Try again later</string>
     <string name="smartcard_max_attempt_dialog_message">Too many failed attempts, try again later.</string>
-    <string name="smartcard_max_attempt_dialog_positive_button">Ok</string>
+
+    <string name="smartcard_early_unplug_dialog_title">Try again</string>
+    <string name="smartcard_early_unplug_dialog_message">Smartcard device was removed. Please reinsert device before attempting to log in again.</string>
+
+    <string name="smartcard_no_cert_dialog_title">No applicable certificates found.</string>
+    <string name="smartcard_no_cert_dialog_message">Please confirm that your certificate has been correctly provisioned onto your smartcard device.</string>
+
+    <string name="smartcard_general_error_dialog_title">Try again later</string>
+    <string name="smartcard_general_error_dialog_message">An unexpected error has occurred. Please try again later.</string>
 </resources>

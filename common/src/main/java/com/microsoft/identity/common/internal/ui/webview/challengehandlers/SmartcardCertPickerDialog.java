@@ -40,6 +40,7 @@ import androidx.appcompat.app.AlertDialog;
 
 import com.microsoft.identity.common.R;
 
+import java.security.cert.X509Certificate;
 import java.util.List;
 
 /**
@@ -49,23 +50,22 @@ public class SmartcardCertPickerDialog extends SmartcardDialog {
 
     private final List<ClientCertAuthChallengeHandler.YubiKitCertDetails> mCertList;
     private final PositiveButtonListener mPositiveButtonListener;
-    private final NegativeButtonListener mNegativeButtonListener;
     private final CancelCbaCallback mCancelCbaCallback;
 
     /**
      * Creates new instance of SmartcardCertPickerDialog.
      * @param certList List of ClientCertAuthChallengeHandler.YubiKitCertDetails compiled from certificates on YubiKey.
+     * @param positiveButtonListener Implemented Listener for a positive button click.
+     * @param cancelCbaCallback Implemented Callback for when CBA is being cancelled.
      * @param activity Host activity.
      */
     public SmartcardCertPickerDialog(@NonNull final List<ClientCertAuthChallengeHandler.YubiKitCertDetails> certList,
                                      @NonNull final PositiveButtonListener positiveButtonListener,
-                                     @NonNull final NegativeButtonListener negativeButtonListener,
                                      @NonNull final CancelCbaCallback cancelCbaCallback,
                                      @NonNull final Activity activity) {
         super(activity);
         mCertList = certList;
         mPositiveButtonListener = positiveButtonListener;
-        mNegativeButtonListener = negativeButtonListener;
         mCancelCbaCallback = cancelCbaCallback;
         createDialog();
     }
@@ -102,7 +102,7 @@ public class SmartcardCertPickerDialog extends SmartcardDialog {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
                                 //On request by user, cancel flow.
-                                mNegativeButtonListener.onClick();
+                                mCancelCbaCallback.onCancel();
                             }
                         });
                 // Create dialog.
@@ -124,7 +124,7 @@ public class SmartcardCertPickerDialog extends SmartcardDialog {
                 alertDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
                     @Override
                     public void onCancel(DialogInterface dialog) {
-                        mNegativeButtonListener.onClick();
+                        mCancelCbaCallback.onCancel();
                     }
                 });
                 mDialog = alertDialog;
@@ -139,8 +139,6 @@ public class SmartcardCertPickerDialog extends SmartcardDialog {
     public void onCancelCba() {
         //Call CancelCbaCallback's onCancel
         mCancelCbaCallback.onCancel();
-        //Dismiss dialog
-        dismiss();
     }
 
     /**
@@ -151,14 +149,7 @@ public class SmartcardCertPickerDialog extends SmartcardDialog {
     }
 
     /**
-     * Listener interface for a negative button click.
-     */
-    public interface NegativeButtonListener {
-        void onClick();
-    }
-
-    /**
-     * Callback interface for when CBA is cancelled unexpectedly.
+     * Callback interface for when CBA is being cancelled.
      */
     public interface CancelCbaCallback {
         void onCancel();
@@ -184,9 +175,9 @@ public class SmartcardCertPickerDialog extends SmartcardDialog {
             TextView subjectText = item.findViewById(R.id.subjectText);
             TextView issuerText = item.findViewById(R.id.issuerText);
             // Fill in the TextViews with the subject and issuer values.
-            ClientCertAuthChallengeHandler.YubiKitCertDetails currentCert = getItem(position);
-            subjectText.setText(currentCert.getSubjectText());
-            issuerText.setText(currentCert.getIssuerText());
+            X509Certificate currentCert = getItem(position).getCertificate();
+            subjectText.setText(currentCert.getSubjectDN().getName());
+            issuerText.setText(currentCert.getIssuerDN().getName());
             //Set radio button to be checked/unchecked based on ListView.
             ListView listView = (ListView) parent;
             RadioButton radioButton = item.findViewById(R.id.radioButton);

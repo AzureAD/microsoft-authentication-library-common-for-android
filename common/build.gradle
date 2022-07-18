@@ -28,7 +28,7 @@ codeCoverageReport {
     coverage.enabled = enableCodeCoverage
 }
 
-def common4jVersion = "0.0.+"
+def common4jVersion = "1.0.8-CBATest"
 if (project.hasProperty("distCommon4jVersion") && project.distCommon4jVersion != '') {
     common4jVersion = project.distCommon4jVersion
 }
@@ -140,6 +140,9 @@ dependencies {
     implementation "com.google.code.gson:gson:$rootProject.ext.gsonVersion"
     implementation "androidx.browser:browser:$rootProject.ext.browserVersion"
     implementation "androidx.constraintlayout:constraintlayout:$rootProject.ext.constraintLayoutVersion"
+    //For Executive Order work
+    implementation "com.yubico.yubikit:android:$rootProject.ext.yubikitAndroidVersion"
+    implementation "com.yubico.yubikit:piv:$rootProject.ext.yubikitAndroidVersion"
 
     compileOnly 'com.github.spotbugs:spotbugs-annotations:4.3.0'
 
