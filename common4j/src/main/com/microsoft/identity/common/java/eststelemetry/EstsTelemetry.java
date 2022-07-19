@@ -31,6 +31,7 @@ import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.logging.DiagnosticContext;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.result.ILocalAuthenticationResult;
+import com.microsoft.identity.common.java.util.SchemaUtil;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.util.ported.InMemoryStorage;
 
@@ -56,10 +57,23 @@ public class EstsTelemetry {
     private static final String LAST_REQUEST_TELEMETRY_STORAGE_FILE =
             "com.microsoft.identity.client.last_request_telemetry";
 
+    private static final String SUPPLEMENTAL_TELEMETRY_DATA_CACHE_FILE_NAME =
+            "com.microsoft.identity.client.supplemental_telemetry_data_cache";
+
     private static volatile EstsTelemetry sEstsTelemetryInstance = null;
     private LastRequestTelemetryCache mLastRequestTelemetryCache;
     private final INameValueStorage<CurrentRequestTelemetry> mTelemetryMap;
     private final INameValueStorage<Set<FailedRequest>> mSentFailedRequests;
+
+    /**
+     * A supplemental cache that can used to store telemetry that is captured outside of the
+     * DiagnosticContext. We have lots of code that is executed outside of a DiagnosticContext i.e.
+     * ThreadLocal is not populated with a correlation Id. Since the current telemetry design is
+     * strictly around DiagnosticContext, therefore we need this supplemental cache to capture these
+     * fields that are emitted in code that is running outside that context. This fields are the
+     * ones determined by {@link SchemaConstants#isOfflineEmitAllowedForThisField(String)}.
+     */
+    private INameValueStorage<String> mSupplementalTelemetryDataCache;
 
     EstsTelemetry() {
         this(new InMemoryStorage<CurrentRequestTelemetry>(),
@@ -115,6 +129,12 @@ public class EstsTelemetry {
             this.mLastRequestTelemetryCache = new LastRequestTelemetryCache(
                     platformComponents.getNameValueStore(LAST_REQUEST_TELEMETRY_STORAGE_FILE, String.class));
         }
+
+        if (mSupplementalTelemetryDataCache == null) {
+            mSupplementalTelemetryDataCache = platformComponents.getNameValueStore(
+                    SUPPLEMENTAL_TELEMETRY_DATA_CACHE_FILE_NAME, String.class
+            );
+        }
     }
 
     /**
@@ -164,7 +184,42 @@ public class EstsTelemetry {
         final CurrentRequestTelemetry currentTelemetryInstance = getCurrentTelemetryInstance(correlationId);
         if (currentTelemetryInstance != null) {
             currentTelemetryInstance.put(key, compliantValueString);
+        } else if (mSupplementalTelemetryDataCache != null && SchemaConstants.isOfflineEmitAllowedForThisField(key)) {
+            mSupplementalTelemetryDataCache.put(key, compliantValueString);
         }
+    }
+
+    /**
+     * Emit the provided telemetry field. The field will be saved in {@link RequestTelemetry} object
+     * associated to the current request.
+     *
+     * @param key   the key associated to the telemetry field
+     * @param value the value associated to the telemetry field
+     */
+    public void emit(final String key, final int value) {
+        emit(key, String.valueOf(value));
+    }
+
+    /**
+     * Emit the provided telemetry field. The field will be saved in {@link RequestTelemetry} object
+     * associated to the current request.
+     *
+     * @param key   the key associated to the telemetry field
+     * @param value the value associated to the telemetry field
+     */
+    public void emit(final String key, final long value) {
+        emit(key, String.valueOf(value));
+    }
+
+    /**
+     * Emit the provided telemetry field. The field will be saved in {@link RequestTelemetry} object
+     * associated to the current request.
+     *
+     * @param key   the key associated to the telemetry field
+     * @param value the value associated to the telemetry field
+     */
+    public void emit(final String key, final boolean value) {
+        emit(key, TelemetryUtils.getSchemaCompliantStringFromBoolean(value));
     }
 
     /**
@@ -232,6 +287,11 @@ public class EstsTelemetry {
 
             // headers have been logged by sts - we don't need to hold on to this data - let's wipe
             lastRequestTelemetry.wipeFailedRequestAndErrorForSubList(failedRequestSentSet);
+
+            if (mSupplementalTelemetryDataCache != null) {
+                // headers have been logged by sts - we don't need to hold on to this data - let's wipe
+                mSupplementalTelemetryDataCache.clear();
+            }
         }
 
         // get the error encountered during execution of this command
@@ -364,6 +424,11 @@ public class EstsTelemetry {
             Logger.warn(TAG + methodName, "currentTelemetry for correlation ID:" +
                     correlationId + " is null.");
             return null;
+        }
+
+        // we are collecting telemetry so now add these to primary Map
+        if (mSupplementalTelemetryDataCache != null) {
+            EstsTelemetry.getInstance().emit(mSupplementalTelemetryDataCache.getAll());
         }
 
         return currentTelemetry.getCompleteHeaderString();
