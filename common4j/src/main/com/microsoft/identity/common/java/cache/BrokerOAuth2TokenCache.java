@@ -194,7 +194,7 @@ public class BrokerOAuth2TokenCache
                 TAG + methodName,
                 "Saving to FOCI cache? ["
                         + isFoci
-                        + "]"
+                        +  " in save method "+ familyId + " ]"
         );
 
         if (isFoci) {
@@ -439,7 +439,7 @@ public class BrokerOAuth2TokenCache
                     TAG + methodName,
                     "Saving to FOCI cache? ["
                             + isFoci
-                            + "]"
+                            + "]" + " in saveAndLoadAggregatedAccountData with response as the param"
             );
 
             if (isFoci) {
@@ -456,7 +456,7 @@ public class BrokerOAuth2TokenCache
 
             // The 0th element contains the record we *just* saved. Other records are corollary data.
             final ICacheRecord justSavedRecord = result.get(0);
-
+            Logger.info(TAG + methodName,"justSavedRecord "+ justSavedRecord + " "+ justSavedRecord.getRefreshToken().getClientId() + " "+justSavedRecord.getAccessToken().getClientId());
             updateApplicationMetadataCache(
                     justSavedRecord.getRefreshToken().getClientId(),
                     justSavedRecord.getRefreshToken().getEnvironment(),
@@ -533,7 +533,7 @@ public class BrokerOAuth2TokenCache
                              @NonNull final AbstractAuthenticationScheme authScheme) {
         final String methodName = ":load";
 
-        Logger.verbose(
+        Logger.info(
                 TAG + methodName,
                 "Performing lookup in app-specific cache."
         );
@@ -633,7 +633,7 @@ public class BrokerOAuth2TokenCache
                                                             @NonNull final AbstractAuthenticationScheme authScheme) {
         synchronized (this) {
             final String methodName = ":loadWithAggregatedAccountData";
-
+            Logger.info(TAG, "in loadWithAggregatedAccountData with javadoc");
             final BrokerApplicationMetadata appMetadata = mApplicationMetadataCache.getMetadata(
                     clientId,
                     account.getEnvironment(),

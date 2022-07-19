@@ -125,9 +125,9 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
 
     @Override
     public synchronized void saveCredential(@NonNull Credential credentialToSave) {
-        Logger.verbose(TAG, "Saving credential...");
+        Logger.info(TAG, "Saving credential...");
         final String cacheKey = mCacheValueDelegate.generateCacheKey(credentialToSave);
-        Logger.verbosePII(TAG, "Generated cache key: [" + cacheKey + "]");
+        Logger.info(TAG, "Generated cache key: [" + cacheKey + "]");
 
         // Perform any necessary field merging on the Credential to save...
         final Credential existingCredential = getCredential(cacheKey);
@@ -137,6 +137,7 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
         }
 
         final String cacheValue = mCacheValueDelegate.generateCacheValue(credentialToSave);
+        Logger.info(TAG, "saveCredential cacheValue "+cacheValue);
         mSharedPreferencesFileManager.put(cacheKey, cacheValue);
     }
 
@@ -169,7 +170,7 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
     public synchronized Credential getCredential(@NonNull final String cacheKey) {
         // TODO add support for more Credential types...
         Logger.verbose(TAG, "getCredential()");
-        Logger.verbosePII(TAG, "Using cache key: [" + cacheKey + "]");
+        Logger.info(TAG, "Using cache key: [" + cacheKey + "]");
 
         final CredentialType type = getCredentialTypeForCredentialCacheKey(cacheKey);
         Class<? extends Credential> clazz = null;
@@ -273,7 +274,7 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
 
     @NonNull
     private Map<String, Credential> getCredentialsWithKeys() {
-        Logger.verbose(TAG, "Loading Credentials with keys...");
+        Logger.info(TAG, "Loading Credentials with keys...");
         final Map<String, Credential> credentials = new HashMap<>();
         final Iterator<Map.Entry<String, String>> cacheValues = mSharedPreferencesFileManager.getAllFilteredByKey(new Predicate<String>() {
             @Override
