@@ -72,10 +72,4 @@ public interface ICryptoFactory {
     void setProviderForWebView();
 
     void unsetProviderForWebView();
-
-    // When this is set, Other operations that are relying on the default provider will be blocked
-    // until removeOverriddenProvider() is invoked.
-    void overrideDefaultProvider(@NonNull final Provider provider);
-
-    void removeOverriddenDefaultProvider();
 }
