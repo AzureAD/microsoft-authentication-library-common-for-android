@@ -456,7 +456,7 @@ public class BrokerOAuth2TokenCache
 
             // The 0th element contains the record we *just* saved. Other records are corollary data.
             final ICacheRecord justSavedRecord = result.get(0);
-            Logger.info(TAG + methodName,"justSavedRecord "+ justSavedRecord + " "+ justSavedRecord.getRefreshToken().getClientId() + " "+justSavedRecord.getAccessToken().getClientId());
+            Logger.info(TAG + methodName,"justSavedRecord "+ justSavedRecord + " record's RT "+ justSavedRecord.getRefreshToken().getClientId() + " "+justSavedRecord.getAccessToken().getClientId());
             updateApplicationMetadataCache(
                     justSavedRecord.getRefreshToken().getClientId(),
                     justSavedRecord.getRefreshToken().getEnvironment(),
@@ -480,7 +480,7 @@ public class BrokerOAuth2TokenCache
         applicationMetadata.setFoci(familyId);
         applicationMetadata.setUid(uid);
 
-        Logger.verbose(
+        Logger.info(
                 TAG + methodName,
                 "Adding cache entry for clientId: ["
                         + clientId

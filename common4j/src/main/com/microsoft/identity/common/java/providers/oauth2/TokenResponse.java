@@ -73,6 +73,7 @@ public class TokenResponse implements ISuccessResponse {
      *
      * @see <a href="https://tools.ietf.org/html/rfc6749#section-5.1">RFC 6749 - Successful Response</a>
      */
+    @Expose()
     @SerializedName("access_token")
     private String mAccessToken;
 
@@ -94,6 +95,7 @@ public class TokenResponse implements ISuccessResponse {
      *
      * @see <a href="https://tools.ietf.org/html/rfc6749#section-5.1">RFC 6749 - Successful Response</a>
      */
+    @Expose()
     @SerializedName("refresh_token")
     private String mRefreshToken;
 
@@ -126,6 +128,7 @@ public class TokenResponse implements ISuccessResponse {
      *
      * @See <a href="https://docs.microsoft.com/en-us/azure/active-directory/develop/active-directory-protocols-oauth-code">Authorize access to web applications using OAuth 2.0 and Azure Active Directory</a>
      */
+    @Expose()
     @SerializedName("id_token")
     private String mIdToken;
 
