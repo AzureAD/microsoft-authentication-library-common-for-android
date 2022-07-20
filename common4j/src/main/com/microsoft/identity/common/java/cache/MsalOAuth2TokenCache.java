@@ -1262,7 +1262,7 @@ public class MsalOAuth2TokenCache
             );
 
             if (idTokensForAccount == null || idTokensForAccount.size() == 0) {
-                Logger.info(TAG, "skipping this iteration as no idToken found for this record")
+                Logger.info(TAG, "skipping this iteration as no idToken found for this record");
                 // Skip returning account record if there is no corresponding idToken record in the cache for the given clientId
                 continue;
             }
