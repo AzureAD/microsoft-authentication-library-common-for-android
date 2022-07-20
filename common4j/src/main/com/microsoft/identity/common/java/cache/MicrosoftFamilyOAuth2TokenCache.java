@@ -92,7 +92,7 @@ public class MicrosoftFamilyOAuth2TokenCache
 
         final String familyId = "1";
 
-        Logger.verbose(
+        Logger.info(
                 TAG + methodName,
                 "ClientId[" + clientId + ", " + familyId + "]"
         );
@@ -114,6 +114,7 @@ public class MicrosoftFamilyOAuth2TokenCache
 
         final List<Credential> allCredentials = getAccountCredentialCache().getCredentials();
 
+        Logger.info(TAG + methodName, "before first filter with allCreds size "+ allCredentials.size());
         // First, filter down to only the refresh tokens...
         for (final Credential credential : allCredentials) {
             if (credential instanceof RefreshTokenRecord) {
@@ -127,7 +128,7 @@ public class MicrosoftFamilyOAuth2TokenCache
                 }
             }
         }
-
+        Logger.info(TAG + methodName, "after first filter with rtToReturn= "+ rtToReturn);
         // If there's a matching IdToken, pick that up too...
         for (final Credential credential : allCredentials) {
             if (credential instanceof IdTokenRecord) {
@@ -146,8 +147,9 @@ public class MicrosoftFamilyOAuth2TokenCache
                 }
             }
         }
-
+        Logger.info(TAG + methodName, "after 2nd filter with idTokenToReturn= "+ idTokenToReturn);
         if (null != target && null != authenticationScheme) {
+            Logger.info(TAG + methodName, "in   null != target && null != authenticationScheme");
             for (final Credential credential : allCredentials) {
                 if (credential instanceof AccessTokenRecord) {
                     final AccessTokenRecord atRecord = (AccessTokenRecord) credential;
@@ -169,6 +171,7 @@ public class MicrosoftFamilyOAuth2TokenCache
                     }
                 }
             }
+            Logger.info(TAG + methodName, "in   null != target && null != authenticationScheme "+atRecordToReturn);
         }
 
         final CacheRecord.CacheRecordBuilder result = CacheRecord.builder();
@@ -187,7 +190,7 @@ public class MicrosoftFamilyOAuth2TokenCache
             @NonNull final AccountRecord account,
             @Nullable final AbstractAuthenticationScheme authenticationScheme) {
         final String methodName = ":loadByFamilyIdWithAggregatedAccountData";
-
+        Logger.info(TAG+": loadByFamilyIdWithAggregatedAccountData", " in loadByFamilyIdWithAggregatedAccountData");
         final List<ICacheRecord> result = new ArrayList<>();
 
         // First, load our primary record...

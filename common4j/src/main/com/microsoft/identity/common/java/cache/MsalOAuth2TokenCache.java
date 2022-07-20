@@ -66,6 +66,7 @@ import java.util.List;
 import java.util.Set;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
+import jdk.internal.net.http.common.Log;
 import lombok.NonNull;
 
 // Suppressing rawtype warnings due to the generic type OAuth2Strategy and AuthorizationRequest
@@ -180,7 +181,7 @@ public class MsalOAuth2TokenCache
                       @NonNull IdTokenRecord idTokenRecord,
                       @NonNull AccessTokenRecord accessTokenRecord) throws ClientException {
         final String methodName = ":save (3 arg)";
-
+        Logger.info(TAG +methodName, "in save with javadoc ");
         // Validate the supplied Accounts/Credentials
         final boolean isAccountValid = isAccountSchemaCompliant(accountRecord);
         final boolean isIdTokenValid = isIdTokenSchemaCompliant(idTokenRecord);
@@ -198,7 +199,7 @@ public class MsalOAuth2TokenCache
             throw new ClientException(CREDENTIAL_IS_SCHEMA_NONCOMPLIANT, "[(AT)]");
         }
 
-        Logger.verbose(
+        Logger.info(
                 TAG + methodName,
                 "Accounts/Credentials are valid.... proceeding"
         );
@@ -292,7 +293,7 @@ public class MsalOAuth2TokenCache
         final List<ICacheRecord> result = new ArrayList<>();
         // Whatever ICacheRecord you provide will _always_ be the first element in the result List.
         result.add(savedCacheRecord);
-
+    Logger.info(TAG, "in mergeCacheRecordWithOtherTenantCacheRecords");
         final List<AccountRecord> accountsInOtherTenants = new ArrayList<>(
                 getAllTenantAccountsForAccountByClientId(
                         savedCacheRecord
@@ -325,6 +326,7 @@ public class MsalOAuth2TokenCache
     public ICacheRecord save(@NonNull final GenericOAuth2Strategy oAuth2Strategy,
                              @NonNull final GenericAuthorizationRequest request,
                              @NonNull final GenericTokenResponse response) throws ClientException {
+        Logger.info(TAG, "in save");
         // Create the Account
         final AccountRecord accountToSave =
                 mAccountCredentialAdapter.createAccount(
@@ -364,7 +366,8 @@ public class MsalOAuth2TokenCache
                 refreshTokenToSave,
                 idTokenToSave
         );
-
+        Logger.info(TAG, "in save "+ "accessTokenToSave " + accessTokenToSave + "accessTokenToSave client id "+accessTokenToSave.getClientId()+
+                " refreshTokenToSave "+ refreshTokenToSave + " "+idTokenToSave);
         // Save the Account and Credentials...
         saveAccounts(accountToSave);
         synchronized(sCacheLock) {
@@ -494,6 +497,7 @@ public class MsalOAuth2TokenCache
             @NonNull final GenericAuthorizationRequest request,
             @NonNull final GenericTokenResponse response) throws ClientException {
         synchronized (this) {
+            Logger.info(TAG, "in saveAndLoadAggregatedAccountData before save");
             return mergeCacheRecordWithOtherTenantCacheRecords(
                     save(oAuth2Strategy, request, response)
             );
@@ -866,7 +870,7 @@ public class MsalOAuth2TokenCache
                                                             @NonNull final AbstractAuthenticationScheme authScheme) {
         synchronized (this) {
             final List<ICacheRecord> result = new ArrayList<>();
-
+            Logger.info(TAG, "in loadWithAggregatedAccountData without javadoc");
             final ICacheRecord primaryCacheRecord = load(clientId, target, account, authScheme);
 
             // Set this result as the 0th entry in the result...
@@ -1578,15 +1582,17 @@ public class MsalOAuth2TokenCache
     }
 
     void saveCredentialsInternal(final Credential... credentials) {
+        Logger.info(TAG +"saveCredentialsInternal", " credentials.size "+credentials.length);
         for (final Credential credential : credentials) {
             if (credential == null) {
                 continue;
             }
 
             if (credential instanceof AccessTokenRecord) {
+                Logger.info(TAG +"saveCredentialsInternal", " credential instanceof AccessTokenRecord");
                 deleteAccessTokensWithIntersectingScopes((AccessTokenRecord) credential);
             }
-
+            Logger.info(TAG +"saveCredentialsInternal", " before mAccountCredentialCache.saveCredential");
             mAccountCredentialCache.saveCredential(credential);
         }
     }
@@ -1609,7 +1615,7 @@ public class MsalOAuth2TokenCache
             @NonNull final RefreshTokenRecord refreshTokenToSave,
             @NonNull final IdTokenRecord idTokenToSave) throws ClientException {
         final String methodName = ":validateCacheArtifacts";
-        Logger.verbose(
+        Logger.info(
                 TAG + methodName,
                 "Validating cache artifacts..."
         );
@@ -1664,14 +1670,14 @@ public class MsalOAuth2TokenCache
                 referenceToken.getRequestedClaims()
         );
 
-        Logger.verbose(
+        Logger.info(
                 TAG + ":" + methodName,
                 "Inspecting " + accessTokens.size() + " accessToken[s]."
         );
 
         for (final Credential accessToken : accessTokens) {
             if (scopesIntersect(referenceToken, (AccessTokenRecord) accessToken, true)) {
-                Logger.infoPII(
+                Logger.info(
                         TAG + ":" + methodName,
                         "Removing credential: " + accessToken
                 );

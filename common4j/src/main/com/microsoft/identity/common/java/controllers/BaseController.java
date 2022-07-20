@@ -853,20 +853,33 @@ public abstract class BaseController {
                             homeAccountId
                     );
         } else {
-            targetAccount = parameters
+            Logger.info(TAG + "getCachedAccountRecord in basecontroller ", "in else cond");
+//            targetAccount = parameters
+//                    .getOAuth2TokenCache()
+//                    .getAccountByLocalAccountId(
+//                            environment,
+//                            clientId,
+//                            localAccountId
+//                    );
+            List<ICacheRecord> cacheRecord = parameters
                     .getOAuth2TokenCache()
-                    .getAccountByLocalAccountId(
-                            environment,
-                            clientId,
-                            localAccountId
+                    .loadWithAggregatedAccountData(
+                            parameters.getClientId(),
+                            StringUtil.join(" ", parameters.getScopes()),
+                            (AccountRecord)parameters.getAccount(),
+                            parameters.getAuthenticationScheme()
                     );
+            targetAccount = cacheRecord.get(0).getAccount();
+            Logger.info(TAG + "getCachedAccountRecord in basecontroller", "end of else cond "+ targetAccount + " isNull? "+ (targetAccount==null) + "instanceOf "+ (parameters.getOAuth2TokenCache() instanceof MsalOAuth2TokenCache) + " " + parameters.getOAuth2TokenCache());
         }
 
         if (null == targetAccount && parameters.getOAuth2TokenCache() instanceof MsalOAuth2TokenCache) {
+            logParameters(TAG + "null == targetAccount && parameters.getOAuth2TokenCache() instanceof MsalOAuth2TokenCache", "before getAccountWithFRTIfAvailable");
             targetAccount = getAccountWithFRTIfAvailable(
                     parameters,
                     (MsalOAuth2TokenCache) parameters.getOAuth2TokenCache()
             );
+            logParameters(TAG + "null == targetAccount && parameters.getOAuth2TokenCache() instanceof MsalOAuth2TokenCache", "after  getAccountWithFRTIfAvailable "+ targetAccount);
         }
 
         if (null == targetAccount) {
