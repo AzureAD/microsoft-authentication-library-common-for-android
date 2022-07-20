@@ -210,7 +210,7 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
 
     @NonNull
     private Map<String, AccountRecord> getAccountsWithKeys() {
-        Logger.verbose(TAG, "Loading Accounts + keys...");
+        Logger.info(TAG, "Loading Accounts + keys...");
         final Iterator<Map.Entry<String, String>> cacheValues = mSharedPreferencesFileManager.getAllFilteredByKey(new Predicate<String>() {
             @Override
             public boolean test(String value) {
@@ -230,12 +230,13 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
                 if (null == account) {
                     Logger.warn(TAG, ACCOUNT_RECORD_DESERIALIZATION_FAILED);
                 } else {
+                    Logger.info(TAG, "cacheKey "+cacheKey);
                     accounts.put(cacheKey, account);
                 }
             }
         }
 
-        Logger.verbose(TAG, "Returning [" + accounts.size() + "] Accounts w/ keys...");
+        Logger.info(TAG, "Returning [" + accounts.size() + "] Accounts w/ keys...");
 
         return accounts;
     }
@@ -256,7 +257,7 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
             @Nullable final String homeAccountId,
             @Nullable final String environment,
             @Nullable final String realm) {
-        Logger.verbose(TAG, "Loading Accounts...");
+        Logger.info(TAG, "Loading Accounts...");
 
         final List<AccountRecord> allAccounts = getAccounts();
 
@@ -267,7 +268,7 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
                 allAccounts
         );
 
-        Logger.verbose(TAG, "Found [" + matchingAccounts.size() + "] matching Accounts...");
+        Logger.info(TAG, "Found [" + matchingAccounts.size() + "] matching Accounts...");
 
         return matchingAccounts;
     }

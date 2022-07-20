@@ -1091,7 +1091,7 @@ public class BrokerOAuth2TokenCache
             );
 
             if (null == targetCache) {
-                Logger.verbose(
+                Logger.info(
                         TAG + methodName,
                         "Falling back to FoCI cache..."
                 );

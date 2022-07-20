@@ -89,7 +89,7 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
         final boolean mustMatchOnEnvironment = !StringUtil.isNullOrEmpty(environment);
         final boolean mustMatchOnRealm = !StringUtil.isNullOrEmpty(realm);
 
-        Logger.verbose(
+        Logger.info(
                 TAG,
                 "Account lookup filtered by home_account_id? [" + mustMatchOnHomeAccountId + "]"
                         + NEW_LINE
@@ -114,11 +114,12 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
             }
 
             if (matches) {
+                Logger.info(TAG, "account added details accountId : "+account.getHomeAccountId() + " env: "+account.getEnvironment() + " realm: "+account.getRealm());
                 matchingAccounts.add(account);
             }
         }
 
-        Logger.verbose(
+        Logger.info(
                 TAG,
                 "Found [" + matchingAccounts.size() + "] matching accounts"
         );

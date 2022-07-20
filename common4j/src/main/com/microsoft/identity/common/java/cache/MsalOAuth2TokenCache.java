@@ -326,7 +326,7 @@ public class MsalOAuth2TokenCache
     public ICacheRecord save(@NonNull final GenericOAuth2Strategy oAuth2Strategy,
                              @NonNull final GenericAuthorizationRequest request,
                              @NonNull final GenericTokenResponse response) throws ClientException {
-        Logger.info(TAG, "in save");
+        Logger.info(TAG, "in save!!!");
         // Create the Account
         final AccountRecord accountToSave =
                 mAccountCredentialAdapter.createAccount(
@@ -367,8 +367,10 @@ public class MsalOAuth2TokenCache
                 idTokenToSave
         );
         Logger.info(TAG, "in save "+ "accessTokenToSave " + accessTokenToSave + "accessTokenToSave client id "+accessTokenToSave.getClientId()+
-                " refreshTokenToSave "+ refreshTokenToSave + " "+idTokenToSave);
-        // Save the Account and Credentials...
+                " refreshTokenToSave "+ refreshTokenToSave + " idTokenToSave "+idTokenToSave);
+        Logger.info(TAG, "**************\n\n");
+        Logger.info(TAG, "accountToSave "+accountToSave +" its client info is : "+ accountToSave.getClientInfo());
+                // Save the Account and Credentials...
         saveAccounts(accountToSave);
         synchronized(sCacheLock) {
             saveCredentialsInternal(accessTokenToSave, refreshTokenToSave, idTokenToSave);
@@ -971,7 +973,7 @@ public class MsalOAuth2TokenCache
                                     @Nullable final String realm) {
         final String methodName = ":getAccount";
 
-        Logger.verbosePII(
+        Logger.info(
                 TAG + methodName,
                 "Environment: [" + environment + "]"
                         + "\n"
@@ -1175,7 +1177,7 @@ public class MsalOAuth2TokenCache
                         null // wildcard (*) realm
                 );
 
-        Logger.verbose(
+        Logger.info(
                 TAG + methodName,
                 "Found " + accountsForEnvironment.size() + " accounts for this environment"
         );
@@ -1202,7 +1204,7 @@ public class MsalOAuth2TokenCache
             }
         }
 
-        Logger.verbose(
+        Logger.info(
                 TAG + methodName,
                 "Found " + accountsForThisApp.size() + " accounts for this clientId"
         );
@@ -1260,6 +1262,7 @@ public class MsalOAuth2TokenCache
             );
 
             if (idTokensForAccount == null || idTokensForAccount.size() == 0) {
+                Logger.info(TAG, "skipping this iteration as no idToken found for this record")
                 // Skip returning account record if there is no corresponding idToken record in the cache for the given clientId
                 continue;
             }
@@ -1267,6 +1270,9 @@ public class MsalOAuth2TokenCache
             // Construct the cache record....
             final CacheRecord.CacheRecordBuilder cacheRecordBuilder = CacheRecord.builder();
             cacheRecordBuilder.account(accountRecord);
+            Logger.info(TAG, "final accountRecord being set to cache is "+accountRecord);
+            Logger.info(TAG, "\nwith clientInfo "+accountRecord.getClientInfo());
+
             // Set the IdTokens...
             for (IdTokenRecord idTokenRecord : idTokensForAccount) {
                 setToCacheRecord(cacheRecordBuilder, idTokenRecord);
@@ -1276,7 +1282,7 @@ public class MsalOAuth2TokenCache
 
         }
 
-        Logger.verbose(
+        Logger.info(
                 TAG + methodName,
                 "Found " + result.size() + " accounts with IdTokens"
         );
@@ -1318,7 +1324,7 @@ public class MsalOAuth2TokenCache
         for (final Credential credential : appCredentials) {
             if (accountHomeId.equals(credential.getHomeAccountId())
                     && accountEnvironment.equals(credential.getEnvironment())) {
-                Logger.verbose(
+                Logger.info(
                         TAG + methodName,
                         "Credentials located for account."
                 );
