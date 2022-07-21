@@ -551,7 +551,7 @@ public class MicrosoftFamilyOAuth2TokenCacheTest extends MsalOAuth2TokenCacheTes
         final String[] thread2 = {""};
         final AccountCredentialTestBundle frtTestBundle = new AccountCredentialTestBundle(
                 MicrosoftAccount.AUTHORITY_TYPE_MS_STS, localAccountId, "test.user@tenant.onmicrosoft.com",
-                randomHomeAccountId, ENVIRONMENT, realm, TARGET, CACHED_AT, EXPIRES_ON, SECRET, CLIENT_ID,
+                randomHomeAccountId, ENVIRONMENT, realm, TARGET, CACHED_AT, EXPIRES_ON, SECRET, CLIENT_ID, APPLICATION_IDENTIFIER,
                 SECRET, MicrosoftStsAccountCredentialAdapterTest.MOCK_ID_TOKEN_WITH_CLAIMS, "1",
                 SESSION_KEY, CredentialType.IdToken);
 
@@ -568,13 +568,13 @@ public class MicrosoftFamilyOAuth2TokenCacheTest extends MsalOAuth2TokenCacheTes
         // The mocks return different tokens based on the thread names, to mock having two separte Refresh tokens
         final AccountCredentialTestBundle frtTestBundle1 = new AccountCredentialTestBundle(
                 MicrosoftAccount.AUTHORITY_TYPE_MS_STS, localAccountId, "test.user@tenant.onmicrosoft.com",
-                randomHomeAccountId, ENVIRONMENT, realm, TARGET + " client1_scope", CACHED_AT, EXPIRES_ON, SECRET, "client_1",
+                randomHomeAccountId, ENVIRONMENT, realm, TARGET + " client1_scope", CACHED_AT, EXPIRES_ON, SECRET, "client_1", APPLICATION_IDENTIFIER,
                 SECRET, MicrosoftStsAccountCredentialAdapterTest.MOCK_ID_TOKEN_WITH_CLAIMS, "1",
                 SESSION_KEY, CredentialType.IdToken);
 
         final AccountCredentialTestBundle frtTestBundle2 = new AccountCredentialTestBundle(
                 MicrosoftAccount.AUTHORITY_TYPE_MS_STS, localAccountId, "test.user@tenant.onmicrosoft.com",
-                randomHomeAccountId, ENVIRONMENT, realm, TARGET + " client2_scope", CACHED_AT, EXPIRES_ON, SECRET, "client_2",
+                randomHomeAccountId, ENVIRONMENT, realm, TARGET + " client2_scope", CACHED_AT, EXPIRES_ON, SECRET, "client_2", APPLICATION_IDENTIFIER,
                 SECRET, MicrosoftStsAccountCredentialAdapterTest.MOCK_ID_TOKEN_WITH_CLAIMS, "1", SESSION_KEY,
                 CredentialType.IdToken);
 
