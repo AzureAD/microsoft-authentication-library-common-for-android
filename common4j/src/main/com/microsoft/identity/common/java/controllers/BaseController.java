@@ -869,7 +869,14 @@ public abstract class BaseController {
                             (AccountRecord)parameters.getAccount(),
                             parameters.getAuthenticationScheme()
                     );
-            targetAccount = cacheRecord.get(0).getAccount();
+           // targetAccount = cacheRecord.get(0).getAccount();
+            for (ICacheRecord cr : cacheRecord) {
+                if (cr.getAccount() != null && localAccountId
+                        .equalsIgnoreCase(cr.getAccount().getLocalAccountId())) {
+                    Logger.info(TAG, "************ found a match ****** "+ cr.getAccount().getLocalAccountId())
+                    targetAccount = cr.getAccount();
+                }
+            }
             Logger.info(TAG + "getCachedAccountRecord in basecontroller", "end of else cond "+ targetAccount + " isNull? "+ (targetAccount==null) + "instanceOf "+ (parameters.getOAuth2TokenCache() instanceof MsalOAuth2TokenCache) + " " + parameters.getOAuth2TokenCache());
         }
 
