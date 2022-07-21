@@ -34,6 +34,7 @@ import com.microsoft.identity.common.java.AuthenticationConstants;
 import com.microsoft.identity.common.java.BaseAccount;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
+import com.microsoft.identity.common.java.commands.parameters.SilentTokenCommandParameters;
 import com.microsoft.identity.common.java.dto.AccessTokenRecord;
 import com.microsoft.identity.common.java.dto.AccountRecord;
 import com.microsoft.identity.common.java.dto.Credential;
@@ -1060,6 +1061,11 @@ public class MsalOAuth2TokenCache
         }
 
         return null;
+    }
+
+    @Override
+    public AccountRecord getAccountByLocalAccountId(String environment, String clientId, String localAccountId, SilentTokenCommandParameters parameters) {
+        return getAccountByLocalAccountId(environment, clientId, localAccountId);
     }
 
     /**

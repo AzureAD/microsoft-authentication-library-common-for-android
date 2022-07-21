@@ -35,6 +35,7 @@ import com.microsoft.identity.common.java.adal.cache.DateTimeAdapter;
 import com.microsoft.identity.common.java.cache.AccountDeletionRecord;
 import com.microsoft.identity.common.java.cache.ICacheRecord;
 import com.microsoft.identity.common.java.cache.IShareSingleSignOnState;
+import com.microsoft.identity.common.java.commands.parameters.SilentTokenCommandParameters;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.java.dto.AccountRecord;
@@ -258,6 +259,16 @@ public class ADALOAuth2TokenCache
     public AccountRecord getAccountByLocalAccountId(final String environment,
                                                     final String clientId,
                                                     final String localAccountId) {
+        throw new UnsupportedOperationException(
+                ERR_UNSUPPORTED_OPERATION
+        );
+    }
+
+    @Override
+    public AccountRecord getAccountByLocalAccountId(final String environment,
+                                                    final String clientId,
+                                                    final String localAccountId,
+                                                    final SilentTokenCommandParameters parameters) {
         throw new UnsupportedOperationException(
                 ERR_UNSUPPORTED_OPERATION
         );

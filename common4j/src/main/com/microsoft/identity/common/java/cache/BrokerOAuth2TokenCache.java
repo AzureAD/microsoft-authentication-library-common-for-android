@@ -24,6 +24,7 @@ package com.microsoft.identity.common.java.cache;
 
 
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
+import com.microsoft.identity.common.java.commands.parameters.SilentTokenCommandParameters;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
@@ -946,6 +947,31 @@ public class BrokerOAuth2TokenCache
             return result;
         }
     }
+
+    @Override
+    @Nullable
+    public AccountRecord getAccountByLocalAccountId(@Nullable final String environment,
+                                                    @NonNull final String clientId,
+                                                    @NonNull final String localAccountId,
+                                                    @NonNull final SilentTokenCommandParameters parameters) {
+        final String methodName = ":getAccountByLocalAccountId";
+
+        Logger.info(
+                TAG + methodName,
+                "Loading account by local account id."
+        );
+        AccountRecord targetAccount;
+        // First do a lookup with clientId of the calling app (lookup happens with localAccountId for the app)
+        targetAccount = getAccountByLocalAccountId(environment, clientId, localAccountId);
+
+        if (targetAccount == null) {
+            // Do a lookup in foci cache (Lookup happens with familyId, not by doing a hard match on clientId)
+            ICacheRecord cacheRecord = mFociCache.loadByFamilyId(clientId, StringUtil.join(" ", parameters.getScopes()), (AccountRecord) parameters.getAccount(), parameters.getAuthenticationScheme());
+            targetAccount = cacheRecord.getAccount();
+        }
+        return targetAccount;
+    }
+
 
     @Override
     @Nullable

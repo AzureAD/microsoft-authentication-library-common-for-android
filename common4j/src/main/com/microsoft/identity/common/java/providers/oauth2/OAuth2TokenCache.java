@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.providers.oauth2;
 
+import com.microsoft.identity.common.java.commands.parameters.SilentTokenCommandParameters;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.cache.AccountDeletionRecord;
 import com.microsoft.identity.common.java.WarningType;
@@ -177,6 +178,20 @@ public abstract class OAuth2TokenCache
     public abstract AccountRecord getAccountByLocalAccountId(final String environment,
                                                              final String clientId,
                                                              final String localAccountId
+    );
+
+    /**
+     * Returns the AccountRecord matching the supplied criteria.
+     *
+     * @param environment    The environment to which the sought IAccount is associated.
+     * @param clientId       The clientId to which the sought IAccount is associated.
+     * @param localAccountId The local account id of the targeted account.
+     * @return The sought AccountRecord or null if it cannot be found.
+     */
+    public abstract AccountRecord getAccountByLocalAccountId(final String environment,
+                                                             final String clientId,
+                                                             final String localAccountId,
+                                                             final SilentTokenCommandParameters parameters
     );
 
     /**
