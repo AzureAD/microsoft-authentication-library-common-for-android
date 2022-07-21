@@ -114,7 +114,7 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
             }
 
             if (matches) {
-                Logger.info(TAG, "account added details accountId : "+account.getHomeAccountId() + " env: "+account.getEnvironment() + " realm: "+account.getRealm());
+                Logger.info(TAG, "account added details accountId : "+account.getHomeAccountId() + ", env: "+account.getEnvironment() + " realm: "+account.getRealm());
                 matchingAccounts.add(account);
             }
         }
@@ -146,8 +146,8 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
                 && !StringUtil.isNullOrEmpty(authScheme)
                 && credentialType == CredentialType.AccessToken_With_AuthScheme;
         final boolean mustMatchOnRequestedClaims = !StringUtil.isNullOrEmpty(requestedClaims);
-
-        Logger.verbose(
+        Logger.info(TAG, "clientId : " + clientId + "\n\n");
+        Logger.info(
                 TAG,
                 "Credential lookup filtered by home_account_id? [" + mustMatchOnHomeAccountId + "]"
                         + NEW_LINE

@@ -895,7 +895,7 @@ public class BrokerOAuth2TokenCache
                                                     @NonNull final String localAccountId) {
         final String methodName = ":getAccountByLocalAccountId";
 
-        Logger.verbose(
+        Logger.info(
                 TAG + methodName,
                 "Loading account by local account id."
         );
