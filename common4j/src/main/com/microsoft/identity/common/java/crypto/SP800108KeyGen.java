@@ -45,9 +45,15 @@ public class SP800108KeyGen {
 
     /**]
      * Generate a derived key given a starting key.
-     * @param key the basis for the key material.
-     * @param label a label for the key.
-     * @param ctx the key context.
+     * @param key Key derivation key, a key that is used as an input to a key derivation function
+     * (along with other input data) to derive keying material.
+     * @param label A string that identifies the purpose for the derived keying material, which
+     * is encoded as a binary string.
+     * @param ctx  A binary string containing the information related to the derived keying
+     * material. It may include identities of parties who are deriving and/or using the
+     * derived keying material and, optionally, a nonce known by the parties who derive
+     * the keys. (NOTE: In our case this is a random value that we share with Microsoft STS
+     * via the JWT header when making a request using a PRT)
      * @return a derived key.
      * @throws IOException
      * @throws InvalidKeyException
@@ -67,6 +73,20 @@ public class SP800108KeyGen {
         return Arrays.copyOf(pbDerivedKey, 32);
     }
 
+    /**
+     * An implementation of a Key Derivation function in Counter Mode
+     * Executes a pipeline (a series of pseudo random function executions) to generate a derived key (new keying material)
+     * @param keyDerivationKey - a key that is used as an input to a key derivation function
+     * (along with other input data) to derive keying material.
+     * @param fixedInput
+     *
+     * Reference: <a href="https://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication800-108.pdf">SP800-108</a>
+     *
+     * @return
+     * @throws IOException
+     * @throws NoSuchAlgorithmException
+     * @throws InvalidKeyException
+     */
     private static byte[] constructNewKey(byte[] keyDerivationKey, byte[] fixedInput)
             throws IOException, NoSuchAlgorithmException, InvalidKeyException {
         byte ctr;
@@ -77,7 +97,7 @@ public class SP800108KeyGen {
         int len;
         int numCurrentElements;
         int numCurrentElementsBytes;
-        int outputSizeBit = 256;
+        int outputSizeBit = 256; // L - Length of the derived keying material
 
         numCurrentElements = 0;
         ctr = 1;

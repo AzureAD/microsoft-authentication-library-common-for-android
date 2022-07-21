@@ -34,13 +34,26 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 
-public class JweResponse {
+/***
+ * This class represents JSON Web Encryption (JWE) content serialized using the JWE Compact
+ * Serialization Format
+ *
+ * FORMAT:
+ * BASE64URL(UTF8(JWE Protected Header)) || '.' ||
+ * BASE64URL(JWE Encrypted Key) || '.' ||
+ * BASE64URL(JWE Initialization Vector) || '.' ||
+ * BASE64URL(JWE Ciphertext) || '.' ||
+ * BASE64URL(JWE Authentication Tag)
+ *
+ * The JWE Spec describing the JWE Compact Serialization Format is found <a href="https://datatracker.ietf.org/doc/html/rfc7516#section-3.1">here</a>
+ */
+public class JweCompactSerialization {
 
     @Builder
     @Getter
     @Accessors(prefix = "m")
     @EqualsAndHashCode
-    public static class JweHeader {
+    public static class JweProtectedHeader {
         private final String mAlgorithm;
 
         private final String mType;
@@ -58,38 +71,38 @@ public class JweResponse {
         private final String mContext;
     }
 
-    JweHeader mJweHeader;
+    JweProtectedHeader mJweProtectedHeader;
 
     String mEncryptedKey;
 
-    String mIv;
+    String mInitializationVector;
 
-    String mPayload;
+    String mCipherText;
 
     String mAuthenticationTag;
 
-    public JweHeader getJweHeader() {
-        return mJweHeader;
+    public JweProtectedHeader getJweProtectedHeader() {
+        return mJweProtectedHeader;
     }
 
     public String getEncryptedKey() {
         return mEncryptedKey;
     }
 
-    public String getIV() {
-        return mIv;
+    public String getInitializationVector() {
+        return mInitializationVector;
     }
 
-    public String getPayload() {
-        return mPayload;
+    public String getCipherText() {
+        return mCipherText;
     }
 
     public String getAuthenticationTag() {
         return mAuthenticationTag;
     }
 
-    public static JweResponse parseJwe(String jwe) throws JSONException {
-        JweResponse response = new JweResponse();
+    public static JweCompactSerialization parseJwe(String jwe) throws JSONException {
+        JweCompactSerialization response = new JweCompactSerialization();
 
         String[] split = jwe.split("\\.");
         if (split.length < 4) {
@@ -98,8 +111,8 @@ public class JweResponse {
 
         String header = split[0];
         response.mEncryptedKey = split[1];
-        response.mIv = split[2];
-        response.mPayload = split[3];
+        response.mInitializationVector = split[2];
+        response.mCipherText = split[3];
 
         if (split.length > 4) {
             response.mAuthenticationTag = split[4];
@@ -109,7 +122,7 @@ public class JweResponse {
         String decodedHeader = StringUtil.fromByteArray(headerDecodedBytes);
 
         JSONObject jsonObject = new JSONObject(decodedHeader);
-        response.mJweHeader = JweHeader.builder()
+        response.mJweProtectedHeader = JweProtectedHeader.builder()
                 .algorithm(jsonObject.optString("alg"))
                 .type(jsonObject.optString("typ"))
                 .x509CertificateThumbprint(jsonObject.optString("x5t"))
