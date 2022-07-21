@@ -1160,7 +1160,7 @@ public class MsalOAuth2TokenCache
                                            @NonNull final String clientId) {
         final String methodName = ":getAccounts";
 
-        Logger.verbosePII(
+        Logger.info(
                 TAG + methodName,
                 "Environment: [" + environment + "]"
                         + "\n"

@@ -115,20 +115,24 @@ public class NameValueStorageBrokerApplicationMetadataCache
             if (!inverseMatch) { // match FoCI
                 if (!StringUtil.isNullOrEmpty(metadata.getFoci())) {
                     allFociClientIds.add(metadata.getClientId());
+                    Logger.info(TAG, "**** found a foci clientId *** "+ metadata.getClientId());
                 }
             } else { // match non FoCI
                 if (StringUtil.isNullOrEmpty(metadata.getFoci())) {
                     allFociClientIds.add(metadata.getClientId());
+                    Logger.info(TAG, "**** found a non-foci clientId *** "+ metadata.getClientId());
                 }
             }
         }
 
-        Logger.verbose(
+        Logger.info(
                 TAG + methodName,
                 "Found ["
                         + allFociClientIds.size()
                         + "] client ids."
         );
+
+
 
         return allFociClientIds;
     }
