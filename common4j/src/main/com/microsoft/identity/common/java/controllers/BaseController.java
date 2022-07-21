@@ -869,11 +869,12 @@ public abstract class BaseController {
                             (AccountRecord)parameters.getAccount(),
                             parameters.getAuthenticationScheme()
                     );
+
            // targetAccount = cacheRecord.get(0).getAccount();
             for (ICacheRecord cr : cacheRecord) {
                 if (cr.getAccount() != null && localAccountId
                         .equalsIgnoreCase(cr.getAccount().getLocalAccountId())) {
-                    Logger.info(TAG, "************ found a match ****** "+ cr.getAccount().getLocalAccountId())
+                    Logger.info(TAG, "************ found a match ****** "+ cr.getAccount().getLocalAccountId());
                     targetAccount = cr.getAccount();
                 }
             }
