@@ -836,7 +836,7 @@ public abstract class BaseController {
         final String localAccountId = parameters.getAccount().getLocalAccountId();
         final String environment = parameters.getAccount().getEnvironment();
 
-        AccountRecord targetAccount;
+        AccountRecord targetAccount = null;
 
         if (isB2CAuthority) {
             // Due to differences in the B2C service API relative to AAD, all IAccounts returned by
