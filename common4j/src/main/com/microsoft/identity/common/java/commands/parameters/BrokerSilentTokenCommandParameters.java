@@ -38,13 +38,10 @@ import lombok.experimental.SuperBuilder;
 @EqualsAndHashCode(callSuper = true)
 public class BrokerSilentTokenCommandParameters extends SilentTokenCommandParameters implements IBrokerTokenCommandParameters {
 
-<<<<<<< HEAD
     @Expose
     private final String callerPackageName;
 
     @Expose
-=======
->>>>>>> 2f1385d10 (WIP - Adding applicationIdentifier to accessTokenRecord)
     private final int callerUid;
 
     @Expose

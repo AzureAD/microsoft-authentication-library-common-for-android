@@ -41,13 +41,10 @@ import lombok.experimental.SuperBuilder;
 public class BrokerInteractiveTokenCommandParameters extends InteractiveTokenCommandParameters
         implements IHasExtraParameters, IBrokerTokenCommandParameters {
 
-<<<<<<< HEAD
     @Expose
     private final String callerPackageName;
 
     @Expose
-=======
->>>>>>> 2f1385d10 (WIP - Adding applicationIdentifier to accessTokenRecord)
     private final int callerUid;
 
     @Expose
