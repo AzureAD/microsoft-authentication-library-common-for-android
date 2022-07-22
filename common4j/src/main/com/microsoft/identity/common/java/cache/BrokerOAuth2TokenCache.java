@@ -917,7 +917,7 @@ public class BrokerOAuth2TokenCache
                             + "]"
             );
 
-            if (null != targetCache) {
+            if (null != targetCache && targetCache != mFociCache) {
                 return targetCache.getAccountByLocalAccountId(
                         environment,
                         clientId,
