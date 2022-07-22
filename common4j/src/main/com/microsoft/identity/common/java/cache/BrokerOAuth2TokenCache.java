@@ -1025,14 +1025,16 @@ public class BrokerOAuth2TokenCache
                     parameters,
                     mFociCache
             );
-            return targetAccount;
+            if (targetAccount != null)
+                return targetAccount;
 
-
-            // Trying all by own
-           // mFociCache.
+            else {
+                Logger.info(
+                        TAG + methodName, "in else cond ");
+                // Trying all by own
+                return mFociCache.getFociAccount(environment, parameters.getAccount().getHomeAccountId());
+            }
         }
-
-
 
         return null;
     }

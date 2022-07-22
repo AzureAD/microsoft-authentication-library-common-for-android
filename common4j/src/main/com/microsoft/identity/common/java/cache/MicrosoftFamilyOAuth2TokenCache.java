@@ -213,8 +213,19 @@ public class MicrosoftFamilyOAuth2TokenCache
                 }
             }
         }
-        targetAccount = accountRecordListForEnv.get(0);
-        return targetAccount;
+        for (AccountRecord accountRecord : accountRecordListForEnv) {
+            if (rtToReturn.getHomeAccountId().equalsIgnoreCase(accountRecord.getHomeAccountId()) && rtToReturn.getEnvironment().equalsIgnoreCase(accountRecord.getEnvironment()))
+            {
+                Logger.info(TAG, "yayyyy found a match :) "+ accountRecord.getUsername());
+                return accountRecord;
+            }
+            else {
+                Logger.info(TAG, "rt homeAccountId "+ rtToReturn.getHomeAccountId() + " account homeAccountId "+ accountRecord.getHomeAccountId());
+                Logger.info(TAG, "\n rt environment "+ rtToReturn.getEnvironment() + " account env "+ accountRecord.getEnvironment());
+            }
+        }
+
+      return null;
     }
 
 //    @Nullable
