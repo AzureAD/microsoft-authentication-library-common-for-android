@@ -893,7 +893,7 @@ public abstract class BaseController {
         }
 
         else if (null == targetAccount && parameters.getOAuth2TokenCache() instanceof BrokerOAuth2TokenCache) {
-            targetAccount =  getAccountFromFociCacheUsingLocalAccountId(localAccountId, parameters.getOAuth2TokenCache());
+            targetAccount =  getAccountFromFociCacheUsingLocalAccountId(localAccountId, (BrokerOAuth2TokenCache)parameters.getOAuth2TokenCache());
         }
 
         if (null == targetAccount) {
