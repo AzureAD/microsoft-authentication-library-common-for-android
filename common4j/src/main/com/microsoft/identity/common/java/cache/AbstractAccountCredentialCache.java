@@ -147,7 +147,7 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
                 && credentialType == CredentialType.AccessToken_With_AuthScheme;
         final boolean mustMatchOnRequestedClaims = !StringUtil.isNullOrEmpty(requestedClaims);
         Logger.info(TAG, "clientId : " + clientId + "\n\n");
-        Logger.info(
+        Logger.verbose(
                 TAG,
                 "Credential lookup filtered by home_account_id? [" + mustMatchOnHomeAccountId + "]"
                         + NEW_LINE

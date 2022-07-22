@@ -151,7 +151,7 @@ public class NameValueStorageBrokerApplicationMetadataCache
             if (clientId.equals(metadata.getClientId())
                     && environment.equals(metadata.getEnvironment())
                     && processUid == metadata.getUid()) {
-                Logger.verbose(
+                Logger.info(
                         TAG + metadata,
                         "Metadata located."
                 );

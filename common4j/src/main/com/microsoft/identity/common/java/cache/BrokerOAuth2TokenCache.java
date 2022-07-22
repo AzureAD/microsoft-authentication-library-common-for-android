@@ -384,7 +384,7 @@ public class BrokerOAuth2TokenCache
         final boolean isFoci = !StringUtil.isNullOrEmpty(response.getFamilyId());
 
         if (isFoci) {
-            Logger.verbose(
+            Logger.info(
                     TAG + methodName,
                     "Received FOCI value: ["
                             + response.getFamilyId()
@@ -414,7 +414,7 @@ public class BrokerOAuth2TokenCache
                 request,
                 response
         );
-
+    Logger.info(TAG + methodName, " immediately after saving " + result.getRefreshToken().getFamilyId());
         updateApplicationMetadataCache(
                 result.getRefreshToken().getClientId(),
                 result.getRefreshToken().getEnvironment(),
@@ -459,7 +459,7 @@ public class BrokerOAuth2TokenCache
 
             // The 0th element contains the record we *just* saved. Other records are corollary data.
             final ICacheRecord justSavedRecord = result.get(0);
-            Logger.info(TAG + methodName,"justSavedRecord "+ justSavedRecord + " record's RT "+ justSavedRecord.getRefreshToken().getClientId() + " "+justSavedRecord.getAccessToken().getClientId());
+            Logger.info(TAG + methodName,"justSavedRecord  record's RT "+ justSavedRecord.getRefreshToken().getClientId() + " "+justSavedRecord.getRefreshToken().getFamilyId() + " env "+ justSavedRecord.getRefreshToken().getEnvironment());
             updateApplicationMetadataCache(
                     justSavedRecord.getRefreshToken().getClientId(),
                     justSavedRecord.getRefreshToken().getEnvironment(),
@@ -487,7 +487,7 @@ public class BrokerOAuth2TokenCache
                 TAG + methodName,
                 "Adding cache entry for clientId: ["
                         + clientId
-                        + "]"
+                        + "]" + " familyId "+ familyId + " uid "+ uid
         );
 
         final boolean success = mApplicationMetadataCache.insert(applicationMetadata);
@@ -924,6 +924,7 @@ public class BrokerOAuth2TokenCache
                         localAccountId
                 );
             } else {
+                Logger.info(TAG, "  looking in foci cache as targetCache was null");
                 AccountRecord targetAccount = mFociCache.getAccountByLocalAccountId(
                         environment,
                         clientId,
@@ -976,13 +977,15 @@ public class BrokerOAuth2TokenCache
                 );
 
                 // Try to look for account again in the cache
-                return parameters
+                AccountRecord targetAccountRecord =  parameters
                         .getOAuth2TokenCache()
                         .getAccountByLocalAccountId(
                                 null,
                                 clientId,
                                 parameters.getAccount().getLocalAccountId()
                         );
+                Logger.info(TAG, "after a server req and after localAcId fetch "+ targetAccountRecord);
+                return  targetAccountRecord;
             } catch (IOException | ClientException e) {
                 Logger.warn(TAG,
                         "Error while attempting to validate client: "
@@ -1650,7 +1653,7 @@ public class BrokerOAuth2TokenCache
                                                            final int uid) {
         final String methodName = ":initializeProcessUidCache";
 
-        Logger.verbose(
+        Logger.info(
                 TAG + methodName,
                 "Initializing uid cache."
         );
@@ -1727,11 +1730,11 @@ public class BrokerOAuth2TokenCache
         final String methodName = ":getTokenCacheForClient(bam)";
 
         MsalOAuth2TokenCache targetCache = null;
-
+        Logger.info(TAG, " trying to decide which cache to return");
         if (null != metadata) {
             final boolean isFoci = null != metadata.getFoci();
 
-            Logger.verbose(
+            Logger.info(
                     TAG + methodName,
                     "is Foci? ["
                             + isFoci
@@ -1769,6 +1772,8 @@ public class BrokerOAuth2TokenCache
                                                         @NonNull final String environment,
                                                         final int uid) {
         final String methodName = ":getTokenCacheForClient(id, env, uid)";
+
+        Logger.info(TAG + methodName, "fetching meta data for " + clientId + " "+ environment);
 
         final BrokerApplicationMetadata metadata = mApplicationMetadataCache.getMetadata(
                 clientId,

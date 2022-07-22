@@ -107,7 +107,7 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
 
     @Override
     public synchronized void saveAccount(@NonNull final AccountRecord accountToSave) {
-        Logger.verbose(TAG, "Saving Account...");
+        Logger.info(TAG, "Saving Account... sharedpredaccountcredcache");
         Logger.verbose(TAG, "Account type: [" + accountToSave.getClass().getSimpleName() + "]");
         final String cacheKey = mCacheValueDelegate.generateCacheKey(accountToSave);
         Logger.verbosePII(TAG, "Generated cache key: [" + cacheKey + "]");
@@ -275,7 +275,7 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
 
     @NonNull
     private Map<String, Credential> getCredentialsWithKeys() {
-        Logger.info(TAG, "Loading Credentials with keys...");
+        Logger.verbose(TAG, "Loading Credentials with keys...");
         final Map<String, Credential> credentials = new HashMap<>();
         final Iterator<Map.Entry<String, String>> cacheValues = mSharedPreferencesFileManager.getAllFilteredByKey(new Predicate<String>() {
             @Override

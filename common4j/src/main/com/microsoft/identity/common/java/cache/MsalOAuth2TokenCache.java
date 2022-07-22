@@ -327,7 +327,7 @@ public class MsalOAuth2TokenCache
     public ICacheRecord save(@NonNull final GenericOAuth2Strategy oAuth2Strategy,
                              @NonNull final GenericAuthorizationRequest request,
                              @NonNull final GenericTokenResponse response) throws ClientException {
-        Logger.info(TAG, "in save!!!");
+        Logger.info(TAG, "in save of Msal!!!");
         // Create the Account
         final AccountRecord accountToSave =
                 mAccountCredentialAdapter.createAccount(
@@ -367,8 +367,8 @@ public class MsalOAuth2TokenCache
                 refreshTokenToSave,
                 idTokenToSave
         );
-        Logger.info(TAG, "in save "+ "accessTokenToSave " + accessTokenToSave + "accessTokenToSave client id "+accessTokenToSave.getClientId()+
-                " refreshTokenToSave "+ refreshTokenToSave + " idTokenToSave "+idTokenToSave);
+        Logger.info(TAG, "in save " + "accessTokenToSave client id "+accessTokenToSave.getClientId()+
+                " refreshTokenToSave "+ refreshTokenToSave + " refreshTokenToSave.getLocalAccountId "+ accountToSave.getLocalAccountId());
         Logger.info(TAG, "**************\n\n");
         Logger.info(TAG, "accountToSave "+accountToSave +" its client info is : "+ accountToSave.getClientInfo());
                 // Save the Account and Credentials...
@@ -1049,12 +1049,13 @@ public class MsalOAuth2TokenCache
 
         final List<AccountRecord> accounts = getAccounts(environment, clientId);
 
-        Logger.verbosePII(
+        Logger.info(
                 TAG + methodName,
                 "LocalAccountId: [" + localAccountId + "]"
         );
 
         for (final AccountRecord account : accounts) {
+            Logger.info(TAG, "account local acc id "+ account.getLocalAccountId());
             if (localAccountId.equals(account.getLocalAccountId())) {
                 return account;
             }
@@ -1590,6 +1591,7 @@ public class MsalOAuth2TokenCache
 
     private void saveAccounts(final AccountRecord... accounts) {
         for (final AccountRecord account : accounts) {
+            Logger.info(TAG, " saving account after all ops "+ account.getLocalAccountId());
             mAccountCredentialCache.saveAccount(account);
         }
     }
@@ -1605,7 +1607,7 @@ public class MsalOAuth2TokenCache
                 Logger.info(TAG +"saveCredentialsInternal", " credential instanceof AccessTokenRecord");
                 deleteAccessTokensWithIntersectingScopes((AccessTokenRecord) credential);
             }
-            Logger.info(TAG +"saveCredentialsInternal", " before mAccountCredentialCache.saveCredential");
+            Logger.info(TAG +"saveCredentialsInternal", " before mAccountCredentialCache.saveCredential homeAcId"+ credential.getHomeAccountId() + " env "+ credential.getEnvironment());
             mAccountCredentialCache.saveCredential(credential);
         }
     }
