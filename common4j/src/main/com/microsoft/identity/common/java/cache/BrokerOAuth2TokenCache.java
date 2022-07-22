@@ -1025,10 +1025,10 @@ public class BrokerOAuth2TokenCache
 //            ICacheRecord cacheRecord = mFociCache.getAccountByFamilyId(((AccountRecord) parameters.getAccount()).getEnvironment(), clientId,
 //                    parameters.getAuthenticationScheme(), parameters);
 //            targetAccount = cacheRecord.getAccount();
-            targetAccount = getAccountWithFRTIfAvailable(
-                    parameters,
-                    mFociCache
-            );
+//            targetAccount = getAccountWithFRTIfAvailable(
+//                    parameters,
+//                    mFociCache
+//            );
             if (targetAccount != null)
                 return targetAccount;
 
@@ -1036,7 +1036,15 @@ public class BrokerOAuth2TokenCache
                 Logger.info(
                         TAG + methodName, "in else cond ");
                 // Trying all by own
-                return mFociCache.getFociAccount(environment, parameters.getAccount().getHomeAccountId());
+              //  return mFociCache.getFociAccount(environment, parameters.getAccount().getHomeAccountId());
+               List<ICacheRecord> fociCacheRecords =  getFociCacheRecords();
+
+                for (ICacheRecord cacheRecord : fociCacheRecords) {
+                    if (cacheRecord.getAccount() != null && localAccountId
+                            .equalsIgnoreCase(cacheRecord.getAccount().getLocalAccountId())) {
+                        targetAccount = cacheRecord.getAccount();
+                    }
+                }
             }
         }
         return targetAccount;
