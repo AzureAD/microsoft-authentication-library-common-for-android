@@ -859,8 +859,7 @@ public abstract class BaseController {
                     .getAccountByLocalAccountId(
                             environment,
                             clientId,
-                            localAccountId,
-                            parameters
+                            localAccountId
                     );
 //            List<ICacheRecord> cacheRecord = parameters
 //                    .getOAuth2TokenCache()
@@ -882,7 +881,7 @@ public abstract class BaseController {
             Logger.info(TAG + "getCachedAccountRecord in basecontroller", "end of else cond "+ targetAccount + " isNull? "+ (targetAccount==null) + "instanceOf "+ (parameters.getOAuth2TokenCache() instanceof MsalOAuth2TokenCache) + " " + parameters.getOAuth2TokenCache());
         }
 
-        if (null == targetAccount && parameters.getOAuth2TokenCache() instanceof MsalOAuth2TokenCache) {
+        if (null == targetAccount) {
             logParameters(TAG + "null == targetAccount && parameters.getOAuth2TokenCache() instanceof MsalOAuth2TokenCache", "before getAccountWithFRTIfAvailable");
             targetAccount = getAccountWithFRTIfAvailable(
                     parameters,
@@ -918,16 +917,17 @@ public abstract class BaseController {
 
     @Nullable
     private AccountRecord getAccountWithFRTIfAvailable(@NonNull final SilentTokenCommandParameters parameters,
-                                                       @SuppressWarnings(WarningType.rawtype_warning) @NonNull final MsalOAuth2TokenCache msalOAuth2TokenCache) {
+                                                       @SuppressWarnings(WarningType.rawtype_warning) @NonNull final MsalOAuth2TokenCache oAuth2TokenCache) {
 
         final String homeAccountId = parameters.getAccount().getHomeAccountId();
         final String clientId = parameters.getClientId();
 
         // check for FOCI tokens for the homeAccountId
-        final RefreshTokenRecord refreshTokenRecord = msalOAuth2TokenCache
+        final RefreshTokenRecord refreshTokenRecord = oAuth2TokenCache
                 .getFamilyRefreshTokenForHomeAccountId(homeAccountId);
 
         if (refreshTokenRecord != null) {
+            Logger.info(TAG, "refreshTokenRecord != null");
             try {
                 // foci token is available, make a request to service to see if the client id is FOCI and save the tokens
                 FociQueryUtilities.tryFociTokenWithGivenClientId(

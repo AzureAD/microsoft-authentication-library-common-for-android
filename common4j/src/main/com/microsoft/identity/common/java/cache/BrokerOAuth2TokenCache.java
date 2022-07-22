@@ -954,22 +954,28 @@ public class BrokerOAuth2TokenCache
                                                     @NonNull final String clientId,
                                                     @NonNull final String localAccountId,
                                                     @NonNull final SilentTokenCommandParameters parameters) {
-        final String methodName = ":getAccountByLocalAccountId";
-
-        Logger.info(
-                TAG + methodName,
-                "Loading account by local account id."
-        );
-        AccountRecord targetAccount;
-        // First do a lookup with clientId of the calling app (lookup happens with localAccountId for the app)
-        targetAccount = getAccountByLocalAccountId(environment, clientId, localAccountId);
-
-        if (targetAccount == null) {
-            // Do a lookup in foci cache (Lookup happens with familyId, not by doing a hard match on clientId)
-            ICacheRecord cacheRecord = mFociCache.loadByFamilyId(clientId, StringUtil.join(" ", parameters.getScopes()), (AccountRecord) parameters.getAccount(), parameters.getAuthenticationScheme());
-            targetAccount = cacheRecord.getAccount();
-        }
-        return targetAccount;
+//        final String methodName = ":getAccountByLocalAccountId";
+//
+//        Logger.info(
+//                TAG + methodName,
+//                "Loading account by local account id."
+//        );
+//        AccountRecord targetAccount;
+//        // First do a lookup with clientId of the calling app (lookup happens with localAccountId for the app)
+//        targetAccount = getAccountByLocalAccountId(environment, clientId, localAccountId);
+//
+//        if (targetAccount == null) {
+//            Logger.verbose(
+//                    TAG + methodName,
+//                    "Account was not found corresponding to the clientId in both broker cache & FOCI cache. Loading account by familyId"
+//            );
+//            // Do a lookup in foci cache (Lookup happens with familyId, not by doing a hard match on clientId)
+//            ICacheRecord cacheRecord = mFociCache.getAccountByFamilyId(((AccountRecord) parameters.getAccount()).getEnvironment(), clientId,
+//                    parameters.getAuthenticationScheme(), parameters);
+//            targetAccount = cacheRecord.getAccount();
+//        }
+//        return targetAccount;
+        return null;
     }
 
 

@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.java.providers.oauth2;
 
 import com.microsoft.identity.common.java.commands.parameters.SilentTokenCommandParameters;
+import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.cache.AccountDeletionRecord;
 import com.microsoft.identity.common.java.WarningType;

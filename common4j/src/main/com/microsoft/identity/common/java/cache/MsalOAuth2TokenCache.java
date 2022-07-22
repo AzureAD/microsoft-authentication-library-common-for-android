@@ -1065,7 +1065,7 @@ public class MsalOAuth2TokenCache
 
     @Override
     public AccountRecord getAccountByLocalAccountId(String environment, String clientId, String localAccountId, SilentTokenCommandParameters parameters) {
-        return getAccountByLocalAccountId(environment, clientId, localAccountId);
+       return getAccountByLocalAccountId(environment, clientId, localAccountId);
     }
 
     /**
@@ -1304,6 +1304,7 @@ public class MsalOAuth2TokenCache
             return CredentialType.AccessToken_With_AuthScheme;
         }
     }
+
 
     /**
      * Evaluates the supplied list of Credentials. Returns true if the provided Account

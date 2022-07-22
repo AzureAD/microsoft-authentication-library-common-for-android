@@ -27,12 +27,15 @@ import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.java.authscheme.BearerAuthenticationSchemeInternal;
 import com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeInternal;
+import com.microsoft.identity.common.java.commands.parameters.SilentTokenCommandParameters;
 import com.microsoft.identity.common.java.dto.AccessTokenRecord;
 import com.microsoft.identity.common.java.dto.AccountRecord;
 import com.microsoft.identity.common.java.dto.Credential;
 import com.microsoft.identity.common.java.dto.CredentialType;
 import com.microsoft.identity.common.java.dto.IdTokenRecord;
 import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
+import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.foci.FociQueryUtilities;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
@@ -40,6 +43,7 @@ import com.microsoft.identity.common.java.providers.oauth2.RefreshToken;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.java.logging.Logger;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -59,6 +63,8 @@ public class MicrosoftFamilyOAuth2TokenCache
         extends MsalOAuth2TokenCache<GenericOAuth2Strategy, GenericAuthorizationRequest, GenericTokenResponse, GenericAccount, GenericRefreshToken> {
 
     private static final String TAG = MicrosoftFamilyOAuth2TokenCache.class.getSimpleName();
+    private static final String familyId = "1";
+
 
     /**
      * Constructs a new OAuth2TokenCache.
@@ -76,6 +82,156 @@ public class MicrosoftFamilyOAuth2TokenCache
         super(context, accountCredentialCache, accountCredentialAdapter);
     }
 
+    public AccountRecord getAccountByFamilyId(@Nullable String environment, String clientId, @Nullable String realm) {
+//        final String methodName = ":getAccountByFamilyId";
+////        final RefreshTokenRecord frt;
+////        final List<Credential> allCredentials = getAccountCredentialCache().getCredentials();
+////        // find the rt record
+////        for (final Credential credential : allCredentials) {
+////            if (credential instanceof RefreshTokenRecord) {
+////                final RefreshTokenRecord rtRecord = (RefreshTokenRecord) credential;
+////
+////                if (familyId.equals(rtRecord.getFamilyId())
+////                        && environment.equals(rtRecord.getEnvironment())
+////                        && homeAccountId.equals(rtRecord.getHomeAccountId())) {
+////                    frt = rtRecord;
+////                    break;
+////                }
+////            }
+////        }
+////        final List<AccountRecord> accountsForThisApp = new ArrayList<>();
+////
+////        // Get all of the Accounts for this environment
+////        final List<AccountRecord> accountsForEnvironment =
+////                getAccountCredentialCache().getAccountsFilteredBy(
+////                        homeAccountId,
+////                        environment,
+////                        null // wildcard (*) realm
+////                );
+////        final List<Credential> appCredentials = getAccountCredentialCache().getCredentialsFilteredBy(
+////                homeAccountId, // homeAccountId
+////                environment,
+////                CredentialType.RefreshToken,
+////                null,
+////                null, // realm
+////                null, // target
+////                null // authScheme
+////        );
+////        // For each Account with an associated RT, add it to the result List...
+////        for (final AccountRecord account : accountsForEnvironment) {
+////            if (accountHasCredential(account, appCredentials)) {
+////                accountsForThisApp.add(account);
+////            }
+////        }
+////        if (accountsForThisApp.size() > 0)
+////        return accountsForThisApp.get(0);
+////        else
+////            return null;
+//
+//        // check for FOCI tokens for the homeAccountId
+//        final RefreshTokenRecord refreshTokenRecord = getFamilyRefreshTokenForHomeAccountId();
+//
+//        if (refreshTokenRecord != null) {
+//            try {
+//                // foci token is available, make a request to service to see if the client id is FOCI and save the tokens
+//                FociQueryUtilities.tryFociTokenWithGivenClientId(
+//                        this,
+//                        clientId,
+//                        parameters.getRedirectUri(),
+//                        refreshTokenRecord,
+//                        parameters.getAccount()
+//                );
+//
+//                // Try to look for account again in the cache
+//                return parameters
+//                        .getOAuth2TokenCache()
+//                        .getAccountByLocalAccountId(
+//                                null,
+//                                clientId,
+//                                parameters.getAccount().getLocalAccountId()
+//                        );
+//            } catch (IOException | ClientException e) {
+//                Logger.warn(TAG,
+//                        "Error while attempting to validate client: "
+//                                + clientId + " is part of family " + e.getMessage()
+//                );
+//            }
+//        } else {
+//            Logger.info(TAG, "No Foci tokens found for homeAccountId " + homeAccountId);
+//        }
+        return null;
+    }
+
+    private boolean accountHasCredential(@NonNull final AccountRecord account,
+                                         @NonNull final List<Credential> appCredentials) {
+        final String methodName = ":accountHasCredential";
+
+        final String accountHomeId = account.getHomeAccountId();
+        final String accountEnvironment = account.getEnvironment();
+
+        Logger.info(
+                TAG + methodName,
+                "HomeAccountId: [" + accountHomeId + "]"
+                        + "\n"
+                        + "Environment: [" + accountEnvironment + "]"
+        );
+
+        for (final Credential credential : appCredentials) {
+            if (accountHomeId.equals(credential.getHomeAccountId())
+                    && accountEnvironment.equals(credential.getEnvironment())) {
+                Logger.info(
+                        TAG + methodName,
+                        "Credentials located for account."
+                );
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+//    @Nullable
+//    private AccountRecord getAccountWithFRTIfAvailable(@NonNull final SilentTokenCommandParameters parameters,
+//                                                       @SuppressWarnings(WarningType.rawtype_warning) @NonNull final MsalOAuth2TokenCache oAuth2TokenCache) {
+//
+//        final String homeAccountId = parameters.getAccount().getHomeAccountId();
+//        final String clientId = parameters.getClientId();
+//
+//        // check for FOCI tokens for the homeAccountId
+//        final RefreshTokenRecord refreshTokenRecord = oAuth2TokenCache
+//                .getFamilyRefreshTokenForHomeAccountId(homeAccountId);
+//
+//        if (refreshTokenRecord != null) {
+//            try {
+//                // foci token is available, make a request to service to see if the client id is FOCI and save the tokens
+//                FociQueryUtilities.tryFociTokenWithGivenClientId(
+//                        parameters.getOAuth2TokenCache(),
+//                        clientId,
+//                        parameters.getRedirectUri(),
+//                        refreshTokenRecord,
+//                        parameters.getAccount()
+//                );
+//
+//                // Try to look for account again in the cache
+//                return parameters
+//                        .getOAuth2TokenCache()
+//                        .getAccountByLocalAccountId(
+//                                null,
+//                                clientId,
+//                                parameters.getAccount().getLocalAccountId()
+//                        );
+//            } catch (IOException | ClientException e) {
+//                Logger.warn(TAG,
+//                        "Error while attempting to validate client: "
+//                                + clientId + " is part of family " + e.getMessage()
+//                );
+//            }
+//        } else {
+//            Logger.info(TAG, "No Foci tokens found for homeAccountId " + homeAccountId);
+//        }
+//        return null;
+//    }
+
     /**
      * Loads the tokens available for the supplied client criteria.
      *
@@ -89,8 +245,6 @@ public class MicrosoftFamilyOAuth2TokenCache
                                        @NonNull final AccountRecord accountRecord,
                                        @Nullable final AbstractAuthenticationScheme authenticationScheme) {
         final String methodName = ":loadByFamilyId";
-
-        final String familyId = "1";
 
         Logger.info(
                 TAG + methodName,
