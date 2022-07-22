@@ -924,12 +924,13 @@ public class BrokerOAuth2TokenCache
                         localAccountId
                 );
             } else {
-                Logger.info(TAG, "  looking in foci cache as targetCache was null");
+                Logger.info(TAG, "  looking in foci cache");
                 AccountRecord targetAccount = mFociCache.getAccountByLocalAccountId(
                         environment,
                         clientId,
                         localAccountId
                 );
+                Logger.info(TAG, "  account from getBylocalAccountId "+ (targetAccount==null));
                 return targetAccount;
             }
         } else {
@@ -1024,10 +1025,10 @@ public class BrokerOAuth2TokenCache
 //            ICacheRecord cacheRecord = mFociCache.getAccountByFamilyId(((AccountRecord) parameters.getAccount()).getEnvironment(), clientId,
 //                    parameters.getAuthenticationScheme(), parameters);
 //            targetAccount = cacheRecord.getAccount();
-//            targetAccount = getAccountWithFRTIfAvailable(
-//                    parameters,
-//                    mFociCache
-//            );
+            targetAccount = getAccountWithFRTIfAvailable(
+                    parameters,
+                    mFociCache
+            );
             if (targetAccount != null)
                 return targetAccount;
 
@@ -1038,8 +1039,7 @@ public class BrokerOAuth2TokenCache
                 return mFociCache.getFociAccount(environment, parameters.getAccount().getHomeAccountId());
             }
         }
-
-        return null;
+        return targetAccount;
     }
 
 

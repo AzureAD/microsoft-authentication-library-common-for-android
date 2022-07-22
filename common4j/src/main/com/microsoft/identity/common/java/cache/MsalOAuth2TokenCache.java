@@ -1056,7 +1056,8 @@ public class MsalOAuth2TokenCache
 
         for (final AccountRecord account : accounts) {
             Logger.info(TAG, "account local acc id "+ account.getLocalAccountId());
-            if (localAccountId.equals(account.getLocalAccountId())) {
+            if (localAccountId.trim().equalsIgnoreCase(account.getLocalAccountId().trim())) {
+                Logger.info(TAG, "found a match after localAcId comparison");
                 return account;
             }
         }
