@@ -1033,18 +1033,18 @@ public class BrokerOAuth2TokenCache
                 return targetAccount;
 
             else {
-                Logger.info(
-                        TAG + methodName, "in else cond ");
-                // Trying all by own
-              //  return mFociCache.getFociAccount(environment, parameters.getAccount().getHomeAccountId());
-               List<ICacheRecord> fociCacheRecords =  getFociCacheRecords();
-
-                for (ICacheRecord cacheRecord : fociCacheRecords) {
-                    if (cacheRecord.getAccount() != null && localAccountId
-                            .equalsIgnoreCase(cacheRecord.getAccount().getLocalAccountId())) {
-                        targetAccount = cacheRecord.getAccount();
-                    }
-                }
+//                Logger.info(
+//                        TAG + methodName, "in else cond ");
+//                // Trying all by own
+//              //  return mFociCache.getFociAccount(environment, parameters.getAccount().getHomeAccountId());
+//               List<ICacheRecord> fociCacheRecords =  getFociCacheRecords();
+//
+//                for (ICacheRecord cacheRecord : fociCacheRecords) {
+//                    if (cacheRecord.getAccount() != null && localAccountId
+//                            .equalsIgnoreCase(cacheRecord.getAccount().getLocalAccountId())) {
+//                        targetAccount = cacheRecord.getAccount();
+//                    }
+//                }
             }
         }
         return targetAccount;

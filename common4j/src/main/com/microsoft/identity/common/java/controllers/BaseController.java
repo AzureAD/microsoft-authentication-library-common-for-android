@@ -27,6 +27,7 @@ import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.
 import static com.microsoft.identity.common.java.authorities.Authority.B2C;
 
 
+import com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache;
 import com.microsoft.identity.common.java.commands.parameters.RopcTokenCommandParameters;
 import com.microsoft.identity.common.java.foci.FociQueryUtilities;
 import com.microsoft.identity.common.java.cache.MsalOAuth2TokenCache;
@@ -891,6 +892,10 @@ public abstract class BaseController {
             logParameters(TAG + "null == targetAccount && parameters.getOAuth2TokenCache() instanceof MsalOAuth2TokenCache", "after  getAccountWithFRTIfAvailable "+ targetAccount);
         }
 
+        else if (null == targetAccount && parameters.getOAuth2TokenCache() instanceof BrokerOAuth2TokenCache) {
+            targetAccount =  getAccountFromFociCacheUsingLocalAccountId(localAccountId, parameters.getOAuth2TokenCache());
+        }
+
         if (null == targetAccount) {
             if (Logger.isAllowPii()) {
                 Logger.errorPII(
@@ -957,6 +962,20 @@ public abstract class BaseController {
             Logger.info(TAG, "No Foci tokens found for homeAccountId " + homeAccountId);
         }
         return null;
+    }
+
+    @Nullable
+    private AccountRecord getAccountFromFociCacheUsingLocalAccountId(final String localAccountId, final BrokerOAuth2TokenCache brokerOAuth2TokenCache) {
+        AccountRecord targetAccount = null;
+        List<ICacheRecord> fociCacheRecords = brokerOAuth2TokenCache.getFociCacheRecords();
+
+        for (ICacheRecord cacheRecord : fociCacheRecords) {
+            if (cacheRecord.getAccount() != null && localAccountId
+                    .equalsIgnoreCase(cacheRecord.getAccount().getLocalAccountId())) {
+                targetAccount = cacheRecord.getAccount();
+            }
+        }
+        return targetAccount;
     }
 
 
