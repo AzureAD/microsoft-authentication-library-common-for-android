@@ -25,6 +25,7 @@ package com.microsoft.identity.common.java.cache;
 
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.java.commands.parameters.SilentTokenCommandParameters;
+import com.microsoft.identity.common.java.foci.FociQueryUtilities;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
@@ -44,6 +45,7 @@ import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.util.StringUtil;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -922,11 +924,12 @@ public class BrokerOAuth2TokenCache
                         localAccountId
                 );
             } else {
-                return mFociCache.getAccountByLocalAccountId(
+                AccountRecord targetAccount = mFociCache.getAccountByLocalAccountId(
                         environment,
                         clientId,
                         localAccountId
                 );
+                return targetAccount;
             }
         } else {
             AccountRecord result = null;
@@ -948,33 +951,84 @@ public class BrokerOAuth2TokenCache
         }
     }
 
+    @Nullable
+    private AccountRecord getAccountWithFRTIfAvailable(@NonNull final SilentTokenCommandParameters parameters,
+                                                       @SuppressWarnings(WarningType.rawtype_warning) @NonNull final MsalOAuth2TokenCache oAuth2TokenCache) {
+
+        final String homeAccountId = parameters.getAccount().getHomeAccountId();
+        final String clientId = parameters.getClientId();
+
+        // check for FOCI tokens for the homeAccountId
+        final RefreshTokenRecord refreshTokenRecord = oAuth2TokenCache
+                .getFamilyRefreshTokenForHomeAccountId(homeAccountId);
+
+        if (refreshTokenRecord != null) {
+            Logger.info(TAG, "refreshTokenRecord != null");
+            try {
+                // foci token is available, make a request to service to see if the client id is FOCI and save the tokens
+                FociQueryUtilities.tryFociTokenWithGivenClientId(
+                        parameters.getOAuth2TokenCache(),
+                        clientId,
+                        parameters.getRedirectUri(),
+                        refreshTokenRecord,
+                        parameters.getAccount()
+                );
+
+                // Try to look for account again in the cache
+                return parameters
+                        .getOAuth2TokenCache()
+                        .getAccountByLocalAccountId(
+                                null,
+                                clientId,
+                                parameters.getAccount().getLocalAccountId()
+                        );
+            } catch (IOException | ClientException e) {
+                Logger.warn(TAG,
+                        "Error while attempting to validate client: "
+                                + clientId + " is part of family " + e.getMessage()
+                );
+            }
+        } else {
+            Logger.info(TAG, "No Foci tokens found for homeAccountId " + homeAccountId);
+        }
+        return null;
+    }
+
+
     @Override
     @Nullable
     public AccountRecord getAccountByLocalAccountId(@Nullable final String environment,
                                                     @NonNull final String clientId,
                                                     @NonNull final String localAccountId,
                                                     @NonNull final SilentTokenCommandParameters parameters) {
-//        final String methodName = ":getAccountByLocalAccountId";
-//
-//        Logger.info(
-//                TAG + methodName,
-//                "Loading account by local account id."
-//        );
-//        AccountRecord targetAccount;
-//        // First do a lookup with clientId of the calling app (lookup happens with localAccountId for the app)
-//        targetAccount = getAccountByLocalAccountId(environment, clientId, localAccountId);
-//
-//        if (targetAccount == null) {
-//            Logger.verbose(
-//                    TAG + methodName,
-//                    "Account was not found corresponding to the clientId in both broker cache & FOCI cache. Loading account by familyId"
-//            );
-//            // Do a lookup in foci cache (Lookup happens with familyId, not by doing a hard match on clientId)
+        final String methodName = ":getAccountByLocalAccountId";
+
+        Logger.info(
+                TAG + methodName,
+                "Loading account by local account id."
+        );
+        AccountRecord targetAccount;
+        // First do a lookup with clientId of the calling app (lookup happens with localAccountId for the app)
+        targetAccount = getAccountByLocalAccountId(environment, clientId, localAccountId);
+
+        if (targetAccount == null) {
+            Logger.verbose(
+                    TAG + methodName,
+                    "Account was not found corresponding to the clientId in both broker cache & FOCI cache. Loading account by familyId"
+            );
+            // Do a lookup in foci cache (Lookup happens with familyId, not by doing a hard match on clientId)
 //            ICacheRecord cacheRecord = mFociCache.getAccountByFamilyId(((AccountRecord) parameters.getAccount()).getEnvironment(), clientId,
 //                    parameters.getAuthenticationScheme(), parameters);
 //            targetAccount = cacheRecord.getAccount();
-//        }
-//        return targetAccount;
+            targetAccount = getAccountWithFRTIfAvailable(
+                    parameters,
+                    mFociCache
+            );
+            return targetAccount;
+        }
+
+
+
         return null;
     }
 

@@ -859,7 +859,8 @@ public abstract class BaseController {
                     .getAccountByLocalAccountId(
                             environment,
                             clientId,
-                            localAccountId
+                            localAccountId,
+                            parameters
                     );
 //            List<ICacheRecord> cacheRecord = parameters
 //                    .getOAuth2TokenCache()
@@ -881,7 +882,7 @@ public abstract class BaseController {
             Logger.info(TAG + "getCachedAccountRecord in basecontroller", "end of else cond "+ targetAccount + " isNull? "+ (targetAccount==null) + "instanceOf "+ (parameters.getOAuth2TokenCache() instanceof MsalOAuth2TokenCache) + " " + parameters.getOAuth2TokenCache());
         }
 
-        if (null == targetAccount) {
+        if (null == targetAccount && parameters.getOAuth2TokenCache() instanceof MsalOAuth2TokenCache) {
             logParameters(TAG + "null == targetAccount && parameters.getOAuth2TokenCache() instanceof MsalOAuth2TokenCache", "before getAccountWithFRTIfAvailable");
             targetAccount = getAccountWithFRTIfAvailable(
                     parameters,
@@ -957,6 +958,7 @@ public abstract class BaseController {
         }
         return null;
     }
+
 
     /**
      * Helper method which returns false if the tenant id of the authority
