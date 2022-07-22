@@ -816,9 +816,9 @@ public class MsalOAuth2TokenCache
                 null, // wildcard (*) -- all FRTs are MRRTs by definition
                 null // not applicable
         );
-
+        Logger.info(TAG + methodName, "fallBackRts size "+ fallbackRts.size());
         if (!fallbackRts.isEmpty()) {
-            Logger.verbose(
+            Logger.info(
                     TAG + methodName,
                     "Inspecting fallback RTs for a FoCI match."
             );
@@ -834,7 +834,7 @@ public class MsalOAuth2TokenCache
                     );
 
                     if (isFamilyRefreshToken) {
-                        Logger.verbose(
+                        Logger.info(
                                 TAG + methodName,
                                 "Fallback RT found."
                         );

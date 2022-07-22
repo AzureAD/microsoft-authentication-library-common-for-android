@@ -955,13 +955,14 @@ public class BrokerOAuth2TokenCache
     private AccountRecord getAccountWithFRTIfAvailable(@NonNull final SilentTokenCommandParameters parameters,
                                                        @SuppressWarnings(WarningType.rawtype_warning) @NonNull final MsalOAuth2TokenCache oAuth2TokenCache) {
 
+        Logger.info(TAG, "in getAccountWithFRTIfAvailable of MSAL cache");
         final String homeAccountId = parameters.getAccount().getHomeAccountId();
         final String clientId = parameters.getClientId();
 
         // check for FOCI tokens for the homeAccountId
         final RefreshTokenRecord refreshTokenRecord = oAuth2TokenCache
                 .getFamilyRefreshTokenForHomeAccountId(homeAccountId);
-
+        Logger.info(TAG, "refreshTokenRecord "+ refreshTokenRecord);
         if (refreshTokenRecord != null) {
             Logger.info(TAG, "refreshTokenRecord != null");
             try {
@@ -1012,7 +1013,7 @@ public class BrokerOAuth2TokenCache
         targetAccount = getAccountByLocalAccountId(environment, clientId, localAccountId);
 
         if (targetAccount == null) {
-            Logger.verbose(
+            Logger.info(
                     TAG + methodName,
                     "Account was not found corresponding to the clientId in both broker cache & FOCI cache. Loading account by familyId"
             );
@@ -1025,6 +1026,10 @@ public class BrokerOAuth2TokenCache
                     mFociCache
             );
             return targetAccount;
+
+
+            // Trying all by own
+           // mFociCache.
         }
 
 

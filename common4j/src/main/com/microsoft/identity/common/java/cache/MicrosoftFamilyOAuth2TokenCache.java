@@ -42,6 +42,7 @@ import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.java.providers.oauth2.RefreshToken;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.java.logging.Logger;
+import com.microsoft.identity.common.java.util.StringUtil;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -189,6 +190,95 @@ public class MicrosoftFamilyOAuth2TokenCache
 
         return false;
     }
+
+    public AccountRecord getFociAccount(final String environmentId, final String homeAccountId) {
+        AccountRecord targetAccount;
+        RefreshTokenRecord rtToReturn = null;
+        // all accounts in this env
+        List<AccountRecord> accountRecordListForEnv = getAccountCredentialCache().getAccountsFilteredBy(null, environmentId, null);
+       // get All FRTs
+        final List<Credential> allCredentials = getAccountCredentialCache().getCredentials();
+
+        Logger.info(TAG + " : getFociAccount", "before first filter with allCreds size "+ allCredentials.size());
+        // First, filter down to only the refresh tokens...
+        for (final Credential credential : allCredentials) {
+            if (credential instanceof RefreshTokenRecord) {
+                final RefreshTokenRecord rtRecord = (RefreshTokenRecord) credential;
+
+                if (familyId.equals(rtRecord.getFamilyId())
+                        && environmentId.equals(rtRecord.getEnvironment())
+                        && homeAccountId.equals(rtRecord.getHomeAccountId())) {
+                    rtToReturn = rtRecord;
+                    break;
+                }
+            }
+        }
+        targetAccount = accountRecordListForEnv.get(0);
+        return targetAccount;
+    }
+
+//    @Nullable
+//    public RefreshTokenRecord getFamilyRefreshTokenForHomeAccountId(@NonNull final String homeAccountId) {
+//
+//        for (AccountRecord accountRecord : getAccountCredentialCache().getAccounts()) {
+//            if (accountRecord.getHomeAccountId().equals(homeAccountId)) {
+//                return getFamilyRefreshTokenForAccount(accountRecord);
+//            }
+//        }
+//        return null;
+//    }
+//
+//    @Nullable
+//    private RefreshTokenRecord getFamilyRefreshTokenForAccount(@NonNull final AccountRecord account) {
+//        final String methodName = ":getFamilyRefreshTokensForAccount";
+//
+//        // Our eventual result - init to null, will assign if valid FRT is found
+//        RefreshTokenRecord result = null;
+//
+//        // Look for an arbitrary RT matching the current user.
+//        // If we find one, check that it is FoCI, if it is, assume it works.
+//        final List<Credential> fallbackRts = getAccountCredentialCache().getCredentialsFilteredBy(
+//                account.getHomeAccountId(),
+//                account.getEnvironment(),
+//                CredentialType.RefreshToken,
+//                null, // wildcard (*)
+//                null, // wildcard (*) -- all FRTs are MRRTs by definition
+//                null, // wildcard (*) -- all FRTs are MRRTs by definition
+//                null // not applicable
+//        );
+//        Logger.info(TAG + methodName, "fallBackRts size "+ fallbackRts.size());
+//        if (!fallbackRts.isEmpty()) {
+//            Logger.info(
+//                    TAG + methodName,
+//                    "Inspecting fallback RTs for a FoCI match."
+//            );
+//
+//            // Any arbitrary RT should be OK -- if multiple clients are stacked,
+//            // they're either "all FoCI" or none are.
+//            for (final Credential rt : fallbackRts) {
+//                if (rt instanceof RefreshTokenRecord) {
+//                    final RefreshTokenRecord refreshTokenRecord = (RefreshTokenRecord) rt;
+//
+//                    final boolean isFamilyRefreshToken = !StringUtil.isNullOrEmpty(
+//                            refreshTokenRecord.getFamilyId()
+//                    );
+//
+//                    if (isFamilyRefreshToken) {
+//                        Logger.info(
+//                                TAG + methodName,
+//                                "Fallback RT found."
+//                        );
+//
+//                        result = refreshTokenRecord;
+//                        break;
+//                    }
+//                }
+//            }
+//        }
+//
+//        return result;
+//    }
+
 
 //    @Nullable
 //    private AccountRecord getAccountWithFRTIfAvailable(@NonNull final SilentTokenCommandParameters parameters,
