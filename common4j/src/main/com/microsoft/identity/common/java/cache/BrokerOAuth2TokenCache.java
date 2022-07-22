@@ -1024,10 +1024,10 @@ public class BrokerOAuth2TokenCache
 //            ICacheRecord cacheRecord = mFociCache.getAccountByFamilyId(((AccountRecord) parameters.getAccount()).getEnvironment(), clientId,
 //                    parameters.getAuthenticationScheme(), parameters);
 //            targetAccount = cacheRecord.getAccount();
-            targetAccount = getAccountWithFRTIfAvailable(
-                    parameters,
-                    mFociCache
-            );
+//            targetAccount = getAccountWithFRTIfAvailable(
+//                    parameters,
+//                    mFociCache
+//            );
             if (targetAccount != null)
                 return targetAccount;
 
