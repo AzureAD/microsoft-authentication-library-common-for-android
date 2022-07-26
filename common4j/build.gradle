@@ -173,20 +173,20 @@ sourceSets {
 }
 
 dependencies {
-    compileOnly 'com.github.spotbugs:spotbugs-annotations:3.1.12'
-    compileOnly "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
-    annotationProcessor "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
-    implementation "com.nimbusds:nimbus-jose-jwt:$rootProject.ext.nimbusVersion"
-    implementation "com.google.code.gson:gson:$rootProject.ext.gsonVersion"
-    implementation 'org.json:json:20180813'
-    implementation 'com.github.stephenc.jcip:jcip-annotations:1.0-1'
-    implementation "cz.msebera.android:httpclient:$rootProject.ext.mseberaApacheHttpClientVersion"
+    compileOnly libs.spotbugsAnnotations4J
+    compileOnly libs.lombok
+    annotationProcessor libs.lombok
+    implementation libs.nimbusJoseJwt
+    implementation libs.gson
+    implementation libs.json
+    implementation libs.jcipAnnotations
+    implementation libs.httpclient
 
-    testCompileOnly 'com.github.spotbugs:spotbugs-annotations:3.1.12'
-    testCompileOnly "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
-    testAnnotationProcessor "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
-    testImplementation "junit:junit:$rootProject.ext.junitVersion"
-    testImplementation "org.mockito:mockito-core:$rootProject.ext.mockitoCoreVersion"
+    testCompileOnly libs.spotbugsAnnotations4J
+    testCompileOnly libs.lombok
+    testAnnotationProcessor libs.lombok
+    testImplementation libs.junit
+    testImplementation libs.mockitoCore
 }
 
 sourceCompatibility = "1.7"

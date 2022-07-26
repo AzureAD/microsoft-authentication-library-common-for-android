@@ -1,0 +1,206 @@
+plugins {
+    id 'version-catalog'
+    id 'maven-publish'
+}
+
+project.version = "1"
+
+catalog {
+    // declare the aliases, bundles and versions in this block
+    versionCatalog {
+        // SDK
+        version('minSdk', '16')
+        version('automationAppMinSdk', '21')
+        version('targetSdk', '30')
+        version('compileSdk', '30')
+        version('buildTools', '28.0.3')
+
+        // Plugin Versions
+        version('gradle', '4.1.0')
+        version('androidMavenGradlePlugin', '1.4.1')
+
+        // library versions
+        version('coreLibraryDesugaring', '1.0.9')
+        version('androidxTest', '1.4.0')
+        version('annotation', '1.0.0')
+        version('appcompat', '1.1.0')
+        version('browser', '1.0.0')
+        version('constraintLayout', '1.1.3')
+        version('dexMakerMockito', '2.19.0')
+        version('espresso', '3.1.0')
+        version('gson', '2.8.9')
+        version('junit', '4.12')
+        version('legacySupportV4', '1.0.0')
+        version('localBroadcastManager', '1.0.0')
+        version('lombok', '1.18.12')
+        version('material', '1.0.0')
+        version('mockito', '3.6.28')
+        version('multidex', '2.0.1')
+        version('nimbus', '9.9')
+        version('powermock', '2.0.9')
+        version('annotation', '8.37')
+        version('robolectric', '4.5.1')
+        version('uiAutomator', '2.2.0')
+        version('flatBuffers', '1.12.0')
+        version('dagger', '2.31.2')
+        version('msal4j', '1.10.0')
+        version('adal4j', '1.6.7')
+        version('mseberaApacheHttpClient', '4.5.8')
+        version('moshi', '1.12.0')
+        version('openpojo', '0.9.1')
+        version('equalsVerifier', '3.6.1')
+        version('jsonGenerator', '0.4.3')
+        version('jsonSchemaFriend', '0.9.1')
+        version('json', '20200518')
+        version('junitEngine', '5.7.2')
+        version('dbusJava', '3.3.0')
+        version('bouncyCastle', '1.67')
+        version('oshi', '5.7.5')
+        version('tsl', '1.6.1')
+        version('yubikit', '2.0.0')
+        version('supportLibrary', '2.0.0')
+        version('adalLegacy', '1.15.0')
+        version('adalSnapshot', '3.1.1-SNAPSHOT')
+        version('adalLatest', '3.1.1')
+        version('spotbugs', '4.2.3')
+        version('spotbugs4J', '3.1.2')
+        version('jcip', '1.0-1')
+        version('commonsLang', '2.6')
+        version('displayMask', '0.3.0')
+        version('androidxJUnit', '1.1.1')
+        version('volley', '1.1.1')
+        version('tokenShare', '1.6.1')
+        version('ariaAndroid', '3.0.22.0')
+        version('knoxSdk', '3.2.1')
+        version('knoxSupportLib', '2018.12.17')
+        version('robotium', '5.6.3')
+        version('jacoco', '0.7.9')
+        version('mapdb', '3.0.8')
+        version('secretService', '1.6.2')
+
+        // TSL versions
+        version('yubikit', '2.0.0')
+        version('yubikit', '2.0.0')
+        version('yubikit', '2.0.0')
+        version('yubikit', '2.0.0')
+        version('yubikit', '2.0.0')
+
+
+        // libraries
+        // the params listed in order are as follows:
+        // alias, group, id, -- then versionRef is of course the version
+        library('spotbugsAnnotations', 'com.github.spotbugs', 'spotbugs-annotations').versionRef('spotbugs')
+        library('spotbugsAnnotations4J', 'com.github.spotbugs', 'spotbugs-annotations').versionRef('spotbugs4J')
+        library('lombok', 'org.projectlombok', 'lombok').versionRef('lombok')
+        library('nimbusJoseJwt', 'com.nimbusds', 'nimbus-jose-jwt').versionRef('nimbus')
+        library('gson', 'com.google.code.gson', 'gson').versionRef('gson')
+        library('json', 'org.json', 'json').versionRef('json')
+        library('jcipAnnotations', 'com.github.stephenc.jcip', 'jcip-annotations').versionRef('jcip')
+        library('httpclient', 'cz.msebera.android', 'httpclient').versionRef('mseberaApacheHttpClient')
+        library('msal4j', 'com.microsoft.azure', 'msal4j').versionRef('msal4j')
+        library('adal4j', 'com.microsoft.azure', 'adal4j').versionRef('adal4j')
+        library('commonsLang', 'commons-lang', 'commons-lang').versionRef('commonsLang')
+        library('flatbuffers', 'com.google.flatbuffers', 'flatbuffers-java').versionRef('flatbuffers')
+        library('bcprovJdk15on', 'org.bouncycastle', 'bcprov-jdk15on').versionRef('bouncyCastle')
+        library('bcpkixJdk15on', 'org.bouncycastle', 'bcpkix-jdk15on').versionRef('bouncyCastle')
+        library('bctlsJdk15on', 'org.bouncycastle', 'bctls-jdk15on').versionRef('bouncyCastle')
+        library('dbusJava', 'com.github.hypfvieh', 'dbus-java').versionRef('dbusJava')
+        library('dbusJavaUtils', 'com.github.hypfvieh', 'dbus-java-utils').versionRef('dbusJava')
+        library('moshi', 'com.squareup.moshi', 'moshi').versionRef('moshi')
+        library('moshiAdapters', 'com.squareup.moshi', 'moshi-adapters').versionRef('moshi')
+        library('oshi', 'com.github.oshi', 'oshi-core').versionRef('oshi')
+        library('mapdb', 'org.mapdb', 'mapdb').versionRef('mapdb')
+        library('secretService', 'de.swiesend', 'secret-service').versionRef('secretService')
+
+        // android libraries
+        library('appcompat', 'androidx.appcompat', 'appcompat').versionRef('appcompat')
+        library('coreLibraryDesugaring', 'com.android.tools', 'desugar_jdk_libs').versionRef('coreLibraryDesugaring')
+        library('displayMask', 'com.microsoft.device.display', 'display-mask').versionRef('displayMask')
+        library('browser', 'androidx.browser', 'browser').versionRef('browser')
+        library('constraintLayout', 'androidx.constraintlayout', 'constraintlayout').versionRef('constraintLayout')
+        library('legacySupportV4', 'androidx.legacy', 'legacy-support-v4').versionRef('legacySupportV4')
+        library('material', 'com.google.android.material', 'material').versionRef('material')
+        library('volley', 'com.android.volley', 'volley').versionRef('volley')
+        library('localBroadcastManager', 'androidx.localbroadcastmanager', 'localbroadcastmanager').versionRef('localBroadcastManager')
+        library('dagger', 'com.google.dagger', 'dagger').versionRef('dagger')
+        library('daggerCompiler', 'com.google.dagger', 'dagger-compiler').versionRef('dagger')
+        library('tokenShare', 'com.microsoft', 'tokenshare').versionRef('tokenShare')
+        library('ariaAndroid', 'com.microsoft.applications', 'ariaandroidjavasdk').versionRef('ariaAndroid')
+        library('knoxSdk', 'com.samsung.android.knox', 'sdk').versionRef('knoxSdk')
+        library('knoxSupportLib', 'com.samsung.android.knox', 'supportlib').versionRef('knoxSupportLib')
+        library('robotiumSolo', 'com.jayway.android.robotium', 'robotium-solo').versionRef('robotium')
+
+        // test libraries
+        library('junit', 'junit', 'junit').versionRef('junit')
+        library('mockitoCore', 'org.mockito', 'mockito-core').versionRef('mockito')
+        library('mockitoInline', 'org.mockito', 'mockito-inline').versionRef('mockito')
+        library('powermockModuleJunit4', 'org.powermock', 'powermock-module-junit4').versionRef('powermock')
+        library('powermockModuleJunit4Rule', 'org.powermock', 'powermock-module-junit4-rule').versionRef('powermock')
+        library('powermockApiMockito2', 'org.powermock', 'powermock-api-mockito2').versionRef('powermock')
+        library('powermockClassloadingXstream', 'org.powermock', 'powermock-classloading-xstream').versionRef('powermock')
+        library('junitJupiterApi', 'org.junit.jupiter', 'junit-jupiter-api').versionRef('powermock')
+        library('robolectric4j', 'org.robolectric', 'junit').versionRef('robolectric')
+        library('jacocoMavenPlugin', 'org.jacoco', 'jacoco-maven-plugin').versionRef('jacoco')
+        library('openpojo', 'com.openpojo', 'openpojo').versionRef('openpojo')
+        library('equalsVerifier', 'nl.jqno.equalsverifier', 'equalsverifier').versionRef('equalsVerifier')
+
+        // android test libraries
+        library('robolectric', 'org.robolectric', 'robolectric').versionRef('robolectric')
+        library('androidxTestCore', 'androidx.test', 'core').versionRef('androidxTest')
+        library('androidxTestRunner', 'androidx.test', 'runner').versionRef('androidxTest')
+        library('androidxTestMonitor', 'androidx.test', 'monitor').versionRef('androidxTest')
+        library('androidxTestRules', 'androidx.test', 'rules').versionRef('androidxTest')
+        library('androidxTestOrchestrator', 'androidx.test', 'orchestrator').versionRef('androidxTest')
+        library('androidxJUnit', 'androidx.test.ext', 'junit').versionRef('androidxJUnit')
+        library('uiAutomator', 'androidx.test', 'uiautomator').versionRef('uiAutomator')
+        library('mockitoAndroid', 'org.mockito', 'mockito-android').versionRef('mockito')
+        library('espressoCore', 'androidx.test.espresso', 'espresso-core').versionRef('espresso')
+    }
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            groupId 'com.microsoft.identity'
+            artifactId 'catalog'
+            from components.versionCatalog
+
+            pom {
+                name = 'catalog'
+                description = 'This is a version catalog for dependencies used by Auth Client Team'
+                url = 'https://github.com/AzureAD/android-complete'
+                developers {
+                    developer {
+                        id = 'microsoft'
+                        name = 'Microsoft'
+                    }
+                }
+                licenses {
+                    license {
+                        name = 'MIT License'
+                    }
+                }
+                inceptionYear = '2022'
+                scm {
+                    url = 'https://github.com/AzureAD/android-complete/tree/master'
+                }
+                properties = [
+                        branch: 'master',
+                        version: project.version
+                ]
+            }
+        }
+    }
+
+    repositories {
+        mavenLocal()
+        maven {
+            name "vsts-maven-adal-android"
+            url "https://identitydivision.pkgs.visualstudio.com/_packaging/AndroidADAL/maven/v1"
+            credentials {
+                username project.vstsUsername
+                password project.vstsMavenAccessToken
+            }
+        }
+    }
+}

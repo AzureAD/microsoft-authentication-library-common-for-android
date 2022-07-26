@@ -200,19 +200,19 @@ dependencies {
 
     implementation project(":LabApiUtilities")
 
-    implementation "androidx.test:core:$rootProject.ext.androidxTestCoreVersion"
-    implementation "com.google.code.gson:gson:$rootProject.ext.gsonVersion"
-    implementation "com.nimbusds:nimbus-jose-jwt:$rootProject.ext.nimbusVersion"
-    implementation 'androidx.appcompat:appcompat:1.0.2'
-    implementation "junit:junit:$rootProject.ext.junitVersion"
-    implementation ("org.robolectric:robolectric:$rootProject.ext.robolectricVersion") {
+    implementation libs.androidxTestCore
+    implementation libs.gson
+    implementation libs.nimbusJoseJwt
+    implementation libs.appcompat
+    implementation libs.junit
+    implementation (libs.robolectric) {
         exclude group: "org.apache.maven"
         exclude group: "org.apache.maven.wagon"
         exclude group: "xmlpull"
         exclude group: "xpp3"
     }
-    compileOnly "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
-    annotationProcessor "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
+    compileOnly libs.lombok
+    annotationProcessor libs.lombok
 }
 
 static boolean getBoolean(final String s) {

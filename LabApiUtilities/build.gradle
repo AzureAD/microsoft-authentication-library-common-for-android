@@ -73,16 +73,16 @@ dependencies {
         implementation(group: 'com.microsoft.identity', name: 'labapi', version: '0.0.+')
     }
 
-    implementation "com.nimbusds:nimbus-jose-jwt:$rootProject.ext.nimbusVersion"
-    implementation "com.microsoft.azure:msal4j:$rootProject.ext.msal4jVersion"
-    implementation 'com.microsoft.azure:adal4j:1.6.7'
-    testImplementation "junit:junit:$rootProject.ext.junitVersion"
-    compileOnly "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
-    annotationProcessor "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
-    implementation 'commons-lang:commons-lang:2.6'
+    implementation libs.nimbusJoseJwt
+    implementation libs.msal4j
+    implementation libs.adal4j
+    testImplementation libs.junit
+    compileOnly libs.lombok
+    annotationProcessor libs.lombok
+    implementation libs.commonsLang
 
-    testCompileOnly "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
-    testAnnotationProcessor "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
+    testCompileOnly libs.lombok
+    testAnnotationProcessor libs.lombok
 }
 
 afterEvaluate {

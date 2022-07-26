@@ -176,14 +176,14 @@ dependencies {
     //coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:$rootProject.ext.coreLibraryDesugaringVersion"
 
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation "androidx.appcompat:appcompat:$rootProject.ext.appCompatVersion"
-    implementation 'junit:junit:4.13'
-    implementation "androidx.test.uiautomator:uiautomator:$rootProject.ext.uiAutomatorVersion"
-    implementation "androidx.test:monitor:$rootProject.ext.androidxTestMonitorVersion"
-    implementation "androidx.test:core:$rootProject.ext.androidxTestCoreVersion"
+    implementation libs.appcompat
+    implementation libs.junit
+    implementation libs.uiAutomator
+    implementation libs.androidxTestMonitor
+    implementation libs.androidxTestCore
     implementation(project(":LabApiUtilities"))
-    implementation "com.google.code.gson:gson:$rootProject.ext.gsonVersion"
-    compileOnly "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
-    annotationProcessor "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
-    androidTestImplementation "androidx.test:runner:$rootProject.ext.androidxTestRunnerVersion"
+    implementation libs.gson
+    compileOnly libs.lombok
+    annotationProcessor libs.lombok
+    androidTestImplementation libs.androidxTestRunner
 }

@@ -30,3 +30,18 @@ project(':labapi').projectDir = new File('labapi')
 
 include(':LabApiUtilities')
 project(':LabApiUtilities').projectDir = new File('LabApiUtilities')
+
+include ':catalog'
+project(':catalog').projectDir = new File('catalog')
+
+dependencyResolutionManagement {
+    repositories {
+        mavenLocal()
+    }
+
+    versionCatalogs {
+        libs {
+            from("com.microsoft.identity:catalog:1")
+        }
+    }
+}
