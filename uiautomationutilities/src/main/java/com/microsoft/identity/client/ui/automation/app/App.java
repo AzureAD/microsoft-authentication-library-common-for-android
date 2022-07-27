@@ -57,7 +57,7 @@ public abstract class App implements IApp {
     private String appName;
 
     protected String localApkFileName = null;
-    protected String localOldApkFileName = null;
+    protected String localUpdateApkFileName = null;
 
     /**
      * Indicates whether the first run experience should be handled in the UI. This value can
@@ -107,26 +107,14 @@ public abstract class App implements IApp {
 
     @Override
     public void install() {
-        if (localOldApkFileName != null) {
-            // To ensure to install the old apk first in update scenarios
-            if (appInstaller instanceof LocalApkInstaller && !TextUtils.isEmpty(localOldApkFileName)) {
-                Logger.i(TAG, "Installing the " + this.appName + " from local apk..");
-                appInstaller.installApp(localOldApkFileName);
-            } else {
-                Logger.i(TAG, "Installing the " + this.appName + " from Play Store..");
-                appInstaller.installApp(packageName);
-            }
-        }
-        else {
-            //TODO: make it build time configurable to specify the installer that should be used.
-            // Ideally we can specify different installers on app basis
-            if (appInstaller instanceof LocalApkInstaller && !TextUtils.isEmpty(localApkFileName)) {
-                Logger.i(TAG, "Installing the " + this.appName + " from local apk..");
-                appInstaller.installApp(localApkFileName);
-            } else {
-                Logger.i(TAG, "Installing the " + this.appName + " from Play Store..");
-                appInstaller.installApp(packageName);
-            }
+        //TODO: make it build time configurable to specify the installer that should be used.
+        // Ideally we can specify different installers on app basis
+        if (appInstaller instanceof LocalApkInstaller && !TextUtils.isEmpty(localApkFileName)) {
+            Logger.i(TAG, "Installing the " + this.appName + " from local apk..");
+            appInstaller.installApp(localApkFileName);
+        } else {
+            Logger.i(TAG, "Installing the " + this.appName + " from Play Store..");
+            appInstaller.installApp(packageName);
         }
         // the app is just installed, first run should be handled
         // this value can (should) be changed to false by child classes as appropriate
@@ -149,9 +137,9 @@ public abstract class App implements IApp {
     @Override
     public void update() {
         String appHint;
-        if (updateAppInstaller instanceof LocalApkInstaller && !TextUtils.isEmpty(localApkFileName)) {
+        if (updateAppInstaller instanceof LocalApkInstaller && !TextUtils.isEmpty(localUpdateApkFileName)) {
             Logger.i(TAG, "Updating the " + this.appName + " from local apk..");
-            appHint = localApkFileName;
+            appHint = localUpdateApkFileName;
         } else {
             Logger.i(TAG, "Updating the " + this.appName + " from Play Store..");
             appHint = packageName;

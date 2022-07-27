@@ -54,12 +54,11 @@ public class AzureSampleApp extends App {
         localApkFileName = AZURE_SAMPLE_APK;
     }
 
-    public AzureSampleApp(final boolean isOldApk) {
+    public AzureSampleApp(@NonNull final String azureSampleApk,
+                                        @NonNull final String updatedAzureSampleApk) {
         super(AZURE_SAMPLE_PACKAGE_NAME, AZURE_SAMPLE_APP_NAME, new LocalApkInstaller());
-        localApkFileName = AZURE_SAMPLE_APK;
-        if (isOldApk) {
-            localOldApkFileName = OLD_AZURE_SAMPLE_APK;
-        }
+        localApkFileName = azureSampleApk;
+        localUpdateApkFileName = updatedAzureSampleApk;
     }
 
     @Override

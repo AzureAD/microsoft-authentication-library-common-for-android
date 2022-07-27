@@ -78,12 +78,11 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
         localApkFileName = COMPANY_PORTAL_APK;
     }
 
-    public BrokerCompanyPortal(final boolean isOldApk) {
+    public BrokerCompanyPortal(@NonNull final String companyPortalApkName,
+                                        @NonNull final String updatedCompanyPortalApkName) {
         super(COMPANY_PORTAL_APP_PACKAGE_NAME, COMPANY_PORTAL_APP_NAME);
-        localApkFileName = COMPANY_PORTAL_APK;
-        if (isOldApk) {
-            localOldApkFileName = OLD_COMPANY_PORTAL_APK;
-        }
+        localApkFileName = companyPortalApkName;
+        localUpdateApkFileName = updatedCompanyPortalApkName;
     }
 
     @Override
