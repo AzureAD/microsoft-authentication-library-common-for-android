@@ -79,10 +79,10 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
     }
 
     public BrokerCompanyPortal(@NonNull final String companyPortalApkName,
-                                        @NonNull final String updatedCompanyPortalApkName) {
+                                        @NonNull final String updateCompanyPortalApkName) {
         super(COMPANY_PORTAL_APP_PACKAGE_NAME, COMPANY_PORTAL_APP_NAME);
         localApkFileName = companyPortalApkName;
-        localUpdateApkFileName = updatedCompanyPortalApkName;
+        localUpdateApkFileName = updateCompanyPortalApkName;
     }
 
     @Override

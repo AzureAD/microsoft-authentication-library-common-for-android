@@ -77,11 +77,11 @@ public class BrokerHost extends AbstractTestBroker {
     }
 
     public BrokerHost(@NonNull final String brokerHostApkName,
-                      @NonNull final String updatedBrokerHostApkName) {
+                      @NonNull final String updateBrokerHostApkName) {
         super(BROKER_HOST_APP_PACKAGE_NAME, BROKER_HOST_APP_NAME,
                 new LocalApkInstaller(), new LocalApkInstaller());
         localApkFileName = brokerHostApkName;
-        localUpdateApkFileName = updatedBrokerHostApkName;
+        localUpdateApkFileName = updateBrokerHostApkName;
     }
 
     @Override

@@ -55,10 +55,10 @@ public class AzureSampleApp extends App {
     }
 
     public AzureSampleApp(@NonNull final String azureSampleApk,
-                                        @NonNull final String updatedAzureSampleApk) {
+                                        @NonNull final String updateAzureSampleApk) {
         super(AZURE_SAMPLE_PACKAGE_NAME, AZURE_SAMPLE_APP_NAME, new LocalApkInstaller());
         localApkFileName = azureSampleApk;
-        localUpdateApkFileName = updatedAzureSampleApk;
+        localUpdateApkFileName = updateAzureSampleApk;
     }
 
     @Override
