@@ -99,7 +99,7 @@ public class FociQueryUtilities {
             throws ClientException, IOException {
         final String methodName = ":tryFociTokenWithGivenClientId";
         final MicrosoftStsOAuth2Configuration config = new MicrosoftStsOAuth2Configuration();
-
+        Logger.info(TAG + methodName, "**************************");
         //Get authority url
         final CommonURIBuilder requestUrlBuilder = new CommonURIBuilder();
         requestUrlBuilder.setScheme("https")
@@ -139,7 +139,7 @@ public class FociQueryUtilities {
         // Create a correlation_id for the request
         final UUID correlationId = UUID.randomUUID();
 
-        Logger.verbose(TAG + methodName,
+        Logger.info(TAG + methodName,
                 "Create the token request with correlationId ["
                         + correlationId
                         + "]");
@@ -154,13 +154,13 @@ public class FociQueryUtilities {
                 "2"
         );
 
-        Logger.verbose(TAG + methodName,
+        Logger.info(TAG + methodName,
                 "Start refreshing token (to verify foci) with correlationId ["
                         + correlationId
                         + "]");
         final TokenResult tokenResult = strategy.requestToken(tokenRequest);
 
-        Logger.verbose(TAG + methodName,
+        Logger.info(TAG + methodName,
                 "Is the client ID able to use the foci? ["
                         + tokenResult.getSuccess()
                         + "] with correlationId ["
@@ -177,7 +177,7 @@ public class FociQueryUtilities {
                     accountRecord,
                     correlationId
             );
-            Logger.verbose(TAG + methodName,
+            Logger.info(TAG + methodName,
                     "Saving records to cache with client id" + clientId
             );
             brokerOAuth2TokenCacheSave(brokerOAuth2TokenCache, strategy, tokenResult, authorizationRequest);
