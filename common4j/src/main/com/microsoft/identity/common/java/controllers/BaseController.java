@@ -865,6 +865,10 @@ public abstract class BaseController {
         return targetAccount;
     }
 
+    /**
+     * Lookup in app-specific cache.
+     */
+    @Nullable
     private AccountRecord getCachedAccountRecordFromCallingAppCache(
             @NonNull final SilentTokenCommandParameters parameters) {
         final boolean isB2CAuthority = B2C.equalsIgnoreCase(
@@ -909,6 +913,7 @@ public abstract class BaseController {
     /**
      * Lookup in ALL the caches including the foci cache.
      */
+    @Nullable
     protected AccountRecord getCachedAccountRecordFromAllCaches(
             @NonNull final SilentTokenCommandParameters parameters) throws ClientException {
         // TO-DO https://identitydivision.visualstudio.com/Engineering/_workitems/edit/1999531/
