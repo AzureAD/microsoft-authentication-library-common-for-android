@@ -907,7 +907,7 @@ public abstract class BaseController {
     }
 
     /**
-     * Lookup in ALL the caches including the foci cache
+     * Lookup in ALL the caches including the foci cache.
      */
     protected AccountRecord getCachedAccountRecordFromAllCaches(
             @NonNull final SilentTokenCommandParameters parameters) throws ClientException {
