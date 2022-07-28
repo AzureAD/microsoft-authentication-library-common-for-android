@@ -925,7 +925,7 @@ public abstract class BaseController {
             return targetAccount;
         else {
             Logger.info(TAG, "Account not found in app cache..");
-            targetAccount = getCachedAccountRecordInAllCaches(parameters);
+            targetAccount = getCachedAccountRecordFromAllCaches(parameters);
         }
 
         if (null == targetAccount) {
@@ -996,7 +996,8 @@ public abstract class BaseController {
         return targetAccount;
     }
 
-    protected AccountRecord getCachedAccountRecordInAllCaches(@NonNull final SilentTokenCommandParameters parameters) {
+    protected AccountRecord getCachedAccountRecordFromAllCaches(
+            @NonNull final SilentTokenCommandParameters parameters) throws ClientException {
         Logger.info(TAG + "getCachedAccountRecordForFoci", "how do we redirect it?");
         // TO-DO https://identitydivision.visualstudio.com/Engineering/_workitems/edit/1999531/
         if (parameters.getOAuth2TokenCache() instanceof MsalOAuth2TokenCache) {
