@@ -93,8 +93,8 @@ public class RulesHelper {
             ));
         }
 
-        Log.i(TAG, "Adding FactoryResetChromeRule");
-        ruleChain = ruleChain.around(new FactoryResetChromeRule());
+//        Log.i(TAG, "Adding FactoryResetChromeRule");
+//        ruleChain = ruleChain.around(new FactoryResetChromeRule());
 
         Log.i(TAG, "Adding RemoveBrokersBeforeTestRule");
         ruleChain = ruleChain.around(new RemoveBrokersBeforeTestRule());
@@ -113,9 +113,6 @@ public class RulesHelper {
 
             Log.i(TAG, "Adding DeviceEnrollmentFailureRecoveryRule");
             ruleChain = ruleChain.around(new DeviceEnrollmentFailureRecoveryRule());
-
-//            Log.i(TAG, "Adding UncaughtExceptionHandlerRule");
-//            ruleChain = ruleChain.around(new UncaughtExceptionHandlerRule());
         }
 
         return ruleChain;
