@@ -59,7 +59,7 @@ public class LabClient implements ILabClient {
     private final LabApiAuthenticationClient mLabApiAuthenticationClient;
     private final long PASSWORD_RESET_WAIT_DURATION = TimeUnit.MINUTES.toMillis(1);
     private final long LAB_API_RETRY_WAIT = TimeUnit.SECONDS.toMillis(5);
-    private final long TEMP_USER_CREATION_WAIT = TimeUnit.SECONDS.toMillis(20);
+    private final long TEMP_USER_CREATION_WAIT = TimeUnit.SECONDS.toMillis(30);
 
     /**
      * Temp users API provided by Lab team can often take more than 10 seconds to return...hence, we
@@ -391,12 +391,6 @@ public class LabClient implements ILabClient {
             System.out.printf(Locale.ENGLISH, "Password reset attempt #%d%n", (i + 1));
 
             try {
-                Thread.sleep(TimeUnit.SECONDS.toMillis(5));
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-
-            try {
                 if (resetPassword(upn)) {
                     return true;
                 }
@@ -408,6 +402,12 @@ public class LabClient implements ILabClient {
                             "Password reset attempt #%d%n failed: %s", (i + 1),
                             labApiException
                     );
+
+                    try {
+                        Thread.sleep(TimeUnit.SECONDS.toMillis(5));
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                 } else {
                     // last attempt, just throw the exception back
                     throw labApiException;

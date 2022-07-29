@@ -22,6 +22,9 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.constants;
 
+/**
+ * Class used to hold some global constants for UI testing automation.
+ */
 public class GlobalConstants {
     public static final boolean IS_STAY_SIGN_IN_PAGE_EXPECTED = true;
 }
