@@ -1,19 +1,26 @@
 V.Next
 ----------
 - [MINOR] Bumped MSAL Broker Protocol version to 9.0, acquireToken/acquireTokenSilent endpoint requires minimum_required_broker_protocol_version of 9.0+ to Send x-ms-PKeyAuth Header to the token endpoint. (#1790)
+
+Version 6.0.0
+----------
 - [PATCH] Fix msal failing tests due to telemetry context (1788)
 - [MAJOR] Bumped MSAL Broker Protocol version to 8.0, GET_ACCOUNTS endpoint requires minimum_required_broker_protocol_version of 8.0+ to return an account constructed from PRT id token to FOCI apps. (#1771)
 - [MAJOR] [Msal] Remove launching logout endpoint in default browser for shared device mode signout flow
-- [PATCH] [Adal] Ignore failure in updating unified/msal cache if ignoreKeyLoaderNotFoundError flag is set (#1781)
 - [MINOR] Add telemetry relay client (#1757)
 - [MINOR] Add telemetry error events (#1768)
 - [MAJOR] Adding YubiKit SDK, which requires Java Version 8 and will thus bump up Java version overall to 8; added keyboard flag to android:configChanges for all activities that could interact with a YubiKey. (#1729)
 - [MINOR] Support WordApp local apk install in UI automation flows (#1732)
 - [PATCH] Fix SDK Cancel when using authorization in current task (#1743)
 - [MINOR] Added support for broadcasting to applications installed on the device. (#1744)
-- [PATCH] Fix APPLICATION_CANCELLED by handling back button press (#1725)
 - [PATCH] Added Base64 encode for the AuthorizationRequest state parameter (#1750)
 - [PATCH] Fix missing authority_url when creating the authority audience (#1753)
+- [PATCH] Add filter for broker telemetry event fields. (#1793)
+
+Version 5.0.1
+----------
+- [PATCH] [Adal] Ignore failure in updating unified/msal cache if ignoreKeyLoaderNotFoundError flag is set (#1781)
+- [PATCH] Fix APPLICATION_CANCELLED by handling back button press (#1725)
 
 Version 5.0.0
 ----------

@@ -25,9 +25,6 @@ package com.microsoft.identity.common.java.telemetry.relay;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.telemetry.observers.ITelemetryObserver;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import lombok.NonNull;
 
 /**
@@ -39,33 +36,33 @@ import lombok.NonNull;
 public abstract class AbstractTelemetryRelayClient<T> implements ITelemetryObserver<T> {
 
     private static final String TAG = AbstractTelemetryRelayClient.class.getSimpleName();
-    // Filters to apply on the events captured.
-    // This basically performs an AND operation on the filters to determine whether the event will be relayed.
-    private final List<ITelemetryEventFilter<T>> eventFilters = new ArrayList<>();
+    // Filter to apply on the events captured.
+    private ITelemetryEventFilter<T> mEventFilter = null;
 
     @Override
-    public synchronized void onReceived(T telemetryData) {
+    public void onReceived(T telemetryData) {
         final String methodTag = TAG + ":onReceived";
 
-        for (final ITelemetryEventFilter<T> filter : eventFilters) {
-            // Prevent event relay if any of the filters returns false.
-            if (!filter.shouldRelay(telemetryData)) {
-                return;
-            }
+        T filteredData = telemetryData;
+
+        if (mEventFilter != null) {
+            filteredData = mEventFilter.apply(telemetryData);
         }
 
-        try {
-            relayEvent(telemetryData);
-        } catch (TelemetryRelayException e) {
-            Logger.error(methodTag, "Error relaying telemetry data", e);
+        if (filteredData != null) {
+            try {
+                relayEvent(filteredData);
+            } catch (TelemetryRelayException e) {
+                Logger.error(methodTag, "Error relaying telemetry data", e);
+            }
         }
     }
 
     /**
-     * Add an event filter to the list of filters
+     * Add an event filter.
      */
-    public void addFilter(ITelemetryEventFilter<T> filter) {
-        this.eventFilters.add(filter);
+    public void setFilter(ITelemetryEventFilter<T> filter) {
+        this.mEventFilter = filter;
     }
 
     /**
