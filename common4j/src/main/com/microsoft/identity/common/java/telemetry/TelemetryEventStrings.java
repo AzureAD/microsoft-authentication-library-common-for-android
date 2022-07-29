@@ -66,6 +66,9 @@ public class TelemetryEventStrings {
         public static final String BROKER_END_EVENT = "broker_end_event";
 
         public static final String DEPRECATED_API_USAGE_EVENT = "deprecated_api_usage_event";
+
+        public static final String CERT_BASED_AUTH_ON_DEVICE_EVENT = "cert_based_auth_on_device_event";
+        public static final String CERT_BASED_AUTH_SMARTCARD_EVENT = "cert_based_auth_smartcard_event";
     }
 
     public static final class EventType {
@@ -76,6 +79,7 @@ public class TelemetryEventStrings {
         public static final String BROKER_EVENT = EVENT_PREFIX + "broker_event";
         public static final String LIBRARY_CONSUMER_EVENT = EVENT_PREFIX + "library_consumer_event";
         public static final String ERROR_EVENT = EVENT_PREFIX + "error_event";
+        public static final String CERT_BASED_AUTH_EVENT = EVENT_PREFIX + "cert_based_auth_event";
     }
 
     public static final class Key {

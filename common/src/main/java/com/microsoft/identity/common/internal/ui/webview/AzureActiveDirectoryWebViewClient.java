@@ -477,4 +477,17 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         }
     }
 
+    /**
+     * A wrapper to telemet results from certificate based authentication (CBA) if CBA occurred.
+     * @param response a RawAuthorizationResult object received upon a challenge response received.
+     */
+    public void telemetCertBasedAuthResult(@NonNull final RawAuthorizationResult response) {
+        final String methodTag = TAG + ":telemetCertBasedAuthResult";
+        if (mClientCertAuthChallengeHandler != null) {
+            mClientCertAuthChallengeHandler.telemetCertBasedAuthResults(response);
+        } else {
+            Logger.error(methodTag, "CBA results won't be telemeterized due to mClientCertAuthChallengeHandler being null", null);
+        }
+    }
+
 }
