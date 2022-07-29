@@ -91,7 +91,7 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
     private final DialogHolder mDialogHolder;
     //Lock to help facilitate synchronization
     private static final Object sDeviceLock = new Object();
-    //Booleans to help determine if a CBA flow is being completed so that we can telemeterize the results.
+    //Booleans to help determine if a CBA flow is being completed so that we can emit telemetry for the results.
     private boolean mIsOnDeviceCertBasedAuthProceeding;
     private boolean mIsSmartcardCertBasedAuthProceeding;
 
@@ -179,11 +179,11 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
                                 if (Security.getProvider(YUBIKEY_PROVIDER) != null) {
                                     //Remove provider.
                                     Security.removeProvider(YUBIKEY_PROVIDER);
-                                    //Telemet and log that PivProvider is being removed from Security static list.
+                                    //Emit telemetry and log that PivProvider is being removed from Security static list.
                                     Telemetry.emit(certBasedAuthEvent.putPivProviderRemoved(true));
                                     Logger.info(TAG, "An instance of PivProvider was removed from Security static list upon YubiKey device connection being closed.");
                                 } else {
-                                    //Telemet and log that PivProvider is not present in Security static list and therefore is not being removed.
+                                    //Emit telemetry and log that PivProvider is not present in Security static list and therefore is not being removed.
                                     Telemetry.emit(certBasedAuthEvent.putPivProviderRemoved(false));
                                     Logger.info(TAG, "An instance of PivProvider was not present in Security static list upon YubiKey device connection being closed.");
                                 }
@@ -485,12 +485,12 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
         if (Security.getProvider(YUBIKEY_PROVIDER) != null) {
             //Remove existing PivProvider.
             Security.removeProvider(YUBIKEY_PROVIDER);
-            //Telemet and log. The PivProvider instance is either unexpectedly being added elsewhere
+            //Emit telemetry and log. The PivProvider instance is either unexpectedly being added elsewhere
             // or it isn't being removed properly upon CBA flow termination.
             Telemetry.emit(certBasedAuthEvent.putIsExistingPivProviderPresent(true));
             Logger.info(methodTag, "Existing PivProvider was present in Security static list.");
         } else {
-            //Telemet and log. This is expected behavior.
+            //Emit telemetry and log. This is expected behavior.
             Telemetry.emit(certBasedAuthEvent.putIsExistingPivProviderPresent(false));
             Logger.info(methodTag, "Security static list does not have existing PivProvider.");
         }
@@ -518,7 +518,7 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
             final X509Certificate[] chain = new X509Certificate[]{cert};
             //Clear current dialog.
             mDialogHolder.dismissDialog();
-            //Set mIsSmartcardCertBasedAuthProceeding to true so a result will be telemeterized.
+            //Set mIsSmartcardCertBasedAuthProceeding to true so telemetry is emitted for the result.
             mIsSmartcardCertBasedAuthProceeding = true;
             //Call proceed on ClientCertRequest with PivPrivateKey and cert chain.
             request.proceed(pivPrivateKey, chain);
@@ -603,7 +603,7 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
                                     mActivity, alias);
 
                             Logger.info(methodTag,"Certificate is chosen by user, proceed with TLS request.");
-                            //Set mIsOnDeviceCertBasedAuthProceeding to true so a result will be telemeterized.
+                            //Set mIsOnDeviceCertBasedAuthProceeding to true so telemetry is emitted for the result.
                             mIsOnDeviceCertBasedAuthProceeding = true;
                             request.proceed(privateKey, certChain);
                             return;
@@ -633,12 +633,12 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
     }
 
     /**
-     * Telemet results from certificate based authentication (CBA) if CBA occurred.
+     * Emit telemetry for results from certificate based authentication (CBA) if CBA occurred.
      * @param response a RawAuthorizationResult object received upon a challenge response received.
      */
-    public void telemetCertBasedAuthResults(@NonNull final RawAuthorizationResult response) {
+    public void emitTelemetryForCertBasedAuthResults(@NonNull final RawAuthorizationResult response) {
         if (mIsOnDeviceCertBasedAuthProceeding || mIsSmartcardCertBasedAuthProceeding) {
-            //Telemet Results based on which type of CBA occurred.
+            //Emit telemetry for results based on which type of CBA occurred.
             final CertBasedAuthEvent certBasedAuthEvent;
             if (mIsOnDeviceCertBasedAuthProceeding) {
                certBasedAuthEvent =  new CertBasedAuthEvent(TelemetryEventStrings.Event.CERT_BASED_AUTH_ON_DEVICE_EVENT);
