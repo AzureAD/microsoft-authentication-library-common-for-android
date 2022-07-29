@@ -26,7 +26,6 @@ import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.
 import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.PKEYAUTH_VERSION;
 import static com.microsoft.identity.common.java.authorities.Authority.B2C;
 
-
 import com.microsoft.identity.common.java.commands.parameters.RopcTokenCommandParameters;
 import com.microsoft.identity.common.java.foci.FociQueryUtilities;
 import com.microsoft.identity.common.java.cache.MsalOAuth2TokenCache;
@@ -486,7 +485,7 @@ public abstract class BaseController {
                     Should return existing AT without refreshing it.
                     This way caller will know whether to refresh based on this exception.
                  */
-                if(SERVICE_NOT_AVAILABLE.equals(errorCode)){
+                if (SERVICE_NOT_AVAILABLE.equals(errorCode)) {
                     throw new ServiceException(SERVICE_NOT_AVAILABLE, "AAD is not available.", tokenResult.getErrorResponse().getStatusCode(), null);
                 }
 
@@ -588,7 +587,7 @@ public abstract class BaseController {
                     Should return existing AT without refreshing it.
                     This way caller will know whether to refresh based on this exception.
                  */
-                if(SERVICE_NOT_AVAILABLE.equals(errorCode)){
+                if (SERVICE_NOT_AVAILABLE.equals(errorCode)) {
                     throw new ServiceException(SERVICE_NOT_AVAILABLE, "AAD is not available.", tokenResult.getErrorResponse().getStatusCode(), null);
                 }
 
@@ -625,7 +624,7 @@ public abstract class BaseController {
         return cacheRecords.get(0);
     }
 
-    public OAuth2TokenCache getTokenCache(@NonNull final SilentTokenCommandParameters parameters){
+    public OAuth2TokenCache getTokenCache(@NonNull final SilentTokenCommandParameters parameters) {
         //Extract cache from parameters
         return parameters.getOAuth2TokenCache();
     }
@@ -831,6 +830,53 @@ public abstract class BaseController {
                         .getAuthorityTypeString()
         );
 
+        AccountRecord targetAccount = getCachedAccountRecordFromCallingAppCache(parameters);
+        if (targetAccount != null) {
+            return targetAccount;
+        } else {
+            Logger.info(TAG, "Account not found in app cache..");
+            targetAccount = getCachedAccountRecordFromAllCaches(parameters);
+        }
+
+        if (null == targetAccount) {
+            final String clientId = parameters.getClientId();
+            final String homeAccountId = parameters.getAccount().getHomeAccountId();
+            if (Logger.isAllowPii()) {
+                Logger.errorPII(
+                        TAG,
+                        "No accounts found for clientId [" + clientId + "], homeAccountId [" + homeAccountId + "]",
+                        null
+                );
+            } else {
+                Logger.error(
+                        TAG,
+                        "No accounts found for clientId [" + clientId + "]",
+                        null
+                );
+            }
+
+            throw new ClientException(
+                    ErrorStrings.NO_ACCOUNT_FOUND,
+                    "No cached accounts found for the supplied "
+                            + (isB2CAuthority ? "homeAccountId" : "localAccountId")
+            );
+        }
+
+        return targetAccount;
+    }
+
+    /**
+     * Lookup in app-specific cache.
+     */
+    @Nullable
+    private AccountRecord getCachedAccountRecordFromCallingAppCache(
+            @NonNull final SilentTokenCommandParameters parameters) {
+        final boolean isB2CAuthority = B2C.equalsIgnoreCase(
+                parameters
+                        .getAuthority()
+                        .getAuthorityTypeString()
+        );
+
         final String clientId = parameters.getClientId();
         final String homeAccountId = parameters.getAccount().getHomeAccountId();
         final String localAccountId = parameters.getAccount().getLocalAccountId();
@@ -861,37 +907,23 @@ public abstract class BaseController {
                             localAccountId
                     );
         }
+        return targetAccount;
+    }
 
-        if (null == targetAccount && parameters.getOAuth2TokenCache() instanceof MsalOAuth2TokenCache) {
-            targetAccount = getAccountWithFRTIfAvailable(
+    /**
+     * Lookup in ALL the caches including the foci cache.
+     */
+    @Nullable
+    protected AccountRecord getCachedAccountRecordFromAllCaches(
+            @NonNull final SilentTokenCommandParameters parameters) throws ClientException {
+        // TO-DO https://identitydivision.visualstudio.com/Engineering/_workitems/edit/1999531/
+        if (parameters.getOAuth2TokenCache() instanceof MsalOAuth2TokenCache) {
+            return getAccountWithFRTIfAvailable(
                     parameters,
                     (MsalOAuth2TokenCache) parameters.getOAuth2TokenCache()
             );
         }
-
-        if (null == targetAccount) {
-            if (Logger.isAllowPii()) {
-                Logger.errorPII(
-                        TAG,
-                        "No accounts found for clientId [" + clientId + "], homeAccountId [" + homeAccountId + "]",
-                        null
-                );
-            } else {
-                Logger.error(
-                        TAG,
-                        "No accounts found for clientId [" + clientId +"]",
-                        null
-                );
-            }
-
-            throw new ClientException(
-                    ErrorStrings.NO_ACCOUNT_FOUND,
-                    "No cached accounts found for the supplied "
-                            + (isB2CAuthority ? "homeAccountId" : "localAccountId")
-            );
-        }
-
-        return targetAccount;
+        return null;
     }
 
     @Nullable
@@ -935,6 +967,7 @@ public abstract class BaseController {
         }
         return null;
     }
+
 
     /**
      * Helper method which returns false if the tenant id of the authority
