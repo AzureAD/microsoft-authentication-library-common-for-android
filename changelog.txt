@@ -1,5 +1,6 @@
 V.Next
 ----------
+- [MINOR] Bumped MSAL Broker Protocol version to 9.0, acquireToken/acquireTokenSilent endpoint requires minimum_required_broker_protocol_version of 9.0+ to Send x-ms-PKeyAuth Header to the token endpoint. (#1790)
 
 Version 6.0.0
 ----------

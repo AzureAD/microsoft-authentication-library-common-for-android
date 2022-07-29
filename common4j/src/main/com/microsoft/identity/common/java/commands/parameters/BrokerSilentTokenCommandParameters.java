@@ -47,6 +47,7 @@ public class BrokerSilentTokenCommandParameters extends SilentTokenCommandParame
     private final int sleepTimeBeforePrtAcquisition;
 
     private final String negotiatedBrokerProtocolVersion;
+    private final boolean pKeyAuthHeaderAllowed;
 
     @Override
     public void validate() throws ArgumentException {
