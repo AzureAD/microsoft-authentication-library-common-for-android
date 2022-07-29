@@ -45,7 +45,7 @@ public class BrokerProtocolVersionUtilTest {
         final String requiredBrokerProtocol = "5.0";
         Assert.assertTrue(
                 BrokerProtocolVersionUtil
-                        .isNegotiatedBrokerProtocolLargerOrEqualThanRequiredBrokerProtocol(
+                        .isProvidedBrokerProtocolLargerOrEqualThanRequiredBrokerProtocol(
                                 negotiatedBrokerProtocol,
                                 requiredBrokerProtocol)
         );
@@ -57,7 +57,7 @@ public class BrokerProtocolVersionUtilTest {
         final String requiredBrokerProtocol = "10.0";
         Assert.assertFalse(
                 BrokerProtocolVersionUtil
-                        .isNegotiatedBrokerProtocolLargerOrEqualThanRequiredBrokerProtocol(
+                        .isProvidedBrokerProtocolLargerOrEqualThanRequiredBrokerProtocol(
                                 negotiatedBrokerProtocol,
                                 requiredBrokerProtocol)
         );
@@ -69,7 +69,7 @@ public class BrokerProtocolVersionUtilTest {
         final String requiredBrokerProtocol = "10.0";
         Assert.assertTrue(
                 BrokerProtocolVersionUtil
-                        .isNegotiatedBrokerProtocolLargerOrEqualThanRequiredBrokerProtocol(
+                        .isProvidedBrokerProtocolLargerOrEqualThanRequiredBrokerProtocol(
                                 negotiatedBrokerProtocol,
                                 requiredBrokerProtocol)
         );
@@ -81,7 +81,7 @@ public class BrokerProtocolVersionUtilTest {
         final String requiredBrokerProtocol = "10.0";
         Assert.assertFalse(
                 BrokerProtocolVersionUtil
-                        .isNegotiatedBrokerProtocolLargerOrEqualThanRequiredBrokerProtocol(
+                        .isProvidedBrokerProtocolLargerOrEqualThanRequiredBrokerProtocol(
                                 negotiatedBrokerProtocol,
                                 requiredBrokerProtocol)
         );
@@ -140,6 +140,34 @@ public class BrokerProtocolVersionUtilTest {
     public void testCanFociAppsConstructAccountsFromPrtIdTokens_NegotiatedNull(){
         Assert.assertFalse(
                 BrokerProtocolVersionUtil.canFociAppsConstructAccountsFromPrtIdTokens(null)
+        );
+    }
+
+    @Test
+    public void testCanSendPKeyAuthHeaderToTheTokenEndpoint_NegotiatedLargerThanRequired(){
+        Assert.assertTrue(
+                BrokerProtocolVersionUtil.canSendPKeyAuthHeaderToTheTokenEndpoint("10.0")
+        );
+    }
+
+    @Test
+    public void testCanSendPKeyAuthHeaderToTheTokenEndpoint_NegotiatedEqualToRequired(){
+        Assert.assertTrue(
+                BrokerProtocolVersionUtil.canSendPKeyAuthHeaderToTheTokenEndpoint("9.0")
+        );
+    }
+
+    @Test
+    public void testCanSendPKeyAuthHeaderToTheTokenEndpoint_NegotiatedSmallerThanRequired(){
+        Assert.assertFalse(
+                BrokerProtocolVersionUtil.canSendPKeyAuthHeaderToTheTokenEndpoint("8.0")
+        );
+    }
+
+    @Test
+    public void testCanSendPKeyAuthHeaderToTheTokenEndpoint_NegotiatedNull(){
+        Assert.assertFalse(
+                BrokerProtocolVersionUtil.canSendPKeyAuthHeaderToTheTokenEndpoint(null)
         );
     }
 }
