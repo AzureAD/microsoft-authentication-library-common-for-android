@@ -100,6 +100,7 @@ public class MicrosoftTokenRequest extends TokenRequest implements IHasExtraPara
     // Sent as part of headers if available, so marking it transient.
     private transient String mBrokerVersion;
 
+    // Send PKeyAuth Header to token endpoint for required msal-broker protocol version 9.0.
     @Getter
     @Setter
     @Accessors(prefix = "m")
