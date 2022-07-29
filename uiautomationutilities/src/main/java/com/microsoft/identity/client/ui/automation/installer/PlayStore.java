@@ -51,9 +51,11 @@ public class PlayStore implements IAppInstaller {
 
     private final static String TAG = PlayStore.class.getSimpleName();
     private static final String GOOGLE_PLAY_PACKAGE_NAME = "com.android.vending";
+    private static final String INSTALL_APP = "Install";
+    private static final String UPDATE_APP = "Update";
 
     // wait at least 5 mins for app installation from Play Store
-    private static final long PLAY_STORE_INSTALL_APP_TIMEOUT = TimeUnit.MINUTES.toMillis(5);
+    private static final long PLAY_STORE_INSTALL_OR_UPDATE_APP_TIMEOUT = TimeUnit.MINUTES.toMillis(5);
 
     private void launchMarketPageForPackage(final String appPackageName) {
         Logger.i(TAG, "Launch Market Page For " + appPackageName + " Package..");
@@ -128,38 +130,39 @@ public class PlayStore implements IAppInstaller {
         }
     }
 
-    private void installAppFromMarketPageInternal() throws UiObjectNotFoundException {
-        Logger.i(TAG, "Install App From Market Page Internal..");
-        final UiDevice device = UiDevice.getInstance(getInstrumentation());
-
-        final UiObject installBtn = device.findObject(
-                new UiSelector().className(Button.class).text("Install").enabled(true)
-        );
-
-        installBtn.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
-
-        installBtn.click();
-
-        final UiObject openButton = device.findObject(
-                new UiSelector().className(Button.class).text("Open").enabled(true)
-        );
-
-        // if we see open button, then we know that the installation is complete
-        openButton.waitForExists(PLAY_STORE_INSTALL_APP_TIMEOUT);
-    }
-
-    private void installAppFromMarketPage() {
-        Logger.i(TAG, "Install App From Market Page..");
+    private void installOrUpdateAppFromMarketPage(String playStoreAction) {
         try {
-            installAppFromMarketPageInternal();
+            installOrUpdateAppFromMarketPageInternal(playStoreAction);
         } catch (final UiObjectNotFoundException e) {
             acceptGooglePlayTermsOfService();
             try {
-                installAppFromMarketPageInternal();
+                installOrUpdateAppFromMarketPageInternal(playStoreAction);
             } catch (UiObjectNotFoundException ex) {
                 throw new AssertionError(e);
             }
         }
+    }
+
+    private void installOrUpdateAppFromMarketPageInternal(String playStoreAction) throws UiObjectNotFoundException {
+        Logger.i(TAG, "Performing " + playStoreAction + " App From Market Page Internal..");
+        final UiDevice device = UiDevice.getInstance(getInstrumentation());
+        final UiObject uiObjBtn = device.findObject(
+                new UiSelector().className(Button.class).text(playStoreAction).enabled(true)
+        );
+
+        uiObjBtn.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
+
+        uiObjBtn.click();
+        openAppFromPlayStore();
+
+    }
+
+    private void openAppFromPlayStore() {
+        final UiDevice device = UiDevice.getInstance(getInstrumentation());
+        final UiObject openButton = device.findObject(
+                new UiSelector().className(Button.class).text("Open").enabled(true)
+        );
+        openButton.waitForExists(PLAY_STORE_INSTALL_OR_UPDATE_APP_TIMEOUT);
     }
 
     private void acceptGooglePlayTermsOfService() {
@@ -184,9 +187,10 @@ public class PlayStore implements IAppInstaller {
             selectGooglePlayAppFromAppName();
         }
 
-        installAppFromMarketPage();
+        installOrUpdateAppFromMarketPage(INSTALL_APP);
     }
 
+    @Override
     public void updateApp(@NonNull final String searchHint) {
         if (isStringPackageName(searchHint)) {
             launchMarketPageForPackage(searchHint);
@@ -195,41 +199,6 @@ public class PlayStore implements IAppInstaller {
             selectGooglePlayAppFromAppName();
         }
 
-        updateAppFromMarketPage();
-    }
-
-    private void updateAppFromMarketPage() {
-        Logger.i(TAG, "Update App From Market Page..");
-        try {
-            updateAppFromMarketPageInternal();
-        } catch (final UiObjectNotFoundException e) {
-            acceptGooglePlayTermsOfService();
-            try {
-                updateAppFromMarketPageInternal();
-            } catch (UiObjectNotFoundException ex) {
-                throw new AssertionError(e);
-            }
-        }
-    }
-
-    private void updateAppFromMarketPageInternal() throws UiObjectNotFoundException {
-        Logger.i(TAG, "Update App From Market Page Internal..");
-        final UiDevice device = UiDevice.getInstance(getInstrumentation());
-
-        final UiObject updateBtn = device.findObject(
-                new UiSelector().className(Button.class).text("Update").enabled(true)
-        );
-
-        updateBtn.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
-
-        updateBtn.click();
-
-        final UiObject openButton = device.findObject(
-                new UiSelector().className(Button.class).text("Open").enabled(true)
-        );
-
-        // if we see open button, then we know that the update is complete
-        // using same timeout as that used for install
-        openButton.waitForExists(PLAY_STORE_INSTALL_APP_TIMEOUT);
+        installOrUpdateAppFromMarketPage(UPDATE_APP);
     }
 }
