@@ -733,18 +733,22 @@ public abstract class BaseController {
             ((MicrosoftTokenRequest) refreshTokenRequest).setClaims(parameters.getClaimsRequestJson());
             ((MicrosoftTokenRequest) refreshTokenRequest).setClientAppName(parameters.getApplicationName());
             ((MicrosoftTokenRequest) refreshTokenRequest).setClientAppVersion(parameters.getApplicationVersion());
-        }
 
-        //NOTE: this should be moved to the strategy; however requires a larger refactor
-        if (parameters.getSdkType() == SdkType.ADAL) {
-            ((MicrosoftTokenRequest) refreshTokenRequest).setIdTokenVersion("1");
-        }
+            //NOTE: this should be moved to the strategy; however requires a larger refactor
+            if (parameters.getSdkType() == SdkType.ADAL) {
+                ((MicrosoftTokenRequest) refreshTokenRequest).setIdTokenVersion("1");
+            }
 
-        // Set Broker version to Token Request if it's a brokered request.
-        if (parameters instanceof BrokerSilentTokenCommandParameters) {
-            ((MicrosoftTokenRequest) refreshTokenRequest).setBrokerVersion(
-                    ((BrokerSilentTokenCommandParameters) parameters).getBrokerVersion()
-            );
+            if (parameters instanceof BrokerSilentTokenCommandParameters) {
+                // Set Broker version to Token Request if it's a brokered request.
+                ((MicrosoftTokenRequest) refreshTokenRequest).setBrokerVersion(
+                        ((BrokerSilentTokenCommandParameters) parameters).getBrokerVersion()
+                );
+                // Set PKeyAuth Header for token endpoint.
+                ((MicrosoftTokenRequest) refreshTokenRequest).setPKeyAuthHeaderAllowed(
+                        ((BrokerSilentTokenCommandParameters) parameters).isPKeyAuthHeaderAllowed()
+                );
+            }
         }
 
         if (!StringUtil.isNullOrEmpty(refreshTokenRequest.getScope())) {
