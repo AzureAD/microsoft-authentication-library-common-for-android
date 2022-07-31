@@ -213,6 +213,7 @@ public class ADALOAuth2TokenCache
     public ICacheRecord load(
             final String clientId,
             final String applicationIdentifier,
+            final String mamEnrollmentIdentifier,
             final String target,
             final AccountRecord account,
             final AbstractAuthenticationScheme scheme) {
@@ -224,6 +225,7 @@ public class ADALOAuth2TokenCache
     @Override
     public List<ICacheRecord> loadWithAggregatedAccountData(final String clientId,
                                                             final String applicationIdentifer,
+                                                            final String mamEnrollmentIdentifier,
                                                             final String target,
                                                             final AccountRecord account,
                                                             final AbstractAuthenticationScheme scheme) {

@@ -55,6 +55,7 @@ import static com.microsoft.identity.common.java.cache.CacheKeyValueDelegate.Cac
 import static com.microsoft.identity.common.java.cache.CacheKeyValueDelegate.CacheKeyReplacements.CREDENTIAL_TYPE;
 import static com.microsoft.identity.common.java.cache.CacheKeyValueDelegate.CacheKeyReplacements.ENVIRONMENT;
 import static com.microsoft.identity.common.java.cache.CacheKeyValueDelegate.CacheKeyReplacements.HOME_ACCOUNT_ID;
+import static com.microsoft.identity.common.java.cache.CacheKeyValueDelegate.CacheKeyReplacements.MAM_ENROLLMENT_IDENTIFIER;
 import static com.microsoft.identity.common.java.cache.CacheKeyValueDelegate.CacheKeyReplacements.REALM;
 import static com.microsoft.identity.common.java.cache.CacheKeyValueDelegate.CacheKeyReplacements.REQUESTED_CLAIMS;
 import static com.microsoft.identity.common.java.cache.CacheKeyValueDelegate.CacheKeyReplacements.TARGET;
@@ -90,7 +91,8 @@ public class CacheKeyValueDelegate implements ICacheKeyValueDelegate {
         static final String REALM = "<realm>";
         static final String CREDENTIAL_TYPE = "<credential_type>";
         static final String CLIENT_ID = "<client_id>";
-        static final String APPLICATION_IDENTIFIER = "<application_identifier";
+        static final String APPLICATION_IDENTIFIER = "<application_identifier>";
+        static final String MAM_ENROLLMENT_IDENTIFIER = "<mam_enrollment_identifier>";
         static final String TARGET = "<target>";
         static final String AUTH_SCHEME = "<auth_scheme>";
         static final String REQUESTED_CLAIMS = "<requested_claims>";
@@ -171,6 +173,11 @@ public class CacheKeyValueDelegate implements ICacheKeyValueDelegate {
             if (!StringUtil.isNullOrEmpty(accessToken.getApplicationIdentifier())) {
                 cacheKey += CACHE_VALUE_SEPARATOR + APPLICATION_IDENTIFIER;
                 cacheKey = cacheKey.replace(APPLICATION_IDENTIFIER, StringUtil.sanitizeNullAndLowercaseAndTrim(accessToken.getApplicationIdentifier()));
+            }
+
+            if (!StringUtil.isNullOrEmpty(accessToken.getMamEnrollmentIdentifier())) {
+                cacheKey += CACHE_VALUE_SEPARATOR + MAM_ENROLLMENT_IDENTIFIER;
+                cacheKey = cacheKey.replace(MAM_ENROLLMENT_IDENTIFIER, StringUtil.sanitizeNullAndLowercaseAndTrim(accessToken.getMamEnrollmentIdentifier()));
             }
 
             if (TokenRequest.TokenType.POP.equalsIgnoreCase(accessToken.getAccessTokenType())) {

@@ -29,6 +29,7 @@ import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCa
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.CLIENT_ID;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.ENVIRONMENT;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.EXPIRES_ON;
+import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.MAM_ENROLLMENT_IDENTIFIER;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.REALM;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.SECRET;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.SESSION_KEY;
@@ -120,6 +121,7 @@ public class MicrosoftFamilyOAuth2TokenCacheTest extends MsalOAuth2TokenCacheTes
                 SECRET,
                 CLIENT_ID,
                 APPLICATION_IDENTIFIER,
+                MAM_ENROLLMENT_IDENTIFIER,
                 SECRET,
                 MOCK_ID_TOKEN_WITH_CLAIMS,
                 "1",
@@ -241,6 +243,7 @@ public class MicrosoftFamilyOAuth2TokenCacheTest extends MsalOAuth2TokenCacheTes
                 SECRET,
                 CLIENT_ID,
                 APPLICATION_IDENTIFIER,
+                MAM_ENROLLMENT_IDENTIFIER,
                 SECRET,
                 MOCK_ID_TOKEN_WITH_CLAIMS,
                 "1",
@@ -300,6 +303,7 @@ public class MicrosoftFamilyOAuth2TokenCacheTest extends MsalOAuth2TokenCacheTes
                 SECRET,
                 CLIENT_ID + "2",
                 APPLICATION_IDENTIFIER,
+                MAM_ENROLLMENT_IDENTIFIER,
                 SECRET,
                 MOCK_ID_TOKEN_WITH_CLAIMS,
                 "1",
@@ -422,6 +426,7 @@ public class MicrosoftFamilyOAuth2TokenCacheTest extends MsalOAuth2TokenCacheTes
                 SECRET,
                 CLIENT_ID,
                 APPLICATION_IDENTIFIER,
+                MAM_ENROLLMENT_IDENTIFIER,
                 SECRET,
                 MOCK_ID_TOKEN_WITH_CLAIMS,
                 "1",
@@ -481,6 +486,7 @@ public class MicrosoftFamilyOAuth2TokenCacheTest extends MsalOAuth2TokenCacheTes
                 SECRET,
                 CLIENT_ID,
                 APPLICATION_IDENTIFIER,
+                MAM_ENROLLMENT_IDENTIFIER,
                 SECRET,
                 MOCK_ID_TOKEN_WITH_CLAIMS,
                 "1",
@@ -551,7 +557,7 @@ public class MicrosoftFamilyOAuth2TokenCacheTest extends MsalOAuth2TokenCacheTes
         final String[] thread2 = {""};
         final AccountCredentialTestBundle frtTestBundle = new AccountCredentialTestBundle(
                 MicrosoftAccount.AUTHORITY_TYPE_MS_STS, localAccountId, "test.user@tenant.onmicrosoft.com",
-                randomHomeAccountId, ENVIRONMENT, realm, TARGET, CACHED_AT, EXPIRES_ON, SECRET, CLIENT_ID, APPLICATION_IDENTIFIER,
+                randomHomeAccountId, ENVIRONMENT, realm, TARGET, CACHED_AT, EXPIRES_ON, SECRET, CLIENT_ID, APPLICATION_IDENTIFIER, MAM_ENROLLMENT_IDENTIFIER,
                 SECRET, MicrosoftStsAccountCredentialAdapterTest.MOCK_ID_TOKEN_WITH_CLAIMS, "1",
                 SESSION_KEY, CredentialType.IdToken);
 
@@ -568,13 +574,15 @@ public class MicrosoftFamilyOAuth2TokenCacheTest extends MsalOAuth2TokenCacheTes
         // The mocks return different tokens based on the thread names, to mock having two separte Refresh tokens
         final AccountCredentialTestBundle frtTestBundle1 = new AccountCredentialTestBundle(
                 MicrosoftAccount.AUTHORITY_TYPE_MS_STS, localAccountId, "test.user@tenant.onmicrosoft.com",
-                randomHomeAccountId, ENVIRONMENT, realm, TARGET + " client1_scope", CACHED_AT, EXPIRES_ON, SECRET, "client_1", APPLICATION_IDENTIFIER,
+                randomHomeAccountId, ENVIRONMENT, realm, TARGET + " client1_scope", CACHED_AT, EXPIRES_ON, SECRET, "client_1",
+                APPLICATION_IDENTIFIER, MAM_ENROLLMENT_IDENTIFIER,
                 SECRET, MicrosoftStsAccountCredentialAdapterTest.MOCK_ID_TOKEN_WITH_CLAIMS, "1",
                 SESSION_KEY, CredentialType.IdToken);
 
         final AccountCredentialTestBundle frtTestBundle2 = new AccountCredentialTestBundle(
                 MicrosoftAccount.AUTHORITY_TYPE_MS_STS, localAccountId, "test.user@tenant.onmicrosoft.com",
-                randomHomeAccountId, ENVIRONMENT, realm, TARGET + " client2_scope", CACHED_AT, EXPIRES_ON, SECRET, "client_2", APPLICATION_IDENTIFIER,
+                randomHomeAccountId, ENVIRONMENT, realm, TARGET + " client2_scope", CACHED_AT, EXPIRES_ON, SECRET, "client_2",
+                APPLICATION_IDENTIFIER, MAM_ENROLLMENT_IDENTIFIER,
                 SECRET, MicrosoftStsAccountCredentialAdapterTest.MOCK_ID_TOKEN_WITH_CLAIMS, "1", SESSION_KEY,
                 CredentialType.IdToken);
 

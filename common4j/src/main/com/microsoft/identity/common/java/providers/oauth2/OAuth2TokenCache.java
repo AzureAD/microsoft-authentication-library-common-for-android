@@ -102,6 +102,7 @@ public abstract class OAuth2TokenCache
      *
      * @param clientId The ClientId of the current app. (Logical Identifier)
      * @param applicationIdentifier An optional physical identifier (Android: PackageName/Signature)
+     * @param mamEnrollmentIdentifier An optional identifier for Mobile Application Management/Intune App Protection
      * @param target   The 'target' (scopes) the requested token should contain.
      * @param account  The Account whose Credentials should be loaded.
      * @return The resulting ICacheRecord. Entries may be empty if not present in the cache.
@@ -109,6 +110,7 @@ public abstract class OAuth2TokenCache
     public abstract ICacheRecord load(
             final String clientId,
             final String applicationIdentifier,
+            final String mamEnrollmentIdentifier,
             final String target,
             final AccountRecord account,
             final AbstractAuthenticationScheme authScheme
@@ -121,6 +123,7 @@ public abstract class OAuth2TokenCache
      *
      * @param clientId The ClientId of the current app. (Logical Identifier)
      * @param applicationIdentifier An optional physical identifier (Android: PackageName/Signature)
+     * @param mamEnrollmentIdentifier An optional mobile application management or Intune App Protection identifier
      * @param target   The 'target' (scopes) the requested token should contain.
      * @param account  The Account whose Credentials should be loaded.
      * @return The resulting ICacheRecord. Entries may be empty if not present in the cache.
@@ -128,6 +131,7 @@ public abstract class OAuth2TokenCache
     public abstract List<ICacheRecord> loadWithAggregatedAccountData(
             final String clientId,
             final String applicationIdentifier,
+            final String mamEnrollmentIdentifier,
             final String target,
             final AccountRecord account,
             final AbstractAuthenticationScheme authenticationScheme

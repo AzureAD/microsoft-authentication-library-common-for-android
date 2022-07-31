@@ -62,6 +62,9 @@ public class TokenCommandParameters extends CommandParameters {
     private final AbstractAuthenticationScheme authenticationScheme;
 
     @Expose()
+    private final String mamEnrollmentId;
+
+    @Expose()
     private final boolean forceRefresh;
 
     private final String loginHint;
@@ -70,6 +73,10 @@ public class TokenCommandParameters extends CommandParameters {
 
     public Set<String> getScopes() {
         return this.scopes == null ? null : new HashSet<>(this.scopes);
+    }
+
+    public String getMamEnrollmentId(){
+        return mamEnrollmentId;
     }
 
     public void validate() throws ArgumentException {

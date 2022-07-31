@@ -54,6 +54,7 @@ import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCa
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.EXPIRES_ON;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.HOME_ACCOUNT_ID;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.LOCAL_ACCOUNT_ID;
+import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.MAM_ENROLLMENT_IDENTIFIER;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.REALM;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.REALM2;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.SECRET;
@@ -91,6 +92,7 @@ public class MsalCppOAuth2TokenCacheTest {
                 SECRET,
                 CLIENT_ID,
                 APPLICATION_IDENTIFIER,
+                MAM_ENROLLMENT_IDENTIFIER,
                 SECRET,
                 MOCK_ID_TOKEN_WITH_CLAIMS,
                 null,
@@ -414,6 +416,7 @@ public class MsalCppOAuth2TokenCacheTest {
         final ICacheRecord cacheRecord = mCppCache.load(
                 mTestBundle.mGeneratedIdToken.getClientId(),
                 mTestBundle.mGeneratedAccessToken.getApplicationIdentifier(),
+                mTestBundle.mGeneratedAccessToken.getMamEnrollmentIdentifier(),
                 mTestBundle.mGeneratedAccessToken.getTarget(),
                 generatedAccount,
                 new BearerAuthenticationSchemeInternal()
@@ -451,6 +454,7 @@ public class MsalCppOAuth2TokenCacheTest {
         final ICacheRecord cacheRecord = mCppCache.load(
                 mTestBundle.mGeneratedIdToken.getClientId(),
                 mTestBundle.mGeneratedAccessToken.getApplicationIdentifier(),
+                mTestBundle.mGeneratedAccessToken.getMamEnrollmentIdentifier(),
                 mTestBundle.mGeneratedAccessToken.getTarget(),
                 generatedAccount,
                 new BearerAuthenticationSchemeInternal()

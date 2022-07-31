@@ -79,8 +79,6 @@ public class LocalMsalControllerTest {
 
     private static final String CLIENT_ID = "4b0db8c2-9f26-4417-8bde-3f0e3656f8e0";
 
-    private static final String APPLICATION_IDENTIFIER = "unset/unset";
-
     private static final String REDIRECT_URI = "msauth://com.msft.identity.client.sample.local/1wIqXSqBj7w%2Bh11ZifsnqwgyKrY%3D";
 
     private static final String SCOPE = "User.read";
@@ -159,7 +157,6 @@ public class LocalMsalControllerTest {
                 .password(sTestAccount.getPassword())
                 .authority(Authority.getAuthorityFromAuthorityUrl(AUTHORITY_URL))
                 .clientId(CLIENT_ID)
-                .applicationIdentifier(APPLICATION_IDENTIFIER)
                 .correlationId(UUID.randomUUID().toString())
                 .redirectUri(REDIRECT_URI)
                 .platformComponents(mPlatformComponents)
@@ -175,7 +172,6 @@ public class LocalMsalControllerTest {
         return SilentTokenCommandParameters.builder()
                 .authority(Authority.getAuthorityFromAuthorityUrl(AUTHORITY_URL))
                 .clientId(CLIENT_ID)
-                .applicationIdentifier(APPLICATION_IDENTIFIER)
                 .correlationId(UUID.randomUUID().toString())
                 .redirectUri(REDIRECT_URI)
                 .platformComponents(mPlatformComponents)

@@ -351,6 +351,7 @@ public class BrokerOAuth2TokenCache
         final String target = cacheRecord.getAccessToken().getTarget();
         final String environment = cacheRecord.getAccessToken().getEnvironment();
         final String applicationIdentifier = cacheRecord.getAccessToken().getApplicationIdentifier();
+        final String mamEnrollmentIdentifier = cacheRecord.getAccessToken().getMamEnrollmentIdentifier();
 
         final MsalOAuth2TokenCache cache = getTokenCacheForClient(
                 clientId,
@@ -368,6 +369,7 @@ public class BrokerOAuth2TokenCache
         return cache.loadWithAggregatedAccountData(
                 clientId,
                 applicationIdentifier,
+                mamEnrollmentIdentifier,
                 target,
                 cacheRecord.getAccount(),
                 authScheme
@@ -531,6 +533,7 @@ public class BrokerOAuth2TokenCache
     @Override
     public ICacheRecord load(@NonNull final String clientId,
                              @NonNull final String applicationIdentifier,
+                             @Nullable final String mamEnrollmentIdentifier,
                              @Nullable final String target,
                              @NonNull final AccountRecord account,
                              @NonNull final AbstractAuthenticationScheme authScheme) {
@@ -586,6 +589,7 @@ public class BrokerOAuth2TokenCache
             resultRecord = targetCache.load(
                     clientId,
                     applicationIdentifier,
+                    mamEnrollmentIdentifier,
                     target,
                     account,
                     authScheme
@@ -633,6 +637,7 @@ public class BrokerOAuth2TokenCache
     @Override
     public List<ICacheRecord> loadWithAggregatedAccountData(@NonNull final String clientId,
                                                             @NonNull final String applicationIdentifier,
+                                                            @Nullable final String mamEnrollmentIdentifier,
                                                             @Nullable final String target,
                                                             @NonNull final AccountRecord account,
                                                             @NonNull final AbstractAuthenticationScheme authScheme) {
@@ -696,6 +701,7 @@ public class BrokerOAuth2TokenCache
                 resultRecords = targetCache.loadWithAggregatedAccountData(
                         clientId,
                         applicationIdentifier,
+                        mamEnrollmentIdentifier,
                         target,
                         account,
                         authScheme
@@ -1385,6 +1391,7 @@ public class BrokerOAuth2TokenCache
                                         CredentialType.RefreshToken,
                                         clientId,
                                         null, //wildcard (*)
+                                        null, //wildcard (*)
                                         null, // wildcard (*)
                                         null, // wildcard (*)
                                         null // Not applicable
@@ -1400,6 +1407,7 @@ public class BrokerOAuth2TokenCache
                                         CredentialType.V1IdToken,
                                         clientId,
                                         null, //wildcard (*)
+                                        null, //wildcard (*)
                                         realm,
                                         null,
                                         null // Not applicable
@@ -1414,6 +1422,7 @@ public class BrokerOAuth2TokenCache
                                         environment,
                                         CredentialType.IdToken,
                                         clientId,
+                                        null, //wildcard (*)
                                         null, //wildcard (*)
                                         realm,
                                         null,

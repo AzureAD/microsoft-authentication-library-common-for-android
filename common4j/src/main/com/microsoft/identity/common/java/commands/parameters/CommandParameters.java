@@ -82,11 +82,9 @@ public class CommandParameters {
     @Expose()
     private boolean powerOptCheckEnabled;
 
-    //Marking as final excludes from lombok generated builder
-    @Expose()
-    private final String applicationIdentifier;
     @Expose()
     private String callerPackageName;
+
     @Expose()
     private String callerSignature;
 

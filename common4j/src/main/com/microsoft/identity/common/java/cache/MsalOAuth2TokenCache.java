@@ -471,6 +471,7 @@ public class MsalOAuth2TokenCache
                         credentialType,
                         clientId,
                         null, //wildcard (*)
+                        null, //wildcard
                         realmAgnostic
                                 ? null // wildcard (*) realm
                                 : targetAccount.getRealm(),
@@ -683,6 +684,7 @@ public class MsalOAuth2TokenCache
     @Override
     public ICacheRecord load(@NonNull final String clientId,
                              @NonNull final String applicationIdentifier,
+                             @Nullable final String mamEnrollmentIdentifier,
                              @Nullable final String target,
                              @NonNull final AccountRecord account,
                              @NonNull final AbstractAuthenticationScheme authScheme) {
@@ -706,6 +708,7 @@ public class MsalOAuth2TokenCache
                 getAccessTokenCredentialTypeForAuthenticationScheme(authScheme),
                 clientId,
                 applicationIdentifier,
+                mamEnrollmentIdentifier, //Null unless Intune reports one available for this app
                 account.getRealm(),
                 target,
                 authScheme.getName(),
@@ -719,6 +722,7 @@ public class MsalOAuth2TokenCache
                 account.getEnvironment(),
                 CredentialType.RefreshToken,
                 clientId,
+                null, //wildcard (*)
                 null, //wildcard (*)
                 isMultiResourceCapable
                         ? null // wildcard (*)
@@ -767,6 +771,7 @@ public class MsalOAuth2TokenCache
                 IdToken,
                 clientId,
                 null, //wildcard (*)
+                null, //wildcard (*)
                 account.getRealm(),
                 null, // wildcard (*),
                 null, // not applicable
@@ -779,6 +784,7 @@ public class MsalOAuth2TokenCache
                 account.getEnvironment(),
                 CredentialType.V1IdToken,
                 clientId,
+                null, //wildcard (*)
                 null, //wildcard (*)
                 account.getRealm(),
                 null, // wildcard (*)
@@ -817,6 +823,7 @@ public class MsalOAuth2TokenCache
                 account.getEnvironment(),
                 CredentialType.RefreshToken,
                 null, // wildcard (*)
+                null, //wildcard (*)
                 null, //wildcard (*)
                 null, // wildcard (*) -- all FRTs are MRRTs by definition
                 null, // wildcard (*) -- all FRTs are MRRTs by definition
@@ -875,13 +882,14 @@ public class MsalOAuth2TokenCache
     @Override
     public List<ICacheRecord> loadWithAggregatedAccountData(@NonNull final String clientId,
                                                             @NonNull final String applicationIdentifier,
+                                                            @Nullable final String mamEnrollmentIdentifier,
                                                             @Nullable final String target,
                                                             @NonNull final AccountRecord account,
                                                             @NonNull final AbstractAuthenticationScheme authScheme) {
         synchronized (this) {
             final List<ICacheRecord> result = new ArrayList<>();
 
-            final ICacheRecord primaryCacheRecord = load(clientId, applicationIdentifier, target, account, authScheme);
+            final ICacheRecord primaryCacheRecord = load(clientId, applicationIdentifier, mamEnrollmentIdentifier, target, account, authScheme);
 
             // Set this result as the 0th entry in the result...
             result.add(primaryCacheRecord);
@@ -919,6 +927,7 @@ public class MsalOAuth2TokenCache
                 IdToken,
                 clientId, // If null, behaves as wildcard
                 null,
+                null,
                 accountRecord.getRealm(),
                 null, // wildcard (*),
                 null, // not applicable
@@ -931,6 +940,7 @@ public class MsalOAuth2TokenCache
                         accountRecord.getEnvironment(),
                         CredentialType.V1IdToken,
                         clientId,
+                        null, //wildcard (*)
                         null, //wildcard (*)
                         accountRecord.getRealm(),
                         null, // wildcard (*)
@@ -1201,11 +1211,12 @@ public class MsalOAuth2TokenCache
                 environment,
                 credentialTypes,
                 clientId,
-                null, // realm
-                null, // target
-                null, // authScheme
                 null,
-                null// requestedClaims
+                null,
+                null,
+                null,
+                null,
+                null
         );
 
         // For each Account with an associated RT, add it to the result List...
@@ -1573,6 +1584,7 @@ public class MsalOAuth2TokenCache
                         credentialType,
                         clientId,
                         null, //wildcard (*)
+                        null, //wildcard (*)
                         realmAgnostic
                                 ? null // wildcard (*) realm
                                 : targetAccount.getRealm(),
@@ -1677,6 +1689,7 @@ public class MsalOAuth2TokenCache
                 CredentialType.fromString(referenceToken.getCredentialType()),
                 referenceToken.getClientId(),
                 referenceToken.getApplicationIdentifier(),
+                referenceToken.getMamEnrollmentIdentifier(),
                 referenceToken.getRealm(),
                 null, // Wildcard (*)
                 referenceToken.getAccessTokenType(),
