@@ -1,6 +1,9 @@
-V.Next
+Version 6.0.1
 ----------
+- [PATCH] Fix for failing foci scenarios in Broker (#1800)
 - [MINOR] Bumped MSAL Broker Protocol version to 9.0, acquireToken/acquireTokenSilent endpoint requires minimum_required_broker_protocol_version of 9.0+ to Send x-ms-PKeyAuth Header to the token endpoint. (#1790)
+- [PATCH] Throw UiRequiredException when no token is found (#1795)
+- [MINOR] Remove SSLContext From HttpClient signature (#1789)
 
 Version 6.0.0
 ----------
