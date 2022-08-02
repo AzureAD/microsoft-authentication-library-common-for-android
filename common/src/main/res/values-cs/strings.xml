@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+    <string name="app_loading">Načítání…</string>
+
+    <string name="broker_processing">Zprostředkovatel zpracovává data.</string>
+    <string name="http_auth_dialog_username">Uživatelské jméno</string>
+    <string name="http_auth_dialog_password">Heslo</string>
+    <string name="http_auth_dialog_title">Zadejte vaše přihlašovací údaje</string>
+    <string name="http_auth_dialog_login">Přihlásit se</string>
+    <string name="http_auth_dialog_cancel">Zrušit</string>
+
+    <!-- strings for CBA dialogs and layouts -->
+    <string name="smartcard_cert_dialog_title">Zvolte certifikát čipové karty pro přihlášení</string>
+    <string name="smartcard_cert_dialog_positive_button">Pokračovat</string>
+    <string name="smartcard_cert_dialog_negative_button">Zrušit</string>
+
+    <string name="smartcard_pin_dialog_title">Odemknout čipovou kartu</string>
+    <string name="smartcard_pin_dialog_message">Zadejte PIN kód čipové karty pro přístup k certifikátu a přihlaste se</string>
+    <string name="smartcard_pin_dialog_positive_button">Odemknout</string>
+    <string name="smartcard_pin_dialog_negative_button">Zrušit</string>
+    <string name="smartcard_pin_dialog_error_message">Pin kód, který jste zadali, byl nesprávný</string>
+    <string name="smartcard_pin_layout_edittext_hint">PIN</string>
+
+    <string name="smartcard_error_dialog_positive_button">OK</string>
+
+    <string name="smartcard_max_attempt_dialog_title">Zkuste to znovu později</string>
+    <string name="smartcard_max_attempt_dialog_message">Příliš mnoho neúspěšných pokusů, zkuste to znovu později.</string>
+
+    <string name="smartcard_early_unplug_dialog_title">Zkusit znovu</string>
+    <string name="smartcard_early_unplug_dialog_message">Zařízení čipové karty se odebralo. Než se znovu pokusíte přihlásit, znovu vložte zařízení.</string>
+
+    <string name="smartcard_no_cert_dialog_title">Nenašly se žádné použitelné certifikáty.</string>
+    <string name="smartcard_no_cert_dialog_message">Ověřte prosím, že se váš certifikát správně zřídil na zařízení s čipovou kartou.</string>
+
+    <string name="smartcard_general_error_dialog_title">Zkuste to znovu později</string>
+    <string name="smartcard_general_error_dialog_message">Je nám líto, ale objevila se nečekaná chyba. Zkuste to prosím znovu později.</string>
+</resources>

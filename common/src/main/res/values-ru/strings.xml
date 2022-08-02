@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+    <string name="app_loading">Загрузка…</string>
+
+    <string name="broker_processing">Брокер выполняет обработку</string>
+    <string name="http_auth_dialog_username">Имя пользователя</string>
+    <string name="http_auth_dialog_password">Пароль</string>
+    <string name="http_auth_dialog_title">Введите учетные данные</string>
+    <string name="http_auth_dialog_login">Имя для входа</string>
+    <string name="http_auth_dialog_cancel">Отмена</string>
+
+    <!-- strings for CBA dialogs and layouts -->
+    <string name="smartcard_cert_dialog_title">Выберите сертификат смарт-карты для входа</string>
+    <string name="smartcard_cert_dialog_positive_button">Продолжить</string>
+    <string name="smartcard_cert_dialog_negative_button">Отмена</string>
+
+    <string name="smartcard_pin_dialog_title">Разблокировать смарт-карту</string>
+    <string name="smartcard_pin_dialog_message">Введите ПИН-код смарт-карты для доступа к сертификату и входа</string>
+    <string name="smartcard_pin_dialog_positive_button">Разблокировать</string>
+    <string name="smartcard_pin_dialog_negative_button">Отмена</string>
+    <string name="smartcard_pin_dialog_error_message">Введен неправильный ПИН-код</string>
+    <string name="smartcard_pin_layout_edittext_hint">ПИН-код</string>
+
+    <string name="smartcard_error_dialog_positive_button">ОК</string>
+
+    <string name="smartcard_max_attempt_dialog_title">Повторите попытку позже</string>
+    <string name="smartcard_max_attempt_dialog_message">Слишком много неудачных попыток. Повторите попытку позже.</string>
+
+    <string name="smartcard_early_unplug_dialog_title">Повторите попытку</string>
+    <string name="smartcard_early_unplug_dialog_message">Устройство смарт-карты удалено. Перед повторной попыткой входа вставьте это устройство еще раз.</string>
+
+    <string name="smartcard_no_cert_dialog_title">Нет применимых сертификатов.</string>
+    <string name="smartcard_no_cert_dialog_message">Убедитесь, что сертификат правильно подготовлен на устройстве со смарт-картой.</string>
+
+    <string name="smartcard_general_error_dialog_title">Повторите попытку позже</string>
+    <string name="smartcard_general_error_dialog_message">Произошла непредвиденная ошибка. Повторите попытку позже.</string>
+</resources>
