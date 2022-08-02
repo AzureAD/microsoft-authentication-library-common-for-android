@@ -58,17 +58,30 @@ public class BrokerHost extends AbstractTestBroker {
     public final static String BROKER_HOST_APP_PACKAGE_NAME = "com.microsoft.identity.testuserapp";
     public final static String BROKER_HOST_APP_NAME = "Broker Host App";
     public final static String BROKER_HOST_APK = "BrokerHost.apk";
+    public final static String OLD_BROKER_HOST_APK = "OldBrokerHost.apk";
     public final static String BROKER_HOST_APK_PROD = "BrokerHostProd.apk";
     public final static String BROKER_HOST_APK_RC = "BrokerHostRC.apk";
 
     public BrokerHost() {
-        super(BROKER_HOST_APP_PACKAGE_NAME, BROKER_HOST_APP_NAME, new LocalApkInstaller());
+        super(BROKER_HOST_APP_PACKAGE_NAME, BROKER_HOST_APP_NAME,
+                new LocalApkInstaller(), new LocalApkInstaller());
         localApkFileName = BROKER_HOST_APK;
+        localUpdateApkFileName = BROKER_HOST_APK;
     }
 
     public BrokerHost(@NonNull final String brokerHostApkName) {
-        super(BROKER_HOST_APP_PACKAGE_NAME, BROKER_HOST_APP_NAME, new LocalApkInstaller());
+        super(BROKER_HOST_APP_PACKAGE_NAME, BROKER_HOST_APP_NAME,
+                new LocalApkInstaller(), new LocalApkInstaller());
         localApkFileName = brokerHostApkName;
+        localUpdateApkFileName = brokerHostApkName;
+    }
+
+    public BrokerHost(@NonNull final String brokerHostApkName,
+                      @NonNull final String updateBrokerHostApkName) {
+        super(BROKER_HOST_APP_PACKAGE_NAME, BROKER_HOST_APP_NAME,
+                new LocalApkInstaller(), new LocalApkInstaller());
+        localApkFileName = brokerHostApkName;
+        localUpdateApkFileName = updateBrokerHostApkName;
     }
 
     @Override

@@ -61,6 +61,8 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
     public final static String AUTHENTICATOR_APP_PACKAGE_NAME = "com.azure.authenticator";
     public final static String AUTHENTICATOR_APP_NAME = "Microsoft Authenticator";
     public final static String AUTHENTICATOR_APK = "Authenticator.apk";
+    public final static String OLD_AUTHENTICATOR_APK = "OldAuthenticator.apk";
+
     private final static String UPDATE_VERSION_NUMBER = "6.2206.3949";
     private final static String OLD_VERSION_NUMBER = "6.2203.1651";
 
@@ -81,6 +83,18 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
     public BrokerMicrosoftAuthenticator(@NonNull final IAppInstaller appInstaller) {
         super(AUTHENTICATOR_APP_PACKAGE_NAME, AUTHENTICATOR_APP_NAME, appInstaller);
         localApkFileName = AUTHENTICATOR_APK;
+    }
+
+    public BrokerMicrosoftAuthenticator(@NonNull final IAppInstaller appInstaller, @NonNull final IAppInstaller updateAppInstaller) {
+        super(AUTHENTICATOR_APP_PACKAGE_NAME, AUTHENTICATOR_APP_NAME, appInstaller, updateAppInstaller);
+        localApkFileName = AUTHENTICATOR_APK;
+    }
+
+    public BrokerMicrosoftAuthenticator(@NonNull final String authenticatorApkName,
+                                        @NonNull final String updateAuthenticatorApkName) {
+        super(AUTHENTICATOR_APP_PACKAGE_NAME, AUTHENTICATOR_APP_NAME);
+        localApkFileName = authenticatorApkName;
+        localUpdateApkFileName = updateAuthenticatorApkName;
     }
 
     @Override
