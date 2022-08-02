@@ -20,17 +20,14 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.internal.testutils.shadows;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+package com.microsoft.identity.shadow;
 
 import com.microsoft.identity.common.java.net.AbstractHttpClient;
 import com.microsoft.identity.common.java.net.HttpClient;
 import com.microsoft.identity.common.java.net.HttpResponse;
 import com.microsoft.identity.common.java.net.UrlConnectionHttpClient;
-import com.microsoft.identity.internal.testutils.HttpRequestInterceptor;
-import com.microsoft.identity.internal.testutils.MockHttpClient;
+import com.microsoft.identity.http.HttpRequestInterceptor;
+import com.microsoft.identity.http.MockHttpClient;
 
 import org.robolectric.annotation.Implementation;
 import org.robolectric.annotation.Implements;
@@ -39,7 +36,8 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.Map;
 
-import javax.net.ssl.SSLContext;
+import edu.umd.cs.findbugs.annotations.Nullable;
+import lombok.NonNull;
 
 /**
  * Allows us to mock http request responses by shadowing the {@link HttpClient}.
@@ -57,9 +55,9 @@ import javax.net.ssl.SSLContext;
 @Implements(AbstractHttpClient.class)
 public class ShadowHttpClient {
     public HttpResponse method(@NonNull HttpClient.HttpMethod httpMethod,
-                                  @NonNull URL requestUrl,
-                                  @NonNull Map<String, String> requestHeaders,
-                                  @Nullable byte[] requestContent) throws IOException {
+                               @NonNull URL requestUrl,
+                               @NonNull Map<String, String> requestHeaders,
+                               @Nullable byte[] requestContent) throws IOException {
         final HttpRequestInterceptor interceptor = MockHttpClient.getInterceptor(httpMethod, requestUrl, requestHeaders, requestContent);
         if (interceptor == null) {
             return UrlConnectionHttpClient.getDefaultInstance().method(httpMethod, requestUrl, requestHeaders, requestContent);

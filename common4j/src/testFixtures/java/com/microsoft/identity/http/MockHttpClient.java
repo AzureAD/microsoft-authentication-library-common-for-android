@@ -20,10 +20,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.internal.testutils;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+package com.microsoft.identity.http;
 
 import com.microsoft.identity.common.java.net.HttpClient;
 import com.microsoft.identity.common.java.net.HttpClient.HttpMethod;
@@ -40,6 +37,9 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Predicate;
+
+import edu.umd.cs.findbugs.annotations.Nullable;
+import lombok.NonNull;
 
 /**
  * Class to set a mock request interceptor at runtime.
@@ -65,6 +65,7 @@ public class MockHttpClient {
     public MockHttpClient() {
         this(false);
     }
+
     /**
      * Installs a mock http client instance to use in providing the request interceptors.
      * <p>
@@ -108,7 +109,7 @@ public class MockHttpClient {
      * @param url    the request url to intercept
      * @return the http request interceptor configured for the http method and request url
      */
-    public static HttpRequestInterceptor getInterceptor (
+    public static HttpRequestInterceptor getInterceptor(
             @NonNull final HttpMethod method,
             @NonNull final URL url,
             final Map<String, String> requestHeaders,
@@ -123,7 +124,7 @@ public class MockHttpClient {
                 final HttpRequestInterceptor httpRequestInterceptor = interceptors.get(matcher);
                 return new HttpRequestInterceptor() {
                     @Override
-                    public HttpResponse performIntercept(@NonNull HttpClient.HttpMethod httpMethod, @NonNull  URL requestUrl, @NonNull Map<String, String> requestHeaders, @Nullable byte[] requestContent) throws IOException {
+                    public HttpResponse performIntercept(@NonNull HttpClient.HttpMethod httpMethod, @NonNull URL requestUrl, @NonNull Map<String, String> requestHeaders, @Nullable byte[] requestContent) throws IOException {
                         if (sSaveRequests.get()) {
                             sInterceptedRequests.add(new HttpRequest(url, requestHeaders, method.name(), requestContent, null));
                         }

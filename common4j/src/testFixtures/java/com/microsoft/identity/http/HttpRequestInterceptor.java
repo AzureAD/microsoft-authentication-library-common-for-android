@@ -20,21 +20,20 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.internal.testutils;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+package com.microsoft.identity.http;
 
 import com.microsoft.identity.common.java.net.HttpClient;
 import com.microsoft.identity.common.java.net.HttpResponse;
-import com.microsoft.identity.internal.testutils.shadows.ShadowHttpClient;
 
 import java.io.IOException;
 import java.net.URL;
 import java.util.Map;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
+import lombok.NonNull;
+
 /**
- * Intercepting http requests at runtime when the {@link HttpClient} is shadowed with {@link ShadowHttpClient}.
+ * Intercepting http requests at runtime when the {@link HttpClient} is shadowed with {@link com.microsoft.identity.shadow.ShadowHttpClient}.
  */
 public interface HttpRequestInterceptor {
 

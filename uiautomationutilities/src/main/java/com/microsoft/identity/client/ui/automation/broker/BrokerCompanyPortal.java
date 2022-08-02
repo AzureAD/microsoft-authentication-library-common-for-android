@@ -63,6 +63,7 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
     public final static String COMPANY_PORTAL_APP_PACKAGE_NAME = "com.microsoft.windowsintune.companyportal";
     public final static String COMPANY_PORTAL_APP_NAME = "Intune Company Portal";
     public final static String COMPANY_PORTAL_APK = "CompanyPortal.apk";
+    public final static String OLD_COMPANY_PORTAL_APK = "OldCompanyPortal.apk";
 
     private boolean enrollmentPerformedSuccessfully;
 
@@ -74,6 +75,13 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
     public BrokerCompanyPortal(@NonNull final IAppInstaller appInstaller) {
         super(COMPANY_PORTAL_APP_PACKAGE_NAME, COMPANY_PORTAL_APP_NAME, appInstaller);
         localApkFileName = COMPANY_PORTAL_APK;
+    }
+
+    public BrokerCompanyPortal(@NonNull final String companyPortalApkName,
+                                        @NonNull final String updateCompanyPortalApkName) {
+        super(COMPANY_PORTAL_APP_PACKAGE_NAME, COMPANY_PORTAL_APP_NAME);
+        localApkFileName = companyPortalApkName;
+        localUpdateApkFileName = updateCompanyPortalApkName;
     }
 
     @Override

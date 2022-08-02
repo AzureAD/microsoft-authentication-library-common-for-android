@@ -38,6 +38,11 @@ public interface IApp {
     void launch();
 
     /**
+     * Update this app on the device.
+     */
+    void update();
+
+    /**
      * Clear (storage) associated to this app on the device.
      */
     void clear();
