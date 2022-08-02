@@ -291,6 +291,13 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
         enrollDevice(username, password, false);
     }
 
+    /**
+     * Method used to complete device enrollment with a Work Profile account. By the end of this automation,
+     * the device should have work profile enabled.
+     *
+     * @param username username of the account
+     * @param password password of the account
+     */
     public void enrollDeviceForWorkProfile(@NonNull final String username,
                                            @NonNull final String password) {
         Logger.i(TAG, "Enroll Device for the given account..");
