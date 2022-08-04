@@ -67,8 +67,10 @@ public class TelemetryEventStrings {
 
         public static final String DEPRECATED_API_USAGE_EVENT = "deprecated_api_usage_event";
 
-        public static final String CERT_BASED_AUTH_ON_DEVICE_EVENT = "cert_based_auth_on_device_event";
-        public static final String CERT_BASED_AUTH_SMARTCARD_EVENT = "cert_based_auth_smartcard_event";
+        public static final String CERT_BASED_AUTH_RESULT_ON_DEVICE_EVENT = "cert_based_auth_result_on_device_event";
+        public static final String CERT_BASED_AUTH_RESULT_SMARTCARD_EVENT = "cert_based_auth_result_smartcard_event";
+
+        public static final String PIV_PROVIDER_STATUS_EVENT = "piv_provider_status_event";
     }
 
     public static final class EventType {
@@ -80,6 +82,7 @@ public class TelemetryEventStrings {
         public static final String LIBRARY_CONSUMER_EVENT = EVENT_PREFIX + "library_consumer_event";
         public static final String ERROR_EVENT = EVENT_PREFIX + "error_event";
         public static final String CERT_BASED_AUTH_EVENT = EVENT_PREFIX + "cert_based_auth_event";
+        public static final String YUBIKEY_EVENT = EVENT_PREFIX + "yubikey_event";
     }
 
     public static final class Key {
