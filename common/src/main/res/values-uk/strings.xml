@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+    <string name="app_loading">Завантаження…</string>
+
+    <string name="broker_processing">Посередник здійснює обробку</string>
+    <string name="http_auth_dialog_username">Ім’я користувача</string>
+    <string name="http_auth_dialog_password">Пароль</string>
+    <string name="http_auth_dialog_title">Введіть свої облікові дані</string>
+    <string name="http_auth_dialog_login">Увійти</string>
+    <string name="http_auth_dialog_cancel">Скасувати</string>
+
+    <!-- strings for CBA dialogs and layouts -->
+    <string name="smartcard_cert_dialog_title">Виберіть сертифікат смарт-картки для входу</string>
+    <string name="smartcard_cert_dialog_positive_button">Продовжити</string>
+    <string name="smartcard_cert_dialog_negative_button">Скасувати</string>
+
+    <string name="smartcard_pin_dialog_title">Розблокувати смарт-картку</string>
+    <string name="smartcard_pin_dialog_message">Введіть PIN-код смарт-картки, щоб отримати доступ до сертифіката, і ввійдіть</string>
+    <string name="smartcard_pin_dialog_positive_button">Розблокувати</string>
+    <string name="smartcard_pin_dialog_negative_button">Скасувати</string>
+    <string name="smartcard_pin_dialog_error_message">Ви ввели неправильний PIN-код</string>
+    <string name="smartcard_pin_layout_edittext_hint">PIN-код</string>
+
+    <string name="smartcard_error_dialog_positive_button">OK</string>
+
+    <string name="smartcard_max_attempt_dialog_title">Спробуйте знову пізніше</string>
+    <string name="smartcard_max_attempt_dialog_message">Забагато невдалих спроб. Спробуйте ще раз пізніше.</string>
+
+    <string name="smartcard_early_unplug_dialog_title">Повторити спробу</string>
+    <string name="smartcard_early_unplug_dialog_message">Пристрій смарт-картки видалено. Вставте пристрій ще раз, перш ніж знову спробувати ввійти.</string>
+
+    <string name="smartcard_no_cert_dialog_title">Застосовні сертифікати не знайдено.</string>
+    <string name="smartcard_no_cert_dialog_message">Переконайтеся, що сертифікат належним чином підготовлено на пристрої смарт-картки.</string>
+
+    <string name="smartcard_general_error_dialog_title">Спробуйте знову пізніше</string>
+    <string name="smartcard_general_error_dialog_message">Сталася неочікувана помилка. Спробуйте ще раз пізніше.</string>
+</resources>

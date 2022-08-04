@@ -16,6 +16,7 @@
         android:hint="@string/smartcard_pin_layout_edittext_hint"
         android:backgroundTint="@color/dialogPinEditText"
         android:textCursorDrawable="@drawable/cursor_color"
+        android:textAlignment="viewStart"
         />
     <TextView
         android:id="@+id/errorTextView"

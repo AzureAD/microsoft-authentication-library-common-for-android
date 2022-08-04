@@ -46,6 +46,11 @@ android {
         project.archivesBaseName = "common"
         project.version = android.defaultConfig.versionName
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        //Languages Common supports.
+        resConfigs "en", "ar", "b+sr+Latn", "bg", "ca", "cs", "da", "de", "el", "es", "et",
+                "eu", "fi", "fr", "gl", "he", "hi", "hr", "hu", "in", "it", "iw", "ja",
+                "kk", "ko", "lt", "lv", "ms", "nb", "nl", "pl", "pt-rBR", "pt-rPT", "ro",
+                "ru", "sk", "sl", "sr", "sv", "th", "tr", "uk", "vi", "zh-rCN", "zh-rTW"
     }
 
     buildTypes {
