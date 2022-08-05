@@ -43,7 +43,7 @@ import lombok.NonNull;
  *
  * @param <T> the type of separator to use
  */
-public interface IPerSeparatorMultiTypeNameValueStore<T> {
+public interface IPerSeparatorMultiTypeNameValueStorage<T> {
     /**
      * Gets a {@link String} value from the storage.
      *

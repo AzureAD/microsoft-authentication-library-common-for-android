@@ -23,7 +23,7 @@
 package com.microsoft.identity.common.java.storage;
 
 import com.microsoft.identity.common.components.SettablePlatformComponents;
-import com.microsoft.identity.common.java.interfaces.IPerSeparatorMultiTypeNameValueStore;
+import com.microsoft.identity.common.java.interfaces.IPerSeparatorMultiTypeNameValueStorage;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -43,7 +43,7 @@ public class StringSeparatedMultiTypeNameValueStorageTest {
     private static final String TEST_VALUE_1 = "test_value_1";
     private static final String TEST_VALUE_2 = "test_value_2";
 
-    private IPerSeparatorMultiTypeNameValueStore<String> mStringSeparatedMultiTypeNameValueStorage;
+    private IPerSeparatorMultiTypeNameValueStorage<String> mStringSeparatedMultiTypeNameValueStorage;
 
     @Before
     public void setup() throws IOException {

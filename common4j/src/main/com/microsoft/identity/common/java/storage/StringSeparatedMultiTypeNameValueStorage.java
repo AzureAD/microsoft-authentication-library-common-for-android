@@ -24,7 +24,7 @@ package com.microsoft.identity.common.java.storage;
 
 import com.microsoft.identity.common.java.cache.IMultiTypeNameValueStorage;
 import com.microsoft.identity.common.java.crypto.IKeyAccessor;
-import com.microsoft.identity.common.java.interfaces.IPerSeparatorMultiTypeNameValueStore;
+import com.microsoft.identity.common.java.interfaces.IPerSeparatorMultiTypeNameValueStorage;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.util.ported.Predicate;
 
@@ -39,13 +39,13 @@ import lombok.AllArgsConstructor;
 import lombok.NonNull;
 
 /**
- * A platform agnostic implementation of {@link IPerSeparatorMultiTypeNameValueStore} where the
+ * A platform agnostic implementation of {@link IPerSeparatorMultiTypeNameValueStorage} where the
  * separator is of type {@link String}. The internal storage mechanism here could be backed by
  * anything as determined by the {@link IPlatformComponents#getFileStore(String)} or even be an
  * encrypted variant as determined by {@link IPlatformComponents#getEncryptedFileStore(String, IKeyAccessor)}.
  */
 @AllArgsConstructor
-public class StringSeparatedMultiTypeNameValueStorage implements IPerSeparatorMultiTypeNameValueStore<String> {
+public class StringSeparatedMultiTypeNameValueStorage implements IPerSeparatorMultiTypeNameValueStorage<String> {
 
     @NonNull
     private final IPlatformComponents mPlatformComponents;
@@ -60,7 +60,7 @@ public class StringSeparatedMultiTypeNameValueStorage implements IPerSeparatorMu
     /**
      * In-memory cache for storing per-string storage for each String. The idea is to not have
      * create a new instance of {@link IMultiTypeNameValueStorage} for each call to
-     * {@link IPerSeparatorMultiTypeNameValueStore#putString(Object, String, String)}.
+     * {@link IPerSeparatorMultiTypeNameValueStorage#putString(Object, String, String)}.
      */
     private static final Map<String, IMultiTypeNameValueStorage> sPerTenantStorageCache =
             Collections.synchronizedMap(new LinkedHashMap<String, IMultiTypeNameValueStorage>(
