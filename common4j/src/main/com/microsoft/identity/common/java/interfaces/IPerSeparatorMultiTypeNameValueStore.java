@@ -69,7 +69,7 @@ public interface IPerSeparatorMultiTypeNameValueStore<T> {
      * @param name      The name (key) of the long to save
      * @param value     The actual value to persist
      */
-    void putLong(@NonNull T separator, String name, long value);
+    void putLong(@NonNull T separator, @NonNull String name, long value);
 
     /**
      * Retrieves a long value previously stored.
@@ -78,7 +78,7 @@ public interface IPerSeparatorMultiTypeNameValueStore<T> {
      * @param name      The name (key) of the long to retrieve
      * @return The persisted value or 0 if one cannot be found
      */
-    long getLong(@NonNull T separator, String name);
+    long getLong(@NonNull T separator, @NonNull String name);
 
     /**
      * Returns all entries in the named resource.
@@ -118,5 +118,5 @@ public interface IPerSeparatorMultiTypeNameValueStore<T> {
      * @param keyFilter A predicate to use to evaluate the key, return true to include key value pair.
      * @return an iterator as a view on the shared preferences file.
      */
-    Iterator<Map.Entry<String, String>> getAllFilteredByKey(@NonNull T separator, Predicate<String> keyFilter);
+    Iterator<Map.Entry<String, String>> getAllFilteredByKey(@NonNull T separator, @NonNull Predicate<String> keyFilter);
 }
