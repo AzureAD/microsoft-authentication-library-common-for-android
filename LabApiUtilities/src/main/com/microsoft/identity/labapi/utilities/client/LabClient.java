@@ -153,13 +153,13 @@ public class LabClient implements ILabClient {
         // Adding a second attempt here, api sometimes fails to create the temp user.
         try {
             return createTempAccountInternal(tempUserType);
-        } catch (LabApiException e){
-            if (e.getErrorCode().equals(LabError.FAILED_TO_CREATE_TEMP_USER)){
+        } catch (final LabApiException e){
+            if (LabError.FAILED_TO_CREATE_TEMP_USER.equals(e.getErrorCode())){
 
                 // Wait for a bit
                 try {
                     Thread.sleep(LAB_API_RETRY_WAIT);
-                } catch (InterruptedException e2) {
+                } catch (final InterruptedException e2) {
                     e2.printStackTrace();
                 }
 
@@ -190,7 +190,7 @@ public class LabClient implements ILabClient {
         // Adding a wait to finish temp user creation
         try {
             Thread.sleep(TEMP_USER_CREATION_WAIT);
-        } catch (InterruptedException e) {
+        } catch (final InterruptedException e) {
             e.printStackTrace();
         }
 
@@ -232,13 +232,13 @@ public class LabClient implements ILabClient {
         // Adding a second attempt here, api sometimes fails to get the lab secret.
         try {
             return getSecret(labName);
-        } catch (LabApiException e){
+        } catch (final LabApiException e){
             if (e.getErrorCode().equals(LabError.FAILED_TO_GET_SECRET_FROM_LAB)){
 
                 // Wait for a bit
                 try {
                     Thread.sleep(LAB_API_RETRY_WAIT);
-                } catch (InterruptedException e2) {
+                } catch (final InterruptedException e2) {
                     e2.printStackTrace();
                 }
 
@@ -347,13 +347,13 @@ public class LabClient implements ILabClient {
         // Adding a second attempt here, api sometimes fails to get the lab secret.
         try {
             return getSecret(secretName);
-        } catch (LabApiException e){
+        } catch (final LabApiException e){
             if (e.getErrorCode().equals(LabError.FAILED_TO_GET_SECRET_FROM_LAB)){
 
                 // Wait for a bit
                 try {
                     Thread.sleep(LAB_API_RETRY_WAIT);
-                } catch (InterruptedException e2) {
+                } catch (final InterruptedException e2) {
                     e2.printStackTrace();
                 }
 
@@ -365,6 +365,7 @@ public class LabClient implements ILabClient {
         }
     }
 
+    @Override
     public boolean resetPassword(@NonNull final String upn) throws LabApiException {
         final ResetApi resetApi = new ResetApi();
         try {
@@ -375,16 +376,17 @@ public class LabClient implements ILabClient {
             if (result) {
                 try {
                     Thread.sleep(PASSWORD_RESET_WAIT_DURATION);
-                } catch (InterruptedException e) {
+                } catch (final InterruptedException e) {
                     e.printStackTrace();
                 }
             }
             return result;
-        } catch (ApiException e) {
+        } catch (final ApiException e) {
             throw new LabApiException(LabError.FAILED_TO_RESET_PASSWORD, e);
         }
     }
 
+    @Override
     public boolean resetPassword(@NonNull final String upn,
                                  final int resetAttempts) throws LabApiException {
         for (int i = 0; i < resetAttempts; i++) {
@@ -405,7 +407,7 @@ public class LabClient implements ILabClient {
 
                     try {
                         Thread.sleep(TimeUnit.SECONDS.toMillis(5));
-                    } catch (InterruptedException e) {
+                    } catch (final InterruptedException e) {
                         e.printStackTrace();
                     }
                 } else {

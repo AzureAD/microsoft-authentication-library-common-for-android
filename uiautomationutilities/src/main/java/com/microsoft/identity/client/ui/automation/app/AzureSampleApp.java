@@ -106,7 +106,7 @@ public class AzureSampleApp extends App {
 
         // sleep as it can take a bit for UPN to appear in Azure Sample app
         try {
-            Thread.sleep(TimeUnit.SECONDS.toMillis(10));
+            Thread.sleep(TimeUnit.SECONDS.toMillis(5));
         } catch (InterruptedException e){
             e.printStackTrace();
         }
