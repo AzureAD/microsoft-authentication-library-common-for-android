@@ -71,6 +71,11 @@ public class SharedPreferenceLongStorage extends AbstractSharedPrefNameValueStor
     }
 
     @Override
+    public void put(Map<String, Long> keyValuePairs) {
+        mManager.putLongs(keyValuePairs);
+    }
+
+    @Override
     public Iterator<Map.Entry<String, Long>> getAllFilteredByKey(final @NonNull Predicate<String> keyFilter) {
         return new Iterator<Map.Entry<String, Long>>() {
 

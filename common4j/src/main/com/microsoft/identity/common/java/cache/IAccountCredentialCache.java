@@ -49,6 +49,13 @@ public interface IAccountCredentialCache {
     void saveCredential(final Credential credential);
 
     /**
+     * Saves the supplied Credential's in the cache.
+     *
+     * @param credential The Credential's to save.
+     */
+    void saveCredentials(final Credential... credentials);
+
+    /**
      * Gets the Account saved for the supplied cache key.
      *
      * @param cacheKey The cache key to use when consulting the cache.

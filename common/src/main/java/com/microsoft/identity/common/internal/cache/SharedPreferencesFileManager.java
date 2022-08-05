@@ -54,10 +54,6 @@ public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage 
 
     private static final String TAG = SharedPreferencesFileManager.class.getSimpleName();
 
-    private final Object cacheLock = new Object();
-    @GuardedBy("cacheLock")
-    private final LruCache<String, String> fileCache = new LruCache<>(256);
-    @GuardedBy("cacheLock")
     private final SharedPreferences mSharedPreferences;
     private final KeyAccessorStringAdapter mEncryptionManager;
     @VisibleForTesting
@@ -132,48 +128,62 @@ public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage 
     }
 
     @Override
+    public final void putStrings(Map<String, String> keyValuePairs) {
+        final SharedPreferences.Editor editor = mSharedPreferences.edit();
+
+        for (Map.Entry<String, String> kvp : keyValuePairs.entrySet()) {
+            putStringInternal(editor, kvp.getKey(), kvp.getValue());
+        }
+
+        editor.apply();
+    }
+
+    @Override
     public final void putString(
             final String key,
             final String value) {
-        synchronized (cacheLock) {
-            if (value != null) {
-                fileCache.put(key, value);
-            } else {
-                fileCache.remove(key);
-            }
-            final SharedPreferences.Editor editor = mSharedPreferences.edit();
+        final SharedPreferences.Editor editor = mSharedPreferences.edit();
 
-            if (null == mEncryptionManager || StringUtil.isNullOrEmpty(value)) {
-                editor.putString(key, value);
-            } else {
-                final String encryptedValue = encrypt(value);
-                editor.putString(key, encryptedValue);
-            }
+        putStringInternal(editor, key, value);
 
-            editor.apply();
+        editor.apply();
+    }
+
+    private void putStringInternal(SharedPreferences.Editor editor, String key, String value) {
+        if (null == mEncryptionManager || StringUtil.isNullOrEmpty(value)) {
+            editor.putString(key, value);
+        } else {
+            final String encryptedValue = encrypt(value);
+            editor.putString(key, encryptedValue);
         }
     }
 
     @Override
     @Nullable
     public final String getString(final String key) {
-        synchronized (cacheLock) {
-            String memCache = fileCache.get(key);
-            if (memCache != null) {
-                return memCache;
+        String restoredValue = mSharedPreferences.getString(key, null);
+
+        if (null != mEncryptionManager && !StringUtil.isNullOrEmpty(restoredValue)) {
+            restoredValue = decrypt(restoredValue);
+
+            if (StringUtil.isNullOrEmpty(restoredValue)) {
+                logWarningAndRemoveKey(key);
             }
-            String restoredValue = mSharedPreferences.getString(key, null);
-
-            if (null != mEncryptionManager && !StringUtil.isNullOrEmpty(restoredValue)) {
-                restoredValue = decrypt(restoredValue);
-
-                if (StringUtil.isNullOrEmpty(restoredValue)) {
-                    logWarningAndRemoveKey(key);
-                }
-            }
-
-            return restoredValue;
         }
+
+        return restoredValue;
+    }
+
+    @Override
+    public final void putLongs(
+            Map<String, Long> keyValuePairs) {
+        final SharedPreferences.Editor editor = mSharedPreferences.edit();
+
+        for (Map.Entry<String, Long> kvp : keyValuePairs.entrySet()) {
+            putStringInternal(editor, kvp.getKey(), kvp.getValue().toString());
+        }
+
+        editor.apply();
     }
 
     @Override
@@ -284,12 +294,9 @@ public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage 
 
     @Override
     public final void clear() {
-        synchronized (cacheLock) {
-            final SharedPreferences.Editor editor = mSharedPreferences.edit();
-            editor.clear();
-            fileCache.evictAll();
-            editor.apply();
-        }
+        final SharedPreferences.Editor editor = mSharedPreferences.edit();
+        editor.clear();
+        editor.apply();
     }
 
     @Override
@@ -299,12 +306,10 @@ public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage 
                 methodTag,
                 "Removing cache key"
         );
-        synchronized (cacheLock) {
-            fileCache.remove(key);
-            final SharedPreferences.Editor editor = mSharedPreferences.edit();
-            editor.remove(key);
-            editor.apply();
-        }
+
+        final SharedPreferences.Editor editor = mSharedPreferences.edit();
+        editor.remove(key);
+        editor.apply();
 
         Logger.infoPII(
                 methodTag,

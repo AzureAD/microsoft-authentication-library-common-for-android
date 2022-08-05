@@ -54,6 +54,11 @@ public class SharedPrefStringNameValueStorage extends AbstractSharedPrefNameValu
     }
 
     @Override
+    public void put(Map<String, String> keyValuePairs) {
+        mManager.putStrings(keyValuePairs);
+    }
+
+    @Override
     public Iterator<Map.Entry<String, String>> getAllFilteredByKey(Predicate<String> keyFilter) {
         return mManager.getAllFilteredByKey(keyFilter);
     }

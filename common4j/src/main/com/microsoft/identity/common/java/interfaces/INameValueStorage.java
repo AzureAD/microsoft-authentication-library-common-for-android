@@ -57,6 +57,8 @@ public interface INameValueStorage<T> {
      */
     void put(@NonNull String name, @Nullable T value);
 
+    void put(Map<String, T> keyValuePairs);
+
     /**
      * Removes a value from the storage.
      * [

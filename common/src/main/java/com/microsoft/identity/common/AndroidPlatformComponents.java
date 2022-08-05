@@ -270,6 +270,17 @@ public class AndroidPlatformComponents implements IPlatformComponents {
         final SharedPreferences sharedPreferences = mContext.getSharedPreferences(storeName, Context.MODE_MULTI_PROCESS);
         return new SharedPrefStringNameValueStorage(new IMultiTypeNameValueStorage() {
             @Override
+            public void putStrings(Map<String, String> keyValuePairs) {
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+
+                for (Map.Entry<String, String> keyValuePair : keyValuePairs.entrySet()) {
+                    editor.putString(keyValuePair.getKey(), keyValuePair.getValue());
+                }
+
+                editor.apply();
+            }
+
+            @Override
             public void putString(String key, String value) {
                 sharedPreferences.edit().putString(key, value).apply();
             }
@@ -277,6 +288,17 @@ public class AndroidPlatformComponents implements IPlatformComponents {
             @Override
             public String getString(String key) {
                 return sharedPreferences.getString(key, null);
+            }
+
+            @Override
+            public void putLongs(Map<String, Long> keyValuePairs) {
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+
+                for (Map.Entry<String, Long> keyValuePair : keyValuePairs.entrySet()) {
+                    editor.putLong(keyValuePair.getKey(), keyValuePair.getValue());
+                }
+
+                editor.apply();
             }
 
             @Override

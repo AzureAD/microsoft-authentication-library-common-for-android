@@ -70,4 +70,9 @@ public class SharedPreferenceStringStorage extends AbstractSharedPrefNameValueSt
     public void put(@NonNull String name, @Nullable String value) {
         mManager.putString(name, value);
     }
+
+    @Override
+    public void put(Map<String, String> keyValuePairs) {
+        mManager.putStrings(keyValuePairs);
+    }
 }

@@ -46,6 +46,9 @@ public class MapBackedPreferencesManager implements IMultiTypeNameValueStorage {
     private final Map<String, String> mBackingStore = new HashMap<>();
 
     @Override
+    public void putStrings(Map<String, String> keyValuePairs) { mBackingStore.putAll(keyValuePairs); }
+
+    @Override
     public void putString(String key, String value) {
         mBackingStore.put(key, value);
     }
@@ -53,6 +56,13 @@ public class MapBackedPreferencesManager implements IMultiTypeNameValueStorage {
     @Override
     public String getString(String key) {
         return mBackingStore.get(key);
+    }
+
+    @Override
+    public void putLongs(Map<String, Long> keyValuePairs) {
+        for (Map.Entry<String, Long> entry : keyValuePairs.entrySet()) {
+            putLong(entry.getKey(), entry.getValue());
+        }
     }
 
     @Override

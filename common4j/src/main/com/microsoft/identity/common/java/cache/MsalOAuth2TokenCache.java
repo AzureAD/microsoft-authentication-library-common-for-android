@@ -1586,9 +1586,9 @@ public class MsalOAuth2TokenCache
             if (credential instanceof AccessTokenRecord) {
                 deleteAccessTokensWithIntersectingScopes((AccessTokenRecord) credential);
             }
-
-            mAccountCredentialCache.saveCredential(credential);
         }
+
+        mAccountCredentialCache.saveCredentials(credentials);
     }
 
 

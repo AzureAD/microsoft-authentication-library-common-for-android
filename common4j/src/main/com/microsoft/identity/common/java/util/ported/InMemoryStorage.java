@@ -49,6 +49,9 @@ public class InMemoryStorage<T> implements INameValueStorage<T> {
         return mMap;
     }
 
+    @Override
+    public void put(Map<String, T> nameValuePairs) { mMap.putAll(nameValuePairs); }
+
     public void put(@NonNull final String key,
                     @Nullable final T value) {
         if (value == null) {

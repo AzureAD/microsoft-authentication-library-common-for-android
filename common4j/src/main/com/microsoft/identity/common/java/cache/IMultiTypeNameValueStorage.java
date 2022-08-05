@@ -32,6 +32,8 @@ import java.util.Map;
  * Shared Preferences.
  */
 public interface IMultiTypeNameValueStorage {
+    void putStrings(Map<String, String> keyValuePairs);
+
     /**
      * Associates a {@link String} value with a key in the named resource that this represents.
      *
@@ -47,6 +49,8 @@ public interface IMultiTypeNameValueStorage {
      * @return The string value associated with this key or null if no value could be found.
      */
     String getString(String key);
+
+    void putLongs(Map<String, Long> keyValuePairs);
 
     /**
      * Persists a long value to the named resource.

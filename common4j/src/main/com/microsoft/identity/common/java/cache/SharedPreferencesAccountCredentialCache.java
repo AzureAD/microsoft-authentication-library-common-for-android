@@ -141,6 +141,33 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
     }
 
     @Override
+    public synchronized void saveCredentials(final Credential... credentials)
+    {
+        Logger.verbose(TAG, "Saving bulk credentials...");
+
+        Map<String, String> cacheKeyValuePairs = new HashMap<>();
+
+        for (Credential cred : credentials)
+        {
+            final String cacheKey = mCacheValueDelegate.generateCacheKey(cred);
+            Logger.verbosePII(TAG, "Generated cache key: [" + cacheKey + "]");
+
+            // Perform any necessary field merging on the Credential to save...
+            final Credential existingCredential = getCredential(cacheKey);
+
+            if (null != existingCredential) {
+                cred.mergeAdditionalFields(existingCredential);
+            }
+
+            final String cacheValue = mCacheValueDelegate.generateCacheValue(cred);
+
+            cacheKeyValuePairs.put(cacheKey, cacheValue);
+        }
+
+        mSharedPreferencesFileManager.put(cacheKeyValuePairs);
+    }
+
+    @Override
     public synchronized AccountRecord getAccount(@NonNull final String cacheKey) {
         Logger.verbose(TAG, "Loading Account by key...");
         AccountRecord account = mCacheValueDelegate.fromCacheValue(
