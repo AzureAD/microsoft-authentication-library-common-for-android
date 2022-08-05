@@ -24,17 +24,14 @@ package com.microsoft.identity.common.java.storage;
 
 import com.microsoft.identity.common.java.cache.IMultiTypeNameValueStorage;
 import com.microsoft.identity.common.java.crypto.IKeyAccessor;
+import com.microsoft.identity.common.java.interfaces.AbstractPerSeparatorMultiTypeNameValueStorage;
 import com.microsoft.identity.common.java.interfaces.IPerSeparatorMultiTypeNameValueStorage;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
-import com.microsoft.identity.common.java.util.ported.Predicate;
 
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Set;
 
-import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 
@@ -45,7 +42,7 @@ import lombok.NonNull;
  * encrypted variant as determined by {@link IPlatformComponents#getEncryptedFileStore(String, IKeyAccessor)}.
  */
 @AllArgsConstructor
-public class StringSeparatedMultiTypeNameValueStorage implements IPerSeparatorMultiTypeNameValueStorage<String> {
+public class StringSeparatedMultiTypeNameValueStorage extends AbstractPerSeparatorMultiTypeNameValueStorage<String> {
 
     @NonNull
     private final IPlatformComponents mPlatformComponents;
@@ -73,7 +70,8 @@ public class StringSeparatedMultiTypeNameValueStorage implements IPerSeparatorMu
             });
 
     @NonNull
-    private synchronized IMultiTypeNameValueStorage getStoreForSeparator(@NonNull final String separator) {
+    @Override
+    protected synchronized IMultiTypeNameValueStorage getStoreForSeparator(@NonNull final String separator) {
         return sPerTenantStorageCache.computeIfAbsent(
                 separator,
                 key -> {
@@ -89,54 +87,5 @@ public class StringSeparatedMultiTypeNameValueStorage implements IPerSeparatorMu
                     }
                 }
         );
-    }
-
-    @Nullable
-    @Override
-    public String getString(@NonNull final String separator, @NonNull final String name) {
-        return getStoreForSeparator(separator).getString(name);
-    }
-
-    @Override
-    public void putString(@NonNull final String separator,
-                          @NonNull final String name,
-                          @Nullable final String value) {
-        getStoreForSeparator(separator).putString(name, value);
-    }
-
-    @Override
-    public void putLong(@NonNull final String separator, @NonNull final String name, long value) {
-        getStoreForSeparator(separator).putLong(name, value);
-    }
-
-    @Override
-    public long getLong(@NonNull final String separator, @NonNull final String name) {
-        return getStoreForSeparator(separator).getLong(name);
-    }
-
-    @Override
-    public @NonNull Map<String, String> getAll(@NonNull final String separator) {
-        return getStoreForSeparator(separator).getAll();
-    }
-
-    @Override
-    public void remove(@NonNull final String separator, @NonNull final String name) {
-        getStoreForSeparator(separator).remove(name);
-    }
-
-    @Override
-    public void clear(@NonNull final String separator) {
-        getStoreForSeparator(separator).clear();
-    }
-
-    @Override
-    public @NonNull Set<String> keySet(@NonNull final String separator) {
-        return getStoreForSeparator(separator).getAll().keySet();
-    }
-
-    @Override
-    public Iterator<Map.Entry<String, String>> getAllFilteredByKey(@NonNull final String separator,
-                                                                   @NonNull final Predicate<String> keyFilter) {
-        return getStoreForSeparator(separator).getAllFilteredByKey(keyFilter);
     }
 }
