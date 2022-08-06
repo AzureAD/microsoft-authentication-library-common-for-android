@@ -40,8 +40,12 @@ import androidx.annotation.RequiresApi;
 
 import com.microsoft.identity.common.R;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
+import com.microsoft.identity.common.java.exception.BaseException;
+import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings;
-import com.microsoft.identity.common.java.telemetry.events.BaseEvent;
+import com.microsoft.identity.common.java.telemetry.events.CertBasedAuthResultEvent;
+import com.microsoft.identity.common.java.telemetry.events.ErrorEvent;
+import com.microsoft.identity.common.java.telemetry.events.PivProviderStatusEvent;
 import com.microsoft.identity.common.logging.Logger;
 import com.yubico.yubikit.android.YubiKitManager;
 import com.yubico.yubikit.android.transport.usb.UsbConfiguration;
@@ -89,6 +93,9 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
     private final DialogHolder mDialogHolder;
     //Lock to help facilitate synchronization
     private static final Object sDeviceLock = new Object();
+    //Booleans to help determine if a CBA flow is being completed so that we can emit telemetry for the results.
+    private boolean mIsOnDeviceCertBasedAuthProceeding;
+    private boolean mIsSmartcardCertBasedAuthProceeding;
 
     /**
      * Holds certificate found on YubiKey and its corresponding slot.
@@ -144,6 +151,9 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
         mActivity = activity;
         //Create instance of DialogHolder.
         mDialogHolder = new DialogHolder(mActivity);
+        //Set both mIsCertBasedAuthProceeding to false.
+        mIsOnDeviceCertBasedAuthProceeding = false;
+        mIsSmartcardCertBasedAuthProceeding = false;
         //Create and start YubiKitManager for UsbDiscovery mode.
         //When in Usb Discovery mode, Yubikeys that plug into the device will be accessible
         // once the user provides permission via the Android permission dialog.
@@ -165,22 +175,18 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
                             synchronized (sDeviceLock) {
                                 Logger.verbose(TAG, "A YubiKey device was disconnected");
                                 mDevice = null;
+                                //Creating a PivProviderStatusEvent for Telemetry.
+                                final PivProviderStatusEvent pivProviderStatusEvent = new PivProviderStatusEvent();
                                 //Remove the YKPiv security provider if it was added.
                                 if (Security.getProvider(YUBIKEY_PROVIDER) != null) {
                                     //Remove provider.
                                     Security.removeProvider(YUBIKEY_PROVIDER);
-                                    //Telemet and log that PivProvider is being removed from Security static list.
-                                    Telemetry.emit((BaseEvent) new BaseEvent().put(
-                                            TelemetryEventStrings.Key.PIVPROVIDER_REMOVED,
-                                            String.valueOf(true)
-                                    ));
+                                    //Emit telemetry and log that PivProvider is being removed from Security static list.
+                                    Telemetry.emit(pivProviderStatusEvent.putPivProviderRemoved(true));
                                     Logger.info(TAG, "An instance of PivProvider was removed from Security static list upon YubiKey device connection being closed.");
                                 } else {
-                                    //Telemet and log that PivProvider is not present in Security static list and therefore is not being removed.
-                                    Telemetry.emit((BaseEvent) new BaseEvent().put(
-                                            TelemetryEventStrings.Key.PIVPROVIDER_REMOVED,
-                                            String.valueOf(false)
-                                    ));
+                                    //Emit telemetry and log that PivProvider is not present in Security static list and therefore is not being removed.
+                                    Telemetry.emit(pivProviderStatusEvent.putPivProviderRemoved(false));
                                     Logger.info(TAG, "An instance of PivProvider was not present in Security static list upon YubiKey device connection being closed.");
                                 }
                                 //Show an error dialog only if a dialog is still showing.
@@ -209,6 +215,7 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
     @Override
     public Void processChallenge(@NonNull final ClientCertRequest request) {
         //final String methodTag = TAG + ":processChallenge";
+        //If a smartcard device is connected, proceed with smartcard CBA.
         synchronized (sDeviceLock) {
             if (mDevice != null) {
                 handleSmartcardCertAuth(request);
@@ -267,6 +274,8 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
                     Logger.error(methodTag, e.getMessage(), e);
                     //Show general error dialog.
                     mDialogHolder.showErrorDialog(R.string.smartcard_general_error_dialog_title, R.string.smartcard_general_error_dialog_message);
+                    //Emit telemetry for this exception.
+                    Telemetry.emit(new ErrorEvent().putException(e));
                     request.cancel();
                 }
             }
@@ -301,6 +310,8 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
                     Logger.error(methodTag, e.getMessage(), e);
                     //Show general error dialog.
                     mDialogHolder.showErrorDialog(R.string.smartcard_general_error_dialog_title, R.string.smartcard_general_error_dialog_message);
+                    //Emit telemetry for exception.
+                    Telemetry.emit(new ErrorEvent().putException(e));
                     request.cancel();
                 }
             }
@@ -408,6 +419,8 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
                                 Logger.error(methodTag, e.getMessage(), e);
                                 //Show general error dialog.
                                 mDialogHolder.showErrorDialog(R.string.smartcard_general_error_dialog_title, R.string.smartcard_general_error_dialog_message);
+                                //Emit telemetry for this exception.
+                                Telemetry.emit(new ErrorEvent().putException(e));
                                 request.cancel();
                             }
 
@@ -474,23 +487,19 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
         final String methodTag = TAG + "useSmartcardCertForAuth:";
         //Need to add a PivProvider instance to the beginning of the array of Security providers in order for signature logic to occur.
         //Note that this provider is removed when the UsbYubiKeyDevice connection is closed.
+        //Creating a PivProviderStatusEvent for Telemetry.
+        final PivProviderStatusEvent pivProviderStatusEvent = new PivProviderStatusEvent();
         //First check if a PivProvider instance is already present in the static list.
         if (Security.getProvider(YUBIKEY_PROVIDER) != null) {
             //Remove existing PivProvider.
             Security.removeProvider(YUBIKEY_PROVIDER);
-            //Telemet and log. The PivProvider instance is either unexpectedly being added elsewhere
+            //Emit telemetry and log. The PivProvider instance is either unexpectedly being added elsewhere
             // or it isn't being removed properly upon CBA flow termination.
-            Telemetry.emit((BaseEvent) new BaseEvent().put(
-                    TelemetryEventStrings.Key.IS_EXISTING_PIVPROVIDER_PRESENT,
-                    String.valueOf(true)
-            ));
+            Telemetry.emit(pivProviderStatusEvent.putIsExistingPivProviderPresent(true));
             Logger.info(methodTag, "Existing PivProvider was present in Security static list.");
         } else {
-            //Telemet and log. This is expected behavior.
-            Telemetry.emit((BaseEvent) new BaseEvent().put(
-                    TelemetryEventStrings.Key.IS_EXISTING_PIVPROVIDER_PRESENT,
-                    String.valueOf(false)
-            ));
+            //Emit telemetry and log. This is expected behavior.
+            Telemetry.emit(pivProviderStatusEvent.putIsExistingPivProviderPresent(false));
             Logger.info(methodTag, "Security static list does not have existing PivProvider.");
         }
         //The position parameter is 1-based (1 maps to index 0).
@@ -517,12 +526,16 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
             final X509Certificate[] chain = new X509Certificate[]{cert};
             //Clear current dialog.
             mDialogHolder.dismissDialog();
+            //Set mIsSmartcardCertBasedAuthProceeding to true so telemetry is emitted for the result.
+            mIsSmartcardCertBasedAuthProceeding = true;
             //Call proceed on ClientCertRequest with PivPrivateKey and cert chain.
             request.proceed(pivPrivateKey, chain);
         } catch (final UnrecoverableKeyException | CertificateException | KeyStoreException | IOException | NoSuchAlgorithmException e) {
             Logger.error(methodTag, e.getMessage(), e);
             //Show general error dialog.
             mDialogHolder.showErrorDialog(R.string.smartcard_general_error_dialog_title, R.string.smartcard_general_error_dialog_message);
+            //Emit telemetry for this exception.
+            Telemetry.emit(new ErrorEvent().putException(e));
             request.cancel();
         }
     }
@@ -541,7 +554,6 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
                     //Show error dialog and cancel flow if mDevice is null.
                     if (mDevice == null) {
                         Logger.error(methodTag, MDEVICE_NULL_ERROR_MESSAGE, null);
-                        //TODO: want to see if we can show an error dialog somehow in this scenario.
                         //Invoke result failure.
                         callback.invoke(Result.failure(new Exception(MDEVICE_NULL_ERROR_MESSAGE)));
                         return;
@@ -600,6 +612,8 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
                                     mActivity, alias);
 
                             Logger.info(methodTag,"Certificate is chosen by user, proceed with TLS request.");
+                            //Set mIsOnDeviceCertBasedAuthProceeding to true so telemetry is emitted for the result.
+                            mIsOnDeviceCertBasedAuthProceeding = true;
                             request.proceed(privateKey, certChain);
                             return;
                         } catch (final KeyChainException e) {
@@ -625,5 +639,30 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
         //Stop UsbDiscovery for YubiKitManager
         //Should be called when host fragment is destroyed.
         mYubiKitManager.stopUsbDiscovery();
+    }
+
+    /**
+     * Emit telemetry for results from certificate based authentication (CBA) if CBA occurred.
+     * @param response a RawAuthorizationResult object received upon a challenge response received.
+     */
+    public void emitTelemetryForCertBasedAuthResults(@NonNull final RawAuthorizationResult response) {
+        if (mIsOnDeviceCertBasedAuthProceeding || mIsSmartcardCertBasedAuthProceeding) {
+            //Emit telemetry for results based on which type of CBA occurred.
+            final CertBasedAuthResultEvent certBasedAuthResultEvent;
+            if (mIsOnDeviceCertBasedAuthProceeding) {
+               certBasedAuthResultEvent =  new CertBasedAuthResultEvent(TelemetryEventStrings.Event.CERT_BASED_AUTH_RESULT_ON_DEVICE_EVENT);
+               mIsOnDeviceCertBasedAuthProceeding = false;
+            } else {
+                certBasedAuthResultEvent =  new CertBasedAuthResultEvent(TelemetryEventStrings.Event.CERT_BASED_AUTH_RESULT_SMARTCARD_EVENT);
+                mIsSmartcardCertBasedAuthProceeding = false;
+            }
+            //Put response code and emit.
+            Telemetry.emit(certBasedAuthResultEvent.putResponseCode(response.getResultCode().toString()));
+            //If an exception was provided, emit an ErrorEvent.
+            final BaseException exception = response.getException();
+            if (exception != null) {
+                Telemetry.emit(new ErrorEvent().putException(exception));
+            }
+        }
     }
 }
