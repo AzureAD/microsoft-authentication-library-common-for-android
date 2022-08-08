@@ -45,13 +45,12 @@ import com.microsoft.identity.client.ui.automation.utils.CommonUtils;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
 import org.junit.Assert;
-
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
 
 import lombok.Getter;
 
 import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT;
-
 
 /**
  * A model for interacting with the Company Portal Broker App during UI Test.
@@ -193,7 +192,7 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
 
     public void enrollDevice(@NonNull final String username,
                              @NonNull final String password,
-                             final boolean isFederated) {
+                             final boolean isFederated){
         Logger.i(TAG, "Enroll Device for the given account..");
         launch(); // launch CP app
 
@@ -298,6 +297,71 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
     public void enrollDevice(@NonNull final String username,
                              @NonNull final String password) {
         enrollDevice(username, password, false);
+    }
+
+    /**
+     * Method used to complete device enrollment with a Work Profile account. By the end of this automation,
+     * the device should have work profile enabled.
+     *
+     * @param username username of the account
+     * @param password password of the account
+     */
+    public void enrollDeviceForWorkProfile(@NonNull final String username,
+                                           @NonNull final String password) {
+        Logger.i(TAG, "Enroll Device for the given account..");
+        launch(); // launch CP app
+
+        handleFirstRun(); // handle CP first run
+
+        // click Sign In button on CP welcome page
+        UiAutomatorUtils.handleButtonClick("com.microsoft.windowsintune.companyportal:id/sign_in_button");
+
+        final MicrosoftStsPromptHandlerParameters promptHandlerParameters = MicrosoftStsPromptHandlerParameters.builder()
+                .prompt(PromptParameter.LOGIN)
+                .consentPageExpected(false)
+                .expectingLoginPageAccountPicker(false)
+                .sessionExpected(false)
+                .loginHint(null)
+                .build();
+
+        final MicrosoftStsPromptHandler microsoftStsPromptHandler = new MicrosoftStsPromptHandler(promptHandlerParameters);
+
+        Logger.i(TAG, "Handle prompt in AAD login page for enrolling device..");
+        // handle AAD login page
+        microsoftStsPromptHandler.handlePrompt(username, password);
+
+        // click the activate device admin btn
+        final UiObject accessSetupScreen = UiAutomatorUtils.obtainUiObjectWithText("Access Setup");
+        Assert.assertTrue(
+                "CP Enrollment - Access Setup screen appears",
+                accessSetupScreen.exists()
+        );
+
+        // click on BEGIN button to start enroll
+        UiAutomatorUtils.handleButtonClick("com.microsoft.windowsintune.companyportal:id/setup_positive_button");
+
+        // click CONTINUE to ack privacy page
+        UiAutomatorUtils.handleButtonClick("com.microsoft.windowsintune.companyportal:id/ContinueButton");
+
+        UiAutomatorUtils.handleButtonClickForObjectWithText("Accept & continue");
+
+        UiAutomatorUtils.handleButtonClickForObjectWithText("Next");
+
+        UiAutomatorUtils.handleButtonClick("com.microsoft.windowsintune.companyportal:id/setup_positive_button");
+
+        try {
+            Thread.sleep(TimeUnit.SECONDS.toMillis(45));
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        // click on DONE to complete setup
+        UiAutomatorUtils.handleButtonClick(
+                "com.microsoft.windowsintune.companyportal:id/setup_center_button"
+        );
+
+        // Enrollment has been performed successfully
+        enrollmentPerformedSuccessfully = true;
     }
 
     @Override

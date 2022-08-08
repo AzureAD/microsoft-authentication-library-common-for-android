@@ -110,6 +110,26 @@ public class AdbShellUtils {
     }
 
     /**
+     * Enable the app with the given package name
+     *
+     * @param packageName the package name to enable
+     */
+    public static void enablePackage(@NonNull final String packageName) {
+        Logger.i(TAG, "Enable the " + packageName + " App..");
+        executeShellCommand("pm enable " + packageName);
+    }
+
+    /**
+     * Disable the app with the given package name
+     *
+     * @param packageName the package name to disable
+     */
+    public static void disablePackage(@NonNull final String packageName) {
+        Logger.i(TAG, "Disable the " + packageName + " App..");
+        executeShellCommand("pm disable " + packageName);
+    }
+
+    /**
      * Clear the contents of the storage associated to the given package name.
      *
      * @param packageName the package name to clear
