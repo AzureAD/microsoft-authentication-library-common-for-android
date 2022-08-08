@@ -84,4 +84,12 @@ public class BrowserChrome extends App implements IBrowser {
         // press enter on the Keyboard
         device.pressEnter();
     }
+
+    /**
+     * Method used to reload a page in chrome.
+     */
+    public void reloadPage() {
+        UiAutomatorUtils.handleButtonClick("com.android.chrome:id/menu_button");
+        UiAutomatorUtils.handleButtonClick("com.android.chrome:id/button_five");
+    }
 }

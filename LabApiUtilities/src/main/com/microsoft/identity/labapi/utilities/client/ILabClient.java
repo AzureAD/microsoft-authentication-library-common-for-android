@@ -96,7 +96,19 @@ public interface ILabClient {
      * @return boolean showing if the reset was successful
      * @throws LabApiException if an error occurs while password is being reset
      */
-    boolean resetPassword(String upn) throws LabApiException;
+    boolean resetPassword(@NonNull final String upn) throws LabApiException;
+
+    /**
+     * Reset the password for the username given, then reset it back to the original password.
+     * This method allows for repeated reset attempts if previous attempts fail.
+     *
+     * @param upn username of the user that will have their password reset
+     * @param resetAttempts number of attempts to reset the password
+     * @return boolean showing if the reset was successful
+     * @throws LabApiException if an error occurs while password is being reset
+     */
+    boolean resetPassword(@NonNull final String upn,
+                          final int resetAttempts) throws LabApiException;
 
     /**
      * Delete the specified device from AAD using the Lab Api.

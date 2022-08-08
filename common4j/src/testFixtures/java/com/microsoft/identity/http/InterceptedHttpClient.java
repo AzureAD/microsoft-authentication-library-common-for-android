@@ -20,20 +20,39 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.internal.testutils;
+package com.microsoft.identity.http;
 
-import com.microsoft.identity.common.java.interfaces.IHttpClientWrapper;
+import com.microsoft.identity.common.java.net.AbstractHttpClient;
 import com.microsoft.identity.common.java.net.HttpClient;
+import com.microsoft.identity.common.java.net.HttpResponse;
 
+import java.io.IOException;
+import java.net.URL;
+import java.util.Map;
+
+import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.NonNull;
 
 /**
- * Wraps any given {@link HttpClient} with {@link InterceptedHttpClient},
- * allowing it to work with {@link MockHttpClient}.
- * */
-public class InterceptedHttpClientWrapper implements IHttpClientWrapper {
+ * A client that wraps around another client, allowing the use of {@link HttpRequestInterceptor}
+ */
+public class InterceptedHttpClient extends AbstractHttpClient {
+    private final HttpClient mClient;
+
+    public InterceptedHttpClient(@NonNull final HttpClient httpClient) {
+        mClient = httpClient;
+    }
+
     @Override
-    public @NonNull HttpClient wrap(@NonNull final HttpClient client) {
-        return new InterceptedHttpClient(client);
+    public HttpResponse method(@NonNull final HttpMethod httpMethod,
+                               @NonNull final URL requestUrl,
+                               @NonNull final Map<String, String> requestHeaders,
+                               @Nullable final byte[] requestContent) throws IOException {
+        final HttpRequestInterceptor interceptor = MockHttpClient.getInterceptor(httpMethod, requestUrl, requestHeaders, requestContent);
+        if (interceptor == null) {
+            return mClient.method(httpMethod, requestUrl, requestHeaders, requestContent);
+        } else {
+            return interceptor.performIntercept(httpMethod, requestUrl, requestHeaders, requestContent);
+        }
     }
 }

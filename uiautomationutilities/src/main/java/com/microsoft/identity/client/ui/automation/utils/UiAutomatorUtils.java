@@ -289,6 +289,7 @@ public class UiAutomatorUtils {
         final UiObject inputField = obtainUiObjectWithResourceId(resourceId);
 
         try {
+            inputField.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
             inputField.setText(inputText);
             closeKeyboardIfNeeded();
         } catch (final UiObjectNotFoundException e) {
@@ -306,6 +307,7 @@ public class UiAutomatorUtils {
         final UiObject button = obtainUiObjectWithResourceId(resourceId);
 
         try {
+            button.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
             button.click();
         } catch (final UiObjectNotFoundException e) {
             throw new AssertionError(e);

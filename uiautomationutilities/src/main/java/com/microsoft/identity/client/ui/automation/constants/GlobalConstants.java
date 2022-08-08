@@ -20,24 +20,11 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.client.ui.automation.installer;
+package com.microsoft.identity.client.ui.automation.constants;
 
 /**
- * An interface that can be used to install apps on the device during a UI Test.
+ * Class used to hold some constant variables for UI testing automation.
  */
-public interface IAppInstaller {
-
-    /**
-     * Install the supplied app on the device.
-     *
-     * @param appHint The app name or the package name of the app to install
-     */
-    void installApp(final String appHint);
-
-    /**
-     * Updates the supplied app on the device.
-     *
-     * @param appHint The app name or the package name of the app to update
-     */
-    void updateApp(final String appHint);
+public class GlobalConstants {
+    public static final boolean IS_STAY_SIGN_IN_PAGE_EXPECTED = true;
 }
