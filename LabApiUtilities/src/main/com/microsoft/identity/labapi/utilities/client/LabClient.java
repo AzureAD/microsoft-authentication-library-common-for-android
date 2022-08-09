@@ -297,40 +297,43 @@ public class LabClient implements ILabClient {
     @Override
     public boolean deleteDevice(@NonNull final String upn,
                                 @NonNull final String deviceId,
-                                final int numDeleteAttempts,
+                                final int numDeleteAttemptsRemaining,
                                 final long waitTimeBeforeEachDeleteAttempt) throws LabApiException {
-        for (int i = 0; i < numDeleteAttempts; i++) {
-            System.out.printf(Locale.ENGLISH, "Delete device attempt #%d%n", (i + 1));
-            // Lab may not find the device right away so we try every 2 seconds
-            // we do 5 attempts, if that doesn't work then we fail
-            try {
-                Thread.sleep(waitTimeBeforeEachDeleteAttempt);
-            } catch (final InterruptedException e) {
-                e.printStackTrace();
-            }
-
-            try {
-                if (deleteDevice(upn, deviceId)) {
-                    return true;
-                }
-            } catch (final LabApiException labApiException) {
-                // if not the last attempt, then just print the error to console
-                if (i < (numDeleteAttempts - 1)) {
-                    System.out.printf(
-                            Locale.ENGLISH,
-                            "Delete device attempt #%d%n failed: %s", (i + 1),
-                            labApiException
-                    );
-                } else {
-                    // last attempt, just throw the exception back
-                    throw labApiException;
-                }
-            }
-
+        System.out.printf(Locale.ENGLISH, "Delete device attempt remaining #%d%n", (numDeleteAttemptsRemaining));
+        if (numDeleteAttemptsRemaining == 0) {
+            return false; // tried all attempts and failed to delete device
         }
 
-        // there was no error, but device still not deleted
-        return false;
+        try {
+            if (deleteDevice(upn, deviceId)) {
+                return true;
+            }
+        } catch (final LabApiException labApiException) {
+            // if not the last attempt, then just print the error to console
+            if (numDeleteAttemptsRemaining > 1) {
+                System.out.printf(
+                        Locale.ENGLISH,
+                        "Delete device attempt #%d%n failed: %s", (numDeleteAttemptsRemaining),
+                        labApiException
+                );
+            } else {
+                // last attempt, just throw the exception back
+                throw labApiException;
+            }
+        }
+
+        try {
+            Thread.sleep(waitTimeBeforeEachDeleteAttempt);
+        } catch (final InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        return deleteDevice(
+                upn,
+                deviceId,
+                numDeleteAttemptsRemaining - 1,
+                waitTimeBeforeEachDeleteAttempt * 2
+        );
     }
 
     private String getPassword(@NonNull final ConfigInfo configInfo) throws LabApiException {
