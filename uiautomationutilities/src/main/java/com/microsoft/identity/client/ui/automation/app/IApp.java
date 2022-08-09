@@ -53,6 +53,16 @@ public interface IApp {
     void uninstall();
 
     /**
+     * Enable this app.
+     */
+    void enable();
+
+    /**
+     * Disable this app.
+     */
+    void disable();
+
+    /**
      * Handle the first run experience for this app on first time launch.
      */
     void handleFirstRun();

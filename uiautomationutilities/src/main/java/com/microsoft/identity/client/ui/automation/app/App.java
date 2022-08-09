@@ -159,6 +159,16 @@ public abstract class App implements IApp {
     }
 
     @Override
+    public void enable() {
+        AdbShellUtils.enablePackage(packageName);
+    }
+
+    @Override
+    public void disable() {
+        AdbShellUtils.disablePackage(packageName);
+    }
+
+    @Override
     public boolean hasPermission(@NonNull final String permission) {
         return CommonUtils.hasPermission(packageName, permission);
     }
