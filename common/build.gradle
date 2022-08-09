@@ -28,7 +28,7 @@ codeCoverageReport {
     coverage.enabled = enableCodeCoverage
 }
 
-def common4jVersion = "1.0.8-CBATest"
+def common4jVersion = "1.0.9-CBATest"
 if (project.hasProperty("distCommon4jVersion") && project.distCommon4jVersion != '') {
     common4jVersion = project.distCommon4jVersion
 }
