@@ -2,6 +2,7 @@ V.Next
 ----------
 - [PATCH] Add telemetry event for content provider call for getting enrollment id (#1801)
 - [MINOR] Bumped MSAL Broker Protocol version to 9.0, acquireToken/acquireTokenSilent endpoint requires minimum_required_broker_protocol_version of 9.0+ to Send x-ms-PKeyAuth Header to the token endpoint. (#1790)
+- [MINOR] Move some storage classes from broker to common4j (#1809)
 
 Version 6.0.0
 ----------
