@@ -26,7 +26,14 @@ import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings;
 
 import lombok.NonNull;
 
+/**
+ * Telemetry Event to capture details about a content provider call from broker
+ */
 public class ContentProviderCallEvent extends BaseEvent {
+    /**
+     * Constructor for ContentProviderCallEvent
+     * @param contentUri uri for the content provider call
+     */
     public ContentProviderCallEvent(@NonNull final String contentUri){
         super();
         types(TelemetryEventStrings.EventType.CONTENT_PROVIDER_EVENT);
