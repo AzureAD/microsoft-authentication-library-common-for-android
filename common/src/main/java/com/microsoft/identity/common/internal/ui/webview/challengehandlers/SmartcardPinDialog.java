@@ -152,7 +152,10 @@ public class SmartcardPinDialog extends SmartcardDialog {
                 ((AlertDialog)mDialog).getButton(DialogInterface.BUTTON_POSITIVE).setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        mPositiveButtonListener.onClick(pinEditText.getText().toString());
+                        //Avoiding the use of strings for pin.
+                        char[] pin = new char[pinEditText.length()];
+                        pinEditText.getText().getChars(0, pinEditText.length(), pin, 0);
+                        mPositiveButtonListener.onClick(pin);
                     }
                 });
             }
@@ -199,7 +202,7 @@ public class SmartcardPinDialog extends SmartcardDialog {
      * Listener interface for a positive button click.
      */
     public interface PositiveButtonListener {
-        void onClick(@NonNull final String pin);
+        void onClick(@NonNull final char[] pin);
     }
 
     /**

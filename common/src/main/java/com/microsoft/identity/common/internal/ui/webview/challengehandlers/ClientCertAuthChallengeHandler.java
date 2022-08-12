@@ -75,6 +75,7 @@ import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
 
@@ -406,7 +407,7 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
         return new SmartcardPinDialog.PositiveButtonListener() {
             @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
             @Override
-            public void onClick(@NonNull final String pin) {
+            public void onClick(@NonNull final char[] pin) {
                 synchronized (sDeviceLock) {
                     // Need to request a PivSession in order to access certs on YubiKey.
                     getActivePivSessionAsync(request, new IPivSessionCallback() {
@@ -414,7 +415,7 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
                         public void onGetSession(@NonNull PivSession piv) {
                             try {
                                 //Verify PIN and handle results
-                                verifySmartcardPin(pin.toCharArray(), certDetails, request, piv);
+                                verifySmartcardPin(pin, certDetails, request, piv);
                             } catch (final IOException | ApduException | BadResponseException e) {
                                 Logger.error(methodTag, e.getMessage(), e);
                                 //Show general error dialog.
@@ -422,6 +423,8 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
                                 //Emit telemetry for this exception.
                                 Telemetry.emit(new ErrorEvent().putException(e));
                                 request.cancel();
+                                //Clear PIN attempt from local char array.
+                                clearPin(pin);
                             }
 
                         }
@@ -454,6 +457,8 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
             useSmartcardCertForAuth(certDetails.getCertificate(), pin, certDetails.getSlot().getStringAlias(), piv, request);
         } catch (final InvalidPinException e) {
             // An incorrect Pin attempt.
+            //Clear PIN attempt from local char array.
+            clearPin(pin);
             // We need to retrieve the number of pin attempts before proceeding.
             final int pinAttemptsRemaining = piv.getPinAttempts();
             // If the number of attempts is 0, no more attempts will be allowed.
@@ -522,6 +527,8 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
             }
             //PivPrivateKey implements PrivateKey
             final PivPrivateKey pivPrivateKey = (PivPrivateKey) key;
+            //The PIN is now copied in the pivPrivateKey, so clear the local PIN array.
+            clearPin(pin);
             //Cert chain only needs the cert to be used for authentication.
             final X509Certificate[] chain = new X509Certificate[]{cert};
             //Clear current dialog.
@@ -538,6 +545,14 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
             Telemetry.emit(new ErrorEvent().putException(e));
             request.cancel();
         }
+    }
+
+    /**
+     * Sets all chars in the PIN array to null.
+     * @param pin char array containing PIN.
+     */
+    private void clearPin(@NonNull final char[] pin) {
+        Arrays.fill(pin, Character.MIN_VALUE);
     }
 
     /**
