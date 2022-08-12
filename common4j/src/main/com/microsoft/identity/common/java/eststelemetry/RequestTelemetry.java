@@ -95,6 +95,11 @@ public abstract class RequestTelemetry implements IRequestTelemetry {
     private String getPlatformTelemetryHeaderString() {
         final List<String> platformFields;
 
+        mPlatformTelemetry.putIfAbsent(
+                SchemaConstants.Key.PLATFORM_SCHEMA_VERSION,
+                SchemaConstants.CURRENT_PLATFORM_SCHEMA_VERSION
+        );
+
         if (this instanceof CurrentRequestTelemetry) {
             platformFields = SchemaConstants.getCurrentRequestPlatformFields(
                     TelemetryUtils.getBooleanFromString(

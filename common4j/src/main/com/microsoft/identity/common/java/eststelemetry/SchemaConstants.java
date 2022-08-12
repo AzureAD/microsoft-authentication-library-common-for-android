@@ -36,6 +36,9 @@ public class SchemaConstants {
     public static final String SCHEMA_VERSION_KEY = "schema_version";
     public static final String CURRENT_SCHEMA_VERSION = "2";
 
+    // starting from two, as we were sending platform telemetry prior to it being versioned
+    public static final String CURRENT_PLATFORM_SCHEMA_VERSION = "2";
+
     public static final String CURRENT_REQUEST_HEADER_NAME = "x-client-current-telemetry";
     public static final String LAST_REQUEST_HEADER_NAME = "x-client-last-telemetry";
 
@@ -56,6 +59,8 @@ public class SchemaConstants {
         public static final String FRT_STATUS = TelemetryEventStrings.Key.FRT_STATUS;
         public static final String MRRT_STATUS = TelemetryEventStrings.Key.MRRT_STATUS;
         public static final String ALL_TELEMETRY_DATA_SENT = "is_all_telemetry_data_sent";
+
+        public static final String PLATFORM_SCHEMA_VERSION = "platform_schema_version";
 
         // flw and multiple reg fields
         // More details here:
@@ -130,6 +135,7 @@ public class SchemaConstants {
      * Failure do so will break the schema.
      */
     private static final List<String> lastRequestPlatformFields = Arrays.asList(
+            Key.PLATFORM_SCHEMA_VERSION,
             SchemaConstants.Key.ALL_TELEMETRY_DATA_SENT
     );
 
@@ -187,6 +193,8 @@ public class SchemaConstants {
      */
     static List<String> getCurrentRequestPlatformFields(final boolean isSharedDeviceScenario) {
         final List<String> consolidatedPlatformFields = new ArrayList<>();
+
+        consolidatedPlatformFields.add(Key.PLATFORM_SCHEMA_VERSION);
 
         if (isSharedDeviceScenario) {
             consolidatedPlatformFields.addAll(currentRequestSharedFlwPlatformFieldsForAndroidAndiOSBroker);
