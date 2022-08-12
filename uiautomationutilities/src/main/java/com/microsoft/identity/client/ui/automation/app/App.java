@@ -46,7 +46,10 @@ public abstract class App implements IApp {
     private final static String TAG = App.class.getSimpleName();
 
     @Setter
-    private IAppInstaller appInstaller;
+    private final IAppInstaller appInstaller;
+
+    @Setter
+    private final IAppInstaller updateAppInstaller;
 
     private final String packageName;
 
@@ -54,6 +57,7 @@ public abstract class App implements IApp {
     private String appName;
 
     protected String localApkFileName = null;
+    protected String localUpdateApkFileName = null;
 
     /**
      * Indicates whether the first run experience should be handled in the UI. This value can
@@ -66,6 +70,7 @@ public abstract class App implements IApp {
     public App(@NonNull final String packageName) {
         this.packageName = packageName;
         this.appInstaller = new PlayStore();
+        this.updateAppInstaller = new LocalApkInstaller();
     }
 
     public App(@NonNull final String packageName, @NonNull final String appName) {
@@ -76,6 +81,8 @@ public abstract class App implements IApp {
     public App(@NonNull final String packageName, @NonNull final IAppInstaller appInstaller) {
         this.appInstaller = appInstaller;
         this.packageName = packageName;
+        // update installer is PlayStore by default
+        this.updateAppInstaller = new LocalApkInstaller();
     }
 
     public App(@NonNull final String packageName,
@@ -84,11 +91,23 @@ public abstract class App implements IApp {
         this.appInstaller = appInstaller;
         this.packageName = packageName;
         this.appName = appName;
+        // update installer is PlayStore by default
+        this.updateAppInstaller = new LocalApkInstaller();
+    }
+
+    public App(@NonNull final String packageName,
+               @NonNull final String appName,
+               @NonNull final IAppInstaller appInstaller,
+               @NonNull final IAppInstaller updateAppInstaller) {
+        this.appInstaller = appInstaller;
+        this.packageName = packageName;
+        this.appName = appName;
+        this.updateAppInstaller = updateAppInstaller;
     }
 
     @Override
     public void install() {
-        //TODO: make it build time configurable to specify the installer that should be used.
+        // TODO: make it build time configurable to specify the installer that should be used.
         // Ideally we can specify different installers on app basis
         if (appInstaller instanceof LocalApkInstaller && !TextUtils.isEmpty(localApkFileName)) {
             Logger.i(TAG, "Installing the " + this.appName + " from local apk..");
@@ -97,7 +116,6 @@ public abstract class App implements IApp {
             Logger.i(TAG, "Installing the " + this.appName + " from Play Store..");
             appInstaller.installApp(packageName);
         }
-
         // the app is just installed, first run should be handled
         // this value can (should) be changed to false by child classes as appropriate
         shouldHandleFirstRun = true;
@@ -117,6 +135,19 @@ public abstract class App implements IApp {
     }
 
     @Override
+    public void update() {
+        String appHint;
+        if (updateAppInstaller instanceof LocalApkInstaller && !TextUtils.isEmpty(localUpdateApkFileName)) {
+            Logger.i(TAG, "Updating the " + this.appName + " from local apk..");
+            appHint = localUpdateApkFileName;
+        } else {
+            Logger.i(TAG, "Updating the " + this.appName + " from Play Store..");
+            appHint = packageName;
+        }
+        updateAppInstaller.updateApp(appHint);
+    }
+
+    @Override
     public void clear() {
         AdbShellUtils.clearPackage(packageName);
     }
@@ -125,6 +156,16 @@ public abstract class App implements IApp {
     public void uninstall() {
         AdbShellUtils.removePackage(packageName);
         shouldHandleFirstRun = true;
+    }
+
+    @Override
+    public void enable() {
+        AdbShellUtils.enablePackage(packageName);
+    }
+
+    @Override
+    public void disable() {
+        AdbShellUtils.disablePackage(packageName);
     }
 
     @Override

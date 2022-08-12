@@ -597,7 +597,7 @@ public final class AuthenticationConstants {
          * The newest Msal-To-Broker protocol version.
          * @see <a href="ttps://identitydivision.visualstudio.com/DevEx/_git/AuthLibrariesApiReview?path=/%5BAndroid%5D%20Broker%20API/broker_protocol_versions.md">Android Auth Broker Protocol Versions</a>
          */
-        public static final String MSAL_TO_BROKER_PROTOCOL_VERSION_CODE = "8.0";
+        public static final String MSAL_TO_BROKER_PROTOCOL_VERSION_CODE = "9.0";
 
         /**
          * A client id for requesting the SSO token.
@@ -1158,6 +1158,11 @@ public final class AuthenticationConstants {
          * String to return a true if the request succeeded, false otherwise.
          */
         public static final String BROKER_REQUEST_V2_SUCCESS = "broker_request_v2_success";
+
+        /**
+         * String to send true if the request should send the PkeyAuth header to the token endpoint, false otherwise.
+         */
+        public static final String SHOULD_SEND_PKEYAUTH_HEADER_TO_THE_TOKEN_ENDPOINT = "should.send.pkeyauth.header";
 
         /**
          * String for ssl prefix.

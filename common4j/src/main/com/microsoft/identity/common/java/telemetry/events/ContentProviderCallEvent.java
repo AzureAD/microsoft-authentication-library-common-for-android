@@ -1,3 +1,4 @@
+// Copyright (c) Microsoft Corporation.
 // All rights reserved.
 //
 // This code is licensed under the MIT License.
@@ -19,24 +20,24 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java.telemetry.relay;
+package com.microsoft.identity.common.java.telemetry.events;
 
-import javax.annotation.Nullable;
+import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings;
 
 import lombok.NonNull;
 
 /**
- * An interface that describes an event filter for a telemetry relay client {@link AbstractTelemetryRelayClient}
- * @param <T> the event data
+ * Telemetry Event to capture details about a content provider call from broker
  */
-public interface ITelemetryEventFilter<T> {
-
+public class ContentProviderCallEvent extends BaseEvent {
     /**
-     * Invoked when a new event is captured by the telemetry.
-     * @param telemetryEvent the telemetry event data
-     *
-     * @return an event with filtered fields. Return null if the event is to be ignored completely.
+     * Constructor for ContentProviderCallEvent
+     * @param contentUri uri for the content provider call
      */
-    @Nullable
-    T apply(@NonNull final T telemetryEvent);
+    public ContentProviderCallEvent(@NonNull final String contentUri){
+        super();
+        types(TelemetryEventStrings.EventType.CONTENT_PROVIDER_EVENT);
+        names(TelemetryEventStrings.Event.CONTENT_PROVIDER_CALL_EVENT);
+        put(TelemetryEventStrings.Key.CONTENT_PROVIDER_URI, contentUri);
+    }
 }
