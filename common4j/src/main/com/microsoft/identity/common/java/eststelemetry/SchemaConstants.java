@@ -58,6 +58,8 @@ public class SchemaConstants {
         public static final String ALL_TELEMETRY_DATA_SENT = "is_all_telemetry_data_sent";
 
         // flw and multiple reg fields
+        // More details here:
+        // https://dev.azure.com/IdentityDivision/DevEx/_git/AuthLibrariesApiReview/pullrequest/5168
         public static final String IS_SHARED_DEVICE = "isSharedScenario";
         public static final String REG_TYPE = "reg_type";
         public static final String REG_SOURCE = "reg_source";
