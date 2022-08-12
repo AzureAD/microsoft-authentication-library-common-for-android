@@ -157,7 +157,7 @@ public class EstsTelemetry {
      *
      * @param telemetry a map containing telemetry fields and their values
      */
-    public void emit(final Map<String, String> telemetry) {
+    public void emit(@Nullable final Map<String, String> telemetry) {
         if (telemetry == null) {
             return;
         }
@@ -174,7 +174,7 @@ public class EstsTelemetry {
      * @param key   the key associated to the telemetry field
      * @param value the value associated to the telemetry field
      */
-    public void emit(final String key, final String value) {
+    public void emit(@Nullable final String key, final String value) {
         if (StringUtil.isNullOrEmpty(key)) {
             return;
         }
@@ -196,7 +196,7 @@ public class EstsTelemetry {
      * @param key   the key associated to the telemetry field
      * @param value the value associated to the telemetry field
      */
-    public void emit(final String key, final int value) {
+    public void emit(@Nullable final String key, final int value) {
         emit(key, String.valueOf(value));
     }
 
@@ -207,7 +207,7 @@ public class EstsTelemetry {
      * @param key   the key associated to the telemetry field
      * @param value the value associated to the telemetry field
      */
-    public void emit(final String key, final long value) {
+    public void emit(@Nullable final String key, final long value) {
         emit(key, String.valueOf(value));
     }
 
@@ -218,7 +218,7 @@ public class EstsTelemetry {
      * @param key   the key associated to the telemetry field
      * @param value the value associated to the telemetry field
      */
-    public void emit(final String key, final boolean value) {
+    public void emit(@Nullable final String key, final boolean value) {
         emit(key, TelemetryUtils.getSchemaCompliantStringFromBoolean(value));
     }
 
@@ -228,7 +228,7 @@ public class EstsTelemetry {
      *
      * @param apiId the api id to emit to telemetry
      */
-    public void emitApiId(final String apiId) {
+    public void emitApiId(@Nullable final String apiId) {
         emit(SchemaConstants.Key.API_ID, apiId);
     }
 
