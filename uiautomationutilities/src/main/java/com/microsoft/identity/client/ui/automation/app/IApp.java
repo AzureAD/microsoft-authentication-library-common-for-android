@@ -38,6 +38,11 @@ public interface IApp {
     void launch();
 
     /**
+     * Update this app on the device.
+     */
+    void update();
+
+    /**
      * Clear (storage) associated to this app on the device.
      */
     void clear();
@@ -46,6 +51,16 @@ public interface IApp {
      * Remove this app from the device.
      */
     void uninstall();
+
+    /**
+     * Enable this app.
+     */
+    void enable();
+
+    /**
+     * Disable this app.
+     */
+    void disable();
 
     /**
      * Handle the first run experience for this app on first time launch.

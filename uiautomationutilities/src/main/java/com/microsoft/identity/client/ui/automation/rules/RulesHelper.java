@@ -64,8 +64,11 @@ public class RulesHelper {
      * @return a {@link RuleChain} object
      */
     public static RuleChain getPrimaryRules(@Nullable final ITestBroker broker, Timeout timeout) {
+        Log.i(TAG, "Adding UncaughtExceptionHandlerRule");
+        RuleChain ruleChain = RuleChain.outerRule(new UncaughtExceptionHandlerRule());
+
         Log.i(TAG, "Adding AutomationLoggingRule");
-        RuleChain ruleChain = RuleChain.outerRule(new AutomationLoggingRule());
+        ruleChain = ruleChain.around(new AutomationLoggingRule());
 
         Log.i(TAG, "Adding RetryTestRule");
         ruleChain = ruleChain.around(new RetryTestRule());

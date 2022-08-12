@@ -20,45 +20,48 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.internal.testutils;
+package com.microsoft.identity.http;
 
-import androidx.annotation.Nullable;
-
-import com.microsoft.identity.common.java.net.AbstractHttpClient;
 import com.microsoft.identity.common.java.net.HttpClient;
 import com.microsoft.identity.common.java.net.HttpResponse;
-import com.microsoft.identity.common.java.net.UrlConnectionHttpClient;
-import com.microsoft.identity.internal.testutils.HttpRequestInterceptor;
-import com.microsoft.identity.internal.testutils.MockHttpClient;
 
 import java.io.IOException;
 import java.net.URL;
 import java.util.Map;
 
-import javax.net.ssl.SSLContext;
-
+import edu.umd.cs.findbugs.annotations.Nullable;
+import lombok.AllArgsConstructor;
 import lombok.NonNull;
 
 /**
- * A client that wraps around another client, allowing the use of {@link HttpRequestInterceptor}
+ * An {@link HttpRequestInterceptor} that proceeds with the original request and allow to re-write
+ * the received http response.
  */
-public class InterceptedHttpClient extends AbstractHttpClient {
-    private final HttpClient mClient;
+@AllArgsConstructor
+public abstract class HttpResponseRewriter implements HttpRequestInterceptor {
 
-    public InterceptedHttpClient(@NonNull final HttpClient httpClient) {
-        mClient = httpClient;
-    }
+    private final HttpClient mOriginalClient;
 
     @Override
-    public HttpResponse method(@NonNull final HttpMethod httpMethod,
-                               @NonNull final URL requestUrl,
-                               @NonNull final Map<String, String> requestHeaders,
-                               @Nullable final byte[] requestContent) throws IOException {
-        final HttpRequestInterceptor interceptor = MockHttpClient.getInterceptor(httpMethod, requestUrl, requestHeaders, requestContent);
-        if (interceptor == null) {
-            return mClient.method(httpMethod, requestUrl, requestHeaders, requestContent);
-        } else {
-            return interceptor.performIntercept(httpMethod, requestUrl, requestHeaders, requestContent);
-        }
+    public HttpResponse performIntercept(@NonNull final HttpClient.HttpMethod httpMethod,
+                                         @NonNull final URL requestUrl,
+                                         @NonNull final Map<String, String> requestHeaders,
+                                         @Nullable final byte[] requestContent) throws IOException {
+        final HttpResponse originalResponse = mOriginalClient.method(
+                httpMethod,
+                requestUrl,
+                requestHeaders,
+                requestContent
+        );
+
+        return rewriteHttpResponse(originalResponse);
     }
+
+    /**
+     * Rewrites the received HTTP response for this request.
+     *
+     * @param originalResponse the original HTTP response
+     * @return the modified HTTP response
+     */
+    public abstract HttpResponse rewriteHttpResponse(@NonNull final HttpResponse originalResponse);
 }
