@@ -548,7 +548,7 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
     }
 
     /**
-     * Sets all chars in the PIN array to null.
+     * Sets all chars in the PIN array to 0.
      * @param pin char array containing PIN.
      */
     private void clearPin(@NonNull final char[] pin) {

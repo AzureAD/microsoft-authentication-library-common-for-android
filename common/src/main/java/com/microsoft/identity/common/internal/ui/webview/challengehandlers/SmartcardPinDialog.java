@@ -153,7 +153,7 @@ public class SmartcardPinDialog extends SmartcardDialog {
                     @Override
                     public void onClick(View v) {
                         //Avoiding the use of strings for pin.
-                        char[] pin = new char[pinEditText.length()];
+                        final char[] pin = new char[pinEditText.length()];
                         pinEditText.getText().getChars(0, pinEditText.length(), pin, 0);
                         mPositiveButtonListener.onClick(pin);
                     }
