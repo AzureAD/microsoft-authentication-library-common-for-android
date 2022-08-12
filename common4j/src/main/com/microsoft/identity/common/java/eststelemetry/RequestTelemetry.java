@@ -97,7 +97,7 @@ public abstract class RequestTelemetry implements IRequestTelemetry {
 
         if (this instanceof CurrentRequestTelemetry) {
             platformFields = SchemaConstants.getCurrentRequestPlatformFields(
-                    TelemetryUtils.getBooleanFromSchemaString(
+                    TelemetryUtils.getBooleanFromString(
                             mPlatformTelemetry.get(SchemaConstants.Key.IS_SHARED_DEVICE)
                     )
             );

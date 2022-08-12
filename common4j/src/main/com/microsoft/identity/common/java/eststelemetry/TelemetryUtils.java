@@ -30,7 +30,7 @@ import lombok.NonNull;
 
 public class TelemetryUtils {
 
-    static boolean getBooleanFromSchemaString(@Nullable final String val) {
+    static boolean getBooleanFromString(@Nullable final String val) {
         return val != null && val.equals(SchemaConstants.Value.TRUE);
     }
 
