@@ -45,6 +45,8 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
 
     private final static String TAG = AadLoginComponentHandler.class.getSimpleName();
 
+    public final static String ACCOUNT_PICKER_DID_NOT_APPEAR_ERROR = "Account picker screen did not show up";
+
     @Override
     public void handleEmailField(@NonNull final String username) {
         UiAutomatorUtils.handleInput("i0116", username);
@@ -78,7 +80,7 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
         final UiObject accountPicker = UiAutomatorUtils.obtainUiObjectWithResourceId("tilesHolder");
 
         if (!accountPicker.waitForExists(FIND_UI_ELEMENT_TIMEOUT)) {
-            fail("Account picker screen did not show up");
+            fail(ACCOUNT_PICKER_DID_NOT_APPEAR_ERROR);
         }
 
         final UiObject account = uiDevice.findObject(new UiSelector()
@@ -103,7 +105,7 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
         Logger.i(TAG, "Confirm Consent on Consent Page Received..");
         final UiObject consentScreen = getConsentScreen();
         Assert.assertTrue(
-                "Consent screen appears",
+                "Consent screen does not appear",
                 consentScreen.waitForExists(FIND_UI_ELEMENT_TIMEOUT)
         );
     }
