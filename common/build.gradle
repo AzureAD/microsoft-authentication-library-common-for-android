@@ -28,7 +28,7 @@ codeCoverageReport {
     coverage.enabled = enableCodeCoverage
 }
 
-def common4jVersion = "3.0.1-RC1"
+def common4jVersion = "3.0.1"
 if (project.hasProperty("distCommon4jVersion") && project.distCommon4jVersion != '') {
     common4jVersion = project.distCommon4jVersion
 }
