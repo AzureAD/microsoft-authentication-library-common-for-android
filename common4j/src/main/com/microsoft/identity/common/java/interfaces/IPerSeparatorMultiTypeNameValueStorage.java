@@ -46,6 +46,9 @@ import lombok.NonNull;
 public interface IPerSeparatorMultiTypeNameValueStorage<T> {
     /**
      * Gets a {@link String} value from the storage.
+     * A "null" will be returned in the following cases:
+     * - separator not found
+     * - name not found
      *
      * @param separator the key to use for storage separation
      * @param name      A name associated to the value
