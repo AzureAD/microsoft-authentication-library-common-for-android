@@ -1,5 +1,6 @@
 V.Next
 ----------
+- [PATCH] Fix an issue where incorrect authority url is returned after cloud discovery is set. (#1820)
 - [PATCH] Add telemetry event for content provider call for getting enrollment id (#1801)
 - [MINOR] Move some storage classes from broker to common4j (#1809)
 
