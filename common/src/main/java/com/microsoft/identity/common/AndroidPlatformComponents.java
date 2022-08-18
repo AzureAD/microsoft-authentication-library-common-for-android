@@ -295,7 +295,7 @@ public class AndroidPlatformComponents implements IPlatformComponents {
                 SharedPreferences.Editor editor = sharedPreferences.edit();
 
                 for (Map.Entry<String, Long> keyValuePair : keyValuePairs.entrySet()) {
-                    editor.putLong(keyValuePair.getKey(), keyValuePair.getValue());
+                    editor.putString(keyValuePair.getKey(), keyValuePair.getValue().toString());
                 }
 
                 editor.apply();

@@ -149,6 +149,11 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
 
         for (Credential cred : credentials)
         {
+            if (cred == null)
+            {
+                continue;
+            }
+
             final String cacheKey = mCacheValueDelegate.generateCacheKey(cred);
             Logger.verbosePII(TAG, "Generated cache key: [" + cacheKey + "]");
 
