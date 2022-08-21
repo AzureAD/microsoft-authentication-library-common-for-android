@@ -2,6 +2,7 @@ V.Next
 ----------
 - [PATCH] Add telemetry event for content provider call for getting enrollment id (#1801)
 - [MINOR] Move some storage classes from broker to common4j (#1809)
+- [MINOR] ESTS Telemetry changes to capture data around FLW and Multiple WPJ (#1799)
 
 Version 6.0.1
 ----------
