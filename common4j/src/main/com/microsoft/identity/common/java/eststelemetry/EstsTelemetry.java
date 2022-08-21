@@ -31,7 +31,6 @@ import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.logging.DiagnosticContext;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.result.ILocalAuthenticationResult;
-import com.microsoft.identity.common.java.util.SchemaUtil;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.util.ported.InMemoryStorage;
 
@@ -102,7 +101,7 @@ public class EstsTelemetry {
     }
 
     //@VisibleForTesting
-    public synchronized void clear(){
+    public synchronized void clear() {
         mTelemetryMap.clear();
         mSentFailedRequests.clear();
         if (mLastRequestTelemetryCache != null) {
@@ -184,8 +183,14 @@ public class EstsTelemetry {
         final CurrentRequestTelemetry currentTelemetryInstance = getCurrentTelemetryInstance(correlationId);
         if (currentTelemetryInstance != null) {
             currentTelemetryInstance.put(key, compliantValueString);
-        } else if (mSupplementalTelemetryDataCache != null && SchemaConstants.isOfflineEmitAllowedForThisField(key)) {
-            mSupplementalTelemetryDataCache.put(key, compliantValueString);
+        } else {
+            emitToSupplementalTelemetryCache(key, compliantValueString);
+        }
+    }
+
+    private synchronized void emitToSupplementalTelemetryCache(@NonNull final String key, final String value) {
+        if (mSupplementalTelemetryDataCache != null && SchemaConstants.isOfflineEmitAllowedForThisField(key)) {
+            mSupplementalTelemetryDataCache.put(key, value);
         }
     }
 
@@ -427,11 +432,15 @@ public class EstsTelemetry {
         }
 
         // we are collecting telemetry so now add these to primary Map
+        addFromSupplementalTelemetryToCurrentTelemetry();
+
+        return currentTelemetry.getCompleteHeaderString();
+    }
+
+    private synchronized void addFromSupplementalTelemetryToCurrentTelemetry() {
         if (mSupplementalTelemetryDataCache != null) {
             EstsTelemetry.getInstance().emit(mSupplementalTelemetryDataCache.getAll());
         }
-
-        return currentTelemetry.getCompleteHeaderString();
     }
 
     /**
