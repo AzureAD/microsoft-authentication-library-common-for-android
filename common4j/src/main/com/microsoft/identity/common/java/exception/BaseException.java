@@ -75,6 +75,10 @@ public class BaseException extends Exception implements IErrorInformation, ITele
     @Nullable
     private String mUsername;
 
+    // The home account id of the account that owns the flow.
+    @Nullable
+    private String mHomeAccountId;
+
     private final List<Map<String, String>> mTelemetry = new ArrayList<>();
 
     /**
@@ -205,6 +209,15 @@ public class BaseException extends Exception implements IErrorInformation, ITele
 
     public void setUsername(@NonNull final String username) {
         this.mUsername = username;
+    }
+
+    @Nullable
+    public String getHomeAccountId() {
+        return mHomeAccountId;
+    }
+
+    public void setHomeAccountId(@NonNull final String homeAccountId) {
+        this.mHomeAccountId = homeAccountId;
     }
 
     public String getExceptionName() {
