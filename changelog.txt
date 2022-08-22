@@ -1,5 +1,6 @@
 V.Next
 ----------
+- [PATCH] Add homeAccountId to BaseException (#1822)
 - [PATCH] Add telemetry event for content provider call for getting enrollment id (#1801)
 - [MINOR] Move some storage classes from broker to common4j (#1809)
 
