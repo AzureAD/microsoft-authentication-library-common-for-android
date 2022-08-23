@@ -1405,7 +1405,9 @@ public final class AuthenticationConstants {
             BROKER_SET_FLIGHTS(BROKER_API_SET_FLIGHTS_PATH, BROKER_VERSION_2, null),
             BROKER_GET_FLIGHTS(BROKER_API_GET_FLIGHTS_PATH, BROKER_VERSION_2, null),
             GET_SSO_TOKEN(GET_SSO_TOKEN_PATH, null, VERSION_7),
-            UNKNOWN(null, null, null)
+            UNKNOWN(null, null, null),
+            // WPJ
+            WPJ_V1(MSAL_HELLO_PATH, null, null),
             ;
             /**
              * The content provider path that the API exists behind.

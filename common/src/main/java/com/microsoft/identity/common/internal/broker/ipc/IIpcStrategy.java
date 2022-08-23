@@ -16,7 +16,8 @@ public interface IIpcStrategy {
         BOUND_SERVICE("bound_service"),
         ACCOUNT_MANAGER_ADD_ACCOUNT("account_manager_add_account"),
         CONTENT_PROVIDER("content_provider"),
-        LEGACY_ACCOUNT_MANAGER_FOR_BROKER_API("legacy_account_manager_for_broker_api");
+        LEGACY_ACCOUNT_MANAGER_FOR_BROKER_API("legacy_account_manager_for_broker_api"),
+        LEGACY_ACCOUNT_AUTHENTICATOR_FOR_WPJ_API("legacy_account_authenticator_for_wpj_api");
 
         final String name;
 

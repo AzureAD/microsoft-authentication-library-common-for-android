@@ -56,7 +56,7 @@ public class BrokerOperationBundle {
 
     @Getter
     @Accessors(prefix = "m")
-    public enum Operation {
+    public enum Operation implements IOperation {
         MSAL_HELLO(API.MSAL_HELLO, BrokerAccountManagerOperation.HELLO),
         MSAL_GET_INTENT_FOR_INTERACTIVE_REQUEST(API.ACQUIRE_TOKEN_INTERACTIVE, BrokerAccountManagerOperation.GET_INTENT_FOR_INTERACTIVE_REQUEST),
         MSAL_ACQUIRE_TOKEN_SILENT(API.ACQUIRE_TOKEN_SILENT, BrokerAccountManagerOperation.ACQUIRE_TOKEN_SILENT),
@@ -84,7 +84,7 @@ public class BrokerOperationBundle {
     }
 
     @Getter
-    @NonNull final private Operation operation;
+    @NonNull final private IOperation operation;
 
     @Getter
     @NonNull final private String targetBrokerAppPackageName;
