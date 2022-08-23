@@ -163,8 +163,14 @@ public abstract class BoundServiceClient<T extends IInterface> {
      * Disconnects (unbinds) from the service.
      */
     public void disconnect() {
+        final String methodTag = TAG + ":disconnect";
         if (mHasStartedBinding) {
-            mContext.unbindService(mConnection);
+            try {
+                mContext.unbindService(mConnection);
+            } catch (IllegalArgumentException e) {
+                final String errorDescription = "Error occurred while unbinding bound Service with " + getClass().getSimpleName();
+                Logger.error(methodTag, errorDescription, e);
+            }
             mHasStartedBinding = false;
         }
     }
