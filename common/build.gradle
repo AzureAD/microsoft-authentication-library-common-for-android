@@ -90,6 +90,9 @@ android {
             exclude 'com/microsoft/identity/common/integration'
             exclude 'com/microsoft/identity/common/ropc'
         }
+        unitTests {
+            includeAndroidResources = true
+        }
     }
 
     flavorDimensions "main"

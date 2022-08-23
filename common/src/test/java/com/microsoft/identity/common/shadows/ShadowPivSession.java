@@ -1,5 +1,7 @@
 package com.microsoft.identity.common.shadows;
 
+import static com.yubico.yubikit.core.smartcard.SW.FILE_NOT_FOUND;
+
 import android.util.Log;
 
 import com.yubico.yubikit.core.application.ApplicationNotAvailableException;
@@ -31,14 +33,6 @@ public class ShadowPivSession {
         mCardAuth = null;
     }
 
-    /**
-     * Writes an X.509 certificate to a slot on the YubiKey.
-     *
-     * @param slot        Key reference '9A', '9C', '9D', or '9E'. {@link Slot}.
-     * @param certificate certificate to write
-     * @throws IOException   in case of connection error
-     * @throws ApduException in case of an error response from the YubiKey
-     */
     @Implementation
     public void putCertificate(Slot slot, X509Certificate certificate) throws IOException, ApduException {
         if (slot == Slot.AUTHENTICATION) {
@@ -52,27 +46,35 @@ public class ShadowPivSession {
         } //else it isn't one of the 4 applicable slots, so do nothing.
     }
 
-    /**
-     * Reads the X.509 certificate stored in a slot.
-     *
-     * @param slot Key reference '9A', '9C', '9D', or '9E'. {@link Slot}.
-     * @return certificate instance
-     * @throws IOException          in case of connection error
-     * @throws ApduException        in case of an error response from the YubiKey
-     * @throws BadResponseException in case of incorrect YubiKey response
-     */
     @Implementation
     public X509Certificate getCertificate(Slot slot) throws IOException, ApduException, BadResponseException {
         if (slot == Slot.AUTHENTICATION) {
+            if (mAuthentication == null) {
+                throw new ApduException(FILE_NOT_FOUND);
+            }
             return mAuthentication;
         } else if (slot == Slot.SIGNATURE) {
+            if (mSignature == null) {
+                throw new ApduException(FILE_NOT_FOUND);
+            }
             return mSignature;
         } else if (slot == Slot.KEY_MANAGEMENT) {
+            if (mKeyManagement == null) {
+                throw new ApduException(FILE_NOT_FOUND);
+            }
             return mKeyManagement;
         } else if (slot == Slot.CARD_AUTH) {
+            if (mCardAuth == null) {
+                throw new ApduException(FILE_NOT_FOUND);
+            }
             return mCardAuth;
         } else {
             return null;
         }
+    }
+
+    @Implementation
+    public int getPinAttempts() throws IOException, ApduException {
+        return 3;
     }
 }

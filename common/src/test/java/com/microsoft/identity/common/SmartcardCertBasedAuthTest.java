@@ -1,9 +1,10 @@
 package com.microsoft.identity.common;
 
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity;
-import com.microsoft.identity.common.internal.providers.oauth2.WebViewAuthorizationFragment;
+import com.microsoft.identity.common.internal.ui.DualScreenActivity;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.ClientCertAuthChallengeHandler;
 import com.microsoft.identity.common.shadows.ShadowPivSession;
+import com.microsoft.identity.common.shadows.ShadowUsbSmartCardConnection;
+import com.microsoft.identity.common.shadows.ShadowUsbYubiKeyDevice;
 import com.yubico.yubikit.core.Transport;
 import com.yubico.yubikit.core.application.ApplicationNotAvailableException;
 import com.yubico.yubikit.core.application.BadResponseException;
@@ -23,7 +24,6 @@ import org.robolectric.android.controller.ActivityController;
 import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowAlertDialog;
 import org.robolectric.shadows.ShadowUsbManager;
-import static org.robolectric.RuntimeEnvironment.application;
 
 import java.io.IOException;
 import java.math.BigInteger;
@@ -40,7 +40,6 @@ import java.security.cert.CertificateExpiredException;
 import java.security.cert.CertificateNotYetValidException;
 import java.security.cert.X509Certificate;
 import java.util.Date;
-import java.util.List;
 import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
@@ -53,8 +52,6 @@ import static org.mockito.Mockito.when;
 import static org.robolectric.Shadows.shadowOf;
 
 import androidx.annotation.Nullable;
-import androidx.lifecycle.Lifecycle;
-import androidx.test.core.app.ActivityScenario;
 import androidx.test.core.app.ApplicationProvider;
 
 import android.app.Activity;
@@ -64,13 +61,13 @@ import android.content.Intent;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
 import android.webkit.ClientCertRequest;
-import android.webkit.WebView;
 
 @RunWith(RobolectricTestRunner.class)
-@Config(shadows={ShadowUsbManager.class, ShadowPivSession.class})
+@Config(shadows={ShadowUsbManager.class, ShadowUsbSmartCardConnection.class, ShadowUsbYubiKeyDevice.class, ShadowPivSession.class})
 public class SmartcardCertBasedAuthTest {
 
     final int YUBICO_VENDOR_ID = 0x1050;
+    final int YUBICO_PRODUCT_ID = 0x0407;
 
     private UsbManager usbManager;
 
@@ -84,34 +81,19 @@ public class SmartcardCertBasedAuthTest {
 
         when(usbDevice.getDeviceName()).thenReturn("MockYubiKey");
         when(usbDevice.getVendorId()).thenReturn(YUBICO_VENDOR_ID);
+        when(usbDevice.getProductId()).thenReturn(YUBICO_PRODUCT_ID);
     }
 
     @Test
-    public void testAddUsbYubiKeyDevice() {
-        //ActivityController<AuthorizationActivity> controller = Robolectric.buildActivity(AuthorizationActivity.class);
-        //controller.setup();
-        //AuthorizationActivity activity = controller.get();
-
-        //set up ClientCertAuthChallengeHandler
-/*        try(ActivityScenario<AuthorizationActivity> scenario = ActivityScenario.launch(AuthorizationActivity.class)) {
-            scenario.moveToState(Lifecycle.State.RESUMED);
-            scenario.onActivity(new ActivityScenario.ActivityAction<AuthorizationActivity>() {
-                @Override
-                public void perform(AuthorizationActivity activity) {
-                    ClientCertAuthChallengeHandler clientCertAuthChallengeHandler = new ClientCertAuthChallengeHandler(activity);
-                    assertFalse(usbManager.getDeviceList().values().isEmpty());
-                }
-            });
-        }*/
-        //ClientCertAuthChallengeHandler clientCertAuthChallengeHandler = new ClientCertAuthChallengeHandler(Robolectric.setupActivity(Activity.class));
-        ActivityController<Activity> controller = Robolectric.buildActivity(Activity.class);
+    public void testNoCertsOnYubiKey() {
+        ActivityController<DualScreenActivity> controller = Robolectric.buildActivity(DualScreenActivity.class);
         controller.setup(); // Moves Activity to RESUMED state
         Activity activity = controller.get();
-        ClientCertAuthChallengeHandler clientCertAuthChallengeHandler = new ClientCertAuthChallengeHandler(activity);
-        //add to usbmanager?
-        //application.sendBroadcast(new Intent(UsbManager.ACTION_USB_PORT_CHANGED));
+        //For testing, always add device before initializing ClientCertAuthChallengeHandler.
+        //Broadcasting that a Usb was connected (UsbManager.ACTION_USB_DEVICE_ATTACHED) doesn't work here for some reason.
         shadowOf(usbManager).addOrUpdateUsbDevice(usbDevice, true);
-        application.sendBroadcast(new Intent(UsbManager.ACTION_USB_DEVICE_ATTACHED));
+        assertFalse(usbManager.getDeviceList().values().isEmpty());
+
         ClientCertRequest clientCertRequest = new ClientCertRequest() {
             @Nullable
             @Override
@@ -150,12 +132,12 @@ public class SmartcardCertBasedAuthTest {
 
             }
         };
+        ClientCertAuthChallengeHandler clientCertAuthChallengeHandler = new ClientCertAuthChallengeHandler(activity);
         clientCertAuthChallengeHandler.processChallenge(clientCertRequest);
-        //assertFalse(usbManager.getDeviceList().values().isEmpty());
-        List<Dialog> dialogs = ShadowAlertDialog.getShownDialogs();
-        assertEquals(1, dialogs.size());
 
-
+        Dialog dialog = ShadowAlertDialog.getLatestDialog();
+        assertNotNull(dialog);
+        assertTrue(dialog.isShowing());
     }
 
     @Test
