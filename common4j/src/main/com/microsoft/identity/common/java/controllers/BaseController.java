@@ -280,7 +280,7 @@ public abstract class BaseController {
                     final AzureActiveDirectoryAuthority requestAuthority = (AzureActiveDirectoryAuthority) interactiveTokenCommandParameters.getAuthority();
                     ((MicrosoftStsAuthorizationRequest.Builder) builder)
                             .setAuthority(requestAuthority.getAuthorityURL())
-                            .setMultipleCloudAware(requestAuthority.mMultipleCloudsSupported)
+                            .setMultipleCloudAware(requestAuthority.isMultipleCloudsSupported())
                             .setState(interactiveTokenCommandParameters.getPlatformComponents().getStateGenerator().generate())
                             .setSlice(requestAuthority.mSlice);
                 }

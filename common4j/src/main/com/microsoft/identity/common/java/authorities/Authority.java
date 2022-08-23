@@ -55,9 +55,6 @@ public abstract class Authority {
     private static final String B2C_PATH_SEGMENT = "tfp";
     public static final String B2C = "B2C";
 
-    protected boolean mKnownToMicrosoft = false;
-    protected boolean mKnownToDeveloper = false;
-
     @SerializedName("default")
     protected boolean mIsDefault = false;
 
@@ -236,16 +233,6 @@ public abstract class Authority {
     @SuppressWarnings(WarningType.rawtype_warning)
     public abstract OAuth2Strategy createOAuth2Strategy(@NonNull final OAuth2StrategyParameters parameters) throws ClientException;
 
-    /**
-     * Indicates whether the authority is known to Microsoft or not.  Microsoft can recognize authorities that exist within public clouds.  Microsoft does
-     * not maintain a list of B2C authorities or a list of ADFS or 3rd party authorities (issuers).
-     *
-     * @return
-     */
-    protected boolean getKnownToMicrosoft() {
-        return mKnownToMicrosoft;
-    }
-
     //CHECKSTYLE:OFF
     // This method is generated. Checkstyle and/or PMD has been disabled.
     // This method *must* be regenerated if the class' structural definition changes through the
@@ -279,18 +266,10 @@ public abstract class Authority {
     /**
      * These are authorities that the developer based on configuration of the public client application are known and trusted by the developer using the public client
      * application.  In order for the public client application to make a request to an authority.  That authority must be known by Microsoft or the developer
-     * configuring the public client application.  Developers can check at runtime whether an authority (issuer) is known to Microsoft using the isKnownAuthority() method of
-     * PublicClientApplication.  In addition the developer can request that Microsoft attempt to validate an unknown ADFS authority using the validateAuthority() method of the
-     * PublicClientApplication.
-     *
-     * @return
+     * configuring the public client application.
      */
-    protected boolean getKnownToDeveloper() {
-        return mKnownToDeveloper;
-    }
-
-    private static List<Authority> knownAuthorities = new ArrayList<>();
-    private static Object sLock = new Object();
+    private static final List<Authority> knownAuthorities = new ArrayList<>();
+    private static final Object sLock = new Object();
 
     private static void performCloudDiscovery()
             throws IOException, URISyntaxException {
@@ -336,25 +315,22 @@ public abstract class Authority {
         }
 
         //Check if authority was added to configuration
-        if (authority.getKnownToDeveloper()) {
-            knownToDeveloper = true;
-        } else {
-            for (final Authority currentAuthority : knownAuthorities) {
-                if (currentAuthority.mAuthorityUrlString != null &&
-                        authority.getAuthorityURL() != null &&
-                        authority.getAuthorityURL().getAuthority() != null &&
-                        currentAuthority.mAuthorityUrlString.toLowerCase(Locale.ROOT).contains(
-                                authority
-                                        .getAuthorityURL()
-                                        .getAuthority()
-                                        .toLowerCase(Locale.ROOT))) {
-                    knownToDeveloper = true;
-                    break;
-                }
+        for (final Authority currentAuthority : knownAuthorities) {
+            if (currentAuthority.mAuthorityUrlString != null &&
+                    authority.getAuthorityURL() != null &&
+                    authority.getAuthorityURL().getAuthority() != null &&
+                    currentAuthority.mAuthorityUrlString.toLowerCase(Locale.ROOT).contains(
+                            authority
+                                    .getAuthorityURL()
+                                    .getAuthority()
+                                    .toLowerCase(Locale.ROOT))) {
+                knownToDeveloper = true;
+                break;
             }
         }
 
-        //Check if authority host is known to Microsoft
+        // Check whether the authority is known to Microsoft or not.  Microsoft can recognize authorities that exist within public clouds.
+        // Microsoft does not maintain a list of B2C authorities or a list of ADFS or 3rd party authorities (issuers).
         knownToMicrosoft = AzureActiveDirectory.hasCloudHost(authority.getAuthorityURL());
 
         final boolean isKnown = (knownToDeveloper || knownToMicrosoft);
