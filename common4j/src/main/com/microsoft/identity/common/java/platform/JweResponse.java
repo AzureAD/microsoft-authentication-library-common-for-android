@@ -29,6 +29,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import cz.msebera.android.httpclient.extras.Base64;
+import io.opentelemetry.api.trace.Span;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -89,9 +90,13 @@ public class JweResponse {
     }
 
     public static JweResponse parseJwe(String jwe) throws JSONException {
+        Span span = Span.current();
         JweResponse response = new JweResponse();
 
         String[] split = jwe.split("\\.");
+
+        span.setAttribute("jwt_valid", split.length >= 4);
+
         if (split.length < 4) {
             throw new IllegalArgumentException("Invalid JWE");
         }
@@ -109,6 +114,9 @@ public class JweResponse {
         String decodedHeader = StringUtil.fromByteArray(headerDecodedBytes);
 
         JSONObject jsonObject = new JSONObject(decodedHeader);
+
+        span.setAttribute("jwt_alg", jsonObject.optString("alg"));
+
         response.mJweHeader = JweHeader.builder()
                 .algorithm(jsonObject.optString("alg"))
                 .type(jsonObject.optString("typ"))

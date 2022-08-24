@@ -30,6 +30,8 @@ import org.json.JSONObject;
 import java.util.HashMap;
 import java.util.Iterator;
 
+import io.opentelemetry.api.trace.Span;
+
 public class HashMapExtensions {
 
     /**
@@ -56,6 +58,8 @@ public class HashMapExtensions {
      */
     public static HashMap<String, String> getJsonResponseFromResponseBody(String responseBody) throws JSONException {
         final HashMap<String, String> response = new HashMap<>();
+        Span span = Span.current();
+        span.setAttribute("response_body_length", responseBody.length());
         if (!StringUtil.isNullOrEmpty(responseBody)) {
             final JSONObject jsonObject = new JSONObject(responseBody);
             final Iterator<String> keyIterator = jsonObject.keys();
