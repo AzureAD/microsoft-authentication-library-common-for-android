@@ -200,6 +200,11 @@ public abstract class AbstractTestBroker extends App implements ITestBroker {
     }
 
     @Override
+    public void addFlights(@Nullable final String flightsJson) {
+        // Default implementation, Do nothing.
+    }
+
+    @Override
     public String getFlights() {
         // Default implementation, Do nothing.
         return "";

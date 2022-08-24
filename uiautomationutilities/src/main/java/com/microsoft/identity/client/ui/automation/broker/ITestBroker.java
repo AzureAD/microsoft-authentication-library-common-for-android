@@ -121,6 +121,12 @@ public interface ITestBroker extends IApp {
     void setFlights(@Nullable final String flightsJson);
 
     /**
+     * Add the flight information.
+     * @param flightsJson the json representation of the flight key and value pairs {"key1":"value"}.
+     */
+    void addFlights(@Nullable final String flightsJson);
+
+    /**
      * The flight information set for this broker app.
      *
      * @return the flight information set for this broker app

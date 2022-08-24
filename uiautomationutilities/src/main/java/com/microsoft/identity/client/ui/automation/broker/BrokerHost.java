@@ -350,12 +350,33 @@ public class BrokerHost extends AbstractTestBroker {
         }
 
         // scroll to find the set flights button
-        UiAutomatorUtils.obtainChildInScrollable("Set Flights");
+        UiAutomatorUtils.obtainChildInScrollable("Set flights (When BrokerHost is the active broker)");
         // input flights string in flights input box
         UiAutomatorUtils.handleInput("com.microsoft.identity.testuserapp:id/editTextFlights", flightsJson);
         // Click Set Flights button
         UiAutomatorUtils.handleButtonClick("com.microsoft.identity.testuserapp:id/setFlightsButton");
     }
+
+    @Override
+    public void addFlights(@Nullable final String flightsJson) {
+        Logger.i(TAG, "Add Flights..");
+        launch();
+
+        // Sleep for a bit to finish launching brokerHost before scrolling to set Flights
+        try {
+            Thread.sleep(TimeUnit.SECONDS.toMillis(5));
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        // scroll to find the set flights button
+        UiAutomatorUtils.obtainChildInScrollable("Add Flights");
+        // input flights string in flights input box
+        UiAutomatorUtils.handleInput("com.microsoft.identity.testuserapp:id/editTextFlights", flightsJson);
+        // Click Set Flights button
+        UiAutomatorUtils.handleButtonClick("com.microsoft.identity.testuserapp:id/addFlightsButton");
+    }
+
 
     @Override
     public String getFlights() {
