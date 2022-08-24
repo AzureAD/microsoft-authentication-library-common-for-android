@@ -59,7 +59,7 @@ public class StringSeparatedMultiTypeNameValueStorage extends AbstractPerSeparat
      * create a new instance of {@link IMultiTypeNameValueStorage} for each call to
      * {@link IPerSeparatorMultiTypeNameValueStorage#putString(Object, String, String)}.
      */
-    private static final Map<String, IMultiTypeNameValueStorage> sPerTenantStorageCache =
+    private static final Map<String, IMultiTypeNameValueStorage> sStringSeparatedStorageCache =
             Collections.synchronizedMap(new LinkedHashMap<String, IMultiTypeNameValueStorage>(
                     2, 0.75f, true
             ) {
@@ -72,7 +72,7 @@ public class StringSeparatedMultiTypeNameValueStorage extends AbstractPerSeparat
     @NonNull
     @Override
     protected synchronized IMultiTypeNameValueStorage getStoreForSeparator(@NonNull final String separator) {
-        return sPerTenantStorageCache.computeIfAbsent(
+        return sStringSeparatedStorageCache.computeIfAbsent(
                 separator,
                 key -> {
                     if (mShouldEncrypt) {
