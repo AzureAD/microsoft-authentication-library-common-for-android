@@ -469,7 +469,7 @@ public class BrokerHost extends AbstractTestBroker {
     public String acquireSSOToken(@NonNull final String nonce) {
         try {
             // Fill the nonce
-            final UiObject nonceTxtBox = UiAutomatorUtils.obtainChildInScrollable("nonce");
+            final UiObject nonceTxtBox = UiAutomatorUtils.obtainChildInScrollable("nonce for SSO Token");
             nonceTxtBox.setText(nonce);
 
             // Click on sso token button
