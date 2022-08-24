@@ -36,6 +36,7 @@ import android.security.KeyChainException;
 import android.webkit.ClientCertRequest;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
 import com.microsoft.identity.common.R;
@@ -79,6 +80,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
 
+import javax.annotation.Nonnull;
+
 /**
  * Handles Certificate Based Authentication by means of certificates provisioned onto YubiKeys or the devices themselves.
  * Note that CBA requires API >= 21 (YubiKit SDK min API = 19; ClientCertRequest class available with API >= 21)
@@ -110,7 +113,7 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
          * @param cert Certificate found on YubiKey.
          * @param slot PIV slot on YubiKey where certificate is located.
          */
-        public YubiKitCertDetails(X509Certificate cert, Slot slot) {
+        public YubiKitCertDetails(@NonNull final X509Certificate cert, @NonNull final Slot slot) {
             this.cert = cert;
             this.slot = slot;
         }
@@ -119,6 +122,7 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
          * Gets certificate.
          * @return certificate.
          */
+        @NonNull
         public X509Certificate getCertificate() {
             return cert;
         }
@@ -128,6 +132,7 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
          * Gets PIV Slot where certificate is located.
          * @return Slot where certificate is located.
          */
+        @Nonnull
         public Slot getSlot() {
             return slot;
         }
@@ -150,9 +155,7 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
      */
     public ClientCertAuthChallengeHandler(@NonNull final Activity activity) {
         mActivity = activity;
-        //Create instance of DialogHolder.
         mDialogHolder = new DialogHolder(mActivity);
-        //Set both mIsCertBasedAuthProceeding to false.
         mIsOnDeviceCertBasedAuthProceeding = false;
         mIsSmartcardCertBasedAuthProceeding = false;
         //Create and start YubiKitManager for UsbDiscovery mode.
@@ -164,7 +167,6 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
             public void invoke(@NonNull UsbYubiKeyDevice device) {
                 Logger.verbose(TAG, "A YubiKey device was connected");
                 synchronized (sDeviceLock) {
-                    //set device
                     mDevice = device;
                     //Reset DialogHolder to null if necessary.
                     //In this case, DialogHolder would be an ErrorDialog if not null.
@@ -176,25 +178,19 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
                             synchronized (sDeviceLock) {
                                 Logger.verbose(TAG, "A YubiKey device was disconnected");
                                 mDevice = null;
-                                //Creating a PivProviderStatusEvent for Telemetry.
                                 final PivProviderStatusEvent pivProviderStatusEvent = new PivProviderStatusEvent();
                                 //Remove the YKPiv security provider if it was added.
                                 if (Security.getProvider(YUBIKEY_PROVIDER) != null) {
-                                    //Remove provider.
                                     Security.removeProvider(YUBIKEY_PROVIDER);
-                                    //Emit telemetry and log that PivProvider is being removed from Security static list.
                                     Telemetry.emit(pivProviderStatusEvent.putPivProviderRemoved(true));
                                     Logger.info(TAG, "An instance of PivProvider was removed from Security static list upon YubiKey device connection being closed.");
                                 } else {
-                                    //Emit telemetry and log that PivProvider is not present in Security static list and therefore is not being removed.
                                     Telemetry.emit(pivProviderStatusEvent.putPivProviderRemoved(false));
                                     Logger.info(TAG, "An instance of PivProvider was not present in Security static list upon YubiKey device connection being closed.");
                                 }
-                                //Show an error dialog only if a dialog is still showing.
+                                //Show an error dialog informing users that they have unplugged their device only if a dialog is still showing.
                                 if (mDialogHolder.isDialogShowing()) {
-                                    //Call Cancel Cba callback
                                     mDialogHolder.onCancelCba();
-                                    //Show dialog informing users that they have unplugged their device too early.
                                     mDialogHolder.showErrorDialog(R.string.smartcard_early_unplug_dialog_title, R.string.smartcard_early_unplug_dialog_message);
                                     Logger.verbose(TAG, "YubiKey was disconnected while dialog was still displayed.");
                                 }
@@ -242,7 +238,6 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
             @Override
             public void onGetSession(@NonNull PivSession piv) {
                 try {
-                    //Check if there are no PIN attempts remaining.
                     if (piv.getPinAttempts() == 0) {
                         Logger.info(methodTag,  "User has reached the maximum failed attempts allowed.");
                         mDialogHolder.showErrorDialog(R.string.smartcard_max_attempt_dialog_title, R.string.smartcard_max_attempt_dialog_message);
@@ -254,7 +249,6 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
                     //If no certs were found, cancel flow.
                     if (certList.isEmpty()) {
                         Logger.info(methodTag,  "No PIV certificates found on YubiKey device.");
-                        //Show error dialog stating that no PIV certificates were found on the YubiKey.
                         mDialogHolder.showErrorDialog(R.string.smartcard_no_cert_dialog_title, R.string.smartcard_no_cert_dialog_message);
                         request.cancel();
                         return;
@@ -275,7 +269,6 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
                     Logger.error(methodTag, e.getMessage(), e);
                     //Show general error dialog.
                     mDialogHolder.showErrorDialog(R.string.smartcard_general_error_dialog_title, R.string.smartcard_general_error_dialog_message);
-                    //Emit telemetry for this exception.
                     Telemetry.emit(new ErrorEvent().putException(e));
                     request.cancel();
                 }
@@ -291,32 +284,31 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     private void getActivePivSessionAsync(@NonNull final ClientCertRequest request, @NonNull final IPivSessionCallback callback){
         final String methodTag = TAG + "getActivePivSessionAsync:";
-        //If mDevice is null, show a general error dialog and cancel request.
-        if (mDevice == null) {
-            Logger.error(methodTag, MDEVICE_NULL_ERROR_MESSAGE, null);
-            mDialogHolder.showErrorDialog(R.string.smartcard_general_error_dialog_title, R.string.smartcard_general_error_dialog_message);
-            request.cancel();
-            return;
-        }
-        //Request a connection from mDevice so that we can get a PivSession instance.
-        mDevice.requestConnection(UsbSmartCardConnection.class, new Callback<Result<UsbSmartCardConnection, IOException>>() {
-            @Override
-            public void invoke(@NonNull final Result<UsbSmartCardConnection, IOException> value) {
-                try {
-                    final SmartCardConnection c = value.getValue();
-                    final PivSession piv = new PivSession(c);
-                    //Call session callback.
-                    callback.onGetSession(piv);
-                } catch (final IOException | ApduException | ApplicationNotAvailableException e) {
-                    Logger.error(methodTag, e.getMessage(), e);
-                    //Show general error dialog.
-                    mDialogHolder.showErrorDialog(R.string.smartcard_general_error_dialog_title, R.string.smartcard_general_error_dialog_message);
-                    //Emit telemetry for exception.
-                    Telemetry.emit(new ErrorEvent().putException(e));
-                    request.cancel();
-                }
+        synchronized (sDeviceLock) {
+            if (mDevice == null) {
+                Logger.error(methodTag, MDEVICE_NULL_ERROR_MESSAGE, null);
+                mDialogHolder.showErrorDialog(R.string.smartcard_general_error_dialog_title, R.string.smartcard_general_error_dialog_message);
+                request.cancel();
+                return;
             }
-        });
+            //Request a connection from mDevice so that we can get a PivSession instance.
+            mDevice.requestConnection(UsbSmartCardConnection.class, new Callback<Result<UsbSmartCardConnection, IOException>>() {
+                @Override
+                public void invoke(@NonNull final Result<UsbSmartCardConnection, IOException> value) {
+                    try {
+                        final SmartCardConnection c = value.getValue();
+                        final PivSession piv = new PivSession(c);
+                        callback.onGetSession(piv);
+                    } catch (final IOException | ApduException | ApplicationNotAvailableException e) {
+                        Logger.error(methodTag, e.getMessage(), e);
+                        //Show general error dialog.
+                        mDialogHolder.showErrorDialog(R.string.smartcard_general_error_dialog_title, R.string.smartcard_general_error_dialog_message);
+                        Telemetry.emit(new ErrorEvent().putException(e));
+                        request.cancel();
+                    }
+                }
+            });
+        }
     }
 
     /**
@@ -408,29 +400,26 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
             @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
             @Override
             public void onClick(@NonNull final char[] pin) {
-                synchronized (sDeviceLock) {
-                    // Need to request a PivSession in order to access certs on YubiKey.
-                    getActivePivSessionAsync(request, new IPivSessionCallback() {
-                        @Override
-                        public void onGetSession(@NonNull PivSession piv) {
-                            try {
-                                //Verify PIN and handle results
-                                tryUsingSmartcardWithPin(pin, certDetails, request, piv);
-                            } catch (final IOException | ApduException | BadResponseException e) {
-                                Logger.error(methodTag, e.getMessage(), e);
-                                //Show general error dialog.
-                                mDialogHolder.showErrorDialog(R.string.smartcard_general_error_dialog_title, R.string.smartcard_general_error_dialog_message);
-                                //Emit telemetry for this exception.
-                                Telemetry.emit(new ErrorEvent().putException(e));
-                                request.cancel();
-                            } finally {
-                                //Clear PIN attempt from local char array.
-                                clearPin(pin);
-                            }
-
+                // Need to request a PivSession in order to access certs on YubiKey.
+                getActivePivSessionAsync(request, new IPivSessionCallback() {
+                    @Override
+                    public void onGetSession(@NonNull PivSession piv) {
+                        try {
+                            //Verify PIN and handle results
+                            tryUsingSmartcardWithPin(pin, certDetails, request, piv);
+                        } catch (final IOException | ApduException | BadResponseException e) {
+                            Logger.error(methodTag, e.getMessage(), e);
+                            //Show general error dialog.
+                            mDialogHolder.showErrorDialog(R.string.smartcard_general_error_dialog_title, R.string.smartcard_general_error_dialog_message);
+                            Telemetry.emit(new ErrorEvent().putException(e));
+                            request.cancel();
+                        } finally {
+                            clearPin(pin);
                         }
-                    });
-                }
+
+                    }
+                });
+
             }
         };
     }
@@ -450,15 +439,12 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     private void tryUsingSmartcardWithPin(@NonNull final char[] pin, @NonNull final YubiKitCertDetails certDetails, @NonNull final ClientCertRequest request, @NonNull final PivSession piv) throws IOException, ApduException, BadResponseException {
         final String methodTag = TAG + ":tryUsingSmartcardWithPin";
-        //Call YubiKit method to verify PIN.
         try {
             piv.verifyPin(pin);
             //If pin is successfully verified, we will use the certificate to perform the rest of the logic for authentication.
-            //Complete authentication using cert and YubiKit sdk.
             useSmartcardCertForAuth(certDetails.getCertificate(), pin, certDetails.getSlot().getStringAlias(), piv, request);
         } catch (final InvalidPinException e) {
             // An incorrect Pin attempt.
-            // We need to retrieve the number of pin attempts before proceeding.
             final int pinAttemptsRemaining = piv.getPinAttempts();
             // If the number of attempts is 0, no more attempts will be allowed.
             if (pinAttemptsRemaining == 0) {
@@ -491,34 +477,29 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
         final String methodTag = TAG + "useSmartcardCertForAuth:";
         //Need to add a PivProvider instance to the beginning of the array of Security providers in order for signature logic to occur.
         //Note that this provider is removed when the UsbYubiKeyDevice connection is closed.
-        //Creating a PivProviderStatusEvent for Telemetry.
         final PivProviderStatusEvent pivProviderStatusEvent = new PivProviderStatusEvent();
-        //First check if a PivProvider instance is already present in the static list.
         if (Security.getProvider(YUBIKEY_PROVIDER) != null) {
             //Remove existing PivProvider.
             Security.removeProvider(YUBIKEY_PROVIDER);
-            //Emit telemetry and log. The PivProvider instance is either unexpectedly being added elsewhere
+            //The PivProvider instance is either unexpectedly being added elsewhere
             // or it isn't being removed properly upon CBA flow termination.
             Telemetry.emit(pivProviderStatusEvent.putIsExistingPivProviderPresent(true));
             Logger.info(methodTag, "Existing PivProvider was present in Security static list.");
         } else {
-            //Emit telemetry and log. This is expected behavior.
+            //This is expected behavior.
             Telemetry.emit(pivProviderStatusEvent.putIsExistingPivProviderPresent(false));
             Logger.info(methodTag, "Security static list does not have existing PivProvider.");
         }
         //The position parameter is 1-based (1 maps to index 0).
         Security.insertProviderAt(new PivProvider(getPivProviderCallback()), 1);
-        //Log that PivProvider is being added to Security static list.
         Logger.info(methodTag, "An instance of PivProvider was added to Security static list.");
         try {
             //Using KeyStore methods in order to generate PivPrivateKey.
             //Loading null is needed for initialization.
             final KeyStore keyStore = KeyStore.getInstance(YUBIKEY_PROVIDER, new PivProvider(piv));
             keyStore.load(null);
-            //Make sure Key is of type PivPrivateKey
             final Key key = keyStore.getKey(slotAlias, pin);
             if (!(key instanceof PivPrivateKey)) {
-                //Show general error dialog and cancel request.
                 Logger.error(methodTag, "Private key retrieved from YKPiv keystore is not of type PivPrivateKey.", null);
                 mDialogHolder.showErrorDialog(R.string.smartcard_general_error_dialog_title, R.string.smartcard_general_error_dialog_message);
                 request.cancel();
@@ -530,9 +511,7 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
             final X509Certificate[] chain = new X509Certificate[]{cert};
             //Clear current dialog.
             mDialogHolder.dismissDialog();
-            //Set mIsSmartcardCertBasedAuthProceeding to true so telemetry is emitted for the result.
             mIsSmartcardCertBasedAuthProceeding = true;
-            //Call proceed on ClientCertRequest with PivPrivateKey and cert chain.
             request.proceed(pivPrivateKey, chain);
         } catch (final UnrecoverableKeyException | CertificateException | KeyStoreException | IOException | NoSuchAlgorithmException e) {
             Logger.error(methodTag, e.getMessage(), e);
@@ -566,7 +545,6 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
                     //Show error dialog and cancel flow if mDevice is null.
                     if (mDevice == null) {
                         Logger.error(methodTag, MDEVICE_NULL_ERROR_MESSAGE, null);
-                        //Invoke result failure.
                         callback.invoke(Result.failure(new Exception(MDEVICE_NULL_ERROR_MESSAGE)));
                         return;
                     }

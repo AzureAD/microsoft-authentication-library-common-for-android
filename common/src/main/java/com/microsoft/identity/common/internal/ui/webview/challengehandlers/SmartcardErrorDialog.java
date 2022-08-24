@@ -65,7 +65,7 @@ public class SmartcardErrorDialog extends SmartcardDialog {
             @Override
             public void run() {
                 //Start building dialog
-                AlertDialog.Builder builder = new AlertDialog.Builder(mActivity, R.style.ErrorAlertDialogTheme)
+                final AlertDialog.Builder builder = new AlertDialog.Builder(mActivity, R.style.ErrorAlertDialogTheme)
                         //Sets topmost text of dialog.
                         .setTitle(mTitleStringResourceId)
                         //Sets subtext of the title.
@@ -77,7 +77,7 @@ public class SmartcardErrorDialog extends SmartcardDialog {
                                 mDismissCallback.onClick();
                             }
                         });
-                AlertDialog dialog = builder.create();
+                final AlertDialog dialog = builder.create();
                 //If user touches outside dialog, the default behavior makes the dialog disappear without really doing anything.
                 //Adding this line in disables this default behavior so that the user can only exit by hitting the positive button.
                 dialog.setCanceledOnTouchOutside(false);

@@ -81,7 +81,7 @@ public class SmartcardCertPickerDialog extends SmartcardDialog {
             @Override
             public void run() {
                 //Start building the dialog.
-                AlertDialog.Builder builder = new AlertDialog.Builder(mActivity, R.style.CertAlertDialogTheme)
+                final AlertDialog.Builder builder = new AlertDialog.Builder(mActivity, R.style.CertAlertDialogTheme)
                         //Set topmost text of dialog.
                         .setTitle(R.string.smartcard_cert_dialog_title)
                         //Creates and sets a ListView which gets rows from the provided CertDetails adapter. The first row is checked by default.
@@ -160,27 +160,27 @@ public class SmartcardCertPickerDialog extends SmartcardDialog {
      */
     public static class CertDetailsAdapter extends ArrayAdapter<ClientCertAuthChallengeHandler.YubiKitCertDetails> {
 
-        public CertDetailsAdapter(@NonNull Context context, @NonNull List<ClientCertAuthChallengeHandler.YubiKitCertDetails> certs) {
+        public CertDetailsAdapter(@NonNull final Context context, @NonNull final List<ClientCertAuthChallengeHandler.YubiKitCertDetails> certs) {
             super(context, 0, certs);
         }
 
         @NonNull
         @Override
-        public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+        public View getView(final int position, @Nullable final View convertView, @NonNull final ViewGroup parent) {
             View item = convertView;
             if (item == null) {
                 item = LayoutInflater.from(getContext()).inflate(R.layout.certificate_row_layout, parent, false);
             }
             //Get references to the TextViews within the layout.
-            TextView subjectText = item.findViewById(R.id.subjectText);
-            TextView issuerText = item.findViewById(R.id.issuerText);
+            final TextView subjectText = item.findViewById(R.id.subjectText);
+            final TextView issuerText = item.findViewById(R.id.issuerText);
             // Fill in the TextViews with the subject and issuer values.
-            X509Certificate currentCert = getItem(position).getCertificate();
+            final X509Certificate currentCert = getItem(position).getCertificate();
             subjectText.setText(currentCert.getSubjectDN().getName());
             issuerText.setText(currentCert.getIssuerDN().getName());
             //Set radio button to be checked/unchecked based on ListView.
-            ListView listView = (ListView) parent;
-            RadioButton radioButton = item.findViewById(R.id.radioButton);
+            final ListView listView = (ListView) parent;
+            final RadioButton radioButton = item.findViewById(R.id.radioButton);
             radioButton.setChecked(position == listView.getCheckedItemPosition());
 
             return item;

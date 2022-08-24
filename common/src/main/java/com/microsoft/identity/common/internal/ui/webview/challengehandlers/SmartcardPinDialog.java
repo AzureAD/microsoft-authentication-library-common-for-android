@@ -75,7 +75,7 @@ public class SmartcardPinDialog extends SmartcardDialog {
                 //Inflate Pin EditText layout
                 mPinLayout = mActivity.getLayoutInflater().inflate(R.layout.pin_textview_layout, null);
                 //Start building dialog
-                AlertDialog.Builder builder = new AlertDialog.Builder(mActivity, R.style.CertAlertDialogTheme)
+                final AlertDialog.Builder builder = new AlertDialog.Builder(mActivity, R.style.CertAlertDialogTheme)
                         //Sets topmost text of dialog.
                         .setTitle(R.string.smartcard_pin_dialog_title)
                         //Sets subtext of the title.

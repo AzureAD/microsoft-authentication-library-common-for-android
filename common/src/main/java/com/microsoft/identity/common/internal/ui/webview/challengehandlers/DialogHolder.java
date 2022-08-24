@@ -47,7 +47,7 @@ public class DialogHolder {
      * Creates new instance of DialogHolder.
      * @param activity Current host activity.
      */
-    DialogHolder(Activity activity) {
+    DialogHolder(@NonNull final Activity activity) {
         mActivity = activity;
         mCurrentDialog = null;
     }
@@ -66,7 +66,6 @@ public class DialogHolder {
                 positiveButtonListener,
                 cancelCbaCallback,
                 mActivity);
-        //Show cert picker dialog.
         showDialog(certPickerDialog);
     }
 
@@ -81,7 +80,7 @@ public class DialogHolder {
                 positiveButtonListener,
                 cancelCbaCallback,
                 mActivity);
-        //Show PinDialog, which should always be called after a positive button press.
+        //PinDialog should always be called after a positive button press.
         showDialog(pinDialog);
     }
 
@@ -90,7 +89,8 @@ public class DialogHolder {
      * @param titleStringResourceId String resource id of the title text.
      * @param messageStringResourceId String resource id of the message text.
      */
-    public synchronized void showErrorDialog(final int titleStringResourceId, final int messageStringResourceId) {
+    public synchronized void showErrorDialog(final int titleStringResourceId,
+                                             final int messageStringResourceId) {
         showDialog(new SmartcardErrorDialog(
                 titleStringResourceId,
                 messageStringResourceId,
@@ -117,13 +117,11 @@ public class DialogHolder {
      * @param dialog SmartcardDialog object to be shown.
      */
     public synchronized void showDialog(@Nullable final SmartcardDialog dialog) {
-        //Dismiss current dialog, if one is currently showing.
         if (mCurrentDialog != null) {
             mCurrentDialog.dismiss();
         }
         //Set current dialog, which could be null.
         mCurrentDialog = dialog;
-        //If current dialog is not null, show.
         if (mCurrentDialog != null) {
             // dispatch to main thread if not on main thread
             mCurrentDialog.show();

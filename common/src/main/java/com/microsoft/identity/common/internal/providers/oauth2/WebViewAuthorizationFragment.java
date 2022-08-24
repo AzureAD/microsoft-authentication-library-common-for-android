@@ -293,7 +293,6 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         public void onChallengeResponseReceived(@NonNull final RawAuthorizationResult response) {
             final String methodTag = TAG + ":onChallengeResponseReceived";
             Logger.info(methodTag, null, "onChallengeResponseReceived:" + response.getResultCode());
-            //Send response for CBA telemetry.
             //No telemetry will be emitted if CBA did not occur.
             mAADWebViewClient.emitTelemetryForCertBasedAuthResult(response);
             sendResult(response);
