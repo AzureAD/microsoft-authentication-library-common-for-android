@@ -437,7 +437,11 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
      * @throws BadResponseException in case of incorrect YubiKey response
      */
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-    private void tryUsingSmartcardWithPin(@NonNull final char[] pin, @NonNull final YubiKitCertDetails certDetails, @NonNull final ClientCertRequest request, @NonNull final PivSession piv) throws IOException, ApduException, BadResponseException {
+    private void tryUsingSmartcardWithPin(@NonNull final char[] pin,
+                                          @NonNull final YubiKitCertDetails certDetails,
+                                          @NonNull final ClientCertRequest request,
+                                          @NonNull final PivSession piv)
+            throws IOException, ApduException, BadResponseException {
         final String methodTag = TAG + ":tryUsingSmartcardWithPin";
         try {
             piv.verifyPin(pin);
