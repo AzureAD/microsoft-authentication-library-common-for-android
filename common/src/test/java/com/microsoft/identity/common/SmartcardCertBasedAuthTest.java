@@ -2,15 +2,12 @@ package com.microsoft.identity.common;
 
 import com.microsoft.identity.common.internal.ui.DualScreenActivity;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.ClientCertAuthChallengeHandler;
+import com.microsoft.identity.common.internal.ui.webview.challengehandlers.DialogHolder;
+import com.microsoft.identity.common.internal.ui.webview.challengehandlers.SmartcardCertPickerDialog;
 import com.microsoft.identity.common.shadows.ShadowPivSession;
 import com.microsoft.identity.common.shadows.ShadowUsbSmartCardConnection;
 import com.microsoft.identity.common.shadows.ShadowUsbYubiKeyDevice;
-import com.yubico.yubikit.core.Transport;
-import com.yubico.yubikit.core.application.ApplicationNotAvailableException;
-import com.yubico.yubikit.core.application.BadResponseException;
-import com.yubico.yubikit.core.smartcard.ApduException;
-import com.yubico.yubikit.core.smartcard.SmartCardConnection;
-import com.yubico.yubikit.piv.PivSession;
+import com.yubico.yubikit.android.transport.usb.UsbYubiKeyDevice;
 import com.yubico.yubikit.piv.Slot;
 
 import org.junit.Before;
@@ -22,10 +19,12 @@ import org.robolectric.Robolectric;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.android.controller.ActivityController;
 import org.robolectric.annotation.Config;
+import org.robolectric.shadow.api.Shadow;
 import org.robolectric.shadows.ShadowAlertDialog;
 import org.robolectric.shadows.ShadowUsbManager;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.math.BigInteger;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -60,7 +59,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
+import android.util.Log;
+import android.view.View;
 import android.webkit.ClientCertRequest;
+import android.widget.TextView;
 
 @RunWith(RobolectricTestRunner.class)
 @Config(shadows={ShadowUsbManager.class, ShadowUsbSmartCardConnection.class, ShadowUsbYubiKeyDevice.class, ShadowPivSession.class})
@@ -82,6 +84,10 @@ public class SmartcardCertBasedAuthTest {
         when(usbDevice.getDeviceName()).thenReturn("MockYubiKey");
         when(usbDevice.getVendorId()).thenReturn(YUBICO_VENDOR_ID);
         when(usbDevice.getProductId()).thenReturn(YUBICO_PRODUCT_ID);
+
+        //For testing, always add device before initializing ClientCertAuthChallengeHandler.
+        //Broadcasting that a Usb was connected (UsbManager.ACTION_USB_DEVICE_ATTACHED) doesn't work here for some reason.
+        shadowOf(usbManager).addOrUpdateUsbDevice(usbDevice, true);
     }
 
     @Test
@@ -89,82 +95,64 @@ public class SmartcardCertBasedAuthTest {
         ActivityController<DualScreenActivity> controller = Robolectric.buildActivity(DualScreenActivity.class);
         controller.setup(); // Moves Activity to RESUMED state
         Activity activity = controller.get();
-        //For testing, always add device before initializing ClientCertAuthChallengeHandler.
-        //Broadcasting that a Usb was connected (UsbManager.ACTION_USB_DEVICE_ATTACHED) doesn't work here for some reason.
-        shadowOf(usbManager).addOrUpdateUsbDevice(usbDevice, true);
-        assertFalse(usbManager.getDeviceList().values().isEmpty());
 
-        ClientCertRequest clientCertRequest = new ClientCertRequest() {
-            @Nullable
-            @Override
-            public String[] getKeyTypes() {
-                return new String[0];
-            }
-
-            @Nullable
-            @Override
-            public Principal[] getPrincipals() {
-                return new Principal[0];
-            }
-
-            @Override
-            public String getHost() {
-                return null;
-            }
-
-            @Override
-            public int getPort() {
-                return 0;
-            }
-
-            @Override
-            public void proceed(PrivateKey privateKey, X509Certificate[] x509Certificates) {
-
-            }
-
-            @Override
-            public void ignore() {
-
-            }
-
-            @Override
-            public void cancel() {
-
-            }
-        };
+        ClientCertRequest clientCertRequest = getMockClientCertRequest();
         ClientCertAuthChallengeHandler clientCertAuthChallengeHandler = new ClientCertAuthChallengeHandler(activity);
         clientCertAuthChallengeHandler.processChallenge(clientCertRequest);
 
         Dialog dialog = ShadowAlertDialog.getLatestDialog();
         assertNotNull(dialog);
         assertTrue(dialog.isShowing());
+
+        //close activity?
+        //stop discovery
+        clientCertAuthChallengeHandler.stopYubiKitManagerUsbDiscovery();
     }
 
     @Test
-    public void testPivSession() throws ApduException, IOException, ApplicationNotAvailableException, BadResponseException {
-        PivSession ps  = new PivSession(new SmartCardConnection() {
-            @Override
-            public byte[] sendAndReceive(byte[] apdu) throws IOException {
-                return new byte[0];
-            }
+    public void testCertsOnYubKey() {
+        ActivityController<DualScreenActivity> controller = Robolectric.buildActivity(DualScreenActivity.class);
+        controller.setup(); // Moves Activity to RESUMED state
+        Activity activity = controller.get();
 
-            @Override
-            public Transport getTransport() {
-                return null;
-            }
+        ClientCertRequest clientCertRequest = getMockClientCertRequest();
+        ClientCertAuthChallengeHandler clientCertAuthChallengeHandler = new ClientCertAuthChallengeHandler(activity);
 
-            @Override
-            public boolean isExtendedLengthApduSupported() {
-                return false;
-            }
+        //Access mDevice
+        try {
+            Field field = ClientCertAuthChallengeHandler.class.getDeclaredField("mDevice");
+            field.setAccessible(true);
+            UsbYubiKeyDevice device = (UsbYubiKeyDevice) field.get(clientCertAuthChallengeHandler);
+            ShadowUsbYubiKeyDevice shadowDevice = (ShadowUsbYubiKeyDevice) Shadow.extract(device);
+            //Create a fake cert
+            X509Certificate authCert = getMockCert("Mock Issuer", "Mock Subject");
+            shadowDevice.putCertificate(Slot.AUTHENTICATION, authCert);
 
-            @Override
-            public void close() throws IOException {
+            //try processing challenge
+            clientCertAuthChallengeHandler.processChallenge(clientCertRequest);
+            //should get cert picker dialog
+            Dialog dialog = ShadowAlertDialog.getLatestDialog();
+            assertNotNull(dialog);
+            assertTrue(dialog.isShowing());
 
-            }
-        });
+            Field dialogHolderField = ClientCertAuthChallengeHandler.class.getDeclaredField("mDialogHolder");
+            dialogHolderField.setAccessible(true);
+            DialogHolder dialogHolder = (DialogHolder) dialogHolderField.get(clientCertAuthChallengeHandler);
+            assertNotNull(dialogHolder);
+            assertNotNull(dialogHolder.getDialogSimpleName());
+            assertEquals(SmartcardCertPickerDialog.class.getSimpleName(), dialogHolder.getDialogSimpleName());
 
-        ps.putCertificate(Slot.AUTHENTICATION, new X509Certificate() {
+            //stop discovery
+            clientCertAuthChallengeHandler.stopYubiKitManagerUsbDiscovery();
+
+        } catch (Exception e) {
+            // do nothing for now
+            Log.e("tag", "message", e);
+        }
+    }
+
+    private X509Certificate getMockCert(@Nullable final String issuerDNName, @Nullable final String subjectDNName) {
+        return new X509Certificate() {
             @Override
             public void checkValidity() throws CertificateExpiredException, CertificateNotYetValidException {
 
@@ -187,12 +175,22 @@ public class SmartcardCertBasedAuthTest {
 
             @Override
             public Principal getIssuerDN() {
-                return null;
+                return new Principal() {
+                    @Override
+                    public String getName() {
+                        return issuerDNName;
+                    }
+                };
             }
 
             @Override
             public Principal getSubjectDN() {
-                return null;
+                return new Principal() {
+                    @Override
+                    public String getName() {
+                        return subjectDNName;
+                    }
+                };
             }
 
             @Override
@@ -294,10 +292,48 @@ public class SmartcardCertBasedAuthTest {
             public byte[] getExtensionValue(String s) {
                 return new byte[0];
             }
-        });
+        };
+    }
 
-        assertNotNull(ps.getCertificate(Slot.AUTHENTICATION));
+    private ClientCertRequest getMockClientCertRequest() {
+        return new ClientCertRequest() {
+            @Nullable
+            @Override
+            public String[] getKeyTypes() {
+                return new String[0];
+            }
 
+            @Nullable
+            @Override
+            public Principal[] getPrincipals() {
+                return new Principal[0];
+            }
+
+            @Override
+            public String getHost() {
+                return null;
+            }
+
+            @Override
+            public int getPort() {
+                return 0;
+            }
+
+            @Override
+            public void proceed(PrivateKey privateKey, X509Certificate[] x509Certificates) {
+
+            }
+
+            @Override
+            public void ignore() {
+
+            }
+
+            @Override
+            public void cancel() {
+
+            }
+        };
     }
 
 }

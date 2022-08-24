@@ -139,6 +139,14 @@ public class DialogHolder {
     }
 
     /**
+     * Gets simple class name of dialog if currently showing.
+     * @return Simple name of class of dialog currently showing. If no dialog is showing, returns null.
+     */
+    public synchronized String getDialogSimpleName() {
+        return mCurrentDialog == null ? null : mCurrentDialog.getClass().getSimpleName();
+    }
+
+    /**
      * Runs the onCancelCbaCallback code for the current dialog.
      * Used when YubiKey is unexpectedly disconnected from device.
      */

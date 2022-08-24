@@ -13,6 +13,7 @@ import com.yubico.yubikit.piv.Slot;
 
 import org.robolectric.annotation.Implementation;
 import org.robolectric.annotation.Implements;
+import org.robolectric.shadow.api.Shadow;
 
 import java.io.IOException;
 import java.security.cert.X509Certificate;
@@ -27,10 +28,11 @@ public class ShadowPivSession {
 
     @Implementation
     protected void __constructor__(SmartCardConnection connection) throws IOException, ApduException, ApplicationNotAvailableException {
-        mAuthentication = null;
-        mSignature = null;
-        mKeyManagement = null;
-        mCardAuth = null;
+        ShadowUsbSmartCardConnection shadowConnection = Shadow.extract(connection);
+        mAuthentication = shadowConnection.getCertificate(Slot.AUTHENTICATION);
+        mSignature = shadowConnection.getCertificate(Slot.SIGNATURE);
+        mKeyManagement = shadowConnection.getCertificate(Slot.KEY_MANAGEMENT);
+        mCardAuth = shadowConnection.getCertificate(Slot.CARD_AUTH);
     }
 
     @Implementation
