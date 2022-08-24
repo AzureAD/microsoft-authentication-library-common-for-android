@@ -113,7 +113,8 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
          * @param cert Certificate found on YubiKey.
          * @param slot PIV slot on YubiKey where certificate is located.
          */
-        public YubiKitCertDetails(@NonNull final X509Certificate cert, @NonNull final Slot slot) {
+        public YubiKitCertDetails(@NonNull final X509Certificate cert,
+                                  @NonNull final Slot slot) {
             this.cert = cert;
             this.slot = slot;
         }
@@ -240,7 +241,9 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
                 try {
                     if (piv.getPinAttempts() == 0) {
                         Logger.info(methodTag,  "User has reached the maximum failed attempts allowed.");
-                        mDialogHolder.showErrorDialog(R.string.smartcard_max_attempt_dialog_title, R.string.smartcard_max_attempt_dialog_message);
+                        mDialogHolder.showErrorDialog(
+                                R.string.smartcard_max_attempt_dialog_title,
+                                R.string.smartcard_max_attempt_dialog_message);
                         request.cancel();
                         return;
                     }
@@ -249,7 +252,9 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
                     //If no certs were found, cancel flow.
                     if (certList.isEmpty()) {
                         Logger.info(methodTag,  "No PIV certificates found on YubiKey device.");
-                        mDialogHolder.showErrorDialog(R.string.smartcard_no_cert_dialog_title, R.string.smartcard_no_cert_dialog_message);
+                        mDialogHolder.showErrorDialog(
+                                R.string.smartcard_no_cert_dialog_title,
+                                R.string.smartcard_no_cert_dialog_message);
                         request.cancel();
                         return;
                     }
@@ -268,7 +273,9 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
                 } catch(final IOException | ApduException | BadResponseException e) {
                     Logger.error(methodTag, e.getMessage(), e);
                     //Show general error dialog.
-                    mDialogHolder.showErrorDialog(R.string.smartcard_general_error_dialog_title, R.string.smartcard_general_error_dialog_message);
+                    mDialogHolder.showErrorDialog(
+                            R.string.smartcard_general_error_dialog_title,
+                            R.string.smartcard_general_error_dialog_message);
                     Telemetry.emit(new ErrorEvent().putException(e));
                     request.cancel();
                 }
@@ -282,12 +289,15 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
      * @param callback Callback code that utilizes PivSession.
      */
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-    private void getActivePivSessionAsync(@NonNull final ClientCertRequest request, @NonNull final IPivSessionCallback callback){
+    private void getActivePivSessionAsync(@NonNull final ClientCertRequest request,
+                                          @NonNull final IPivSessionCallback callback){
         final String methodTag = TAG + "getActivePivSessionAsync:";
         synchronized (sDeviceLock) {
             if (mDevice == null) {
                 Logger.error(methodTag, MDEVICE_NULL_ERROR_MESSAGE, null);
-                mDialogHolder.showErrorDialog(R.string.smartcard_general_error_dialog_title, R.string.smartcard_general_error_dialog_message);
+                mDialogHolder.showErrorDialog(
+                        R.string.smartcard_general_error_dialog_title,
+                        R.string.smartcard_general_error_dialog_message);
                 request.cancel();
                 return;
             }
@@ -302,7 +312,9 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
                     } catch (final IOException | ApduException | ApplicationNotAvailableException e) {
                         Logger.error(methodTag, e.getMessage(), e);
                         //Show general error dialog.
-                        mDialogHolder.showErrorDialog(R.string.smartcard_general_error_dialog_title, R.string.smartcard_general_error_dialog_message);
+                        mDialogHolder.showErrorDialog(
+                                R.string.smartcard_general_error_dialog_title,
+                                R.string.smartcard_general_error_dialog_message);
                         Telemetry.emit(new ErrorEvent().putException(e));
                         request.cancel();
                     }
@@ -320,7 +332,8 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
      * @throws ApduException        in case of an error response from the YubiKey
      * @throws BadResponseException in case of incorrect YubiKey response
      */
-    private List<YubiKitCertDetails> getCertDetailsFromKey(@NonNull final PivSession piv) throws IOException, ApduException, BadResponseException {
+    private List<YubiKitCertDetails> getCertDetailsFromKey(@NonNull final PivSession piv)
+            throws IOException, ApduException, BadResponseException {
         //Create ArrayList that contains cert details only pertinent to the cert picker.
         final List<YubiKitCertDetails> certList = new ArrayList<>();
         //We need to check all four PIV slots.
@@ -346,7 +359,10 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
      * @throws ApduException        in case of an error response from the YubiKey
      * @throws BadResponseException in case of incorrect YubiKey response
      */
-    private void getAndPutCertDetailsInList(@NonNull final Slot slot, @NonNull final PivSession piv, @NonNull final List<YubiKitCertDetails> certList) throws IOException, ApduException, BadResponseException {
+    private void getAndPutCertDetailsInList(@NonNull final Slot slot,
+                                            @NonNull final PivSession piv,
+                                            @NonNull final List<YubiKitCertDetails> certList)
+            throws IOException, ApduException, BadResponseException {
         final String methodTag = TAG + ":getAndPutCertDetailsInList";
         try {
             final X509Certificate cert =  piv.getCertificate(slot);
@@ -393,7 +409,8 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
      * @param request ClientCertRequest received from AzureActiveDirectoryWebViewClient.onReceivedClientCertRequest.
      * @return A PositiveButtonListener to be set for a SmartcardPinDialog.
      */
-    private SmartcardPinDialog.PositiveButtonListener getSmartcardPinDialogPositiveButtonListener(@NonNull final YubiKitCertDetails certDetails, @NonNull final ClientCertRequest request) {
+    private SmartcardPinDialog.PositiveButtonListener getSmartcardPinDialogPositiveButtonListener(@NonNull final YubiKitCertDetails certDetails,
+                                                                                                  @NonNull final ClientCertRequest request) {
         final String methodTag = TAG + ":getSmartcardPinDialogPositiveButtonListener";
 
         return new SmartcardPinDialog.PositiveButtonListener() {
@@ -410,7 +427,9 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
                         } catch (final IOException | ApduException | BadResponseException e) {
                             Logger.error(methodTag, e.getMessage(), e);
                             //Show general error dialog.
-                            mDialogHolder.showErrorDialog(R.string.smartcard_general_error_dialog_title, R.string.smartcard_general_error_dialog_message);
+                            mDialogHolder.showErrorDialog(
+                                    R.string.smartcard_general_error_dialog_title,
+                                    R.string.smartcard_general_error_dialog_message);
                             Telemetry.emit(new ErrorEvent().putException(e));
                             request.cancel();
                         } finally {
@@ -455,7 +474,9 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
                 //We must display a dialog informing the user that they have made too many incorrect attempts,
                 // and the user will need to figure out a way to reset their key outside of our library.
                 Logger.info(methodTag,  "User has reached the maximum failed attempts allowed.");
-                mDialogHolder.showErrorDialog(R.string.smartcard_max_attempt_dialog_title, R.string.smartcard_max_attempt_dialog_message);
+                mDialogHolder.showErrorDialog(
+                        R.string.smartcard_max_attempt_dialog_title,
+                        R.string.smartcard_max_attempt_dialog_message);
                 request.cancel();
             } else {
                 //Update Dialog to indicate that an incorrect attempt was made.
@@ -505,7 +526,9 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
             final Key key = keyStore.getKey(slotAlias, pin);
             if (!(key instanceof PivPrivateKey)) {
                 Logger.error(methodTag, "Private key retrieved from YKPiv keystore is not of type PivPrivateKey.", null);
-                mDialogHolder.showErrorDialog(R.string.smartcard_general_error_dialog_title, R.string.smartcard_general_error_dialog_message);
+                mDialogHolder.showErrorDialog(
+                        R.string.smartcard_general_error_dialog_title,
+                        R.string.smartcard_general_error_dialog_message);
                 request.cancel();
                 return;
             }
@@ -520,7 +543,9 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
         } catch (final UnrecoverableKeyException | CertificateException | KeyStoreException | IOException | NoSuchAlgorithmException e) {
             Logger.error(methodTag, e.getMessage(), e);
             //Show general error dialog.
-            mDialogHolder.showErrorDialog(R.string.smartcard_general_error_dialog_title, R.string.smartcard_general_error_dialog_message);
+            mDialogHolder.showErrorDialog(
+                    R.string.smartcard_general_error_dialog_title,
+                    R.string.smartcard_general_error_dialog_message);
             //Emit telemetry for this exception.
             Telemetry.emit(new ErrorEvent().putException(e));
             request.cancel();

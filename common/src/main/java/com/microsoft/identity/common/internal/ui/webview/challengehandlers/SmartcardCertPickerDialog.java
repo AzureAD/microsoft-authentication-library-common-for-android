@@ -160,13 +160,16 @@ public class SmartcardCertPickerDialog extends SmartcardDialog {
      */
     public static class CertDetailsAdapter extends ArrayAdapter<ClientCertAuthChallengeHandler.YubiKitCertDetails> {
 
-        public CertDetailsAdapter(@NonNull final Context context, @NonNull final List<ClientCertAuthChallengeHandler.YubiKitCertDetails> certs) {
+        public CertDetailsAdapter(@NonNull final Context context,
+                                  @NonNull final List<ClientCertAuthChallengeHandler.YubiKitCertDetails> certs) {
             super(context, 0, certs);
         }
 
         @NonNull
         @Override
-        public View getView(final int position, @Nullable final View convertView, @NonNull final ViewGroup parent) {
+        public View getView(final int position,
+                            @Nullable final View convertView,
+                            @NonNull final ViewGroup parent) {
             View item = convertView;
             if (item == null) {
                 item = LayoutInflater.from(getContext()).inflate(R.layout.certificate_row_layout, parent, false);
