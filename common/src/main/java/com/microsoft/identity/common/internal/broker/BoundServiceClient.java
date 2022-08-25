@@ -167,7 +167,7 @@ public abstract class BoundServiceClient<T extends IInterface> {
         if (mHasStartedBinding) {
             try {
                 mContext.unbindService(mConnection);
-            } catch (IllegalArgumentException e) {
+            } catch (final IllegalArgumentException e) {
                 final String errorDescription = "Error occurred while unbinding bound Service with " + getClass().getSimpleName();
                 Logger.error(methodTag, errorDescription, e);
             }
