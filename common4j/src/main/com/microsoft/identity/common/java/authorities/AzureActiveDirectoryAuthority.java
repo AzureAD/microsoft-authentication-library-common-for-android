@@ -22,7 +22,11 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.authorities;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
+import lombok.Getter;
 import lombok.NonNull;
+import lombok.Setter;
+import lombok.experimental.Accessors;
 
 import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
@@ -46,45 +50,46 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
+@Accessors(prefix = "m")
 public class AzureActiveDirectoryAuthority extends Authority {
 
     private static transient final String TAG = AzureActiveDirectoryAuthority.class.getSimpleName();
 
+    @Getter
     @SerializedName("audience")
     public AzureActiveDirectoryAudience mAudience;
 
     @SerializedName("flight_parameters")
     public Map<String, String> mFlightParameters;
 
-    public boolean mMultipleCloudsSupported = false;
+    @Getter
+    @Setter
+    private boolean mMultipleCloudsSupported = false;
 
-    private AzureActiveDirectoryCloud mAzureActiveDirectoryCloud;
-
-    private AzureActiveDirectoryCloud getAzureActiveDirectoryCloud() {
+    /** Gets {@link AzureActiveDirectoryCloud}, if the cloud metadata is already initialized. */
+    @Nullable
+    private static synchronized AzureActiveDirectoryCloud getAzureActiveDirectoryCloud(
+            @NonNull final AzureActiveDirectoryAudience audience) {
         final String methodName = ":getAzureActiveDirectoryCloud";
-        AzureActiveDirectoryCloud cloud = null;
 
         try {
-            cloud = AzureActiveDirectory.getAzureActiveDirectoryCloud(new URL(mAudience.getCloudUrl()));
-            mKnownToMicrosoft = true;
+            return AzureActiveDirectory.getAzureActiveDirectoryCloud(new URL(audience.getCloudUrl()));
         } catch (MalformedURLException e) {
             Logger.errorPII(
                     TAG + methodName,
                     "AAD cloud URL was malformed.",
                     e
             );
-            cloud = null;
-            mKnownToMicrosoft = false;
         }
 
-        return cloud;
+        return null;
     }
 
     public AzureActiveDirectoryAuthority(AzureActiveDirectoryAudience signInAudience) {
         mAudience = signInAudience;
         mAuthorityTypeString = "AAD";
-        mAzureActiveDirectoryCloud = getAzureActiveDirectoryCloud();
     }
 
     public AzureActiveDirectoryAuthority() {
@@ -92,41 +97,18 @@ public class AzureActiveDirectoryAuthority extends Authority {
         mAudience = new AllAccounts();
         mAuthorityTypeString = "AAD";
         mMultipleCloudsSupported = false;
-        mAzureActiveDirectoryCloud = getAzureActiveDirectoryCloud();
-    }
-
-    /**
-     * Gets the {@link AzureActiveDirectoryCloud} associated to this Authority.
-     *
-     * @return The {@link AzureActiveDirectoryCloud} or null, if the provided URL is not associated
-     * with any cloud.
-     */
-    public AzureActiveDirectoryCloud getCloud() {
-        return mAzureActiveDirectoryCloud;
-    }
-
-    public Map<String, String> getFlightParameters() {
-        return this.mFlightParameters;
-    }
-
-    public void setMultipleCloudsSupported(boolean supported) {
-        mMultipleCloudsSupported = supported;
-    }
-
-    public boolean getMultipleCloudsSupported() {
-        return mMultipleCloudsSupported;
     }
 
     @Override
     public URI getAuthorityUri() {
         try {
-            getAzureActiveDirectoryCloud();
+            final AzureActiveDirectoryCloud cloud = getAzureActiveDirectoryCloud(mAudience);
             CommonURIBuilder issuer;
 
-            if (mAzureActiveDirectoryCloud == null) {
+            if (cloud == null) {
                 issuer = new CommonURIBuilder(mAudience.getCloudUrl());
             } else {
-                issuer = new CommonURIBuilder("https://" + mAzureActiveDirectoryCloud.getPreferredNetworkHostName());
+                issuer = new CommonURIBuilder("https://" + cloud.getPreferredNetworkHostName());
             }
 
             if (!StringUtil.isNullOrEmpty(mAudience.getTenantId())) {
@@ -185,10 +167,6 @@ public class AzureActiveDirectoryAuthority extends Authority {
         return new MicrosoftStsOAuth2Strategy(config, parameters);
     }
 
-    public AzureActiveDirectoryAudience getAudience() {
-        return mAudience;
-    }
-
     /**
      * Checks if current authority belongs to same cloud as the passed in authority.
      *
@@ -203,6 +181,14 @@ public class AzureActiveDirectoryAuthority extends Authority {
             AzureActiveDirectory.performCloudDiscovery();
         }
 
-        return getAzureActiveDirectoryCloud().equals(authorityToCheck.getAzureActiveDirectoryCloud());
+        final AzureActiveDirectoryCloud cloudOfThisAuthority = getAzureActiveDirectoryCloud(mAudience);
+        final AzureActiveDirectoryCloud cloudOfAuthorityToCheck = getAzureActiveDirectoryCloud(authorityToCheck.getAudience());
+
+        // Can't verify, return false.
+        if (cloudOfThisAuthority == null && cloudOfAuthorityToCheck == null) {
+            return false;
+        }
+
+        return Objects.equals(cloudOfThisAuthority, cloudOfAuthorityToCheck);
     }
 }
