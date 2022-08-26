@@ -81,8 +81,19 @@ public interface IBrokerTokenCommandParameters {
      */
     String getLocalAccountId();
 
+    /**
+     * Get the {@link BrokerRequestType} for the request.
+     *
+     * @return the {@link BrokerRequestType}
+     */
     BrokerRequestType getRequestType();
 
+    /**
+     * Get the tenant id being used for this request. This is particularly tenant id requesting BRT
+     * and this is here for FLW telemetry purposes.
+     *
+     * @return a String representing tenant id
+     */
     @Nullable
     String getTenantIdRequestingBrt();
 
