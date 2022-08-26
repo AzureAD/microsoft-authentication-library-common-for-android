@@ -129,6 +129,16 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
         final String cacheKey = mCacheValueDelegate.generateCacheKey(credentialToSave);
         Logger.verbosePII(TAG, "Generated cache key: [" + cacheKey + "]");
 
+
+        if(credentialToSave instanceof AccessTokenRecord) {
+            Logger.info(
+                    TAG,
+                    "AT about to be saved. " +
+                            " AT CredentialToSave is expired?: [ " + credentialToSave.isExpired() + " ]"
+                            + " scopes: [ " + ((AccessTokenRecord) credentialToSave ).getTarget() + " ]"
+            );
+        }
+
         // Perform any necessary field merging on the Credential to save...
         final Credential existingCredential = getCredential(cacheKey);
 
@@ -468,12 +478,29 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
             throw new IllegalArgumentException("Param [credentialToRemove] cannot be null.");
         }
 
+        if (credentialToRemove instanceof AccessTokenRecord){
+            Logger.info(
+                    TAG,
+                    "Deleting AT. Begin Searching.. " +
+                            " AT to Delete is expired?: [ "+ credentialToRemove.isExpired() +" ]"
+                            + " scopes: [ "+ ((AccessTokenRecord) credentialToRemove).getTarget() +" ]"
+            );
+        }
+
         final Map<String, Credential> credentials = getCredentialsWithKeys();
 
         boolean credentialRemoved = false;
         for (final Map.Entry<String, Credential> entry : credentials.entrySet()) {
             Logger.verbosePII(TAG, "Inspecting: [" + entry.getKey() + "]");
             final Credential currentCredential = entry.getValue();
+            if (credentialToRemove instanceof AccessTokenRecord){
+                Logger.info(
+                        TAG,
+                        "Deleting AT. " +
+                                " AT to Delete is expired?: [ "+ currentCredential.isExpired() +" ]"
+                                + " scopes: [ "+ ((AccessTokenRecord) currentCredential).getTarget() +" ]"
+                );
+            }
 
             if (currentCredential.equals(credentialToRemove)) {
                 mSharedPreferencesFileManager.remove(entry.getKey());

@@ -271,6 +271,14 @@ public class BrokerOAuth2TokenCache
         );
 
         if (isFoci) {
+
+            Logger.info(
+                    TAG,
+                    "AT about to be saved to the FociCache. " +
+                            " is expired?: [ "+ accessTokenRecord.isExpired() +" ]"
+                            + " scopes: [ "+ accessTokenRecord.getTarget() +" ]"
+            );
+
             // Save to the foci cache....
             result = mFociCache.save(
                     accountRecord,
@@ -283,6 +291,13 @@ public class BrokerOAuth2TokenCache
             final MsalOAuth2TokenCache targetCache = initializeProcessUidCache(
                     getComponents(),
                     mUid
+            );
+
+            Logger.info(
+                    TAG,
+                    "AT about to be saved to the processUid Cache"
+                            + " is expired?: [ "+ accessTokenRecord.isExpired() +" ]"
+                            + " scopes: [ "+ accessTokenRecord.getTarget() +" ]"
             );
 
             result = targetCache.save(
