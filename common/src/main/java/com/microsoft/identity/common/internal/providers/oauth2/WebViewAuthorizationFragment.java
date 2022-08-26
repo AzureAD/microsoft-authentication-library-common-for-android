@@ -260,6 +260,19 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         mWebView.setWebViewClient(webViewClient);
     }
 
+    // For ClientCertAuthChallengeHandler within AADWebViewClient,
+    // the YubiKitManager needs to stop discovering Usb devices upon fragment destroy.
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        final String methodTag = TAG + ":onDestroy";
+        if (mAADWebViewClient != null) {
+            mAADWebViewClient.stopYubiKitManagerUsbDiscovery();
+        } else {
+            Logger.error(methodTag, "YubiKitManager usb discovery not stopped due to mAADWebViewClient being null", null);
+        }
+    }
+
     /**
      * Extracts request headers from the given bundle object.
      */
@@ -280,6 +293,8 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         public void onChallengeResponseReceived(@NonNull final RawAuthorizationResult response) {
             final String methodTag = TAG + ":onChallengeResponseReceived";
             Logger.info(methodTag, null, "onChallengeResponseReceived:" + response.getResultCode());
+            //No telemetry will be emitted if CBA did not occur.
+            mAADWebViewClient.emitTelemetryForCertBasedAuthResult(response);
             sendResult(response);
             finish();
         }

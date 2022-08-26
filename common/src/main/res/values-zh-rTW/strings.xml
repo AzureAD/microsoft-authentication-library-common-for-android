@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+    <string name="app_loading">正在載入…</string>
+
+    <string name="broker_processing">Broker 正在處理</string>
+    <string name="http_auth_dialog_username">使用者名稱</string>
+    <string name="http_auth_dialog_password">密碼</string>
+    <string name="http_auth_dialog_title">輸入您的認證</string>
+    <string name="http_auth_dialog_login">登入</string>
+    <string name="http_auth_dialog_cancel">取消</string>
+
+    <!-- strings for CBA dialogs and layouts -->
+    <string name="smartcard_cert_dialog_title">選擇要登入的智慧卡憑證</string>
+    <string name="smartcard_cert_dialog_positive_button">繼續</string>
+    <string name="smartcard_cert_dialog_negative_button">取消</string>
+
+    <string name="smartcard_pin_dialog_title">解除鎖定智慧卡</string>
+    <string name="smartcard_pin_dialog_message">輸入智慧卡 PIN 碼以存取憑證並登入</string>
+    <string name="smartcard_pin_dialog_positive_button">解除鎖定</string>
+    <string name="smartcard_pin_dialog_negative_button">取消</string>
+    <string name="smartcard_pin_dialog_error_message">您輸入的 PIN 碼不正確</string>
+    <string name="smartcard_pin_layout_edittext_hint">PIN 碼</string>
+
+    <string name="smartcard_error_dialog_positive_button">確定</string>
+
+    <string name="smartcard_max_attempt_dialog_title">請稍後再試</string>
+    <string name="smartcard_max_attempt_dialog_message">嘗試失敗次數過多，請稍後再試一次。</string>
+
+    <string name="smartcard_early_unplug_dialog_title">再試一次</string>
+    <string name="smartcard_early_unplug_dialog_message">智慧卡裝置已移除。嘗試重新登入之前，請先重新插入裝置。</string>
+
+    <string name="smartcard_no_cert_dialog_title">找不到適用的憑證。</string>
+    <string name="smartcard_no_cert_dialog_message">請確認您的憑證已正確佈建至您的智慧卡裝置。</string>
+
+    <string name="smartcard_general_error_dialog_title">請稍後再試</string>
+    <string name="smartcard_general_error_dialog_message">發生意外錯誤。請稍後再試一次。</string>
+</resources>

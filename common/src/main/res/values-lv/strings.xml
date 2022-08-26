@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+    <string name="app_loading">Notiek ielāde…</string>
+
+    <string name="broker_processing">Starpnieks veic apstrādi</string>
+    <string name="http_auth_dialog_username">Lietotājvārds</string>
+    <string name="http_auth_dialog_password">Parole</string>
+    <string name="http_auth_dialog_title">Ievadiet savus akreditācijas datus</string>
+    <string name="http_auth_dialog_login">Pieteikties</string>
+    <string name="http_auth_dialog_cancel">Atcelt</string>
+
+    <!-- strings for CBA dialogs and layouts -->
+    <string name="smartcard_cert_dialog_title">Izvēlieties viedkartes sertifikātu, lai pierakstītos</string>
+    <string name="smartcard_cert_dialog_positive_button">Turpināt</string>
+    <string name="smartcard_cert_dialog_negative_button">Atcelt</string>
+
+    <string name="smartcard_pin_dialog_title">Viedkartes atbloķēšana</string>
+    <string name="smartcard_pin_dialog_message">Ievadiet viedkartes PIN kodu, lai piekļūtu sertifikātam un pierakstītos</string>
+    <string name="smartcard_pin_dialog_positive_button">Atbloķēt</string>
+    <string name="smartcard_pin_dialog_negative_button">Atcelt</string>
+    <string name="smartcard_pin_dialog_error_message">Jūsu ievadītais PIN kods nav pareizs.</string>
+    <string name="smartcard_pin_layout_edittext_hint">PIN</string>
+
+    <string name="smartcard_error_dialog_positive_button">Labi</string>
+
+    <string name="smartcard_max_attempt_dialog_title">Vēlāk mēģiniet vēlreiz</string>
+    <string name="smartcard_max_attempt_dialog_message">Pārāk daudz neizdevušos mēģinājumu. Vēlāk mēģiniet vēlreiz.</string>
+
+    <string name="smartcard_early_unplug_dialog_title">Mēģiniet vēlreiz</string>
+    <string name="smartcard_early_unplug_dialog_message">Viedkartes ierīce tika noņemta. Lūdzu, atkārtoti ievietojiet ierīci, pirms vēlreiz mēģināt pieteikties.</string>
+
+    <string name="smartcard_no_cert_dialog_title">Nav atrasts neviens lietojams sertifikāts.</string>
+    <string name="smartcard_no_cert_dialog_message">Lūdzu, pārliecinieties, vai jūsu sertifikāts ir pareizi nodrošināts viedkartes ierīcē.</string>
+
+    <string name="smartcard_general_error_dialog_title">Vēlāk mēģiniet vēlreiz</string>
+    <string name="smartcard_general_error_dialog_message">Radās neparedzēta kļūda. Vēlāk mēģiniet vēlreiz.</string>
+</resources>

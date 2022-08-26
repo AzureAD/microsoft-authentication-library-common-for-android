@@ -48,6 +48,11 @@ android {
         project.archivesBaseName = "common"
         project.version = android.defaultConfig.versionName
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        //Languages Common supports.
+        resConfigs "en", "ar", "b+sr+Latn", "bg", "ca", "cs", "da", "de", "el", "es", "et",
+                "eu", "fi", "fr", "gl", "he", "hi", "hr", "hu", "in", "it", "iw", "ja",
+                "kk", "ko", "lt", "lv", "ms", "nb", "nl", "pl", "pt-rBR", "pt-rPT", "ro",
+                "ru", "sk", "sl", "sr", "sv", "th", "tr", "uk", "vi", "zh-rCN", "zh-rTW"
     }
 
     buildTypes {
@@ -61,6 +66,11 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
             consumerProguardFiles 'consumer-rules.pro'
         }
+    }
+    //Upgrading to Java 8 in order to use YubiKit SDK
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
 
     lintOptions {
@@ -137,6 +147,9 @@ dependencies {
     implementation "com.google.code.gson:gson:$rootProject.ext.gsonVersion"
     implementation "androidx.browser:browser:$rootProject.ext.browserVersion"
     implementation "androidx.constraintlayout:constraintlayout:$rootProject.ext.constraintLayoutVersion"
+    //For Executive Order work
+    implementation "com.yubico.yubikit:android:$rootProject.ext.yubikitAndroidVersion"
+    implementation "com.yubico.yubikit:piv:$rootProject.ext.yubikitPivVersion"
 
     compileOnly 'com.github.spotbugs:spotbugs-annotations:4.3.0'
 
