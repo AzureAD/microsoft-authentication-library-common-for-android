@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+    <string name="app_loading">लोड हो रहा है…</string>
+
+    <string name="broker_processing">ब्रोकर संसाधित हो रहा है</string>
+    <string name="http_auth_dialog_username">उपयोगकर्ता नाम</string>
+    <string name="http_auth_dialog_password">पासवर्ड</string>
+    <string name="http_auth_dialog_title">अपने क्रेडेंशियल्स दर्ज करें</string>
+    <string name="http_auth_dialog_login">लॉगिन करें</string>
+    <string name="http_auth_dialog_cancel">रद्द करें</string>
+
+    <!-- strings for CBA dialogs and layouts -->
+    <string name="smartcard_cert_dialog_title">साइन इन करने के लिए कोई स्मार्टकार्ड प्रमाणपत्र चुनें</string>
+    <string name="smartcard_cert_dialog_positive_button">जारी रखें</string>
+    <string name="smartcard_cert_dialog_negative_button">रद्द करें</string>
+
+    <string name="smartcard_pin_dialog_title">स्मार्टकार्ड अनलॉक करें</string>
+    <string name="smartcard_pin_dialog_message">प्रमाणपत्र पर पहुँच प्राप्त करने और साइन इन करने के लिए स्मार्टकार्ड पिन दर्ज करें</string>
+    <string name="smartcard_pin_dialog_positive_button">अनलॉक करें</string>
+    <string name="smartcard_pin_dialog_negative_button">रद्द करें</string>
+    <string name="smartcard_pin_dialog_error_message">आपके द्वारा दर्ज किया गया PIN गलत था.</string>
+    <string name="smartcard_pin_layout_edittext_hint">पिन</string>
+
+    <string name="smartcard_error_dialog_positive_button">ठीक है</string>
+
+    <string name="smartcard_max_attempt_dialog_title">बाद में फिर से कोशिश करें</string>
+    <string name="smartcard_max_attempt_dialog_message">बहुत अधिक विफल प्रयास, बाद में फिर से कोशिश करें.</string>
+
+    <string name="smartcard_early_unplug_dialog_title">फिर से कोशिश करें</string>
+    <string name="smartcard_early_unplug_dialog_message">स्मार्टकार्ड डिवाइस निकाल दिया गया था. कृपया फिर से लॉग इन करने की कोशिश करने से पहले डिवाइस को फिर से लगाएँ.</string>
+
+    <string name="smartcard_no_cert_dialog_title">कोई लागू होने लायक प्रमाण पत्र नहीं मिले.</string>
+    <string name="smartcard_no_cert_dialog_message">कृपया पुष्टि करें कि आपके प्रमाणपत्र का आपके स्मार्टकार्ड डिवाइस पर सही तरीके से प्रावधान किया गया है.</string>
+
+    <string name="smartcard_general_error_dialog_title">बाद में फिर से कोशिश करें</string>
+    <string name="smartcard_general_error_dialog_message">एक अनपेक्षित त्रुटि हुई है. कृपया बाद में पुनः प्रयास करें.</string>
+</resources>

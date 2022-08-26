@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+    <string name="app_loading">Laden…</string>
+
+    <string name="broker_processing">Broker wordt verwerkt</string>
+    <string name="http_auth_dialog_username">Gebruikersnaam</string>
+    <string name="http_auth_dialog_password">Wachtwoord</string>
+    <string name="http_auth_dialog_title">Voer uw inloggegevens in</string>
+    <string name="http_auth_dialog_login">Aanmelden</string>
+    <string name="http_auth_dialog_cancel">Annuleren</string>
+
+    <!-- strings for CBA dialogs and layouts -->
+    <string name="smartcard_cert_dialog_title">Kies een smartcard-certificaat om u aan te melden</string>
+    <string name="smartcard_cert_dialog_positive_button">Doorgaan</string>
+    <string name="smartcard_cert_dialog_negative_button">Annuleren</string>
+
+    <string name="smartcard_pin_dialog_title">Smartcard ontgrendelen</string>
+    <string name="smartcard_pin_dialog_message">Voer de pincode van de smartcard in voor toegang tot het certificaat en meld u aan</string>
+    <string name="smartcard_pin_dialog_positive_button">Ontgrendelen</string>
+    <string name="smartcard_pin_dialog_negative_button">Annuleren</string>
+    <string name="smartcard_pin_dialog_error_message">De ingevoerde pincode is onjuist</string>
+    <string name="smartcard_pin_layout_edittext_hint">Pincode</string>
+
+    <string name="smartcard_error_dialog_positive_button">OK</string>
+
+    <string name="smartcard_max_attempt_dialog_title">Probeer het later opnieuw</string>
+    <string name="smartcard_max_attempt_dialog_message">Te veel mislukte pogingen. Probeer het later opnieuw.</string>
+
+    <string name="smartcard_early_unplug_dialog_title">Opnieuw proberen</string>
+    <string name="smartcard_early_unplug_dialog_message">Smartcard-apparaat is verwijderd. Plaats het apparaat opnieuw voordat u zich opnieuw probeert aan te melden.</string>
+
+    <string name="smartcard_no_cert_dialog_title">Er zijn geen toepasselijke certificaten gevonden.</string>
+    <string name="smartcard_no_cert_dialog_message">Controleer of uw certificaat correct is ingericht op uw smartcard-apparaat.</string>
+
+    <string name="smartcard_general_error_dialog_title">Probeer het later opnieuw</string>
+    <string name="smartcard_general_error_dialog_message">Er is een onverwachte fout opgetreden. Probeer het later opnieuw.</string>
+</resources>
