@@ -39,6 +39,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 
 import com.microsoft.identity.common.R;
+import com.microsoft.identity.common.internal.ui.webview.ICertDetails;
 
 import java.security.cert.X509Certificate;
 import java.util.List;
@@ -48,7 +49,7 @@ import java.util.List;
  */
 public class SmartcardCertPickerDialog extends SmartcardDialog {
 
-    private final List<ClientCertAuthChallengeHandler.YubiKitCertDetails> mCertList;
+    private final List<ICertDetails> mCertList;
     private final PositiveButtonListener mPositiveButtonListener;
     private final CancelCbaCallback mCancelCbaCallback;
 
@@ -59,7 +60,7 @@ public class SmartcardCertPickerDialog extends SmartcardDialog {
      * @param cancelCbaCallback Implemented Callback for when CBA is being cancelled.
      * @param activity Host activity.
      */
-    public SmartcardCertPickerDialog(@NonNull final List<ClientCertAuthChallengeHandler.YubiKitCertDetails> certList,
+    public SmartcardCertPickerDialog(@NonNull final List<ICertDetails> certList,
                                      @NonNull final PositiveButtonListener positiveButtonListener,
                                      @NonNull final CancelCbaCallback cancelCbaCallback,
                                      @NonNull final Activity activity) {
@@ -93,7 +94,7 @@ public class SmartcardCertPickerDialog extends SmartcardDialog {
                             public void onClick(final DialogInterface dialog, int which) {
                                 //Get the certificate details of the checked row.
                                 final int checkedPosition = ((AlertDialog) dialog).getListView().getCheckedItemPosition();
-                                final ClientCertAuthChallengeHandler.YubiKitCertDetails certDetails = certAdapter.getItem(checkedPosition);
+                                final ICertDetails certDetails = certAdapter.getItem(checkedPosition);
                                 mPositiveButtonListener.onClick(certDetails);
                             }
                         })
@@ -145,7 +146,7 @@ public class SmartcardCertPickerDialog extends SmartcardDialog {
      * Listener interface for a positive button click.
      */
     public interface PositiveButtonListener {
-        void onClick(@NonNull final ClientCertAuthChallengeHandler.YubiKitCertDetails certDetails);
+        void onClick(@NonNull final ICertDetails certDetails);
     }
 
     /**
@@ -158,10 +159,10 @@ public class SmartcardCertPickerDialog extends SmartcardDialog {
     /**
      * YubiKitCertDetails Adapter for ListView within smartcard certificate picker dialog.
      */
-    public static class CertDetailsAdapter extends ArrayAdapter<ClientCertAuthChallengeHandler.YubiKitCertDetails> {
+    public static class CertDetailsAdapter extends ArrayAdapter<ICertDetails> {
 
         public CertDetailsAdapter(@NonNull final Context context,
-                                  @NonNull final List<ClientCertAuthChallengeHandler.YubiKitCertDetails> certs) {
+                                  @NonNull final List<ICertDetails> certs) {
             super(context, 0, certs);
         }
 
