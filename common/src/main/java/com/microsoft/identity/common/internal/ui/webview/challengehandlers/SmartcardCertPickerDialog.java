@@ -84,7 +84,7 @@ public class SmartcardCertPickerDialog extends SmartcardDialog {
                 final AlertDialog.Builder builder = new AlertDialog.Builder(mActivity, R.style.CertAlertDialogTheme)
                         //Set topmost text of dialog.
                         .setTitle(R.string.smartcard_cert_dialog_title)
-                        //Creates and sets a ListView which gets rows from the provided CertDetails adapter. The first row is checked by default.
+                        //Creates and sets a ListView which gets rows from the provided ICertDetails adapter. The first row is checked by default.
                         //We don't pass through a listener, as the radio button check logic is handled after dialog is created.
                         .setSingleChoiceItems(certAdapter, 0, null)
                         //Positive button will pass along the certDetails of the selected row.

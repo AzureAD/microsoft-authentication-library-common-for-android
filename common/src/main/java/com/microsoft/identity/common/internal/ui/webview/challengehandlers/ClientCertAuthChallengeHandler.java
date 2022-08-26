@@ -41,6 +41,8 @@ import androidx.annotation.RequiresApi;
 
 import com.microsoft.identity.common.R;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
+import com.microsoft.identity.common.internal.ui.webview.ICertDetails;
+import com.microsoft.identity.common.internal.ui.webview.ISmartcardCertBasedAuthManager;
 import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings;
@@ -92,52 +94,16 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
     private static final String MDEVICE_NULL_ERROR_MESSAGE = "Instance UsbYubiKitDevice variable (mDevice) is null.";
     private static final String YUBIKEY_PROVIDER = "YKPiv";
     private final Activity mActivity;
-    private final YubiKitManager mYubiKitManager;
-    private UsbYubiKeyDevice mDevice;
+    //Smartcard variables
+    protected final ISmartcardCertBasedAuthManager mSmartcardCertBasedAuthManager;
+    //private final YubiKitManager mYubiKitManager;
+    //private UsbYubiKeyDevice mDevice;
     private final DialogHolder mDialogHolder;
     //Lock to help facilitate synchronization
     private static final Object sDeviceLock = new Object();
     //Booleans to help determine if a CBA flow is being completed so that we can emit telemetry for the results.
     private boolean mIsOnDeviceCertBasedAuthProceeding;
     private boolean mIsSmartcardCertBasedAuthProceeding;
-
-    /**
-     * Holds certificate found on YubiKey and its corresponding slot.
-     */
-    public static class YubiKitCertDetails {
-        private final X509Certificate cert;
-        private final Slot slot;
-
-        /**
-         * Creates new instance of YubiKitCertDetails.
-         * @param cert Certificate found on YubiKey.
-         * @param slot PIV slot on YubiKey where certificate is located.
-         */
-        public YubiKitCertDetails(@NonNull final X509Certificate cert,
-                                  @NonNull final Slot slot) {
-            this.cert = cert;
-            this.slot = slot;
-        }
-
-        /**
-         * Gets certificate.
-         * @return certificate.
-         */
-        @NonNull
-        public X509Certificate getCertificate() {
-            return cert;
-        }
-
-
-        /**
-         * Gets PIV Slot where certificate is located.
-         * @return Slot where certificate is located.
-         */
-        @Nonnull
-        public Slot getSlot() {
-            return slot;
-        }
-    }
 
     /**
      * Callback which will contain code to be run upon creation of a PivSession instance.
@@ -162,8 +128,28 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
         //Create and start YubiKitManager for UsbDiscovery mode.
         //When in Usb Discovery mode, Yubikeys that plug into the device will be accessible
         // once the user provides permission via the Android permission dialog.
-        mYubiKitManager = new YubiKitManager(mActivity.getApplicationContext());
-        mYubiKitManager.startUsbDiscovery(new UsbConfiguration(), new Callback<UsbYubiKeyDevice>() {
+        mSmartcardCertBasedAuthManager = SmartcardCertBasedAuthManagerFactory.getSmartcardCertBasedAuthManager(mActivity);
+        mSmartcardCertBasedAuthManager.startDiscovery(new ISmartcardCertBasedAuthManager.IStartDiscoveryCallback() {
+            @Override
+            public void onStartDiscovery() {
+                //Reset DialogHolder to null if necessary.
+                //In this case, DialogHolder would be an ErrorDialog if not null.
+                mDialogHolder.dismissDialog();
+            }
+
+            @Override
+            public void onClosedConnection() {
+                //Show an error dialog informing users that they have unplugged their device only if a dialog is still showing.
+                if (mDialogHolder.isDialogShowing()) {
+                    mDialogHolder.onCancelCba();
+                    mDialogHolder.showErrorDialog(R.string.smartcard_early_unplug_dialog_title, R.string.smartcard_early_unplug_dialog_message);
+                    Logger.verbose(TAG, "Smartcard was disconnected while dialog was still displayed.");
+                }
+            }
+        });
+
+        //mYubiKitManager = new YubiKitManager(mActivity.getApplicationContext());
+/*        mYubiKitManager.startUsbDiscovery(new UsbConfiguration(), new Callback<UsbYubiKeyDevice>() {
             @Override
             public void invoke(@NonNull UsbYubiKeyDevice device) {
                 Logger.verbose(TAG, "A YubiKey device was connected");
@@ -200,7 +186,7 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
                     });
                 }
             }
-        });
+        });*/
     }
 
     /**
@@ -214,11 +200,9 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
     public Void processChallenge(@NonNull final ClientCertRequest request) {
         //final String methodTag = TAG + ":processChallenge";
         //If a smartcard device is connected, proceed with smartcard CBA.
-        synchronized (sDeviceLock) {
-            if (mDevice != null) {
-                handleSmartcardCertAuth(request);
-                return null;
-            }
+        if (mSmartcardCertBasedAuthManager.isDeviceConnected()) {
+            handleSmartcardCertAuth(request);
+            return null;
         }
         //Else, proceed with user certificates stored on device.
         handleOnDeviceCertAuth(request);
@@ -234,6 +218,28 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     private void handleSmartcardCertAuth(@NonNull final ClientCertRequest request) {
         final String methodTag = TAG + ":handleSmartcardCertAuth";
+        if (mSmartcardCertBasedAuthManager.getPinAttemptsRemaining() == 0) {
+            Logger.info(methodTag,  "User has reached the maximum failed attempts allowed.");
+            mDialogHolder.showErrorDialog(
+                    R.string.smartcard_max_attempt_dialog_title,
+                    R.string.smartcard_max_attempt_dialog_message);
+            request.cancel();
+            return;
+        }
+
+        //Create List that contains cert details only pertinent to the cert picker.
+        final List<ICertDetails> certList = mSmartcardCertBasedAuthManager.getCertDetailsList();
+        //If no certs were found, cancel flow.
+        if (certList.isEmpty()) {
+            Logger.info(methodTag,  "No PIV certificates found on YubiKey device.");
+            mDialogHolder.showErrorDialog(
+                    R.string.smartcard_no_cert_dialog_title,
+                    R.string.smartcard_no_cert_dialog_message);
+            request.cancel();
+            return;
+        }
+
+        //this is where I stopped
         //A connection to the YubiKey needs to be made in order to read the certificates off it.
         getActivePivSessionAsync(request, new IPivSessionCallback() {
             @Override
