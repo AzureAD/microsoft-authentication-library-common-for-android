@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+    <string name="app_loading">Nalaganje …</string>
+
+    <string name="broker_processing">Posrednik obdeluje</string>
+    <string name="http_auth_dialog_username">Uporabniško ime</string>
+    <string name="http_auth_dialog_password">Geslo</string>
+    <string name="http_auth_dialog_title">Vnesite poverilnice</string>
+    <string name="http_auth_dialog_login">Prijava</string>
+    <string name="http_auth_dialog_cancel">Prekliči</string>
+
+    <!-- strings for CBA dialogs and layouts -->
+    <string name="smartcard_cert_dialog_title">Izberite potrdilo pametne kartice za vpis</string>
+    <string name="smartcard_cert_dialog_positive_button">Nadaljuj</string>
+    <string name="smartcard_cert_dialog_negative_button">Prekliči</string>
+
+    <string name="smartcard_pin_dialog_title">Odkleni pametno kartico</string>
+    <string name="smartcard_pin_dialog_message">Če želite dostopati do potrdila in se vpisati, vnesite kodo PIN pametne kartice</string>
+    <string name="smartcard_pin_dialog_positive_button">Odkleni</string>
+    <string name="smartcard_pin_dialog_negative_button">Prekliči</string>
+    <string name="smartcard_pin_dialog_error_message">Vnesena koda PIN ni pravilna</string>
+    <string name="smartcard_pin_layout_edittext_hint">Koda PIN</string>
+
+    <string name="smartcard_error_dialog_positive_button">V redu</string>
+
+    <string name="smartcard_max_attempt_dialog_title">Poskusite znova pozneje</string>
+    <string name="smartcard_max_attempt_dialog_message">Preveč neuspelih poskusov. Poskusite znova pozneje.</string>
+
+    <string name="smartcard_early_unplug_dialog_title">Poskusi znova</string>
+    <string name="smartcard_early_unplug_dialog_message">Naprava s pametno kartico je bila odstranjena. Znova vstavite napravo, preden se poskusite znova prijaviti.</string>
+
+    <string name="smartcard_no_cert_dialog_title">Ustreznih potrdil ni bilo mogoče najti.</string>
+    <string name="smartcard_no_cert_dialog_message">Preverite, ali je bilo potrdilo pravilno nastavljeno in omogočeno v napravi s pametno kartico.</string>
+
+    <string name="smartcard_general_error_dialog_title">Poskusite znova pozneje</string>
+    <string name="smartcard_general_error_dialog_message">Prišlo je do nepričakovane napake. Poskusite znova pozneje.</string>
+</resources>

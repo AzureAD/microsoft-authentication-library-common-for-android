@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+    <string name="app_loading">Caricamento…</string>
+
+    <string name="broker_processing">Broker in fase di elaborazione</string>
+    <string name="http_auth_dialog_username">Nome utente</string>
+    <string name="http_auth_dialog_password">Password</string>
+    <string name="http_auth_dialog_title">Immetti le credenziali</string>
+    <string name="http_auth_dialog_login">Accedi</string>
+    <string name="http_auth_dialog_cancel">Annulla</string>
+
+    <!-- strings for CBA dialogs and layouts -->
+    <string name="smartcard_cert_dialog_title">Scegli un certificato smart card per accedere</string>
+    <string name="smartcard_cert_dialog_positive_button">Continua</string>
+    <string name="smartcard_cert_dialog_negative_button">Annulla</string>
+
+    <string name="smartcard_pin_dialog_title">Sblocca smart card</string>
+    <string name="smartcard_pin_dialog_message">Immetti il PIN della smart card per accedere al certificato e accedere</string>
+    <string name="smartcard_pin_dialog_positive_button">Sblocca</string>
+    <string name="smartcard_pin_dialog_negative_button">Annulla</string>
+    <string name="smartcard_pin_dialog_error_message">Il PIN immesso non è corretto.</string>
+    <string name="smartcard_pin_layout_edittext_hint">PIN</string>
+
+    <string name="smartcard_error_dialog_positive_button">OK</string>
+
+    <string name="smartcard_max_attempt_dialog_title">Riprova più tardi</string>
+    <string name="smartcard_max_attempt_dialog_message">Troppi tentativi non riusciti. Riprova più tardi.</string>
+
+    <string name="smartcard_early_unplug_dialog_title">Riprova</string>
+    <string name="smartcard_early_unplug_dialog_message">Il dispositivo smart card è stato rimosso. Reinserisci il dispositivo prima di tentare di nuovo l\'accesso.</string>
+
+    <string name="smartcard_no_cert_dialog_title">Non sono stati trovati certificati applicabili.</string>
+    <string name="smartcard_no_cert_dialog_message">Verifica che il provisioning del certificato sia stato eseguito correttamente nel dispositivo smart card.</string>
+
+    <string name="smartcard_general_error_dialog_title">Riprova più tardi</string>
+    <string name="smartcard_general_error_dialog_message">Si è verificato un errore imprevisto. Riprova più tardi.</string>
+</resources>

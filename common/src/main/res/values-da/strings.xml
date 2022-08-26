@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+    <string name="app_loading">Indlæser…</string>
+
+    <string name="broker_processing">Mægleren er i gang med behandling</string>
+    <string name="http_auth_dialog_username">Brugernavn</string>
+    <string name="http_auth_dialog_password">Adgangskode</string>
+    <string name="http_auth_dialog_title">Angiv dine legitimationsoplysninger</string>
+    <string name="http_auth_dialog_login">Logon</string>
+    <string name="http_auth_dialog_cancel">Annuller</string>
+
+    <!-- strings for CBA dialogs and layouts -->
+    <string name="smartcard_cert_dialog_title">Vælg et chipkort-certifikat for at logge på</string>
+    <string name="smartcard_cert_dialog_positive_button">Fortsæt</string>
+    <string name="smartcard_cert_dialog_negative_button">Annuller</string>
+
+    <string name="smartcard_pin_dialog_title">Lås chipkort op</string>
+    <string name="smartcard_pin_dialog_message">Angiv chipkort-pinkoden for at få adgang til certifikatet og logge på</string>
+    <string name="smartcard_pin_dialog_positive_button">Lås op</string>
+    <string name="smartcard_pin_dialog_negative_button">Annuller</string>
+    <string name="smartcard_pin_dialog_error_message">Den pinkode, du har angivet, var forkert</string>
+    <string name="smartcard_pin_layout_edittext_hint">Pinkode</string>
+
+    <string name="smartcard_error_dialog_positive_button">OK</string>
+
+    <string name="smartcard_max_attempt_dialog_title">Prøv igen senere</string>
+    <string name="smartcard_max_attempt_dialog_message">Der er for mange mislykkede forsøg. Prøv igen senere.</string>
+
+    <string name="smartcard_early_unplug_dialog_title">Prøv igen</string>
+    <string name="smartcard_early_unplug_dialog_message">Chipkort-enheden blev fjernet. Indsæt enheden igen, før du forsøger at logge på igen.</string>
+
+    <string name="smartcard_no_cert_dialog_title">Der blev ikke fundet nogen relevante certifikater.</string>
+    <string name="smartcard_no_cert_dialog_message">Bekræft, at dit certifikat er blevet klargjort korrekt på din chipkort-enhed.</string>
+
+    <string name="smartcard_general_error_dialog_title">Prøv igen senere</string>
+    <string name="smartcard_general_error_dialog_message">Der opstod en uventet fejl. Prøv igen senere.</string>
+</resources>
