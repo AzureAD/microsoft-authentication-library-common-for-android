@@ -1174,4 +1174,61 @@ public class BrokerOAuth2TokenCacheTest {
                 retrievedResult.getRefreshToken()
         );
     }
+
+    @Test
+    public void testClearAll() throws ClientException {
+        int appIndex = 0;
+        for (final OAuth2TokenCache cache : mOtherAppTokenCaches) {
+            configureMocks(mOtherCacheTestBundles.get(appIndex));
+
+            final ICacheRecord cacheRecord = cache.save(mockStrategy, mockRequest, mockResponse);
+
+            final BrokerApplicationMetadata applicationMetadata = new BrokerApplicationMetadata();
+            applicationMetadata.setClientId(cacheRecord.getIdToken().getClientId());
+            applicationMetadata.setEnvironment(cacheRecord.getIdToken().getEnvironment());
+            applicationMetadata.setFoci(cacheRecord.getRefreshToken().getFamilyId());
+            applicationMetadata.setUid(testAppUids[appIndex++]);
+
+            mApplicationMetadataCache.insert(applicationMetadata);
+        }
+
+        final List<String> clientIds = new ArrayList<>();
+
+        for (final MsalOAuth2TokenCacheTest.AccountCredentialTestBundle testBundle : mOtherCacheTestBundles) {
+            clientIds.add(
+                    testBundle.mGeneratedRefreshToken.getClientId()
+            );
+        }
+
+        configureMocksForFoci();
+        final ICacheRecord fociCacheRecord = mBrokerOAuth2TokenCache.save(mockStrategy, mockRequest, mockResponse);
+        final BrokerApplicationMetadata applicationMetadata = new BrokerApplicationMetadata();
+        applicationMetadata.setClientId(fociCacheRecord.getIdToken().getClientId());
+        applicationMetadata.setEnvironment(fociCacheRecord.getIdToken().getEnvironment());
+        applicationMetadata.setFoci(fociCacheRecord.getRefreshToken().getFamilyId());
+        applicationMetadata.setUid(0);
+
+        mApplicationMetadataCache.insert(applicationMetadata);
+        clientIds.add(fociCacheRecord.getIdToken().getClientId());
+
+        // Verify the broker cache is populated
+        assertEquals(true, mBrokerOAuth2TokenCache.getAccounts().size() > 0);
+        assertEquals(true, mBrokerOAuth2TokenCache.getFociCacheRecords().size() > 0);
+        assertEquals(true, mApplicationMetadataCache.getAll().size() > 0);
+
+        for( final String clientId :clientIds) {
+            assertEquals(true, mBrokerOAuth2TokenCache.isClientIdKnownToCache(clientId));
+        }
+
+        // Clear Broker Cache
+        mBrokerOAuth2TokenCache.clearAll();
+
+        // Verify Broker cache is cleared
+        assertEquals(0, mBrokerOAuth2TokenCache.getAccounts().size());
+        assertEquals(0, mBrokerOAuth2TokenCache.getFociCacheRecords().size());
+        assertEquals(0, mApplicationMetadataCache.getAll().size());
+        for( final String clientId :clientIds) {
+            assertEquals(false, mBrokerOAuth2TokenCache.isClientIdKnownToCache(clientId));
+        }
+    }
 }

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+    <string name="app_loading">Đang tải…</string>
+
+    <string name="broker_processing">Nhà môi giới đang xử lý</string>
+    <string name="http_auth_dialog_username">Tên người dùng</string>
+    <string name="http_auth_dialog_password">Mật khẩu</string>
+    <string name="http_auth_dialog_title">Nhập thông tin đăng nhập</string>
+    <string name="http_auth_dialog_login">Đăng nhập</string>
+    <string name="http_auth_dialog_cancel">Hủy</string>
+
+    <!-- strings for CBA dialogs and layouts -->
+    <string name="smartcard_cert_dialog_title">Chọn chứng chỉ thẻ thông minh để đăng nhập</string>
+    <string name="smartcard_cert_dialog_positive_button">Tiếp tục</string>
+    <string name="smartcard_cert_dialog_negative_button">Hủy</string>
+
+    <string name="smartcard_pin_dialog_title">Mở khóa thẻ thông minh</string>
+    <string name="smartcard_pin_dialog_message">Nhập mã PIN thẻ thông minh để truy nhập chứng chỉ và đăng nhập</string>
+    <string name="smartcard_pin_dialog_positive_button">Mở khóa</string>
+    <string name="smartcard_pin_dialog_negative_button">Hủy</string>
+    <string name="smartcard_pin_dialog_error_message">Mã PIN bạn nhập không đúng</string>
+    <string name="smartcard_pin_layout_edittext_hint">Mã PIN</string>
+
+    <string name="smartcard_error_dialog_positive_button">OK</string>
+
+    <string name="smartcard_max_attempt_dialog_title">Thử lại sau</string>
+    <string name="smartcard_max_attempt_dialog_message">Quá nhiều lần thử không thành công, hãy thử lại sau.</string>
+
+    <string name="smartcard_early_unplug_dialog_title">Thử lại</string>
+    <string name="smartcard_early_unplug_dialog_message">Thiết bị thẻ thông minh đã bị loại bỏ. Vui lòng chèn lại thiết bị trước khi tìm cách đăng nhập lại.</string>
+
+    <string name="smartcard_no_cert_dialog_title">Không tìm thấy chứng chỉ có thể áp dụng.</string>
+    <string name="smartcard_no_cert_dialog_message">Vui lòng xác nhận rằng chứng chỉ của bạn đã được cung cấp chính xác trên thiết bị thẻ thông minh của bạn.</string>
+
+    <string name="smartcard_general_error_dialog_title">Thử lại sau</string>
+    <string name="smartcard_general_error_dialog_message">Đã xảy ra lỗi bất ngờ. Xin thử lại sau.</string>
+</resources>
