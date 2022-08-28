@@ -57,7 +57,7 @@ public class BrokerInteractiveTokenCommandParameters extends InteractiveTokenCom
     private final String homeAccountId;
     private final String localAccountId;
     private final boolean pKeyAuthHeaderAllowed;
-    private final String tenantIdRequestingBrt;
+    private final String homeTenantId;
 
     @Override
     public void validate() throws ArgumentException {

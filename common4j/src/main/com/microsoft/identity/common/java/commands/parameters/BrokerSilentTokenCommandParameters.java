@@ -51,7 +51,7 @@ public class BrokerSilentTokenCommandParameters extends SilentTokenCommandParame
     private final boolean pKeyAuthHeaderAllowed;
 
     private final BrokerRequestType requestType;
-    private final String tenantIdRequestingBrt;
+    private final String homeTenantId;
 
     @Override
     public void validate() throws ArgumentException {

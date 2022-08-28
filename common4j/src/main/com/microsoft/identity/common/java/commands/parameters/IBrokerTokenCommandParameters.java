@@ -89,13 +89,13 @@ public interface IBrokerTokenCommandParameters {
     BrokerRequestType getRequestType();
 
     /**
-     * Get the tenant id being used for this request. This is particularly tenant id requesting BRT
-     * and this is here for FLW telemetry purposes.
+     * Get the home tenant id being used for this request. This is particularly tenant id
+     * requesting BRT and this is here for FLW telemetry purposes.
      *
      * @return a String representing tenant id
      */
     @Nullable
-    String getTenantIdRequestingBrt();
+    String getHomeTenantId();
 
     /**
      * Helper method to identify if the request originated from Broker itself or from client libraries.
