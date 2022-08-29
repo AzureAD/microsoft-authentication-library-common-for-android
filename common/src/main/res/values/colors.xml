@@ -1,4 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
     <color name="msal_loading" tools:override="true">#0078D4</color>
+    <!-- colors for CBA dialogs -->
+    <color name="dialogTitleText">#0078D4</color>
+    <color name="dialogMessageText">#919191</color>
+    <color name="dialogRadioButton">#0078D4</color>
+    <color name="dialogButtonText">#0078D4</color>
+    <color name="dialogPinEditText">#0078D4</color>
+    <color name="certIssuerTitle">#212121</color>
+    <color name="dialogErrorText">#D92C2C</color>
 </resources>

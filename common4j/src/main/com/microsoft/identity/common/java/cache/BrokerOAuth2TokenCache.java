@@ -1300,9 +1300,28 @@ public class BrokerOAuth2TokenCache
         throw new UnsupportedOperationException(OAuth2TokenCache.ERR_UNSUPPORTED_OPERATION);
     }
 
+    /**
+     * Removes all entries from broker cache for all clients in applications metadata cache.
+     * Removes all entries from broker Foci cache
+     * Removes all entries from broker applications metadata cache
+     */
     @Override
     public void clearAll() {
-        throw new UnsupportedOperationException(OAuth2TokenCache.ERR_UNSUPPORTED_OPERATION);
+        final List<BrokerApplicationMetadata> allClientsMetadata = mApplicationMetadataCache.getAll();
+        for (final BrokerApplicationMetadata clientMetadata : allClientsMetadata) {
+            final OAuth2TokenCache clientTokenCache = getTokenCacheForClient(
+                    clientMetadata.getClientId(),
+                    clientMetadata.getEnvironment(),
+                    clientMetadata.getUid()
+            );
+
+            if (clientTokenCache != null) {
+                clientTokenCache.clearAll();
+            }
+        }
+
+        this.mFociCache.clearAll();
+        this.mApplicationMetadataCache.clear();
     }
 
     /**
