@@ -493,7 +493,7 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
         for (final Map.Entry<String, Credential> entry : credentials.entrySet()) {
             Logger.verbosePII(TAG, "Inspecting: [" + entry.getKey() + "]");
             final Credential currentCredential = entry.getValue();
-            if (credentialToRemove instanceof AccessTokenRecord){
+            if (currentCredential.getClass().equals(AccessTokenRecord.class)){
                 Logger.info(
                         TAG,
                         "Deleting AT. " +
