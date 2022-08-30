@@ -112,6 +112,7 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
                 .build();
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     @Override
     public KeyPair generateNewRsaKeyPair(int keySize) throws UnsupportedOperationException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchProviderException {
         return generateNewRsaKeyPair(mContext, keySize);
@@ -159,7 +160,8 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
      * @return The newly generated RSA KeyPair.
      * @throws UnsupportedOperationException
      */
-    @SuppressLint("NewApi")
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
+    @SuppressLint(NewApi)
     private KeyPair generateNewRsaKeyPair(@androidx.annotation.NonNull final Context context,
                                           final int minKeySize)
             throws UnsupportedOperationException, InvalidAlgorithmParameterException,
