@@ -123,7 +123,7 @@ public class YubiKitCertBasedAuthManager implements ISmartcardCertBasedAuthManag
     }
 
 
-    public class YubiKitSmartcardSession implements ISmartcardSession{
+    public class YubiKitSmartcardSession implements ISmartcardSession {
         PivSession piv;
 
         public YubiKitSmartcardSession(PivSession p) {
@@ -183,8 +183,8 @@ public class YubiKitCertBasedAuthManager implements ISmartcardCertBasedAuthManag
         }
 
         @Override
-        public int getPinAttemptsRemaining() {
-            return 0;
+        public int getPinAttemptsRemaining() throws Exception {
+            return piv.getPinAttempts();
         }
 
         @Override

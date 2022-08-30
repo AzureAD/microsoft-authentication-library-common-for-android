@@ -181,15 +181,15 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
         mSmartcardCertBasedAuthManager.attemptDeviceSession(new ISmartcardCertBasedAuthManager.ISessionCallback() {
             @Override
             public void onGetSession(@NonNull ISmartcardCertBasedAuthManager.ISmartcardSession session) {
-                if (session.getPinAttemptsRemaining() == 0) {
-                    Logger.info(methodTag,  "User has reached the maximum failed attempts allowed.");
-                    mDialogHolder.showErrorDialog(
-                            R.string.smartcard_max_attempt_dialog_title,
-                            R.string.smartcard_max_attempt_dialog_message);
-                    request.cancel();
-                    return;
-                }
                 try {
+                    if (session.getPinAttemptsRemaining() == 0) {
+                        Logger.info(methodTag,  "User has reached the maximum failed attempts allowed.");
+                        mDialogHolder.showErrorDialog(
+                                R.string.smartcard_max_attempt_dialog_title,
+                                R.string.smartcard_max_attempt_dialog_message);
+                        request.cancel();
+                        return;
+                    }
                     //Create List that contains cert details only pertinent to the cert picker.
                     final List<ICertDetails> certList = session.getCertDetailsList();
                     //If no certs were found, cancel flow.
@@ -419,20 +419,29 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
             useSmartcardCertForAuth(certDetails, pin, session, request);
         } catch (Exception e) {
             if (e instanceof InvalidPinException) {
-                // An incorrect Pin attempt.
-                final int pinAttemptsRemaining = session.getPinAttemptsRemaining();
-                // If the number of attempts is 0, no more attempts will be allowed.
-                if (pinAttemptsRemaining == 0) {
-                    //We must display a dialog informing the user that they have made too many incorrect attempts,
-                    // and the user will need to figure out a way to reset their key outside of our library.
-                    Logger.info(methodTag,  "User has reached the maximum failed attempts allowed.");
+                try {
+                    // An incorrect Pin attempt.
+                    final int pinAttemptsRemaining = session.getPinAttemptsRemaining();
+                    // If the number of attempts is 0, no more attempts will be allowed.
+                    if (pinAttemptsRemaining == 0) {
+                        //We must display a dialog informing the user that they have made too many incorrect attempts,
+                        // and the user will need to figure out a way to reset their key outside of our library.
+                        Logger.info(methodTag, "User has reached the maximum failed attempts allowed.");
+                        mDialogHolder.showErrorDialog(
+                                R.string.smartcard_max_attempt_dialog_title,
+                                R.string.smartcard_max_attempt_dialog_message);
+                        request.cancel();
+                    } else {
+                        //Update Dialog to indicate that an incorrect attempt was made.
+                        mDialogHolder.setPinDialogErrorMode();
+                    }
+                } catch (Exception exception) {
+                    //Show general error dialog.
                     mDialogHolder.showErrorDialog(
-                            R.string.smartcard_max_attempt_dialog_title,
-                            R.string.smartcard_max_attempt_dialog_message);
+                            R.string.smartcard_general_error_dialog_title,
+                            R.string.smartcard_general_error_dialog_message);
+                    Telemetry.emit(new ErrorEvent().putException(exception));
                     request.cancel();
-                } else {
-                    //Update Dialog to indicate that an incorrect attempt was made.
-                    mDialogHolder.setPinDialogErrorMode();
                 }
             } else {
                 //Show general error dialog.

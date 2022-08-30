@@ -47,7 +47,7 @@ public interface ISmartcardCertBasedAuthManager {
 
         public void verifyPin(char[] pin) throws Exception;
 
-        public int getPinAttemptsRemaining();
+        public int getPinAttemptsRemaining() throws Exception;
 
         public void prepareForAuth();
 
