@@ -49,8 +49,8 @@ public class BrokerSilentTokenCommandParameters extends SilentTokenCommandParame
 
     private final String negotiatedBrokerProtocolVersion;
 
-    // If this flag is true, we will request to send x-ms-PKeyAuth Header to the token endpoint.
-    // This flag is transferred to a MicrosoftTokenRequest in BaseController.
+    // If this flag is true, we will send the x-ms-PKeyAuth Header to the token endpoint.
+    // Note: this flag is transferred to a MicrosoftTokenRequest in BaseController.
     private final boolean pKeyAuthHeaderAllowed;
 
     private final BrokerRequestType requestType;
