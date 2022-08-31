@@ -248,7 +248,7 @@ stages:
           MavenServiceConnections: IdentityDivision
 
       - task: MavenAuthenticate@0
-          displayName: Authenticate to the Intune_App_SDK feed
+        displayName: Authenticate to the Intune_App_SDK feed
         inputs:
           MavenServiceConnections: Intune_App_SDK
 
