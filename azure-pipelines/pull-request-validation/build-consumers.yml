@@ -249,8 +249,8 @@ stages:
 
       - task: MavenAuthenticate@0
           displayName: Authenticate to the Intune_App_SDK feed
-          inputs:
-            MavenServiceConnections: Intune_App_SDK
+        inputs:
+          MavenServiceConnections: Intune_App_SDK
 
       - task: Bash@3
         displayName: Install ninja
