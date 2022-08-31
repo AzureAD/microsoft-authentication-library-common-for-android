@@ -221,6 +221,7 @@ dependencies {
 
     api platform("io.opentelemetry:opentelemetry-bom:1.16.0")
     api('io.opentelemetry:opentelemetry-api')
+    resolvableTestFixturesImplementation "org.robolectric:junit:$rootProject.ext.robolectricVersion"
 }
 
 sourceCompatibility = "1.8"

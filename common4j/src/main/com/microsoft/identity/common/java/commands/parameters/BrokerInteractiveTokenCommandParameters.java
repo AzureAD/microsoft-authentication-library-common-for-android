@@ -23,9 +23,9 @@
 package com.microsoft.identity.common.java.commands.parameters;
 
 import com.microsoft.identity.common.java.broker.IBrokerAccount;
-import com.microsoft.identity.common.java.request.BrokerRequestType;
 import com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache;
 import com.microsoft.identity.common.java.exception.ArgumentException;
+import com.microsoft.identity.common.java.request.BrokerRequestType;
 import com.microsoft.identity.common.java.util.StringUtil;
 
 import java.util.Map;
@@ -38,7 +38,7 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder(toBuilder = true)
 @EqualsAndHashCode(callSuper = true)
 public class BrokerInteractiveTokenCommandParameters extends InteractiveTokenCommandParameters
-          implements IHasExtraParameters {
+        implements IHasExtraParameters, IBrokerTokenCommandParameters {
 
     private final String callerPackageName;
     private final int callerUid;
@@ -57,17 +57,7 @@ public class BrokerInteractiveTokenCommandParameters extends InteractiveTokenCom
     private final String homeAccountId;
     private final String localAccountId;
     private final boolean pKeyAuthHeaderAllowed;
-
-
-    /**
-     * Helper method to identify if the request originated from Broker itself or from client libraries.
-     *
-     * @return : true if request is the request is originated from Broker, false otherwise
-     */
-    public boolean isRequestFromBroker() {
-        return requestType == BrokerRequestType.BROKER_RT_REQUEST ||
-                requestType == BrokerRequestType.RESOLVE_INTERRUPT;
-    }
+    private final String homeTenantId;
 
     @Override
     public void validate() throws ArgumentException {
