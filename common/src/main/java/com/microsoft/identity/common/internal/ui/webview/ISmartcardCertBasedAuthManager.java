@@ -35,7 +35,7 @@ public interface ISmartcardCertBasedAuthManager {
          * Code depending on PivSession instance to be run.
          * @param connection PivSession instance created from UsbSmartCardConnection.
          */
-        void onGetSession(@NonNull final ISmartcardSession session);
+        void onGetSession(@NonNull final ISmartcardSession session) throws Exception;
 
         void onException(@NonNull final Exception e);
     }
@@ -45,7 +45,7 @@ public interface ISmartcardCertBasedAuthManager {
         @NonNull
         public List<ICertDetails> getCertDetailsList() throws Exception;
 
-        public void verifyPin(char[] pin) throws Exception;
+        public boolean verifyPin(char[] pin) throws Exception;
 
         public int getPinAttemptsRemaining() throws Exception;
 

@@ -85,7 +85,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                                              @NonNull final String redirectUrl) {
         super(activity, completionCallback, pageLoadedCallback);
         mRedirectUrl = redirectUrl;
-        //Creating ClientCertAuthChallengeHandler starts YubiKitManager usb discovery
+        //Creating ClientCertAuthChallengeHandler starts smartcard usb discovery
         mClientCertAuthChallengeHandler = new ClientCertAuthChallengeHandler(getActivity());
     }
 
@@ -466,14 +466,14 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     }
 
     /**
-     * A wrapper to stop YubiKitManager instance from detecting any more Usb devices.
+     * A wrapper to stop a smartcard manager instance from detecting any more Usb devices.
      */
-    public void stopYubiKitManagerUsbDiscovery() {
-        final String methodTag = TAG + ":stopYubiKitManagerUsbDiscovery";
+    public void stopSmartcardUsbDiscovery() {
+        final String methodTag = TAG + ":stopSmartcardUsbDiscovery";
         if (mClientCertAuthChallengeHandler != null) {
-            mClientCertAuthChallengeHandler.stopYubiKitManagerUsbDiscovery();
+            mClientCertAuthChallengeHandler.stopSmartcardUsbDiscovery();
         } else {
-            Logger.error(methodTag, "YubiKitManager usb discovery not stopped due to mClientCertAuthChallengeHandler being null", null);
+            Logger.error(methodTag, "Usb discovery not stopped due to mClientCertAuthChallengeHandler being null", null);
         }
     }
 

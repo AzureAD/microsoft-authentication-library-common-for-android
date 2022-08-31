@@ -261,15 +261,15 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     }
 
     // For ClientCertAuthChallengeHandler within AADWebViewClient,
-    // the YubiKitManager needs to stop discovering Usb devices upon fragment destroy.
+    // the smartcard manager needs to stop discovering Usb devices upon fragment destroy.
     @Override
     public void onDestroy() {
         super.onDestroy();
         final String methodTag = TAG + ":onDestroy";
         if (mAADWebViewClient != null) {
-            mAADWebViewClient.stopYubiKitManagerUsbDiscovery();
+            mAADWebViewClient.stopSmartcardUsbDiscovery();
         } else {
-            Logger.error(methodTag, "YubiKitManager usb discovery not stopped due to mAADWebViewClient being null", null);
+            Logger.error(methodTag, "Usb discovery not stopped due to mAADWebViewClient being null", null);
         }
     }
 
