@@ -38,6 +38,8 @@ import org.junit.Assert;
 import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT;
 import static org.junit.Assert.fail;
 
+import java.util.concurrent.TimeUnit;
+
 /**
  * A login component handler for AAD.
  */
@@ -97,7 +99,7 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
     }
 
     private UiObject getConsentScreen() {
-        return UiAutomatorUtils.obtainUiObjectWithResourceId("consentHeader");
+        return UiAutomatorUtils.obtainUiObjectWithResourceId("consent_warning");
     }
 
     @Override
@@ -112,6 +114,10 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
 
     @Override
     public void acceptConsent() {
+        try {
+            Thread.sleep(TimeUnit.SECONDS.toMillis(10));
+        } catch (Exception e){
+        }
         confirmConsentPageReceived();
         handleNextButton();
     }

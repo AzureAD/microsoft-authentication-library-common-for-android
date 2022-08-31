@@ -35,7 +35,6 @@ import androidx.test.uiautomator.UiSelector;
 
 import com.microsoft.identity.client.ui.automation.logging.Logger;
 import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT;
-import static org.junit.Assert.fail;
 
 /**
  * This class contains utility methods for leveraging UI Automator to interact with UI elements.
@@ -315,7 +314,7 @@ public class UiAutomatorUtils {
     }
 
     /**
-     * Clicks the button element associated to the supplied resource id.
+     * Clicks the button element associated to the supplied text.
      *
      * @param text the text on the button to click
      */
