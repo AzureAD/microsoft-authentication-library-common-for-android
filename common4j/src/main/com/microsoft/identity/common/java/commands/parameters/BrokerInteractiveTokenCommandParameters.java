@@ -56,6 +56,9 @@ public class BrokerInteractiveTokenCommandParameters extends InteractiveTokenCom
     private final IBrokerAccount brokerAccount;
     private final String homeAccountId;
     private final String localAccountId;
+
+    // If this flag is true, we will send the x-ms-PKeyAuth Header to the token endpoint.
+    // Note: this flag is transferred to a MicrosoftTokenRequest in BaseController.
     private final boolean pKeyAuthHeaderAllowed;
     private final String homeTenantId;
 
