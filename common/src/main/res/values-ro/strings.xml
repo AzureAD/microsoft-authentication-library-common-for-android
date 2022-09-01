@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+    <string name="app_loading">Se încarcă…</string>
+
+    <string name="broker_processing">Brokerul procesează</string>
+    <string name="http_auth_dialog_username">Nume de utilizator</string>
+    <string name="http_auth_dialog_password">Parolă</string>
+    <string name="http_auth_dialog_title">Introduceți acreditările</string>
+    <string name="http_auth_dialog_login">Conectare</string>
+    <string name="http_auth_dialog_cancel">Anulare</string>
+
+    <!-- strings for CBA dialogs and layouts -->
+    <string name="smartcard_cert_dialog_title">Alegeți un certificat de smart card pentru a vă conecta</string>
+    <string name="smartcard_cert_dialog_positive_button">Continuați</string>
+    <string name="smartcard_cert_dialog_negative_button">Anulați</string>
+
+    <string name="smartcard_pin_dialog_title">Deblocați smart cardul</string>
+    <string name="smartcard_pin_dialog_message">Introduceți codul PIN al smart cardului pentru a accesa certificatul și a vă conecta</string>
+    <string name="smartcard_pin_dialog_positive_button">Deblocați</string>
+    <string name="smartcard_pin_dialog_negative_button">Anulați</string>
+    <string name="smartcard_pin_dialog_error_message">Codul PIN introdus este incorect</string>
+    <string name="smartcard_pin_layout_edittext_hint">Cod PIN</string>
+
+    <string name="smartcard_error_dialog_positive_button">OK</string>
+
+    <string name="smartcard_max_attempt_dialog_title">Încercați din nou mai târziu</string>
+    <string name="smartcard_max_attempt_dialog_message">Prea multe încercări nereușite, încercați din nou mai târziu.</string>
+
+    <string name="smartcard_early_unplug_dialog_title">Încercați din nou</string>
+    <string name="smartcard_early_unplug_dialog_message">Dispozitivul smart card a fost eliminat. Reintroduceți dispozitivul înainte de a încerca să vă conectați din nou.</string>
+
+    <string name="smartcard_no_cert_dialog_title">Nu s-au găsit certificate aplicabile.</string>
+    <string name="smartcard_no_cert_dialog_message">Confirmați că s-a asigurat corect accesul certificatului pe dispozitivul smart cardului.</string>
+
+    <string name="smartcard_general_error_dialog_title">Încercați din nou mai târziu</string>
+    <string name="smartcard_general_error_dialog_message">A apărut o eroare neașteptată. Încercați din nou mai târziu.</string>
+</resources>
