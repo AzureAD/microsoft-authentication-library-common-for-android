@@ -100,7 +100,7 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
     }
 
     private UiObject getConsentScreen() {
-        return UiAutomatorUtils.obtainUiObjectWithResourceId("consent_warning");
+        return UiAutomatorUtils.obtainUiObjectWithResourceId("appDomainLinkToAppInfo");
     }
 
     @Override
