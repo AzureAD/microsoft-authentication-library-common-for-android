@@ -72,9 +72,12 @@ public class DevicePinSetupRule implements TestRule {
             public void evaluate() throws Throwable {
                 Logger.i(TAG, "Applying rule..");
                 final TestDevice device = TestContext.getTestContext().getTestDevice();
-                if (!device.isSecured()) {
+                if (mBroker instanceof BrokerCompanyPortal && !device.isSecured()) {
                     device.setPin(PIN);
-                }
+                } else if (mBroker instanceof BrokerMicrosoftAuthenticator && device.isSecured()) {
+                    device.removePin(PIN);
+                } // for BrokerHost it doesn't really matter (at least not yet)
+
                 base.evaluate();
             }
         };
