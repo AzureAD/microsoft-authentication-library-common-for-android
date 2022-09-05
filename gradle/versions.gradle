@@ -3,8 +3,8 @@ ext {
     // SDK
     minSdkVersion = 16
     automationAppMinSDKVersion = 21
-    targetSdkVersion = 30
-    compileSdkVersion = 30
+    targetSdkVersion = 31
+    compileSdkVersion = 32
     buildToolsVersion = "28.0.3"
 
     // Plugins
