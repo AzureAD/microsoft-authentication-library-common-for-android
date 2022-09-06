@@ -328,7 +328,14 @@ public class GoogleSettings extends BaseSettings {
             Assert.assertTrue("password_entry not found", UiAutomatorUtils.obtainUiObjectWithResourceId("com.android.settings:id/password_entry").exists());
             device.pressEnter();
             // Click Lock None
-            UiAutomatorUtils.handleButtonClick("com.android.settings:id/lock_none");
+            try {
+                Thread.sleep(TimeUnit.SECONDS.toMillis(4));
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            final UiObject button = obtainUiObjectWithExactText("None");
+            button.click();
+//            UiAutomatorUtils.handleButtonClick("com.android.settings:id/lock_none");
             // confirm removal of screen lock
             UiAutomatorUtils.handleButtonClick("android:id/button1");
         } catch (final UiObjectNotFoundException e) {
