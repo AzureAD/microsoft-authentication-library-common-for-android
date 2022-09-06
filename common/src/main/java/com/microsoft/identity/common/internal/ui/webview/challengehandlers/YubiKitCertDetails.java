@@ -22,21 +22,50 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.ui.webview.challengehandlers;
 
-import android.app.Activity;
+import androidx.annotation.NonNull;
+
+import com.yubico.yubikit.piv.Slot;
+
+import java.security.cert.X509Certificate;
+
+import javax.annotation.Nonnull;
 
 /**
- * Instantiates ISmartcardCertBasedAuthManagers for certificate based authentication.
+ * Holds certificate found on YubiKey and its corresponding slot.
  */
-public class SmartcardCertBasedAuthManagerFactory {
+public class YubiKitCertDetails implements ICertDetails {
+    private final X509Certificate cert;
+    private final Slot slot;
 
     /**
-     * Creates and returns an applicable instance of ISmartcardCertBasedAuthManager.
-     * @param activity Current host activity.
-     * @return A ISmartcardCertBasedAuthManager implementation instance.
+     * Creates new instance of YubiKitCertDetails.
+     * @param cert Certificate found on YubiKey.
+     * @param slot PIV slot on YubiKey where certificate is located.
      */
-    public static ISmartcardCertBasedAuthManager getSmartcardCertBasedAuthManager(Activity activity) {
-        //Return instance of YubiKitCertBasedAuthManager, since this is the only implementation of
-        // ISmartcardCertBasedAuthManager we have right now.
-        return new YubiKitCertBasedAuthManager(activity);
+    public YubiKitCertDetails(@NonNull final X509Certificate cert,
+                              @NonNull final Slot slot) {
+        this.cert = cert;
+        this.slot = slot;
+    }
+
+    /**
+     * Gets certificate.
+     * @return certificate.
+     */
+    @Override
+    @NonNull
+    public X509Certificate getCertificate() {
+        return cert;
+    }
+
+
+    /**
+     * Gets PIV Slot where certificate is located.
+     * @return Slot where certificate is located.
+     */
+    @Nonnull
+    public Slot getSlot() {
+        return slot;
     }
 }
+

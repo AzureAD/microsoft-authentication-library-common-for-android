@@ -39,7 +39,6 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 
 import com.microsoft.identity.common.R;
-import com.microsoft.identity.common.internal.ui.webview.ICertDetails;
 
 import java.security.cert.X509Certificate;
 import java.util.List;

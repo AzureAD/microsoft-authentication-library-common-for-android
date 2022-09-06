@@ -22,21 +22,20 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.ui.webview.challengehandlers;
 
-import android.app.Activity;
+import androidx.annotation.NonNull;
+
+import java.security.cert.X509Certificate;
 
 /**
- * Instantiates ISmartcardCertBasedAuthManagers for certificate based authentication.
+ * Holds X509Certificate and other important details that may be smartcard brand dependent.
  */
-public class SmartcardCertBasedAuthManagerFactory {
+public interface ICertDetails {
 
     /**
-     * Creates and returns an applicable instance of ISmartcardCertBasedAuthManager.
-     * @param activity Current host activity.
-     * @return A ISmartcardCertBasedAuthManager implementation instance.
+     * Gets certificate.
+     * @return certificate.
      */
-    public static ISmartcardCertBasedAuthManager getSmartcardCertBasedAuthManager(Activity activity) {
-        //Return instance of YubiKitCertBasedAuthManager, since this is the only implementation of
-        // ISmartcardCertBasedAuthManager we have right now.
-        return new YubiKitCertBasedAuthManager(activity);
-    }
+    @NonNull
+    X509Certificate getCertificate();
+
 }

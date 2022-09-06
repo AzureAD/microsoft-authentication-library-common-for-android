@@ -35,17 +35,13 @@ import androidx.annotation.RequiresApi;
 
 import com.microsoft.identity.common.R;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
-import com.microsoft.identity.common.internal.ui.webview.ICertDetails;
-import com.microsoft.identity.common.internal.ui.webview.ISmartcardCertBasedAuthManager;
 import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings;
 import com.microsoft.identity.common.java.telemetry.events.CertBasedAuthResultEvent;
 import com.microsoft.identity.common.java.telemetry.events.ErrorEvent;
 import com.microsoft.identity.common.logging.Logger;
-import com.yubico.yubikit.piv.InvalidPinException;
 
-import java.io.IOException;
 import java.security.Principal;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
@@ -130,7 +126,7 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
 
         mSmartcardCertBasedAuthManager.attemptDeviceSession(new ISmartcardCertBasedAuthManager.ISessionCallback() {
             @Override
-            public void onGetSession(@NonNull ISmartcardCertBasedAuthManager.ISmartcardSession session) throws Exception {
+            public void onGetSession(@NonNull ISmartcardSession session) throws Exception {
                 if (session.getPinAttemptsRemaining() == 0) {
                     Logger.info(methodTag,  "User has reached the maximum failed attempts allowed.");
                     mDialogHolder.showErrorDialog(
@@ -219,7 +215,7 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
             public void onClick(@NonNull final char[] pin) {
                 mSmartcardCertBasedAuthManager.attemptDeviceSession(new ISmartcardCertBasedAuthManager.ISessionCallback() {
                     @Override
-                    public void onGetSession(@NonNull ISmartcardCertBasedAuthManager.ISmartcardSession session) throws Exception {
+                    public void onGetSession(@NonNull ISmartcardSession session) throws Exception {
                         tryUsingSmartcardWithPin(pin, certDetails, request, session);
                         clearPin(pin);
                     }
@@ -253,7 +249,7 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
     private void tryUsingSmartcardWithPin(@NonNull final char[] pin,
                                           @NonNull final ICertDetails certDetails,
                                           @NonNull final ClientCertRequest request,
-                                          @NonNull final ISmartcardCertBasedAuthManager.ISmartcardSession session)
+                                          @NonNull final ISmartcardSession session)
             throws Exception {
         final String methodTag = TAG + ":tryUsingSmartcardWithPin";
         if (session.verifyPin(pin)) {
@@ -290,12 +286,12 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     private void useSmartcardCertForAuth(@NonNull final ICertDetails certDetails,
                                          @NonNull final char[] pin,
-                                         @NonNull final ISmartcardCertBasedAuthManager.ISmartcardSession session,
+                                         @NonNull final ISmartcardSession session,
                                          @NonNull final ClientCertRequest request)
             throws Exception {
         //final String methodTag = TAG + "useSmartcardCertForAuth:";
-        //Each type of ISmartcardSession could have different preparation steps before procceeding with a ClientCertRequest.
-        session.prepareForAuth();
+        //Each type of smartcard manager could have different preparation steps before proceeding with a ClientCertRequest.
+        mSmartcardCertBasedAuthManager.prepareForAuth();
         //PivPrivateKey implements PrivateKey. Note that the PIN is copied in pivPrivateKey.
         final PrivateKey privateKey = session.getKeyForAuth(certDetails, pin);
         //Cert chain only needs the cert to be used for authentication.

@@ -29,8 +29,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
-import com.microsoft.identity.common.internal.ui.webview.ICertDetails;
-
 import net.jcip.annotations.ThreadSafe;
 
 import java.util.List;
