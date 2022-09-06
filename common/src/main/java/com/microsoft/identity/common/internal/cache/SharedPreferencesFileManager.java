@@ -303,7 +303,13 @@ public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage 
             fileCache.remove(key);
             final SharedPreferences.Editor editor = mSharedPreferences.edit();
             editor.remove(key);
-            editor.apply();
+            //write preferences to storage synchronously.
+            boolean successful = editor.commit();
+            //Log the success state of the deletion here.
+            Logger.info(
+                    methodTag,
+                    "Removing cache key Successful? [ " + successful +" ] "
+            );
         }
 
         Logger.infoPII(
