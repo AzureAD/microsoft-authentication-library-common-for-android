@@ -295,9 +295,9 @@ public class GoogleSettings extends BaseSettings {
             screenLock.click();
             UiAutomatorUtils.handleButtonClick("com.android.settings:id/lock_pin");
 
-            if (UiAutomatorUtils.obtainUiObjectWithResourceId("com.android.settings:id/suw_layout_title").waitForExists(TimeUnit.SECONDS.toMillis(5))){
-                UiAutomatorUtils.handleButtonClick("com.android.settings:id/encrypt_dont_require_password");
-            }
+//            if (UiAutomatorUtils.obtainUiObjectWithResourceId("com.android.settings:id/suw_layout_title").waitForExists(TimeUnit.SECONDS.toMillis(5))){
+//                UiAutomatorUtils.handleButtonClick("com.android.settings:id/encrypt_dont_require_password");
+//            }
 
             UiAutomatorUtils.handleInput("com.android.settings:id/password_entry", pin);
             device.pressEnter();
