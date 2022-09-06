@@ -128,10 +128,7 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
             @Override
             public void onGetSession(@NonNull ISmartcardSession session) throws Exception {
                 if (session.getPinAttemptsRemaining() == 0) {
-                    Logger.info(methodTag,  "User has reached the maximum failed attempts allowed.");
-                    mDialogHolder.showErrorDialog(
-                            R.string.smartcard_max_attempt_dialog_title,
-                            R.string.smartcard_max_attempt_dialog_message);
+                    indicateTooManyFailedAttempts(methodTag);
                     request.cancel();
                     return;
                 }
@@ -163,15 +160,37 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
 
             @Override
             public void onException(@NonNull Exception e) {
-                Logger.error(methodTag, e.getMessage(), e);
-                //Show general error dialog.
-                mDialogHolder.showErrorDialog(
-                        R.string.smartcard_general_error_dialog_title,
-                        R.string.smartcard_general_error_dialog_message);
-                Telemetry.emit(new ErrorEvent().putException(e));
+                indicateGeneralException(methodTag, e);
                 request.cancel();
             }
         });
+    }
+
+    /**
+     * Helper method to log and show an error dialog with messages indicating that
+     *  too many failed login attempts have occurred.
+     * @param methodTag tag from calling method.
+     */
+    private void indicateTooManyFailedAttempts(@NonNull final String methodTag) {
+        Logger.info(methodTag,  "User has reached the maximum failed attempts allowed.");
+        mDialogHolder.showErrorDialog(
+                R.string.smartcard_max_attempt_dialog_title,
+                R.string.smartcard_max_attempt_dialog_message);
+    }
+
+    /**
+     * Helper method to log, show general error dialog, and emit telemetry for when
+     *  an unexpected exception is thrown.
+     * @param methodTag tag from calling method.
+     * @param e Exception thrown.
+     */
+    private void indicateGeneralException(@NonNull final String methodTag, @NonNull final Exception e) {
+        Logger.error(methodTag, e.getMessage(), e);
+        //Show general error dialog.
+        mDialogHolder.showErrorDialog(
+                R.string.smartcard_general_error_dialog_title,
+                R.string.smartcard_general_error_dialog_message);
+        Telemetry.emit(new ErrorEvent().putException(e));
     }
 
     /**
@@ -222,12 +241,7 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
 
                     @Override
                     public void onException(@NonNull Exception e) {
-                        Logger.error(methodTag, e.getMessage(), e);
-                        //Show general error dialog.
-                        mDialogHolder.showErrorDialog(
-                                R.string.smartcard_general_error_dialog_title,
-                                R.string.smartcard_general_error_dialog_message);
-                        Telemetry.emit(new ErrorEvent().putException(e));
+                        indicateGeneralException(methodTag, e);
                         request.cancel();
                         clearPin(pin);
                     }
@@ -257,16 +271,11 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
             useSmartcardCertForAuth(certDetails, pin, session, request);
         }
         else {
-            // An incorrect Pin attempt.
-            final int pinAttemptsRemaining = session.getPinAttemptsRemaining();
             // If the number of attempts is 0, no more attempts will be allowed.
-            if (pinAttemptsRemaining == 0) {
+            if (session.getPinAttemptsRemaining() == 0) {
                 //We must display a dialog informing the user that they have made too many incorrect attempts,
                 // and the user will need to figure out a way to reset their key outside of our library.
-                Logger.info(methodTag, "User has reached the maximum failed attempts allowed.");
-                mDialogHolder.showErrorDialog(
-                        R.string.smartcard_max_attempt_dialog_title,
-                        R.string.smartcard_max_attempt_dialog_message);
+                indicateTooManyFailedAttempts(methodTag);
                 request.cancel();
             } else {
                 //Update Dialog to indicate that an incorrect attempt was made.
