@@ -32,7 +32,7 @@ jobs:
     inputs:
       versionSpec: '11' 
       jdkArchitectureOption: 'x86'
-      jdkSourceOption: 'PreInstalled'
+      jdkSourceOption: 'AzureStorage'
   - task: Gradle@2
     name: Gradle2   
     displayName: Assemble Release
