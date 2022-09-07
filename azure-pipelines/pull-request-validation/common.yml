@@ -28,10 +28,11 @@ jobs:
     submodules: recursive
     persistCredentials: True
   - template: ../templates/steps/automation-cert.yml
-  - task: Gradle@3
-    name: Gradle1    
+  - task: Gradle@2
+    name: Gradle2   
     displayName: Assemble Release
     inputs:
+      javaHomeSelection: JDKVersion
       jdkVersionOption: "1.11"
       tasks: clean common:assembleLocal
       publishJUnitResults: false
@@ -43,5 +44,7 @@ jobs:
   - task: Gradle@2
     displayName: Run Unit tests
     inputs:
+      javaHomeSelection: JDKVersion
+      jdkVersionOption: "1.11"
       tasks: common:testLocalDebugUnitTest
 ...
