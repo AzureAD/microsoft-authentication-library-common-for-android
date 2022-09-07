@@ -31,7 +31,7 @@ jobs:
   - task: JavaToolInstaller@0
     inputs:
       versionSpec: '11' 
-      jdkArchitectureOption: 'x64'
+      jdkArchitectureOption: 'x86'
       jdkSourceOption: 'PreInstalled'
   - task: Gradle@2
     name: Gradle2   
