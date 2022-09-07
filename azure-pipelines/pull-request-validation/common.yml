@@ -28,6 +28,11 @@ jobs:
     submodules: recursive
     persistCredentials: True
   - template: ../templates/steps/automation-cert.yml
+  - task: JavaToolInstaller@0
+    inputs:
+      versionSpec: '11' 
+      jdkArchitectureOption: 'x64'
+      jdkSourceOption: 'PreInstalled'
   - task: Gradle@2
     name: Gradle2   
     displayName: Assemble Release
