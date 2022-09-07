@@ -111,14 +111,14 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
     public void performDeviceRegistration(@NonNull final String username,
                                           @NonNull final String password,
                                           final boolean isFederatedUser) {
-        final TestDevice device = TestContext.getTestContext().getTestDevice();
-        if (GlobalConstants.IS_PIN_NEEDED_FOR_CREDENTIAL_STORAGE && !device.isSecured()) {
-            device.setPin(DevicePinSetupRule.PIN);
-        }
+//        final TestDevice device = TestContext.getTestContext().getTestDevice();
+//        if (GlobalConstants.IS_PIN_NEEDED_FOR_CREDENTIAL_STORAGE && !device.isSecured()) {
+//            device.setPin(DevicePinSetupRule.PIN);
+//        }
         brokerMicrosoftAuthenticatorImpl.performDeviceRegistration(username, password, isFederatedUser);
-        if (device.isSecured()) {
-            device.removePin(DevicePinSetupRule.PIN);
-        }
+//        if (device.isSecured()) {
+//            device.removePin(DevicePinSetupRule.PIN);
+//        }
     }
 
     @Override
