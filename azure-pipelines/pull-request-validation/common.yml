@@ -28,14 +28,15 @@ jobs:
     submodules: recursive
     persistCredentials: True
   - template: ../templates/steps/automation-cert.yml
-  - task: Gradle@1
-    name: Gradle1
+  - task: Gradle@3
+    name: Gradle1    
     displayName: Assemble Release
     inputs:
+      jdkVersionOption: "1.11"
       tasks: clean common:assembleLocal
       publishJUnitResults: false
       jdkArchitecture: x86
-      sqAnalysisBreakBuildIfQualityGateFailed: false
+      sqAnalysisEnabled: false
   - template: ../templates/steps/spotbugs.yml
     parameters:
       project: common
