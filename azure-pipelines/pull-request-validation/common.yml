@@ -41,7 +41,7 @@ jobs:
       jdkVersionOption: "1.11"
       tasks: clean common:assembleLocal
       publishJUnitResults: false
-      jdkArchitecture: x86
+      jdkArchitecture: x64
       sqAnalysisEnabled: false
   - template: ../templates/steps/spotbugs.yml
     parameters:
