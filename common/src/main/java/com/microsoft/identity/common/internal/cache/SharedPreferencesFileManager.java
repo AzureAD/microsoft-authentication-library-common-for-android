@@ -59,6 +59,10 @@ public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage 
     private final LruCache<String, String> fileCache = new LruCache<>(256);
     @GuardedBy("cacheLock")
     private final SharedPreferences mSharedPreferences;
+    //From https://developer.android.com/reference/android/content/SharedPreferences.Editor#apply()
+    //Note that when two editors are modifying preferences at the same time, the last one to call commit wins.
+    //Initialize one editor object and utilize it when required instead of initializing another one.
+    SharedPreferences.Editor mSharedPreferencesEditor;
     private final KeyAccessorStringAdapter mEncryptionManager;
     @VisibleForTesting
     private final String mSharedPreferencesFileName;
@@ -118,6 +122,7 @@ public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage 
             Logger.verbose(TAG, "Init with storage helper:  " + TAG);
         }
         mSharedPreferences = context.getSharedPreferences(name, Context.MODE_PRIVATE);
+        mSharedPreferencesEditor = mSharedPreferences.edit();
         mSharedPreferencesFileName = name;
 
         if (encryptionManager != null) {
@@ -141,16 +146,15 @@ public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage 
             } else {
                 fileCache.remove(key);
             }
-            final SharedPreferences.Editor editor = mSharedPreferences.edit();
 
             if (null == mEncryptionManager || StringUtil.isNullOrEmpty(value)) {
-                editor.putString(key, value);
+                mSharedPreferencesEditor.putString(key, value);
             } else {
                 final String encryptedValue = encrypt(value);
-                editor.putString(key, encryptedValue);
+                mSharedPreferencesEditor.putString(key, encryptedValue);
             }
 
-            editor.apply();
+            mSharedPreferencesEditor.apply();
         }
     }
 
@@ -285,10 +289,9 @@ public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage 
     @Override
     public final void clear() {
         synchronized (cacheLock) {
-            final SharedPreferences.Editor editor = mSharedPreferences.edit();
-            editor.clear();
+            mSharedPreferencesEditor.clear();
             fileCache.evictAll();
-            editor.apply();
+            mSharedPreferencesEditor.apply();
         }
     }
 
@@ -301,10 +304,9 @@ public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage 
         );
         synchronized (cacheLock) {
             fileCache.remove(key);
-            final SharedPreferences.Editor editor = mSharedPreferences.edit();
-            editor.remove(key);
+            mSharedPreferencesEditor.remove(key);
             //write preferences to storage synchronously.
-            boolean successful = editor.commit();
+            boolean successful = mSharedPreferencesEditor.commit();
             //Log the success state of the deletion here.
             Logger.info(
                     methodTag,
