@@ -23,6 +23,7 @@
 
 package com.microsoft.identity.common.java.platform;
 
+import com.microsoft.identity.common.java.opentelemetry.AttributeName;
 import com.microsoft.identity.common.java.util.StringUtil;
 
 import org.json.JSONException;
@@ -95,7 +96,7 @@ public class JweResponse {
 
         String[] split = jwe.split("\\.");
 
-        span.setAttribute("jwt_valid", split.length >= 4);
+        span.setAttribute(AttributeName.jwt_valid.name(), split.length >= 4);
 
         if (split.length < 4) {
             throw new IllegalArgumentException("Invalid JWE");
@@ -115,7 +116,7 @@ public class JweResponse {
 
         JSONObject jsonObject = new JSONObject(decodedHeader);
 
-        span.setAttribute("jwt_alg", jsonObject.optString("alg"));
+        span.setAttribute(AttributeName.jwt_alg.name(), jsonObject.optString("alg"));
 
         response.mJweHeader = JweHeader.builder()
                 .algorithm(jsonObject.optString("alg"))
