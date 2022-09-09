@@ -20,12 +20,9 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.internal.commands;
-
-import androidx.annotation.NonNull;
+package com.microsoft.identity.common.java.commands;
 
 import com.microsoft.identity.common.java.WarningType;
-import com.microsoft.identity.common.java.commands.TokenCommand;
 import com.microsoft.identity.common.java.commands.parameters.DeviceCodeFlowCommandParameters;
 import com.microsoft.identity.common.java.controllers.BaseController;
 import com.microsoft.identity.common.java.logging.Logger;
@@ -35,6 +32,8 @@ import com.microsoft.identity.common.java.result.AcquireTokenResult;
 
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
+
+import lombok.NonNull;
 
 /**
  * This command is used to execute the device code flow protocol.

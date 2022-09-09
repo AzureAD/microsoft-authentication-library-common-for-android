@@ -50,6 +50,7 @@ import androidx.annotation.Nullable;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.broker.BrokerRequest;
 import com.microsoft.identity.common.java.commands.parameters.AcquirePrtSsoTokenCommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.DeviceCodeFlowCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.GenerateShrCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.RemoveAccountCommandParameters;
 import com.microsoft.identity.common.java.ui.BrowserDescriptor;
@@ -112,6 +113,39 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                                 AuthorizationAgent.BROWSER.name() :
                                 AuthorizationAgent.WEBVIEW.name()
                 ).authenticationScheme(parameters.getAuthenticationScheme())
+                .powerOptCheckEnabled(parameters.isPowerOptCheckEnabled())
+                .build();
+
+        return brokerRequest;
+    }
+
+
+    public BrokerRequest brokerRequestFromDeviceOperationParameters(@NonNull final DeviceCodeFlowCommandParameters parameters) {
+        final String methodTag = TAG + ":brokerRequestFromSilentOperationParameters";
+
+        Logger.info(methodTag, "Constructing result bundle from AcquireTokenSilentOperationParameters.");
+        final String extraOptions = parameters.getExtraOptions() != null ?
+                QueryParamsAdapter._toJson(parameters.getExtraOptions()) : null;
+
+        final BrokerRequest brokerRequest = BrokerRequest.builder()
+                .authority(parameters.getAuthority().getAuthorityURL().toString())
+                .scope(TextUtils.join(" ", parameters.getScopes()))
+                .redirect(parameters.getRedirectUri())
+                .extraOptions(extraOptions)
+                .clientId(parameters.getClientId())
+                .homeAccountId(parameters.getAccount().getHomeAccountId())
+                .localAccountId(parameters.getAccount().getLocalAccountId())
+                .userName(parameters.getAccount().getUsername())
+                .claims(parameters.getClaimsRequestJson())
+                .forceRefresh(parameters.isForceRefresh())
+                .correlationId(parameters.getCorrelationId())
+                .applicationName(parameters.getApplicationName())
+                .applicationVersion(parameters.getApplicationVersion())
+                .msalVersion(parameters.getSdkVersion())
+                .sdkType(parameters.getSdkType())
+                .environment(AzureActiveDirectory.getEnvironment().name())
+                .multipleCloudsSupported(getMultipleCloudsSupported(parameters))
+                .authenticationScheme(parameters.getAuthenticationScheme())
                 .powerOptCheckEnabled(parameters.isPowerOptCheckEnabled())
                 .build();
 
@@ -226,6 +260,28 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
         final BrokerRequest brokerRequest = msalBrokerRequestAdapter.
                 brokerRequestFromSilentOperationParameters(parameters);
+
+        final Bundle requestBundle = getRequestBundleFromBrokerRequest(
+                brokerRequest,
+                negotiatedBrokerProtocolVersion,
+                parameters.getRequiredBrokerProtocolVersion()
+        );
+
+        requestBundle.putInt(
+                CALLER_INFO_UID,
+                context.getApplicationInfo().uid
+        );
+
+        return requestBundle;
+    }
+
+    public Bundle getRequestBundleForAcquireTokenDCF(@NonNull final Context context,
+                                                        @NonNull final DeviceCodeFlowCommandParameters parameters,
+                                                        @Nullable final String negotiatedBrokerProtocolVersion) {
+        final MsalBrokerRequestAdapter msalBrokerRequestAdapter = new MsalBrokerRequestAdapter();
+
+        final BrokerRequest brokerRequest = msalBrokerRequestAdapter.
+                brokerRequestFromDeviceOperationParameters(parameters);
 
         final Bundle requestBundle = getRequestBundleFromBrokerRequest(
                 brokerRequest,

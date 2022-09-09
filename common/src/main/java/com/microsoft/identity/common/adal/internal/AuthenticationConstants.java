@@ -1401,6 +1401,7 @@ public final class AuthenticationConstants {
             BROKER_GET_ACCOUNTS(BROKER_API_GET_BROKER_ACCOUNTS_PATH, BROKER_VERSION_1, null),
             BROKER_REMOVE_ACCOUNT(BROKER_API_REMOVE_BROKER_ACCOUNT_PATH, BROKER_VERSION_1, null),
             BROKER_UPDATE_BRT(BROKER_API_UPDATE_BRT_PATH, BROKER_VERSION_1, null),
+            BROKER_WPJ_WITH_DEVICE_ID(BROKER_WPJ_WITH_DEVICE_ID_PATH, BROKER_VERSION_1, null),
             BROKER_ADD_FLIGHTS(BROKER_API_ADD_FLIGHTS_PATH, BROKER_VERSION_2, null),
             BROKER_SET_FLIGHTS(BROKER_API_SET_FLIGHTS_PATH, BROKER_VERSION_2, null),
             BROKER_GET_FLIGHTS(BROKER_API_GET_FLIGHTS_PATH, BROKER_VERSION_2, null),
@@ -1484,7 +1485,7 @@ public final class AuthenticationConstants {
          * URI Path constant for BrokerApi-to-Broker updateBrt request using ContentProvider.
          */
         public static final String BROKER_API_UPDATE_BRT_PATH = "/brokerApi/updateBrt";
-
+        public static final String BROKER_WPJ_WITH_DEVICE_ID_PATH = "/brokerApi/performWPJ";
         /**
          * Broker api path constant for adding flight information.
          */

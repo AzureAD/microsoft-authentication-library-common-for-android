@@ -281,6 +281,7 @@ public class LabClient implements ILabClient {
             // we probably need a more sophisticated logger integrated into LabApi
             // for now this is fine
             System.out.println(successResponse.getResult());
+           // Logger.info("test", "test");
 
             final String expectedResult = String.format(
                     "Device : %s, successfully deleted from AAD.", deviceId

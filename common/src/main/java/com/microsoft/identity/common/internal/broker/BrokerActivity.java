@@ -118,6 +118,11 @@ public final class BrokerActivity extends Activity {
         outState.putBoolean(BROKER_INTENT_STARTED, mBrokerIntentStarted);
     }
 
+    @Override
+    protected void onPause() {
+
+        super.onPause();
+    }
     /**
      * Receive result from broker intent
      *

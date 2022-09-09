@@ -617,6 +617,8 @@ public class LocalMSALController extends BaseController {
         return authorizationResult;
     }
 
+
+
     @Override
     public AcquireTokenResult acquireDeviceCodeFlowToken(
             @SuppressWarnings(WarningType.rawtype_warning) final AuthorizationResult authorizationResult,

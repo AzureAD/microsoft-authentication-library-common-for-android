@@ -129,6 +129,10 @@ public abstract class BaseController {
             final SilentTokenCommandParameters parameters)
             throws Exception;
 
+    public abstract AcquireTokenResult acquireDeviceCodeFlowToken(
+            final DeviceCodeFlowCommandParameters parameters)
+            throws Exception;
+
     public abstract List<ICacheRecord> getAccounts(
             final CommandParameters parameters)
             throws Exception;

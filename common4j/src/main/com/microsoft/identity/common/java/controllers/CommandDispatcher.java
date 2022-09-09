@@ -176,7 +176,7 @@ public class CommandDispatcher {
      * */
     // TODO: If we want this to be generic, we should make the success type of CommandResult to match with type T from BaseCommand<T>
     //       currently, CommandResult from BaseCommand<AcquireTokenResult> stores "ILocalAuthenticationResult".
-    public static ILocalAuthenticationResult submitAcquireTokenSilentSync(@NonNull final SilentTokenCommand command)
+    public static ILocalAuthenticationResult submitAcquireTokenSilentSync(@NonNull final BaseCommand command)
             throws BaseException {
         final CommandResult commandResult;
         try {
