@@ -41,6 +41,7 @@ import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.broker.PackageHelper;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.ClientCertAuthChallengeHandler;
+import com.microsoft.identity.common.internal.ui.webview.challengehandlers.SmartcardCertBasedAuthManagerFactory;
 import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallenge;
 import com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallengeFactory;
@@ -86,7 +87,8 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         super(activity, completionCallback, pageLoadedCallback);
         mRedirectUrl = redirectUrl;
         //Creating ClientCertAuthChallengeHandler starts smartcard usb discovery
-        mClientCertAuthChallengeHandler = new ClientCertAuthChallengeHandler(getActivity());
+        mClientCertAuthChallengeHandler = new ClientCertAuthChallengeHandler(getActivity(),
+                SmartcardCertBasedAuthManagerFactory.getSmartcardCertBasedAuthManager(getActivity()));
     }
 
     /**
