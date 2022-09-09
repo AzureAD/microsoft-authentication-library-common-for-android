@@ -1,11 +1,16 @@
 package com.microsoft.identity.common;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import android.app.Activity;
-import android.app.Dialog;
+import androidx.appcompat.app.AlertDialog;
+import android.content.DialogInterface;
 import android.webkit.ClientCertRequest;
+import android.widget.Button;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -22,6 +27,7 @@ import org.robolectric.Robolectric;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.android.controller.ActivityController;
 import org.robolectric.shadows.ShadowAlertDialog;
+import org.robolectric.shadows.ShadowLooper;
 
 import java.math.BigInteger;
 import java.security.InvalidKeyException;
@@ -44,52 +50,154 @@ import java.util.Set;
 
 @RunWith(RobolectricTestRunner.class)
 public class SmartcardCertBasedAuthTest {
+
     @Test
     public void testNoCertsOnSmartcard() {
-        ActivityController<DualScreenActivity> controller = Robolectric.buildActivity(DualScreenActivity.class);
-        controller.setup(); // Moves Activity to RESUMED state
-        Activity activity = controller.get();
-
-        ClientCertRequest clientCertRequest = getMockClientCertRequest();
-
-        TestSmartcardCertBasedAuthManager testSmartcardCertBasedAuthManager = new TestSmartcardCertBasedAuthManager(
-                new ArrayList<>()
+        final Activity activity = setUpActivity();
+        setUpClientCertAuthChallengeHandlerAndProcess(activity, new ArrayList<>());
+        checkIfCorrectDialogIsShowing(
+                getStringFromResource(activity, R.string.smartcard_error_dialog_positive_button)
         );
-        ClientCertAuthChallengeHandler clientCertAuthChallengeHandler = new ClientCertAuthChallengeHandler(activity,
-                testSmartcardCertBasedAuthManager);
-        clientCertAuthChallengeHandler.processChallenge(clientCertRequest);
-
-        Dialog dialog = ShadowAlertDialog.getLatestDialog();
-        assertNotNull(dialog);
-        assertTrue(dialog.isShowing());
     }
 
     @Test
-    public void testCertsOnSmartcard() {
+    public void testGetToCertPickerDialog() {
+        final Activity activity = setUpActivity();
+        final List<X509Certificate> certList = getMockCertList();
+        setUpClientCertAuthChallengeHandlerAndProcess(activity, certList);
+        goToPickerDialog(activity);
+    }
+
+    @Test
+    public void testGetToPinDialog() {
+        final Activity activity = setUpActivity();
+        final List<X509Certificate> certList = getMockCertList();
+        setUpClientCertAuthChallengeHandlerAndProcess(activity, certList);
+        goToPinDialog(activity);
+    }
+
+    @Test
+    public void testCancelAtPickerDialog() {
+        final Activity activity = setUpActivity();
+        final List<X509Certificate> certList = getMockCertList();
+        setUpClientCertAuthChallengeHandlerAndProcess(activity, certList);
+        AlertDialog pickerDialog = goToPickerDialog(activity);
+        performClick(pickerDialog, DialogInterface.BUTTON_NEGATIVE);
+        ensureNoDialogIsShowing();
+    }
+
+    @Test
+    public void testCancelAtPinDialog() {
+        final Activity activity = setUpActivity();
+        final List<X509Certificate> certList = getMockCertList();
+        setUpClientCertAuthChallengeHandlerAndProcess(activity, certList);
+        AlertDialog pinDialog = goToPinDialog(activity);
+        performClick(pinDialog, DialogInterface.BUTTON_NEGATIVE);
+        ensureNoDialogIsShowing();
+    }
+
+    @Test
+    public void testUnplugAtPickerDialog() {
+        Activity activity = setUpActivity();
+        List<X509Certificate> certList = getMockCertList();
+        ClientCertAuthChallengeHandler clientCertAuthChallengeHandler = setUpClientCertAuthChallengeHandlerAndProcess(activity, certList);
+        goToPickerDialog(activity);
+        mockUnplugSmartcard(clientCertAuthChallengeHandler);
+        checkIfCorrectDialogIsShowing(
+                getStringFromResource(activity, R.string.smartcard_error_dialog_positive_button)
+        );
+    }
+
+    @Test
+    public void testUnplugAtPinDialog() {
+        Activity activity = setUpActivity();
+        List<X509Certificate> certList = getMockCertList();
+        ClientCertAuthChallengeHandler clientCertAuthChallengeHandler = setUpClientCertAuthChallengeHandlerAndProcess(activity, certList);
+        goToPinDialog(activity);
+        mockUnplugSmartcard(clientCertAuthChallengeHandler);
+        checkIfCorrectDialogIsShowing(
+                getStringFromResource(activity, R.string.smartcard_error_dialog_positive_button)
+        );
+    }
+
+    @NonNull
+    private String getStringFromResource(@NonNull final Activity activity, final int id) {
+        return activity.getResources().getString(id);
+    }
+
+    @NonNull
+    private Activity setUpActivity() {
         ActivityController<DualScreenActivity> controller = Robolectric.buildActivity(DualScreenActivity.class);
         controller.setup(); // Moves Activity to RESUMED state
-        Activity activity = controller.get();
+        return controller.get();
+    }
 
-        ClientCertRequest clientCertRequest = getMockClientCertRequest();
-
-        //Create mock certificates.
+    @NonNull
+    private List<X509Certificate> getMockCertList() {
         X509Certificate cert1 = getMockCertificate("SomeIssuer1", "SomeSubject1");
         X509Certificate cert2 = getMockCertificate("SomeIssuer2", "SomeSubject2");
-
         List<X509Certificate> certList = new ArrayList<>();
         certList.add(cert1);
         certList.add(cert2);
+        return certList;
+    }
 
+    @NonNull
+    private ClientCertAuthChallengeHandler setUpClientCertAuthChallengeHandlerAndProcess(@NonNull final Activity activity, @NonNull final List<X509Certificate> certList) {
         TestSmartcardCertBasedAuthManager testSmartcardCertBasedAuthManager = new TestSmartcardCertBasedAuthManager(certList);
         ClientCertAuthChallengeHandler clientCertAuthChallengeHandler = new ClientCertAuthChallengeHandler(activity, testSmartcardCertBasedAuthManager);
+        ClientCertRequest clientCertRequest = getMockClientCertRequest();
         clientCertAuthChallengeHandler.processChallenge(clientCertRequest);
+        return clientCertAuthChallengeHandler;
+    }
 
-        Dialog dialog = ShadowAlertDialog.getLatestDialog();
+    @NonNull
+    private AlertDialog goToPickerDialog(@NonNull final Activity activity) {
+        return checkIfCorrectDialogIsShowing(
+                getStringFromResource(activity, R.string.smartcard_cert_dialog_positive_button)
+        );
+    }
+
+    @NonNull
+    private AlertDialog goToPinDialog(@NonNull final Activity activity) {
+        AlertDialog pickerDialog = goToPickerDialog(activity);
+        performClick(pickerDialog, DialogInterface.BUTTON_POSITIVE);
+        return checkIfCorrectDialogIsShowing(
+                getStringFromResource(activity, R.string.smartcard_pin_dialog_positive_button)
+        );
+    }
+
+    private void performClick(@NonNull final AlertDialog dialog, final int whichButton) {
+        dialog.getButton(whichButton).performClick();
+        ShadowLooper.runUiThreadTasks();
+    }
+
+    @NonNull
+    private AlertDialog checkIfCorrectDialogIsShowing(@NonNull final String expectedPositiveButtonText) {
+        final AlertDialog dialog = (AlertDialog) ShadowAlertDialog.getLatestDialog();
         assertNotNull(dialog);
         assertTrue(dialog.isShowing());
 
+        final Button positiveButton = dialog.getButton(DialogInterface.BUTTON_POSITIVE);
+        assertNotNull(positiveButton);
+
+        final String positiveButtonText = positiveButton.getText().toString();
+        assertEquals(expectedPositiveButtonText, positiveButtonText);
+        return dialog;
     }
 
+    private void ensureNoDialogIsShowing() {
+        final AlertDialog dialog = (AlertDialog) ShadowAlertDialog.getLatestDialog();
+        assertFalse(dialog.isShowing());
+    }
+
+    private void mockUnplugSmartcard(ClientCertAuthChallengeHandler clientCertAuthChallengeHandler) {
+        //Try unplugging
+        clientCertAuthChallengeHandler.stopSmartcardUsbDiscovery();
+        ShadowLooper.runUiThreadTasks();
+    }
+
+    @NonNull
     private ClientCertRequest getMockClientCertRequest() {
         return new ClientCertRequest() {
             @Nullable
@@ -131,6 +239,7 @@ public class SmartcardCertBasedAuthTest {
         };
     }
 
+    @NonNull
     private X509Certificate getMockCertificate(@Nullable final String issuerDNName, @Nullable final String subjectDNName) {
         return new X509Certificate() {
             @Override
