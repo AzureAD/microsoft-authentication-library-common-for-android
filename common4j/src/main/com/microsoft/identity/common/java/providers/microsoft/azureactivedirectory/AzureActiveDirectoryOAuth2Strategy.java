@@ -109,12 +109,12 @@ public class AzureActiveDirectoryOAuth2Strategy
 
     @Override
     public String getIssuerCacheIdentifier(final AzureActiveDirectoryAuthorizationRequest authRequest) throws ClientException {
-        final String methodName = "getIssuerCacheIdentifier";
+        final String methodTag = TAG + ":getIssuerCacheIdentifier";
 
         final AzureActiveDirectoryCloud cloud = AzureActiveDirectory.getAzureActiveDirectoryCloud(authRequest.getAuthority());
         if (cloud == null) {
             if (!getOAuth2Configuration().isAuthorityHostValidationEnabled()) {
-                Logger.warn(TAG + ":" + methodName, "Discovery data does not include cloud authority and validation is off."
+                Logger.warn(methodTag, "Discovery data does not include cloud authority and validation is off."
                         + " Returning passed in Authority: "
                         + authRequest.getAuthority().toString());
                 return authRequest.getAuthority().toString();
@@ -125,7 +125,7 @@ public class AzureActiveDirectoryOAuth2Strategy
         }
 
         if (!cloud.isValidated() && getOAuth2Configuration().isAuthorityHostValidationEnabled()) {
-            Logger.warn(TAG + ":" + methodName, "Authority host validation has been enabled. This data hasn't been validated, though.");
+            Logger.warn(methodTag, "Authority host validation has been enabled. This data hasn't been validated, though.");
             // We have invalid cloud data... and authority host validation is enabled....
             // TODO: Throw an exception in this case... need to see what ADAL does in this case.
             // If Cloud is null, e.g. Authority is PPE and AAD PE doesn't include it in the discovery data, this will similarly throw:
@@ -136,7 +136,7 @@ public class AzureActiveDirectoryOAuth2Strategy
 
         if (!cloud.isValidated() && !getOAuth2Configuration().isAuthorityHostValidationEnabled()) {
             Logger.warn(
-                    TAG + ":" + methodName,
+                    methodTag,
                     "Authority host validation not specified..."
                             + "but there is no cloud..."
                             + "Hence just return the passed in Authority"
@@ -145,14 +145,14 @@ public class AzureActiveDirectoryOAuth2Strategy
             return authRequest.getAuthority().toString();
         }
 
-        Logger.info(TAG, "Building authority URI");
+        Logger.info(methodTag, "Building authority URI");
 
         try {
             final String issuerCacheIdentifier = new CommonURIBuilder(authRequest.getAuthority().toString())
                     .setHost(cloud.getPreferredCacheHostName())
                     .build().toString();
 
-            Logger.infoPII(TAG, "Issuer cache identifier created: " + issuerCacheIdentifier);
+            Logger.infoPII(methodTag, "Issuer cache identifier created: " + issuerCacheIdentifier);
             return issuerCacheIdentifier;
         } catch (final URISyntaxException e) {
             throw new ClientException(ClientException.MALFORMED_URL, e.getMessage(), e);
@@ -184,27 +184,27 @@ public class AzureActiveDirectoryOAuth2Strategy
     @Override
     public AzureActiveDirectoryAccount createAccount(
             @NonNull final AzureActiveDirectoryTokenResponse response) {
-        final String methodName = "createAccount";
+        final String methodTag = TAG + ":createAccount";
 
         IDToken idToken = null;
         ClientInfo clientInfo = null;
 
         try {
-            Logger.info(TAG, "Constructing IDToken from response");
+            Logger.info(methodTag, "Constructing IDToken from response");
             idToken = new IDToken(response.getIdToken());
 
-            Logger.info(TAG, "Constructing ClientInfo from response");
+            Logger.info(methodTag, "Constructing ClientInfo from response");
             clientInfo = new ClientInfo(response.getClientInfo());
         } catch (ServiceException ccse) {
-            Logger.error(TAG + ":" + methodName, "Failed to construct IDToken or ClientInfo", null);
-            Logger.errorPII(TAG + ":" + methodName, "Failed with Exception", ccse);
+            Logger.error(methodTag, "Failed to construct IDToken or ClientInfo", null);
+            Logger.errorPII(methodTag, "Failed with Exception", ccse);
             throw new RuntimeException();
         }
 
         final AzureActiveDirectoryAccount account = new AzureActiveDirectoryAccount(idToken, clientInfo);
 
-        Logger.info(TAG, "Account created");
-        Logger.infoPII(TAG, account.toString());
+        Logger.info(methodTag, "Account created");
+        Logger.infoPII(methodTag, account.toString());
 
         return account;
     }
