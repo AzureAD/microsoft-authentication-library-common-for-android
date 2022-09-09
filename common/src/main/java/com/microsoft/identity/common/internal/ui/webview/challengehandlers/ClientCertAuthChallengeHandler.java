@@ -68,12 +68,13 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
      * A manager for smartcard CBA is retrieved, and discovery for USB devices is started.
      * @param activity current host activity.
      */
-    public ClientCertAuthChallengeHandler(@NonNull final Activity activity) {
+    public ClientCertAuthChallengeHandler(@NonNull final Activity activity,
+                                          @NonNull final ISmartcardCertBasedAuthManager smartcardCertBasedAuthManager) {
         mActivity = activity;
         mDialogHolder = new DialogHolder(mActivity);
         mIsOnDeviceCertBasedAuthProceeding = false;
         mIsSmartcardCertBasedAuthProceeding = false;
-        mSmartcardCertBasedAuthManager = SmartcardCertBasedAuthManagerFactory.getSmartcardCertBasedAuthManager(mActivity);
+        mSmartcardCertBasedAuthManager = smartcardCertBasedAuthManager;
         mSmartcardCertBasedAuthManager.startDiscovery(new ISmartcardCertBasedAuthManager.IStartDiscoveryCallback() {
             @Override
             public void onStartDiscovery() {

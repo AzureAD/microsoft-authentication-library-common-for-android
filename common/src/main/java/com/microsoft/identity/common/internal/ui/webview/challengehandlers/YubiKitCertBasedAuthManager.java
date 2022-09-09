@@ -154,7 +154,7 @@ public class YubiKitCertBasedAuthManager implements ISmartcardCertBasedAuthManag
      */
     @Override
     public boolean isDeviceConnected() {
-        synchronized (mDevice) {
+        synchronized (sDeviceLock) {
             return mDevice != null;
         }
     }
@@ -196,7 +196,7 @@ public class YubiKitCertBasedAuthManager implements ISmartcardCertBasedAuthManag
             @Override
             public void invoke(@NonNull final Callback<Result<PivSession, Exception>> callback) {
                 //Show error dialog and cancel flow if mDevice is null.
-                synchronized (mDevice) {
+                synchronized (sDeviceLock) {
                     if (mDevice == null) {
                         Logger.error(methodTag, MDEVICE_NULL_ERROR_MESSAGE, null);
                         callback.invoke(Result.failure(new Exception(MDEVICE_NULL_ERROR_MESSAGE)));
