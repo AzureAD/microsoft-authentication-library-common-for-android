@@ -206,19 +206,20 @@ public class RawAuthorizationResult {
     }
 
     private static ResultCode getResultCodeFromFinalRedirectUri(@NonNull final URI uri) throws URISyntaxException {
+        final String methodTag = TAG + "getResultCodeFromFinalRedirectUri";
         final Map<String, String> parameters = UrlUtil.getParameters(uri);
 
         if (REDIRECT_PREFIX.equalsIgnoreCase(uri.getScheme())) {
             // i.e. (Browser) msauth://com.msft.identity.client.sample.local/1wIqXSqBj7w%2Bh11ZifsnqwgyKrY%3D?wpj=1&username=idlab1%40msidlab4.onmicrosoft.com&app_link=https%3a%2f%2fplay.google.com%2fstore%2fapps%2fdetails%3fid%3dcom.azure.authenticator
             //      (WebView) msauth://wpj/?username=idlab1%40msidlab4.onmicrosoft.com&app_link=https%3a%2f%2fplay.google.com%2fstore%2fapps%2fdetails%3fid%3dcom.azure.authenticator%26referrer%3dcom.msft.identity.client.sample.local
             if (parameters.containsKey(APP_LINK_KEY)) {
-                Logger.info(TAG, "Return to caller with BROWSER_CODE_WAIT_FOR_BROKER_INSTALL, and waiting for result.");
+                Logger.info(methodTag, "Return to caller with BROWSER_CODE_WAIT_FOR_BROKER_INSTALL, and waiting for result.");
                 return ResultCode.BROKER_INSTALLATION_TRIGGERED;
             }
 
             // i.e. (both Browser and WebView) msauth://wpj/?username=idlab1%40msidlab4.onmicrosoft.com&client_info=[SOME_GUID]
             if (DEVICE_REGISTRATION_REDIRECT_URI_HOSTNAME.equalsIgnoreCase(uri.getHost())) {
-                Logger.info(TAG, " Device needs to be registered, sending BROWSER_CODE_DEVICE_REGISTER");
+                Logger.info(methodTag, " Device needs to be registered, sending BROWSER_CODE_DEVICE_REGISTER");
                 return ResultCode.DEVICE_REGISTRATION_REQUIRED;
             }
         }
@@ -226,7 +227,7 @@ public class RawAuthorizationResult {
         if (StringUtil.equalsIgnoreCase(parameters.get(ERROR_SUBCODE), SUB_ERROR_UI_CANCEL)) {
             // when the user click the "cancel" button in the UI, server will send the the
             // redirect uri with "cancel" error sub-code and redirects back to the calling app
-            Logger.info(TAG, "User cancelled the session");
+            Logger.info(methodTag, "User cancelled the session");
             return ResultCode.CANCELLED;
         }
 

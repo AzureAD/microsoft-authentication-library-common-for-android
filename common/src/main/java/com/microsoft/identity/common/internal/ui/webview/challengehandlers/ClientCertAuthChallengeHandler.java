@@ -67,6 +67,7 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
      * Creates new instance of ClientCertAuthChallengeHandler.
      * A manager for smartcard CBA is retrieved, and discovery for USB devices is started.
      * @param activity current host activity.
+     * @param smartcardCertBasedAuthManager ISmartcardCertBasedAuthManager instance.
      */
     public ClientCertAuthChallengeHandler(@NonNull final Activity activity,
                                           @NonNull final ISmartcardCertBasedAuthManager smartcardCertBasedAuthManager) {
