@@ -202,7 +202,7 @@ public class BrokerHost extends AbstractTestBroker {
         Logger.i(TAG, "Confirming that Shared Device Registration is successfull or not..");
 
         // Adding brief wait to increase reliability of test
-        Thread.sleep(TimeUnit.SECONDS.toMillis(5));
+        Thread.sleep(TimeUnit.SECONDS.toMillis(15));
 
         // Look for join op completion dialog
         final UiObject joinFinishDialog = UiAutomatorUtils.obtainUiObjectWithResourceId(
