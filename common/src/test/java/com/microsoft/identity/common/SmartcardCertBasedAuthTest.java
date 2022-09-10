@@ -1,9 +1,31 @@
+// Copyright (c) Microsoft Corporation.
+// All rights reserved.
+//
+// This code is licensed under the MIT License.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files(the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and / or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions :
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
 package com.microsoft.identity.common;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import android.app.Activity;
@@ -11,6 +33,8 @@ import androidx.appcompat.app.AlertDialog;
 import android.content.DialogInterface;
 import android.webkit.ClientCertRequest;
 import android.widget.Button;
+import android.widget.EditText;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -115,6 +139,54 @@ public class SmartcardCertBasedAuthTest {
         ClientCertAuthChallengeHandler clientCertAuthChallengeHandler = setUpClientCertAuthChallengeHandlerAndProcess(activity, certList);
         goToPinDialog(activity);
         mockUnplugSmartcard(clientCertAuthChallengeHandler);
+        checkIfCorrectDialogIsShowing(
+                getStringFromResource(activity, R.string.smartcard_error_dialog_positive_button)
+        );
+    }
+
+    //Test PIN attempts
+    //Below Test should probably be split into two!
+    @Test
+    public void testLockedOut() {
+        Activity activity = setUpActivity();
+        List<X509Certificate> certList = getMockCertList();
+        ClientCertAuthChallengeHandler c = setUpClientCertAuthChallengeHandlerAndProcess(activity, certList);
+        AlertDialog pinDialog = goToPinDialog(activity);
+        EditText editText = pinDialog.findViewById(R.id.pinEditText);
+        assertNotNull(editText);
+        char[] wrongPin = {'1', '2', '3'};
+        editText.setText(wrongPin, 0, wrongPin.length);
+        performClick(pinDialog, DialogInterface.BUTTON_POSITIVE);
+        checkIfCorrectDialogIsShowing(
+                getStringFromResource(activity, R.string.smartcard_pin_dialog_positive_button)
+        );
+        TextView errorMessage = pinDialog.findViewById(R.id.errorTextView);
+        assertNotNull(errorMessage);
+        String expectedErrorMessage = getStringFromResource(activity, R.string.smartcard_pin_dialog_error_message);
+        assertEquals(expectedErrorMessage, errorMessage.getText());
+
+        editText.setText(wrongPin, 0, wrongPin.length);
+        assertNotEquals(expectedErrorMessage, errorMessage.getText());
+
+        performClick(pinDialog, DialogInterface.BUTTON_POSITIVE);
+        checkIfCorrectDialogIsShowing(
+                getStringFromResource(activity, R.string.smartcard_pin_dialog_positive_button)
+        );
+        assertEquals(expectedErrorMessage, errorMessage.getText());
+
+        //This should show an error dialog next
+        editText.setText(wrongPin, 0, wrongPin.length);
+        performClick(pinDialog, DialogInterface.BUTTON_POSITIVE);
+
+        AlertDialog errorDialog = checkIfCorrectDialogIsShowing(
+                getStringFromResource(activity, R.string.smartcard_error_dialog_positive_button)
+        );
+
+        //Finally, we'll try to start again and it should block us.
+        performClick(errorDialog, DialogInterface.BUTTON_POSITIVE);
+        ensureNoDialogIsShowing();
+        c.processChallenge(getMockClientCertRequest());
+        //Should see error dialog again
         checkIfCorrectDialogIsShowing(
                 getStringFromResource(activity, R.string.smartcard_error_dialog_positive_button)
         );
@@ -389,9 +461,11 @@ public class SmartcardCertBasedAuthTest {
         private IStartDiscoveryCallback mStartDiscoveryCallback;
         private boolean mIsConnected;
         private final List<ICertDetails> mCertDetailsList;
+        private int mPinAttemptsRemaining;
 
         public TestSmartcardCertBasedAuthManager(@NonNull final List<X509Certificate> certList) {
             mIsConnected = false;
+            mPinAttemptsRemaining = 3;
             //Convert cert list into certDetails list
             mCertDetailsList = new ArrayList<>();
             for (X509Certificate cert : certList) {
@@ -419,7 +493,12 @@ public class SmartcardCertBasedAuthTest {
         @Override
         public void attemptDeviceSession(@NonNull ISessionCallback callback) {
             try {
-                callback.onGetSession(new TestSmartcardSession(mCertDetailsList));
+                callback.onGetSession(new TestSmartcardSession(mCertDetailsList, mPinAttemptsRemaining, new TestSmartcardSession.ITestSessionCallback() {
+                    @Override
+                    public void onIncorrectAttempt() {
+                        mPinAttemptsRemaining--;
+                    }
+                }));
             } catch (Exception e) {
                 callback.onException(e);
             }
@@ -456,10 +535,13 @@ public class SmartcardCertBasedAuthTest {
         private final char[] mPin;
         private int mPinAttemptsRemaining;
 
-        public TestSmartcardSession(List<ICertDetails> certDetailsList) {
+        private ITestSessionCallback mCallback;
+
+        public TestSmartcardSession(@NonNull final List<ICertDetails> certDetailsList, final int pinAttemptsRemaining, @NonNull final ITestSessionCallback callback) {
             mCertDetailsList = certDetailsList;
             mPin = new char[]{'1', '2', '3', '4', '5', '6'};
-            mPinAttemptsRemaining = 3;
+            mPinAttemptsRemaining = pinAttemptsRemaining;
+            mCallback = callback;
         }
 
         @NonNull
@@ -474,6 +556,7 @@ public class SmartcardCertBasedAuthTest {
                 return true;
             } else {
                 mPinAttemptsRemaining = mPinAttemptsRemaining > 0 ? mPinAttemptsRemaining - 1 : 0;
+                mCallback.onIncorrectAttempt();
                 return false;
             }
         }
@@ -504,8 +587,8 @@ public class SmartcardCertBasedAuthTest {
             };
         }
 
-        public void resetPinAttemptsRemaining() {
-            mPinAttemptsRemaining = 3;
+        interface ITestSessionCallback {
+            void onIncorrectAttempt();
         }
     }
 }
