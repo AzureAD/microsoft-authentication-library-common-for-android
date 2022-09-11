@@ -120,6 +120,7 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
 
     @Override
     protected SecureHardwareState getSecureHardwareState(@NonNull KeyPair kp) {
+        final String methodTag = TAG + ":getSecureHardwareState";
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             try {
                 final PrivateKey privateKey = kp.getPrivate();
@@ -128,16 +129,16 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
                 );
                 final KeyInfo info = factory.getKeySpec(privateKey, KeyInfo.class);
                 final boolean isInsideSecureHardware = info.isInsideSecureHardware();
-                Logger.info(TAG, "SecretKey is secure hardware backed? " + isInsideSecureHardware);
+                Logger.info(methodTag, "SecretKey is secure hardware backed? " + isInsideSecureHardware);
                 return isInsideSecureHardware
                         ? SecureHardwareState.TRUE_UNATTESTED
                         : SecureHardwareState.FALSE;
             } catch (final NoSuchAlgorithmException | NoSuchProviderException | InvalidKeySpecException e) {
-                Logger.error(TAG, "Failed to query secure hardware state.", e);
+                Logger.error(methodTag, "Failed to query secure hardware state.", e);
                 return SecureHardwareState.UNKNOWN_QUERY_ERROR;
             }
         } else {
-            Logger.info(TAG, "Cannot query secure hardware state (API unavailable <23)");
+            Logger.info(methodTag, "Cannot query secure hardware state (API unavailable <23)");
         }
 
         return SecureHardwareState.UNKNOWN_DOWNLEVEL;
