@@ -201,7 +201,7 @@ public class BrokerHost extends AbstractTestBroker {
     private void postJoinConfirmHelper(@NonNull final String expectedUpn) throws InterruptedException {
         Logger.i(TAG, "Confirming that Shared Device Registration is successfull or not..");
 
-        // Adding brief wait to increase reliability of test
+        // Adding wait to increase reliability of test
         Thread.sleep(TimeUnit.SECONDS.toMillis(15));
 
         // Look for join op completion dialog

@@ -27,5 +27,4 @@ package com.microsoft.identity.client.ui.automation.constants;
  */
 public class GlobalConstants {
     public static final boolean IS_STAY_SIGN_IN_PAGE_EXPECTED = true;
-    public static final boolean IS_PIN_NEEDED_FOR_CREDENTIAL_STORAGE = true;
 }

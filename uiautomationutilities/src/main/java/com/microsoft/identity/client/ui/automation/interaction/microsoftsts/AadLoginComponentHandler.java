@@ -116,7 +116,7 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
     @Override
     public void acceptConsent() {
         try {
-            Thread.sleep(TimeUnit.SECONDS.toMillis(10));
+            Thread.sleep(TimeUnit.SECONDS.toMillis(2));
         } catch (InterruptedException e){
             e.printStackTrace();
         }

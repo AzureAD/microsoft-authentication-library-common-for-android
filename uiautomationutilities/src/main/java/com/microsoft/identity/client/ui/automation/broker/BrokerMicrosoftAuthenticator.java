@@ -36,9 +36,6 @@ import androidx.test.core.app.ApplicationProvider;
 import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObjectNotFoundException;
 
-import com.microsoft.identity.client.ui.automation.TestContext;
-import com.microsoft.identity.client.ui.automation.constants.GlobalConstants;
-import com.microsoft.identity.client.ui.automation.device.TestDevice;
 import com.microsoft.identity.client.ui.automation.installer.IAppInstaller;
 import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.AdfsPromptHandler;
 import com.microsoft.identity.client.ui.automation.powerlift.IPowerLiftIntegratedApp;
@@ -47,13 +44,11 @@ import com.microsoft.identity.client.ui.automation.interaction.PromptHandlerPara
 import com.microsoft.identity.client.ui.automation.interaction.PromptParameter;
 import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.AadPromptHandler;
 import com.microsoft.identity.client.ui.automation.logging.Logger;
-import com.microsoft.identity.client.ui.automation.rules.DevicePinSetupRule;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
 import org.junit.Assert;
 
 import lombok.Getter;
-
 
 /**
  * Serves as the base class interacting with the Microsoft Authenticator Broker App during UI Test. The base class should be extended
@@ -111,14 +106,7 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
     public void performDeviceRegistration(@NonNull final String username,
                                           @NonNull final String password,
                                           final boolean isFederatedUser) {
-//        final TestDevice device = TestContext.getTestContext().getTestDevice();
-//        if (GlobalConstants.IS_PIN_NEEDED_FOR_CREDENTIAL_STORAGE && !device.isSecured()) {
-//            device.setPin(DevicePinSetupRule.PIN);
-//        }
         brokerMicrosoftAuthenticatorImpl.performDeviceRegistration(username, password, isFederatedUser);
-//        if (device.isSecured()) {
-//            device.removePin(DevicePinSetupRule.PIN);
-//        }
     }
 
     @Override
