@@ -1653,6 +1653,13 @@ public class MsalOAuth2TokenCache
             final AccessTokenRecord referenceToken) {
         final String methodName = "deleteAccessTokensWithIntersectingScopes";
 
+        Logger.info(
+                TAG,
+                "AT about to be deleted that overlaps reference token Scopes " +
+                        " Reference Token is expired?: [ "+ referenceToken.isExpired() +" ]"
+                        + " scopes: [ "+ referenceToken.getTarget() +" ]"
+        );
+
         final List<Credential> accessTokens = mAccountCredentialCache.getCredentialsFilteredBy(
                 referenceToken.getHomeAccountId(),
                 referenceToken.getEnvironment(),
@@ -1671,6 +1678,16 @@ public class MsalOAuth2TokenCache
 
         for (final Credential accessToken : accessTokens) {
             if (scopesIntersect(referenceToken, (AccessTokenRecord) accessToken, true)) {
+                if(accessToken instanceof AccessTokenRecord) {
+                    Logger.info(
+                            TAG,
+                            "AT that overlaps reference token Scopes about to be Deleted" +
+                                    " AT to Delete is expired?: [ " + accessToken.isExpired() + " ]"
+                                    + " reference AT scopes: [ " + ((AccessTokenRecord) accessToken).getTarget() + " ]"
+                                    + " target AT scopes: [ " + ((AccessTokenRecord) accessToken).getTarget() + " ]"
+                    );
+                }
+
                 Logger.infoPII(
                         TAG + ":" + methodName,
                         "Removing credential: " + accessToken

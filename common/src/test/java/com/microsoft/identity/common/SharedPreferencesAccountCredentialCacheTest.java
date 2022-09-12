@@ -338,6 +338,7 @@ public class SharedPreferencesAccountCredentialCacheTest {
         accessToken.setCredentialType(CredentialType.AccessToken.name());
         accessToken.setClientId(CLIENT_ID);
         accessToken.setTarget(TARGET);
+        accessToken.setExpiresOn(EXPIRES_ON);
 
         // Save the Credential
         mSharedPreferencesAccountCredentialCache.saveCredential(accessToken);
