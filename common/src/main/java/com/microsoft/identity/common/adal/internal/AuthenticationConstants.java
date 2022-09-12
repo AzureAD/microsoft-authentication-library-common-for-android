@@ -1405,7 +1405,8 @@ public final class AuthenticationConstants {
             BROKER_SET_FLIGHTS(BROKER_API_SET_FLIGHTS_PATH, BROKER_VERSION_2, null),
             BROKER_GET_FLIGHTS(BROKER_API_GET_FLIGHTS_PATH, BROKER_VERSION_2, null),
             GET_SSO_TOKEN(GET_SSO_TOKEN_PATH, null, VERSION_7),
-            UNKNOWN(null, null, null)
+            UNKNOWN(null, null, null),
+            DEVICE_REGISTRATION("/dr/test/v0", null, null),
             ;
             /**
              * The content provider path that the API exists behind.
