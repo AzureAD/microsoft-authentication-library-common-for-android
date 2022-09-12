@@ -69,10 +69,17 @@ import java.util.Set;
 //Tests basic cancellation and error dialog flows of smartcard CBA feature.
 //Manual tests cover complete authentication flow.
 public class SmartcardCertBasedAuthTest {
-    //Build activity
+    //Controller to build, get, and restart activity
     private static final ActivityController<DualScreenActivity> mController = Robolectric.buildActivity(DualScreenActivity.class);
     //Host activity
-    private Activity mActivity;
+    private Activity mActivity = mController.get();
+    //Resource strings
+    private final String SMARTCARD_CERT_DIALOG_POSITIVE_BUTTON = mActivity.getResources().getString(R.string.smartcard_cert_dialog_positive_button);
+    private final String SMARTCARD_PIN_DIALOG_POSITIVE_BUTTON = mActivity.getResources().getString(R.string.smartcard_pin_dialog_positive_button);
+    private final String SMARTCARD_PIN_DIALOG_ERROR_MESSAGE = mActivity.getResources().getString(R.string.smartcard_pin_dialog_error_message);
+    private final String SMARTCARD_ERROR_DIALOG_POSITIVE_BUTTON = mActivity.getResources().getString(R.string.smartcard_error_dialog_positive_button);
+
+    //Need to restart activity for every test.
     @Before
     public void setUp() {
         mController.restart();
@@ -83,9 +90,7 @@ public class SmartcardCertBasedAuthTest {
     @Test
     public void testNoCertsOnSmartcard() {
         setUpClientCertAuthChallengeHandlerAndProcess(mActivity, new ArrayList<>());
-        checkIfCorrectDialogIsShowing(
-                getStringFromResource(mActivity, R.string.smartcard_error_dialog_positive_button)
-        );
+        checkIfCorrectDialogIsShowing(SMARTCARD_ERROR_DIALOG_POSITIVE_BUTTON);
     }
 
     //Basic test to get to picker dialog.
@@ -132,9 +137,7 @@ public class SmartcardCertBasedAuthTest {
         goToPickerDialog(mActivity);
         //Unplugging while dialog is showing should result in an error dialog.
         mockUnplugSmartcard(clientCertAuthChallengeHandler);
-        checkIfCorrectDialogIsShowing(
-                getStringFromResource(mActivity, R.string.smartcard_error_dialog_positive_button)
-        );
+        checkIfCorrectDialogIsShowing(SMARTCARD_ERROR_DIALOG_POSITIVE_BUTTON);
     }
 
     //Should result in error dialog showing.
@@ -145,9 +148,7 @@ public class SmartcardCertBasedAuthTest {
         goToPinDialog(mActivity);
         //Unplugging while dialog is showing should result in an error dialog.
         mockUnplugSmartcard(clientCertAuthChallengeHandler);
-        checkIfCorrectDialogIsShowing(
-                getStringFromResource(mActivity, R.string.smartcard_error_dialog_positive_button)
-        );
+        checkIfCorrectDialogIsShowing(SMARTCARD_ERROR_DIALOG_POSITIVE_BUTTON);
     }
 
     //Incorrect PIN attempts before reaching limit should remain on same dialog with error message.
@@ -162,27 +163,20 @@ public class SmartcardCertBasedAuthTest {
         final char[] wrongPin = {'1', '2', '3'};
         enterPinAndClick(pinDialog, wrongPin);
         //Dialog should be the same.
-        checkIfCorrectDialogIsShowing(
-                getStringFromResource(mActivity, R.string.smartcard_pin_dialog_positive_button)
-        );
+        checkIfCorrectDialogIsShowing(SMARTCARD_PIN_DIALOG_POSITIVE_BUTTON);
         //Make sure error message is seen.
         final TextView errorMessage = pinDialog.findViewById(R.id.errorTextView);
         assertNotNull(errorMessage);
-        final String expectedErrorMessage = getStringFromResource(mActivity, R.string.smartcard_pin_dialog_error_message);
-        assertEquals(expectedErrorMessage, errorMessage.getText());
+        assertEquals(SMARTCARD_PIN_DIALOG_ERROR_MESSAGE, errorMessage.getText());
         //Upon click again, an error dialog should appear.
         enterPinAndClick(pinDialog, wrongPin);
-        final AlertDialog errorDialog = checkIfCorrectDialogIsShowing(
-                getStringFromResource(mActivity, R.string.smartcard_error_dialog_positive_button)
-        );
+        final AlertDialog errorDialog = checkIfCorrectDialogIsShowing(SMARTCARD_ERROR_DIALOG_POSITIVE_BUTTON);
         //Finally, we'll try to start the flow over again,
         // and it should block us with an error dialog.
         performClick(errorDialog, DialogInterface.BUTTON_POSITIVE);
         ensureNoDialogIsShowing();
         challengeHandler.processChallenge(getMockClientCertRequest());
-        checkIfCorrectDialogIsShowing(
-                getStringFromResource(mActivity, R.string.smartcard_error_dialog_positive_button)
-        );
+        checkIfCorrectDialogIsShowing(SMARTCARD_ERROR_DIALOG_POSITIVE_BUTTON);
     }
 
     //When an unexpected exception is thrown, a generic dialog should appear.
@@ -195,15 +189,7 @@ public class SmartcardCertBasedAuthTest {
         // within the getKeyForAuth method. An error dialog should appear.
         final char[] correctPin = {'1', '2', '3', '4', '5', '6'};
         enterPinAndClick(pinDialog, correctPin);
-        checkIfCorrectDialogIsShowing(
-                getStringFromResource(mActivity, R.string.smartcard_error_dialog_positive_button)
-        );
-    }
-
-    //Helper method... to get string from resource id.
-    @NonNull
-    private static String getStringFromResource(@NonNull final Activity activity, final int id) {
-        return activity.getResources().getString(id);
+        checkIfCorrectDialogIsShowing(SMARTCARD_ERROR_DIALOG_POSITIVE_BUTTON);
     }
 
     //Return a list containing two mock certificates.
@@ -230,9 +216,7 @@ public class SmartcardCertBasedAuthTest {
     //Returns picker dialog if we successfully get there.
     @NonNull
     private AlertDialog goToPickerDialog(@NonNull final Activity activity) {
-        return checkIfCorrectDialogIsShowing(
-                getStringFromResource(activity, R.string.smartcard_cert_dialog_positive_button)
-        );
+        return checkIfCorrectDialogIsShowing(SMARTCARD_CERT_DIALOG_POSITIVE_BUTTON);
     }
 
     //Returns PIN dialog if we successfully get there.
@@ -240,9 +224,7 @@ public class SmartcardCertBasedAuthTest {
     private AlertDialog goToPinDialog(@NonNull final Activity activity) {
         final AlertDialog pickerDialog = goToPickerDialog(activity);
         performClick(pickerDialog, DialogInterface.BUTTON_POSITIVE);
-        return checkIfCorrectDialogIsShowing(
-                getStringFromResource(activity, R.string.smartcard_pin_dialog_positive_button)
-        );
+        return checkIfCorrectDialogIsShowing(SMARTCARD_PIN_DIALOG_POSITIVE_BUTTON);
     }
 
     //Enter PIN into dialog, check that components are correct, and click.
@@ -254,8 +236,7 @@ public class SmartcardCertBasedAuthTest {
         //Make sure error messgae is not showing
         final TextView errorMessage = pinDialog.findViewById(R.id.errorTextView);
         assertNotNull(errorMessage);
-        final String expectedErrorMessage = getStringFromResource(mActivity, R.string.smartcard_pin_dialog_error_message);
-        assertNotEquals(expectedErrorMessage, errorMessage.getText());
+        assertNotEquals(SMARTCARD_PIN_DIALOG_ERROR_MESSAGE, errorMessage.getText());
         performClick(pinDialog, DialogInterface.BUTTON_POSITIVE);
     }
 
