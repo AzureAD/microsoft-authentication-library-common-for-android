@@ -15,8 +15,6 @@ steps:
 - task: Gradle@3
   displayName: 'Run Spotbugs'
   inputs:
-    javaHomeSelection: JDKVersion
-    jdkVersionOption: "1.11"
     cwd: ${{ parameters.cwd }}
     tasks: ${{ parameters.project }}:${{ parameters.spotbugsCommand }}
     publishJUnitResults: false
