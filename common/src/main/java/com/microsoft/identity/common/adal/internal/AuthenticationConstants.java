@@ -1406,7 +1406,7 @@ public final class AuthenticationConstants {
             BROKER_GET_FLIGHTS(BROKER_API_GET_FLIGHTS_PATH, BROKER_VERSION_2, null),
             GET_SSO_TOKEN(GET_SSO_TOKEN_PATH, null, VERSION_7),
             UNKNOWN(null, null, null),
-            DEVICE_REGISTRATION("/dr/test/v0", null, null),
+            DEVICE_REGISTRATION(DEVICE_REGISTRATION_PATH, null, null),
             ;
             /**
              * The content provider path that the API exists behind.
@@ -1505,6 +1505,11 @@ public final class AuthenticationConstants {
          * Broker api path constant for adding flight information.
          */
         public static final String GET_SSO_TOKEN_PATH = "/ssoToken";
+
+        /**
+         * Broker api path constant for execute device registration protocols.
+         */
+        public static final String DEVICE_REGISTRATION_PATH = "/deviceRegistration/protocols";
 
         /**
          * BrokerContentProvider URI code constant for MSAL-to-Broker hello request.
