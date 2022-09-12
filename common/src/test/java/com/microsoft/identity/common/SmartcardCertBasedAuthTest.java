@@ -476,6 +476,8 @@ public class SmartcardCertBasedAuthTest {
         };
     }
 
+    //Implements ISmartcardCertBasedAuthManager in order to carry out testing of dialogs.
+    //Only meant to be used for testing purposes.
     private static class TestSmartcardCertBasedAuthManager implements ISmartcardCertBasedAuthManager {
 
         private IStartDiscoveryCallback mStartDiscoveryCallback;
@@ -487,7 +489,7 @@ public class SmartcardCertBasedAuthTest {
             mIsConnected = false;
             //Attempts remaining is usually 3, but 2 attempts is all that's necessary for testing.
             mPinAttemptsRemaining = 2;
-            //Convert cert list into certDetails list
+            //Convert cert list into certDetails list.
             mCertDetailsList = new ArrayList<>();
             for (X509Certificate cert : certList) {
                 mCertDetailsList.add(new ICertDetails() {
@@ -501,7 +503,7 @@ public class SmartcardCertBasedAuthTest {
         }
 
         @Override
-        public void startDiscovery(IStartDiscoveryCallback startDiscoveryCallback) {
+        public void startDiscovery(@NonNull final IStartDiscoveryCallback startDiscoveryCallback) {
             mStartDiscoveryCallback = startDiscoveryCallback;
             mockConnect();
         }
@@ -512,7 +514,7 @@ public class SmartcardCertBasedAuthTest {
         }
 
         @Override
-        public void attemptDeviceSession(@NonNull ISessionCallback callback) {
+        public void attemptDeviceSession(@NonNull final ISessionCallback callback) {
             try {
                 callback.onGetSession(new TestSmartcardSession(mCertDetailsList, mPinAttemptsRemaining, new TestSmartcardSession.ITestSessionCallback() {
                     @Override
@@ -520,7 +522,7 @@ public class SmartcardCertBasedAuthTest {
                         mPinAttemptsRemaining--;
                     }
                 }));
-            } catch (Exception e) {
+            } catch (@NonNull final Exception e) {
                 callback.onException(e);
             }
         }
@@ -532,7 +534,8 @@ public class SmartcardCertBasedAuthTest {
 
         @Override
         public void prepareForAuth() {
-            //Don't need anything
+            //Since we don't go through with authentication for testing,
+            // we don't need any logic here.
         }
 
         public void mockConnect() {
@@ -550,6 +553,8 @@ public class SmartcardCertBasedAuthTest {
         }
     }
 
+    //Implements ISmartcardSession in order to carry out testing of dialogs.
+    //Only meant to be used for testing purposes.
     private static class TestSmartcardSession implements ISmartcardSession {
 
         private final List<ICertDetails> mCertDetailsList;
@@ -558,7 +563,14 @@ public class SmartcardCertBasedAuthTest {
 
         private final ITestSessionCallback mCallback;
 
-        public TestSmartcardSession(@NonNull final List<ICertDetails> certDetailsList, final int pinAttemptsRemaining, @NonNull final ITestSessionCallback callback) {
+        //Used to keep the pinAttemptsRemaining variable consistent between the manager and session.
+        interface ITestSessionCallback {
+            void onIncorrectAttempt();
+        }
+
+        public TestSmartcardSession(@NonNull final List<ICertDetails> certDetailsList,
+                                    final int pinAttemptsRemaining,
+                                    @NonNull final ITestSessionCallback callback) {
             mCertDetailsList = certDetailsList;
             mPin = new char[]{'1', '2', '3', '4', '5', '6'};
             mPinAttemptsRemaining = pinAttemptsRemaining;
@@ -572,7 +584,7 @@ public class SmartcardCertBasedAuthTest {
         }
 
         @Override
-        public boolean verifyPin(char[] pin) {
+        public boolean verifyPin(final char[] pin) {
             if (Arrays.equals(mPin, pin)) {
                 return true;
             } else {
@@ -587,9 +599,10 @@ public class SmartcardCertBasedAuthTest {
             return mPinAttemptsRemaining;
         }
 
+        //This method isn't (shouldn't) being used.
         @NonNull
         @Override
-        public PrivateKey getKeyForAuth(ICertDetails certDetails, char[] pin) {
+        public PrivateKey getKeyForAuth(@NonNull final ICertDetails certDetails, final char[] pin) {
             return new PrivateKey() {
                 @Override
                 public String getAlgorithm() {
@@ -606,10 +619,6 @@ public class SmartcardCertBasedAuthTest {
                     return new byte[0];
                 }
             };
-        }
-
-        interface ITestSessionCallback {
-            void onIncorrectAttempt();
         }
     }
 }
