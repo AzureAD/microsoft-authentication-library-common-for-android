@@ -1255,7 +1255,7 @@ public final class AuthenticationConstants {
         /**
          * Boolean to return when broker flights is successfully set.
          */
-        public static final String ADD_FLIGHTS_SUCCEEDED = "add_flights_succeeded";
+        public static final String SET_FLIGHTS_SUCCEEDED = "set_flights_succeeded";
 
         /**
          * All of the active flights.
@@ -1410,7 +1410,7 @@ public final class AuthenticationConstants {
             BROKER_GET_ACCOUNTS(BROKER_API_GET_BROKER_ACCOUNTS_PATH, BROKER_VERSION_1, null),
             BROKER_REMOVE_ACCOUNT(BROKER_API_REMOVE_BROKER_ACCOUNT_PATH, BROKER_VERSION_1, null),
             BROKER_UPDATE_BRT(BROKER_API_UPDATE_BRT_PATH, BROKER_VERSION_1, null),
-            BROKER_ADD_FLIGHTS(BROKER_API_ADD_FLIGHTS_PATH, BROKER_VERSION_3, null),
+            BROKER_SET_FLIGHTS(BROKER_API_SET_FLIGHTS_PATH, BROKER_VERSION_3, null),
             BROKER_GET_FLIGHTS(BROKER_API_GET_FLIGHTS_PATH, BROKER_VERSION_3, null),
             GET_SSO_TOKEN(GET_SSO_TOKEN_PATH, null, VERSION_7),
             UNKNOWN(null, null, null)
@@ -1494,9 +1494,9 @@ public final class AuthenticationConstants {
         public static final String BROKER_API_UPDATE_BRT_PATH = "/brokerApi/updateBrt";
 
         /**
-         * Broker api path constant for adding flight information.
+         * Broker api path constant for setting flight information.
          */
-        public static final String BROKER_API_ADD_FLIGHTS_PATH = "/brokerApi/addFlights";
+        public static final String BROKER_API_SET_FLIGHTS_PATH = "/brokerApi/setFlights";
 
         /**
          * Broker api path constant for adding flight information.

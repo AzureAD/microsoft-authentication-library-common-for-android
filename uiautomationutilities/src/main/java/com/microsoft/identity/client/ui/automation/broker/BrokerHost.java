@@ -338,7 +338,7 @@ public class BrokerHost extends AbstractTestBroker {
     }
 
     @Override
-    public void setFlights(@Nullable final String flightsJson) {
+    public void overwriteFlights(@Nullable final String flightsJson) {
         Logger.i(TAG, "Set Flights..");
         launch();
 
@@ -349,8 +349,8 @@ public class BrokerHost extends AbstractTestBroker {
             e.printStackTrace();
         }
 
-        // scroll to find the set flights button
-        UiAutomatorUtils.obtainChildInScrollable("Set flights (When BrokerHost is the active broker)");
+        // scroll to find the overwrite flights button
+        UiAutomatorUtils.obtainChildInScrollable("Overwrite flights (When BrokerHost is the active broker)");
         // input flights string in flights input box
         UiAutomatorUtils.handleInput("com.microsoft.identity.testuserapp:id/editTextFlights", flightsJson);
         // Click Set Flights button
@@ -358,7 +358,7 @@ public class BrokerHost extends AbstractTestBroker {
     }
 
     @Override
-    public void addFlights(@Nullable final String flightsJson) {
+    public void setFlights(@Nullable final String flightsJson) {
         Logger.i(TAG, "Add Flights..");
         launch();
 
@@ -370,7 +370,7 @@ public class BrokerHost extends AbstractTestBroker {
         }
 
         // scroll to find the set flights button
-        UiAutomatorUtils.obtainChildInScrollable("Add Flights");
+        UiAutomatorUtils.obtainChildInScrollable("Set Flights");
         // input flights string in flights input box
         UiAutomatorUtils.handleInput("com.microsoft.identity.testuserapp:id/editTextFlights", flightsJson);
         // Click Set Flights button

@@ -115,16 +115,16 @@ public interface ITestBroker extends IApp {
     DeviceAdmin getAdminName();
 
     /**
-     * Sets the flight information.
+     * Overwrite the whole flight information.
+     * @param flightsJson the json representation of the flight key and value pairs {"key1":"value"}.
+     */
+    void overwriteFlights(@Nullable final String flightsJson);
+
+    /**
+     * Set flight informations.
      * @param flightsJson the json representation of the flight key and value pairs {"key1":"value"}.
      */
     void setFlights(@Nullable final String flightsJson);
-
-    /**
-     * Add the flight information.
-     * @param flightsJson the json representation of the flight key and value pairs {"key1":"value"}.
-     */
-    void addFlights(@Nullable final String flightsJson);
 
     /**
      * The flight information set for this broker app.
