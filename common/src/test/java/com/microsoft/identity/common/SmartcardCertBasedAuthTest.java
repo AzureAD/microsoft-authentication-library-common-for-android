@@ -179,7 +179,34 @@ public class SmartcardCertBasedAuthTest {
         checkIfCorrectDialogIsShowing(SMARTCARD_ERROR_DIALOG_POSITIVE_BUTTON);
     }
 
-    //When an unexpected exception is thrown, a generic dialog should appear.
+    //When getting the cert details list for the picker, should show a generic error dialog
+    // upon unexpected exception thrown.
+    @Test
+    public void testExceptionThrownWhenGettingCertDetailsList() {
+        //Create a specific certList with one cert that has "Exception" as the issuer name.
+        //The Test session is set up so that in this specific case, it will throw an exception
+        // for testing purposes.
+        final List<X509Certificate> certList = new ArrayList<>();
+        certList.add(getMockCertificate("Exception", "Exception"));
+        setUpClientCertAuthChallengeHandlerAndProcess(mActivity, certList);
+        checkIfCorrectDialogIsShowing(SMARTCARD_ERROR_DIALOG_POSITIVE_BUTTON);
+    }
+
+    //In pin dialog, should show a generic error dialog upon unexpected exception thrown
+    // while interacting with a session.
+    @Test
+    public void testExceptionThrownWhenVerifyingPin() {
+        final List<X509Certificate> certList = getMockCertList();
+        setUpClientCertAuthChallengeHandlerAndProcess(mActivity, certList);
+        final AlertDialog pinDialog = goToPinDialog(mActivity);
+        //Type in PIN of "exc", which (in this testing case only) should throw an exception
+        // within the verifyPin method. An error dialog should appear.
+        final char[] exceptionPin = {'e', 'x', 'c'};
+        enterPinAndClick(pinDialog, exceptionPin);
+        checkIfCorrectDialogIsShowing(SMARTCARD_ERROR_DIALOG_POSITIVE_BUTTON);
+    }
+
+    //When an unexpected exception is thrown, a generic error dialog should appear.
     @Test
     public void testExceptionThrownWhenGettingKey() {
         final List<X509Certificate> certList = getMockCertList();
@@ -567,15 +594,26 @@ public class SmartcardCertBasedAuthTest {
 
         @NonNull
         @Override
-        public List<ICertDetails> getCertDetailsList() {
+        public List<ICertDetails> getCertDetailsList() throws Exception {
+            //Check for a specific testing case where if there's only one cert
+            // and it has a subject value of "Exception", throw an Exception.
+            if (mCertDetailsList.size() == 1 &&
+                    mCertDetailsList.get(0).getCertificate().getIssuerDN().getName().equals("Exception")) {
+                throw new Exception();
+            }
             return mCertDetailsList;
         }
 
         @Override
-        public boolean verifyPin(final char[] pin) {
+        public boolean verifyPin(final char[] pin) throws Exception {
             if (Arrays.equals(mPin, pin)) {
                 return true;
-            } else {
+            }
+            else if (Arrays.equals(new char[]{'e', 'x', 'c'}, pin)) {
+                //This is a special case where we want to test handling an exception.
+                throw new Exception();
+            }
+            else {
                 mPinAttemptsRemaining = mPinAttemptsRemaining > 0 ? mPinAttemptsRemaining - 1 : 0;
                 mCallback.onIncorrectAttempt();
                 return false;
