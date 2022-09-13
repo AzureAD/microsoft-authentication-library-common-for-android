@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+    <string name="app_loading">Wird geladen…</string>
+
+    <string name="broker_processing">Bearbeitung durch Broker</string>
+    <string name="http_auth_dialog_username">Benutzername</string>
+    <string name="http_auth_dialog_password">Kennwort</string>
+    <string name="http_auth_dialog_title">Geben Sie Ihre Anmeldeinformationen ein</string>
+    <string name="http_auth_dialog_login">Anmeldung</string>
+    <string name="http_auth_dialog_cancel">Abbrechen</string>
+
+    <!-- strings for CBA dialogs and layouts -->
+    <string name="smartcard_cert_dialog_title">Ein Smartcard Zertifikat für die Anmeldung auswählen</string>
+    <string name="smartcard_cert_dialog_positive_button">Weiter</string>
+    <string name="smartcard_cert_dialog_negative_button">Abbrechen</string>
+
+    <string name="smartcard_pin_dialog_title">Smartcard entsperren</string>
+    <string name="smartcard_pin_dialog_message">Die Smartcard-PIN eingeben, um auf das Zertifikat zuzugreifen und sich anzumelden</string>
+    <string name="smartcard_pin_dialog_positive_button">Entsperren</string>
+    <string name="smartcard_pin_dialog_negative_button">Abbrechen</string>
+    <string name="smartcard_pin_dialog_error_message">Die eingegebene PIN war falsch</string>
+    <string name="smartcard_pin_layout_edittext_hint">PIN</string>
+
+    <string name="smartcard_error_dialog_positive_button">OK</string>
+
+    <string name="smartcard_max_attempt_dialog_title">Später noch mal versuchen</string>
+    <string name="smartcard_max_attempt_dialog_message">Zu viele Fehlversuche, später erneut versuchen.</string>
+
+    <string name="smartcard_early_unplug_dialog_title">Erneut versuchen</string>
+    <string name="smartcard_early_unplug_dialog_message">Smartcard Gerät wurde entfernt. Bitte stecken das Gerät erneut ein, bevor Sie versuchen, sich erneut anzumelden.</string>
+
+    <string name="smartcard_no_cert_dialog_title">Keine zutreffenden Zertifikate gefunden.</string>
+    <string name="smartcard_no_cert_dialog_message">Bitte bestätigen Sie, dass Ihr Zertifikat korrekt auf Ihrem Smartcard-Gerät bereitgestellt wurde.</string>
+
+    <string name="smartcard_general_error_dialog_title">Später noch mal versuchen</string>
+    <string name="smartcard_general_error_dialog_message">Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es später noch einmal.</string>
+</resources>

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+    <string name="app_loading">กำลังโหลด…</string>
+
+    <string name="broker_processing">กำลังประมวลผลตัวกลาง</string>
+    <string name="http_auth_dialog_username">ชื่อผู้ใช้</string>
+    <string name="http_auth_dialog_password">รหัสผ่าน</string>
+    <string name="http_auth_dialog_title">ใส่ข้อมูลประจำตัวของคุณ</string>
+    <string name="http_auth_dialog_login">ล็อกอิน</string>
+    <string name="http_auth_dialog_cancel">ยกเลิก</string>
+
+    <!-- strings for CBA dialogs and layouts -->
+    <string name="smartcard_cert_dialog_title">เลือกใบรับรองสมาร์ทการ์ดเพื่อลงชื่อเข้าใช้</string>
+    <string name="smartcard_cert_dialog_positive_button">ดำเนินการต่อ</string>
+    <string name="smartcard_cert_dialog_negative_button">ยกเลิก</string>
+
+    <string name="smartcard_pin_dialog_title">ปลดล็อกสมาร์ทการ์ด</string>
+    <string name="smartcard_pin_dialog_message">ใส่ PIN ของสมาร์ทการ์ดเพื่อเข้าถึงใบรับรองและลงชื่อเข้าใช้</string>
+    <string name="smartcard_pin_dialog_positive_button">ปลดล็อก</string>
+    <string name="smartcard_pin_dialog_negative_button">ยกเลิก</string>
+    <string name="smartcard_pin_dialog_error_message">PIN ที่คุณใส่ไม่ถูกต้อง</string>
+    <string name="smartcard_pin_layout_edittext_hint">PIN</string>
+
+    <string name="smartcard_error_dialog_positive_button">ตกลง</string>
+
+    <string name="smartcard_max_attempt_dialog_title">ลองอีกครั้งในภายหลัง</string>
+    <string name="smartcard_max_attempt_dialog_message">มีความพยายามที่ล้มเหลวมากเกินไป โปรดลองอีกครั้งในภายหลัง</string>
+
+    <string name="smartcard_early_unplug_dialog_title">ลองอีกครั้ง</string>
+    <string name="smartcard_early_unplug_dialog_message">นำอุปกรณ์สมาร์ทการ์ดออกแล้ว โปรดใส่อุปกรณ์ใหม่ก่อนที่จะพยายามเข้าสู่ระบบอีกครั้ง</string>
+
+    <string name="smartcard_no_cert_dialog_title">ไม่พบใบรับรองที่เกี่ยวข้อง</string>
+    <string name="smartcard_no_cert_dialog_message">โปรดยืนยันว่าใบรับรองของคุณได้รับการเตรียมใช้งานอย่างถูกต้องบนอุปกรณ์สมาร์ทการ์ดของคุณ</string>
+
+    <string name="smartcard_general_error_dialog_title">ลองอีกครั้งในภายหลัง</string>
+    <string name="smartcard_general_error_dialog_message">เกิดข้อผิดพลาดที่ไม่คาดคิด โปรดลองอีกครั้งภายหลัง</string>
+</resources>

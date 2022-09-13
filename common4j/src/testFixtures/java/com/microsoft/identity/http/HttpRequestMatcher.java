@@ -198,5 +198,15 @@ public class HttpRequestMatcher {
             });
             return this;
         }
+
+        public HttpRequestMatcherBuilder headersContain(Map.Entry<String, String> header) {
+            headers(new Predicate<Map<String, String>>() {
+                @Override
+                public boolean test(Map<String, String> headers) {
+                    return header.getValue().equals(headers.get(header.getKey()));
+                }
+            });
+            return this;
+        }
     }
 }

@@ -465,4 +465,29 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         }
     }
 
+    /**
+     * A wrapper to stop YubiKitManager instance from detecting any more Usb devices.
+     */
+    public void stopYubiKitManagerUsbDiscovery() {
+        final String methodTag = TAG + ":stopYubiKitManagerUsbDiscovery";
+        if (mClientCertAuthChallengeHandler != null) {
+            mClientCertAuthChallengeHandler.stopYubiKitManagerUsbDiscovery();
+        } else {
+            Logger.error(methodTag, "YubiKitManager usb discovery not stopped due to mClientCertAuthChallengeHandler being null", null);
+        }
+    }
+
+    /**
+     * A wrapper to emit telemetry for results from certificate based authentication (CBA) if CBA occurred.
+     * @param response a RawAuthorizationResult object received upon a challenge response received.
+     */
+    public void emitTelemetryForCertBasedAuthResult(@NonNull final RawAuthorizationResult response) {
+        final String methodTag = TAG + ":emitTelemetryForCertBasedAuthResult";
+        if (mClientCertAuthChallengeHandler != null) {
+            mClientCertAuthChallengeHandler.emitTelemetryForCertBasedAuthResults(response);
+        } else {
+            Logger.error(methodTag, "CBA results won't be emitted due to mClientCertAuthChallengeHandler being null", null);
+        }
+    }
+
 }

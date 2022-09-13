@@ -76,7 +76,13 @@ public class InMemoryStorage<T> implements INameValueStorage<T> {
 
     @Override
     public Iterator<Map.Entry<String, T>> getAllFilteredByKey(Predicate<String> keyFilter) {
-        return null;
+        final Map<String, T> newMap = new HashMap<>();
+        for (final Map.Entry<String, T> entry: mMap.entrySet()) {
+            if (keyFilter.test(entry.getKey())) {
+                newMap.put(entry.getKey(), entry.getValue());
+            }
+        }
+        return newMap.entrySet().iterator();
     }
 
     public int size() {

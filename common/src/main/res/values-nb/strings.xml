@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+    <string name="app_loading">Laster inn …</string>
+
+    <string name="broker_processing">Broker behandler</string>
+    <string name="http_auth_dialog_username">Brukernavn</string>
+    <string name="http_auth_dialog_password">Passord</string>
+    <string name="http_auth_dialog_title">Skriv inn legitimasjonen din</string>
+    <string name="http_auth_dialog_login">Pålogging</string>
+    <string name="http_auth_dialog_cancel">Avbryt</string>
+
+    <!-- strings for CBA dialogs and layouts -->
+    <string name="smartcard_cert_dialog_title">Velg et smartkortsertifikat for å logge på</string>
+    <string name="smartcard_cert_dialog_positive_button">Fortsett</string>
+    <string name="smartcard_cert_dialog_negative_button">Avbryt</string>
+
+    <string name="smartcard_pin_dialog_title">Lås opp smartkort</string>
+    <string name="smartcard_pin_dialog_message">Skriv inn PIN-koden for smartkortet for å få tilgang til sertifikatet, og logg på</string>
+    <string name="smartcard_pin_dialog_positive_button">Lås opp</string>
+    <string name="smartcard_pin_dialog_negative_button">Avbryt</string>
+    <string name="smartcard_pin_dialog_error_message">PIN-koden du skrev inn er feil.</string>
+    <string name="smartcard_pin_layout_edittext_hint">PIN-kode</string>
+
+    <string name="smartcard_error_dialog_positive_button">OK</string>
+
+    <string name="smartcard_max_attempt_dialog_title">Prøv på nytt senere</string>
+    <string name="smartcard_max_attempt_dialog_message">For mange mislykkede forsøk. Prøv på nytt senere.</string>
+
+    <string name="smartcard_early_unplug_dialog_title">Prøv på nytt</string>
+    <string name="smartcard_early_unplug_dialog_message">Smartkortenheten ble fjernet. Sett inn enheten på nytt før du prøver å logge på igjen.</string>
+
+    <string name="smartcard_no_cert_dialog_title">Finner ingen gyldige sertifikater.</string>
+    <string name="smartcard_no_cert_dialog_message">Bekreft at sertifikatet er riktig klargjort på smartkortenheten.</string>
+
+    <string name="smartcard_general_error_dialog_title">Prøv på nytt senere</string>
+    <string name="smartcard_general_error_dialog_message">Det har oppstått en uventet feil. Prøv på nytt senere.</string>
+</resources>
