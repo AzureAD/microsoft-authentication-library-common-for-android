@@ -201,15 +201,12 @@ public class BrokerHost extends AbstractTestBroker {
     private void postJoinConfirmHelper(@NonNull final String expectedUpn) throws InterruptedException {
         Logger.i(TAG, "Confirming that Shared Device Registration is successfull or not..");
 
-        // Adding brief wait to increase reliability of test
-        Thread.sleep(TimeUnit.SECONDS.toMillis(5));
-
         // Look for join op completion dialog
         final UiObject joinFinishDialog = UiAutomatorUtils.obtainUiObjectWithResourceId(
                 "android:id/message"
         );
 
-        Assert.assertTrue("Assert join finish dialog", joinFinishDialog.exists());
+        Assert.assertTrue("Assert join finish dialog", joinFinishDialog.waitForExists(TimeUnit.SECONDS.toMillis(15)));
 
         try {
             // Obtain the text from the dialog box
