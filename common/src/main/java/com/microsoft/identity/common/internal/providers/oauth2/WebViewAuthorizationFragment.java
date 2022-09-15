@@ -185,7 +185,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 mRedirectUri,
                 //Creating ClientCertAuthChallengeHandler starts smartcard usb discovery
                 new ClientCertAuthChallengeHandler(getActivity(),
-                        SmartcardCertBasedAuthManagerFactory.createSmartcardCertBasedAuthManager(getActivity())));
+                        SmartcardCertBasedAuthManagerFactory.createSmartcardCertBasedAuthManager(getActivity().getApplicationContext())));
         setUpWebView(view, mAADWebViewClient);
 
         mWebView.post(new Runnable() {

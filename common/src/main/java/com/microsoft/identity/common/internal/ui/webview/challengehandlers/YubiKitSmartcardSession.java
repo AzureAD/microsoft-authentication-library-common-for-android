@@ -28,6 +28,8 @@ import static com.yubico.yubikit.piv.Slot.KEY_MANAGEMENT;
 import static com.yubico.yubikit.piv.Slot.SIGNATURE;
 
 
+import android.nfc.Tag;
+
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.logging.Logger;
@@ -128,11 +130,13 @@ public class YubiKitSmartcardSession implements ISmartcardSession {
      */
     @Override
     public boolean verifyPin(@NonNull final char[] pin) throws ApduException, IOException {
+        final String methodTag = TAG + ":verifyPin";
         try {
             piv.verifyPin(pin);
             //If no InvalidPinException is thrown, PIN is validated.
             return true;
         } catch (InvalidPinException e) {
+            Logger.info(methodTag, "Incorrect PIN entered.");
             return false;
         }
     }

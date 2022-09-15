@@ -22,7 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.ui.webview.challengehandlers;
 
-import android.app.Activity;
+import android.content.Context;
 import android.os.Build;
 
 import androidx.annotation.NonNull;
@@ -45,8 +45,6 @@ import java.io.IOException;
 import java.security.Security;
 import java.util.concurrent.Callable;
 
-import javax.annotation.Nonnull;
-
 /**
  * Utilizes YubiKit in order to detect and interact with YubiKeys for smartcard certificate based authentication.
  */
@@ -63,10 +61,10 @@ public class YubiKitCertBasedAuthManager implements ISmartcardCertBasedAuthManag
 
     /**
      * Create new instance of YubiKitCertBasedAuthManager.
-     * @param activity current host activity.
+     * @param context current application context.
      */
-    YubiKitCertBasedAuthManager(Activity activity) {
-        mYubiKitManager = new YubiKitManager(activity.getApplicationContext());
+    YubiKitCertBasedAuthManager(@NonNull final Context context) {
+        mYubiKitManager = new YubiKitManager(context);
     }
 
     /**

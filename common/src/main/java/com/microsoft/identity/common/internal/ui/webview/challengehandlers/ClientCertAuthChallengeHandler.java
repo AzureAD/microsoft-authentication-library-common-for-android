@@ -170,7 +170,7 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
             }
 
             @Override
-            public void onException(@NonNull Exception e) {
+            public void onException(@NonNull final Exception e) {
                 indicateGeneralException(methodTag, e);
                 request.cancel();
             }
@@ -245,13 +245,13 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
             public void onClick(@NonNull final char[] pin) {
                 mSmartcardCertBasedAuthManager.requestDeviceSession(new ISmartcardCertBasedAuthManager.ISessionCallback() {
                     @Override
-                    public void onGetSession(@NonNull ISmartcardSession session) throws Exception {
+                    public void onGetSession(@NonNull final ISmartcardSession session) throws Exception {
                         tryUsingSmartcardWithPin(pin, certDetails, request, session);
                         clearPin(pin);
                     }
 
                     @Override
-                    public void onException(@NonNull Exception e) {
+                    public void onException(@NonNull final Exception e) {
                         indicateGeneralException(methodTag, e);
                         request.cancel();
                         clearPin(pin);

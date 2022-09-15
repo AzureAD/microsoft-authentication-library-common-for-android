@@ -22,7 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.ui.webview.challengehandlers;
 
-import android.app.Activity;
+import android.content.Context;
 
 /**
  * Instantiates ISmartcardCertBasedAuthManagers for certificate based authentication.
@@ -31,12 +31,12 @@ public class SmartcardCertBasedAuthManagerFactory {
 
     /**
      * Creates and returns an applicable instance of ISmartcardCertBasedAuthManager.
-     * @param activity Current host activity.
+     * @param context Current application context.
      * @return A ISmartcardCertBasedAuthManager implementation instance.
      */
-    public static ISmartcardCertBasedAuthManager createSmartcardCertBasedAuthManager(Activity activity) {
+    public static ISmartcardCertBasedAuthManager createSmartcardCertBasedAuthManager(Context context) {
         //Return instance of YubiKitCertBasedAuthManager, since this is the only implementation of
         // ISmartcardCertBasedAuthManager we have right now.
-        return new YubiKitCertBasedAuthManager(activity);
+        return new YubiKitCertBasedAuthManager(context);
     }
 }
