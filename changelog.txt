@@ -1,5 +1,6 @@
 V.Next
 ----------
+- [MINOR] Add ICryptoFactory to common4j (#1844)
 - [MAJOR] Update target Android targetSdk to API 31/ Android 12
 - [MINOR] Use Java 11 in Spotbugs Check
 - [MAJOR] Use Java 11 to accomodate android sdk 31 tooling. (#1832)
