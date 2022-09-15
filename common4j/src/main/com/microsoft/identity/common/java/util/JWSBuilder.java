@@ -27,6 +27,7 @@ import static com.microsoft.identity.common.java.AuthenticationConstants.ENCODIN
 
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
+import com.microsoft.identity.common.java.crypto.DefaultCryptoFactory;
 import com.microsoft.identity.common.java.crypto.ISigner;
 import com.microsoft.identity.common.java.crypto.BasicSigner;
 import com.microsoft.identity.common.java.exception.ClientException;
@@ -59,7 +60,8 @@ public class JWSBuilder {
 
     private static final String TAG = "JWSBuilder";
 
-    private static final ISigner sSigner = new BasicSigner();
+    // TODO[FIPS] exposes a constructor that takes in an ISigner/ICryptoFactory.
+    private static final ISigner sSigner = new BasicSigner(new DefaultCryptoFactory());
 
     /**
      * Payload for JWS.
