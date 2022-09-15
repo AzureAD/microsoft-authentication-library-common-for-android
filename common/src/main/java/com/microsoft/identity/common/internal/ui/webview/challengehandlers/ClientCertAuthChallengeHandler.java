@@ -106,6 +106,15 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
     }
 
     /**
+     * Cleanup to be done when host activity is being destroyed.
+     * Smartcard discovery should be stopped.
+     */
+    @Override
+    public void onDestroy() {
+        mSmartcardCertBasedAuthManager.stopDiscovery();
+    }
+
+    /**
      * Called when a ClientCertRequest is received by the AzureActiveDirectoryWebViewClient.
      * Prompts the user to choose a certificate to authenticate with based on whether or not a smartcard device is plugged in and has permission to be connected.
      * @param request ClientCertRequest received from AzureActiveDirectoryWebViewClient.onReceivedClientCertRequest.
@@ -385,14 +394,6 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
                 request.getHost(),
                 request.getPort(),
                 null);
-    }
-
-    /**
-     * Allows AzureActiveDirectoryWebViewClient to stop the local SmartcardCertBasedAuthManager's discovery mode.
-     */
-    public void stopSmartcardUsbDiscovery() {
-        //Should be called when host fragment is destroyed.
-        mSmartcardCertBasedAuthManager.stopDiscovery();
     }
 
     /**

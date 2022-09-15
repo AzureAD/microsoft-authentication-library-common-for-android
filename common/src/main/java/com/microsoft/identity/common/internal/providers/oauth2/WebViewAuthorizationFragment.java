@@ -272,7 +272,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         super.onDestroy();
         final String methodTag = TAG + ":onDestroy";
         if (mAADWebViewClient != null) {
-            mAADWebViewClient.stopSmartcardUsbDiscovery();
+            mAADWebViewClient.onDestroy();
         } else {
             Logger.error(methodTag, "Fragment destroyed, but smartcard usb discovery was unable to be stopped.", null);
         }

@@ -169,14 +169,12 @@ public class YubiKitCertBasedAuthManager implements ISmartcardCertBasedAuthManag
         //Note that this provider is removed when the UsbYubiKeyDevice connection is closed.
         final PivProviderStatusEvent pivProviderStatusEvent = new PivProviderStatusEvent();
         if (Security.getProvider(YUBIKEY_PROVIDER) != null) {
-            //Remove existing PivProvider.
             Security.removeProvider(YUBIKEY_PROVIDER);
             //The PivProvider instance is either unexpectedly being added elsewhere
             // or it isn't being removed properly upon CBA flow termination.
             Telemetry.emit(pivProviderStatusEvent.putIsExistingPivProviderPresent(true));
             Logger.info(methodTag, "Existing PivProvider was present in Security static list.");
         } else {
-            //This is expected behavior.
             Telemetry.emit(pivProviderStatusEvent.putIsExistingPivProviderPresent(false));
             Logger.info(methodTag, "Security static list does not have existing PivProvider.");
         }

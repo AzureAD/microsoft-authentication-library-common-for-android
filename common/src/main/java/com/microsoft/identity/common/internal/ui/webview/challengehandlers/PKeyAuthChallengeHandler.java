@@ -87,4 +87,12 @@ public final class PKeyAuthChallengeHandler implements IChallengeHandler<PKeyAut
 
         return null;
     }
+
+    /**
+     * Cleanup to be done when host activity is being destroyed.
+     */
+    @Override
+    public void onDestroy() {
+
+    }
 }

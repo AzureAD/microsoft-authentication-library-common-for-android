@@ -34,4 +34,9 @@ public interface IChallengeHandler<GenericChallenge, GenericResponse> {
      * @return GenericResponse
      */
     GenericResponse processChallenge(GenericChallenge genericChallenge);
+
+    /**
+     * Cleanup to be done when host activity is being destroyed.
+     */
+    void onDestroy();
 }

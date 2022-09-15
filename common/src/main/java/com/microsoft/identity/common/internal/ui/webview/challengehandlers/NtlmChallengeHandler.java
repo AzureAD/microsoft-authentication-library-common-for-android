@@ -65,6 +65,14 @@ public final class NtlmChallengeHandler implements IChallengeHandler<NtlmChallen
         return null;
     }
 
+    /**
+     * Cleanup to be done when host activity is being destroyed.
+     */
+    @Override
+    public void onDestroy() {
+
+    }
+
     private void showHttpAuthDialog(final NtlmChallenge ntlmChallenge) {
         final String methodTag = TAG + ":showHttpAuthDialog";
 

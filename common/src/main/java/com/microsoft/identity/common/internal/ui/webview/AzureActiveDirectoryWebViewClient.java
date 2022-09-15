@@ -462,10 +462,10 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     }
 
     /**
-     * A wrapper to stop a smartcard manager instance from detecting any more Usb devices.
+     * Cleanup to be done when host activity is being destroyed.
      */
-    public void stopSmartcardUsbDiscovery() {
-        mClientCertAuthChallengeHandler.stopSmartcardUsbDiscovery();
+    public void onDestroy() {
+        mClientCertAuthChallengeHandler.onDestroy();
     }
 
     /**
