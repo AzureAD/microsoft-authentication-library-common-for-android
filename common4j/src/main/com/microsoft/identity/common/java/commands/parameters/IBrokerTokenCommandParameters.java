@@ -98,6 +98,13 @@ public interface IBrokerTokenCommandParameters {
     String getHomeTenantId();
 
     /**
+     * Get the negotiated broker protocol version.
+     *
+     * @return a String representing broker protocol version
+     */
+    String getNegotiatedBrokerProtocolVersion();
+
+    /**
      * Helper method to identify if the request originated from Broker itself or from client libraries.
      *
      * @return : true if request is the request is originated from Broker, false otherwise
