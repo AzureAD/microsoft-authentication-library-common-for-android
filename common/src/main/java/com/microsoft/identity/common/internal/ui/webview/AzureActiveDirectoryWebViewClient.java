@@ -83,12 +83,11 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     public AzureActiveDirectoryWebViewClient(@NonNull final Activity activity,
                                              @NonNull final IAuthorizationCompletionCallback completionCallback,
                                              @NonNull final OnPageLoadedCallback pageLoadedCallback,
-                                             @NonNull final String redirectUrl) {
+                                             @NonNull final String redirectUrl,
+                                             @NonNull final ClientCertAuthChallengeHandler clientCertAuthChallengeHandler) {
         super(activity, completionCallback, pageLoadedCallback);
         mRedirectUrl = redirectUrl;
-        //Creating ClientCertAuthChallengeHandler starts smartcard usb discovery
-        mClientCertAuthChallengeHandler = new ClientCertAuthChallengeHandler(getActivity(),
-                SmartcardCertBasedAuthManagerFactory.getSmartcardCertBasedAuthManager(getActivity()));
+        mClientCertAuthChallengeHandler = clientCertAuthChallengeHandler;
     }
 
     /**
@@ -459,24 +458,14 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     @Override
     public void onReceivedClientCertRequest(WebView view,
                                             final ClientCertRequest clientCertRequest) {
-        final String methodTag = TAG + ":onReceivedClientCertRequest";
-        if (mClientCertAuthChallengeHandler != null) {
-            mClientCertAuthChallengeHandler.processChallenge(clientCertRequest);
-        } else {
-            Logger.error(methodTag, "ClientCertRequest cannot be handled due to mClientCertAuthChallengeHandler being null.", null);
-        }
+        mClientCertAuthChallengeHandler.processChallenge(clientCertRequest);
     }
 
     /**
      * A wrapper to stop a smartcard manager instance from detecting any more Usb devices.
      */
     public void stopSmartcardUsbDiscovery() {
-        final String methodTag = TAG + ":stopSmartcardUsbDiscovery";
-        if (mClientCertAuthChallengeHandler != null) {
-            mClientCertAuthChallengeHandler.stopSmartcardUsbDiscovery();
-        } else {
-            Logger.error(methodTag, "Usb discovery not stopped due to mClientCertAuthChallengeHandler being null", null);
-        }
+        mClientCertAuthChallengeHandler.stopSmartcardUsbDiscovery();
     }
 
     /**
@@ -484,12 +473,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      * @param response a RawAuthorizationResult object received upon a challenge response received.
      */
     public void emitTelemetryForCertBasedAuthResult(@NonNull final RawAuthorizationResult response) {
-        final String methodTag = TAG + ":emitTelemetryForCertBasedAuthResult";
-        if (mClientCertAuthChallengeHandler != null) {
-            mClientCertAuthChallengeHandler.emitTelemetryForCertBasedAuthResults(response);
-        } else {
-            Logger.error(methodTag, "CBA results won't be emitted due to mClientCertAuthChallengeHandler being null", null);
-        }
+        mClientCertAuthChallengeHandler.emitTelemetryForCertBasedAuthResults(response);
     }
 
 }

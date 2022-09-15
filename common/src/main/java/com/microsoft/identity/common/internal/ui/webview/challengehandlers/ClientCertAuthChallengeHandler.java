@@ -71,6 +71,7 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
      */
     public ClientCertAuthChallengeHandler(@NonNull final Activity activity,
                                           @NonNull final ISmartcardCertBasedAuthManager smartcardCertBasedAuthManager) {
+        final String methodTag = TAG + ":ClientCertAuthChallengeHandler";
         mActivity = activity;
         mDialogHolder = new DialogHolder(mActivity);
         mIsOnDeviceCertBasedAuthProceeding = false;
@@ -92,6 +93,14 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
                     mDialogHolder.showErrorDialog(R.string.smartcard_early_unplug_dialog_title, R.string.smartcard_early_unplug_dialog_message);
                     Logger.verbose(TAG, "Smartcard was disconnected while dialog was still displayed.");
                 }
+            }
+
+            @Override
+            public void onException() {
+                //Logging, but may also want to emit telemetry.
+                //This method is not currently being called, but it could be
+                // used in future SmartcardCertBasedAuthManager implementations.
+                Logger.error(methodTag, "Unable to start smartcard usb discovery.", null);
             }
         });
     }
@@ -126,9 +135,9 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
     private void handleSmartcardCertAuth(@NonNull final ClientCertRequest request) {
         final String methodTag = TAG + ":handleSmartcardCertAuth";
 
-        mSmartcardCertBasedAuthManager.attemptDeviceSession(new ISmartcardCertBasedAuthManager.ISessionCallback() {
+        mSmartcardCertBasedAuthManager.requestDeviceSession(new ISmartcardCertBasedAuthManager.ISessionCallback() {
             @Override
-            public void onGetSession(@NonNull ISmartcardSession session) throws Exception {
+            public void onGetSession(@NonNull final ISmartcardSession session) throws Exception {
                 if (session.getPinAttemptsRemaining() == 0) {
                     indicateTooManyFailedAttempts(methodTag);
                     request.cancel();
@@ -234,7 +243,7 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
             @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
             @Override
             public void onClick(@NonNull final char[] pin) {
-                mSmartcardCertBasedAuthManager.attemptDeviceSession(new ISmartcardCertBasedAuthManager.ISessionCallback() {
+                mSmartcardCertBasedAuthManager.requestDeviceSession(new ISmartcardCertBasedAuthManager.ISessionCallback() {
                     @Override
                     public void onGetSession(@NonNull ISmartcardSession session) throws Exception {
                         tryUsingSmartcardWithPin(pin, certDetails, request, session);
@@ -300,7 +309,6 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
                                          @NonNull final ISmartcardSession session,
                                          @NonNull final ClientCertRequest request)
             throws Exception {
-        //final String methodTag = TAG + "useSmartcardCertForAuth:";
         //Each type of smartcard manager could have different preparation steps before proceeding with a ClientCertRequest.
         mSmartcardCertBasedAuthManager.prepareForAuth();
         //PivPrivateKey implements PrivateKey. Note that the PIN is copied in pivPrivateKey.

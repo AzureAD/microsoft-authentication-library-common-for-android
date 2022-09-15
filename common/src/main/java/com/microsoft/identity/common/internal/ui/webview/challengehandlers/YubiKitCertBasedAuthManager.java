@@ -45,6 +45,8 @@ import java.io.IOException;
 import java.security.Security;
 import java.util.concurrent.Callable;
 
+import javax.annotation.Nonnull;
+
 /**
  * Utilizes YubiKit in order to detect and interact with YubiKeys for smartcard certificate based authentication.
  */
@@ -74,7 +76,7 @@ public class YubiKitCertBasedAuthManager implements ISmartcardCertBasedAuthManag
      * @param startDiscoveryCallback Contains callbacks to run when a YubiKey is connected and disconnected.
      */
     @Override
-    public void startDiscovery(IStartDiscoveryCallback startDiscoveryCallback) {
+    public void startDiscovery(@NonNull final IStartDiscoveryCallback startDiscoveryCallback) {
         mYubiKitManager.startUsbDiscovery(new UsbConfiguration(), new Callback<UsbYubiKeyDevice>() {
             @Override
             public void invoke(@NonNull UsbYubiKeyDevice device) {
@@ -119,13 +121,13 @@ public class YubiKitCertBasedAuthManager implements ISmartcardCertBasedAuthManag
     }
 
     /**
-     * Attempt to get a PivSession instance in order to carry out methods
+     * Request a PivSession instance in order to carry out methods
      *  implemented in YubiKitSmartcardSession.
      * @param callback Contains callbacks to run when a PivSession is successfully instantiated and when any exception is thrown due to a connection issue.
      */
     @Override
-    public void attemptDeviceSession(@NonNull final ISessionCallback callback) {
-        final String methodTag = TAG + "attemptDeviceSession:";
+    public void requestDeviceSession(@NonNull final ISessionCallback callback) {
+        final String methodTag = TAG + "requestDeviceSession:";
         synchronized (sDeviceLock) {
             if (mDevice == null) {
                 Logger.error(methodTag, MDEVICE_NULL_ERROR_MESSAGE, null);

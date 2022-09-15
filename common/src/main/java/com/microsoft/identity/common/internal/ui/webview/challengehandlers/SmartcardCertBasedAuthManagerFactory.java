@@ -34,7 +34,7 @@ public class SmartcardCertBasedAuthManagerFactory {
      * @param activity Current host activity.
      * @return A ISmartcardCertBasedAuthManager implementation instance.
      */
-    public static ISmartcardCertBasedAuthManager getSmartcardCertBasedAuthManager(Activity activity) {
+    public static ISmartcardCertBasedAuthManager createSmartcardCertBasedAuthManager(Activity activity) {
         //Return instance of YubiKitCertBasedAuthManager, since this is the only implementation of
         // ISmartcardCertBasedAuthManager we have right now.
         return new YubiKitCertBasedAuthManager(activity);

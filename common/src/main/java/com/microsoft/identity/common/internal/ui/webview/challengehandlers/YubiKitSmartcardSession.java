@@ -55,12 +55,14 @@ public class YubiKitSmartcardSession implements ISmartcardSession {
     private static final String TAG = YubiKitSmartcardSession.class.getSimpleName();
     private final PivSession piv;
     private static final String YUBIKEY_PROVIDER = "YKPiv";
+    //FILE_NOT_FOUND APDU Exception error code (27266)
+    private static final short APDU_EXCEPTION_ERROR_CODE_FILE_NOT_FOUND = 0x6a82;
 
     /**
      * Creates instance of YubiKitSmartcardSession.
      * @param p PivSession created.
      */
-    public YubiKitSmartcardSession(PivSession p) {
+    public YubiKitSmartcardSession(@NonNull final PivSession p) {
         piv = p;
     }
 
@@ -107,8 +109,9 @@ public class YubiKitSmartcardSession implements ISmartcardSession {
             //If there are no exceptions, add this cert to our certList.
             certList.add(new YubiKitCertDetails(cert, slot));
         } catch (final ApduException e) {
-            //If sw is 0x6a82 (27266), This is a FILE_NOT_FOUND error, which we should ignore since this means the slot is merely empty.
-            if (e.getSw() == 0x6a82) {
+            //If sw represents a FILE_NOT_FOUND error, we should ignore
+            // since this merely means the slot is empty.
+            if (e.getSw() == APDU_EXCEPTION_ERROR_CODE_FILE_NOT_FOUND) {
                 Logger.verbose(methodTag, slot + " slot is empty.");
             } else {
                 throw e;
@@ -124,7 +127,7 @@ public class YubiKitSmartcardSession implements ISmartcardSession {
      * @throws IOException in case of connection error
      */
     @Override
-    public boolean verifyPin(char[] pin) throws ApduException, IOException {
+    public boolean verifyPin(@NonNull final char[] pin) throws ApduException, IOException {
         try {
             piv.verifyPin(pin);
             //If no InvalidPinException is thrown, PIN is validated.
@@ -154,7 +157,8 @@ public class YubiKitSmartcardSession implements ISmartcardSession {
      */
     @NonNull
     @Override
-    public PrivateKey getKeyForAuth(ICertDetails certDetails, char[] pin) throws Exception {
+    public PrivateKey getKeyForAuth(@NonNull final ICertDetails certDetails,
+                                    @NonNull final char[] pin) throws Exception {
         final String methodTag = TAG + ":getKeyForAuth";
         if (!(certDetails instanceof YubiKitCertDetails)) {
             throw new Exception("certDetails is not of type YubiKitCertDetails.");

@@ -40,6 +40,8 @@ import androidx.annotation.VisibleForTesting;
 import androidx.fragment.app.FragmentActivity;
 
 import com.microsoft.identity.common.R;
+import com.microsoft.identity.common.internal.ui.webview.challengehandlers.ClientCertAuthChallengeHandler;
+import com.microsoft.identity.common.internal.ui.webview.challengehandlers.SmartcardCertBasedAuthManagerFactory;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
@@ -180,7 +182,10 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                         }
                     }
                 },
-                mRedirectUri);
+                mRedirectUri,
+                //Creating ClientCertAuthChallengeHandler starts smartcard usb discovery
+                new ClientCertAuthChallengeHandler(getActivity(),
+                        SmartcardCertBasedAuthManagerFactory.createSmartcardCertBasedAuthManager(getActivity())));
         setUpWebView(view, mAADWebViewClient);
 
         mWebView.post(new Runnable() {
@@ -269,7 +274,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         if (mAADWebViewClient != null) {
             mAADWebViewClient.stopSmartcardUsbDiscovery();
         } else {
-            Logger.error(methodTag, "Usb discovery not stopped due to mAADWebViewClient being null", null);
+            Logger.error(methodTag, "Fragment destroyed, but smartcard usb discovery was unable to be stopped.", null);
         }
     }
 

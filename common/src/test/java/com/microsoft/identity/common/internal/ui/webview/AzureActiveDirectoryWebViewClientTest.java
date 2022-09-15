@@ -30,6 +30,8 @@ import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
+import com.microsoft.identity.common.internal.ui.webview.challengehandlers.ClientCertAuthChallengeHandler;
+import com.microsoft.identity.common.internal.ui.webview.challengehandlers.SmartcardCertBasedAuthManagerFactory;
 import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 
@@ -99,7 +101,9 @@ public class AzureActiveDirectoryWebViewClientTest {
                         return;
                     }
                 },
-                TEST_REDIRECT_URI);
+                TEST_REDIRECT_URI,
+                new ClientCertAuthChallengeHandler(mActivity,
+                        SmartcardCertBasedAuthManagerFactory.createSmartcardCertBasedAuthManager(mActivity)));
     }
 
     @Test(expected = IllegalArgumentException.class)

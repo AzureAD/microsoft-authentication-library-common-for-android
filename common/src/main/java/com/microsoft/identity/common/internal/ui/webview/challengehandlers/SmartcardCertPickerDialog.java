@@ -25,6 +25,7 @@ package com.microsoft.identity.common.internal.ui.webview.challengehandlers;
 import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.nfc.Tag;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -39,6 +40,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 
 import com.microsoft.identity.common.R;
+import com.microsoft.identity.common.logging.Logger;
 
 import java.security.cert.X509Certificate;
 import java.util.List;
@@ -48,6 +50,7 @@ import java.util.List;
  */
 public class SmartcardCertPickerDialog extends SmartcardDialog {
 
+    private static final String TAG = SmartcardCertPickerDialog.class.getSimpleName();
     private final List<ICertDetails> mCertList;
     private final PositiveButtonListener mPositiveButtonListener;
     private final CancelCbaCallback mCancelCbaCallback;
@@ -74,6 +77,7 @@ public class SmartcardCertPickerDialog extends SmartcardDialog {
      * Builds an AlertDialog that displays the details of the certificates in a single choice ListView and prompts the user to choose a certificate to proceed.
      */
     protected void createDialog() {
+        final String methodTag = TAG + ":createDialog";
         //Create CertDetailsAdapter
         final CertDetailsAdapter certAdapter = new CertDetailsAdapter(mActivity, mCertList);
         //Must build dialog on UI thread
@@ -94,7 +98,15 @@ public class SmartcardCertPickerDialog extends SmartcardDialog {
                                 //Get the certificate details of the checked row.
                                 final int checkedPosition = ((AlertDialog) dialog).getListView().getCheckedItemPosition();
                                 final ICertDetails certDetails = certAdapter.getItem(checkedPosition);
-                                mPositiveButtonListener.onClick(certDetails);
+                                //certAdapter.getItem could return null.
+                                if (certDetails != null) {
+                                    mPositiveButtonListener.onClick(certDetails);
+                                } else {
+                                    //Handle this by cancelling out of flow and logging.
+                                    //Should add telemetry once telemetry process is updated.
+                                    mCancelCbaCallback.onCancel();
+                                    Logger.error(methodTag, "Could not retrieve info for selected certificate entry.", null);
+                                }
                             }
                         })
                         //Negative button should end up cancelling flow.

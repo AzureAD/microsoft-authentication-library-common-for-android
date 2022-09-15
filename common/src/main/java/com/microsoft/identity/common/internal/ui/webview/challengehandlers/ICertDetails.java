@@ -27,7 +27,7 @@ import androidx.annotation.NonNull;
 import java.security.cert.X509Certificate;
 
 /**
- * Holds X509Certificate and other important details that may be smartcard brand dependent.
+ * Holds X509Certificate and other important details that may be implementation specific.
  */
 public interface ICertDetails {
 
