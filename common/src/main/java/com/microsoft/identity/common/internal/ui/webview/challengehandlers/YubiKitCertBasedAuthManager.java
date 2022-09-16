@@ -138,7 +138,7 @@ public class YubiKitCertBasedAuthManager implements ISmartcardCertBasedAuthManag
                     try {
                         final SmartCardConnection c = value.getValue();
                         final PivSession piv = new PivSession(c);
-                        YubiKitSmartcardSession session = new YubiKitSmartcardSession(piv);
+                        final YubiKitSmartcardSession session = new YubiKitSmartcardSession(piv);
                         callback.onGetSession(session);
                     } catch (final Exception e) {
                         callback.onException(e);

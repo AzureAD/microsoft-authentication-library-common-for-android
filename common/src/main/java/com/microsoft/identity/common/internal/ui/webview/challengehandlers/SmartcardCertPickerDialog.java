@@ -25,7 +25,6 @@ package com.microsoft.identity.common.internal.ui.webview.challengehandlers;
 import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.nfc.Tag;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
