@@ -1,5 +1,7 @@
 V.Next
 ----------
+- [MAJOR] Update target Android targetSdk to API 31/ Android 12
+- [MINOR] Use Java 11 in Spotbugs Check
 - [MAJOR] Use Java 11 to accomodate android sdk 31 tooling. (#1832)
 - [PATCH] Swallow unbound service exceptions on disconnect. (#1824)
 - [MINOR] Bumped MSAL Broker Protocol Version to 10.0. (#1829)
