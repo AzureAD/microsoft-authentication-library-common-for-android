@@ -65,6 +65,8 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
     public final static String COMPANY_PORTAL_APK = "CompanyPortal.apk";
     public final static String OLD_COMPANY_PORTAL_APK = "OldCompanyPortal.apk";
 
+    final static long ENROLLMENT_PAGE_TIMEOUT = TimeUnit.SECONDS.toMillis(45);
+
     private boolean enrollmentPerformedSuccessfully;
 
     public BrokerCompanyPortal() {
@@ -263,7 +265,7 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
                 "com.microsoft.windowsintune.companyportal:id/setup_title"
         );
 
-        if (!setupCompletePage.exists()) {
+        if (!setupCompletePage.waitForExists(ENROLLMENT_PAGE_TIMEOUT)) {
             // Something went wrong with enrollment. If we see a device limit reached dialog, then
             // we throw a DeviceLimitReachedException so that we the DeviceEnrollmentRecoveryRule
             // can perform cleanup and recovery for future enrollments.
