@@ -427,7 +427,7 @@ public class BrokerMsalController extends BaseController {
                 });
     }
 
-    public AcquireTokenResult acquireDeviceCodeFlowTokenWithDeviceId(final DeviceCodeFlowCommandParameters parameters) {
+    public AcquireTokenResult acquireDeviceCodeFlowTokenWithDeviceId(final DeviceCodeFlowCommandParameters parameters) throws BaseException {
         // Create empty AcquireTokenResult object
         final AcquireTokenResult acquireTokenResult = new AcquireTokenResult();
         return mBrokerOperationExecutor.execute(parameters,
@@ -477,7 +477,6 @@ public class BrokerMsalController extends BaseController {
                         event.putResult(result);
                     }
                 });
-        return acquireTokenResult;
     }
 
     /**
@@ -536,6 +535,11 @@ public class BrokerMsalController extends BaseController {
                         event.putResult(result);
                     }
                 });
+    }
+
+    @Override
+    public AcquireTokenResult acquireDeviceCodeFlowToken(DeviceCodeFlowCommandParameters parameters) throws Exception {
+        return null;
     }
 
     /**

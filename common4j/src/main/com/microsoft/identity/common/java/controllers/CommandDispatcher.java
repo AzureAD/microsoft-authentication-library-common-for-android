@@ -183,9 +183,9 @@ public class CommandDispatcher {
             if (BuildConfig.DISABLE_ACQUIRE_TOKEN_SILENT_TIMEOUT){
                 commandResult = submitSilentReturningFuture(command).get();
             } else {
-                commandResult = submitSilentReturningFuture(command).get(ACQUIRE_TOKEN_SILENT_DEFAULT_TIMEOUT_MILLISECONDS, TimeUnit.MILLISECONDS);
+                commandResult = submitSilentReturningFuture(command).get();
             }
-        } catch (final InterruptedException | ExecutionException | TimeoutException e) {
+        } catch (final InterruptedException | ExecutionException e) {
             throw ExceptionAdapter.baseExceptionFromException(e);
         }
 

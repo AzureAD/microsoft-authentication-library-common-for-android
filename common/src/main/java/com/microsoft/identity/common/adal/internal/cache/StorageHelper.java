@@ -107,7 +107,7 @@ public class StorageHelper implements IStorageHelper {
     /**
      * A flag to turn on/off keystore encryption on Broker apps.
      */
-    public static final boolean sShouldEncryptWithKeyStoreKey = false;
+    public static final boolean sShouldEncryptWithKeyStoreKey = true;
 
     /**
      * HMac key hashing algorithm.

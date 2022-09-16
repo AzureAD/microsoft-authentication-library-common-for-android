@@ -412,6 +412,11 @@ public class LocalMSALController extends BaseController {
         return acquireTokenSilentResult;
     }
 
+    @Override
+    public AcquireTokenResult acquireDeviceCodeFlowToken(DeviceCodeFlowCommandParameters parameters) throws Exception {
+        return null;
+    }
+
     private void setAcquireTokenResult(final AcquireTokenResult acquireTokenSilentResult,
                                        final SilentTokenCommandParameters parametersWithScopes,
                                        final List<ICacheRecord> cacheRecords) throws ClientException {

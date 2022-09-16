@@ -37,4 +37,7 @@ import lombok.experimental.SuperBuilder;
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder(toBuilder = true)
 public class DeviceCodeFlowCommandParameters extends TokenCommandParameters {
+    private final int callerUid;
+    private final String callerPackageName;
+    private final String callerAppVersion;
 }
