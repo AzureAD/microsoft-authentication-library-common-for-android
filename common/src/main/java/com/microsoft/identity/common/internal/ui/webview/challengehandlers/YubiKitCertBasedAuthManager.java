@@ -81,7 +81,7 @@ public class YubiKitCertBasedAuthManager implements ISmartcardCertBasedAuthManag
                 Logger.verbose(TAG, "A YubiKey device was connected");
                 synchronized (sDeviceLock) {
                     mDevice = device;
-                    startDiscoveryCallback.onStartDiscovery();
+                    startDiscoveryCallback.onCreateConnection();
 
                     mDevice.setOnClosed(new Runnable() {
                         @Override
@@ -181,6 +181,14 @@ public class YubiKitCertBasedAuthManager implements ISmartcardCertBasedAuthManag
         //The position parameter is 1-based (1 maps to index 0).
         Security.insertProviderAt(new PivProvider(getPivProviderCallback()), 1);
         Logger.info(methodTag, "An instance of PivProvider was added to Security static list.");
+    }
+
+    /**
+     * Cleanup to be done upon host activity being destroyed.
+     */
+    @Override
+    public void onDestroy() {
+        stopDiscovery();
     }
 
     /**

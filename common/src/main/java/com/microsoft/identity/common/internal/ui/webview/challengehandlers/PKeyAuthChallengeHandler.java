@@ -27,7 +27,6 @@ import android.webkit.WebView;
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallenge;
-import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.logging.Logger;
@@ -86,13 +85,5 @@ public final class PKeyAuthChallengeHandler implements IChallengeHandler<PKeyAut
         }
 
         return null;
-    }
-
-    /**
-     * Cleanup to be done when host activity is being destroyed.
-     */
-    @Override
-    public void onDestroy() {
-
     }
 }

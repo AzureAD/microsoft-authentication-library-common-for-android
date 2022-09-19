@@ -40,8 +40,7 @@ import androidx.annotation.VisibleForTesting;
 import androidx.fragment.app.FragmentActivity;
 
 import com.microsoft.identity.common.R;
-import com.microsoft.identity.common.internal.ui.webview.challengehandlers.ClientCertAuthChallengeHandler;
-import com.microsoft.identity.common.internal.ui.webview.challengehandlers.SmartcardCertBasedAuthManagerFactory;
+import com.microsoft.identity.common.internal.ui.webview.challengehandlers.CertBasedAuthFactory;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
@@ -183,9 +182,8 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                     }
                 },
                 mRedirectUri,
-                //Creating ClientCertAuthChallengeHandler starts smartcard usb discovery
-                new ClientCertAuthChallengeHandler(getActivity(),
-                        SmartcardCertBasedAuthManagerFactory.createSmartcardCertBasedAuthManager(getActivity().getApplicationContext())));
+                CertBasedAuthFactory.createSmartcardCertBasedAuthManager(getActivity().getApplicationContext()),
+                CertBasedAuthFactory.createDialogHolder(getActivity()));
         setUpWebView(view, mAADWebViewClient);
 
         mWebView.post(new Runnable() {

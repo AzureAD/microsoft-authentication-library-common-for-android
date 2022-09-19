@@ -22,12 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.ui.webview.challengehandlers;
 
-import android.annotation.TargetApi;
-import android.app.Activity;
 import android.os.Build;
-import android.security.KeyChain;
-import android.security.KeyChainAliasCallback;
-import android.security.KeyChainException;
 import android.webkit.ClientCertRequest;
 
 import androidx.annotation.NonNull;
@@ -42,86 +37,44 @@ import com.microsoft.identity.common.java.telemetry.events.CertBasedAuthResultEv
 import com.microsoft.identity.common.java.telemetry.events.ErrorEvent;
 import com.microsoft.identity.common.logging.Logger;
 
-import java.security.Principal;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 import java.util.Arrays;
 import java.util.List;
 
 /**
- * Handles Certificate Based Authentication by means of certificates provisioned onto external smartcards or the mobile devices themselves.
- * Note that CBA requires API >= 21 (ClientCertRequest class available with API >= 21)
+ * Handles a received ClientCertRequest by prompting the user to choose from certificates
+ *  stored on a connected smartcard device.
  */
-public final class ClientCertAuthChallengeHandler implements IChallengeHandler<ClientCertRequest, Void> {
-    private static final String TAG = ClientCertAuthChallengeHandler.class.getSimpleName();
-    private static final String ACCEPTABLE_ISSUER = "CN=MS-Organization-Access";
-    private final Activity mActivity;
-    //Smartcard CBA variables
+public class SmartcardCertBasedAuthChallengeHandler implements ICertBasedAuthChallengeHandler {
+    private static final String TAG = SmartcardCertBasedAuthChallengeHandler.class.getSimpleName();
     protected final ISmartcardCertBasedAuthManager mSmartcardCertBasedAuthManager;
     private final DialogHolder mDialogHolder;
-    //Booleans to help determine if a CBA flow is being completed so that we can emit telemetry for the results.
-    private boolean mIsOnDeviceCertBasedAuthProceeding;
     private boolean mIsSmartcardCertBasedAuthProceeding;
 
     /**
-     * Creates new instance of ClientCertAuthChallengeHandler.
+     * Creates new instance of SmartcardCertBasedAuthChallengeHandler.
      * A manager for smartcard CBA is retrieved, and discovery for USB devices is started.
-     * @param activity current host activity.
      * @param smartcardCertBasedAuthManager ISmartcardCertBasedAuthManager instance.
+     * @param dialogHolder DialogHolder instance.
      */
-    public ClientCertAuthChallengeHandler(@NonNull final Activity activity,
-                                          @NonNull final ISmartcardCertBasedAuthManager smartcardCertBasedAuthManager) {
-        final String methodTag = TAG + ":ClientCertAuthChallengeHandler";
-        mActivity = activity;
-        mDialogHolder = new DialogHolder(mActivity);
-        mIsOnDeviceCertBasedAuthProceeding = false;
+    public SmartcardCertBasedAuthChallengeHandler(@NonNull final ISmartcardCertBasedAuthManager smartcardCertBasedAuthManager,
+                                                  @NonNull final DialogHolder dialogHolder) {
         mIsSmartcardCertBasedAuthProceeding = false;
         mSmartcardCertBasedAuthManager = smartcardCertBasedAuthManager;
-        mSmartcardCertBasedAuthManager.startDiscovery(new ISmartcardCertBasedAuthManager.IStartDiscoveryCallback() {
-            @Override
-            public void onCreateConnection() {
-                //Reset DialogHolder to null if necessary.
-                //In this case, DialogHolder would be an ErrorDialog if not null.
-                mDialogHolder.dismissDialog();
-            }
-
-            @Override
-            public void onClosedConnection() {
-                //Show an error dialog informing users that they have unplugged their device only if a dialog is still showing.
-                if (mDialogHolder.isDialogShowing()) {
-                    mDialogHolder.onCancelCba();
-                    mDialogHolder.showErrorDialog(R.string.smartcard_early_unplug_dialog_title, R.string.smartcard_early_unplug_dialog_message);
-                    Logger.verbose(TAG, "Smartcard was disconnected while dialog was still displayed.");
-                }
-            }
-
-            @Override
-            public void onException() {
-                //Logging, but may also want to emit telemetry.
-                //This method is not currently being called, but it could be
-                // used in future SmartcardCertBasedAuthManager implementations.
-                Logger.error(methodTag, "Unable to start smartcard usb discovery.", null);
-            }
-        });
+        mDialogHolder = dialogHolder;
     }
 
     /**
      * Called when a ClientCertRequest is received by the AzureActiveDirectoryWebViewClient.
-     * Prompts the user to choose a certificate to authenticate with based on whether or not a smartcard device is plugged in and has permission to be connected.
+     * Prompts the user to choose a certificate to authenticate with.
      * @param request ClientCertRequest received from AzureActiveDirectoryWebViewClient.onReceivedClientCertRequest.
-     * @return null in either case.
+     * @return null
      */
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
-    public Void processChallenge(@NonNull final ClientCertRequest request) {
-        //final String methodTag = TAG + ":processChallenge";
-        //If a smartcard device is connected, proceed with smartcard CBA.
-        if (mSmartcardCertBasedAuthManager.isDeviceConnected()) {
-            handleSmartcardCertAuth(request);
-            return null;
-        }
-        //Else, proceed with user certificates stored on device.
-        handleOnDeviceCertAuth(request);
+    public Void processChallenge(ClientCertRequest request) {
+        handleSmartcardCertAuth(request);
         return null;
     }
 
@@ -134,7 +87,6 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     private void handleSmartcardCertAuth(@NonNull final ClientCertRequest request) {
         final String methodTag = TAG + ":handleSmartcardCertAuth";
-
         mSmartcardCertBasedAuthManager.requestDeviceSession(new ISmartcardCertBasedAuthManager.ISessionCallback() {
             @Override
             public void onGetSession(@NonNull final ISmartcardSession session) throws Exception {
@@ -147,7 +99,7 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
                 final List<ICertDetails> certList = session.getCertDetailsList();
                 //If no certs were found, cancel flow.
                 if (certList.isEmpty()) {
-                    Logger.info(methodTag,  "No PIV certificates found on YubiKey device.");
+                    Logger.info(methodTag,  "No PIV certificates found on smartcard device.");
                     mDialogHolder.showErrorDialog(
                             R.string.smartcard_no_cert_dialog_title,
                             R.string.smartcard_no_cert_dialog_message);
@@ -330,79 +282,14 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
     }
 
     /**
-     * Handles the logic for on-device certificate based authentication.
-     * Makes use of Android's KeyChain.choosePrivateKeyAlias method, which shows a certificate picker that allows users to choose their on-device user certificate to authenticate with.
-     * @param request ClientCertRequest received from AzureActiveDirectoryWebViewClient.onReceivedClientCertRequest.
-     */
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-    private void handleOnDeviceCertAuth(@NonNull final ClientCertRequest request) {
-        final String methodTag = TAG + ":handleOnDeviceCertAuth";
-        final Principal[] acceptableCertIssuers = request.getPrincipals();
-
-        // When ADFS server sends null or empty issuers, we'll continue with cert prompt.
-        if (acceptableCertIssuers != null) {
-            for (Principal issuer : acceptableCertIssuers) {
-                if (issuer.getName().contains(ACCEPTABLE_ISSUER)) {
-                    //Checking if received acceptable issuers contain "CN=MS-Organization-Access"
-                    Logger.info(methodTag,"Cancelling the TLS request, not respond to TLS challenge triggered by device authentication.");
-                    request.cancel();
-                    return;
-                }
-            }
-        }
-
-        KeyChain.choosePrivateKeyAlias(mActivity, new KeyChainAliasCallback() {
-                    @Override
-                    public void alias(String alias) {
-                        if (alias == null) {
-                            Logger.info(methodTag,"No certificate chosen by user, cancelling the TLS request.");
-                            request.cancel();
-                            return;
-                        }
-
-                        try {
-                            final X509Certificate[] certChain = KeyChain.getCertificateChain(
-                                    mActivity.getApplicationContext(), alias);
-                            final PrivateKey privateKey = KeyChain.getPrivateKey(
-                                    mActivity, alias);
-
-                            Logger.info(methodTag,"Certificate is chosen by user, proceed with TLS request.");
-                            //Set mIsOnDeviceCertBasedAuthProceeding to true so telemetry is emitted for the result.
-                            mIsOnDeviceCertBasedAuthProceeding = true;
-                            request.proceed(privateKey, certChain);
-                            return;
-                        } catch (final KeyChainException e) {
-                            Logger.errorPII(methodTag,"KeyChain exception", e);
-                        } catch (final InterruptedException e) {
-                            Logger.errorPII(methodTag,"InterruptedException exception", e);
-                        }
-
-                        request.cancel();
-                    }
-                },
-                request.getKeyTypes(),
-                request.getPrincipals(),
-                request.getHost(),
-                request.getPort(),
-                null);
-    }
-
-    /**
      * Emit telemetry for results from certificate based authentication (CBA) if CBA occurred.
      * @param response a RawAuthorizationResult object received upon a challenge response received.
      */
+    @Override
     public void emitTelemetryForCertBasedAuthResults(@NonNull final RawAuthorizationResult response) {
-        if (mIsOnDeviceCertBasedAuthProceeding || mIsSmartcardCertBasedAuthProceeding) {
-            //Emit telemetry for results based on which type of CBA occurred.
-            final CertBasedAuthResultEvent certBasedAuthResultEvent;
-            if (mIsOnDeviceCertBasedAuthProceeding) {
-               certBasedAuthResultEvent =  new CertBasedAuthResultEvent(TelemetryEventStrings.Event.CERT_BASED_AUTH_RESULT_ON_DEVICE_EVENT);
-               mIsOnDeviceCertBasedAuthProceeding = false;
-            } else {
-                certBasedAuthResultEvent =  new CertBasedAuthResultEvent(TelemetryEventStrings.Event.CERT_BASED_AUTH_RESULT_SMARTCARD_EVENT);
-                mIsSmartcardCertBasedAuthProceeding = false;
-            }
-            //Put response code and emit.
+        if (mIsSmartcardCertBasedAuthProceeding) {
+            final CertBasedAuthResultEvent certBasedAuthResultEvent = new CertBasedAuthResultEvent(TelemetryEventStrings.Event.CERT_BASED_AUTH_RESULT_SMARTCARD_EVENT);
+            mIsSmartcardCertBasedAuthProceeding = false;
             Telemetry.emit(certBasedAuthResultEvent.putResponseCode(response.getResultCode().toString()));
             //If an exception was provided, emit an ErrorEvent.
             final BaseException exception = response.getException();

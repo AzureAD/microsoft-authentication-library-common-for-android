@@ -37,11 +37,14 @@ import android.webkit.WebView;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 
+import com.microsoft.identity.common.R;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.broker.PackageHelper;
-import com.microsoft.identity.common.internal.ui.webview.challengehandlers.ClientCertAuthChallengeHandler;
-import com.microsoft.identity.common.internal.ui.webview.challengehandlers.SmartcardCertBasedAuthManagerFactory;
+import com.microsoft.identity.common.internal.ui.webview.challengehandlers.CertBasedAuthFactory;
+import com.microsoft.identity.common.internal.ui.webview.challengehandlers.DialogHolder;
+import com.microsoft.identity.common.internal.ui.webview.challengehandlers.ICertBasedAuthChallengeHandler;
+import com.microsoft.identity.common.internal.ui.webview.challengehandlers.ISmartcardCertBasedAuthManager;
 import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallenge;
 import com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallengeFactory;
@@ -78,16 +81,54 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     public static final String ERROR_SUBCODE = "error_subcode";
     public static final String ERROR_DESCRIPTION = "error_description";
     private final String mRedirectUrl;
-    private final ClientCertAuthChallengeHandler mClientCertAuthChallengeHandler;
+    private final ISmartcardCertBasedAuthManager mSmartcardCertBasedAuthManager;
+    private final DialogHolder mDialogHolder;
+    private ICertBasedAuthChallengeHandler mCertBasedAuthChallengeHandler;
 
     public AzureActiveDirectoryWebViewClient(@NonNull final Activity activity,
                                              @NonNull final IAuthorizationCompletionCallback completionCallback,
                                              @NonNull final OnPageLoadedCallback pageLoadedCallback,
                                              @NonNull final String redirectUrl,
-                                             @NonNull final ClientCertAuthChallengeHandler clientCertAuthChallengeHandler) {
+                                             @NonNull final ISmartcardCertBasedAuthManager smartcardCertBasedAuthManager,
+                                             @NonNull final DialogHolder dialogHolder) {
         super(activity, completionCallback, pageLoadedCallback);
         mRedirectUrl = redirectUrl;
-        mClientCertAuthChallengeHandler = clientCertAuthChallengeHandler;
+        mSmartcardCertBasedAuthManager = smartcardCertBasedAuthManager;
+        mDialogHolder = dialogHolder;
+        startSmartcardUsbDiscovery();
+    }
+
+    /**
+     * Commences usb discovery for smartcards.
+     */
+    void startSmartcardUsbDiscovery() {
+        final String methodTag = TAG + ":startSmartcardUsbDiscovery";
+        mSmartcardCertBasedAuthManager.startDiscovery(new ISmartcardCertBasedAuthManager.IStartDiscoveryCallback() {
+            @Override
+            public void onCreateConnection() {
+                //Reset DialogHolder to null if necessary.
+                //In this case, DialogHolder would be an ErrorDialog if not null.
+                mDialogHolder.dismissDialog();
+            }
+
+            @Override
+            public void onClosedConnection() {
+                //Show an error dialog informing users that they have unplugged their device only if a dialog is still showing.
+                if (mDialogHolder.isDialogShowing()) {
+                    mDialogHolder.onCancelCba();
+                    mDialogHolder.showErrorDialog(R.string.smartcard_early_unplug_dialog_title, R.string.smartcard_early_unplug_dialog_message);
+                    Logger.verbose(TAG, "Smartcard was disconnected while dialog was still displayed.");
+                }
+            }
+
+            @Override
+            public void onException() {
+                //Logging, but may also want to emit telemetry.
+                //This method is not currently being called, but it could be
+                // used in future SmartcardCertBasedAuthManager implementations.
+                Logger.error(methodTag, "Unable to start smartcard usb discovery.", null);
+            }
+        });
     }
 
     /**
@@ -456,16 +497,20 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     @Override
-    public void onReceivedClientCertRequest(WebView view,
+    public void onReceivedClientCertRequest(final WebView view,
                                             final ClientCertRequest clientCertRequest) {
-        mClientCertAuthChallengeHandler.processChallenge(clientCertRequest);
+        mCertBasedAuthChallengeHandler = CertBasedAuthFactory.createCertBasedAuthChallengeHandler(
+                getActivity(),
+                mSmartcardCertBasedAuthManager,
+                mDialogHolder);
+        mCertBasedAuthChallengeHandler.processChallenge(clientCertRequest);
     }
 
     /**
      * Cleanup to be done when host activity is being destroyed.
      */
     public void onDestroy() {
-        mClientCertAuthChallengeHandler.onDestroy();
+        mSmartcardCertBasedAuthManager.onDestroy();
     }
 
     /**
@@ -473,7 +518,10 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      * @param response a RawAuthorizationResult object received upon a challenge response received.
      */
     public void emitTelemetryForCertBasedAuthResult(@NonNull final RawAuthorizationResult response) {
-        mClientCertAuthChallengeHandler.emitTelemetryForCertBasedAuthResults(response);
+        if (mCertBasedAuthChallengeHandler != null) {
+            //The challenge handler checks if CBA was proceeded with and emits telemetry.
+            mCertBasedAuthChallengeHandler.emitTelemetryForCertBasedAuthResults(response);
+        }
     }
 
 }

@@ -22,16 +22,21 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.ui.webview.challengehandlers;
 
-/**
- * Abstract Factory class which can be extended to process difference type of challenges.
- */
+import android.webkit.ClientCertRequest;
 
-public interface IChallengeHandler<GenericChallenge, GenericResponse> {
+import androidx.annotation.NonNull;
+
+import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
+
+/**
+ * ChallengeHandler extended interface specifically for certificate based authentication (CBA)
+ *  implementations.
+ */
+public interface ICertBasedAuthChallengeHandler extends IChallengeHandler<ClientCertRequest, Void> {
+    
     /**
-     * Process difference kinds of challenge request.
-     *
-     * @param genericChallenge challenge request
-     * @return GenericResponse
+     * Emit telemetry for results from certificate based authentication (CBA) if CBA occurred.
+     * @param response a RawAuthorizationResult object received upon a challenge response received.
      */
-    GenericResponse processChallenge(GenericChallenge genericChallenge);
+    void emitTelemetryForCertBasedAuthResults(@NonNull final RawAuthorizationResult response);
 }

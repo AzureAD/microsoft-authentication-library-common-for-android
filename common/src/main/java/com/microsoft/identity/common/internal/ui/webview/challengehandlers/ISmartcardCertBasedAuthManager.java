@@ -59,13 +59,18 @@ public interface ISmartcardCertBasedAuthManager {
     void prepareForAuth();
 
     /**
+     * Cleanup to be done upon host activity being destroyed.
+     */
+    void onDestroy();
+
+    /**
      * Callback methods to be run upon initial connection and disconnection of a smartcard device.
      */
     interface IStartDiscoveryCallback {
         /**
          * Logic to be run upon initial connection of a smartcard device.
          */
-        void onStartDiscovery();
+        void onCreateConnection();
 
         /**
          * Logic to be run upon disconnection of a smartcard device.
