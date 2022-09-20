@@ -40,6 +40,7 @@ public class LabApiAuthenticationClient implements IAccessTokenSupplier {
     private final static String SECRET_NAME_LAB_APP_ID = "LabVaultAppID";
     private final static String SECRET_NAME_LAB_APP_SECRET = "LabVaultAppSecret";
     private final static String SECRET_VERSION = "";
+    private final static int SOCKET_ATTEMPT_COUNT = 3;
     private final static String KEY_VAULT_API_VERSION = "2016-10-01";
     private final static String SCOPE = "https://msidlab.com/.default";
 
@@ -71,6 +72,21 @@ public class LabApiAuthenticationClient implements IAccessTokenSupplier {
 
     @Override
     public String getAccessToken() throws LabApiException {
+        for (int i = 0; i < SOCKET_ATTEMPT_COUNT; i++) {
+            try {
+                return getAccessTokenInternal();
+            } catch (Exception generalException) {
+                if (!generalException.getCause().toString().contains("java.net.SocketTimeoutException: timeout") || i == SOCKET_ATTEMPT_COUNT - 1) {
+                    throw generalException;
+                }
+            }
+        }
+
+        // There were no exceptions, but getAccessToken still failed.
+        return null;
+    }
+
+    private String getAccessTokenInternal() throws LabApiException {
         // first get token for KeyVault...because we find lab app id and secret from there
         final String accessTokenForKeyVault = mKeyVaultAuthenticationClient.getAccessToken();
         Configuration.getDefaultApiClient().setAccessToken(accessTokenForKeyVault);
