@@ -14,6 +14,7 @@ V.Next
 - [MINOR] Add a Multi Type separated store (#1810)
 - [MINOR] ESTS Telemetry changes to capture data around FLW and Multiple WPJ (#1799)
 - [MINOR] Add an interface to Broker Token Command Parameters (#1826)
+- [MINOR] Instrument code using Open Telemetry for Broker Scenarios (#1847)
 
 Version 6.0.1
 ----------
