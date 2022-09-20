@@ -62,7 +62,7 @@ public class CodeMarkerManager {
      */
     public void markCode(final String marker) {
         if (enableCodeMarker) {
-            Logger.info(TAG, "Marking code with " + marker);
+            Logger.info(TAG + ":markCode", "Marking code with " + marker);
 
             if (codeMarkers.size() >= CodeMarkerManager.MAX_SIZE_CODE_MARKER) {
                 clearMarkers();

@@ -90,6 +90,7 @@ public final class AuthenticationConstants {
      */
     public static final String ONE_POINT_ZERO = "1.0";
     public static final String TWO_POINT_ZERO = "2.0";
+    public static final String THREE_POINT_ZERO = "3.0";
 
 
     /**
@@ -608,6 +609,14 @@ public final class AuthenticationConstants {
          * The key indicating that this is an ssoUrl parameter in a Bundle.
          */
         public static final String BROKER_SSO_URL_KEY = "ssoUrl";
+
+        /**
+         * The key indicating that this is a flight map parameter in a Bundle.
+         */
+        /**
+         * The key indicating that this is an ssoUrl parameter in a Bundle.
+         */
+        public static final String BROKER_FLIGHT_MAP_KEY = "broker.flight.map";
 
         /**
          * The BrokerAPI-To-Broker protocol name.
@@ -1244,7 +1253,7 @@ public final class AuthenticationConstants {
         public static final String UPDATE_BROKER_RT_SUCCEEDED = "update_broker_rt_succeeded";
 
         /**
-         * Boolean to return when a Broker RT is successfully updated.
+         * Boolean to return when broker flights is successfully set.
          */
         public static final String SET_FLIGHTS_SUCCEEDED = "set_flights_succeeded";
 
@@ -1370,11 +1379,11 @@ public final class AuthenticationConstants {
         public static final String AUTHORITY = "microsoft.identity.broker";
 
         private static final String VERSION_1 = ONE_POINT_ZERO;
-        private static final String VERSION_3 = "3.0";
+        private static final String VERSION_3 = THREE_POINT_ZERO;
         private static final String VERSION_6 = "6.0";
         private static final String VERSION_7 = "7.0";
         private static final String BROKER_VERSION_1 = ONE_POINT_ZERO;
-        private static final String BROKER_VERSION_2 = TWO_POINT_ZERO;
+        private static final String BROKER_VERSION_3 = THREE_POINT_ZERO;
 
         /**
          * Tie the API paths and codes into a single object structure to stop us from having to keep
@@ -1401,9 +1410,8 @@ public final class AuthenticationConstants {
             BROKER_GET_ACCOUNTS(BROKER_API_GET_BROKER_ACCOUNTS_PATH, BROKER_VERSION_1, null),
             BROKER_REMOVE_ACCOUNT(BROKER_API_REMOVE_BROKER_ACCOUNT_PATH, BROKER_VERSION_1, null),
             BROKER_UPDATE_BRT(BROKER_API_UPDATE_BRT_PATH, BROKER_VERSION_1, null),
-            BROKER_ADD_FLIGHTS(BROKER_API_ADD_FLIGHTS_PATH, BROKER_VERSION_2, null),
-            BROKER_SET_FLIGHTS(BROKER_API_SET_FLIGHTS_PATH, BROKER_VERSION_2, null),
-            BROKER_GET_FLIGHTS(BROKER_API_GET_FLIGHTS_PATH, BROKER_VERSION_2, null),
+            BROKER_SET_FLIGHTS(BROKER_API_SET_FLIGHTS_PATH, BROKER_VERSION_3, null),
+            BROKER_GET_FLIGHTS(BROKER_API_GET_FLIGHTS_PATH, BROKER_VERSION_3, null),
             GET_SSO_TOKEN(GET_SSO_TOKEN_PATH, null, VERSION_7),
             UNKNOWN(null, null, null)
             ;
@@ -1486,19 +1494,14 @@ public final class AuthenticationConstants {
         public static final String BROKER_API_UPDATE_BRT_PATH = "/brokerApi/updateBrt";
 
         /**
-         * Broker api path constant for adding flight information.
+         * Broker api path constant for setting flight information.
          */
-        public static final String BROKER_API_ADD_FLIGHTS_PATH = "/brokerApi/addFlights";
+        public static final String BROKER_API_SET_FLIGHTS_PATH = "/brokerApi/setFlights";
 
         /**
          * Broker api path constant for adding flight information.
          */
         public static final String BROKER_API_GET_FLIGHTS_PATH = "/brokerApi/getFlights";
-
-        /**
-         * Broker api path constant for adding flight information.
-         */
-        public static final String BROKER_API_SET_FLIGHTS_PATH = "/brokerApi/setFlights";
 
         /**
          * Broker api path constant for adding flight information.

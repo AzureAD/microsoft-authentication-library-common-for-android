@@ -266,6 +266,11 @@ public class ClientException extends BaseException {
     public static final String SIGNING_FAILURE = "failed_to_sign";
 
     /**
+     * Generic decryption failure.
+     */
+    public static final String DECRYPTION_FAILURE = "failed_to_decrypt";
+
+    /**
      * Emitted when an error is encountered during signing.
      */
     public static final String JWT_SIGNING_FAILURE = SIGNING_FAILURE + "_jwt";

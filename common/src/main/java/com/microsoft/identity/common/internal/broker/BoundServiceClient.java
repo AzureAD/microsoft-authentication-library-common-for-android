@@ -163,8 +163,17 @@ public abstract class BoundServiceClient<T extends IInterface> {
      * Disconnects (unbinds) from the service.
      */
     public void disconnect() {
+        final String methodTag = TAG + ":disconnect";
         if (mHasStartedBinding) {
-            mContext.unbindService(mConnection);
+            try {
+                mContext.unbindService(mConnection);
+            } catch (final IllegalArgumentException e) {
+                // This is coming from LoadedApk framework code when there is some error unbinding the service,
+                // possibly due to it not having been registered correctly in the first place, or already unregistered.
+                // Since this is the cleanup path, just handle log this and move on.
+                final String errorDescription = "Error occurred while unbinding bound Service with " + getClass().getSimpleName();
+                Logger.error(methodTag, errorDescription, e);
+            }
             mHasStartedBinding = false;
         }
     }
