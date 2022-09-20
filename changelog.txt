@@ -1,6 +1,10 @@
 V.Next
 ----------
 
+Version 7.0.1
+----------
+- [Minor] Bumped Common to 7.0.1 to fix publishing bug.
+
 Version 7.0.0
 ----------
 - [MINOR] Bumped MSAL Broker Protocol Version to 10.0. (#1829)
