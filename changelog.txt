@@ -1,6 +1,7 @@
 V.Next
 ----------
 - [MINOR] Logging performance speedup, removal of IDetailedLoggerCallback/logDiscarded (#1836)
+- [MINOR] Wire ICryptoFactory to Signer/Decryptor/SP800108KeyGen (#1845)
 - [MINOR] Add ICryptoFactory to common4j (#1844)
 - [MAJOR] Update target Android targetSdk to API 31/ Android 12
 - [MINOR] Use Java 11 in Spotbugs Check
