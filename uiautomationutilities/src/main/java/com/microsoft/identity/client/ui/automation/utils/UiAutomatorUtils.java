@@ -35,6 +35,7 @@ import androidx.test.uiautomator.UiSelector;
 
 import com.microsoft.identity.client.ui.automation.logging.Logger;
 import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT;
+import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT_LONG;
 
 /**
  * This class contains utility methods for leveraging UI Automator to interact with UI elements.
@@ -297,12 +298,11 @@ public class UiAutomatorUtils {
     }
 
     /**
-     * Clicks the button element associated to the supplied resource id with a longer timeout.
-     * Creating another method to use the longer timeout here, some ui interactions take longer than expected.
+     * Clicks the button element associated to the supplied resource id.
      *
      * @param resourceId the resource id of the button to click
      */
-    public static void handleButtonClickLongTimeout(@NonNull final String resourceId) {
+    public static void handleButtonClick(@NonNull final String resourceId) {
         Logger.i(TAG, "Clicks the button element associated to the resource id:" + resourceId);
         final UiObject button = obtainUiObjectWithResourceId(resourceId);
 
@@ -315,16 +315,17 @@ public class UiAutomatorUtils {
     }
 
     /**
-     * Clicks the button element associated to the supplied resource id.
+     * Clicks the button element associated to the supplied resource id with a longer timeout.
+     * Creating another method to use the longer timeout here, some ui interactions take longer than expected.
      *
      * @param resourceId the resource id of the button to click
      */
-    public static void handleButtonClick(@NonNull final String resourceId) {
+    public static void handleButtonClickLongTimeout(@NonNull final String resourceId) {
         Logger.i(TAG, "Clicks the button element associated to the resource id:" + resourceId);
         final UiObject button = obtainUiObjectWithResourceId(resourceId);
 
         try {
-            button.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
+            button.waitForExists(FIND_UI_ELEMENT_TIMEOUT_LONG);
             button.click();
         } catch (final UiObjectNotFoundException e) {
             throw new AssertionError(e);
