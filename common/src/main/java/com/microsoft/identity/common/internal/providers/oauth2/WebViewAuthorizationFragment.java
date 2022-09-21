@@ -40,6 +40,7 @@ import androidx.annotation.VisibleForTesting;
 import androidx.fragment.app.FragmentActivity;
 
 import com.microsoft.identity.common.R;
+import com.microsoft.identity.common.internal.ui.webview.challengehandlers.AbstractSmartcardCertBasedAuthManager;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.CertBasedAuthFactory;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.DialogHolder;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.YubiKitCertBasedAuthManager;
@@ -189,9 +190,9 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 // since this is the only implementation of AbstractSmartcardCertBasedAuthManager
                 // that we have right now.
                 new CertBasedAuthFactory(
-                        getActivity(),
-                        new YubiKitCertBasedAuthManager(getActivity().getApplicationContext()),
-                        new DialogHolder(getActivity())));
+                        activity,
+                        new YubiKitCertBasedAuthManager(activity.getApplicationContext()),
+                        new DialogHolder(activity)));
         setUpWebView(view, mAADWebViewClient);
 
         mWebView.post(new Runnable() {
