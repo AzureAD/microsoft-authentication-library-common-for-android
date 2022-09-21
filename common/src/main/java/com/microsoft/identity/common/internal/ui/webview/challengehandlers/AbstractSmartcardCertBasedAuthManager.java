@@ -29,44 +29,46 @@ import javax.annotation.Nonnull;
 /**
  * An abstract manager that can control connections for a particular type of smartcard.
  */
-public interface ISmartcardCertBasedAuthManager {
+public abstract class AbstractSmartcardCertBasedAuthManager {
+
+    protected IDiscoveryCallback mDiscoveryCallback;
+
     /**
      * Logic to prepare an Android device to detect smartcards via usb.
-     * @param startDiscoveryCallback Contains callbacks to run when a smartcard is connected and disconnected.
      */
-    void startDiscovery(@Nonnull final IStartDiscoveryCallback startDiscoveryCallback);
+    abstract void startDiscovery();
 
     /**
      * Cease usb discovery of smartcards.
      */
-    void stopDiscovery();
+    abstract void stopDiscovery();
 
     /**
      * Request an instance of a session in order to carry out methods specific to ISmartcardSession.
      * @param callback Contains callbacks to run when a ISmartcardSession is successfully instantiated and when any exception is thrown due to a connection issue.
      */
-    void requestDeviceSession(@NonNull final ISessionCallback callback);
+    abstract void requestDeviceSession(@NonNull final ISessionCallback callback);
 
     /**
      * Returns boolean based on if a smartcard device is currently connected to the Android device and detected by our code.
      * @return true if a device is currently connected, false otherwise.
      */
-    boolean isDeviceConnected();
+    abstract boolean isDeviceConnected();
 
     /**
      * Runs implementation specific processes that may need to occur prior to authentication.
      */
-    void prepareForAuth();
+    abstract void prepareForAuth();
 
     /**
      * Cleanup to be done upon host activity being destroyed.
      */
-    void onDestroy();
+    abstract void onDestroy();
 
     /**
      * Callback methods to be run upon initial connection and disconnection of a smartcard device.
      */
-    interface IStartDiscoveryCallback {
+    interface IDiscoveryCallback {
         /**
          * Logic to be run upon initial connection of a smartcard device.
          */
@@ -81,6 +83,14 @@ public interface ISmartcardCertBasedAuthManager {
          * Logic to be run when an exception is thrown.
          */
         void onException();
+    }
+
+    /**
+     * Sets callbacks to be run for startDiscovery.
+     * @param discoveryCallback an implementation of IDiscoveryCallback.
+     */
+    public void setDiscoveryCallback(@NonNull final IDiscoveryCallback discoveryCallback) {
+        mDiscoveryCallback = discoveryCallback;
     }
 
     /**

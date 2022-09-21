@@ -41,6 +41,8 @@ import androidx.fragment.app.FragmentActivity;
 
 import com.microsoft.identity.common.R;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.CertBasedAuthFactory;
+import com.microsoft.identity.common.internal.ui.webview.challengehandlers.DialogHolder;
+import com.microsoft.identity.common.internal.ui.webview.challengehandlers.YubiKitCertBasedAuthManager;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
@@ -182,8 +184,14 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                     }
                 },
                 mRedirectUri,
-                CertBasedAuthFactory.createSmartcardCertBasedAuthManager(getActivity().getApplicationContext()),
-                CertBasedAuthFactory.createDialogHolder(getActivity()));
+                //Starts smartcard usb discovery.
+                //Only create instance of YubiKitCertBasedAuthManager,
+                // since this is the only implementation of AbstractSmartcardCertBasedAuthManager
+                // that we have right now.
+                new CertBasedAuthFactory(
+                        getActivity(),
+                        new YubiKitCertBasedAuthManager(getActivity().getApplicationContext()),
+                        new DialogHolder(getActivity())));
         setUpWebView(view, mAADWebViewClient);
 
         mWebView.post(new Runnable() {
@@ -296,8 +304,10 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         public void onChallengeResponseReceived(@NonNull final RawAuthorizationResult response) {
             final String methodTag = TAG + ":onChallengeResponseReceived";
             Logger.info(methodTag, null, "onChallengeResponseReceived:" + response.getResultCode());
-            //No telemetry will be emitted if CBA did not occur.
-            mAADWebViewClient.emitTelemetryForCertBasedAuthResult(response);
+            if (mAADWebViewClient != null) {
+                //No telemetry will be emitted if CBA did not occur.
+                mAADWebViewClient.emitTelemetryForCertBasedAuthResult(response);
+            }
             sendResult(response);
             finish();
         }

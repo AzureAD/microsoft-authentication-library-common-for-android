@@ -23,52 +23,82 @@
 package com.microsoft.identity.common.internal.ui.webview.challengehandlers;
 
 import android.app.Activity;
-import android.content.Context;
 
 import androidx.annotation.NonNull;
+
+import com.microsoft.identity.common.R;
+import com.microsoft.identity.common.logging.Logger;
 
 /**
  * Instantiates handlers and managers for certificate based authentication.
  */
 public class CertBasedAuthFactory {
 
+    private static final String TAG = CertBasedAuthFactory.class.getSimpleName();
+    private final Activity mActivity;
+    private final AbstractSmartcardCertBasedAuthManager mSmartcardCertBasedAuthManager;
+    private final DialogHolder mDialogHolder;
+
     /**
-     * Creates and returns an applicable instance of ISmartcardCertBasedAuthManager.
-     * @param context Current application context.
-     * @return An ISmartcardCertBasedAuthManager implementation instance.
+     * Creates an instance of CertBasedAuthFactory.
+     * Instantiates relevant implementations of ISmartcardCertBasedAuthManagers.
+     * @param activity current host activity.
+     * @param smartcardCertBasedAuthManager instance of AbstractSmartcardCertBasedAuthManager implementation.
+     * @param dialogHolder instance of DialogHolder.
      */
-    @NonNull
-    public static ISmartcardCertBasedAuthManager createSmartcardCertBasedAuthManager(@NonNull final Context context) {
-        //Return instance of YubiKitCertBasedAuthManager, since this is the only implementation of
-        // ISmartcardCertBasedAuthManager we have right now.
-        return new YubiKitCertBasedAuthManager(context);
+    public CertBasedAuthFactory(@NonNull final Activity activity,
+                                @NonNull final AbstractSmartcardCertBasedAuthManager smartcardCertBasedAuthManager,
+                                @NonNull final DialogHolder dialogHolder) {
+        final String methodTag = TAG + ":CertBasedAuthFactory";
+        mActivity = activity;
+        mSmartcardCertBasedAuthManager = smartcardCertBasedAuthManager;
+        mDialogHolder = dialogHolder;
+        mSmartcardCertBasedAuthManager.setDiscoveryCallback(new AbstractSmartcardCertBasedAuthManager.IDiscoveryCallback() {
+            @Override
+            public void onCreateConnection() {
+                //Reset DialogHolder to null if necessary.
+                //In this case, DialogHolder would be an ErrorDialog if not null.
+                mDialogHolder.dismissDialog();
+            }
+
+            @Override
+            public void onClosedConnection() {
+                //Show an error dialog informing users that they have unplugged their device only if a dialog is still showing.
+                if (mDialogHolder.isDialogShowing()) {
+                    mDialogHolder.onCancelCba();
+                    mDialogHolder.showErrorDialog(R.string.smartcard_early_unplug_dialog_title, R.string.smartcard_early_unplug_dialog_message);
+                    Logger.verbose(methodTag, "Smartcard was disconnected while dialog was still displayed.");
+                }
+            }
+
+            @Override
+            public void onException() {
+                //Logging, but may also want to emit telemetry.
+                //This method is not currently being called, but it could be
+                // used in future SmartcardCertBasedAuthManager implementations.
+                Logger.error(methodTag, "Unable to start smartcard usb discovery.", null);
+            }
+        });
+        mSmartcardCertBasedAuthManager.startDiscovery();
     }
 
     /**
      * Creates and returns an applicable instance of ICertBasedAuthChallengeHandler.
-     * @param activity current host activity.
-     * @param smartcardCertBasedAuthManager an instance of ISmartcardCertBasedAuthManager.
-     * @param dialogHolder an instance of DialogHolder.
      * @return An ICertBasedAuthChallengeHandler implementation instance.
      */
     @NonNull
-    public static ICertBasedAuthChallengeHandler createCertBasedAuthChallengeHandler(@NonNull final Activity activity,
-                                                                                     @NonNull final ISmartcardCertBasedAuthManager smartcardCertBasedAuthManager,
-                                                                                     @NonNull final DialogHolder dialogHolder) {
-        if (smartcardCertBasedAuthManager.isDeviceConnected()) {
-            return new SmartcardCertBasedAuthChallengeHandler(smartcardCertBasedAuthManager, dialogHolder);
+    public ICertBasedAuthChallengeHandler createCertBasedAuthChallengeHandler() {
+        if (mSmartcardCertBasedAuthManager.isDeviceConnected()) {
+            return new SmartcardCertBasedAuthChallengeHandler(mSmartcardCertBasedAuthManager, mDialogHolder);
         } else {
-            return new OnDeviceCertBasedAuthChallengeHandler(activity);
+            return new OnDeviceCertBasedAuthChallengeHandler(mActivity);
         }
     }
 
     /**
-     * Create and returns a new instance of DialogHolder.
-     * @param activity current host activity.
-     * @return an instance of DialogHolder.
+     * Cleanup to be done when host activity is being destroyed.
      */
-    @NonNull
-    public static DialogHolder createDialogHolder(@NonNull final Activity activity) {
-        return new DialogHolder(activity);
+    public void onDestroy() {
+        mSmartcardCertBasedAuthManager.onDestroy();
     }
 }

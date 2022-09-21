@@ -57,7 +57,7 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
     private static final String ACCEPTABLE_ISSUER = "CN=MS-Organization-Access";
     private final Activity mActivity;
     //Smartcard CBA variables
-    protected final ISmartcardCertBasedAuthManager mSmartcardCertBasedAuthManager;
+    protected final AbstractSmartcardCertBasedAuthManager mSmartcardCertBasedAuthManager;
     private final DialogHolder mDialogHolder;
     //Booleans to help determine if a CBA flow is being completed so that we can emit telemetry for the results.
     private boolean mIsOnDeviceCertBasedAuthProceeding;
@@ -67,17 +67,17 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
      * Creates new instance of ClientCertAuthChallengeHandler.
      * A manager for smartcard CBA is retrieved, and discovery for USB devices is started.
      * @param activity current host activity.
-     * @param smartcardCertBasedAuthManager ISmartcardCertBasedAuthManager instance.
+     * @param smartcardCertBasedAuthManager AbstractSmartcardCertBasedAuthManager instance.
      */
     public ClientCertAuthChallengeHandler(@NonNull final Activity activity,
-                                          @NonNull final ISmartcardCertBasedAuthManager smartcardCertBasedAuthManager) {
+                                          @NonNull final AbstractSmartcardCertBasedAuthManager smartcardCertBasedAuthManager) {
         final String methodTag = TAG + ":ClientCertAuthChallengeHandler";
         mActivity = activity;
         mDialogHolder = new DialogHolder(mActivity);
         mIsOnDeviceCertBasedAuthProceeding = false;
         mIsSmartcardCertBasedAuthProceeding = false;
         mSmartcardCertBasedAuthManager = smartcardCertBasedAuthManager;
-        mSmartcardCertBasedAuthManager.startDiscovery(new ISmartcardCertBasedAuthManager.IStartDiscoveryCallback() {
+        mSmartcardCertBasedAuthManager.setDiscoveryCallback(new AbstractSmartcardCertBasedAuthManager.IDiscoveryCallback() {
             @Override
             public void onCreateConnection() {
                 //Reset DialogHolder to null if necessary.
@@ -135,7 +135,7 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
     private void handleSmartcardCertAuth(@NonNull final ClientCertRequest request) {
         final String methodTag = TAG + ":handleSmartcardCertAuth";
 
-        mSmartcardCertBasedAuthManager.requestDeviceSession(new ISmartcardCertBasedAuthManager.ISessionCallback() {
+        mSmartcardCertBasedAuthManager.requestDeviceSession(new AbstractSmartcardCertBasedAuthManager.ISessionCallback() {
             @Override
             public void onGetSession(@NonNull final ISmartcardSession session) throws Exception {
                 if (session.getPinAttemptsRemaining() == 0) {
@@ -243,7 +243,7 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
             @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
             @Override
             public void onClick(@NonNull final char[] pin) {
-                mSmartcardCertBasedAuthManager.requestDeviceSession(new ISmartcardCertBasedAuthManager.ISessionCallback() {
+                mSmartcardCertBasedAuthManager.requestDeviceSession(new AbstractSmartcardCertBasedAuthManager.ISessionCallback() {
                     @Override
                     public void onGetSession(@NonNull final ISmartcardSession session) throws Exception {
                         tryUsingSmartcardWithPin(pin, certDetails, request, session);

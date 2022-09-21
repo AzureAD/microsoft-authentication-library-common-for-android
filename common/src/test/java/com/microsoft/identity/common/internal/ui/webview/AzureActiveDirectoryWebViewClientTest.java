@@ -31,6 +31,8 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.CertBasedAuthFactory;
+import com.microsoft.identity.common.internal.ui.webview.challengehandlers.DialogHolder;
+import com.microsoft.identity.common.internal.ui.webview.challengehandlers.YubiKitCertBasedAuthManager;
 import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 
@@ -101,8 +103,10 @@ public class AzureActiveDirectoryWebViewClientTest {
                     }
                 },
                 TEST_REDIRECT_URI,
-                CertBasedAuthFactory.createSmartcardCertBasedAuthManager(mActivity.getApplicationContext()),
-                CertBasedAuthFactory.createDialogHolder(mActivity));
+                new CertBasedAuthFactory(
+                        mActivity,
+                        new YubiKitCertBasedAuthManager(mActivity.getApplicationContext()),
+                        new DialogHolder(mActivity)));
     }
 
     @Test(expected = IllegalArgumentException.class)

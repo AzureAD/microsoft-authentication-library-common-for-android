@@ -48,17 +48,17 @@ import java.util.List;
  */
 public class SmartcardCertBasedAuthChallengeHandler implements ICertBasedAuthChallengeHandler {
     private static final String TAG = SmartcardCertBasedAuthChallengeHandler.class.getSimpleName();
-    protected final ISmartcardCertBasedAuthManager mSmartcardCertBasedAuthManager;
+    protected final AbstractSmartcardCertBasedAuthManager mSmartcardCertBasedAuthManager;
     private final DialogHolder mDialogHolder;
     private boolean mIsSmartcardCertBasedAuthProceeding;
 
     /**
      * Creates new instance of SmartcardCertBasedAuthChallengeHandler.
      * A manager for smartcard CBA is retrieved, and discovery for USB devices is started.
-     * @param smartcardCertBasedAuthManager ISmartcardCertBasedAuthManager instance.
+     * @param smartcardCertBasedAuthManager AbstractSmartcardCertBasedAuthManager instance.
      * @param dialogHolder DialogHolder instance.
      */
-    public SmartcardCertBasedAuthChallengeHandler(@NonNull final ISmartcardCertBasedAuthManager smartcardCertBasedAuthManager,
+    public SmartcardCertBasedAuthChallengeHandler(@NonNull final AbstractSmartcardCertBasedAuthManager smartcardCertBasedAuthManager,
                                                   @NonNull final DialogHolder dialogHolder) {
         mIsSmartcardCertBasedAuthProceeding = false;
         mSmartcardCertBasedAuthManager = smartcardCertBasedAuthManager;
@@ -87,7 +87,7 @@ public class SmartcardCertBasedAuthChallengeHandler implements ICertBasedAuthCha
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     private void handleSmartcardCertAuth(@NonNull final ClientCertRequest request) {
         final String methodTag = TAG + ":handleSmartcardCertAuth";
-        mSmartcardCertBasedAuthManager.requestDeviceSession(new ISmartcardCertBasedAuthManager.ISessionCallback() {
+        mSmartcardCertBasedAuthManager.requestDeviceSession(new AbstractSmartcardCertBasedAuthManager.ISessionCallback() {
             @Override
             public void onGetSession(@NonNull final ISmartcardSession session) throws Exception {
                 if (session.getPinAttemptsRemaining() == 0) {
@@ -195,7 +195,7 @@ public class SmartcardCertBasedAuthChallengeHandler implements ICertBasedAuthCha
             @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
             @Override
             public void onClick(@NonNull final char[] pin) {
-                mSmartcardCertBasedAuthManager.requestDeviceSession(new ISmartcardCertBasedAuthManager.ISessionCallback() {
+                mSmartcardCertBasedAuthManager.requestDeviceSession(new AbstractSmartcardCertBasedAuthManager.ISessionCallback() {
                     @Override
                     public void onGetSession(@NonNull final ISmartcardSession session) throws Exception {
                         tryUsingSmartcardWithPin(pin, certDetails, request, session);

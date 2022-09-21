@@ -48,7 +48,7 @@ import java.util.concurrent.Callable;
 /**
  * Utilizes YubiKit in order to detect and interact with YubiKeys for smartcard certificate based authentication.
  */
-public class YubiKitCertBasedAuthManager implements ISmartcardCertBasedAuthManager {
+public class YubiKitCertBasedAuthManager extends AbstractSmartcardCertBasedAuthManager {
 
     private static final String TAG = YubiKitCertBasedAuthManager.class.getSimpleName();
     private static final String MDEVICE_NULL_ERROR_MESSAGE = "Instance UsbYubiKitDevice variable (mDevice) is null.";
@@ -63,7 +63,7 @@ public class YubiKitCertBasedAuthManager implements ISmartcardCertBasedAuthManag
      * Create new instance of YubiKitCertBasedAuthManager.
      * @param context current application context.
      */
-    YubiKitCertBasedAuthManager(@NonNull final Context context) {
+    public YubiKitCertBasedAuthManager(@NonNull final Context context) {
         mYubiKitManager = new YubiKitManager(context);
     }
 
@@ -71,17 +71,18 @@ public class YubiKitCertBasedAuthManager implements ISmartcardCertBasedAuthManag
      * Create and start YubiKitManager for UsbDiscovery mode.
      * When in Usb Discovery mode, Yubikeys that plug into the device will be accessible
      *  once the user provides permission via the Android permission dialog.
-     * @param startDiscoveryCallback Contains callbacks to run when a YubiKey is connected and disconnected.
      */
     @Override
-    public void startDiscovery(@NonNull final IStartDiscoveryCallback startDiscoveryCallback) {
+    public void startDiscovery() {
         mYubiKitManager.startUsbDiscovery(new UsbConfiguration(), new Callback<UsbYubiKeyDevice>() {
             @Override
             public void invoke(@NonNull UsbYubiKeyDevice device) {
                 Logger.verbose(TAG, "A YubiKey device was connected");
                 synchronized (sDeviceLock) {
                     mDevice = device;
-                    startDiscoveryCallback.onCreateConnection();
+                    if (mDiscoveryCallback != null) {
+                        mDiscoveryCallback.onCreateConnection();
+                    }
 
                     mDevice.setOnClosed(new Runnable() {
                         @Override
@@ -100,7 +101,9 @@ public class YubiKitCertBasedAuthManager implements ISmartcardCertBasedAuthManag
                                 Telemetry.emit(pivProviderStatusEvent.putPivProviderRemoved(false));
                                 Logger.info(TAG, "An instance of PivProvider was not present in Security static list upon YubiKey device connection being closed.");
                             }
-                            startDiscoveryCallback.onClosedConnection();
+                            if (mDiscoveryCallback != null) {
+                                mDiscoveryCallback.onClosedConnection();
+                            }
                         }
 
                     });
