@@ -138,7 +138,7 @@ public class JWSBuilder {
         claims.mAudience = audience;
         claims.mIssueAt = getCurrentTimeInSeconds();
 
-        JwsHeader header = new JwsHeader();
+        final JwsHeader header = new JwsHeader();
         header.mAlgorithm = JWS_HEADER_ALG;
         header.mType = "JWT"; // recommended UpperCase in JWT Spec
 
