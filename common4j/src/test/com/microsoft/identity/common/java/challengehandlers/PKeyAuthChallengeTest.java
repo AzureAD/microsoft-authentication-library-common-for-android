@@ -206,60 +206,46 @@ public class PKeyAuthChallengeTest {
     /**
      * Verify correct exception is thrown when certificate is null.
      */
-    @Test
-    public void testGetChallengeResponseNullCertificate() {
+    @Test(expected = NullPointerException.class)
+    public void testGetChallengeResponseNullCertificate() throws Exception {
         final MockCertLoader certLoader = new MockCertLoader();
-        certLoader.setCert(null);
+        certLoader.setX509(null);
         AuthenticationSettings.INSTANCE.setCertificateLoader(certLoader);
 
-        try {
-            getBasicChallengeBuilder()
-                    .certAuthorities(Arrays.asList(PKEYAUTH_CERT_AUTHORITIES))
-                    .build()
-                    .getChallengeHeader();
-            Assert.fail();
-        } catch (final ClientException e) {
-            Assert.assertEquals(ErrorStrings.KEY_CHAIN_CERTIFICATE_EXCEPTION, e.getErrorCode());
-        }
+        getBasicChallengeBuilder()
+                .certAuthorities(Arrays.asList(PKEYAUTH_CERT_AUTHORITIES))
+                .build()
+                .getChallengeHeader();
     }
 
+
     /**
-     * Verify correct exception is thrown when cert's public key is null.
+     * Verify correct exception is thrown when certificate is null.
      */
-    @Test
-    public void testGetChallengeResponseNullPublicKey() {
+    @Test(expected = NullPointerException.class)
+    public void testGetChallengeResponseNullX509Certificate() throws Exception {
         final MockCertLoader certLoader = new MockCertLoader();
-        certLoader.setPublicKey(null);
+        certLoader.setX509(null);
         AuthenticationSettings.INSTANCE.setCertificateLoader(certLoader);
 
-        try {
-            getBasicChallengeBuilder()
-                    .certAuthorities(Arrays.asList(PKEYAUTH_CERT_AUTHORITIES))
-                    .build()
-                    .getChallengeHeader();
-            Assert.fail();
-        } catch (final ClientException e) {
-            Assert.assertEquals(ErrorStrings.KEY_CHAIN_PUBLIC_KEY_EXCEPTION, e.getErrorCode());
-        }
+        getBasicChallengeBuilder()
+                .certAuthorities(Arrays.asList(PKEYAUTH_CERT_AUTHORITIES))
+                .build()
+                .getChallengeHeader();
     }
 
     /**
      * Verify correct exception is thrown when cert's private key is null.
      */
-    @Test
-    public void testGetChallengeResponseNullPrivateKey() {
+    @Test(expected = NullPointerException.class)
+    public void testGetChallengeResponseNullPrivateKey() throws Exception {
         final MockCertLoader certLoader = new MockCertLoader();
         certLoader.setPrivateKey(null);
         AuthenticationSettings.INSTANCE.setCertificateLoader(certLoader);
 
-        try {
-            getBasicChallengeBuilder()
-                    .certAuthorities(Arrays.asList(PKEYAUTH_CERT_AUTHORITIES))
-                    .build()
-                    .getChallengeHeader();
-            Assert.fail();
-        } catch (final ClientException e) {
-            Assert.assertEquals(ErrorStrings.KEY_CHAIN_PRIVATE_KEY_EXCEPTION, e.getErrorCode());
-        }
+        getBasicChallengeBuilder()
+                .certAuthorities(Arrays.asList(PKEYAUTH_CERT_AUTHORITIES))
+                .build()
+                .getChallengeHeader();
     }
 }
