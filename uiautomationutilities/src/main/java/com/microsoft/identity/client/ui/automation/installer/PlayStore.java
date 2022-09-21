@@ -147,22 +147,21 @@ public class PlayStore implements IAppInstaller {
         Logger.i(TAG, "Performing " + playStoreAction + " App From Market Page Internal..");
         final UiDevice device = UiDevice.getInstance(getInstrumentation());
         final UiObject uiObjBtn = device.findObject(
-                new UiSelector().className(Button.class).text(playStoreAction).enabled(true)
+                new UiSelector().descriptionContains(playStoreAction)
         );
 
         uiObjBtn.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
 
         uiObjBtn.click();
         openAppFromPlayStore();
-
     }
 
     private void openAppFromPlayStore() {
         final UiDevice device = UiDevice.getInstance(getInstrumentation());
-        final UiObject openButton = device.findObject(
-                new UiSelector().className(Button.class).text("Open").enabled(true)
+        final UiObject uninstallButton = device.findObject(
+                new UiSelector().descriptionContains("Uninstall")
         );
-        openButton.waitForExists(PLAY_STORE_INSTALL_OR_UPDATE_APP_TIMEOUT);
+        uninstallButton.waitForExists(PLAY_STORE_INSTALL_OR_UPDATE_APP_TIMEOUT);
     }
 
     private void acceptGooglePlayTermsOfService() {

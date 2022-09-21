@@ -33,6 +33,8 @@ import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
 import org.junit.Assert;
 
+import java.util.concurrent.TimeUnit;
+
 /**
  * A model for interacting with the Outlook Android App during UI Test.
  */
@@ -105,7 +107,7 @@ public class OutlookApp extends App implements IFirstPartyApp {
     public void confirmAccount(@NonNull final String username) {
         Logger.i(TAG, "Confirming account with supplied username is signed in..");
         // Click the account drawer
-        UiAutomatorUtils.handleButtonClick("com.microsoft.office.outlook:id/account_button");
+        UiAutomatorUtils.handleButtonClickLongTimeout("com.microsoft.office.outlook:id/account_button");
 
         // Make sure our account is listed in the account drawer
         final UiObject testAccountLabel = UiAutomatorUtils.obtainUiObjectWithText(username);

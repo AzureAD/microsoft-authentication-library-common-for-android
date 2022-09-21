@@ -82,8 +82,8 @@ public class LabApiAuthenticationClient implements IAccessTokenSupplier {
             }
         }
 
-        // There were no exceptions, but getAccessToken still failed.
-        return null;
+        // Uncaught exception?
+        throw new LabApiException(LabError.FAILED_TO_GET_ACCESS_TOKEN);
     }
 
     private String getAccessTokenInternal() throws LabApiException {
