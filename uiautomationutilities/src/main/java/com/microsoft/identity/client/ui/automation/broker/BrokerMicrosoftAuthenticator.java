@@ -50,7 +50,6 @@ import org.junit.Assert;
 
 import lombok.Getter;
 
-
 /**
  * Serves as the base class interacting with the Microsoft Authenticator Broker App during UI Test. The base class should be extended
  * by BrokerAuthenticatorUpdatedVersionImpl, BrokerAuthenticatorPreviousVersionImpl

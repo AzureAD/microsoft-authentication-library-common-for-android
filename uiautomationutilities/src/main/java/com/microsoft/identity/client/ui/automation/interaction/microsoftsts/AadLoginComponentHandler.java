@@ -36,7 +36,10 @@ import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 import org.junit.Assert;
 
 import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT;
+import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT_LONG;
 import static org.junit.Assert.fail;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  * A login component handler for AAD.
@@ -97,7 +100,7 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
     }
 
     private UiObject getConsentScreen() {
-        return UiAutomatorUtils.obtainUiObjectWithResourceId("consentHeader");
+        return UiAutomatorUtils.obtainUiObjectWithResourceId("appDomainLinkToAppInfo");
     }
 
     @Override
@@ -112,6 +115,11 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
 
     @Override
     public void acceptConsent() {
+        try {
+            Thread.sleep(TimeUnit.SECONDS.toMillis(2));
+        } catch (InterruptedException e){
+            e.printStackTrace();
+        }
         confirmConsentPageReceived();
         handleNextButton();
     }
@@ -127,7 +135,7 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
         // Confirm On Speed Bump Screen
         final UiObject speedBump = UiAutomatorUtils.obtainUiObjectWithResourceId("appConfirmTitle");
 
-        if (!speedBump.waitForExists(FIND_UI_ELEMENT_TIMEOUT)) {
+        if (!speedBump.waitForExists(FIND_UI_ELEMENT_TIMEOUT_LONG)) {
             fail("Speed Bump screen did not show up");
         }
 
@@ -165,7 +173,7 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
     public void handleStaySignedIn(final UiResponse staySignedInResponse) {
         final UiObject staySignedInView = UiAutomatorUtils.obtainUiObjectWithText("Stay signed in?");
 
-        if (!staySignedInView.waitForExists(FIND_UI_ELEMENT_TIMEOUT)) {
+        if (!staySignedInView.waitForExists(FIND_UI_ELEMENT_TIMEOUT_LONG)) {
             fail("Stay signed in page did not show up");
         }
 
