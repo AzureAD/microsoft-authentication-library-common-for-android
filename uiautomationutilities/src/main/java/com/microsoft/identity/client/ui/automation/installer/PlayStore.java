@@ -153,13 +153,13 @@ public class PlayStore implements IAppInstaller {
         uiObjBtn.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
 
         uiObjBtn.click();
-        openAppFromPlayStore();
+        checkInstallCompletion();
     }
 
-    private void openAppFromPlayStore() {
+    private void checkInstallCompletion() {
         final UiDevice device = UiDevice.getInstance(getInstrumentation());
         final UiObject uninstallButton = device.findObject(
-                new UiSelector().descriptionContains("Uninstall")
+                new UiSelector().className(Button.class).text("Uninstall").enabled(true)
         );
         uninstallButton.waitForExists(PLAY_STORE_INSTALL_OR_UPDATE_APP_TIMEOUT);
     }
