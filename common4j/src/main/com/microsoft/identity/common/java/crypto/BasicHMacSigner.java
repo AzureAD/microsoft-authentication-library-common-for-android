@@ -23,53 +23,43 @@
 package com.microsoft.identity.common.java.crypto;
 
 import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.exception.ErrorStrings;
+import com.microsoft.identity.common.java.logging.Logger;
 
-import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
-import java.security.Key;
 import java.security.NoSuchAlgorithmException;
-import java.security.Provider;
+import java.security.PrivateKey;
+import java.security.Signature;
+import java.security.SignatureException;
 
-import javax.crypto.BadPaddingException;
-import javax.crypto.Cipher;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
-import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
+import lombok.experimental.Accessors;
 
 /**
- * A basic Decryptor class.
+ * A very basic HMAC Signer class.
  */
 @AllArgsConstructor
-public class BasicDecryptor implements IDecryptor {
+@Accessors(prefix = "m")
+public class BasicHMacSigner implements IHMacSigner {
 
     private final ICryptoFactory mCryptoFactory;
 
-    @Override
-    public byte[] decrypt(@NonNull final Key key,
-                          @NonNull final String decryptAlgorithm,
-                          final byte[] iv,
-                          byte[] dataToBeDecrypted) throws ClientException {
+    public byte[] sign(final byte[] keyData,
+                       @NonNull final String hmacAlgorithm,
+                       final byte[] dataToBeSigned) throws ClientException {
         try {
-            final Cipher cipher = mCryptoFactory.getCipher(decryptAlgorithm);
-
-            if (iv != null && iv.length > 0) {
-                final IvParameterSpec ivSpec = new IvParameterSpec(iv);
-                cipher.init(Cipher.DECRYPT_MODE, key, ivSpec);
-            } else {
-                cipher.init(Cipher.DECRYPT_MODE, key);
-            }
-            return cipher.doFinal(dataToBeDecrypted);
-        } catch (final BadPaddingException e) {
-            throw new ClientException(ClientException.BAD_PADDING, e.getMessage(), e);
-        } catch (final IllegalBlockSizeException e) {
-            throw new ClientException(ClientException.INVALID_BLOCK_SIZE, e.getMessage(), e);
+            final Mac sha256HMAC = mCryptoFactory.getMac(hmacAlgorithm);
+            final SecretKeySpec secretKey = new SecretKeySpec(keyData, hmacAlgorithm);
+            sha256HMAC.init(secretKey);
+            return sha256HMAC.doFinal(dataToBeSigned);
+        } catch (final IllegalStateException e) {
+            throw new ClientException(ErrorStrings.ENCRYPTION_ERROR, e.getMessage(), e);
         } catch (final InvalidKeyException e) {
             throw new ClientException(ClientException.INVALID_KEY, e.getMessage(), e);
-        } catch (final InvalidAlgorithmParameterException e) {
-            throw new ClientException(ClientException.INVALID_ALG_PARAMETER, e.getMessage(), e);
         }
     }
 }
