@@ -125,10 +125,10 @@ public class JWSBuilder {
         // two period ('.') characters.
         // Base64 encoding without padding, wrapping and urlsafe.
         final String methodTag = TAG + ":generateSignedJWT";
-        if (nonce.length() == 0) {
+        if (nonce.isEmpty()) {
             throw new IllegalArgumentException("nonce is an empty string.");
         }
-        if (audience.length() == 0) {
+        if (audience.isEmpty()) {
             throw new IllegalArgumentException("audience is an empty string.");
         }
 
