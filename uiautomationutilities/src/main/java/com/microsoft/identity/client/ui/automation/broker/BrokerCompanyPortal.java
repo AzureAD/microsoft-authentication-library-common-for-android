@@ -68,6 +68,7 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
     final static long ENROLLMENT_PAGE_TIMEOUT = TimeUnit.SECONDS.toMillis(45);
 
     private boolean enrollmentPerformedSuccessfully;
+    private boolean batteryOptimizationTurnedOff;
 
     public BrokerCompanyPortal() {
         super(COMPANY_PORTAL_APP_PACKAGE_NAME, COMPANY_PORTAL_APP_NAME);
@@ -177,7 +178,6 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
         } catch (final UiObjectNotFoundException e) {
             throw new AssertionError(e);
         }
-
     }
 
     @Override
@@ -200,35 +200,20 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
 
         handleFirstRun(); // handle CP first run
 
-        // click Sign In button on CP welcome page
-        UiAutomatorUtils.handleButtonClick("com.microsoft.windowsintune.companyportal:id/sign_in_button");
+        // Company portal password page is somewhat inconsistent, found out turning off battery optimization helps from testing
+        disableBatteryOptimization();
 
-        if (isFederated) {
-            final MicrosoftStsPromptHandlerParameters promptHandlerParameters = MicrosoftStsPromptHandlerParameters.builder()
-                    .prompt(PromptParameter.LOGIN)
-                    .consentPageExpected(false)
-                    .expectingLoginPageAccountPicker(false)
-                    .sessionExpected(false)
-                    .isFederated(true)
-                    .loginHint(null)
-                    .build();
-
-            final MicrosoftStsPromptHandler microsoftStsPromptHandler = new MicrosoftStsPromptHandler(promptHandlerParameters);
-            ((AdfsLoginComponentHandler) microsoftStsPromptHandler.getLoginComponentHandler()).handleEnrollmentPrompt(username, password);
-        } else {
-            final MicrosoftStsPromptHandlerParameters promptHandlerParameters = MicrosoftStsPromptHandlerParameters.builder()
-                    .prompt(PromptParameter.LOGIN)
-                    .consentPageExpected(false)
-                    .expectingLoginPageAccountPicker(false)
-                    .sessionExpected(false)
-                    .loginHint(null)
-                    .build();
-
-            final MicrosoftStsPromptHandler microsoftStsPromptHandler = new MicrosoftStsPromptHandler(promptHandlerParameters);
-
-            Logger.i(TAG, "Handle prompt in AAD login page for enrolling device..");
-            // handle AAD login page
-            microsoftStsPromptHandler.handlePrompt(username, password);
+        // Sometimes, ui for password page fails to become visible. Catch that particular exception, relaunch the app, and try again.
+        try {
+            signInThroughFrontPage(username, password, isFederated);
+        } catch (AssertionError e) {
+            if (e.getMessage().contains("UiSelector[RESOURCE_ID=i0118]")) {
+                forceStop();
+                launch();
+                signInThroughFrontPage(username, password, isFederated);
+            } else {
+                throw e;
+            }
         }
 
         // click the activate device admin btn
@@ -299,6 +284,40 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
     public void enrollDevice(@NonNull final String username,
                              @NonNull final String password) {
         enrollDevice(username, password, false);
+    }
+
+    private void signInThroughFrontPage(@NonNull final String username, @NonNull final String password, final boolean isFederated){
+        // click Sign In button on CP welcome page
+        UiAutomatorUtils.handleButtonClick("com.microsoft.windowsintune.companyportal:id/sign_in_button");
+
+        if (isFederated) {
+            final MicrosoftStsPromptHandlerParameters promptHandlerParameters = MicrosoftStsPromptHandlerParameters.builder()
+                    .prompt(PromptParameter.LOGIN)
+                    .consentPageExpected(false)
+                    .expectingLoginPageAccountPicker(false)
+                    .sessionExpected(false)
+                    .isFederated(true)
+                    .loginHint(null)
+                    .build();
+
+            final MicrosoftStsPromptHandler microsoftStsPromptHandler = new MicrosoftStsPromptHandler(promptHandlerParameters);
+            ((AdfsLoginComponentHandler) microsoftStsPromptHandler.getLoginComponentHandler()).handleEnrollmentPrompt(username, password);
+        } else {
+            final MicrosoftStsPromptHandlerParameters promptHandlerParameters = MicrosoftStsPromptHandlerParameters.builder()
+                    .prompt(PromptParameter.LOGIN)
+                    .broker(this)
+                    .consentPageExpected(false)
+                    .expectingLoginPageAccountPicker(false)
+                    .sessionExpected(false)
+                    .loginHint(null)
+                    .build();
+
+            final MicrosoftStsPromptHandler microsoftStsPromptHandler = new MicrosoftStsPromptHandler(promptHandlerParameters);
+
+            Logger.i(TAG, "Handle prompt in AAD login page for enrolling device..");
+            // handle AAD login page
+            microsoftStsPromptHandler.handlePrompt(username, password);
+        }
     }
 
     /**
@@ -492,5 +511,45 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
     @Override
     protected void initialiseAppImpl() {
        // nothing needed here
+    }
+
+    public void disableBatteryOptimization() {
+        if (!batteryOptimizationTurnedOff) {
+            Logger.i(TAG, "Disable battery optimization...");
+
+            try {
+                final UiDevice device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+
+                // Click more options in the top right
+                final UiObject threeDots = device.findObject(new UiSelector().descriptionContains(
+                        "More options"
+                ));
+                threeDots.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
+                threeDots.click();
+
+                // Select Settings from menu
+                final UiObject settingsBtn = UiAutomatorUtils.obtainUiObjectWithText("Settings");
+                settingsBtn.click();
+
+                // Click TURN OFF Button (Battery Optimization)
+                final UiObject turnOffBtn = device.findObject(
+                        new UiSelector().text("TURN OFF")
+                );
+                turnOffBtn.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
+                turnOffBtn.click();
+
+                // Click Allow
+                UiAutomatorUtils.handleButtonClick(
+                        "android:id/button1"
+                );
+
+                batteryOptimizationTurnedOff = true;
+
+                // Return to home page
+                launch();
+            } catch (final UiObjectNotFoundException e) {
+                throw new AssertionError(e);
+            }
+        }
     }
 }
