@@ -134,12 +134,13 @@ public class PlayStore implements IAppInstaller {
         try {
             installOrUpdateAppFromMarketPageInternal(playStoreAction);
         } catch (final UiObjectNotFoundException e) {
-            acceptGooglePlayTermsOfService();
-            try {
-                installOrUpdateAppFromMarketPageInternal(playStoreAction);
-            } catch (UiObjectNotFoundException ex) {
-                throw new AssertionError(e);
-            }
+            throw new AssertionError(e.getMessage(), e);
+//            acceptGooglePlayTermsOfService();
+//            try {
+//                installOrUpdateAppFromMarketPageInternal(playStoreAction);
+//            } catch (UiObjectNotFoundException ex) {
+//                throw new AssertionError(e);
+//            }
         }
     }
 

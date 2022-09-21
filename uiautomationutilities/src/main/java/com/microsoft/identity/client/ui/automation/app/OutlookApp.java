@@ -33,8 +33,6 @@ import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
 import org.junit.Assert;
 
-import java.util.concurrent.TimeUnit;
-
 /**
  * A model for interacting with the Outlook Android App during UI Test.
  */
