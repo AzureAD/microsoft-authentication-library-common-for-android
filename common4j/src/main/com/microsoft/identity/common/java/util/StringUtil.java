@@ -436,6 +436,13 @@ public class StringUtil {
     }
 
     /**
+     * Converts the given String into a rawData byte array, and Base64-decode it with the url-safe flag.
+     */
+    public static byte[] base64DecodeUrlSafeString(@NonNull final String encodedString) {
+        return Base64.decode(encodedString, Base64.NO_WRAP | Base64.NO_PADDING | Base64.URL_SAFE);
+    }
+
+    /**
      * This is a reimplementation of String.join for the android platform.  Possibly this should
      * shift into PlatformUtils, which could rely on String.join dependent on the android API level.
      *
