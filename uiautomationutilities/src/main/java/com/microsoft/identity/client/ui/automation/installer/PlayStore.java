@@ -134,13 +134,12 @@ public class PlayStore implements IAppInstaller {
         try {
             installOrUpdateAppFromMarketPageInternal(playStoreAction);
         } catch (final UiObjectNotFoundException e) {
-            throw new AssertionError(e.getMessage(), e);
-//            acceptGooglePlayTermsOfService();
-//            try {
-//                installOrUpdateAppFromMarketPageInternal(playStoreAction);
-//            } catch (UiObjectNotFoundException ex) {
-//                throw new AssertionError(e);
-//            }
+            acceptGooglePlayTermsOfService();
+            try {
+                installOrUpdateAppFromMarketPageInternal(playStoreAction);
+            } catch (UiObjectNotFoundException ex) {
+                throw new AssertionError(ex.getMessage(), e);
+            }
         }
     }
 
@@ -148,7 +147,7 @@ public class PlayStore implements IAppInstaller {
         Logger.i(TAG, "Performing " + playStoreAction + " App From Market Page Internal..");
         final UiDevice device = UiDevice.getInstance(getInstrumentation());
         final UiObject uiObjBtn = device.findObject(
-                new UiSelector().descriptionContains(playStoreAction)
+                new UiSelector().className(Button.class).text(playStoreAction).enabled(true)
         );
 
         uiObjBtn.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
