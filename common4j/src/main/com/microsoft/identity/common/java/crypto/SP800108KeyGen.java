@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.crypto;
 
+import com.microsoft.identity.common.java.exception.ClientException;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -34,14 +36,20 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import lombok.AllArgsConstructor;
 import lombok.NonNull;
+import lombok.experimental.Accessors;
 
 /**
  * This class is a key derivation function for SP800 108 key generation.
  */
+@AllArgsConstructor
+@Accessors(prefix = "m")
 public class SP800108KeyGen {
 
     static final byte[] BIG_ENDIAN_INT_256 = ByteBuffer.allocate(4).order(ByteOrder.BIG_ENDIAN).putInt(256).array();
+
+    private final ICryptoFactory mCryptoFactory;
 
     /**]
      * Generate a derived key given a starting key.
@@ -53,9 +61,10 @@ public class SP800108KeyGen {
      * @throws InvalidKeyException
      * @throws NoSuchAlgorithmException
      */
-    @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE", justification = "Interaction with Lombok")
-    public static byte[] generateDerivedKey(@NonNull final byte[] key, @NonNull final byte[] label, @NonNull final byte[] ctx)
-            throws IOException, InvalidKeyException, NoSuchAlgorithmException {
+    public byte[] generateDerivedKey(final byte[] key,
+                                     final byte[] label,
+                                     final byte[] ctx)
+            throws IOException, InvalidKeyException, NoSuchAlgorithmException, ClientException {
         final ByteArrayOutputStream stream = new ByteArrayOutputStream();
         stream.write(label);
         stream.write(0x0);
@@ -67,8 +76,9 @@ public class SP800108KeyGen {
         return Arrays.copyOf(pbDerivedKey, 32);
     }
 
-    private static byte[] constructNewKey(byte[] keyDerivationKey, byte[] fixedInput)
-            throws IOException, NoSuchAlgorithmException, InvalidKeyException {
+    private byte[] constructNewKey(final byte[] keyDerivationKey,
+                                   final byte[] fixedInput)
+            throws IOException, InvalidKeyException, ClientException {
         byte ctr;
         byte[] cHMAC;
         byte[] keyDerivated;
@@ -83,7 +93,7 @@ public class SP800108KeyGen {
         ctr = 1;
         keyDerivated = new byte[outputSizeBit / 8];
         final SecretKeySpec keySpec = new SecretKeySpec(keyDerivationKey, "HmacSHA256");
-        final Mac hmacSHA256 = Mac.getInstance("HmacSHA256");
+        final Mac hmacSHA256 = mCryptoFactory.getMac("HmacSHA256");
 
         do {
             dataInput = updateDataInput(ctr, fixedInput);
@@ -105,7 +115,8 @@ public class SP800108KeyGen {
         return keyDerivated;
     }
 
-    private static byte[] updateDataInput(final byte ctr, @NonNull final byte[] fixedInput) throws IOException {
+    private static byte[] updateDataInput(final byte ctr,
+                                          final byte[] fixedInput) throws IOException {
         final ByteArrayOutputStream tmpFixedInput = new ByteArrayOutputStream(fixedInput.length + 4);
         tmpFixedInput.write(ctr >>> 24);
         tmpFixedInput.write(ctr >>> 16);
