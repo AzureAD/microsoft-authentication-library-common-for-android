@@ -388,13 +388,14 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
     @Override
     public void handleAppProtectionPolicy() {
         Logger.i(TAG, "Handle App Protection Policy..");
+
         final UiDevice device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
         // get access screen
         final UiObject getAccessScreen = UiAutomatorUtils.obtainUiObjectWithText("Get Access");
         Assert.assertTrue(
                 "CP - Get Access screen appears",
-                getAccessScreen.exists()
+                getAccessScreen.waitForExists(TimeUnit.MINUTES.toMillis(2))
         );
 
         // get access screen - continue
@@ -545,7 +546,14 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
 
                 batteryOptimizationTurnedOff = true;
 
+                try {
+                    Thread.sleep(TimeUnit.SECONDS.toMillis(7));
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
                 // Return to home page
+                forceStop();
                 launch();
             } catch (final UiObjectNotFoundException e) {
                 throw new AssertionError(e);

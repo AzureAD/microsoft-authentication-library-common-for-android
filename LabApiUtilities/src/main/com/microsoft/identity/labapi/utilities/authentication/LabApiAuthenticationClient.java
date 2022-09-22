@@ -80,7 +80,7 @@ public class LabApiAuthenticationClient implements IAccessTokenSupplier {
                     throw generalException;
                 }
                 if (i == SOCKET_ATTEMPT_COUNT - 1) {
-                    throw new LabApiException(LabError.FAILED_SOCKET_RETRY_EXHAUSTED, generalException, "i = " + i);
+                    throw new LabApiException(LabError.FAILED_SOCKET_RETRY_EXHAUSTED, generalException, " total attempts = " + i);
                 }
             }
         }
