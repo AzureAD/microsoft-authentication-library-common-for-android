@@ -366,7 +366,7 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
                 new UiSelector().text("App Lock enabled")
         );
 
-        if (appLockObj.waitForExists(TimeUnit.SECONDS.toMillis(4))){
+        if (appLockObj.waitForExists(TimeUnit.SECONDS.toMillis(1))){
             final UiObject okObj = device.findObject(
                     new UiSelector().text("OK")
             );
