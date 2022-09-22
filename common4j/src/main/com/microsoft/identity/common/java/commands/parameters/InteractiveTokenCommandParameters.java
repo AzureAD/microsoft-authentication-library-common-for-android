@@ -64,6 +64,7 @@ public class InteractiveTokenCommandParameters extends TokenCommandParameters {
 
     private final List<Map.Entry<String, String>> extraQueryStringParameters;
 
+    @Expose()
     private final List<String> extraScopesToConsent;
 
     public boolean getHandleNullTaskAffinity(){

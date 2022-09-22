@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.commands.parameters;
 
+import com.google.gson.annotations.Expose;
 import com.microsoft.identity.common.java.broker.IBrokerAccount;
 import com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache;
 import com.microsoft.identity.common.java.exception.ArgumentException;
@@ -37,9 +38,16 @@ import lombok.experimental.SuperBuilder;
 @EqualsAndHashCode(callSuper = true)
 public class BrokerSilentTokenCommandParameters extends SilentTokenCommandParameters implements IBrokerTokenCommandParameters {
 
+    @Expose
     private final String callerPackageName;
+
+    @Expose
     private final int callerUid;
+
+    @Expose
     private final String callerAppVersion;
+
+    @Expose
     private final String brokerVersion;
 
     private final IBrokerAccount brokerAccount;
@@ -47,13 +55,18 @@ public class BrokerSilentTokenCommandParameters extends SilentTokenCommandParame
     private final String localAccountId;
     private final int sleepTimeBeforePrtAcquisition;
 
+    @Expose
     private final String negotiatedBrokerProtocolVersion;
 
     // If this flag is true, we will send the x-ms-PKeyAuth Header to the token endpoint.
     // Note: this flag is transferred to a MicrosoftTokenRequest in BaseController.
+    @Expose
     private final boolean pKeyAuthHeaderAllowed;
 
+    @Expose
     private final BrokerRequestType requestType;
+
+    @Expose
     private final String homeTenantId;
 
     @Override
