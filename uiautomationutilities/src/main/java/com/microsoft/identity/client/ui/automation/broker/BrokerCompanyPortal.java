@@ -64,6 +64,7 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
     public final static String COMPANY_PORTAL_APP_NAME = "Intune Company Portal";
     public final static String COMPANY_PORTAL_APK = "CompanyPortal.apk";
     public final static String OLD_COMPANY_PORTAL_APK = "OldCompanyPortal.apk";
+    private final static int PASSWORD_UI_ATTEMPT_COUNT = 3;
 
     final static long ENROLLMENT_PAGE_TIMEOUT = TimeUnit.SECONDS.toMillis(45);
 
@@ -203,16 +204,23 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
         // Company portal password page is somewhat inconsistent, found out turning off battery optimization helps from testing
         disableBatteryOptimization();
 
-        // Sometimes, ui for password page fails to become visible. Catch that particular exception, relaunch the app, and try again.
-        try {
-            signInThroughFrontPage(username, password, isFederated);
-        } catch (AssertionError e) {
-            if (e.getMessage().contains("UiSelector[RESOURCE_ID=i0118]")) {
-                forceStop();
-                launch();
+        // Sometimes, ui for password page in company portal fails to become visible.
+        // Catch that particular exception, relaunch the app, and try again.
+        for (int i = 1; i <= PASSWORD_UI_ATTEMPT_COUNT; i++) {
+            try {
                 signInThroughFrontPage(username, password, isFederated);
-            } else {
-                throw e;
+            } catch (AssertionError assertionError) {
+                if (!assertionError.getMessage().contains("UiSelector[RESOURCE_ID=i0118]") || i == PASSWORD_UI_ATTEMPT_COUNT) {
+                    throw assertionError;
+                }
+
+                forceStop();
+                try {
+                    Thread.sleep(TimeUnit.SECONDS.toMillis(3));
+                } catch (InterruptedException interruptedException) {
+                    interruptedException.printStackTrace();
+                }
+                launch();
             }
         }
 
@@ -220,7 +228,7 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
         final UiObject accessSetupScreen = UiAutomatorUtils.obtainUiObjectWithText("Access Setup");
         Assert.assertTrue(
                 "CP Enrollment - Access Setup screen appears",
-                accessSetupScreen.exists()
+                accessSetupScreen.waitForExists(CommonUtils.FIND_UI_ELEMENT_TIMEOUT_LONG)
         );
 
         // click on BEGIN button to start enroll
