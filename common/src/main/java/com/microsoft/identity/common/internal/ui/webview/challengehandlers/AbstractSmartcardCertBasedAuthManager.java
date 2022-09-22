@@ -24,6 +24,9 @@ package com.microsoft.identity.common.internal.ui.webview.challengehandlers;
 
 import androidx.annotation.NonNull;
 
+import java.security.PrivateKey;
+import java.security.cert.X509Certificate;
+
 import javax.annotation.Nonnull;
 
 /**
@@ -56,9 +59,9 @@ public abstract class AbstractSmartcardCertBasedAuthManager {
     abstract boolean isDeviceConnected();
 
     /**
-     * Runs implementation specific processes that may need to occur prior to authentication.
+     * Runs implementation specific processes that may need to occur just before calling {@link android.webkit.ClientCertRequest#proceed(PrivateKey, X509Certificate[])}.
      */
-    abstract void prepareForAuth();
+    abstract void initBeforeProceedingWithRequest();
 
     /**
      * Cleanup to be done upon host activity being destroyed.

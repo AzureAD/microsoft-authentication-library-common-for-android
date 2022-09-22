@@ -310,7 +310,7 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
                                          @NonNull final ClientCertRequest request)
             throws Exception {
         //Each type of smartcard manager could have different preparation steps before proceeding with a ClientCertRequest.
-        mSmartcardCertBasedAuthManager.prepareForAuth();
+        mSmartcardCertBasedAuthManager.initBeforeProceedingWithRequest();
         //PivPrivateKey implements PrivateKey. Note that the PIN is copied in pivPrivateKey.
         final PrivateKey privateKey = session.getKeyForAuth(certDetails, pin);
         //Cert chain only needs the cert to be used for authentication.

@@ -166,8 +166,8 @@ public class YubiKitCertBasedAuthManager extends AbstractSmartcardCertBasedAuthM
      * Adds a PivProvider instance to the Java static Security List (and emits relevant telemetry).
      */
     @Override
-    public void prepareForAuth() {
-        final String methodTag = TAG + ":PrepareForAuth";
+    public void initBeforeProceedingWithRequest() {
+        final String methodTag = TAG + ":initBeforeProceedingWithRequest";
         //Need to add a PivProvider instance to the beginning of the array of Security providers in order for signature logic to occur.
         //Note that this provider is removed when the UsbYubiKeyDevice connection is closed.
         final PivProviderStatusEvent pivProviderStatusEvent = new PivProviderStatusEvent();
