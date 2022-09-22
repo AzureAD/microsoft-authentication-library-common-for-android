@@ -20,15 +20,23 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java.logging;
+package com.microsoft.identity.common.java.crypto;
 
-/**
- * An extension of ILoggerCallback - so that it prints the discarded log.
- * This is for testing only (to verify that logs are actually discarded).
- */
-interface IDetailedLoggerCallback extends ILoggerCallback {
+import com.microsoft.identity.common.java.exception.ClientException;
+
+import lombok.NonNull;
+
+public interface IHMacSigner {
+
     /**
-     * Messages that are discarded by the loggers.
+     * Signs the data Signature with HMAC.
+     *
+     * @param keyData           the key data.
+     * @param hmacAlgorithm     algorithm for signing the data.
+     * @param dataToBeSigned    the data to be signed.
+     * @return signed data.
      */
-    void discardedLog(String tag, Logger.LogLevel logLevel, String message, boolean containsPII);
+    byte[] sign(final byte[] keyData,
+                @NonNull final String hmacAlgorithm,
+                final byte[] dataToBeSigned) throws ClientException;
 }
