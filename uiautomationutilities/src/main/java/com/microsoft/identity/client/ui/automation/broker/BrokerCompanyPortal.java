@@ -203,26 +203,7 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
 
         // Company portal password page is somewhat inconsistent, found out turning off battery optimization helps from testing
         disableBatteryOptimization();
-
-        // Sometimes, ui for password page in company portal fails to become visible.
-        // Catch that particular exception, relaunch the app, and try again.
-        for (int i = 1; i <= PASSWORD_UI_ATTEMPT_COUNT; i++) {
-            try {
-                signInThroughFrontPage(username, password, isFederated);
-            } catch (AssertionError assertionError) {
-                if (!assertionError.getMessage().contains("UiSelector[RESOURCE_ID=i0118]") || i == PASSWORD_UI_ATTEMPT_COUNT) {
-                    throw assertionError;
-                }
-
-                forceStop();
-                try {
-                    Thread.sleep(TimeUnit.SECONDS.toMillis(3));
-                } catch (InterruptedException interruptedException) {
-                    interruptedException.printStackTrace();
-                }
-                launch();
-            }
-        }
+        signInThroughFrontPage(username, password, isFederated);
 
         // click the activate device admin btn
         final UiObject accessSetupScreen = UiAutomatorUtils.obtainUiObjectWithText("Access Setup");
