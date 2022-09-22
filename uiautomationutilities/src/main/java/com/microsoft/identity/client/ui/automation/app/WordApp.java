@@ -36,7 +36,6 @@ import com.microsoft.identity.client.ui.automation.installer.PlayStore;
 import com.microsoft.identity.client.ui.automation.interaction.FirstPartyAppPromptHandlerParameters;
 import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.MicrosoftStsPromptHandler;
 import com.microsoft.identity.client.ui.automation.logging.Logger;
-import com.microsoft.identity.client.ui.automation.utils.CommonUtils;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
 import org.junit.Assert;
@@ -135,6 +134,18 @@ public class WordApp extends App implements IFirstPartyApp {
     @Override
     public void confirmAccount(@NonNull final String username) {
         Logger.i(TAG, "Confirming account with supplied username is signed in..");
+
+        // Had a screen for microsoft 365 pop up occasionally
+        final UiObject msft365Object = UiAutomatorUtils.obtainUiObjectWithText("Go Premium with Microsoft 365 Personal");
+        if (msft365Object.exists()) {
+            final UiObject skipObject = UiAutomatorUtils.obtainUiObjectWithText("SKIP FOR NOW");
+            try {
+                skipObject.click();
+            } catch (UiObjectNotFoundException e) {
+                // Nothing, just want to ignore this
+            }
+        }
+
         UiAutomatorUtils.handleButtonClick("com.microsoft.office.word:id/docsui_me_image");
 
         final UiObject testAccountLabelWord = UiAutomatorUtils.obtainUiObjectWithText(username);

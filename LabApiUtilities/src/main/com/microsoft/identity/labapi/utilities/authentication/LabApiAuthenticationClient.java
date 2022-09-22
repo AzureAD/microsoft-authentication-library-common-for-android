@@ -72,14 +72,14 @@ public class LabApiAuthenticationClient implements IAccessTokenSupplier {
 
     @Override
     public String getAccessToken() throws LabApiException {
-        for (int i = 0; i < SOCKET_ATTEMPT_COUNT; i++) {
+        for (int i = 1; i <= SOCKET_ATTEMPT_COUNT; i++) {
             try {
                 return getAccessTokenInternal();
             } catch (Exception generalException) {
                 if (!generalException.getCause().toString().contains("java.net.SocketTimeoutException: timeout")) {
                     throw generalException;
                 }
-                if (i == SOCKET_ATTEMPT_COUNT - 1) {
+                if (i == SOCKET_ATTEMPT_COUNT) {
                     throw new LabApiException(LabError.FAILED_SOCKET_RETRY_EXHAUSTED, generalException, " total attempts = " + i);
                 }
             }
