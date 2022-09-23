@@ -387,11 +387,10 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
             @Nullable final String realm,
             @Nullable final String target,
             @Nullable final String authScheme,
-            @Nullable final String requestedClaims) {
+            @Nullable final String requestedClaims,
+            @Nullable final List<Credential> inputCredentials) {
         final String methodTag = TAG + ":getCredentialsFilteredBy";
-        Logger.verbose(methodTag, "getCredentialsFilteredBy()");
-
-        final List<Credential> allCredentials = getCredentials();
+        Logger.verbose(TAG, "getCredentialsFilteredBy()");
 
         final List<Credential> matchingCredentials = getCredentialsFilteredByInternal(
                 homeAccountId,
@@ -402,7 +401,7 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
                 target,
                 authScheme,
                 requestedClaims,
-                allCredentials
+                inputCredentials
         );
 
         Logger.verbose(methodTag, "Found [" + matchingCredentials.size() + "] matching Credentials...");
@@ -449,18 +448,13 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
             throw new IllegalArgumentException("Param [accountToRemove] cannot be null.");
         }
 
-        final Map<String, AccountRecord> accounts = getAccountsWithKeys();
+        final String cacheKey = mCacheValueDelegate.generateCacheKey(accountToRemove);
 
         boolean accountRemoved = false;
-        for (final Map.Entry<String, AccountRecord> entry : accounts.entrySet()) {
-            Logger.verbosePII(methodTag, "Inspecting: [" + entry.getKey() + "]");
-            final IAccountRecord currentAccount = entry.getValue();
-
-            if (currentAccount.equals(accountToRemove)) {
-                mSharedPreferencesFileManager.remove(entry.getKey());
-                accountRemoved = true;
-                break;
-            }
+        if (mSharedPreferencesFileManager.keySet().contains(cacheKey))
+        {
+            mSharedPreferencesFileManager.remove(cacheKey);
+            accountRemoved = true;
         }
 
         Logger.info(methodTag, "Account was removed? [" + accountRemoved + "]");
@@ -477,18 +471,13 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
             throw new IllegalArgumentException("Param [credentialToRemove] cannot be null.");
         }
 
-        final Map<String, Credential> credentials = getCredentialsWithKeys();
+        final String cacheKey = mCacheValueDelegate.generateCacheKey(credentialToRemove);
 
         boolean credentialRemoved = false;
-        for (final Map.Entry<String, Credential> entry : credentials.entrySet()) {
-            Logger.verbosePII(methodTag, "Inspecting: [" + entry.getKey() + "]");
-            final Credential currentCredential = entry.getValue();
-
-            if (currentCredential.equals(credentialToRemove)) {
-                mSharedPreferencesFileManager.remove(entry.getKey());
-                credentialRemoved = true;
-                break;
-            }
+        if (mSharedPreferencesFileManager.keySet().contains(cacheKey))
+        {
+            mSharedPreferencesFileManager.remove(cacheKey);
+            credentialRemoved = true;
         }
 
         Logger.info(methodTag, "Credential was removed? [" + credentialRemoved + "]");
