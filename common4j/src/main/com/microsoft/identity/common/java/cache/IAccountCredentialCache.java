@@ -157,7 +157,8 @@ public interface IAccountCredentialCache {
             final String realm,
             final String target,
             final String authScheme,
-            final String requestedClaims
+            final String requestedClaims,
+            final List<Credential> inputCredentials
     );
 
     /**
