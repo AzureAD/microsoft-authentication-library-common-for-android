@@ -12,9 +12,12 @@ parameters:
   default: $(Build.SourcesDirectory)
 
 steps:
-- task: Gradle@2
+- task: Gradle@3
   displayName: 'Run Spotbugs'
   inputs:
+    javaHomeSelection: JDKVersion
+    jdkVersionOption: "1.11"
+    jdkArchitecture: x64
     cwd: ${{ parameters.cwd }}
     tasks: ${{ parameters.project }}:${{ parameters.spotbugsCommand }}
     publishJUnitResults: false

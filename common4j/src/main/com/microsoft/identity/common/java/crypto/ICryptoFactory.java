@@ -20,15 +20,51 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java.logging;
+package com.microsoft.identity.common.java.crypto;
+
+import com.microsoft.identity.common.java.exception.ClientException;
+
+import java.security.KeyFactory;
+import java.security.KeyPairGenerator;
+import java.security.Signature;
+
+import javax.crypto.Cipher;
+import javax.crypto.Mac;
+
+import lombok.NonNull;
 
 /**
- * An extension of ILoggerCallback - so that it prints the discarded log.
- * This is for testing only (to verify that logs are actually discarded).
+ * Representing a class for generating crypto objects.
  */
-interface IDetailedLoggerCallback extends ILoggerCallback {
+public interface ICryptoFactory {
+
     /**
-     * Messages that are discarded by the loggers.
+     * Gets a {@link Signature} crypto object
      */
-    void discardedLog(String tag, Logger.LogLevel logLevel, String message, boolean containsPII);
+    @NonNull
+    Signature getSignature(@NonNull final String algorithm) throws ClientException;
+
+    /**
+     * Gets a {@link Cipher} crypto object
+     */
+    @NonNull
+    Cipher getCipher(@NonNull final String algorithm) throws ClientException;
+
+    /**
+     * Gets a {@link Mac} crypto object
+     */
+    @NonNull
+    Mac getMac(@NonNull final String algorithm) throws ClientException;
+
+    /**
+     * Gets a {@link KeyPairGenerator} crypto object
+     */
+    @NonNull
+    KeyPairGenerator getKeyPairGenerator(@NonNull final String algorithm) throws ClientException;
+
+    /**
+     * Gets a {@link KeyFactory} crypto object
+     */
+    @NonNull
+    KeyFactory getKeyFactory(@NonNull final String algorithm) throws ClientException;
 }

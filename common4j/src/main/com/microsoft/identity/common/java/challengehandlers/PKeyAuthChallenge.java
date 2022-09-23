@@ -186,27 +186,10 @@ public class PKeyAuthChallenge {
                     );
         }
 
-        final PrivateKey privateKey = deviceCertProxy.getPrivateKey();
-        if (privateKey == null) {
-            throw new ClientException(ErrorStrings.KEY_CHAIN_PRIVATE_KEY_EXCEPTION);
-        }
-
-        final PublicKey publicKey = deviceCertProxy.getPublicKey();
-        if (publicKey == null) {
-            throw new ClientException(ErrorStrings.KEY_CHAIN_PUBLIC_KEY_EXCEPTION);
-        }
-
-        final X509Certificate certificate = deviceCertProxy.getCertificate();
-        if (certificate == null) {
-            throw new ClientException(ErrorStrings.KEY_CHAIN_CERTIFICATE_EXCEPTION);
-        }
-
         final String jwt = mJwsBuilder.generateSignedJWT(
                 mNonce,
                 mSubmitUrl,
-                privateKey,
-                publicKey,
-                certificate);
+                deviceCertProxy);
 
         Logger.info(TAG + methodName, "Generated a signed challenge response.");
 

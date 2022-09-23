@@ -1,5 +1,6 @@
 # File: azure-pipelines\pull-request-validation\common4j.yml
 # Description: Run test in common4j
+# Uses Java 11
 name: $(date:yyyyMMdd)$(rev:.r)
 
 trigger: none
