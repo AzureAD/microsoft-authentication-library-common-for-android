@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.ui.webview.challengehandlers;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import java.security.PrivateKey;
 import java.util.List;
@@ -46,7 +47,7 @@ public interface ISmartcardSession {
      * @return true if PIN is verified; false otherwise.
      * @throws Exception that could vary upon smartcard type.
      */
-    boolean verifyPin(char[] pin) throws Exception;
+    boolean verifyPin(@NonNull final char[] pin) throws Exception;
 
     /**
      * Gets number of PIN attempts remaining for smartcard.
@@ -63,5 +64,6 @@ public interface ISmartcardSession {
      * @throws Exception that could vary upon smartcard type.
      */
     @NonNull
-    PrivateKey getKeyForAuth(ICertDetails certDetails, char[] pin) throws Exception;
+    PrivateKey getKeyForAuth(@NonNull final ICertDetails certDetails,
+                             @NonNull final char[] pin) throws Exception;
 }

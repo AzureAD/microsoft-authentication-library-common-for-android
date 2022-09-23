@@ -40,8 +40,8 @@ import androidx.annotation.RequiresApi;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.broker.PackageHelper;
-import com.microsoft.identity.common.internal.ui.webview.challengehandlers.ClientCertAuthChallengeHandler;
-import com.microsoft.identity.common.internal.ui.webview.challengehandlers.SmartcardCertBasedAuthManagerFactory;
+import com.microsoft.identity.common.internal.ui.webview.challengehandlers.CertBasedAuthFactory;
+import com.microsoft.identity.common.internal.ui.webview.challengehandlers.ICertBasedAuthChallengeHandler;
 import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallenge;
 import com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallengeFactory;
@@ -78,17 +78,17 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     public static final String ERROR_SUBCODE = "error_subcode";
     public static final String ERROR_DESCRIPTION = "error_description";
     private final String mRedirectUrl;
-    private final ClientCertAuthChallengeHandler mClientCertAuthChallengeHandler;
+    private final CertBasedAuthFactory mCertBasedAuthFactory;
+    private ICertBasedAuthChallengeHandler mCertBasedAuthChallengeHandler;
 
     public AzureActiveDirectoryWebViewClient(@NonNull final Activity activity,
                                              @NonNull final IAuthorizationCompletionCallback completionCallback,
                                              @NonNull final OnPageLoadedCallback pageLoadedCallback,
-                                             @NonNull final String redirectUrl) {
+                                             @NonNull final String redirectUrl,
+                                             @NonNull final CertBasedAuthFactory certBasedAuthFactory) {
         super(activity, completionCallback, pageLoadedCallback);
         mRedirectUrl = redirectUrl;
-        //Creating ClientCertAuthChallengeHandler starts smartcard usb discovery
-        mClientCertAuthChallengeHandler = new ClientCertAuthChallengeHandler(getActivity(),
-                SmartcardCertBasedAuthManagerFactory.getSmartcardCertBasedAuthManager(getActivity()));
+        mCertBasedAuthFactory = certBasedAuthFactory;
     }
 
     /**
@@ -457,26 +457,17 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     @Override
-    public void onReceivedClientCertRequest(WebView view,
+    public void onReceivedClientCertRequest(final WebView view,
                                             final ClientCertRequest clientCertRequest) {
-        final String methodTag = TAG + ":onReceivedClientCertRequest";
-        if (mClientCertAuthChallengeHandler != null) {
-            mClientCertAuthChallengeHandler.processChallenge(clientCertRequest);
-        } else {
-            Logger.error(methodTag, "ClientCertRequest cannot be handled due to mClientCertAuthChallengeHandler being null.", null);
-        }
+        mCertBasedAuthChallengeHandler = mCertBasedAuthFactory.createCertBasedAuthChallengeHandler();
+        mCertBasedAuthChallengeHandler.processChallenge(clientCertRequest);
     }
 
     /**
-     * A wrapper to stop a smartcard manager instance from detecting any more Usb devices.
+     * Cleanup to be done when host activity is being destroyed.
      */
-    public void stopSmartcardUsbDiscovery() {
-        final String methodTag = TAG + ":stopSmartcardUsbDiscovery";
-        if (mClientCertAuthChallengeHandler != null) {
-            mClientCertAuthChallengeHandler.stopSmartcardUsbDiscovery();
-        } else {
-            Logger.error(methodTag, "Usb discovery not stopped due to mClientCertAuthChallengeHandler being null", null);
-        }
+    public void onDestroy() {
+        mCertBasedAuthFactory.onDestroy();
     }
 
     /**
@@ -484,11 +475,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      * @param response a RawAuthorizationResult object received upon a challenge response received.
      */
     public void emitTelemetryForCertBasedAuthResult(@NonNull final RawAuthorizationResult response) {
-        final String methodTag = TAG + ":emitTelemetryForCertBasedAuthResult";
-        if (mClientCertAuthChallengeHandler != null) {
-            mClientCertAuthChallengeHandler.emitTelemetryForCertBasedAuthResults(response);
-        } else {
-            Logger.error(methodTag, "CBA results won't be emitted due to mClientCertAuthChallengeHandler being null", null);
+        if (mCertBasedAuthChallengeHandler != null) {
+            //The challenge handler checks if CBA was proceeded with and emits telemetry.
+            mCertBasedAuthChallengeHandler.emitTelemetryForCertBasedAuthResults(response);
         }
     }
 

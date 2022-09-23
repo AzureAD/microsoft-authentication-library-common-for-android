@@ -22,12 +22,12 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.challengehandlers;
 
-import java.security.PrivateKey;
-import java.security.PublicKey;
+import com.microsoft.identity.common.java.exception.ClientException;
+
 import java.security.cert.X509Certificate;
-import java.security.interfaces.RSAPrivateKey;
-import java.security.interfaces.RSAPublicKey;
 import java.util.List;
+
+import lombok.NonNull;
 
 /**
  * Work place join related certificate is required to respond device challenge.
@@ -47,21 +47,8 @@ public interface IDeviceCertificate {
      *
      * @return {@link X509Certificate}
      */
-    X509Certificate getCertificate();
-
-    /**
-     * Gets a private key.
-     *
-     * @return private key
-     */
-    PrivateKey getPrivateKey();
-
-    /**
-     * Gets a public key.
-     *
-     * @return RSA public key.
-     */
-    PublicKey getPublicKey();
+    @NonNull
+    X509Certificate getX509();
 
     /**
      * Gets thumbPrint for certificate.
@@ -69,5 +56,13 @@ public interface IDeviceCertificate {
      * @return thumbPrint for certificate.
      */
     String getThumbPrint();
+
+    /**
+     * Signs a piece of data with the (private key associated to the) certificate.
+     *
+     * @param algorithm         algorithm for signing the data.
+     * @param dataToBeSigned    the data to be signed.
+     */
+    byte[] sign(@NonNull final String algorithm, final byte[] dataToBeSigned) throws ClientException;
 }
 

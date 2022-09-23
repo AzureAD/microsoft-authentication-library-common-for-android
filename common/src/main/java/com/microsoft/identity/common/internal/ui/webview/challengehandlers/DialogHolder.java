@@ -47,7 +47,7 @@ public class DialogHolder {
      * Creates new instance of DialogHolder.
      * @param activity Current host activity.
      */
-    DialogHolder(@NonNull final Activity activity) {
+    public DialogHolder(@NonNull final Activity activity) {
         mActivity = activity;
         mCurrentDialog = null;
     }

@@ -22,20 +22,21 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.ui.webview.challengehandlers;
 
+import android.webkit.ClientCertRequest;
+
 import androidx.annotation.NonNull;
 
-import java.security.cert.X509Certificate;
+import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 
 /**
- * Holds X509Certificate and other important details that may be implementation specific.
+ * ChallengeHandler extended interface specifically for certificate based authentication (CBA)
+ *  implementations.
  */
-public interface ICertDetails {
-
+public interface ICertBasedAuthChallengeHandler extends IChallengeHandler<ClientCertRequest, Void> {
+    
     /**
-     * Gets certificate.
-     * @return certificate.
+     * Emit telemetry for results from certificate based authentication (CBA) if CBA occurred.
+     * @param response a RawAuthorizationResult object received upon a challenge response received.
      */
-    @NonNull
-    X509Certificate getCertificate();
-
+    void emitTelemetryForCertBasedAuthResults(@NonNull final RawAuthorizationResult response);
 }

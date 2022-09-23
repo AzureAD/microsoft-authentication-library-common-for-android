@@ -40,6 +40,10 @@ import androidx.annotation.VisibleForTesting;
 import androidx.fragment.app.FragmentActivity;
 
 import com.microsoft.identity.common.R;
+import com.microsoft.identity.common.internal.ui.webview.challengehandlers.AbstractSmartcardCertBasedAuthManager;
+import com.microsoft.identity.common.internal.ui.webview.challengehandlers.CertBasedAuthFactory;
+import com.microsoft.identity.common.internal.ui.webview.challengehandlers.DialogHolder;
+import com.microsoft.identity.common.internal.ui.webview.challengehandlers.YubiKitCertBasedAuthManager;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
@@ -180,7 +184,15 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                         }
                     }
                 },
-                mRedirectUri);
+                mRedirectUri,
+                //Starts smartcard usb discovery.
+                //Only create instance of YubiKitCertBasedAuthManager,
+                // since this is the only implementation of AbstractSmartcardCertBasedAuthManager
+                // that we have right now.
+                new CertBasedAuthFactory(
+                        activity,
+                        new YubiKitCertBasedAuthManager(activity.getApplicationContext()),
+                        new DialogHolder(activity)));
         setUpWebView(view, mAADWebViewClient);
 
         mWebView.post(new Runnable() {
@@ -267,9 +279,9 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         super.onDestroy();
         final String methodTag = TAG + ":onDestroy";
         if (mAADWebViewClient != null) {
-            mAADWebViewClient.stopSmartcardUsbDiscovery();
+            mAADWebViewClient.onDestroy();
         } else {
-            Logger.error(methodTag, "Usb discovery not stopped due to mAADWebViewClient being null", null);
+            Logger.error(methodTag, "Fragment destroyed, but smartcard usb discovery was unable to be stopped.", null);
         }
     }
 
@@ -293,8 +305,10 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         public void onChallengeResponseReceived(@NonNull final RawAuthorizationResult response) {
             final String methodTag = TAG + ":onChallengeResponseReceived";
             Logger.info(methodTag, null, "onChallengeResponseReceived:" + response.getResultCode());
-            //No telemetry will be emitted if CBA did not occur.
-            mAADWebViewClient.emitTelemetryForCertBasedAuthResult(response);
+            if (mAADWebViewClient != null) {
+                //No telemetry will be emitted if CBA did not occur.
+                mAADWebViewClient.emitTelemetryForCertBasedAuthResult(response);
+            }
             sendResult(response);
             finish();
         }

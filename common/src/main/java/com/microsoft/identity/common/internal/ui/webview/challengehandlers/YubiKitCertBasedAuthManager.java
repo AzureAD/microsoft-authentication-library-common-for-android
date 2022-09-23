@@ -22,7 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.ui.webview.challengehandlers;
 
-import android.app.Activity;
+import android.content.Context;
 import android.os.Build;
 
 import androidx.annotation.NonNull;
@@ -48,7 +48,7 @@ import java.util.concurrent.Callable;
 /**
  * Utilizes YubiKit in order to detect and interact with YubiKeys for smartcard certificate based authentication.
  */
-public class YubiKitCertBasedAuthManager implements ISmartcardCertBasedAuthManager {
+public class YubiKitCertBasedAuthManager extends AbstractSmartcardCertBasedAuthManager {
 
     private static final String TAG = YubiKitCertBasedAuthManager.class.getSimpleName();
     private static final String MDEVICE_NULL_ERROR_MESSAGE = "Instance UsbYubiKitDevice variable (mDevice) is null.";
@@ -61,27 +61,28 @@ public class YubiKitCertBasedAuthManager implements ISmartcardCertBasedAuthManag
 
     /**
      * Create new instance of YubiKitCertBasedAuthManager.
-     * @param activity current host activity.
+     * @param context current application context.
      */
-    YubiKitCertBasedAuthManager(Activity activity) {
-        mYubiKitManager = new YubiKitManager(activity.getApplicationContext());
+    public YubiKitCertBasedAuthManager(@NonNull final Context context) {
+        mYubiKitManager = new YubiKitManager(context);
     }
 
     /**
      * Create and start YubiKitManager for UsbDiscovery mode.
      * When in Usb Discovery mode, Yubikeys that plug into the device will be accessible
      *  once the user provides permission via the Android permission dialog.
-     * @param startDiscoveryCallback Contains callbacks to run when a YubiKey is connected and disconnected.
      */
     @Override
-    public void startDiscovery(IStartDiscoveryCallback startDiscoveryCallback) {
+    public void startDiscovery() {
         mYubiKitManager.startUsbDiscovery(new UsbConfiguration(), new Callback<UsbYubiKeyDevice>() {
             @Override
             public void invoke(@NonNull UsbYubiKeyDevice device) {
                 Logger.verbose(TAG, "A YubiKey device was connected");
                 synchronized (sDeviceLock) {
                     mDevice = device;
-                    startDiscoveryCallback.onStartDiscovery();
+                    if (mDiscoveryCallback != null) {
+                        mDiscoveryCallback.onCreateConnection();
+                    }
 
                     mDevice.setOnClosed(new Runnable() {
                         @Override
@@ -100,7 +101,9 @@ public class YubiKitCertBasedAuthManager implements ISmartcardCertBasedAuthManag
                                 Telemetry.emit(pivProviderStatusEvent.putPivProviderRemoved(false));
                                 Logger.info(TAG, "An instance of PivProvider was not present in Security static list upon YubiKey device connection being closed.");
                             }
-                            startDiscoveryCallback.onClosedConnection();
+                            if (mDiscoveryCallback != null) {
+                                mDiscoveryCallback.onClosedConnection();
+                            }
                         }
 
                     });
@@ -119,13 +122,13 @@ public class YubiKitCertBasedAuthManager implements ISmartcardCertBasedAuthManag
     }
 
     /**
-     * Attempt to get a PivSession instance in order to carry out methods
+     * Request a PivSession instance in order to carry out methods
      *  implemented in YubiKitSmartcardSession.
      * @param callback Contains callbacks to run when a PivSession is successfully instantiated and when any exception is thrown due to a connection issue.
      */
     @Override
-    public void attemptDeviceSession(@NonNull final ISessionCallback callback) {
-        final String methodTag = TAG + "attemptDeviceSession:";
+    public void requestDeviceSession(@NonNull final ISessionCallback callback) {
+        final String methodTag = TAG + "requestDeviceSession:";
         synchronized (sDeviceLock) {
             if (mDevice == null) {
                 Logger.error(methodTag, MDEVICE_NULL_ERROR_MESSAGE, null);
@@ -138,7 +141,7 @@ public class YubiKitCertBasedAuthManager implements ISmartcardCertBasedAuthManag
                     try {
                         final SmartCardConnection c = value.getValue();
                         final PivSession piv = new PivSession(c);
-                        YubiKitSmartcardSession session = new YubiKitSmartcardSession(piv);
+                        final YubiKitSmartcardSession session = new YubiKitSmartcardSession(piv);
                         callback.onGetSession(session);
                     } catch (final Exception e) {
                         callback.onException(e);
@@ -163,26 +166,32 @@ public class YubiKitCertBasedAuthManager implements ISmartcardCertBasedAuthManag
      * Adds a PivProvider instance to the Java static Security List (and emits relevant telemetry).
      */
     @Override
-    public void prepareForAuth() {
-        final String methodTag = TAG + ":PrepareForAuth";
+    public void initBeforeProceedingWithRequest() {
+        final String methodTag = TAG + ":initBeforeProceedingWithRequest";
         //Need to add a PivProvider instance to the beginning of the array of Security providers in order for signature logic to occur.
         //Note that this provider is removed when the UsbYubiKeyDevice connection is closed.
         final PivProviderStatusEvent pivProviderStatusEvent = new PivProviderStatusEvent();
         if (Security.getProvider(YUBIKEY_PROVIDER) != null) {
-            //Remove existing PivProvider.
             Security.removeProvider(YUBIKEY_PROVIDER);
             //The PivProvider instance is either unexpectedly being added elsewhere
             // or it isn't being removed properly upon CBA flow termination.
             Telemetry.emit(pivProviderStatusEvent.putIsExistingPivProviderPresent(true));
             Logger.info(methodTag, "Existing PivProvider was present in Security static list.");
         } else {
-            //This is expected behavior.
             Telemetry.emit(pivProviderStatusEvent.putIsExistingPivProviderPresent(false));
             Logger.info(methodTag, "Security static list does not have existing PivProvider.");
         }
         //The position parameter is 1-based (1 maps to index 0).
         Security.insertProviderAt(new PivProvider(getPivProviderCallback()), 1);
         Logger.info(methodTag, "An instance of PivProvider was added to Security static list.");
+    }
+
+    /**
+     * Cleanup to be done upon host activity being destroyed.
+     */
+    @Override
+    public void onDestroy() {
+        stopDiscovery();
     }
 
     /**

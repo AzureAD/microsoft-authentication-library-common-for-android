@@ -20,23 +20,23 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.ui.webview.challengehandlers;
+package com.microsoft.identity.common.java.crypto;
 
-import android.app.Activity;
+import com.microsoft.identity.common.java.exception.ClientException;
 
-/**
- * Instantiates ISmartcardCertBasedAuthManagers for certificate based authentication.
- */
-public class SmartcardCertBasedAuthManagerFactory {
+import lombok.NonNull;
+
+public interface IHMacSigner {
 
     /**
-     * Creates and returns an applicable instance of ISmartcardCertBasedAuthManager.
-     * @param activity Current host activity.
-     * @return A ISmartcardCertBasedAuthManager implementation instance.
+     * Signs the data Signature with HMAC.
+     *
+     * @param keyData           the key data.
+     * @param hmacAlgorithm     algorithm for signing the data.
+     * @param dataToBeSigned    the data to be signed.
+     * @return signed data.
      */
-    public static ISmartcardCertBasedAuthManager getSmartcardCertBasedAuthManager(Activity activity) {
-        //Return instance of YubiKitCertBasedAuthManager, since this is the only implementation of
-        // ISmartcardCertBasedAuthManager we have right now.
-        return new YubiKitCertBasedAuthManager(activity);
-    }
+    byte[] sign(final byte[] keyData,
+                @NonNull final String hmacAlgorithm,
+                final byte[] dataToBeSigned) throws ClientException;
 }

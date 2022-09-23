@@ -24,24 +24,41 @@ package com.microsoft.identity.common.java.crypto;
 
 import com.microsoft.identity.common.java.exception.ClientException;
 
-import java.security.PrivateKey;
+import java.security.KeyFactory;
+import java.security.KeyPairGenerator;
+import java.security.Signature;
+
+import javax.crypto.Cipher;
+import javax.crypto.Mac;
 
 import lombok.NonNull;
 
 /**
- * Interface for a Signer.
+ * A Factory class that generates/utilizes platform's default crypto objects.
  */
-public interface ISigner {
+public class DefaultCryptoFactory implements ICryptoFactory {
+    @Override
+    public @NonNull Signature getSignature(@NonNull String algorithm) throws ClientException {
+        return ProviderFactory.getSignature(algorithm, null);
+    }
 
-    /**
-     * Signs with a {@link PrivateKey}.
-     *
-     * @param key                  the key to sign.
-     * @param signingAlgorithm     algorithm for signing the data.
-     * @param dataToBeSigned       the data to be signed.
-     * @return signed data.
-     */
-    byte[] sign(@NonNull final PrivateKey key,
-                @NonNull final String signingAlgorithm,
-                byte[] dataToBeSigned) throws ClientException;
+    @Override
+    public @NonNull Cipher getCipher(@NonNull String algorithm) throws ClientException {
+        return ProviderFactory.getCipher(algorithm, null);
+    }
+
+    @Override
+    public @NonNull Mac getMac(@NonNull String algorithm) throws ClientException {
+        return ProviderFactory.getMac(algorithm, null);
+    }
+
+    @Override
+    public @NonNull KeyPairGenerator getKeyPairGenerator(@NonNull String algorithm) throws ClientException {
+        return ProviderFactory.getKeyPairGenerator(algorithm, null);
+    }
+
+    @Override
+    public @NonNull KeyFactory getKeyFactory(@NonNull String algorithm) throws ClientException {
+        return ProviderFactory.getKeyFactory(algorithm, null);
+    }
 }
