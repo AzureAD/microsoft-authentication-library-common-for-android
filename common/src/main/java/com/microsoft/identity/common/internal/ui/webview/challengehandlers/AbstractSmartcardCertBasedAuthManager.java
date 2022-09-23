@@ -39,39 +39,39 @@ public abstract class AbstractSmartcardCertBasedAuthManager {
     /**
      * Logic to prepare an Android device to detect smartcards via usb.
      */
-    abstract void startDiscovery();
+    public abstract void startDiscovery();
 
     /**
      * Cease usb discovery of smartcards.
      */
-    abstract void stopDiscovery();
+    public abstract void stopDiscovery();
 
     /**
      * Request an instance of a session in order to carry out methods specific to ISmartcardSession.
      * @param callback Contains callbacks to run when a ISmartcardSession is successfully instantiated and when any exception is thrown due to a connection issue.
      */
-    abstract void requestDeviceSession(@NonNull final ISessionCallback callback);
+    public abstract void requestDeviceSession(@NonNull final ISessionCallback callback);
 
     /**
      * Returns boolean based on if a smartcard device is currently connected to the Android device and detected by our code.
      * @return true if a device is currently connected, false otherwise.
      */
-    abstract boolean isDeviceConnected();
+    public abstract boolean isDeviceConnected();
 
     /**
      * Runs implementation specific processes that may need to occur just before calling {@link android.webkit.ClientCertRequest#proceed(PrivateKey, X509Certificate[])}.
      */
-    abstract void initBeforeProceedingWithRequest();
+    public abstract void initBeforeProceedingWithRequest();
 
     /**
      * Cleanup to be done upon host activity being destroyed.
      */
-    abstract void onDestroy();
+    public abstract void onDestroy();
 
     /**
      * Callback methods to be run upon initial connection and disconnection of a smartcard device.
      */
-    interface IDiscoveryCallback {
+    protected interface IDiscoveryCallback {
         /**
          * Logic to be run upon initial connection of a smartcard device.
          */
@@ -99,7 +99,7 @@ public abstract class AbstractSmartcardCertBasedAuthManager {
     /**
      * Callback which will contain code to be run upon creation of a ISmartcardSession instance.
      */
-    interface ISessionCallback {
+    protected interface ISessionCallback {
         /**
          * Code depending on a ISmartcardSession instance to be run.
          * @param session ISmartcardSession instance.
