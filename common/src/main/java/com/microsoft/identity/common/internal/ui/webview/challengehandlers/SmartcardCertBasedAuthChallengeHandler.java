@@ -86,26 +86,16 @@ public class SmartcardCertBasedAuthChallengeHandler implements ICertBasedAuthCha
 
     /**
      * Called when a ClientCertRequest is received by the AzureActiveDirectoryWebViewClient.
-     * Prompts the user to choose a certificate to authenticate with.
+     * Collects ICertDetails from PIV certificates on smartcard device.
+     * If certificates are found on smartcard, the method proceeds with the smartcard certificate picker.
+     * Otherwise, appropriate error dialogs are shown.
      * @param request ClientCertRequest received from AzureActiveDirectoryWebViewClient.onReceivedClientCertRequest.
      * @return null
      */
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
     public Void processChallenge(ClientCertRequest request) {
-        handleSmartcardCertAuth(request);
-        return null;
-    }
-
-    /**
-     * Collects ICertDetails from PIV certificates on smartcard device.
-     * If certificates are found on smartcard, the method proceeds with the smartcard certificate picker.
-     * Otherwise, appropriate error dialogs are shown.
-     * @param request ClientCertRequest received from AzureActiveDirectoryWebViewClient.onReceivedClientCertRequest.
-     */
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-    private void handleSmartcardCertAuth(@NonNull final ClientCertRequest request) {
-        final String methodTag = TAG + ":handleSmartcardCertAuth";
+        final String methodTag = TAG + ":processChallenge";
         mSmartcardCertBasedAuthManager.requestDeviceSession(new AbstractSmartcardCertBasedAuthManager.ISessionCallback() {
             @Override
             public void onGetSession(@NonNull final ISmartcardSession session) throws Exception {
@@ -146,6 +136,7 @@ public class SmartcardCertBasedAuthChallengeHandler implements ICertBasedAuthCha
                 request.cancel();
             }
         });
+        return null;
     }
 
     /**
