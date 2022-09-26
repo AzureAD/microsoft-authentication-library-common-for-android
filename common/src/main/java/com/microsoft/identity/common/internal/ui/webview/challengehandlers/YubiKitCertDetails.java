@@ -34,8 +34,8 @@ import javax.annotation.Nonnull;
  * Holds certificate found on YubiKey and its corresponding slot.
  */
 public class YubiKitCertDetails implements ICertDetails {
-    private final X509Certificate cert;
-    private final Slot slot;
+    private final X509Certificate mCert;
+    private final Slot mSlot;
 
     /**
      * Creates new instance of YubiKitCertDetails.
@@ -44,8 +44,8 @@ public class YubiKitCertDetails implements ICertDetails {
      */
     public YubiKitCertDetails(@NonNull final X509Certificate cert,
                               @NonNull final Slot slot) {
-        this.cert = cert;
-        this.slot = slot;
+        mCert = cert;
+        mSlot = slot;
     }
 
     /**
@@ -55,7 +55,7 @@ public class YubiKitCertDetails implements ICertDetails {
     @Override
     @NonNull
     public X509Certificate getCertificate() {
-        return cert;
+        return mCert;
     }
 
 
@@ -65,7 +65,7 @@ public class YubiKitCertDetails implements ICertDetails {
      */
     @Nonnull
     public Slot getSlot() {
-        return slot;
+        return mSlot;
     }
 }
 
