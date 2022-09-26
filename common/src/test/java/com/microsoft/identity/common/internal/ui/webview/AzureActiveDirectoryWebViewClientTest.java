@@ -102,8 +102,7 @@ public class AzureActiveDirectoryWebViewClientTest {
                         return;
                     }
                 },
-                TEST_REDIRECT_URI,
-                new CertBasedAuthFactory(mActivity));
+                TEST_REDIRECT_URI);
     }
 
     @Test(expected = IllegalArgumentException.class)

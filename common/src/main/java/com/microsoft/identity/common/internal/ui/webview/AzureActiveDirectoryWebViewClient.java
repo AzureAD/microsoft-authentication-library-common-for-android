@@ -84,11 +84,10 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     public AzureActiveDirectoryWebViewClient(@NonNull final Activity activity,
                                              @NonNull final IAuthorizationCompletionCallback completionCallback,
                                              @NonNull final OnPageLoadedCallback pageLoadedCallback,
-                                             @NonNull final String redirectUrl,
-                                             @NonNull final CertBasedAuthFactory certBasedAuthFactory) {
+                                             @NonNull final String redirectUrl) {
         super(activity, completionCallback, pageLoadedCallback);
         mRedirectUrl = redirectUrl;
-        mCertBasedAuthFactory = certBasedAuthFactory;
+        mCertBasedAuthFactory = new CertBasedAuthFactory(activity);
     }
 
     /**

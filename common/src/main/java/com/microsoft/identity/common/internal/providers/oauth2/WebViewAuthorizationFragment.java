@@ -184,12 +184,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                         }
                     }
                 },
-                mRedirectUri,
-                //Starts smartcard usb discovery.
-                //Only create instance of YubiKitCertBasedAuthManager,
-                // since this is the only implementation of AbstractSmartcardCertBasedAuthManager
-                // that we have right now.
-                new CertBasedAuthFactory(activity));
+                mRedirectUri);
         setUpWebView(view, mAADWebViewClient);
 
         mWebView.post(new Runnable() {
