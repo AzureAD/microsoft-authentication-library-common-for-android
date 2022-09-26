@@ -184,6 +184,28 @@ public interface IAccountCredentialCache {
     );
 
     /**
+     * Returns all of the AccessToken records matching the supplied criteria.
+     *
+     * @param homeAccountId   The homeAccountId used to match Credential cache keys.
+     * @param environment     The environment used to match Credential cache keys.
+     * @param clientId        The clientId used to match Credential cache keys.
+     * @param realm           The realm used to match Credential cache keys.
+     * @param target          The target used to match Credential cache keys.
+     * @param kid             Kid value for access token record
+     * @param requestedClaims The requested claims used to match Credential cache keys.
+     * @return A mutable List of Credentials matching the supplied criteria.
+     */
+    List<Credential> getPoPAccessTokensFilteredBy(
+            final String homeAccountId,
+            final String environment,
+            final String clientId,
+            final String realm,
+            final String target,
+            final String kid,
+            final String requestedClaims
+    );
+
+    /**
      * Removes the supplied Account from the cache.
      *
      * @param accountToRemove The Account to delete.
