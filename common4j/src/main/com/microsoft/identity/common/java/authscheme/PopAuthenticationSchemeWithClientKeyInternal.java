@@ -24,11 +24,11 @@ package com.microsoft.identity.common.java.authscheme;
 
 import static com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeInternal.SerializedNames.CLIENT_CLAIMS;
 import static com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeInternal.SerializedNames.HTTP_METHOD;
+import static com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeInternal.SerializedNames.KID;
 import static com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeInternal.SerializedNames.NONCE;
 import static com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeInternal.SerializedNames.URL;
 
 import com.google.gson.annotations.SerializedName;
-import com.microsoft.identity.common.java.exception.ClientException;
 import com.nimbusds.jose.util.Base64URL;
 
 import org.json.JSONObject;
@@ -57,7 +57,6 @@ public class PopAuthenticationSchemeWithClientKeyInternal
      * The name of this auth scheme as supplied in the Authorization header value.
      */
     public static final String SCHEME_POP_WITH_CLIENT_KEY = "PoP_With_Client_Key";
-    private final String KID = "kid";
 
     @SerializedName(HTTP_METHOD)
     private String mHttpMethod;
@@ -104,7 +103,7 @@ public class PopAuthenticationSchemeWithClientKeyInternal
     }
 
     @Override
-    public String getAccessTokenForScheme(@NonNull final String accessToken) throws ClientException {
+    public String getAccessTokenForScheme(@NonNull final String accessToken) {
         return accessToken;
     }
 
