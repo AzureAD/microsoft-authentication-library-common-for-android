@@ -272,7 +272,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         mWebView.setWebViewClient(webViewClient);
     }
 
-    // For ClientCertAuthChallengeHandler within AADWebViewClient,
+    // For CertBasedAuthChallengeHandler within AADWebViewClient,
     // the smartcard manager needs to stop discovering Usb devices upon fragment destroy.
     @Override
     public void onDestroy() {

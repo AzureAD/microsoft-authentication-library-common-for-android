@@ -28,7 +28,7 @@ import android.app.Dialog;
 import androidx.annotation.NonNull;
 
 /**
- * Lists the main methods needed to show a simple dialog in ClientCertAuthChallengeHandler.
+ * Lists the main methods needed to show a simple dialog in CertBasedAuthChallengeHandler.
  * Button listeners can be implemented in child classes.
  */
 public abstract class SmartcardDialog {
