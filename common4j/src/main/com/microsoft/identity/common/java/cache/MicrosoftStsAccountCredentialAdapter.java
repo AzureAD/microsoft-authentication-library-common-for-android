@@ -22,21 +22,24 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.cache;
 
-import com.microsoft.identity.common.java.exception.ServiceException;
+import static com.microsoft.identity.common.java.AuthenticationConstants.DEFAULT_SCOPES;
+
 import com.microsoft.identity.common.java.dto.AccessTokenRecord;
 import com.microsoft.identity.common.java.dto.AccountRecord;
 import com.microsoft.identity.common.java.dto.CredentialType;
 import com.microsoft.identity.common.java.dto.IdTokenRecord;
 import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
+import com.microsoft.identity.common.java.exception.ServiceException;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAccount;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftRefreshToken;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.ClientInfo;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAccount;
-import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
-import com.microsoft.identity.common.java.providers.oauth2.IDToken;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
+import com.microsoft.identity.common.java.providers.oauth2.IDToken;
+import com.microsoft.identity.common.java.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.java.util.SchemaUtil;
 import com.microsoft.identity.common.java.util.StringUtil;
 
@@ -44,9 +47,6 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-
-import static com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeInternal.SCHEME_POP;
-import static com.microsoft.identity.common.java.AuthenticationConstants.DEFAULT_SCOPES;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.NonNull;
@@ -105,7 +105,7 @@ public class MicrosoftStsAccountCredentialAdapter
             accessToken.setAccessTokenType(response.getTokenType());
 
             // Use case insensitive match - ESTS will not capitalize scheme...
-            if (SCHEME_POP.equalsIgnoreCase(response.getTokenType())) {
+            if (TokenRequest.TokenType.POP.equalsIgnoreCase(response.getTokenType())) {
                 accessToken.setKid(strategy.getDeviceAtPopThumbprint());
             }
 
@@ -120,7 +120,7 @@ public class MicrosoftStsAccountCredentialAdapter
         // Assume default behavior; that token is of 'Bearer' auth scheme.
         String type = CredentialType.AccessToken.name();
 
-        if (SCHEME_POP.equalsIgnoreCase(tokenType)) {
+        if (TokenRequest.TokenType.POP.equalsIgnoreCase(tokenType)) {
             return CredentialType.AccessToken_With_AuthScheme.name();
         }
 
