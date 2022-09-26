@@ -39,4 +39,9 @@ public interface ICertBasedAuthChallengeHandler extends IChallengeHandler<Client
      * @param response a RawAuthorizationResult object received upon a challenge response received.
      */
     void emitTelemetryForCertBasedAuthResults(@NonNull final RawAuthorizationResult response);
+
+    /**
+     * Clean up logic to run when ICertBasedAuthChallengeHandler is no longer going to be used.
+     */
+    void cleanUp();
 }

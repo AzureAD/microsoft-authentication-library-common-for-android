@@ -459,6 +459,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     @Override
     public void onReceivedClientCertRequest(final WebView view,
                                             final ClientCertRequest clientCertRequest) {
+        if (mCertBasedAuthChallengeHandler != null) {
+            mCertBasedAuthChallengeHandler.cleanUp();
+        }
         mCertBasedAuthChallengeHandler = mCertBasedAuthFactory.createCertBasedAuthChallengeHandler();
         mCertBasedAuthChallengeHandler.processChallenge(clientCertRequest);
     }
@@ -467,6 +470,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      * Cleanup to be done when host activity is being destroyed.
      */
     public void onDestroy() {
+        if (mCertBasedAuthChallengeHandler != null) {
+            mCertBasedAuthChallengeHandler.cleanUp();
+        }
         mCertBasedAuthFactory.onDestroy();
     }
 

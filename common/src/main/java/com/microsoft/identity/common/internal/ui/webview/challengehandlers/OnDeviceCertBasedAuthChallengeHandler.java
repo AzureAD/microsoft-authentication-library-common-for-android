@@ -143,4 +143,12 @@ public class OnDeviceCertBasedAuthChallengeHandler implements ICertBasedAuthChal
             }
         }
     }
+
+    /**
+     * Clean up logic to run when ICertBasedAuthChallengeHandler is no longer going to be used.
+     */
+    @Override
+    public void cleanUp() {
+        //Nothing needed at the moment.
+    }
 }

@@ -308,4 +308,14 @@ public class SmartcardCertBasedAuthChallengeHandler implements ICertBasedAuthCha
             }
         }
     }
+
+    /**
+     * Clean up logic to run when ICertBasedAuthChallengeHandler is no longer going to be used.
+     */
+    @Override
+    public void cleanUp() {
+        mDialogHolder.dismissDialog();
+        //Reset IConnectionCallback local variable of mSmartcardCertBasedAuthManager.
+        mSmartcardCertBasedAuthManager.setConnectionCallback(null);
+    }
 }
