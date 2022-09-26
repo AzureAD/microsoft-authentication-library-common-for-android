@@ -27,14 +27,13 @@ import androidx.annotation.NonNull;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 
-import javax.annotation.Nonnull;
-
 /**
  * An abstract manager that can control connections for a particular type of smartcard.
  */
 public abstract class AbstractSmartcardCertBasedAuthManager {
 
-    protected IDiscoveryCallback mDiscoveryCallback;
+    protected IConnectionCallback mConnectionCallback;
+    protected IDiscoveryExceptionCallback mDiscoveryExceptionCallback;
 
     /**
      * Logic to prepare an Android device to detect smartcards via usb.
@@ -69,9 +68,25 @@ public abstract class AbstractSmartcardCertBasedAuthManager {
     abstract void onDestroy();
 
     /**
+     * Sets callbacks to be run for when a smartcard connection is started and ended.
+     * @param connectionCallback an implementation of IConnectionCallback.
+     */
+    public void setConnectionCallback(@NonNull final IConnectionCallback connectionCallback) {
+        mConnectionCallback = connectionCallback;
+    }
+
+    /**
+     * Sets callback to be run for when an exception is thrown during discovery start up.
+     * @param discoveryExceptionCallback an implementation of IDiscoveryExceptionCallback.
+     */
+    public void setDiscoveryExceptionCallback(@NonNull final IDiscoveryExceptionCallback discoveryExceptionCallback) {
+        mDiscoveryExceptionCallback = discoveryExceptionCallback;
+    }
+
+    /**
      * Callback methods to be run upon initial connection and disconnection of a smartcard device.
      */
-    interface IDiscoveryCallback {
+    interface IConnectionCallback {
         /**
          * Logic to be run upon initial connection of a smartcard device.
          */
@@ -81,19 +96,16 @@ public abstract class AbstractSmartcardCertBasedAuthManager {
          * Logic to be run upon disconnection of a smartcard device.
          */
         void onClosedConnection();
+    }
 
+    /**
+     * Callback method to be run upon an exception thrown during discovery start up.
+     */
+    interface IDiscoveryExceptionCallback {
         /**
          * Logic to be run when an exception is thrown.
          */
         void onException();
-    }
-
-    /**
-     * Sets callbacks to be run for startDiscovery.
-     * @param discoveryCallback an implementation of IDiscoveryCallback.
-     */
-    public void setDiscoveryCallback(@NonNull final IDiscoveryCallback discoveryCallback) {
-        mDiscoveryCallback = discoveryCallback;
     }
 
     /**

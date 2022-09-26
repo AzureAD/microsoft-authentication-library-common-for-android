@@ -189,10 +189,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 //Only create instance of YubiKitCertBasedAuthManager,
                 // since this is the only implementation of AbstractSmartcardCertBasedAuthManager
                 // that we have right now.
-                new CertBasedAuthFactory(
-                        activity,
-                        new YubiKitCertBasedAuthManager(activity.getApplicationContext()),
-                        new DialogHolder(activity)));
+                new CertBasedAuthFactory(activity));
         setUpWebView(view, mAADWebViewClient);
 
         mWebView.post(new Runnable() {

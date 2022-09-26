@@ -103,10 +103,7 @@ public class AzureActiveDirectoryWebViewClientTest {
                     }
                 },
                 TEST_REDIRECT_URI,
-                new CertBasedAuthFactory(
-                        mActivity,
-                        new YubiKitCertBasedAuthManager(mActivity.getApplicationContext()),
-                        new DialogHolder(mActivity)));
+                new CertBasedAuthFactory(mActivity));
     }
 
     @Test(expected = IllegalArgumentException.class)

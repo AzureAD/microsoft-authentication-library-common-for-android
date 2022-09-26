@@ -60,9 +60,28 @@ public class SmartcardCertBasedAuthChallengeHandler implements ICertBasedAuthCha
      */
     public SmartcardCertBasedAuthChallengeHandler(@NonNull final AbstractSmartcardCertBasedAuthManager smartcardCertBasedAuthManager,
                                                   @NonNull final DialogHolder dialogHolder) {
+        final String methodTag = TAG + ":SmartcardCertBasedAuthChallengeHandler";
         mIsSmartcardCertBasedAuthProceeding = false;
         mSmartcardCertBasedAuthManager = smartcardCertBasedAuthManager;
         mDialogHolder = dialogHolder;
+        mSmartcardCertBasedAuthManager.setConnectionCallback(new AbstractSmartcardCertBasedAuthManager.IConnectionCallback() {
+            @Override
+            public void onCreateConnection() {
+                //Reset DialogHolder to null if necessary.
+                //In this case, DialogHolder would be an ErrorDialog if not null.
+                mDialogHolder.dismissDialog();
+            }
+
+            @Override
+            public void onClosedConnection() {
+                //Show an error dialog informing users that they have unplugged their device only if a dialog is still showing.
+                if (mDialogHolder.isDialogShowing()) {
+                    mDialogHolder.onCancelCba();
+                    mDialogHolder.showErrorDialog(R.string.smartcard_early_unplug_dialog_title, R.string.smartcard_early_unplug_dialog_message);
+                    Logger.verbose(methodTag, "Smartcard was disconnected while dialog was still displayed.");
+                }
+            }
+        });
     }
 
     /**

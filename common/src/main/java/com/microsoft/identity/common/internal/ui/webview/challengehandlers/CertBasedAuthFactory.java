@@ -26,7 +26,6 @@ import android.app.Activity;
 
 import androidx.annotation.NonNull;
 
-import com.microsoft.identity.common.R;
 import com.microsoft.identity.common.logging.Logger;
 
 /**
@@ -37,40 +36,17 @@ public class CertBasedAuthFactory {
     private static final String TAG = CertBasedAuthFactory.class.getSimpleName();
     private final Activity mActivity;
     private final AbstractSmartcardCertBasedAuthManager mSmartcardCertBasedAuthManager;
-    private final DialogHolder mDialogHolder;
 
     /**
      * Creates an instance of CertBasedAuthFactory.
      * Instantiates relevant implementations of ISmartcardCertBasedAuthManagers.
      * @param activity current host activity.
-     * @param smartcardCertBasedAuthManager instance of AbstractSmartcardCertBasedAuthManager implementation.
-     * @param dialogHolder instance of DialogHolder.
      */
-    public CertBasedAuthFactory(@NonNull final Activity activity,
-                                @NonNull final AbstractSmartcardCertBasedAuthManager smartcardCertBasedAuthManager,
-                                @NonNull final DialogHolder dialogHolder) {
+    public CertBasedAuthFactory(@NonNull final Activity activity) {
         final String methodTag = TAG + ":CertBasedAuthFactory";
         mActivity = activity;
-        mSmartcardCertBasedAuthManager = smartcardCertBasedAuthManager;
-        mDialogHolder = dialogHolder;
-        mSmartcardCertBasedAuthManager.setDiscoveryCallback(new AbstractSmartcardCertBasedAuthManager.IDiscoveryCallback() {
-            @Override
-            public void onCreateConnection() {
-                //Reset DialogHolder to null if necessary.
-                //In this case, DialogHolder would be an ErrorDialog if not null.
-                mDialogHolder.dismissDialog();
-            }
-
-            @Override
-            public void onClosedConnection() {
-                //Show an error dialog informing users that they have unplugged their device only if a dialog is still showing.
-                if (mDialogHolder.isDialogShowing()) {
-                    mDialogHolder.onCancelCba();
-                    mDialogHolder.showErrorDialog(R.string.smartcard_early_unplug_dialog_title, R.string.smartcard_early_unplug_dialog_message);
-                    Logger.verbose(methodTag, "Smartcard was disconnected while dialog was still displayed.");
-                }
-            }
-
+        mSmartcardCertBasedAuthManager = new YubiKitCertBasedAuthManager(mActivity.getApplicationContext());
+        mSmartcardCertBasedAuthManager.setDiscoveryExceptionCallback(new AbstractSmartcardCertBasedAuthManager.IDiscoveryExceptionCallback() {
             @Override
             public void onException() {
                 //Logging, but may also want to emit telemetry.
@@ -79,6 +55,7 @@ public class CertBasedAuthFactory {
                 Logger.error(methodTag, "Unable to start smartcard usb discovery.", null);
             }
         });
+        //Connection and disconnection callbacks for discovery are set in the SmartcardCertBasedAuthChallengeHandlers.
         mSmartcardCertBasedAuthManager.startDiscovery();
     }
 
@@ -89,7 +66,7 @@ public class CertBasedAuthFactory {
     @NonNull
     public ICertBasedAuthChallengeHandler createCertBasedAuthChallengeHandler() {
         if (mSmartcardCertBasedAuthManager.isDeviceConnected()) {
-            return new SmartcardCertBasedAuthChallengeHandler(mSmartcardCertBasedAuthManager, mDialogHolder);
+            return new SmartcardCertBasedAuthChallengeHandler(mSmartcardCertBasedAuthManager, new DialogHolder(mActivity));
         } else {
             return new OnDeviceCertBasedAuthChallengeHandler(mActivity);
         }
