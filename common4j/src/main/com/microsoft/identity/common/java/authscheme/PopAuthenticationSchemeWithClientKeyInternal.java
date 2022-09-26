@@ -133,7 +133,11 @@ public class PopAuthenticationSchemeWithClientKeyInternal
         return mKid;
     }
 
-    public String getReqCnf() {
+    /**
+     * Gets the req_cnf value to be sent to server in token request
+     * @return json representation including the kid info for req_cnf
+     */
+    public String getRequestConfirmation() {
         final String reqCnfJson = new JSONObject().put(KID, mKid).toString();
         return Base64URL.encode(reqCnfJson).toString();
     }

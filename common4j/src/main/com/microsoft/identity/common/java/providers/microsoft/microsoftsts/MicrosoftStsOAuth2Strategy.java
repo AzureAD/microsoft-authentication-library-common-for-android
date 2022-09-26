@@ -406,7 +406,7 @@ public class MicrosoftStsOAuth2Strategy
             tokenRequest.setRequestConfirmation(reqCnf);
         } else if (authScheme instanceof PopAuthenticationSchemeWithClientKeyInternal) {
             tokenRequest.setTokenType(TokenRequest.TokenType.POP);
-            tokenRequest.setRequestConfirmation(((PopAuthenticationSchemeWithClientKeyInternal) authScheme).getReqCnf());
+            tokenRequest.setRequestConfirmation(((PopAuthenticationSchemeWithClientKeyInternal) authScheme).getRequestConfirmation());
         }
 
         return tokenRequest;
@@ -456,7 +456,7 @@ public class MicrosoftStsOAuth2Strategy
             request.setRequestConfirmation(devicePopManager.getRequestConfirmation());
         } else if (authScheme instanceof PopAuthenticationSchemeWithClientKeyInternal) {
             request.setTokenType(TokenRequest.TokenType.POP);
-            request.setRequestConfirmation(((PopAuthenticationSchemeWithClientKeyInternal) authScheme).getReqCnf());
+            request.setRequestConfirmation(((PopAuthenticationSchemeWithClientKeyInternal) authScheme).getRequestConfirmation());
         }
 
         return request;

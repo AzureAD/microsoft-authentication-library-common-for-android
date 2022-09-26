@@ -61,9 +61,9 @@ public class PopAuthenticationSchemeWithClientKeyTest {
     }
 
     @Test
-    public void testGetReqCnf() {
+    public void testGetRequestConfirmation() {
         final String expectedReqCnfJson = Base64URL.encode(new JSONObject().put("kid", kid).toString()).toString();
-        Assert.assertEquals(expectedReqCnfJson, authenticationSchemeWithClientKeyInternal.getReqCnf());
+        Assert.assertEquals(expectedReqCnfJson, authenticationSchemeWithClientKeyInternal.getRequestConfirmation());
     }
 
     @Test
