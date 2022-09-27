@@ -22,6 +22,9 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.opentelemetry;
 
+/**
+ * Names of Open Telemetry Span Attributes we want to capture for broker's Spans.
+ */
 public enum AttributeName {
     response_body_length,
     jwt_valid,
