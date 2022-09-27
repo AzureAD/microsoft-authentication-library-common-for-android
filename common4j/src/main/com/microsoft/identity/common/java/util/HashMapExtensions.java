@@ -59,7 +59,7 @@ public class HashMapExtensions {
      */
     public static HashMap<String, String> getJsonResponseFromResponseBody(String responseBody) throws JSONException {
         final HashMap<String, String> response = new HashMap<>();
-        Span span = Span.current();
+        final Span span = Span.current();
         span.setAttribute(AttributeName.response_body_length.name(), responseBody.length());
         if (!StringUtil.isNullOrEmpty(responseBody)) {
             final JSONObject jsonObject = new JSONObject(responseBody);

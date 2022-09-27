@@ -91,7 +91,7 @@ public class JweResponse {
     }
 
     public static JweResponse parseJwe(String jwe) throws JSONException {
-        Span span = Span.current();
+        final Span span = Span.current();
         JweResponse response = new JweResponse();
 
         String[] split = jwe.split("\\.");
