@@ -84,11 +84,10 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     public AzureActiveDirectoryWebViewClient(@NonNull final Activity activity,
                                              @NonNull final IAuthorizationCompletionCallback completionCallback,
                                              @NonNull final OnPageLoadedCallback pageLoadedCallback,
-                                             @NonNull final String redirectUrl,
-                                             @NonNull final CertBasedAuthFactory certBasedAuthFactory) {
+                                             @NonNull final String redirectUrl) {
         super(activity, completionCallback, pageLoadedCallback);
         mRedirectUrl = redirectUrl;
-        mCertBasedAuthFactory = certBasedAuthFactory;
+        mCertBasedAuthFactory = new CertBasedAuthFactory(activity);
     }
 
     /**
@@ -457,8 +456,11 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     @Override
-    public void onReceivedClientCertRequest(final WebView view,
-                                            final ClientCertRequest clientCertRequest) {
+    public void onReceivedClientCertRequest(@NonNull final WebView view,
+                                            @NonNull final ClientCertRequest clientCertRequest) {
+        if (mCertBasedAuthChallengeHandler != null) {
+            mCertBasedAuthChallengeHandler.cleanUp();
+        }
         mCertBasedAuthChallengeHandler = mCertBasedAuthFactory.createCertBasedAuthChallengeHandler();
         mCertBasedAuthChallengeHandler.processChallenge(clientCertRequest);
     }
@@ -467,6 +469,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      * Cleanup to be done when host activity is being destroyed.
      */
     public void onDestroy() {
+        if (mCertBasedAuthChallengeHandler != null) {
+            mCertBasedAuthChallengeHandler.cleanUp();
+        }
         mCertBasedAuthFactory.onDestroy();
     }
 

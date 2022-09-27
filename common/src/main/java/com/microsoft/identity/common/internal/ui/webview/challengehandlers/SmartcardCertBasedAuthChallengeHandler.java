@@ -60,33 +60,42 @@ public class SmartcardCertBasedAuthChallengeHandler implements ICertBasedAuthCha
      */
     public SmartcardCertBasedAuthChallengeHandler(@NonNull final AbstractSmartcardCertBasedAuthManager smartcardCertBasedAuthManager,
                                                   @NonNull final DialogHolder dialogHolder) {
+        final String methodTag = TAG + ":SmartcardCertBasedAuthChallengeHandler";
         mIsSmartcardCertBasedAuthProceeding = false;
         mSmartcardCertBasedAuthManager = smartcardCertBasedAuthManager;
         mDialogHolder = dialogHolder;
+        mSmartcardCertBasedAuthManager.setConnectionCallback(new AbstractSmartcardCertBasedAuthManager.IConnectionCallback() {
+            @Override
+            public void onCreateConnection() {
+                //Reset DialogHolder to null if necessary.
+                //In this case, DialogHolder would be an ErrorDialog if not null.
+                mDialogHolder.dismissDialog();
+            }
+
+            @Override
+            public void onClosedConnection() {
+                //Show an error dialog informing users that they have unplugged their device only if a dialog is still showing.
+                if (mDialogHolder.isDialogShowing()) {
+                    mDialogHolder.onCancelCba();
+                    mDialogHolder.showErrorDialog(R.string.smartcard_early_unplug_dialog_title, R.string.smartcard_early_unplug_dialog_message);
+                    Logger.verbose(methodTag, "Smartcard was disconnected while dialog was still displayed.");
+                }
+            }
+        });
     }
 
     /**
      * Called when a ClientCertRequest is received by the AzureActiveDirectoryWebViewClient.
-     * Prompts the user to choose a certificate to authenticate with.
+     * Collects ICertDetails from PIV certificates on smartcard device.
+     * If certificates are found on smartcard, the method proceeds with the smartcard certificate picker.
+     * Otherwise, appropriate error dialogs are shown.
      * @param request ClientCertRequest received from AzureActiveDirectoryWebViewClient.onReceivedClientCertRequest.
      * @return null
      */
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
     public Void processChallenge(ClientCertRequest request) {
-        handleSmartcardCertAuth(request);
-        return null;
-    }
-
-    /**
-     * Collects ICertDetails from PIV certificates on smartcard device.
-     * If certificates are found on smartcard, the method proceeds with the smartcard certificate picker.
-     * Otherwise, appropriate error dialogs are shown.
-     * @param request ClientCertRequest received from AzureActiveDirectoryWebViewClient.onReceivedClientCertRequest.
-     */
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-    private void handleSmartcardCertAuth(@NonNull final ClientCertRequest request) {
-        final String methodTag = TAG + ":handleSmartcardCertAuth";
+        final String methodTag = TAG + ":processChallenge";
         mSmartcardCertBasedAuthManager.requestDeviceSession(new AbstractSmartcardCertBasedAuthManager.ISessionCallback() {
             @Override
             public void onGetSession(@NonNull final ISmartcardSession session) throws Exception {
@@ -127,6 +136,7 @@ public class SmartcardCertBasedAuthChallengeHandler implements ICertBasedAuthCha
                 request.cancel();
             }
         });
+        return null;
     }
 
     /**
@@ -297,5 +307,15 @@ public class SmartcardCertBasedAuthChallengeHandler implements ICertBasedAuthCha
                 Telemetry.emit(new ErrorEvent().putException(exception));
             }
         }
+    }
+
+    /**
+     * Clean up logic to run when ICertBasedAuthChallengeHandler is no longer going to be used.
+     */
+    @Override
+    public void cleanUp() {
+        mDialogHolder.dismissDialog();
+        //Reset IConnectionCallback local variable of mSmartcardCertBasedAuthManager.
+        mSmartcardCertBasedAuthManager.setConnectionCallback(null);
     }
 }

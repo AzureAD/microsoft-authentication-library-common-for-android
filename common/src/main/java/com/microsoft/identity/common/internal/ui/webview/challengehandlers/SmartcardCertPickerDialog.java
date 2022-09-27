@@ -56,7 +56,7 @@ public class SmartcardCertPickerDialog extends SmartcardDialog {
 
     /**
      * Creates new instance of SmartcardCertPickerDialog.
-     * @param certList List of ClientCertAuthChallengeHandler.YubiKitCertDetails compiled from certificates on YubiKey.
+     * @param certList List of ICertDetails compiled from certificates on smartcard.
      * @param positiveButtonListener Implemented Listener for a positive button click.
      * @param cancelCbaCallback Implemented Callback for when CBA is being cancelled.
      * @param activity Host activity.

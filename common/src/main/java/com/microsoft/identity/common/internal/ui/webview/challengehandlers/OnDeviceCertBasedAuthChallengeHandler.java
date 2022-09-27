@@ -31,6 +31,7 @@ import android.security.KeyChainException;
 import android.webkit.ClientCertRequest;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.java.exception.BaseException;
@@ -65,34 +66,24 @@ public class OnDeviceCertBasedAuthChallengeHandler implements ICertBasedAuthChal
 
     /**
      * Called when a ClientCertRequest is received by the AzureActiveDirectoryWebViewClient.
-     * Prompts the user to choose a certificate to authenticate with.
-     * @param request challenge request
-     * @return null
-     */
-    @Override
-    public Void processChallenge(ClientCertRequest request) {
-        handleOnDeviceCertAuth(request);
-        return null;
-    }
-
-    /**
-     * Handles the logic for on-device certificate based authentication.
      * Makes use of Android's KeyChain.choosePrivateKeyAlias method, which shows a certificate picker that allows users to choose their on-device user certificate to authenticate with.
      * @param request ClientCertRequest received from AzureActiveDirectoryWebViewClient.onReceivedClientCertRequest.
+     * @return null
      */
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-    private void handleOnDeviceCertAuth(@NonNull final ClientCertRequest request) {
-        final String methodTag = TAG + ":handleOnDeviceCertAuth";
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    @Override
+    public Void processChallenge(ClientCertRequest request) {
+        final String methodTag = TAG + ":processChallenge";
         final Principal[] acceptableCertIssuers = request.getPrincipals();
 
         // When ADFS server sends null or empty issuers, we'll continue with cert prompt.
         if (acceptableCertIssuers != null) {
-            for (Principal issuer : acceptableCertIssuers) {
+            for (final Principal issuer : acceptableCertIssuers) {
                 if (issuer.getName().contains(ACCEPTABLE_ISSUER)) {
                     //Checking if received acceptable issuers contain "CN=MS-Organization-Access"
                     Logger.info(methodTag,"Cancelling the TLS request, not respond to TLS challenge triggered by device authentication.");
                     request.cancel();
-                    return;
+                    return null;
                 }
             }
         }
@@ -131,6 +122,7 @@ public class OnDeviceCertBasedAuthChallengeHandler implements ICertBasedAuthChal
                 request.getHost(),
                 request.getPort(),
                 null);
+        return null;
     }
 
     /**
@@ -150,5 +142,13 @@ public class OnDeviceCertBasedAuthChallengeHandler implements ICertBasedAuthChal
                 Telemetry.emit(new ErrorEvent().putException(exception));
             }
         }
+    }
+
+    /**
+     * Clean up logic to run when ICertBasedAuthChallengeHandler is no longer going to be used.
+     */
+    @Override
+    public void cleanUp() {
+        //Nothing needed at the moment.
     }
 }

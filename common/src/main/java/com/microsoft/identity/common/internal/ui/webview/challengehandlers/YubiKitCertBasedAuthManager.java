@@ -80,8 +80,8 @@ public class YubiKitCertBasedAuthManager extends AbstractSmartcardCertBasedAuthM
                 Logger.verbose(TAG, "A YubiKey device was connected");
                 synchronized (sDeviceLock) {
                     mDevice = device;
-                    if (mDiscoveryCallback != null) {
-                        mDiscoveryCallback.onCreateConnection();
+                    if (mConnectionCallback != null) {
+                        mConnectionCallback.onCreateConnection();
                     }
 
                     mDevice.setOnClosed(new Runnable() {
@@ -101,8 +101,8 @@ public class YubiKitCertBasedAuthManager extends AbstractSmartcardCertBasedAuthM
                                 Telemetry.emit(pivProviderStatusEvent.putPivProviderRemoved(false));
                                 Logger.info(TAG, "An instance of PivProvider was not present in Security static list upon YubiKey device connection being closed.");
                             }
-                            if (mDiscoveryCallback != null) {
-                                mDiscoveryCallback.onClosedConnection();
+                            if (mConnectionCallback != null) {
+                                mConnectionCallback.onClosedConnection();
                             }
                         }
 

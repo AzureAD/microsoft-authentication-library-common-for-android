@@ -184,15 +184,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                         }
                     }
                 },
-                mRedirectUri,
-                //Starts smartcard usb discovery.
-                //Only create instance of YubiKitCertBasedAuthManager,
-                // since this is the only implementation of AbstractSmartcardCertBasedAuthManager
-                // that we have right now.
-                new CertBasedAuthFactory(
-                        activity,
-                        new YubiKitCertBasedAuthManager(activity.getApplicationContext()),
-                        new DialogHolder(activity)));
+                mRedirectUri);
         setUpWebView(view, mAADWebViewClient);
 
         mWebView.post(new Runnable() {
@@ -272,7 +264,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         mWebView.setWebViewClient(webViewClient);
     }
 
-    // For ClientCertAuthChallengeHandler within AADWebViewClient,
+    // For CertBasedAuthChallengeHandler within AADWebViewClient,
     // the smartcard manager needs to stop discovering Usb devices upon fragment destroy.
     @Override
     public void onDestroy() {
