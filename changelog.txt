@@ -1,5 +1,6 @@
 V.Next
 ----------
+- [PATCH] More fields exposed for GSON based logging for Broker Token Parameters (#1849)
 - [MINOR] Logging performance speedup, removal of IDetailedLoggerCallback/logDiscarded (#1836)
 - [MINOR] Expose sign() method in PKeyAuth as opposed to the key itself (#1846)
 - [MINOR] Wire ICryptoFactory to Signer/Decryptor/SP800108KeyGen (#1845)
@@ -8,6 +9,15 @@ V.Next
 - [MINOR] Use Java 11 in Spotbugs Check
 - [MAJOR] Use Java 11 to accomodate android sdk 31 tooling. (#1832)
 - [PATCH] Swallow unbound service exceptions on disconnect. (#1824)
+
+
+Version 7.0.1
+----------
+- [Minor] Bumped Common to 7.0.1 to fix publishing bug.
+
+
+Version 7.0.0
+----------
 - [MINOR] Bumped MSAL Broker Protocol Version to 10.0. (#1829)
 - [MINOR] Add implementation for clearAll method to BrokerOAuth2TokenCache to clear all the credentials and metadata (#1823)
 - [MAJOR] Adding smartcard certificate based authentication (CBA) feature.  (#1814)
