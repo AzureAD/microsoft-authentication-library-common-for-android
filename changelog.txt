@@ -10,7 +10,7 @@ V.Next
 - [MAJOR] Use Java 11 to accomodate android sdk 31 tooling. (#1832)
 - [PATCH] Swallow unbound service exceptions on disconnect. (#1824)
 - [MINOR] Refactored out ClientCertAuthChallengeHandler. (#1833)
-
+- [PATCH] Moved clearClientCertPreferences to onPageLoaded. (#1855)
 
 Version 7.0.1
 ----------
