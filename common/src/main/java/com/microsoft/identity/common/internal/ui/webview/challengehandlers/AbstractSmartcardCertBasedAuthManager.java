@@ -27,12 +27,15 @@ import androidx.annotation.NonNull;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 /**
  * An abstract manager that can control connections for a particular type of smartcard.
  */
 public abstract class AbstractSmartcardCertBasedAuthManager {
 
     protected IConnectionCallback mConnectionCallback;
+    @SuppressFBWarnings //This callback isn't currently being used, but added for completion for future smartcard managers.
     protected IDiscoveryExceptionCallback mDiscoveryExceptionCallback;
 
     /**
