@@ -41,7 +41,6 @@ import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.internal.ui.DualScreenActivity;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.CertBasedAuthFactory;
-import com.microsoft.identity.common.internal.ui.webview.challengehandlers.DialogHolder;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.ICertBasedAuthChallengeHandler;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.ICertDetails;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.AbstractSmartcardCertBasedAuthManager;
@@ -238,11 +237,19 @@ public class SmartcardCertBasedAuthTest {
     //Calls processChallenge once.
     @NonNull
     private ICertBasedAuthChallengeHandler setUpSmartcardCertBasedAuthChallengeHandlerAndProcess(@NonNull final Activity activity,
-                                                                                         @NonNull final AbstractSmartcardCertBasedAuthManager smartcardCertBasedAuthManager) {
-        final CertBasedAuthFactory certBasedAuthFactory = new CertBasedAuthFactory(
-                activity,
-                smartcardCertBasedAuthManager,
-                new DialogHolder(activity));
+                                                                                                 @NonNull final AbstractSmartcardCertBasedAuthManager smartcardCertBasedAuthManager) {
+        smartcardCertBasedAuthManager.setConnectionCallback(new AbstractSmartcardCertBasedAuthManager.IConnectionCallback() {
+            @Override
+            public void onCreateConnection() {
+                //Nothing needed
+            }
+
+            @Override
+            public void onClosedConnection() {
+                //Nothing needed
+            }
+        });
+        final CertBasedAuthFactory certBasedAuthFactory = new TestCertBasedAuthFactory(activity, smartcardCertBasedAuthManager);
         final ICertBasedAuthChallengeHandler certBasedAuthChallengeHandler = certBasedAuthFactory.createCertBasedAuthChallengeHandler();
         certBasedAuthChallengeHandler.processChallenge(getMockClientCertRequest());
         return certBasedAuthChallengeHandler;
@@ -499,6 +506,16 @@ public class SmartcardCertBasedAuthTest {
         };
     }
 
+    //For testing purposes only.
+    //Uses protected constructor of CertBasedAuthFactory in order to inject test manager.
+    private static class TestCertBasedAuthFactory extends CertBasedAuthFactory {
+
+        protected TestCertBasedAuthFactory(@NonNull Activity activity,
+                                           @NonNull AbstractSmartcardCertBasedAuthManager manager) {
+            super(activity, manager);
+        }
+    }
+
     //Implements AbstractSmartcardCertBasedAuthManager in order to carry out testing of dialogs.
     //Only meant to be used for testing purposes.
     private static class TestSmartcardCertBasedAuthManager extends AbstractSmartcardCertBasedAuthManager {
@@ -565,15 +582,15 @@ public class SmartcardCertBasedAuthTest {
         }
 
         public void mockConnect() {
-            if (mDiscoveryCallback != null) {
-                mDiscoveryCallback.onCreateConnection();
+            if (mConnectionCallback != null) {
+                mConnectionCallback.onCreateConnection();
                 mIsConnected = true;
             }
         }
 
         public void mockDisconnect() {
-            if (mDiscoveryCallback != null) {
-                mDiscoveryCallback.onClosedConnection();
+            if (mConnectionCallback != null) {
+                mConnectionCallback.onClosedConnection();
                 mIsConnected = false;
             }
         }

@@ -89,7 +89,7 @@ public abstract class AbstractSmartcardCertBasedAuthManager {
     /**
      * Callback methods to be run upon initial connection and disconnection of a smartcard device.
      */
-    interface IConnectionCallback {
+    public interface IConnectionCallback {
         /**
          * Logic to be run upon initial connection of a smartcard device.
          */
@@ -104,7 +104,7 @@ public abstract class AbstractSmartcardCertBasedAuthManager {
     /**
      * Callback method to be run upon an exception thrown during discovery start up.
      */
-    interface IDiscoveryExceptionCallback {
+    public interface IDiscoveryExceptionCallback {
         /**
          * Logic to be run when an exception is thrown.
          */

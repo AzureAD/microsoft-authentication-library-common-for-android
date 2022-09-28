@@ -34,8 +34,8 @@ import com.microsoft.identity.common.logging.Logger;
 public class CertBasedAuthFactory {
 
     private static final String TAG = CertBasedAuthFactory.class.getSimpleName();
-    private final Activity mActivity;
-    private final AbstractSmartcardCertBasedAuthManager mSmartcardCertBasedAuthManager;
+    private Activity mActivity;
+    private AbstractSmartcardCertBasedAuthManager mSmartcardCertBasedAuthManager;
 
     /**
      * Creates an instance of CertBasedAuthFactory.
@@ -43,9 +43,30 @@ public class CertBasedAuthFactory {
      * @param activity current host activity.
      */
     public CertBasedAuthFactory(@NonNull final Activity activity) {
-        final String methodTag = TAG + ":CertBasedAuthFactory";
+        initialize(activity, new YubiKitCertBasedAuthManager(mActivity.getApplicationContext()));
+    }
+
+    /**
+     * Creates an instance of CertBasedAuthFactory.
+     * Allows injection of AbstractSmartcardCertBasedAuthManager for testing purposes.
+     * @param activity current host activity.
+     * @param manager AbstractSmartcardCertBasedAuthManager to be used for smartcard CBA.
+     */
+    protected CertBasedAuthFactory(@NonNull final Activity activity,
+                                   @NonNull final AbstractSmartcardCertBasedAuthManager manager) {
+        initialize(activity, manager);
+    }
+
+    /**
+     * Sets class variables and starts smartcard usb discovery.
+     * @param activity current host activity.
+     * @param manager AbstractSmartcardCertBasedAuthManager to be used for smartcard CBA.
+     */
+    private void initialize(@NonNull final Activity activity,
+                       @NonNull final AbstractSmartcardCertBasedAuthManager manager) {
+        final String methodTag = TAG + ":initialize";
         mActivity = activity;
-        mSmartcardCertBasedAuthManager = new YubiKitCertBasedAuthManager(mActivity.getApplicationContext());
+        mSmartcardCertBasedAuthManager = manager;
         mSmartcardCertBasedAuthManager.setDiscoveryExceptionCallback(new AbstractSmartcardCertBasedAuthManager.IDiscoveryExceptionCallback() {
             @Override
             public void onException() {
