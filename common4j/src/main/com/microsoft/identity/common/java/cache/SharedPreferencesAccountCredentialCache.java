@@ -387,6 +387,39 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
             @Nullable final String realm,
             @Nullable final String target,
             @Nullable final String authScheme,
+            @Nullable final String requestedClaims) {
+        final String methodTag = TAG + ":getCredentialsFilteredBy";
+        Logger.verbose(methodTag, "getCredentialsFilteredBy()");
+
+        final List<Credential> allCredentials = getCredentials();
+
+        final List<Credential> matchingCredentials = getCredentialsFilteredByInternal(
+                homeAccountId,
+                environment,
+                credentialType,
+                clientId,
+                realm,
+                target,
+                authScheme,
+                requestedClaims,
+                allCredentials
+        );
+
+        Logger.verbose(methodTag, "Found [" + matchingCredentials.size() + "] matching Credentials...");
+
+        return matchingCredentials;
+    }
+
+    @Override
+    @NonNull
+    public List<Credential> getCredentialsFilteredBy(
+            @Nullable final String homeAccountId,
+            @Nullable final String environment,
+            @Nullable final CredentialType credentialType,
+            @Nullable final String clientId,
+            @Nullable final String realm,
+            @Nullable final String target,
+            @Nullable final String authScheme,
             @Nullable final String requestedClaims,
             @Nullable final List<Credential> inputCredentials) {
         final String methodTag = TAG + ":getCredentialsFilteredBy";
