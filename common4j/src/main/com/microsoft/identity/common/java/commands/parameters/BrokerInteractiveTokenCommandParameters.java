@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.commands.parameters;
 
+import com.google.gson.annotations.Expose;
 import com.microsoft.identity.common.java.broker.IBrokerAccount;
 import com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache;
 import com.microsoft.identity.common.java.exception.ArgumentException;
@@ -40,14 +41,27 @@ import lombok.experimental.SuperBuilder;
 public class BrokerInteractiveTokenCommandParameters extends InteractiveTokenCommandParameters
         implements IHasExtraParameters, IBrokerTokenCommandParameters {
 
+    @Expose
     private final String callerPackageName;
+
+    @Expose
     private final int callerUid;
+
+    @Expose
     private final String callerAppVersion;
+
+    @Expose
     private final String brokerVersion;
 
+    @Expose
     private final boolean shouldResolveInterrupt;
+
+    @Expose
     private final BrokerRequestType requestType;
+
+    @Expose
     private final String negotiatedBrokerProtocolVersion;
+
     private final Iterable<Map.Entry<String, String>> extraParameters;
 
     private final String enrollmentId;
@@ -59,7 +73,10 @@ public class BrokerInteractiveTokenCommandParameters extends InteractiveTokenCom
 
     // If this flag is true, we will send the x-ms-PKeyAuth Header to the token endpoint.
     // Note: this flag is transferred to a MicrosoftTokenRequest in BaseController.
+    @Expose
     private final boolean pKeyAuthHeaderAllowed;
+
+    @Expose
     private final String homeTenantId;
 
     @Override

@@ -47,18 +47,18 @@ public class DialogHolder {
      * Creates new instance of DialogHolder.
      * @param activity Current host activity.
      */
-    DialogHolder(@NonNull final Activity activity) {
+    public DialogHolder(@NonNull final Activity activity) {
         mActivity = activity;
         mCurrentDialog = null;
     }
 
     /**
      * Build and show picker that prompts user to select a certificate for authentication.
-     * @param certList List of YubiKitCertDetails that contains cert details only pertinent to the cert picker.
+     * @param certList List of ICertDetails that contains cert details only pertinent to the cert picker.
      * @param positiveButtonListener A PositiveButtonListener to be set for a SmartcardCertPickerDialog.
      * @param cancelCbaCallback      A Callback that holds code to be run when CBA is being cancelled.
      */
-    public synchronized void showCertPickerDialog(@NonNull final List<ClientCertAuthChallengeHandler.YubiKitCertDetails> certList,
+    public synchronized void showCertPickerDialog(@NonNull final List<ICertDetails> certList,
                                                   @NonNull final SmartcardCertPickerDialog.PositiveButtonListener positiveButtonListener,
                                                   @NonNull final SmartcardCertPickerDialog.CancelCbaCallback cancelCbaCallback) {
         final SmartcardCertPickerDialog certPickerDialog = new SmartcardCertPickerDialog(
