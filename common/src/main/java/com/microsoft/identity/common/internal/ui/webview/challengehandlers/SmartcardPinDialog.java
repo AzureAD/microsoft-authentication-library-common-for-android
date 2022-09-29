@@ -36,6 +36,7 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 
 import com.microsoft.identity.common.R;
+import com.microsoft.identity.common.logging.Logger;
 
 import lombok.NonNull;
 
@@ -44,6 +45,7 @@ import lombok.NonNull;
  */
 public class SmartcardPinDialog extends SmartcardDialog {
 
+    private static final String TAG = SmartcardPinDialog.class.getSimpleName();
     private View mPinLayout;
     private final PositiveButtonListener mPositiveButtonListener;
     private final CancelCbaCallback mCancelCbaCallback;
@@ -123,6 +125,7 @@ public class SmartcardPinDialog extends SmartcardDialog {
      */
     @Override
     public void show() {
+        final String methodTag = TAG + ":show";
         mActivity.runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -130,6 +133,12 @@ public class SmartcardPinDialog extends SmartcardDialog {
                 //Need to show appropriate error UI when user enters an incorrect PIN.
                 //Since TextInputLayout requires extra dependencies, we're going to manually show the error message and color using a listener on the PIN's EditText.
                 final EditText pinEditText = mPinLayout.findViewById(R.id.pinEditText);
+                if (pinEditText == null) {
+                    //Log error and cancel out of flow.
+                    mCancelCbaCallback.onCancel();
+                    Logger.error(methodTag, "Error while retrieving dialog EditText component.", null);
+                    return;
+                }
                 pinEditText.addTextChangedListener(new TextWatcher() {
                     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
                     @Override

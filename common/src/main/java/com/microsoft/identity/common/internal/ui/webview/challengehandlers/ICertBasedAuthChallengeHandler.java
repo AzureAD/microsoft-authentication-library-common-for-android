@@ -22,60 +22,26 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.ui.webview.challengehandlers;
 
-import android.app.Activity;
-import android.app.Dialog;
+import android.webkit.ClientCertRequest;
 
 import androidx.annotation.NonNull;
 
+import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
+
 /**
- * Lists the main methods needed to show a simple dialog in CertBasedAuthChallengeHandler.
- * Button listeners can be implemented in child classes.
+ * ChallengeHandler extended interface specifically for certificate based authentication (CBA)
+ *  implementations.
  */
-public abstract class SmartcardDialog {
-    protected final Activity mActivity;
-    protected Dialog mDialog;
+public interface ICertBasedAuthChallengeHandler extends IChallengeHandler<ClientCertRequest, Void> {
+    
+    /**
+     * Emit telemetry for results from certificate based authentication (CBA) if CBA occurred.
+     * @param response a RawAuthorizationResult object received upon a challenge response received.
+     */
+    void emitTelemetryForCertBasedAuthResults(@NonNull final RawAuthorizationResult response);
 
     /**
-     * Creates new instance of SmartcardDialog.
-     * @param activity Host activity.
+     * Clean up logic to run when ICertBasedAuthChallengeHandler is no longer going to be used.
      */
-    public SmartcardDialog(@NonNull final Activity activity) {
-        mActivity = activity;
-        mDialog = null;
-    }
-
-    /**
-     * Should build an Android Dialog object and set it to mDialog.
-     * Dialog objects must be built/interacted with on the UI thread.
-     */
-    abstract void createDialog();
-
-    /**
-     * Should dismiss dialog and call the appropriate methods to help cancel the CBA flow.
-     */
-    abstract void onCancelCba();
-
-    /**
-     * Show mDialog on the main thread.
-     */
-    public void show() {
-        mActivity.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                mDialog.show();
-            }
-        });
-    }
-
-    /**
-     * Dismiss mDialog.
-     */
-    public void dismiss() {
-        mActivity.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                mDialog.dismiss();
-            }
-        });
-    }
+    void cleanUp();
 }
