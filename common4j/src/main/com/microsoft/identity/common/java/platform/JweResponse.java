@@ -38,6 +38,12 @@ import lombok.experimental.Accessors;
 
 public class JweResponse {
 
+    /**
+     * The code defines a valid JWE as one that has at least the header, encryptedKey, IV,
+     * and Payload.
+     */
+    private static final int LENGTH_OF_VALID_JWE = 4;
+
     @Builder
     @Getter
     @Accessors(prefix = "m")
@@ -96,9 +102,9 @@ public class JweResponse {
 
         String[] split = jwe.split("\\.");
 
-        span.setAttribute(AttributeName.jwt_valid.name(), split.length >= 4);
+        span.setAttribute(AttributeName.jwt_valid.name(), split.length >= LENGTH_OF_VALID_JWE);
 
-        if (split.length < 4) {
+        if (split.length < LENGTH_OF_VALID_JWE) {
             throw new IllegalArgumentException("Invalid JWE");
         }
 
