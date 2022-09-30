@@ -40,6 +40,10 @@ import androidx.annotation.VisibleForTesting;
 import androidx.fragment.app.FragmentActivity;
 
 import com.microsoft.identity.common.R;
+import com.microsoft.identity.common.internal.ui.webview.challengehandlers.AbstractSmartcardCertBasedAuthManager;
+import com.microsoft.identity.common.internal.ui.webview.challengehandlers.CertBasedAuthFactory;
+import com.microsoft.identity.common.internal.ui.webview.challengehandlers.DialogHolder;
+import com.microsoft.identity.common.internal.ui.webview.challengehandlers.YubiKitCertBasedAuthManager;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
@@ -260,16 +264,16 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         mWebView.setWebViewClient(webViewClient);
     }
 
-    // For ClientCertAuthChallengeHandler within AADWebViewClient,
-    // the YubiKitManager needs to stop discovering Usb devices upon fragment destroy.
+    // For CertBasedAuthChallengeHandler within AADWebViewClient,
+    // the smartcard manager needs to stop discovering Usb devices upon fragment destroy.
     @Override
     public void onDestroy() {
         super.onDestroy();
         final String methodTag = TAG + ":onDestroy";
         if (mAADWebViewClient != null) {
-            mAADWebViewClient.stopYubiKitManagerUsbDiscovery();
+            mAADWebViewClient.onDestroy();
         } else {
-            Logger.error(methodTag, "YubiKitManager usb discovery not stopped due to mAADWebViewClient being null", null);
+            Logger.error(methodTag, "Fragment destroyed, but smartcard usb discovery was unable to be stopped.", null);
         }
     }
 
@@ -293,8 +297,10 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         public void onChallengeResponseReceived(@NonNull final RawAuthorizationResult response) {
             final String methodTag = TAG + ":onChallengeResponseReceived";
             Logger.info(methodTag, null, "onChallengeResponseReceived:" + response.getResultCode());
-            //No telemetry will be emitted if CBA did not occur.
-            mAADWebViewClient.emitTelemetryForCertBasedAuthResult(response);
+            if (mAADWebViewClient != null) {
+                //No telemetry will be emitted if CBA did not occur.
+                mAADWebViewClient.emitTelemetryForCertBasedAuthResult(response);
+            }
             sendResult(response);
             finish();
         }
