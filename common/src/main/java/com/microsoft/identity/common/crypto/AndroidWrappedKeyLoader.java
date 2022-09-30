@@ -65,6 +65,11 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
     private static final String TAG = AndroidWrappedKeyLoader.class.getSimpleName() + "#";
 
     /**
+     * Should KeyStore and key file check for validity before every key load be skipped.
+     */
+    public static boolean sSkipKeyInvalidationCheck = false;
+
+    /**
      * Alias for this type of key.
      */
     /* package */ static final String KEYSTORE_KEY_ALIAS = "KEYSTORE_KEY";
@@ -99,7 +104,8 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
     private final CachedData<SecretKey> mKeyCache = new CachedData<SecretKey>() {
         @Override
         public SecretKey getData() {
-            if (!AndroidKeyStoreUtil.canLoadKey(mAlias) || !getKeyFile().exists()) {
+            if (!sSkipKeyInvalidationCheck &&
+                    (!AndroidKeyStoreUtil.canLoadKey(mAlias) || !getKeyFile().exists())) {
                 this.clear();
             }
             return super.getData();
