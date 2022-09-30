@@ -52,6 +52,10 @@ import java.net.URL;
 import java.util.UUID;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.context.Scope;
 import lombok.NonNull;
 
 public class FociQueryUtilities {
@@ -120,7 +124,6 @@ public class FociQueryUtilities {
         final MicrosoftStsOAuth2Strategy strategy = new MicrosoftStsOAuth2Strategy(config, strategyParameters);
 
         final String refreshToken = refreshTokenRecord.getSecret();
-
         final String scopes;
         // Hardcoding Teams Agent's client ID with the scope it's pre-authorized for.
         // This is because if only the default scope is passed, eSTS will set the resource ID (on its side)
@@ -129,9 +132,15 @@ public class FociQueryUtilities {
         //       for every FoCI apps (and hardcode it here).
         //       https://identitydivision.visualstudio.com/Engineering/_workitems/edit/1222002
         if (ObjectUtils.equals(clientId, "87749df4-7ccf-48f8-aa87-704bad0e0e16")) {
-            scopes = "https://devicemgmt.teams.microsoft.com/.default " + BaseController.getDelimitedDefaultScopeString();
-            Logger.info(TAG + methodName,
-                    "Teams agent client ID - making a test request with teams agent resource.");
+            final Span span = GlobalOpenTelemetry.getTracer(TAG).spanBuilder("setScopeForDMAgentForFoci").startSpan();
+            try (final Scope scope = span.makeCurrent()) {
+                scopes = "https://devicemgmt.teams.microsoft.com/.default " + BaseController.getDelimitedDefaultScopeString();
+                Logger.info(TAG + methodName,
+                        "Teams agent client ID - making a test request with teams agent resource.");
+            }
+            finally {
+                span.end();
+            }
         } else {
             scopes = BaseController.getDelimitedDefaultScopeString();
         }
