@@ -52,6 +52,7 @@ import javax.crypto.SecretKey;
 import javax.security.auth.x500.X500Principal;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.NonNull;
 
 /**
@@ -67,6 +68,7 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
     /**
      * Should KeyStore and key file check for validity before every key load be skipped.
      */
+    @SuppressFBWarnings("MS_SHOULD_BE_FINAL")
     public static boolean sSkipKeyInvalidationCheck = false;
 
     /**
