@@ -238,17 +238,6 @@ public class SmartcardCertBasedAuthTest {
     @NonNull
     private ICertBasedAuthChallengeHandler setUpSmartcardCertBasedAuthChallengeHandlerAndProcess(@NonNull final Activity activity,
                                                                                                  @NonNull final AbstractSmartcardCertBasedAuthManager smartcardCertBasedAuthManager) {
-        smartcardCertBasedAuthManager.setConnectionCallback(new AbstractSmartcardCertBasedAuthManager.IConnectionCallback() {
-            @Override
-            public void onCreateConnection() {
-                //Nothing needed
-            }
-
-            @Override
-            public void onClosedConnection() {
-                //Nothing needed
-            }
-        });
         final CertBasedAuthFactory certBasedAuthFactory = new TestCertBasedAuthFactory(activity, smartcardCertBasedAuthManager);
         final ICertBasedAuthChallengeHandler certBasedAuthChallengeHandler = certBasedAuthFactory.createCertBasedAuthChallengeHandler();
         certBasedAuthChallengeHandler.processChallenge(getMockClientCertRequest());
@@ -582,16 +571,16 @@ public class SmartcardCertBasedAuthTest {
         }
 
         public void mockConnect() {
+            mIsConnected = true;
             if (mConnectionCallback != null) {
                 mConnectionCallback.onCreateConnection();
-                mIsConnected = true;
             }
         }
 
         public void mockDisconnect() {
+            mIsConnected = false;
             if (mConnectionCallback != null) {
                 mConnectionCallback.onClosedConnection();
-                mIsConnected = false;
             }
         }
     }
