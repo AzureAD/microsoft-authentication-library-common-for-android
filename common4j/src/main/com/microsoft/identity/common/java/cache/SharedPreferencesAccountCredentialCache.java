@@ -29,7 +29,6 @@ import com.microsoft.identity.common.java.dto.AccessTokenRecord;
 import com.microsoft.identity.common.java.dto.AccountRecord;
 import com.microsoft.identity.common.java.dto.Credential;
 import com.microsoft.identity.common.java.dto.CredentialType;
-import com.microsoft.identity.common.java.dto.IAccountRecord;
 import com.microsoft.identity.common.java.dto.IdTokenRecord;
 import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
@@ -430,6 +429,7 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
         Logger.verbose(methodTag, "getCredentialsFilteredBy()");
 
         final List<Credential> matchingCredentials = getCredentialsFilteredByInternal(
+                inputCredentials,
                 homeAccountId,
                 environment,
                 credentialType,
@@ -438,7 +438,7 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
                 target,
                 authScheme,
                 requestedClaims,
-                inputCredentials
+                null
         );
 
         Logger.verbose(methodTag, "Found [" + matchingCredentials.size() + "] matching Credentials...");

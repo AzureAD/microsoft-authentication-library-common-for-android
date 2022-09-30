@@ -74,6 +74,7 @@ import com.microsoft.identity.common.internal.util.AccountManagerUtil;
 import com.microsoft.identity.common.internal.util.StringUtil;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.authorities.AzureActiveDirectoryAudience;
+import com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeWithClientKeyInternal;
 import com.microsoft.identity.common.java.cache.ICacheRecord;
 import com.microsoft.identity.common.java.cache.MsalOAuth2TokenCache;
 import com.microsoft.identity.common.java.commands.AcquirePrtSsoTokenResult;
@@ -85,6 +86,7 @@ import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCo
 import com.microsoft.identity.common.java.commands.parameters.RemoveAccountCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.RopcTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.SilentTokenCommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.TokenCommandParameters;
 import com.microsoft.identity.common.java.controllers.BaseController;
 import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.exception.ClientException;
@@ -98,6 +100,7 @@ import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.java.providers.oauth2.IDToken;
 import com.microsoft.identity.common.java.result.AcquireTokenResult;
 import com.microsoft.identity.common.java.result.GenerateShrResult;
+import com.microsoft.identity.common.java.util.BrokerProtocolVersionUtil;
 import com.microsoft.identity.common.java.util.ResultFuture;
 import com.microsoft.identity.common.java.util.ported.LocalBroadcaster;
 import com.microsoft.identity.common.java.util.ported.PropertyBag;
@@ -380,6 +383,7 @@ public class BrokerMsalController extends BaseController {
 
                     @Override
                     public void performPrerequisites(final @NonNull IIpcStrategy strategy) throws BaseException {
+                        verifyTokenParametersAreSupported(parameters);
                         negotiatedBrokerProtocolVersion = hello(strategy, parameters.getRequiredBrokerProtocolVersion());
                     }
 
@@ -441,6 +445,7 @@ public class BrokerMsalController extends BaseController {
 
                     @Override
                     public void performPrerequisites(final @NonNull IIpcStrategy strategy) throws BaseException {
+                        verifyTokenParametersAreSupported(parameters);
                         negotiatedBrokerProtocolVersion = hello(strategy, parameters.getRequiredBrokerProtocolVersion());
                     }
 
@@ -963,5 +968,20 @@ public class BrokerMsalController extends BaseController {
     @SuppressWarnings(WarningType.unchecked_warning)
     private void msalOAuth2TokenCacheSetSingleSignOnState(@SuppressWarnings(WarningType.rawtype_warning) @NonNull MsalOAuth2TokenCache msalOAuth2TokenCache, MicrosoftStsAccount microsoftStsAccount, MicrosoftRefreshToken microsoftRefreshToken) throws ClientException {
         msalOAuth2TokenCache.setSingleSignOnState(microsoftStsAccount, microsoftRefreshToken);
+    }
+
+    /**
+     * Verifies if the token parameters are supported by the required broker protocol version
+     * @param parameters Token Parameters for verify
+     * @throws ClientException if the token parameters are not supported
+     */
+    private void verifyTokenParametersAreSupported(@NonNull final TokenCommandParameters parameters) throws ClientException {
+        final String requiredProtocolVersion = parameters.getRequiredBrokerProtocolVersion();
+        if (parameters.getAuthenticationScheme() instanceof PopAuthenticationSchemeWithClientKeyInternal
+                && !BrokerProtocolVersionUtil.canSupportPopAuthenticationSchemeWithClientKey(requiredProtocolVersion)){
+            throw new ClientException(ClientException.AUTH_SCHEME_MISMATCH,
+                    "The required broker protocol version does not support the supplied auth scheme"
+                            + parameters.getAuthenticationScheme().getName());
+        }
     }
 }
