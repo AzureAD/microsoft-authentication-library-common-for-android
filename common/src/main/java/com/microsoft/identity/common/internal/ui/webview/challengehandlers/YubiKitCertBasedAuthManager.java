@@ -74,7 +74,9 @@ public class YubiKitCertBasedAuthManager extends AbstractSmartcardCertBasedAuthM
      */
     @Override
     public void startDiscovery() {
-        mYubiKitManager.startUsbDiscovery(new UsbConfiguration(), new Callback<UsbYubiKeyDevice>() {
+        UsbConfiguration usbConfiguration = new UsbConfiguration();
+        usbConfiguration.handlePermissions(false);
+        mYubiKitManager.startUsbDiscovery(usbConfiguration, new Callback<UsbYubiKeyDevice>() {
             @Override
             public void invoke(@NonNull UsbYubiKeyDevice device) {
                 Logger.verbose(TAG, "A YubiKey device was connected");

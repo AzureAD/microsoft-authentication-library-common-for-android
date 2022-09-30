@@ -12,6 +12,18 @@
         <activity
             android:name="com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity"
             android:configChanges="orientation|keyboardHidden|screenSize|smallestScreenSize|screenLayout|keyboard" />
+        <activity-alias
+            android:name="smartcard"
+            android:targetActivity="com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity"
+            android:enabled="false"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED" />
+            </intent-filter>
+
+            <meta-data android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED"
+                android:resource="@xml/device_filter" />
+        </activity-alias>
 
         <activity
             android:name="com.microsoft.identity.common.internal.providers.oauth2.CurrentTaskAuthorizationActivity"

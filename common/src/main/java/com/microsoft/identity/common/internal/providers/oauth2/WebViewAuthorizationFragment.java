@@ -23,7 +23,9 @@
 package com.microsoft.identity.common.internal.providers.oauth2;
 
 import android.annotation.SuppressLint;
+import android.content.ComponentName;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -40,10 +42,6 @@ import androidx.annotation.VisibleForTesting;
 import androidx.fragment.app.FragmentActivity;
 
 import com.microsoft.identity.common.R;
-import com.microsoft.identity.common.internal.ui.webview.challengehandlers.AbstractSmartcardCertBasedAuthManager;
-import com.microsoft.identity.common.internal.ui.webview.challengehandlers.CertBasedAuthFactory;
-import com.microsoft.identity.common.internal.ui.webview.challengehandlers.DialogHolder;
-import com.microsoft.identity.common.internal.ui.webview.challengehandlers.YubiKitCertBasedAuthManager;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
@@ -106,6 +104,11 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         final FragmentActivity activity = getActivity();
         if (activity != null) {
             WebViewUtil.setDataDirectorySuffix(activity.getApplicationContext());
+
+            activity.getPackageManager().setComponentEnabledSetting(
+                    new ComponentName(activity.getPackageName(), "com.microsoft.identity.common.internal.providers.oauth2" + ".smartcard"),
+                    PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+                    PackageManager.DONT_KILL_APP);
         }
         //For CBA, we need to clear the certificate choice cache here so that
         // the user will be able to login with multiple accounts with CBA
