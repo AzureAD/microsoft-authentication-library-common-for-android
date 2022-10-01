@@ -316,16 +316,16 @@ public class UiAutomatorUtils {
 
     /**
      * Clicks the button element associated to the supplied resource id with a longer timeout.
-     * Creating another method to use the longer timeout here, some ui interactions take longer than expected.
-     *
+     * Add parameter to give a custom timeout.
      * @param resourceId the resource id of the button to click
+     * @param existsTimeout how long to wait for ui element
      */
-    public static void handleButtonClickLongTimeout(@NonNull final String resourceId) {
-        Logger.i(TAG, "Clicks the button element associated to the resource id:" + resourceId);
+    public static void handleButtonClick(@NonNull final String resourceId, final long existsTimeout) {
+        Logger.i(TAG, "Clicks the button element associated to the resource id (custom timeout):" + resourceId);
         final UiObject button = obtainUiObjectWithResourceId(resourceId);
 
         try {
-            button.waitForExists(FIND_UI_ELEMENT_TIMEOUT_LONG);
+            button.waitForExists(existsTimeout);
             button.click();
         } catch (final UiObjectNotFoundException e) {
             throw new AssertionError(e);

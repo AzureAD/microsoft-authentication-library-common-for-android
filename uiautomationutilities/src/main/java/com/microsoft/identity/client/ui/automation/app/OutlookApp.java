@@ -22,6 +22,8 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.app;
 
+import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT_LONG;
+
 import androidx.annotation.NonNull;
 import androidx.test.uiautomator.UiObject;
 
@@ -106,7 +108,7 @@ public class OutlookApp extends App implements IFirstPartyApp {
     public void confirmAccount(@NonNull final String username) {
         Logger.i(TAG, "Confirming account with supplied username is signed in..");
         // Click the account drawer
-        UiAutomatorUtils.handleButtonClickLongTimeout("com.microsoft.office.outlook:id/account_button");
+        UiAutomatorUtils.handleButtonClick("com.microsoft.office.outlook:id/account_button", FIND_UI_ELEMENT_TIMEOUT_LONG);
 
         // Make sure our account is listed in the account drawer
         final UiObject testAccountLabel = UiAutomatorUtils.obtainUiObjectWithText(username);

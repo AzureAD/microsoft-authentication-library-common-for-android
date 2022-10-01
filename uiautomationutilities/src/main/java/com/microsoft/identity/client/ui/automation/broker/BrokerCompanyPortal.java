@@ -66,7 +66,8 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
     public final static String OLD_COMPANY_PORTAL_APK = "OldCompanyPortal.apk";
     private final static int PASSWORD_UI_ATTEMPT_COUNT = 3;
 
-    final static long ENROLLMENT_PAGE_TIMEOUT = TimeUnit.SECONDS.toMillis(45);
+    // Timeout to wait for complete enrollment page to appear
+    final static long COMPLETE_ENROLLMENT_PAGE_TIMEOUT = TimeUnit.SECONDS.toMillis(45);
 
     private boolean enrollmentPerformedSuccessfully;
     private boolean batteryOptimizationTurnedOff;
@@ -201,8 +202,8 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
 
         handleFirstRun(); // handle CP first run
 
-        // Company portal password page is somewhat inconsistent, found out turning off battery optimization helps from testing
-        disableBatteryOptimization();
+        // Company portal password page is somewhat inconsistent, found out turning off battery optimization helps in UI testing
+        turnOffBatteryOptimization();
         signInThroughFrontPage(username, password, isFederated);
 
         // click the activate device admin btn
@@ -239,7 +240,7 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
                 "com.microsoft.windowsintune.companyportal:id/setup_title"
         );
 
-        if (!setupCompletePage.waitForExists(ENROLLMENT_PAGE_TIMEOUT)) {
+        if (!setupCompletePage.waitForExists(COMPLETE_ENROLLMENT_PAGE_TIMEOUT)) {
             // Something went wrong with enrollment. If we see a device limit reached dialog, then
             // we throw a DeviceLimitReachedException so that we the DeviceEnrollmentRecoveryRule
             // can perform cleanup and recovery for future enrollments.
@@ -503,9 +504,9 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
        // nothing needed here
     }
 
-    public void disableBatteryOptimization() {
+    public void turnOffBatteryOptimization() {
         if (!batteryOptimizationTurnedOff) {
-            Logger.i(TAG, "Disable battery optimization...");
+            Logger.i(TAG, "Turning Off battery optimization...");
 
             try {
                 final UiDevice device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());

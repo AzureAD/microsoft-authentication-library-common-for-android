@@ -150,21 +150,8 @@ public class PlayStore implements IAppInstaller {
                 new UiSelector().className(Button.class).text(playStoreAction).enabled(true)
         );
 
-        // Sometimes, firebase devices take a very long time to download an app (outlook for example),
-        // a subsequent retry on the same test will find the app already downloading, and will not find the install/update button
-        // instead of just checking for install/update button, we can check for cancel button (Without pressing it)
-        if (uiObjBtn.waitForExists(FIND_UI_ELEMENT_TIMEOUT)){
-            uiObjBtn.click();
-        } else {
-            final UiObject cancelBtn = device.findObject(
-                    new UiSelector().className(Button.class).text("Cancel").enabled(true)
-            );
-
-            // Throw error if we also can't find cancel button
-            if (!cancelBtn.exists()) {
-                throw new AssertionError("Play Store, could not find Install/Update button or Cancel button.");
-            }
-        }
+        uiObjBtn.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
+        uiObjBtn.click();
 
         checkInstallCompletion();
     }
