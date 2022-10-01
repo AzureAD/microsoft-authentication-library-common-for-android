@@ -65,10 +65,10 @@ public class CertBasedAuthFactory {
      */
     @NonNull
     public ICertBasedAuthChallengeHandler createCertBasedAuthChallengeHandler() {
-        if (mSmartcardCertBasedAuthManager.isDeviceConnected()) {
-            return new SmartcardCertBasedAuthChallengeHandler(mSmartcardCertBasedAuthManager, new DialogHolder(mActivity));
+        if (mSmartcardCertBasedAuthManager.isUsbDeviceConnected()) {
+            return new SmartcardCertBasedAuthChallengeHandler(mActivity,mSmartcardCertBasedAuthManager, new DialogHolder(mActivity), false);
         } else {
-            return new OnDeviceCertBasedAuthChallengeHandler(mActivity);
+            return new UserChoiceCertBasedAuthChallengeHandler(mActivity, mSmartcardCertBasedAuthManager, new DialogHolder(mActivity));
         }
     }
 

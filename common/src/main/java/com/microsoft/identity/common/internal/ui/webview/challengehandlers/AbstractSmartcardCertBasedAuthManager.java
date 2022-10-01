@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.ui.webview.challengehandlers;
 
+import android.app.Activity;
+
 import androidx.annotation.NonNull;
 
 import java.security.PrivateKey;
@@ -49,16 +51,32 @@ public abstract class AbstractSmartcardCertBasedAuthManager {
     abstract void stopDiscovery();
 
     /**
+     * Logic to prepare an Android device to detect smartcards via NFC.
+     */
+    abstract void startNfcDiscovery(@NonNull final Activity activity);
+
+    /**
+     * Cease NFC discovery of smartcards.
+     */
+    abstract void stopNfcDiscovery(@NonNull final Activity activity);
+
+    /**
      * Request an instance of a session in order to carry out methods specific to ISmartcardSession.
      * @param callback Contains callbacks to run when a ISmartcardSession is successfully instantiated and when any exception is thrown due to a connection issue.
      */
     abstract void requestDeviceSession(@NonNull final ISessionCallback callback);
 
     /**
-     * Returns boolean based on if a smartcard device is currently connected to the Android device and detected by our code.
+     * Returns boolean based on if a usb smartcard device is currently connected to the Android device and detected by our code.
      * @return true if a device is currently connected, false otherwise.
      */
-    abstract boolean isDeviceConnected();
+    abstract boolean isUsbDeviceConnected();
+
+    /**
+     * Returns boolean based on if a NFC smartcard device is currently connected to the Android device and detected by our code.
+     * @return true if a device is currently connected, false otherwise.
+     */
+    abstract boolean isNfcDeviceConnected();
 
     /**
      * Runs implementation specific processes that may need to occur just before calling {@link android.webkit.ClientCertRequest#proceed(PrivateKey, X509Certificate[])}.
@@ -92,8 +110,9 @@ public abstract class AbstractSmartcardCertBasedAuthManager {
     interface IConnectionCallback {
         /**
          * Logic to be run upon initial connection of a smartcard device.
+         * @param isNfc true if connection is NFC, false if usb.
          */
-        void onCreateConnection();
+        void onCreateConnection(final boolean isNfc);
 
         /**
          * Logic to be run upon disconnection of a smartcard device.

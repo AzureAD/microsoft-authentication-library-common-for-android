@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.ui.webview.challengehandlers;
 
+import android.app.Activity;
 import android.content.Context;
 import android.os.Build;
 
@@ -32,6 +33,10 @@ import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.java.telemetry.events.PivProviderStatusEvent;
 import com.microsoft.identity.common.logging.Logger;
 import com.yubico.yubikit.android.YubiKitManager;
+import com.yubico.yubikit.android.transport.nfc.NfcConfiguration;
+import com.yubico.yubikit.android.transport.nfc.NfcNotAvailable;
+import com.yubico.yubikit.android.transport.nfc.NfcSmartCardConnection;
+import com.yubico.yubikit.android.transport.nfc.NfcYubiKeyDevice;
 import com.yubico.yubikit.android.transport.usb.UsbConfiguration;
 import com.yubico.yubikit.android.transport.usb.UsbYubiKeyDevice;
 import com.yubico.yubikit.android.transport.usb.connection.UsbSmartCardConnection;
@@ -55,7 +60,8 @@ public class YubiKitCertBasedAuthManager extends AbstractSmartcardCertBasedAuthM
     private static final String YUBIKEY_PROVIDER = "YKPiv";
 
     private final YubiKitManager mYubiKitManager;
-    private UsbYubiKeyDevice mDevice;
+    private UsbYubiKeyDevice mUsbDevice;
+    private NfcYubiKeyDevice mNfcDevice;
     //Lock to help facilitate synchronization
     private static final Object sDeviceLock = new Object();
 
@@ -79,17 +85,17 @@ public class YubiKitCertBasedAuthManager extends AbstractSmartcardCertBasedAuthM
             public void invoke(@NonNull UsbYubiKeyDevice device) {
                 Logger.verbose(TAG, "A YubiKey device was connected");
                 synchronized (sDeviceLock) {
-                    mDevice = device;
+                    mUsbDevice = device;
                     if (mConnectionCallback != null) {
-                        mConnectionCallback.onCreateConnection();
+                        mConnectionCallback.onCreateConnection(false);
                     }
 
-                    mDevice.setOnClosed(new Runnable() {
+                    mUsbDevice.setOnClosed(new Runnable() {
                         @Override
                         public void run() {
                             Logger.verbose(TAG, "A YubiKey device was disconnected");
                             synchronized (sDeviceLock) {
-                                mDevice = null;
+                                mUsbDevice = null;
                             }
                             final PivProviderStatusEvent pivProviderStatusEvent = new PivProviderStatusEvent();
                             //Remove the YKPiv security provider if it was added.
@@ -118,7 +124,49 @@ public class YubiKitCertBasedAuthManager extends AbstractSmartcardCertBasedAuthM
      */
     @Override
     public void stopDiscovery() {
+        mUsbDevice = null;
         mYubiKitManager.stopUsbDiscovery();
+    }
+
+    /**
+     * Logic to prepare an Android device to detect smartcards via NFC.
+     */
+    @Override
+    void startNfcDiscovery(@NonNull final Activity activity) {
+        try {
+            mYubiKitManager.startNfcDiscovery(new NfcConfiguration().timeout(25000), activity, new Callback<NfcYubiKeyDevice>() {
+                @Override
+                public void invoke(@NonNull NfcYubiKeyDevice value) {
+                    mNfcDevice = value;
+                    if (mConnectionCallback != null) {
+                        mConnectionCallback.onCreateConnection(true);
+                    }
+                }
+            });
+        } catch (NfcNotAvailable e) {
+            if (e.isDisabled()) {
+                //Need to show some sort of error dialog here.
+                Logger.info(TAG, "Need to turn on NFC");
+            } else {
+                mDiscoveryExceptionCallback.onException();
+            }
+        }
+    }
+
+    /**
+     * Cease NFC discovery of smartcards.
+     */
+    @Override
+    void stopNfcDiscovery(@NonNull final Activity activity) {
+        if (mNfcDevice != null) {
+            mNfcDevice.remove(new Runnable() {
+                @Override
+                public void run() {
+                    mNfcDevice = null;
+                    mYubiKitManager.stopNfcDiscovery(activity);
+                }
+            });
+        }
     }
 
     /**
@@ -130,35 +178,61 @@ public class YubiKitCertBasedAuthManager extends AbstractSmartcardCertBasedAuthM
     public void requestDeviceSession(@NonNull final ISessionCallback callback) {
         final String methodTag = TAG + "requestDeviceSession:";
         synchronized (sDeviceLock) {
-            if (mDevice == null) {
+            if (!isNfcDeviceConnected() && isUsbDeviceConnected()) {
+                //Request a connection from mUsbDevice so that we can get a PivSession instance.
+                mUsbDevice.requestConnection(UsbSmartCardConnection.class, new Callback<Result<UsbSmartCardConnection, IOException>>() {
+                    @Override
+                    public void invoke(@NonNull final Result<UsbSmartCardConnection, IOException> value) {
+                        try {
+                            final SmartCardConnection c = value.getValue();
+                            final PivSession piv = new PivSession(c);
+                            final YubiKitSmartcardSession session = new YubiKitSmartcardSession(piv);
+                            callback.onGetSession(session);
+                        } catch (final Exception e) {
+                            callback.onException(e);
+                        }
+                    }
+                });
+            } else if (isNfcDeviceConnected() && !isUsbDeviceConnected()) {
+                mNfcDevice.requestConnection(NfcSmartCardConnection.class, new Callback<Result<NfcSmartCardConnection, IOException>>() {
+                    @Override
+                    public void invoke(@NonNull Result<NfcSmartCardConnection, IOException> value) {
+                        try {
+                            final SmartCardConnection c = value.getValue();
+                            final PivSession piv = new PivSession(c);
+                            final YubiKitSmartcardSession session = new YubiKitSmartcardSession(piv);
+                            callback.onGetSession(session);
+                        } catch (final Exception e) {
+                            callback.onException(e);
+                        }
+                    }
+                });
+            } else {
                 Logger.error(methodTag, MDEVICE_NULL_ERROR_MESSAGE, null);
                 callback.onException(new Exception());
             }
-            //Request a connection from mDevice so that we can get a PivSession instance.
-            mDevice.requestConnection(UsbSmartCardConnection.class, new Callback<Result<UsbSmartCardConnection, IOException>>() {
-                @Override
-                public void invoke(@NonNull final Result<UsbSmartCardConnection, IOException> value) {
-                    try {
-                        final SmartCardConnection c = value.getValue();
-                        final PivSession piv = new PivSession(c);
-                        final YubiKitSmartcardSession session = new YubiKitSmartcardSession(piv);
-                        callback.onGetSession(session);
-                    } catch (final Exception e) {
-                        callback.onException(e);
-                    }
-                }
-            });
         }
     }
 
     /**
-     * Checks if a YubiKey is currently connected.
+     * Checks if a YubiKey is currently connected via USB.
      * @return true if YubiKey is currently connected. Otherwise, false.
      */
     @Override
-    public boolean isDeviceConnected() {
+    public boolean isUsbDeviceConnected() {
         synchronized (sDeviceLock) {
-            return mDevice != null;
+            return mUsbDevice != null;
+        }
+    }
+
+    /**
+     * Checks if a YubiKey is currently connected via NFC.
+     * @return true if YubiKey is currently connected. Otherwise, false.
+     */
+    @Override
+    public boolean isNfcDeviceConnected() {
+        synchronized (sDeviceLock) {
+            return mNfcDevice != null;
         }
     }
 
@@ -204,24 +278,35 @@ public class YubiKitCertBasedAuthManager extends AbstractSmartcardCertBasedAuthM
             @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
             @Override
             public void invoke(@NonNull final Callback<Result<PivSession, Exception>> callback) {
-                //Show error dialog and cancel flow if mDevice is null.
                 synchronized (sDeviceLock) {
-                    if (mDevice == null) {
+                    if (isNfcDeviceConnected() && !isUsbDeviceConnected()) {
+                        mNfcDevice.requestConnection(NfcSmartCardConnection.class, new Callback<Result<NfcSmartCardConnection, IOException>>() {
+                            @Override
+                            public void invoke(@NonNull final Result<NfcSmartCardConnection, IOException> value) {
+                                callback.invoke(Result.of(new Callable<PivSession>() {
+                                    @Override
+                                    public PivSession call() throws Exception {
+                                        return new PivSession(value.getValue());
+                                    }
+                                }));
+                            }
+                        });
+                    } else if (!isNfcDeviceConnected() && isUsbDeviceConnected()) {
+                        mUsbDevice.requestConnection(UsbSmartCardConnection.class, new Callback<Result<UsbSmartCardConnection, IOException>>() {
+                            @Override
+                            public void invoke(@NonNull final Result<UsbSmartCardConnection, IOException> value) {
+                                callback.invoke(Result.of(new Callable<PivSession>() {
+                                    @Override
+                                    public PivSession call() throws Exception {
+                                        return new PivSession(value.getValue());
+                                    }
+                                }));
+                            }
+                        });
+                    } else {
                         Logger.error(methodTag, MDEVICE_NULL_ERROR_MESSAGE, null);
                         callback.invoke(Result.failure(new Exception(MDEVICE_NULL_ERROR_MESSAGE)));
-                        return;
                     }
-                    mDevice.requestConnection(UsbSmartCardConnection.class, new Callback<Result<UsbSmartCardConnection, IOException>>() {
-                        @Override
-                        public void invoke(@NonNull final Result<UsbSmartCardConnection, IOException> value) {
-                            callback.invoke(Result.of(new Callable<PivSession>() {
-                                @Override
-                                public PivSession call() throws Exception {
-                                    return new PivSession(value.getValue());
-                                }
-                            }));
-                        }
-                    });
                 }
             }
         };
