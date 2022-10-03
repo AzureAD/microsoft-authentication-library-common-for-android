@@ -88,6 +88,7 @@ public class PopAuthenticationSchemeWithClientKeyInternal
      * @param nonce        Client nonce value; for replay protection.
      * @param clientClaims Optional claims provided by the caller to embed in the client_claims
      *                     property of the resulting SHR.
+     * @param kid          The kid/thumbprint for the Client Key.
      */
     public PopAuthenticationSchemeWithClientKeyInternal(@Nullable final String httpMethod,
                                                         @NonNull final URL url,
