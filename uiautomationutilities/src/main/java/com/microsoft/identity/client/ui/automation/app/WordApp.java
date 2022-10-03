@@ -22,16 +22,12 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.app;
 
-import static androidx.test.platform.app.InstrumentationRegistry.getInstrumentation;
-
 import android.widget.Button;
 import android.widget.EditText;
 
 import androidx.annotation.NonNull;
-import androidx.test.uiautomator.UiDevice;
 import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObjectNotFoundException;
-import androidx.test.uiautomator.UiSelector;
 
 import com.microsoft.identity.client.ui.automation.BuildConfig;
 import com.microsoft.identity.client.ui.automation.installer.IAppInstaller;
