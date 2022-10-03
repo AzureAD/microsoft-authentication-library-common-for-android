@@ -87,14 +87,7 @@ public class AuthenticationSchemeFactory {
                             "Constructing PoP Authentication Scheme With Client Key."
                     );
 
-                    final IPoPAuthenticationSchemeParams params = (IPoPAuthenticationSchemeParams) nameable;
-                        return new PopAuthenticationSchemeWithClientKeyInternal(
-                                params.getHttpMethod(),
-                                params.getUrl(),
-                                params.getNonce(),
-                                params.getClientClaims(),
-                                params.getClientClaims()
-                        );
+                    return (PopAuthenticationSchemeWithClientKeyInternal) nameable;
                 } else {
                     throw new IllegalStateException("Unrecognized parameter type.");
                 }
@@ -113,7 +106,6 @@ public class AuthenticationSchemeFactory {
      * @return boolean indicating if the the authentication scheme is a PoP authentication scheme
      */
     public static boolean isPopAuthenticationScheme(@NonNull final AbstractAuthenticationScheme authenticationScheme) {
-        return authenticationScheme instanceof PopAuthenticationSchemeInternal
-                || authenticationScheme instanceof PopAuthenticationSchemeWithClientKeyInternal;
+        return authenticationScheme instanceof IPoPAuthenticationSchemeParams;
     }
 }
