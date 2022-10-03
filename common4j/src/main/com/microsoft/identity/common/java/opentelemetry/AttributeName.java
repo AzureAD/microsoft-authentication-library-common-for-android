@@ -20,15 +20,22 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java.logging;
+package com.microsoft.identity.common.java.opentelemetry;
 
 /**
- * An extension of ILoggerCallback - so that it prints the discarded log.
- * This is for testing only (to verify that logs are actually discarded).
+ * Names of Open Telemetry Span Attributes we want to capture for broker's Spans.
  */
-interface IDetailedLoggerCallback extends ILoggerCallback {
+public enum AttributeName {
     /**
-     * Messages that are discarded by the loggers.
+     * The length of the response body returned from network request.
      */
-    void discardedLog(String tag, Logger.LogLevel logLevel, String message, boolean containsPII);
+    response_body_length,
+    /**
+     * Indicates if the JWT returned by eSTS is a valid JWT.
+     */
+    jwt_valid,
+    /**
+     * Indicates the algorithm for the JWE returned by eSTS.
+     */
+    jwt_alg
 }

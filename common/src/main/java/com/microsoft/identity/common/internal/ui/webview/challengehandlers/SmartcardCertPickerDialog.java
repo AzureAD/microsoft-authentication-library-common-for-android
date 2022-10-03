@@ -39,6 +39,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 
 import com.microsoft.identity.common.R;
+import com.microsoft.identity.common.logging.Logger;
 
 import java.security.cert.X509Certificate;
 import java.util.List;
@@ -48,18 +49,19 @@ import java.util.List;
  */
 public class SmartcardCertPickerDialog extends SmartcardDialog {
 
-    private final List<ClientCertAuthChallengeHandler.YubiKitCertDetails> mCertList;
+    private static final String TAG = SmartcardCertPickerDialog.class.getSimpleName();
+    private final List<ICertDetails> mCertList;
     private final PositiveButtonListener mPositiveButtonListener;
     private final CancelCbaCallback mCancelCbaCallback;
 
     /**
      * Creates new instance of SmartcardCertPickerDialog.
-     * @param certList List of ClientCertAuthChallengeHandler.YubiKitCertDetails compiled from certificates on YubiKey.
+     * @param certList List of ICertDetails compiled from certificates on smartcard.
      * @param positiveButtonListener Implemented Listener for a positive button click.
      * @param cancelCbaCallback Implemented Callback for when CBA is being cancelled.
      * @param activity Host activity.
      */
-    public SmartcardCertPickerDialog(@NonNull final List<ClientCertAuthChallengeHandler.YubiKitCertDetails> certList,
+    public SmartcardCertPickerDialog(@NonNull final List<ICertDetails> certList,
                                      @NonNull final PositiveButtonListener positiveButtonListener,
                                      @NonNull final CancelCbaCallback cancelCbaCallback,
                                      @NonNull final Activity activity) {
@@ -74,6 +76,7 @@ public class SmartcardCertPickerDialog extends SmartcardDialog {
      * Builds an AlertDialog that displays the details of the certificates in a single choice ListView and prompts the user to choose a certificate to proceed.
      */
     protected void createDialog() {
+        final String methodTag = TAG + ":createDialog";
         //Create CertDetailsAdapter
         final CertDetailsAdapter certAdapter = new CertDetailsAdapter(mActivity, mCertList);
         //Must build dialog on UI thread
@@ -84,7 +87,7 @@ public class SmartcardCertPickerDialog extends SmartcardDialog {
                 final AlertDialog.Builder builder = new AlertDialog.Builder(mActivity, R.style.CertAlertDialogTheme)
                         //Set topmost text of dialog.
                         .setTitle(R.string.smartcard_cert_dialog_title)
-                        //Creates and sets a ListView which gets rows from the provided CertDetails adapter. The first row is checked by default.
+                        //Creates and sets a ListView which gets rows from the provided ICertDetails adapter. The first row is checked by default.
                         //We don't pass through a listener, as the radio button check logic is handled after dialog is created.
                         .setSingleChoiceItems(certAdapter, 0, null)
                         //Positive button will pass along the certDetails of the selected row.
@@ -93,8 +96,16 @@ public class SmartcardCertPickerDialog extends SmartcardDialog {
                             public void onClick(final DialogInterface dialog, int which) {
                                 //Get the certificate details of the checked row.
                                 final int checkedPosition = ((AlertDialog) dialog).getListView().getCheckedItemPosition();
-                                final ClientCertAuthChallengeHandler.YubiKitCertDetails certDetails = certAdapter.getItem(checkedPosition);
-                                mPositiveButtonListener.onClick(certDetails);
+                                final ICertDetails certDetails = certAdapter.getItem(checkedPosition);
+                                //certAdapter.getItem could return null.
+                                if (certDetails != null) {
+                                    mPositiveButtonListener.onClick(certDetails);
+                                } else {
+                                    //Handle this by cancelling out of flow and logging.
+                                    //Should add telemetry once telemetry process is updated.
+                                    mCancelCbaCallback.onCancel();
+                                    Logger.error(methodTag, "Could not retrieve info for selected certificate entry.", null);
+                                }
                             }
                         })
                         //Negative button should end up cancelling flow.
@@ -145,7 +156,7 @@ public class SmartcardCertPickerDialog extends SmartcardDialog {
      * Listener interface for a positive button click.
      */
     public interface PositiveButtonListener {
-        void onClick(@NonNull final ClientCertAuthChallengeHandler.YubiKitCertDetails certDetails);
+        void onClick(@NonNull final ICertDetails certDetails);
     }
 
     /**
@@ -158,10 +169,10 @@ public class SmartcardCertPickerDialog extends SmartcardDialog {
     /**
      * YubiKitCertDetails Adapter for ListView within smartcard certificate picker dialog.
      */
-    public static class CertDetailsAdapter extends ArrayAdapter<ClientCertAuthChallengeHandler.YubiKitCertDetails> {
+    public static class CertDetailsAdapter extends ArrayAdapter<ICertDetails> {
 
         public CertDetailsAdapter(@NonNull final Context context,
-                                  @NonNull final List<ClientCertAuthChallengeHandler.YubiKitCertDetails> certs) {
+                                  @NonNull final List<ICertDetails> certs) {
             super(context, 0, certs);
         }
 

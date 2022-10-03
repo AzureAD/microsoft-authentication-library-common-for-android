@@ -24,24 +24,47 @@ package com.microsoft.identity.common.java.crypto;
 
 import com.microsoft.identity.common.java.exception.ClientException;
 
-import java.security.PrivateKey;
+import java.security.KeyFactory;
+import java.security.KeyPairGenerator;
+import java.security.Signature;
+
+import javax.crypto.Cipher;
+import javax.crypto.Mac;
 
 import lombok.NonNull;
 
 /**
- * Interface for a Signer.
+ * Representing a class for generating crypto objects.
  */
-public interface ISigner {
+public interface ICryptoFactory {
 
     /**
-     * Signs with a {@link PrivateKey}.
-     *
-     * @param key                  the key to sign.
-     * @param signingAlgorithm     algorithm for signing the data.
-     * @param dataToBeSigned       the data to be signed.
-     * @return signed data.
+     * Gets a {@link Signature} crypto object
      */
-    byte[] sign(@NonNull final PrivateKey key,
-                @NonNull final String signingAlgorithm,
-                byte[] dataToBeSigned) throws ClientException;
+    @NonNull
+    Signature getSignature(@NonNull final String algorithm) throws ClientException;
+
+    /**
+     * Gets a {@link Cipher} crypto object
+     */
+    @NonNull
+    Cipher getCipher(@NonNull final String algorithm) throws ClientException;
+
+    /**
+     * Gets a {@link Mac} crypto object
+     */
+    @NonNull
+    Mac getMac(@NonNull final String algorithm) throws ClientException;
+
+    /**
+     * Gets a {@link KeyPairGenerator} crypto object
+     */
+    @NonNull
+    KeyPairGenerator getKeyPairGenerator(@NonNull final String algorithm) throws ClientException;
+
+    /**
+     * Gets a {@link KeyFactory} crypto object
+     */
+    @NonNull
+    KeyFactory getKeyFactory(@NonNull final String algorithm) throws ClientException;
 }

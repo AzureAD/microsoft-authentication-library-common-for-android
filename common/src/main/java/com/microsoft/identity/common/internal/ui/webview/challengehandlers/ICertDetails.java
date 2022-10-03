@@ -20,28 +20,22 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java.crypto;
+package com.microsoft.identity.common.internal.ui.webview.challengehandlers;
 
-import com.microsoft.identity.common.java.exception.ClientException;
+import androidx.annotation.NonNull;
 
-import java.security.PrivateKey;
-
-import lombok.NonNull;
+import java.security.cert.X509Certificate;
 
 /**
- * Interface for a Signer.
+ * Holds X509Certificate and other important details that may be implementation specific.
  */
-public interface ISigner {
+public interface ICertDetails {
 
     /**
-     * Signs with a {@link PrivateKey}.
-     *
-     * @param key                  the key to sign.
-     * @param signingAlgorithm     algorithm for signing the data.
-     * @param dataToBeSigned       the data to be signed.
-     * @return signed data.
+     * Gets certificate.
+     * @return certificate.
      */
-    byte[] sign(@NonNull final PrivateKey key,
-                @NonNull final String signingAlgorithm,
-                byte[] dataToBeSigned) throws ClientException;
+    @NonNull
+    X509Certificate getCertificate();
+
 }

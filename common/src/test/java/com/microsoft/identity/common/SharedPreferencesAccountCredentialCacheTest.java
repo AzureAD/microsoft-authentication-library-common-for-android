@@ -1268,7 +1268,8 @@ public class SharedPreferencesAccountCredentialCacheTest {
                 REALM,
                 null,
                 BEARER_AUTHENTICATION_SCHEME.getName(),
-                "{\"access_token\":{\"deviceid\":{\"essential\":true}}}"
+                "{\"access_token\":{\"deviceid\":{\"essential\":true}}}",
+                mSharedPreferencesAccountCredentialCache.getCredentials()
         );
         assertEquals(1, credentials.size());
     }
@@ -1320,7 +1321,8 @@ public class SharedPreferencesAccountCredentialCacheTest {
                 REALM,
                 null,
                 BEARER_AUTHENTICATION_SCHEME.getName(),
-                "{\"access_token\":{\"deviceid\":{\"essential\":true}}}"
+                "{\"access_token\":{\"deviceid\":{\"essential\":true}}}",
+                mSharedPreferencesAccountCredentialCache.getCredentials()
         );
         assertEquals(1, credentials.size());
         assertEquals("SecretB", credentials.get(0).getSecret());
