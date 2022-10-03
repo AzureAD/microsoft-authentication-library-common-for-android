@@ -528,7 +528,6 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         }
 
         // Actual handshake error.
-        // We shouldn't be using OAuth2.Error... but changing this would break backcompat...
         if (!StringUtil.isNullOrEmpty(bundle.getString(HELLO_ERROR_CODE))) {
             final String errorCode = bundle.getString(HELLO_ERROR_CODE);
             final String errorMessage = bundle.getString(HELLO_ERROR_MESSAGE);
