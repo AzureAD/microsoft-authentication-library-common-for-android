@@ -22,60 +22,50 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.ui.webview.challengehandlers;
 
-import android.app.Activity;
-import android.app.Dialog;
-
 import androidx.annotation.NonNull;
 
+import com.yubico.yubikit.piv.Slot;
+
+import java.security.cert.X509Certificate;
+
+import javax.annotation.Nonnull;
+
 /**
- * Lists the main methods needed to show a simple dialog in CertBasedAuthChallengeHandler.
- * Button listeners can be implemented in child classes.
+ * Holds certificate found on YubiKey and its corresponding slot.
  */
-public abstract class SmartcardDialog {
-    protected final Activity mActivity;
-    protected Dialog mDialog;
+public class YubiKitCertDetails implements ICertDetails {
+    private final X509Certificate mCert;
+    private final Slot mSlot;
 
     /**
-     * Creates new instance of SmartcardDialog.
-     * @param activity Host activity.
+     * Creates new instance of YubiKitCertDetails.
+     * @param cert Certificate found on YubiKey.
+     * @param slot PIV slot on YubiKey where certificate is located.
      */
-    public SmartcardDialog(@NonNull final Activity activity) {
-        mActivity = activity;
-        mDialog = null;
+    public YubiKitCertDetails(@NonNull final X509Certificate cert,
+                              @NonNull final Slot slot) {
+        mCert = cert;
+        mSlot = slot;
     }
 
     /**
-     * Should build an Android Dialog object and set it to mDialog.
-     * Dialog objects must be built/interacted with on the UI thread.
+     * Gets certificate.
+     * @return certificate.
      */
-    abstract void createDialog();
-
-    /**
-     * Should dismiss dialog and call the appropriate methods to help cancel the CBA flow.
-     */
-    abstract void onCancelCba();
-
-    /**
-     * Show mDialog on the main thread.
-     */
-    public void show() {
-        mActivity.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                mDialog.show();
-            }
-        });
+    @Override
+    @NonNull
+    public X509Certificate getCertificate() {
+        return mCert;
     }
 
+
     /**
-     * Dismiss mDialog.
+     * Gets PIV Slot where certificate is located.
+     * @return Slot where certificate is located.
      */
-    public void dismiss() {
-        mActivity.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                mDialog.dismiss();
-            }
-        });
+    @Nonnull
+    public Slot getSlot() {
+        return mSlot;
     }
 }
+

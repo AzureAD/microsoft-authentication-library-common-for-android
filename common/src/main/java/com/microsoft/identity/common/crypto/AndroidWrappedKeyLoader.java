@@ -52,6 +52,7 @@ import javax.crypto.SecretKey;
 import javax.security.auth.x500.X500Principal;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.NonNull;
 
 /**
@@ -63,6 +64,12 @@ import lombok.NonNull;
 @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
 public class AndroidWrappedKeyLoader extends AES256KeyLoader {
     private static final String TAG = AndroidWrappedKeyLoader.class.getSimpleName() + "#";
+
+    /**
+     * Should KeyStore and key file check for validity before every key load be skipped.
+     */
+    @SuppressFBWarnings("MS_SHOULD_BE_FINAL")
+    public static boolean sSkipKeyInvalidationCheck = false;
 
     /**
      * Alias for this type of key.
@@ -99,7 +106,8 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
     private final CachedData<SecretKey> mKeyCache = new CachedData<SecretKey>() {
         @Override
         public SecretKey getData() {
-            if (!AndroidKeyStoreUtil.canLoadKey(mAlias) || !getKeyFile().exists()) {
+            if (!sSkipKeyInvalidationCheck &&
+                    (!AndroidKeyStoreUtil.canLoadKey(mAlias) || !getKeyFile().exists())) {
                 this.clear();
             }
             return super.getData();

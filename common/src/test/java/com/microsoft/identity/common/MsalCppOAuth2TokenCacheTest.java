@@ -393,7 +393,6 @@ public class MsalCppOAuth2TokenCacheTest {
         mCppCache.saveAccountRecord(generatedAccount);
 
         mCppCache.saveCredentials(
-                generatedAccount,
                 mTestBundle.mGeneratedAccessToken,
                 mTestBundle.mGeneratedIdToken,
                 mTestBundle.mGeneratedRefreshToken
@@ -429,7 +428,6 @@ public class MsalCppOAuth2TokenCacheTest {
         mCppCache.saveAccountRecord(generatedAccount);
 
         mCppCache.saveCredentials(
-                generatedAccount,
                 mTestBundle.mGeneratedAccessToken,
                 mTestBundle.mGeneratedIdToken,
                 mTestBundle.mGeneratedRefreshToken,
