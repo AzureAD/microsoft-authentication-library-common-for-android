@@ -538,13 +538,9 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         if (resultObject instanceof BrokerResult) {
             // for the back compatibility purpose to version 3.0.4 and 3.0.6.
             final BrokerResult brokerResult = (BrokerResult) resultObject;
-            if (StringUtil.isNullOrEmpty(brokerResult.getErrorCode())){
-                throw new UnsupportedBrokerException(
-                        activeBrokerPackageName,
-                        brokerResult.getErrorCode(),
-                        brokerResult.getErrorMessage());
-            }
+            throw new ClientException(brokerResult.getErrorCode(), brokerResult.getErrorMessage());
         }
+        
         // This means that the Broker doesn't support hello().
         Logger.warn(methodTag, "The result bundle is not in a recognizable format.");
         throw new UnsupportedBrokerException(activeBrokerPackageName);
