@@ -979,9 +979,9 @@ public class BrokerMsalController extends BaseController {
         final String requiredProtocolVersion = parameters.getRequiredBrokerProtocolVersion();
         if (parameters.getAuthenticationScheme() instanceof PopAuthenticationSchemeWithClientKeyInternal
                 && !BrokerProtocolVersionUtil.canSupportPopAuthenticationSchemeWithClientKey(requiredProtocolVersion)){
-            throw new ClientException(ClientException.AUTH_SCHEME_MISMATCH,
-                    "The required broker protocol version does not support the supplied auth scheme"
-                            + parameters.getAuthenticationScheme().getName());
+            throw new ClientException(ClientException.AUTH_SCHEME_NOT_SUPPORTED,
+                    "The min broker protocol version for PopAuthenticationSchemeWithClientKey should be equal or more than 11.0."
+            + " Current required version is set to: " + parameters.getRequiredBrokerProtocolVersion());
         }
     }
 }
