@@ -86,7 +86,7 @@ import java.util.List;
  */
 public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
 
-    private static final String TAG = MsalBrokerResultAdapter.class.getName();
+    private static final String TAG = MsalBrokerResultAdapter.class.getSimpleName();
     public static final Gson GSON = new Gson();
 
     @NonNull
@@ -540,7 +540,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
             final BrokerResult brokerResult = (BrokerResult) resultObject;
             throw new ClientException(brokerResult.getErrorCode(), brokerResult.getErrorMessage());
         }
-        
+
         // This means that the Broker doesn't support hello().
         Logger.warn(methodTag, "The result bundle is not in a recognizable format.");
         throw new UnsupportedBrokerException(activeBrokerPackageName);
