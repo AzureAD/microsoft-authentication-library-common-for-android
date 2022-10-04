@@ -142,7 +142,7 @@ public class WordApp extends App implements IFirstPartyApp {
             try {
                 skipObject.click();
             } catch (UiObjectNotFoundException e) {
-                Logger.i(TAG, "Ignoring failure to find confrim account UI");
+                Logger.i(TAG, "Ignoring failure to find confirm account UI");
             }
         }
 
