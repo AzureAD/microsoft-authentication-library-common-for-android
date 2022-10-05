@@ -22,18 +22,16 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.crypto;
 
+import static com.microsoft.identity.common.java.opentelemetry.CryptoFactoryTelemetryHelper.performCryptoTaskAndUploadTelemetry;
+
 import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.java.exception.ErrorStrings;
-import com.microsoft.identity.common.java.logging.Logger;
+import com.microsoft.identity.common.java.opentelemetry.CryptoFactoryOperationName;
+import com.microsoft.identity.common.java.opentelemetry.ICryptoOperationCallback;
 
 import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.Signature;
 import java.security.SignatureException;
-
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
 
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
@@ -48,10 +46,25 @@ public class BasicSigner implements ISigner {
 
     private final ICryptoFactory mCryptoFactory;
 
-    @Override
     public byte[] sign(@NonNull final PrivateKey key,
                        @NonNull final String signingAlgorithm,
                        final byte[] dataToBeSigned) throws ClientException {
+        return performCryptoTaskAndUploadTelemetry(
+                CryptoFactoryOperationName.Signature,
+                signingAlgorithm,
+                mCryptoFactory,
+                new ICryptoOperationCallback<byte[]>() {
+                    @Override
+                    public byte[] perform() throws ClientException {
+                        return signWithSignature(key, signingAlgorithm, dataToBeSigned);
+                    }
+                }
+        );
+    }
+
+    private byte[] signWithSignature(@NonNull final PrivateKey key,
+                                     @NonNull final String signingAlgorithm,
+                                     final byte[] dataToBeSigned) throws ClientException {
         try {
             final Signature signer = mCryptoFactory.getSignature(signingAlgorithm);
             signer.initSign(key);

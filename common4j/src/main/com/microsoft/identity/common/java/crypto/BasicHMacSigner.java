@@ -22,15 +22,14 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.crypto;
 
+import static com.microsoft.identity.common.java.opentelemetry.CryptoFactoryTelemetryHelper.performCryptoTaskAndUploadTelemetry;
+
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
-import com.microsoft.identity.common.java.logging.Logger;
+import com.microsoft.identity.common.java.opentelemetry.CryptoFactoryOperationName;
+import com.microsoft.identity.common.java.opentelemetry.ICryptoOperationCallback;
 
 import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.security.PrivateKey;
-import java.security.Signature;
-import java.security.SignatureException;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -51,6 +50,22 @@ public class BasicHMacSigner implements IHMacSigner {
     public byte[] sign(final byte[] keyData,
                        @NonNull final String hmacAlgorithm,
                        final byte[] dataToBeSigned) throws ClientException {
+        return performCryptoTaskAndUploadTelemetry(
+                CryptoFactoryOperationName.Mac,
+                hmacAlgorithm,
+                mCryptoFactory,
+                new ICryptoOperationCallback<byte[]>() {
+                    @Override
+                    public byte[] perform() throws ClientException {
+                        return signWithMac(keyData, hmacAlgorithm, dataToBeSigned);
+                    }
+                }
+        );
+    }
+
+    public byte[] signWithMac(final byte[] keyData,
+                              @NonNull final String hmacAlgorithm,
+                              final byte[] dataToBeSigned) throws ClientException {
         try {
             final Mac sha256HMAC = mCryptoFactory.getMac(hmacAlgorithm);
             final SecretKeySpec secretKey = new SecretKeySpec(keyData, hmacAlgorithm);

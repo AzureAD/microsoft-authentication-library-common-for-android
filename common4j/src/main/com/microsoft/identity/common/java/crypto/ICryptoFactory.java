@@ -23,6 +23,8 @@
 package com.microsoft.identity.common.java.crypto;
 
 import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.opentelemetry.CryptoFactoryOperationName;
+import com.microsoft.identity.common.java.opentelemetry.ICryptoOperationCallback;
 
 import java.security.KeyFactory;
 import java.security.KeyPairGenerator;
