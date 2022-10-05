@@ -30,18 +30,14 @@ import com.microsoft.identity.common.java.crypto.ICryptoFactory;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.util.StringUtil;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.StatusCode;
-import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Scope;
 import lombok.NonNull;
 
 public class CryptoFactoryTelemetryHelper {
 
     private static final String TAG = CryptoFactoryTelemetryHelper.class.getSimpleName();
-
-    private static final Tracer sTracer = GlobalOpenTelemetry.getTracer(TAG);
 
     private static final String SPAN_PREFIX = "CryptoFactory_";
 
@@ -60,7 +56,7 @@ public class CryptoFactoryTelemetryHelper {
                                                             @NonNull final ICryptoFactory cryptoFactory,
                                                             @NonNull final ICryptoOperationCallback<T> cryptoOperation)
             throws ClientException {
-        final Span span = sTracer.spanBuilder(getSpanName(operationName)).startSpan();
+        final Span span = OTelUtility.createSpan(getSpanName(operationName));
         try (final Scope scope = span.makeCurrent()) {
             span.setAttribute(crypto_controller.name(), cryptoFactory.getClass().getSimpleName());
             span.setAttribute(crypto_algorithm.name(), algorithmName);

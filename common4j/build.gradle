@@ -221,6 +221,7 @@ dependencies {
 
     implementation platform("io.opentelemetry:opentelemetry-bom:1.16.0")
     implementation('io.opentelemetry:opentelemetry-api')
+    implementation('io.opentelemetry:opentelemetry-sdk-trace:1.18.0')
 }
 
 sourceCompatibility = "1.8"
