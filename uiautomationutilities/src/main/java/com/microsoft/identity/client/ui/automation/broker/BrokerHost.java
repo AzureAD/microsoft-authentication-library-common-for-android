@@ -531,4 +531,47 @@ public class BrokerHost extends AbstractTestBroker {
             UiAutomatorUtils.handleButtonClick("android:id/button1");
         }
     }
+
+    /**
+     * Check if the Device Code Flow option shows up in sign in flow.
+     * @param tenantId tenant ID to use in Join Tenant
+     * @throws UiObjectNotFoundException
+     */
+    public void checkForDcfOption(@Nullable final String tenantId){
+        final String tenantIdToUse;
+
+        // If no tenant ID is specified, default to microsoft tenant
+        if (tenantId == null) {
+            tenantIdToUse = "72f988bf-86f1-41af-91ab-2d7cd011db47";
+        } else {
+            tenantIdToUse = tenantId;
+        }
+
+        final String joinTenantButtonId = "com.microsoft.identity.testuserapp:id/buttonJoinTenant";
+        final String joinTenantEditTestId = "com.microsoft.identity.testuserapp:id/editTextTenantId";
+
+        launch();
+
+        UiAutomatorUtils.handleInput(joinTenantEditTestId, tenantIdToUse);
+
+        UiAutomatorUtils.handleButtonClick(joinTenantButtonId);
+
+        // Apparently, there are two UI objects with exact test "Sign-in options", one is a button the other is a view
+        // Have to specify the search to button class
+        final UiDevice device =
+                UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+
+        final UiObject optionsObject = device.findObject(new UiSelector()
+                .text("Sign-in options").className("android.widget.Button"));
+
+        try {
+            optionsObject.click();
+        } catch (UiObjectNotFoundException e) {
+            throw new AssertionError(e);
+        }
+        UiAutomatorUtils.handleButtonClickForObjectWithText("Sign in from another device");
+
+        // Doesn't look like the page with the device code is readable to the UI automation,
+        // this is a sufficient stopping point
+    }
 }
