@@ -37,7 +37,9 @@ import com.microsoft.identity.common.java.ui.AuthorizationAgent;
 import com.microsoft.identity.common.internal.util.ProcessUtil;
 import com.microsoft.identity.common.logging.DiagnosticContext;
 
+import java.io.Serializable;
 import java.util.HashMap;
+import java.util.Map;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.AUTHORIZATION_AGENT;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.AUTH_INTENT;
@@ -65,14 +67,14 @@ public class AuthorizationActivityFactory {
      * @param webViewZoomControlsEnabled This parameter is specific to embedded and controls whether webview zoom controls are enabled... NOTE: Needs refactoring
      * @return An android Intent which will be used by Android to create an AuthorizationActivity
      */
-    public static Intent getAuthorizationActivityIntent(final Context context,
-                                                        final Intent authIntent,
-                                                        final String requestUrl,
-                                                        final String redirectUri,
-                                                        final HashMap<String, String> requestHeaders,
-                                                        final AuthorizationAgent authorizationAgent,
-                                                        final boolean webViewZoomEnabled,
-                                                        final boolean webViewZoomControlsEnabled) {
+    public static <T extends Map<String, String> & Serializable> Intent getAuthorizationActivityIntent(final Context context,
+                                                                                        final Intent authIntent,
+                                                                                        final String requestUrl,
+                                                                                        final String redirectUri,
+                                                                                        final T requestHeaders,
+                                                                                        final AuthorizationAgent authorizationAgent,
+                                                                                        final boolean webViewZoomEnabled,
+                                                                                        final boolean webViewZoomControlsEnabled) {
         Intent intent;
         final LibraryConfiguration libraryConfig = LibraryConfiguration.getInstance();
         if (ProcessUtil.isBrokerProcess(context)) {
