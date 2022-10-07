@@ -22,11 +22,11 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.crypto;
 
-import static com.microsoft.identity.common.java.opentelemetry.CryptoFactoryTelemetryHelper.performCryptoTaskAndUploadTelemetry;
+import static com.microsoft.identity.common.java.opentelemetry.CryptoFactoryTelemetryHelper.performCryptoOperationAndUploadTelemetry;
 
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.opentelemetry.CryptoFactoryOperationName;
-import com.microsoft.identity.common.java.opentelemetry.ICryptoOperationCallback;
+import com.microsoft.identity.common.java.opentelemetry.ICryptoOperation;
 
 import java.security.InvalidKeyException;
 import java.security.PrivateKey;
@@ -49,11 +49,11 @@ public class BasicSigner implements ISigner {
     public byte[] sign(@NonNull final PrivateKey key,
                        @NonNull final String signingAlgorithm,
                        final byte[] dataToBeSigned) throws ClientException {
-        return performCryptoTaskAndUploadTelemetry(
+        return performCryptoOperationAndUploadTelemetry(
                 CryptoFactoryOperationName.Signature,
                 signingAlgorithm,
                 mCryptoFactory,
-                new ICryptoOperationCallback<byte[]>() {
+                new ICryptoOperation<byte[]>() {
                     @Override
                     public byte[] perform() throws ClientException {
                         return signWithSignature(key, signingAlgorithm, dataToBeSigned);

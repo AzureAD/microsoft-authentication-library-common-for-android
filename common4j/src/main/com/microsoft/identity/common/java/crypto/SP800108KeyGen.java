@@ -22,11 +22,11 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.crypto;
 
-import static com.microsoft.identity.common.java.opentelemetry.CryptoFactoryTelemetryHelper.performCryptoTaskAndUploadTelemetry;
+import static com.microsoft.identity.common.java.opentelemetry.CryptoFactoryTelemetryHelper.performCryptoOperationAndUploadTelemetry;
 
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.opentelemetry.CryptoFactoryOperationName;
-import com.microsoft.identity.common.java.opentelemetry.ICryptoOperationCallback;
+import com.microsoft.identity.common.java.opentelemetry.ICryptoOperation;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -76,11 +76,11 @@ public class SP800108KeyGen {
 
         stream.write(BIG_ENDIAN_INT_256);
 
-        byte[] pbDerivedKey = performCryptoTaskAndUploadTelemetry(
+        byte[] pbDerivedKey = performCryptoOperationAndUploadTelemetry(
                 CryptoFactoryOperationName.Mac,
                 HMAC_ALGORITHM,
                 mCryptoFactory,
-                new ICryptoOperationCallback<byte[]>() {
+                new ICryptoOperation<byte[]>() {
                     @Override
                     public byte[] perform() throws ClientException {
                         try {

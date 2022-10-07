@@ -37,7 +37,7 @@ import lombok.NonNull;
 
 public class CryptoFactoryTelemetryHelper {
 
-    private static final String SPAN_NAME = "CryptoFactoryEvents";
+    private static final String SPAN_NAME = "CryptoFactoryEvent";
 
     /**
      * A helper class that consolidate all the telemetry emitting work
@@ -49,10 +49,10 @@ public class CryptoFactoryTelemetryHelper {
      * @param cryptoOperation a callback that wraps around the crypto operation to be performed.
      * @return result of the crypto operation.
      * */
-    public static <T> T performCryptoTaskAndUploadTelemetry(@NonNull final CryptoFactoryOperationName operationName,
-                                                            @NonNull final String algorithmName,
-                                                            @NonNull final ICryptoFactory cryptoFactory,
-                                                            @NonNull final ICryptoOperationCallback<T> cryptoOperation)
+    public static <T> T performCryptoOperationAndUploadTelemetry(@NonNull final CryptoFactoryOperationName operationName,
+                                                                 @NonNull final String algorithmName,
+                                                                 @NonNull final ICryptoFactory cryptoFactory,
+                                                                 @NonNull final ICryptoOperation<T> cryptoOperation)
             throws ClientException {
         final Span span = OTelUtility.createSpan(SPAN_NAME);
         try (final Scope scope = span.makeCurrent()) {

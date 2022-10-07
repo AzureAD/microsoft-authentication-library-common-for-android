@@ -25,9 +25,9 @@ package com.microsoft.identity.common.java.opentelemetry;
 import com.microsoft.identity.common.java.exception.ClientException;
 
 /**
- * A callback wrapping around a crypto operation to be performed.
+ * An interface representing a crypto operation to be performed.
  * Used with {@link CryptoFactoryTelemetryHelper}
  * */
-public interface ICryptoOperationCallback<T> {
+public interface ICryptoOperation<T> {
     T perform() throws ClientException;
 }

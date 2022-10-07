@@ -22,12 +22,12 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.crypto;
 
-import static com.microsoft.identity.common.java.opentelemetry.CryptoFactoryTelemetryHelper.performCryptoTaskAndUploadTelemetry;
+import static com.microsoft.identity.common.java.opentelemetry.CryptoFactoryTelemetryHelper.performCryptoOperationAndUploadTelemetry;
 
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.opentelemetry.CryptoFactoryOperationName;
-import com.microsoft.identity.common.java.opentelemetry.ICryptoOperationCallback;
+import com.microsoft.identity.common.java.opentelemetry.ICryptoOperation;
 
 import java.security.InvalidKeyException;
 
@@ -50,11 +50,11 @@ public class BasicHMacSigner implements IHMacSigner {
     public byte[] sign(final byte[] keyData,
                        @NonNull final String hmacAlgorithm,
                        final byte[] dataToBeSigned) throws ClientException {
-        return performCryptoTaskAndUploadTelemetry(
+        return performCryptoOperationAndUploadTelemetry(
                 CryptoFactoryOperationName.Mac,
                 hmacAlgorithm,
                 mCryptoFactory,
-                new ICryptoOperationCallback<byte[]>() {
+                new ICryptoOperation<byte[]>() {
                     @Override
                     public byte[] perform() throws ClientException {
                         return signWithMac(keyData, hmacAlgorithm, dataToBeSigned);

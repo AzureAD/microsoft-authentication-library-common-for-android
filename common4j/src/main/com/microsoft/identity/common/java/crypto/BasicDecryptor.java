@@ -22,11 +22,11 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.crypto;
 
-import static com.microsoft.identity.common.java.opentelemetry.CryptoFactoryTelemetryHelper.performCryptoTaskAndUploadTelemetry;
+import static com.microsoft.identity.common.java.opentelemetry.CryptoFactoryTelemetryHelper.performCryptoOperationAndUploadTelemetry;
 
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.opentelemetry.CryptoFactoryOperationName;
-import com.microsoft.identity.common.java.opentelemetry.ICryptoOperationCallback;
+import com.microsoft.identity.common.java.opentelemetry.ICryptoOperation;
 
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
@@ -53,11 +53,11 @@ public class BasicDecryptor implements IDecryptor {
                           @NonNull final String decryptAlgorithm,
                           final byte[] iv,
                           byte[] dataToBeDecrypted) throws ClientException {
-        return performCryptoTaskAndUploadTelemetry(
+        return performCryptoOperationAndUploadTelemetry(
                 CryptoFactoryOperationName.Cipher,
                 decryptAlgorithm,
                 mCryptoFactory,
-                new ICryptoOperationCallback<byte[]>() {
+                new ICryptoOperation<byte[]>() {
                     @Override
                     public byte[] perform() throws ClientException {
                         return decryptWithCipher(key, decryptAlgorithm, iv, dataToBeDecrypted);
