@@ -1,5 +1,9 @@
 V.Next
 ----------
+- [PATCH] Moved clearClientCertPreferences to onPageLoaded. (#1855)
+- [MINOR] Add new exception type for broker protocol not supported exception during msal-broker handshake (#1859)
+- [MINOR] Add opt-in flag to skip expensive SecretKey invalidation steps (#1837)
+- [MINOR] Storage performance improvements (#1852)
 - [PATCH] More fields exposed for GSON based logging for Broker Token Parameters (#1849)
 - [MINOR] Logging performance speedup, removal of IDetailedLoggerCallback/logDiscarded (#1836)
 - [MINOR] Expose sign() method in PKeyAuth as opposed to the key itself (#1846)
@@ -10,12 +14,10 @@ V.Next
 - [MAJOR] Use Java 11 to accomodate android sdk 31 tooling. (#1832)
 - [PATCH] Swallow unbound service exceptions on disconnect. (#1824)
 - [MINOR] Refactored out ClientCertAuthChallengeHandler. (#1833)
-- [PATCH] Moved clearClientCertPreferences to onPageLoaded. (#1855)
 
 Version 7.0.1
 ----------
 - [Minor] Bumped Common to 7.0.1 to fix publishing bug.
-
 
 Version 7.0.0
 ----------
@@ -29,6 +31,7 @@ Version 7.0.0
 - [MINOR] Add a Multi Type separated store (#1810)
 - [MINOR] ESTS Telemetry changes to capture data around FLW and Multiple WPJ (#1799)
 - [MINOR] Add an interface to Broker Token Command Parameters (#1826)
+- [MINOR] Instrument code using Open Telemetry for Broker Scenarios (#1847)
 
 Version 6.0.1
 ----------
