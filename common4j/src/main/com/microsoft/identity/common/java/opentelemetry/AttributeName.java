@@ -50,9 +50,9 @@ public enum AttributeName {
     crypto_controller,
 
     /**
-     * Indicates the algorithm for crypto operation (in FIPS flows).
+     * Indicates the crypto operation.
      */
-    crypto_algorithm,
+    crypto_operation,
 
     /**
      * Indicates the stack trace from an crypto operation exception.

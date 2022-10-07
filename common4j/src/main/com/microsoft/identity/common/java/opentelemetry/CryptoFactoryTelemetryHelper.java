@@ -22,7 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.opentelemetry;
 
-import static com.microsoft.identity.common.java.opentelemetry.AttributeName.crypto_algorithm;
+import static com.microsoft.identity.common.java.opentelemetry.AttributeName.crypto_operation;
 import static com.microsoft.identity.common.java.opentelemetry.AttributeName.crypto_controller;
 import static com.microsoft.identity.common.java.opentelemetry.AttributeName.crypto_exception_stack_trace;
 
@@ -37,9 +37,7 @@ import lombok.NonNull;
 
 public class CryptoFactoryTelemetryHelper {
 
-    private static final String TAG = CryptoFactoryTelemetryHelper.class.getSimpleName();
-
-    private static final String SPAN_PREFIX = "CryptoFactory_";
+    private static final String SPAN_NAME = "CryptoFactoryEvents";
 
     /**
      * A helper class that consolidate all the telemetry emitting work
@@ -56,10 +54,11 @@ public class CryptoFactoryTelemetryHelper {
                                                             @NonNull final ICryptoFactory cryptoFactory,
                                                             @NonNull final ICryptoOperationCallback<T> cryptoOperation)
             throws ClientException {
-        final Span span = OTelUtility.createSpan(getSpanName(operationName));
+        final Span span = OTelUtility.createSpan(SPAN_NAME);
         try (final Scope scope = span.makeCurrent()) {
             span.setAttribute(crypto_controller.name(), cryptoFactory.getClass().getSimpleName());
-            span.setAttribute(crypto_algorithm.name(), algorithmName);
+            span.setAttribute(crypto_operation.name(),
+                    getCryptoOperationEventName(operationName, algorithmName));
             span.setStatus(StatusCode.OK);
             return cryptoOperation.perform();
         } catch (final Exception e) {
@@ -74,10 +73,11 @@ public class CryptoFactoryTelemetryHelper {
     }
 
     /**
-     * Constructs the span name from {@link CryptoFactoryOperationName}.
+     * Constructs the telemetry name for {@link AttributeName#crypto_operation}
      */
-    private static String getSpanName(@NonNull final CryptoFactoryOperationName operationName){
-        return SPAN_PREFIX + operationName.name();
+    private static String getCryptoOperationEventName(@NonNull final CryptoFactoryOperationName operationName,
+                                                      @NonNull final String algorithm){
+        return operationName.name() + "_" + algorithm;
     }
 }
 
