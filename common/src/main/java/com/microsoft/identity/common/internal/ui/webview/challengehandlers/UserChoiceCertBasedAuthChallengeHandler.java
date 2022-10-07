@@ -51,12 +51,30 @@ public class UserChoiceCertBasedAuthChallengeHandler implements ICertBasedAuthCh
     @Override
     public Void processChallenge(ClientCertRequest request) {
         //Show SmartcardUserChoiceDialog
-        SmartcardUserChoiceDialog dialog = new SmartcardUserChoiceDialog(mActivity);
+        SmartcardUserChoiceDialog dialog = new SmartcardUserChoiceDialog(new SmartcardUserChoiceDialog.PositiveButtonListener() {
+            @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+            @Override
+            public void onClick() {
+                mSmartcardCertBasedAuthManager.stopNfcDiscovery(mActivity);
+                new OnDeviceCertBasedAuthChallengeHandler(mActivity).processChallenge(request);
+            }
+        }, new SmartcardUserChoiceDialog.CancelCbaCallback() {
+            @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+            @Override
+            public void onCancel() {
+                mDialogHolder.dismissDialog();
+                request.cancel();
+            }
+        }, mActivity);
         mDialogHolder.showDialog(dialog);
         mSmartcardCertBasedAuthManager.setConnectionCallback(new AbstractSmartcardCertBasedAuthManager.IConnectionCallback() {
             @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
             @Override
             public void onCreateConnection(final boolean isNfc) {
+                if (isNfc) {
+                    //Show loading dialog
+                    mDialogHolder.showDialog(new SmartcardNfcLoadingDialog(mActivity));
+                }
                 new SmartcardCertBasedAuthChallengeHandler(mActivity, mSmartcardCertBasedAuthManager, mDialogHolder, isNfc).processChallenge(request);
             }
 

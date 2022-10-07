@@ -27,4 +27,16 @@
         <item name="colorAccent">@color/dialogButtonText</item>
     </style>
 
+    <!-- Certificate AlertDialog Theme for User Choice Dialog -->
+    <style name="UserChoiceAlertDialogTheme" parent="Theme.AppCompat.Light.Dialog.Alert">
+        <!-- everything -->
+        <item name="android:textColor">@color/dialogTitleText</item>
+        <item name="android:textColorPrimary">@color/dialogMessageText</item>
+        <item name="textAllCaps">false</item>
+        <!-- Title -->
+        <item name="android:windowTitleSize">20sp</item>
+        <!-- buttons -->
+        <item name="colorAccent">@color/dialogButtonText</item>
+    </style>
+
 </resources>

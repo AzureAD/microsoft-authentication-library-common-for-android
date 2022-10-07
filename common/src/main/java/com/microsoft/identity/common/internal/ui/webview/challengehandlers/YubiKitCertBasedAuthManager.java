@@ -166,6 +166,8 @@ public class YubiKitCertBasedAuthManager extends AbstractSmartcardCertBasedAuthM
                     mYubiKitManager.stopNfcDiscovery(activity);
                 }
             });
+        } else {
+            mYubiKitManager.stopNfcDiscovery(activity);
         }
     }
 

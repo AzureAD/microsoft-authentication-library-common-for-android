@@ -221,10 +221,11 @@ public class SmartcardCertBasedAuthChallengeHandler implements ICertBasedAuthCha
             public void onClick(@NonNull final char[] pin) {
                 //For NFC, we need another dialog prompting the user to hold the smartcard to the phone again.
                 if (mProceedWithNfc) {
-                    mDialogHolder.showDialog(new SmartcardUserChoiceDialog(mActivity));
+                    mDialogHolder.showDialog(new SmartcardNfcPromptDialog(mActivity));
                     mSmartcardCertBasedAuthManager.setConnectionCallback(new AbstractSmartcardCertBasedAuthManager.IConnectionCallback() {
                         @Override
                         public void onCreateConnection(boolean isNfc) {
+                            mDialogHolder.showDialog(new SmartcardNfcLoadingDialog(mActivity));
                             mSmartcardCertBasedAuthManager.requestDeviceSession(new AbstractSmartcardCertBasedAuthManager.ISessionCallback() {
                                 @Override
                                 public void onGetSession(@NonNull final ISmartcardSession session) throws Exception {
@@ -237,6 +238,7 @@ public class SmartcardCertBasedAuthChallengeHandler implements ICertBasedAuthCha
                                     indicateGeneralException(methodTag, e);
                                     request.cancel();
                                     clearPin(pin);
+                                    mSmartcardCertBasedAuthManager.stopNfcDiscovery(mActivity);
                                 }
                             });
                         }
@@ -306,12 +308,13 @@ public class SmartcardCertBasedAuthChallengeHandler implements ICertBasedAuthCha
                                     request.cancel();
                                 }
                             });
-                    mSmartcardCertBasedAuthManager.stopNfcDiscovery(mActivity);
                 }
                 //Update Dialog to indicate that an incorrect attempt was made.
                 mDialogHolder.setPinDialogErrorMode();
             }
-
+            if (mProceedWithNfc) {
+                mSmartcardCertBasedAuthManager.stopNfcDiscovery(mActivity);
+            }
         }
     }
 
