@@ -1,5 +1,6 @@
 V.Next
 ----------
+- [PATCH] Moved clearClientCertPreferences to onPageLoaded. (#1855)
 - [MINOR] Add new exception type for broker protocol not supported exception during msal-broker handshake (#1859)
 - [MINOR] Add opt-in flag to skip expensive SecretKey invalidation steps (#1837)
 - [MINOR] Storage performance improvements (#1852)
