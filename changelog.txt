@@ -1,6 +1,7 @@
 V.Next
 ----------
 - [MINOR] Add BrokerContentProvider path and IpcStrategy for new device registration API (#1843)
+- [MINOR] Add new exception type for broker protocol not supported exception during msal-broker handshake (#1859)
 - [MINOR] Add opt-in flag to skip expensive SecretKey invalidation steps (#1837)
 - [MINOR] Storage performance improvements (#1852)
 - [PATCH] More fields exposed for GSON based logging for Broker Token Parameters (#1849)
@@ -14,11 +15,9 @@ V.Next
 - [PATCH] Swallow unbound service exceptions on disconnect. (#1824)
 - [MINOR] Refactored out ClientCertAuthChallengeHandler. (#1833)
 
-
 Version 7.0.1
 ----------
 - [Minor] Bumped Common to 7.0.1 to fix publishing bug.
-
 
 Version 7.0.0
 ----------

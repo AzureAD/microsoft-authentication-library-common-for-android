@@ -90,24 +90,24 @@ public class BrokerProtocolVersionUtil {
         if (StringUtil.isNullOrEmpty(providedBrokerProtocol)) {
             return false;
         }
-        return isFirstVersionLargerOrEqual(
+        return isFirstVersionNewerOrEqual(
                 providedBrokerProtocol,
                 requiredBrokerProtocol);
     }
 
     /**
-     * Returns true if the first semantic version is smaller or equal to the second version.
+     * Returns true if the first semantic version is smaller (older) or equal to the second version.
      */
-    public static final boolean isFirstVersionSmallerOrEqual(@NonNull final String first,
-                                                             @Nullable final String second) {
+    public static boolean isFirstVersionOlderOrEqual(@NonNull final String first,
+                                                     @Nullable final String second) {
         return compareSemanticVersion(first, second) <= 0;
     }
 
     /**
-     * Returns true if the first semantic version is larger or equal to the second version.
+     * Returns true if the first semantic version is larger (newer) or equal to the second version.
      */
-    public static final boolean isFirstVersionLargerOrEqual(@NonNull final String first,
-                                                            @Nullable final String second) {
+    public static boolean isFirstVersionNewerOrEqual(@NonNull final String first,
+                                                     @Nullable final String second) {
         return compareSemanticVersion(first, second) >= 0;
     }
 

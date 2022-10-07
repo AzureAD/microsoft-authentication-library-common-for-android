@@ -206,7 +206,7 @@ public class BrokerHost extends AbstractTestBroker {
                 "android:id/message"
         );
 
-        Assert.assertTrue("Assert join finish dialog", joinFinishDialog.waitForExists(TimeUnit.SECONDS.toMillis(15)));
+        Assert.assertTrue("Assert join finish dialog", joinFinishDialog.waitForExists(CommonUtils.FIND_UI_ELEMENT_TIMEOUT_LONG));
 
         try {
             // Obtain the text from the dialog box
