@@ -666,6 +666,16 @@ public final class AuthenticationConstants {
         public static final String NEGOTIATED_BP_VERSION_KEY = "common.broker.protocol.version.name";
 
         /**
+         * Code of the error that occurs as a result of MSAL-Broker protocol handshake (hello()).
+         */
+        public static final String HELLO_ERROR_CODE = "error";
+
+        /**
+         * Description of the error that occurs as a result of MSAL-Broker protocol handshake (hello()).
+         */
+        public static final String HELLO_ERROR_MESSAGE = "error_description";
+
+        /**
          * The Boolean to send when FOCI apps are allowed to construct accounts from PRT id token in getAccounts.
          */
         public static final String CAN_FOCI_APPS_CONSTRUCT_ACCOUNTS_FROM_PRT_ID_TOKEN_KEY = "can.construct.accounts.from.prt.id.token";

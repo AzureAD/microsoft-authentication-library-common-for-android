@@ -169,9 +169,8 @@ public class BrokerMsalController extends BaseController {
      * Order of objects in the list will reflects the order of strategies that will be used.
      */
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    protected @NonNull
-    List<IIpcStrategy> getIpcStrategies(final Context applicationContext,
-                                        final String activeBrokerPackageName) {
+    @NonNull
+    protected List<IIpcStrategy> getIpcStrategies(final Context applicationContext, final String activeBrokerPackageName) {
         final String methodTag = TAG + ":getIpcStrategies";
         final List<IIpcStrategy> strategies = new ArrayList<>();
         final StringBuilder sb = new StringBuilder(100);
@@ -237,6 +236,7 @@ public class BrokerMsalController extends BaseController {
                 bundle);
 
         final String negotiatedProtocolVersion = mResultAdapter.verifyHelloFromResultBundle(
+                mActiveBrokerPackageName,
                 strategy.communicateToBroker(helloBundle)
         );
 

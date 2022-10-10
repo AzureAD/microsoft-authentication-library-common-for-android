@@ -40,7 +40,7 @@ import org.junit.Assert;
 import java.util.Calendar;
 import java.util.concurrent.TimeUnit;
 
-import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT;
+import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT_LONG;
 import static com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils.obtainUiObjectWithExactText;
 
 /**
@@ -157,10 +157,9 @@ public class GoogleSettings extends BaseSettings {
 
             // Find the cert installer and make sure it exists
             UiObject certInstaller = device.findObject(new UiSelector().packageName("com.android.certinstaller"));
-            certInstaller.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
             Assert.assertTrue(
                     "Cert Installer appears while adding work account",
-                    certInstaller.exists()
+                    certInstaller.waitForExists(FIND_UI_ELEMENT_TIMEOUT_LONG)
             );
 
             // Confirm install cert
