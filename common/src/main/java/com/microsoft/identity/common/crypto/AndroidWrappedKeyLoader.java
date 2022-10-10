@@ -206,7 +206,8 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
             final byte[] wrappedSecretKey = FileUtil.readFromFile(getKeyFile(), KEY_FILE_SIZE);
             if (wrappedSecretKey == null) {
                 Logger.warn(methodTag, "Key file is empty");
-                deleteSecretKeyFromStorage();
+                FileUtil.deleteFile(getKeyFile());
+                mKeyCache.clear();
                 return null;
             }
 
