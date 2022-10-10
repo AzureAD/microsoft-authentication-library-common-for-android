@@ -70,11 +70,8 @@ import java.util.Set;
 //Tests basic cancellation and error dialog flows of smartcard CBA feature.
 //Manual tests cover complete authentication flow.
 public class SmartcardCertBasedAuthTest {
-    //Controller to build, get, and restart activity
     private static final ActivityController<DualScreenActivity> mController = Robolectric.buildActivity(DualScreenActivity.class);
-    //Host activity
     private Activity mActivity = mController.get();
-    //Resource strings
     private final String SMARTCARD_CERT_DIALOG_POSITIVE_BUTTON = mActivity.getResources().getString(R.string.smartcard_cert_dialog_positive_button);
     private final String SMARTCARD_PIN_DIALOG_POSITIVE_BUTTON = mActivity.getResources().getString(R.string.smartcard_pin_dialog_positive_button);
     private final String SMARTCARD_PIN_DIALOG_ERROR_MESSAGE = mActivity.getResources().getString(R.string.smartcard_pin_dialog_error_message);

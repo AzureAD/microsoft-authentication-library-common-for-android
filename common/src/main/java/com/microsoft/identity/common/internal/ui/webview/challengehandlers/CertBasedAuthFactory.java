@@ -25,6 +25,7 @@ package com.microsoft.identity.common.internal.ui.webview.challengehandlers;
 import android.app.Activity;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.VisibleForTesting;
 
 import com.microsoft.identity.common.logging.Logger;
 
@@ -52,6 +53,7 @@ public class CertBasedAuthFactory {
      * @param activity current host activity.
      * @param manager AbstractSmartcardCertBasedAuthManager to be used for smartcard CBA.
      */
+    @VisibleForTesting
     protected CertBasedAuthFactory(@NonNull final Activity activity,
                                    @NonNull final AbstractSmartcardCertBasedAuthManager manager) {
         initialize(activity, manager);
