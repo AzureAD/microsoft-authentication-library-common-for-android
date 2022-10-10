@@ -44,7 +44,7 @@ public class CertBasedAuthFactory {
      * @param activity current host activity.
      */
     public CertBasedAuthFactory(@NonNull final Activity activity) {
-        initialize(activity, new YubiKitCertBasedAuthManager(mActivity.getApplicationContext()));
+        initialize(activity, new YubiKitCertBasedAuthManager(activity.getApplicationContext()));
     }
 
     /**
