@@ -23,34 +23,29 @@
 
 package com.microsoft.identity.common.java.util;
 
-import static com.microsoft.identity.common.java.AuthenticationConstants.ENCODING_UTF8;
-
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
-import com.microsoft.identity.common.java.crypto.ISigner;
-import com.microsoft.identity.common.java.crypto.BasicSigner;
+import com.microsoft.identity.common.java.challengehandlers.IDeviceCertificate;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.logging.Logger;
 
-import java.security.PrivateKey;
-import java.security.PublicKey;
 import java.security.cert.CertificateEncodingException;
-import java.security.cert.X509Certificate;
 
-import cz.msebera.android.httpclient.extras.Base64;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import lombok.NonNull;
 
 /**
  * JWS response builder for certificate challenge response.
  */
 public class JWSBuilder {
-    private static final long SECONDS_MS = 1000L;
+    protected static final long SECONDS_MS = 1000L;
 
     /**
      * Algorithm is fixed to RSA PKCS v1.5.
      */
-    private static final String JWS_HEADER_ALG = "RS256";
+    protected static final String JWS_HEADER_ALG = "RS256";
 
     /**
      * Algorithm name for signing.
@@ -59,7 +54,8 @@ public class JWSBuilder {
 
     private static final String TAG = "JWSBuilder";
 
-    private static final ISigner sSigner = new BasicSigner();
+    public JWSBuilder(){
+    }
 
     /**
      * Payload for JWS.
@@ -81,6 +77,14 @@ public class JWSBuilder {
         @SuppressWarnings("unused")
         private Claims() {
         }
+    }
+
+    protected long getCurrentTimeInSeconds(){
+        return System.currentTimeMillis() / SECONDS_MS;
+    }
+
+    protected String encodeUrlSafeString(final byte[] dataToEncode){
+        return StringUtil.encodeUrlSafeString(dataToEncode);
     }
 
     /**
@@ -108,8 +112,9 @@ public class JWSBuilder {
     /**
      * Generate the signed JWT.
      */
-    public String generateSignedJWT(String nonce, String audience, PrivateKey privateKey,
-                                    PublicKey pubKey, X509Certificate cert) throws ClientException {
+    public String generateSignedJWT(@NonNull final String nonce,
+                                    @NonNull final String audience,
+                                    @NonNull final IDeviceCertificate deviceCert) throws ClientException {
         // http://tools.ietf.org/html/draft-ietf-jose-json-web-signature-25
         // In the JWS Compact Serialization, a JWS object is represented as the
         // combination of these three string values,
@@ -119,27 +124,21 @@ public class JWSBuilder {
         // concatenated in that order, with the three strings being separated by
         // two period ('.') characters.
         // Base64 encoding without padding, wrapping and urlsafe.
-        final String methodName = ":generateSignedJWT";
-        if (StringUtil.isNullOrEmpty(nonce)) {
-            throw new IllegalArgumentException("nonce");
+        final String methodTag = TAG + ":generateSignedJWT";
+        if (nonce.isEmpty()) {
+            throw new IllegalArgumentException("nonce is an empty string.");
         }
-        if (StringUtil.isNullOrEmpty(audience)) {
-            throw new IllegalArgumentException("audience");
-        }
-        if (privateKey == null) {
-            throw new IllegalArgumentException("privateKey");
-        }
-        if (pubKey == null) {
-            throw new IllegalArgumentException("pubKey");
+        if (audience.isEmpty()) {
+            throw new IllegalArgumentException("audience is an empty string.");
         }
 
-        Gson gson = new Gson();
-        Claims claims = new Claims();
+        final Gson gson = new Gson();
+        final Claims claims = new Claims();
         claims.mNonce = nonce;
         claims.mAudience = audience;
-        claims.mIssueAt = System.currentTimeMillis() / SECONDS_MS;
+        claims.mIssueAt = getCurrentTimeInSeconds();
 
-        JwsHeader header = new JwsHeader();
+        final JwsHeader header = new JwsHeader();
         header.mAlgorithm = JWS_HEADER_ALG;
         header.mType = "JWT"; // recommended UpperCase in JWT Spec
 
@@ -156,17 +155,17 @@ public class JWSBuilder {
             // to digitally sign the JWS MUST be the first certificate
             // http://tools.ietf.org/html/draft-ietf-jose-json-web-signature-27
             header.mCert = new String[1];
-            header.mCert[0] = Base64.encodeToString(cert.getEncoded(), Base64.NO_WRAP);
+            header.mCert[0] = StringUtil.base64Encode(deviceCert.getX509().getEncoded());
 
             // redundant but current ADFS code base is looking for
-            String headerJsonString = gson.toJson(header);
-            String claimsJsonString = gson.toJson(claims);
-            Logger.verbose(TAG + methodName, "Generate client certificate challenge response JWS Header. ");
-            signingInput = StringUtil.encodeUrlSafeString(headerJsonString)
+            final String headerJsonString = gson.toJson(header);
+            final String claimsJsonString = gson.toJson(claims);
+            Logger.verbose(methodTag, "Generate client certificate challenge response JWS Header. ");
+            signingInput = encodeUrlSafeString(StringUtil.toByteArray(headerJsonString))
                     + "."
-                    + StringUtil.encodeUrlSafeString(claimsJsonString);
-            signature = StringUtil.encodeUrlSafeString(
-                    sSigner.sign(privateKey, SIGNING_ALGORITHM, signingInput.getBytes(ENCODING_UTF8)));
+                    + encodeUrlSafeString(StringUtil.toByteArray(claimsJsonString));
+            signature = encodeUrlSafeString(
+                    deviceCert.sign(SIGNING_ALGORITHM, StringUtil.toByteArray(signingInput)));
         } catch (final CertificateEncodingException e) {
             throw new ClientException(ErrorStrings.CERTIFICATE_ENCODING_ERROR,
                     "Certificate encoding error", e);

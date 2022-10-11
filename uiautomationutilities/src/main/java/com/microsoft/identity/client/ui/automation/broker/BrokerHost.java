@@ -201,15 +201,12 @@ public class BrokerHost extends AbstractTestBroker {
     private void postJoinConfirmHelper(@NonNull final String expectedUpn) throws InterruptedException {
         Logger.i(TAG, "Confirming that Shared Device Registration is successfull or not..");
 
-        // Adding brief wait to increase reliability of test
-        Thread.sleep(TimeUnit.SECONDS.toMillis(5));
-
         // Look for join op completion dialog
         final UiObject joinFinishDialog = UiAutomatorUtils.obtainUiObjectWithResourceId(
                 "android:id/message"
         );
 
-        Assert.assertTrue("Assert join finish dialog", joinFinishDialog.exists());
+        Assert.assertTrue("Assert join finish dialog", joinFinishDialog.waitForExists(CommonUtils.FIND_UI_ELEMENT_TIMEOUT_LONG));
 
         try {
             // Obtain the text from the dialog box
@@ -338,6 +335,26 @@ public class BrokerHost extends AbstractTestBroker {
     }
 
     @Override
+    public void overwriteFlights(@Nullable final String flightsJson) {
+        Logger.i(TAG, "Overwrite Flights..");
+        launch();
+
+        // Sleep for a bit to finish launching brokerHost before scrolling to set Flights
+        try {
+            Thread.sleep(TimeUnit.SECONDS.toMillis(5));
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        // scroll to find the overwrite flights button
+        UiAutomatorUtils.obtainChildInScrollable("Overwrite flights (When BrokerHost is the active broker)");
+        // input flights string in flights input box
+        UiAutomatorUtils.handleInput("com.microsoft.identity.testuserapp:id/editTextFlights", flightsJson);
+        // Click Set Flights button
+        UiAutomatorUtils.handleButtonClick("com.microsoft.identity.testuserapp:id/overwriteFlightsButton");
+    }
+
+    @Override
     public void setFlights(@Nullable final String flightsJson) {
         Logger.i(TAG, "Set Flights..");
         launch();
@@ -356,6 +373,7 @@ public class BrokerHost extends AbstractTestBroker {
         // Click Set Flights button
         UiAutomatorUtils.handleButtonClick("com.microsoft.identity.testuserapp:id/setFlightsButton");
     }
+
 
     @Override
     public String getFlights() {
@@ -448,7 +466,7 @@ public class BrokerHost extends AbstractTestBroker {
     public String acquireSSOToken(@NonNull final String nonce) {
         try {
             // Fill the nonce
-            final UiObject nonceTxtBox = UiAutomatorUtils.obtainChildInScrollable("nonce");
+            final UiObject nonceTxtBox = UiAutomatorUtils.obtainChildInScrollable("nonce for SSO Token");
             nonceTxtBox.setText(nonce);
 
             // Click on sso token button

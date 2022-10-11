@@ -43,9 +43,9 @@ import lombok.NonNull;
  * A basic Decryptor class.
  */
 @AllArgsConstructor
-public class BasicDecryptor implements IDecryptor{
+public class BasicDecryptor implements IDecryptor {
 
-    private final Provider mProvider;
+    private final ICryptoFactory mCryptoFactory;
 
     @Override
     public byte[] decrypt(@NonNull final Key key,
@@ -53,7 +53,7 @@ public class BasicDecryptor implements IDecryptor{
                           final byte[] iv,
                           byte[] dataToBeDecrypted) throws ClientException {
         try {
-            final Cipher cipher = Cipher.getInstance(decryptAlgorithm, mProvider);
+            final Cipher cipher = mCryptoFactory.getCipher(decryptAlgorithm);
 
             if (iv != null && iv.length > 0) {
                 final IvParameterSpec ivSpec = new IvParameterSpec(iv);
@@ -62,10 +62,6 @@ public class BasicDecryptor implements IDecryptor{
                 cipher.init(Cipher.DECRYPT_MODE, key);
             }
             return cipher.doFinal(dataToBeDecrypted);
-        } catch (final NoSuchAlgorithmException e) {
-            throw new ClientException(ClientException.NO_SUCH_ALGORITHM, e.getMessage(), e);
-        } catch (final NoSuchPaddingException e) {
-            throw new ClientException(ClientException.NO_SUCH_PADDING, e.getMessage(), e);
         } catch (final BadPaddingException e) {
             throw new ClientException(ClientException.BAD_PADDING, e.getMessage(), e);
         } catch (final IllegalBlockSizeException e) {

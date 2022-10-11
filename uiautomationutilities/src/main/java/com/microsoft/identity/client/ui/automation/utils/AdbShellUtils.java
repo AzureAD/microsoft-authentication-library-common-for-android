@@ -74,7 +74,7 @@ public class AdbShellUtils {
         Logger.i(TAG, "Installing the given package:" + packageName + " on the device..");
         final String result = executeShellCommand("pm install " + packageName);
         Assert.assertNotNull(result);
-        Assert.assertEquals("Success", result.trim());
+        Assert.assertEquals("Package Installation failed for package " + packageName, "Success", result.trim());
     }
 
     /**
@@ -96,7 +96,7 @@ public class AdbShellUtils {
         installCmdBuilder.append(packageName);
         final String result = executeShellCommand(installCmdBuilder.toString());
         Assert.assertNotNull(result);
-        Assert.assertEquals("Success", result.trim());
+        Assert.assertEquals("Package Installation failed for package " + packageName, "Success", result.trim());
     }
 
     /**

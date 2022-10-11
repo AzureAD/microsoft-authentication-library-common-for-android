@@ -1,18 +1,37 @@
 V.Next
 ----------
+- [PATCH] Moved clearClientCertPreferences to onPageLoaded. (#1855)
+- [MINOR] Add new exception type for broker protocol not supported exception during msal-broker handshake (#1859)
+- [MINOR] Add opt-in flag to skip expensive SecretKey invalidation steps (#1837)
+- [MINOR] Storage performance improvements (#1852)
+- [PATCH] More fields exposed for GSON based logging for Broker Token Parameters (#1849)
+- [MINOR] Logging performance speedup, removal of IDetailedLoggerCallback/logDiscarded (#1836)
+- [MINOR] Expose sign() method in PKeyAuth as opposed to the key itself (#1846)
+- [MINOR] Wire ICryptoFactory to Signer/Decryptor/SP800108KeyGen (#1845)
+- [MINOR] Add ICryptoFactory to common4j (#1844)
 - [MAJOR] Update target Android targetSdk to API 31/ Android 12
 - [MINOR] Use Java 11 in Spotbugs Check
 - [MAJOR] Use Java 11 to accomodate android sdk 31 tooling. (#1832)
 - [PATCH] Swallow unbound service exceptions on disconnect. (#1824)
+- [MINOR] Refactored out ClientCertAuthChallengeHandler. (#1833)
+
+Version 7.0.1
+----------
+- [Minor] Bumped Common to 7.0.1 to fix publishing bug.
+
+Version 7.0.0
+----------
 - [MINOR] Bumped MSAL Broker Protocol Version to 10.0. (#1829)
 - [MINOR] Add implementation for clearAll method to BrokerOAuth2TokenCache to clear all the credentials and metadata (#1823)
 - [MAJOR] Adding smartcard certificate based authentication (CBA) feature.  (#1814)
+- [MAJOR] Adding YubiKit SDK, which requires Java Version 8 and will thus bump up Java version overall to 8; added keyboard flag to android:configChanges for all activities that could interact with a YubiKey. (#1729)
 - [PATCH] Fix an issue where incorrect authority url is returned after cloud discovery is set. (#1820)
 - [PATCH] Add telemetry event for content provider call for getting enrollment id (#1801)
 - [MINOR] Move some storage classes from broker to common4j (#1809)
 - [MINOR] Add a Multi Type separated store (#1810)
 - [MINOR] ESTS Telemetry changes to capture data around FLW and Multiple WPJ (#1799)
 - [MINOR] Add an interface to Broker Token Command Parameters (#1826)
+- [MINOR] Instrument code using Open Telemetry for Broker Scenarios (#1847)
 
 Version 6.0.1
 ----------
@@ -28,7 +47,6 @@ Version 6.0.0
 - [MAJOR] [Msal] Remove launching logout endpoint in default browser for shared device mode signout flow (#1783)
 - [MINOR] Add telemetry relay client (#1757)
 - [MINOR] Add telemetry error events (#1768)
-- [MAJOR] Adding YubiKit SDK, which requires Java Version 8 and will thus bump up Java version overall to 8; added keyboard flag to android:configChanges for all activities that could interact with a YubiKey. (#1729)
 - [MINOR] Support WordApp local apk install in UI automation flows (#1732)
 - [PATCH] Fix SDK Cancel when using authorization in current task (#1743)
 - [MINOR] Added support for broadcasting to applications installed on the device. (#1744)

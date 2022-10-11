@@ -1661,7 +1661,8 @@ public class MsalOAuth2TokenCache
                 referenceToken.getRealm(),
                 null, // Wildcard (*)
                 referenceToken.getAccessTokenType(),
-                referenceToken.getRequestedClaims()
+                referenceToken.getRequestedClaims(),
+                mAccountCredentialCache.getCredentials()
         );
 
         Logger.verbose(

@@ -23,18 +23,26 @@
 
 package com.microsoft.identity.common.java.platform;
 
+import com.microsoft.identity.common.java.opentelemetry.AttributeName;
 import com.microsoft.identity.common.java.util.StringUtil;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import cz.msebera.android.httpclient.extras.Base64;
+import io.opentelemetry.api.trace.Span;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 
 public class JweResponse {
+
+    /**
+     * The code defines a valid JWE as one that has at least the header, encryptedKey, IV,
+     * and Payload.
+     */
+    private static final int LENGTH_OF_VALID_JWE = 4;
 
     @Builder
     @Getter
@@ -89,10 +97,14 @@ public class JweResponse {
     }
 
     public static JweResponse parseJwe(String jwe) throws JSONException {
+        final Span span = Span.current();
         JweResponse response = new JweResponse();
 
         String[] split = jwe.split("\\.");
-        if (split.length < 4) {
+
+        span.setAttribute(AttributeName.jwt_valid.name(), split.length >= LENGTH_OF_VALID_JWE);
+
+        if (split.length < LENGTH_OF_VALID_JWE) {
             throw new IllegalArgumentException("Invalid JWE");
         }
 
@@ -109,6 +121,9 @@ public class JweResponse {
         String decodedHeader = StringUtil.fromByteArray(headerDecodedBytes);
 
         JSONObject jsonObject = new JSONObject(decodedHeader);
+
+        span.setAttribute(AttributeName.jwt_alg.name(), jsonObject.optString("alg"));
+
         response.mJweHeader = JweHeader.builder()
                 .algorithm(jsonObject.optString("alg"))
                 .type(jsonObject.optString("typ"))
