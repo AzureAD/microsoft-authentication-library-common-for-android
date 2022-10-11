@@ -1,5 +1,9 @@
 V.Next
 ----------
+
+Version 8.0.0
+----------
+- [MINOR] Add opt-in flag to skip expensive SecretKey invalidation steps (#1837)
 - [MINOR] Storage performance improvements (#1852)
 - [PATCH] More fields exposed for GSON based logging for Broker Token Parameters (#1849)
 - [MINOR] Logging performance speedup, removal of IDetailedLoggerCallback/logDiscarded (#1836)
