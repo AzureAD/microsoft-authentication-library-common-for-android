@@ -165,6 +165,11 @@ public class GoogleSettings extends BaseSettings {
             // Confirm install cert
             UiAutomatorUtils.handleButtonClick("android:id/button1");
 
+            // Confirm cert name (API 30+ only)
+            if (android.os.Build.VERSION.SDK_INT >= 30) {
+                UiAutomatorUtils.handleButtonClickSafely("android:id/button1");
+            }
+
             // Make sure account appears in Join Activity afterwards
             broker.confirmJoinInJoinActivity(username);
         } catch (final UiObjectNotFoundException e) {
@@ -221,6 +226,15 @@ public class GoogleSettings extends BaseSettings {
             // Confirm setting date
             final UiObject okBtn = UiAutomatorUtils.obtainUiObjectWithText("OK");
             okBtn.click();
+
+            try {
+                Thread.sleep(TimeUnit.SECONDS.toMillis(7));
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+            // Reset to Automatic Time Zone to avoid chain validation failures
+            AdbShellUtils.enableAutomaticTimeZone();
         } catch (final UiObjectNotFoundException e) {
             throw new AssertionError(e);
         }
@@ -327,7 +341,11 @@ public class GoogleSettings extends BaseSettings {
         Logger.i(TAG, "Handle Done Button on Google Device..");
         if (android.os.Build.VERSION.SDK_INT == 28) {
             UiAutomatorUtils.handleButtonClick("com.android.settings:id/redaction_done_button");
-        } else {
+        } else if (android.os.Build.VERSION.SDK_INT >= 30) {
+            final UiObject doneButton = UiAutomatorUtils.obtainUiObjectWithExactText("DONE");
+            doneButton.click();
+        }
+        else {
             final UiObject doneButton = UiAutomatorUtils.obtainUiObjectWithExactText("Done");
             doneButton.click();
         }
