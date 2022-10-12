@@ -341,13 +341,15 @@ public class GoogleSettings extends BaseSettings {
         Logger.i(TAG, "Handle Done Button on Google Device..");
         if (android.os.Build.VERSION.SDK_INT == 28) {
             UiAutomatorUtils.handleButtonClick("com.android.settings:id/redaction_done_button");
-        } else if (android.os.Build.VERSION.SDK_INT >= 30) {
-            final UiObject doneButton = UiAutomatorUtils.obtainUiObjectWithExactText("DONE");
-            doneButton.click();
-        }
-        else {
-            final UiObject doneButton = UiAutomatorUtils.obtainUiObjectWithExactText("Done");
-            doneButton.click();
+        } else {
+            try {
+                final UiObject doneButton = UiAutomatorUtils.obtainUiObjectWithExactText("Done");
+                doneButton.click();
+            } catch (UiObjectNotFoundException e) {
+                Logger.i(TAG, "First Done button attempt failed: " + e.getMessage());
+                final UiObject doneButton = UiAutomatorUtils.obtainUiObjectWithExactText("DONE");
+                doneButton.click();
+            }
         }
     }
 
