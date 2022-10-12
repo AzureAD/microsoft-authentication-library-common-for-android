@@ -22,6 +22,8 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.app;
 
+import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT_LONG;
+
 import androidx.annotation.NonNull;
 import androidx.test.uiautomator.UiObject;
 
@@ -29,6 +31,7 @@ import com.microsoft.identity.client.ui.automation.installer.PlayStore;
 import com.microsoft.identity.client.ui.automation.interaction.FirstPartyAppPromptHandlerParameters;
 import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.MicrosoftStsPromptHandler;
 import com.microsoft.identity.client.ui.automation.logging.Logger;
+import com.microsoft.identity.client.ui.automation.utils.CommonUtils;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
 import org.junit.Assert;
@@ -75,7 +78,7 @@ public class OutlookApp extends App implements IFirstPartyApp {
         final UiObject addAnotherAccountScreen = UiAutomatorUtils.obtainUiObjectWithText("Add another account");
         Assert.assertTrue(
                 "Add another account screen appears in Outlook account.",
-                addAnotherAccountScreen.exists()
+                addAnotherAccountScreen.waitForExists(CommonUtils.FIND_UI_ELEMENT_TIMEOUT)
         );
 
         // click may be later
@@ -105,13 +108,13 @@ public class OutlookApp extends App implements IFirstPartyApp {
     public void confirmAccount(@NonNull final String username) {
         Logger.i(TAG, "Confirming account with supplied username is signed in..");
         // Click the account drawer
-        UiAutomatorUtils.handleButtonClick("com.microsoft.office.outlook:id/account_button");
+        UiAutomatorUtils.handleButtonClick("com.microsoft.office.outlook:id/account_button", FIND_UI_ELEMENT_TIMEOUT_LONG);
 
         // Make sure our account is listed in the account drawer
         final UiObject testAccountLabel = UiAutomatorUtils.obtainUiObjectWithText(username);
         Assert.assertTrue(
                 "Provided user account exists in Outlook App.",
-                testAccountLabel.exists()
+                testAccountLabel.waitForExists(CommonUtils.FIND_UI_ELEMENT_TIMEOUT_LONG)
         );
     }
 

@@ -22,6 +22,8 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.broker;
 
+import static androidx.test.platform.app.InstrumentationRegistry.getInstrumentation;
+
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageInfo;
@@ -33,8 +35,10 @@ import android.widget.EditText;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.test.core.app.ApplicationProvider;
+import androidx.test.uiautomator.UiDevice;
 import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObjectNotFoundException;
+import androidx.test.uiautomator.UiSelector;
 
 import com.microsoft.identity.client.ui.automation.installer.IAppInstaller;
 import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.AdfsPromptHandler;
@@ -47,6 +51,8 @@ import com.microsoft.identity.client.ui.automation.logging.Logger;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
 import org.junit.Assert;
+
+import java.util.concurrent.TimeUnit;
 
 import lombok.Getter;
 
@@ -94,6 +100,15 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
         super(AUTHENTICATOR_APP_PACKAGE_NAME, AUTHENTICATOR_APP_NAME);
         localApkFileName = authenticatorApkName;
         localUpdateApkFileName = updateAuthenticatorApkName;
+    }
+
+    /**
+     * Overriding the launch function to add a check for the app lock screen
+     */
+    @Override
+    public void launch() {
+        super.launch();
+        handleAppLock();
     }
 
     @Override
@@ -341,6 +356,27 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
             }
         } catch (final PackageManager.NameNotFoundException e) {
             throw new AssertionError(e);
+        }
+    }
+
+    public void handleAppLock() {
+        Logger.i(TAG, "Checking for app lock popup on authenticator...");
+        final UiDevice device = UiDevice.getInstance(getInstrumentation());
+        final UiObject appLockObj = device.findObject(
+                new UiSelector().text("App Lock enabled")
+        );
+
+        if (appLockObj.waitForExists(TimeUnit.SECONDS.toMillis(1))){
+            final UiObject okObj = device.findObject(
+                    new UiSelector().text("OK")
+            );
+
+            try {
+                okObj.click();
+            } catch (UiObjectNotFoundException e) {
+                // Nothing, just want to ignore this
+                // If the button does not exist, then we do not need to do anything
+            }
         }
     }
 }
