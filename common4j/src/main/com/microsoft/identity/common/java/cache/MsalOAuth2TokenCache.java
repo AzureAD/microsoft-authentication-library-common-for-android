@@ -694,19 +694,11 @@ public class MsalOAuth2TokenCache
         final List<Credential> allCredentials = mAccountCredentialCache.getCredentials();
 
         // Load the AccessTokens
-        List<Credential> accessTokens;
-        if (authScheme instanceof PopAuthenticationSchemeWithClientKeyInternal) {
-            accessTokens = mAccountCredentialCache.getPoPAccessTokensFilteredBy(
-                    account.getHomeAccountId(),
-                    account.getEnvironment(),
-                    clientId,
-                    account.getRealm(),
-                    target,
-                    ((PopAuthenticationSchemeWithClientKeyInternal) authScheme).getKid(),
-                    null
-            );
-        } else {
-            accessTokens = mAccountCredentialCache.getCredentialsFilteredBy(
+        final String kid = authScheme instanceof PopAuthenticationSchemeWithClientKeyInternal ?
+                ((PopAuthenticationSchemeWithClientKeyInternal) authScheme).getKid()
+                : null;
+        final List<Credential> accessTokens = mAccountCredentialCache.getCredentialsFilteredBy(
+                allCredentials,
                 account.getHomeAccountId(),
                 account.getEnvironment(),
                 getAccessTokenCredentialTypeForAuthenticationScheme(authScheme),
@@ -714,8 +706,9 @@ public class MsalOAuth2TokenCache
                 account.getRealm(),
                 target,
                 authScheme.getName(),
-                allCredentials);
-        }
+                null,
+                kid
+                );
 
         // Load the RefreshTokens
         List<Credential> refreshTokens = mAccountCredentialCache.getCredentialsFilteredBy(

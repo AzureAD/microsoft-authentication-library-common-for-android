@@ -209,25 +209,30 @@ public interface IAccountCredentialCache {
     );
 
     /**
-     * Returns all of the AccessToken records matching the supplied criteria.
+     * Returns all of the Credentials matching the supplied criteria.
      *
-     * @param homeAccountId   The homeAccountId used to match Credential cache keys.
-     * @param environment     The environment used to match Credential cache keys.
-     * @param clientId        The clientId used to match Credential cache keys.
-     * @param realm           The realm used to match Credential cache keys.
-     * @param target          The target used to match Credential cache keys.
-     * @param kid             Kid value for access token record
-     * @param requestedClaims The requested claims used to match Credential cache keys.
+     * @param inputCredentials Input credential list to filter from.
+     * @param credentialType   The sought CredentialType.
+     * @param homeAccountId    The homeAccountId used to match Credential cache keys.
+     * @param environment      The environment used to match Credential cache keys.
+     * @param clientId         The clientId used to match Credential cache keys.
+     * @param realm            The realm used to match Credential cache keys.
+     * @param target           The target used to match Credential cache keys.
+     * @param requestedClaims  The requested claims used to match Credential cache keys.
+     * @param kid              Kid value used to match access token record.
      * @return A mutable List of Credentials matching the supplied criteria.
      */
-    List<Credential> getPoPAccessTokensFilteredBy(
+    List<Credential> getCredentialsFilteredBy(
+            final List<Credential> inputCredentials,
             final String homeAccountId,
             final String environment,
+            final CredentialType credentialType,
             final String clientId,
             final String realm,
             final String target,
-            final String kid,
-            final String requestedClaims
+            final String authScheme,
+            final String requestedClaims,
+            final String kid
     );
 
     /**

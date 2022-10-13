@@ -22,9 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.cache;
 
-import static com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeInternal.SCHEME_POP;
-import static com.microsoft.identity.common.java.dto.CredentialType.AccessToken_With_AuthScheme;
-
 import com.microsoft.identity.common.java.dto.AccessTokenRecord;
 import com.microsoft.identity.common.java.dto.AccountRecord;
 import com.microsoft.identity.common.java.dto.Credential;
@@ -479,26 +476,28 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
     }
 
     @Override
-    public List<Credential> getPoPAccessTokensFilteredBy(
+    public List<Credential> getCredentialsFilteredBy(
+            final List<Credential> inputCredentials,
             final String homeAccountId,
             final String environment,
+            final CredentialType credentialType,
             final String clientId,
             final String realm,
             final String target,
-            final String kid,
-            final String requestedClaims ) {
-        final List<Credential> allCredentials = getCredentials();
+            final String authScheme,
+            final String requestedClaims,
+            final String kid ) {
         final List<Credential> result = new ArrayList<>();
         result.addAll(
                 getCredentialsFilteredByInternal(
-                        allCredentials,
+                        inputCredentials,
                         homeAccountId,
                         environment,
-                        AccessToken_With_AuthScheme,
+                        credentialType,
                         clientId,
                         realm,
                         target,
-                        SCHEME_POP,
+                        authScheme,
                         requestedClaims,
                         kid
                 )

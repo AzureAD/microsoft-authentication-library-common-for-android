@@ -84,7 +84,7 @@ public class BrokerProtocolVersionUtil {
      * @return true if the broker protocol version of the calling app is larger or equal than
      * the {@link BrokerProtocolVersionUtil#MSAL_TO_BROKER_PROTOCOL_POP_SCHEME_WITH_CLIENT_KEY_MINIMUM_VERSION}.
      */
-    public static boolean canSupportPopAuthenticationSchemeWithClientKey(@Nullable String clientRequiredBrokerProtocolVersion) {
+    public static boolean canSupportPopAuthenticationSchemeWithClientKey(@Nullable final String clientRequiredBrokerProtocolVersion) {
         return isProvidedBrokerProtocolLargerOrEqualThanRequiredBrokerProtocol(
                 clientRequiredBrokerProtocolVersion,
                 MSAL_TO_BROKER_PROTOCOL_POP_SCHEME_WITH_CLIENT_KEY_MINIMUM_VERSION);
