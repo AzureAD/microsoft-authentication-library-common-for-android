@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.java.crypto;
 
 import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.opentelemetry.CryptoFactoryTelemetryClassName;
 
 import java.security.KeyFactory;
 import java.security.KeyPairGenerator;
@@ -37,6 +38,13 @@ import lombok.NonNull;
  * A Factory class that generates/utilizes platform's default crypto objects.
  */
 public class DefaultCryptoFactory implements ICryptoFactory {
+
+    @Override
+    @NonNull
+    public CryptoFactoryTelemetryClassName getTelemetryClassName() {
+        return CryptoFactoryTelemetryClassName.DefaultCryptoFactory;
+    }
+
     @Override
     public @NonNull Signature getSignature(@NonNull final String algorithm) throws ClientException {
         return ProviderFactory.getSignature(algorithm, null);

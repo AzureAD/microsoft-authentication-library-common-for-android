@@ -37,8 +37,6 @@ import lombok.NonNull;
 
 public class CryptoFactoryTelemetryHelper {
 
-    private static final String SPAN_NAME = "CryptoFactoryEvent";
-
     /**
      * A helper class that consolidate all the telemetry emitting work
      * for crypto operation in one place.
@@ -49,14 +47,14 @@ public class CryptoFactoryTelemetryHelper {
      * @param cryptoOperation a callback that wraps around the crypto operation to be performed.
      * @return result of the crypto operation.
      * */
-    public static <T> T performCryptoOperationAndUploadTelemetry(@NonNull final CryptoFactoryOperationName operationName,
+    public static <T> T performCryptoOperationAndUploadTelemetry(@NonNull final CryptoObjectTelemetryClassName operationName,
                                                                  @NonNull final String algorithmName,
                                                                  @NonNull final ICryptoFactory cryptoFactory,
                                                                  @NonNull final ICryptoOperation<T> cryptoOperation)
             throws ClientException {
-        final Span span = OTelUtility.createSpan(SPAN_NAME);
+        final Span span = OTelUtility.createSpan(SpanName.CryptoFactoryEvent.name());
         try (final Scope scope = span.makeCurrent()) {
-            span.setAttribute(crypto_controller.name(), cryptoFactory.getClass().getSimpleName());
+            span.setAttribute(crypto_controller.name(), cryptoFactory.getTelemetryClassName().name());
             span.setAttribute(crypto_operation.name(),
                     getCryptoOperationEventName(operationName, algorithmName));
             span.setStatus(StatusCode.OK);
@@ -75,7 +73,7 @@ public class CryptoFactoryTelemetryHelper {
     /**
      * Constructs the telemetry name for {@link AttributeName#crypto_operation}
      */
-    private static String getCryptoOperationEventName(@NonNull final CryptoFactoryOperationName operationName,
+    private static String getCryptoOperationEventName(@NonNull final CryptoObjectTelemetryClassName operationName,
                                                       @NonNull final String algorithm){
         return operationName.name() + "_" + algorithm;
     }

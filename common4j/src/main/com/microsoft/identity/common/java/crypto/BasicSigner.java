@@ -25,7 +25,7 @@ package com.microsoft.identity.common.java.crypto;
 import static com.microsoft.identity.common.java.opentelemetry.CryptoFactoryTelemetryHelper.performCryptoOperationAndUploadTelemetry;
 
 import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.java.opentelemetry.CryptoFactoryOperationName;
+import com.microsoft.identity.common.java.opentelemetry.CryptoObjectTelemetryClassName;
 import com.microsoft.identity.common.java.opentelemetry.ICryptoOperation;
 
 import java.security.InvalidKeyException;
@@ -50,7 +50,7 @@ public class BasicSigner implements ISigner {
                        @NonNull final String signingAlgorithm,
                        final byte[] dataToBeSigned) throws ClientException {
         return performCryptoOperationAndUploadTelemetry(
-                CryptoFactoryOperationName.Signature,
+                CryptoObjectTelemetryClassName.Signature,
                 signingAlgorithm,
                 mCryptoFactory,
                 new ICryptoOperation<byte[]>() {
