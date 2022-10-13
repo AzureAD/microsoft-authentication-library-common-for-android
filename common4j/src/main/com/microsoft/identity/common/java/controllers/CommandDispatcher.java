@@ -38,11 +38,13 @@ import static com.microsoft.identity.common.java.marker.PerfConstants.CodeMarker
 import com.microsoft.identity.common.java.BuildConfig;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.commands.BaseCommand;
+import com.microsoft.identity.common.java.commands.DeviceCodeFlowCommand;
 import com.microsoft.identity.common.java.commands.ICommandResult;
 import com.microsoft.identity.common.java.commands.InteractiveTokenCommand;
 import com.microsoft.identity.common.java.commands.SilentTokenCommand;
 import com.microsoft.identity.common.java.commands.parameters.BrokerInteractiveTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.DeviceCodeFlowCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.SilentTokenCommandParameters;
 import com.microsoft.identity.common.java.configuration.LibraryConfiguration;
 import com.microsoft.identity.common.java.eststelemetry.EstsTelemetry;
@@ -54,6 +56,8 @@ import com.microsoft.identity.common.java.logging.DiagnosticContext;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.logging.RequestContext;
 import com.microsoft.identity.common.java.marker.CodeMarkerManager;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResult;
+import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.java.request.SdkType;
 import com.microsoft.identity.common.java.result.AcquireTokenResult;
 import com.microsoft.identity.common.java.result.FinalizableResultFuture;
@@ -91,6 +95,7 @@ public class CommandDispatcher {
     private static final ExecutorService sSilentExecutor = Executors.newFixedThreadPool(SILENT_REQUEST_THREAD_POOL_SIZE);
     private static final Object sLock = new Object();
     private static InteractiveTokenCommand sCommand = null;
+    private static DeviceCodeFlowCommand sDCFCommand = null;
     private static final CommandResultCache sCommandResultCache = new CommandResultCache();
 
     private static final Object mapAccessLock = new Object();
@@ -191,6 +196,31 @@ public class CommandDispatcher {
 
         if (commandResult.getStatus() == ICommandResult.ResultStatus.COMPLETED){
             return (ILocalAuthenticationResult) commandResult.getResult();
+        } else if (commandResult.getStatus() == ICommandResult.ResultStatus.ERROR){
+            throw ExceptionAdapter.baseExceptionFromException((Throwable) commandResult.getResult());
+        } else if (commandResult.getStatus() == ICommandResult.ResultStatus.CANCEL){
+            throw new UserCancelException(ErrorStrings.USER_CANCELLED,
+                    "Request cancelled by user");
+        } else {
+            throw new ClientException(ErrorStrings.UNKNOWN_ERROR, "Unexpected CommandResult status");
+        }
+    }
+
+    public static MicrosoftStsAuthorizationResult submitDCFSync(@NonNull final BaseCommand command)
+            throws BaseException {
+        final CommandResult commandResult;
+        try {
+            if (BuildConfig.DISABLE_ACQUIRE_TOKEN_SILENT_TIMEOUT){
+                commandResult = submitSilentReturningFuture(command).get();
+            } else {
+                commandResult = submitSilentReturningFuture(command).get();
+            }
+        } catch (final InterruptedException | ExecutionException e) {
+            throw ExceptionAdapter.baseExceptionFromException(e);
+        }
+
+        if (commandResult.getStatus() == ICommandResult.ResultStatus.COMPLETED){
+            return (MicrosoftStsAuthorizationResult) commandResult.getResult();
         } else if (commandResult.getStatus() == ICommandResult.ResultStatus.ERROR){
             throw ExceptionAdapter.baseExceptionFromException((Throwable) commandResult.getResult());
         } else if (commandResult.getStatus() == ICommandResult.ResultStatus.CANCEL){
@@ -698,6 +728,84 @@ public class CommandDispatcher {
                 });
             }
         }
+
+    public static void beginInteractiveDCF ( final DeviceCodeFlowCommand command){
+        final String methodName = ":beginInteractive";
+        synchronized (sLock) {
+
+            //Cancel interactive request if authorizationInCurrentTask() returns true OR this is a broker request.
+            if (LibraryConfiguration.getInstance().isAuthorizationInCurrentTask() || command.getParameters() instanceof BrokerInteractiveTokenCommandParameters) {
+                // Send a broadcast to cancel if any active auth request is present.
+                if(LocalBroadcaster.INSTANCE.hasReceivers(CANCEL_AUTHORIZATION_REQUEST)) {
+                    LocalBroadcaster.INSTANCE.broadcast(CANCEL_AUTHORIZATION_REQUEST, new PropertyBag());
+                } else if (LocalBroadcaster.INSTANCE.hasReceivers(RETURN_AUTHORIZATION_REQUEST_RESULT)) {
+                    // This means that there is previous interactive request(s) waiting for Authorization result, however
+                    // the actual authorization process for that request has not been started as there are no registered listener/receivers
+                    // for "CANCEL_AUTHORIZATION_REQUEST". This results in the sInteractiveExecutor thread being in deadlock
+                    // state and not able to process any more interactive requests. To get out of this deadlock and be able to
+                    // process future interactive request we need to shutdown and restart the sInteractiveExecutor executor service.
+                    Logger.info(TAG + methodName,
+                            "The previous interactive request was queued but never got processed and is blocking the interactive thread. " +
+                                    "Restarting the interactive executor service to enable processing interactive requests again.");
+                    List<Runnable> cancelledRequests = sInteractiveExecutor.shutdownNow();
+                    sInteractiveExecutor = Executors.newSingleThreadExecutor();
+                    Logger.info(TAG + methodName, "Cancelled execution of " + cancelledRequests.size() + " interactive requests.");
+                }
+            }
+
+            sInteractiveExecutor.execute(new Runnable() {
+                @Override
+                public void run() {
+                    final CommandParameters commandParameters = command.getParameters();
+                    final String correlationId = initializeDiagnosticContext(
+                            commandParameters.getCorrelationId(),
+                            commandParameters.getSdkType() == null ?
+                                    SdkType.UNKNOWN.getProductName() : commandParameters.getSdkType().getProductName(),
+                            commandParameters.getSdkVersion()
+                    );
+                    try {
+                        // set correlation id on parameters as it may not already be set
+                        commandParameters.setCorrelationId(correlationId);
+
+                        logParameters(TAG + methodName, correlationId, commandParameters, command.getPublicApiId());
+
+                        initTelemetryForCommand(command);
+
+                        EstsTelemetry.getInstance().emitApiId(command.getPublicApiId());
+
+                        final LocalBroadcaster.IReceiverCallback resultReceiver = new LocalBroadcaster.IReceiverCallback() {
+                            @Override
+                            public void onReceive(@NonNull PropertyBag dataBag) {
+                                completeInteractive(dataBag);
+                            }
+                        };
+
+                        CommandResult commandResult;
+
+                        LocalBroadcaster.INSTANCE.registerCallback(
+                                RETURN_AUTHORIZATION_REQUEST_RESULT, resultReceiver);
+
+                        sDCFCommand = command;
+
+                        //Try executing request
+                        commandResult = executeCommand(command);
+                        sDCFCommand = null;
+
+                        LocalBroadcaster.INSTANCE.unregisterCallback(RETURN_AUTHORIZATION_REQUEST_RESULT);
+
+                        Logger.info(TAG + methodName,
+                                "Completed interactive request for correlation id : **" + correlationId +
+                                        statusMsg(commandResult.getStatus().getLogStatus()));
+
+                        EstsTelemetry.getInstance().flush(command, commandResult);
+                        returnCommandResult(command, commandResult);
+                    } finally {
+                        DiagnosticContext.INSTANCE.clear();
+                    }
+                }
+            });
+        }
+    }
 
         private static void completeInteractive ( final PropertyBag propertyBag){
             final String methodName = ":completeInteractive";

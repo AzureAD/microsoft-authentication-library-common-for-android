@@ -27,6 +27,7 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.MSAL_TO_BROKER_PROTOCOL_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.MSAL_TO_BROKER_PROTOCOL_VERSION_CODE;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.BROKER_WPJ_WITH_DEVICE_ID;
+import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.DCF_USER_CODE_FETCH;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_ACQUIRE_TOKEN_SILENT;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_GENERATE_SHR;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_GET_ACCOUNTS;
@@ -78,6 +79,7 @@ import com.microsoft.identity.common.java.authorities.AzureActiveDirectoryAudien
 import com.microsoft.identity.common.java.cache.ICacheRecord;
 import com.microsoft.identity.common.java.cache.MsalOAuth2TokenCache;
 import com.microsoft.identity.common.java.commands.AcquirePrtSsoTokenResult;
+import com.microsoft.identity.common.java.commands.DeviceCodeFlowUserCodeResult;
 import com.microsoft.identity.common.java.commands.parameters.AcquirePrtSsoTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.DeviceCodeFlowCommandParameters;
@@ -95,6 +97,7 @@ import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftRefreshToken;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.ClientInfo;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAccount;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResult;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.java.providers.oauth2.IDToken;
 import com.microsoft.identity.common.java.result.AcquireTokenResult;
@@ -427,6 +430,109 @@ public class BrokerMsalController extends BaseController {
                 });
     }
 
+    public MicrosoftStsAuthorizationResult getDeviceCodeFlowUserCodeResult(final DeviceCodeFlowCommandParameters parameters) throws BaseException  {
+        return mBrokerOperationExecutor.execute(parameters,
+                new BrokerOperation<MicrosoftStsAuthorizationResult>() {
+                    private String negotiatedBrokerProtocolVersion;
+
+                    @Override
+                    public void performPrerequisites(final @NonNull IIpcStrategy strategy) throws BaseException {
+                        negotiatedBrokerProtocolVersion = hello(strategy, parameters.getRequiredBrokerProtocolVersion());
+                    }
+
+                    @Override
+                    public @NonNull
+                    BrokerOperationBundle getBundle() {
+                        return new BrokerOperationBundle(DCF_USER_CODE_FETCH,
+                                mActiveBrokerPackageName,
+                                mRequestAdapter.getRequestBundleForAcquireTokenDCF(
+                                        mApplicationContext,
+                                        parameters,
+                                        negotiatedBrokerProtocolVersion,
+                                        null
+                                ));
+                    }
+
+                    @Override
+                    public @NonNull
+                    MicrosoftStsAuthorizationResult extractResultBundle(final @Nullable Bundle resultBundle) throws BaseException {
+                        if (resultBundle == null) {
+                            throw mResultAdapter.getExceptionForEmptyResultBundle();
+                        }
+                        return mResultAdapter.getResultFromResultBundleForDeviceCodeFlow(resultBundle);
+                    }
+
+                    @Override
+                    public @NonNull
+                    String getMethodName() {
+                        return ":acquireTokenSilent";
+                    }
+
+                    @Override
+                    public @NonNull
+                    String getTelemetryApiId() {
+                        return TelemetryEventStrings.Api.BROKER_ACQUIRE_TOKEN_SILENT;
+                    }
+
+                    @Override
+                    public void putValueInSuccessEvent(ApiEndEvent event, MicrosoftStsAuthorizationResult result) {
+
+                    }
+                });
+    }
+
+//    @Override
+//    public AcquireTokenResult acquireDeviceCodeFlowToken(final AuthorizationResult authorizationResult, final DeviceCodeFlowCommandParameters parameters) throws BaseException {
+//        // Create empty AcquireTokenResult object
+//        return mBrokerOperationExecutor.execute(parameters,
+//                new BrokerOperation<AcquireTokenResult>() {
+//                    private String negotiatedBrokerProtocolVersion;
+//
+//                    @Override
+//                    public void performPrerequisites(final @NonNull IIpcStrategy strategy) throws BaseException {
+//                        negotiatedBrokerProtocolVersion = hello(strategy, parameters.getRequiredBrokerProtocolVersion());
+//                    }
+//
+//                    @Override
+//                    public @NonNull
+//                    BrokerOperationBundle getBundle() {
+//                        return new BrokerOperationBundle(BROKER_WPJ_WITH_DEVICE_ID,
+//                                mActiveBrokerPackageName,
+//                                mRequestAdapter.getRequestBundleForAcquireTokenDCF(
+//                                        mApplicationContext,
+//                                        parameters,
+//                                        negotiatedBrokerProtocolVersion, authorizationResult
+//                                ));
+//                    }
+//
+//                    @Override
+//                    public @NonNull
+//                    AcquireTokenResult extractResultBundle(final @Nullable Bundle resultBundle) throws BaseException {
+//                        if (resultBundle == null) {
+//                            throw mResultAdapter.getExceptionForEmptyResultBundle();
+//                        }
+//                        return mResultAdapter.getAcquireTokenResultFromResultBundle(resultBundle);
+//                    }
+//
+//                    @Override
+//                    public @NonNull
+//                    String getMethodName() {
+//                        return ":acquireTokenSilent";
+//                    }
+//
+//                    @Override
+//                    public @NonNull
+//                    String getTelemetryApiId() {
+//                        return TelemetryEventStrings.Api.BROKER_ACQUIRE_TOKEN_SILENT;
+//                    }
+//
+//                    @Override
+//                    public void putValueInSuccessEvent(final @NonNull ApiEndEvent event, final @NonNull AcquireTokenResult result) {
+//                        event.putResult(result);
+//                    }
+//                });
+//    }
+
     public AcquireTokenResult acquireDeviceCodeFlowTokenWithDeviceId(final DeviceCodeFlowCommandParameters parameters) throws BaseException {
         // Create empty AcquireTokenResult object
         final AcquireTokenResult acquireTokenResult = new AcquireTokenResult();
@@ -447,7 +553,8 @@ public class BrokerMsalController extends BaseController {
                                 mRequestAdapter.getRequestBundleForAcquireTokenDCF(
                                         mApplicationContext,
                                         parameters,
-                                        negotiatedBrokerProtocolVersion
+                                        negotiatedBrokerProtocolVersion,
+                                        null
                                 ));
                     }
 
@@ -852,8 +959,56 @@ public class BrokerMsalController extends BaseController {
     }
 
     @Override
-    public AcquireTokenResult acquireDeviceCodeFlowToken(@SuppressWarnings(WarningType.rawtype_warning) AuthorizationResult authorizationResult, DeviceCodeFlowCommandParameters commandParameters) throws ClientException {
-        throw new ClientException("acquireDeviceCodeFlowToken() not supported in BrokerMsalController");
+    public AcquireTokenResult acquireDeviceCodeFlowToken(AuthorizationResult authorizationResult, DeviceCodeFlowCommandParameters parameters) throws Exception {
+            // Create empty AcquireTokenResult object
+            return mBrokerOperationExecutor.execute(parameters,
+                    new BrokerOperation<AcquireTokenResult>() {
+                        private String negotiatedBrokerProtocolVersion;
+
+                        @Override
+                        public void performPrerequisites(final @NonNull IIpcStrategy strategy) throws BaseException {
+                            negotiatedBrokerProtocolVersion = hello(strategy, parameters.getRequiredBrokerProtocolVersion());
+                        }
+
+                        @Override
+                        public @NonNull
+                        BrokerOperationBundle getBundle() {
+                            return new BrokerOperationBundle(BROKER_WPJ_WITH_DEVICE_ID,
+                                    mActiveBrokerPackageName,
+                                    mRequestAdapter.getRequestBundleForAcquireTokenDCF(
+                                            mApplicationContext,
+                                            parameters,
+                                            negotiatedBrokerProtocolVersion, (MicrosoftStsAuthorizationResult) authorizationResult
+                                    ));
+                        }
+
+                        @Override
+                        public @NonNull
+                        AcquireTokenResult extractResultBundle(final @Nullable Bundle resultBundle) throws BaseException {
+                            if (resultBundle == null) {
+                                throw mResultAdapter.getExceptionForEmptyResultBundle();
+                            }
+                            return mResultAdapter.getAcquireTokenResultFromResultBundle(resultBundle);
+                        }
+
+                        @Override
+                        public @NonNull
+                        String getMethodName() {
+                            return ":acquireTokenSilent";
+                        }
+
+                        @Override
+                        public @NonNull
+                        String getTelemetryApiId() {
+                            return TelemetryEventStrings.Api.BROKER_ACQUIRE_TOKEN_SILENT;
+                        }
+
+                        @Override
+                        public void putValueInSuccessEvent(final @NonNull ApiEndEvent event, final @NonNull AcquireTokenResult result) {
+                            event.putResult(result);
+                        }
+                    });
+
     }
 
     @Override

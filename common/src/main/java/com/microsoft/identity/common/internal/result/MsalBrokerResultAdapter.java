@@ -35,6 +35,7 @@ import com.microsoft.identity.common.adal.internal.util.HashMapExtensions;
 import com.microsoft.identity.common.adal.internal.util.JsonExtensions;
 import com.microsoft.identity.common.java.commands.AcquirePrtSsoTokenResult;
 import com.microsoft.identity.common.internal.request.AuthenticationSchemeTypeAdapter;
+import com.microsoft.identity.common.java.commands.DeviceCodeFlowUserCodeResult;
 import com.microsoft.identity.common.java.constants.OAuth2ErrorCode;
 import com.microsoft.identity.common.java.constants.OAuth2SubErrorCode;
 import com.microsoft.identity.common.java.exception.ArgumentException;
@@ -49,6 +50,9 @@ import com.microsoft.identity.common.internal.broker.BrokerResult;
 import com.microsoft.identity.common.java.cache.ICacheRecord;
 import com.microsoft.identity.common.java.dto.AccessTokenRecord;
 import com.microsoft.identity.common.java.dto.IAccountRecord;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResponse;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResult;
+import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.java.request.SdkType;
 import com.microsoft.identity.common.java.util.BrokerProtocolVersionUtil;
 import com.microsoft.identity.common.internal.util.GzipUtil;
@@ -63,7 +67,9 @@ import com.microsoft.identity.common.logging.Logger;
 import org.json.JSONException;
 
 import java.io.IOException;
+import java.util.Date;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_ACCOUNTS;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_ACCOUNTS_COMPRESSED;
@@ -71,6 +77,7 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_DEVICE_MODE;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_GENERATE_SHR_RESULT;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_GENERATE_SSO_TOKEN_RESULT;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_GENERATE_USER_CODE_RESULT;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_PACKAGE_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_RESULT_V2_COMPRESSED;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY;
@@ -591,6 +598,36 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
             );
 
             return acquireTokenResult;
+        }
+
+        throw getBaseExceptionFromBundle(resultBundle);
+    }
+
+    public @NonNull
+    MicrosoftStsAuthorizationResult getResultFromResultBundleForDeviceCodeFlow(@NonNull final Bundle resultBundle) throws BaseException {
+        String brokerResultString;
+        if (resultBundle.getBoolean(AuthenticationConstants.Broker.BROKER_REQUEST_V2_SUCCESS)) {
+           final String resultJson = resultBundle.getString(BROKER_GENERATE_USER_CODE_RESULT);
+            final MicrosoftStsAuthorizationResult authorizationResult = AuthenticationSchemeTypeAdapter.getGsonInstance().fromJson(
+                    resultJson,
+                    MicrosoftStsAuthorizationResult.class
+            );
+return authorizationResult;
+
+//            if (compressedBytes != null) {
+//                try {
+//                    brokerResultString = GzipUtil.decompressBytesToString(compressedBytes);
+//                } catch (IOException e) {
+//                    // We should never hit this ideally unless the string/bytes are malformed for some unknown reason.
+//                    // The caller should handle the null broker result
+//                    throw new ClientException(INVALID_BROKER_BUNDLE, "Failed to decompress broker result", e);
+//                }
+//            } else {
+//                brokerResultString = resultBundle.getString(AuthenticationConstants.Broker.BROKER_RESULT_V2);
+//            }
+
+
+
         }
 
         throw getBaseExceptionFromBundle(resultBundle);

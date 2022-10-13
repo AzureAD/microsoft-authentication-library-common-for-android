@@ -27,6 +27,7 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ACCOUNT_HOME_ACCOUNT_ID;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ACCOUNT_REDIRECT;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.AUTH_SCHEME_PARAMS_POP;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_GENERATE_USER_CODE_RESULT;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_REQUEST_V2;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_REQUEST_V2_COMPRESSED;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CALLER_INFO_UID;
@@ -53,6 +54,8 @@ import com.microsoft.identity.common.java.commands.parameters.AcquirePrtSsoToken
 import com.microsoft.identity.common.java.commands.parameters.DeviceCodeFlowCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.GenerateShrCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.RemoveAccountCommandParameters;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResult;
+import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.java.ui.BrowserDescriptor;
 import com.microsoft.identity.common.java.util.BrokerProtocolVersionUtil;
 import com.microsoft.identity.common.java.util.QueryParamsAdapter;
@@ -273,8 +276,9 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
     }
 
     public Bundle getRequestBundleForAcquireTokenDCF(@NonNull final Context context,
-                                                        @NonNull final DeviceCodeFlowCommandParameters parameters,
-                                                        @Nullable final String negotiatedBrokerProtocolVersion) {
+                                                     @NonNull final DeviceCodeFlowCommandParameters parameters,
+                                                     @Nullable final String negotiatedBrokerProtocolVersion,
+                                                     @NonNull MicrosoftStsAuthorizationResult authorizationResult) {
         final MsalBrokerRequestAdapter msalBrokerRequestAdapter = new MsalBrokerRequestAdapter();
 
         final BrokerRequest brokerRequest = msalBrokerRequestAdapter.
@@ -290,6 +294,16 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 CALLER_INFO_UID,
                 context.getApplicationInfo().uid
         );
+        if (authorizationResult != null) {
+            // Serialize it
+            final String serializedResult =
+                    AuthenticationSchemeTypeAdapter.getGsonInstance().toJson(
+                            authorizationResult,
+                            MicrosoftStsAuthorizationResult.class
+                    );
+
+            requestBundle.putString(BROKER_GENERATE_USER_CODE_RESULT, serializedResult);
+        }
 
         return requestBundle;
     }

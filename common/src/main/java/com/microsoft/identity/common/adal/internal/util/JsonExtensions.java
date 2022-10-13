@@ -30,6 +30,8 @@ import com.google.gson.reflect.TypeToken;
 import com.microsoft.identity.common.internal.broker.BrokerResult;
 import com.microsoft.identity.common.internal.util.ICacheRecordGsonAdapter;
 import com.microsoft.identity.common.java.cache.ICacheRecord;
+import com.microsoft.identity.common.java.commands.DeviceCodeFlowUserCodeResult;
+import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
 
 import java.lang.reflect.Type;
 import java.util.List;
@@ -81,6 +83,16 @@ public final class JsonExtensions {
                 .fromJson(
                         jsonString,
                         BrokerResult.class
+                );
+    }
+
+    public static AuthorizationResult getDeviceCodeFlowUserCodeResultFromJsonString(@NonNull final String jsonString) {
+        return new GsonBuilder()
+                .registerTypeAdapter(ICacheRecord.class, new ICacheRecordGsonAdapter())
+                .create()
+                .fromJson(
+                        jsonString,
+                        AuthorizationResult.class
                 );
     }
 }

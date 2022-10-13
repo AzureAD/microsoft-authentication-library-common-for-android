@@ -129,13 +129,14 @@ public class FociQueryUtilities {
         //       for every FoCI apps (and hardcode it here).
         //       https://identitydivision.visualstudio.com/Engineering/_workitems/edit/1222002
         if (ObjectUtils.equals(clientId, "87749df4-7ccf-48f8-aa87-704bad0e0e16")) {
-            final Span span = mTracer.spanBuilder("testNewSpan").startSpan();
-
-            try (final Scope scope = span.makeCurrent()) {
-                scopes = "https://devicemgmt.teams.microsoft.com/.default " + BaseController.getDelimitedDefaultScopeString();
-                Logger.info(TAG + methodName,
-                        "Teams agent client ID - making a test request with teams agent resource.");
-            }
+            scopes = "https://devicemgmt.teams.microsoft.com/.default " + BaseController.getDelimitedDefaultScopeString();
+//            final Span span = mTracer.spanBuilder("testNewSpan").startSpan();
+//
+//            try (final Scope scope = span.makeCurrent()) {
+//
+//                Logger.info(TAG + methodName,
+//                        "Teams agent client ID - making a test request with teams agent resource.");
+//            }
 
 
         } else {

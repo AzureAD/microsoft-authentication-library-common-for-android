@@ -1160,6 +1160,11 @@ public final class AuthenticationConstants {
         public static final String BROKER_REQUEST_V2_SUCCESS = "broker_request_v2_success";
 
         /**
+         * String to return a true if the request succeeded, false otherwise.
+         */
+        public static final String BROKER_GENERATE_USER_CODE_RESULT = "broker_generate_usercode_result";
+
+        /**
          * String to send true if the request should send the PkeyAuth header to the token endpoint, false otherwise.
          */
         public static final String SHOULD_SEND_PKEYAUTH_HEADER_TO_THE_TOKEN_ENDPOINT = "should.send.pkeyauth.header";
@@ -1402,6 +1407,7 @@ public final class AuthenticationConstants {
             BROKER_REMOVE_ACCOUNT(BROKER_API_REMOVE_BROKER_ACCOUNT_PATH, BROKER_VERSION_1, null),
             BROKER_UPDATE_BRT(BROKER_API_UPDATE_BRT_PATH, BROKER_VERSION_1, null),
             BROKER_WPJ_WITH_DEVICE_ID(BROKER_WPJ_WITH_DEVICE_ID_PATH, BROKER_VERSION_1, null),
+            DCF_USER_CODE_FETCH(DCF_USER_CODE_FETCH_PATH, BROKER_VERSION_1, null),
             BROKER_ADD_FLIGHTS(BROKER_API_ADD_FLIGHTS_PATH, BROKER_VERSION_2, null),
             BROKER_SET_FLIGHTS(BROKER_API_SET_FLIGHTS_PATH, BROKER_VERSION_2, null),
             BROKER_GET_FLIGHTS(BROKER_API_GET_FLIGHTS_PATH, BROKER_VERSION_2, null),
@@ -1486,6 +1492,7 @@ public final class AuthenticationConstants {
          */
         public static final String BROKER_API_UPDATE_BRT_PATH = "/brokerApi/updateBrt";
         public static final String BROKER_WPJ_WITH_DEVICE_ID_PATH = "/brokerApi/performWPJ";
+        public static final String DCF_USER_CODE_FETCH_PATH = "/brokerApi/userCodeFetch";
         /**
          * Broker api path constant for adding flight information.
          */
