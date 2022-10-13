@@ -10,7 +10,7 @@ import java.lang.annotation.Target;
  * Tests not marked with this annotation are assumed to be compatible with API 30+
  * Typical reasons for wanting to run on older API:
  *      - Pages that have elements with height 0 (these aren't visible to automation in API 30+) i.e. Keep me signed in page, consent page
- *      - Some apps not behaving correctly on API 30+ i.e. Azure Sample app
+ *      - First party apps not launching on API 30+ i.e. Azure Sample app, outlook, etc.
  *      - WebView seems to be easier to test on API 29-.
  */
 @Retention(RetentionPolicy.RUNTIME)

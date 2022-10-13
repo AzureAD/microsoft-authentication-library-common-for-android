@@ -179,7 +179,7 @@ public class GoogleSettings extends BaseSettings {
 
     @Override
     public void forwardDeviceTimeForOneDay() {
-        forwardDeviceTime(TimeUnit.DAYS.toSeconds(1));
+        forwardDeviceTime(TimeUnit.DAYS.toSeconds(1), true);
     }
 
     /**
@@ -188,7 +188,7 @@ public class GoogleSettings extends BaseSettings {
      * @param seconds amount to advance time by
      */
     @Override
-    public void forwardDeviceTime(long seconds) {
+    public void forwardDeviceTime(long seconds, final boolean enableTimeZone) {
         Logger.i(TAG, "Forwarding Time by " + seconds + " seconds on Google Device");
         // Disable Automatic TimeZone
         AdbShellUtils.disableAutomaticTimeZone();
@@ -227,14 +227,17 @@ public class GoogleSettings extends BaseSettings {
             final UiObject okBtn = UiAutomatorUtils.obtainUiObjectWithText("OK");
             okBtn.click();
 
-            try {
-                Thread.sleep(TimeUnit.SECONDS.toMillis(7));
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-
             // Reset to Automatic Time Zone to avoid chain validation failures
-            AdbShellUtils.enableAutomaticTimeZone();
+            // Some cases fail if you do this, however, so setting it to a boolean parameter
+            if (enableTimeZone) {
+                try {
+                    Thread.sleep(TimeUnit.SECONDS.toMillis(3));
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+                AdbShellUtils.enableAutomaticTimeZone();
+            }
         } catch (final UiObjectNotFoundException e) {
             throw new AssertionError(e);
         }
