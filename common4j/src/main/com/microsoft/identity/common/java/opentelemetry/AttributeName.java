@@ -37,5 +37,10 @@ public enum AttributeName {
     /**
      * Indicates the algorithm for the JWE returned by eSTS.
      */
-    jwt_alg
+    jwt_alg,
+
+    /**
+     * Indicates the request id value for cached credential service (if used) on server side
+     */
+    ccs_request_id
 }
