@@ -29,35 +29,20 @@ import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.net.MalformedURLException;
-import java.net.URL;
-
 public class PopAuthenticationSchemeWithClientKeyTest {
-    private final String httpMethod = "GET";
-    private final String nonce = "123456";
-    private final String url = "http://foo.com";
     private final String kid = "xyz";
-    private final String clientClaims = "claim1_key:claim1_Value";
 
     private final PopAuthenticationSchemeWithClientKeyInternal authenticationSchemeWithClientKeyInternal;
 
-    public PopAuthenticationSchemeWithClientKeyTest() throws MalformedURLException {
+    public PopAuthenticationSchemeWithClientKeyTest() {
         authenticationSchemeWithClientKeyInternal = PopAuthenticationSchemeWithClientKeyInternal.builder()
-                .httpMethod(httpMethod)
-                .nonce(nonce)
-                .url(new URL(url))
                 .kid(kid)
-                .clientClaims(clientClaims)
                 .build();
     }
 
     @Test
     public void testBuilder() {
-        Assert.assertEquals(httpMethod, authenticationSchemeWithClientKeyInternal.getHttpMethod());
-        Assert.assertEquals(clientClaims, authenticationSchemeWithClientKeyInternal.getClientClaims());
         Assert.assertEquals(kid, authenticationSchemeWithClientKeyInternal.getKid());
-        Assert.assertEquals(nonce, authenticationSchemeWithClientKeyInternal.getNonce());
-        Assert.assertEquals(url, authenticationSchemeWithClientKeyInternal.getUrl().toString());
     }
 
     @Test

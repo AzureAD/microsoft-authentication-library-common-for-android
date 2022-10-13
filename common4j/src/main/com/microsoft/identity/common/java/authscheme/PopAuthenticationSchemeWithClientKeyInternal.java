@@ -22,20 +22,13 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.authscheme;
 
-import static com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeInternal.SerializedNames.CLIENT_CLAIMS;
-import static com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeInternal.SerializedNames.HTTP_METHOD;
 import static com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeInternal.SerializedNames.KID;
-import static com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeInternal.SerializedNames.NONCE;
-import static com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeInternal.SerializedNames.URL;
 
 import com.google.gson.annotations.SerializedName;
 import com.nimbusds.jose.util.Base64URL;
 
 import org.json.JSONObject;
 
-import java.net.URL;
-
-import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 import lombok.experimental.Accessors;
@@ -58,18 +51,6 @@ public class PopAuthenticationSchemeWithClientKeyInternal
      */
     public static final String SCHEME_POP_WITH_CLIENT_KEY = "PoP_With_Client_Key";
 
-    @SerializedName(HTTP_METHOD)
-    private String mHttpMethod;
-
-    @SerializedName(URL)
-    private URL mUrl;
-
-    @SerializedName(NONCE)
-    private String mNonce;
-
-    @SerializedName(CLIENT_CLAIMS)
-    private String mClientClaims;
-
     @SerializedName(KID)
     private String mKid;
 
@@ -83,51 +64,16 @@ public class PopAuthenticationSchemeWithClientKeyInternal
     /**
      * Constructs a new PopAuthenticationSchemeWithClientKeyInternal.
      *
-     * @param httpMethod   The HTTP method associated with this request. Optional.
-     * @param url          The resource URL of future-recipient of this SHR.
-     * @param nonce        Client nonce value; for replay protection.
-     * @param clientClaims Optional claims provided by the caller to embed in the client_claims
-     *                     property of the resulting SHR.
-     * @param kid          The kid/thumbprint for the Client Key.
+     *@param kid          The kid/thumbprint for the Client Key.
      */
-    public PopAuthenticationSchemeWithClientKeyInternal(@Nullable final String httpMethod,
-                                                        @NonNull final URL url,
-                                                        @Nullable final String nonce,
-                                                        @Nullable final String clientClaims,
-                                                        @NonNull final String kid) {
+    public PopAuthenticationSchemeWithClientKeyInternal(@NonNull final String kid) {
         super(SCHEME_POP_WITH_CLIENT_KEY);
-        mHttpMethod = httpMethod;
-        mUrl = url;
-        mNonce = nonce;
-        mClientClaims = clientClaims;
         mKid = kid;
     }
 
     @Override
     public String getAccessTokenForScheme(@NonNull final String accessToken) {
         return accessToken;
-    }
-
-    @Override
-    @Nullable
-    public String getHttpMethod() {
-        return mHttpMethod;
-    }
-
-    @Override
-    public URL getUrl() {
-        return mUrl;
-    }
-
-    @Override
-    public String getClientClaims() {
-        return mClientClaims;
-    }
-
-    @Override
-    @Nullable
-    public String getNonce() {
-        return mNonce;
     }
 
     public String getKid() {
@@ -141,5 +87,25 @@ public class PopAuthenticationSchemeWithClientKeyInternal
     public String getRequestConfirmation() {
         final String reqCnfJson = new JSONObject().put(KID, mKid).toString();
         return Base64URL.encode(reqCnfJson).toString();
+    }
+
+    @Override
+    public String getNonce() {
+        return null;
+    }
+
+    @Override
+    public String getHttpMethod() {
+        return null;
+    }
+
+    @Override
+    public java.net.URL getUrl() {
+        return null;
+    }
+
+    @Override
+    public String getClientClaims() {
+        return null;
     }
 }

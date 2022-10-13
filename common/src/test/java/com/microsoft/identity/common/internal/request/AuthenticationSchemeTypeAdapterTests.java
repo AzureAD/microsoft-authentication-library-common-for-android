@@ -68,14 +68,9 @@ public class AuthenticationSchemeTypeAdapterTests {
     @Test
     public void testSerialize_PopAuthenticationSchemeWithClientKeyInternal() throws MalformedURLException {
         final String expectedJson =
-                "{\"http_method\":\"GET\",\"url\":\"https://xyz.com\",\"nonce\":\"nonce_test\",\"client_claims\":\"clientClaims_test\",\"kid\":\"kid_test\",\"name\":\"PoP_With_Client_Key\"}";
+                "{\"kid\":\"kid_test\",\"name\":\"PoP_With_Client_Key\"}";
         final PopAuthenticationSchemeWithClientKeyInternal popAuthenticationSchemeWithClientKeyInternal =
-                new PopAuthenticationSchemeWithClientKeyInternal(
-                        "GET",
-                        new URL("https://xyz.com"),
-                        "nonce_test",
-                        "clientClaims_test",
-                        "kid_test");
+                new PopAuthenticationSchemeWithClientKeyInternal("kid_test");
 
         final String json = AuthenticationSchemeTypeAdapter.getGsonInstance().toJson(popAuthenticationSchemeWithClientKeyInternal);
         Assert.assertEquals(expectedJson, json);
