@@ -118,8 +118,6 @@ public class MicrosoftStsOAuth2Strategy
 
     private final HttpClient httpClient = UrlConnectionHttpClient.getDefaultInstance();
 
-    private AbstractAuthenticationScheme mAuthScheme;
-
     /**
      * Constructor of MicrosoftStsOAuth2Strategy.
      *
@@ -382,7 +380,6 @@ public class MicrosoftStsOAuth2Strategy
             tokenRequest.setGrantType(TokenRequest.GrantTypes.AUTHORIZATION_CODE);
         }
 
-        this.setAuthenticationScheme(authScheme);
         if (authScheme instanceof PopAuthenticationSchemeInternal) {
             // Add a token_type
             tokenRequest.setTokenType(TokenRequest.TokenType.POP);
@@ -442,7 +439,6 @@ public class MicrosoftStsOAuth2Strategy
         final MicrosoftStsTokenRequest request = new MicrosoftStsTokenRequest();
         request.setGrantType(TokenRequest.GrantTypes.REFRESH_TOKEN);
 
-        this.setAuthenticationScheme(authScheme);
         if (authScheme instanceof  PopAuthenticationSchemeInternal) {
             request.setTokenType(TokenRequest.TokenType.POP);
 
@@ -727,10 +723,6 @@ public class MicrosoftStsOAuth2Strategy
         return buildCloudSpecificTokenEndpoint((MicrosoftStsAuthorizationResponse) response);
     }
 
-    private void setAuthenticationScheme(@NonNull final AbstractAuthenticationScheme authScheme) {
-        mAuthScheme = authScheme;
-    }
-
     /**
      * Gets the at/pop device credential's thumbprint.
      *
@@ -738,8 +730,8 @@ public class MicrosoftStsOAuth2Strategy
      */
     @Nullable
     public String getDeviceAtPopThumbprint() {
-        if (mAuthScheme instanceof PopAuthenticationSchemeWithClientKeyInternal) {
-           return ((PopAuthenticationSchemeWithClientKeyInternal) mAuthScheme).getKid();
+        if (mStrategyParameters.getAuthenticationScheme() instanceof PopAuthenticationSchemeWithClientKeyInternal) {
+           return ((PopAuthenticationSchemeWithClientKeyInternal) mStrategyParameters.getAuthenticationScheme()).getKid();
         }
 
         String atPoPKid = null;
