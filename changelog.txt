@@ -1,5 +1,6 @@
-V.Next
+V.8.0.1
 ----------
+- [PATCH] Avoid keystore key overwriting for apps using sharedUserId. (#1864)
 
 Version 8.0.0
 ----------
