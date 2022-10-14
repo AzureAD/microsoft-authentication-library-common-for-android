@@ -39,6 +39,7 @@ import com.microsoft.identity.common.java.crypto.key.KeyUtil;
 import com.microsoft.identity.common.java.crypto.key.PredefinedKeyLoader;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
+import com.microsoft.identity.common.java.exception.TerminalException;
 import com.microsoft.identity.common.java.logging.Logger;
 
 import java.security.InvalidAlgorithmParameterException;
@@ -334,6 +335,9 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
             exception = e;
         } catch (final IllegalArgumentException e) {
             errCode = DATA_MALFORMED;
+            exception = e;
+        } catch (final TerminalException e) {
+            errCode = e.getErrorCode();
             exception = e;
         }
 
