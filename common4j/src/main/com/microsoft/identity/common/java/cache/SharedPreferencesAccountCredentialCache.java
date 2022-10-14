@@ -22,17 +22,16 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.cache;
 
-import com.microsoft.identity.common.java.interfaces.INameValueStorage;
-import com.microsoft.identity.common.java.logging.Logger;
-import com.microsoft.identity.common.java.util.StringUtil;
-import com.microsoft.identity.common.java.util.ported.Predicate;
 import com.microsoft.identity.common.java.dto.AccessTokenRecord;
 import com.microsoft.identity.common.java.dto.AccountRecord;
 import com.microsoft.identity.common.java.dto.Credential;
 import com.microsoft.identity.common.java.dto.CredentialType;
-import com.microsoft.identity.common.java.dto.IAccountRecord;
 import com.microsoft.identity.common.java.dto.IdTokenRecord;
 import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
+import com.microsoft.identity.common.java.interfaces.INameValueStorage;
+import com.microsoft.identity.common.java.logging.Logger;
+import com.microsoft.identity.common.java.util.StringUtil;
+import com.microsoft.identity.common.java.util.ported.Predicate;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -42,8 +41,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-
-import static com.microsoft.identity.common.java.cache.CacheKeyValueDelegate.CACHE_VALUE_SEPARATOR;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.NonNull;
@@ -331,6 +328,7 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
         final List<Credential> allCredentials = getCredentials();
 
         final List<Credential> matchingCredentials = getCredentialsFilteredByInternal(
+                allCredentials,
                 homeAccountId,
                 environment,
                 credentialType,
@@ -339,7 +337,7 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
                 target,
                 authScheme,
                 null,
-                allCredentials
+                null
         );
 
         Logger.verbose(methodTag, "Found [" + matchingCredentials.size() + "] matching Credentials...");
@@ -361,6 +359,7 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
         Logger.verbose(methodTag, "getCredentialsFilteredBy() -- with input list");
 
         final List<Credential> matchingCredentials = getCredentialsFilteredByInternal(
+                inputCredentials,
                 homeAccountId,
                 environment,
                 credentialType,
@@ -369,7 +368,7 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
                 target,
                 authScheme,
                 null,
-                inputCredentials
+                null
         );
 
         Logger.verbose(methodTag, "Found [" + matchingCredentials.size() + "] matching Credentials...");
@@ -394,6 +393,7 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
         final List<Credential> allCredentials = getCredentials();
 
         final List<Credential> matchingCredentials = getCredentialsFilteredByInternal(
+                allCredentials,
                 homeAccountId,
                 environment,
                 credentialType,
@@ -402,7 +402,7 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
                 target,
                 authScheme,
                 requestedClaims,
-                allCredentials
+                null
         );
 
         Logger.verbose(methodTag, "Found [" + matchingCredentials.size() + "] matching Credentials...");
@@ -426,6 +426,7 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
         Logger.verbose(methodTag, "getCredentialsFilteredBy()");
 
         final List<Credential> matchingCredentials = getCredentialsFilteredByInternal(
+                inputCredentials,
                 homeAccountId,
                 environment,
                 credentialType,
@@ -434,7 +435,7 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
                 target,
                 authScheme,
                 requestedClaims,
-                inputCredentials
+                null
         );
 
         Logger.verbose(methodTag, "Found [" + matchingCredentials.size() + "] matching Credentials...");
@@ -457,6 +458,7 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
         for (final CredentialType type : credentialTypes) {
             result.addAll(
                     getCredentialsFilteredByInternal(
+                            allCredentials,
                             homeAccountId,
                             environment,
                             type,
@@ -465,11 +467,41 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
                             target,
                             authScheme,
                             requestedClaims,
-                            allCredentials
+                            null
                     )
             );
         }
 
+        return result;
+    }
+
+    @Override
+    public List<Credential> getCredentialsFilteredBy(
+            final List<Credential> inputCredentials,
+            final String homeAccountId,
+            final String environment,
+            final CredentialType credentialType,
+            final String clientId,
+            final String realm,
+            final String target,
+            final String authScheme,
+            final String requestedClaims,
+            final String kid ) {
+        final List<Credential> result = new ArrayList<>();
+        result.addAll(
+                getCredentialsFilteredByInternal(
+                        inputCredentials,
+                        homeAccountId,
+                        environment,
+                        credentialType,
+                        clientId,
+                        realm,
+                        target,
+                        authScheme,
+                        requestedClaims,
+                        kid
+                )
+        );
         return result;
     }
 

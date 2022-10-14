@@ -149,6 +149,7 @@ public class LocalMSALController extends BaseController {
         // Build up params for Strategy construction
         final OAuth2StrategyParameters strategyParameters = OAuth2StrategyParameters.builder()
                 .platformComponents(parameters.getPlatformComponents())
+                .authenticationScheme(parameters.getAuthenticationScheme())
                 .build();
 
         //1) Get oAuth2Strategy for Authority Type
@@ -301,6 +302,7 @@ public class LocalMSALController extends BaseController {
         final AbstractAuthenticationScheme authScheme = parametersWithScopes.getAuthenticationScheme();
         final OAuth2StrategyParameters strategyParameters = OAuth2StrategyParameters.builder()
                 .platformComponents(parameters.getPlatformComponents())
+                .authenticationScheme(authScheme)
                 .build();
 
         @SuppressWarnings(WarningType.rawtype_warning) final OAuth2Strategy strategy = parametersWithScopes.getAuthority().createOAuth2Strategy(strategyParameters);
@@ -577,6 +579,7 @@ public class LocalMSALController extends BaseController {
             // Create OAuth2Strategy using commandParameters and strategyParameters
             final OAuth2StrategyParameters strategyParameters = OAuth2StrategyParameters.builder()
                     .platformComponents(parameters.getPlatformComponents())
+                    .authenticationScheme(parameters.getAuthenticationScheme())
                     .build();
 
             final OAuth2Strategy oAuth2Strategy = parametersWithScopes
@@ -652,6 +655,7 @@ public class LocalMSALController extends BaseController {
             // Create OAuth2Strategy using commandParameters and strategyParameters
             final OAuth2StrategyParameters strategyParameters = OAuth2StrategyParameters.builder()
                     .platformComponents(parameters.getPlatformComponents())
+                    .authenticationScheme(parameters.getAuthenticationScheme())
                     .build();
 
             @SuppressWarnings(WarningType.rawtype_warning) final OAuth2Strategy oAuth2Strategy = parameters
