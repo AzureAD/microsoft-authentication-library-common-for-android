@@ -23,7 +23,7 @@
 package com.microsoft.identity.common.java.crypto;
 
 import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.java.opentelemetry.CryptoFactoryTelemetryClassName;
+import com.microsoft.identity.common.java.opentelemetry.CryptoFactoryName;
 
 import java.security.KeyFactory;
 import java.security.KeyPairGenerator;
@@ -41,8 +41,8 @@ public class DefaultCryptoFactory implements ICryptoFactory {
 
     @Override
     @NonNull
-    public CryptoFactoryTelemetryClassName getTelemetryClassName() {
-        return CryptoFactoryTelemetryClassName.DefaultCryptoFactory;
+    public CryptoFactoryName getTelemetryClassName() {
+        return CryptoFactoryName.DefaultCryptoFactory;
     }
 
     @Override

@@ -25,7 +25,7 @@ package com.microsoft.identity.common.java.opentelemetry;
 /**
  * Enum representing classes implementing {@link com.microsoft.identity.common.java.crypto.ICryptoFactory}.
  */
-public enum CryptoFactoryTelemetryClassName {
+public enum CryptoFactoryName {
     DefaultCryptoFactory,
     NonFipsBrokerCryptoFactory,
     AndroidBrokerFipsCryptoFactory
