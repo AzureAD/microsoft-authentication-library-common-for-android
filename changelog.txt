@@ -2,6 +2,7 @@ V.Next
 ----------
 - [PATCH] Moved clearClientCertPreferences to onPageLoaded. (#1855)
 - [MINOR] Add new exception type for broker protocol not supported exception during msal-broker handshake (#1859)
+- [PATCH] Avoid keystore key overwriting for apps using sharedUserId. (#3738)
 
 Version 8.0.0
 ----------
