@@ -109,6 +109,7 @@ public class SmartcardCertBasedAuthChallengeHandler implements ICertBasedAuthCha
                 //If no certs were found, cancel flow.
                 if (certList.isEmpty()) {
                     Logger.info(methodTag,  "No PIV certificates found on smartcard device.");
+                    //NOTE: Put OTel here
                     mDialogHolder.showErrorDialog(
                             R.string.smartcard_no_cert_dialog_title,
                             R.string.smartcard_no_cert_dialog_message);
@@ -146,6 +147,7 @@ public class SmartcardCertBasedAuthChallengeHandler implements ICertBasedAuthCha
      */
     private void indicateTooManyFailedAttempts(@NonNull final String methodTag) {
         Logger.info(methodTag,  "User has reached the maximum failed attempts allowed.");
+        //NOTE: Put OTel here
         mDialogHolder.showErrorDialog(
                 R.string.smartcard_max_attempt_dialog_title,
                 R.string.smartcard_max_attempt_dialog_message);
@@ -159,6 +161,7 @@ public class SmartcardCertBasedAuthChallengeHandler implements ICertBasedAuthCha
      */
     private void indicateGeneralException(@NonNull final String methodTag, @NonNull final Exception e) {
         Logger.error(methodTag, e.getMessage(), e);
+        //NOTE: Put OTel here
         //Show general error dialog.
         mDialogHolder.showErrorDialog(
                 R.string.smartcard_general_error_dialog_title,
@@ -298,6 +301,7 @@ public class SmartcardCertBasedAuthChallengeHandler implements ICertBasedAuthCha
     @Override
     public void emitTelemetryForCertBasedAuthResults(@NonNull final RawAuthorizationResult response) {
         if (mIsSmartcardCertBasedAuthProceeding) {
+            //NOTE: OTel, emit span status as well as response code and exceptions
             final CertBasedAuthResultEvent certBasedAuthResultEvent = new CertBasedAuthResultEvent(TelemetryEventStrings.Event.CERT_BASED_AUTH_RESULT_SMARTCARD_EVENT);
             mIsSmartcardCertBasedAuthProceeding = false;
             Telemetry.emit(certBasedAuthResultEvent.putResponseCode(response.getResultCode().toString()));

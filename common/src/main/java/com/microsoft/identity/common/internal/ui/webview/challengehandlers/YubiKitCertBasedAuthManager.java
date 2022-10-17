@@ -91,6 +91,7 @@ public class YubiKitCertBasedAuthManager extends AbstractSmartcardCertBasedAuthM
                             synchronized (sDeviceLock) {
                                 mDevice = null;
                             }
+                            //NOTE: Replace with OTEL span
                             final PivProviderStatusEvent pivProviderStatusEvent = new PivProviderStatusEvent();
                             //Remove the YKPiv security provider if it was added.
                             if (Security.getProvider(YUBIKEY_PROVIDER) != null) {
@@ -170,6 +171,7 @@ public class YubiKitCertBasedAuthManager extends AbstractSmartcardCertBasedAuthM
         final String methodTag = TAG + ":initBeforeProceedingWithRequest";
         //Need to add a PivProvider instance to the beginning of the array of Security providers in order for signature logic to occur.
         //Note that this provider is removed when the UsbYubiKeyDevice connection is closed.
+        //NOTE: Replace with OTEL span
         final PivProviderStatusEvent pivProviderStatusEvent = new PivProviderStatusEvent();
         if (Security.getProvider(YUBIKEY_PROVIDER) != null) {
             Security.removeProvider(YUBIKEY_PROVIDER);
