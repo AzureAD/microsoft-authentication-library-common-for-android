@@ -206,7 +206,10 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
             final byte[] wrappedSecretKey = FileUtil.readFromFile(getKeyFile(), KEY_FILE_SIZE);
             if (wrappedSecretKey == null) {
                 Logger.warn(methodTag, "Key file is empty");
-                deleteSecretKeyFromStorage();
+                // Do not delete the KeyStoreKeyPair even if the key file is empty. This caused credential cache
+                // to be deleted in Office because of sharedUserId allowing keystore to be shared amongst apps.
+                FileUtil.deleteFile(getKeyFile());
+                mKeyCache.clear();
                 return null;
             }
 

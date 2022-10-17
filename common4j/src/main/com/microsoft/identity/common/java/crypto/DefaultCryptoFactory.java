@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.java.crypto;
 
 import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.opentelemetry.CryptoFactoryName;
 
 import java.security.KeyFactory;
 import java.security.KeyPairGenerator;
@@ -37,28 +38,35 @@ import lombok.NonNull;
  * A Factory class that generates/utilizes platform's default crypto objects.
  */
 public class DefaultCryptoFactory implements ICryptoFactory {
+
     @Override
-    public @NonNull Signature getSignature(@NonNull String algorithm) throws ClientException {
+    @NonNull
+    public CryptoFactoryName getTelemetryClassName() {
+        return CryptoFactoryName.DefaultCryptoFactory;
+    }
+
+    @Override
+    public @NonNull Signature getSignature(@NonNull final String algorithm) throws ClientException {
         return ProviderFactory.getSignature(algorithm, null);
     }
 
     @Override
-    public @NonNull Cipher getCipher(@NonNull String algorithm) throws ClientException {
+    public @NonNull Cipher getCipher(@NonNull final String algorithm) throws ClientException {
         return ProviderFactory.getCipher(algorithm, null);
     }
 
     @Override
-    public @NonNull Mac getMac(@NonNull String algorithm) throws ClientException {
+    public @NonNull Mac getMac(@NonNull final String algorithm) throws ClientException {
         return ProviderFactory.getMac(algorithm, null);
     }
 
     @Override
-    public @NonNull KeyPairGenerator getKeyPairGenerator(@NonNull String algorithm) throws ClientException {
+    public @NonNull KeyPairGenerator getKeyPairGenerator(@NonNull final String algorithm) throws ClientException {
         return ProviderFactory.getKeyPairGenerator(algorithm, null);
     }
 
     @Override
-    public @NonNull KeyFactory getKeyFactory(@NonNull String algorithm) throws ClientException {
+    public @NonNull KeyFactory getKeyFactory(@NonNull final String algorithm) throws ClientException {
         return ProviderFactory.getKeyFactory(algorithm, null);
     }
 }
