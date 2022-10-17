@@ -57,6 +57,7 @@ public class PopAuthenticationSchemeInternal
         public static final String URL = "url";
         public static final String NONCE = "nonce";
         public static final String CLIENT_CLAIMS = "client_claims";
+        public static final String KID = "kid";
     }
 
     /**
