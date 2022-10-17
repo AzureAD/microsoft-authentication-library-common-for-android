@@ -28,6 +28,7 @@ import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.
 import static com.microsoft.identity.common.java.AuthenticationConstants.OAuth2Scopes.CLAIMS_UPDATE_RESOURCE;
 import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.PRODUCT;
 import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.VERSION;
+import static com.microsoft.identity.common.java.net.HttpConstants.HeaderField.XMS_CCS_REQUEST_ID;
 import static com.microsoft.identity.common.java.net.HttpConstants.HeaderField.X_MS_CLITELEM;
 import static com.microsoft.identity.common.java.providers.oauth2.TokenRequest.GrantTypes.CLIENT_CREDENTIALS;
 
@@ -41,20 +42,6 @@ import com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallenge;
 import com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallengeFactory;
 import com.microsoft.identity.common.java.commands.parameters.RopcTokenCommandParameters;
 import com.microsoft.identity.common.java.crypto.IDevicePopManager;
-import com.microsoft.identity.common.java.opentelemetry.AttributeName;
-import com.microsoft.identity.common.java.platform.Device;
-import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationResponse;
-import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenErrorResponse;
-import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
-import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResultFactory;
-import com.microsoft.identity.common.java.providers.oauth2.IAuthorizationStrategy;
-import com.microsoft.identity.common.java.providers.oauth2.TokenErrorResponse;
-import com.microsoft.identity.common.java.providers.oauth2.TokenRequest;
-
-import edu.umd.cs.findbugs.annotations.Nullable;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import lombok.NonNull;
-import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.dto.IAccountRecord;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
@@ -65,6 +52,7 @@ import com.microsoft.identity.common.java.net.HttpClient;
 import com.microsoft.identity.common.java.net.HttpConstants;
 import com.microsoft.identity.common.java.net.HttpResponse;
 import com.microsoft.identity.common.java.net.UrlConnectionHttpClient;
+import com.microsoft.identity.common.java.opentelemetry.AttributeName;
 import com.microsoft.identity.common.java.platform.Device;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationResponse;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenErrorResponse;
@@ -87,8 +75,6 @@ import com.microsoft.identity.common.java.util.ObjectMapper;
 import com.microsoft.identity.common.java.util.ResultUtil;
 import com.microsoft.identity.common.java.util.StringUtil;
 
-import io.opentelemetry.api.trace.Span;
-
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
@@ -100,17 +86,9 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.UUID;
 
-import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.APP_PACKAGE_NAME;
-import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.APP_VERSION;
-import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.CHALLENGE_REQUEST_HEADER;
-import static com.microsoft.identity.common.java.AuthenticationConstants.OAuth2Scopes.CLAIMS_UPDATE_RESOURCE;
-import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.PRODUCT;
-import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.VERSION;
-import static com.microsoft.identity.common.java.net.HttpConstants.HeaderField.XMS_CCS_REQUEST_ID;
-import static com.microsoft.identity.common.java.net.HttpConstants.HeaderField.X_MS_CLITELEM;
-import static com.microsoft.identity.common.java.providers.oauth2.TokenRequest.GrantTypes.CLIENT_CREDENTIALS;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.opentelemetry.api.trace.Span;
 import lombok.NonNull;
 
 // Suppressing rawtype warnings due to the generic type AuthorizationStrategy, AuthorizationResult, AuthorizationResultFactory and MicrosoftAuthorizationRequest
