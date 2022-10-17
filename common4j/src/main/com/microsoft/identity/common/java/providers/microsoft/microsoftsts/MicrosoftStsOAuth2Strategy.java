@@ -22,8 +22,21 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.providers.microsoft.microsoftsts;
 
-import com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeInternal;
+import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.APP_PACKAGE_NAME;
+import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.APP_VERSION;
+import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.CHALLENGE_REQUEST_HEADER;
+import static com.microsoft.identity.common.java.AuthenticationConstants.OAuth2Scopes.CLAIMS_UPDATE_RESOURCE;
+import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.PRODUCT;
+import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.VERSION;
+import static com.microsoft.identity.common.java.net.HttpConstants.HeaderField.X_MS_CLITELEM;
+import static com.microsoft.identity.common.java.providers.oauth2.TokenRequest.GrantTypes.CLIENT_CREDENTIALS;
+
+import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
+import com.microsoft.identity.common.java.authscheme.AuthenticationSchemeFactory;
+import com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeInternal;
+import com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeWithClientKeyInternal;
+import com.microsoft.identity.common.java.cache.ICacheRecord;
 import com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallenge;
 import com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallengeFactory;
 import com.microsoft.identity.common.java.commands.parameters.RopcTokenCommandParameters;
@@ -42,30 +55,37 @@ import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.NonNull;
 import com.microsoft.identity.common.java.WarningType;
+import com.microsoft.identity.common.java.dto.IAccountRecord;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.exception.ServiceException;
-import com.microsoft.identity.common.java.cache.ICacheRecord;
-import com.microsoft.identity.common.java.dto.IAccountRecord;
-import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
-import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud;
-import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.ClientInfo;
-import com.microsoft.identity.common.java.providers.oauth2.IDToken;
-import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
-import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters;
-import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
-import com.microsoft.identity.common.java.telemetry.CliTelemInfo;
-import com.microsoft.identity.common.java.util.HeaderSerializationUtil;
-import com.microsoft.identity.common.java.util.ResultUtil;
-import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.logging.DiagnosticContext;
+import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.net.HttpClient;
 import com.microsoft.identity.common.java.net.HttpConstants;
 import com.microsoft.identity.common.java.net.HttpResponse;
 import com.microsoft.identity.common.java.net.UrlConnectionHttpClient;
-import com.microsoft.identity.common.java.util.ObjectMapper;
-import com.microsoft.identity.common.java.logging.Logger;
+import com.microsoft.identity.common.java.platform.Device;
+import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationResponse;
+import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenErrorResponse;
+import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
+import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud;
+import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.ClientInfo;
+import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
+import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResultFactory;
+import com.microsoft.identity.common.java.providers.oauth2.IAuthorizationStrategy;
+import com.microsoft.identity.common.java.providers.oauth2.IDToken;
+import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
+import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters;
+import com.microsoft.identity.common.java.providers.oauth2.TokenErrorResponse;
+import com.microsoft.identity.common.java.providers.oauth2.TokenRequest;
+import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
+import com.microsoft.identity.common.java.telemetry.CliTelemInfo;
 import com.microsoft.identity.common.java.util.CommonURIBuilder;
+import com.microsoft.identity.common.java.util.HeaderSerializationUtil;
+import com.microsoft.identity.common.java.util.ObjectMapper;
+import com.microsoft.identity.common.java.util.ResultUtil;
+import com.microsoft.identity.common.java.util.StringUtil;
 
 import io.opentelemetry.api.trace.Span;
 
@@ -89,6 +109,9 @@ import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlat
 import static com.microsoft.identity.common.java.net.HttpConstants.HeaderField.XMS_CCS_REQUEST_ID;
 import static com.microsoft.identity.common.java.net.HttpConstants.HeaderField.X_MS_CLITELEM;
 import static com.microsoft.identity.common.java.providers.oauth2.TokenRequest.GrantTypes.CLIENT_CREDENTIALS;
+import edu.umd.cs.findbugs.annotations.Nullable;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import lombok.NonNull;
 
 // Suppressing rawtype warnings due to the generic type AuthorizationStrategy, AuthorizationResult, AuthorizationResultFactory and MicrosoftAuthorizationRequest
 @SuppressWarnings(WarningType.rawtype_warning)
@@ -382,7 +405,7 @@ public class MicrosoftStsOAuth2Strategy
             tokenRequest.setGrantType(TokenRequest.GrantTypes.AUTHORIZATION_CODE);
         }
 
-        if (PopAuthenticationSchemeInternal.SCHEME_POP.equals(authScheme.getName())) {
+        if (authScheme instanceof PopAuthenticationSchemeInternal) {
             // Add a token_type
             tokenRequest.setTokenType(TokenRequest.TokenType.POP);
 
@@ -403,6 +426,9 @@ public class MicrosoftStsOAuth2Strategy
             final String reqCnf = devicePopManager.getRequestConfirmation();
             // Set the req_cnf
             tokenRequest.setRequestConfirmation(reqCnf);
+        } else if (authScheme instanceof PopAuthenticationSchemeWithClientKeyInternal) {
+            tokenRequest.setTokenType(TokenRequest.TokenType.POP);
+            tokenRequest.setRequestConfirmation(((PopAuthenticationSchemeWithClientKeyInternal) authScheme).getRequestConfirmation());
         }
 
         return tokenRequest;
@@ -438,7 +464,7 @@ public class MicrosoftStsOAuth2Strategy
         final MicrosoftStsTokenRequest request = new MicrosoftStsTokenRequest();
         request.setGrantType(TokenRequest.GrantTypes.REFRESH_TOKEN);
 
-        if (PopAuthenticationSchemeInternal.SCHEME_POP.equals(authScheme.getName())) {
+        if (authScheme instanceof  PopAuthenticationSchemeInternal) {
             request.setTokenType(TokenRequest.TokenType.POP);
 
             final IDevicePopManager devicePopManager =
@@ -449,6 +475,9 @@ public class MicrosoftStsOAuth2Strategy
             }
 
             request.setRequestConfirmation(devicePopManager.getRequestConfirmation());
+        } else if (authScheme instanceof PopAuthenticationSchemeWithClientKeyInternal) {
+            request.setTokenType(TokenRequest.TokenType.POP);
+            request.setRequestConfirmation(((PopAuthenticationSchemeWithClientKeyInternal) authScheme).getRequestConfirmation());
         }
 
         return request;
@@ -473,7 +502,7 @@ public class MicrosoftStsOAuth2Strategy
         request.setScope(StringUtil.join(" ", parameters.getScopes()));
         setTokenRequestCorrelationId(request);
 
-        if (PopAuthenticationSchemeInternal.SCHEME_POP.equals(parameters.getAuthenticationScheme().getName())) {
+        if (AuthenticationSchemeFactory.isPopAuthenticationScheme(parameters.getAuthenticationScheme())) {
             throw new UnsupportedOperationException("MSAL Android supports ROPC on Bearer flows only for testing purposes.");
         }
 
@@ -732,6 +761,10 @@ public class MicrosoftStsOAuth2Strategy
      */
     @Nullable
     public String getDeviceAtPopThumbprint() {
+        if (mStrategyParameters.getAuthenticationScheme() instanceof PopAuthenticationSchemeWithClientKeyInternal) {
+           return ((PopAuthenticationSchemeWithClientKeyInternal) mStrategyParameters.getAuthenticationScheme()).getKid();
+        }
+
         String atPoPKid = null;
 
         IDevicePopManager devicePopManager = null;
@@ -777,8 +810,11 @@ public class MicrosoftStsOAuth2Strategy
                                         @NonNull final ICacheRecord cacheRecord) {
         super.validateCachedResult(authScheme, cacheRecord);
 
-        if (authSchemeIsPoP(authScheme)) {
+        if (authScheme instanceof PopAuthenticationSchemeInternal) {
             return cachedAccessTokenKidMatchesKeystoreKid(cacheRecord.getAccessToken().getKid());
+        } else if (authScheme instanceof PopAuthenticationSchemeWithClientKeyInternal) {
+            return ((PopAuthenticationSchemeWithClientKeyInternal) authScheme).getKid()
+                    .equalsIgnoreCase(cacheRecord.getAccessToken().getKid());
         }
 
         return true;
@@ -795,9 +831,5 @@ public class MicrosoftStsOAuth2Strategy
         }
 
         return deviceKid.equals(atKid);
-    }
-
-    public static boolean authSchemeIsPoP(@NonNull final AbstractAuthenticationScheme scheme) {
-        return PopAuthenticationSchemeInternal.SCHEME_POP.equals(scheme.getName());
     }
 }

@@ -22,6 +22,7 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.providers.oauth2;
 
+import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
@@ -38,4 +39,7 @@ import lombok.experimental.Accessors;
 public class OAuth2StrategyParameters {
     @Nullable
     private final transient IPlatformComponents mPlatformComponents;
+
+    @Nullable
+    private final transient AbstractAuthenticationScheme mAuthenticationScheme;
 }
