@@ -101,7 +101,7 @@ public class HttpResponse {
         }
 
         final List<String> list = mResponseHeaders.get(key);
-        if (list == null){
+        if (list == null || list.size() <= index){
             return null;
         }
 
