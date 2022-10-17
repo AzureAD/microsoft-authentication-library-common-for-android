@@ -598,7 +598,7 @@ public final class AuthenticationConstants {
          * The newest Msal-To-Broker protocol version.
          * @see <a href="ttps://identitydivision.visualstudio.com/DevEx/_git/AuthLibrariesApiReview?path=/%5BAndroid%5D%20Broker%20API/broker_protocol_versions.md">Android Auth Broker Protocol Versions</a>
          */
-        public static final String MSAL_TO_BROKER_PROTOCOL_VERSION_CODE = "10.0";
+        public static final String MSAL_TO_BROKER_PROTOCOL_VERSION_CODE = "11.0";
 
         /**
          * A client id for requesting the SSO token.
@@ -664,6 +664,16 @@ public final class AuthenticationConstants {
          * The key of negotiated broker protocol version between broker client and broker service.
          */
         public static final String NEGOTIATED_BP_VERSION_KEY = "common.broker.protocol.version.name";
+
+        /**
+         * Code of the error that occurs as a result of MSAL-Broker protocol handshake (hello()).
+         */
+        public static final String HELLO_ERROR_CODE = "error";
+
+        /**
+         * Description of the error that occurs as a result of MSAL-Broker protocol handshake (hello()).
+         */
+        public static final String HELLO_ERROR_MESSAGE = "error_description";
 
         /**
          * The Boolean to send when FOCI apps are allowed to construct accounts from PRT id token in getAccounts.

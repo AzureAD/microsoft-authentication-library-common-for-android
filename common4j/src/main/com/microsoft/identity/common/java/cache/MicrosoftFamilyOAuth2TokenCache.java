@@ -22,11 +22,13 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.cache;
 
+import static com.microsoft.identity.common.java.cache.AbstractAccountCredentialCache.targetsIntersect;
+
 import com.microsoft.identity.common.java.BaseAccount;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
+import com.microsoft.identity.common.java.authscheme.AuthenticationSchemeFactory;
 import com.microsoft.identity.common.java.authscheme.BearerAuthenticationSchemeInternal;
-import com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeInternal;
 import com.microsoft.identity.common.java.dto.AccessTokenRecord;
 import com.microsoft.identity.common.java.dto.AccountRecord;
 import com.microsoft.identity.common.java.dto.Credential;
@@ -34,16 +36,14 @@ import com.microsoft.identity.common.java.dto.CredentialType;
 import com.microsoft.identity.common.java.dto.IdTokenRecord;
 import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
-import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
+import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
+import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.java.providers.oauth2.RefreshToken;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResponse;
-import com.microsoft.identity.common.java.logging.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import static com.microsoft.identity.common.java.cache.AbstractAccountCredentialCache.targetsIntersect;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.NonNull;
@@ -162,7 +162,7 @@ public class MicrosoftFamilyOAuth2TokenCache
                             atRecordToReturn = atRecord;
                             break;
                         } else if (CredentialType.AccessToken_With_AuthScheme.name().equalsIgnoreCase(atRecord.getCredentialType())
-                                && PopAuthenticationSchemeInternal.SCHEME_POP.equalsIgnoreCase(authenticationScheme.getName())) {
+                                && AuthenticationSchemeFactory.isPopAuthenticationScheme(authenticationScheme)) {
                             atRecordToReturn = atRecord;
                             break;
                         }

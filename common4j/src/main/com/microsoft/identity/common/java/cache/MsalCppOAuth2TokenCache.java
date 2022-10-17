@@ -117,8 +117,7 @@ public class MsalCppOAuth2TokenCache
      * @param credentials   : list of Credential which can include AccessTokenRecord, IdTokenRecord and RefreshTokenRecord.
      * @throws ClientException : If the supplied Account or Credential are null or schema invalid.
      */
-    public synchronized void saveCredentials(@Nullable final AccountRecord accountRecord,
-                                             @NonNull final Credential... credentials) throws ClientException {
+    public synchronized void saveCredentials(@NonNull final Credential... credentials) throws ClientException {
         if (credentials.length == 0) {
             throw new ClientException("Credential array passed in is null or empty");
         }
@@ -137,13 +136,6 @@ public class MsalCppOAuth2TokenCache
                         "AT is missing a required property."
                 );
             }
-        }
-
-        if (accountRecord != null && refreshTokenRecord != null) {
-            // MSAL C++ writes credentials first and then the account.
-            // For a new account, this will not be true as the accountRecord will be null.
-            // For existing accounts, we would remove the old refresh token if present.
-            removeRefreshTokenIfNeeded(accountRecord, refreshTokenRecord);
         }
 
         saveCredentialsInternal(credentials);

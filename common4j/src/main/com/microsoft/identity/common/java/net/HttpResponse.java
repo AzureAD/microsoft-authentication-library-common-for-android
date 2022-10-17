@@ -28,6 +28,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+import javax.annotation.Nullable;
+
 import lombok.NonNull;
 
 /**
@@ -87,6 +89,23 @@ public class HttpResponse {
      */
     public Map<String, List<String>> getHeaders() {
         return mResponseHeaders;
+    }
+
+    /**
+     * Returns: element "index" of the header list associated to the provided key.
+     */
+    @Nullable
+    public String getHeaderValue(@NonNull final String key, final int index){
+        if (mResponseHeaders == null){
+            return null;
+        }
+
+        final List<String> list = mResponseHeaders.get(key);
+        if (list == null){
+            return null;
+        }
+
+        return list.get(index);
     }
 
     //CHECKSTYLE:OFF

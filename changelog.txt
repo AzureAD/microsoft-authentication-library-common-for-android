@@ -1,5 +1,14 @@
 V.Next
 ----------
+- [MAJOR] Add support for client/application managed key in pop flow (#1854)
+- [PATCH] Avoid keystore key overwriting for apps using sharedUserId. (#1864)
+- [PATCH] Moved clearClientCertPreferences to onPageLoaded. (#1855)
+- [MINOR] Add new exception type for broker protocol not supported exception during msal-broker handshake (#1859)
+
+Version 8.0.0
+----------
+- [MINOR] Add opt-in flag to skip expensive SecretKey invalidation steps (#1837)
+- [MINOR] Storage performance improvements (#1852)
 - [PATCH] More fields exposed for GSON based logging for Broker Token Parameters (#1849)
 - [MINOR] Logging performance speedup, removal of IDetailedLoggerCallback/logDiscarded (#1836)
 - [MINOR] Expose sign() method in PKeyAuth as opposed to the key itself (#1846)
@@ -7,15 +16,13 @@ V.Next
 - [MINOR] Add ICryptoFactory to common4j (#1844)
 - [MAJOR] Update target Android targetSdk to API 31/ Android 12
 - [MINOR] Use Java 11 in Spotbugs Check
-- [MAJOR] Use Java 11 to accomodate android sdk 31 tooling. (#1832)
+- [MAJOR] Use Java 11 to accommodate android sdk 31 tooling. (#1832)
 - [PATCH] Swallow unbound service exceptions on disconnect. (#1824)
 - [MINOR] Refactored out ClientCertAuthChallengeHandler. (#1833)
-
 
 Version 7.0.1
 ----------
 - [Minor] Bumped Common to 7.0.1 to fix publishing bug.
-
 
 Version 7.0.0
 ----------

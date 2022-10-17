@@ -20,26 +20,34 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.java.providers.oauth2;
+package com.microsoft.identity.common.java.exception;
 
-import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
-import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
+import javax.annotation.Nullable;
 
-import edu.umd.cs.findbugs.annotations.Nullable;
-import lombok.Builder;
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.experimental.Accessors;
 
 /**
- * Base class for defining options relative to the construction of an {@link OAuth2Strategy}.
+ * Representing all exceptions that occur due to unsupported/incompatible broker.
  */
-@Builder
 @Getter
 @Accessors(prefix = "m")
-public class OAuth2StrategyParameters {
-    @Nullable
-    private final transient IPlatformComponents mPlatformComponents;
+public class UnsupportedBrokerException extends BaseException {
 
-    @Nullable
-    private final transient AbstractAuthenticationScheme mAuthenticationScheme;
+    @NonNull
+    private final String mActiveBrokerPackageName;
+
+    public UnsupportedBrokerException(@NonNull final String activeBrokerPackageName){
+        this(activeBrokerPackageName,
+                ErrorStrings.UNSUPPORTED_BROKER_VERSION_ERROR_CODE,
+                ErrorStrings.UNSUPPORTED_BROKER_VERSION_ERROR_MESSAGE);
+    }
+
+    public UnsupportedBrokerException(@NonNull final String activeBrokerPackageName,
+                                      @NonNull final String errorCode,
+                                      @Nullable final String errorMessage){
+        super(errorCode, errorMessage);
+        mActiveBrokerPackageName = activeBrokerPackageName;
+    }
 }
