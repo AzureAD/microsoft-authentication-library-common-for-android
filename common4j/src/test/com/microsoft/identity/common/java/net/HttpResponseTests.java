@@ -32,7 +32,7 @@ import java.util.List;
 /**
  * Tests for {@link HttpResponse}.
  */
-public final class HttpResponseBodyTest {
+public final class HttpResponseTests {
 
     private static final String RESPONSE_BODY = "test response body";
 
