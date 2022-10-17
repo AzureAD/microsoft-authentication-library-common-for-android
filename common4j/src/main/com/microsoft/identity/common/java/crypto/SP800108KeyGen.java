@@ -25,7 +25,7 @@ package com.microsoft.identity.common.java.crypto;
 import static com.microsoft.identity.common.java.opentelemetry.CryptoFactoryTelemetryHelper.performCryptoOperationAndUploadTelemetry;
 
 import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.java.opentelemetry.CryptoObjectTelemetryClassName;
+import com.microsoft.identity.common.java.opentelemetry.CryptoObjectName;
 import com.microsoft.identity.common.java.opentelemetry.ICryptoOperation;
 
 import java.io.ByteArrayOutputStream;
@@ -77,7 +77,7 @@ public class SP800108KeyGen {
         stream.write(BIG_ENDIAN_INT_256);
 
         byte[] pbDerivedKey = performCryptoOperationAndUploadTelemetry(
-                CryptoObjectTelemetryClassName.Mac,
+                CryptoObjectName.Mac,
                 HMAC_ALGORITHM,
                 mCryptoFactory,
                 new ICryptoOperation<byte[]>() {

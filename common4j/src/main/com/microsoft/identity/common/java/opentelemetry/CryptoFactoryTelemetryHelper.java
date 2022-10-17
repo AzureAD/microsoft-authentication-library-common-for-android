@@ -47,7 +47,7 @@ public class CryptoFactoryTelemetryHelper {
      * @param cryptoOperation a callback that wraps around the crypto operation to be performed.
      * @return result of the crypto operation.
      * */
-    public static <T> T performCryptoOperationAndUploadTelemetry(@NonNull final CryptoObjectTelemetryClassName operationName,
+    public static <T> T performCryptoOperationAndUploadTelemetry(@NonNull final CryptoObjectName operationName,
                                                                  @NonNull final String algorithmName,
                                                                  @NonNull final ICryptoFactory cryptoFactory,
                                                                  @NonNull final ICryptoOperation<T> cryptoOperation)
@@ -73,7 +73,7 @@ public class CryptoFactoryTelemetryHelper {
     /**
      * Constructs the telemetry name for {@link AttributeName#crypto_operation}
      */
-    private static String getCryptoOperationEventName(@NonNull final CryptoObjectTelemetryClassName operationName,
+    private static String getCryptoOperationEventName(@NonNull final CryptoObjectName operationName,
                                                       @NonNull final String algorithm){
         return operationName.name() + "_" + algorithm;
     }

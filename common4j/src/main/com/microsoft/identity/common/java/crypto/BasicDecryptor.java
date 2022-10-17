@@ -25,7 +25,7 @@ package com.microsoft.identity.common.java.crypto;
 import static com.microsoft.identity.common.java.opentelemetry.CryptoFactoryTelemetryHelper.performCryptoOperationAndUploadTelemetry;
 
 import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.java.opentelemetry.CryptoObjectTelemetryClassName;
+import com.microsoft.identity.common.java.opentelemetry.CryptoObjectName;
 import com.microsoft.identity.common.java.opentelemetry.ICryptoOperation;
 
 import java.security.InvalidAlgorithmParameterException;
@@ -54,7 +54,7 @@ public class BasicDecryptor implements IDecryptor {
                           final byte[] iv,
                           byte[] dataToBeDecrypted) throws ClientException {
         return performCryptoOperationAndUploadTelemetry(
-                CryptoObjectTelemetryClassName.Cipher,
+                CryptoObjectName.Cipher,
                 decryptAlgorithm,
                 mCryptoFactory,
                 new ICryptoOperation<byte[]>() {

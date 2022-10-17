@@ -26,7 +26,7 @@ import static com.microsoft.identity.common.java.opentelemetry.CryptoFactoryTele
 
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
-import com.microsoft.identity.common.java.opentelemetry.CryptoObjectTelemetryClassName;
+import com.microsoft.identity.common.java.opentelemetry.CryptoObjectName;
 import com.microsoft.identity.common.java.opentelemetry.ICryptoOperation;
 
 import java.security.InvalidKeyException;
@@ -51,7 +51,7 @@ public class BasicHMacSigner implements IHMacSigner {
                        @NonNull final String hmacAlgorithm,
                        final byte[] dataToBeSigned) throws ClientException {
         return performCryptoOperationAndUploadTelemetry(
-                CryptoObjectTelemetryClassName.Mac,
+                CryptoObjectName.Mac,
                 hmacAlgorithm,
                 mCryptoFactory,
                 new ICryptoOperation<byte[]>() {

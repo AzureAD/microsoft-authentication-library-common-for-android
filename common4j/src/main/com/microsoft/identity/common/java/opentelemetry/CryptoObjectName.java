@@ -26,7 +26,7 @@ package com.microsoft.identity.common.java.opentelemetry;
  * All the operations/methods provided by CryptoFactory
  * Used as SpanName in OpenTelemetry
  * */
-public enum CryptoObjectTelemetryClassName {
+public enum CryptoObjectName {
     Signature,
     Cipher,
     Mac,
