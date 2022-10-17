@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.net;
 
+import com.microsoft.identity.common.java.util.StringUtil;
+
 import net.jcip.annotations.Immutable;
 
 import java.util.Date;
@@ -96,7 +98,7 @@ public class HttpResponse {
      */
     @Nullable
     public String getHeaderValue(@NonNull final String key, final int index){
-        if (mResponseHeaders == null){
+        if (mResponseHeaders == null || index < 0 || StringUtil.isNullOrEmpty(key)){
             return null;
         }
 
