@@ -72,7 +72,48 @@ public class UserChoiceCertBasedAuthChallengeHandler implements ICertBasedAuthCh
      */
     @Override
     public Void processChallenge(ClientCertRequest request) {
-        mDialogHolder.showSmartcardPromptDialog(new SmartcardPromptDialog.CancelCbaCallback() {
+        mDialogHolder.showUserChoiceDialog(new UserChoiceDialog.PositiveButtonListener() {
+            @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+            @Override
+            public void onClick(final int checkedPosition) {
+                //Position 0 -> On-device
+                //Position 1 -> Smartcard
+                if (checkedPosition == 0) {
+                    new OnDeviceCertBasedAuthChallengeHandler(mActivity).processChallenge(request);
+                } else {
+                    mDialogHolder.showSmartcardPromptDialog(new SmartcardPromptDialog.CancelCbaCallback() {
+                        @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+                        @Override
+                        public void onCancel() {
+                            mDialogHolder.dismissDialog();
+                            request.cancel();
+                        }
+                    });
+                    mSmartcardCertBasedAuthManager.setConnectionCallback(new AbstractSmartcardCertBasedAuthManager.IConnectionCallback() {
+                        @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+                        @Override
+                        public void onCreateConnection(final boolean isNfc) {
+                            if (isNfc) {
+                                //Show loading
+                                mDialogHolder.showSmartcardNfcLoadingDialog();
+                            }
+                            new SmartcardCertBasedAuthChallengeHandler(
+                                    mActivity,
+                                    mSmartcardCertBasedAuthManager,
+                                    mDialogHolder,
+                                    isNfc)
+                                    .processChallenge(request);
+                        }
+
+                        @Override
+                        public void onClosedConnection() {
+
+                        }
+                    });
+                    mSmartcardCertBasedAuthManager.startNfcDiscovery(mActivity);
+                }
+            }
+        }, new UserChoiceDialog.CancelCbaCallback() {
             @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
             @Override
             public void onCancel() {
@@ -80,33 +121,6 @@ public class UserChoiceCertBasedAuthChallengeHandler implements ICertBasedAuthCh
                 request.cancel();
             }
         });
-        /*
-        new SmartcardPromptDialog.PositiveButtonListener() {
-            @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-            @Override
-            public void onClick() {
-                mSmartcardCertBasedAuthManager.stopNfcDiscovery(mActivity);
-                new OnDeviceCertBasedAuthChallengeHandler(mActivity).processChallenge(request);
-            }
-        }
-         */
-        mSmartcardCertBasedAuthManager.setConnectionCallback(new AbstractSmartcardCertBasedAuthManager.IConnectionCallback() {
-            @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-            @Override
-            public void onCreateConnection(final boolean isNfc) {
-                if (isNfc) {
-                    //Show loading
-                    mDialogHolder.showSmartcardNfcLoadingDialog();
-                }
-                new SmartcardCertBasedAuthChallengeHandler(mActivity, mSmartcardCertBasedAuthManager, mDialogHolder, isNfc).processChallenge(request);
-            }
-
-            @Override
-            public void onClosedConnection() {
-
-            }
-        });
-        mSmartcardCertBasedAuthManager.startNfcDiscovery(mActivity);
         return null;
     }
 }

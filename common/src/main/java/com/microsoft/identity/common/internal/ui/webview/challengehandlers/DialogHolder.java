@@ -105,6 +105,21 @@ public class DialogHolder {
     }
 
     /**
+     * Builds and shows dialog that prompts user to choose if they would like to proceed with on-device
+     * or smartcard certificate based authentication.
+     * @param positiveButtonListener A Listener containing code to be run upon a positive button click.
+     * @param cancelCbaCallback A Callback that holds code to be run when CBA is being cancelled.
+     */
+    public synchronized void showUserChoiceDialog(@NonNull final UserChoiceDialog.PositiveButtonListener positiveButtonListener,
+                                                  @NonNull final UserChoiceDialog.CancelCbaCallback cancelCbaCallback) {
+        showDialog(new UserChoiceDialog(
+                positiveButtonListener,
+                 cancelCbaCallback,
+                mActivity
+        ));
+    }
+
+    /**
      * Builds and shows a SmartcardDialog that prompts the user to connect their smartcard,
      * either by plugging in (USB) or holding to back of phone (NFC).
      * @param cancelCbaCallback A Callback that holds code to be run when CBA is being cancelled.

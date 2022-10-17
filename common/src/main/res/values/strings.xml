@@ -36,6 +36,12 @@
     <string name="smartcard_general_error_dialog_message">An unexpected error has occurred. Please try again later.</string>
 
     <!-- Beginning of new CBA dialog strings to be localized -->
+    <string name="user_choice_dialog_title">Choose the type of authentication to continue</string>
+    <string name="user_choice_dialog_on_device_name">On-Device Certificate</string>
+    <string name="user_choice_dialog_smartcard_name">Physical Smartcard</string>
+    <string name="user_choice_dialog_positive_button">Continue</string>
+    <string name="user_choice_dialog_negative_button">Cancel</string>
+
     <string name="smartcard_prompt_dialog_title">Prepare your smartcard</string>
     <string name="smartcard_prompt_dialog_message">Plug in or hold a smartcard to the back of your phone.</string>
     <string name="smartcard_prompt_dialog_negative_button">Cancel</string>
