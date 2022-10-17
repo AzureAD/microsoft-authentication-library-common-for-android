@@ -23,24 +23,30 @@
 package com.microsoft.identity.common.internal.ui.webview.challengehandlers;
 
 import android.app.Activity;
-import android.view.View;
+import android.content.DialogInterface;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 
 import com.microsoft.identity.common.R;
 
+import lombok.NonNull;
+
 /**
- * Builds a dialog that reminds a user using NFC to keep their smartcard device to the back of their phone.
+ * Builds a dialog that prompts the user to connect their smartcard, either by plugging in (USB) or holding to back of phone (NFC).
  */
-public class SmartcardNfcLoadingDialog extends SmartcardDialog {
+public class SmartcardPromptDialog extends SmartcardDialog {
+
+    private final CancelCbaCallback mCancelCbaCallback;
+
     /**
-     * Creates new instance of SmartcardNfcLoadingDialog.
+     * Creates new instance of SmartcardPromptDialog.
      *
      * @param activity Host activity.
      */
-    public SmartcardNfcLoadingDialog(@NonNull Activity activity) {
+    public SmartcardPromptDialog(@NonNull final CancelCbaCallback cancelCbaCallback,
+                                 @NonNull final Activity activity) {
         super(activity);
+        mCancelCbaCallback = cancelCbaCallback;
         createDialog();
     }
 
@@ -52,15 +58,28 @@ public class SmartcardNfcLoadingDialog extends SmartcardDialog {
         mActivity.runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                final View nfcLoadingLayout = mActivity.getLayoutInflater().inflate(R.layout.nfc_loading_layout, null);
                 final AlertDialog.Builder builder = new AlertDialog.Builder(mActivity, R.style.UserChoiceAlertDialogTheme)
                         //Sets topmost text of dialog.
-                        .setTitle(R.string.smartcard_nfc_loading_dialog_title)
-                        .setView(nfcLoadingLayout);
+                        .setTitle(R.string.smartcard_prompt_dialog_title)
+                        //Sets subtext of the title.
+                        .setMessage(R.string.smartcard_prompt_dialog_message)
+                        .setNegativeButton(R.string.smartcard_prompt_dialog_negative_button, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                mCancelCbaCallback.onCancel();
+                            }
+                        });
                 final androidx.appcompat.app.AlertDialog dialog = builder.create();
                 //If user touches outside dialog, the default behavior makes the dialog disappear without really doing anything.
                 //Adding this line in disables this default behavior so that the user can only exit by hitting the positive button.
                 dialog.setCanceledOnTouchOutside(false);
+                //Handle back button the same as the negative button.
+                dialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+                    @Override
+                    public void onCancel(DialogInterface dialog) {
+                        mCancelCbaCallback.onCancel();
+                    }
+                });
                 mDialog = dialog;
             }
         });
@@ -71,6 +90,13 @@ public class SmartcardNfcLoadingDialog extends SmartcardDialog {
      */
     @Override
     void onCancelCba() {
-        //No options to cancel here.
+        mCancelCbaCallback.onCancel();
+    }
+
+    /**
+     * Callback interface for when CBA is being cancelled.
+     */
+    public interface CancelCbaCallback {
+        void onCancel();
     }
 }

@@ -221,7 +221,13 @@ public class SmartcardCertBasedAuthChallengeHandler implements ICertBasedAuthCha
             public void onClick(@NonNull final char[] pin) {
                 //For NFC, we need another dialog prompting the user to hold the smartcard to the phone again.
                 if (mProceedWithNfc) {
-                    mDialogHolder.showDialog(new SmartcardNfcPromptDialog(mActivity));
+                    mDialogHolder.showSmartcardNfcPromptDialog(new SmartcardNfcPromptDialog.CancelCbaCallback() {
+                        @Override
+                        public void onCancel() {
+                            mDialogHolder.dismissDialog();
+                            request.cancel();
+                        }
+                    });
                     mSmartcardCertBasedAuthManager.setConnectionCallback(new AbstractSmartcardCertBasedAuthManager.IConnectionCallback() {
                         @Override
                         public void onCreateConnection(boolean isNfc) {
