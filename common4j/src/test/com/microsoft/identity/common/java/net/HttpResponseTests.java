@@ -72,5 +72,7 @@ public final class HttpResponseTests {
         Assert.assertEquals(requestId, response.getHeaderValue("xms-ccs-requestid", 0));
         Assert.assertNull(response.getHeaderValue("xms-ccs-requestid", 1));
         Assert.assertNull(response.getHeaderValue("invalid", 1));
+        Assert.assertNull(response.getHeaderValue("xms-ccs-requestid", -3));
+        Assert.assertNull(response.getHeaderValue("", 0));
     }
 }
