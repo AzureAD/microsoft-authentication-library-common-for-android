@@ -219,8 +219,9 @@ dependencies {
     testFixturesAnnotationProcessor "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
     resolvableTestFixturesImplementation "org.robolectric:junit:$rootProject.ext.robolectricVersion"
 
-    implementation platform("io.opentelemetry:opentelemetry-bom:1.16.0")
-    implementation('io.opentelemetry:opentelemetry-api')
+    implementation platform("io.opentelemetry:opentelemetry-bom:1.18.0")
+    implementation('io.opentelemetry:opentelemetry-api:1.18.0')
+    implementation('io.opentelemetry:opentelemetry-sdk-trace:1.18.0')
 }
 
 sourceCompatibility = "1.8"
