@@ -94,7 +94,11 @@ public class HttpResponse {
     }
 
     /**
-     * Returns: element "index" of the header list associated to the provided key.
+     * Gets the value from the response header list associated to the provided key at a given index.
+     * @param key   header key for look up.
+     * @param index index of the element to get
+     * @return      element at given index of the header list associated to the provided key.
+     *              if element is not found returns null.
      */
     @Nullable
     public String getHeaderValue(@NonNull final String key, final int index){
