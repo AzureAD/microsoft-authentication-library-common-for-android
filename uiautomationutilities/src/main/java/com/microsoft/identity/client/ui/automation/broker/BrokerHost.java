@@ -556,7 +556,7 @@ public class BrokerHost extends AbstractTestBroker {
 
         UiAutomatorUtils.handleButtonClick(joinTenantButtonId);
 
-        // Apparently, there are two UI objects with exact test "Sign-in options", one is a button the other is a view
+        // Apparently, there are two UI objects with exact text "Sign-in options", one is a button the other is a view
         // Have to specify the search to button class
         final UiDevice device =
                 UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
