@@ -177,6 +177,12 @@ public class BrokerHost extends AbstractTestBroker {
         }
     }
 
+    @Override
+    public void performSharedDeviceRegistrationDontValidate(@NonNull final String username,
+                                                            @NonNull final String password) {
+        throw new UnsupportedOperationException("Not Supported!");
+    }
+
     private void performDeviceRegistrationHelper(@NonNull final String username) {
         Logger.i(TAG, "Execution of Helper for Device Registration..");
         launch(); // launch Broker Host app

@@ -68,6 +68,15 @@ public interface ITestBroker extends IApp {
     void performSharedDeviceRegistration(String username, String password);
 
     /**
+     * Perform shared device registration with supplied username. This user must be a cloud device
+     * admin for the registration to actually succeed.
+     *
+     * @param username username of the account to use for registration
+     * @param password password of the account to use for registration
+     */
+    void performSharedDeviceRegistrationDontValidate(String username, String password);
+
+    /**
      * Perform device registration from the Join Activity using the supplied user account.
      *
      * @param username username of the account to use for registration

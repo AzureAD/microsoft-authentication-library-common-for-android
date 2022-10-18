@@ -120,6 +120,12 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
         throw new UnsupportedOperationException("Not supported!");
     }
 
+    @Override
+    public void performSharedDeviceRegistrationDontValidate(@NonNull final String username,
+                                                            @NonNull final String password) {
+        throw new UnsupportedOperationException("Not Supported!");
+    }
+
     @Nullable
     @Override
     public String obtainDeviceId() {

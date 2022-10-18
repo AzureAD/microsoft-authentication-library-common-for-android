@@ -138,6 +138,19 @@ public class BrokerAuthenticatorUpdatedVersionImpl extends BrokerMicrosoftAuthen
 
         isInSharedDeviceMode = true;
     }
+
+    @Override
+    public void performSharedDeviceRegistrationDontValidate(@NonNull final String username,
+                                                @NonNull final String password) {
+        Logger.i(TAG, "Performing Shared Device Registration for the given account..");
+        performDeviceRegistrationHelper(
+                username,
+                password,
+                "sharedWorkPlaceTextField",
+                "sharedWorkPlaceRegisterButton",
+                false
+        );
+    }
     
     @Override
     protected void goToDeviceRegistrationPage() {
