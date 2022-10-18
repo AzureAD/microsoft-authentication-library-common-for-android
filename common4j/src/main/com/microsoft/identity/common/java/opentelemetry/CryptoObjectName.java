@@ -23,39 +23,14 @@
 package com.microsoft.identity.common.java.opentelemetry;
 
 /**
- * Names of Open Telemetry Span Attributes we want to capture for broker's Spans.
- */
-public enum AttributeName {
-    /**
-     * The length of the response body returned from network request.
-     */
-    response_body_length,
-    /**
-     * Indicates if the JWT returned by eSTS is a valid JWT.
-     */
-    jwt_valid,
-    /**
-     * Indicates the algorithm for the JWE returned by eSTS.
-     */
-    jwt_alg,
-
-    /**
-     * Indicates name of the parent span.
-     */
-    parent_span_name,
-
-    /**
-     * Indicates the controller for crypto operation (in FIPS flows).
-     */
-    crypto_controller,
-
-    /**
-     * Indicates the crypto operation.
-     */
-    crypto_operation,
-
-    /**
-     * Indicates the stack trace from an crypto operation exception.
-     */
-    crypto_exception_stack_trace
+ * All the operations/methods provided by CryptoFactory
+ * Used as SpanName in OpenTelemetry
+ * */
+public enum CryptoObjectName {
+    Signature,
+    Cipher,
+    Mac,
+    KeyPairGenerator,
+    KeyFactory,
+    JcaContentSigner,
 }

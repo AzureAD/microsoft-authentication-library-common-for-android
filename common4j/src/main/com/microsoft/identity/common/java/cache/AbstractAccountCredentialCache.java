@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.cache;
 
+import static com.microsoft.identity.common.java.AuthenticationConstants.DEFAULT_SCOPES;
+
 import com.microsoft.identity.common.java.dto.AccessTokenRecord;
 import com.microsoft.identity.common.java.dto.AccountRecord;
 import com.microsoft.identity.common.java.dto.Credential;
@@ -31,15 +33,12 @@ import com.microsoft.identity.common.java.dto.PrimaryRefreshTokenRecord;
 import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.util.StringUtil;
-import com.microsoft.identity.common.java.logging.Logger;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
-
-import static com.microsoft.identity.common.java.AuthenticationConstants.DEFAULT_SCOPES;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.NonNull;
@@ -126,7 +125,8 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
         return matchingAccounts;
     }
 
-    protected List<Credential> getCredentialsFilteredByInternal(@Nullable final String homeAccountId,
+    protected List<Credential> getCredentialsFilteredByInternal(@NonNull final List<Credential> allCredentials,
+                                                                @Nullable final String homeAccountId,
                                                                 @Nullable final String environment,
                                                                 @Nullable final CredentialType credentialType,
                                                                 @Nullable final String clientId,
@@ -134,7 +134,7 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
                                                                 @Nullable final String target,
                                                                 @Nullable final String authScheme,
                                                                 @Nullable final String requestedClaims,
-                                                                @NonNull final List<Credential> allCredentials) {
+                                                                @Nullable final String kid) {
         final boolean mustMatchOnEnvironment = !StringUtil.isNullOrEmpty(environment);
         final boolean mustMatchOnHomeAccountId = !StringUtil.isNullOrEmpty(homeAccountId);
         final boolean mustMatchOnRealm = !StringUtil.isNullOrEmpty(realm);
@@ -144,6 +144,7 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
         final boolean mustMatchOnAuthScheme = mustMatchOnCredentialType
                 && !StringUtil.isNullOrEmpty(authScheme)
                 && credentialType == CredentialType.AccessToken_With_AuthScheme;
+        final boolean mustMatchOnKid = !StringUtil.isNullOrEmpty(kid);
         final boolean mustMatchOnRequestedClaims = !StringUtil.isNullOrEmpty(requestedClaims);
 
         Logger.verbose(
@@ -215,6 +216,11 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
                 }
 
                 matches = matches && authScheme.equalsIgnoreCase(atType);
+            }
+
+            if(mustMatchOnKid && credential instanceof AccessTokenRecord) {
+                final AccessTokenRecord accessToken = (AccessTokenRecord) credential;
+                matches = matches && kid.equalsIgnoreCase(accessToken.getKid());
             }
 
             if (mustMatchOnRequestedClaims) {
