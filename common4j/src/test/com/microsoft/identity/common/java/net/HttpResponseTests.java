@@ -26,13 +26,16 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.net.HttpURLConnection;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Tests for {@link HttpResponse}.
  */
-public final class HttpResponseBodyTest {
+public final class HttpResponseTests {
 
     private static final String RESPONSE_BODY = "test response body";
 
@@ -58,5 +61,18 @@ public final class HttpResponseBodyTest {
         final HttpResponse response = new HttpResponse(HttpURLConnection.HTTP_OK, RESPONSE_BODY, null);
         Assert.assertTrue(response.getBody().equals(RESPONSE_BODY));
         Assert.assertNull(response.getHeaders());
+    }
+
+    @Test
+    public void testGetHeaderValue() {
+        final String requestId = UUID.randomUUID().toString();
+        HashMap responseHeaders = new HashMap<>();
+        responseHeaders.put("xms-ccs-requestid", new ArrayList<>((Collections.singleton(requestId))));
+        final HttpResponse response = new HttpResponse(HttpURLConnection.HTTP_OK, RESPONSE_BODY, responseHeaders);
+        Assert.assertEquals(requestId, response.getHeaderValue("xms-ccs-requestid", 0));
+        Assert.assertNull(response.getHeaderValue("xms-ccs-requestid", 1));
+        Assert.assertNull(response.getHeaderValue("invalid", 1));
+        Assert.assertNull(response.getHeaderValue("xms-ccs-requestid", -3));
+        Assert.assertNull(response.getHeaderValue("", 0));
     }
 }
