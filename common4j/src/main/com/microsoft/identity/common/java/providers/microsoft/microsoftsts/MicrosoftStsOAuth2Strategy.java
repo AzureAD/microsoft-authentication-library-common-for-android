@@ -619,11 +619,9 @@ public class MicrosoftStsOAuth2Strategy
                 }
             }
 
-            if (null != responseHeaders.get(XMS_CCS_REQUEST_ID)) {
-                Span.current().setAttribute(
-                        AttributeName.ccs_request_id.name(),
-                        response.getHeaderValue(XMS_CCS_REQUEST_ID, 0));
-            }
+            Span.current().setAttribute(
+                    AttributeName.ccs_request_id.name(),
+                    response.getHeaderValue(XMS_CCS_REQUEST_ID, 0));
         }
 
         return result;
