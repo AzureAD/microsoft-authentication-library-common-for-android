@@ -1,3 +1,7 @@
+V.8.0.2
+----------
+- [PATCH] Remove java.time.* Java8 APIs (#1868)
+
 V.8.0.1
 ----------
 - [PATCH] Avoid keystore key overwriting for apps using sharedUserId. (#1864)
