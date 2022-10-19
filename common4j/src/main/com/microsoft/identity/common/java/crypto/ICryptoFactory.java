@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.java.crypto;
 
 import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.opentelemetry.CryptoFactoryName;
 
 import java.security.KeyFactory;
 import java.security.KeyPairGenerator;
@@ -37,6 +38,13 @@ import lombok.NonNull;
  * Representing a class for generating crypto objects.
  */
 public interface ICryptoFactory {
+
+    /**
+     * Gets a class name for emitting telemetry events.
+     *
+     * @return*/
+    @NonNull
+    CryptoFactoryName getTelemetryClassName();
 
     /**
      * Gets a {@link Signature} crypto object
