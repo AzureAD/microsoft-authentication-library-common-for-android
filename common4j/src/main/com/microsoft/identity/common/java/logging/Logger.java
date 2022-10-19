@@ -25,13 +25,12 @@ package com.microsoft.identity.common.java.logging;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.util.ThrowableUtil;
 
-import java.time.Instant;
-import java.time.format.DateTimeFormatter;
-import java.time.ZoneOffset;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.TimeZone;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -69,7 +68,11 @@ public class Logger {
 
     private static final Map<String, ILoggerCallback> sLoggers = new HashMap<>();
 
-    private static final DateTimeFormatter sDateTimeFormatter = DateTimeFormatter.ofPattern(DATE_FORMAT).withZone(ZoneOffset.UTC);
+    private static final SimpleDateFormat sDateTimeFormatter;
+    static {
+        sDateTimeFormatter = new SimpleDateFormat(DATE_FORMAT, Locale.getDefault());
+        sDateTimeFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
+    }
 
     /**
      * Set the platform string to be used when generating logs.
@@ -379,7 +382,7 @@ public class Logger {
             return;
         }
 
-        final Instant now = Instant.now();
+        final Date now = new Date();
 
         sLogExecutor.execute(new Runnable() {
             @Override

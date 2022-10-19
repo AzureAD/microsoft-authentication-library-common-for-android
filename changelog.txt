@@ -1,5 +1,7 @@
 V.Next
 ----------
+- [PATCH] Adding cached credential service request id to telemetry (#1866)
+- [PATCH] Remove java.time.* Java8 APIs (#1868)
 - [MAJOR] Add support for client/application managed key in pop flow (#1854)
 - [PATCH] Avoid keystore key overwriting for apps using sharedUserId. (#1864)
 - [PATCH] Moved clearClientCertPreferences to onPageLoaded. (#1855)
