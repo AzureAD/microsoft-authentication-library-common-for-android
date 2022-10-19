@@ -62,7 +62,7 @@ public class BrowserSelector {
     public static Browser select(final Context context, final List<BrowserDescriptor> browserSafeList) throws ClientException {
         final String methodTag = TAG + ":select";
         final List<Browser> allBrowsers = getAllBrowsers(context);
-        Logger.verbose(methodTag, "Select the browser to launch.");
+        Logger.info(methodTag, "Select the browser to launch from safeList size=" + browserSafeList.size());
 
         for (final Browser browser : allBrowsers) {
             for (final BrowserDescriptor browserDescriptor : browserSafeList) {
@@ -82,31 +82,34 @@ public class BrowserSelector {
         throw new ClientException(ErrorStrings.NO_AVAILABLE_BROWSER_FOUND, "No available browser installed on the device.");
     }
 
-    private static boolean matches(@NonNull final BrowserDescriptor browserDescriptor,
+    private static boolean matches(@NonNull final BrowserDescriptor descriptor,
                                    @NonNull Browser browser) {
-        final BrowserDescriptor descriptor;
-        try {
-            descriptor = (BrowserDescriptor) browserDescriptor;
-        } catch (final ClassCastException e) {
-            Logger.error(TAG + ":matches", "Cannot cast IBrowserDescriptor to BrowserDescriptor", e);
-            return false;
-        }
+        final String methodTag = TAG + ":matches";
 
         if (!StringUtil.equalsIgnoreCase(descriptor.getPackageName(), browser.getPackageName())) {
             return false;
         }
 
         if (!descriptor.getSignatureHashes().equals(browser.getSignatureHashes())) {
+            Logger.info(methodTag, "Signature hash does not match. " +
+                    "Expects: " + descriptor.getSignatureHashes() +
+                    " Found: " + browser.getSignatureHashes());
             return false;
         }
 
         if (!StringUtil.isNullOrEmpty(descriptor.getVersionLowerBound())
                 && compareSemanticVersion(browser.getVersion(), descriptor.getVersionLowerBound()) == -1) {
+            Logger.info(methodTag, "Browser version too low. " +
+                    "Min. supported version: " + descriptor.getVersionLowerBound() +
+                    " Found: " + browser.getVersion());
             return false;
         }
 
         if (!StringUtil.isNullOrEmpty(descriptor.getVersionUpperBound())
                 && compareSemanticVersion(browser.getVersion(), descriptor.getVersionUpperBound()) == 1) {
+            Logger.info(methodTag, "Browser version too high. " +
+                    "Max supported version: " + descriptor.getVersionLowerBound() +
+                    " Found: " + browser.getVersion());
             return false;
         }
 
@@ -141,6 +144,8 @@ public class BrowserSelector {
         for (ResolveInfo info : resolvedActivityList) {
             // ignore handlers which are not browsers
             if (!isFullBrowser(info)) {
+                Logger.info(methodTag, null,
+                        "Ignoring: " + info.activityInfo.packageName + " as it is not a full browser.");
                 continue;
             }
 
@@ -153,12 +158,14 @@ public class BrowserSelector {
                 } else {
                     browserList.add(new Browser(packageInfo, false));
                 }
+                Logger.info(methodTag, null, "Found supported browser: " + packageInfo.packageName);
             } catch (PackageManager.NameNotFoundException e) {
                 // a browser cannot be generated without the package info
+                Logger.info(methodTag, null, "Package name not found: " + info.activityInfo.packageName);
             }
         }
 
-        Logger.verbose(methodTag, null, "Found " + browserList.size() + " browsers.");
+        Logger.info(methodTag, null, "Found " + browserList.size() + " browsers.");
         return browserList;
     }
 
