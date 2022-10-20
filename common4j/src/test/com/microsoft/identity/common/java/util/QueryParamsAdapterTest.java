@@ -25,7 +25,10 @@ package com.microsoft.identity.common.java.util;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.microsoft.identity.common.java.controllers.ExceptionAdapter;
+import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.exception.TerminalException;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -67,6 +70,14 @@ public class QueryParamsAdapterTest {
         final Gson gson = gsonBuilder.create();
 
         Assert.assertEquals(expected, gson.toJson(input, QueryParamsAdapter.getListType()));
+    }
+
+    @Test
+    public void test123() throws Exception{
+        TerminalException t = new TerminalException("errorMsg", ClientException.KEY_RING_WRITE_FAILURE);
+        BaseException e = ExceptionAdapter.baseExceptionFromException(t);
+        Assert.assertEquals(e.getErrorCode(), t.getErrorCode());
+        Assert.assertEquals(e.getCause(), t);
     }
 
     @Test
