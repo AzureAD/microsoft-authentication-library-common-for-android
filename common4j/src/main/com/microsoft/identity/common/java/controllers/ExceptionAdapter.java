@@ -296,14 +296,15 @@ public class ExceptionAdapter {
 
     public static BaseException baseExceptionFromException(final Throwable exception) {
         Throwable e = exception;
+        final Throwable cause = e.getCause();
         if (exception instanceof ExecutionException) {
             e = exception.getCause();
         }
 
         if (e instanceof TerminalException) {
             final String errorCode = ((TerminalException) e).getErrorCode();
-            if (e.getCause() != null) {
-                e = e.getCause();
+            if (cause != null) {
+                e = cause;
             }
             return new ClientException(
                     errorCode,
