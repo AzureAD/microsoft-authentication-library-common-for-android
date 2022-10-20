@@ -86,4 +86,16 @@ public class CommandParameters {
     @EqualsAndHashCode.Exclude
     @Expose()
     private String correlationId;
+
+    @EqualsAndHashCode.Exclude
+    @Expose()
+    private String traceId;
+
+    @EqualsAndHashCode.Exclude
+    @Expose()
+    private String spanId;
+
+    @EqualsAndHashCode.Exclude
+    @Expose()
+    private String parentSpanName;
 }

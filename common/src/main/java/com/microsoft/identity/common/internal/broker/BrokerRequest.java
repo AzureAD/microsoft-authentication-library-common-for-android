@@ -69,6 +69,8 @@ public class BrokerRequest implements Serializable {
         final static String AUTHORIZATION_AGENT = "authorization_agent";
         final static String AUTHENTICATION_SCHEME = "authentication_scheme";
         final static String POWER_OPT_CHECK_ENABLED = "power_opt_check_enabled";
+        final static String TRACE_ID = "trace_id";
+        final static String SPAN_ID = "span_id";
     }
 
     /**
@@ -219,4 +221,15 @@ public class BrokerRequest implements Serializable {
     @SerializedName(SerializedNames.POWER_OPT_CHECK_ENABLED)
     private boolean mPowerOptCheckEnabled;
 
+    @Nullable
+    @SerializedName(SerializedNames.TRACE_ID)
+    private String mTraceId;
+
+    @Nullable
+    @SerializedName(SerializedNames.SPAN_ID)
+    private String mSpanId;
+
+    @Nullable
+    @SerializedName("parent_span_name")
+    private String mParentSpanName;
 }

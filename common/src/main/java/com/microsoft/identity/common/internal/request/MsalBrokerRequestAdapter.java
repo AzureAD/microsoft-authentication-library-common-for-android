@@ -52,6 +52,7 @@ import com.microsoft.identity.common.internal.broker.BrokerRequest;
 import com.microsoft.identity.common.java.commands.parameters.AcquirePrtSsoTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.GenerateShrCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.RemoveAccountCommandParameters;
+import com.microsoft.identity.common.java.opentelemetry.OTelUtility;
 import com.microsoft.identity.common.java.ui.BrowserDescriptor;
 import com.microsoft.identity.common.java.util.BrokerProtocolVersionUtil;
 import com.microsoft.identity.common.java.util.QueryParamsAdapter;
@@ -74,6 +75,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+
+import io.opentelemetry.api.trace.Span;
 
 public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
@@ -146,6 +149,9 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 .multipleCloudsSupported(getMultipleCloudsSupported(parameters))
                 .authenticationScheme(parameters.getAuthenticationScheme())
                 .powerOptCheckEnabled(parameters.isPowerOptCheckEnabled())
+                .traceId(Span.current().getSpanContext().getTraceId())
+                .spanId(Span.current().getSpanContext().getSpanId())
+                .parentSpanName(OTelUtility.getCurrentSpanName())
                 .build();
 
         return brokerRequest;

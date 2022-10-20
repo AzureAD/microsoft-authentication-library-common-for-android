@@ -176,6 +176,10 @@ dependencies {
     androidTestImplementation("androidx.test.espresso:espresso-core:$rootProject.ext.espressoCoreVersion", {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
+
+    implementation platform("io.opentelemetry:opentelemetry-bom:1.18.0")
+    implementation("io.opentelemetry:opentelemetry-sdk:1.18.0")
+    implementation 'com.microsoft.applications:ariaandroidjavasdk-release:3.0.22.0'
 }
 
 // Create tasks to generate javadoc

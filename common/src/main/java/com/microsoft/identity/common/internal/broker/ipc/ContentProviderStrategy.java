@@ -40,9 +40,17 @@ import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.exception.BrokerCommunicationException;
 import com.microsoft.identity.common.internal.util.ParcelableUtil;
+import com.microsoft.identity.common.java.opentelemetry.OTelUtility;
+import com.microsoft.identity.common.java.opentelemetry.SpanName;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.util.List;
+
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.context.Scope;
 
 /**
  * A strategy for communicating with the targeted broker via Content Provider.
@@ -51,6 +59,8 @@ public class ContentProviderStrategy implements IIpcStrategy {
 
     private static final String TAG = ContentProviderStrategy.class.getName();
     private final Context mContext;
+
+    private final Tracer mTracer = GlobalOpenTelemetry.getTracer(TAG);
 
     public ContentProviderStrategy(final Context context) {
         mContext = context;
@@ -65,54 +75,66 @@ public class ContentProviderStrategy implements IIpcStrategy {
 
         Logger.info(methodTag, "Broker operation name: " + operationName +  " brokerPackage: "+brokerOperationBundle.getTargetBrokerAppPackageName());
 
-        final Uri uri = getContentProviderURI(
-                brokerOperationBundle.getTargetBrokerAppPackageName(),
-                brokerOperationBundle.getContentProviderPath()
-        );
-        Logger.info(methodTag, "Request to BrokerContentProvider for uri path " +
-                brokerOperationBundle.getContentProviderPath()
-        );
+        final Span span = OTelUtility.createSpan("MSAL_communicateToBroker");
 
-        String marshalledRequestString = null;
+        try (final Scope scope = span.makeCurrent()) {
+            span.setAttribute("ipc_strategy", this.getType().name);
+            final Uri uri = getContentProviderURI(
+                    brokerOperationBundle.getTargetBrokerAppPackageName(),
+                    brokerOperationBundle.getContentProviderPath()
+            );
+            Logger.info(methodTag, "Request to BrokerContentProvider for uri path " +
+                    brokerOperationBundle.getContentProviderPath()
+            );
 
-        final Bundle requestBundle = brokerOperationBundle.getBundle();
-        if (requestBundle != null) {
-            byte[] marshalledBytes = ParcelableUtil.marshall(requestBundle);
-            marshalledRequestString = Base64.encodeToString(marshalledBytes, 0);
-        }
+            String marshalledRequestString = null;
 
-        final Cursor cursor = mContext.getContentResolver().query(
-                uri,
-                null,
-                marshalledRequestString,
-                null,
-                null
-        );
-
-        if (cursor != null) {
-            try {
-                final Bundle resultBundle = cursor.getExtras();
-
-                if (resultBundle == null) {
-                    final String message = "Received an empty bundle. This means the operation is not supported on the other side. " +
-                            "If you're using a newer feature, please bump the minimum protocol version.";
-                    Logger.error(methodTag, message, null);
-                    throw new BrokerCommunicationException(OPERATION_NOT_SUPPORTED_ON_SERVER_SIDE, getType(), message, null);
-                }
-
-                Logger.info(methodTag, "Received successful result from Broker Content Provider.");
-                return resultBundle;
-            } catch (final RuntimeException exception) {
-                final String message = "Failed to get result from Broker Content Provider";
-                Logger.error(methodTag, message, exception);
-                throw new BrokerCommunicationException(CONNECTION_ERROR, getType(), message, null);
-            } finally {
-                cursor.close();
+            final Bundle requestBundle = brokerOperationBundle.getBundle();
+            if (requestBundle != null) {
+                byte[] marshalledBytes = ParcelableUtil.marshall(requestBundle);
+                marshalledRequestString = Base64.encodeToString(marshalledBytes, 0);
             }
-        } else {
-            final String message = "Failed to get result from Broker Content Provider, cursor is null";
-            Logger.error(methodTag, message, null);
-            throw new BrokerCommunicationException(CONNECTION_ERROR, getType(), message, null);
+
+            final Cursor cursor = mContext.getContentResolver().query(
+                    uri,
+                    null,
+                    marshalledRequestString,
+                    null,
+                    null
+            );
+
+            if (cursor != null) {
+                try {
+                    final Bundle resultBundle = cursor.getExtras();
+
+                    if (resultBundle == null) {
+                        final String message = "Received an empty bundle. This means the operation is not supported on the other side. " +
+                                "If you're using a newer feature, please bump the minimum protocol version.";
+                        Logger.error(methodTag, message, null);
+                        throw new BrokerCommunicationException(OPERATION_NOT_SUPPORTED_ON_SERVER_SIDE, getType(), message, null);
+                    }
+
+                    Logger.info(methodTag, "Received successful result from Broker Content Provider.");
+                    span.setStatus(StatusCode.OK);
+                    return resultBundle;
+                } catch (final RuntimeException exception) {
+                    final String message = "Failed to get result from Broker Content Provider";
+                    Logger.error(methodTag, message, exception);
+                    throw new BrokerCommunicationException(CONNECTION_ERROR, getType(), message, null);
+                } finally {
+                    cursor.close();
+                }
+            } else {
+                final String message = "Failed to get result from Broker Content Provider, cursor is null";
+                Logger.error(methodTag, message, null);
+                throw new BrokerCommunicationException(CONNECTION_ERROR, getType(), message, null);
+            }
+        } catch (final Throwable throwable) {
+            span.recordException(throwable);
+            span.setStatus(StatusCode.ERROR);
+            throw throwable;
+        } finally {
+            span.end();;
         }
     }
 

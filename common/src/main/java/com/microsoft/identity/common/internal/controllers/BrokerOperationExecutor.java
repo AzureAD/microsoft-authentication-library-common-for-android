@@ -37,6 +37,8 @@ import com.microsoft.identity.common.internal.telemetry.events.ApiStartEvent;
 import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
+import com.microsoft.identity.common.java.opentelemetry.OTelUtility;
+import com.microsoft.identity.common.java.opentelemetry.SpanName;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.logging.Logger;
 
@@ -45,6 +47,11 @@ import java.util.List;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.context.Scope;
 import lombok.NonNull;
 
 /**
@@ -57,6 +64,8 @@ import lombok.NonNull;
 public class BrokerOperationExecutor {
 
     private static final String TAG = BrokerOperationExecutor.class.getSimpleName();
+
+    private final Tracer mTracer = GlobalOpenTelemetry.getTracer(TAG);
 
     /**
      * Info of a service operation to be performed with available strategies.
@@ -117,6 +126,8 @@ public class BrokerOperationExecutor {
      */
     public <T extends CommandParameters, U> U execute(@Nullable final T parameters,
                                                       @NonNull final BrokerOperation<U> operation) throws BaseException {
+        final Span span = OTelUtility.createSpan("MSAL_BrokerOperationExecutor_execute");
+
         final CodeMarkerManager codeMarkerManager = CodeMarkerManager.getInstance();
         codeMarkerManager.markCode(PerfConstants.CodeMarkerConstants.BROKER_OPERATION_EXECUTION_START);
         final String methodTag = TAG + ":execute";
@@ -131,36 +142,45 @@ public class BrokerOperationExecutor {
             throw exception;
         }
 
-        final List<BrokerCommunicationException> communicationExceptionStack = new ArrayList<>();
-        for (final IIpcStrategy strategy : mStrategies) {
-            try {
-                codeMarkerManager.markCode(PerfConstants.CodeMarkerConstants.BROKER_PROCESS_START);
-                final U result = performStrategy(strategy, operation);
-                codeMarkerManager.markCode(PerfConstants.CodeMarkerConstants.BROKER_PROCESS_END);
-                emitOperationSuccessEvent(operation, result);
-                return result;
-            } catch (final BrokerCommunicationException communicationException) {
-                // Fails to communicate to the . Try next strategy.
-                communicationExceptionStack.add(communicationException);
-            } catch (final BaseException exception) {
-                emitOperationFailureEvent((BrokerOperation<U>) operation, exception);
-                throw exception;
+        try (final Scope scope = span.makeCurrent()) {
+            final List<BrokerCommunicationException> communicationExceptionStack = new ArrayList<>();
+            for (final IIpcStrategy strategy : mStrategies) {
+                try {
+                    codeMarkerManager.markCode(PerfConstants.CodeMarkerConstants.BROKER_PROCESS_START);
+                    final U result = performStrategy(strategy, operation);
+                    codeMarkerManager.markCode(PerfConstants.CodeMarkerConstants.BROKER_PROCESS_END);
+                    emitOperationSuccessEvent(operation, result);
+                    span.setStatus(StatusCode.OK);
+                    return result;
+                } catch (final BrokerCommunicationException communicationException) {
+                    // Fails to communicate to the . Try next strategy.
+                    communicationExceptionStack.add(communicationException);
+                } catch (final BaseException exception) {
+                    emitOperationFailureEvent((BrokerOperation<U>) operation, exception);
+                    throw exception;
+                }
             }
+
+            final ClientException exception = new ClientException(
+                    ErrorStrings.BROKER_BIND_SERVICE_FAILED,
+                    "Unable to connect to the broker. Please refer to MSAL/Broker logs " +
+                            "or suppressed exception (API 19+) for more details.");
+
+            // This means that we've tried every strategies... log everything...
+            for (final BrokerCommunicationException e : communicationExceptionStack) {
+                Logger.error(methodTag, e.getMessage(), e);
+                exception.addSuppressedException(e);
+            }
+
+            emitOperationFailureEvent(operation, exception);
+            throw exception;
+        } catch (final Throwable throwable) {
+            span.recordException(throwable);
+            span.setStatus(StatusCode.ERROR);
+            throw throwable;
+        } finally {
+            span.end();
         }
-
-        final ClientException exception = new ClientException(
-                ErrorStrings.BROKER_BIND_SERVICE_FAILED,
-                "Unable to connect to the broker. Please refer to MSAL/Broker logs " +
-                        "or suppressed exception (API 19+) for more details.");
-
-        // This means that we've tried every strategies... log everything...
-        for (final BrokerCommunicationException e : communicationExceptionStack) {
-            Logger.error(methodTag, e.getMessage(), e);
-            exception.addSuppressedException(e);
-        }
-
-        emitOperationFailureEvent(operation, exception);
-        throw exception;
     }
 
     private <T extends CommandParameters, U> void emitOperationStartEvent(@Nullable final T parameters,

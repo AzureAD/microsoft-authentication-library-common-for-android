@@ -28,7 +28,9 @@ import javax.annotation.Nullable;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.sdk.trace.ReadableSpan;
 import lombok.NonNull;
 
@@ -49,10 +51,25 @@ public class OTelUtility {
     }
 
     /**
+     * Creates a span (with shared basic attributes).
+     **/
+    @NonNull
+    public static Span createSpan(@NonNull final String name, @NonNull final SpanContext parentSpanContext, @NonNull final String parentSpanName){
+        final Tracer tracer = GlobalOpenTelemetry.getTracer(TAG);
+        final Span span = tracer.spanBuilder(name)
+                .setParent(Context.current().with(Span.wrap(parentSpanContext)))
+                .startSpan();
+
+        // Current span is the parent of span just created.
+        span.setAttribute(parent_span_name.name(), parentSpanName);
+        return span;
+    }
+
+    /**
      * Get name of the current span, if possible.
      **/
     @Nullable
-    private static String getCurrentSpanName(){
+    public static String getCurrentSpanName(){
         final Span span = Span.current();
         if (span instanceof ReadableSpan) {
             return ((ReadableSpan) span).getName();
