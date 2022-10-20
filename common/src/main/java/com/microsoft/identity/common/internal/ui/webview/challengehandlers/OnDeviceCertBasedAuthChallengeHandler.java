@@ -22,7 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.ui.webview.challengehandlers;
 
-import android.annotation.TargetApi;
 import android.app.Activity;
 import android.os.Build;
 import android.security.KeyChain;
@@ -33,12 +32,9 @@ import android.webkit.ClientCertRequest;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 
-import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.java.exception.BaseException;
+import com.microsoft.identity.common.java.opentelemetry.CertBasedAuthTelemetryHelper;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
-import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings;
-import com.microsoft.identity.common.java.telemetry.events.CertBasedAuthResultEvent;
-import com.microsoft.identity.common.java.telemetry.events.ErrorEvent;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.security.Principal;
@@ -75,13 +71,16 @@ public class OnDeviceCertBasedAuthChallengeHandler implements ICertBasedAuthChal
     public Void processChallenge(ClientCertRequest request) {
         final String methodTag = TAG + ":processChallenge";
         final Principal[] acceptableCertIssuers = request.getPrincipals();
+        CertBasedAuthTelemetryHelper.setCertBasedAuthChallengeHandler(TAG);
 
         // When ADFS server sends null or empty issuers, we'll continue with cert prompt.
         if (acceptableCertIssuers != null) {
             for (final Principal issuer : acceptableCertIssuers) {
                 if (issuer.getName().contains(ACCEPTABLE_ISSUER)) {
-                    //Checking if received acceptable issuers contain "CN=MS-Organization-Access"
-                    Logger.info(methodTag,"Cancelling the TLS request, not respond to TLS challenge triggered by device authentication.");
+                    //Checking if received acceptable issuers contain "CN=MS-Organization-Access"\
+                    final String message = "Cancelling the TLS request, not respond to TLS challenge triggered by device authentication.";
+                    Logger.info(methodTag, message);
+                    CertBasedAuthTelemetryHelper.setResultFailure(message);
                     request.cancel();
                     return null;
                 }
@@ -92,7 +91,9 @@ public class OnDeviceCertBasedAuthChallengeHandler implements ICertBasedAuthChal
                     @Override
                     public void alias(String alias) {
                         if (alias == null) {
-                            Logger.info(methodTag,"No certificate chosen by user, cancelling the TLS request.");
+                            final String message = "No certificate chosen by user, cancelling the TLS request.";
+                            Logger.info(methodTag, message);
+                            CertBasedAuthTelemetryHelper.setResultFailure(message);
                             request.cancel();
                             return;
                         }
@@ -110,8 +111,10 @@ public class OnDeviceCertBasedAuthChallengeHandler implements ICertBasedAuthChal
                             return;
                         } catch (final KeyChainException e) {
                             Logger.errorPII(methodTag,"KeyChain exception", e);
+                            CertBasedAuthTelemetryHelper.setResultFailure(e);
                         } catch (final InterruptedException e) {
                             Logger.errorPII(methodTag,"InterruptedException exception", e);
+                            CertBasedAuthTelemetryHelper.setResultFailure(e);
                         }
 
                         request.cancel();
@@ -133,13 +136,20 @@ public class OnDeviceCertBasedAuthChallengeHandler implements ICertBasedAuthChal
     @Override
     public void emitTelemetryForCertBasedAuthResults(@NonNull final RawAuthorizationResult response) {
         if (mIsOnDeviceCertBasedAuthProceeding) {
-            final CertBasedAuthResultEvent certBasedAuthResultEvent= new CertBasedAuthResultEvent(TelemetryEventStrings.Event.CERT_BASED_AUTH_RESULT_ON_DEVICE_EVENT);
             mIsOnDeviceCertBasedAuthProceeding = false;
-            Telemetry.emit(certBasedAuthResultEvent.putResponseCode(response.getResultCode().toString()));
-            //If an exception was provided, emit an ErrorEvent.
-            final BaseException exception = response.getException();
-            if (exception != null) {
-                Telemetry.emit(new ErrorEvent().putException(exception));
+            final RawAuthorizationResult.ResultCode resultCode = response.getResultCode();
+            if (resultCode == RawAuthorizationResult.ResultCode.NON_OAUTH_ERROR
+                    || resultCode == RawAuthorizationResult.ResultCode.SDK_CANCELLED
+                    || resultCode == RawAuthorizationResult.ResultCode.CANCELLED) {
+                final BaseException exception = response.getException();
+                if (exception != null) {
+                    CertBasedAuthTelemetryHelper.setResultFailure(exception);
+                } else {
+                    //Putting result code as message.
+                    CertBasedAuthTelemetryHelper.setResultFailure(resultCode.toString());
+                }
+            } else {
+                CertBasedAuthTelemetryHelper.setResultSuccess();
             }
         }
     }

@@ -1,4 +1,3 @@
-package com.microsoft.identity.common.java.opentelemetry;
 // Copyright (c) Microsoft Corporation.
 // All rights reserved.
 //
@@ -21,6 +20,7 @@ package com.microsoft.identity.common.java.opentelemetry;
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
+package com.microsoft.identity.common.java.opentelemetry;
 
 public enum SpanName {
     AcquirePrtUsingBrt,
@@ -28,5 +28,6 @@ public enum SpanName {
     AcquireAtUsingPrt,
     AcquireTokenInteractive,
     AcquireTokenSilent,
-    CryptoFactoryEvent
+    CryptoFactoryEvent,
+    CertBasedAuth
 }

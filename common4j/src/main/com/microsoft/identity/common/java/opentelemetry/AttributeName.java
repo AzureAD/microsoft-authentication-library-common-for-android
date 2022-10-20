@@ -57,5 +57,21 @@ public enum AttributeName {
     /**
      * Indicates the stack trace from an crypto operation exception.
      */
-    crypto_exception_stack_trace
+    crypto_exception_stack_trace,
+
+    /**
+     * Indicates which CertBasedAuthChallengeHandler was handling the CBA flow.
+     */
+    cert_based_auth_challenge_handler,
+
+    /**
+     * Indicates if PivProvider (part of YubiKit) was already present in the
+     *  Security static list prior to adding a new PivProvider.
+     */
+    cert_based_auth_existing_piv_provider_present,
+
+    /**
+     * Indicates which CBA flow the user selected (will be utilized in future CBA work).
+     */
+    cert_based_auth_user_choice
 }

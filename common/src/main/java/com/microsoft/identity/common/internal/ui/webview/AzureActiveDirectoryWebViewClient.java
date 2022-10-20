@@ -42,6 +42,7 @@ import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.broker.PackageHelper;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.CertBasedAuthFactory;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.ICertBasedAuthChallengeHandler;
+import com.microsoft.identity.common.java.opentelemetry.CertBasedAuthTelemetryHelper;
 import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallenge;
 import com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallengeFactory;
@@ -461,6 +462,10 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         if (mCertBasedAuthChallengeHandler != null) {
             mCertBasedAuthChallengeHandler.cleanUp();
         }
+        CertBasedAuthTelemetryHelper.createSpanAndMakeCurrent();
+        //Span attribute for user_choice will be utilized soon in a future update, but
+        // setting it here to be empty in order to prepare for Aria dashboards.
+        CertBasedAuthTelemetryHelper.setUserChoice("");
         mCertBasedAuthChallengeHandler = mCertBasedAuthFactory.createCertBasedAuthChallengeHandler();
         mCertBasedAuthChallengeHandler.processChallenge(clientCertRequest);
     }

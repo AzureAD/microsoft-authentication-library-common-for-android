@@ -26,10 +26,10 @@ import android.content.Context;
 import android.os.Build;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
-import com.microsoft.identity.common.internal.telemetry.Telemetry;
-import com.microsoft.identity.common.java.telemetry.events.PivProviderStatusEvent;
+import com.microsoft.identity.common.java.opentelemetry.CertBasedAuthTelemetryHelper;
 import com.microsoft.identity.common.logging.Logger;
 import com.yubico.yubikit.android.YubiKitManager;
 import com.yubico.yubikit.android.transport.usb.UsbConfiguration;
@@ -44,6 +44,8 @@ import com.yubico.yubikit.piv.jca.PivProvider;
 import java.io.IOException;
 import java.security.Security;
 import java.util.concurrent.Callable;
+
+import io.opentelemetry.api.trace.Span;
 
 /**
  * Utilizes YubiKit in order to detect and interact with YubiKeys for smartcard certificate based authentication.
@@ -91,15 +93,11 @@ public class YubiKitCertBasedAuthManager extends AbstractSmartcardCertBasedAuthM
                             synchronized (sDeviceLock) {
                                 mDevice = null;
                             }
-                            //NOTE: Replace with OTEL span
-                            final PivProviderStatusEvent pivProviderStatusEvent = new PivProviderStatusEvent();
                             //Remove the YKPiv security provider if it was added.
                             if (Security.getProvider(YUBIKEY_PROVIDER) != null) {
                                 Security.removeProvider(YUBIKEY_PROVIDER);
-                                Telemetry.emit(pivProviderStatusEvent.putPivProviderRemoved(true));
                                 Logger.info(TAG, "An instance of PivProvider was removed from Security static list upon YubiKey device connection being closed.");
                             } else {
-                                Telemetry.emit(pivProviderStatusEvent.putPivProviderRemoved(false));
                                 Logger.info(TAG, "An instance of PivProvider was not present in Security static list upon YubiKey device connection being closed.");
                             }
                             if (mConnectionCallback != null) {
@@ -126,9 +124,11 @@ public class YubiKitCertBasedAuthManager extends AbstractSmartcardCertBasedAuthM
      * Request a PivSession instance in order to carry out methods
      *  implemented in YubiKitSmartcardSession.
      * @param callback Contains callbacks to run when a PivSession is successfully instantiated and when any exception is thrown due to a connection issue.
+     * @param span OpenTelemetry Span to be passed to PivSession in order to update current span attributes.
      */
     @Override
-    public void requestDeviceSession(@NonNull final ISessionCallback callback) {
+    public void requestDeviceSession(@NonNull final ISessionCallback callback,
+                                     @Nullable final Span span) {
         final String methodTag = TAG + "requestDeviceSession:";
         synchronized (sDeviceLock) {
             if (mDevice == null) {
@@ -139,6 +139,12 @@ public class YubiKitCertBasedAuthManager extends AbstractSmartcardCertBasedAuthM
             mDevice.requestConnection(UsbSmartCardConnection.class, new Callback<Result<UsbSmartCardConnection, IOException>>() {
                 @Override
                 public void invoke(@NonNull final Result<UsbSmartCardConnection, IOException> value) {
+                    //Running on a separate thread, so we need to update the current span.
+                    if (span != null) {
+                        span.makeCurrent();
+                    } else {
+                        Logger.info(methodTag, "Telemetry not captured in current YubiKitSmartcardSession.");
+                    }
                     try {
                         final SmartCardConnection c = value.getValue();
                         final PivSession piv = new PivSession(c);
@@ -171,17 +177,15 @@ public class YubiKitCertBasedAuthManager extends AbstractSmartcardCertBasedAuthM
         final String methodTag = TAG + ":initBeforeProceedingWithRequest";
         //Need to add a PivProvider instance to the beginning of the array of Security providers in order for signature logic to occur.
         //Note that this provider is removed when the UsbYubiKeyDevice connection is closed.
-        //NOTE: Replace with OTEL span
-        final PivProviderStatusEvent pivProviderStatusEvent = new PivProviderStatusEvent();
         if (Security.getProvider(YUBIKEY_PROVIDER) != null) {
             Security.removeProvider(YUBIKEY_PROVIDER);
             //The PivProvider instance is either unexpectedly being added elsewhere
             // or it isn't being removed properly upon CBA flow termination.
-            Telemetry.emit(pivProviderStatusEvent.putIsExistingPivProviderPresent(true));
             Logger.info(methodTag, "Existing PivProvider was present in Security static list.");
+            CertBasedAuthTelemetryHelper.setExistingPivProviderPresent(true);
         } else {
-            Telemetry.emit(pivProviderStatusEvent.putIsExistingPivProviderPresent(false));
             Logger.info(methodTag, "Security static list does not have existing PivProvider.");
+            CertBasedAuthTelemetryHelper.setExistingPivProviderPresent(false);
         }
         //The position parameter is 1-based (1 maps to index 0).
         Security.insertProviderAt(new PivProvider(getPivProviderCallback()), 1);

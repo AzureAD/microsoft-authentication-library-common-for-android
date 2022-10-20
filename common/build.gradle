@@ -149,6 +149,10 @@ dependencies {
     implementation "com.yubico.yubikit:android:$rootProject.ext.yubikitAndroidVersion"
     implementation "com.yubico.yubikit:piv:$rootProject.ext.yubikitPivVersion"
 
+    implementation platform("io.opentelemetry:opentelemetry-bom:1.18.0")
+    implementation('io.opentelemetry:opentelemetry-api:1.18.0')
+    implementation('io.opentelemetry:opentelemetry-sdk-trace:1.18.0')
+
     compileOnly 'com.github.spotbugs:spotbugs-annotations:4.3.0'
 
     compileOnly "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
