@@ -28,5 +28,6 @@ public enum SpanName {
     AcquireAtUsingPrt,
     AcquireTokenInteractive,
     AcquireTokenSilent,
-    CryptoFactoryEvent
+    CryptoFactoryEvent,
+    SetScopeForDMAgentForFoci
 }
