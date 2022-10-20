@@ -308,7 +308,7 @@ public class ExceptionAdapter {
             }
             return new ClientException(
                     errorCode,
-                    "An unhandled exception occurred with message: " + e.getMessage(),
+                    "--An unhandled exception occurred with message: " + e.getMessage(),
                     e
             );
         }
