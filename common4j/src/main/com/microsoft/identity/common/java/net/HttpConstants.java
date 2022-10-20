@@ -48,6 +48,11 @@ public final class HttpConstants {
          * Header used to track SPE Ring for telemetry.
          */
         public static final String X_MS_CLITELEM = "x-ms-clitelem";
+
+        /**
+         * Header to track if Cached Credential Service (CCS) was used
+         */
+        public static final String XMS_CCS_REQUEST_ID = "xms-ccs-requestid";
     }
 
     /**

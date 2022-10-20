@@ -60,6 +60,11 @@ public enum AttributeName {
     crypto_exception_stack_trace,
 
     /**
+     * Indicates the request id value for cached credential service (if used) on server side
+     */
+    ccs_request_id,
+
+    /**
      * Indicates which CertBasedAuthChallengeHandler was handling the CBA flow.
      */
     cert_based_auth_challenge_handler,
