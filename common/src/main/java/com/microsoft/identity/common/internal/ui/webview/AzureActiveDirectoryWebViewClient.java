@@ -464,8 +464,8 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         }
         CertBasedAuthTelemetryHelper.createSpanAndMakeCurrent();
         //Span attribute for user_choice will be utilized soon in a future update, but
-        // setting it here to be empty in order to prepare for Aria dashboards.
-        CertBasedAuthTelemetryHelper.setUserChoice("");
+        // setting it here to be null in order to prepare for Aria dashboards.
+        CertBasedAuthTelemetryHelper.setUserChoice(null);
         mCertBasedAuthChallengeHandler = mCertBasedAuthFactory.createCertBasedAuthChallengeHandler();
         mCertBasedAuthChallengeHandler.processChallenge(clientCertRequest);
     }

@@ -236,7 +236,7 @@ public class YubiKitCertBasedAuthManager extends AbstractSmartcardCertBasedAuthM
         return new Callback<T>() {
             @Override
             public void invoke(@NonNull T value) {
-                try (Scope ignored = context.makeCurrent()) {
+                try (final Scope ignored = context.makeCurrent()) {
                     callback.invoke(value);
                 }
             }

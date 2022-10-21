@@ -26,6 +26,8 @@ import javax.annotation.Nullable;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
 import lombok.NonNull;
 
 /**
@@ -33,29 +35,13 @@ import lombok.NonNull;
  *  telemetry-related tasks.
  */
 public class CertBasedAuthTelemetryHelper {
-
+    private static Scope mScope;
     /**
      * Creates a new Span and sets it to be the current Span.
      */
     public static void createSpanAndMakeCurrent() {
         final Span span = OTelUtility.createSpan(SpanName.CertBasedAuth.name());
-        span.makeCurrent();
-    }
-
-    /**
-     * Gets the current Span.
-     * Should be mainly used to pass the existing current Span to a task that is
-     *  running on a different thread.
-     * @return current Span if it is related to CBA; null otherwise.
-     */
-    @Nullable
-    public static Span getCurrentSpan() {
-        //Note that the current span should always be the CertBasedAuth span if this method is being called,
-        // but double checking just to be safe.
-        if (isCorrectSpan()) {
-            return Span.current();
-        }
-        return null;
+        mScope = span.makeCurrent();
     }
 
     /**
@@ -63,14 +49,10 @@ public class CertBasedAuthTelemetryHelper {
      * @param challengeHandlerName name of the ICertBasedAuthChallengeHandler class.
      */
     public static void setCertBasedAuthChallengeHandler(@NonNull final String challengeHandlerName) {
-        //Note that the current span should always be the CertBasedAuth span if this method is being called,
-        // but double checking just to be safe.
-        if (isCorrectSpan()) {
-            final Span span = Span.current();
-            span.setAttribute(
-                    AttributeName.cert_based_auth_challenge_handler.name(),
-                    challengeHandlerName);
-        }
+        final Span span = Span.current();
+        span.setAttribute(
+                AttributeName.cert_based_auth_challenge_handler.name(),
+                challengeHandlerName);
     }
 
     /**
@@ -78,27 +60,23 @@ public class CertBasedAuthTelemetryHelper {
      *  Java Security static list upon adding a new instance.
      * @param present true if PivProvider instance present; false otherwise.
      */
-    public static void setExistingPivProviderPresent(@NonNull final boolean present) {
-        //Note that the current span should always be the CertBasedAuth span if this method is being called,
-        // but double checking just to be safe.
-        if (isCorrectSpan()) {
-            final Span span = Span.current();
-            span.setAttribute(
-                    AttributeName.cert_based_auth_existing_piv_provider_present.name(),
-                    present);
-        }
+    public static void setExistingPivProviderPresent(final boolean present) {
+        final Span span = Span.current();
+        span.setAttribute(
+                AttributeName.cert_based_auth_existing_piv_provider_present.name(),
+                present);
     }
 
     /**
      * Indicates on the Span that CBA was successful and then ends current Span.
      */
     public static void setResultSuccess() {
-        //Note that the current span should always be the CertBasedAuth span if this method is being called,
-        // but double checking just to be safe.
-        if (isCorrectSpan()) {
-            final Span span = Span.current();
-            span.setStatus(StatusCode.OK);
-            span.end();
+        final Span span = Span.current();
+        span.setStatus(StatusCode.OK);
+        span.end();
+        if (mScope != null) {
+            mScope.close();
+            mScope = null;
         }
     }
 
@@ -109,16 +87,16 @@ public class CertBasedAuthTelemetryHelper {
      * @param message descriptive cause of failure message.
      */
     public static void setResultFailure(@NonNull final String message) {
-        //Note that the current span should always be the CertBasedAuth span if this method is being called,
-        // but double checking just to be safe.
-        if (isCorrectSpan()) {
-            final Span span = Span.current();
-            //setting the error_message attribute manually since there's no exception to record.
-            span.setAttribute(
-                    "error_message",
-                    message);
-            span.setStatus(StatusCode.ERROR);
-            span.end();
+        final Span span = Span.current();
+        //setting the error_message attribute manually since there's no exception to record.
+        span.setAttribute(
+                "error_message",
+                message);
+        span.setStatus(StatusCode.ERROR);
+        span.end();
+        if (mScope != null) {
+            mScope.close();
+            mScope = null;
         }
     }
 
@@ -127,13 +105,13 @@ public class CertBasedAuthTelemetryHelper {
      * @param exception exception thrown upon error.
      */
     public static void setResultFailure(@NonNull final Exception exception) {
-        //Note that the current span should always be the CertBasedAuth span if this method is being called,
-        // but double checking just to be safe.
-        if (isCorrectSpan()) {
-            final Span span = Span.current();
-            span.recordException(exception);
-            span.setStatus(StatusCode.ERROR);
-            span.end();
+        final Span span = Span.current();
+        span.recordException(exception);
+        span.setStatus(StatusCode.ERROR);
+        span.end();
+        if (mScope != null) {
+            mScope.close();
+            mScope = null;
         }
     }
 
@@ -143,24 +121,12 @@ public class CertBasedAuthTelemetryHelper {
      *  in future updates to the CBA dialogs.
      * @param choice string indicating user's choice for CBA.
      */
-    public static void setUserChoice(@NonNull final String choice) {
-        //Note that the current span should always be the CertBasedAuth span if this method is being called,
-        // but double checking just to be safe.
-        if (isCorrectSpan()) {
-            final Span span = Span.current();
-            span.setAttribute(
-                    AttributeName.cert_based_auth_user_choice.name(),
-                    choice);
-        }
-    }
-
-    /**
-     * Checks if the current Span is related to CBA.
-     * Used to ensure CBA attributes are not being set for other unrelated Spans.
-     * @return true if current Span is CBA related; false otherwise.
-     */
-    private static boolean isCorrectSpan() {
-        return (SpanName.CertBasedAuth.name()
-                .equals(OTelUtility.getCurrentSpanName()));
+    //Adding SuppressWarnings annotation since we aren't sending specific data for this field just yet.
+    @SuppressWarnings("null")
+    public static void setUserChoice(@Nullable final String choice) {
+        final Span span = Span.current();
+        span.setAttribute(
+                AttributeName.cert_based_auth_user_choice.name(),
+                choice);
     }
 }
