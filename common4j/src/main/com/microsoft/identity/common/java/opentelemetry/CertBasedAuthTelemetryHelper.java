@@ -50,6 +50,8 @@ public class CertBasedAuthTelemetryHelper {
      */
     @Nullable
     public static Span getCurrentSpan() {
+        //Note that the current span should always be the CertBasedAuth span if this method is being called,
+        // but double checking just to be safe.
         if (isCorrectSpan()) {
             return Span.current();
         }
@@ -61,6 +63,8 @@ public class CertBasedAuthTelemetryHelper {
      * @param challengeHandlerName name of the ICertBasedAuthChallengeHandler class.
      */
     public static void setCertBasedAuthChallengeHandler(@NonNull final String challengeHandlerName) {
+        //Note that the current span should always be the CertBasedAuth span if this method is being called,
+        // but double checking just to be safe.
         if (isCorrectSpan()) {
             final Span span = Span.current();
             span.setAttribute(
@@ -75,6 +79,8 @@ public class CertBasedAuthTelemetryHelper {
      * @param present true if PivProvider instance present; false otherwise.
      */
     public static void setExistingPivProviderPresent(@NonNull final boolean present) {
+        //Note that the current span should always be the CertBasedAuth span if this method is being called,
+        // but double checking just to be safe.
         if (isCorrectSpan()) {
             final Span span = Span.current();
             span.setAttribute(
@@ -87,6 +93,8 @@ public class CertBasedAuthTelemetryHelper {
      * Indicates on the Span that CBA was successful and then ends current Span.
      */
     public static void setResultSuccess() {
+        //Note that the current span should always be the CertBasedAuth span if this method is being called,
+        // but double checking just to be safe.
         if (isCorrectSpan()) {
             final Span span = Span.current();
             span.setStatus(StatusCode.OK);
@@ -101,6 +109,8 @@ public class CertBasedAuthTelemetryHelper {
      * @param message descriptive cause of failure message.
      */
     public static void setResultFailure(@NonNull final String message) {
+        //Note that the current span should always be the CertBasedAuth span if this method is being called,
+        // but double checking just to be safe.
         if (isCorrectSpan()) {
             final Span span = Span.current();
             //setting the error_message attribute manually since there's no exception to record.
@@ -117,6 +127,8 @@ public class CertBasedAuthTelemetryHelper {
      * @param exception exception thrown upon error.
      */
     public static void setResultFailure(@NonNull final Exception exception) {
+        //Note that the current span should always be the CertBasedAuth span if this method is being called,
+        // but double checking just to be safe.
         if (isCorrectSpan()) {
             final Span span = Span.current();
             span.recordException(exception);
@@ -132,6 +144,8 @@ public class CertBasedAuthTelemetryHelper {
      * @param choice string indicating user's choice for CBA.
      */
     public static void setUserChoice(@NonNull final String choice) {
+        //Note that the current span should always be the CertBasedAuth span if this method is being called,
+        // but double checking just to be safe.
         if (isCorrectSpan()) {
             final Span span = Span.current();
             span.setAttribute(

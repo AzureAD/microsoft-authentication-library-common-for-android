@@ -23,13 +23,11 @@
 package com.microsoft.identity.common.internal.ui.webview.challengehandlers;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import io.opentelemetry.api.trace.Span;
 
 /**
  * An abstract manager that can control connections for a particular type of smartcard.
@@ -53,10 +51,8 @@ public abstract class AbstractSmartcardCertBasedAuthManager {
     /**
      * Request an instance of a session in order to carry out methods specific to ISmartcardSession.
      * @param callback Contains callbacks to run when a ISmartcardSession is successfully instantiated and when any exception is thrown due to a connection issue.
-     * @param span OpenTelemetry Span to be passed to session in order to update current span attributes.
      */
-    abstract void requestDeviceSession(@NonNull final ISessionCallback callback,
-                                       @Nullable final Span span);
+    abstract void requestDeviceSession(@NonNull final ISessionCallback callback);
 
     /**
      * Returns boolean based on if a smartcard device is currently connected to the Android device and detected by our code.

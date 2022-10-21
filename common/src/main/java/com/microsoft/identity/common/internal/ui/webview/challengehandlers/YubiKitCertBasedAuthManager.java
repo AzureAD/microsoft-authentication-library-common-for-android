@@ -26,7 +26,6 @@ import android.content.Context;
 import android.os.Build;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
 import com.microsoft.identity.common.java.opentelemetry.CertBasedAuthTelemetryHelper;
@@ -45,7 +44,7 @@ import java.io.IOException;
 import java.security.Security;
 import java.util.concurrent.Callable;
 
-import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Scope;
 
 /**
  * Utilizes YubiKit in order to detect and interact with YubiKeys for smartcard certificate based authentication.
@@ -124,11 +123,9 @@ public class YubiKitCertBasedAuthManager extends AbstractSmartcardCertBasedAuthM
      * Request a PivSession instance in order to carry out methods
      *  implemented in YubiKitSmartcardSession.
      * @param callback Contains callbacks to run when a PivSession is successfully instantiated and when any exception is thrown due to a connection issue.
-     * @param span OpenTelemetry Span to be passed to PivSession in order to update current span attributes.
      */
     @Override
-    public void requestDeviceSession(@NonNull final ISessionCallback callback,
-                                     @Nullable final Span span) {
+    public void requestDeviceSession(@NonNull final ISessionCallback callback) {
         final String methodTag = TAG + "requestDeviceSession:";
         synchronized (sDeviceLock) {
             if (mDevice == null) {
@@ -136,15 +133,9 @@ public class YubiKitCertBasedAuthManager extends AbstractSmartcardCertBasedAuthM
                 callback.onException(new Exception());
             }
             //Request a connection from mDevice so that we can get a PivSession instance.
-            mDevice.requestConnection(UsbSmartCardConnection.class, new Callback<Result<UsbSmartCardConnection, IOException>>() {
+            mDevice.requestConnection(UsbSmartCardConnection.class, wrapCallback(new Callback<Result<UsbSmartCardConnection, IOException>>() {
                 @Override
                 public void invoke(@NonNull final Result<UsbSmartCardConnection, IOException> value) {
-                    //Running on a separate thread, so we need to update the current span.
-                    if (span != null) {
-                        span.makeCurrent();
-                    } else {
-                        Logger.info(methodTag, "Telemetry not captured in current YubiKitSmartcardSession.");
-                    }
                     try {
                         final SmartCardConnection c = value.getValue();
                         final PivSession piv = new PivSession(c);
@@ -154,7 +145,7 @@ public class YubiKitCertBasedAuthManager extends AbstractSmartcardCertBasedAuthM
                         callback.onException(e);
                     }
                 }
-            });
+            }));
         }
     }
 
@@ -217,7 +208,7 @@ public class YubiKitCertBasedAuthManager extends AbstractSmartcardCertBasedAuthM
                         callback.invoke(Result.failure(new Exception(MDEVICE_NULL_ERROR_MESSAGE)));
                         return;
                     }
-                    mDevice.requestConnection(UsbSmartCardConnection.class, new Callback<Result<UsbSmartCardConnection, IOException>>() {
+                    mDevice.requestConnection(UsbSmartCardConnection.class, wrapCallback(new Callback<Result<UsbSmartCardConnection, IOException>>() {
                         @Override
                         public void invoke(@NonNull final Result<UsbSmartCardConnection, IOException> value) {
                             callback.invoke(Result.of(new Callable<PivSession>() {
@@ -227,7 +218,25 @@ public class YubiKitCertBasedAuthManager extends AbstractSmartcardCertBasedAuthM
                                 }
                             }));
                         }
-                    });
+                    }));
+                }
+            }
+        };
+    }
+
+    /**
+     * Sets the current OpenTelemetry Context for a YubiKit Callback to be consistent with the current thread.
+     * @param callback YubiKit callback that contains information to be emitted via OpenTelemetry.
+     * @param <T> usually a Result.
+     * @return the YubiKit callback with its current Context updated.
+     */
+    private <T> Callback<T> wrapCallback(Callback<T> callback) {
+        final io.opentelemetry.context.Context context = io.opentelemetry.context.Context.current();
+        return new Callback<T>() {
+            @Override
+            public void invoke(@NonNull T value) {
+                try (Scope ignored = context.makeCurrent()) {
+                    callback.invoke(value);
                 }
             }
         };

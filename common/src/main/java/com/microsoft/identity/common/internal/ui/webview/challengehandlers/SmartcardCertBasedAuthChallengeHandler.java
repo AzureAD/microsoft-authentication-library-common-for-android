@@ -141,7 +141,7 @@ public class SmartcardCertBasedAuthChallengeHandler implements ICertBasedAuthCha
                 indicateGeneralException(methodTag, e);
                 request.cancel();
             }
-        }, CertBasedAuthTelemetryHelper.getCurrentSpan());
+        });
         return null;
     }
 
@@ -226,7 +226,7 @@ public class SmartcardCertBasedAuthChallengeHandler implements ICertBasedAuthCha
                         request.cancel();
                         clearPin(pin);
                     }
-                }, CertBasedAuthTelemetryHelper.getCurrentSpan());
+                });
             }
         };
     }
