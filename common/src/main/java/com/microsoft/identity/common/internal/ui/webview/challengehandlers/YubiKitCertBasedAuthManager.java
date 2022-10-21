@@ -230,7 +230,8 @@ public class YubiKitCertBasedAuthManager extends AbstractSmartcardCertBasedAuthM
      * @param <T> usually a Result.
      * @return the YubiKit callback with its current Context updated.
      */
-    private <T> Callback<T> wrapCallback(Callback<T> callback) {
+    @NonNull
+    private <T> Callback<T> wrapCallback(@NonNull final Callback<T> callback) {
         final io.opentelemetry.context.Context context = io.opentelemetry.context.Context.current();
         return new Callback<T>() {
             @Override
