@@ -26,7 +26,6 @@ import javax.annotation.Nullable;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.StatusCode;
-import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import lombok.NonNull;
 
@@ -35,12 +34,15 @@ import lombok.NonNull;
  *  telemetry-related tasks.
  */
 public class CertBasedAuthTelemetryHelper {
+
     private static Scope mScope;
+
     /**
      * Creates a new Span and sets it to be the current Span.
      */
     public static void createSpanAndMakeCurrent() {
         final Span span = OTelUtility.createSpan(SpanName.CertBasedAuth.name());
+        //Note that mScope is closed by calling any of the setResult methods.
         mScope = span.makeCurrent();
     }
 
