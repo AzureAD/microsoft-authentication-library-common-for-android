@@ -24,6 +24,7 @@ package com.microsoft.identity.common.java.opentelemetry;
 
 import javax.annotation.Nullable;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.Scope;
@@ -125,6 +126,7 @@ public class CertBasedAuthTelemetryHelper {
      */
     //Adding SuppressWarnings annotation since we aren't sending specific data for this field just yet.
     @SuppressWarnings("null")
+    @SuppressFBWarnings
     public static void setUserChoice(@Nullable final String choice) {
         final Span span = Span.current();
         span.setAttribute(
