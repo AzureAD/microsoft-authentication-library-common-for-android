@@ -73,6 +73,18 @@ if [ $JAVADOCJAR == "true" ]; then
     fi
 fi
 
+if [ $TESTFIXUTREJAR == "true" ]; then
+    gpg --batch --pinentry-mode loopback --passphrase-file $PASSPHRASE_SECUREFILEPATH --armor --detach-sign $PROJECT-$PROJECTVERSION-test-fixtures.jar
+    signed=$?
+    if [ $signed -ne 0 ]; then
+        echo "GPG signing failed with for $PROJECT-$PROJECTVERSION-test-fixtures.jar with error code $signed"
+        exit $signed
+    fi
+    if [ ! -f $PROJECT-$PROJECTVERSION-javadoc.jar.asc ]; then
+        exit "Signature file for $PROJECT-$PROJECTVERSION-test-fixtures.jar not found."
+    fi
+fi
+
 gpg --batch --pinentry-mode loopback --passphrase-file $PASSPHRASE_SECUREFILEPATH --armor --detach-sign pom-default.xml
 signed=$?
 
