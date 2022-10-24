@@ -28,3 +28,4 @@ jobs:
     gpgSourcesJar: true
     gpgJavadocJar: true
     gpgJar: true
+    testFixtureJar: true

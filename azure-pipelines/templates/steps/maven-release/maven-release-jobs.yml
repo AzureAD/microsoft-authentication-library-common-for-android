@@ -36,6 +36,8 @@ parameters:
   default: false
 - name: gpgJavadocJar
   default: false
+- name: gpgTestFixtureJar
+  default: false
 
 
 jobs:
@@ -153,6 +155,7 @@ jobs:
       AAR: ${{ parameters.gpgAar }}
       SOURCESJAR: ${{ parameters.gpgSourcesJar }}
       JAVADOCJAR: ${{ parameters.gpgJavadocJar }}
+      TESTFIXTUREJAR: ${{ parameters.gpgtestFixtureJar }}
   - task: CopyFiles@2
     inputs:
       SourceFolder: $(Build.SourcesDirectory)/$(BuildOutputs)
