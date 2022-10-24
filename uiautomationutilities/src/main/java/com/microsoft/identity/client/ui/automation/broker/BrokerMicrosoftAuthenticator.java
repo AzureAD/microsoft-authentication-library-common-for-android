@@ -68,7 +68,7 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
     public final static String AUTHENTICATOR_APK = "Authenticator.apk";
     public final static String OLD_AUTHENTICATOR_APK = "OldAuthenticator.apk";
 
-    private final static String UPDATE_VERSION_NUMBER = "6.2206.3949";
+    private final static String UPDATE_VERSION_NUMBER = "6.2204.2470";
     private final static String OLD_VERSION_NUMBER = "6.2203.1651";
 
     private final static String INCIDENT_MSG = "Broker Automation Incident";
