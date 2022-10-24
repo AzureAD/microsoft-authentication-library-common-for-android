@@ -30,6 +30,7 @@ import android.security.KeyChainException;
 import android.webkit.ClientCertRequest;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
 import com.microsoft.identity.common.java.exception.BaseException;
@@ -40,6 +41,8 @@ import com.microsoft.identity.common.logging.Logger;
 import java.security.Principal;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
+
+import io.opentelemetry.context.Scope;
 
 /**
  * Handles a received ClientCertRequest by prompting the user to choose from certificates
@@ -87,7 +90,7 @@ public class OnDeviceCertBasedAuthChallengeHandler implements ICertBasedAuthChal
             }
         }
 
-        KeyChain.choosePrivateKeyAlias(mActivity, new KeyChainAliasCallback() {
+        KeyChain.choosePrivateKeyAlias(mActivity, wrapKeyChainAliasCallback(new KeyChainAliasCallback() {
                     @Override
                     public void alias(String alias) {
                         if (alias == null) {
@@ -119,7 +122,7 @@ public class OnDeviceCertBasedAuthChallengeHandler implements ICertBasedAuthChal
 
                         request.cancel();
                     }
-                },
+                }),
                 request.getKeyTypes(),
                 request.getPrincipals(),
                 request.getHost(),
@@ -160,5 +163,23 @@ public class OnDeviceCertBasedAuthChallengeHandler implements ICertBasedAuthChal
     @Override
     public void cleanUp() {
         //Nothing needed at the moment.
+    }
+
+    /**
+     * Sets the current OpenTelemetry Context for a KeyChainAliasCallback to be consistent with the current thread.
+     * @param callback KeychainAliasCallback that contains information to be emitted via OpenTelemetry.
+     * @return the KeyChainAliasCallback with its current Context updated.
+     */
+    @NonNull
+    private KeyChainAliasCallback wrapKeyChainAliasCallback(@NonNull final KeyChainAliasCallback callback) {
+        final io.opentelemetry.context.Context context = io.opentelemetry.context.Context.current();
+        return new KeyChainAliasCallback() {
+            @Override
+            public void alias(@Nullable String s) {
+                try (final Scope ignored = context.makeCurrent()) {
+                    callback.alias(s);
+                }
+            }
+        };
     }
 }

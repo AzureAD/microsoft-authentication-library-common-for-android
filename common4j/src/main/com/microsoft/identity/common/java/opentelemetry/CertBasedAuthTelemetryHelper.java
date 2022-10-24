@@ -35,7 +35,7 @@ import lombok.NonNull;
  */
 public class CertBasedAuthTelemetryHelper {
 
-    private static Scope mScope;
+    private static Scope sScope;
 
     /**
      * Creates a new Span and sets it to be the current Span.
@@ -43,7 +43,7 @@ public class CertBasedAuthTelemetryHelper {
     public static void createSpanAndMakeCurrent() {
         final Span span = OTelUtility.createSpan(SpanName.CertBasedAuth.name());
         //Note that mScope is closed by calling any of the setResult methods.
-        mScope = span.makeCurrent();
+        sScope = span.makeCurrent();
     }
 
     /**
@@ -76,9 +76,9 @@ public class CertBasedAuthTelemetryHelper {
         final Span span = Span.current();
         span.setStatus(StatusCode.OK);
         span.end();
-        if (mScope != null) {
-            mScope.close();
-            mScope = null;
+        if (sScope != null) {
+            sScope.close();
+            sScope = null;
         }
     }
 
@@ -96,9 +96,9 @@ public class CertBasedAuthTelemetryHelper {
                 message);
         span.setStatus(StatusCode.ERROR);
         span.end();
-        if (mScope != null) {
-            mScope.close();
-            mScope = null;
+        if (sScope != null) {
+            sScope.close();
+            sScope = null;
         }
     }
 
@@ -111,9 +111,9 @@ public class CertBasedAuthTelemetryHelper {
         span.recordException(exception);
         span.setStatus(StatusCode.ERROR);
         span.end();
-        if (mScope != null) {
-            mScope.close();
-            mScope = null;
+        if (sScope != null) {
+            sScope.close();
+            sScope = null;
         }
     }
 
