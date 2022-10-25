@@ -64,7 +64,13 @@ public class YubiKitCertBasedAuthManager extends AbstractSmartcardCertBasedAuthM
      * @param context current application context.
      */
     public YubiKitCertBasedAuthManager(@NonNull final Context context) {
-        mYubiKitManager = new YubiKitManager(context);
+        //Edge case where device is an emulator that doesn't account for USB_SERVICE.
+        if (context.getSystemService(Context.USB_SERVICE) != null) {
+            mYubiKitManager = new YubiKitManager(context);
+        } else {
+            mYubiKitManager = null;
+            Logger.info(TAG, "Certificate Based Authentication via YubiKey not enabled due to device not supporting USB_SERVICE.");
+        }
     }
 
     /**
@@ -74,42 +80,44 @@ public class YubiKitCertBasedAuthManager extends AbstractSmartcardCertBasedAuthM
      */
     @Override
     public void startDiscovery() {
-        mYubiKitManager.startUsbDiscovery(new UsbConfiguration(), new Callback<UsbYubiKeyDevice>() {
-            @Override
-            public void invoke(@NonNull UsbYubiKeyDevice device) {
-                Logger.verbose(TAG, "A YubiKey device was connected");
-                synchronized (sDeviceLock) {
-                    mDevice = device;
-                    if (mConnectionCallback != null) {
-                        mConnectionCallback.onCreateConnection();
-                    }
-
-                    mDevice.setOnClosed(new Runnable() {
-                        @Override
-                        public void run() {
-                            Logger.verbose(TAG, "A YubiKey device was disconnected");
-                            synchronized (sDeviceLock) {
-                                mDevice = null;
-                            }
-                            final PivProviderStatusEvent pivProviderStatusEvent = new PivProviderStatusEvent();
-                            //Remove the YKPiv security provider if it was added.
-                            if (Security.getProvider(YUBIKEY_PROVIDER) != null) {
-                                Security.removeProvider(YUBIKEY_PROVIDER);
-                                Telemetry.emit(pivProviderStatusEvent.putPivProviderRemoved(true));
-                                Logger.info(TAG, "An instance of PivProvider was removed from Security static list upon YubiKey device connection being closed.");
-                            } else {
-                                Telemetry.emit(pivProviderStatusEvent.putPivProviderRemoved(false));
-                                Logger.info(TAG, "An instance of PivProvider was not present in Security static list upon YubiKey device connection being closed.");
-                            }
-                            if (mConnectionCallback != null) {
-                                mConnectionCallback.onClosedConnection();
-                            }
+        if (mYubiKitManager != null) {
+            mYubiKitManager.startUsbDiscovery(new UsbConfiguration(), new Callback<UsbYubiKeyDevice>() {
+                @Override
+                public void invoke(@NonNull UsbYubiKeyDevice device) {
+                    Logger.verbose(TAG, "A YubiKey device was connected");
+                    synchronized (sDeviceLock) {
+                        mDevice = device;
+                        if (mConnectionCallback != null) {
+                            mConnectionCallback.onCreateConnection();
                         }
 
-                    });
+                        mDevice.setOnClosed(new Runnable() {
+                            @Override
+                            public void run() {
+                                Logger.verbose(TAG, "A YubiKey device was disconnected");
+                                synchronized (sDeviceLock) {
+                                    mDevice = null;
+                                }
+                                final PivProviderStatusEvent pivProviderStatusEvent = new PivProviderStatusEvent();
+                                //Remove the YKPiv security provider if it was added.
+                                if (Security.getProvider(YUBIKEY_PROVIDER) != null) {
+                                    Security.removeProvider(YUBIKEY_PROVIDER);
+                                    Telemetry.emit(pivProviderStatusEvent.putPivProviderRemoved(true));
+                                    Logger.info(TAG, "An instance of PivProvider was removed from Security static list upon YubiKey device connection being closed.");
+                                } else {
+                                    Telemetry.emit(pivProviderStatusEvent.putPivProviderRemoved(false));
+                                    Logger.info(TAG, "An instance of PivProvider was not present in Security static list upon YubiKey device connection being closed.");
+                                }
+                                if (mConnectionCallback != null) {
+                                    mConnectionCallback.onClosedConnection();
+                                }
+                            }
+
+                        });
+                    }
                 }
-            }
-        });
+            });
+        }
     }
 
     /**
@@ -118,7 +126,9 @@ public class YubiKitCertBasedAuthManager extends AbstractSmartcardCertBasedAuthM
      */
     @Override
     public void stopDiscovery() {
-        mYubiKitManager.stopUsbDiscovery();
+        if (mYubiKitManager != null) {
+            mYubiKitManager.stopUsbDiscovery();
+        }
     }
 
     /**
