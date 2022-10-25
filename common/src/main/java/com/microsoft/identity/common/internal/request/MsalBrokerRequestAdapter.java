@@ -50,10 +50,14 @@ import androidx.annotation.Nullable;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.broker.BrokerRequest;
 import com.microsoft.identity.common.java.commands.parameters.AcquirePrtSsoTokenCommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.DeviceCodeFlowCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.GenerateShrCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.RemoveAccountCommandParameters;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResult;
+import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.java.ui.BrowserDescriptor;
 import com.microsoft.identity.common.java.util.BrokerProtocolVersionUtil;
+import com.microsoft.identity.common.java.util.ObjectMapper;
 import com.microsoft.identity.common.java.util.QueryParamsAdapter;
 import com.microsoft.identity.common.java.authorities.AzureActiveDirectoryAuthority;
 import com.microsoft.identity.common.java.authscheme.AuthenticationSchemeFactory;
@@ -113,6 +117,35 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                                 AuthorizationAgent.WEBVIEW.name()
                 ).authenticationScheme(parameters.getAuthenticationScheme())
                 .powerOptCheckEnabled(parameters.isPowerOptCheckEnabled())
+                .build();
+
+        return brokerRequest;
+    }
+
+    @Override
+    public BrokerRequest brokerRequestFromDeviceCodeFlowCommandParameters(@NonNull final DeviceCodeFlowCommandParameters parameters) {
+        final String methodTag = TAG + ":brokerRequestFromDeviceCodeFlowCommandParameters";
+
+        Logger.info(methodTag, "Constructing result bundle from DeviceCodeFlowCommandParameters.");
+        final String extraOptions = parameters.getExtraOptions() != null ?
+                QueryParamsAdapter._toJson(parameters.getExtraOptions()) : null;
+
+        final BrokerRequest brokerRequest = BrokerRequest.builder()
+                .authority(parameters.getAuthority().getAuthorityURL().toString())
+                .scope(TextUtils.join(" ", parameters.getScopes()))
+                .redirect(parameters.getRedirectUri())
+                .extraOptions(extraOptions)
+                .clientId(parameters.getClientId())
+                .claims(parameters.getClaimsRequestJson())
+                .forceRefresh(parameters.isForceRefresh())
+                .correlationId(parameters.getCorrelationId())
+                .applicationName(parameters.getApplicationName())
+                .applicationVersion(parameters.getApplicationVersion())
+                .msalVersion(parameters.getSdkVersion())
+                .sdkType(parameters.getSdkType())
+                .environment(AzureActiveDirectory.getEnvironment().name())
+                .multipleCloudsSupported(getMultipleCloudsSupported(parameters))
+                .authenticationScheme(parameters.getAuthenticationScheme())
                 .build();
 
         return brokerRequest;
@@ -209,6 +242,70 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 negotiatedBrokerProtocolVersion,
                 parameters.getRequiredBrokerProtocolVersion()
         );
+    }
+
+    /**
+     * Method to construct a request bundle for broker acquireTokenSilent request.
+     *
+     * @param context                         {@link Context}
+     * @param parameters                      input parameters
+     * @param negotiatedBrokerProtocolVersion protocol version returned by broker hello.
+     * @return request Bundle
+     */
+    public Bundle getRequestBundleForDeviceCodeFlowAuthRequest(@NonNull final Context context,
+                                                        @NonNull final DeviceCodeFlowCommandParameters parameters,
+                                                        @Nullable final String negotiatedBrokerProtocolVersion) {
+        final MsalBrokerRequestAdapter msalBrokerRequestAdapter = new MsalBrokerRequestAdapter();
+
+        final BrokerRequest brokerRequest = msalBrokerRequestAdapter.
+                brokerRequestFromDeviceCodeFlowCommandParameters(parameters);
+
+        final Bundle requestBundle = getRequestBundleFromBrokerRequest(
+                brokerRequest,
+                negotiatedBrokerProtocolVersion,
+                parameters.getRequiredBrokerProtocolVersion()
+        );
+
+        requestBundle.putInt(
+                CALLER_INFO_UID,
+                context.getApplicationInfo().uid
+        );
+
+        return requestBundle;
+    }
+
+    /**
+     * Method to construct a request bundle for broker acquireTokenSilent request.
+     *
+     * @param context                         {@link Context}
+     * @param parameters                      input parameters
+     * @param negotiatedBrokerProtocolVersion protocol version returned by broker hello.
+     * @return request Bundle
+     */
+    public Bundle getRequestBundleForDCFTokenRequest(@NonNull final Context context,
+                                                     @NonNull final DeviceCodeFlowCommandParameters parameters,
+                                                     @NonNull final AuthorizationResult authorizationResult,
+                                                     @Nullable final String negotiatedBrokerProtocolVersion) {
+        final MsalBrokerRequestAdapter msalBrokerRequestAdapter = new MsalBrokerRequestAdapter();
+
+        final BrokerRequest brokerRequest = msalBrokerRequestAdapter.
+                brokerRequestFromDeviceCodeFlowCommandParameters(parameters);
+
+        final Bundle requestBundle = getRequestBundleFromBrokerRequest(
+                brokerRequest,
+                negotiatedBrokerProtocolVersion,
+                parameters.getRequiredBrokerProtocolVersion()
+        );
+
+        requestBundle.putInt(
+                CALLER_INFO_UID,
+                context.getApplicationInfo().uid
+        );
+
+        MicrosoftStsAuthorizationResult microsoftStsAuthorizationResult= (MicrosoftStsAuthorizationResult) authorizationResult;
+        requestBundle.putString("authorizationResultBundle", ObjectMapper.serializeObjectToJsonString(microsoftStsAuthorizationResult));
+
+        return requestBundle;
     }
 
     /**

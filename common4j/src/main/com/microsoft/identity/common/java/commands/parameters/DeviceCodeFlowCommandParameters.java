@@ -22,7 +22,8 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.commands.parameters;
 
-import com.microsoft.identity.common.java.commands.parameters.TokenCommandParameters;
+import com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache;
+import com.microsoft.identity.common.java.exception.ArgumentException;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -37,4 +38,24 @@ import lombok.experimental.SuperBuilder;
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder(toBuilder = true)
 public class DeviceCodeFlowCommandParameters extends TokenCommandParameters {
+    private final int callerUid;
+    private final String brokerVersion;
+    private final String negotiatedBrokerProtocolVersion;
+
+    @Override
+    public void validate() throws ArgumentException {
+        if (callerUid == 0) {
+            throw new ArgumentException(
+                    ArgumentException.ACQUIRE_TOKEN_SILENT_OPERATION_NAME,
+                    "mCallerUId", "Caller Uid is not set"
+            );
+        }
+        if (!(getOAuth2TokenCache() instanceof BrokerOAuth2TokenCache)) {
+            throw new ArgumentException(
+                    ArgumentException.ACQUIRE_TOKEN_SILENT_OPERATION_NAME,
+                    "AcquireTokenSilentOperationParameters",
+                    "OAuth2Cache not an instance of BrokerOAuth2TokenCache"
+            );
+        }
+    }
 }

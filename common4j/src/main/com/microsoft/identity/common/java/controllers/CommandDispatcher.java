@@ -38,6 +38,8 @@ import static com.microsoft.identity.common.java.marker.PerfConstants.CodeMarker
 import com.microsoft.identity.common.java.BuildConfig;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.commands.BaseCommand;
+import com.microsoft.identity.common.java.commands.DCFTokenFetchCommand;
+import com.microsoft.identity.common.java.commands.DeviceCodeFlowCommand;
 import com.microsoft.identity.common.java.commands.ICommandResult;
 import com.microsoft.identity.common.java.commands.InteractiveTokenCommand;
 import com.microsoft.identity.common.java.commands.SilentTokenCommand;
@@ -54,6 +56,7 @@ import com.microsoft.identity.common.java.logging.DiagnosticContext;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.logging.RequestContext;
 import com.microsoft.identity.common.java.marker.CodeMarkerManager;
+import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.java.request.SdkType;
 import com.microsoft.identity.common.java.result.AcquireTokenResult;
 import com.microsoft.identity.common.java.result.FinalizableResultFuture;
@@ -164,6 +167,48 @@ public class CommandDispatcher {
      */
     public static void submitSilent(@SuppressWarnings(WarningType.rawtype_warning) @NonNull final BaseCommand command) {
         submitSilentReturningFuture(command);
+    }
+
+    public static AuthorizationResult submitSilentAndReturnAuthorizationResult(@NonNull final DeviceCodeFlowCommand command)
+            throws BaseException {
+        final CommandResult commandResult;
+        try {
+            commandResult = submitSilentReturningFuture(command).get();
+        } catch (final InterruptedException | ExecutionException e) {
+            throw ExceptionAdapter.baseExceptionFromException(e);
+        }
+
+        if (commandResult.getStatus() == ICommandResult.ResultStatus.COMPLETED){
+            return (AuthorizationResult) commandResult.getResult();
+        } else if (commandResult.getStatus() == ICommandResult.ResultStatus.ERROR){
+            throw ExceptionAdapter.baseExceptionFromException((Throwable) commandResult.getResult());
+        } else if (commandResult.getStatus() == ICommandResult.ResultStatus.CANCEL){
+            throw new UserCancelException(ErrorStrings.USER_CANCELLED,
+                    "Request cancelled by user");
+        } else {
+            throw new ClientException(ErrorStrings.UNKNOWN_ERROR, "Unexpected CommandResult status");
+        }
+    }
+
+    public static ILocalAuthenticationResult submitSilentAndReturnAuthenticationResult(@NonNull final DCFTokenFetchCommand command)
+            throws BaseException {
+        final CommandResult commandResult;
+        try {
+            commandResult = submitSilentReturningFuture(command).get();
+        } catch (final InterruptedException | ExecutionException e) {
+            throw ExceptionAdapter.baseExceptionFromException(e);
+        }
+
+        if (commandResult.getStatus() == ICommandResult.ResultStatus.COMPLETED){
+            return (ILocalAuthenticationResult) commandResult.getResult();
+        } else if (commandResult.getStatus() == ICommandResult.ResultStatus.ERROR){
+             throw ExceptionAdapter.baseExceptionFromException((Throwable) commandResult.getResult());
+        } else if (commandResult.getStatus() == ICommandResult.ResultStatus.CANCEL){
+            throw new UserCancelException(ErrorStrings.USER_CANCELLED,
+                    "Request cancelled by user");
+        } else {
+            throw new ClientException(ErrorStrings.UNKNOWN_ERROR, "Unexpected CommandResult status");
+        }
     }
 
 

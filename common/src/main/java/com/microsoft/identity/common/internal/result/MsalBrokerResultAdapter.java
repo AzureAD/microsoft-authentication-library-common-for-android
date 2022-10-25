@@ -65,6 +65,8 @@ import com.microsoft.identity.common.java.exception.ServiceException;
 import com.microsoft.identity.common.java.exception.UiRequiredException;
 import com.microsoft.identity.common.java.exception.UnsupportedBrokerException;
 import com.microsoft.identity.common.java.exception.UserCancelException;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResult;
+import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.java.request.SdkType;
 import com.microsoft.identity.common.java.result.AcquireTokenResult;
 import com.microsoft.identity.common.java.result.GenerateShrResult;
@@ -73,6 +75,7 @@ import com.microsoft.identity.common.java.result.LocalAuthenticationResult;
 import com.microsoft.identity.common.java.util.BrokerProtocolVersionUtil;
 import com.microsoft.identity.common.java.util.HeaderSerializationUtil;
 import com.microsoft.identity.common.java.util.StringUtil;
+import com.microsoft.identity.common.java.util.ObjectMapper;
 import com.microsoft.identity.common.logging.Logger;
 
 import org.json.JSONException;
@@ -87,6 +90,7 @@ import java.util.List;
 public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
 
     private static final String TAG = MsalBrokerResultAdapter.class.getSimpleName();
+    private static final String AUTHORIZATION_PENDING = "authorization_pending";
     public static final Gson GSON = new Gson();
 
     @NonNull
@@ -179,7 +183,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
 
         final Bundle resultBundle = bundleFromBrokerResult(builder.build(), negotiatedBrokerProtocolVersion);
         resultBundle.putBoolean(AuthenticationConstants.Broker.BROKER_REQUEST_V2_SUCCESS, false);
-
+        resultBundle.putString("errorCode", exception.getErrorCode());
         return resultBundle;
     }
 
@@ -583,6 +587,14 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
     }
 
     @NonNull
+    public AuthorizationResult getDCFResultFromResultBundle(@NonNull final Bundle resultBundle) throws BaseException {
+        String serializedDCFResult = resultBundle.getString("dcfResultBundle");
+        AuthorizationResult dcfResult = ObjectMapper.deserializeJsonStringToObject(serializedDCFResult, MicrosoftStsAuthorizationResult.class);
+
+        return dcfResult;
+    }
+
+    @NonNull
     public AcquireTokenResult getAcquireTokenResultFromResultBundle(@NonNull final Bundle resultBundle) throws BaseException {
         final MsalBrokerResultAdapter resultAdapter = new MsalBrokerResultAdapter();
         if (resultBundle.getBoolean(AuthenticationConstants.Broker.BROKER_REQUEST_V2_SUCCESS)) {
@@ -592,6 +604,8 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
             );
 
             return acquireTokenResult;
+        } else if (resultBundle.getString("errorCode").contains(AUTHORIZATION_PENDING)) {
+            return null;
         }
 
         throw getBaseExceptionFromBundle(resultBundle);
