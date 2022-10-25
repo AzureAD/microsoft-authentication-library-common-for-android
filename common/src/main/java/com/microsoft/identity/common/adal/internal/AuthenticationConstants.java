@@ -1351,6 +1351,10 @@ public final class AuthenticationConstants {
 
         public static final String ACQUIRE_TOKEN_SILENT = "ACQUIRE_TOKEN_SILENT";
 
+        public static final String FETCH_DCF_USER_CODE = "FETCH_DCF_USER_CODE";
+
+        public static final String ACQUIRE_TOKEN_DCF = "ACQUIRE_TOKEN_DCF";
+
         public static final String GET_INTENT_FOR_INTERACTIVE_REQUEST = "GET_INTENT_FOR_INTERACTIVE_REQUEST";
 
         public static final String REMOVE_ACCOUNT = "REMOVE_ACCOUNT";
@@ -1401,6 +1405,8 @@ public final class AuthenticationConstants {
             MSAL_HELLO(MSAL_HELLO_PATH, null, VERSION_3),
             ACQUIRE_TOKEN_INTERACTIVE(MSAL_ACQUIRE_TOKEN_INTERACTIVE_PATH, null, VERSION_3),
             ACQUIRE_TOKEN_SILENT(MSAL_ACQUIRE_TOKEN_SILENT_PATH, null, VERSION_3),
+            FETCH_DCF_USER_CODE(MSAL_FETCH_DCF_USER_CODE_PATH, null, VERSION_3),
+            ACQUIRE_TOKEN_DCF(MSAL_ACQUIRE_TOKEN_DCF_PATH, null, VERSION_3),
             GET_ACCOUNTS(MSAL_GET_ACCOUNTS_PATH, null, VERSION_3),
             REMOVE_ACCOUNT(MSAL_REMOVE_ACCOUNT_PATH, null, VERSION_3),
             GET_CURRENT_ACCOUNT_SHARED_DEVICE(MSAL_GET_CURRENT_ACCOUNT_SHARED_DEVICE_PATH, null, VERSION_3),
@@ -1444,6 +1450,16 @@ public final class AuthenticationConstants {
          * URI Path constant for MSAL-to-Broker acquireTokenSilent request using ContentProvider.
          */
         public static final String MSAL_ACQUIRE_TOKEN_SILENT_PATH = "/acquireTokenSilent";
+
+        /**
+         * URI Path constant for MSAL-to-Broker fetchDCFUserCode request using ContentProvider.
+         */
+        public static final String MSAL_FETCH_DCF_USER_CODE_PATH = "/fetchDCFUserCode";
+
+        /**
+         * URI Path constant for MSAL-to-Broker acquireTokenDCF request using ContentProvider.
+         */
+        public static final String MSAL_ACQUIRE_TOKEN_DCF_PATH = "/acquireTokenDCF";
 
         /**
          * URI Path constant for MSAL-to-Broker getAccounts request using ContentProvider.

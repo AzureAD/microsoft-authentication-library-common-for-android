@@ -71,6 +71,7 @@ import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCo
 import com.microsoft.identity.common.java.commands.parameters.RemoveAccountCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.RopcTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.SilentTokenCommandParameters;
+import com.microsoft.identity.common.java.constants.OAuth2ErrorCode;
 import com.microsoft.identity.common.java.controllers.BaseController;
 import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.exception.ClientException;
@@ -82,9 +83,11 @@ import com.microsoft.identity.common.java.providers.microsoft.azureactivedirecto
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAccount;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.java.providers.oauth2.IDToken;
+import com.microsoft.identity.common.java.providers.oauth2.IResult;
 import com.microsoft.identity.common.java.result.AcquireTokenResult;
 import com.microsoft.identity.common.java.result.GenerateShrResult;
 import com.microsoft.identity.common.java.util.ResultFuture;
+import com.microsoft.identity.common.java.util.ThreadUtils;
 import com.microsoft.identity.common.java.util.ported.LocalBroadcaster;
 import com.microsoft.identity.common.java.util.ported.PropertyBag;
 import com.microsoft.identity.common.logging.Logger;
@@ -99,6 +102,8 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CLIENT_CONFIGURED_MINIMUM_BP_VERSION_KEY;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.MSAL_TO_BROKER_PROTOCOL_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.MSAL_TO_BROKER_PROTOCOL_VERSION_CODE;
+import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_ACQUIRE_TOKEN_DCF;
+import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_FETCH_DCF_USER_CODE;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_ACQUIRE_TOKEN_SILENT;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_GENERATE_SHR;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_GET_ACCOUNTS;
@@ -427,6 +432,125 @@ public class BrokerMsalController extends BaseController {
                     @Override
                     public void putValueInSuccessEvent(final @NonNull ApiEndEvent event, final @NonNull Intent result) {
                     }
+                });
+    }
+
+    @Override
+    public AuthorizationResult deviceCodeFlowAuthRequest(final DeviceCodeFlowCommandParameters parameters)
+            throws BaseException {
+        // IPC to Broker : AcquireTokenWithDCF user code fetch API in Broker
+        return mBrokerOperationExecutor.execute(parameters,
+                new BrokerOperation<AuthorizationResult>() {
+                    private String negotiatedBrokerProtocolVersion;
+
+                    @Override
+                    public void performPrerequisites(final @NonNull IIpcStrategy strategy) throws BaseException {
+                        // hello ipc
+                        negotiatedBrokerProtocolVersion = hello(strategy, parameters.getRequiredBrokerProtocolVersion());
+                    }
+
+                    @Override
+                    public BrokerOperationBundle getBundle() {
+                        // Call Broker to make a request to fetch DCF authorization result
+                        // Note : Broker API here is to only fetch the authorization result which has the verificationUri, userCode, expiration time and message.
+                        return new BrokerOperationBundle(MSAL_FETCH_DCF_USER_CODE,
+                                mActiveBrokerPackageName,
+                                mRequestAdapter.getRequestBundleForDeviceCodeFlowAuthRequest(
+                                        mApplicationContext,
+                                        parameters,
+                                        negotiatedBrokerProtocolVersion));
+                    }
+
+                    @Override
+                    public AuthorizationResult extractResultBundle(final @Nullable Bundle resultBundle) throws BaseException {
+                        // extract resultBundle here and convert into DeviceCodeFlowAuthResponse
+                        // DeviceCodeFlowAuthResponse would be returned to Client app by callback in DeviceCodeFlowCommand
+                        if (resultBundle == null) {
+                            throw mResultAdapter.getExceptionForEmptyResultBundle();
+                        }
+                        return mResultAdapter.getDCFResultFromResultBundle(resultBundle);
+                    }
+
+                    @Override
+                    public @NonNull
+                    String getMethodName() {
+                        return ":deviceCodeFlowAuthRequest";
+                    }
+
+                    @Override
+                    public @Nullable
+                    String getTelemetryApiId() {
+                        return null;
+                    }
+
+                    @Override
+                    public void putValueInSuccessEvent(final @NonNull ApiEndEvent event, final @NonNull AuthorizationResult result) {
+                    }
+
+                });
+    }
+
+    public AcquireTokenResult acquireDeviceCodeFlowToken(
+            @SuppressWarnings(WarningType.rawtype_warning) final AuthorizationResult authorizationResult,
+            final DeviceCodeFlowCommandParameters parameters)
+            throws BaseException {
+        // IPC to Broker : AcquireTokenWithDCF API in Broker
+        return mBrokerOperationExecutor.execute(parameters,
+                new BrokerOperation<AcquireTokenResult>() {
+                    private String negotiatedBrokerProtocolVersion;
+
+                    @Override
+                    public void performPrerequisites(final @NonNull IIpcStrategy strategy) throws BaseException {
+                        // hello ipc
+                        negotiatedBrokerProtocolVersion = hello(strategy, parameters.getRequiredBrokerProtocolVersion());
+                    }
+
+                    @Override
+                    public BrokerOperationBundle getBundle() {
+                        // Call Broker to make a request to fetch DCF authorization result
+                        // Note : Broker API here is to only fetch the authorization result which has the verificationUri, userCode, expiration time and message.
+                        return new BrokerOperationBundle(MSAL_ACQUIRE_TOKEN_DCF,
+                                mActiveBrokerPackageName,
+                                mRequestAdapter.getRequestBundleForDCFTokenRequest(
+                                        mApplicationContext,
+                                        parameters,
+                                        authorizationResult,
+                                        negotiatedBrokerProtocolVersion));
+                    }
+
+                    @Override
+                    public AcquireTokenResult extractResultBundle(final @Nullable Bundle resultBundle) throws BaseException {
+                        if (resultBundle == null) {
+                            throw mResultAdapter.getExceptionForEmptyResultBundle();
+                        }
+                        AcquireTokenResult acquireTokenResult = mResultAdapter.getAcquireTokenResultFromResultBundle(resultBundle);
+                        if (acquireTokenResult == null) {
+                            // Wait between polls for 5 secs
+                            ThreadUtils.sleepSafely(5000, TAG,
+                                    "Attempting to sleep thread during Device Code Flow token polling...");
+                            return acquireDeviceCodeFlowToken(authorizationResult, parameters);
+                        } else {
+                            return acquireTokenResult;
+                        }
+                    }
+
+                    @Override
+                    public @NonNull
+                    String getMethodName() {
+                        return ":deviceCodeFlowAuthRequest";
+                    }
+
+                    @Override
+                    public @Nullable
+                    String getTelemetryApiId() {
+                        return null;
+                    }
+
+                    @Override
+                    public void putValueInSuccessEvent(final @NonNull ApiEndEvent event, final @NonNull AcquireTokenResult result) {
+                        event.putResult(result);
+                    }
+
                 });
     }
 
@@ -825,18 +949,6 @@ public class BrokerMsalController extends BaseController {
             Logger.error(methodTag,
                     "Failed to launch browser sign out with browser=[" + browserPackageName + "]. Skipping.", e);
         }
-    }
-
-    // Suppressing rawtype warnings due to the generic type AuthorizationResult
-    @SuppressWarnings(WarningType.rawtype_warning)
-    @Override
-    public AuthorizationResult deviceCodeFlowAuthRequest(DeviceCodeFlowCommandParameters parameters) throws ClientException {
-        throw new ClientException("deviceCodeFlowAuthRequest() not supported in BrokerMsalController");
-    }
-
-    @Override
-    public AcquireTokenResult acquireDeviceCodeFlowToken(@SuppressWarnings(WarningType.rawtype_warning) AuthorizationResult authorizationResult, DeviceCodeFlowCommandParameters commandParameters) throws ClientException {
-        throw new ClientException("acquireDeviceCodeFlowToken() not supported in BrokerMsalController");
     }
 
     @Override

@@ -20,23 +20,20 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
+package com.microsoft.identity.common.java.commands;
 
-package com.microsoft.identity.common.internal.request;
+import java.util.Date;
 
-import android.os.Bundle;
+import lombok.NonNull;
 
-import com.microsoft.identity.common.internal.broker.BrokerRequest;
-import com.microsoft.identity.common.java.commands.parameters.AcquirePrtSsoTokenCommandParameters;
-import com.microsoft.identity.common.java.commands.parameters.DeviceCodeFlowCommandParameters;
-import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCommandParameters;
-import com.microsoft.identity.common.java.commands.parameters.SilentTokenCommandParameters;
-
-public interface IBrokerRequestAdapter {
-
-    BrokerRequest brokerRequestFromAcquireTokenParameters(InteractiveTokenCommandParameters parameters);
-
-    BrokerRequest brokerRequestFromSilentOperationParameters(SilentTokenCommandParameters parameters);
-
-    BrokerRequest brokerRequestFromDeviceCodeFlowCommandParameters(DeviceCodeFlowCommandParameters parameters);
-
+/**
+ * Extension of the CommandCallback class to allow Device Code Flow to display the user_code,
+ * verification_uri, and message midway through the protocol. This is done through the
+ * getUserCode() method shown below
+ */
+public interface DeviceCodeFlowCommandCallback<T, U> extends CommandCallback<T, U> {
+    void onUserCodeReceived(@NonNull String vUri,
+                            @NonNull String userCode,
+                            @NonNull String message,
+                            @NonNull final Date sessionExpirationDate);
 }

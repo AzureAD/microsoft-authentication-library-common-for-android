@@ -96,7 +96,7 @@ public class TokenCommandParameters extends CommandParameters {
                         "scope is empty or null"
                 );
             }
-            if (this instanceof InteractiveTokenCommandParameters) {
+            if (this instanceof InteractiveTokenCommandParameters || this instanceof DeviceCodeFlowCommandParameters) {
                 throw new ArgumentException(
                         ArgumentException.ACQUIRE_TOKEN_OPERATION_NAME,
                         ArgumentException.SCOPE_ARGUMENT_NAME,
@@ -114,7 +114,7 @@ public class TokenCommandParameters extends CommandParameters {
                 );
             }
 
-            if (this instanceof InteractiveTokenCommandParameters) {
+            if (this instanceof InteractiveTokenCommandParameters || this instanceof DeviceCodeFlowCommandParameters) {
                 throw new ArgumentException(
                         ArgumentException.ACQUIRE_TOKEN_OPERATION_NAME,
                         ArgumentException.AUTHENTICATION_SCHEME_ARGUMENT_NAME,
