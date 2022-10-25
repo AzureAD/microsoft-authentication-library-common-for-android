@@ -5,6 +5,7 @@ V.Next
 - [MAJOR] Add support for client/application managed key in pop flow (#1854)
 - [PATCH] Moved clearClientCertPreferences to onPageLoaded. (#1855)
 - [MINOR] Add new exception type for broker protocol not supported exception during msal-broker handshake (#1859)
+- [MINOR] Leverage Otel Utility create span method (#1877)
 
 V.8.0.2
 ----------
