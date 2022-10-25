@@ -57,5 +57,10 @@ public enum AttributeName {
     /**
      * Indicates the stack trace from an crypto operation exception.
      */
-    crypto_exception_stack_trace
+    crypto_exception_stack_trace,
+
+    /**
+     * Indicates the request id value for cached credential service (if used) on server side
+     */
+    ccs_request_id,
 }
