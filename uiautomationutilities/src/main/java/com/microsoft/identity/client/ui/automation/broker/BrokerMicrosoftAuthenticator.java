@@ -67,6 +67,8 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
     public final static String AUTHENTICATOR_APP_NAME = "Microsoft Authenticator";
     public final static String AUTHENTICATOR_APK = "Authenticator.apk";
     public final static String OLD_AUTHENTICATOR_APK = "OldAuthenticator.apk";
+    public final static boolean AUTHENTICATOR_IS_REGISTER_EXPECTED = true;
+    public final static boolean AUTHENTICATOR_IS_REGISTER_EXPECTED_SHARED = false;
 
     private final static String UPDATE_VERSION_NUMBER = "6.2204.2470";
     private final static String OLD_VERSION_NUMBER = "6.2203.1651";
@@ -122,12 +124,21 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
                                           @NonNull final String password,
                                           final boolean isFederatedUser) {
         brokerMicrosoftAuthenticatorImpl.performDeviceRegistration(username, password, isFederatedUser);
+
+        // This value was not being updated from the above performSharedDeviceRegistration method since
+        // brokerMicrosoftAuthenticatorImpl is actually a completely separate object.
+        shouldHandleFirstRun = false;
     }
 
     @Override
     public void performSharedDeviceRegistration(@NonNull final String username,
                                                 @NonNull final String password) {
         brokerMicrosoftAuthenticatorImpl.performSharedDeviceRegistration(username, password);
+
+        // These values were not being updated from the above performSharedDeviceRegistration method since
+        // brokerMicrosoftAuthenticatorImpl is actually a completely separate object.
+        isInSharedDeviceMode = true;
+        shouldHandleFirstRun = false;
     }
 
 
@@ -153,6 +164,10 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
     @Override
     public void enableBrowserAccess() {
         brokerMicrosoftAuthenticatorImpl.enableBrowserAccess();
+
+        // This value was not being updated from the above performSharedDeviceRegistration method since
+        // brokerMicrosoftAuthenticatorImpl is actually a completely separate object.
+        shouldHandleFirstRun = false;
     }
 
     @Override
@@ -285,7 +300,8 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
                                                    @NonNull final String password,
                                                    @NonNull final String emailInputResourceId,
                                                    @NonNull final String registerBtnResourceId,
-                                                   final boolean isFederatedUser) {
+                                                   final boolean isFederatedUser,
+                                                   final boolean isRegistrationPageExpected) {
         Logger.i(TAG, "Execution of Helper for Device Registration..");
         // open device registration page
         openDeviceRegistrationPage();
@@ -306,6 +322,7 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
                 .expectingBrokerAccountChooserActivity(false)
                 .expectingLoginPageAccountPicker(false)
                 .sessionExpected(false)
+                .registerPageExpected(isRegistrationPageExpected)
                 .loginHint(username)
                 .build();
 
