@@ -73,7 +73,7 @@ if [ $JAVADOCJAR == "true" ]; then
     fi
 fi
 
-if [ $TESTFIXUTREJAR == "true" ]; then
+if [ $TESTFIXTUREJAR == "true" ]; then
     gpg --batch --pinentry-mode loopback --passphrase-file $PASSPHRASE_SECUREFILEPATH --armor --detach-sign $PROJECT-$PROJECTVERSION-test-fixtures.jar
     signed=$?
     if [ $signed -ne 0 ]; then
