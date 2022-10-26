@@ -29,6 +29,7 @@ import static com.yubico.yubikit.piv.Slot.SIGNATURE;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
+import android.content.Context;
 import android.os.Build;
 import android.security.KeyChain;
 import android.security.KeyChainAliasCallback;
@@ -36,7 +37,6 @@ import android.security.KeyChainException;
 import android.webkit.ClientCertRequest;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
 import com.microsoft.identity.common.R;
@@ -159,6 +159,12 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
         mDialogHolder = new DialogHolder(mActivity);
         mIsOnDeviceCertBasedAuthProceeding = false;
         mIsSmartcardCertBasedAuthProceeding = false;
+        //Edge case where device doesn't support USB_SERVICE.
+        if (activity.getApplicationContext().getSystemService(Context.USB_SERVICE) == null) {
+            mYubiKitManager = null;
+            Logger.info(TAG, "Certificate Based Authentication via YubiKey not enabled due to device not supporting USB_SERVICE.");
+            return;
+        }
         //Create and start YubiKitManager for UsbDiscovery mode.
         //When in Usb Discovery mode, Yubikeys that plug into the device will be accessible
         // once the user provides permission via the Android permission dialog.
@@ -655,6 +661,11 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
      * Allows AzureActiveDirectoryWebViewClient to stop the local YubiKitManager's discovery mode.
      */
     public void stopYubiKitManagerUsbDiscovery() {
+        final String methodTag = TAG + ":stopYubiKitManagerUsbDiscovery";
+        if (mYubiKitManager == null) {
+            Logger.info(methodTag, "Stop discovery for Certificate Based Authentication via YubiKey not performed.");
+            return;
+        }
         //Stop UsbDiscovery for YubiKitManager
         //Should be called when host fragment is destroyed.
         mYubiKitManager.stopUsbDiscovery();
