@@ -9,7 +9,7 @@ V.Next
 
 V.8.0.3
 ----------
-- [PATCH] Add null checks for emulators that do not account for USB_SERVICE. (#1885)
+- [PATCH] Add null checks for devices that do not support USB_SERVICE. (#1885)
 
 V.8.0.2
 ----------
