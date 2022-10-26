@@ -302,7 +302,10 @@ public class ExceptionAdapter {
 
         if (e instanceof TerminalException) {
             final String errorCode = ((TerminalException) e).getErrorCode();
-            e = e.getCause();
+            final Throwable cause = exception.getCause();
+            if (cause != null) {
+                e = cause;
+            }
             return new ClientException(
                     errorCode,
                     "An unhandled exception occurred with message: " + e.getMessage(),
