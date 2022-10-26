@@ -31,5 +31,5 @@ public enum SpanName {
     CryptoFactoryEvent,
     SetScopeForDMAgentForFoci,
     GetAccounts,
-    RemoveAccounts
+    RemoveAccount
 }
