@@ -7,6 +7,10 @@ V.Next
 - [MINOR] Add new exception type for broker protocol not supported exception during msal-broker handshake (#1859)
 - [MINOR] Leverage Otel Utility create span method (#1877)
 
+V.8.0.3
+----------
+- [PATCH] Add null checks for devices that do not support USB_SERVICE. (#1885)
+
 V.8.0.2
 ----------
 - [PATCH] Remove java.time.* Java8 APIs (#1868)
