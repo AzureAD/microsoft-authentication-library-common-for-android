@@ -7,6 +7,7 @@ V.Next
 - [MINOR] Add new exception type for broker protocol not supported exception during msal-broker handshake (#1859)
 - [MINOR] Leverage Otel Utility create span method (#1877)
 - [MINOR] Add Open Telemetry explicitly in common as transitive is set to false (#1882)
+- [MINOR] Add open telemetry to consumer rules (#1883)
 
 V.8.0.3
 ----------
