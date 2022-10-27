@@ -31,6 +31,7 @@ import com.microsoft.identity.common.java.util.IBroadcaster;
 import com.microsoft.identity.common.java.util.IClockSkewManager;
 import com.microsoft.identity.common.java.util.IPlatformUtil;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.NonNull;
 
 /**
@@ -63,16 +64,18 @@ public interface IPlatformComponents extends IPopManagerLoader, IStorageLoader {
 
     /**
      * Gets {@link IAuthorizationStrategyFactory} of each platform.
+     * Might be null for silent flow.
      */
     @SuppressWarnings(WarningType.rawtype_warning)
-    @NonNull
+    @Nullable
     IAuthorizationStrategyFactory getAuthorizationStrategyFactory();
 
     /**
      * This generates a non-guessable value for the state parameter in an authorization request per the specification:
      * https://tools.ietf.org/html/rfc6749#section-10.10
+     * Might be null for silent flow.
      */
-    @NonNull
+    @Nullable
     IStateGenerator getStateGenerator();
 
     /**
