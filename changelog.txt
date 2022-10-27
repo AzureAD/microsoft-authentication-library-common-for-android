@@ -1,6 +1,10 @@
 V.Next
 ----------
 
+Version 7.0.2
+----------
+- [PATCH] Add null checks for devices that do not support USB_SERVICE. (#1885, #1888)
+
 Version 7.0.1
 ----------
 - [Minor] Bumped Common to 7.0.1 to fix publishing bug.
