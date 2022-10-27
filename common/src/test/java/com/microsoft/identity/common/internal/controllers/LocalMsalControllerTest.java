@@ -26,7 +26,7 @@ import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.microsoft.identity.common.AndroidPlatformComponents;
+import com.microsoft.identity.common.components.AndroidPlatformComponentsFactory;
 import com.microsoft.identity.common.java.util.BrokerProtocolVersionUtil;
 import com.microsoft.identity.common.java.authorities.Authority;
 import com.microsoft.identity.common.java.authscheme.BearerAuthenticationSchemeInternal;
@@ -96,7 +96,7 @@ public class LocalMsalControllerTest {
     @Before
     public void setup() {
         final Context context = ApplicationProvider.getApplicationContext();
-        mPlatformComponents = AndroidPlatformComponents.createFromContext(
+        mPlatformComponents = AndroidPlatformComponentsFactory.createFromContext(
                 context
         );
     }
