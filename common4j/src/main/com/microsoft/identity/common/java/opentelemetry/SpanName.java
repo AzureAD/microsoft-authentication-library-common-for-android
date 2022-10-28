@@ -31,5 +31,9 @@ public enum SpanName {
     CryptoFactoryEvent,
     SetScopeForDMAgentForFoci,
     GetAccounts,
-    RemoveAccount
+    RemoveAccount,
+    WorkplaceJoin,
+    DoDiscovery,
+    WorkplaceLeave,
+    DeviceState
 }
