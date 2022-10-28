@@ -64,7 +64,13 @@ public class YubiKitCertBasedAuthManager extends AbstractSmartcardCertBasedAuthM
      * @param context current application context.
      */
     public YubiKitCertBasedAuthManager(@NonNull final Context context) {
-        mYubiKitManager = new YubiKitManager(context);
+        //Edge case where device doesn't support USB_SERVICE.
+        if (context.getSystemService(Context.USB_SERVICE) != null) {
+            mYubiKitManager = new YubiKitManager(context);
+        } else {
+            mYubiKitManager = null;
+            Logger.info(TAG, "Certificate Based Authentication via YubiKey not enabled due to device not supporting USB_SERVICE.");
+        }
     }
 
     /**
@@ -74,6 +80,11 @@ public class YubiKitCertBasedAuthManager extends AbstractSmartcardCertBasedAuthM
      */
     @Override
     public void startDiscovery() {
+        final String methodTag = TAG + ":startDiscovery";
+        if (mYubiKitManager == null) {
+            Logger.info(methodTag, "Discovery for Certificate Based Authentication via YubiKey not started.");
+            return;
+        }
         mYubiKitManager.startUsbDiscovery(new UsbConfiguration(), new Callback<UsbYubiKeyDevice>() {
             @Override
             public void invoke(@NonNull UsbYubiKeyDevice device) {
@@ -118,6 +129,11 @@ public class YubiKitCertBasedAuthManager extends AbstractSmartcardCertBasedAuthM
      */
     @Override
     public void stopDiscovery() {
+        final String methodTag = TAG + ":stopDiscovery";
+        if (mYubiKitManager == null) {
+            Logger.info(methodTag, "Stop discovery for Certificate Based Authentication via YubiKey not performed.");
+            return;
+        }
         mYubiKitManager.stopUsbDiscovery();
     }
 
