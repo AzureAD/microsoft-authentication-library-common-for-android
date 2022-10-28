@@ -32,8 +32,8 @@ import com.microsoft.identity.common.java.crypto.IKeyAccessor;
 import com.microsoft.identity.common.java.crypto.SecureHardwareState;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
-import com.microsoft.identity.common.java.interfaces.IPopManagerLoader;
-import com.microsoft.identity.common.java.interfaces.IStorageLoader;
+import com.microsoft.identity.common.java.interfaces.IPopManagerSupplier;
+import com.microsoft.identity.common.java.interfaces.IStorageSupplier;
 import com.microsoft.identity.common.java.interfaces.PlatformComponents;
 import com.microsoft.identity.common.java.net.DefaultHttpClientWrapper;
 import com.microsoft.identity.common.java.providers.oauth2.IStateGenerator;
@@ -159,13 +159,7 @@ public class MockPlatformComponentsFactory {
         throw new UnsupportedOperationException();
     };
 
-    private static final IPopManagerLoader NONFUNCTIONAL_POP_MANAGER_LOADER = new IPopManagerLoader() {
-        @Override
-        @NonNull
-        public IDevicePopManager getDefaultDevicePopManager() throws ClientException {
-            throw new UnsupportedOperationException();
-        }
-
+    private static final IPopManagerSupplier NONFUNCTIONAL_POP_MANAGER_LOADER = new IPopManagerSupplier() {
         @Override
         @NonNull
         public IDevicePopManager getDevicePopManager(@Nullable final String alias) throws ClientException {
@@ -173,32 +167,19 @@ public class MockPlatformComponentsFactory {
         }
     };
 
-    private static final IStorageLoader NONFUNCTIONAL_STORAGE_LOADER = new IStorageLoader() {
+    private static final IStorageSupplier NONFUNCTIONAL_STORAGE_LOADER = new IStorageSupplier() {
         private final Map<String, INameValueStorage<?>> mStores = new ConcurrentHashMap<>();
 
         @Override
-        public synchronized <T> INameValueStorage<T> getNameValueStore(@NonNull final String storeName,
-                                                                       @NonNull final Class<T> clazz) {
-            @SuppressWarnings("unchecked")
-            INameValueStorage<T> ret = (INameValueStorage<T>) mStores.get(storeName);
-            if (ret == null) {
-                mStores.put(storeName, new InMemoryStorage<T>());
-                ret = (INameValueStorage<T>) mStores.get(storeName);
-            }
-            return ret;
-        }
-
-        private final Map<String, INameValueStorage<?>> mEncryptedStores = new ConcurrentHashMap<>();
-
-        @Override
+        @NonNull
         public <T> INameValueStorage<T> getEncryptedNameValueStore(@NonNull final String storeName,
                                                                    @Nullable final IKeyAccessor helper,
                                                                    @NonNull final Class<T> clazz) {
             @SuppressWarnings("unchecked")
-            INameValueStorage<T> ret = (INameValueStorage<T>) mEncryptedStores.get(storeName);
+            INameValueStorage<T> ret = (INameValueStorage<T>) mStores.get(storeName);
             if (ret == null) {
-                mEncryptedStores.put(storeName, new InMemoryStorage<>());
-                ret = (INameValueStorage<T>) mEncryptedStores.get(storeName);
+                mStores.put(storeName, new InMemoryStorage<>());
+                ret = (INameValueStorage<T>) mStores.get(storeName);
             }
             return ret;
         }

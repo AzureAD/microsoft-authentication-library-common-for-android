@@ -40,7 +40,7 @@ import lombok.NonNull;
  * TODO: make getPopManagerLoader() and getStorageLoader() part of this interface.
  *       will do that in a separate PR to minimize PR size.
  */
-public interface IPlatformComponents extends IPopManagerLoader, IStorageLoader {
+public interface IPlatformComponents extends IPopManagerSupplier, IStorageSupplier {
 
     /**
      * Get an encryption manager for storage layer.

@@ -48,34 +48,34 @@ import lombok.experimental.SuperBuilder;
 public class PlatformComponents implements IPlatformComponents {
 
     @NonNull
-    private IKeyAccessor mStorageEncryptionManager;
+    private final IKeyAccessor mStorageEncryptionManager;
 
     @NonNull
-    private IClockSkewManager mClockSkewManager;
+    private final IClockSkewManager mClockSkewManager;
 
     @NonNull
-    private IBroadcaster mBroadcaster;
+    private final IBroadcaster mBroadcaster;
 
     @NonNull
-    private IPopManagerLoader mPopManagerLoader;
+    private final IPopManagerSupplier mPopManagerLoader;
 
     @NonNull
-    private IStorageLoader mStorageLoader;
+    private final IStorageSupplier mStorageLoader;
 
     @SuppressWarnings(WarningType.rawtype_warning)
     @Nullable
-    private IAuthorizationStrategyFactory mAuthorizationStrategyFactory;
+    private final IAuthorizationStrategyFactory mAuthorizationStrategyFactory;
 
     @Nullable
-    private IStateGenerator mStateGenerator;
+    private final IStateGenerator mStateGenerator;
 
     @NonNull
-    private IPlatformUtil mPlatformUtil;
+    private final IPlatformUtil mPlatformUtil;
 
     @NonNull
-    private IHttpClientWrapper mHttpClientWrapper;
+    private final IHttpClientWrapper mHttpClientWrapper;
 
-    // TODO: Remove these methods and have the caller invoke IPopManagerLoader and IStorageLoader directly.
+    // TODO: Remove these methods and have the caller invoke IPopManagerSupplier and IStorageSupplier directly.
     // Keeping this for now to minimize the PR size.
 
     /**

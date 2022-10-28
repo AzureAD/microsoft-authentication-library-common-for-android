@@ -81,7 +81,7 @@ public class AndroidPlatformComponentsFactory {
      * @param fragment a fragment where an interactive session will be attached to.
      **/
     public static IPlatformComponents createFromActivity(@NonNull final Activity activity,
-                                                               @Nullable final Fragment fragment) {
+                                                         @Nullable final Fragment fragment) {
 
         return create(activity.getApplicationContext(), activity, fragment);
     }
@@ -97,16 +97,32 @@ public class AndroidPlatformComponentsFactory {
         return builder.build();
     }
 
+    /**
+     * Fill {@link PlatformComponents.PlatformComponentsBuilder} with Android implementations.
+     */
     @SuppressWarnings(WarningType.rawtype_warning)
-    public static void fillBuilder(@NonNull final PlatformComponents.PlatformComponentsBuilder builder,
-                                   @NonNull final Context context,
-                                   @Nullable final Activity activity,
-                                   @Nullable final Fragment fragment) {
-        builder.storageEncryptionManager(new AndroidAuthSdkStorageEncryptionManager(context, null))
-                .clockSkewManager(new AndroidClockSkewManager(context))
+    private static void fillBuilder(@NonNull final PlatformComponents.PlatformComponentsBuilder builder,
+                                    @NonNull final Context context,
+                                    @Nullable final Activity activity,
+                                    @Nullable final Fragment fragment) {
+        builder.storageEncryptionManager(new AndroidAuthSdkStorageEncryptionManager(context, null));
+        fillBuilderWithBasicImplementations(builder, context, activity, fragment);
+    }
+
+    /**
+     * Fill {@link PlatformComponents.PlatformComponentsBuilder}
+     * with Android implementations that could be shared with other Factories, i.e. Broker.
+     */
+    @SuppressWarnings(WarningType.rawtype_warning)
+    public static void fillBuilderWithBasicImplementations(
+            @NonNull final PlatformComponents.PlatformComponentsBuilder builder,
+            @NonNull final Context context,
+            @Nullable final Activity activity,
+            @Nullable final Fragment fragment) {
+        builder.clockSkewManager(new AndroidClockSkewManager(context))
                 .broadcaster(new AndroidBroadcaster(context))
-                .popManagerLoader(new AndroidPopManagerLoader(context))
-                .storageLoader(new AndroidStorageLoader(context))
+                .popManagerLoader(new AndroidPopManagerSupplier(context))
+                .storageLoader(new AndroidStorageSupplier(context))
                 .platformUtil(new AndroidPlatformUtil(context, activity))
                 .httpClientWrapper(new DefaultHttpClientWrapper());
 

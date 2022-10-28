@@ -34,42 +34,23 @@ import androidx.annotation.Nullable;
 import com.microsoft.identity.common.internal.platform.AndroidDevicePopManager;
 import com.microsoft.identity.common.java.crypto.IDevicePopManager;
 import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.java.interfaces.IPopManagerLoader;
+import com.microsoft.identity.common.java.interfaces.IPopManagerSupplier;
 
 import java.io.IOException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
-import java.util.HashMap;
 
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 
 @AllArgsConstructor
-public class AndroidPopManagerLoader implements IPopManagerLoader {
+public class AndroidPopManagerSupplier implements IPopManagerSupplier {
     private final Context mContext;
 
-    private final HashMap<String, IDevicePopManager> mCachedPopManager = new HashMap<>();
-
     @Override
-    public @NonNull IDevicePopManager getDefaultDevicePopManager() throws ClientException {
-        return getDevicePopManager(null);
-    }
-
-    @Override
-    public @NonNull IDevicePopManager getDevicePopManager(@Nullable String alias) throws ClientException {
-        final IDevicePopManager cachedManager = mCachedPopManager.get(alias);
-        if (cachedManager != null) {
-            return cachedManager;
-        }
-
-        final IDevicePopManager popManager = initializeDevicePopManager(alias);
-        mCachedPopManager.put(alias, popManager);
-        return popManager;
-    }
-
     @NonNull
-    private IDevicePopManager initializeDevicePopManager(@Nullable final String alias) throws ClientException {
+    public IDevicePopManager getDevicePopManager(@Nullable String alias) throws ClientException {
         final Exception exception;
         final String errCode;
 

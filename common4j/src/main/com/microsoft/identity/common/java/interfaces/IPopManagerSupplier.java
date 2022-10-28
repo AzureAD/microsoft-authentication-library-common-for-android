@@ -31,14 +31,16 @@ import lombok.NonNull;
 /**
  * An interface for loading {@link IDevicePopManager}
  */
-public interface IPopManagerLoader {
+public interface IPopManagerSupplier {
     /**
      * Gets the default {@link IDevicePopManager}
      *
      * @throws ClientException if it fails to initialize, or if the operation is not supported by the platform.
      */
     @NonNull
-    IDevicePopManager getDefaultDevicePopManager() throws ClientException;
+    default IDevicePopManager getDefaultDevicePopManager() throws ClientException {
+        return getDevicePopManager(null);
+    }
 
     /**
      * Gets a {@link IDevicePopManager} associated to the alias.

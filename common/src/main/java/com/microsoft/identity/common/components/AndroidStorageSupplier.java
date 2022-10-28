@@ -33,7 +33,7 @@ import com.microsoft.identity.common.internal.util.SharedPreferenceLongStorage;
 import com.microsoft.identity.common.java.cache.IMultiTypeNameValueStorage;
 import com.microsoft.identity.common.java.crypto.IKeyAccessor;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
-import com.microsoft.identity.common.java.interfaces.IStorageLoader;
+import com.microsoft.identity.common.java.interfaces.IStorageSupplier;
 import com.microsoft.identity.common.java.util.ported.Predicate;
 
 import java.util.Iterator;
@@ -43,15 +43,8 @@ import lombok.AllArgsConstructor;
 import lombok.NonNull;
 
 @AllArgsConstructor
-public class AndroidStorageLoader implements IStorageLoader {
+public class AndroidStorageSupplier implements IStorageSupplier {
     private final Context mContext;
-
-    @Override
-    @NonNull
-    public <T> INameValueStorage<T> getNameValueStore(@NonNull final String storeName,
-                                                      @NonNull final Class<T> clazz) {
-        return getEncryptedNameValueStore(storeName, null, clazz);
-    }
 
     @SuppressWarnings("unchecked")
     @Override

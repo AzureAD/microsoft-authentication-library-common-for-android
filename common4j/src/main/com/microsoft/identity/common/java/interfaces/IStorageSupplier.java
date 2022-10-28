@@ -23,7 +23,6 @@
 package com.microsoft.identity.common.java.interfaces;
 
 import com.microsoft.identity.common.java.cache.IMultiTypeNameValueStorage;
-import com.microsoft.identity.common.java.crypto.IDevicePopManager;
 import com.microsoft.identity.common.java.crypto.IKeyAccessor;
 
 import javax.annotation.Nullable;
@@ -33,7 +32,7 @@ import lombok.NonNull;
 /**
  * An interface for loading {@link INameValueStorage}
  */
-public interface IStorageLoader {
+public interface IStorageSupplier {
     /**
      * Retrieve a name-value store with a given identifier.
      *
@@ -42,8 +41,10 @@ public interface IStorageLoader {
      * @return a INameValueStorage instance based around data stored with the same storeName.
      */
     @NonNull
-    <T> INameValueStorage<T> getNameValueStore(@NonNull final String storeName,
-                                               @NonNull final Class<T> clazz);
+    default <T> INameValueStorage<T> getNameValueStore(@NonNull final String storeName,
+                                                       @NonNull final Class<T> clazz) {
+        return getEncryptedNameValueStore(storeName, null, clazz);
+    }
 
     /**
      * Retrieve a name-value store with a given identifier.
