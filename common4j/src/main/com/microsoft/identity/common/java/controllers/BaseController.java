@@ -25,23 +25,9 @@ package com.microsoft.identity.common.java.controllers;
 import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.PKEYAUTH_HEADER;
 import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.PKEYAUTH_VERSION;
 import static com.microsoft.identity.common.java.authorities.Authority.B2C;
+import static com.microsoft.identity.common.java.exception.ServiceException.SERVICE_NOT_AVAILABLE;
+import static com.microsoft.identity.common.java.util.ResultUtil.logExposedFieldsOfObject;
 
-import com.microsoft.identity.common.java.commands.parameters.RopcTokenCommandParameters;
-import com.microsoft.identity.common.java.foci.FociQueryUtilities;
-import com.microsoft.identity.common.java.cache.MsalOAuth2TokenCache;
-import com.microsoft.identity.common.java.commands.parameters.BrokerSilentTokenCommandParameters;
-import com.microsoft.identity.common.java.commands.parameters.DeviceCodeFlowCommandParameters;
-import com.microsoft.identity.common.java.commands.parameters.GenerateShrCommandParameters;
-import com.microsoft.identity.common.java.commands.parameters.RemoveAccountCommandParameters;
-import com.microsoft.identity.common.java.constants.OAuth2ErrorCode;
-import com.microsoft.identity.common.java.constants.OAuth2SubErrorCode;
-import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters;
-import com.microsoft.identity.common.java.result.AcquireTokenResult;
-import com.microsoft.identity.common.java.result.GenerateShrResult;
-import com.microsoft.identity.common.java.result.LocalAuthenticationResult;
-import com.microsoft.identity.common.java.telemetry.Telemetry;
-import com.microsoft.identity.common.java.providers.oauth2.IResult;
-import com.microsoft.identity.common.java.telemetry.events.CacheEndEvent;
 import com.microsoft.identity.common.java.AuthenticationConstants;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.authorities.Authority;
@@ -50,11 +36,19 @@ import com.microsoft.identity.common.java.authorities.AzureActiveDirectoryAuthor
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.java.authscheme.ITokenAuthenticationSchemeInternal;
 import com.microsoft.identity.common.java.cache.ICacheRecord;
+import com.microsoft.identity.common.java.cache.MsalOAuth2TokenCache;
+import com.microsoft.identity.common.java.commands.parameters.BrokerSilentTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.DeviceCodeFlowCommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.GenerateShrCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.IHasExtraParameters;
 import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.RemoveAccountCommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.RopcTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.SilentTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.TokenCommandParameters;
+import com.microsoft.identity.common.java.constants.OAuth2ErrorCode;
+import com.microsoft.identity.common.java.constants.OAuth2SubErrorCode;
 import com.microsoft.identity.common.java.dto.AccessTokenRecord;
 import com.microsoft.identity.common.java.dto.AccountRecord;
 import com.microsoft.identity.common.java.dto.IdTokenRecord;
@@ -62,6 +56,9 @@ import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.exception.ServiceException;
+import com.microsoft.identity.common.java.foci.FociQueryUtilities;
+import com.microsoft.identity.common.java.logging.DiagnosticContext;
+import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationRequest;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenRequest;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenResponse;
@@ -69,21 +66,26 @@ import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.Micro
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResponse;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
+import com.microsoft.identity.common.java.providers.oauth2.IResult;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
+import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2TokenCache;
 import com.microsoft.identity.common.java.providers.oauth2.OpenIdConnectPromptParameter;
 import com.microsoft.identity.common.java.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.java.request.SdkType;
+import com.microsoft.identity.common.java.result.AcquireTokenResult;
+import com.microsoft.identity.common.java.result.GenerateShrResult;
+import com.microsoft.identity.common.java.result.LocalAuthenticationResult;
 import com.microsoft.identity.common.java.telemetry.CliTelemInfo;
+import com.microsoft.identity.common.java.telemetry.Telemetry;
+import com.microsoft.identity.common.java.telemetry.events.CacheEndEvent;
 import com.microsoft.identity.common.java.util.ObjectMapper;
 import com.microsoft.identity.common.java.util.ResultUtil;
 import com.microsoft.identity.common.java.util.SchemaUtil;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.util.ported.PropertyBag;
-import com.microsoft.identity.common.java.logging.DiagnosticContext;
-import com.microsoft.identity.common.java.logging.Logger;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -96,9 +98,6 @@ import java.util.regex.Pattern;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.EqualsAndHashCode;
 import lombok.NonNull;
-
-import static com.microsoft.identity.common.java.exception.ServiceException.SERVICE_NOT_AVAILABLE;
-import static com.microsoft.identity.common.java.util.ResultUtil.logExposedFieldsOfObject;
 
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public abstract class BaseController {
@@ -193,6 +192,7 @@ public abstract class BaseController {
         // Build up params for Strategy construction
         final OAuth2StrategyParameters strategyParameters = OAuth2StrategyParameters.builder()
                 .platformComponents(parameters.getPlatformComponents())
+                .authenticationScheme(parameters.getAuthenticationScheme())
                 .build();
 
         //1) Get oAuth2Strategy for Authority Type
@@ -280,7 +280,7 @@ public abstract class BaseController {
                     final AzureActiveDirectoryAuthority requestAuthority = (AzureActiveDirectoryAuthority) interactiveTokenCommandParameters.getAuthority();
                     ((MicrosoftStsAuthorizationRequest.Builder) builder)
                             .setAuthority(requestAuthority.getAuthorityURL())
-                            .setMultipleCloudAware(requestAuthority.mMultipleCloudsSupported)
+                            .setMultipleCloudAware(requestAuthority.isMultipleCloudsSupported())
                             .setState(interactiveTokenCommandParameters.getPlatformComponents().getStateGenerator().generate())
                             .setSlice(requestAuthority.mSlice);
                 }
@@ -407,15 +407,15 @@ public abstract class BaseController {
                                     @SuppressWarnings(WarningType.rawtype_warning) @NonNull final OAuth2Strategy strategy,
                                     @NonNull final ICacheRecord cacheRecord)
             throws IOException, ClientException, ServiceException {
-        final String methodName = ":renewAccessToken";
+        final String methodTag = TAG + ":renewAccessToken";
         Logger.info(
-                TAG + methodName,
+                methodTag,
                 "Renewing access token..."
         );
 
         RefreshTokenRecord refreshTokenRecord = cacheRecord.getRefreshToken();
 
-        logParameters(TAG, parameters);
+        logParameters(methodTag, parameters);
 
         final TokenResult tokenResult = performSilentTokenRequest(
                 strategy,
@@ -425,11 +425,11 @@ public abstract class BaseController {
 
         acquireTokenSilentResult.setTokenResult(tokenResult);
 
-        ResultUtil.logResult(TAG + methodName, tokenResult);
+        ResultUtil.logResult(methodTag, tokenResult);
 
         if (tokenResult.getSuccess()) {
             Logger.info(
-                    TAG + methodName,
+                    methodTag,
                     "Token request was successful"
             );
 
@@ -467,13 +467,13 @@ public abstract class BaseController {
             if (tokenResult.getErrorResponse() != null) {
                 final String errorCode = tokenResult.getErrorResponse().getError();
                 final String subErrorCode = tokenResult.getErrorResponse().getSubError();
-                Logger.info(TAG, "Error: " + errorCode + " Suberror: " + subErrorCode);
+                Logger.info(methodTag, "Error: " + errorCode + " Suberror: " + subErrorCode);
 
                 if (OAuth2ErrorCode.INVALID_GRANT.equals(errorCode) &&
                         OAuth2SubErrorCode.BAD_TOKEN.equals(subErrorCode)) {
                     boolean isRemoved = tokenCache.removeCredential(cacheRecord.getRefreshToken());
                     Logger.info(
-                            TAG,
+                            methodTag,
                             "Refresh token is invalid, "
                                     + "attempting to delete the RT from cache, result:"
                                     + isRemoved
@@ -490,7 +490,7 @@ public abstract class BaseController {
                 }
 
             } else {
-                Logger.warn(TAG, "Invalid state, No token success or error response on the token result");
+                Logger.warn(methodTag, "Invalid state, No token success or error response on the token result");
             }
         }
     }
@@ -510,9 +510,9 @@ public abstract class BaseController {
      */
     public TokenResult renewAccessToken(@NonNull final SilentTokenCommandParameters parameters)
             throws IOException, ClientException, ServiceException {
-        final String methodName = ":renewAccessToken";
+        final String methodTag = TAG + ":renewAccessToken";
         Logger.info(
-                TAG + methodName,
+                methodTag,
                 "Renewing access token..."
         );
 
@@ -521,7 +521,7 @@ public abstract class BaseController {
         ICacheRecord cacheRecord = getCacheRecord(parameters);
 
         Logger.info(
-                TAG + methodName,
+                methodTag,
                 "Attempting renewal of Access Token because it's refresh-expired. RefreshIn was expired at " + cacheRecord.getAccessToken().getRefreshOn() + ". Regular expiry is at " + cacheRecord.getAccessToken().getExpiresOn() + "."
                         + "Currently executing acquireTokenSilent(..), SilentTokenCommand with CorrelationId: " + parameters.getCorrelationId()
         );
@@ -534,16 +534,16 @@ public abstract class BaseController {
                 parameters
         );
 
-        logResult(TAG + methodName, tokenResult);
+        logResult(methodTag, tokenResult);
         if (tokenResult.getSuccess()) {
             Logger.info(
-                    TAG + methodName,
+                    methodTag,
                     "Token request was successful"
             );
 
             // Remove old Access Token
             Logger.info(
-                    TAG + methodName,
+                    methodTag,
                     "Access token is refresh-expired. Removing from cache..."
             );
             final AccessTokenRecord accessTokenRecord = cacheRecord.getAccessToken();
@@ -570,12 +570,12 @@ public abstract class BaseController {
             if (tokenResult.getErrorResponse() != null) {
                 final String errorCode = tokenResult.getErrorResponse().getError();
                 final String subErrorCode = tokenResult.getErrorResponse().getSubError();
-                Logger.warn(TAG, "Error: " + errorCode + " Suberror: " + subErrorCode);
+                Logger.warn(methodTag, "Error: " + errorCode + " Suberror: " + subErrorCode);
 
                 if (OAuth2ErrorCode.INVALID_GRANT.equals(errorCode) && OAuth2SubErrorCode.BAD_TOKEN.equals(subErrorCode)) {
                     boolean isRemoved = cache.removeCredential(cacheRecord.getRefreshToken());
                     Logger.info(
-                            TAG,
+                            methodTag,
                             "Refresh token is invalid, "
                                     + "attempting to delete the RT from cache, result:"
                                     + isRemoved
@@ -592,7 +592,7 @@ public abstract class BaseController {
                 }
 
             } else {
-                Logger.warn(TAG, "Invalid state, No token success or error response on the token result");
+                Logger.warn(methodTag, "Invalid state, No token success or error response on the token result");
             }
         }
 
@@ -602,6 +602,7 @@ public abstract class BaseController {
     public OAuth2Strategy getStrategy(@NonNull final SilentTokenCommandParameters parameters) throws ClientException {
         final OAuth2StrategyParameters strategyParameters = OAuth2StrategyParameters.builder()
                 .platformComponents(parameters.getPlatformComponents())
+                .authenticationScheme(parameters.getAuthenticationScheme())
                 .build();
 
         return parameters.getAuthority().createOAuth2Strategy(strategyParameters);
@@ -821,6 +822,7 @@ public abstract class BaseController {
      */
     protected AccountRecord getCachedAccountRecord(
             @NonNull final SilentTokenCommandParameters parameters) throws ClientException {
+        final String methodTag = TAG + ":getCachedAccountRecord";
         if (parameters.getAccount() == null) {
             throw new ClientException(
                     ErrorStrings.NO_ACCOUNT_FOUND,
@@ -838,7 +840,7 @@ public abstract class BaseController {
         if (targetAccount != null) {
             return targetAccount;
         } else {
-            Logger.info(TAG, "Account not found in app cache..");
+            Logger.info(methodTag, "Account not found in app cache..");
             targetAccount = getCachedAccountRecordFromAllCaches(parameters);
         }
 
@@ -847,13 +849,13 @@ public abstract class BaseController {
             final String homeAccountId = parameters.getAccount().getHomeAccountId();
             if (Logger.isAllowPii()) {
                 Logger.errorPII(
-                        TAG,
+                        methodTag,
                         "No accounts found for clientId [" + clientId + "], homeAccountId [" + homeAccountId + "]",
                         null
                 );
             } else {
                 Logger.error(
-                        TAG,
+                        methodTag,
                         "No accounts found for clientId [" + clientId + "]",
                         null
                 );
@@ -934,6 +936,7 @@ public abstract class BaseController {
     private AccountRecord getAccountWithFRTIfAvailable(@NonNull final SilentTokenCommandParameters parameters,
                                                        @SuppressWarnings(WarningType.rawtype_warning) @NonNull final MsalOAuth2TokenCache msalOAuth2TokenCache) {
 
+        final String methodTag = TAG + ":getAccountWithFRTIfAvailable";
         final String homeAccountId = parameters.getAccount().getHomeAccountId();
         final String clientId = parameters.getClientId();
 
@@ -961,13 +964,13 @@ public abstract class BaseController {
                                 parameters.getAccount().getLocalAccountId()
                         );
             } catch (IOException | ClientException e) {
-                Logger.warn(TAG,
+                Logger.warn(methodTag,
                         "Error while attempting to validate client: "
                                 + clientId + " is part of family " + e.getMessage()
                 );
             }
         } else {
-            Logger.info(TAG, "No Foci tokens found for homeAccountId " + homeAccountId);
+            Logger.info(methodTag, "No Foci tokens found for homeAccountId " + homeAccountId);
         }
         return null;
     }

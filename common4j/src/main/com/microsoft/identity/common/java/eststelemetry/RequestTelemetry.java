@@ -26,6 +26,7 @@ import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.util.StringUtil;
 
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -92,10 +93,19 @@ public abstract class RequestTelemetry implements IRequestTelemetry {
     }
 
     private String getPlatformTelemetryHeaderString() {
-        final String[] platformFields;
+        final List<String> platformFields;
+
+        mPlatformTelemetry.putIfAbsent(
+                SchemaConstants.Key.PLATFORM_SCHEMA_VERSION,
+                SchemaConstants.CURRENT_PLATFORM_SCHEMA_VERSION
+        );
 
         if (this instanceof CurrentRequestTelemetry) {
-            platformFields = SchemaConstants.getCurrentRequestPlatformFields();
+            platformFields = SchemaConstants.getCurrentRequestPlatformFields(
+                    TelemetryUtils.getBooleanFromString(
+                            mPlatformTelemetry.get(SchemaConstants.Key.IS_SHARED_DEVICE)
+                    )
+            );
         } else {
             platformFields = SchemaConstants.getLastRequestPlatformFields();
         }
@@ -115,19 +125,19 @@ public abstract class RequestTelemetry implements IRequestTelemetry {
      */
     @NonNull
     // This only being used to compute the platform telemetry header string
-    private String getHeaderStringForFields(final String[] fields, final Map<String, String> telemetry) {
+    private String getHeaderStringForFields(final List<String> fields, final Map<String, String> telemetry) {
         if (fields == null || telemetry == null) {
             return "";
         }
 
         StringBuilder sb = new StringBuilder();
 
-        for (int i = 0; i < fields.length; i++) {
-            final String key = fields[i];
+        for (int i = 0; i < fields.size(); i++) {
+            final String key = fields.get(i);
             final String value = telemetry.get(key);
             final String compliantValueString = TelemetryUtils.getSchemaCompliantString(value);
             sb.append(compliantValueString);
-            if (i != fields.length - 1) {
+            if (i != fields.size() - 1) {
                 sb.append(',');
             }
         }

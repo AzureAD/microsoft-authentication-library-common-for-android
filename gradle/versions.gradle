@@ -3,8 +3,8 @@ ext {
     // SDK
     minSdkVersion = 16
     automationAppMinSDKVersion = 21
-    targetSdkVersion = 30
-    compileSdkVersion = 30
+    targetSdkVersion = 31
+    compileSdkVersion = 32
     buildToolsVersion = "28.0.3"
 
     // Plugins
@@ -43,7 +43,8 @@ ext {
     uiAutomatorVersion = "2.2.0"
     msal4jVersion = "1.10.0"
     mseberaApacheHttpClientVersion = "4.5.8"
-    yubikitAndroidVersion = "2.0.0"
+    yubikitAndroidVersion = "2.1.0"
+    yubikitPivVersion = "2.1.0"
 
     // TODO: adal automation test app.
     supportLibraryVersion = "27.1.+"

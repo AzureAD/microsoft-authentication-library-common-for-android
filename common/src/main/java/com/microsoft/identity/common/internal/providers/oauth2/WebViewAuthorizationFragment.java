@@ -40,6 +40,10 @@ import androidx.annotation.VisibleForTesting;
 import androidx.fragment.app.FragmentActivity;
 
 import com.microsoft.identity.common.R;
+import com.microsoft.identity.common.internal.ui.webview.challengehandlers.AbstractSmartcardCertBasedAuthManager;
+import com.microsoft.identity.common.internal.ui.webview.challengehandlers.CertBasedAuthFactory;
+import com.microsoft.identity.common.internal.ui.webview.challengehandlers.DialogHolder;
+import com.microsoft.identity.common.internal.ui.webview.challengehandlers.YubiKitCertBasedAuthManager;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
@@ -98,18 +102,9 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        final String methodTag = TAG + ":onCreate";
         final FragmentActivity activity = getActivity();
         if (activity != null) {
             WebViewUtil.setDataDirectorySuffix(activity.getApplicationContext());
-        }
-        //For CBA, we need to clear the certificate choice cache here so that
-        // the user will be able to login with multiple accounts with CBA
-        //addressing on-device CBA bug: https://identitydivision.visualstudio.com/Engineering/_workitems/edit/1776683
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            WebView.clearClientCertPreferences(null);
-        } else {
-            Logger.warn(methodTag, "Client Cert Preferences cache not cleared due to SDK version < 21 (LOLLIPOP)");
         }
     }
 
@@ -178,6 +173,15 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                                 mWebView.loadUrl("javascript:" + javascriptToExecute[0].replace("%", "%25"));
                             }
                         }
+                        //For CBA, we need to clear the certificate choice cache here so that
+                        // if the cert picker is exited (`cancel()`) or the flow has an error,
+                        //the user can still try to login again with a cert.
+                        //addressing on-device CBA bug: https://identitydivision.visualstudio.com/Engineering/_workitems/edit/1776683
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                            WebView.clearClientCertPreferences(null);
+                        } else {
+                            Logger.warn(methodTag, "Client Cert Preferences cache not cleared due to SDK version < 21 (LOLLIPOP)");
+                        }
                     }
                 },
                 mRedirectUri);
@@ -207,15 +211,6 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
 
         if (mWebView.canGoBack()) {
             mWebView.goBack();
-            //For CBA, we need to clear the certificate choice cache here so that
-            // if the cert picker is exited (`cancel()`) or the flow has an error,
-            //the user can still try to login again with a cert.
-            //addressing on-device CBA bug: https://identitydivision.visualstudio.com/Engineering/_workitems/edit/1776683
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                WebView.clearClientCertPreferences(null);
-            } else {
-                Logger.warn(methodTag, "Client Cert Preferences cache not cleared due to SDK version < 21 (LOLLIPOP)");
-            }
         } else {
             cancelAuthorization(true);
         }
@@ -260,6 +255,19 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         mWebView.setWebViewClient(webViewClient);
     }
 
+    // For CertBasedAuthChallengeHandler within AADWebViewClient,
+    // the smartcard manager needs to stop discovering Usb devices upon fragment destroy.
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        final String methodTag = TAG + ":onDestroy";
+        if (mAADWebViewClient != null) {
+            mAADWebViewClient.onDestroy();
+        } else {
+            Logger.error(methodTag, "Fragment destroyed, but smartcard usb discovery was unable to be stopped.", null);
+        }
+    }
+
     /**
      * Extracts request headers from the given bundle object.
      */
@@ -280,6 +288,10 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         public void onChallengeResponseReceived(@NonNull final RawAuthorizationResult response) {
             final String methodTag = TAG + ":onChallengeResponseReceived";
             Logger.info(methodTag, null, "onChallengeResponseReceived:" + response.getResultCode());
+            if (mAADWebViewClient != null) {
+                //No telemetry will be emitted if CBA did not occur.
+                mAADWebViewClient.emitTelemetryForCertBasedAuthResult(response);
+            }
             sendResult(response);
             finish();
         }

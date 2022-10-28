@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+    <string name="app_loading">正在加载…</string>
+
+    <string name="broker_processing">代理正在处理</string>
+    <string name="http_auth_dialog_username">用户名</string>
+    <string name="http_auth_dialog_password">密码</string>
+    <string name="http_auth_dialog_title">输入凭据</string>
+    <string name="http_auth_dialog_login">登录</string>
+    <string name="http_auth_dialog_cancel">取消</string>
+
+    <!-- strings for CBA dialogs and layouts -->
+    <string name="smartcard_cert_dialog_title">选择要登录的智能卡证书</string>
+    <string name="smartcard_cert_dialog_positive_button">继续</string>
+    <string name="smartcard_cert_dialog_negative_button">取消</string>
+
+    <string name="smartcard_pin_dialog_title">解锁智能卡</string>
+    <string name="smartcard_pin_dialog_message">输入智能卡 PIN 以访问证书并登录</string>
+    <string name="smartcard_pin_dialog_positive_button">解锁</string>
+    <string name="smartcard_pin_dialog_negative_button">取消</string>
+    <string name="smartcard_pin_dialog_error_message">你输入的 PIN 不正确。</string>
+    <string name="smartcard_pin_layout_edittext_hint">PIN</string>
+
+    <string name="smartcard_error_dialog_positive_button">确定</string>
+
+    <string name="smartcard_max_attempt_dialog_title">请稍后重试</string>
+    <string name="smartcard_max_attempt_dialog_message">失败的尝试次数过多，请稍后重试。</string>
+
+    <string name="smartcard_early_unplug_dialog_title">重试</string>
+    <string name="smartcard_early_unplug_dialog_message">已删除智能卡设备。请在尝试再次登录之前重新插入设备。</string>
+
+    <string name="smartcard_no_cert_dialog_title">找不到适用的证书。</string>
+    <string name="smartcard_no_cert_dialog_message">请确认你的证书已正确预配到智能卡设备上。</string>
+
+    <string name="smartcard_general_error_dialog_title">请稍后重试</string>
+    <string name="smartcard_general_error_dialog_message">发生意外错误。请稍后再试。</string>
+</resources>

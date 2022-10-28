@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+    <string name="app_loading">読み込み中…</string>
+
+    <string name="broker_processing">ブローカーが処理中です</string>
+    <string name="http_auth_dialog_username">ユーザー名</string>
+    <string name="http_auth_dialog_password">パスワード</string>
+    <string name="http_auth_dialog_title">資格情報の入力</string>
+    <string name="http_auth_dialog_login">ログイン</string>
+    <string name="http_auth_dialog_cancel">キャンセル</string>
+
+    <!-- strings for CBA dialogs and layouts -->
+    <string name="smartcard_cert_dialog_title">サインインするスマートカード証明書の選択</string>
+    <string name="smartcard_cert_dialog_positive_button">続行</string>
+    <string name="smartcard_cert_dialog_negative_button">キャンセル</string>
+
+    <string name="smartcard_pin_dialog_title">スマートカードのロック解除</string>
+    <string name="smartcard_pin_dialog_message">スマートカードの PIN を入力して証明書にアクセスし、サインインしてください</string>
+    <string name="smartcard_pin_dialog_positive_button">ロック解除</string>
+    <string name="smartcard_pin_dialog_negative_button">キャンセル</string>
+    <string name="smartcard_pin_dialog_error_message">入力された PIN が正しくありません</string>
+    <string name="smartcard_pin_layout_edittext_hint">PIN</string>
+
+    <string name="smartcard_error_dialog_positive_button">OK</string>
+
+    <string name="smartcard_max_attempt_dialog_title">後でもう一度お試しください</string>
+    <string name="smartcard_max_attempt_dialog_message">失敗した試行回数が多すぎます。後でもう一度お試しください。</string>
+
+    <string name="smartcard_early_unplug_dialog_title">もう一度お試しください</string>
+    <string name="smartcard_early_unplug_dialog_message">スマートカード デバイスが削除されました。もう一度ログインする前に、デバイスを再挿入してください。</string>
+
+    <string name="smartcard_no_cert_dialog_title">該当する証明書が見つかりません。</string>
+    <string name="smartcard_no_cert_dialog_message">証明書がスマートカード デバイスに正しくプロビジョニングされていることを確認してください。</string>
+
+    <string name="smartcard_general_error_dialog_title">後でもう一度お試しください</string>
+    <string name="smartcard_general_error_dialog_message">予期しないエラーが発生しました。後でもう一度お試しください。</string>
+</resources>

@@ -31,40 +31,54 @@ import android.security.KeyChainException;
 import android.webkit.ClientCertRequest;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 
+import com.microsoft.identity.common.internal.telemetry.Telemetry;
+import com.microsoft.identity.common.java.exception.BaseException;
+import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
+import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings;
+import com.microsoft.identity.common.java.telemetry.events.CertBasedAuthResultEvent;
+import com.microsoft.identity.common.java.telemetry.events.ErrorEvent;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.security.Principal;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 
-public final class ClientCertAuthChallengeHandler implements IChallengeHandler<ClientCertRequest, Void> {
-    private static final String TAG = ClientCertAuthChallengeHandler.class.getSimpleName();
+/**
+ * Handles a received ClientCertRequest by prompting the user to choose from certificates
+ *  stored on the Android device.
+ */
+public class OnDeviceCertBasedAuthChallengeHandler implements ICertBasedAuthChallengeHandler {
+    private static final String TAG = OnDeviceCertBasedAuthChallengeHandler.class.getSimpleName();
     private static final String ACCEPTABLE_ISSUER = "CN=MS-Organization-Access";
-    private Activity mActivity;
+    private final Activity mActivity;
+    private boolean mIsOnDeviceCertBasedAuthProceeding;
 
-    public ClientCertAuthChallengeHandler(@NonNull final Activity activity) {
+    /**
+     * Creates new instance of OnDeviceCertBasedAuthChallengeHandler.
+     * @param activity current host activity.
+     */
+    public OnDeviceCertBasedAuthChallengeHandler(@NonNull final Activity activity) {
         mActivity = activity;
+        mIsOnDeviceCertBasedAuthProceeding = false;
     }
 
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    /**
+     * Called when a ClientCertRequest is received by the AzureActiveDirectoryWebViewClient.
+     * Makes use of Android's KeyChain.choosePrivateKeyAlias method, which shows a certificate picker that allows users to choose their on-device user certificate to authenticate with.
+     * @param request ClientCertRequest received from AzureActiveDirectoryWebViewClient.onReceivedClientCertRequest.
+     * @return null
+     */
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
-    public Void processChallenge(@NonNull final ClientCertRequest request) {
-        //final String methodTag = TAG + ":processChallenge";
-        return handleOnDeviceCertAuth(request);
-    }
-
-    // Handles the logic for on-device certificate based authentication.
-    // Makes use of Android's KeyChain.choosePrivateKeyAlias method,
-    // which shows a cert picker that allows users to choose their on-device user certificate to authenticate with.
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-    public Void handleOnDeviceCertAuth(@NonNull final ClientCertRequest request) {
-        final String methodTag = TAG + ":handleOnDeviceCertAuth";
+    public Void processChallenge(ClientCertRequest request) {
+        final String methodTag = TAG + ":processChallenge";
         final Principal[] acceptableCertIssuers = request.getPrincipals();
 
         // When ADFS server sends null or empty issuers, we'll continue with cert prompt.
         if (acceptableCertIssuers != null) {
-            for (Principal issuer : acceptableCertIssuers) {
+            for (final Principal issuer : acceptableCertIssuers) {
                 if (issuer.getName().contains(ACCEPTABLE_ISSUER)) {
                     //Checking if received acceptable issuers contain "CN=MS-Organization-Access"
                     Logger.info(methodTag,"Cancelling the TLS request, not respond to TLS challenge triggered by device authentication.");
@@ -90,6 +104,8 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
                                     mActivity, alias);
 
                             Logger.info(methodTag,"Certificate is chosen by user, proceed with TLS request.");
+                            //Set mIsOnDeviceCertBasedAuthProceeding to true so telemetry is emitted for the result.
+                            mIsOnDeviceCertBasedAuthProceeding = true;
                             request.proceed(privateKey, certChain);
                             return;
                         } catch (final KeyChainException e) {
@@ -106,7 +122,33 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
                 request.getHost(),
                 request.getPort(),
                 null);
-
         return null;
+    }
+
+    /**
+     * Emit telemetry for results from certificate based authentication (CBA) if CBA occurred.
+     *
+     * @param response a RawAuthorizationResult object received upon a challenge response received.
+     */
+    @Override
+    public void emitTelemetryForCertBasedAuthResults(@NonNull final RawAuthorizationResult response) {
+        if (mIsOnDeviceCertBasedAuthProceeding) {
+            final CertBasedAuthResultEvent certBasedAuthResultEvent= new CertBasedAuthResultEvent(TelemetryEventStrings.Event.CERT_BASED_AUTH_RESULT_ON_DEVICE_EVENT);
+            mIsOnDeviceCertBasedAuthProceeding = false;
+            Telemetry.emit(certBasedAuthResultEvent.putResponseCode(response.getResultCode().toString()));
+            //If an exception was provided, emit an ErrorEvent.
+            final BaseException exception = response.getException();
+            if (exception != null) {
+                Telemetry.emit(new ErrorEvent().putException(exception));
+            }
+        }
+    }
+
+    /**
+     * Clean up logic to run when ICertBasedAuthChallengeHandler is no longer going to be used.
+     */
+    @Override
+    public void cleanUp() {
+        //Nothing needed at the moment.
     }
 }

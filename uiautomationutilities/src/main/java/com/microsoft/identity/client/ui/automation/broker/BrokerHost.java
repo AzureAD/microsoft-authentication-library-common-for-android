@@ -201,15 +201,12 @@ public class BrokerHost extends AbstractTestBroker {
     private void postJoinConfirmHelper(@NonNull final String expectedUpn) throws InterruptedException {
         Logger.i(TAG, "Confirming that Shared Device Registration is successfull or not..");
 
-        // Adding brief wait to increase reliability of test
-        Thread.sleep(TimeUnit.SECONDS.toMillis(5));
-
         // Look for join op completion dialog
         final UiObject joinFinishDialog = UiAutomatorUtils.obtainUiObjectWithResourceId(
                 "android:id/message"
         );
 
-        Assert.assertTrue("Assert join finish dialog", joinFinishDialog.exists());
+        Assert.assertTrue("Assert join finish dialog", joinFinishDialog.waitForExists(CommonUtils.FIND_UI_ELEMENT_TIMEOUT_LONG));
 
         try {
             // Obtain the text from the dialog box
@@ -338,6 +335,26 @@ public class BrokerHost extends AbstractTestBroker {
     }
 
     @Override
+    public void overwriteFlights(@Nullable final String flightsJson) {
+        Logger.i(TAG, "Overwrite Flights..");
+        launch();
+
+        // Sleep for a bit to finish launching brokerHost before scrolling to set Flights
+        try {
+            Thread.sleep(TimeUnit.SECONDS.toMillis(5));
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        // scroll to find the overwrite flights button
+        UiAutomatorUtils.obtainChildInScrollable("Overwrite flights (When BrokerHost is the active broker)");
+        // input flights string in flights input box
+        UiAutomatorUtils.handleInput("com.microsoft.identity.testuserapp:id/editTextFlights", flightsJson);
+        // Click Set Flights button
+        UiAutomatorUtils.handleButtonClick("com.microsoft.identity.testuserapp:id/overwriteFlightsButton");
+    }
+
+    @Override
     public void setFlights(@Nullable final String flightsJson) {
         Logger.i(TAG, "Set Flights..");
         launch();
@@ -356,6 +373,7 @@ public class BrokerHost extends AbstractTestBroker {
         // Click Set Flights button
         UiAutomatorUtils.handleButtonClick("com.microsoft.identity.testuserapp:id/setFlightsButton");
     }
+
 
     @Override
     public String getFlights() {
@@ -448,7 +466,7 @@ public class BrokerHost extends AbstractTestBroker {
     public String acquireSSOToken(@NonNull final String nonce) {
         try {
             // Fill the nonce
-            final UiObject nonceTxtBox = UiAutomatorUtils.obtainChildInScrollable("nonce");
+            final UiObject nonceTxtBox = UiAutomatorUtils.obtainChildInScrollable("nonce for SSO Token");
             nonceTxtBox.setText(nonce);
 
             // Click on sso token button
@@ -512,5 +530,48 @@ public class BrokerHost extends AbstractTestBroker {
             // dismiss dialog
             UiAutomatorUtils.handleButtonClick("android:id/button1");
         }
+    }
+
+    /**
+     * Check if the Device Code Flow option shows up in sign in flow.
+     * @param tenantId tenant ID to use in Join Tenant
+     * @throws UiObjectNotFoundException
+     */
+    public void checkForDcfOption(@Nullable final String tenantId){
+        final String tenantIdToUse;
+
+        // If no tenant ID is specified, default to microsoft tenant
+        if (tenantId == null) {
+            tenantIdToUse = "72f988bf-86f1-41af-91ab-2d7cd011db47";
+        } else {
+            tenantIdToUse = tenantId;
+        }
+
+        final String joinTenantButtonId = "com.microsoft.identity.testuserapp:id/buttonJoinTenant";
+        final String joinTenantEditTestId = "com.microsoft.identity.testuserapp:id/editTextTenantId";
+
+        launch();
+
+        UiAutomatorUtils.handleInput(joinTenantEditTestId, tenantIdToUse);
+
+        UiAutomatorUtils.handleButtonClick(joinTenantButtonId);
+
+        // Apparently, there are two UI objects with exact text "Sign-in options", one is a button the other is a view
+        // Have to specify the search to button class
+        final UiDevice device =
+                UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+
+        final UiObject optionsObject = device.findObject(new UiSelector()
+                .text("Sign-in options").className("android.widget.Button"));
+
+        try {
+            optionsObject.click();
+        } catch (UiObjectNotFoundException e) {
+            throw new AssertionError(e);
+        }
+        UiAutomatorUtils.handleButtonClickForObjectWithText("Sign in from another device");
+
+        // Doesn't look like the page with the device code is readable to the UI automation,
+        // this is a sufficient stopping point
     }
 }

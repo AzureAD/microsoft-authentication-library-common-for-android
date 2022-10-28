@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+    <string name="app_loading">טוען…</string>
+
+    <string name="broker_processing">המתווך מבצע עיבוד</string>
+    <string name="http_auth_dialog_username">שם משתמש</string>
+    <string name="http_auth_dialog_password">סיסמה</string>
+    <string name="http_auth_dialog_title">הזן את האישורים שלך</string>
+    <string name="http_auth_dialog_login">כניסה</string>
+    <string name="http_auth_dialog_cancel">ביטול</string>
+
+    <!-- strings for CBA dialogs and layouts -->
+    <string name="smartcard_cert_dialog_title">בחר אישור כרטיס חכם כדי להיכנס</string>
+    <string name="smartcard_cert_dialog_positive_button">המשך</string>
+    <string name="smartcard_cert_dialog_negative_button">ביטול</string>
+
+    <string name="smartcard_pin_dialog_title">בטל נעילת כרטיס חכם</string>
+    <string name="smartcard_pin_dialog_message">הזן את מספר הזיהוי האישי של הכרטיס החכם כדי לגשת לאישור ולהיכנס</string>
+    <string name="smartcard_pin_dialog_positive_button">בטל נעילה</string>
+    <string name="smartcard_pin_dialog_negative_button">ביטול</string>
+    <string name="smartcard_pin_dialog_error_message">מספר הזיהוי האישי שהזנת היה שגוי</string>
+    <string name="smartcard_pin_layout_edittext_hint">מספר זיהוי אישי</string>
+
+    <string name="smartcard_error_dialog_positive_button">בסדר גמור</string>
+
+    <string name="smartcard_max_attempt_dialog_title">נסה שוב מאוחר יותר</string>
+    <string name="smartcard_max_attempt_dialog_message">ניסיונות כושלים רבים מדי. נסה שוב מאוחר יותר.</string>
+
+    <string name="smartcard_early_unplug_dialog_title">נסה שוב</string>
+    <string name="smartcard_early_unplug_dialog_message">התקן כרטיס חכם הוסר. הכנס מחדש את המכשיר לפני שתנסה להיכנס שוב.</string>
+
+    <string name="smartcard_no_cert_dialog_title">לא נמצאו אישורים ישימים.</string>
+    <string name="smartcard_no_cert_dialog_message">ודא שהאישור שלך הוקצה כראוי להתקן הכרטיס החכם שלך.</string>
+
+    <string name="smartcard_general_error_dialog_title">נסה שוב מאוחר יותר</string>
+    <string name="smartcard_general_error_dialog_message">‏‏אירעה שגיאה בלתי צפויה. נסה שוב מאוחר יותר.</string>
+</resources>

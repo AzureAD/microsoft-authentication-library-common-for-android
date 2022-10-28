@@ -1,4 +1,3 @@
-package com.microsoft.identity.common.java.net;
 // Copyright (c) Microsoft Corporation.
 // All rights reserved.
 //
@@ -22,41 +21,33 @@ package com.microsoft.identity.common.java.net;
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+package com.microsoft.identity.common.java.controllers;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.microsoft.identity.common.java.controllers.ExceptionAdapter;
+import com.microsoft.identity.common.java.exception.BaseException;
+import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.exception.TerminalException;
+
 import org.junit.Assert;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
-import java.net.HttpURLConnection;
-import java.util.Collections;
+import java.util.AbstractMap;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
-/**
- * Tests for {@link HttpResponse}.
- */
-public final class HttpResponseBodyTest {
-
-    private static final String RESPONSE_BODY = "test response body";
+@RunWith(JUnit4.class)
+public class ExceptionAdapterTests {
 
     @Test
-    public void testHttpResponseWithNullBody() {
-        final HttpResponse response = new HttpResponse(HttpURLConnection.HTTP_OK, null,
-                Collections.<String, List<String>>emptyMap());
-        Assert.assertNull(response.getBody());
-        Assert.assertTrue(response.getStatusCode() == HttpURLConnection.HTTP_OK);
-        Assert.assertTrue(response.getHeaders().isEmpty());
-    }
-
-    @Test
-    public void testHttpResponseWithEmptyBody() {
-        final HttpResponse response = new HttpResponse(HttpURLConnection.HTTP_OK, "",
-                Collections.<String, List<String>>emptyMap());
-        Assert.assertNotNull(response.getBody());
-        Assert.assertTrue(response.getBody().isEmpty());
-    }
-
-    @Test
-    public void testHttpResponseWithNullResponseHeaders() {
-        final HttpResponse response = new HttpResponse(HttpURLConnection.HTTP_OK, RESPONSE_BODY, null);
-        Assert.assertTrue(response.getBody().equals(RESPONSE_BODY));
-        Assert.assertNull(response.getHeaders());
+    public void testBaseExceptionFromException_TerminalException() throws Exception{
+        TerminalException t = new TerminalException("errorMsg", ClientException.KEY_RING_WRITE_FAILURE);
+        BaseException e = ExceptionAdapter.baseExceptionFromException(t);
+        Assert.assertEquals(e.getErrorCode(), t.getErrorCode());
+        Assert.assertEquals(e.getCause(), t);
     }
 }

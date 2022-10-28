@@ -39,49 +39,49 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 
-@Getter
-@Setter
 @Accessors(prefix = "m")
 public class MockCertLoader implements IDeviceCertificateLoader{
 
     private final String MOCK_CERT_THUMBPRINT = "thumbprint1234";
 
+    @Getter
+    @Setter
     private boolean mValidIssuer = true;
+
+    @Getter
+    @Setter
     private PrivateKey mPrivateKey = mock(PrivateKey.class);
-    private PublicKey mPublicKey = mock(PublicKey.class);
-    private X509Certificate mCert = mock(X509Certificate.class);
+
+    @Getter
+    @Setter
+    private X509Certificate mX509 = mock(X509Certificate.class);
+
+    private final IDeviceCertificate mCert = new IDeviceCertificate() {
+        @Override
+        public boolean isValidIssuer(List<String> certAuthorities) {
+            return mValidIssuer;
+        }
+
+        @Override
+        public @lombok.NonNull X509Certificate getX509() {
+            return mX509;
+        }
+
+        @Override
+        public String getThumbPrint() {
+            return MOCK_CERT_THUMBPRINT;
+        }
+
+        @Override
+        public byte[] sign(@NonNull String algorithm, byte[] dataToBeSigned) throws ClientException {
+            throw new UnsupportedOperationException("Should be mocked!");
+        }
+    };
 
     @Nullable
     @Override
     public IDeviceCertificate loadCertificate(@Nullable String tenantId) {
-        return new IDeviceCertificate() {
-            @Override
-            public boolean isValidIssuer(List<String> certAuthorities) {
-                return mValidIssuer;
-            }
-
-            @Override
-            public X509Certificate getCertificate() {
-                return mCert;
-            }
-
-            @Override
-            public PrivateKey getPrivateKey() {
-                return mPrivateKey;
-
-            }
-
-            @Override
-            public PublicKey getPublicKey() {
-                return mPublicKey;
-
-            }
-
-            @Override
-            public String getThumbPrint() {
-                return MOCK_CERT_THUMBPRINT;
-            }
-        };
+        return mCert;
     }
 
     /**
@@ -95,8 +95,7 @@ public class MockCertLoader implements IDeviceCertificateLoader{
         return nonce + ":" +
                 submitUrl + ":" +
                 mPrivateKey.hashCode() + ":" +
-                mPublicKey.hashCode() + ":" +
-                mCert.hashCode();
+                mX509.hashCode();
     }
 
     /**
@@ -113,8 +112,6 @@ public class MockCertLoader implements IDeviceCertificateLoader{
                 mockJwsBuilder.generateSignedJWT(
                         nonce,
                         submitUrl,
-                        mPrivateKey,
-                        mPublicKey,
                         mCert
                 )
         ).thenReturn(getMockSignedJwt(nonce, submitUrl));

@@ -36,6 +36,7 @@ public class BrokerProtocolVersionUtil {
     public static final String MSAL_TO_BROKER_PROTOCOL_COMPRESSION_CHANGES_MINIMUM_VERSION = "5.0";
     public static final String MSAL_TO_BROKER_PROTOCOL_ACCOUNT_FROM_PRT_CHANGES_MINIMUM_VERSION = "8.0";
     public static final String MSAL_TO_BROKER_PROTOCOL_PKEYAUTH_HEADER_CHANGES_MINIMUM_VERSION = "9.0";
+    public static final String MSAL_TO_BROKER_PROTOCOL_POP_SCHEME_WITH_CLIENT_KEY_MINIMUM_VERSION = "11.0";
 
     /**
      * Verifies if negotiated broker protocol version allows to decompressing/compressing broker payloads.
@@ -77,6 +78,19 @@ public class BrokerProtocolVersionUtil {
     }
 
     /**
+     * Verifies if client required broker protocol version supports PoPAuthenticationSchemeWithClientKey.
+     *
+     * @param clientRequiredBrokerProtocolVersion broker protocol version of the calling app.
+     * @return true if the broker protocol version of the calling app is larger or equal than
+     * the {@link BrokerProtocolVersionUtil#MSAL_TO_BROKER_PROTOCOL_POP_SCHEME_WITH_CLIENT_KEY_MINIMUM_VERSION}.
+     */
+    public static boolean canSupportPopAuthenticationSchemeWithClientKey(@Nullable final String clientRequiredBrokerProtocolVersion) {
+        return isProvidedBrokerProtocolLargerOrEqualThanRequiredBrokerProtocol(
+                clientRequiredBrokerProtocolVersion,
+                MSAL_TO_BROKER_PROTOCOL_POP_SCHEME_WITH_CLIENT_KEY_MINIMUM_VERSION);
+    }
+
+    /**
      * Verifies if the provided broker protocol is larger or equal than the required protocol.
      *
      * @param providedBrokerProtocol provided protocol version.
@@ -90,24 +104,24 @@ public class BrokerProtocolVersionUtil {
         if (StringUtil.isNullOrEmpty(providedBrokerProtocol)) {
             return false;
         }
-        return isFirstVersionLargerOrEqual(
+        return isFirstVersionNewerOrEqual(
                 providedBrokerProtocol,
                 requiredBrokerProtocol);
     }
 
     /**
-     * Returns true if the first semantic version is smaller or equal to the second version.
+     * Returns true if the first semantic version is smaller (older) or equal to the second version.
      */
-    public static final boolean isFirstVersionSmallerOrEqual(@NonNull final String first,
-                                                             @Nullable final String second) {
+    public static boolean isFirstVersionOlderOrEqual(@NonNull final String first,
+                                                     @Nullable final String second) {
         return compareSemanticVersion(first, second) <= 0;
     }
 
     /**
-     * Returns true if the first semantic version is larger or equal to the second version.
+     * Returns true if the first semantic version is larger (newer) or equal to the second version.
      */
-    public static final boolean isFirstVersionLargerOrEqual(@NonNull final String first,
-                                                            @Nullable final String second) {
+    public static boolean isFirstVersionNewerOrEqual(@NonNull final String first,
+                                                     @Nullable final String second) {
         return compareSemanticVersion(first, second) >= 0;
     }
 

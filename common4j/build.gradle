@@ -217,7 +217,11 @@ dependencies {
     testFixturesCompileOnly 'com.github.spotbugs:spotbugs-annotations:3.1.12'
     testFixturesCompileOnly "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
     testFixturesAnnotationProcessor "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
-    resolvableTestFixturesImplementation 'org.robolectric:junit:4.5.1'
+    resolvableTestFixturesImplementation "org.robolectric:junit:$rootProject.ext.robolectricVersion"
+
+    implementation platform("io.opentelemetry:opentelemetry-bom:1.18.0")
+    implementation('io.opentelemetry:opentelemetry-api:1.18.0')
+    implementation('io.opentelemetry:opentelemetry-sdk-trace:1.18.0')
 }
 
 sourceCompatibility = "1.8"

@@ -24,10 +24,14 @@ package com.microsoft.identity.common.java.authorities;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
 
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.io.IOException;
+import java.net.URISyntaxException;
 
 public class AuthorityDeserializerTest {
 
@@ -63,6 +67,21 @@ public class AuthorityDeserializerTest {
     public void testDeserializeAAD() {
         final Authority authority = gson.fromJson(AAD_AUTHORITY, Authority.class);
 
+        Assert.assertTrue(authority instanceof AzureActiveDirectoryAuthority);
+
+        Assert.assertEquals("https://login.microsoftonline.us", ((AzureActiveDirectoryAuthority) authority).mAudience.getCloudUrl());
+        Assert.assertEquals("common", ((AzureActiveDirectoryAuthority) authority).mAudience.getTenantId());
+
+        Assert.assertEquals("https://login.microsoftonline.us/common", authority.getAuthorityUri().toString());
+    }
+
+    // AzureActiveDirectoryAuthority.getAuthorityUri() relies on results from cloud metadata.
+    // We should make sure that the result are valid after cloud discovery is done.
+    @Test
+    public void testDeserializeAfterGettingCloudMetadata() throws Exception {
+        AzureActiveDirectory.performCloudDiscovery();
+
+        final Authority authority = gson.fromJson(AAD_AUTHORITY, Authority.class);
         Assert.assertTrue(authority instanceof AzureActiveDirectoryAuthority);
 
         Assert.assertEquals("https://login.microsoftonline.us", ((AzureActiveDirectoryAuthority) authority).mAudience.getCloudUrl());

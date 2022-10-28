@@ -31,9 +31,8 @@ import com.microsoft.identity.client.ui.automation.interaction.FirstPartyAppProm
 import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.MicrosoftStsPromptHandler;
 import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.MicrosoftStsPromptHandlerParameters;
 import com.microsoft.identity.client.ui.automation.logging.Logger;
+import com.microsoft.identity.client.ui.automation.utils.CommonUtils;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
-
-import org.junit.Assert;
 
 /**
  * A model for interacting with the Teams Android App during UI Test.
@@ -71,6 +70,8 @@ public class TeamsApp extends App implements IFirstPartyApp {
                         "com.microsoft.teams:id/title",
                         username
                 );
+
+                email.waitForExists(CommonUtils.FIND_UI_ELEMENT_TIMEOUT);
 
                 email.click();
 

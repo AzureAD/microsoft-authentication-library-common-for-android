@@ -59,6 +59,16 @@ public class ResourceOwnerPasswordCredentialsTestStrategy extends MicrosoftStsOA
     }
 
     /**
+     * Constructor of ResourceOwnerPasswordCredentialsTestStrategy.
+     *
+     * @param config Microsoft Sts OAuth2 configuration
+     * @param parameters Oauth2Strategy parameters
+     */
+    public ResourceOwnerPasswordCredentialsTestStrategy(final MicrosoftStsOAuth2Configuration config, final OAuth2StrategyParameters parameters) throws ClientException {
+        super(config, parameters);
+    }
+
+    /**
      * Template method for executing an OAuth2 authorization request.
      *
      * @param request               microsoft sts authorization request.

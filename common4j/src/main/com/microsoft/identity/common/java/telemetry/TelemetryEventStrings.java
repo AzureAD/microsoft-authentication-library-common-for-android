@@ -65,7 +65,14 @@ public class TelemetryEventStrings {
         public static final String BROKER_START_EVENT = "broker_start_event";
         public static final String BROKER_END_EVENT = "broker_end_event";
 
+        public static final String CONTENT_PROVIDER_CALL_EVENT = "content_provider_call_event";
+
         public static final String DEPRECATED_API_USAGE_EVENT = "deprecated_api_usage_event";
+
+        public static final String CERT_BASED_AUTH_RESULT_ON_DEVICE_EVENT = "cert_based_auth_result_on_device_event";
+        public static final String CERT_BASED_AUTH_RESULT_SMARTCARD_EVENT = "cert_based_auth_result_smartcard_event";
+
+        public static final String PIV_PROVIDER_STATUS_EVENT = "piv_provider_status_event";
     }
 
     public static final class EventType {
@@ -76,6 +83,9 @@ public class TelemetryEventStrings {
         public static final String BROKER_EVENT = EVENT_PREFIX + "broker_event";
         public static final String LIBRARY_CONSUMER_EVENT = EVENT_PREFIX + "library_consumer_event";
         public static final String ERROR_EVENT = EVENT_PREFIX + "error_event";
+        public static final String CERT_BASED_AUTH_EVENT = EVENT_PREFIX + "cert_based_auth_event";
+        public static final String YUBIKEY_EVENT = EVENT_PREFIX + "yubikey_event";
+        public static final String CONTENT_PROVIDER_EVENT = EVENT_PREFIX + "content_provider_event";
     }
 
     public static final class Key {
@@ -174,6 +184,10 @@ public class TelemetryEventStrings {
         public static final String ERROR_LOCATION_LINE_NUMBER = EVENT_PREFIX + "error_location_line_number";
         public static final String IS_WPJ_JOINED = EVENT_PREFIX + "is_wpj_joined";
         public static final String IS_ERROR_EVENT = EVENT_PREFIX + "is_error_event";
+        public static final String IS_EXISTING_PIVPROVIDER_PRESENT = EVENT_PREFIX + "is_existing_pivprovider_present";
+        public static final String PIVPROVIDER_REMOVED = EVENT_PREFIX + "pivprovider_removed";
+        public static final String CONTENT_PROVIDER_URI = EVENT_PREFIX + "content_provider_uri";
+        public static final String ENROLLMENT_ID_NULL = EVENT_PREFIX + "enrollment_id_null";
     }
 
     public static final class Value {

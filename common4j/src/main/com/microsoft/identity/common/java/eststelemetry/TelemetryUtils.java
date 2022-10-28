@@ -22,15 +22,16 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.eststelemetry;
 
-import lombok.NonNull;
-
-import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings;
+import com.microsoft.identity.common.java.util.StringUtil;
+
+import edu.umd.cs.findbugs.annotations.Nullable;
+import lombok.NonNull;
 
 public class TelemetryUtils {
 
-    static boolean getBooleanFromSchemaString(final String val) {
-        return val.equals(SchemaConstants.Value.TRUE);
+    static boolean getBooleanFromString(@Nullable final String val) {
+        return val != null && val.equals(SchemaConstants.Value.TRUE);
     }
 
     static String getSchemaCompliantStringFromBoolean(final boolean val) {

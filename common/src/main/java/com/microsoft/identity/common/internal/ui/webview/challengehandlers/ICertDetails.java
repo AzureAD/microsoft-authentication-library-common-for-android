@@ -20,15 +20,22 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java.logging;
+package com.microsoft.identity.common.internal.ui.webview.challengehandlers;
+
+import androidx.annotation.NonNull;
+
+import java.security.cert.X509Certificate;
 
 /**
- * An extension of ILoggerCallback - so that it prints the discarded log.
- * This is for testing only (to verify that logs are actually discarded).
+ * Holds X509Certificate and other important details that may be implementation specific.
  */
-interface IDetailedLoggerCallback extends ILoggerCallback {
+public interface ICertDetails {
+
     /**
-     * Messages that are discarded by the loggers.
+     * Gets certificate.
+     * @return certificate.
      */
-    void discardedLog(String tag, Logger.LogLevel logLevel, String message, boolean containsPII);
+    @NonNull
+    X509Certificate getCertificate();
+
 }

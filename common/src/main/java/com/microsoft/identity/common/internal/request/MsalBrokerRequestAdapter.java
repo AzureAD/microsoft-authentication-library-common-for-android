@@ -371,7 +371,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
     private boolean getMultipleCloudsSupported(@NonNull final TokenCommandParameters parameters) {
         if (parameters.getAuthority() instanceof AzureActiveDirectoryAuthority) {
             final AzureActiveDirectoryAuthority authority = (AzureActiveDirectoryAuthority) parameters.getAuthority();
-            return authority.getMultipleCloudsSupported();
+            return authority.isMultipleCloudsSupported();
         } else {
             return false;
         }

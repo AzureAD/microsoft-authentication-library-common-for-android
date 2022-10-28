@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+    <string name="app_loading">Зареждане…</string>
+
+    <string name="broker_processing">Брокерът обработва</string>
+    <string name="http_auth_dialog_username">Потребителско име</string>
+    <string name="http_auth_dialog_password">Парола</string>
+    <string name="http_auth_dialog_title">Въведете идентификационните си данни</string>
+    <string name="http_auth_dialog_login">Влизане</string>
+    <string name="http_auth_dialog_cancel">Отказ</string>
+
+    <!-- strings for CBA dialogs and layouts -->
+    <string name="smartcard_cert_dialog_title">Избиране на сертификат за смарт карта за влизане</string>
+    <string name="smartcard_cert_dialog_positive_button">Продължи</string>
+    <string name="smartcard_cert_dialog_negative_button">Отказ</string>
+
+    <string name="smartcard_pin_dialog_title">Отключване на смарт карта</string>
+    <string name="smartcard_pin_dialog_message">Въведете ПИН кода на смарт картата, за да получите достъп до сертификата и да влезете</string>
+    <string name="smartcard_pin_dialog_positive_button">Отключване</string>
+    <string name="smartcard_pin_dialog_negative_button">Отказ</string>
+    <string name="smartcard_pin_dialog_error_message">Въведеният ПИН е неправилен.</string>
+    <string name="smartcard_pin_layout_edittext_hint">ПИН</string>
+
+    <string name="smartcard_error_dialog_positive_button">OK</string>
+
+    <string name="smartcard_max_attempt_dialog_title">Опитайте отново по-късно</string>
+    <string name="smartcard_max_attempt_dialog_message">Твърде много неуспешни опити, опитайте отново по-късно.</string>
+
+    <string name="smartcard_early_unplug_dialog_title">Повторен опит</string>
+    <string name="smartcard_early_unplug_dialog_message">Устройството със смарт карта е премахнато. Поставете повторно устройството, преди да се опитате да влезете отново.</string>
+
+    <string name="smartcard_no_cert_dialog_title">Не са намерени приложими сертификати.</string>
+    <string name="smartcard_no_cert_dialog_message">Потвърдете, че вашият сертификат е бил правилно инсталиран на устройството ви със смарт карта.</string>
+
+    <string name="smartcard_general_error_dialog_title">Опитайте отново по-късно</string>
+    <string name="smartcard_general_error_dialog_message">Възникна неочаквана грешка. Опитайте отново по-късно.</string>
+</resources>

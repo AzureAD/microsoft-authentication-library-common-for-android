@@ -71,10 +71,10 @@ public class BrokerOperationBundle {
         BROKER_API_GET_BROKER_ACCOUNTS(API.BROKER_GET_ACCOUNTS, null),
         BROKER_API_REMOVE_BROKER_ACCOUNT(API.BROKER_REMOVE_ACCOUNT, null),
         BROKER_API_UPDATE_BRT(API.BROKER_UPDATE_BRT, null),
-        BROKER_SET_FLIGHTS(API.BROKER_SET_FLIGHTS, null),
         BROKER_GET_FLIGHTS(API.BROKER_GET_FLIGHTS, null),
-        BROKER_ADD_FLIGHTS(API.BROKER_ADD_FLIGHTS, null),
-        MSAL_SSO_TOKEN(API.GET_SSO_TOKEN, null);
+        BROKER_SET_FLIGHTS(API.BROKER_SET_FLIGHTS, null),
+        MSAL_SSO_TOKEN(API.GET_SSO_TOKEN, null),
+        DEVICE_REGISTRATION_OPERATIONS(API.DEVICE_REGISTRATION_PROTOCOLS, null);
         final API mContentApi;
         final String mAccountManagerOperation;
         Operation(API contentApi, String accountManagerOperation) {

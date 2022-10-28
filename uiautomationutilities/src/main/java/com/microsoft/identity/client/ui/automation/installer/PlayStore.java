@@ -138,7 +138,7 @@ public class PlayStore implements IAppInstaller {
             try {
                 installOrUpdateAppFromMarketPageInternal(playStoreAction);
             } catch (UiObjectNotFoundException ex) {
-                throw new AssertionError(e);
+                throw new AssertionError(ex.getMessage(), e);
             }
         }
     }
@@ -151,17 +151,17 @@ public class PlayStore implements IAppInstaller {
         );
 
         uiObjBtn.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
-
         uiObjBtn.click();
-        openAppFromPlayStore();
 
+        checkInstallCompletion();
     }
 
-    private void openAppFromPlayStore() {
+    private void checkInstallCompletion() {
         final UiDevice device = UiDevice.getInstance(getInstrumentation());
         final UiObject openButton = device.findObject(
                 new UiSelector().className(Button.class).text("Open").enabled(true)
         );
+
         openButton.waitForExists(PLAY_STORE_INSTALL_OR_UPDATE_APP_TIMEOUT);
     }
 

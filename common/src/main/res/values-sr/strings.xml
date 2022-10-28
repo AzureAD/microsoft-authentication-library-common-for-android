@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+    <string name="app_loading">Учитавање…</string>
+
+    <string name="broker_processing">Посредник обрађује</string>
+    <string name="http_auth_dialog_username">Корисничко име</string>
+    <string name="http_auth_dialog_password">Лозинка</string>
+    <string name="http_auth_dialog_title">Унесите акредитиве</string>
+    <string name="http_auth_dialog_login">Пријављивање</string>
+    <string name="http_auth_dialog_cancel">Откажи</string>
+
+    <!-- strings for CBA dialogs and layouts -->
+    <string name="smartcard_cert_dialog_title">Одаберите цертификат паметне картице за пријављивање</string>
+    <string name="smartcard_cert_dialog_positive_button">Настави</string>
+    <string name="smartcard_cert_dialog_negative_button">Откажи</string>
+
+    <string name="smartcard_pin_dialog_title">Откључавање паметне картице</string>
+    <string name="smartcard_pin_dialog_message">Унесите PIN кôд паметне картице да бисте приступили цертификату и пријавили се</string>
+    <string name="smartcard_pin_dialog_positive_button">Откључај</string>
+    <string name="smartcard_pin_dialog_negative_button">Откажи</string>
+    <string name="smartcard_pin_dialog_error_message">PIN кôд који сте унели је нетачан</string>
+    <string name="smartcard_pin_layout_edittext_hint">PIN</string>
+
+    <string name="smartcard_error_dialog_positive_button">У реду</string>
+
+    <string name="smartcard_max_attempt_dialog_title">Покушајте поново касније</string>
+    <string name="smartcard_max_attempt_dialog_message">Превише неуспелих покушаја, покушајте поново касније.</string>
+
+    <string name="smartcard_early_unplug_dialog_title">Покушајте поново</string>
+    <string name="smartcard_early_unplug_dialog_message">Уређај паметне картице је уклоњен. Поново уметните уређај пре него што поново покушате да се пријавите.</string>
+
+    <string name="smartcard_no_cert_dialog_title">Нису пронађени важећи цертификати.</string>
+    <string name="smartcard_no_cert_dialog_message">Потврдите да је цертификат исправно обезбеђен на уређају паметне картице.</string>
+
+    <string name="smartcard_general_error_dialog_title">Покушајте поново касније</string>
+    <string name="smartcard_general_error_dialog_message">Дошло је до неочекиване грешке. Покушајте поново касније.</string>
+</resources>
