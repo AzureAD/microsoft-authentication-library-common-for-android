@@ -44,6 +44,8 @@ import lombok.NonNull;
 
 @AllArgsConstructor
 public class AndroidStorageSupplier implements IStorageSupplier {
+
+    @NonNull
     private final Context mContext;
 
     @SuppressWarnings("unchecked")

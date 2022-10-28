@@ -46,6 +46,8 @@ import lombok.NonNull;
 
 @AllArgsConstructor
 public class AndroidPopManagerSupplier implements IPopManagerSupplier {
+
+    @NonNull
     private final Context mContext;
 
     @Override
