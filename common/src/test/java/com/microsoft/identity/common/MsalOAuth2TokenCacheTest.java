@@ -27,6 +27,8 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.microsoft.identity.common.components.AndroidPlatformComponentsFactory;
+import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.cache.CacheKeyValueDelegate;
@@ -260,7 +262,7 @@ public class MsalOAuth2TokenCacheTest {
         // Context and related init
         mContext = ApplicationProvider.getApplicationContext();
 
-        final AndroidPlatformComponents components = AndroidPlatformComponents.createFromContext(mContext);
+        final IPlatformComponents components = AndroidPlatformComponentsFactory.createFromContext(mContext);
         mSharedPreferencesFileManager = components.getEncryptedNameValueStore(
                 "test_prefs",
                 components.getStorageEncryptionManager(),
