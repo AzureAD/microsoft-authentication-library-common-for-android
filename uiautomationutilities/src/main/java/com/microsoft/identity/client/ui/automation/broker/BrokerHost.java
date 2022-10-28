@@ -180,7 +180,8 @@ public class BrokerHost extends AbstractTestBroker {
     @Override
     public void performSharedDeviceRegistrationDontValidate(@NonNull final String username,
                                                             @NonNull final String password) {
-        throw new UnsupportedOperationException("Not Supported!");
+        Logger.i(TAG, "Performing Shared Device Registration for the given account..");
+        performDeviceRegistrationHelper(username);
     }
 
     private void performDeviceRegistrationHelper(@NonNull final String username) {
