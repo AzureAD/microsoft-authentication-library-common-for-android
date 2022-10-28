@@ -99,9 +99,8 @@ public interface ISettings {
      * Change the time on the device by seconds.
      *
      * @param seconds time to advance device time by
-     * @param resetTimeZone whether or not to enable automatic time zone after changing time
      */
-    void forwardDeviceTime(long seconds, boolean resetTimeZone);
+    void forwardDeviceTime(long seconds);
 
     /**
      * Activate this admin app. This method is supposed to be called when the Activate Device Admin

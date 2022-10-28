@@ -154,10 +154,10 @@ public class SamsungSettings extends BaseSettings {
 
     @Override
     public void forwardDeviceTimeForOneDay() {
-        forwardDeviceTime(86400, false);
+        forwardDeviceTime(86400);
     }
 
-    public void forwardDeviceTime(long seconds, boolean enableTimeZone) {
+    public void forwardDeviceTime(long seconds) {
         Logger.i(TAG, "Forwarding Time by " + seconds + " seconds on Samsung Device..");
         // Disable Automatic TimeZone
         AdbShellUtils.disableAutomaticTimeZone();
