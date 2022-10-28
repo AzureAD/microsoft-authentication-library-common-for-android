@@ -174,9 +174,7 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
     public String createPowerLiftIncident() {
         Logger.i(TAG, "Creating Power Lift Incident..");
         launch();
-        if (shouldHandleFirstRun) {
-            handleFirstRun();
-        }
+        handleFirstRun();
 
         if (isInSharedDeviceMode) {
             return createPowerLiftIncidentInSharedDeviceMode();
@@ -281,9 +279,7 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
         Logger.i(TAG, "Open the device registration page in the Authenticator App..");
         launch(); // launch Authenticator app
 
-        if (shouldHandleFirstRun) {
-            handleFirstRun(); // handle first run experience
-        }
+        handleFirstRun(); // handle first run experience
         goToDeviceRegistrationPage();
 
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
@@ -342,12 +338,14 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
 
     @Override
     public void handleFirstRun() {
-        Logger.i(TAG, "Handle First Run of the APP..");
-        // privacy dialog
-        UiAutomatorUtils.handleButtonClick("com.azure.authenticator:id/privacy_consent_button");
-        // the skip button
-        UiAutomatorUtils.handleButtonClick("com.azure.authenticator:id/frx_skip_button");
-        shouldHandleFirstRun = false;
+        if (shouldHandleFirstRun) {
+            Logger.i(TAG, "Handle First Run of the APP..");
+            // privacy dialog
+            UiAutomatorUtils.handleButtonClick("com.azure.authenticator:id/privacy_consent_button");
+            // the skip button
+            UiAutomatorUtils.handleButtonClick("com.azure.authenticator:id/frx_skip_button");
+            shouldHandleFirstRun = false;
+        }
     }
 
     @Override
