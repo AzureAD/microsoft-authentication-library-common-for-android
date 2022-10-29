@@ -1,4 +1,3 @@
-package com.microsoft.identity.common.java.opentelemetry;
 // Copyright (c) Microsoft Corporation.
 // All rights reserved.
 //
@@ -21,19 +20,33 @@ package com.microsoft.identity.common.java.opentelemetry;
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
+package com.microsoft.identity.common.components;
 
-public enum SpanName {
-    AcquirePrtUsingBrt,
-    RefreshPrt,
-    AcquireAtUsingPrt,
-    AcquireTokenInteractive,
-    AcquireTokenSilent,
-    CryptoFactoryEvent,
-    SetScopeForDMAgentForFoci,
-    GetAccounts,
-    RemoveAccount,
-    WorkplaceJoin,
-    DoDiscovery,
-    WorkplaceLeave,
-    DeviceState
+import android.content.Context;
+
+import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
+import com.microsoft.identity.common.internal.util.SharedPreferenceLongStorage;
+import com.microsoft.identity.common.java.util.ClockSkewManager;
+
+import lombok.NonNull;
+
+/**
+ * A {@link ClockSkewManager} instance on Android.
+ */
+public class AndroidClockSkewManager extends ClockSkewManager {
+
+    /**
+     * SharedPref filename for Clock Skew storage.
+     */
+    private static final String SKEW_PREFERENCES_FILENAME =
+            "com.microsoft.identity.client.clock_correction";
+
+    public AndroidClockSkewManager(@NonNull final Context context){
+        super(new SharedPreferenceLongStorage(
+                SharedPreferencesFileManager.getSharedPreferences(
+                        context,
+                        SKEW_PREFERENCES_FILENAME,
+                        null
+                )));
+    }
 }

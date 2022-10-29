@@ -1,4 +1,3 @@
-package com.microsoft.identity.common.java.opentelemetry;
 // Copyright (c) Microsoft Corporation.
 // All rights reserved.
 //
@@ -21,19 +20,33 @@ package com.microsoft.identity.common.java.opentelemetry;
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
+package com.microsoft.identity.common.java.interfaces;
 
-public enum SpanName {
-    AcquirePrtUsingBrt,
-    RefreshPrt,
-    AcquireAtUsingPrt,
-    AcquireTokenInteractive,
-    AcquireTokenSilent,
-    CryptoFactoryEvent,
-    SetScopeForDMAgentForFoci,
-    GetAccounts,
-    RemoveAccount,
-    WorkplaceJoin,
-    DoDiscovery,
-    WorkplaceLeave,
-    DeviceState
+import com.microsoft.identity.common.java.crypto.IDevicePopManager;
+import com.microsoft.identity.common.java.exception.ClientException;
+
+import edu.umd.cs.findbugs.annotations.Nullable;
+import lombok.NonNull;
+
+/**
+ * An interface for loading {@link IDevicePopManager}
+ */
+public interface IPopManagerSupplier {
+    /**
+     * Gets the default {@link IDevicePopManager}
+     *
+     * @throws ClientException if it fails to initialize, or if the operation is not supported by the platform.
+     */
+    @NonNull
+    default IDevicePopManager getDefaultDevicePopManager() throws ClientException {
+        return getDevicePopManager(null);
+    }
+
+    /**
+     * Gets a {@link IDevicePopManager} associated to the alias.
+     *
+     * @throws ClientException if it fails to initialize, or if the operation is not supported by the platform.
+     */
+    @NonNull
+    IDevicePopManager getDevicePopManager(@Nullable final String alias) throws ClientException;
 }
