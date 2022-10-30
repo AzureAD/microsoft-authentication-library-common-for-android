@@ -55,7 +55,7 @@ public class OpenIdProviderConfigurationClient {
     private static final String sWellKnownConfig = "/.well-known/openid-configuration";
     private static final ExecutorService sBackgroundExecutor = Executors.newCachedThreadPool();
     private static final Map<URI, OpenIdProviderConfiguration> sConfigCache = new HashMap<>();
-    private static final HttpClient httpClient = UrlConnectionHttpClient.getDefaultInstance();
+    private static final HttpClient httpClient = UrlConnectionHttpClient.getBuilderWithDefaultRetryPolicy().build();
 
     public interface OpenIdProviderConfigurationCallback
             extends TaskCompletedCallbackWithError<OpenIdProviderConfiguration, Exception> {

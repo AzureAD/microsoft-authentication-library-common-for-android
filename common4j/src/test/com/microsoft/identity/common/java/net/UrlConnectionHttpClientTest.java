@@ -957,7 +957,7 @@ public final class UrlConnectionHttpClientTest {
             }
 
             HttpResponse specific(URL url, Map<String, String> headers, byte[] body) throws Exception {
-                return UrlConnectionHttpClient.getDefaultInstance().get(url, headers);
+                return UrlConnectionHttpClient.getBuilderWithDefaultRetryPolicy().build().get(url, headers);
             }
 
             HttpResponse specificNoRetry(URL url, Map<String, String> headers, byte[] body) throws Exception {
@@ -970,7 +970,7 @@ public final class UrlConnectionHttpClientTest {
             }
 
             HttpResponse specific(URL url, Map<String, String> headers, byte[] body) throws Exception {
-                return UrlConnectionHttpClient.getDefaultInstance().head(url, headers);
+                return UrlConnectionHttpClient.getBuilderWithDefaultRetryPolicy().build().head(url, headers);
             }
 
             HttpResponse specificNoRetry(URL url, Map<String, String> headers, byte[] body) throws Exception {
@@ -979,7 +979,7 @@ public final class UrlConnectionHttpClientTest {
         },
         PUT {
             HttpResponse specific(URL url, Map<String, String> headers, byte[] body) throws Exception {
-                return UrlConnectionHttpClient.getDefaultInstance().put(url, headers, body);
+                return UrlConnectionHttpClient.getBuilderWithDefaultRetryPolicy().build().put(url, headers, body);
             }
 
             HttpResponse specificNoRetry(URL url, Map<String, String> headers, byte[] body) throws Exception {
@@ -988,7 +988,7 @@ public final class UrlConnectionHttpClientTest {
         },
         POST {
             HttpResponse specific(URL url, Map<String, String> headers, byte[] body) throws Exception {
-                return UrlConnectionHttpClient.getDefaultInstance().post(url, headers, body);
+                return UrlConnectionHttpClient.getBuilderWithDefaultRetryPolicy().build().post(url, headers, body);
             }
 
             HttpResponse specificNoRetry(URL url, Map<String, String> headers, byte[] body) throws Exception {
@@ -997,7 +997,7 @@ public final class UrlConnectionHttpClientTest {
         },
         OPTIONS {
             HttpResponse specific(URL url, Map<String, String> headers, byte[] body) throws Exception {
-                return UrlConnectionHttpClient.getDefaultInstance().options(url, headers);
+                return UrlConnectionHttpClient.getBuilderWithDefaultRetryPolicy().build().options(url, headers);
             }
 
             HttpResponse specificNoRetry(URL url, Map<String, String> headers, byte[] body) throws Exception {
@@ -1010,7 +1010,7 @@ public final class UrlConnectionHttpClientTest {
             }
 
             HttpResponse specific(URL url, Map<String, String> headers, byte[] body) throws Exception {
-                return UrlConnectionHttpClient.getDefaultInstance().trace(url, headers);
+                return UrlConnectionHttpClient.getBuilderWithDefaultRetryPolicy().build().trace(url, headers);
             }
 
             HttpResponse specificNoRetry(URL url, Map<String, String> headers, byte[] body) throws Exception {
@@ -1019,7 +1019,7 @@ public final class UrlConnectionHttpClientTest {
         },
         PATCH {
             HttpResponse specific(URL url, Map<String, String> headers, byte[] body) throws Exception {
-                return UrlConnectionHttpClient.getDefaultInstance().patch(url, headers, body);
+                return UrlConnectionHttpClient.getBuilderWithDefaultRetryPolicy().build().patch(url, headers, body);
             }
 
             HttpResponse specificNoRetry(URL url, Map<String, String> headers, byte[] body) throws Exception {
@@ -1028,7 +1028,7 @@ public final class UrlConnectionHttpClientTest {
         },
         DELETE {
             HttpResponse specific(URL url, Map<String, String> headers, byte[] body) throws Exception {
-                return UrlConnectionHttpClient.getDefaultInstance().delete(url, headers, body);
+                return UrlConnectionHttpClient.getBuilderWithDefaultRetryPolicy().build().delete(url, headers, body);
             }
 
             HttpResponse specificNoRetry(URL url, Map<String, String> headers, byte[] body) throws Exception {
@@ -1079,7 +1079,7 @@ public final class UrlConnectionHttpClientTest {
 
     private HttpResponse sendWithMethod(final HttpTestMethod method) throws Exception {
         URL validRequestUrl = getRequestUrl();
-        return UrlConnectionHttpClient.getDefaultInstance().method(
+        return UrlConnectionHttpClient.getBuilderWithDefaultRetryPolicy().build().method(
                 method.name(),
                 validRequestUrl,
                 method.canHaveBody() ? Collections.singletonMap(CONTENT_TYPE_KEY, CONTENT_TYPE_VALUE) : Collections.<String, String>emptyMap(),

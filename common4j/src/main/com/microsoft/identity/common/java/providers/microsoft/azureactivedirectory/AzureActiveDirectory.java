@@ -77,7 +77,7 @@ public class AzureActiveDirectory
     private static ConcurrentMap<String, AzureActiveDirectoryCloud> sAadClouds = new ConcurrentHashMap<>();
     private static boolean sIsInitialized = false;
     private static Environment sEnvironment = Environment.Production;
-    private static final HttpClient httpClient = UrlConnectionHttpClient.getDefaultInstance();
+    private static final HttpClient httpClient = UrlConnectionHttpClient.getBuilderWithDefaultRetryPolicy().build();
 
     @Override
     public AzureActiveDirectoryOAuth2Strategy createOAuth2Strategy(@NonNull final AzureActiveDirectoryOAuth2Configuration config,

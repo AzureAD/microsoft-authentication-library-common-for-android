@@ -69,7 +69,7 @@ import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.CLI
  * size of the buffer for reading objects from the http stream is 1024 bytes.
  * <p>
  * There are two ways to supply timeout values to this class, one method takes suppliers, the other
- * one integers.  If you use both of these, the suppliers method will take precendence over the method
+ * one integers.  If you use both of these, the suppliers method will take precedence over the method
  * using integers.
  * <p>
  * TODO: add telemetry for exceptions/intermediary failures in this class.
@@ -79,12 +79,12 @@ import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.CLI
 public class UrlConnectionHttpClient extends AbstractHttpClient {
     private static final Object TAG = UrlConnectionHttpClient.class.getName();
 
-    protected static final int RETRY_TIME_WAITING_PERIOD_MSEC = 1000;
+    protected static final int RETRY_TIME_WAITING_PERIOD_MS = 1000;
     protected static final int DEFAULT_CONNECT_TIME_OUT_MS = 30000;
     protected static final int DEFAULT_READ_TIME_OUT_MS = 30000;
     protected static final int DEFAULT_STREAM_BUFFER_SIZE_BYTE = 1024;
 
-    private static final transient AtomicReference<UrlConnectionHttpClient> defaultReference = new AtomicReference<>(null);
+    private static final transient AtomicReference<UrlConnectionHttpClientBuilder> defaultReference = new AtomicReference<>(null);
 
     /**
      * Retry policy of this HttpClient. Default is {@link NoRetryPolicy}.
@@ -163,38 +163,48 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
     }
 
     /**
-     * Obtain a static default instance of the HTTP Client class.
+     * Obtain a static default builder of the HTTP Client class.
      *
-     * @return a default-configured HttpClient.
+     * @return a default-configured HttpClient builder.
      */
-    public static synchronized UrlConnectionHttpClient getDefaultInstance() {
-        UrlConnectionHttpClient reference = defaultReference.get();
+    public static synchronized UrlConnectionHttpClientBuilder getBuilderWithDefaultRetryPolicy() {
+        UrlConnectionHttpClientBuilder reference = defaultReference.get();
         if (reference == null) {
             defaultReference.compareAndSet(null, UrlConnectionHttpClient.builder()
-                    .retryPolicy(StatusCodeAndExceptionRetry.builder()
-                            .number(1)
-                            .extensionFactor(2)
-                            .isAcceptable(new Function<HttpResponse, Boolean>() {
-                                public Boolean apply(HttpResponse response) {
-                                    return response != null && response.getStatusCode() < 400;
-                                }
-                            })
-                            .initialDelay(RETRY_TIME_WAITING_PERIOD_MSEC)
-                            .isRetryable(new Function<HttpResponse, Boolean>() {
-                                public Boolean apply(HttpResponse response) {
-                                    return response != null && isRetryableError(response.getStatusCode());
-                                }
-                            })
-                            .isRetryableException(new Function<Exception, Boolean>() {
-                                public Boolean apply(Exception e) {
-                                    return e instanceof SocketTimeoutException;
-                                }
-                            })
-                            .build())
-                    .build());
+                    .retryPolicy(getDefaultExceptionRetryPolicy())
+            );
             reference = defaultReference.get();
         }
         return reference;
+    }
+
+    /**
+     * Obtain a static default instance of a Status {@link IRetryPolicy retry policy}.
+     *
+     * @return a StatusCodeAndExceptionRetry object
+     */
+    @NonNull
+    private static StatusCodeAndExceptionRetry getDefaultExceptionRetryPolicy() {
+         return StatusCodeAndExceptionRetry.builder()
+                 .number(1)
+                .extensionFactor(2)
+                .isAcceptable(new Function<HttpResponse, Boolean>() {
+                    public Boolean apply(HttpResponse response) {
+                        return response != null && response.getStatusCode() < 400;
+                    }
+                })
+                .initialDelay(RETRY_TIME_WAITING_PERIOD_MS)
+                .isRetryable(new Function<HttpResponse, Boolean>() {
+                    public Boolean apply(HttpResponse response) {
+                        return response != null && isRetryableError(response.getStatusCode());
+                    }
+                })
+                .isRetryableException(new Function<Exception, Boolean>() {
+                    public Boolean apply(Exception e) {
+                        return e instanceof SocketTimeoutException;
+                    }
+                })
+                .build();
     }
 
     /**
@@ -214,7 +224,7 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
     /**
      * Record the end of an http event.
      *
-     * @param response
+     * @param response http response
      */
     private static void recordHttpTelemetryEventEnd(final HttpResponse response) {
         final HttpEndEvent httpEndEvent = new HttpEndEvent();
@@ -289,6 +299,7 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
      * @throws IOException Thrown when failing to access inputStream stream.
      */
     private String convertStreamToString(final InputStream inputStream) throws IOException {
+        final String methodTag = TAG+ ":convertStreamToString";
         try {
             final BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream,
                     AuthenticationConstants.CHARSET_UTF8));
@@ -300,6 +311,7 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
                 stringBuilder.append(buffer, 0, charsRead);
             }
 
+            Logger.info(methodTag, "Stream converted to String Successfully");
             return stringBuilder.toString();
         } finally {
             safeCloseStream(inputStream);
@@ -326,21 +338,25 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
     }
 
     private HttpResponse executeHttpSend(HttpRequest request, Consumer<HttpResponse> completionCallback) throws IOException {
+        final String methodTag = TAG+ ":executeHttpSend";
         final HttpURLConnection urlConnection = setupConnection(request);
 
         sendRequest(urlConnection, request.getRequestContent(), request.getRequestHeaders().get(HttpConstants.HeaderField.CONTENT_TYPE));
 
+        Logger.info(methodTag, "Request sent");
         InputStream responseStream = null;
         HttpResponse response = null;
         try {
             try {
                 responseStream = urlConnection.getInputStream();
             } catch (final SocketTimeoutException socketTimeoutException) {
+                Logger.warn(methodTag, "SocketTimeoutException occurred," + retryPolicy.getClass().getName());
                 // SocketTimeoutExcetion is thrown when connection timeout happens. For connection
                 // timeout, we want to retry once. Throw the exception to the upper layer, and the
                 // upper layer will handle the retry.
                 throw socketTimeoutException;
             } catch (final IOException ioException) {
+                Logger.warn(methodTag, "Input stream contains IOException");
                 // 404, for example, will generate an exception.  We should catch it.
                 responseStream = urlConnection.getErrorStream();
             }
@@ -358,6 +374,7 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
                     responseBody,
                     urlConnection.getHeaderFields()
             );
+            Logger.info(methodTag, "Response " + statusCode);
         } finally {
             completionCallback.accept(response);
             safeCloseStream(responseStream);

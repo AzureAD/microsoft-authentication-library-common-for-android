@@ -60,7 +60,7 @@ public class ShadowHttpClient {
                                @Nullable byte[] requestContent) throws IOException {
         final HttpRequestInterceptor interceptor = MockHttpClient.getInterceptor(httpMethod, requestUrl, requestHeaders, requestContent);
         if (interceptor == null) {
-            return UrlConnectionHttpClient.getDefaultInstance().method(httpMethod, requestUrl, requestHeaders, requestContent);
+            return UrlConnectionHttpClient.getBuilderWithDefaultRetryPolicy().build().method(httpMethod, requestUrl, requestHeaders, requestContent, sslContext);
         } else {
             return interceptor.performIntercept(httpMethod, requestUrl, requestHeaders, requestContent);
         }

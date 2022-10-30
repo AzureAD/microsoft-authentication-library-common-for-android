@@ -71,8 +71,6 @@ import javax.net.ssl.HttpsURLConnection;
 import lombok.NonNull;
 
 import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.CLIENT_REQUEST_ID;
-import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.PKEYAUTH_HEADER;
-import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.PKEYAUTH_VERSION;
 import static com.microsoft.identity.common.java.AuthenticationConstants.OAuth2.ERROR;
 import static com.microsoft.identity.common.java.AuthenticationConstants.OAuth2.ERROR_DESCRIPTION;
 
@@ -102,7 +100,7 @@ public abstract class OAuth2Strategy
     protected static final String TOKEN_REQUEST_CONTENT_TYPE = "application/x-www-form-urlencoded";
     protected static final String DEVICE_CODE_CONTENT_TYPE = TOKEN_REQUEST_CONTENT_TYPE;
 
-    protected final HttpClient httpClient = UrlConnectionHttpClient.getDefaultInstance();
+    protected final HttpClient httpClient = UrlConnectionHttpClient.getBuilderWithDefaultRetryPolicy().build();
 
     protected final GenericOAuth2Configuration mConfig;
     protected final GenericOAuth2StrategyParameters mStrategyParameters;
