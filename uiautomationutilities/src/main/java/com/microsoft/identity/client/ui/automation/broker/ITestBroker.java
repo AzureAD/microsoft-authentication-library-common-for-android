@@ -69,7 +69,7 @@ public interface ITestBroker extends IApp {
 
     /**
      * Perform shared device registration with supplied username. This user must be a cloud device
-     * admin for the registration to actually succeed.
+     * admin for the registration to actually succeed. This method excludes checking if is in shared device mode.
      *
      * @param username username of the account to use for registration
      * @param password password of the account to use for registration

@@ -142,7 +142,7 @@ public class BrokerAuthenticatorUpdatedVersionImpl extends BrokerMicrosoftAuthen
     @Override
     public void performSharedDeviceRegistrationDontValidate(@NonNull final String username,
                                                 @NonNull final String password) {
-        Logger.i(TAG, "Performing Shared Device Registration for the given account..");
+        Logger.i(TAG, "Performing Shared Device Registration for the given account without validating we are in shared device mode.");
         performDeviceRegistrationHelper(
                 username,
                 password,
