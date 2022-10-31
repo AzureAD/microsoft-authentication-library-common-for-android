@@ -39,6 +39,7 @@ import static org.mockito.Mockito.when;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.microsoft.identity.common.components.AndroidPlatformComponentsFactory;
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.java.authscheme.BearerAuthenticationSchemeInternal;
 import com.microsoft.identity.common.java.cache.ICacheRecord;
@@ -90,7 +91,7 @@ public class MicrosoftFamilyOAuth2TokenCacheTest extends MsalOAuth2TokenCacheTes
     public void setUp() throws Exception {
         super.setUp();
         mOauth2TokenCache = new MicrosoftFamilyOAuth2TokenCache<>(
-                AndroidPlatformComponents.createFromContext(ApplicationProvider.getApplicationContext()),
+                AndroidPlatformComponentsFactory.createFromContext(ApplicationProvider.getApplicationContext()),
                 accountCredentialCache,
                 mockCredentialAdapter
         );

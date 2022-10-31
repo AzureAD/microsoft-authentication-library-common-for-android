@@ -26,7 +26,7 @@ import android.content.Context;
 
 import androidx.annotation.NonNull;
 
-import com.microsoft.identity.common.AndroidPlatformComponents;
+import com.microsoft.identity.common.components.AndroidPlatformComponentsFactory;
 import com.microsoft.identity.common.java.exception.ClientException;
 
 /**
@@ -48,7 +48,7 @@ public class AndroidKeystoreAsymmetricRsaKeyFactory implements AsymmetricRsaKeyF
     @Override
     public synchronized AsymmetricRsaKey generateAsymmetricKey(@NonNull final String alias) throws ClientException {
         return new AndroidKeystoreAsymmetricRsaKey(
-                AndroidPlatformComponents.createFromContext(mContext).getDevicePopManager(alias),
+                AndroidPlatformComponentsFactory.createFromContext(mContext).getDevicePopManager(alias),
                 alias
         );
     }
@@ -61,6 +61,6 @@ public class AndroidKeystoreAsymmetricRsaKeyFactory implements AsymmetricRsaKeyF
 
     @Override
     public synchronized boolean clearAsymmetricKey(@NonNull final String alias) throws ClientException {
-        return AndroidPlatformComponents.createFromContext(mContext).getDevicePopManager(alias).clearAsymmetricKey();
+        return AndroidPlatformComponentsFactory.createFromContext(mContext).getDevicePopManager(alias).clearAsymmetricKey();
     }
 }

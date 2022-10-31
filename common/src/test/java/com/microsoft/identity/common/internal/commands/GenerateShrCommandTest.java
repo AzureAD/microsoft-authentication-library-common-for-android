@@ -24,7 +24,7 @@ package com.microsoft.identity.common.internal.commands;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.microsoft.identity.common.AndroidPlatformComponents;
+import com.microsoft.identity.common.components.AndroidPlatformComponentsFactory;
 import com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeInternal;
 import com.microsoft.identity.common.java.commands.BaseCommand;
 import com.microsoft.identity.common.java.commands.CommandCallback;
@@ -53,7 +53,7 @@ public class GenerateShrCommandTest {
     };
 
     public static final GenerateShrCommandParameters PARAMS_ONE = GenerateShrCommandParameters.builder()
-            .platformComponents(AndroidPlatformComponents.createFromContext(ApplicationProvider.getApplicationContext()))
+            .platformComponents(AndroidPlatformComponentsFactory.createFromContext(ApplicationProvider.getApplicationContext()))
             .homeAccountId("One")
             .popParameters(PopAuthenticationSchemeInternal.builder()
                     .clientClaims("claims")
@@ -70,7 +70,7 @@ public class GenerateShrCommandTest {
             .controllers(Collections.<BaseController>emptyList())
             .build();
     public static final GenerateShrCommandParameters PARAMS_ONE_CLONE = GenerateShrCommandParameters.builder()
-            .platformComponents(AndroidPlatformComponents.createFromContext(ApplicationProvider.getApplicationContext()))
+            .platformComponents(AndroidPlatformComponentsFactory.createFromContext(ApplicationProvider.getApplicationContext()))
             .homeAccountId("One")
             .popParameters(PopAuthenticationSchemeInternal.builder()
                     .clientClaims("claims")
@@ -87,7 +87,7 @@ public class GenerateShrCommandTest {
             .controllers(Collections.<BaseController>emptyList())
             .build();
     public static final GenerateShrCommandParameters PARAMS_TWO = GenerateShrCommandParameters.builder()
-            .platformComponents(AndroidPlatformComponents.createFromContext(ApplicationProvider.getApplicationContext()))
+            .platformComponents(AndroidPlatformComponentsFactory.createFromContext(ApplicationProvider.getApplicationContext()))
             .homeAccountId("One")
             .popParameters(PopAuthenticationSchemeInternal.builder()
                     .clientClaims("claims")
@@ -115,7 +115,7 @@ public class GenerateShrCommandTest {
                 .build();
 
         GenerateShrCommandParameters paramsTwo = GenerateShrCommandParameters.builder()
-                .platformComponents(AndroidPlatformComponents.createFromContext(ApplicationProvider.getApplicationContext()))
+                .platformComponents(AndroidPlatformComponentsFactory.createFromContext(ApplicationProvider.getApplicationContext()))
                 .homeAccountId("One")
                 .popParameters(PopAuthenticationSchemeInternal.builder()
                         .clientClaims("claims")
