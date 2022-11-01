@@ -51,7 +51,42 @@ public class NoopSpan implements Span {
     private final SpanContext spanContext;
 
     @Override
+    public Span setAttribute(String key, String value) {
+        return this;
+    }
+
+    @Override
+    public Span setAttribute(String key, long value) {
+        return this;
+    }
+
+    @Override
+    public Span setAttribute(String key, double value) {
+        return this;
+    }
+
+    @Override
+    public Span setAttribute(String key, boolean value) {
+        return this;
+    }
+
+    @Override
     public <T> Span setAttribute(AttributeKey<T> key, T value) {
+        return this;
+    }
+
+    @Override
+    public Span setAllAttributes(Attributes attributes) {
+        return this;
+    }
+
+    @Override
+    public Span addEvent(String name) {
+        return this;
+    }
+
+    @Override
+    public Span addEvent(String name, long timestamp, TimeUnit unit) {
         return this;
     }
 
@@ -66,7 +101,17 @@ public class NoopSpan implements Span {
     }
 
     @Override
+    public Span setStatus(StatusCode statusCode) {
+        return this;
+    }
+
+    @Override
     public Span setStatus(StatusCode statusCode, String description) {
+        return this;
+    }
+
+    @Override
+    public Span recordException(Throwable exception) {
         return this;
     }
 
@@ -81,14 +126,10 @@ public class NoopSpan implements Span {
     }
 
     @Override
-    public void end() {
-
-    }
+    public void end() {}
 
     @Override
-    public void end(long timestamp, TimeUnit unit) {
-
-    }
+    public void end(long timestamp, TimeUnit unit) {}
 
     @Override
     public SpanContext getSpanContext() {
@@ -98,5 +139,10 @@ public class NoopSpan implements Span {
     @Override
     public boolean isRecording() {
         return false;
+    }
+
+    @Override
+    public String toString() {
+        return "NoopSpan{" + spanContext + '}';
     }
 }
