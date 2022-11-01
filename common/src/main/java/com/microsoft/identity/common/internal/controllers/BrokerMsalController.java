@@ -50,7 +50,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
-import com.microsoft.identity.common.AndroidPlatformComponents;
+import com.microsoft.identity.common.components.AndroidPlatformComponentsFactory;
 import com.microsoft.identity.common.PropertyBagUtil;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.broker.BrokerActivity;
@@ -145,7 +145,7 @@ public class BrokerMsalController extends BaseController {
     }
 
     public BrokerMsalController(@NonNull final Context applicationContext) {
-        mComponents = AndroidPlatformComponents.createFromContext(applicationContext);
+        mComponents = AndroidPlatformComponentsFactory.createFromContext(applicationContext);
         mApplicationContext = applicationContext;
         mActiveBrokerPackageName = getActiveBrokerPackageName();
         if (TextUtils.isEmpty(mActiveBrokerPackageName)) {

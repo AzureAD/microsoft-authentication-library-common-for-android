@@ -339,6 +339,16 @@ public class ClientException extends BaseException {
     public static final String DATA_MALFORMED = "data_malformed";
 
     /**
+     * The Keyring write operation failed.
+     */
+    public static final String KEY_RING_WRITE_FAILURE = "storage_keyring_write_failure";
+
+    /**
+     * The Keyring read operation failed.
+     */
+    public static final String KEY_RING_READ_FAILURE = "storage_keyring_read_failure";
+
+    /**
      * Constructor of ClientException.
      *
      * @param errorCode String

@@ -22,18 +22,19 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.crypto;
 
+import static com.microsoft.identity.common.java.opentelemetry.CryptoFactoryTelemetryHelper.performCryptoOperationAndUploadTelemetry;
+
 import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.opentelemetry.CryptoObjectName;
+import com.microsoft.identity.common.java.opentelemetry.ICryptoOperation;
 
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.Key;
-import java.security.NoSuchAlgorithmException;
-import java.security.Provider;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.IvParameterSpec;
 
 import lombok.AllArgsConstructor;
@@ -52,16 +53,33 @@ public class BasicDecryptor implements IDecryptor {
                           @NonNull final String decryptAlgorithm,
                           final byte[] iv,
                           byte[] dataToBeDecrypted) throws ClientException {
-        try {
-            final Cipher cipher = mCryptoFactory.getCipher(decryptAlgorithm);
+        return performCryptoOperationAndUploadTelemetry(
+                CryptoObjectName.Cipher,
+                decryptAlgorithm,
+                mCryptoFactory,
+                new ICryptoOperation<byte[]>() {
+                    @Override
+                    public byte[] perform() throws ClientException {
+                        return decryptWithCipher(key, decryptAlgorithm, iv, dataToBeDecrypted);
+                    }
+                }
+        );
+    }
 
+    private byte[] decryptWithCipher(@NonNull final Key key,
+                                     @NonNull final String decryptAlgorithm,
+                                     final byte[] iv,
+                                     byte[] dataToBeDecrypted)
+            throws ClientException {
+        final Cipher cipher = mCryptoFactory.getCipher(decryptAlgorithm);
+        try{
             if (iv != null && iv.length > 0) {
                 final IvParameterSpec ivSpec = new IvParameterSpec(iv);
                 cipher.init(Cipher.DECRYPT_MODE, key, ivSpec);
             } else {
                 cipher.init(Cipher.DECRYPT_MODE, key);
             }
-            return cipher.doFinal(dataToBeDecrypted);
+                return cipher.doFinal(dataToBeDecrypted);
         } catch (final BadPaddingException e) {
             throw new ClientException(ClientException.BAD_PADDING, e.getMessage(), e);
         } catch (final IllegalBlockSizeException e) {

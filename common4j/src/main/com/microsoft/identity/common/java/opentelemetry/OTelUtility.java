@@ -22,45 +22,42 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.opentelemetry;
 
-/**
- * Names of Open Telemetry Span Attributes we want to capture for broker's Spans.
- */
-public enum AttributeName {
+import static com.microsoft.identity.common.java.opentelemetry.AttributeName.parent_span_name;
+
+import javax.annotation.Nullable;
+
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.sdk.trace.ReadableSpan;
+import lombok.NonNull;
+
+public class OTelUtility {
+    private static final String TAG = OTelUtility.class.getSimpleName();
+    
     /**
-     * The length of the response body returned from network request.
-     */
-    response_body_length,
-    /**
-     * Indicates if the JWT returned by eSTS is a valid JWT.
-     */
-    jwt_valid,
-    /**
-     * Indicates the algorithm for the JWE returned by eSTS.
-     */
-    jwt_alg,
+     * Creates a span (with shared basic attributes).
+     **/
+    @NonNull
+    public static Span createSpan(@NonNull final String name){
+        final Tracer tracer = GlobalOpenTelemetry.getTracer(TAG);
+        final Span span = tracer.spanBuilder(name).startSpan();
+
+        // Current span is the parent of span just created.
+        span.setAttribute(parent_span_name.name(), getCurrentSpanName());
+        return span;
+    }
 
     /**
-     * Indicates name of the parent span.
-     */
-    parent_span_name,
+     * Get name of the current span, if possible.
+     **/
+    @Nullable
+    private static String getCurrentSpanName(){
+        final Span span = Span.current();
+        if (span instanceof ReadableSpan) {
+            return ((ReadableSpan) span).getName();
+        }
+        return null;
+    }
 
-    /**
-     * Indicates the controller for crypto operation (in FIPS flows).
-     */
-    crypto_controller,
-
-    /**
-     * Indicates the crypto operation.
-     */
-    crypto_operation,
-
-    /**
-     * Indicates the stack trace from an crypto operation exception.
-     */
-    crypto_exception_stack_trace,
-
-    /**
-     * Indicates the request id value for cached credential service (if used) on server side
-     */
-    ccs_request_id,
 }

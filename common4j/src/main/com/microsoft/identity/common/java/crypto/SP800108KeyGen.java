@@ -22,7 +22,11 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.crypto;
 
+import static com.microsoft.identity.common.java.opentelemetry.CryptoFactoryTelemetryHelper.performCryptoOperationAndUploadTelemetry;
+
 import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.opentelemetry.CryptoObjectName;
+import com.microsoft.identity.common.java.opentelemetry.ICryptoOperation;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -35,9 +39,7 @@ import java.util.Arrays;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.AllArgsConstructor;
-import lombok.NonNull;
 import lombok.experimental.Accessors;
 
 /**
@@ -50,6 +52,8 @@ public class SP800108KeyGen {
     static final byte[] BIG_ENDIAN_INT_256 = ByteBuffer.allocate(4).order(ByteOrder.BIG_ENDIAN).putInt(256).array();
 
     private final ICryptoFactory mCryptoFactory;
+
+    private static final String HMAC_ALGORITHM = "HMacSHA256";
 
     /**]
      * Generate a derived key given a starting key.
@@ -72,7 +76,24 @@ public class SP800108KeyGen {
 
         stream.write(BIG_ENDIAN_INT_256);
 
-        byte[] pbDerivedKey = constructNewKey(key, stream.toByteArray());
+        byte[] pbDerivedKey = performCryptoOperationAndUploadTelemetry(
+                CryptoObjectName.Mac,
+                HMAC_ALGORITHM,
+                mCryptoFactory,
+                new ICryptoOperation<byte[]>() {
+                    @Override
+                    public byte[] perform() throws ClientException {
+                        try {
+                            return constructNewKey(key, stream.toByteArray());
+                        } catch (IOException e) {
+                            throw new ClientException(ClientException.IO_ERROR, e.getMessage(), e);
+                        } catch (InvalidKeyException e) {
+                            throw new ClientException(ClientException.INVALID_KEY, e.getMessage(), e);
+                        }
+                    }
+                }
+        );
+
         return Arrays.copyOf(pbDerivedKey, 32);
     }
 

@@ -22,8 +22,9 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.storage;
 
-import com.microsoft.identity.common.components.SettablePlatformComponents;
+import com.microsoft.identity.common.components.MockPlatformComponentsFactory;
 import com.microsoft.identity.common.java.interfaces.IPerSeparatorMultiTypeNameValueStorage;
+import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -47,7 +48,7 @@ public class StringSeparatedMultiTypeNameValueStorageTest {
 
     @Before
     public void setup() throws IOException {
-        final SettablePlatformComponents components = SettablePlatformComponents.builder()
+        final IPlatformComponents components = MockPlatformComponentsFactory.getNonFunctionalBuilder()
                 .build();
         mStringSeparatedMultiTypeNameValueStorage = new StringSeparatedMultiTypeNameValueStorage(
                 components, false

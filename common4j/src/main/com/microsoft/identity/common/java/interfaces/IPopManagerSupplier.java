@@ -20,47 +20,33 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java.opentelemetry;
+package com.microsoft.identity.common.java.interfaces;
+
+import com.microsoft.identity.common.java.crypto.IDevicePopManager;
+import com.microsoft.identity.common.java.exception.ClientException;
+
+import edu.umd.cs.findbugs.annotations.Nullable;
+import lombok.NonNull;
 
 /**
- * Names of Open Telemetry Span Attributes we want to capture for broker's Spans.
+ * An interface for loading {@link IDevicePopManager}
  */
-public enum AttributeName {
+public interface IPopManagerSupplier {
     /**
-     * The length of the response body returned from network request.
+     * Gets the default {@link IDevicePopManager}
+     *
+     * @throws ClientException if it fails to initialize, or if the operation is not supported by the platform.
      */
-    response_body_length,
-    /**
-     * Indicates if the JWT returned by eSTS is a valid JWT.
-     */
-    jwt_valid,
-    /**
-     * Indicates the algorithm for the JWE returned by eSTS.
-     */
-    jwt_alg,
+    @NonNull
+    default IDevicePopManager getDefaultDevicePopManager() throws ClientException {
+        return getDevicePopManager(null);
+    }
 
     /**
-     * Indicates name of the parent span.
+     * Gets a {@link IDevicePopManager} associated to the alias.
+     *
+     * @throws ClientException if it fails to initialize, or if the operation is not supported by the platform.
      */
-    parent_span_name,
-
-    /**
-     * Indicates the controller for crypto operation (in FIPS flows).
-     */
-    crypto_controller,
-
-    /**
-     * Indicates the crypto operation.
-     */
-    crypto_operation,
-
-    /**
-     * Indicates the stack trace from an crypto operation exception.
-     */
-    crypto_exception_stack_trace,
-
-    /**
-     * Indicates the request id value for cached credential service (if used) on server side
-     */
-    ccs_request_id,
+    @NonNull
+    IDevicePopManager getDevicePopManager(@Nullable final String alias) throws ClientException;
 }
