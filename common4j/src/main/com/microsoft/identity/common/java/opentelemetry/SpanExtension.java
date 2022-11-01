@@ -21,8 +21,6 @@
 // OUT OF OR IN CO
 package com.microsoft.identity.common.java.opentelemetry;
 
-import static io.opentelemetry.api.trace.TraceFlags.fromByte;
-
 import com.microsoft.identity.common.java.logging.Logger;
 
 import io.opentelemetry.api.internal.ImmutableSpanContext;
@@ -55,7 +53,7 @@ public class SpanExtension {
             ImmutableSpanContext.create(
                     TraceId.getInvalid(),
                     SpanId.getInvalid(),
-                    fromByte((byte) 0x00),
+                    new NoopTraceFlags(),
                     new NoopTraceState(),
                     /* remote= */ false,
                     /* valid= */ false
