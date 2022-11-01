@@ -8,6 +8,7 @@ V.Next
 - [MINOR] Leverage Otel Utility create span method (#1877)
 - [MINOR] Add Open Telemetry explicitly in common as transitive is set to false (#1882)
 - [MINOR] Add open telemetry to consumer rules (#1883)
+- [PATCH] Fixes MSAL Issue #1715 (#1894)
 
 V.8.0.3
 ----------
