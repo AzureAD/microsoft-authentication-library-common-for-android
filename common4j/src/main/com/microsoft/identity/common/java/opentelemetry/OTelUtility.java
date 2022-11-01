@@ -23,23 +23,40 @@
 package com.microsoft.identity.common.java.opentelemetry;
 
 import static com.microsoft.identity.common.java.opentelemetry.AttributeName.parent_span_name;
+import static io.opentelemetry.api.trace.TraceFlags.fromByte;
+
+import com.microsoft.identity.common.java.logging.Logger;
 
 import javax.annotation.Nullable;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.internal.ImmutableSpanContext;
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.api.trace.SpanId;
+import io.opentelemetry.api.trace.TraceId;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.sdk.trace.ReadableSpan;
 import lombok.NonNull;
 
 public class OTelUtility {
     private static final String TAG = OTelUtility.class.getSimpleName();
-    
+
+    private static final SpanContext INVALID =
+            ImmutableSpanContext.create(
+                    TraceId.getInvalid(),
+                    SpanId.getInvalid(),
+                    fromByte((byte) 0x00),
+                    new NoopTraceState(),
+                    /* remote= */ false,
+                    /* valid= */ false
+            );
+
     /**
      * Creates a span (with shared basic attributes).
      **/
     @NonNull
-    public static Span createSpan(@NonNull final String name){
+    public static Span createSpan(@NonNull final String name) {
         final Tracer tracer = GlobalOpenTelemetry.getTracer(TAG);
         final Span span = tracer.spanBuilder(name).startSpan();
 
@@ -48,11 +65,20 @@ public class OTelUtility {
         return span;
     }
 
+    public static Span getCurrentSpan() {
+        try {
+            return Span.current();
+        } catch (final NoSuchMethodError error) {
+            Logger.error(TAG + ":getCurrentSpan", error.getMessage(), error);
+            return new NoopSpan(INVALID);
+        }
+    }
+
     /**
      * Get name of the current span, if possible.
      **/
     @Nullable
-    private static String getCurrentSpanName(){
+    private static String getCurrentSpanName() {
         final Span span = Span.current();
         if (span instanceof ReadableSpan) {
             return ((ReadableSpan) span).getName();
