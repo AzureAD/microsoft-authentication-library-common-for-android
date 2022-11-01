@@ -24,6 +24,7 @@ package com.microsoft.identity.common.java.util;
 
 import com.microsoft.identity.common.java.net.HttpResponse;
 import com.microsoft.identity.common.java.opentelemetry.AttributeName;
+import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -59,7 +60,7 @@ public class HashMapExtensions {
      */
     public static HashMap<String, String> getJsonResponseFromResponseBody(String responseBody) throws JSONException {
         final HashMap<String, String> response = new HashMap<>();
-        final Span span = Span.current();
+        final Span span = SpanExtension.current();
         span.setAttribute(AttributeName.response_body_length.name(), responseBody.length());
         if (!StringUtil.isNullOrEmpty(responseBody)) {
             final JSONObject jsonObject = new JSONObject(responseBody);

@@ -24,6 +24,7 @@
 package com.microsoft.identity.common.java.platform;
 
 import com.microsoft.identity.common.java.opentelemetry.AttributeName;
+import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
 import com.microsoft.identity.common.java.util.StringUtil;
 
 import org.json.JSONException;
@@ -97,7 +98,7 @@ public class JweResponse {
     }
 
     public static JweResponse parseJwe(String jwe) throws JSONException {
-        final Span span = Span.current();
+        final Span span = SpanExtension.current();
         JweResponse response = new JweResponse();
 
         String[] split = jwe.split("\\.");
