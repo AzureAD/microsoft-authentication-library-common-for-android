@@ -53,6 +53,7 @@ import com.microsoft.identity.common.java.net.HttpConstants;
 import com.microsoft.identity.common.java.net.HttpResponse;
 import com.microsoft.identity.common.java.net.UrlConnectionHttpClient;
 import com.microsoft.identity.common.java.opentelemetry.AttributeName;
+import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
 import com.microsoft.identity.common.java.platform.Device;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationResponse;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenErrorResponse;
@@ -619,7 +620,7 @@ public class MicrosoftStsOAuth2Strategy
                 }
             }
 
-            Span.current().setAttribute(
+            SpanExtension.current().setAttribute(
                     AttributeName.ccs_request_id.name(),
                     response.getHeaderValue(XMS_CCS_REQUEST_ID, 0));
         }
