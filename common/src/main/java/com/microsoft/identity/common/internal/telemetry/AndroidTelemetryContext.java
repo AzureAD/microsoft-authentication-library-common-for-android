@@ -26,8 +26,8 @@ import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.content.res.Resources;
 import android.os.Build;
+import android.os.Bundle;
 
 import androidx.core.content.pm.PackageInfoCompat;
 
@@ -51,7 +51,7 @@ public class AndroidTelemetryContext extends AbstractTelemetryContext {
     public AndroidTelemetryContext(@NonNull final Context context) {
         super(new AndroidTelemetryPropertiesCache(context));
         addApplicationInfo(context);
-        addDeviceInfo(Build.MANUFACTURER, Build.MODEL, Build.DEVICE);
+        addDeviceInfo(Build.MANUFACTURER, Build.MODEL, Build.DEVICE, getDeviceType(context));
         addOsInfo();
     }
 
@@ -76,8 +76,12 @@ public class AndroidTelemetryContext extends AbstractTelemetryContext {
                 } else {
                     applicationName = context.getString(applicationInfo.labelRes);
                 }
-            }
 
+            }
+            ApplicationInfo appInfo = packageManager.getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);
+            Bundle bundle = appInfo.metaData;
+            String deviceType= bundle.getString("DeviceType");
+            Logger.info(methodTag, "setting the deviceType "+deviceType);
             super.addApplicationInfo(
                     packageName,
                     applicationName,
@@ -88,6 +92,23 @@ public class AndroidTelemetryContext extends AbstractTelemetryContext {
             //Not throw the exception to break the auth request when getting the app's telemetry
             Logger.warn(methodTag, "Unable to find the app's package name from PackageManager.");
         }
+    }
+
+    private String getDeviceType(Context context) {
+        final String methodTag = TAG + ":addApplicationInfo";
+        try {
+            final PackageManager packageManager = context.getPackageManager();
+
+            ApplicationInfo appInfo = packageManager.getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);
+            Bundle bundle = appInfo.metaData;
+            String deviceType = bundle.getString("DeviceType");
+            Logger.info(methodTag, "returning the deviceType " + deviceType);
+            return deviceType;
+        } catch (final PackageManager.NameNotFoundException e) {
+            //Not throw the exception to break the auth request when getting the app's telemetry
+            Logger.warn(methodTag, "Unable to find the app's package name from PackageManager.");
+        }
+        return null;
     }
 
     private void addOsInfo() {

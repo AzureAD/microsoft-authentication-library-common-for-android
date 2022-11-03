@@ -45,6 +45,7 @@ public class TelemetryEventStrings {
         public static final String NAME = EVENT_PREFIX + "device_name";
         public static final String TIMEZONE = EVENT_PREFIX + "time_zone";
         public static final String ID = EVENT_PREFIX + "device_guid";
+        public static final String TYPE = EVENT_PREFIX + "device_type";
     }
 
     public static final class Event {

@@ -29,6 +29,6 @@ class MockTelemetryContext extends AbstractTelemetryContext {
         super(new TelemetryPropertiesCache(new InMemoryStorage()));
         addApplicationInfo("com.testapp", "TestApp", "1.0", "100XXX");
         addOsInfo("TestOS", "1.0");
-        addDeviceInfo("SomeManufacturer", "SomeModel", "SomeDevice");
+        addDeviceInfo("SomeManufacturer", "SomeModel", "SomeDevice", "MobileDevice");
     }
 }

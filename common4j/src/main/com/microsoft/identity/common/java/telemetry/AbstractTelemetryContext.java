@@ -56,10 +56,12 @@ public abstract class AbstractTelemetryContext extends Properties {
 
     protected void addDeviceInfo(final String manufacturer,
                                  final String model,
-                                 final String device) {
+                                 final String device,
+                                 final String deviceType) {
         put(Device.MANUFACTURER, manufacturer);
         put(Device.MODEL, model);
         put(Device.NAME, device);
+        put(Device.TYPE, deviceType);
     }
 
     protected void addOsInfo(final String osName,

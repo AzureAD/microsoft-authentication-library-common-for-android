@@ -512,7 +512,7 @@ public class AuthenticationConstants {
         /**
          * Default timeout for broker tasks/futures.
          */
-        public static final long BROKER_TASK_DEFAULT_TIMEOUT_MILLISECONDS = TimeUnit.SECONDS.toMillis(30);
+        public static final long BROKER_TASK_DEFAULT_TIMEOUT_MILLISECONDS = TimeUnit.SECONDS.toMillis(300);
 
         /**
          * String of challenge response header.

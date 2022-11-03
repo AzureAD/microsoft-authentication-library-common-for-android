@@ -36,12 +36,12 @@ public interface ICallValidator {
      * Throws a ClientException if the caller cannot be validated or is unauthorized.  In android,
      * this will end up taking a map of package name to string of signatures.  In Linux, this is
      * probably a list of client ids.
-     * @param methodName the method name for logging purposes.
+     * @param methodTag the method name for logging purposes.
      * @param callingUid the identifier for the caller, platform dependent.
      * @param allowedApplications A map of name to iterable of verification string for calling apps.
      * @throws ClientException if the caller cannot be validated.
      */
-    void throwIfNotInvokedByAcceptableApp(@NonNull String methodName,
+    void throwIfNotInvokedByAcceptableApp(@NonNull String methodTag,
                                           int callingUid,
                                           @NonNull Map<String, Iterable<String>> allowedApplications)
             throws ClientException;
