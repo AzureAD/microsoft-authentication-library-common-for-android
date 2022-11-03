@@ -21,4 +21,10 @@
     <!-- This warns when a field is never read. -->
     <Bug pattern="URF_UNREAD_FIELD" />
 </Match>
+<Match>
+    <!-- Return value of method without side effect is ignored. -->
+    <!-- Adding this primarily for CryptoFactoryTelemetryHelper where this shows up -->
+    <Class name="com.microsoft.identity.common.java.opentelemetry.CryptoFactoryTelemetryHelper" />
+    <Bug pattern="RV_RETURN_VALUE_IGNORED_NO_SIDE_EFFECT" />
+</Match>
 </FindBugsFilter>
