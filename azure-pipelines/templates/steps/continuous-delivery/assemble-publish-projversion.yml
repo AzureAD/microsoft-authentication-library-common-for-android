@@ -39,6 +39,8 @@ steps:
 - task: Gradle@2
   displayName: Run unit tests
   inputs:
+    javaHomeSelection: JDKVersion
+    jdkVersionOption: "1.11"
     tasks: '${{ parameters.project }}:test${{ parameters.variant }} ${{ parameters.testArguments }}'
 - task: Gradle@2
   displayName: Publish
