@@ -127,7 +127,7 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
 
         // This value was not being updated from the above performSharedDeviceRegistration method since
         // brokerMicrosoftAuthenticatorImpl is actually a completely separate object.
-        shouldHandleFirstRun = false;
+        shouldHandleFirstRun = brokerMicrosoftAuthenticatorImpl.shouldHandleFirstRun;
     }
 
     @Override
@@ -137,8 +137,8 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
 
         // These values were not being updated from the above performSharedDeviceRegistration method since
         // brokerMicrosoftAuthenticatorImpl is actually a completely separate object.
-        isInSharedDeviceMode = true;
-        shouldHandleFirstRun = false;
+        isInSharedDeviceMode = brokerMicrosoftAuthenticatorImpl.isInSharedDeviceMode;
+        shouldHandleFirstRun = brokerMicrosoftAuthenticatorImpl.shouldHandleFirstRun;
     }
 
 
@@ -167,7 +167,7 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
 
         // This value was not being updated from the above performSharedDeviceRegistration method since
         // brokerMicrosoftAuthenticatorImpl is actually a completely separate object.
-        shouldHandleFirstRun = false;
+        shouldHandleFirstRun = brokerMicrosoftAuthenticatorImpl.shouldHandleFirstRun;
     }
 
     @Override
