@@ -33,6 +33,8 @@ steps:
 - task: Gradle@2
   displayName: Assemble ${{ parameters.project }} ${{ parameters.variant }}
   inputs:
+    javaHomeSelection: JDKVersion
+    jdkVersionOption: "1.11"
     tasks: '${{ parameters.project }}:clean ${{ parameters.project }}:assemble${{ parameters.variant }} ${{ parameters.buildArguments }}'
 - task: Gradle@2
   displayName: Run unit tests
