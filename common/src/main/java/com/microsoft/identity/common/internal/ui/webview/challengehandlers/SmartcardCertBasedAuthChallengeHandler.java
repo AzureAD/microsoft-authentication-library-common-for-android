@@ -58,8 +58,10 @@ public class SmartcardCertBasedAuthChallengeHandler implements ICertBasedAuthCha
     /**
      * Creates new instance of SmartcardCertBasedAuthChallengeHandler.
      * A manager for smartcard CBA is retrieved, and discovery for USB devices is started.
+     * @param activity current host activity.
      * @param smartcardCertBasedAuthManager AbstractSmartcardCertBasedAuthManager instance.
      * @param dialogHolder DialogHolder instance.
+     * @param proceedWithNfc true if connection is NFC, false if usb.
      */
     public SmartcardCertBasedAuthChallengeHandler(@NonNull final Activity activity,
                                                   @NonNull final AbstractSmartcardCertBasedAuthManager smartcardCertBasedAuthManager,

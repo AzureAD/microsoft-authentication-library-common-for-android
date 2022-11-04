@@ -48,7 +48,7 @@ public class CertBasedAuthFactory {
         mSmartcardCertBasedAuthManager = new YubiKitCertBasedAuthManager(mActivity.getApplicationContext());
         mSmartcardCertBasedAuthManager.setDiscoveryExceptionCallback(new AbstractSmartcardCertBasedAuthManager.IDiscoveryExceptionCallback() {
             @Override
-            public void onException() {
+            public void onException(@NonNull final Exception exception) {
                 //Logging, but may also want to emit telemetry.
                 //This method is not currently being called, but it could be
                 // used in future SmartcardCertBasedAuthManager implementations.
@@ -56,7 +56,7 @@ public class CertBasedAuthFactory {
             }
         });
         //Connection and disconnection callbacks for discovery are set in the SmartcardCertBasedAuthChallengeHandlers.
-        mSmartcardCertBasedAuthManager.startDiscovery();
+        mSmartcardCertBasedAuthManager.startUsbDiscovery();
     }
 
     /**

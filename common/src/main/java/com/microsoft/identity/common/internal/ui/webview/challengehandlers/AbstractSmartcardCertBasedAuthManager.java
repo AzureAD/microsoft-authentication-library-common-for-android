@@ -43,20 +43,22 @@ public abstract class AbstractSmartcardCertBasedAuthManager {
     /**
      * Logic to prepare an Android device to detect smartcards via usb.
      */
-    abstract void startDiscovery();
+    abstract void startUsbDiscovery();
 
     /**
      * Cease usb discovery of smartcards.
      */
-    abstract void stopDiscovery();
+    abstract void stopUsbDiscovery();
 
     /**
      * Logic to prepare an Android device to detect smartcards via NFC.
+     * @param activity current host activity.
      */
     abstract void startNfcDiscovery(@NonNull final Activity activity);
 
     /**
      * Cease NFC discovery of smartcards.
+     * @param activity current host activity.
      */
     abstract void stopNfcDiscovery(@NonNull final Activity activity);
 
@@ -115,7 +117,7 @@ public abstract class AbstractSmartcardCertBasedAuthManager {
         void onCreateConnection(final boolean isNfc);
 
         /**
-         * Logic to be run upon disconnection of a smartcard device.
+         * Logic to be run upon disconnection of a smartcard device via usb.
          */
         void onClosedConnection();
     }
@@ -126,8 +128,9 @@ public abstract class AbstractSmartcardCertBasedAuthManager {
     interface IDiscoveryExceptionCallback {
         /**
          * Logic to be run when an exception is thrown.
+         * @param exception thrown Exception instance.
          */
-        void onException();
+        void onException(@NonNull final Exception exception);
     }
 
     /**
