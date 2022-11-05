@@ -20,33 +20,23 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.client.ui.automation;
+package com.microsoft.identity.client.ui.automation.annotations;
 
-import java.util.concurrent.TimeUnit;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
- * Timeout values to be used with {@link TokenRequestLatch} to perform awaits.
+ * An annotation indicating that an automated End-to-End test case should be ran on a test device with API 29 or lower.
+ * Tests not marked with this annotation are assumed to be compatible with API 30+
+ * Typical reasons for wanting to run on older API:
+ *      - Pages that have elements with height 0 (these aren't visible to automation in API 30+) i.e. Keep me signed in page, consent page
+ *      - First party apps not launching on API 30+ i.e. Azure Sample app, outlook, etc.
+ *      - WebView seems to be easier to test on API 29-.
  */
-public enum TokenRequestTimeout {
-
-    SILENT(10, TimeUnit.SECONDS),
-    SHORT(20, TimeUnit.SECONDS),
-    MEDIUM(30, TimeUnit.SECONDS),
-    LONG(1, TimeUnit.MINUTES);
-
-    private final long time;
-    private final TimeUnit timeUnit;
-
-    TokenRequestTimeout(long time, TimeUnit timeUnit) {
-        this.time = time;
-        this.timeUnit = timeUnit;
-    }
-
-    public long getTime() {
-        return time;
-    }
-
-    public TimeUnit getTimeUnit() {
-        return timeUnit;
-    }
+@Retention(RetentionPolicy.RUNTIME)
+@Target({ElementType.METHOD, ElementType.TYPE})
+public @interface RunOnAPI29Minus {
+    String value() default "";
 }

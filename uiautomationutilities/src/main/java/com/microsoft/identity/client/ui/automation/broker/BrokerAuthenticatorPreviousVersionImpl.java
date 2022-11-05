@@ -55,7 +55,8 @@ public class BrokerAuthenticatorPreviousVersionImpl extends BrokerMicrosoftAuthe
                 password,
                 "com.azure.authenticator:id/email_input",
                 "com.azure.authenticator:id/register_button",
-                isFederatedUser
+                isFederatedUser,
+                AUTHENTICATOR_IS_REGISTER_EXPECTED
         );
 
         try {
@@ -103,7 +104,8 @@ public class BrokerAuthenticatorPreviousVersionImpl extends BrokerMicrosoftAuthe
                 password,
                 "com.azure.authenticator:id/shared_device_registration_email_input",
                 "com.azure.authenticator:id/shared_device_registration_button",
-                false
+                false,
+                AUTHENTICATOR_IS_REGISTER_EXPECTED_SHARED
         );
 
         final UiDevice device =

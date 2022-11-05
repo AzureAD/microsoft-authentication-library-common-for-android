@@ -34,12 +34,12 @@ import lombok.NonNull;
 
 public class OTelUtility {
     private static final String TAG = OTelUtility.class.getSimpleName();
-    
+
     /**
      * Creates a span (with shared basic attributes).
      **/
     @NonNull
-    public static Span createSpan(@NonNull final String name){
+    public static Span createSpan(@NonNull final String name) {
         final Tracer tracer = GlobalOpenTelemetry.getTracer(TAG);
         final Span span = tracer.spanBuilder(name).startSpan();
 
@@ -52,8 +52,8 @@ public class OTelUtility {
      * Get name of the current span, if possible.
      **/
     @Nullable
-    private static String getCurrentSpanName(){
-        final Span span = Span.current();
+    private static String getCurrentSpanName() {
+        final Span span = SpanExtension.current();
         if (span instanceof ReadableSpan) {
             return ((ReadableSpan) span).getName();
         }

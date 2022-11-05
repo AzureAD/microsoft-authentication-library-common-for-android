@@ -49,12 +49,21 @@ public class BrowserChrome extends App implements IBrowser {
 
     @Override
     public void handleFirstRun() {
-        Logger.i(TAG, "Handle First Run of Browser..");
-        UiAutomatorUtils.handleButtonClick("com.android.chrome:id/terms_accept");
-        if (LITE_MODE_EXPECTED){
-            UiAutomatorUtils.handleButtonClickForObjectWithText("Next");
+        // Make Chrome handleFirstRun safe
+        try {
+            Logger.i(TAG, "Handle First Run of Browser..");
+            UiAutomatorUtils.handleButtonClick("com.android.chrome:id/terms_accept");
+            if (LITE_MODE_EXPECTED) {
+                UiAutomatorUtils.handleButtonClickForObjectWithText("Next");
+            }
+            UiAutomatorUtils.handleButtonClick("com.android.chrome:id/negative_button");
+        } catch (AssertionError e) {
+            if (e.toString().contains("UiObjectNotFoundException")){
+                Logger.i(TAG, "Handle First Run had a UIObjectNotFoundException, do not throw AssertionError");
+            } else {
+                throw e;
+            }
         }
-        UiAutomatorUtils.handleButtonClick("com.android.chrome:id/negative_button");
     }
 
     @Override
