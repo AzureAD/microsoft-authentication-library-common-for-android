@@ -55,6 +55,7 @@ public class SmartcardNfcPromptDialog extends SmartcardDialog {
                 final AlertDialog.Builder builder = new AlertDialog.Builder(mActivity, R.style.UserChoiceAlertDialogTheme)
                         //Sets topmost text of dialog.
                         .setTitle(R.string.smartcard_nfc_prompt_dialog_title)
+                        .setMessage(R.string.smartcard_nfc_prompt_dialog_message)
                         .setNegativeButton(R.string.smartcard_nfc_prompt_dialog_negative_button, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {

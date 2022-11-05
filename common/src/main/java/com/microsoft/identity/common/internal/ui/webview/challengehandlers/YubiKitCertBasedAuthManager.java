@@ -71,13 +71,7 @@ public class YubiKitCertBasedAuthManager extends AbstractSmartcardCertBasedAuthM
      * @param context current application context.
      */
     public YubiKitCertBasedAuthManager(@NonNull final Context context) {
-        //Edge case where device doesn't support USB_SERVICE.
-        if (context.getSystemService(Context.USB_SERVICE) != null) {
             mYubiKitManager = new YubiKitManager(context);
-        } else {
-            mYubiKitManager = null;
-            Logger.info(TAG, "Certificate Based Authentication via YubiKey not enabled due to device not supporting USB_SERVICE.");
-        }
     }
 
     /**
@@ -87,11 +81,6 @@ public class YubiKitCertBasedAuthManager extends AbstractSmartcardCertBasedAuthM
      */
     @Override
     public void startUsbDiscovery() {
-        final String methodTag = TAG + ":startUsbDiscovery";
-        if (mYubiKitManager == null) {
-            Logger.info(methodTag, "Usb discovery for Certificate Based Authentication via YubiKey not started.");
-            return;
-        }
         mYubiKitManager.startUsbDiscovery(new UsbConfiguration(), new Callback<UsbYubiKeyDevice>() {
             @Override
             public void invoke(@NonNull UsbYubiKeyDevice device) {
@@ -136,11 +125,6 @@ public class YubiKitCertBasedAuthManager extends AbstractSmartcardCertBasedAuthM
      */
     @Override
     public void stopUsbDiscovery() {
-        final String methodTag = TAG + ":stopUsbDiscovery";
-        if (mYubiKitManager == null) {
-            Logger.info(methodTag, "Stop usb discovery for Certificate Based Authentication via YubiKey not performed.");
-            return;
-        }
         mUsbDevice = null;
         mYubiKitManager.stopUsbDiscovery();
     }
@@ -148,9 +132,11 @@ public class YubiKitCertBasedAuthManager extends AbstractSmartcardCertBasedAuthM
     /**
      * Logic to prepare an Android device to detect smartcards via NFC.
      * @param activity current host activity.
+     * @return true if user needs to turn on NFC capabilities;
+     * false if NFC discovery successfully started or device doesn't have NFC capabilities.
      */
     @Override
-    void startNfcDiscovery(@NonNull final Activity activity) {
+    boolean startNfcDiscovery(@NonNull final Activity activity) {
         try {
             mYubiKitManager.startNfcDiscovery(
                     new NfcConfiguration().timeout(NFC_TIMEOUT),
@@ -164,14 +150,18 @@ public class YubiKitCertBasedAuthManager extends AbstractSmartcardCertBasedAuthM
                     }
                 }
             });
+            return false;
         } catch (@NonNull final NfcNotAvailable e) {
             if (e.isDisabled()) {
-                //TODO: do we need to show a message to the user here to turn on NFC?
-                Logger.info(TAG, "Need to turn on NFC");
-            } else {
-                //This means that the device does not have an NFC reader.
-                //TODO: should we show a different dialog message to the users then?
+                //User will not be blocked from seeing the regular smartcard prompt,
+                // but appropriate dialog should be shown.
+                Logger.info(TAG, "Device has NFC functionality turned off.");
+                return true;
             }
+            //This means that the device does not have an NFC reader.
+            //User is not blocked because they can use usb to connect their YubiKey.
+            //No additional dialog needed.
+            return false;
         }
     }
 

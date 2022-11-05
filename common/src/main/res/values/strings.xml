@@ -10,12 +10,12 @@
     <string name="http_auth_dialog_cancel">Cancel</string>
 
     <!-- strings for CBA dialogs and layouts -->
-    <string name="smartcard_cert_dialog_title">Choose a smartcard certificate to sign in</string>
+    <string name="smartcard_cert_dialog_title">Select a certificate to sign in</string>
     <string name="smartcard_cert_dialog_positive_button">Continue</string>
     <string name="smartcard_cert_dialog_negative_button">Cancel</string>
 
-    <string name="smartcard_pin_dialog_title">Unlock smartcard</string>
-    <string name="smartcard_pin_dialog_message">Enter the smartcard PIN to access the certificate and sign in</string>
+    <string name="smartcard_pin_dialog_title">Unlock smart card</string>
+    <string name="smartcard_pin_dialog_message">Enter the smart card PIN to access the certificate and sign in</string>
     <string name="smartcard_pin_dialog_positive_button">Unlock</string>
     <string name="smartcard_pin_dialog_negative_button">Cancel</string>
     <string name="smartcard_pin_dialog_error_message">The PIN you entered was incorrect</string>
@@ -27,28 +27,30 @@
     <string name="smartcard_max_attempt_dialog_message">Too many failed attempts, try again later.</string>
 
     <string name="smartcard_early_unplug_dialog_title">Try again</string>
-    <string name="smartcard_early_unplug_dialog_message">Smartcard device was removed. Please reinsert device before attempting to log in again.</string>
+    <string name="smartcard_early_unplug_dialog_message">Smart card device was removed. Please reinsert device before attempting to log in again.</string>
 
     <string name="smartcard_no_cert_dialog_title">No applicable certificates found.</string>
-    <string name="smartcard_no_cert_dialog_message">Please confirm that your certificate has been correctly provisioned onto your smartcard device.</string>
+    <string name="smartcard_no_cert_dialog_message">Please confirm that your certificate has been correctly provisioned onto your smart card device.</string>
 
     <string name="smartcard_general_error_dialog_title">Try again later</string>
     <string name="smartcard_general_error_dialog_message">An unexpected error has occurred. Please try again later.</string>
 
     <!-- Beginning of new CBA dialog strings to be localized -->
-    <string name="user_choice_dialog_title">Choose the type of authentication to continue</string>
-    <string name="user_choice_dialog_on_device_name">On-Device Certificate</string>
-    <string name="user_choice_dialog_smartcard_name">Physical Smartcard</string>
+    <string name="user_choice_dialog_title">Select method of authentication</string>
+    <string name="user_choice_dialog_on_device_name">On-device certificate</string>
+    <string name="user_choice_dialog_smartcard_name">Physical smart card</string>
     <string name="user_choice_dialog_positive_button">Continue</string>
     <string name="user_choice_dialog_negative_button">Cancel</string>
 
-    <string name="smartcard_prompt_dialog_title">Prepare your smartcard</string>
-    <string name="smartcard_prompt_dialog_message">Plug in or hold a smartcard to the back of your phone.</string>
+    <string name="smartcard_prompt_dialog_title">Prepare your smart card</string>
+    <string name="smartcard_prompt_dialog_message">Plug in or hold a smart card to the back of your phone.</string>
     <string name="smartcard_prompt_dialog_negative_button">Cancel</string>
 
-    <string name="smartcard_nfc_loading_dialog_title">Keep holding smartcard to device.</string>
+    <string name="smartcard_nfc_loading_dialog_title">Reading your smart card</string>
+    <string name="smartcard_nfc_loading_dialog_message">Keep your smart card in place.</string>
 
-    <string name="smartcard_nfc_prompt_dialog_title">Hold a smartcard to the back of your phone.</string>
+    <string name="smartcard_nfc_prompt_dialog_title">Prepare your smart card</string>
+    <string name="smartcard_nfc_prompt_dialog_message">Hold a smart card to the back of your phone.</string>
     <string name="smartcard_nfc_prompt_dialog_negative_button">Cancel</string>
 
 </resources>

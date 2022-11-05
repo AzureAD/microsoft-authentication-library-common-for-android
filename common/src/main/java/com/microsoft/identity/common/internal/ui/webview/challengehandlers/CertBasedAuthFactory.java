@@ -29,7 +29,7 @@ import androidx.annotation.NonNull;
 import com.microsoft.identity.common.logging.Logger;
 
 /**
- * Instantiates handlers and managers for certificate based authentication.
+ * Instantiates handlers for certificate based authentication.
  */
 public class CertBasedAuthFactory {
 
@@ -45,7 +45,10 @@ public class CertBasedAuthFactory {
     public CertBasedAuthFactory(@NonNull final Activity activity) {
         final String methodTag = TAG + ":CertBasedAuthFactory";
         mActivity = activity;
-        mSmartcardCertBasedAuthManager = new YubiKitCertBasedAuthManager(mActivity.getApplicationContext());
+        mSmartcardCertBasedAuthManager = SmartcardCertBasedAuthManagerFactory.createSmartcardCertBasedAuthManager(mActivity.getApplicationContext());
+        if (mSmartcardCertBasedAuthManager == null) {
+            return;
+        }
         mSmartcardCertBasedAuthManager.setDiscoveryExceptionCallback(new AbstractSmartcardCertBasedAuthManager.IDiscoveryExceptionCallback() {
             @Override
             public void onException(@NonNull final Exception exception) {
@@ -65,17 +68,23 @@ public class CertBasedAuthFactory {
      */
     @NonNull
     public ICertBasedAuthChallengeHandler createCertBasedAuthChallengeHandler() {
-        if (mSmartcardCertBasedAuthManager.isUsbDeviceConnected()) {
-            return new SmartcardCertBasedAuthChallengeHandler(mActivity,mSmartcardCertBasedAuthManager, new DialogHolder(mActivity), false);
-        } else {
-            return new UserChoiceCertBasedAuthChallengeHandler(mActivity, mSmartcardCertBasedAuthManager, new DialogHolder(mActivity));
+        if (mSmartcardCertBasedAuthManager == null) {
+            //Smartcard CBA is not available, so default to on-device.
+            return new OnDeviceCertBasedAuthChallengeHandler(mActivity);
         }
+        else if (mSmartcardCertBasedAuthManager.isUsbDeviceConnected()) {
+            return new SmartcardCertBasedAuthChallengeHandler(mActivity, mSmartcardCertBasedAuthManager, new DialogHolder(mActivity), false);
+        }
+        return new UserChoiceCertBasedAuthChallengeHandler(mActivity, mSmartcardCertBasedAuthManager, new DialogHolder(mActivity));
     }
 
     /**
      * Cleanup to be done when host activity is being destroyed.
      */
     public void onDestroy() {
+        if (mSmartcardCertBasedAuthManager == null) {
+            return;
+        }
         mSmartcardCertBasedAuthManager.onDestroy();
     }
 }

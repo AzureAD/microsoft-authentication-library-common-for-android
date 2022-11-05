@@ -131,6 +131,10 @@ public class UserChoiceCertBasedAuthChallengeHandler implements ICertBasedAuthCh
             return;
         }
 
+        if (mSmartcardCertBasedAuthManager.startNfcDiscovery(mActivity)) {
+            //TODO: will add extra dialog here that will inform user to turn on NFC if they want to use NFC.
+            //Dialog button callback will show SmartcardPromptDialog
+        }
         mDialogHolder.showSmartcardPromptDialog(new SmartcardPromptDialog.CancelCbaCallback() {
             @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
             @Override
@@ -155,7 +159,6 @@ public class UserChoiceCertBasedAuthChallengeHandler implements ICertBasedAuthCh
                 //ConnectionCallback will be changed before ever reaching this method.
             }
         });
-        mSmartcardCertBasedAuthManager.startNfcDiscovery(mActivity);
     }
 
     /**

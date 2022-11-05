@@ -53,8 +53,10 @@ public abstract class AbstractSmartcardCertBasedAuthManager {
     /**
      * Logic to prepare an Android device to detect smartcards via NFC.
      * @param activity current host activity.
+     * @return true if user needs to turn on NFC capabilities;
+     * false if NFC discovery successfully started or device doesn't have NFC capabilities.
      */
-    abstract void startNfcDiscovery(@NonNull final Activity activity);
+    abstract boolean startNfcDiscovery(@NonNull final Activity activity);
 
     /**
      * Cease NFC discovery of smartcards.

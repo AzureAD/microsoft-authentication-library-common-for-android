@@ -56,6 +56,7 @@ public class SmartcardNfcLoadingDialog extends SmartcardDialog {
                 final AlertDialog.Builder builder = new AlertDialog.Builder(mActivity, R.style.UserChoiceAlertDialogTheme)
                         //Sets topmost text of dialog.
                         .setTitle(R.string.smartcard_nfc_loading_dialog_title)
+                        .setMessage(R.string.smartcard_nfc_loading_dialog_message)
                         .setView(nfcLoadingLayout);
                 final androidx.appcompat.app.AlertDialog dialog = builder.create();
                 //If user touches outside dialog, the default behavior makes the dialog disappear without really doing anything.
