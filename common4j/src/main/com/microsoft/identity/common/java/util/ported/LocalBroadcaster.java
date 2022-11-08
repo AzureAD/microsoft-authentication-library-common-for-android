@@ -82,6 +82,9 @@ public enum LocalBroadcaster {
         });
     }
 
+    /**
+     * Resets the broadcast executor service.
+     */
     public void resetBroadcast() {
         shutdownAndAwaitTerminationForBroadcasterService();
         sBroadcastExecutor = Executors.newSingleThreadExecutor();
