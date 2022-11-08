@@ -2,7 +2,6 @@ package com.microsoft.identity.client.ui.automation.rules;
 
 import android.text.TextUtils;
 
-import com.microsoft.identity.client.ui.automation.app.App;
 import com.microsoft.identity.client.ui.automation.powerlift.IPowerLiftIntegratedApp;
 import com.microsoft.identity.client.ui.automation.logging.Logger;
 import com.microsoft.identity.client.ui.automation.powerlift.ThrowableWithPowerLiftIncident;
