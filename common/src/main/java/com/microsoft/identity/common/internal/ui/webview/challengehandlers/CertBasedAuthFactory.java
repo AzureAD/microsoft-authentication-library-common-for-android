@@ -55,7 +55,7 @@ public class CertBasedAuthFactory {
                 //Logging, but may also want to emit telemetry.
                 //This method is not currently being called, but it could be
                 // used in future SmartcardCertBasedAuthManager implementations.
-                Logger.error(methodTag, "Unable to start smartcard usb discovery.", null);
+                Logger.error(methodTag, "Exception thrown upon starting smartcard usb discovery: " + exception.getMessage(), exception);
             }
         });
         //Connection and disconnection callbacks for discovery are set in the SmartcardCertBasedAuthChallengeHandlers.
