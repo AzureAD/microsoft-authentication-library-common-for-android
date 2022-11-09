@@ -150,7 +150,8 @@ public class BrokerAuthenticatorUpdatedVersionImpl extends BrokerMicrosoftAuthen
                 password,
                 "sharedWorkPlaceTextField",
                 "sharedWorkPlaceRegisterButton",
-                false
+                false,
+                AUTHENTICATOR_IS_REGISTER_EXPECTED_SHARED
         );
     }
     
