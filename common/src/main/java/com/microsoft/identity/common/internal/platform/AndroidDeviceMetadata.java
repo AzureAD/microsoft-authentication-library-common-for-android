@@ -22,8 +22,13 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.platform;
 
+import android.content.Context;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import android.os.Build;
+import android.os.Bundle;
 
+import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.platform.AbstractDeviceMetadata;
 
 import lombok.NonNull;
@@ -34,6 +39,8 @@ import lombok.NonNull;
 public class AndroidDeviceMetadata extends AbstractDeviceMetadata {
 
     private static final String ANDROID_DEVICE_TYPE = "Android";
+    private static final String DEVICE_TYPE = "DeviceType";
+    private static final String TAG = AndroidDeviceMetadata.class.getSimpleName();
 
     @Override
     @NonNull
@@ -63,7 +70,9 @@ public class AndroidDeviceMetadata extends AbstractDeviceMetadata {
     }
 
     @Override
-    public @NonNull String getOsForMats() { return android.os.Build.VERSION.RELEASE; }
+    public @NonNull String getOsForMats() {
+        return android.os.Build.VERSION.RELEASE;
+    }
 
     @Override
     public @NonNull String getOsForDrs() {
@@ -80,6 +89,29 @@ public class AndroidDeviceMetadata extends AbstractDeviceMetadata {
     @NonNull
     public String getManufacturer() {
         return Build.MANUFACTURER;
+    }
+
+    /**
+     * Get the android device type, i.e; if it is an nGMS teams device or a mobile device
+     *
+     * @param context {@link Context}
+     * @return device type
+     */
+    public static String getAndroidDeviceTypeFromMetadata(@NonNull final Context context) {
+        final String methodTag = TAG + " :getDeviceType";
+        String defaultDeviceType = "mobileDevice";
+        try {
+            final PackageManager packageManager = context.getPackageManager();
+            final ApplicationInfo appInfo = packageManager.getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);
+            final Bundle metaDataBundle = appInfo.metaData;
+            final String deviceType = metaDataBundle.getString(DEVICE_TYPE, defaultDeviceType);
+            Logger.verbose(methodTag, "Setting the deviceType as " + deviceType);
+            return deviceType;
+        } catch (final PackageManager.NameNotFoundException e) {
+            // Do not throw the exception to break the auth request when getting the app's telemetry
+            Logger.warn(methodTag, "Unable to find the app's package name from PackageManager.");
+        }
+        return defaultDeviceType;
     }
 }
 
