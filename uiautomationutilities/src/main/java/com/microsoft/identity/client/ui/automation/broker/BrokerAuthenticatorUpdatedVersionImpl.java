@@ -69,15 +69,16 @@ public class BrokerAuthenticatorUpdatedVersionImpl extends BrokerMicrosoftAuthen
                     password,
                     "workPlaceTextField",
                     "workPlaceRegisterButton",
-                    isFederatedUser
+                    isFederatedUser,
+                    AUTHENTICATOR_IS_REGISTER_EXPECTED
             );
 
 
             try {
                 // after device registration, make sure that we see the unregister btn to confirm successful
                 // registration
-                final UiObject unRegisterBtn = UiAutomatorUtils.obtainUiObjectWithResourceId(
-                        "com.azure.authenticator:id/unregister_button"
+                final UiObject unRegisterBtn = UiAutomatorUtils.obtainUiObjectWithExactText(
+                        "UNREGISTER DEVICE"
                 );
                 Assert.assertTrue(
                         "Microsoft Authenticator - Unregister Button appears.",
@@ -119,7 +120,8 @@ public class BrokerAuthenticatorUpdatedVersionImpl extends BrokerMicrosoftAuthen
                 password,
                 "sharedWorkPlaceTextField",
                 "sharedWorkPlaceRegisterButton",
-                false
+                false,
+                AUTHENTICATOR_IS_REGISTER_EXPECTED_SHARED
         );
 
         final UiDevice device =

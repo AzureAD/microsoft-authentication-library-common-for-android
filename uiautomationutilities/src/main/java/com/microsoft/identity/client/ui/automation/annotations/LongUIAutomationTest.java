@@ -20,33 +20,18 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.client.ui.automation;
+package com.microsoft.identity.client.ui.automation.annotations;
 
-import java.util.concurrent.TimeUnit;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
- * Timeout values to be used with {@link TokenRequestLatch} to perform awaits.
+ * Use this annotation to specify if a UI Automation test is expected to take a long time (3+ minutes)
  */
-public enum TokenRequestTimeout {
-
-    SILENT(10, TimeUnit.SECONDS),
-    SHORT(20, TimeUnit.SECONDS),
-    MEDIUM(30, TimeUnit.SECONDS),
-    LONG(1, TimeUnit.MINUTES);
-
-    private final long time;
-    private final TimeUnit timeUnit;
-
-    TokenRequestTimeout(long time, TimeUnit timeUnit) {
-        this.time = time;
-        this.timeUnit = timeUnit;
-    }
-
-    public long getTime() {
-        return time;
-    }
-
-    public TimeUnit getTimeUnit() {
-        return timeUnit;
-    }
+@Retention(RetentionPolicy.RUNTIME)
+@Target({ElementType.METHOD, ElementType.TYPE})
+public @interface LongUIAutomationTest {
+    String value() default "";
 }
