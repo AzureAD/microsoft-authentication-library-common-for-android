@@ -430,6 +430,7 @@ public class BrokerHost extends AbstractTestBroker {
         if (shouldHandleFirstRun) {
             handleFirstRun(); // handle first run experience
         }
+        UiAutomatorUtils.obtainChildInScrollable("Get Accounts");
         UiAutomatorUtils.handleButtonClick(resourceButtonId);
         // Look for the dialog box
         final UiObject dialogBox = UiAutomatorUtils.obtainUiObjectWithResourceId(
