@@ -141,6 +141,12 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
         shouldHandleFirstRun = brokerMicrosoftAuthenticatorImpl.shouldHandleFirstRun;
     }
 
+    @Override
+    public void performSharedDeviceRegistrationDontValidate(@NonNull final String username,
+                                                @NonNull final String password) {
+        brokerMicrosoftAuthenticatorImpl.performSharedDeviceRegistrationDontValidate(username, password);
+    }
+
 
     @Nullable
     @Override
