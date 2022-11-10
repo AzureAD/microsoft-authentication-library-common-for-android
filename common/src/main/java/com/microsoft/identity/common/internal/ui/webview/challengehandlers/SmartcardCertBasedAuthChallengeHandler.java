@@ -83,13 +83,11 @@ public class SmartcardCertBasedAuthChallengeHandler implements ICertBasedAuthCha
 
             @Override
             public void onClosedConnection() {
-                if (!proceedWithNfc) {
-                    //Show an error dialog informing users that they have unplugged their device only if a dialog is still showing.
-                    if (mDialogHolder.isDialogShowing()) {
-                        mDialogHolder.onCancelCba();
-                        mDialogHolder.showErrorDialog(R.string.smartcard_early_unplug_dialog_title, R.string.smartcard_early_unplug_dialog_message);
-                        Logger.verbose(methodTag, "Smartcard was disconnected while dialog was still displayed.");
-                    }
+                if (!proceedWithNfc && mDialogHolder.isDialogShowing()) {
+                    //Show an error dialog informing users that they have unplugged their device.
+                    mDialogHolder.onCancelCba();
+                    mDialogHolder.showErrorDialog(R.string.smartcard_early_unplug_dialog_title, R.string.smartcard_early_unplug_dialog_message);
+                    Logger.verbose(methodTag, "Smartcard was disconnected while dialog was still displayed.");
                 }
             }
         });
