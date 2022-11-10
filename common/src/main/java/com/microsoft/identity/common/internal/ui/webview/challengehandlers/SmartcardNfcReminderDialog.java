@@ -30,14 +30,22 @@ import androidx.appcompat.app.AlertDialog;
 
 import com.microsoft.identity.common.R;
 
+/**
+ * Builds a dialog that notifies the user to turn on NFC in settings if they want to authenticate via NFC.
+ */
 public class SmartcardNfcReminderDialog extends SmartcardDialog {
 
-    private final PositiveButtonListener mPositiveButtonListener;
+    private final DismissCallback mDismissCallback;
 
-    public SmartcardNfcReminderDialog(@NonNull final PositiveButtonListener positiveButtonListener,
+    /**
+     * Creates new instance of SmartcardNfcReminderDialog.
+     * @param dismissCallback callback containing logic to be run upon dialog dismissal.
+     * @param activity current host activity.
+     */
+    public SmartcardNfcReminderDialog(@NonNull final DismissCallback dismissCallback,
                                       @NonNull final Activity activity) {
         super(activity);
-        mPositiveButtonListener = positiveButtonListener;
+        mDismissCallback = dismissCallback;
         createDialog();
     }
 
@@ -58,7 +66,7 @@ public class SmartcardNfcReminderDialog extends SmartcardDialog {
                         .setPositiveButton(R.string.smartcard_nfc_reminder_dialog_positive_button, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                mPositiveButtonListener.onClick();
+                                mDismissCallback.onClick();
                             }
                         });
                 final AlertDialog dialog = builder.create();
@@ -69,7 +77,7 @@ public class SmartcardNfcReminderDialog extends SmartcardDialog {
                 dialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
                     @Override
                     public void onCancel(DialogInterface dialog) {
-                        mPositiveButtonListener.onClick();
+                        mDismissCallback.onClick();
                     }
                 });
                 mDialog = dialog;
@@ -86,9 +94,9 @@ public class SmartcardNfcReminderDialog extends SmartcardDialog {
     }
 
     /**
-     * Listener interface for a positive button click.
+     * Callback interface for a dialog dismissal.
      */
-    public interface PositiveButtonListener {
+    public interface DismissCallback {
         void onClick();
     }
 }
