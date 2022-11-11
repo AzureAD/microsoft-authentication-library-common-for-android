@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.opentelemetry;
 
+import javax.annotation.Nullable;
+
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.StatusCode;
 import lombok.NonNull;
@@ -100,5 +102,16 @@ public class CertBasedAuthTelemetryHelper {
         mSpan.setAttribute(
                 AttributeName.cert_based_auth_user_choice.name(),
                 choice);
+    }
+
+    /**
+     * Sets attribute that indicates if a user selecting smartcard CBA connected via USB or NFC.
+     * @param connectionType string indicating "USB" or "NFC".
+     */
+    public void setSmartcardConnectionType(@NonNull final String connectionType) {
+        mSpan.setAttribute(
+                AttributeName.cert_based_auth_smartcard_connection_type.name(),
+                connectionType
+        );
     }
 }

@@ -82,6 +82,7 @@ public class SmartcardCertBasedAuthChallengeHandler implements ICertBasedAuthCha
         mTelemetryHelper = telemetryHelper;
         mTelemetryHelper.setCertBasedAuthChallengeHandler(TAG);
         mProceedWithNfc = proceedWithNfc;
+        mTelemetryHelper.setSmartcardConnectionType(proceedWithNfc ? "NFC" : "USB");
         mSmartcardCertBasedAuthManager.setConnectionCallback(new AbstractSmartcardCertBasedAuthManager.IConnectionCallback() {
             @Override
             public void onCreateConnection(final boolean isNfc) {
