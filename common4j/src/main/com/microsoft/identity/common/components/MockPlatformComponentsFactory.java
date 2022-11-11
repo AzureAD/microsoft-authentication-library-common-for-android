@@ -73,7 +73,7 @@ public class MockPlatformComponentsFactory {
                 .clockSkewManager(NONFUNCTIONAL_CLOCK_SKEW_MANAGER)
                 .broadcaster(NONFUNCTIONAL_BROADCASTER)
                 .popManagerLoader(NONFUNCTIONAL_POP_MANAGER_LOADER)
-                .storageLoader(NONFUNCTIONAL_STORAGE_LOADER)
+                .storageLoader(new InMemoryStorageSupplier())
                 .authorizationStrategyFactory(NON_FUNCTIONAL_AUTH_STRATEGY_FACTORY)
                 .stateGenerator(NON_FUNCTIONAL_STATE_GENERATOR)
                 .platformUtil(NON_FUNCTIONAL_PLATFORM_UTIL)
@@ -155,11 +155,11 @@ public class MockPlatformComponentsFactory {
         }
     };
 
-    private static final IBroadcaster NONFUNCTIONAL_BROADCASTER = (broadcastId, propertyBag) -> {
-        throw new UnsupportedOperationException();
+    public static final IBroadcaster NONFUNCTIONAL_BROADCASTER = (broadcastId, propertyBag) -> {
+        // Do nothing.
     };
 
-    private static final IPopManagerSupplier NONFUNCTIONAL_POP_MANAGER_LOADER = new IPopManagerSupplier() {
+    public static final IPopManagerSupplier NONFUNCTIONAL_POP_MANAGER_LOADER = new IPopManagerSupplier() {
         @Override
         @NonNull
         public IDevicePopManager getDevicePopManager(@Nullable final String alias) throws ClientException {
@@ -167,66 +167,12 @@ public class MockPlatformComponentsFactory {
         }
     };
 
-    private static final IStorageSupplier NONFUNCTIONAL_STORAGE_LOADER = new IStorageSupplier() {
-        private final Map<String, INameValueStorage<?>> mStores = new ConcurrentHashMap<>();
-
-        @Override
-        @NonNull
-        public <T> INameValueStorage<T> getEncryptedNameValueStore(@NonNull final String storeName,
-                                                                   @Nullable final IKeyAccessor helper,
-                                                                   @NonNull final Class<T> clazz) {
-            @SuppressWarnings("unchecked")
-            INameValueStorage<T> ret = (INameValueStorage<T>) mStores.get(storeName);
-            if (ret == null) {
-                mStores.put(storeName, new InMemoryStorage<>());
-                ret = (INameValueStorage<T>) mStores.get(storeName);
-            }
-            return ret;
-        }
-
-        private final Map<String, IMultiTypeNameValueStorage> mEncryptedFileStores = new ConcurrentHashMap<>();
-
-        @Override
-        public synchronized IMultiTypeNameValueStorage getEncryptedFileStore(@NonNull final String storeName,
-                                                                             @NonNull final IKeyAccessor helper) {
-            IMultiTypeNameValueStorage ret = mEncryptedFileStores.get(storeName);
-            if (ret == null) {
-                mEncryptedFileStores.put(storeName, MapBackedPreferencesManager.builder().name(storeName).build());
-                ret = (IMultiTypeNameValueStorage) mEncryptedFileStores.get(storeName);
-            }
-            return ret;
-        }
-
-        private final Map<String, IMultiTypeNameValueStorage> mFileStores = new ConcurrentHashMap<>();
-
-        @Override
-        public IMultiTypeNameValueStorage getFileStore(@NonNull final String storeName) {
-            IMultiTypeNameValueStorage ret = mFileStores.get(storeName);
-            if (ret == null) {
-                mFileStores.put(storeName, MapBackedPreferencesManager.builder().name(storeName).build());
-                ret = (IMultiTypeNameValueStorage) mFileStores.get(storeName);
-            }
-            return ret;
-        }
-
-        @Override
-        public INameValueStorage<String> getMultiProcessStringStore(@NonNull final String storeName) {
-            @SuppressWarnings("unchecked")
-            INameValueStorage<String> ret = (INameValueStorage<String>) mStores.get(storeName);
-            if (ret == null) {
-                mStores.put(storeName, new InMemoryStorage<String>());
-                ret = (INameValueStorage<String>) mStores.get(storeName);
-            }
-            return ret;
-        }
-    };
-
     @SuppressWarnings(WarningType.rawtype_warning)
-    private static final IAuthorizationStrategyFactory NON_FUNCTIONAL_AUTH_STRATEGY_FACTORY = parameters -> {
+    public static final IAuthorizationStrategyFactory NON_FUNCTIONAL_AUTH_STRATEGY_FACTORY = parameters -> {
         throw new UnsupportedOperationException();
     };
 
-    private static final IStateGenerator NON_FUNCTIONAL_STATE_GENERATOR = new IStateGenerator() {
+    public static final IStateGenerator NON_FUNCTIONAL_STATE_GENERATOR = new IStateGenerator() {
         @Override
         @NonNull
         public String generate() {
@@ -234,7 +180,7 @@ public class MockPlatformComponentsFactory {
         }
     };
 
-    private static final IPlatformUtil NON_FUNCTIONAL_PLATFORM_UTIL = new IPlatformUtil() {
+    public static final IPlatformUtil NON_FUNCTIONAL_PLATFORM_UTIL = new IPlatformUtil() {
         @Override
         public List<BrowserDescriptor> getBrowserSafeListForBroker() {
             throw new UnsupportedOperationException();
