@@ -138,9 +138,28 @@ public class UserChoiceCertBasedAuthChallengeHandler implements ICertBasedAuthCh
         }
 
         if (mSmartcardCertBasedAuthManager.startNfcDiscovery(mActivity)) {
-            //TODO: will add extra dialog here that will inform user to turn on NFC if they want to use NFC.
-            //Dialog button callback will show SmartcardPromptDialog
+            //Inform user to turn on NFC if they want to use NFC.
+            mDialogHolder.showSmartcardNfcReminderDialog(new SmartcardNfcReminderDialog.DismissCallback() {
+                @Override
+                public void onClick() {
+                    //If smartcard is already plugged in, go straight to cert picker.
+                    if (mSmartcardCertBasedAuthManager.isUsbDeviceConnected()) {
+                        createSmartcardChallengeHandlerAndProcess(request, false);
+                        return;
+                    }
+                    showSmartcardPromptDialogAndSetCallback(request);
+                }
+            });
+            return;
         }
+        showSmartcardPromptDialogAndSetCallback(request);
+    }
+
+    /**
+     * Helper method that shows smartcard prompt dialog and sets connection callback.
+     * @param request challenge request
+     */
+    private void showSmartcardPromptDialogAndSetCallback(@NonNull final ClientCertRequest request) {
         mDialogHolder.showSmartcardPromptDialog(new SmartcardPromptDialog.CancelCbaCallback() {
             @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
             @Override
