@@ -35,5 +35,6 @@ public enum SpanName {
     WorkplaceJoin,
     DoDiscovery,
     WorkplaceLeave,
-    DeviceState
+    DeviceState,
+    CertBasedAuth
 }

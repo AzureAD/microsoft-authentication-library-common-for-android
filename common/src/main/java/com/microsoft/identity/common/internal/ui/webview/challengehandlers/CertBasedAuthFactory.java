@@ -26,6 +26,7 @@ import android.app.Activity;
 
 import androidx.annotation.NonNull;
 
+import com.microsoft.identity.common.java.opentelemetry.CertBasedAuthTelemetryHelper;
 import com.microsoft.identity.common.logging.Logger;
 
 /**
@@ -70,12 +71,23 @@ public class CertBasedAuthFactory {
     public ICertBasedAuthChallengeHandler createCertBasedAuthChallengeHandler() {
         if (mSmartcardCertBasedAuthManager == null) {
             //Smartcard CBA is not available, so default to on-device.
-            return new OnDeviceCertBasedAuthChallengeHandler(mActivity);
+            return new OnDeviceCertBasedAuthChallengeHandler(
+                    mActivity,
+                    new CertBasedAuthTelemetryHelper());
         }
         else if (mSmartcardCertBasedAuthManager.isUsbDeviceConnected()) {
-            return new SmartcardCertBasedAuthChallengeHandler(mActivity, mSmartcardCertBasedAuthManager, new DialogHolder(mActivity), false);
+            return new SmartcardCertBasedAuthChallengeHandler(
+                    mActivity,
+                    mSmartcardCertBasedAuthManager,
+                    new DialogHolder(mActivity),
+                    new CertBasedAuthTelemetryHelper(),
+                    false);
         }
-        return new UserChoiceCertBasedAuthChallengeHandler(mActivity, mSmartcardCertBasedAuthManager, new DialogHolder(mActivity));
+        return new UserChoiceCertBasedAuthChallengeHandler(
+                mActivity,
+                mSmartcardCertBasedAuthManager,
+                new DialogHolder(mActivity),
+                new CertBasedAuthTelemetryHelper());
     }
 
     /**

@@ -32,6 +32,7 @@ import androidx.annotation.RequiresApi;
 import com.microsoft.identity.common.R;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.java.exception.BaseException;
+import com.microsoft.identity.common.java.opentelemetry.CertBasedAuthTelemetryHelper;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings;
 import com.microsoft.identity.common.java.telemetry.events.CertBasedAuthResultEvent;
@@ -49,9 +50,13 @@ import java.util.List;
  */
 public class SmartcardCertBasedAuthChallengeHandler implements ICertBasedAuthChallengeHandler {
     private static final String TAG = SmartcardCertBasedAuthChallengeHandler.class.getSimpleName();
+    private static final String MAX_ATTEMPTS_MESSAGE = "User has reached the maximum failed attempts allowed.";
+    private static final String NO_PIV_CERTS_FOUND_MESSAGE = "No PIV certificates found on smartcard device.";
+    private static final String USER_CANCEL_MESSAGE = "User canceled smartcard CBA flow.";
     private final Activity mActivity;
     protected final AbstractSmartcardCertBasedAuthManager mSmartcardCertBasedAuthManager;
     protected final DialogHolder mDialogHolder;
+    private final CertBasedAuthTelemetryHelper mTelemetryHelper;
     private final boolean mProceedWithNfc;
     private boolean mIsSmartcardCertBasedAuthProceeding;
 
@@ -61,17 +66,21 @@ public class SmartcardCertBasedAuthChallengeHandler implements ICertBasedAuthCha
      * @param activity current host activity.
      * @param smartcardCertBasedAuthManager AbstractSmartcardCertBasedAuthManager instance.
      * @param dialogHolder DialogHolder instance.
+     * @param telemetryHelper CertBasedAuthTelemetryHelder instance.
      * @param proceedWithNfc true if connection is NFC, false if usb.
      */
     public SmartcardCertBasedAuthChallengeHandler(@NonNull final Activity activity,
                                                   @NonNull final AbstractSmartcardCertBasedAuthManager smartcardCertBasedAuthManager,
                                                   @NonNull final DialogHolder dialogHolder,
+                                                  @NonNull final CertBasedAuthTelemetryHelper telemetryHelper,
                                                   final boolean proceedWithNfc) {
         final String methodTag = TAG + ":SmartcardCertBasedAuthChallengeHandler";
         mActivity = activity;
         mIsSmartcardCertBasedAuthProceeding = false;
         mSmartcardCertBasedAuthManager = smartcardCertBasedAuthManager;
         mDialogHolder = dialogHolder;
+        mTelemetryHelper = telemetryHelper;
+        mTelemetryHelper.setCertBasedAuthChallengeHandler(TAG);
         mProceedWithNfc = proceedWithNfc;
         mSmartcardCertBasedAuthManager.setConnectionCallback(new AbstractSmartcardCertBasedAuthManager.IConnectionCallback() {
             @Override
@@ -117,7 +126,8 @@ public class SmartcardCertBasedAuthChallengeHandler implements ICertBasedAuthCha
                 final List<ICertDetails> certList = session.getCertDetailsList();
                 //If no certs were found, cancel flow.
                 if (certList.isEmpty()) {
-                    Logger.info(methodTag,  "No PIV certificates found on smartcard device.");
+                    Logger.info(methodTag,  NO_PIV_CERTS_FOUND_MESSAGE);
+                    mTelemetryHelper.setResultFailure(NO_PIV_CERTS_FOUND_MESSAGE);
                     mDialogHolder.showErrorDialog(
                             R.string.smartcard_no_cert_dialog_title,
                             R.string.smartcard_no_cert_dialog_message);
@@ -134,6 +144,7 @@ public class SmartcardCertBasedAuthChallengeHandler implements ICertBasedAuthCha
                             @Override
                             public void onCancel() {
                                 mDialogHolder.dismissDialog();
+                                mTelemetryHelper.setResultFailure(USER_CANCEL_MESSAGE);
                                 request.cancel();
                             }
                         });
@@ -159,7 +170,8 @@ public class SmartcardCertBasedAuthChallengeHandler implements ICertBasedAuthCha
      * @param methodTag tag from calling method.
      */
     private void indicateTooManyFailedAttempts(@NonNull final String methodTag) {
-        Logger.info(methodTag,  "User has reached the maximum failed attempts allowed.");
+        Logger.info(methodTag,  MAX_ATTEMPTS_MESSAGE);
+        mTelemetryHelper.setResultFailure(MAX_ATTEMPTS_MESSAGE);
         mDialogHolder.showErrorDialog(
                 R.string.smartcard_max_attempt_dialog_title,
                 R.string.smartcard_max_attempt_dialog_message);
@@ -173,11 +185,11 @@ public class SmartcardCertBasedAuthChallengeHandler implements ICertBasedAuthCha
      */
     private void indicateGeneralException(@NonNull final String methodTag, @NonNull final Exception e) {
         Logger.error(methodTag, e.getMessage(), e);
+        mTelemetryHelper.setResultFailure(e);
         //Show general error dialog.
         mDialogHolder.showErrorDialog(
                 R.string.smartcard_general_error_dialog_title,
                 R.string.smartcard_general_error_dialog_message);
-        Telemetry.emit(new ErrorEvent().putException(e));
     }
 
     /**
@@ -198,6 +210,7 @@ public class SmartcardCertBasedAuthChallengeHandler implements ICertBasedAuthCha
                             @Override
                             public void onCancel() {
                                 mDialogHolder.dismissDialog();
+                                mTelemetryHelper.setResultFailure(USER_CANCEL_MESSAGE);
                                 request.cancel();
                             }
                         });
@@ -225,6 +238,7 @@ public class SmartcardCertBasedAuthChallengeHandler implements ICertBasedAuthCha
                         @Override
                         public void onCancel() {
                             mDialogHolder.dismissDialog();
+                            mTelemetryHelper.setResultFailure(USER_CANCEL_MESSAGE);
                             request.cancel();
                         }
                     });
@@ -311,6 +325,7 @@ public class SmartcardCertBasedAuthChallengeHandler implements ICertBasedAuthCha
                                 @Override
                                 public void onCancel() {
                                     mDialogHolder.dismissDialog();
+                                    mTelemetryHelper.setResultFailure(USER_CANCEL_MESSAGE);
                                     request.cancel();
                                 }
                             });
@@ -338,7 +353,7 @@ public class SmartcardCertBasedAuthChallengeHandler implements ICertBasedAuthCha
                                          @NonNull final ClientCertRequest request)
             throws Exception {
         //Each type of smartcard manager could have different preparation steps before proceeding with a ClientCertRequest.
-        mSmartcardCertBasedAuthManager.initBeforeProceedingWithRequest();
+        mSmartcardCertBasedAuthManager.initBeforeProceedingWithRequest(mTelemetryHelper);
         //PivPrivateKey implements PrivateKey. Note that the PIN is copied in pivPrivateKey.
         final PrivateKey privateKey = session.getKeyForAuth(certDetails, pin);
         //Cert chain only needs the cert to be used for authentication.
@@ -364,13 +379,20 @@ public class SmartcardCertBasedAuthChallengeHandler implements ICertBasedAuthCha
     @Override
     public void emitTelemetryForCertBasedAuthResults(@NonNull final RawAuthorizationResult response) {
         if (mIsSmartcardCertBasedAuthProceeding) {
-            final CertBasedAuthResultEvent certBasedAuthResultEvent = new CertBasedAuthResultEvent(TelemetryEventStrings.Event.CERT_BASED_AUTH_RESULT_SMARTCARD_EVENT);
             mIsSmartcardCertBasedAuthProceeding = false;
-            Telemetry.emit(certBasedAuthResultEvent.putResponseCode(response.getResultCode().toString()));
-            //If an exception was provided, emit an ErrorEvent.
-            final BaseException exception = response.getException();
-            if (exception != null) {
-                Telemetry.emit(new ErrorEvent().putException(exception));
+            final RawAuthorizationResult.ResultCode resultCode = response.getResultCode();
+            if (resultCode == RawAuthorizationResult.ResultCode.NON_OAUTH_ERROR
+                    || resultCode == RawAuthorizationResult.ResultCode.SDK_CANCELLED
+                    || resultCode == RawAuthorizationResult.ResultCode.CANCELLED) {
+                final BaseException exception = response.getException();
+                if (exception != null) {
+                    mTelemetryHelper.setResultFailure(exception);
+                } else {
+                    //Putting result code as message.
+                    mTelemetryHelper.setResultFailure(resultCode.toString());
+                }
+            } else {
+                mTelemetryHelper.setResultSuccess();
             }
         }
     }
