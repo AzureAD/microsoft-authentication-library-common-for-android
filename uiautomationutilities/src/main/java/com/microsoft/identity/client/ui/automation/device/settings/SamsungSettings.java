@@ -81,12 +81,7 @@ public class SamsungSettings extends BaseSettings {
         Logger.i(TAG, "Removing Account from Samsung Device..");
         launchAccountListPage();
         try {
-            // scroll down the recycler view to find the list item for this account
-            final UiObject account = UiAutomatorUtils.obtainChildInScrollable(
-                    "android:id/list",
-                    username
-            );
-
+            final UiObject account = UiAutomatorUtils.obtainUiObjectWithText(username);
             // Click into this account
             account.click();
 
