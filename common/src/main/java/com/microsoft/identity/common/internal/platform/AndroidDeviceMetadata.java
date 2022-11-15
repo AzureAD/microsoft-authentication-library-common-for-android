@@ -41,6 +41,8 @@ public class AndroidDeviceMetadata extends AbstractDeviceMetadata {
     private static final String ANDROID_DEVICE_TYPE = "Android";
     private static final String DEVICE_TYPE = "DeviceType";
     private static final String TAG = AndroidDeviceMetadata.class.getSimpleName();
+    private static final String MOBILE_DEVICE = "mobileDevice";
+    private static final String UNKNOWN_DEVICE = "unknown";
 
     @Override
     @NonNull
@@ -99,19 +101,19 @@ public class AndroidDeviceMetadata extends AbstractDeviceMetadata {
      */
     public static String getAndroidDeviceTypeFromMetadata(@NonNull final Context context) {
         final String methodTag = TAG + " :getDeviceType";
-        String defaultDeviceType = "mobileDevice";
         try {
             final PackageManager packageManager = context.getPackageManager();
             final ApplicationInfo appInfo = packageManager.getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);
             final Bundle metaDataBundle = appInfo.metaData;
-            final String deviceType = metaDataBundle.getString(DEVICE_TYPE, defaultDeviceType);
+            // If the deviceType property is not found, default it to mobile device
+            final String deviceType = metaDataBundle.getString(DEVICE_TYPE, MOBILE_DEVICE);
             Logger.verbose(methodTag, "Setting the deviceType as " + deviceType);
             return deviceType;
         } catch (final PackageManager.NameNotFoundException e) {
             // Do not throw the exception to break the auth request when getting the app's telemetry
             Logger.warn(methodTag, "Unable to find the app's package name from PackageManager.");
+            return UNKNOWN_DEVICE;
         }
-        return defaultDeviceType;
     }
 }
 
