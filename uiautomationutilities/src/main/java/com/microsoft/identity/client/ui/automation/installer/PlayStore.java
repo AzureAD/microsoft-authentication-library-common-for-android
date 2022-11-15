@@ -40,6 +40,7 @@ import org.junit.Assert;
 
 import java.util.concurrent.TimeUnit;
 
+import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT;
 import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.getResourceId;
 import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.isStringPackageName;
 import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.launchApp;
@@ -114,11 +115,15 @@ public class PlayStore implements IAppInstaller {
     }
 
     private void installOrUpdateAppFromMarketPage(String playStoreAction) {
-        acceptGooglePlayTermsOfServiceSafely();
         try {
             installOrUpdateAppFromMarketPageInternal(playStoreAction);
-        } catch (UiObjectNotFoundException e) {
-            throw new AssertionError(e.getMessage(), e);
+        } catch (final UiObjectNotFoundException e) {
+            acceptGooglePlayTermsOfService();
+            try {
+                installOrUpdateAppFromMarketPageInternal(playStoreAction);
+            } catch (UiObjectNotFoundException ex) {
+                throw new AssertionError(ex.getMessage(), e);
+            }
         }
     }
 
@@ -147,14 +152,17 @@ public class PlayStore implements IAppInstaller {
         Assert.assertTrue(openButton.exists());
     }
 
-    private void acceptGooglePlayTermsOfServiceSafely() {
+    private void acceptGooglePlayTermsOfService() {
         if (shouldHandleTermsAndServices) {
             Logger.i(TAG, "Accept Google Play Terms Of Service while installing App from Playstore..");
+            final UiObject termsOfService = UiAutomatorUtils.obtainUiObjectWithText("Terms of Service");
+            Assert.assertTrue(termsOfService.exists());
             final UiObject acceptBtn = UiAutomatorUtils.obtainUiObjectWithText("ACCEPT");
+            Assert.assertTrue(acceptBtn.exists());
             try {
                 acceptBtn.click();
             } catch (UiObjectNotFoundException e) {
-                Logger.i(TAG, "Got an exception while accepting google play terms safely: " + e.getMessage());
+                throw new AssertionError(e);
             }
 
             shouldHandleTermsAndServices = false;
