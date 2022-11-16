@@ -76,11 +76,7 @@ public class CertBasedAuthTelemetryHelper {
      * @param message descriptive cause of failure message.
      */
     public void setResultFailure(@NonNull final String message) {
-        //setting the error_message attribute manually since there's no exception to record.
-        mSpan.setAttribute(
-                "error_message",
-                message);
-        mSpan.setStatus(StatusCode.ERROR);
+        mSpan.setStatus(StatusCode.ERROR, message);
         mSpan.end();
     }
 
