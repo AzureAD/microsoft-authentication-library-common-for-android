@@ -42,9 +42,6 @@ public class BrokerInteractiveTokenCommandParameters extends InteractiveTokenCom
         implements IHasExtraParameters, IBrokerTokenCommandParameters {
 
     @Expose
-    private final String callerPackageName;
-
-    @Expose
     private final int callerUid;
 
     @Expose

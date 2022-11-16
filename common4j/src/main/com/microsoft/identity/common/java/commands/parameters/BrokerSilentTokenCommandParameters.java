@@ -39,9 +39,6 @@ import lombok.experimental.SuperBuilder;
 public class BrokerSilentTokenCommandParameters extends SilentTokenCommandParameters implements IBrokerTokenCommandParameters {
 
     @Expose
-    private final String callerPackageName;
-
-    @Expose
     private final int callerUid;
 
     @Expose

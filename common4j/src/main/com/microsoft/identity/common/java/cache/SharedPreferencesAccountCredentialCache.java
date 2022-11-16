@@ -429,6 +429,8 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
             @Nullable final String environment,
             @Nullable final CredentialType credentialType,
             @Nullable final String clientId,
+            @Nullable final String applicationIdentifier,
+            @Nullable final String mamEnrollmentIdentifier,
             @Nullable final String realm,
             @Nullable final String target,
             @Nullable final String authScheme,
@@ -443,6 +445,8 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
                 environment,
                 credentialType,
                 clientId,
+                applicationIdentifier,
+                mamEnrollmentIdentifier,
                 realm,
                 target,
                 authScheme,
@@ -493,16 +497,18 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
 
     @Override
     public List<Credential> getCredentialsFilteredBy(
-            final List<Credential> inputCredentials,
-            final String homeAccountId,
-            final String environment,
-            final CredentialType credentialType,
-            final String clientId,
-            final String realm,
-            final String target,
-            final String authScheme,
-            final String requestedClaims,
-            final String kid ) {
+            @Nullable List<Credential> inputCredentials,
+            @Nullable final String homeAccountId,
+            @Nullable final String environment,
+            @Nullable final CredentialType credentialType,
+            @Nullable final String clientId,
+            @Nullable final String applicationIdentifier,
+            @Nullable final String mamEnrollmentIdentifier,
+            @Nullable final String realm,
+            @Nullable final String target,
+            @Nullable final String authScheme,
+            @Nullable final String requestedClaims,
+            @Nullable final String kid ) {
         final List<Credential> result = new ArrayList<>();
         result.addAll(
                 getCredentialsFilteredByInternal(
@@ -511,6 +517,8 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
                         environment,
                         credentialType,
                         clientId,
+                        applicationIdentifier,
+                        mamEnrollmentIdentifier,
                         realm,
                         target,
                         authScheme,
