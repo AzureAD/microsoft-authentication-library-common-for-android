@@ -90,7 +90,7 @@ public enum LocalBroadcaster {
         sBroadcastExecutor = Executors.newSingleThreadExecutor();
     }
 
-    void shutdownAndAwaitTerminationForBroadcasterService() {
+    private void shutdownAndAwaitTerminationForBroadcasterService() {
         final String methodName = ":shutdownAndAwaitTerminationForBroadcasterService";
         sBroadcastExecutor.shutdown();
         try {
