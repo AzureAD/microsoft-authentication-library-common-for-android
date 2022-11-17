@@ -154,7 +154,7 @@ public class YubiKitCertBasedAuthManager extends AbstractSmartcardCertBasedAuthM
         } catch (@NonNull final NfcNotAvailable e) {
             if (e.isDisabled()) {
                 //User will not be blocked from seeing the regular smartcard prompt,
-                // but appropriate dialog should be shown.
+                // but appropriate reminder dialog should be shown.
                 Logger.info(TAG, "Device has NFC functionality turned off.");
                 return true;
             }
