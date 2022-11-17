@@ -14,6 +14,7 @@ V.9.0.0
 - [MINOR] Add Open Telemetry explicitly in common as transitive is set to false (#1882)
 - [MINOR] Add open telemetry to consumer rules (#1883)
 - [PATCH] Fixes MSAL Issue #1715 (#1894)
+- [MINOR] Add support to reset broadcast Executor service (#1895)
 
 V.8.0.3
 ----------
@@ -128,7 +129,7 @@ Version 4.0.3
 
 Version 4.0.2
 ----------
-- [PATCH] Port #1662 into the new common4j class - since StorageHelper is no longer used (#1689, #1690) 
+- [PATCH] Port #1662 into the new common4j class - since StorageHelper is no longer used (#1689, #1690)
 
 Version 4.0.1
 ----------

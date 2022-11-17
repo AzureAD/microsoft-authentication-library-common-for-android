@@ -120,6 +120,12 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
         throw new UnsupportedOperationException("Not supported!");
     }
 
+    @Override
+    public void performSharedDeviceRegistrationDontValidate(@NonNull final String username,
+                                                            @NonNull final String password) {
+        throw new UnsupportedOperationException("Not Supported!");
+    }
+
     @Nullable
     @Override
     public String obtainDeviceId() {
@@ -135,9 +141,7 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
     public String createPowerLiftIncident() {
         Logger.i(TAG, "Creating Power Lift Incident..");
         launch();
-        if (shouldHandleFirstRun) {
-            handleFirstRun();
-        }
+        handleFirstRun();
 
         try {
             final UiDevice device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
@@ -189,9 +193,12 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
 
     @Override
     public void handleFirstRun() {
-        // click the I AGREE btn on privacy screen
-        // First run of CP from playstore does not have a privacy screen
-        // UiAutomatorUtils.handleButtonClick("com.microsoft.windowsintune.companyportal:id/privacy_notice_agree_button");
+        if (shouldHandleFirstRun) {
+            // click the I AGREE btn on privacy screen
+            // First run of CP from playstore does not have a privacy screen
+            // UiAutomatorUtils.handleButtonClick("com.microsoft.windowsintune.companyportal:id/privacy_notice_agree_button");
+            shouldHandleFirstRun = false;
+        }
     }
 
     public void enrollDevice(@NonNull final String username,

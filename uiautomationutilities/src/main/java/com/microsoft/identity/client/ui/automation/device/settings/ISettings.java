@@ -98,7 +98,7 @@ public interface ISettings {
     /**
      * Change the time on the device by seconds.
      *
-     * @seconds time to advance device time by
+     * @param seconds time to advance device time by
      */
     void forwardDeviceTime(long seconds);
 
