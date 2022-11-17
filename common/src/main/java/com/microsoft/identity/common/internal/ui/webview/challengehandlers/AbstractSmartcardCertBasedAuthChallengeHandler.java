@@ -57,7 +57,8 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandler implements 
      * @param activity current host activity.
      * @param smartcardCertBasedAuthManager AbstractSmartcardCertBasedAuthManager instance.
      * @param dialogHolder DialogHolder instance.
-     * @param telemetryHelper CertBasedAuthTelemetryHelder instance.
+     * @param telemetryHelper CertBasedAuthTelemetryHelper instance.
+     * @param tag name of challenge handler, for logging purposes.
      */
     public AbstractSmartcardCertBasedAuthChallengeHandler(@NonNull final Activity activity,
                                                           @NonNull final AbstractSmartcardCertBasedAuthManager smartcardCertBasedAuthManager,
