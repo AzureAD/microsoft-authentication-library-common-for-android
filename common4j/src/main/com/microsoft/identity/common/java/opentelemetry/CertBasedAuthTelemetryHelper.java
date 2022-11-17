@@ -44,7 +44,7 @@ public class CertBasedAuthTelemetryHelper {
      * Sets attribute that indicates the ICertBasedAuthChallengeHandler handling the current CBA flow.
      * @param challengeHandlerName name of the ICertBasedAuthChallengeHandler class.
      */
-    public void setCertBasedAuthChallengeHandler(@NonNull final String challengeHandlerName) {
+    public void setCertBasedAuthChallengeHandler(@Nullable final String challengeHandlerName) {
         mSpan.setAttribute(
                 AttributeName.cert_based_auth_challenge_handler.name(),
                 challengeHandlerName);
@@ -92,22 +92,11 @@ public class CertBasedAuthTelemetryHelper {
 
     /**
      * Sets attribute that indicates the user's intended choice for CBA (smartcard or on-device).
-     * @param choice string indicating user's choice for CBA.
+     * @param choice string indicating user's intended choice for CBA.
      */
-    public void setUserChoice(@NonNull final String choice) {
+    public void setUserChoice(@Nullable final String choice) {
         mSpan.setAttribute(
                 AttributeName.cert_based_auth_user_choice.name(),
                 choice);
-    }
-
-    /**
-     * Sets attribute that indicates if a user selecting smartcard CBA connected via USB or NFC.
-     * @param connectionType string indicating "USB" or "NFC".
-     */
-    public void setSmartcardConnectionType(@NonNull final String connectionType) {
-        mSpan.setAttribute(
-                AttributeName.cert_based_auth_smartcard_connection_type.name(),
-                connectionType
-        );
     }
 }

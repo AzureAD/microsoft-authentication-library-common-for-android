@@ -78,10 +78,5 @@ public enum AttributeName {
     /**
      * Indicates which CBA flow the user intended to select.
      */
-    cert_based_auth_user_choice,
-
-    /**
-     * Indicates if user with smartcard connected via USB or NFC.
-     */
-    cert_based_auth_smartcard_connection_type
+    cert_based_auth_user_choice
 }
