@@ -124,15 +124,38 @@ public class CertBasedAuthFactory {
         }
 
         if (mSmartcardCertBasedAuthManager.startNfcDiscovery(mActivity)) {
-            //TODO: will add extra dialog here that will inform user to turn on NFC if they want to use NFC.
-            //Dialog button callback will show SmartcardPromptDialog
+            //Inform user to turn on NFC if they want to use NFC.
+            mDialogHolder.showSmartcardNfcReminderDialog(new SmartcardNfcReminderDialog.DismissCallback() {
+                @Override
+                public void onClick() {
+                    //If smartcard is already plugged in, go straight to cert picker.
+                    if (mSmartcardCertBasedAuthManager.isUsbDeviceConnected()) {
+                        callback.onReceived(new SmartcardCertBasedAuthChallengeHandler(
+                                mActivity,
+                                mSmartcardCertBasedAuthManager,
+                                mDialogHolder,
+                                false));
+                        return;
+                    }
+                    showSmartcardPromptDialogAndSetConnectionCallback(callback);
+                }
+            });
+            return;
         }
+        showSmartcardPromptDialogAndSetConnectionCallback(callback);
+    }
+
+    /**
+     * Helper method that shows smartcard prompt dialog and sets connection callback.
+     * @param challengeHandlerCallback logic to run after a CertBasedAuthChallengeHandler is chosen.
+     */
+    private void showSmartcardPromptDialogAndSetConnectionCallback(@NonNull final CertBasedAuthChallengeHandlerCallback challengeHandlerCallback) {
         mDialogHolder.showSmartcardPromptDialog(new SmartcardPromptDialog.CancelCbaCallback() {
             @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
             @Override
             public void onCancel() {
                 mDialogHolder.dismissDialog();
-                callback.onReceived(null);
+                challengeHandlerCallback.onReceived(null);
             }
         });
         mSmartcardCertBasedAuthManager.setConnectionCallback(new AbstractSmartcardCertBasedAuthManager.IConnectionCallback() {
@@ -143,7 +166,7 @@ public class CertBasedAuthFactory {
                     //User needs to keep smartcard in place.
                     mDialogHolder.showSmartcardNfcLoadingDialog();
                 }
-                callback.onReceived(new SmartcardCertBasedAuthChallengeHandler(
+                challengeHandlerCallback.onReceived(new SmartcardCertBasedAuthChallengeHandler(
                         mActivity,
                         mSmartcardCertBasedAuthManager,
                         mDialogHolder,
