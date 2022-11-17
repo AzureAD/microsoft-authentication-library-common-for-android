@@ -28,6 +28,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.logging.Logger;
+import com.yubico.yubikit.android.transport.nfc.NfcNotAvailable;
 
 /**
  * Instantiates managers for certificate based authentication.
@@ -37,17 +38,32 @@ public class SmartcardCertBasedAuthManagerFactory {
     private static final String TAG = SmartcardCertBasedAuthManagerFactory.class.getSimpleName();
 
     /**
-     * Creates and returns an applicable instance of AbstractSmartcardCertBasedAuthManager.
+     * Creates and returns an applicable instance of AbstractSmartcardCertBasedAuthManager that handles USB connections.
      * @param context current Context.
      * @return An AbstractSmartcardCertBasedAuthManager if the USB_SERVICE is supported by the device; null otherwise.
      */
     @Nullable
-    static AbstractSmartcardCertBasedAuthManager createSmartcardCertBasedAuthManager(@NonNull final Context context) {
-        final String methodTag = TAG + ":createSmartcardCertBasedAuthManager";
+    static AbstractSmartcardCertBasedAuthManager createSmartcardUsbCertBasedAuthManager(@NonNull final Context context) {
+        final String methodTag = TAG + ":createSmartcardUsbCertBasedAuthManager";
         if (context.getSystemService(Context.USB_SERVICE) == null) {
             Logger.info(methodTag, "Certificate Based Authentication via YubiKey not enabled due to device not supporting the USB_SERVICE system service.");
             return null;
         }
-        return new YubiKitCertBasedAuthManager(context);
+        return new YubiKitUsbCertBasedAuthManager(context);
+    }
+
+    /**
+     * Creates and returns an applicable instance of AbstractSmartcardCertBasedAuthManager that handles NFC connections.
+     * @param context current Context.
+     * @return An AbstractSmartcardCertBasedAuthManager if NFC is supported on the device; null otherwise.
+     */
+    @Nullable
+    static AbstractSmartcardCertBasedAuthManager createSmartcardNfcCertBasedAuthManager(@NonNull final Context context) {
+        try {
+            return new YubiKitNfcCertBasedAuthManager(context);
+        } catch (final NfcNotAvailable e) {
+            //This means that the device does not have an NFC reader.
+            return null;
+        }
     }
 }

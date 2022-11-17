@@ -43,28 +43,17 @@ public abstract class AbstractSmartcardCertBasedAuthManager {
     protected IDiscoveryExceptionCallback mDiscoveryExceptionCallback;
 
     /**
-     * Logic to prepare an Android device to detect smartcards via usb.
-     */
-    abstract void startUsbDiscovery();
-
-    /**
-     * Cease usb discovery of smartcards.
-     */
-    abstract void stopUsbDiscovery();
-
-    /**
-     * Logic to prepare an Android device to detect smartcards via NFC.
+     * Logic to prepare an Android device to detect smartcards.
      * @param activity current host activity.
-     * @return true if user needs to turn on NFC capabilities;
-     * false if NFC discovery successfully started or device doesn't have NFC capabilities.
+     * @return boolean value dependent on implementation.
      */
-    abstract boolean startNfcDiscovery(@NonNull final Activity activity);
+    abstract boolean startDiscovery(@NonNull final Activity activity);
 
     /**
-     * Cease NFC discovery of smartcards.
+     * Cease discovery of smartcards.
      * @param activity current host activity.
      */
-    abstract void stopNfcDiscovery(@NonNull final Activity activity);
+    abstract void stopDiscovery(@NonNull final Activity activity);
 
     /**
      * Request an instance of a session in order to carry out methods specific to ISmartcardSession.
@@ -73,16 +62,10 @@ public abstract class AbstractSmartcardCertBasedAuthManager {
     abstract void requestDeviceSession(@NonNull final ISessionCallback callback);
 
     /**
-     * Returns boolean based on if a usb smartcard device is currently connected to the Android device and detected by our code.
+     * Returns boolean based on if a smartcard device is currently connected to the Android device and detected by our code.
      * @return true if a device is currently connected, false otherwise.
      */
-    abstract boolean isUsbDeviceConnected();
-
-    /**
-     * Returns boolean based on if a NFC smartcard device is currently connected to the Android device and detected by our code.
-     * @return true if a device is currently connected, false otherwise.
-     */
-    abstract boolean isNfcDeviceConnected();
+    abstract boolean isDeviceConnected();
 
     /**
      * Runs implementation specific processes that may need to occur just before calling {@link android.webkit.ClientCertRequest#proceed(PrivateKey, X509Certificate[])}.
@@ -92,8 +75,9 @@ public abstract class AbstractSmartcardCertBasedAuthManager {
 
     /**
      * Cleanup to be done upon host activity being destroyed.
+     * @param activity current host activity.
      */
-    abstract void onDestroy();
+    abstract void onDestroy(@NonNull final Activity activity);
 
     /**
      * Sets callbacks to be run for when a smartcard connection is started and ended.
@@ -117,9 +101,8 @@ public abstract class AbstractSmartcardCertBasedAuthManager {
     interface IConnectionCallback {
         /**
          * Logic to be run upon initial connection of a smartcard device.
-         * @param isNfc true if connection is NFC, false if usb.
          */
-        void onCreateConnection(final boolean isNfc);
+        void onCreateConnection();
 
         /**
          * Logic to be run upon disconnection of a smartcard device via usb.
