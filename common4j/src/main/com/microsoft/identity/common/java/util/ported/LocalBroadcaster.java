@@ -85,12 +85,12 @@ public enum LocalBroadcaster {
     /**
      * Resets the broadcast executor service.
      */
-    public void resetBroadcast() {
+    public static void resetBroadcast() {
         shutdownAndAwaitTerminationForBroadcasterService();
         sBroadcastExecutor = Executors.newSingleThreadExecutor();
     }
 
-    private void shutdownAndAwaitTerminationForBroadcasterService() {
+    private static void shutdownAndAwaitTerminationForBroadcasterService() {
         final String methodName = ":shutdownAndAwaitTerminationForBroadcasterService";
         sBroadcastExecutor.shutdown();
         try {
