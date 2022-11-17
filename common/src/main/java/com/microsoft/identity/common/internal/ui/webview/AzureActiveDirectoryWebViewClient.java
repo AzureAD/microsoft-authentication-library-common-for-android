@@ -35,6 +35,7 @@ import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
@@ -461,8 +462,18 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         if (mCertBasedAuthChallengeHandler != null) {
             mCertBasedAuthChallengeHandler.cleanUp();
         }
-        mCertBasedAuthChallengeHandler = mCertBasedAuthFactory.createCertBasedAuthChallengeHandler();
-        mCertBasedAuthChallengeHandler.processChallenge(clientCertRequest);
+        mCertBasedAuthFactory.createCertBasedAuthChallengeHandler(new CertBasedAuthFactory.CertBasedAuthChallengeHandlerCallback() {
+            @Override
+            public void onReceived(@Nullable ICertBasedAuthChallengeHandler challengeHandler) {
+                mCertBasedAuthChallengeHandler = challengeHandler;
+                if (mCertBasedAuthChallengeHandler == null) {
+                    //User cancelled out of CBA.
+                    clientCertRequest.cancel();
+                    return;
+                }
+                mCertBasedAuthChallengeHandler.processChallenge(clientCertRequest);
+            }
+        });
     }
 
     /**
