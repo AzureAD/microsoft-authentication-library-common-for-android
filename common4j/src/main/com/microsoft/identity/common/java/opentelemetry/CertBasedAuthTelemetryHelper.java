@@ -22,8 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.opentelemetry;
 
-import javax.annotation.Nullable;
-
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.StatusCode;
 import lombok.NonNull;
@@ -44,7 +43,7 @@ public class CertBasedAuthTelemetryHelper {
      * Sets attribute that indicates the ICertBasedAuthChallengeHandler handling the current CBA flow.
      * @param challengeHandlerName name of the ICertBasedAuthChallengeHandler class.
      */
-    public void setCertBasedAuthChallengeHandler(@Nullable final String challengeHandlerName) {
+    public void setCertBasedAuthChallengeHandler(@NonNull final String challengeHandlerName) {
         mSpan.setAttribute(
                 AttributeName.cert_based_auth_challenge_handler.name(),
                 challengeHandlerName);
@@ -64,6 +63,8 @@ public class CertBasedAuthTelemetryHelper {
     /**
      * Indicates on the Span that CBA was successful and then ends current Span.
      */
+    //Suppressing warnings for RETURN_VALUE_IGNORED_NO_SIDE_EFFECT
+    @SuppressFBWarnings
     public void setResultSuccess() {
         mSpan.setStatus(StatusCode.OK);
         mSpan.end();
@@ -75,6 +76,8 @@ public class CertBasedAuthTelemetryHelper {
      *  such as user cancellation, no certificates on smartcard, etc.
      * @param message descriptive cause of failure message.
      */
+    //Suppressing warnings for RETURN_VALUE_IGNORED_NO_SIDE_EFFECT
+    @SuppressFBWarnings
     public void setResultFailure(@NonNull final String message) {
         mSpan.setStatus(StatusCode.ERROR, message);
         mSpan.end();
@@ -84,6 +87,8 @@ public class CertBasedAuthTelemetryHelper {
      * Indicates on the Span that CBA failed and then ends current Span.
      * @param exception exception thrown upon error.
      */
+    //Suppressing warnings for RETURN_VALUE_IGNORED_NO_SIDE_EFFECT
+    @SuppressFBWarnings
     public void setResultFailure(@NonNull final Exception exception) {
         mSpan.recordException(exception);
         mSpan.setStatus(StatusCode.ERROR);
@@ -94,7 +99,7 @@ public class CertBasedAuthTelemetryHelper {
      * Sets attribute that indicates the user's intended choice for CBA (smartcard or on-device).
      * @param choice string indicating user's intended choice for CBA.
      */
-    public void setUserChoice(@Nullable final String choice) {
+    public void setUserChoice(@NonNull final String choice) {
         mSpan.setAttribute(
                 AttributeName.cert_based_auth_user_choice.name(),
                 choice);

@@ -40,6 +40,7 @@ public class CertBasedAuthFactory {
     private static final String USER_CANCEL_MESSAGE = "User canceled smartcard CBA flow.";
     private static final String ON_DEVICE_CHOICE = "on-device";
     private static final String SMARTCARD_CHOICE = "smartcard";
+    private static final String NON_APPLICABLE = "N/A";
     private final Activity mActivity;
     private final AbstractSmartcardCertBasedAuthManager mSmartcardUsbCertBasedAuthManager;
     private final AbstractSmartcardCertBasedAuthManager mSmartcardNfcCertBasedAuthManager;
@@ -81,8 +82,8 @@ public class CertBasedAuthFactory {
      */
     public void createCertBasedAuthChallengeHandler(@NonNull final CertBasedAuthChallengeHandlerCallback callback) {
         final CertBasedAuthTelemetryHelper telemetryHelper = new CertBasedAuthTelemetryHelper();
-        telemetryHelper.setUserChoice(null);
-        telemetryHelper.setCertBasedAuthChallengeHandler(null);
+        telemetryHelper.setUserChoice(NON_APPLICABLE);
+        telemetryHelper.setCertBasedAuthChallengeHandler(NON_APPLICABLE);
         if (mSmartcardUsbCertBasedAuthManager == null) {
             //Smartcard CBA is not available, so default to on-device.
             callback.onReceived(new OnDeviceCertBasedAuthChallengeHandler(
