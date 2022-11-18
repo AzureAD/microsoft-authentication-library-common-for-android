@@ -136,14 +136,14 @@ public class PlayStore implements IAppInstaller {
                     new UiSelector().description(playStoreAction),
                     PLAY_STORE_UI_OBJECT_TIMEOUT);
             uiObjBtn.click();
-            checkInstallCompletion(new UiSelector().description("Open"));
+            checkInstallCompletion(new UiSelector().description("Uninstall"));
         } catch (final UiObjectNotFoundException e) {
             Logger.i(TAG, "Got exception when trying to find Install/Update button for PlayStore: " + e.getMessage());
             final UiObject uiObjBtn = UiAutomatorUtils.obtainUiObjectWithUiSelector(
                     new UiSelector().className(Button.class).text(playStoreAction).enabled(true),
                     PLAY_STORE_UI_OBJECT_TIMEOUT);
             uiObjBtn.click();
-            checkInstallCompletion(new UiSelector().className(Button.class).text("Open").enabled(true));
+            checkInstallCompletion(new UiSelector().className(Button.class).text("Uninstall").enabled(true));
         }
     }
 
