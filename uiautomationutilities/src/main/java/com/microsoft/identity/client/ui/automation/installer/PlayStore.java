@@ -40,7 +40,6 @@ import org.junit.Assert;
 
 import java.util.concurrent.TimeUnit;
 
-import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT;
 import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.getResourceId;
 import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.isStringPackageName;
 import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.launchApp;
