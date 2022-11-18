@@ -223,6 +223,7 @@ public class CertBasedAuthFactory {
             @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
             @Override
             public void onCreateConnection() {
+                mSmartcardUsbCertBasedAuthManager.setConnectionCallback(null);
                 mDialogHolder.showSmartcardNfcLoadingDialog();
                 challengeHandlerCallback.onReceived(new SmartcardNfcCertBasedAuthChallengeHandler(
                         mActivity,
