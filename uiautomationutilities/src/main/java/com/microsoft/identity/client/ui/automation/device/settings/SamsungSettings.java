@@ -217,4 +217,15 @@ public class SamsungSettings extends BaseSettings {
     public void removePinFromDevice(String pin) {
         //TODO: implement removing PIN for SAMSUNG device.
     }
+
+
+    @Override
+    public void disableAppThroughSettings(@NonNull final String packageName) {
+        //TODO: implement disabling app through settings
+    }
+
+    @Override
+    public void enableAppThroughSettings(@NonNull final String packageName) {
+        //TODO: implement enabling app through settings
+    }
 }
