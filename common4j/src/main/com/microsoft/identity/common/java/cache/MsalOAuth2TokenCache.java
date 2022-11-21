@@ -1546,7 +1546,7 @@ public class MsalOAuth2TokenCache
      * @param realmAgnostic  True if the specified action should be completed irrespective of realm.
      * @return The number of Credentials removed.
      */
-    private int removeCredentialsOfTypeForAccount(
+    public int removeCredentialsOfTypeForAccount(
             @Nullable final String environment, // 'authority host'
             @Nullable final String clientId,
             @NonNull final CredentialType credentialType,

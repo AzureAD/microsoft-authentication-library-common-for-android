@@ -76,6 +76,7 @@ import com.microsoft.identity.common.java.providers.oauth2.OAuth2TokenCache;
 import com.microsoft.identity.common.shadows.ShadowAndroidSdkStorageEncryptionManager;
 
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -84,7 +85,9 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
@@ -704,6 +707,7 @@ public class BrokerOAuth2TokenCacheTest {
 
     @Test
     public void testRemoveAccountFromDevice() throws ClientException {
+        Map<Integer,ICacheRecord> map=new HashMap<Integer,ICacheRecord>();
         // Load up the 'other caches' which a bunch of test credentials, see if we can get them out...
         int ii = 0;
         for (final OAuth2TokenCache cache : mOtherAppTokenCaches) {
@@ -714,7 +718,7 @@ public class BrokerOAuth2TokenCacheTest {
                     mockRequest,
                     mockResponse
             );
-
+            map.put(testAppUids[ii], cacheRecord);
             final BrokerApplicationMetadata applicationMetadata = new BrokerApplicationMetadata();
             applicationMetadata.setClientId(cacheRecord.getIdToken().getClientId());
             applicationMetadata.setEnvironment(cacheRecord.getIdToken().getEnvironment());
@@ -733,6 +737,47 @@ public class BrokerOAuth2TokenCacheTest {
         }
 
         final List<AccountRecord> xAppAccounts = mBrokerOAuth2TokenCache.getAccounts();
+
+
+        // check for
+        for (final BrokerApplicationMetadata brokerAppMetadata : mApplicationMetadataCache.getAll()) {
+            //get cache for specific uid
+            // we need to do this because BrokerOAuth2TokenCache can access the cache from all the uid
+            // but only get the accounts, if we want access to the credentials we need to instance a cache object
+            // using the specific id
+            final BrokerOAuth2TokenCache brokerOAuth2TokenCache = new BrokerOAuth2TokenCache(
+                    mPlatformComponents,
+                    brokerAppMetadata.getUid(),
+                    new NameValueStorageBrokerApplicationMetadataCache(mPlatformComponents)
+            );
+            // Geat accouts of specific cache
+            final List<AccountRecord> accountRecordList = brokerOAuth2TokenCache.getAccounts(
+                    brokerAppMetadata.getEnvironment(),
+                    brokerAppMetadata.getClientId()
+            );
+            // get cache record )must contain credentials
+            final List<ICacheRecord> cacheRecordOld = brokerOAuth2TokenCache.loadWithAggregatedAccountData(
+                    brokerAppMetadata.getClientId(),
+                    TARGET,
+                    accountRecordList.get(0),
+                    BEARER_AUTHENTICATION_SCHEME
+            );
+
+            mBrokerOAuth2TokenCache.removeCredentials(
+                    brokerAppMetadata.getEnvironment(),
+                    brokerAppMetadata.getClientId(),
+                    accountRecordList.get(0).getHomeAccountId(),
+                    accountRecordList.get(0).getRealm(),
+                    CredentialType.AccessToken
+            );
+            // credential AT removed
+            final List<ICacheRecord> cacheRecord = brokerOAuth2TokenCache.loadWithAggregatedAccountData(
+                    brokerAppMetadata.getClientId(),
+                    TARGET,
+                    accountRecordList.get(0),
+                    BEARER_AUTHENTICATION_SCHEME
+            );
+        }
 
         // Deleting one of these AccountRecords should remove all of them...
         final AccountDeletionRecord deletionRecord = mBrokerOAuth2TokenCache.removeAccountFromDevice(

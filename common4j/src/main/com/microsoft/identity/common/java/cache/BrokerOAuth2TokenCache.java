@@ -24,6 +24,8 @@ package com.microsoft.identity.common.java.cache;
 
 
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
+import com.microsoft.identity.common.java.authscheme.BearerAuthenticationSchemeInternal;
+import com.microsoft.identity.common.java.dto.IAccountRecord;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
@@ -44,6 +46,7 @@ import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.util.StringUtil;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -1288,6 +1291,74 @@ public class BrokerOAuth2TokenCache
                 realm,
                 false
         );
+    }
+
+
+    public int removeCredentials(
+            @Nullable final String environment,
+            @Nullable final String clientId,
+            @NonNull final String homeAccountId,
+            @NonNull final String realm,
+            @Nullable final CredentialType... typesToRemove) {
+        // TODO: check also foci cache
+        final String methodTag = TAG + ":removeAccounts";
+        int numberOfCredentialsRemoved = 0;
+        for (final BrokerApplicationMetadata metadata :  mApplicationMetadataCache.getAll()) {
+            if (!StringUtil.isNullOrEmpty(clientId) && !clientId.equalsIgnoreCase(metadata.getClientId())) {
+                continue;
+            }
+            if (!StringUtil.isNullOrEmpty(environment) && !environment.equalsIgnoreCase(metadata.getEnvironment())) {
+                continue;
+            }
+            // Get cache for clientId, Id
+            final MsalOAuth2TokenCache candidateCache = getTokenCacheForClient(
+                    metadata.getClientId(),
+                    metadata.getEnvironment(),
+                    metadata.getUid()
+            );
+            if (candidateCache == null) {
+                continue;
+            }
+            // Get account
+            final AccountRecord accountRecord = candidateCache.getAccount(
+                    metadata.getEnvironment(),
+                    metadata.getClientId(),
+                    homeAccountId,
+                    realm
+            );
+            if (accountRecord == null) {
+                continue;
+            }
+            // Option 1: loop credentials
+            /*
+            // Get cache record for account
+            final List<ICacheRecord> cacheRecordList = candidateCache.loadWithAggregatedAccountData(
+                    metadata.getClientId(),
+                    null,
+                    accountRecord,
+                    new BearerAuthenticationSchemeInternal()
+            );
+            if (cacheRecordList == null) {
+                continue;
+            }
+            // Remove AT
+            candidateCache.removeCredential(cacheRecordList.get(0).getAccessToken());
+            */
+            // Option 2: Make private method public
+            // Remove credentials
+            for (final CredentialType type : typesToRemove) {
+                // A count of the deleted creds...
+                int deletedCredentialsOfTypeCount = candidateCache.removeCredentialsOfTypeForAccount(
+                        environment,
+                        clientId,
+                        type,
+                        accountRecord,
+                        false
+                );
+                numberOfCredentialsRemoved += deletedCredentialsOfTypeCount;
+            }
+        }
+        return numberOfCredentialsRemoved;
     }
 
     @Override
