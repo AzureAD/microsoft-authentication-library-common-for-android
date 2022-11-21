@@ -22,9 +22,9 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.opentelemetry;
 
-import static com.microsoft.identity.common.java.opentelemetry.AttributeName.crypto_operation;
 import static com.microsoft.identity.common.java.opentelemetry.AttributeName.crypto_controller;
 import static com.microsoft.identity.common.java.opentelemetry.AttributeName.crypto_exception_stack_trace;
+import static com.microsoft.identity.common.java.opentelemetry.AttributeName.crypto_operation;
 
 import com.microsoft.identity.common.java.crypto.ICryptoFactory;
 import com.microsoft.identity.common.java.exception.ClientException;
@@ -42,11 +42,11 @@ public class CryptoFactoryTelemetryHelper {
      * for crypto operation in one place.
      *
      * @param cryptoOperation name of the crypto operation.
-     * @param algorithmName name of the algorithm.
-     * @param cryptoFactory an {@link ICryptoFactory} object.
+     * @param algorithmName   name of the algorithm.
+     * @param cryptoFactory   an {@link ICryptoFactory} object.
      * @param cryptoOperation a callback that wraps around the crypto operation to be performed.
      * @return result of the crypto operation.
-     * */
+     */
     public static <T> T performCryptoOperationAndUploadTelemetry(@NonNull final CryptoObjectName operationName,
                                                                  @NonNull final String algorithmName,
                                                                  @NonNull final ICryptoFactory cryptoFactory,
@@ -74,7 +74,7 @@ public class CryptoFactoryTelemetryHelper {
      * Constructs the telemetry name for {@link AttributeName#crypto_operation}
      */
     private static String getCryptoOperationEventName(@NonNull final CryptoObjectName operationName,
-                                                      @NonNull final String algorithm){
+                                                      @NonNull final String algorithm) {
         return operationName.name() + "_" + algorithm;
     }
 }
