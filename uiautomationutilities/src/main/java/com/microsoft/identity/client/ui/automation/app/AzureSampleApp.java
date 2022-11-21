@@ -27,6 +27,7 @@ import androidx.annotation.Nullable;
 import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObjectNotFoundException;
 
+import com.microsoft.identity.client.ui.automation.broker.ITestBroker;
 import com.microsoft.identity.client.ui.automation.browser.IBrowser;
 import com.microsoft.identity.client.ui.automation.installer.LocalApkInstaller;
 import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.MicrosoftStsPromptHandler;
@@ -103,6 +104,34 @@ public class AzureSampleApp extends App {
                 new MicrosoftStsPromptHandler(promptHandlerParameters);
 
         microsoftStsPromptHandler.handlePrompt(username, password);
+
+        // sleep as it can take a bit for UPN to appear in Azure Sample app
+        try {
+            Thread.sleep(TimeUnit.SECONDS.toMillis(5));
+        } catch (InterruptedException e){
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Sign in into the Azure Sample App. Please note that this method performs sign in into the
+     * Single Account Mode Fragment in the Sample App.
+     *
+     * @param browser                     the browser that is expected to be used during sign in flow
+     * @param broker                      the broker used in the test case
+     * @param shouldHandleBrowserFirstRun whether this is the first time the browser being run
+     */
+    public void signInSilentlyWithSingleAccountFragment(@Nullable final IBrowser browser,
+                                                        @NonNull final ITestBroker broker,
+                                                        final boolean shouldHandleBrowserFirstRun) {
+        Logger.i(TAG, "Signing in into Azure Sample App with Single Account Mode Fragment..");
+        // Click Sign In in Single Account Fragment
+        UiAutomatorUtils.handleButtonClick("com.azuresamples.msalandroidapp:id/btn_signIn");
+
+        if (broker == null && browser != null && shouldHandleBrowserFirstRun) {
+            // handle browser first run as applicable
+            ((IApp) browser).handleFirstRun();
+        }
 
         // sleep as it can take a bit for UPN to appear in Azure Sample app
         try {
