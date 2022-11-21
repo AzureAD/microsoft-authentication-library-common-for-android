@@ -173,7 +173,7 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
     public void handleStaySignedIn(final UiResponse staySignedInResponse) {
         final UiObject staySignedInView = UiAutomatorUtils.obtainUiObjectWithText("Stay signed in?");
 
-        if (!staySignedInView.waitForExists(FIND_UI_ELEMENT_TIMEOUT_LONG)) {
+        if (!staySignedInView.exists()) {
             fail("Stay signed in page did not show up");
         }
 

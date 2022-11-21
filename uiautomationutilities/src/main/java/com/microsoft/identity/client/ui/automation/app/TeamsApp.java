@@ -26,6 +26,7 @@ import androidx.annotation.NonNull;
 import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObjectNotFoundException;
 
+import com.microsoft.identity.client.ui.automation.installer.IAppInstaller;
 import com.microsoft.identity.client.ui.automation.installer.PlayStore;
 import com.microsoft.identity.client.ui.automation.interaction.FirstPartyAppPromptHandlerParameters;
 import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.MicrosoftStsPromptHandler;
@@ -42,9 +43,15 @@ public class TeamsApp extends App implements IFirstPartyApp {
     private final static String TAG = TeamsApp.class.getSimpleName();
     private static final String TEAMS_PACKAGE_NAME = "com.microsoft.teams";
     private static final String TEAMS_APP_NAME = "Microsoft Teams";
+    private static final String TEAMS_APK = "Teams.apk";
 
     public TeamsApp() {
         super(TEAMS_PACKAGE_NAME, TEAMS_APP_NAME, new PlayStore());
+    }
+
+    public TeamsApp(@NonNull final IAppInstaller appInstaller) {
+        super(TEAMS_PACKAGE_NAME, TEAMS_APP_NAME, appInstaller);
+        localApkFileName = TEAMS_APK;
     }
 
     @Override

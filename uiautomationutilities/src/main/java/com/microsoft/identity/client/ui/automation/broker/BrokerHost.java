@@ -177,6 +177,13 @@ public class BrokerHost extends AbstractTestBroker {
         }
     }
 
+    @Override
+    public void performSharedDeviceRegistrationDontValidate(@NonNull final String username,
+                                                            @NonNull final String password) {
+        Logger.i(TAG, "Performing Shared Device Registration for the given account..");
+        performDeviceRegistrationHelper(username);
+    }
+
     private void performDeviceRegistrationHelper(@NonNull final String username) {
         Logger.i(TAG, "Execution of Helper for Device Registration..");
         launch(); // launch Broker Host app
@@ -339,9 +346,9 @@ public class BrokerHost extends AbstractTestBroker {
         Logger.i(TAG, "Overwrite Flights..");
         launch();
 
-        // Sleep for a bit to finish launching brokerHost before scrolling to set Flights
+        // Sleep for a bit to finish launching brokerHost before scrolling to Overwrite Flights
         try {
-            Thread.sleep(TimeUnit.SECONDS.toMillis(5));
+            Thread.sleep(TimeUnit.SECONDS.toMillis(2));
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -359,9 +366,9 @@ public class BrokerHost extends AbstractTestBroker {
         Logger.i(TAG, "Set Flights..");
         launch();
 
-        // Sleep for a bit to finish launching brokerHost before scrolling to set Flights
+        // Sleep for a bit to finish launching brokerHost before scrolling to Set Flights
         try {
-            Thread.sleep(TimeUnit.SECONDS.toMillis(5));
+            Thread.sleep(TimeUnit.SECONDS.toMillis(2));
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -378,9 +385,15 @@ public class BrokerHost extends AbstractTestBroker {
     @Override
     public String getFlights() {
         Logger.i(TAG, "Get Flights..");
-        final String resourceButtonId = "com.microsoft.identity.testuserapp:id/getFlightsButton";
         final String text = "Get Flights";
         launch();
+
+        // Sleep for a bit to finish launching brokerHost before scrolling to Get Flights
+        try {
+            Thread.sleep(TimeUnit.SECONDS.toMillis(2));
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
         try {
             // scroll to find the get flights button and click
@@ -423,6 +436,7 @@ public class BrokerHost extends AbstractTestBroker {
         if (shouldHandleFirstRun) {
             handleFirstRun(); // handle first run experience
         }
+        UiAutomatorUtils.obtainChildInScrollable("Get Accounts");
         UiAutomatorUtils.handleButtonClick(resourceButtonId);
         // Look for the dialog box
         final UiObject dialogBox = UiAutomatorUtils.obtainUiObjectWithResourceId(
