@@ -27,6 +27,7 @@ import static com.microsoft.identity.common.java.opentelemetry.AttributeName.par
 import javax.annotation.Nullable;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.LongCounter;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.trace.Span;
@@ -62,6 +63,18 @@ public class OTelUtility {
                 .setDescription(description)
                 .setUnit("count")
                 .build();
+    }
+
+    /**
+     * Get name of the current span, if possible.
+     **/
+    @Nullable
+    public static Attributes getCurrentSpanAttributes() {
+        final Span span = SpanExtension.current();
+        if (span instanceof ReadableSpan) {
+            return ((ReadableSpan) span).toSpanData().getAttributes();
+        }
+        return null;
     }
 
     /**

@@ -30,12 +30,19 @@ import com.microsoft.identity.common.java.crypto.ICryptoFactory;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.util.StringUtil;
 
+import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.metrics.LongCounter;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.Scope;
 import lombok.NonNull;
 
 public class CryptoFactoryTelemetryHelper {
+
+    private static final LongCounter sFailedCryptoOperationCount = OTelUtility.createLongCounter(
+            "failed_crypto_operation_count",
+            "Number of failed crypto operations"
+    );
 
     /**
      * A helper class that consolidate all the telemetry emitting work
@@ -58,8 +65,20 @@ public class CryptoFactoryTelemetryHelper {
             span.setAttribute(crypto_operation.name(),
                     getCryptoOperationEventName(operationName, algorithmName));
             span.setStatus(StatusCode.OK);
+            final Attributes attributes = OTelUtility.getCurrentSpanAttributes();
+            if (attributes != null) {
+                sFailedCryptoOperationCount.add(1, attributes);
+            } else {
+                sFailedCryptoOperationCount.add(1);
+            }
             return cryptoOperation.perform();
         } catch (final Exception e) {
+            final Attributes attributes = OTelUtility.getCurrentSpanAttributes();
+            if (attributes != null) {
+                sFailedCryptoOperationCount.add(1, attributes);
+            } else {
+                sFailedCryptoOperationCount.add(1);
+            }
             span.setStatus(StatusCode.ERROR);
             span.recordException(e);
             span.setAttribute(crypto_exception_stack_trace.name(),
