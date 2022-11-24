@@ -139,6 +139,11 @@ public class ClientException extends BaseException {
     public static final String INVALID_JWT = "invalid_jwt";
 
     /**
+     * JWE returned by the server is not valid, empty or malformed.
+     */
+    public static final String INVALID_JWE = "invalid_jwe";
+
+    /**
      * State from authorization response did not match the state in the authorization request.
      * For authorization requests, the sdk will verify the state returned from redirect and the one sent in the request.
      */
@@ -148,6 +153,12 @@ public class ClientException extends BaseException {
      * Unsupported url, cannot perform adfs authority validation.
      */
     public static final String UNSUPPORTED_URL = "unsupported_url";
+
+    /**
+     * Unsupported android api version.
+     */
+    public static final String UNSUPPORTED_ANDROID_API_VERSION = "unsupported_android_api_version";
+
 
     /**
      * The authority is not supported for authority validation. The sdk supports b2c authority, but we don't support b2c authority validation yet.
