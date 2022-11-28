@@ -28,7 +28,7 @@ package com.microsoft.identity.client.ui.automation.app;
 public interface IApp {
 
     /**
-     * Returns the package name of the broker.
+     * Returns the package name of the app.
      */
     String getPackageName();
 
