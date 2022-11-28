@@ -80,6 +80,13 @@ public class MicrosoftStsPromptHandler extends AbstractPromptHandler {
             loginComponentHandler.handlePasswordField(password);
         }
 
+        final IMicrosoftStsLoginComponentHandler aadLoginComponentHandler =
+                (IMicrosoftStsLoginComponentHandler) loginComponentHandler;
+
+        if (parameters.isVerifyYourIdentityPageExpected()) {
+            aadLoginComponentHandler.handleVerifyYourIdentity();
+        }
+
         if (parameters.isConsentPageExpected() || parameters.getPrompt() == PromptParameter.CONSENT) {
             final UiResponse consentPageResponse = parameters.getConsentPageResponse();
             if (consentPageResponse == UiResponse.ACCEPT) {
@@ -88,9 +95,6 @@ public class MicrosoftStsPromptHandler extends AbstractPromptHandler {
                 loginComponentHandler.declineConsent();
             }
         }
-
-        final IMicrosoftStsLoginComponentHandler aadLoginComponentHandler =
-                (IMicrosoftStsLoginComponentHandler) loginComponentHandler;
 
         if (parameters.isStaySignedInPageExpected()) {
             aadLoginComponentHandler.handleStaySignedIn(parameters.getStaySignedInResponse());

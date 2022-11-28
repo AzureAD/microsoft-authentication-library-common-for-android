@@ -104,13 +104,6 @@ public class AzureSampleApp extends App {
                 new MicrosoftStsPromptHandler(promptHandlerParameters);
 
         microsoftStsPromptHandler.handlePrompt(username, password);
-
-        // sleep as it can take a bit for UPN to appear in Azure Sample app
-        try {
-            Thread.sleep(TimeUnit.SECONDS.toMillis(5));
-        } catch (InterruptedException e){
-            e.printStackTrace();
-        }
     }
 
     /**
@@ -132,13 +125,6 @@ public class AzureSampleApp extends App {
             // handle browser first run as applicable
             ((IApp) browser).handleFirstRun();
         }
-
-        // sleep as it can take a bit for UPN to appear in Azure Sample app
-        try {
-            Thread.sleep(TimeUnit.SECONDS.toMillis(5));
-        } catch (InterruptedException e){
-            e.printStackTrace();
-        }
     }
 
     /**
@@ -157,13 +143,16 @@ public class AzureSampleApp extends App {
      */
     public void confirmSignedIn(@NonNull final String username) {
         Logger.i(TAG, "Confirming account with supplied username is signed in..");
+
+        final UiObject signedInUser = UiAutomatorUtils.obtainUiObjectWithResourceId("com.azuresamples.msalandroidapp:id/current_user");
+
+        // Sometimes need some time for upn to appear
         try {
-            Thread.sleep(TimeUnit.SECONDS.toMillis(5));
+            Thread.sleep(TimeUnit.SECONDS.toMillis(10));
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
 
-        final UiObject signedInUser = UiAutomatorUtils.obtainUiObjectWithResourceId("com.azuresamples.msalandroidapp:id/current_user");
         try {
             Assert.assertEquals("User is signed into Azure Sample App", username, signedInUser.getText());
         } catch (final UiObjectNotFoundException e) {
