@@ -1,7 +1,9 @@
 V.Next
 ----------
 
-
+V.9.0.1
+----------
+- [MINOR] Moving ClearClientCertPreferences back to onCreate and handleBackButtonPressed (#1908)
 
 V.9.0.0
 ----------
