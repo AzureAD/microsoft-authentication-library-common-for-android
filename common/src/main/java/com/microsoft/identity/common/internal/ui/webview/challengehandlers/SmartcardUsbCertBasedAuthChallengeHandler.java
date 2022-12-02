@@ -35,7 +35,7 @@ import com.microsoft.identity.common.logging.Logger;
 
 /**
  * Handles a received ClientCertRequest by prompting the user to choose from certificates
- *  stored on a connected smartcard device.
+ *  stored on a smartcard device connected via USB.
  */
 public class SmartcardUsbCertBasedAuthChallengeHandler extends AbstractSmartcardCertBasedAuthChallengeHandler {
 
@@ -43,7 +43,7 @@ public class SmartcardUsbCertBasedAuthChallengeHandler extends AbstractSmartcard
      * Creates new instance of SmartcardUsbCertBasedAuthChallengeHandler.
      * A manager for smartcard CBA is retrieved, and discovery for USB devices is started.
      * @param activity current host activity.
-     * @param smartcardUsbCertBasedAuthManager AbstractSmartcardCertBasedAuthManager instance.
+     * @param smartcardUsbCertBasedAuthManager SmartcardUsbCertBasedAuthManager instance.
      * @param dialogHolder DialogHolder instance.
      * @param telemetryHelper CertBasedAuthTelemetryHelder instance.
      */
@@ -89,7 +89,7 @@ public class SmartcardUsbCertBasedAuthChallengeHandler extends AbstractSmartcard
      */
     @Override
     protected SmartcardPinDialog.PositiveButtonListener getSmartcardPinDialogPositiveButtonListener(@NonNull final ICertDetails certDetails,
-                                                                                                  @NonNull final ClientCertRequest request) {
+                                                                                                    @NonNull final ClientCertRequest request) {
         final String methodTag = TAG + ":getSmartcardPinDialogPositiveButtonListener";
 
         return new SmartcardPinDialog.PositiveButtonListener() {
@@ -126,9 +126,9 @@ public class SmartcardUsbCertBasedAuthChallengeHandler extends AbstractSmartcard
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
     protected void tryUsingSmartcardWithPin(@NonNull final char[] pin,
-                                          @NonNull final ICertDetails certDetails,
-                                          @NonNull final ClientCertRequest request,
-                                          @NonNull final ISmartcardSession session)
+                                            @NonNull final ICertDetails certDetails,
+                                            @NonNull final ClientCertRequest request,
+                                            @NonNull final ISmartcardSession session)
             throws Exception {
         final String methodTag = TAG + ":tryUsingSmartcardWithPin";
         if (session.verifyPin(pin)) {

@@ -31,6 +31,10 @@ import androidx.annotation.RequiresApi;
 
 import com.microsoft.identity.common.java.opentelemetry.CertBasedAuthTelemetryHelper;
 
+/**
+ * Handles a received ClientCertRequest by prompting the user to choose from certificates
+ *  stored on a smartcard device connected via NFC.
+ */
 public class SmartcardNfcCertBasedAuthChallengeHandler extends AbstractSmartcardCertBasedAuthChallengeHandler{
     /**
      * Creates new instance of SmartcardNfcCertBasedAuthChallengeHandler.
@@ -75,7 +79,7 @@ public class SmartcardNfcCertBasedAuthChallengeHandler extends AbstractSmartcard
      */
     @Override
     protected SmartcardPinDialog.PositiveButtonListener getSmartcardPinDialogPositiveButtonListener(@NonNull final ICertDetails certDetails,
-                                                                                                  @NonNull final ClientCertRequest request) {
+                                                                                                    @NonNull final ClientCertRequest request) {
         final String methodTag = TAG + ":getSmartcardPinDialogPositiveButtonListener";
 
         return new SmartcardPinDialog.PositiveButtonListener() {
@@ -134,9 +138,9 @@ public class SmartcardNfcCertBasedAuthChallengeHandler extends AbstractSmartcard
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
     protected void tryUsingSmartcardWithPin(@NonNull final char[] pin,
-                                          @NonNull final ICertDetails certDetails,
-                                          @NonNull final ClientCertRequest request,
-                                          @NonNull final ISmartcardSession session)
+                                            @NonNull final ICertDetails certDetails,
+                                            @NonNull final ClientCertRequest request,
+                                            @NonNull final ISmartcardSession session)
             throws Exception {
         final String methodTag = TAG + ":tryUsingSmartcardWithPin";
         if (session.verifyPin(pin)) {

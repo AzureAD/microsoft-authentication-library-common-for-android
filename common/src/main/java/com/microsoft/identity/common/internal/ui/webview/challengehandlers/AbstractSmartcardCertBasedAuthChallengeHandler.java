@@ -40,6 +40,10 @@ import java.security.cert.X509Certificate;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * Abstract class which handles a received ClientCertRequest by prompting the user to choose from certificates
+ *  stored on a smartcard device.
+ */
 public abstract class AbstractSmartcardCertBasedAuthChallengeHandler implements ICertBasedAuthChallengeHandler {
     protected static final String MAX_ATTEMPTS_MESSAGE = "User has reached the maximum failed attempts allowed.";
     protected static final String NO_PIV_CERTS_FOUND_MESSAGE = "No PIV certificates found on smartcard device.";
@@ -52,10 +56,9 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandler implements 
     protected boolean mIsSmartcardCertBasedAuthProceeding;
 
     /**
-     * Creates new instance of SmartcardUsbCertBasedAuthChallengeHandler.
-     * A manager for smartcard CBA is retrieved, and discovery for USB devices is started.
+     * Creates new instance of AbstractSmartcardCertBasedAuthChallengeHandler.
      * @param activity current host activity.
-     * @param smartcardCertBasedAuthManager AbstractSmartcardCertBasedAuthManager instance.
+     * @param smartcardCertBasedAuthManager AbstractSmartcardCertBasedAuthManager implementation instance.
      * @param dialogHolder DialogHolder instance.
      * @param telemetryHelper CertBasedAuthTelemetryHelper instance.
      * @param tag name of challenge handler, for logging purposes.
@@ -201,7 +204,7 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandler implements 
      * @return A PositiveButtonListener to be set for a SmartcardPinDialog.
      */
     protected abstract SmartcardPinDialog.PositiveButtonListener getSmartcardPinDialogPositiveButtonListener(@NonNull final ICertDetails certDetails,
-                                                                                                  @NonNull final ClientCertRequest request);
+                                                                                                             @NonNull final ClientCertRequest request);
 
     /**
      * Checks to see if PIN for smartcard is correct.
@@ -214,13 +217,13 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandler implements 
      */
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     protected abstract void tryUsingSmartcardWithPin(@NonNull final char[] pin,
-                                          @NonNull final ICertDetails certDetails,
-                                          @NonNull final ClientCertRequest request,
-                                          @NonNull final ISmartcardSession session)
+                                                     @NonNull final ICertDetails certDetails,
+                                                     @NonNull final ClientCertRequest request,
+                                                     @NonNull final ISmartcardSession session)
             throws Exception;
 
     /**
-     * Attempts to authenticate using smartcard certificate.
+     * Authenticates using smartcard certificate.
      * @param certDetails ICertDetails of chosen certificate for authentication.
      * @param pin char array containing PIN.
      * @param session An ISmartcardSession created to help with interactions pertaining to certificates.
@@ -228,9 +231,9 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandler implements 
      */
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     protected void useSmartcardCertForAuth(@NonNull final ICertDetails certDetails,
-                                         @NonNull final char[] pin,
-                                         @NonNull final ISmartcardSession session,
-                                         @NonNull final ClientCertRequest request)
+                                           @NonNull final char[] pin,
+                                           @NonNull final ISmartcardSession session,
+                                           @NonNull final ClientCertRequest request)
             throws Exception {
         //Each type of smartcard manager could have different preparation steps before proceeding with a ClientCertRequest.
         mSmartcardCertBasedAuthManager.initBeforeProceedingWithRequest(mTelemetryHelper);
@@ -258,23 +261,24 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandler implements 
      */
     @Override
     public void emitTelemetryForCertBasedAuthResults(@NonNull final RawAuthorizationResult response) {
-        if (mIsSmartcardCertBasedAuthProceeding) {
-            mIsSmartcardCertBasedAuthProceeding = false;
-            final RawAuthorizationResult.ResultCode resultCode = response.getResultCode();
-            if (resultCode == RawAuthorizationResult.ResultCode.NON_OAUTH_ERROR
-                    || resultCode == RawAuthorizationResult.ResultCode.SDK_CANCELLED
-                    || resultCode == RawAuthorizationResult.ResultCode.CANCELLED) {
-                final BaseException exception = response.getException();
-                if (exception != null) {
-                    mTelemetryHelper.setResultFailure(exception);
-                } else {
-                    //Putting result code as message.
-                    mTelemetryHelper.setResultFailure(resultCode.toString());
-                }
-            } else {
-                mTelemetryHelper.setResultSuccess();
-            }
+        if (!mIsSmartcardCertBasedAuthProceeding) {
+            return;
         }
+        mIsSmartcardCertBasedAuthProceeding = false;
+        final RawAuthorizationResult.ResultCode resultCode = response.getResultCode();
+        if (resultCode == RawAuthorizationResult.ResultCode.NON_OAUTH_ERROR
+                || resultCode == RawAuthorizationResult.ResultCode.SDK_CANCELLED
+                || resultCode == RawAuthorizationResult.ResultCode.CANCELLED) {
+            final BaseException exception = response.getException();
+            if (exception != null) {
+                mTelemetryHelper.setResultFailure(exception);
+                return;
+            }
+            //Putting result code as message.
+            mTelemetryHelper.setResultFailure(resultCode.toString());
+            return;
+        }
+        mTelemetryHelper.setResultSuccess();
     }
 
     /**
