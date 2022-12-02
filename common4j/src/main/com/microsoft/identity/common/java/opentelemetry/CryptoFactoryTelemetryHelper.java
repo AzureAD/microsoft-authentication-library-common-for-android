@@ -25,16 +25,18 @@ package com.microsoft.identity.common.java.opentelemetry;
 import static com.microsoft.identity.common.java.opentelemetry.AttributeName.crypto_controller;
 import static com.microsoft.identity.common.java.opentelemetry.AttributeName.crypto_exception_stack_trace;
 import static com.microsoft.identity.common.java.opentelemetry.AttributeName.crypto_operation;
+import static com.microsoft.identity.common.java.opentelemetry.AttributeName.error_code;
+import static com.microsoft.identity.common.java.opentelemetry.AttributeName.error_type;
+import static com.microsoft.identity.common.java.opentelemetry.AttributeName.parent_span_name;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 
 import com.microsoft.identity.common.java.crypto.ICryptoFactory;
 import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.java.util.StringUtil;
+import com.microsoft.identity.common.java.exception.IErrorInformation;
+import com.microsoft.identity.common.java.util.ThrowableUtil;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.LongCounter;
-import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.StatusCode;
-import io.opentelemetry.context.Scope;
 import lombok.NonNull;
 
 public class CryptoFactoryTelemetryHelper {
@@ -59,33 +61,20 @@ public class CryptoFactoryTelemetryHelper {
                                                                  @NonNull final ICryptoFactory cryptoFactory,
                                                                  @NonNull final ICryptoOperation<T> cryptoOperation)
             throws ClientException {
-        final Span span = OTelUtility.createSpan(SpanName.CryptoFactoryEvent.name());
-        try (final Scope scope = span.makeCurrent()) {
-            span.setAttribute(crypto_controller.name(), cryptoFactory.getTelemetryClassName().name());
-            span.setAttribute(crypto_operation.name(),
-                    getCryptoOperationEventName(operationName, algorithmName));
-            span.setStatus(StatusCode.OK);
-            final Attributes attributes = OTelUtility.getCurrentSpanAttributes();
-            if (attributes != null) {
-                sFailedCryptoOperationCount.add(1, attributes);
-            } else {
-                sFailedCryptoOperationCount.add(1);
-            }
+        try {
             return cryptoOperation.perform();
         } catch (final Exception e) {
-            final Attributes attributes = OTelUtility.getCurrentSpanAttributes();
-            if (attributes != null) {
-                sFailedCryptoOperationCount.add(1, attributes);
-            } else {
-                sFailedCryptoOperationCount.add(1);
-            }
-            span.setStatus(StatusCode.ERROR);
-            span.recordException(e);
-            span.setAttribute(crypto_exception_stack_trace.name(),
-                    StringUtil.getStackTraceAsString(e));
+            final String parentSpanName = OTelUtility.getCurrentSpanName();
+            final Attributes attributes = Attributes.of(
+                    stringKey(crypto_controller.name()), cryptoFactory.getTelemetryClassName().name(),
+                    stringKey(crypto_operation.name()), getCryptoOperationEventName(operationName, algorithmName),
+                    stringKey(parent_span_name.name()), parentSpanName == null ? "N/A" : parentSpanName,
+                    stringKey(error_type.name()), e.getClass().getSimpleName(),
+                    stringKey(error_code.name()), e instanceof IErrorInformation ? ((IErrorInformation) e).getErrorCode() : "N/A",
+                    stringKey(crypto_exception_stack_trace.name()), ThrowableUtil.getStackTraceAsString(e)
+            );
+            sFailedCryptoOperationCount.add(1, attributes);
             throw e;
-        } finally {
-            span.end();
         }
     }
 

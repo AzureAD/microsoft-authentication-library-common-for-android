@@ -81,7 +81,7 @@ public class OTelUtility {
      * Get name of the current span, if possible.
      **/
     @Nullable
-    private static String getCurrentSpanName() {
+    public static String getCurrentSpanName() {
         final Span span = SpanExtension.current();
         if (span instanceof ReadableSpan) {
             return ((ReadableSpan) span).getName();
