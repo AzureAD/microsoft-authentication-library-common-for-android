@@ -35,7 +35,6 @@ import androidx.test.uiautomator.UiSelector;
 
 import com.microsoft.identity.client.ui.automation.logging.Logger;
 import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT;
-import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT_LONG;
 
 /**
  * This class contains utility methods for leveraging UI Automator to interact with UI elements.
@@ -52,36 +51,36 @@ public class UiAutomatorUtils {
      */
     public static UiObject obtainUiObjectWithResourceId(@NonNull final String resourceId) {
         Logger.i(TAG, "Obtain an instance of the UiObject with resource id:" + resourceId);
-        final UiDevice device =
-                UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+        return obtainUiObjectWithUiSelector(new UiSelector().resourceId(resourceId),
+                FIND_UI_ELEMENT_TIMEOUT);
+    }
 
-        final UiObject uiObject = device.findObject(new UiSelector()
-                .resourceId(resourceId));
-
-        uiObject.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
-        return uiObject;
+    /**
+     * Obtain an instance of the UiObject for a given resource id and a custom timeout.
+     *
+     * @param resourceId the resource id of the element to obtain
+     * @param existsTimeout time to wait until ui object exists
+     * @return the UiObject associated to the supplied resource id
+     */
+    public static UiObject obtainUiObjectWithResourceId(@NonNull final String resourceId, final long existsTimeout) {
+        Logger.i(TAG, "Obtain an instance of the UiObject with resource id (custom timeout):" + resourceId);
+        return obtainUiObjectWithUiSelector(new UiSelector().resourceId(resourceId),
+                existsTimeout);
     }
 
     /**
      * Obtain an instance of an enabled UiObject for the resource Id.
      *
      * @param resourceId the resource Id of the element to obtain
+     * @param enabled whether the object is enabled or not
      * @return the UiObject associated to the supplied resource id
      */
     @NonNull
     public static UiObject obtainUiObjectWithResourceIdAndEnabledFlag(@NonNull final String resourceId,
                                                                       final boolean enabled) {
         Logger.i(TAG, "Obtain an instance of an enabled UiObject with resource Id:" + resourceId + " and enabled value:" + enabled);
-        final UiDevice device =
-                UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
-
-        final UiObject uiObject = device.findObject(new UiSelector()
-                .resourceId(resourceId)
-                .enabled(enabled)
-        );
-
-        uiObject.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
-        return uiObject;
+        return obtainUiObjectWithUiSelector(new UiSelector().resourceId(resourceId).enabled(enabled),
+                FIND_UI_ELEMENT_TIMEOUT);
     }
 
     /**
@@ -93,16 +92,8 @@ public class UiAutomatorUtils {
     @NonNull
     public static UiObject obtainEnabledUiObjectWithExactText(@NonNull final String text) {
         Logger.i(TAG, "Obtain an instance of an enabled UiObject with text:" + text);
-        final UiDevice device =
-                UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
-
-        final UiObject uiObject = device.findObject(new UiSelector()
-                .text(text)
-                .enabled(true)
-        );
-
-        uiObject.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
-        return uiObject;
+        return obtainUiObjectWithUiSelector(new UiSelector().text(text).enabled(true),
+                FIND_UI_ELEMENT_TIMEOUT);
     }
 
     /**
@@ -113,14 +104,8 @@ public class UiAutomatorUtils {
      */
     public static UiObject obtainUiObjectWithText(@NonNull final String text) {
         Logger.i(TAG, "Obtain an instance of the UiObject with text:" + text);
-        final UiDevice device =
-                UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
-
-        final UiObject uiObject = device.findObject(new UiSelector()
-                .textContains(text));
-
-        uiObject.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
-        return uiObject;
+        return obtainUiObjectWithUiSelector(new UiSelector().textContains(text),
+                FIND_UI_ELEMENT_TIMEOUT);
     }
 
     /**
@@ -130,14 +115,9 @@ public class UiAutomatorUtils {
      * @return the UiObject associated to the supplied text
      */
     public static UiObject obtainUiObjectWithDescription(@NonNull final String description) {
-        final UiDevice device =
-                UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
-
-        final UiObject uiObject = device.findObject(new UiSelector()
-                .description(description));
-
-        uiObject.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
-        return uiObject;
+        Logger.i(TAG, "Obtain an instance of the UiObject with description:" + description);
+        return obtainUiObjectWithUiSelector(new UiSelector().description(description),
+                FIND_UI_ELEMENT_TIMEOUT);
     }
 
     /**
@@ -148,15 +128,9 @@ public class UiAutomatorUtils {
      */
     public static UiObject obtainUiObjectWithClassAndDescription(@NonNull final Class clazz,
                                                                  @NonNull final String description) {
-        final UiDevice device =
-                UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
-
-        final UiObject uiObject = device.findObject(new UiSelector()
-                .className(clazz)
-                .descriptionContains(description));
-
-        uiObject.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
-        return uiObject;
+        Logger.i(TAG, "Obtain an instance of the UiObject with description:" + description + " and class name:" + clazz);
+        return obtainUiObjectWithUiSelector(new UiSelector().className(clazz).descriptionContains(description),
+                FIND_UI_ELEMENT_TIMEOUT);
     }
 
     /**
@@ -168,15 +142,8 @@ public class UiAutomatorUtils {
     public static UiObject obtainUiObjectWithResourceIdAndText(@NonNull final String resourceId,
                                                                @NonNull final String text) {
         Logger.i(TAG, "Obtain an instance of an UiObject with resource id:" + resourceId + " and with text:" + text);
-        final UiDevice device =
-                UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
-
-        final UiObject uiObject = device.findObject(new UiSelector()
-                .resourceId(resourceId)
-                .textContains(text));
-
-        uiObject.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
-        return uiObject;
+        return obtainUiObjectWithUiSelector(new UiSelector().resourceId(resourceId).textContains(text),
+                FIND_UI_ELEMENT_TIMEOUT);
     }
 
     /**
@@ -189,15 +156,8 @@ public class UiAutomatorUtils {
     public static UiObject obtainUiObjectWithTextAndClassType(@NonNull final String text,
                                                               @NonNull Class className) {
         Logger.i(TAG, "Obtain an instance of the UiObject with text:" + text + " and with class name:" + className);
-        final UiDevice device =
-                UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
-
-        final UiObject uiObject = device.findObject(new UiSelector()
-                .className(className)
-                .textContains(text));
-
-        uiObject.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
-        return uiObject;
+        return obtainUiObjectWithUiSelector(new UiSelector().className(className).textContains(text),
+                FIND_UI_ELEMENT_TIMEOUT);
     }
 
     /**
@@ -289,7 +249,6 @@ public class UiAutomatorUtils {
         final UiObject inputField = obtainUiObjectWithResourceId(resourceId);
 
         try {
-            inputField.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
             inputField.setText(inputText);
             closeKeyboardIfNeeded();
         } catch (final UiObjectNotFoundException e) {
@@ -307,7 +266,6 @@ public class UiAutomatorUtils {
         final UiObject button = obtainUiObjectWithResourceId(resourceId);
 
         try {
-            button.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
             button.click();
         } catch (final UiObjectNotFoundException e) {
             throw new AssertionError(e);
@@ -325,7 +283,6 @@ public class UiAutomatorUtils {
         final UiObject button = obtainUiObjectWithResourceId(resourceId);
 
         try {
-            button.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
             button.click();
         } catch (final UiObjectNotFoundException e) {
             Logger.i(TAG, "Button " + resourceId + " was not found: " + e.getMessage());
@@ -340,10 +297,9 @@ public class UiAutomatorUtils {
      */
     public static void handleButtonClick(@NonNull final String resourceId, final long existsTimeout) {
         Logger.i(TAG, "Clicks the button element associated to the resource id (custom timeout):" + resourceId);
-        final UiObject button = obtainUiObjectWithResourceId(resourceId);
+        final UiObject button = obtainUiObjectWithResourceId(resourceId, existsTimeout);
 
         try {
-            button.waitForExists(existsTimeout);
             button.click();
         } catch (final UiObjectNotFoundException e) {
             throw new AssertionError(e);
@@ -376,6 +332,17 @@ public class UiAutomatorUtils {
         device.pressBack();
     }
 
+    /**
+     * Presses the device enter button on the Android device.
+     */
+    public static void pressEnter() {
+        Logger.i(TAG, "Presses the device enter button on the Android device..");
+        final UiDevice device =
+                UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+
+        device.pressEnter();
+    }
+
     private static boolean isKeyboardOpen() {
         for (AccessibilityWindowInfo window : InstrumentationRegistry.getInstrumentation().getUiAutomation().getWindows()) {
             if (window.getType() == AccessibilityWindowInfo.TYPE_INPUT_METHOD) {
@@ -401,14 +368,8 @@ public class UiAutomatorUtils {
      */
     public static UiObject obtainUiObjectWithExactText(@NonNull final String text) {
         Logger.i(TAG, "Obtain an instance of the UiObject for the given text:" + text);
-        final UiDevice device =
-                UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
-
-        final UiObject uiObject = device.findObject(new UiSelector()
-                .text(text));
-
-        uiObject.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
-        return uiObject;
+        return obtainUiObjectWithUiSelector(new UiSelector().text(text),
+                FIND_UI_ELEMENT_TIMEOUT);
     }
 
     /**
@@ -420,15 +381,18 @@ public class UiAutomatorUtils {
      */
     public static UiObject obtainUiObjectWithClassAndIndex(@NonNull final Class clazz, final int index) {
         Logger.i(TAG, "Obtain an instance of the UiObject for the class name:" + clazz + " and index value:" + index);
+        return obtainUiObjectWithUiSelector(new UiSelector().className(clazz).index(index),
+                FIND_UI_ELEMENT_TIMEOUT);
+    }
+
+    public static UiObject obtainUiObjectWithUiSelector(@NonNull final UiSelector selector, final long existsTimeout) {
+        Logger.i(TAG, "Obtain an instance of the UiObject with a given selector");
         final UiDevice device =
                 UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
-        final UiObject uiObject = device.findObject(new UiSelector()
-                .className(clazz)
-                .index(index)
-        );
+        final UiObject uiObject = device.findObject(selector);
 
-        uiObject.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
+        uiObject.waitForExists(existsTimeout);
         return uiObject;
     }
 }
