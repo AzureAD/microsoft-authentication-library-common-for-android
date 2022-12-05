@@ -30,6 +30,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
+import com.microsoft.identity.common.java.opentelemetry.CertBasedAuthTelemetryHelper;
 import com.microsoft.identity.common.java.telemetry.events.PivProviderStatusEvent;
 import com.microsoft.identity.common.logging.Logger;
 import com.yubico.yubikit.android.YubiKitManager;
@@ -253,21 +254,21 @@ public class YubiKitCertBasedAuthManager extends AbstractSmartcardCertBasedAuthM
 
     /**
      * Adds a PivProvider instance to the Java static Security List (and emits relevant telemetry).
+     * @param telemetryHelper CertBasedAuthTelemetryHelper instance.
      */
     @Override
-    public void initBeforeProceedingWithRequest() {
+    public void initBeforeProceedingWithRequest(@NonNull final CertBasedAuthTelemetryHelper telemetryHelper) {
         final String methodTag = TAG + ":initBeforeProceedingWithRequest";
         //Need to add a PivProvider instance to the beginning of the array of Security providers in order for signature logic to occur.
         //Note that this provider is removed when the UsbYubiKeyDevice connection is closed.
-        final PivProviderStatusEvent pivProviderStatusEvent = new PivProviderStatusEvent();
         if (Security.getProvider(YUBIKEY_PROVIDER) != null) {
             Security.removeProvider(YUBIKEY_PROVIDER);
             //The PivProvider instance is either unexpectedly being added elsewhere
             // or it isn't being removed properly upon CBA flow termination.
-            Telemetry.emit(pivProviderStatusEvent.putIsExistingPivProviderPresent(true));
+            telemetryHelper.setExistingPivProviderPresent(true);
             Logger.info(methodTag, "Existing PivProvider was present in Security static list.");
         } else {
-            Telemetry.emit(pivProviderStatusEvent.putIsExistingPivProviderPresent(false));
+            telemetryHelper.setExistingPivProviderPresent(false);
             Logger.info(methodTag, "Security static list does not have existing PivProvider.");
         }
         //The position parameter is 1-based (1 maps to index 0).

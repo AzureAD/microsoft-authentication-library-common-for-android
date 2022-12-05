@@ -29,6 +29,7 @@ import android.webkit.ClientCertRequest;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 
+import com.microsoft.identity.common.java.opentelemetry.CertBasedAuthTelemetryHelper;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 
 /**
@@ -36,9 +37,12 @@ import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
  *  to the challenge handlers for on-device or smartcard CBA based on user input.
  */
 public class UserChoiceCertBasedAuthChallengeHandler implements ICertBasedAuthChallengeHandler {
+    private static final String TAG = UserChoiceCertBasedAuthChallengeHandler.class.getSimpleName();
+    private static final String USER_CANCEL_MESSAGE = "User canceled smartcard CBA flow.";
     private final Activity mActivity;
     protected final AbstractSmartcardCertBasedAuthManager mSmartcardCertBasedAuthManager;
     private final DialogHolder mDialogHolder;
+    private final CertBasedAuthTelemetryHelper mTelemetryHelper;
     private ICertBasedAuthChallengeHandler mCertBasedAuthChallengeHandler;
 
     /**
@@ -46,13 +50,17 @@ public class UserChoiceCertBasedAuthChallengeHandler implements ICertBasedAuthCh
      * @param activity current host activity.
      * @param smartcardCertBasedAuthManager AbstractSmartcardCertBasedAuthManager instance.
      * @param dialogHolder DialogHolder instance.
+     * @param telemetryHelper CertBasedAuthTelemetryHelder instance.
      */
     public UserChoiceCertBasedAuthChallengeHandler(@NonNull final Activity activity,
                                                    @NonNull final AbstractSmartcardCertBasedAuthManager smartcardCertBasedAuthManager,
-                                                   @NonNull final DialogHolder dialogHolder) {
+                                                   @NonNull final DialogHolder dialogHolder,
+                                                   @NonNull final CertBasedAuthTelemetryHelper telemetryHelper) {
         mActivity = activity;
         mSmartcardCertBasedAuthManager = smartcardCertBasedAuthManager;
         mDialogHolder = dialogHolder;
+        mTelemetryHelper = telemetryHelper;
+        mTelemetryHelper.setCertBasedAuthChallengeHandler(TAG);
     }
 
 
@@ -65,9 +73,7 @@ public class UserChoiceCertBasedAuthChallengeHandler implements ICertBasedAuthCh
     public void emitTelemetryForCertBasedAuthResults(@NonNull RawAuthorizationResult response) {
         if (mCertBasedAuthChallengeHandler != null) {
             mCertBasedAuthChallengeHandler.emitTelemetryForCertBasedAuthResults(response);
-            //TODO: Put return statement here once  error telemetry is added.
         }
-        //TODO: Handle any local error telemetry here.
     }
 
     /**
@@ -100,7 +106,7 @@ public class UserChoiceCertBasedAuthChallengeHandler implements ICertBasedAuthCh
                 //Position 1 -> Smartcard
                 if (checkedPosition == 0) {
                     mDialogHolder.dismissDialog();
-                    mCertBasedAuthChallengeHandler = new OnDeviceCertBasedAuthChallengeHandler(mActivity);
+                    mCertBasedAuthChallengeHandler = new OnDeviceCertBasedAuthChallengeHandler(mActivity, mTelemetryHelper);
                     mCertBasedAuthChallengeHandler.processChallenge(request);
                 } else {
                     setUpForSmartcardCertBasedAuth(request);
@@ -111,6 +117,7 @@ public class UserChoiceCertBasedAuthChallengeHandler implements ICertBasedAuthCh
             @Override
             public void onCancel() {
                 mDialogHolder.dismissDialog();
+                mTelemetryHelper.setResultFailure(USER_CANCEL_MESSAGE);
                 request.cancel();
             }
         });
@@ -158,6 +165,7 @@ public class UserChoiceCertBasedAuthChallengeHandler implements ICertBasedAuthCh
             @Override
             public void onCancel() {
                 mDialogHolder.dismissDialog();
+                mTelemetryHelper.setResultFailure(USER_CANCEL_MESSAGE);
                 request.cancel();
             }
         });
@@ -190,6 +198,7 @@ public class UserChoiceCertBasedAuthChallengeHandler implements ICertBasedAuthCh
                 mActivity,
                 mSmartcardCertBasedAuthManager,
                 mDialogHolder,
+                mTelemetryHelper,
                 isNfc);
         mCertBasedAuthChallengeHandler.processChallenge(request);
     }

@@ -63,4 +63,20 @@ public enum AttributeName {
      * Indicates the request id value for cached credential service (if used) on server side
      */
     ccs_request_id,
+
+    /**
+     * Indicates which CertBasedAuthChallengeHandler was handling the CBA flow.
+     */
+    cert_based_auth_challenge_handler,
+
+    /**
+     * Indicates if PivProvider (part of YubiKit) was already present in the
+     *  Security static list prior to adding a new PivProvider.
+     */
+    cert_based_auth_existing_piv_provider_present,
+
+    /**
+     * Indicates which CBA flow the user intended to select.
+     */
+    cert_based_auth_user_choice
 }

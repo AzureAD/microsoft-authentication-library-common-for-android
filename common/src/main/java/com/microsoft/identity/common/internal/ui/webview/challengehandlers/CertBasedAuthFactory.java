@@ -30,14 +30,18 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
+import com.microsoft.identity.common.java.opentelemetry.CertBasedAuthTelemetryHelper;
 import com.microsoft.identity.common.logging.Logger;
 
 /**
  * Instantiates handlers for certificate based authentication.
  */
 public class CertBasedAuthFactory {
-
     private static final String TAG = CertBasedAuthFactory.class.getSimpleName();
+    private static final String USER_CANCEL_MESSAGE = "User canceled smartcard CBA flow.";
+    private static final String ON_DEVICE_CHOICE = "on-device";
+    private static final String SMARTCARD_CHOICE = "smartcard";
+    private static final String NON_APPLICABLE = "N/A";
     private final Activity mActivity;
     private final AbstractSmartcardCertBasedAuthManager mSmartcardCertBasedAuthManager;
     private final DialogHolder mDialogHolder;
@@ -73,13 +77,24 @@ public class CertBasedAuthFactory {
      * @param callback logic to run after a ICertBasedAuthChallengeHandler is chosen.
      */
     public void createCertBasedAuthChallengeHandler(@NonNull final CertBasedAuthChallengeHandlerCallback callback) {
+        final CertBasedAuthTelemetryHelper telemetryHelper = new CertBasedAuthTelemetryHelper();
+        telemetryHelper.setUserChoice(NON_APPLICABLE);
+        telemetryHelper.setCertBasedAuthChallengeHandler(NON_APPLICABLE);
         if (mSmartcardCertBasedAuthManager == null) {
             //Smartcard CBA is not available, so default to on-device.
-            callback.onReceived(new OnDeviceCertBasedAuthChallengeHandler(mActivity));
+            callback.onReceived(new OnDeviceCertBasedAuthChallengeHandler(
+                    mActivity,
+                    telemetryHelper));
             return;
         }
         else if (mSmartcardCertBasedAuthManager.isUsbDeviceConnected()) {
-            callback.onReceived(new SmartcardCertBasedAuthChallengeHandler(mActivity, mSmartcardCertBasedAuthManager, mDialogHolder, false));
+            telemetryHelper.setUserChoice(SMARTCARD_CHOICE);
+            callback.onReceived(new SmartcardCertBasedAuthChallengeHandler(
+                    mActivity,
+                    mSmartcardCertBasedAuthManager,
+                    mDialogHolder,
+                    telemetryHelper,
+                    false));
             return;
         }
         //Need input from user to determine which CertBasedAuthChallengeHandler to return.
@@ -91,19 +106,34 @@ public class CertBasedAuthFactory {
                 //Position 1 -> Smartcard
                 if (checkedPosition == 0) {
                     mDialogHolder.dismissDialog();
-                    callback.onReceived(new OnDeviceCertBasedAuthChallengeHandler(mActivity));
+                    telemetryHelper.setUserChoice(ON_DEVICE_CHOICE);
+                    callback.onReceived(new OnDeviceCertBasedAuthChallengeHandler(
+                            mActivity,
+                            telemetryHelper));
                     return;
                 }
-                setUpForSmartcardCertBasedAuth(callback);
+                telemetryHelper.setUserChoice(SMARTCARD_CHOICE);
+                setUpForSmartcardCertBasedAuth(callback, telemetryHelper);
             }
         }, new UserChoiceDialog.CancelCbaCallback() {
             @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
             @Override
             public void onCancel() {
-                mDialogHolder.dismissDialog();
-                callback.onReceived(null);
+                onCancelHelper(callback, telemetryHelper);
             }
         });
+    }
+
+    /**
+     * Helper method for logic to be run upon user cancelling out of CBA.
+     * @param callback logic to run after a ICertBasedAuthChallengeHandler is chosen.
+     * @param telemetryHelper CertBasedAuthTelemetryHelper instance.
+     */
+    private void onCancelHelper(@NonNull final  CertBasedAuthChallengeHandlerCallback callback,
+                                @NonNull final CertBasedAuthTelemetryHelper telemetryHelper) {
+        mDialogHolder.dismissDialog();
+        telemetryHelper.setResultFailure(USER_CANCEL_MESSAGE);
+        callback.onReceived(null);
     }
 
     /**
@@ -111,14 +141,18 @@ public class CertBasedAuthFactory {
      * Proceeds with a certificate picker if a smartcard is already connected.
      * Otherwise, shows a dialog prompting user to connect a smartcard.
      * @param callback logic to run after a CertBasedAuthChallengeHandler is created.
+     * @param telemetryHelper CertBasedAuthTelemetryHelper instance.
      */
-    private void setUpForSmartcardCertBasedAuth(@NonNull final CertBasedAuthChallengeHandlerCallback callback) {
+    private void setUpForSmartcardCertBasedAuth(
+            @NonNull final CertBasedAuthChallengeHandlerCallback callback,
+            @NonNull final CertBasedAuthTelemetryHelper telemetryHelper) {
         //If smartcard is already plugged in, go straight to cert picker.
         if (mSmartcardCertBasedAuthManager.isUsbDeviceConnected()) {
             callback.onReceived(new SmartcardCertBasedAuthChallengeHandler(
                     mActivity,
                     mSmartcardCertBasedAuthManager,
                     mDialogHolder,
+                    telemetryHelper,
                     false));
             return;
         }
@@ -134,28 +168,30 @@ public class CertBasedAuthFactory {
                                 mActivity,
                                 mSmartcardCertBasedAuthManager,
                                 mDialogHolder,
+                                telemetryHelper,
                                 false));
                         return;
                     }
-                    showSmartcardPromptDialogAndSetConnectionCallback(callback);
+                    showSmartcardPromptDialogAndSetConnectionCallback(callback, telemetryHelper);
                 }
             });
             return;
         }
-        showSmartcardPromptDialogAndSetConnectionCallback(callback);
+        showSmartcardPromptDialogAndSetConnectionCallback(callback, telemetryHelper);
     }
 
     /**
      * Helper method that shows smartcard prompt dialog and sets connection callback.
      * @param challengeHandlerCallback logic to run after a CertBasedAuthChallengeHandler is chosen.
+     * @param telemetryHelper CertBasedAuthTelemetryHelper instance.
      */
-    private void showSmartcardPromptDialogAndSetConnectionCallback(@NonNull final CertBasedAuthChallengeHandlerCallback challengeHandlerCallback) {
+    private void showSmartcardPromptDialogAndSetConnectionCallback(@NonNull final CertBasedAuthChallengeHandlerCallback challengeHandlerCallback,
+                                                                   @NonNull final CertBasedAuthTelemetryHelper telemetryHelper) {
         mDialogHolder.showSmartcardPromptDialog(new SmartcardPromptDialog.CancelCbaCallback() {
             @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
             @Override
             public void onCancel() {
-                mDialogHolder.dismissDialog();
-                challengeHandlerCallback.onReceived(null);
+                onCancelHelper(challengeHandlerCallback, telemetryHelper);
             }
         });
         mSmartcardCertBasedAuthManager.setConnectionCallback(new AbstractSmartcardCertBasedAuthManager.IConnectionCallback() {
@@ -170,6 +206,7 @@ public class CertBasedAuthFactory {
                         mActivity,
                         mSmartcardCertBasedAuthManager,
                         mDialogHolder,
+                        telemetryHelper,
                         isNfc));
             }
 
