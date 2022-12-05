@@ -1,5 +1,10 @@
 V.Next
 ----------
+
+
+
+V.9.0.0
+----------
 - [MINOR] Add BrokerContentProvider path and IpcStrategy for new device registration API (#1843)
 - [PATCH] Adding cached credential service request id to telemetry (#1866)
 - [MAJOR] Add support for client/application managed key in pop flow (#1854)
