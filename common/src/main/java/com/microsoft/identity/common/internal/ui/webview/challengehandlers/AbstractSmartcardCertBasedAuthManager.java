@@ -25,6 +25,7 @@ package com.microsoft.identity.common.internal.ui.webview.challengehandlers;
 import android.app.Activity;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.java.opentelemetry.CertBasedAuthTelemetryHelper;
 
@@ -83,7 +84,7 @@ public abstract class AbstractSmartcardCertBasedAuthManager {
      * Sets callbacks to be run for when a smartcard connection is started and ended.
      * @param connectionCallback an implementation of IConnectionCallback.
      */
-    public void setConnectionCallback(final IConnectionCallback connectionCallback) {
+    public void setConnectionCallback(@Nullable final IConnectionCallback connectionCallback) {
         mConnectionCallback = connectionCallback;
     }
 
@@ -91,7 +92,7 @@ public abstract class AbstractSmartcardCertBasedAuthManager {
      * Sets callback to be run for when an exception is thrown during discovery start up.
      * @param discoveryExceptionCallback an implementation of IDiscoveryExceptionCallback.
      */
-    public void setDiscoveryExceptionCallback(final IDiscoveryExceptionCallback discoveryExceptionCallback) {
+    public void setDiscoveryExceptionCallback(@Nullable final IDiscoveryExceptionCallback discoveryExceptionCallback) {
         mDiscoveryExceptionCallback = discoveryExceptionCallback;
     }
 

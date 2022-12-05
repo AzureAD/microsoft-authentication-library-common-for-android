@@ -132,7 +132,7 @@ public class CertBasedAuthFactory {
      * @param callback logic to run after a ICertBasedAuthChallengeHandler is chosen.
      * @param telemetryHelper CertBasedAuthTelemetryHelper instance.
      */
-    private void onCancelHelper(@NonNull final  CertBasedAuthChallengeHandlerCallback callback,
+    private void onCancelHelper(@NonNull final CertBasedAuthChallengeHandlerCallback callback,
                                 @NonNull final CertBasedAuthTelemetryHelper telemetryHelper) {
         mDialogHolder.dismissDialog();
         telemetryHelper.setResultFailure(USER_CANCEL_MESSAGE);
@@ -146,9 +146,8 @@ public class CertBasedAuthFactory {
      * @param callback logic to run after a CertBasedAuthChallengeHandler is created.
      * @param telemetryHelper CertBasedAuthTelemetryHelper instance.
      */
-    private void setUpForSmartcardCertBasedAuth(
-            @NonNull final CertBasedAuthChallengeHandlerCallback callback,
-            @NonNull final CertBasedAuthTelemetryHelper telemetryHelper) {
+    private void setUpForSmartcardCertBasedAuth(@NonNull final CertBasedAuthChallengeHandlerCallback callback,
+                                                @NonNull final CertBasedAuthTelemetryHelper telemetryHelper) {
         //If smartcard is already plugged in, go straight to cert picker.
         if (mSmartcardUsbCertBasedAuthManager.isDeviceConnected()) {
             callback.onReceived(new SmartcardUsbCertBasedAuthChallengeHandler(
@@ -258,6 +257,6 @@ public class CertBasedAuthFactory {
          * Callback object that should contain logic to run after a CertBasedAuthChallengeHandler is chosen by the factory.
          * @param challengeHandler An ICertBasedAuthChallengeHandler implementation instance, or null if user cancels out of CBA.
          */
-        void onReceived(@Nullable ICertBasedAuthChallengeHandler challengeHandler);
+        void onReceived(@Nullable final ICertBasedAuthChallengeHandler challengeHandler);
     }
 }
