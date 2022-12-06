@@ -63,4 +63,14 @@ public enum AttributeName {
      * Indicates the request id value for cached credential service (if used) on server side
      */
     ccs_request_id,
+
+    /**
+     * The type of the error. Generally the class name of an exception.
+     */
+    error_type,
+
+    /**
+     * An error code.
+     */
+    error_code
 }
