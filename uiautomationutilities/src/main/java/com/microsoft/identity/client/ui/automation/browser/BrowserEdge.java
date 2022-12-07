@@ -75,7 +75,10 @@ public class BrowserEdge extends App implements IBrowser {
         // cancel sync in Edge
         UiAutomatorUtils.handleButtonClickForObjectWithText("Not now");
         sleep(); // need to use sleep due to Edge animations
+<<<<<<< HEAD
 >>>>>>> 3d9d7aae5 (implementing custom email and password field handlers for edge)
+=======
+>>>>>>> 3d9d7aae5c364e89bcbf36ed99120a78e7f2a808
     }
 
     @Override
