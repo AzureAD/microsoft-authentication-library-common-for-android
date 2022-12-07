@@ -217,4 +217,16 @@ public class SamsungSettings extends BaseSettings {
     public void removePinFromDevice(String pin) {
         //TODO: implement removing PIN for SAMSUNG device.
     }
+
+    @Override
+    public void disableAppThroughSettings(@NonNull final String packageName) {
+        //TODO: implement disabling app through settings
+        throw new UnsupportedOperationException("We do not support disabling apps through Settings Page on samsung devices");
+    }
+
+    @Override
+    public void enableAppThroughSettings(@NonNull final String packageName) {
+        //TODO: implement enabling app through settings
+        throw new UnsupportedOperationException("We do not support enabling apps through Settings Page on samsung devices");
+    }
 }
