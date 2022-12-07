@@ -144,19 +144,8 @@ public class AzureSampleApp extends App {
     public void confirmSignedIn(@NonNull final String username) {
         Logger.i(TAG, "Confirming account with supplied username is signed in..");
 
-        final UiObject signedInUser = UiAutomatorUtils.obtainUiObjectWithResourceId("com.azuresamples.msalandroidapp:id/current_user");
+        final UiObject signedInUser = UiAutomatorUtils.obtainEnabledUiObjectWithExactText(username);
 
-        // Sometimes need some time for upn to appear
-        try {
-            Thread.sleep(TimeUnit.SECONDS.toMillis(10));
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        try {
-            Assert.assertEquals("User is signed into Azure Sample App", username, signedInUser.getText());
-        } catch (final UiObjectNotFoundException e) {
-            throw new AssertionError(e);
-        }
+        Assert.assertTrue("User is signed into Azure Sample App", signedInUser.exists());
     }
 }
