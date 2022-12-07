@@ -26,6 +26,7 @@ import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -210,16 +211,21 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         Logger.info(methodTag, "Back button is pressed");
 
         if (mWebView.canGoBack()) {
-            mWebView.goBack();
             //For CBA, we need to clear the certificate choice cache here so that
             // if the cert picker is exited (`cancel()`) or the flow has an error,
             //the user can still try to login again with a cert.
             //addressing on-device CBA bug: https://identitydivision.visualstudio.com/Engineering/_workitems/edit/1776683
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                WebView.clearClientCertPreferences(null);
-            } else {
-                Logger.warn(methodTag, "Client Cert Preferences cache not cleared due to SDK version < 21 (LOLLIPOP)");
+                WebView.clearClientCertPreferences(new Runnable() {
+                    @Override
+                    public void run() {
+                        mWebView.goBack();
+                    }
+                });
+                return;
             }
+            Logger.warn(methodTag, "Client Cert Preferences cache not cleared due to SDK version < 21 (LOLLIPOP)");
+            mWebView.goBack();
         } else {
             cancelAuthorization(true);
         }
