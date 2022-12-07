@@ -1,5 +1,6 @@
 V.Next
 ----------
+- [MINOR] Convert crypto operation spans into metrics (#1909)
 
 V.9.0.1
 ----------

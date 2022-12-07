@@ -27,6 +27,9 @@ import static com.microsoft.identity.common.java.opentelemetry.AttributeName.par
 import javax.annotation.Nullable;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.metrics.LongCounter;
+import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.sdk.trace.ReadableSpan;
@@ -49,10 +52,36 @@ public class OTelUtility {
     }
 
     /**
+     * Creates a span (with shared basic attributes).
+     **/
+    @NonNull
+    public static LongCounter createLongCounter(@NonNull final String name, @NonNull final String description) {
+        final Meter meter = GlobalOpenTelemetry.getMeter(TAG);
+
+        return meter
+                .counterBuilder(name)
+                .setDescription(description)
+                .setUnit("count")
+                .build();
+    }
+
+    /**
      * Get name of the current span, if possible.
      **/
     @Nullable
-    private static String getCurrentSpanName() {
+    public static Attributes getCurrentSpanAttributes() {
+        final Span span = SpanExtension.current();
+        if (span instanceof ReadableSpan) {
+            return ((ReadableSpan) span).toSpanData().getAttributes();
+        }
+        return null;
+    }
+
+    /**
+     * Get name of the current span, if possible.
+     **/
+    @Nullable
+    public static String getCurrentSpanName() {
         final Span span = SpanExtension.current();
         if (span instanceof ReadableSpan) {
             return ((ReadableSpan) span).getName();
