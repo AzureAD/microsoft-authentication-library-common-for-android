@@ -28,11 +28,13 @@ import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.UiDevice;
 import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObjectNotFoundException;
+import androidx.test.uiautomator.UiSelector;
 
 import com.microsoft.identity.client.ui.automation.app.App;
 import com.microsoft.identity.client.ui.automation.interaction.FirstPartyAppPromptHandlerParameters;
 import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.AadPromptHandler;
 import com.microsoft.identity.client.ui.automation.logging.Logger;
+import com.microsoft.identity.client.ui.automation.utils.CommonUtils;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
 /**
@@ -51,6 +53,7 @@ public class BrowserEdge extends App implements IBrowser {
 
     @Override
     public void handleFirstRun() {
+<<<<<<< HEAD
         if (shouldHandleFirstRun) {
             Logger.i(TAG, "Handle First Run of Browser..");
             // cancel sync in Edge
@@ -67,6 +70,12 @@ public class BrowserEdge extends App implements IBrowser {
             sleep();// need to use sleep due to Edge animations
             shouldHandleFirstRun = false;
         }
+=======
+        Logger.i(TAG, "Handle First Run of Browser..");
+        // cancel sync in Edge
+        UiAutomatorUtils.handleButtonClickForObjectWithText("Not now");
+        sleep(); // need to use sleep due to Edge animations
+>>>>>>> 3d9d7aae5 (implementing custom email and password field handlers for edge)
     }
 
     @Override
@@ -155,17 +164,28 @@ public class BrowserEdge extends App implements IBrowser {
                                                @NonNull final String password,
                                                @NonNull final FirstPartyAppPromptHandlerParameters promptHandlerParameters) throws UiObjectNotFoundException {
         final UiObject signInWithWorkAccountBtn = UiAutomatorUtils.obtainUiObjectWithText(
-                "Sign in with a work or school account"
+                "Add account"
         );
 
         // click Sign In with work or school account btn
         signInWithWorkAccountBtn.click();
 
         Logger.i(TAG, "Handle Sign-In Prompt for Work or School account..");
-        // handle prompt
-        final AadPromptHandler aadPromptHandler = new AadPromptHandler(promptHandlerParameters);
-        aadPromptHandler.handlePrompt(username, password);
+        // handle email field
+        final UiObject emailField = UiAutomatorUtils.obtainUiObjectWithUiSelector(new UiSelector().className("android.widget.EditText"), CommonUtils.FIND_UI_ELEMENT_TIMEOUT);
+        try {
+            emailField.setText(username);
+            UiAutomatorUtils.handleButtonClickForObjectWithText("Next");
+        }catch(UiObjectNotFoundException ex){
+            throw new AssertionError(ex);
+        }
 
+        //handle password field
+        Logger.i(TAG, "Handle Aad Login Password UI..");
+        UiAutomatorUtils.handleInput("i0118", password);
+        UiAutomatorUtils.handleButtonClick("idSIButton9");
+
+        UiAutomatorUtils.handleButtonClickForObjectWithText("Confirm");
         handleFirstRun();
     }
 
