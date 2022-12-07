@@ -23,6 +23,7 @@
 package com.microsoft.identity.client.ui.automation.browser;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.UiDevice;
 import androidx.test.uiautomator.UiObject;
@@ -34,10 +35,6 @@ import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.AadP
 import com.microsoft.identity.client.ui.automation.logging.Logger;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
-import org.junit.Assert;
-
-import static org.junit.Assert.fail;
-
 /**
  * A model for interacting with the Microsoft Edge Browser App during UI Test.
  */
@@ -46,6 +43,7 @@ public class BrowserEdge extends App implements IBrowser {
     private final static String TAG = BrowserEdge.class.getSimpleName();
     private static final String EDGE_PACKAGE_NAME = "com.microsoft.emmx";
     private static final String EDGE_APP_NAME = "Microsoft Edge";
+    private boolean shouldHandleFirstRun = true;
 
     public BrowserEdge() {
         super(EDGE_PACKAGE_NAME, EDGE_APP_NAME);
@@ -53,19 +51,22 @@ public class BrowserEdge extends App implements IBrowser {
 
     @Override
     public void handleFirstRun() {
-        Logger.i(TAG, "Handle First Run of Browser..");
-        // cancel sync in Edge
-        UiAutomatorUtils.handleButtonClick("com.microsoft.emmx:id/not_now");
-        sleep(); // need to use sleep due to Edge animations
-        // cancel sharing data
-        UiAutomatorUtils.handleButtonClick("com.microsoft.emmx:id/not_now");
-        sleep(); // need to use sleep due to Edge animations
-        // cancel personalization
-        UiAutomatorUtils.handleButtonClick("com.microsoft.emmx:id/fre_share_not_now");
-        sleep();// need to use sleep due to Edge animations
-        // avoid setting default
-        UiAutomatorUtils.handleButtonClick("com.microsoft.emmx:id/no");
-        sleep();// need to use sleep due to Edge animations
+        if (shouldHandleFirstRun) {
+            Logger.i(TAG, "Handle First Run of Browser..");
+            // cancel sync in Edge
+            UiAutomatorUtils.handleButtonClick("com.microsoft.emmx:id/not_now");
+            sleep(); // need to use sleep due to Edge animations
+            // cancel sharing data
+            UiAutomatorUtils.handleButtonClick("com.microsoft.emmx:id/not_now");
+            sleep(); // need to use sleep due to Edge animations
+            // cancel personalization
+            UiAutomatorUtils.handleButtonClick("com.microsoft.emmx:id/fre_share_not_now");
+            sleep();// need to use sleep due to Edge animations
+            // avoid setting default
+            UiAutomatorUtils.handleButtonClick("com.microsoft.emmx:id/no");
+            sleep();// need to use sleep due to Edge animations
+            shouldHandleFirstRun = false;
+        }
     }
 
     @Override
@@ -166,5 +167,26 @@ public class BrowserEdge extends App implements IBrowser {
         aadPromptHandler.handlePrompt(username, password);
 
         handleFirstRun();
+    }
+
+    public boolean confirmSignedIn(@Nullable final String username) {
+        Logger.i(TAG, "Checking if account " + username + "is signed in to Edge.");
+        launch();
+
+        // Depending on when edge was opened and when account was signed out, we might see this
+        if (username == null && UiAutomatorUtils.obtainUiObjectWithText("Add account").exists()){
+            return true;
+        }
+
+        UiAutomatorUtils.handleButtonClick("com.microsoft.emmx:id/edge_account_image_view");
+
+        // If we're checking that no account is signed in, we can check for specific text suggesting that the user sign in
+        if (username == null) {
+            final UiObject signInToSyncObject = UiAutomatorUtils.obtainUiObjectWithText("sign in to sync");
+            return signInToSyncObject.exists();
+        }
+
+        final UiObject usernameObject = UiAutomatorUtils.obtainUiObjectWithExactText(username);
+        return usernameObject.exists();
     }
 }
