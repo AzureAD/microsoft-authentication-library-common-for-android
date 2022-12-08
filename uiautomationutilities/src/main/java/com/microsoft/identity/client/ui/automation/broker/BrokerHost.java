@@ -346,9 +346,9 @@ public class BrokerHost extends AbstractTestBroker {
         Logger.i(TAG, "Overwrite Flights..");
         launch();
 
-        // Sleep for a bit to finish launching brokerHost before scrolling to Overwrite Flights
+        // Sleep for a bit to finish launching brokerHost before scrolling to set Flights
         try {
-            Thread.sleep(TimeUnit.SECONDS.toMillis(2));
+            Thread.sleep(TimeUnit.SECONDS.toMillis(5));
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -366,9 +366,9 @@ public class BrokerHost extends AbstractTestBroker {
         Logger.i(TAG, "Set Flights..");
         launch();
 
-        // Sleep for a bit to finish launching brokerHost before scrolling to Set Flights
+        // Sleep for a bit to finish launching brokerHost before scrolling to set Flights
         try {
-            Thread.sleep(TimeUnit.SECONDS.toMillis(2));
+            Thread.sleep(TimeUnit.SECONDS.toMillis(5));
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -385,15 +385,9 @@ public class BrokerHost extends AbstractTestBroker {
     @Override
     public String getFlights() {
         Logger.i(TAG, "Get Flights..");
+        final String resourceButtonId = "com.microsoft.identity.testuserapp:id/getFlightsButton";
         final String text = "Get Flights";
         launch();
-
-        // Sleep for a bit to finish launching brokerHost before scrolling to Get Flights
-        try {
-            Thread.sleep(TimeUnit.SECONDS.toMillis(2));
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
 
         try {
             // scroll to find the get flights button and click
