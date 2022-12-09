@@ -152,7 +152,7 @@ public class BrowserEdge extends App implements IBrowser {
         signInWithWorkAccountBtn.click();
 
         Logger.i(TAG, "Handle Sign-In Prompt for Work or School account..");
-        // handle email field
+        // handle email field - the email field in Edge UI is missing a resource id, so we find it with EditText class
         final UiObject emailField = UiAutomatorUtils.obtainUiObjectWithUiSelector(new UiSelector().className("android.widget.EditText"), CommonUtils.FIND_UI_ELEMENT_TIMEOUT);
         try {
             emailField.setText(username);
@@ -161,12 +161,13 @@ public class BrowserEdge extends App implements IBrowser {
             throw new AssertionError(ex);
         }
 
-        //handle password field
-        Logger.i(TAG, "Handle Aad Login Password UI..");
-        UiAutomatorUtils.handleInput("i0118", password);
-        UiAutomatorUtils.handleButtonClick("idSIButton9");
+        // handle prompt
+        final AadPromptHandler aadPromptHandler = new AadPromptHandler(promptHandlerParameters);
+        aadPromptHandler.handlePrompt(username, password);
 
+        // Handle confirm page that loads after password prompt
         UiAutomatorUtils.handleButtonClickForObjectWithText("Confirm");
+        
         handleFirstRun();
     }
 
