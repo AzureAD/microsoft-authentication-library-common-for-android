@@ -130,4 +130,15 @@ public interface ISettings {
      */
     void launchAppInfoPage(String packageName);
 
+    /**
+     * Disable an app through the device's settings page instead of shell command.
+     * @param packageName name of package to be disabled
+     */
+    public void disableAppThroughSettings(@NonNull final String packageName);
+
+    /**
+     * Enable an app through the device's settings page instead of shell command.
+     * @param packageName name of package to be enabled
+     */
+    public void enableAppThroughSettings(@NonNull final String packageName);
 }
