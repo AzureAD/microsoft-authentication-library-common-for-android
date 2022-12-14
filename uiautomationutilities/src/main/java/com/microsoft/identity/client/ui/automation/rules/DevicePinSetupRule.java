@@ -57,7 +57,7 @@ import org.junit.runners.model.Statement;
 public class DevicePinSetupRule implements TestRule {
 
     private final static String TAG = DevicePinSetupRule.class.getSimpleName();
-    static final String PIN = "1234";
+    public static final String PIN = "1234";
 
     private final ITestBroker mBroker;
 

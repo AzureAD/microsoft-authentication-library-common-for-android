@@ -63,7 +63,7 @@ public class MicrosoftStsPromptHandler extends AbstractPromptHandler {
         final boolean loginHintProvided = !TextUtils.isEmpty(parameters.getLoginHint());
 
         // if login hint was not provided, then we need to handle either account picker or email
-        // field. If it was provided, then we expect to go straight to password field.
+        // field. If it was provided, then we expect to go straight to password/certificate field.
         if (!loginHintProvided) {
             if (parameters.getBroker() != null && parameters.isExpectingBrokerAccountChooserActivity()) {
                 parameters.getBroker().handleAccountPicker(username);
@@ -76,7 +76,10 @@ public class MicrosoftStsPromptHandler extends AbstractPromptHandler {
             loginComponentHandler.handleEmailField(username);
         }
 
-        if (parameters.isPasswordPageExpected() || parameters.getPrompt() == PromptParameter.LOGIN || !parameters.isSessionExpected()) {
+        if (parameters.getUserCertificate() != null) {
+
+        }
+        else if (parameters.isPasswordPageExpected() || parameters.getPrompt() == PromptParameter.LOGIN || !parameters.isSessionExpected()) {
             loginComponentHandler.handlePasswordField(password);
         }
 
