@@ -21,6 +21,11 @@
         <activity
             android:name="com.microsoft.identity.common.internal.broker.BrokerActivity"
             android:configChanges="orientation|keyboardHidden|screenSize|screenLayout|keyboard" />
+
+        <activity
+            android:name="com.microsoft.identity.common.internal.broker.InstallCertActivityWrapper"
+            android:configChanges="orientation|keyboardHidden|screenSize|screenLayout|keyboard" />
+
     </application>
 
     <!-- Required for API Level 30 to make sure we can detect browsers and other apps we want to
