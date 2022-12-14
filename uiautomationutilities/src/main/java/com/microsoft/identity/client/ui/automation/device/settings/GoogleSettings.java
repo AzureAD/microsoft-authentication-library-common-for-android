@@ -429,7 +429,7 @@ public class GoogleSettings extends BaseSettings {
                 sidebarObject.click();
                 UiAutomatorUtils.handleButtonClickForObjectWithText("Downloads");
             }
-            
+
             // Click the Certificate file in the downloads folder
             final UiObject certFileObject = UiAutomatorUtils.obtainUiObjectWithExactText(certFileName);
             certFileObject.click();

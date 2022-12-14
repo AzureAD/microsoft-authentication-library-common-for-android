@@ -129,7 +129,7 @@ public class PromptHandlerParameters {
     private final boolean verifyYourIdentityPageExpected;
 
     /**
-     * Denotes whether or not to use a certificate to sign the account in rather than a password
+     * Denotes name of the certificate to use to sign the account in rather than a password
      */
     private final String userCertificate;
 
