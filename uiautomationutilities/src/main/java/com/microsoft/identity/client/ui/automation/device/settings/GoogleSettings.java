@@ -422,8 +422,16 @@ public class GoogleSettings extends BaseSettings {
         Logger.i(TAG, "Installing certificate " + certFileName + " from the device's download folder...");
         CommonUtils.launchCertInstallationIntent();
         try {
+            // Make sure we are in the downloads page
+            final UiObject downloadsUiObject = UiAutomatorUtils.obtainUiObjectWithText("Downloads");
+            if (!downloadsUiObject.exists()) {
+                final UiObject sidebarObject = UiAutomatorUtils.obtainUiObjectWithDescription("Show roots");
+                sidebarObject.click();
+                UiAutomatorUtils.handleButtonClickForObjectWithText("Downloads");
+            }
+            
             // Click the Certificate file in the downloads folder
-            UiObject certFileObject = UiAutomatorUtils.obtainUiObjectWithExactText(certFileName);
+            final UiObject certFileObject = UiAutomatorUtils.obtainUiObjectWithExactText(certFileName);
             certFileObject.click();
             // Enter the password for the certificate file and proceed
             UiAutomatorUtils.handleInput("com.android.certinstaller:id/credential_password", certFilePassword);
@@ -436,7 +444,7 @@ public class GoogleSettings extends BaseSettings {
 
             // Confirm the certificate was installed successfully
             launchUserCredentialsPage();
-            UiObject certInstalledObject = UiAutomatorUtils.obtainChildInScrollable("com.android.settings:id/recycler_view", certFileName);
+            final UiObject certInstalledObject = UiAutomatorUtils.obtainChildInScrollable("com.android.settings:id/recycler_view", certFileName);
             Assert.assertTrue(certInstalledObject.exists());
         } catch (UiObjectNotFoundException e) {
             throw new AssertionError(e);
