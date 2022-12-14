@@ -1,4 +1,15 @@
 V.Next
+--------
+
+V.9.0.2
+---------
+- [PATCH] Moving ClearClientCertPreferences back to onCreate and handleBackButtonPressed; created off of correct branch. (#1914)
+
+V.9.0.1
+----------
+- [PATCH] Moving ClearClientCertPreferences back to onCreate and handleBackButtonPressed (#1908)
+
+V.9.0.0
 ----------
 - [MINOR] Add BrokerContentProvider path and IpcStrategy for new device registration API (#1843)
 - [PATCH] Adding cached credential service request id to telemetry (#1866)
