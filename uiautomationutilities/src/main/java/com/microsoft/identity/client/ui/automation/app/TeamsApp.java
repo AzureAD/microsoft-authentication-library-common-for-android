@@ -25,6 +25,7 @@ package com.microsoft.identity.client.ui.automation.app;
 import androidx.annotation.NonNull;
 import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObjectNotFoundException;
+import androidx.test.uiautomator.UiSelector;
 
 import com.microsoft.identity.client.ui.automation.installer.IAppInstaller;
 import com.microsoft.identity.client.ui.automation.installer.PlayStore;
@@ -105,7 +106,28 @@ public class TeamsApp extends App implements IFirstPartyApp {
     public void addAnotherAccount(@NonNull final String username,
                                   @NonNull final String password,
                                   @NonNull final FirstPartyAppPromptHandlerParameters promptHandlerParameters) {
-        throw new UnsupportedOperationException("Not implemented");
+
+        //Allow nearby devices access - screen appears; click cancel
+        UiAutomatorUtils.handleButtonClick("android:id/button2");
+
+        try {
+            //click user icon
+            final UiObject userIcon = UiAutomatorUtils.obtainUiObjectWithUiSelector(new UiSelector().className("android.widget.ImageView"), CommonUtils.FIND_UI_ELEMENT_TIMEOUT);
+            userIcon.click();
+
+            //click Add account
+            UiAutomatorUtils.handleButtonClickForObjectWithText("Add account");
+        }catch (UiObjectNotFoundException ex){
+            throw new AssertionError(ex);
+        }
+
+        //provide email field
+        UiAutomatorUtils.handleInput(
+                "com.microsoft.teams:id/edit_email",
+                username
+        );
+        // Click Sign in btn
+        UiAutomatorUtils.handleButtonClick("com.microsoft.teams:id/sign_in_button");
     }
 
     private void signInWithEmail(@NonNull final String username,
