@@ -322,6 +322,22 @@ public class UiAutomatorUtils {
     }
 
     /**
+     * Clicks the button element associated to the supplied text.
+     * Do not throw an exception if the button is not found.
+     *
+     * @param text the text on the button to click
+     */
+    public static void handleButtonClickForObjectWithTextSafely(@NonNull final String text) {
+        final UiObject button = obtainUiObjectWithText(text);
+
+        try {
+            button.click();
+        } catch (final UiObjectNotFoundException e) {
+            Logger.i(TAG, "Button with text \"" + text + "\" was not found: " + e.getMessage());
+        }
+    }
+
+    /**
      * Presses the device back button on the Android device.
      */
     public static void pressBack() {
