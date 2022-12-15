@@ -10,12 +10,12 @@
     <string name="http_auth_dialog_cancel">취소</string>
 
     <!-- strings for CBA dialogs and layouts -->
-    <string name="smartcard_cert_dialog_title">로그인할 스마트 카드 인증서 선택</string>
+    <string name="smartcard_cert_dialog_title">로그인할 인증서 선택</string>
     <string name="smartcard_cert_dialog_positive_button">계속</string>
     <string name="smartcard_cert_dialog_negative_button">취소</string>
 
     <string name="smartcard_pin_dialog_title">스마트 카드 잠금 해제</string>
-    <string name="smartcard_pin_dialog_message">인증서에 액세스하고 로그인하려면 스마트 카드 PIN을 입력하세요.</string>
+    <string name="smartcard_pin_dialog_message">인증서에 액세스하여 로그인하려면 스마트 카드 PIN을 입력하세요.</string>
     <string name="smartcard_pin_dialog_positive_button">잠금 해제</string>
     <string name="smartcard_pin_dialog_negative_button">취소</string>
     <string name="smartcard_pin_dialog_error_message">입력한 PIN이 잘못되었습니다.</string>
@@ -27,11 +27,32 @@
     <string name="smartcard_max_attempt_dialog_message">실패한 시도가 너무 많습니다. 나중에 다시 시도하세요.</string>
 
     <string name="smartcard_early_unplug_dialog_title">다시 시도하세요</string>
-    <string name="smartcard_early_unplug_dialog_message">스마트 카드 장치가 제거되었습니다. 다시 로그인을 시도하기 전에 장치를 다시 삽입하세요.</string>
+    <string name="smartcard_early_unplug_dialog_message">스마트 카드 장치를 제거했습니다. 다시 로그인을 시도하기 전에 장치를 다시 삽입하세요.</string>
 
     <string name="smartcard_no_cert_dialog_title">해당 인증서를 찾을 수 없습니다.</string>
     <string name="smartcard_no_cert_dialog_message">인증서가 스마트 카드 장치에 올바르게 프로비전되었는지 확인하세요.</string>
 
     <string name="smartcard_general_error_dialog_title">나중에 다시 시도</string>
     <string name="smartcard_general_error_dialog_message">예기치 않은 오류가 발생했습니다. 나중에 다시 시도하세요.</string>
+
+    <string name="user_choice_dialog_title">어떻게 로그인하길 원하시나요?</string>
+    <string name="user_choice_dialog_on_device_name">장치의 인증서</string>
+    <string name="user_choice_dialog_smartcard_name">실물 스마트 카드</string>
+    <string name="user_choice_dialog_positive_button">계속</string>
+    <string name="user_choice_dialog_negative_button">취소</string>
+
+    <string name="smartcard_prompt_dialog_title">스마트 카드를 준비하세요.</string>
+    <string name="smartcard_prompt_dialog_message">스마트 카드를 연결하거나 휴대폰 뒷면에 가져다 대세요.</string>
+    <string name="smartcard_prompt_dialog_negative_button">취소</string>
+
+    <string name="smartcard_nfc_loading_dialog_title">스마트 카드를 읽는 중</string>
+    <string name="smartcard_nfc_loading_dialog_message">스마트 카드를 그대로 들고 있으세요.</string>
+
+    <string name="smartcard_nfc_prompt_dialog_title">스마트 카드를 준비하세요.</string>
+    <string name="smartcard_nfc_prompt_dialog_message">스마트 카드를 휴대폰 뒷면에 가져다 대세요.</string>
+    <string name="smartcard_nfc_prompt_dialog_negative_button">취소</string>
+
+    <string name="smartcard_nfc_reminder_dialog_title">장치 설정에서 NFC를 활성화하세요.</string>
+    <string name="smartcard_nfc_reminder_dialog_message">NFC로 로그인하려면 장치 설정에서 NFC를 활성화하세요. 그런 다음 다시 로그인하세요.</string>
+    <string name="smartcard_nfc_reminder_dialog_positive_button">확인</string>
 </resources>

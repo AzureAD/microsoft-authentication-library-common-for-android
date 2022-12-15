@@ -10,12 +10,12 @@
     <string name="http_auth_dialog_cancel">Abbrechen</string>
 
     <!-- strings for CBA dialogs and layouts -->
-    <string name="smartcard_cert_dialog_title">Ein Smartcard Zertifikat für die Anmeldung auswählen</string>
+    <string name="smartcard_cert_dialog_title">Zertifikat für die Anmeldung auswählen</string>
     <string name="smartcard_cert_dialog_positive_button">Weiter</string>
     <string name="smartcard_cert_dialog_negative_button">Abbrechen</string>
 
     <string name="smartcard_pin_dialog_title">Smartcard entsperren</string>
-    <string name="smartcard_pin_dialog_message">Die Smartcard-PIN eingeben, um auf das Zertifikat zuzugreifen und sich anzumelden</string>
+    <string name="smartcard_pin_dialog_message">Geben Sie die Smartcard-PIN ein, um auf das Zertifikat zuzugreifen und sich anzumelden.</string>
     <string name="smartcard_pin_dialog_positive_button">Entsperren</string>
     <string name="smartcard_pin_dialog_negative_button">Abbrechen</string>
     <string name="smartcard_pin_dialog_error_message">Die eingegebene PIN war falsch</string>
@@ -27,11 +27,32 @@
     <string name="smartcard_max_attempt_dialog_message">Zu viele Fehlversuche, später erneut versuchen.</string>
 
     <string name="smartcard_early_unplug_dialog_title">Erneut versuchen</string>
-    <string name="smartcard_early_unplug_dialog_message">Smartcard Gerät wurde entfernt. Bitte stecken das Gerät erneut ein, bevor Sie versuchen, sich erneut anzumelden.</string>
+    <string name="smartcard_early_unplug_dialog_message">Smartcard-Gerät wurde entfernt. Bitte stecken das Gerät wieder ein, bevor Sie versuchen, sich erneut anzumelden.</string>
 
     <string name="smartcard_no_cert_dialog_title">Keine zutreffenden Zertifikate gefunden.</string>
-    <string name="smartcard_no_cert_dialog_message">Bitte bestätigen Sie, dass Ihr Zertifikat korrekt auf Ihrem Smartcard-Gerät bereitgestellt wurde.</string>
+    <string name="smartcard_no_cert_dialog_message">Bestätigen Sie, dass Ihr Zertifikat korrekt auf Ihrem Smartcard-Gerät bereitgestellt wurde.</string>
 
     <string name="smartcard_general_error_dialog_title">Später noch mal versuchen</string>
     <string name="smartcard_general_error_dialog_message">Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es später noch einmal.</string>
+
+    <string name="user_choice_dialog_title">Wie möchten Sie sich anmelden?</string>
+    <string name="user_choice_dialog_on_device_name">Zertifikat auf Ihrem Gerät</string>
+    <string name="user_choice_dialog_smartcard_name">Physische Smartcard</string>
+    <string name="user_choice_dialog_positive_button">Weiter</string>
+    <string name="user_choice_dialog_negative_button">Abbrechen</string>
+
+    <string name="smartcard_prompt_dialog_title">Smartcard vorbereiten</string>
+    <string name="smartcard_prompt_dialog_message">Schließen Sie eine Smartcard an die Rückseite Ihres Smartphones an, oder halten Sie sie dagegen.</string>
+    <string name="smartcard_prompt_dialog_negative_button">Abbrechen</string>
+
+    <string name="smartcard_nfc_loading_dialog_title">Smartcard wird gelesen</string>
+    <string name="smartcard_nfc_loading_dialog_message">Halten Sie Ihre Smartcard bereit.</string>
+
+    <string name="smartcard_nfc_prompt_dialog_title">Smartcard vorbereiten</string>
+    <string name="smartcard_nfc_prompt_dialog_message">Halten Sie eine Smartcard an die Rückseite Ihres Smartphones.</string>
+    <string name="smartcard_nfc_prompt_dialog_negative_button">Abbrechen</string>
+
+    <string name="smartcard_nfc_reminder_dialog_title">NFC in den Geräteeinstellungen aktivieren</string>
+    <string name="smartcard_nfc_reminder_dialog_message">Um sich mit NFC anzumelden, aktivieren Sie NFC in ihren Geräteeinstellungen. Melden Sie sich dann erneut an.</string>
+    <string name="smartcard_nfc_reminder_dialog_positive_button">OK</string>
 </resources>
