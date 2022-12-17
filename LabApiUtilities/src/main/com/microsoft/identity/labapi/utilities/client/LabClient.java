@@ -77,6 +77,13 @@ public class LabClient implements ILabClient {
         return getLabAccountObject(configInfo);
     }
 
+    public ILabAccount getLabAccount(@NonNull final String upn) throws LabApiException {
+        final List<ConfigInfo> configInfos = fetchConfigsFromLab(upn);
+        // We still get a list of configs despite passing in a single upn, so we select the account from the list.
+        final ConfigInfo configInfo = configInfos.get(0);
+        return getLabAccountObject(configInfo);
+    }
+
     @Override
     public List<ILabAccount> getLabAccounts(@NonNull final LabQuery labQuery) throws LabApiException {
         final List<ConfigInfo> configInfos = fetchConfigsFromLab(labQuery);
@@ -107,6 +114,18 @@ public class LabClient implements ILabClient {
                 .homeTenantId(configInfo.getUserInfo().getHomeTenantID())
                 .configInfo(configInfo)
                 .build();
+    }
+
+    private List<ConfigInfo> fetchConfigsFromLab(@NonNull final String upn) throws LabApiException {
+        Configuration.getDefaultApiClient().setAccessToken(
+                mLabApiAuthenticationClient.getAccessToken()
+        );
+        try {
+            final ConfigApi api = new ConfigApi();
+            return api.apiConfigUpnGet(upn);
+        } catch (final com.microsoft.identity.internal.test.labapi.ApiException ex) {
+            throw new LabApiException(LabError.FAILED_TO_GET_ACCOUNT_FROM_LAB, ex);
+        }
     }
 
     private List<ConfigInfo> fetchConfigsFromLab(@NonNull final LabQuery query) throws LabApiException {
