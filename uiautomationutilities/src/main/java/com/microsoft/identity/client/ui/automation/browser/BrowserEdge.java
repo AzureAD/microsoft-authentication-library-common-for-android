@@ -31,6 +31,7 @@ import androidx.test.uiautomator.UiObjectNotFoundException;
 import androidx.test.uiautomator.UiSelector;
 
 import com.microsoft.identity.client.ui.automation.app.App;
+import com.microsoft.identity.client.ui.automation.installer.IAppInstaller;
 import com.microsoft.identity.client.ui.automation.interaction.FirstPartyAppPromptHandlerParameters;
 import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.AadPromptHandler;
 import com.microsoft.identity.client.ui.automation.logging.Logger;
@@ -45,10 +46,16 @@ public class BrowserEdge extends App implements IBrowser {
     private final static String TAG = BrowserEdge.class.getSimpleName();
     private static final String EDGE_PACKAGE_NAME = "com.microsoft.emmx";
     private static final String EDGE_APP_NAME = "Microsoft Edge";
+    private static final String EDGE_APK = "Edge.apk";
     private boolean shouldHandleFirstRun = true;
 
     public BrowserEdge() {
         super(EDGE_PACKAGE_NAME, EDGE_APP_NAME);
+    }
+
+    public BrowserEdge(@NonNull final IAppInstaller appInstaller) {
+        super(EDGE_PACKAGE_NAME, EDGE_APP_NAME, appInstaller);
+        localApkFileName = EDGE_APK;
     }
 
     @Override
