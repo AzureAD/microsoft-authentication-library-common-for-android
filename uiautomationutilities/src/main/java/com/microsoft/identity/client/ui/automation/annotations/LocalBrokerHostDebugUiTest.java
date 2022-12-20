@@ -22,9 +22,16 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.annotations;
 
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
 /**
  * Adding annotation to denote tests that should be ran with LocalBrokerHostDebug variant.
  * This is needed because it allows for separation while running on pipelines.
  */
+@Retention(RetentionPolicy.RUNTIME)
+@Target({ElementType.METHOD, ElementType.TYPE})
 public @interface LocalBrokerHostDebugUiTest {
 }
