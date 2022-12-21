@@ -47,7 +47,7 @@ public class BrowserEdge extends App implements IBrowser {
     private static final String EDGE_PACKAGE_NAME = "com.microsoft.emmx";
     private static final String EDGE_APP_NAME = "Microsoft Edge";
     private static final String EDGE_APK = "Edge.apk";
-    private boolean shouldHandleFirstRun = true;
+    private boolean shouldHandleAutoFill = true;
 
     public BrowserEdge() {
         super(EDGE_PACKAGE_NAME, EDGE_APP_NAME);
@@ -56,6 +56,18 @@ public class BrowserEdge extends App implements IBrowser {
     public BrowserEdge(@NonNull final IAppInstaller appInstaller) {
         super(EDGE_PACKAGE_NAME, EDGE_APP_NAME, appInstaller);
         localApkFileName = EDGE_APK;
+    }
+
+    /**
+     * Overriding the launch function to add a check for autofill ui
+     */
+    @Override
+    public void launch() {
+        super.launch();
+        if (shouldHandleAutoFill) {
+            UiAutomatorUtils.handleButtonClickForObjectWithTextSafely("No, thanks");
+            shouldHandleAutoFill = false;
+        }
     }
 
     @Override
