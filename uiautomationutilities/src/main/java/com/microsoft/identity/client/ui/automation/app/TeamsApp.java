@@ -106,12 +106,8 @@ public class TeamsApp extends App implements IFirstPartyApp {
     public void addAnotherAccount(@NonNull final String username,
                                   @NonNull final String password,
                                   @NonNull final FirstPartyAppPromptHandlerParameters promptHandlerParameters) {
-
-        //Allow nearby devices access - screen appears; click cancel
-        UiAutomatorUtils.handleButtonClick("android:id/button2");
-
-        try {
-            //click user icon
+       try {
+            //click account drawer icon
             final UiObject userIcon = UiAutomatorUtils.obtainUiObjectWithUiSelector(new UiSelector().className("android.widget.ImageView"), CommonUtils.FIND_UI_ELEMENT_TIMEOUT);
             userIcon.click();
 
