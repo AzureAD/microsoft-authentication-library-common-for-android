@@ -129,11 +129,6 @@ public class PromptHandlerParameters {
     private final boolean verifyYourIdentityPageExpected;
 
     /**
-     * Denotes name of the certificate to use to sign the account in rather than a password
-     */
-    private final String userCertificate;
-
-    /**
      * Denotes the way in which we want to respond to the enroll page for this request.
      */
     @Builder.Default

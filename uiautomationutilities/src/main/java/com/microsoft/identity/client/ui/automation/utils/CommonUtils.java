@@ -28,7 +28,6 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
-import android.security.KeyChain;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -201,15 +200,5 @@ public class CommonUtils {
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
         intent.setData(data);
         context.startActivity(intent);
-    }
-
-    /**
-     * Launch an intent for certificate Installation
-     */
-    public static void launchCertInstallationIntent() {
-        final Context context = ApplicationProvider.getApplicationContext();
-        final Intent certInstallationIntent = KeyChain.createInstallIntent();
-        certInstallationIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        context.startActivity(certInstallationIntent);
     }
 }

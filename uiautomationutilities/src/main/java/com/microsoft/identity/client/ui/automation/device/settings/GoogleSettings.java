@@ -32,9 +32,7 @@ import androidx.test.uiautomator.UiSelector;
 import com.microsoft.identity.client.ui.automation.broker.ITestBroker;
 import com.microsoft.identity.client.ui.automation.constants.DeviceAdmin;
 import com.microsoft.identity.client.ui.automation.logging.Logger;
-import com.microsoft.identity.client.ui.automation.rules.DevicePinSetupRule;
 import com.microsoft.identity.client.ui.automation.utils.AdbShellUtils;
-import com.microsoft.identity.client.ui.automation.utils.CommonUtils;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
 import org.junit.Assert;
@@ -363,92 +361,6 @@ public class GoogleSettings extends BaseSettings {
         launchAppInfoPage(packageName);
         // This is the id for the enable button
         handleButtonClick("com.android.settings:id/button2");
-    }
-
-    @Override
-    public void launchUserCredentialsPage() {
-        Logger.i(TAG, "Opening User Credentials Page...");
-        launchScreenLockPage();
-        try {
-            // Navigate to the Encryption & Credentials page
-            UiObject advancedSettings = UiAutomatorUtils.obtainChildInScrollable("com.android.settings:id/recycler_view","Encryption & credentials");
-            advancedSettings.click();
-            // Enter User credentials page
-            UiAutomatorUtils.handleButtonClickForObjectWithText("User credentials");
-        } catch (UiObjectNotFoundException e) {
-            throw new AssertionError(e);
-        }
-    }
-
-    @Override
-    public void clearUserCredentials() {
-        Logger.i(TAG, "Clearing user certificates...");
-        launchScreenLockPage();
-        try {
-            // Navigate to the Encryption & Credentials page
-            UiObject advancedSettings = UiAutomatorUtils.obtainChildInScrollable("com.android.settings:id/recycler_view","Encryption & credentials");
-            advancedSettings.click();
-            // Clear User Credentials
-            UiAutomatorUtils.handleButtonClickForObjectWithText("Clear credentials");
-
-            try {
-                UiAutomatorUtils.handleButtonClick("android:id/button1", TimeUnit.SECONDS.toMillis(5));
-            } catch (AssertionError e) {
-                // if the confirmation prompt did not appear, then let's assume the "Clear credentials" button was not pressable, so there were no credentials to clear
-                // In this case, we can cut this method call short
-                return;
-            }
-
-            // Enter pin to delete certificates
-            final UiDevice device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
-            UiAutomatorUtils.handleInput("com.android.settings:id/password_entry", DevicePinSetupRule.PIN);
-            device.pressEnter();
-
-            // Confirm we are back to settings page to confirm deletion is complete
-            final UiObject encryptionObject = UiAutomatorUtils.obtainUiObjectWithText("Clear credentials");
-            Assert.assertTrue(encryptionObject.exists());
-
-            // Confirm there are no certificates on the device
-            launchUserCredentialsPage();
-            final UiObject noCredentialsInstalled = UiAutomatorUtils.obtainUiObjectWithText("No user credentials installed");
-            Assert.assertTrue("\"No user credentials installed\" UI object was not found", noCredentialsInstalled.exists());
-        } catch (UiObjectNotFoundException e) {
-            throw new AssertionError(e);
-        }
-    }
-
-    @Override
-    public void installCertFromDeviceDownloadFolder(@NonNull final String certFileName, @NonNull final String certFilePassword) {
-        Logger.i(TAG, "Installing certificate " + certFileName + " from the device's download folder...");
-        CommonUtils.launchCertInstallationIntent();
-        try {
-            // Make sure we are in the downloads page
-            final UiObject downloadsUiObject = UiAutomatorUtils.obtainUiObjectWithText("Downloads");
-            if (!downloadsUiObject.exists()) {
-                final UiObject sidebarObject = UiAutomatorUtils.obtainUiObjectWithDescription("Show roots");
-                sidebarObject.click();
-                UiAutomatorUtils.handleButtonClickForObjectWithText("Downloads");
-            }
-
-            // Click the Certificate file in the downloads folder
-            final UiObject certFileObject = UiAutomatorUtils.obtainUiObjectWithExactText(certFileName);
-            certFileObject.click();
-            // Enter the password for the certificate file and proceed
-            UiAutomatorUtils.handleInput("com.android.certinstaller:id/credential_password", certFilePassword);
-            UiAutomatorUtils.handleButtonClick("android:id/button1");
-            // Confirm the certificate type
-            UiAutomatorUtils.handleButtonClick("android:id/button1");
-            // Change the certificate name to match the filename and proceed
-            UiAutomatorUtils.handleInput("com.android.certinstaller:id/certificate_name", certFileName);
-            UiAutomatorUtils.handleButtonClick("android:id/button1");
-
-            // Confirm the certificate was installed successfully
-            launchUserCredentialsPage();
-            final UiObject certInstalledObject = UiAutomatorUtils.obtainChildInScrollable("com.android.settings:id/recycler_view", certFileName);
-            Assert.assertTrue(certInstalledObject.exists());
-        } catch (UiObjectNotFoundException e) {
-            throw new AssertionError(e);
-        }
     }
 }
 

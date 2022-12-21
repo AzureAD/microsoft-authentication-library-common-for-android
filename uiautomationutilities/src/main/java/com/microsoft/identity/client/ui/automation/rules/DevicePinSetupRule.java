@@ -61,7 +61,7 @@ public class DevicePinSetupRule implements TestRule {
 
     private final ITestBroker mBroker;
 
-    public DevicePinSetupRule(final ITestBroker broker) {
+    DevicePinSetupRule(final ITestBroker broker) {
         this.mBroker = broker;
     }
 

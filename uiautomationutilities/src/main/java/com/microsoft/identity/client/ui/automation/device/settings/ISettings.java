@@ -131,21 +131,6 @@ public interface ISettings {
     void launchAppInfoPage(String packageName);
 
     /**
-     * Launch settings page showing user credentials (installed certificates)
-     */
-    void launchUserCredentialsPage();
-
-    /**
-     * Clear all user certificates currently on the device
-     */
-    void clearUserCredentials();
-
-    /**
-     * Install a certificate from a file in the device's Download folder
-     */
-    void installCertFromDeviceDownloadFolder(@NonNull final String certFileName, @NonNull final String certFilePassword);
-
-    /**
      * Disable an app through the device's settings page instead of shell command.
      * @param packageName name of package to be disabled
      */

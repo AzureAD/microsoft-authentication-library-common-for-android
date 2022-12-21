@@ -227,22 +227,4 @@ public class SamsungSettings extends BaseSettings {
         //TODO: implement enabling app through settings
         throw new UnsupportedOperationException("We do not support enabling apps through Settings Page on samsung devices");
     }
-
-    @Override
-    public void launchUserCredentialsPage() {
-        //TODO: find user credentials page in samsung settings
-        throw new UnsupportedOperationException("We do not support launching user credentials page on samsung devices");
-    }
-
-    @Override
-    public void clearUserCredentials() {
-        //TODO: clear user credentials in samsung settings
-        throw new UnsupportedOperationException("We do not support clearing user credentials on samsung devices");
-    }
-
-    @Override
-    public void installCertFromDeviceDownloadFolder(@NonNull final String certFileName, @NonNull final String certFilePassword) {
-        //TODO: handle cert installation ui in Samsung
-        throw new UnsupportedOperationException("We do not support installing certificates from device download folder on samsung devices");
-    }
 }
