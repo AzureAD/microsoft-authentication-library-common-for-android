@@ -27,7 +27,6 @@ import com.microsoft.identity.common.java.commands.parameters.DeviceCodeFlowComm
 import com.microsoft.identity.common.java.controllers.BaseController;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
-import com.microsoft.identity.common.java.result.AcquireTokenResult;
 
 import lombok.NonNull;
 
@@ -38,27 +37,22 @@ import lombok.NonNull;
  * Class also includes some pre-defined error codes and messages to be used in
  * exception handling.
  */
-public class DCFTokenFetchCommand extends TokenCommand{
-    private static final String TAG = DCFTokenFetchCommand.class.getSimpleName();
+public class DeviceCodeFlowAuthResultCommand extends BaseCommand<AuthorizationResult> {
+    private static final String TAG = DeviceCodeFlowAuthResultCommand.class.getSimpleName();
 
-    private final AuthorizationResult mAuthorizationResult;
-
-    public DCFTokenFetchCommand(@NonNull DeviceCodeFlowCommandParameters parameters,
-                                @NonNull AuthorizationResult authorizationResult,
-                                @NonNull BaseController controller,
-                                @SuppressWarnings(WarningType.rawtype_warning) @NonNull CommandCallback callback,
-                                @NonNull String publicApiId) {
+    public DeviceCodeFlowAuthResultCommand(@NonNull DeviceCodeFlowCommandParameters parameters,
+                                 @NonNull BaseController controller,
+                                 @SuppressWarnings(WarningType.rawtype_warning) @NonNull CommandCallback callback,
+                                 @NonNull String publicApiId) {
         super(parameters, controller, callback, publicApiId);
-
-        mAuthorizationResult = authorizationResult;
     }
 
     @Override
-    public AcquireTokenResult execute() throws Exception {
+    public AuthorizationResult execute() throws Exception {
         final String methodTag = TAG + ":execute";
         Logger.verbose(
                 methodTag,
-                "DCFTokenFetchCommand initiating..."
+                "Device Code Flow command initiating..."
         );
 
         // Get the controller used to execute the command
@@ -67,15 +61,10 @@ public class DCFTokenFetchCommand extends TokenCommand{
         // Fetch the parameters
         final DeviceCodeFlowCommandParameters commandParameters = (DeviceCodeFlowCommandParameters) getParameters();
 
-        // Call acquireDeviceCodeFlowToken to get token result (Part 2 of DCF)
-        final AcquireTokenResult tokenResult = controller.acquireDeviceCodeFlowToken(mAuthorizationResult, commandParameters);
+        // Call deviceCodeFlowAuthRequest to get authorization result (Part 1 of DCF)
+        @SuppressWarnings(WarningType.rawtype_warning) final AuthorizationResult authorizationResult = controller.deviceCodeFlowAuthRequest(commandParameters);
 
-        Logger.verbose(
-                methodTag,
-                "DCFTokenFetchCommand exiting with token..."
-        );
-
-        return tokenResult;
+        return authorizationResult;
     }
 
     @Override

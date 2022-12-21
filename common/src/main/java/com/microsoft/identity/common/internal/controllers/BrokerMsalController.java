@@ -27,7 +27,7 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.MSAL_TO_BROKER_PROTOCOL_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.MSAL_TO_BROKER_PROTOCOL_VERSION_CODE;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_ACQUIRE_TOKEN_DCF;
-import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_FETCH_DCF_USER_CODE;
+import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_FETCH_DCF_AUTH_RESULT;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_ACQUIRE_TOKEN_SILENT;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_GENERATE_SHR;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_GET_ACCOUNTS;
@@ -455,7 +455,7 @@ public class BrokerMsalController extends BaseController {
                         public BrokerOperationBundle getBundle() {
                             // Call Broker to make a request to fetch DCF authorization result
                             // Note : Broker API here is to only fetch the authorization result which has the verificationUri, userCode, expiration time and message.
-                            return new BrokerOperationBundle(MSAL_FETCH_DCF_USER_CODE,
+                            return new BrokerOperationBundle(MSAL_FETCH_DCF_AUTH_RESULT,
                                     mActiveBrokerPackageName,
                                     mRequestAdapter.getRequestBundleForDeviceCodeFlowAuthRequest(
                                             mApplicationContext,
@@ -470,7 +470,7 @@ public class BrokerMsalController extends BaseController {
                             if (resultBundle == null) {
                                 throw mResultAdapter.getExceptionForEmptyResultBundle();
                             }
-                            return mResultAdapter.getDCFResultFromResultBundle(resultBundle);
+                            return mResultAdapter.getDeviceCodeFlowAuthResultFromResultBundle(resultBundle);
                         }
 
                         @Override
@@ -518,7 +518,7 @@ public class BrokerMsalController extends BaseController {
                             // Note : Broker API here is to only fetch the authorization result which has the verificationUri, userCode, expiration time and message.
                             return new BrokerOperationBundle(MSAL_ACQUIRE_TOKEN_DCF,
                                     mActiveBrokerPackageName,
-                                    mRequestAdapter.getRequestBundleForDCFTokenRequest(
+                                    mRequestAdapter.getRequestBundleForDeviceCodeFlowTokenRequest(
                                             mApplicationContext,
                                             parameters,
                                             authorizationResult,
@@ -530,7 +530,7 @@ public class BrokerMsalController extends BaseController {
                             if (resultBundle == null) {
                                 throw mResultAdapter.getExceptionForEmptyResultBundle();
                             }
-                            AcquireTokenResult acquireTokenResult = mResultAdapter.getAcquireTokenResultFromResultBundle(resultBundle);
+                            AcquireTokenResult acquireTokenResult = mResultAdapter.getDeviceCodeFlowTokenResultFromResultBundle(resultBundle);
                             if (acquireTokenResult == null) {
                                 // Wait between polls for 5 secs
                                 ThreadUtils.sleepSafely(5000, TAG,

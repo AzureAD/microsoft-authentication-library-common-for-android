@@ -282,7 +282,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
      * @param negotiatedBrokerProtocolVersion protocol version returned by broker hello.
      * @return request Bundle
      */
-    public Bundle getRequestBundleForDCFTokenRequest(@NonNull final Context context,
+    public Bundle getRequestBundleForDeviceCodeFlowTokenRequest(@NonNull final Context context,
                                                      @NonNull final DeviceCodeFlowCommandParameters parameters,
                                                      @NonNull final AuthorizationResult authorizationResult,
                                                      @Nullable final String negotiatedBrokerProtocolVersion) {

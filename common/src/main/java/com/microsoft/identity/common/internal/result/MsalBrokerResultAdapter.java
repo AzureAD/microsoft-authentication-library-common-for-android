@@ -587,7 +587,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
     }
 
     @NonNull
-    public AuthorizationResult getDCFResultFromResultBundle(@NonNull final Bundle resultBundle) throws BaseException {
+    public AuthorizationResult getDeviceCodeFlowAuthResultFromResultBundle(@NonNull final Bundle resultBundle) throws BaseException {
         String serializedDCFResult = resultBundle.getString("dcfResultBundle");
         AuthorizationResult dcfResult = ObjectMapper.deserializeJsonStringToObject(serializedDCFResult, MicrosoftStsAuthorizationResult.class);
 
@@ -595,8 +595,9 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
     }
 
     @NonNull
-    public AcquireTokenResult getAcquireTokenResultFromResultBundle(@NonNull final Bundle resultBundle) throws BaseException {
+    public AcquireTokenResult getDeviceCodeFlowTokenResultFromResultBundle(@NonNull final Bundle resultBundle) throws BaseException {
         final MsalBrokerResultAdapter resultAdapter = new MsalBrokerResultAdapter();
+        //TODO (ppunhani): refactor this
         if (resultBundle.getBoolean(AuthenticationConstants.Broker.BROKER_REQUEST_V2_SUCCESS)) {
             final AcquireTokenResult acquireTokenResult = new AcquireTokenResult();
             acquireTokenResult.setLocalAuthenticationResult(
@@ -605,7 +606,23 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
 
             return acquireTokenResult;
         } else if (resultBundle.getString("errorCode").contains(AUTHORIZATION_PENDING)) {
+            //TODO (ppunhani): refactor this
             return null;
+        }
+
+        throw getBaseExceptionFromBundle(resultBundle);
+    }
+
+    public @NonNull
+    AcquireTokenResult getAcquireTokenResultFromResultBundle(@NonNull final Bundle resultBundle) throws BaseException {
+        final MsalBrokerResultAdapter resultAdapter = new MsalBrokerResultAdapter();
+        if (resultBundle.getBoolean(AuthenticationConstants.Broker.BROKER_REQUEST_V2_SUCCESS)) {
+            final AcquireTokenResult acquireTokenResult = new AcquireTokenResult();
+            acquireTokenResult.setLocalAuthenticationResult(
+                    resultAdapter.authenticationResultFromBundle(resultBundle)
+            );
+
+            return acquireTokenResult;
         }
 
         throw getBaseExceptionFromBundle(resultBundle);

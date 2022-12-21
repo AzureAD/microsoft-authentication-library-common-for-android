@@ -38,8 +38,8 @@ import static com.microsoft.identity.common.java.marker.PerfConstants.CodeMarker
 import com.microsoft.identity.common.java.BuildConfig;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.commands.BaseCommand;
-import com.microsoft.identity.common.java.commands.DCFTokenFetchCommand;
-import com.microsoft.identity.common.java.commands.DeviceCodeFlowCommand;
+import com.microsoft.identity.common.java.commands.DeviceCodeFlowTokenResultCommand;
+import com.microsoft.identity.common.java.commands.DeviceCodeFlowAuthResultCommand;
 import com.microsoft.identity.common.java.commands.ICommandResult;
 import com.microsoft.identity.common.java.commands.InteractiveTokenCommand;
 import com.microsoft.identity.common.java.commands.SilentTokenCommand;
@@ -169,7 +169,7 @@ public class CommandDispatcher {
         submitSilentReturningFuture(command);
     }
 
-    public static AuthorizationResult submitSilentAndReturnAuthorizationResult(@NonNull final DeviceCodeFlowCommand command)
+    public static AuthorizationResult submitSilentAndReturnAuthorizationResult(@NonNull final DeviceCodeFlowAuthResultCommand command)
             throws BaseException {
         final CommandResult commandResult;
         try {
@@ -190,7 +190,7 @@ public class CommandDispatcher {
         }
     }
 
-    public static ILocalAuthenticationResult submitSilentAndReturnAuthenticationResult(@NonNull final DCFTokenFetchCommand command)
+    public static ILocalAuthenticationResult submitSilentAndReturnAuthenticationResult(@NonNull final DeviceCodeFlowTokenResultCommand command)
             throws BaseException {
         final CommandResult commandResult;
         try {
