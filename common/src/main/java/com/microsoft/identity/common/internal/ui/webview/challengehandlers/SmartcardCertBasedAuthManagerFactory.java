@@ -59,10 +59,12 @@ public class SmartcardCertBasedAuthManagerFactory {
      */
     @Nullable
     static AbstractSmartcardCertBasedAuthManager createSmartcardNfcCertBasedAuthManager(@NonNull final Context context) {
+        final String methodTag = TAG + ":createSmartcardNfcCertBasedAuthManager";
         try {
             return new YubiKitNfcCertBasedAuthManager(context);
         } catch (final NfcNotAvailable e) {
             //This means that the device does not have an NFC reader.
+            Logger.info(methodTag, "Device does not support NFC capabilities.");
             return null;
         }
     }

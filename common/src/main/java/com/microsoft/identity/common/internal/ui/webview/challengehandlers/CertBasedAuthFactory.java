@@ -30,13 +30,11 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
 import com.microsoft.identity.common.java.opentelemetry.CertBasedAuthTelemetryHelper;
-import com.microsoft.identity.common.logging.Logger;
 
 /**
  * Instantiates handlers for certificate based authentication.
  */
 public class CertBasedAuthFactory {
-    private static final String TAG = CertBasedAuthFactory.class.getSimpleName();
     private static final String USER_CANCEL_MESSAGE = "User canceled smartcard CBA flow.";
     private static final String ON_DEVICE_CHOICE = "on-device";
     private static final String SMARTCARD_CHOICE = "smartcard";
@@ -52,7 +50,6 @@ public class CertBasedAuthFactory {
      * @param activity current host activity.
      */
     public CertBasedAuthFactory(@NonNull final Activity activity) {
-        final String methodTag = TAG + ":CertBasedAuthFactory";
         mActivity = activity;
         mSmartcardUsbCertBasedAuthManager = SmartcardCertBasedAuthManagerFactory.createSmartcardUsbCertBasedAuthManager(mActivity.getApplicationContext());
         mSmartcardNfcCertBasedAuthManager = SmartcardCertBasedAuthManagerFactory.createSmartcardNfcCertBasedAuthManager(mActivity.getApplicationContext());
@@ -63,15 +60,6 @@ public class CertBasedAuthFactory {
             //In the rare case a user is able to use NFC but not USB, this will require some different design work.
             return;
         }
-        mSmartcardUsbCertBasedAuthManager.setDiscoveryExceptionCallback(new AbstractSmartcardCertBasedAuthManager.IDiscoveryExceptionCallback() {
-            @Override
-            public void onException(@NonNull final Exception exception) {
-                //This method is not currently being called, but it could be
-                // used in future SmartcardCertBasedAuthManager implementations.
-                //Logging, but may also want to emit telemetry at some point, when it's actually being called.
-                Logger.error(methodTag, "Exception thrown upon starting smartcard usb discovery: " + exception.getMessage(), exception);
-            }
-        });
         //Connection and disconnection callbacks for discovery are set in the SmartcardCertBasedAuthChallengeHandlers.
         mSmartcardUsbCertBasedAuthManager.startDiscovery(activity);
     }
@@ -91,7 +79,8 @@ public class CertBasedAuthFactory {
                     telemetryHelper));
             return;
         }
-        else if (mSmartcardUsbCertBasedAuthManager.isDeviceConnected()) {
+
+        if (mSmartcardUsbCertBasedAuthManager.isDeviceConnected()) {
             telemetryHelper.setUserChoice(SMARTCARD_CHOICE);
             callback.onReceived(new SmartcardUsbCertBasedAuthChallengeHandler(
                     mActivity,
@@ -100,6 +89,7 @@ public class CertBasedAuthFactory {
                     telemetryHelper));
             return;
         }
+
         //Need input from user to determine which CertBasedAuthChallengeHandler to return.
         mDialogHolder.showUserChoiceDialog(new UserChoiceDialog.PositiveButtonListener() {
             @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)

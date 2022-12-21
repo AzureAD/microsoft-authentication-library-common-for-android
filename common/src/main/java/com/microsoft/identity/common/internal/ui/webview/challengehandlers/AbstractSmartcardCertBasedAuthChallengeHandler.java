@@ -95,7 +95,7 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandler implements 
                 if (session.getPinAttemptsRemaining() == 0) {
                     indicateTooManyFailedAttempts(methodTag);
                     request.cancel();
-                    onGetCertSessionExtendedLogic();
+                    onGetSessionFinished();
                     return;
                 }
                 //Create List that contains cert details only pertinent to the cert picker.
@@ -108,7 +108,7 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandler implements 
                             R.string.smartcard_no_cert_dialog_title,
                             R.string.smartcard_no_cert_dialog_message);
                     request.cancel();
-                    onGetCertSessionExtendedLogic();
+                    onGetSessionFinished();
                     return;
                 }
 
@@ -126,7 +126,7 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandler implements 
                             }
                         });
 
-                onGetCertSessionExtendedLogic();
+                onGetSessionFinished();
             }
 
             @Override
@@ -141,7 +141,7 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandler implements 
     /**
      * Additional logic to run upon before the end of processChallenge.
      */
-    protected abstract void onGetCertSessionExtendedLogic();
+    protected abstract void onGetSessionFinished();
 
     /**
      * Helper method to log and show an error dialog with messages indicating that
@@ -264,7 +264,6 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandler implements 
         if (!mIsSmartcardCertBasedAuthProceeding) {
             return;
         }
-        mIsSmartcardCertBasedAuthProceeding = false;
         final RawAuthorizationResult.ResultCode resultCode = response.getResultCode();
         if (resultCode == RawAuthorizationResult.ResultCode.NON_OAUTH_ERROR
                 || resultCode == RawAuthorizationResult.ResultCode.SDK_CANCELLED

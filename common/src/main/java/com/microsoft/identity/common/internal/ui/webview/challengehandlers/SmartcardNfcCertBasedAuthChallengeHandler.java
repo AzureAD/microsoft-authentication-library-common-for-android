@@ -48,26 +48,13 @@ public class SmartcardNfcCertBasedAuthChallengeHandler extends AbstractSmartcard
                                                      @NonNull final DialogHolder dialogHolder,
                                                      @NonNull final CertBasedAuthTelemetryHelper telemetryHelper) {
         super(activity, smartcardNfcCertBasedAuthManager, dialogHolder, telemetryHelper, SmartcardNfcCertBasedAuthChallengeHandler.class.getSimpleName());
-        mSmartcardCertBasedAuthManager.setConnectionCallback(new AbstractSmartcardCertBasedAuthManager.IConnectionCallback() {
-            @Override
-            public void onCreateConnection() {
-                //Reset DialogHolder to null if necessary.
-                //In this case, DialogHolder would be an ErrorDialog if not null.
-                mDialogHolder.dismissDialog();
-            }
-
-            @Override
-            public void onClosedConnection() {
-                //Nothing needed.
-            }
-        });
     }
 
     /**
      * Additional logic to run upon before the end of processChallenge.
      */
     @Override
-    protected void onGetCertSessionExtendedLogic() {
+    protected void onGetSessionFinished() {
         mSmartcardCertBasedAuthManager.stopDiscovery(mActivity);
     }
 

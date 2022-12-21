@@ -119,6 +119,7 @@ public abstract class AbstractSmartcardCertBasedAuthManager {
          * Logic to be run when an exception is thrown.
          * @param exception thrown Exception instance.
          */
+        @SuppressFBWarnings
         void onException(@NonNull final Exception exception);
     }
 

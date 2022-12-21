@@ -77,7 +77,7 @@ public class SmartcardUsbCertBasedAuthChallengeHandler extends AbstractSmartcard
      * Additional logic to run upon before the end of processChallenge.
      */
     @Override
-    protected void onGetCertSessionExtendedLogic() {
+    protected void onGetSessionFinished() {
         //Nothing needed
     }
 
