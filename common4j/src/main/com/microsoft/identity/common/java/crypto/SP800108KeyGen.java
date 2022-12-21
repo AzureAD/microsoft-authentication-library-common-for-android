@@ -118,7 +118,6 @@ public class SP800108KeyGen {
 
         do {
             dataInput = updateDataInput(ctr, fixedInput);
-            hmacSHA256.reset();
             hmacSHA256.init(keySpec);
             hmacSHA256.update(dataInput);
             cHMAC = hmacSHA256.doFinal();
@@ -132,6 +131,9 @@ public class SP800108KeyGen {
             System.arraycopy(cHMAC, 0, keyDerivated, numCurrentElementsBytes, 32);
             numCurrentElements = numCurrentElements + len;
             ctr++;
+
+            // Reset so that it can be reused in the next iteration.
+            hmacSHA256.reset();
         } while (numCurrentElements < outputSizeBit);
         return keyDerivated;
     }
