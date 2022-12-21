@@ -10,12 +10,12 @@
     <string name="http_auth_dialog_cancel">Annulla</string>
 
     <!-- strings for CBA dialogs and layouts -->
-    <string name="smartcard_cert_dialog_title">Scegli un certificato smart card per accedere</string>
+    <string name="smartcard_cert_dialog_title">Selezionare un certificato per l\'accesso</string>
     <string name="smartcard_cert_dialog_positive_button">Continua</string>
     <string name="smartcard_cert_dialog_negative_button">Annulla</string>
 
     <string name="smartcard_pin_dialog_title">Sblocca smart card</string>
-    <string name="smartcard_pin_dialog_message">Immetti il PIN della smart card per accedere al certificato e accedere</string>
+    <string name="smartcard_pin_dialog_message">Immetti il PIN della smart card per accedere al certificato ed eseguire l\'accesso</string>
     <string name="smartcard_pin_dialog_positive_button">Sblocca</string>
     <string name="smartcard_pin_dialog_negative_button">Annulla</string>
     <string name="smartcard_pin_dialog_error_message">Il PIN immesso non è corretto.</string>
@@ -27,11 +27,32 @@
     <string name="smartcard_max_attempt_dialog_message">Troppi tentativi non riusciti. Riprova più tardi.</string>
 
     <string name="smartcard_early_unplug_dialog_title">Riprova</string>
-    <string name="smartcard_early_unplug_dialog_message">Il dispositivo smart card è stato rimosso. Reinserisci il dispositivo prima di tentare di nuovo l\'accesso.</string>
+    <string name="smartcard_early_unplug_dialog_message">Il dispositivo smart card è stato rimosso. Reinserire il dispositivo prima di tentare di nuovo l\'accesso.</string>
 
     <string name="smartcard_no_cert_dialog_title">Non sono stati trovati certificati applicabili.</string>
-    <string name="smartcard_no_cert_dialog_message">Verifica che il provisioning del certificato sia stato eseguito correttamente nel dispositivo smart card.</string>
+    <string name="smartcard_no_cert_dialog_message">Verificare che il provisioning del certificato sia stato eseguito correttamente nel dispositivo smart card.</string>
 
     <string name="smartcard_general_error_dialog_title">Riprova più tardi</string>
     <string name="smartcard_general_error_dialog_message">Si è verificato un errore imprevisto. Riprova più tardi.</string>
+
+    <string name="user_choice_dialog_title">Come si vuole accedere?</string>
+    <string name="user_choice_dialog_on_device_name">Certificato nel dispositivo</string>
+    <string name="user_choice_dialog_smartcard_name">Smart card fisica</string>
+    <string name="user_choice_dialog_positive_button">Continua</string>
+    <string name="user_choice_dialog_negative_button">Annulla</string>
+
+    <string name="smartcard_prompt_dialog_title">Preparare la smart card</string>
+    <string name="smartcard_prompt_dialog_message">Collegare o tenere una smart card sul retro del telefono.</string>
+    <string name="smartcard_prompt_dialog_negative_button">Annulla</string>
+
+    <string name="smartcard_nfc_loading_dialog_title">Lettura del smart card</string>
+    <string name="smartcard_nfc_loading_dialog_message">Mantenere la smart card al suo posto.</string>
+
+    <string name="smartcard_nfc_prompt_dialog_title">Preparare la smart card</string>
+    <string name="smartcard_nfc_prompt_dialog_message">Tenere una smart card sul retro del telefono.</string>
+    <string name="smartcard_nfc_prompt_dialog_negative_button">Annulla</string>
+
+    <string name="smartcard_nfc_reminder_dialog_title">Attivare NFC nelle impostazioni del dispositivo</string>
+    <string name="smartcard_nfc_reminder_dialog_message">Per accedere con NFC, attivarlo nelle impostazioni del dispositivo. Quindi accedi di nuovo.</string>
+    <string name="smartcard_nfc_reminder_dialog_positive_button">Chiudi</string>
 </resources>
