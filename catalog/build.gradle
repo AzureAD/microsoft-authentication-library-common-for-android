@@ -41,7 +41,7 @@ catalog {
         version('annotation', '8.37')
         version('robolectric', '4.5.1')
         version('uiAutomator', '2.2.0')
-        version('flatBuffers', '1.12.0')
+        version('flatbuffers', '1.12.0')
         version('dagger', '2.31.2')
         version('msal4j', '1.10.0')
         version('adal4j', '1.6.7')
@@ -77,6 +77,7 @@ catalog {
         version('jacoco', '0.7.9')
         version('mapdb', '3.0.8')
         version('secretService', '1.6.2')
+        version('opentelemetry', '1.18.0')
 
         // TSL versions
         version('yubikit', '2.0.0')
@@ -111,6 +112,9 @@ catalog {
         library('oshi', 'com.github.oshi', 'oshi-core').versionRef('oshi')
         library('mapdb', 'org.mapdb', 'mapdb').versionRef('mapdb')
         library('secretService', 'de.swiesend', 'secret-service').versionRef('secretService')
+        library('opentelemetryBom', 'io.opentelemetry', 'opentelemetry-bom').versionRef('opentelemetry')
+        library('opentelemetryApi', 'io.opentelemetry', 'opentelemetry-api').versionRef('opentelemetry')
+        library('opentelemetrySdkTrace', 'io.opentelemetry', 'opentelemetry-sdk-trace').versionRef('opentelemetry')
 
         // android libraries
         library('appcompat', 'androidx.appcompat', 'appcompat').versionRef('appcompat')

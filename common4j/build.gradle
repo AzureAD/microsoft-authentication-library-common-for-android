@@ -214,14 +214,14 @@ dependencies {
     testImplementation libs.junit
     testImplementation libs.mockitoCore
 
-    testFixturesCompileOnly 'com.github.spotbugs:spotbugs-annotations:3.1.12'
-    testFixturesCompileOnly "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
-    testFixturesAnnotationProcessor "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
-    resolvableTestFixturesImplementation "org.robolectric:junit:$rootProject.ext.robolectricVersion"
+    testFixturesCompileOnly libs.spotbugsAnnotations4J
+    testFixturesCompileOnly libs.lombok
+    testFixturesAnnotationProcessor libs.lombok
+    resolvableTestFixturesImplementation libs.robolectric4j
 
-    implementation platform("io.opentelemetry:opentelemetry-bom:1.18.0")
-    implementation('io.opentelemetry:opentelemetry-api:1.18.0')
-    implementation('io.opentelemetry:opentelemetry-sdk-trace:1.18.0')
+    implementation platform(libs.opentelemetryBom)
+    implementation libs.opentelemetryApi
+    implementation libs.opentelemetrySdkTrace
 }
 
 sourceCompatibility = "1.8"

@@ -175,9 +175,9 @@ dependencies {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
 
-    implementation platform("io.opentelemetry:opentelemetry-bom:1.18.0")
-    implementation('io.opentelemetry:opentelemetry-api:1.18.0')
-    implementation('io.opentelemetry:opentelemetry-sdk-trace:1.18.0')
+    implementation platform(libs.opentelemetryBom)
+    implementation libs.opentelemetryApi
+    implementation libs.opentelemetrySdkTrace
 }
 
 // Create tasks to generate javadoc
