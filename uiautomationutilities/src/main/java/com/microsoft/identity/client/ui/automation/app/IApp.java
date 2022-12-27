@@ -28,6 +28,11 @@ package com.microsoft.identity.client.ui.automation.app;
 public interface IApp {
 
     /**
+     * Returns the package name of the app.
+     */
+    String getPackageName();
+
+    /**
      * Install this app on the device.
      */
     void install();
@@ -38,6 +43,11 @@ public interface IApp {
     void launch();
 
     /**
+     * Update this app on the device.
+     */
+    void update();
+
+    /**
      * Clear (storage) associated to this app on the device.
      */
     void clear();
@@ -46,6 +56,16 @@ public interface IApp {
      * Remove this app from the device.
      */
     void uninstall();
+
+    /**
+     * Enable this app.
+     */
+    void enable();
+
+    /**
+     * Disable this app.
+     */
+    void disable();
 
     /**
      * Handle the first run experience for this app on first time launch.

@@ -28,6 +28,7 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonPrimitive;
+import com.microsoft.identity.common.components.AndroidPlatformComponentsFactory;
 import com.microsoft.identity.common.java.authscheme.BearerAuthenticationSchemeInternal;
 import com.microsoft.identity.common.java.cache.CacheKeyValueDelegate;
 import com.microsoft.identity.common.java.cache.SharedPreferencesAccountCredentialCache;
@@ -97,9 +98,9 @@ public class SharedPreferencesAccountCredentialCacheTest {
     public void setUp() throws Exception {
         final Context testContext = ApplicationProvider.getApplicationContext();
         mDelegate = new CacheKeyValueDelegate();
-        mSharedPreferencesFileManager = AndroidPlatformComponents.createFromContext(testContext).getEncryptedNameValueStore(
+        mSharedPreferencesFileManager = AndroidPlatformComponentsFactory.createFromContext(testContext).getEncryptedNameValueStore(
                 sAccountCredentialSharedPreferences,
-                AndroidPlatformComponents.createFromContext(testContext).getStorageEncryptionManager(), // Use encrypted storage for tests...
+                AndroidPlatformComponentsFactory.createFromContext(testContext).getStorageEncryptionManager(), // Use encrypted storage for tests...
                 String.class
         );
         mSharedPreferencesAccountCredentialCache = new SharedPreferencesAccountCredentialCache(
@@ -1268,7 +1269,8 @@ public class SharedPreferencesAccountCredentialCacheTest {
                 REALM,
                 null,
                 BEARER_AUTHENTICATION_SCHEME.getName(),
-                "{\"access_token\":{\"deviceid\":{\"essential\":true}}}"
+                "{\"access_token\":{\"deviceid\":{\"essential\":true}}}",
+                mSharedPreferencesAccountCredentialCache.getCredentials()
         );
         assertEquals(1, credentials.size());
     }
@@ -1320,7 +1322,8 @@ public class SharedPreferencesAccountCredentialCacheTest {
                 REALM,
                 null,
                 BEARER_AUTHENTICATION_SCHEME.getName(),
-                "{\"access_token\":{\"deviceid\":{\"essential\":true}}}"
+                "{\"access_token\":{\"deviceid\":{\"essential\":true}}}",
+                mSharedPreferencesAccountCredentialCache.getCredentials()
         );
         assertEquals(1, credentials.size());
         assertEquals("SecretB", credentials.get(0).getSecret());

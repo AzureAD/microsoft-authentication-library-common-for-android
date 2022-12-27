@@ -28,10 +28,12 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import lombok.SneakyThrows;
 
 public class LoggerTest {
+    final int DISCARDED_TIME_IN_MILLISECONDS = 100;
     final int TEST_TIME_OUT_IN_MILLISECONDS = 1000;
 
     final String tag = "TAG";
@@ -214,12 +216,7 @@ public class LoggerTest {
         final String[] result_logMessage = {null};
         final Boolean[] result_containsPII = {null};
 
-        final String[] discarded_tag = {null};
-        final Logger.LogLevel[] discarded_logLevel = {Logger.LogLevel.UNDEFINED};
-        final String[] discarded_logMessage = {null};
-        final Boolean[] discarded_containsPII = {null};
-
-        Logger.setLogger("TEST", new IDetailedLoggerCallback() {
+        Logger.setLogger("TEST", new ILoggerCallback() {
             @Override
             public void log(String tag, Logger.LogLevel logLevel, String message, boolean containsPII) {
                 result_tag[0] = tag;
@@ -228,26 +225,15 @@ public class LoggerTest {
                 result_containsPII[0] = containsPII;
                 countDownLatch.countDown();
             }
-
-            @Override
-            public void discardedLog(String tag, Logger.LogLevel logLevel, String message, boolean containsPII) {
-                discarded_tag[0] = tag;
-                discarded_logLevel[0] = logLevel;
-                discarded_logMessage[0] = message;
-                discarded_containsPII[0] = containsPII;
-                countDownLatch.countDown();
-            }
         });
 
         operation.execute();
-        countDownLatch.await();
+        final Boolean timedOut = !countDownLatch.await(DISCARDED_TIME_IN_MILLISECONDS, TimeUnit.MILLISECONDS);
+        Assert.assertEquals(shouldLogBeDiscarded, timedOut);
 
         if (shouldLogBeDiscarded) {
-            Assert.assertEquals(discarded_tag[0], expectedTag);
-            Assert.assertEquals(discarded_logLevel[0], expectedLogLevel);
-            Assert.assertTrue(discarded_logMessage[0].contains(expectedMessage));
-            Assert.assertTrue(discarded_logMessage[0].contains(expectedCorrelationId));
-            Assert.assertEquals(discarded_containsPII[0], expectedContainsPii);
+            Assert.assertEquals(result_tag[0], null);
+            Assert.assertEquals(result_logLevel[0], Logger.LogLevel.UNDEFINED);
         } else {
             Assert.assertEquals(result_tag[0], expectedTag);
             Assert.assertEquals(result_logLevel[0], expectedLogLevel);

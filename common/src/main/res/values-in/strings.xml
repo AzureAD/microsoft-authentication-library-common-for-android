@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+    <string name="app_loading">Memuat…</string>
+
+    <string name="broker_processing">Perantara sedang dalam proses</string>
+    <string name="http_auth_dialog_username">Nama pengguna</string>
+    <string name="http_auth_dialog_password">Kata sandi</string>
+    <string name="http_auth_dialog_title">Masukkan kredensial Anda</string>
+    <string name="http_auth_dialog_login">Masuk</string>
+    <string name="http_auth_dialog_cancel">Batal</string>
+
+    <!-- strings for CBA dialogs and layouts -->
+    <string name="smartcard_cert_dialog_title">Pilih sertifikat kartu pintar untuk masuk</string>
+    <string name="smartcard_cert_dialog_positive_button">Lanjutkan</string>
+    <string name="smartcard_cert_dialog_negative_button">Batal</string>
+
+    <string name="smartcard_pin_dialog_title">Buka kunci kartu pintar</string>
+    <string name="smartcard_pin_dialog_message">Masukkan PIN kartu pintar untuk mengakses sertifikat dan untuk masuk</string>
+    <string name="smartcard_pin_dialog_positive_button">Buka kunci</string>
+    <string name="smartcard_pin_dialog_negative_button">Batal</string>
+    <string name="smartcard_pin_dialog_error_message">PIN yang Anda masukkan salah</string>
+    <string name="smartcard_pin_layout_edittext_hint">PIN</string>
+
+    <string name="smartcard_error_dialog_positive_button">OK</string>
+
+    <string name="smartcard_max_attempt_dialog_title">Coba lagi nanti</string>
+    <string name="smartcard_max_attempt_dialog_message">Terlalu banyak upaya yang gagal. Coba lagi nanti.</string>
+
+    <string name="smartcard_early_unplug_dialog_title">Coba lagi</string>
+    <string name="smartcard_early_unplug_dialog_message">Perangkat kartu pintar telah dihapus. Masukkan ulang perangkat sebelum mencoba masuk lagi.</string>
+
+    <string name="smartcard_no_cert_dialog_title">Tidak ditemukan sertifikat yang berlaku.</string>
+    <string name="smartcard_no_cert_dialog_message">Konfirmasikan bahwa sertifikat Anda telah disediakan dengan benar ke perangkat kartu pintar.</string>
+
+    <string name="smartcard_general_error_dialog_title">Coba lagi nanti</string>
+    <string name="smartcard_general_error_dialog_message">Terjadi kesalahan yang tidak terduga. Coba lagi nanti.</string>
+</resources>

@@ -96,7 +96,19 @@ public interface ILabClient {
      * @return boolean showing if the reset was successful
      * @throws LabApiException if an error occurs while password is being reset
      */
-    boolean resetPassword(String upn) throws LabApiException;
+    boolean resetPassword(@NonNull final String upn) throws LabApiException;
+
+    /**
+     * Reset the password for the username given, then reset it back to the original password.
+     * This method allows for repeated reset attempts if previous attempts fail.
+     *
+     * @param upn           username of the user that will have their password reset
+     * @param resetAttempts number of attempts to reset the password
+     * @return boolean showing if the reset was successful
+     * @throws LabApiException if an error occurs while password is being reset
+     */
+    boolean resetPassword(@NonNull final String upn,
+                          final int resetAttempts) throws LabApiException;
 
     /**
      * Delete the specified device from AAD using the Lab Api.
@@ -116,10 +128,10 @@ public interface ILabClient {
      *
      * @param upn                             the upn of the owner of this device
      * @param deviceId                        the device id of the device to be deleted
-     * @param numDeleteAttempts               the number times Lab Api should attempt to delete the device
+     * @param numDeleteAttemptsRemaining      the number times Lab Api should attempt to delete the device
      * @param waitTimeBeforeEachDeleteAttempt the amount of time to wait before each delete attempt
      * @return a boolean indicated if device has been deleted
      * @throws LabApiException if an error occurs while trying to delete the device
      */
-    boolean deleteDevice(String upn, String deviceId, int numDeleteAttempts, long waitTimeBeforeEachDeleteAttempt) throws LabApiException;
+    boolean deleteDevice(String upn, String deviceId, int numDeleteAttemptsRemaining, long waitTimeBeforeEachDeleteAttempt) throws LabApiException;
 }

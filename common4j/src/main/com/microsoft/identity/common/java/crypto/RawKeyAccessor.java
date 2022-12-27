@@ -239,9 +239,10 @@ public class RawKeyAccessor implements IKeyAccessor {
      * @return a new key, generated from the previous one.
      * @throws ClientException if something goes wrong during generation.
      */
-    public byte[] generateDerivedKey(@NonNull final byte[] label, @NonNull final byte[] ctx) throws ClientException{
+    public byte[] generateDerivedKey(final byte[] label, @NonNull final byte[] ctx) throws ClientException {
         try {
-            return SP800108KeyGen.generateDerivedKey(mKey, label, ctx);
+            return new SP800108KeyGen(new DefaultCryptoFactory())
+                    .generateDerivedKey(mKey, label, ctx);
         } catch (IOException e) {
             throw new ClientException(IO_ERROR, e.getMessage(), e);
         } catch (InvalidKeyException e) {
@@ -263,9 +264,12 @@ public class RawKeyAccessor implements IKeyAccessor {
      */
     @Override
     public IKeyAccessor generateDerivedKey(@NonNull final byte[] label, @NonNull final byte[] ctx,
-                                          @NonNull final CryptoSuite suite) throws ClientException{
+                                          @NonNull final CryptoSuite suite) throws ClientException {
         try {
-            return new RawKeyAccessor(suite, SP800108KeyGen.generateDerivedKey(mKey, label, ctx), null);
+            return new RawKeyAccessor(
+                    suite,
+                    new SP800108KeyGen(new DefaultCryptoFactory())
+                            .generateDerivedKey(mKey, label, ctx), null);
         } catch (IOException e) {
             throw new ClientException(IO_ERROR, e.getMessage(), e);
         } catch (InvalidKeyException e) {

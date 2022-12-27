@@ -59,10 +59,11 @@ public abstract class AuthorizationResultFactory
     public GenericAuthorizationResult createAuthorizationResult(@NonNull final RawAuthorizationResult data,
                                                                 @NonNull final GenericAuthorizationRequest request) {
 
+        final String methodTag = TAG + ":createAuthorizationResult";
         final URI url = data.getAuthorizationFinalUri();
         switch (data.getResultCode()) {
             case CANCELLED:
-                Logger.info(TAG, null, "The authorization request was intentionally cancelled.");
+                Logger.info(methodTag, null, "The authorization request was intentionally cancelled.");
                 return createAuthorizationResultWithErrorResponse(
                         AuthorizationStatus.USER_CANCEL,
                         MicrosoftAuthorizationErrorResponse.USER_CANCEL,
@@ -70,7 +71,7 @@ public abstract class AuthorizationResultFactory
                 );
 
             case SDK_CANCELLED:
-                Logger.info(TAG, null, "SDK cancelled the authorization request.");
+                Logger.info(methodTag, null, "SDK cancelled the authorization request.");
                 return createAuthorizationResultWithErrorResponse(
                         AuthorizationStatus.SDK_CANCEL,
                         MicrosoftAuthorizationErrorResponse.SDK_AUTH_CANCEL,
@@ -79,7 +80,7 @@ public abstract class AuthorizationResultFactory
 
             case COMPLETED:
                 if (url == null) {
-                    Logger.warn(TAG, null, "returned URL is null or empty.");
+                    Logger.warn(methodTag, null, "returned URL is null or empty.");
                     return createAuthorizationResultWithErrorResponse(
                             AuthorizationStatus.FAIL,
                             MicrosoftAuthorizationErrorResponse.AUTHORIZATION_FAILED,
@@ -99,7 +100,7 @@ public abstract class AuthorizationResultFactory
                 }
 
             case BROKER_INSTALLATION_TRIGGERED: {
-                Logger.info(TAG, "Device needs to have broker installed, we expect the apps to call us"
+                Logger.info(methodTag, "Device needs to have broker installed, we expect the apps to call us"
                         + "back when the broker is installed");
                 final GenericAuthorizationResult result = createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL,
                         MicrosoftAuthorizationErrorResponse.BROKER_NEEDS_TO_BE_INSTALLED,
@@ -112,7 +113,7 @@ public abstract class AuthorizationResultFactory
             }
 
             case DEVICE_REGISTRATION_REQUIRED: {
-                Logger.info(TAG, "Device Registration needed, need to start WPJ");
+                Logger.info(methodTag, "Device Registration needed, need to start WPJ");
                 final GenericAuthorizationResult result = createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL,
                         MicrosoftAuthorizationErrorResponse.DEVICE_REGISTRATION_NEEDED,
                         MicrosoftAuthorizationErrorResponse.DEVICE_REGISTRATION_NEEDED_ERROR_DESCRIPTION);
@@ -124,7 +125,7 @@ public abstract class AuthorizationResultFactory
             }
 
             case MDM_FLOW:
-                Logger.info(TAG, "MDM required. Launching Intune MDM link on browser.");
+                Logger.info(methodTag, "MDM required. Launching Intune MDM link on browser.");
                 return createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL,
                         MicrosoftAuthorizationErrorResponse.DEVICE_NEEDS_TO_BE_MANAGED,
                         MicrosoftAuthorizationErrorResponse.DEVICE_NEEDS_TO_BE_MANAGED_ERROR_DESCRIPTION);

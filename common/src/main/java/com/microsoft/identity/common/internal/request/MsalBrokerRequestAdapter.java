@@ -37,6 +37,7 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.MSAL_TO_BROKER_PROTOCOL_VERSION_CODE;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.REQUEST_AUTHORITY;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.SHOULD_SEND_PKEYAUTH_HEADER_TO_THE_TOKEN_ENDPOINT;
 import static com.microsoft.identity.common.internal.util.GzipUtil.compressString;
 
 import android.content.Context;
@@ -203,7 +204,11 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
     public Bundle getRequestBundleForAcquireTokenInteractive(@NonNull final InteractiveTokenCommandParameters parameters,
                                                              @Nullable final String negotiatedBrokerProtocolVersion) {
         final BrokerRequest brokerRequest = brokerRequestFromAcquireTokenParameters(parameters);
-        return getRequestBundleFromBrokerRequest(brokerRequest, negotiatedBrokerProtocolVersion);
+        return getRequestBundleFromBrokerRequest(
+                brokerRequest,
+                negotiatedBrokerProtocolVersion,
+                parameters.getRequiredBrokerProtocolVersion()
+        );
     }
 
     /**
@@ -224,7 +229,8 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
         final Bundle requestBundle = getRequestBundleFromBrokerRequest(
                 brokerRequest,
-                negotiatedBrokerProtocolVersion
+                negotiatedBrokerProtocolVersion,
+                parameters.getRequiredBrokerProtocolVersion()
         );
 
         requestBundle.putInt(
@@ -236,7 +242,8 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
     }
 
     private Bundle getRequestBundleFromBrokerRequest(@NonNull BrokerRequest brokerRequest,
-                                                     @Nullable String negotiatedBrokerProtocolVersion) {
+                                                     @Nullable String negotiatedBrokerProtocolVersion,
+                                                     @Nullable String requiredBrokerProtocolVersion) {
         final String methodTag = TAG + ":getRequestBundleFromBrokerRequest";
         final Bundle requestBundle = new Bundle();
 
@@ -265,6 +272,10 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
             );
         }
         requestBundle.putString(NEGOTIATED_BP_VERSION_KEY, negotiatedBrokerProtocolVersion);
+        requestBundle.putBoolean(
+                SHOULD_SEND_PKEYAUTH_HEADER_TO_THE_TOKEN_ENDPOINT,
+                BrokerProtocolVersionUtil.canSendPKeyAuthHeaderToTheTokenEndpoint(requiredBrokerProtocolVersion)
+        );
         return requestBundle;
     }
 
@@ -360,7 +371,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
     private boolean getMultipleCloudsSupported(@NonNull final TokenCommandParameters parameters) {
         if (parameters.getAuthority() instanceof AzureActiveDirectoryAuthority) {
             final AzureActiveDirectoryAuthority authority = (AzureActiveDirectoryAuthority) parameters.getAuthority();
-            return authority.getMultipleCloudsSupported();
+            return authority.isMultipleCloudsSupported();
         } else {
             return false;
         }

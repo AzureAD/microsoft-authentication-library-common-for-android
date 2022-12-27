@@ -160,6 +160,7 @@ public final class StringUtil {
      */
     @SuppressFBWarnings(value = "ES_COMPARING_PARAMETER_STRING_WITH_EQ",
                         justification = "This is actually a reference comparison")
+    @SuppressWarnings("PMD.UseEqualsToCompareStrings")
     public static boolean equalsIgnoreCase(@Nullable final String one, @Nullable final String two) {
         return one == two || (one != null && one.equalsIgnoreCase(two));
     }

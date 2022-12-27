@@ -81,12 +81,7 @@ public class SamsungSettings extends BaseSettings {
         Logger.i(TAG, "Removing Account from Samsung Device..");
         launchAccountListPage();
         try {
-            // scroll down the recycler view to find the list item for this account
-            final UiObject account = UiAutomatorUtils.obtainChildInScrollable(
-                    "android:id/list",
-                    username
-            );
-
+            final UiObject account = UiAutomatorUtils.obtainUiObjectWithText(username);
             // Click into this account
             account.click();
 
@@ -221,5 +216,17 @@ public class SamsungSettings extends BaseSettings {
     @Override
     public void removePinFromDevice(String pin) {
         //TODO: implement removing PIN for SAMSUNG device.
+    }
+
+    @Override
+    public void disableAppThroughSettings(@NonNull final String packageName) {
+        //TODO: implement disabling app through settings
+        throw new UnsupportedOperationException("We do not support disabling apps through Settings Page on samsung devices");
+    }
+
+    @Override
+    public void enableAppThroughSettings(@NonNull final String packageName) {
+        //TODO: implement enabling app through settings
+        throw new UnsupportedOperationException("We do not support enabling apps through Settings Page on samsung devices");
     }
 }

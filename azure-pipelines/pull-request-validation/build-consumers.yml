@@ -247,6 +247,11 @@ stages:
         inputs:
           MavenServiceConnections: IdentityDivision
 
+      - task: MavenAuthenticate@0
+        displayName: Authenticate to the Intune_App_SDK feed
+        inputs:
+          MavenServiceConnections: Intune_App_SDK
+
       - task: Bash@3
         displayName: Install ninja
         inputs:
@@ -264,10 +269,10 @@ stages:
         inputs:
           cwd: $(Agent.BuildDirectory)/s/
           gradleWrapperFile: $(Agent.BuildDIrectory)/s/gradlew.bat
-          tasks: clean assembleOneAuth
+          tasks: clean OneAuth:assembleLocalDebug
       - task: Gradle@2
         displayName: Run OneAuth Unit tests
         inputs:
           cwd: $(Agent.BuildDirectory)/s/
           gradleWrapperFile: $(Agent.BuildDIrectory)/s/gradlew.bat
-          tasks: runOneAuthTests
+          tasks: OneAuth:testLocalDebugUnitTest

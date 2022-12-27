@@ -90,6 +90,7 @@ public final class AuthenticationConstants {
      */
     public static final String ONE_POINT_ZERO = "1.0";
     public static final String TWO_POINT_ZERO = "2.0";
+    public static final String THREE_POINT_ZERO = "3.0";
 
 
     /**
@@ -597,7 +598,7 @@ public final class AuthenticationConstants {
          * The newest Msal-To-Broker protocol version.
          * @see <a href="ttps://identitydivision.visualstudio.com/DevEx/_git/AuthLibrariesApiReview?path=/%5BAndroid%5D%20Broker%20API/broker_protocol_versions.md">Android Auth Broker Protocol Versions</a>
          */
-        public static final String MSAL_TO_BROKER_PROTOCOL_VERSION_CODE = "8.0";
+        public static final String MSAL_TO_BROKER_PROTOCOL_VERSION_CODE = "11.0";
 
         /**
          * A client id for requesting the SSO token.
@@ -608,6 +609,14 @@ public final class AuthenticationConstants {
          * The key indicating that this is an ssoUrl parameter in a Bundle.
          */
         public static final String BROKER_SSO_URL_KEY = "ssoUrl";
+
+        /**
+         * The key indicating that this is a flight map parameter in a Bundle.
+         */
+        /**
+         * The key indicating that this is an ssoUrl parameter in a Bundle.
+         */
+        public static final String BROKER_FLIGHT_MAP_KEY = "broker.flight.map";
 
         /**
          * The BrokerAPI-To-Broker protocol name.
@@ -655,6 +664,16 @@ public final class AuthenticationConstants {
          * The key of negotiated broker protocol version between broker client and broker service.
          */
         public static final String NEGOTIATED_BP_VERSION_KEY = "common.broker.protocol.version.name";
+
+        /**
+         * Code of the error that occurs as a result of MSAL-Broker protocol handshake (hello()).
+         */
+        public static final String HELLO_ERROR_CODE = "error";
+
+        /**
+         * Description of the error that occurs as a result of MSAL-Broker protocol handshake (hello()).
+         */
+        public static final String HELLO_ERROR_MESSAGE = "error_description";
 
         /**
          * The Boolean to send when FOCI apps are allowed to construct accounts from PRT id token in getAccounts.
@@ -1160,6 +1179,11 @@ public final class AuthenticationConstants {
         public static final String BROKER_REQUEST_V2_SUCCESS = "broker_request_v2_success";
 
         /**
+         * String to send true if the request should send the PkeyAuth header to the token endpoint, false otherwise.
+         */
+        public static final String SHOULD_SEND_PKEYAUTH_HEADER_TO_THE_TOKEN_ENDPOINT = "should.send.pkeyauth.header";
+
+        /**
          * String for ssl prefix.
          */
         public static final String REDIRECT_SSL_PREFIX = "https://";
@@ -1239,7 +1263,7 @@ public final class AuthenticationConstants {
         public static final String UPDATE_BROKER_RT_SUCCEEDED = "update_broker_rt_succeeded";
 
         /**
-         * Boolean to return when a Broker RT is successfully updated.
+         * Boolean to return when broker flights is successfully set.
          */
         public static final String SET_FLIGHTS_SUCCEEDED = "set_flights_succeeded";
 
@@ -1365,11 +1389,11 @@ public final class AuthenticationConstants {
         public static final String AUTHORITY = "microsoft.identity.broker";
 
         private static final String VERSION_1 = ONE_POINT_ZERO;
-        private static final String VERSION_3 = "3.0";
+        private static final String VERSION_3 = THREE_POINT_ZERO;
         private static final String VERSION_6 = "6.0";
         private static final String VERSION_7 = "7.0";
         private static final String BROKER_VERSION_1 = ONE_POINT_ZERO;
-        private static final String BROKER_VERSION_2 = TWO_POINT_ZERO;
+        private static final String BROKER_VERSION_3 = THREE_POINT_ZERO;
 
         /**
          * Tie the API paths and codes into a single object structure to stop us from having to keep
@@ -1396,11 +1420,11 @@ public final class AuthenticationConstants {
             BROKER_GET_ACCOUNTS(BROKER_API_GET_BROKER_ACCOUNTS_PATH, BROKER_VERSION_1, null),
             BROKER_REMOVE_ACCOUNT(BROKER_API_REMOVE_BROKER_ACCOUNT_PATH, BROKER_VERSION_1, null),
             BROKER_UPDATE_BRT(BROKER_API_UPDATE_BRT_PATH, BROKER_VERSION_1, null),
-            BROKER_ADD_FLIGHTS(BROKER_API_ADD_FLIGHTS_PATH, BROKER_VERSION_2, null),
-            BROKER_SET_FLIGHTS(BROKER_API_SET_FLIGHTS_PATH, BROKER_VERSION_2, null),
-            BROKER_GET_FLIGHTS(BROKER_API_GET_FLIGHTS_PATH, BROKER_VERSION_2, null),
+            BROKER_SET_FLIGHTS(BROKER_API_SET_FLIGHTS_PATH, BROKER_VERSION_3, null),
+            BROKER_GET_FLIGHTS(BROKER_API_GET_FLIGHTS_PATH, BROKER_VERSION_3, null),
             GET_SSO_TOKEN(GET_SSO_TOKEN_PATH, null, VERSION_7),
-            UNKNOWN(null, null, null)
+            UNKNOWN(null, null, null),
+            DEVICE_REGISTRATION_PROTOCOLS(DEVICE_REGISTRATION_PROTOCOLS_PATH, null, null),
             ;
             /**
              * The content provider path that the API exists behind.
@@ -1481,9 +1505,9 @@ public final class AuthenticationConstants {
         public static final String BROKER_API_UPDATE_BRT_PATH = "/brokerApi/updateBrt";
 
         /**
-         * Broker api path constant for adding flight information.
+         * Broker api path constant for setting flight information.
          */
-        public static final String BROKER_API_ADD_FLIGHTS_PATH = "/brokerApi/addFlights";
+        public static final String BROKER_API_SET_FLIGHTS_PATH = "/brokerApi/setFlights";
 
         /**
          * Broker api path constant for adding flight information.
@@ -1493,12 +1517,12 @@ public final class AuthenticationConstants {
         /**
          * Broker api path constant for adding flight information.
          */
-        public static final String BROKER_API_SET_FLIGHTS_PATH = "/brokerApi/setFlights";
+        public static final String GET_SSO_TOKEN_PATH = "/ssoToken";
 
         /**
-         * Broker api path constant for adding flight information.
+         * Broker api path constant for execute device registration protocols.
          */
-        public static final String GET_SSO_TOKEN_PATH = "/ssoToken";
+        public static final String DEVICE_REGISTRATION_PROTOCOLS_PATH = "/deviceRegistration/protocols";
 
         /**
          * BrokerContentProvider URI code constant for MSAL-to-Broker hello request.

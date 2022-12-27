@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+    <string name="app_loading">Memuatkan…</string>
+
+    <string name="broker_processing">Broker sedang memproses</string>
+    <string name="http_auth_dialog_username">Nama pengguna</string>
+    <string name="http_auth_dialog_password">Kata Laluan</string>
+    <string name="http_auth_dialog_title">Masukkan kelayakan anda</string>
+    <string name="http_auth_dialog_login">Log Masuk</string>
+    <string name="http_auth_dialog_cancel">Batal</string>
+
+    <!-- strings for CBA dialogs and layouts -->
+    <string name="smartcard_cert_dialog_title">Pilih sijil kad pintar untuk mendaftar masuk</string>
+    <string name="smartcard_cert_dialog_positive_button">Teruskan</string>
+    <string name="smartcard_cert_dialog_negative_button">Batalkan</string>
+
+    <string name="smartcard_pin_dialog_title">Buka kunci kad pintar</string>
+    <string name="smartcard_pin_dialog_message">Masukkan PIN kad pintar untuk mencapai sijil dan mendaftar masuk</string>
+    <string name="smartcard_pin_dialog_positive_button">Buka kunci</string>
+    <string name="smartcard_pin_dialog_negative_button">Batalkan</string>
+    <string name="smartcard_pin_dialog_error_message">PIN yang anda masukkan tidak betul</string>
+    <string name="smartcard_pin_layout_edittext_hint">PIN</string>
+
+    <string name="smartcard_error_dialog_positive_button">OK</string>
+
+    <string name="smartcard_max_attempt_dialog_title">Cuba lagi kemudian</string>
+    <string name="smartcard_max_attempt_dialog_message">Terlalu banyak percubaan gagal, cuba lagi kemudian.</string>
+
+    <string name="smartcard_early_unplug_dialog_title">Cuba lagi</string>
+    <string name="smartcard_early_unplug_dialog_message">Peranti kad pintar telah dialih keluar. Sila sisip semula peranti sebelum cuba melog masuk sekali lagi.</string>
+
+    <string name="smartcard_no_cert_dialog_title">Tiada sijil yang berkenaan ditemui.</string>
+    <string name="smartcard_no_cert_dialog_message">Sila sahkan bahawa sijil anda telah diperuntukkan dengan betul pada peranti kad pintar anda.</string>
+
+    <string name="smartcard_general_error_dialog_title">Cuba lagi kemudian</string>
+    <string name="smartcard_general_error_dialog_message">Ralat tidak dijangka telah berlaku. Sila cuba semula sebentar lagi.</string>
+</resources>

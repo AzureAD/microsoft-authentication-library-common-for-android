@@ -36,6 +36,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
@@ -66,6 +67,12 @@ public class Logger {
     private static final ReentrantReadWriteLock sLoggersLock = new ReentrantReadWriteLock();
 
     private static final Map<String, ILoggerCallback> sLoggers = new HashMap<>();
+
+    private static final SimpleDateFormat sDateTimeFormatter;
+    static {
+        sDateTimeFormatter = new SimpleDateFormat(DATE_FORMAT, Locale.getDefault());
+        sDateTimeFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
+    }
 
     /**
      * Set the platform string to be used when generating logs.
@@ -371,12 +378,18 @@ public class Logger {
                             final String message,
                             final Throwable throwable,
                             final boolean containsPII) {
+        if (logLevel.compareTo(sLogLevel) > 0 || (!sAllowPii && containsPII)) {
+            return;
+        }
 
-        final String dateTimeStamp = getUTCDateTimeAsString();
+        final Date now = new Date();
 
         sLogExecutor.execute(new Runnable() {
             @Override
+            @SuppressFBWarnings(value = "DE_MIGHT_IGNORE",
+                    justification = "If logging throws, there is nothing left to do but swallow the exception and move on.")
             public void run() {
+                final String dateTimeStamp = sDateTimeFormatter.format(now);
                 //Format the log message.
                 final String logMessage = formatMessage(diagnosticMetadata, sPlatformString, message, dateTimeStamp, throwable);
 
@@ -386,18 +399,6 @@ public class Logger {
                         try {
                             final ILoggerCallback callback = sLoggers.get(loggerCallbackKey);
                             if (callback != null) {
-                                if (logLevel.compareTo(sLogLevel) > 0) {
-                                    logDiscardedLogIfApplicable(logMessage, callback, tag, logLevel, containsPII);
-                                    return;
-                                }
-
-                                // Developer turns off PII logging, if the log message contains any PII,
-                                // we should not send it.
-                                if (!sAllowPii && containsPII) {
-                                    logDiscardedLogIfApplicable(logMessage, callback, tag, logLevel, containsPII);
-                                    return;
-                                }
-
                                 callback.log(tag, logLevel, logMessage, containsPII);
                             }
                         } catch (final Exception e) {
@@ -409,16 +410,6 @@ public class Logger {
                 }
             }
         });
-    }
-
-    /**
-     * If applicable, log the discarded log.
-     * This is applicable for testing only (IDetailedLoggerCallback is package-private).
-     */
-    private static void logDiscardedLogIfApplicable(String logMessage, ILoggerCallback callback, @NonNull String tag, @NonNull Logger.LogLevel logLevel, boolean containsPII) {
-        if (callback instanceof IDetailedLoggerCallback) {
-            ((IDetailedLoggerCallback) callback).discardedLog(tag, logLevel, logMessage, containsPII);
-        }
     }
 
     /**
@@ -439,13 +430,6 @@ public class Logger {
                 + "- " + platformString + "] "
                 + logMessage
                 + (throwable == null ? "" : '\n' + ThrowableUtil.getStackTraceAsString(throwable));
-    }
-
-    private static String getUTCDateTimeAsString() {
-        final SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT, Locale.getDefault());
-        dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
-
-        return dateFormat.format(new Date());
     }
 
     /**

@@ -22,17 +22,16 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.cache;
 
-import com.microsoft.identity.common.java.interfaces.INameValueStorage;
-import com.microsoft.identity.common.java.logging.Logger;
-import com.microsoft.identity.common.java.util.StringUtil;
-import com.microsoft.identity.common.java.util.ported.Predicate;
 import com.microsoft.identity.common.java.dto.AccessTokenRecord;
 import com.microsoft.identity.common.java.dto.AccountRecord;
 import com.microsoft.identity.common.java.dto.Credential;
 import com.microsoft.identity.common.java.dto.CredentialType;
-import com.microsoft.identity.common.java.dto.IAccountRecord;
 import com.microsoft.identity.common.java.dto.IdTokenRecord;
 import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
+import com.microsoft.identity.common.java.interfaces.INameValueStorage;
+import com.microsoft.identity.common.java.logging.Logger;
+import com.microsoft.identity.common.java.util.StringUtil;
+import com.microsoft.identity.common.java.util.ported.Predicate;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -42,8 +41,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-
-import static com.microsoft.identity.common.java.cache.CacheKeyValueDelegate.CACHE_VALUE_SEPARATOR;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.NonNull;
@@ -242,10 +239,11 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
     @Override
     @NonNull
     public synchronized List<AccountRecord> getAccounts() {
-        Logger.verbose(TAG, "Loading Accounts...(no arg)");
+        final String methodTag = TAG + ":getAccounts";
+        Logger.verbose(methodTag, "Loading Accounts...(no arg)");
         final Map<String, AccountRecord> allAccounts = getAccountsWithKeys();
         final List<AccountRecord> accounts = new ArrayList<>(allAccounts.values());
-        Logger.info(TAG, "Found [" + accounts.size() + "] Accounts...");
+        Logger.info(methodTag, "Found [" + accounts.size() + "] Accounts...");
         return accounts;
     }
 
@@ -255,7 +253,8 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
             @Nullable final String homeAccountId,
             @Nullable final String environment,
             @Nullable final String realm) {
-        Logger.verbose(TAG, "Loading Accounts...");
+        final String methodTag = TAG + ":getAccountsFilteredBy";
+        Logger.verbose(methodTag, "Loading Accounts...");
 
         final List<AccountRecord> allAccounts = getAccounts();
 
@@ -266,14 +265,15 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
                 allAccounts
         );
 
-        Logger.verbose(TAG, "Found [" + matchingAccounts.size() + "] matching Accounts...");
+        Logger.verbose(methodTag, "Found [" + matchingAccounts.size() + "] matching Accounts...");
 
         return matchingAccounts;
     }
 
     @NonNull
     private Map<String, Credential> getCredentialsWithKeys() {
-        Logger.verbose(TAG, "Loading Credentials with keys...");
+        final String methodTag = TAG + ":getCredentialsWithKeys";
+        Logger.verbose(methodTag, "Loading Credentials with keys...");
         final Map<String, Credential> credentials = new HashMap<>();
         final Iterator<Map.Entry<String, String>> cacheValues = mSharedPreferencesFileManager.getAllFilteredByKey(new Predicate<String>() {
             @Override
@@ -291,13 +291,13 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
             );
 
             if (null == credential) {
-                Logger.warn(TAG, CREDENTIAL_DESERIALIZATION_FAILED);
+                Logger.warn(methodTag, CREDENTIAL_DESERIALIZATION_FAILED);
             } else {
                 credentials.put(cacheKey, credential);
             }
         }
 
-        Logger.verbose(TAG, "Loaded [" + credentials.size() + "] Credentials...");
+        Logger.verbose(methodTag, "Loaded [" + credentials.size() + "] Credentials...");
 
         return credentials;
     }
@@ -305,7 +305,8 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
     @Override
     @NonNull
     public synchronized List<Credential> getCredentials() {
-        Logger.verbose(TAG, "Loading Credentials...");
+        final String methodTag = TAG + ":getCredentials";
+        Logger.verbose(methodTag, "Loading Credentials...");
         final Map<String, Credential> allCredentials = getCredentialsWithKeys();
         final List<Credential> creds = new ArrayList<>(allCredentials.values());
         return creds;
@@ -321,11 +322,13 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
             @Nullable final String realm,
             @Nullable final String target,
             @Nullable final String authScheme) {
-        Logger.verbose(TAG, "getCredentialsFilteredBy()");
+        final String methodTag = TAG + ":getCredentialsFilteredBy";
+        Logger.verbose(methodTag, "getCredentialsFilteredBy()");
 
         final List<Credential> allCredentials = getCredentials();
 
         final List<Credential> matchingCredentials = getCredentialsFilteredByInternal(
+                allCredentials,
                 homeAccountId,
                 environment,
                 credentialType,
@@ -334,10 +337,10 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
                 target,
                 authScheme,
                 null,
-                allCredentials
+                null
         );
 
-        Logger.verbose(TAG, "Found [" + matchingCredentials.size() + "] matching Credentials...");
+        Logger.verbose(methodTag, "Found [" + matchingCredentials.size() + "] matching Credentials...");
 
         return matchingCredentials;
     }
@@ -352,9 +355,11 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
             @Nullable final String target,
             @Nullable final String authScheme,
             @NonNull final List<Credential> inputCredentials) {
-        Logger.verbose(TAG, "getCredentialsFilteredBy() -- with input list");
+        final String methodTag = TAG + ":getCredentialsFilteredBy";
+        Logger.verbose(methodTag, "getCredentialsFilteredBy() -- with input list");
 
         final List<Credential> matchingCredentials = getCredentialsFilteredByInternal(
+                inputCredentials,
                 homeAccountId,
                 environment,
                 credentialType,
@@ -363,10 +368,10 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
                 target,
                 authScheme,
                 null,
-                inputCredentials
+                null
         );
 
-        Logger.verbose(TAG, "Found [" + matchingCredentials.size() + "] matching Credentials...");
+        Logger.verbose(methodTag, "Found [" + matchingCredentials.size() + "] matching Credentials...");
 
         return matchingCredentials;
     }
@@ -382,11 +387,13 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
             @Nullable final String target,
             @Nullable final String authScheme,
             @Nullable final String requestedClaims) {
-        Logger.verbose(TAG, "getCredentialsFilteredBy()");
+        final String methodTag = TAG + ":getCredentialsFilteredBy";
+        Logger.verbose(methodTag, "getCredentialsFilteredBy()");
 
         final List<Credential> allCredentials = getCredentials();
 
         final List<Credential> matchingCredentials = getCredentialsFilteredByInternal(
+                allCredentials,
                 homeAccountId,
                 environment,
                 credentialType,
@@ -395,10 +402,43 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
                 target,
                 authScheme,
                 requestedClaims,
-                allCredentials
+                null
         );
 
-        Logger.verbose(TAG, "Found [" + matchingCredentials.size() + "] matching Credentials...");
+        Logger.verbose(methodTag, "Found [" + matchingCredentials.size() + "] matching Credentials...");
+
+        return matchingCredentials;
+    }
+
+    @Override
+    @NonNull
+    public List<Credential> getCredentialsFilteredBy(
+            @Nullable final String homeAccountId,
+            @Nullable final String environment,
+            @Nullable final CredentialType credentialType,
+            @Nullable final String clientId,
+            @Nullable final String realm,
+            @Nullable final String target,
+            @Nullable final String authScheme,
+            @Nullable final String requestedClaims,
+            @Nullable final List<Credential> inputCredentials) {
+        final String methodTag = TAG + ":getCredentialsFilteredBy";
+        Logger.verbose(methodTag, "getCredentialsFilteredBy()");
+
+        final List<Credential> matchingCredentials = getCredentialsFilteredByInternal(
+                inputCredentials,
+                homeAccountId,
+                environment,
+                credentialType,
+                clientId,
+                realm,
+                target,
+                authScheme,
+                requestedClaims,
+                null
+        );
+
+        Logger.verbose(methodTag, "Found [" + matchingCredentials.size() + "] matching Credentials...");
 
         return matchingCredentials;
     }
@@ -418,6 +458,7 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
         for (final CredentialType type : credentialTypes) {
             result.addAll(
                     getCredentialsFilteredByInternal(
+                            allCredentials,
                             homeAccountId,
                             environment,
                             type,
@@ -426,7 +467,7 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
                             target,
                             authScheme,
                             requestedClaims,
-                            allCredentials
+                            null
                     )
             );
         }
@@ -435,69 +476,93 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
     }
 
     @Override
+    public List<Credential> getCredentialsFilteredBy(
+            final List<Credential> inputCredentials,
+            final String homeAccountId,
+            final String environment,
+            final CredentialType credentialType,
+            final String clientId,
+            final String realm,
+            final String target,
+            final String authScheme,
+            final String requestedClaims,
+            final String kid ) {
+        final List<Credential> result = new ArrayList<>();
+        result.addAll(
+                getCredentialsFilteredByInternal(
+                        inputCredentials,
+                        homeAccountId,
+                        environment,
+                        credentialType,
+                        clientId,
+                        realm,
+                        target,
+                        authScheme,
+                        requestedClaims,
+                        kid
+                )
+        );
+        return result;
+    }
+
+    @Override
     public boolean removeAccount(@NonNull final AccountRecord accountToRemove) {
-        Logger.info(TAG, "Removing Account...");
+        final String methodTag = TAG + ":removeAccount";
+        Logger.info(methodTag, "Removing Account...");
         if (null == accountToRemove) {
             throw new IllegalArgumentException("Param [accountToRemove] cannot be null.");
         }
 
-        final Map<String, AccountRecord> accounts = getAccountsWithKeys();
+        final String cacheKey = mCacheValueDelegate.generateCacheKey(accountToRemove);
 
         boolean accountRemoved = false;
-        for (final Map.Entry<String, AccountRecord> entry : accounts.entrySet()) {
-            Logger.verbosePII(TAG, "Inspecting: [" + entry.getKey() + "]");
-            final IAccountRecord currentAccount = entry.getValue();
-
-            if (currentAccount.equals(accountToRemove)) {
-                mSharedPreferencesFileManager.remove(entry.getKey());
-                accountRemoved = true;
-                break;
-            }
+        if (mSharedPreferencesFileManager.keySet().contains(cacheKey))
+        {
+            mSharedPreferencesFileManager.remove(cacheKey);
+            accountRemoved = true;
         }
 
-        Logger.info(TAG, "Account was removed? [" + accountRemoved + "]");
+        Logger.info(methodTag, "Account was removed? [" + accountRemoved + "]");
 
         return accountRemoved;
     }
 
     @Override
     public boolean removeCredential(@NonNull final Credential credentialToRemove) {
-        Logger.info(TAG, "Removing Credential...");
+        final String methodTag = TAG + ":removeCredential";
+        Logger.info(methodTag, "Removing Credential...");
 
         if (null == credentialToRemove) {
             throw new IllegalArgumentException("Param [credentialToRemove] cannot be null.");
         }
 
-        final Map<String, Credential> credentials = getCredentialsWithKeys();
+        final String cacheKey = mCacheValueDelegate.generateCacheKey(credentialToRemove);
 
         boolean credentialRemoved = false;
-        for (final Map.Entry<String, Credential> entry : credentials.entrySet()) {
-            Logger.verbosePII(TAG, "Inspecting: [" + entry.getKey() + "]");
-            final Credential currentCredential = entry.getValue();
-
-            if (currentCredential.equals(credentialToRemove)) {
-                mSharedPreferencesFileManager.remove(entry.getKey());
-                credentialRemoved = true;
-                break;
-            }
+        if (mSharedPreferencesFileManager.keySet().contains(cacheKey))
+        {
+            mSharedPreferencesFileManager.remove(cacheKey);
+            credentialRemoved = true;
         }
 
-        Logger.info(TAG, "Credential was removed? [" + credentialRemoved + "]");
+        Logger.info(methodTag, "Credential was removed? [" + credentialRemoved + "]");
 
         return credentialRemoved;
     }
 
     @Override
     public void clearAll() {
-        Logger.info(TAG, "Clearing all SharedPreferences entries...");
+        final String methodTag = TAG + ":clearAll";
+        Logger.info(methodTag, "Clearing all SharedPreferences entries...");
         mSharedPreferencesFileManager.clear();
-        Logger.info(TAG, "SharedPreferences cleared.");
+        Logger.info(methodTag, "SharedPreferences cleared.");
     }
 
     @Nullable
     private Class<? extends Credential> credentialClassForType(@NonNull final String cacheKey) {
-        Logger.verbose(TAG, "Resolving class for key/CredentialType...");
-        Logger.verbosePII(TAG, "Supplied key: [" + cacheKey + "]");
+        final String methodTag = TAG + ":credentialClassForType";
+        Logger.verbose(methodTag, "Resolving class for key/CredentialType...");
+        Logger.verbosePII(methodTag, "Supplied key: [" + cacheKey + "]");
 
         final CredentialType targetType = getCredentialTypeForCredentialCacheKey(cacheKey);
 
@@ -505,7 +570,7 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
             return null;
         }
 
-        Logger.verbose(TAG, "CredentialType matched: [" + targetType + "]");
+        Logger.verbose(methodTag, "CredentialType matched: [" + targetType + "]");
 
         return getTargetClassForCredentialType(cacheKey, targetType);
     }
@@ -518,11 +583,12 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
      */
     @Nullable
     public static CredentialType getCredentialTypeForCredentialCacheKey(@NonNull final String cacheKey) {
+        final String methodTag = TAG + ":getCredentialTypeForCredentialCacheKey";
         if (StringUtil.isNullOrEmpty(cacheKey)) {
             throw new IllegalArgumentException("Param [cacheKey] cannot be null.");
         }
 
-        Logger.verbosePII(TAG, "Evaluating cache key for CredentialType [" + cacheKey + "]");
+        Logger.verbosePII(methodTag, "Evaluating cache key for CredentialType [" + cacheKey + "]");
 
         final Set<String> credentialTypesLowerCase = new HashSet<>();
 
@@ -533,7 +599,7 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
         CredentialType type = null;
         for (final String credentialTypeStr : credentialTypesLowerCase) {
             if (cacheKey.contains(CacheKeyValueDelegate.CACHE_VALUE_SEPARATOR + credentialTypeStr + CacheKeyValueDelegate.CACHE_VALUE_SEPARATOR)) {
-                Logger.verbose(TAG, "Cache key is a Credential type...");
+                Logger.verbose(methodTag, "Cache key is a Credential type...");
 
                 if (CredentialType.AccessToken.name().equalsIgnoreCase(credentialTypeStr)) {
                     type = CredentialType.AccessToken;
@@ -555,27 +621,29 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
                     break;
                 } else {
                     // TODO Log a warning and skip this value?
-                    Logger.warn(TAG, "Unexpected credential type.");
+                    Logger.warn(methodTag, "Unexpected credential type.");
                 }
             }
         }
 
-        Logger.verbose(TAG, "Cache key was type: [" + type + "]");
+        Logger.verbose(methodTag, "Cache key was type: [" + type + "]");
 
         return type;
     }
 
     private static boolean isAccount(@NonNull final String cacheKey) {
-        Logger.verbosePII(TAG, "Evaluating cache key: [" + cacheKey + "]");
+        final String methodTag = TAG + ":isAccount";
+        Logger.verbosePII(methodTag, "Evaluating cache key: [" + cacheKey + "]");
         boolean isAccount = null == getCredentialTypeForCredentialCacheKey(cacheKey);
-        Logger.verbose(TAG, "isAccount? [" + isAccount + "]");
+        Logger.verbose(methodTag, "isAccount? [" + isAccount + "]");
         return isAccount;
     }
 
     private static boolean isCredential(@NonNull String cacheKey) {
-        Logger.verbosePII(TAG, "Evaluating cache key: [" + cacheKey + "]");
+        final String methodTag = TAG + ":isCredential";
+        Logger.verbosePII(methodTag, "Evaluating cache key: [" + cacheKey + "]");
         boolean isCredential = null != getCredentialTypeForCredentialCacheKey(cacheKey);
-        Logger.verbose(TAG, "isCredential? [" + isCredential + "]");
+        Logger.verbose(methodTag, "isCredential? [" + isCredential + "]");
         return isCredential;
     }
 

@@ -54,4 +54,12 @@ public class LocalApkInstaller implements IAppInstaller {
         // using -t flag to also allow installation of test only packages
         AdbShellUtils.installPackage(fullPath, "-t");
     }
+
+    @Override
+    public void updateApp(@NonNull final String apkFileName) {
+        final String fullPath = LOCAL_APK_PATH_PREFIX + apkFileName;
+        // adding -r flag will reinstall the apk
+        // -d flag will allow version downgrade as well
+        AdbShellUtils.installPackage(fullPath, "-t", "-r", "-d");
+    }
 }

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+    <string name="app_loading">Cargando…</string>
+
+    <string name="broker_processing">Broker está procesando</string>
+    <string name="http_auth_dialog_username">Nome de usuario</string>
+    <string name="http_auth_dialog_password">Contrasinal</string>
+    <string name="http_auth_dialog_title">Introduza as credenciais</string>
+    <string name="http_auth_dialog_login">Iniciar sesión</string>
+    <string name="http_auth_dialog_cancel">Cancelar</string>
+
+    <!-- strings for CBA dialogs and layouts -->
+    <string name="smartcard_cert_dialog_title">Escolla un certificado de cartón intelixente para iniciar sesión</string>
+    <string name="smartcard_cert_dialog_positive_button">Continuar</string>
+    <string name="smartcard_cert_dialog_negative_button">Cancelar</string>
+
+    <string name="smartcard_pin_dialog_title">Desbloquear cartón intelixente</string>
+    <string name="smartcard_pin_dialog_message">Introduza o PIN do cartón intelixente para acceder ao certificado e iniciar sesión</string>
+    <string name="smartcard_pin_dialog_positive_button">Desbloquear</string>
+    <string name="smartcard_pin_dialog_negative_button">Cancelar</string>
+    <string name="smartcard_pin_dialog_error_message">O PIN que introduciu non era correcto</string>
+    <string name="smartcard_pin_layout_edittext_hint">PIN</string>
+
+    <string name="smartcard_error_dialog_positive_button">Aceptar</string>
+
+    <string name="smartcard_max_attempt_dialog_title">Tentar de novo máis tarde</string>
+    <string name="smartcard_max_attempt_dialog_message">Demasiados intentos erróneos. Ténteo de novo máis tarde.</string>
+
+    <string name="smartcard_early_unplug_dialog_title">Tentar de novo</string>
+    <string name="smartcard_early_unplug_dialog_message">Eliminouse o dispositivo de cartón intelixente. Volva inserir o dispositivo antes de intentar rexistrarse de novo.</string>
+
+    <string name="smartcard_no_cert_dialog_title">Non se atoparon certificados aplicables.</string>
+    <string name="smartcard_no_cert_dialog_message">Confirme que o certificado se proporcionase correctamente no dispositivo de cartón intelixente.</string>
+
+    <string name="smartcard_general_error_dialog_title">Tentar de novo máis tarde</string>
+    <string name="smartcard_general_error_dialog_message">Ocorreu un erro inesperado. Ténteo novamente máis tarde.</string>
+</resources>

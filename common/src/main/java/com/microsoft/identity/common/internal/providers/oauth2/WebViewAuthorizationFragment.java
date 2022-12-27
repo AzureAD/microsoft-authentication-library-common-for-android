@@ -98,18 +98,9 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        final String methodTag = TAG + ":onCreate";
         final FragmentActivity activity = getActivity();
         if (activity != null) {
             WebViewUtil.setDataDirectorySuffix(activity.getApplicationContext());
-        }
-        //For CBA, we need to clear the certificate choice cache here so that
-        // the user will be able to login with multiple accounts with CBA
-        //addressing on-device CBA bug: https://identitydivision.visualstudio.com/Engineering/_workitems/edit/1776683
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            WebView.clearClientCertPreferences(null);
-        } else {
-            Logger.warn(methodTag, "Client Cert Preferences cache not cleared due to SDK version < 21 (LOLLIPOP)");
         }
     }
 
@@ -182,21 +173,20 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 },
                 mRedirectUri);
         setUpWebView(view, mAADWebViewClient);
-
-        mWebView.post(new Runnable() {
-            @Override
-            public void run() {
-                Logger.info(methodTag, "Launching embedded WebView for acquiring auth code.");
-                Logger.infoPII(methodTag, "The start url is " + mAuthorizationRequestUrl);
-                mWebView.loadUrl(mAuthorizationRequestUrl, mRequestHeaders);
-
-                // The first page load could take time, and we do not want to just show a blank page.
-                // Therefore, we'll show a spinner here, and hides it when mAuthorizationRequestUrl is successfully loaded.
-                // After that, progress bar will be displayed by MSA/AAD.
-                mProgressBar.setVisibility(View.VISIBLE);
-            }
-        });
-
+        //For CBA, we need to clear the certificate choice cache here so that
+        // the user will be able to login with multiple accounts with CBA
+        //addressing on-device CBA bug: https://identitydivision.visualstudio.com/Engineering/_workitems/edit/1776683
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            WebView.clearClientCertPreferences(new Runnable() {
+                @Override
+                public void run() {
+                    launchWebView();
+                }
+            });
+        } else {
+            Logger.warn(methodTag, "Client Cert Preferences cache not cleared due to SDK version < 21 (LOLLIPOP)");
+            launchWebView();
+        }
         return view;
     }
 
@@ -207,15 +197,6 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
 
         if (mWebView.canGoBack()) {
             mWebView.goBack();
-            //For CBA, we need to clear the certificate choice cache here so that
-            // if the cert picker is exited (`cancel()`) or the flow has an error,
-            //the user can still try to login again with a cert.
-            //addressing on-device CBA bug: https://identitydivision.visualstudio.com/Engineering/_workitems/edit/1776683
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                WebView.clearClientCertPreferences(null);
-            } else {
-                Logger.warn(methodTag, "Client Cert Preferences cache not cleared due to SDK version < 21 (LOLLIPOP)");
-            }
         } else {
             cancelAuthorization(true);
         }
@@ -261,6 +242,39 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     }
 
     /**
+     * Loads starting authorization request url into WebView.
+     */
+    private void launchWebView() {
+        final String methodTag = TAG + ":launchWebView";
+        mWebView.post(new Runnable() {
+            @Override
+            public void run() {
+                Logger.info(methodTag, "Launching embedded WebView for acquiring auth code.");
+                Logger.infoPII(methodTag, "The start url is " + mAuthorizationRequestUrl);
+                mWebView.loadUrl(mAuthorizationRequestUrl, mRequestHeaders);
+
+                // The first page load could take time, and we do not want to just show a blank page.
+                // Therefore, we'll show a spinner here, and hides it when mAuthorizationRequestUrl is successfully loaded.
+                // After that, progress bar will be displayed by MSA/AAD.
+                mProgressBar.setVisibility(View.VISIBLE);
+            }
+        });
+    }
+
+    // For CertBasedAuthChallengeHandler within AADWebViewClient,
+    // the smartcard manager needs to stop discovering Usb devices upon fragment destroy.
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        final String methodTag = TAG + ":onDestroy";
+        if (mAADWebViewClient != null) {
+            mAADWebViewClient.onDestroy();
+        } else {
+            Logger.error(methodTag, "Fragment destroyed, but smartcard usb discovery was unable to be stopped.", null);
+        }
+    }
+
+    /**
      * Extracts request headers from the given bundle object.
      */
     private HashMap<String, String> getRequestHeaders(final Bundle state) {
@@ -280,6 +294,10 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         public void onChallengeResponseReceived(@NonNull final RawAuthorizationResult response) {
             final String methodTag = TAG + ":onChallengeResponseReceived";
             Logger.info(methodTag, null, "onChallengeResponseReceived:" + response.getResultCode());
+            if (mAADWebViewClient != null) {
+                //No telemetry will be emitted if CBA did not occur.
+                mAADWebViewClient.emitTelemetryForCertBasedAuthResult(response);
+            }
             sendResult(response);
             finish();
         }

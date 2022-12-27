@@ -58,7 +58,7 @@ class CurrentRequestTelemetry extends RequestTelemetry implements ICurrentTeleme
                 mApiId = value;
                 break;
             case FORCE_REFRESH:
-                mForceRefresh = TelemetryUtils.getBooleanFromSchemaString(value);
+                mForceRefresh = TelemetryUtils.getBooleanFromString(value);
                 break;
             default:
                 putInPlatformTelemetry(key, value);

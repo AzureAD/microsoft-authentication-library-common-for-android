@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+    <string name="app_loading">Betöltés…</string>
+
+    <string name="broker_processing">A szervező feldolgozást végez</string>
+    <string name="http_auth_dialog_username">Felhasználónév</string>
+    <string name="http_auth_dialog_password">Jelszó</string>
+    <string name="http_auth_dialog_title">Adja meg a hitelesítő adatait</string>
+    <string name="http_auth_dialog_login">Bejelentkezés</string>
+    <string name="http_auth_dialog_cancel">Mégse</string>
+
+    <!-- strings for CBA dialogs and layouts -->
+    <string name="smartcard_cert_dialog_title">Válasszon ki egy intelligenskártya-tanúsítványt a bejelentkezéshez</string>
+    <string name="smartcard_cert_dialog_positive_button">Tovább</string>
+    <string name="smartcard_cert_dialog_negative_button">Mégse</string>
+
+    <string name="smartcard_pin_dialog_title">Intelligens kártya zárolásának feloldása</string>
+    <string name="smartcard_pin_dialog_message">Adja meg az intelligens kártya PIN-kódját a tanúsítvány eléréséhez és a bejelentkezéshez</string>
+    <string name="smartcard_pin_dialog_positive_button">Zárolás feloldása</string>
+    <string name="smartcard_pin_dialog_negative_button">Mégse</string>
+    <string name="smartcard_pin_dialog_error_message">A megadott PIN-kód helytelen.</string>
+    <string name="smartcard_pin_layout_edittext_hint">PIN-kód</string>
+
+    <string name="smartcard_error_dialog_positive_button">OK</string>
+
+    <string name="smartcard_max_attempt_dialog_title">Próbálkozzon újra később</string>
+    <string name="smartcard_max_attempt_dialog_message">Túl sok sikertelen kísérlet történt. Próbálkozzon újra később.</string>
+
+    <string name="smartcard_early_unplug_dialog_title">Újra</string>
+    <string name="smartcard_early_unplug_dialog_message">Az intelligenskártya-eszköz el lett távolítva. Az újbóli bejelentkezés előtt helyezze be újra az eszközt.</string>
+
+    <string name="smartcard_no_cert_dialog_title">Nem találhatók alkalmazható tanúsítványok.</string>
+    <string name="smartcard_no_cert_dialog_message">Győződjön meg arról, hogy a tanúsítvány megfelelően lett kiépítve az intelligenskártya-eszközön.</string>
+
+    <string name="smartcard_general_error_dialog_title">Próbálkozzon újra később</string>
+    <string name="smartcard_general_error_dialog_message">Váratlan hiba történt. Később próbálja meg újból.</string>
+</resources>

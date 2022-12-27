@@ -27,6 +27,7 @@ import androidx.annotation.Nullable;
 import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObjectNotFoundException;
 
+import com.microsoft.identity.client.ui.automation.broker.ITestBroker;
 import com.microsoft.identity.client.ui.automation.browser.IBrowser;
 import com.microsoft.identity.client.ui.automation.installer.LocalApkInstaller;
 import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.MicrosoftStsPromptHandler;
@@ -35,6 +36,8 @@ import com.microsoft.identity.client.ui.automation.logging.Logger;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
 import org.junit.Assert;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  * A model for interacting with the Azure Sample App for MSAL Android during UI Test.
@@ -47,10 +50,18 @@ public class AzureSampleApp extends App {
     private static final String AZURE_SAMPLE_PACKAGE_NAME = "com.azuresamples.msalandroidapp";
     private static final String AZURE_SAMPLE_APP_NAME = "Azure Sample";
     public final static String AZURE_SAMPLE_APK = "AzureSample.apk";
+    public final static String OLD_AZURE_SAMPLE_APK = "OldAzureSample.apk";
 
     public AzureSampleApp() {
         super(AZURE_SAMPLE_PACKAGE_NAME, AZURE_SAMPLE_APP_NAME, new LocalApkInstaller());
         localApkFileName = AZURE_SAMPLE_APK;
+    }
+
+    public AzureSampleApp(@NonNull final String azureSampleApk,
+                                        @NonNull final String updateAzureSampleApk) {
+        super(AZURE_SAMPLE_PACKAGE_NAME, AZURE_SAMPLE_APP_NAME, new LocalApkInstaller());
+        localApkFileName = azureSampleApk;
+        localUpdateApkFileName = updateAzureSampleApk;
     }
 
     @Override
@@ -96,6 +107,27 @@ public class AzureSampleApp extends App {
     }
 
     /**
+     * Sign in into the Azure Sample App. Please note that this method performs sign in into the
+     * Single Account Mode Fragment in the Sample App.
+     *
+     * @param browser                     the browser that is expected to be used during sign in flow
+     * @param broker                      the broker used in the test case
+     * @param shouldHandleBrowserFirstRun whether this is the first time the browser being run
+     */
+    public void signInSilentlyWithSingleAccountFragment(@Nullable final IBrowser browser,
+                                                        @NonNull final ITestBroker broker,
+                                                        final boolean shouldHandleBrowserFirstRun) {
+        Logger.i(TAG, "Signing in into Azure Sample App with Single Account Mode Fragment..");
+        // Click Sign In in Single Account Fragment
+        UiAutomatorUtils.handleButtonClick("com.azuresamples.msalandroidapp:id/btn_signIn");
+
+        if (broker == null && browser != null && shouldHandleBrowserFirstRun) {
+            // handle browser first run as applicable
+            ((IApp) browser).handleFirstRun();
+        }
+    }
+
+    /**
      * Sign out of the Azure Sample App. Please note that this method performs sign out of the
      * Single Account mode fragment in the Azure Sample App.
      */
@@ -111,11 +143,9 @@ public class AzureSampleApp extends App {
      */
     public void confirmSignedIn(@NonNull final String username) {
         Logger.i(TAG, "Confirming account with supplied username is signed in..");
-        final UiObject signedInUser = UiAutomatorUtils.obtainUiObjectWithResourceId("com.azuresamples.msalandroidapp:id/current_user");
-        try {
-            Assert.assertEquals("User is signed into Azure Sample App", signedInUser.getText(), username);
-        } catch (final UiObjectNotFoundException e) {
-            throw new AssertionError(e);
-        }
+
+        final UiObject signedInUser = UiAutomatorUtils.obtainEnabledUiObjectWithExactText(username);
+
+        Assert.assertTrue("User is signed into Azure Sample App", signedInUser.exists());
     }
 }

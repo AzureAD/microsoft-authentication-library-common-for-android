@@ -45,6 +45,7 @@ public class AuthenticationSchemeFactory {
      */
     public static AbstractAuthenticationScheme createScheme(@NonNull final IPlatformComponents commonComponents,
                                                             @Nullable final INameable nameable) throws ClientException {
+        final String methodTag = TAG + ":createScheme";
         if (null == nameable) {
             // If null, choose Bearer for backcompat
             return new BearerAuthenticationSchemeInternal();
@@ -53,7 +54,7 @@ public class AuthenticationSchemeFactory {
         switch (nameable.getName()) {
             case BearerAuthenticationSchemeInternal.SCHEME_BEARER:
                 Logger.verbose(
-                        TAG,
+                        methodTag,
                         "Constructing Bearer Authentication Scheme."
                 );
 
@@ -62,7 +63,7 @@ public class AuthenticationSchemeFactory {
             case PopAuthenticationSchemeInternal.SCHEME_POP:
                 if (nameable instanceof IPoPAuthenticationSchemeParams) {
                     Logger.verbose(
-                            TAG,
+                            methodTag,
                             "Constructing PoP Authentication Scheme."
                     );
 
@@ -79,6 +80,18 @@ public class AuthenticationSchemeFactory {
                     throw new IllegalStateException("Unrecognized parameter type.");
                 }
 
+            case PopAuthenticationSchemeWithClientKeyInternal.SCHEME_POP_WITH_CLIENT_KEY:
+                if (nameable instanceof IPoPAuthenticationSchemeParams) {
+                    Logger.verbose(
+                            methodTag,
+                            "Constructing PoP Authentication Scheme With Client Key."
+                    );
+
+                    return (PopAuthenticationSchemeWithClientKeyInternal) nameable;
+                } else {
+                    throw new IllegalStateException("Unrecognized parameter type.");
+                }
+
             default:
                 throw new UnsupportedOperationException(
                         "Unknown or unsupported scheme: "
@@ -87,4 +100,12 @@ public class AuthenticationSchemeFactory {
         }
     }
 
+    /**
+     * Checks the given authentication scheme is a PoP authentication scheme or not
+     * @param authenticationScheme
+     * @return boolean indicating if the the authentication scheme is a PoP authentication scheme
+     */
+    public static boolean isPopAuthenticationScheme(@NonNull final AbstractAuthenticationScheme authenticationScheme) {
+        return authenticationScheme instanceof IPoPAuthenticationSchemeParams;
+    }
 }

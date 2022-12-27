@@ -44,16 +44,4 @@ public interface ISigner {
     byte[] sign(@NonNull final PrivateKey key,
                 @NonNull final String signingAlgorithm,
                 byte[] dataToBeSigned) throws ClientException;
-
-    /**
-     * Signs with a HMac key.
-     *
-     * @param keyData           the HMac key data.
-     * @param hmacAlgorithm     algorithm for generating key/signing the data.
-     * @param dataToBeSigned    the data to be signed.
-     * @return signed data.
-     */
-    byte[] signWithHMac(final byte[] keyData,
-                        @NonNull final String hmacAlgorithm,
-                        final byte[] dataToBeSigned) throws ClientException;
 }

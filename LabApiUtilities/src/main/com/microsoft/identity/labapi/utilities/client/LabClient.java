@@ -36,7 +36,6 @@ import com.microsoft.identity.internal.test.labapi.model.CustomSuccessResponse;
 import com.microsoft.identity.internal.test.labapi.model.SecretResponse;
 import com.microsoft.identity.internal.test.labapi.model.TempUser;
 import com.microsoft.identity.internal.test.labapi.model.UserInfo;
-import com.microsoft.identity.labapi.utilities.BuildConfig;
 import com.microsoft.identity.labapi.utilities.authentication.LabApiAuthenticationClient;
 import com.microsoft.identity.labapi.utilities.constants.ProtectionPolicy;
 import com.microsoft.identity.labapi.utilities.constants.TempUserType;
@@ -59,6 +58,8 @@ public class LabClient implements ILabClient {
 
     private final LabApiAuthenticationClient mLabApiAuthenticationClient;
     private final long PASSWORD_RESET_WAIT_DURATION = TimeUnit.MINUTES.toMillis(1);
+    private final long LAB_API_RETRY_WAIT = TimeUnit.SECONDS.toMillis(5);
+    private final long TEMP_USER_CREATION_WAIT = TimeUnit.SECONDS.toMillis(30);
 
     /**
      * Temp users API provided by Lab team can often take more than 10 seconds to return...hence, we
@@ -149,6 +150,28 @@ public class LabClient implements ILabClient {
 
     @Override
     public ILabAccount createTempAccount(@NonNull final TempUserType tempUserType) throws LabApiException {
+        // Adding a second attempt here, api sometimes fails to create the temp user.
+        try {
+            return createTempAccountInternal(tempUserType);
+        } catch (final LabApiException e){
+            if (LabError.FAILED_TO_CREATE_TEMP_USER.equals(e.getErrorCode())){
+
+                // Wait for a bit
+                try {
+                    Thread.sleep(LAB_API_RETRY_WAIT);
+                } catch (final InterruptedException e2) {
+                    e2.printStackTrace();
+                }
+
+                // Try to create the temp account again
+                return createTempAccountInternal(tempUserType);
+            } else {
+                throw e;
+            }
+        }
+    }
+
+    private ILabAccount createTempAccountInternal(@NonNull final TempUserType tempUserType) throws LabApiException {
         Configuration.getDefaultApiClient().setAccessToken(
                 mLabApiAuthenticationClient.getAccessToken()
         );
@@ -163,6 +186,13 @@ public class LabClient implements ILabClient {
         }
 
         final String password = getPassword(tempUser);
+
+        // Adding a wait to finish temp user creation
+        try {
+            Thread.sleep(TEMP_USER_CREATION_WAIT);
+        } catch (final InterruptedException e) {
+            e.printStackTrace();
+        }
 
         return new LabAccount.LabAccountBuilder()
                 .username(tempUser.getUpn())
@@ -198,7 +228,26 @@ public class LabClient implements ILabClient {
     @Override
     public String getPasswordForGuestUser(LabGuestAccount guestUser) throws LabApiException {
         final String labName = guestUser.getHomeDomain().split("\\.")[0];
-        return getSecret(labName);
+
+        // Adding a second attempt here, api sometimes fails to get the lab secret.
+        try {
+            return getSecret(labName);
+        } catch (final LabApiException e){
+            if (e.getErrorCode().equals(LabError.FAILED_TO_GET_SECRET_FROM_LAB)){
+
+                // Wait for a bit
+                try {
+                    Thread.sleep(LAB_API_RETRY_WAIT);
+                } catch (final InterruptedException e2) {
+                    e2.printStackTrace();
+                }
+
+                // Try to get the secret again
+                return getSecret(labName);
+            } else {
+                throw e;
+            }
+        }
     }
 
     @Override
@@ -248,40 +297,43 @@ public class LabClient implements ILabClient {
     @Override
     public boolean deleteDevice(@NonNull final String upn,
                                 @NonNull final String deviceId,
-                                final int numDeleteAttempts,
+                                final int numDeleteAttemptsRemaining,
                                 final long waitTimeBeforeEachDeleteAttempt) throws LabApiException {
-        for (int i = 0; i < numDeleteAttempts; i++) {
-            System.out.printf(Locale.ENGLISH, "Delete device attempt #%d%n", (i + 1));
-            // Lab may not find the device right away so we try every 2 seconds
-            // we do 5 attempts, if that doesn't work then we fail
-            try {
-                Thread.sleep(waitTimeBeforeEachDeleteAttempt);
-            } catch (final InterruptedException e) {
-                e.printStackTrace();
-            }
-
-            try {
-                if (deleteDevice(upn, deviceId)) {
-                    return true;
-                }
-            } catch (final LabApiException labApiException) {
-                // if not the last attempt, then just print the error to console
-                if (i < (numDeleteAttempts - 1)) {
-                    System.out.printf(
-                            Locale.ENGLISH,
-                            "Delete device attempt #%d%n failed: %s", (i + 1),
-                            labApiException
-                    );
-                } else {
-                    // last attempt, just throw the exception back
-                    throw labApiException;
-                }
-            }
-
+        System.out.printf(Locale.ENGLISH, "Delete device attempt remaining #%d%n", (numDeleteAttemptsRemaining));
+        if (numDeleteAttemptsRemaining == 0) {
+            return false; // tried all attempts and failed to delete device
         }
 
-        // there was no error, but device still not deleted
-        return false;
+        try {
+            if (deleteDevice(upn, deviceId)) {
+                return true;
+            }
+        } catch (final LabApiException labApiException) {
+            // if not the last attempt, then just print the error to console
+            if (numDeleteAttemptsRemaining > 1) {
+                System.out.printf(
+                        Locale.ENGLISH,
+                        "Delete device attempt #%d%n failed: %s", (numDeleteAttemptsRemaining),
+                        labApiException
+                );
+            } else {
+                // last attempt, just throw the exception back
+                throw labApiException;
+            }
+        }
+
+        try {
+            Thread.sleep(waitTimeBeforeEachDeleteAttempt);
+        } catch (final InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        return deleteDevice(
+                upn,
+                deviceId,
+                numDeleteAttemptsRemaining - 1,
+                waitTimeBeforeEachDeleteAttempt * 2
+        );
     }
 
     private String getPassword(@NonNull final ConfigInfo configInfo) throws LabApiException {
@@ -294,9 +346,29 @@ public class LabClient implements ILabClient {
 
     private String getPassword(final String credentialVaultKeyName) throws LabApiException {
         final String secretName = getLabSecretName(credentialVaultKeyName);
-        return getSecret(secretName);
+
+        // Adding a second attempt here, api sometimes fails to get the lab secret.
+        try {
+            return getSecret(secretName);
+        } catch (final LabApiException e){
+            if (e.getErrorCode().equals(LabError.FAILED_TO_GET_SECRET_FROM_LAB)){
+
+                // Wait for a bit
+                try {
+                    Thread.sleep(LAB_API_RETRY_WAIT);
+                } catch (final InterruptedException e2) {
+                    e2.printStackTrace();
+                }
+
+                // Try to get the secret again
+                return getSecret(secretName);
+            } else {
+                throw e;
+            }
+        }
     }
 
+    @Override
     public boolean resetPassword(@NonNull final String upn) throws LabApiException {
         final ResetApi resetApi = new ResetApi();
         try {
@@ -305,12 +377,51 @@ public class LabClient implements ILabClient {
                     .toLowerCase();
             final boolean result = resetResponse.getResult().toLowerCase().contains(expectedResult);
             if (result) {
-                Thread.sleep(PASSWORD_RESET_WAIT_DURATION);
+                try {
+                    Thread.sleep(PASSWORD_RESET_WAIT_DURATION);
+                } catch (final InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
             return result;
-        } catch (ApiException | InterruptedException e) {
+        } catch (final ApiException e) {
             throw new LabApiException(LabError.FAILED_TO_RESET_PASSWORD, e);
         }
+    }
+
+    @Override
+    public boolean resetPassword(@NonNull final String upn,
+                                 final int resetAttempts) throws LabApiException {
+        for (int i = 0; i < resetAttempts; i++) {
+            System.out.printf(Locale.ENGLISH, "Password reset attempt #%d%n", (i + 1));
+
+            try {
+                if (resetPassword(upn)) {
+                    return true;
+                }
+            } catch (final LabApiException labApiException) {
+                // if not the last attempt, then just print the error to console
+                if (i < (resetAttempts - 1)) {
+                    System.out.printf(
+                            Locale.ENGLISH,
+                            "Password reset attempt #%d%n failed: %s", (i + 1),
+                            labApiException
+                    );
+
+                    try {
+                        Thread.sleep(TimeUnit.SECONDS.toMillis(5));
+                    } catch (final InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    // last attempt, just throw the exception back
+                    throw labApiException;
+                }
+            }
+        }
+
+        // there was no error, but password was not reset
+        return false;
     }
 
     private String getLabSecretName(final String credentialVaultKeyName) {

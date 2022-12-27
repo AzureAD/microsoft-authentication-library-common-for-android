@@ -30,6 +30,9 @@ import com.microsoft.identity.common.java.providers.oauth2.TokenRequest;
 import java.util.UUID;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.experimental.Accessors;
 
 public class MicrosoftTokenRequest extends TokenRequest implements IHasExtraParameters {
 
@@ -96,6 +99,12 @@ public class MicrosoftTokenRequest extends TokenRequest implements IHasExtraPara
 
     // Sent as part of headers if available, so marking it transient.
     private transient String mBrokerVersion;
+
+    // Send PKeyAuth Header to token endpoint for required msal-broker protocol version 9.0.
+    @Getter
+    @Setter
+    @Accessors(prefix = "m")
+    private boolean mPKeyAuthHeaderAllowed;
 
     public String getCodeVerifier() {
         return this.mCodeVerifier;

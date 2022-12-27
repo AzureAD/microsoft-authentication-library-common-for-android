@@ -21,6 +21,10 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.telemetry.relay;
 
+import javax.annotation.Nullable;
+
+import lombok.NonNull;
+
 /**
  * An interface that describes an event filter for a telemetry relay client {@link AbstractTelemetryRelayClient}
  * @param <T> the event data
@@ -31,7 +35,8 @@ public interface ITelemetryEventFilter<T> {
      * Invoked when a new event is captured by the telemetry.
      * @param telemetryEvent the telemetry event data
      *
-     * @return a boolean representing whether the event should be relayed.
+     * @return an event with filtered fields. Return null if the event is to be ignored completely.
      */
-    boolean shouldRelay(T telemetryEvent);
+    @Nullable
+    T apply(@NonNull final T telemetryEvent);
 }

@@ -34,6 +34,7 @@ import com.microsoft.identity.common.java.AuthenticationConstants;
 import com.microsoft.identity.common.java.BaseAccount;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
+import com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeWithClientKeyInternal;
 import com.microsoft.identity.common.java.dto.AccessTokenRecord;
 import com.microsoft.identity.common.java.dto.AccountRecord;
 import com.microsoft.identity.common.java.dto.Credential;
@@ -693,7 +694,11 @@ public class MsalOAuth2TokenCache
         final List<Credential> allCredentials = mAccountCredentialCache.getCredentials();
 
         // Load the AccessTokens
+        final String kid = authScheme instanceof PopAuthenticationSchemeWithClientKeyInternal ?
+                ((PopAuthenticationSchemeWithClientKeyInternal) authScheme).getKid()
+                : null;
         final List<Credential> accessTokens = mAccountCredentialCache.getCredentialsFilteredBy(
+                allCredentials,
                 account.getHomeAccountId(),
                 account.getEnvironment(),
                 getAccessTokenCredentialTypeForAuthenticationScheme(authScheme),
@@ -701,8 +706,9 @@ public class MsalOAuth2TokenCache
                 account.getRealm(),
                 target,
                 authScheme.getName(),
-                allCredentials
-        );
+                null,
+                kid
+                );
 
         // Load the RefreshTokens
         List<Credential> refreshTokens = mAccountCredentialCache.getCredentialsFilteredBy(
@@ -1661,7 +1667,8 @@ public class MsalOAuth2TokenCache
                 referenceToken.getRealm(),
                 null, // Wildcard (*)
                 referenceToken.getAccessTokenType(),
-                referenceToken.getRequestedClaims()
+                referenceToken.getRequestedClaims(),
+                mAccountCredentialCache.getCredentials()
         );
 
         Logger.verbose(

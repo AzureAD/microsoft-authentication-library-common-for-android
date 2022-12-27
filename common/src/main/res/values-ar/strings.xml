@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+    <string name="app_loading">يتم الآن التحميل…</string>
+
+    <string name="broker_processing">جارٍ معالجة Broker</string>
+    <string name="http_auth_dialog_username">اسم المستخدم</string>
+    <string name="http_auth_dialog_password">كلمة المرور</string>
+    <string name="http_auth_dialog_title">أدخل بيانات اعتمادك</string>
+    <string name="http_auth_dialog_login">تسجيل الدخول</string>
+    <string name="http_auth_dialog_cancel">إلغاء</string>
+
+    <!-- strings for CBA dialogs and layouts -->
+    <string name="smartcard_cert_dialog_title">مطلوب اختيار شهادة بطاقة ذكية لتسجيل الدخول</string>
+    <string name="smartcard_cert_dialog_positive_button">متابعة</string>
+    <string name="smartcard_cert_dialog_negative_button">إلغاء الأمر</string>
+
+    <string name="smartcard_pin_dialog_title">فتح قفل البطاقة الذكية</string>
+    <string name="smartcard_pin_dialog_message">أدخل رقم التعريف الشخصي (PIN) للبطاقة الذكية للوصول إلى الشهادة وتسجيل الدخول</string>
+    <string name="smartcard_pin_dialog_positive_button">فتح القفل</string>
+    <string name="smartcard_pin_dialog_negative_button">إلغاء الأمر</string>
+    <string name="smartcard_pin_dialog_error_message">رقم التعريف الشخصي (PIN) الذي أدخلتك غير صحيح</string>
+    <string name="smartcard_pin_layout_edittext_hint">رقم التعريف الشخصي (PIN)</string>
+
+    <string name="smartcard_error_dialog_positive_button">حسناً</string>
+
+    <string name="smartcard_max_attempt_dialog_title">حاول مجدداً لاحقاً</string>
+    <string name="smartcard_max_attempt_dialog_message">تم إجراء الكثير من المحاولات غير الناجحة. حاول مجدداً لاحقاً.</string>
+
+    <string name="smartcard_early_unplug_dialog_title">حاول مجدداً</string>
+    <string name="smartcard_early_unplug_dialog_message">تمت إزالة جهاز البطاقة الذكية. الرجاء إعادة إدخال الجهاز قبل محاولة تسجيل الدخول مجدداً.</string>
+
+    <string name="smartcard_no_cert_dialog_title">ما من شهادات قابلة للتطبيق موجودة.</string>
+    <string name="smartcard_no_cert_dialog_message">الرجاء تأكيد أن شهادتك مزودة بالخدمة بشكل صحيح على جهاز البطاقة الذكية.</string>
+
+    <string name="smartcard_general_error_dialog_title">حاول مجدداً لاحقاً</string>
+    <string name="smartcard_general_error_dialog_message">حدث خطأ غير متوقع. الرجاء إعادة المحاولة لاحقًا.</string>
+</resources>

@@ -146,9 +146,9 @@ public class ADALOAuth2TokenCache
         final AzureActiveDirectoryRefreshToken refreshToken = strategy.getRefreshTokenFromResponse(response);
         refreshToken.setEnvironment(msalEnvironment);
 
-        Logger.info(TAG, "Constructing new ADALTokenCacheItem");
+        Logger.info(methodTag, "Constructing new ADALTokenCacheItem");
         final ADALTokenCacheItem cacheItem = new ADALTokenCacheItem(strategy, request, response);
-        logTokenCacheItem(cacheItem);
+        logTokenCacheItem(cacheItem, methodTag);
 
         //There is more than one valid user identifier for some accounts... AAD Accounts as of this writing have 3
         Logger.info(methodTag, "Setting items to cache for user...");
@@ -345,17 +345,18 @@ public class ADALOAuth2TokenCache
         );
     }
 
-    private static void logTokenCacheItem(final ADALTokenCacheItem tokenCacheItem) {
-        Logger.info(TAG, "Logging TokenCacheItem");
-        Logger.infoPII(TAG, "resource: [" + tokenCacheItem.getResource() + "]");
-        Logger.infoPII(TAG, "authority: [" + tokenCacheItem.getAuthority() + "]");
-        Logger.infoPII(TAG, "clientId: [" + tokenCacheItem.getClientId() + "]");
-        Logger.infoPII(TAG, "expiresOn: [" + tokenCacheItem.getExpiresOn() + "]");
-        Logger.infoPII(TAG, "isMrrt: [" + tokenCacheItem.getIsMultiResourceRefreshToken() + "]");
-        Logger.infoPII(TAG, "tenantId: [" + tokenCacheItem.getTenantId() + "]");
-        Logger.infoPII(TAG, "foci: [" + tokenCacheItem.getFamilyClientId() + "]");
-        Logger.infoPII(TAG, "extendedExpires: [" + tokenCacheItem.getExtendedExpiresOn() + "]");
-        Logger.infoPII(TAG, "speRing: [" + tokenCacheItem.getSpeRing() + "]");
+    private static void logTokenCacheItem(final ADALTokenCacheItem tokenCacheItem,
+                                          @NonNull final String methodTag) {
+        Logger.info(methodTag, "Logging TokenCacheItem");
+        Logger.infoPII(methodTag, "resource: [" + tokenCacheItem.getResource() + "]");
+        Logger.infoPII(methodTag, "authority: [" + tokenCacheItem.getAuthority() + "]");
+        Logger.infoPII(methodTag, "clientId: [" + tokenCacheItem.getClientId() + "]");
+        Logger.infoPII(methodTag, "expiresOn: [" + tokenCacheItem.getExpiresOn() + "]");
+        Logger.infoPII(methodTag, "isMrrt: [" + tokenCacheItem.getIsMultiResourceRefreshToken() + "]");
+        Logger.infoPII(methodTag, "tenantId: [" + tokenCacheItem.getTenantId() + "]");
+        Logger.infoPII(methodTag, "foci: [" + tokenCacheItem.getFamilyClientId() + "]");
+        Logger.infoPII(methodTag, "extendedExpires: [" + tokenCacheItem.getExtendedExpiresOn() + "]");
+        Logger.infoPII(methodTag, "speRing: [" + tokenCacheItem.getSpeRing() + "]");
     }
 
     private void setItemToCacheForUser(final String issuer,
@@ -380,7 +381,7 @@ public class ADALOAuth2TokenCache
     }
 
     private void setItem(final String key, final ADALTokenCacheItem cacheItem) {
-        Logger.info(TAG, "Setting item to cache");
+        Logger.info(TAG + ":setItem", "Setting item to cache");
         String json = mGson.toJson(cacheItem);
         mISharedPreferencesFileManager.put(key, json);
     }

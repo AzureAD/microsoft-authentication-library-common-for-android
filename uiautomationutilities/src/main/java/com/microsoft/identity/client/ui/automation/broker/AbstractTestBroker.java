@@ -63,6 +63,9 @@ public abstract class AbstractTestBroker extends App implements ITestBroker {
     public final static IAppInstaller DEFAULT_BROKER_APP_INSTALLER = BuildConfig.INSTALL_SOURCE_LOCAL_APK
             .equalsIgnoreCase(BuildConfig.BROKER_INSTALL_SOURCE)
             ? new LocalApkInstaller() : new PlayStore();
+    public final static IAppInstaller DEFAULT_BROKER_APP_UPDATE_INSTALLER = BuildConfig.UPDATE_SOURCE_LOCAL_APK
+            .equalsIgnoreCase(BuildConfig.BROKER_UPDATE_SOURCE)
+            ? new LocalApkInstaller() : new PlayStore();
 
     @Override
     public void uninstall() {
@@ -83,13 +86,20 @@ public abstract class AbstractTestBroker extends App implements ITestBroker {
 
     public AbstractTestBroker(@NonNull final String packageName,
                               @NonNull final String appName) {
-        super(packageName, appName, DEFAULT_BROKER_APP_INSTALLER);
+        super(packageName, appName, DEFAULT_BROKER_APP_INSTALLER, DEFAULT_BROKER_APP_UPDATE_INSTALLER);
     }
 
     public AbstractTestBroker(@NonNull final String packageName,
                               @NonNull final String appName,
                               @NonNull final IAppInstaller appInstaller) {
-        super(packageName, appName, appInstaller);
+        super(packageName, appName, appInstaller, DEFAULT_BROKER_APP_UPDATE_INSTALLER);
+    }
+
+    public AbstractTestBroker(@NonNull final String packageName,
+                              @NonNull final String appName,
+                              @NonNull final IAppInstaller appInstaller,
+                              @NonNull final IAppInstaller updateAppInstaller) {
+        super(packageName, appName, appInstaller, updateAppInstaller);
     }
 
     @Override
@@ -182,6 +192,11 @@ public abstract class AbstractTestBroker extends App implements ITestBroker {
                 getPackageName(),
                 "JoinButton"
         ));
+    }
+
+    @Override
+    public void overwriteFlights(@Nullable final String flightsJson) {
+        // Default implementation, Do nothing.
     }
 
     @Override
