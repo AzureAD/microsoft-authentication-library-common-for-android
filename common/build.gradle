@@ -146,8 +146,8 @@ dependencies {
     implementation libs.constraintLayout
 
     //For Executive Order work
-    implementation "com.yubico.yubikit:android:$rootProject.ext.yubikitAndroidVersion"
-    implementation "com.yubico.yubikit:piv:$rootProject.ext.yubikitPivVersion"
+    implementation libs.yubikitAndroid
+    implementation libs.yubikitPiv
 
     compileOnly libs.lombok
     annotationProcessor libs.lombok

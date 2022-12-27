@@ -57,7 +57,7 @@ catalog {
         version('bouncyCastle', '1.67')
         version('oshi', '5.7.5')
         version('tsl', '1.6.1')
-        version('yubikit', '2.0.0')
+        version('yubikit', '2.1.0')
         version('supportLibrary', '2.0.0')
         version('adalLegacy', '1.15.0')
         version('adalSnapshot', '3.1.1-SNAPSHOT')
@@ -133,6 +133,8 @@ catalog {
         library('knoxSdk', 'com.samsung.android.knox', 'sdk').versionRef('knoxSdk')
         library('knoxSupportLib', 'com.samsung.android.knox', 'supportlib').versionRef('knoxSupportLib')
         library('robotiumSolo', 'com.jayway.android.robotium', 'robotium-solo').versionRef('robotium')
+        library('yubikitAndroid', 'com.yubico.yubikit', 'android').versionRef('yubikit')
+        library('yubikitPiv', 'com.yubico.yubikit', 'piv').versionRef('yubikit')
 
         // test libraries
         library('junit', 'junit', 'junit').versionRef('junit')
