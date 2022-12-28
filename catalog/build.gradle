@@ -3,7 +3,7 @@ plugins {
     id 'maven-publish'
 }
 
-project.version = "1"
+project.version = "1.0.0"
 
 catalog {
     // declare the aliases, bundles and versions in this block
