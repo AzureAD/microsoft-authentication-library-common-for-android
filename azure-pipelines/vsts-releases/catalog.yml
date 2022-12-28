@@ -34,5 +34,5 @@ jobs:
       - task: Gradle@2
         displayName: Publish to VSTS
         inputs:
-          tasks: catalog:generatePomFileForMavenPublication catalog:publish
+          tasks: catalog:generateMetadataFileForTomlPublication catalog:publish
           publishJUnitResults: false
