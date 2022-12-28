@@ -167,14 +167,15 @@ catalog {
 publishing {
     publications {
         maven(MavenPublication) {
+            from components.versionCatalog
             groupId 'com.microsoft.identity'
             artifactId 'catalog'
-            from components.versionCatalog
+            version = project.version
 
             pom {
                 name = 'catalog'
                 description = 'This is a version catalog for dependencies used by Auth Client Team'
-                url = 'https://github.com/AzureAD/android-complete'
+                url = 'https://github.com/AzureAD/microsoft-authentication-library-common-for-android'
                 developers {
                     developer {
                         id = 'microsoft'
@@ -188,7 +189,7 @@ publishing {
                 }
                 inceptionYear = '2022'
                 scm {
-                    url = 'https://github.com/AzureAD/android-complete/tree/master'
+                    url = 'https://github.com/AzureAD/microsoft-authentication-library-common-for-android/tree/master'
                 }
                 properties = [
                         branch: 'master',
