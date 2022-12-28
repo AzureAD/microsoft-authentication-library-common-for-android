@@ -32,7 +32,17 @@ jobs:
           filename: echo
           arguments: '##vso[task.setvariable variable=ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN]$(mvnAccessToken)'
       - task: Gradle@2
+        displayName: Generate catalog as TOML
+        inputs:
+          tasks: catalog:generateCatalogAsToml
+          publishJUnitResults: false
+      - task: PublishPipelineArtifact@1
+        displayName: 'Publish Artifact: Catalog'
+        inputs:
+          ArtifactName: Catalog
+          TargetPath: $(Build.SourcesDirectory)/catalog/build
+      - task: Gradle@2
         displayName: Publish to VSTS
         inputs:
-          tasks: catalog:generateMetadataFileForTomlPublication catalog:publish
+          tasks: catalog:publish
           publishJUnitResults: false
