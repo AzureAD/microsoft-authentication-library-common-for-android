@@ -57,7 +57,7 @@ import lombok.NonNull;
 public class LabClient implements ILabClient {
 
     private final LabApiAuthenticationClient mLabApiAuthenticationClient;
-    private final long PASSWORD_RESET_WAIT_DURATION = TimeUnit.MINUTES.toMillis(1);
+    private final long PASSWORD_RESET_WAIT_DURATION = TimeUnit.SECONDS.toMillis(90);
     private final long LAB_API_RETRY_WAIT = TimeUnit.SECONDS.toMillis(5);
     private final long TEMP_USER_CREATION_WAIT = TimeUnit.SECONDS.toMillis(30);
 
@@ -77,6 +77,7 @@ public class LabClient implements ILabClient {
         return getLabAccountObject(configInfo);
     }
 
+    @Override
     public ILabAccount getLabAccount(@NonNull final String upn) throws LabApiException {
         final List<ConfigInfo> configInfos = fetchConfigsFromLab(upn);
         // We still get a list of configs despite passing in a single upn, so we select the account from the list.
@@ -98,8 +99,14 @@ public class LabClient implements ILabClient {
     }
 
     private ILabAccount getLabAccountObject(@NonNull final ConfigInfo configInfo) throws LabApiException {
+        // If the userInfo is null, then no lab account was found
+        final UserInfo userInfo = configInfo.getUserInfo();
+        if (userInfo == null) {
+            throw new AssertionError("Lab account was not found.");
+        }
+
         // for guest accounts the UPN is located under homeUpn field
-        String username = configInfo.getUserInfo().getHomeUPN();
+        String username = userInfo.getHomeUPN();
         if (username == null || username.equals("") || username.equalsIgnoreCase("None")) {
             // for accounts that are NOT guest..the UPN is directly on the UPN field
             username = configInfo.getUserInfo().getUpn();

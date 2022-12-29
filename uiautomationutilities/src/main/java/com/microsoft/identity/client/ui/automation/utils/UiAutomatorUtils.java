@@ -285,7 +285,7 @@ public class UiAutomatorUtils {
         try {
             button.click();
         } catch (final UiObjectNotFoundException e) {
-            Logger.i(TAG, "Button " + resourceId + " was not found: " + e.getMessage());
+            Logger.w(TAG, "Button " + resourceId + " was not found: " + e.getMessage());
         }
     }
 
@@ -333,7 +333,7 @@ public class UiAutomatorUtils {
         try {
             button.click();
         } catch (final UiObjectNotFoundException e) {
-            Logger.i(TAG, "Button with text \"" + text + "\" was not found: " + e.getMessage());
+            Logger.w(TAG, "Button with text \"" + text + "\" was not found: " + e.getMessage());
         }
     }
 

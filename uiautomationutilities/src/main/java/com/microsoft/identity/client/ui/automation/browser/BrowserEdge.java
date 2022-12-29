@@ -163,11 +163,16 @@ public class BrowserEdge extends App implements IBrowser {
     private void signInWithWorkOrSchoolAccount(@NonNull final String username,
                                                @NonNull final String password,
                                                @NonNull final FirstPartyAppPromptHandlerParameters promptHandlerParameters) throws UiObjectNotFoundException {
+        // click Sign In with work or school account btn
         final UiObject signInWithWorkAccountBtn = UiAutomatorUtils.obtainUiObjectWithText(
                 "Add account"
         );
 
-        // click Sign In with work or school account btn
+        // Sometimes, we don't see the "Sign in to turn on sync page", so we must navigate to it.
+        if (!signInWithWorkAccountBtn.exists()) {
+            UiAutomatorUtils.handleButtonClick("com.microsoft.emmx:id/edge_account_image_view");
+            UiAutomatorUtils.handleButtonClickForObjectWithText("sign in to sync");
+        }
         signInWithWorkAccountBtn.click();
 
         Logger.i(TAG, "Handle Sign-In Prompt for Work or School account..");
