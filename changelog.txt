@@ -7,6 +7,7 @@ V.Next
 - [MINOR] Add flighting parameters to commmandParameters (#1562)
 - [MINOR] Add ropc command and ropc flow to BaseController (#1539)
 - [PATCH] Correct setAttestationChallenge to provide null rather than empty byte array (#1814725)
+- [MINOR] Fix custom fragment logic - fulfill mReferencedFragment with intent.getExtras() (#1704)
 
 Version 4.0.3
 ----------
