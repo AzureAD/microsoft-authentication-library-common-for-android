@@ -37,19 +37,18 @@ public final class InstallCertActivityWrapper extends Activity {
     private static final String TAG = InstallCertActivityWrapper.class.getSimpleName();
     private static final String INSTALL_CERT_INTENT_STARTED = "broker_intent_started";
     private static final int INSTALL_CERT_INTENT_REQUEST_CODE = 1;
-    public static final String INSTALL_CERT_INTENT = "install_cert_intent";
-    public static final String INSTALL_CERT_BROADCAST_ALIAS = "install_cert_broadcast_alias";
-    public static final String INSTALL_CERT_EXCEPTION = "com.microsoft.workaccount.exception";
-    public static final String INSTALL_CERT_RESULT = "com.microsoft.workaccount.cert.installed";
 
     private Intent mInstallCertificateIntent;
     private Boolean mInstallCertificateIntentStarted = false;
     private Boolean mInstallCertificateResultReceived = false;
 
+    public static final String INSTALL_CERT_INTENT = "install_cert_intent";
+    public static final String INSTALL_CERT_BROADCAST_ALIAS = "install_cert_broadcast_alias";
+    public static final String INSTALL_CERT_ACTIVITY_ERROR_KEY = "install_cert_error_key";
+
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         if (savedInstanceState == null) {
             mInstallCertificateIntent = getIntent().getExtras().getParcelable(INSTALL_CERT_INTENT);
         } else {
@@ -62,7 +61,6 @@ public final class InstallCertActivityWrapper extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
-
         if (!mInstallCertificateIntentStarted) {
             mInstallCertificateIntentStarted = true;
             startActivityForResult(mInstallCertificateIntent, INSTALL_CERT_INTENT_REQUEST_CODE);
@@ -80,20 +78,11 @@ public final class InstallCertActivityWrapper extends Activity {
         // If the broker process crashes, onActivityResult() will not be triggered.
         // (tested by throwing an exception in AccountChooserActivity, and by killing the activity via App Switcher).
         if (!mInstallCertificateResultReceived) {
-            returnsExceptionOnActivityUnexpectedlyKilled(null);
+            final PropertyBag propertyBag = new PropertyBag();
+            propertyBag.put(INSTALL_CERT_ACTIVITY_ERROR_KEY, "The activity is killed unexpectedly.");
+            LocalBroadcaster.INSTANCE.broadcast(INSTALL_CERT_BROADCAST_ALIAS, propertyBag);
         }
         super.onDestroy();
-    }
-
-    private void returnsExceptionOnActivityUnexpectedlyKilled(@Nullable final Bundle resultBundle) {
-        final PropertyBag propertyBag;
-        if (resultBundle == null) {
-            propertyBag = new PropertyBag();
-            propertyBag.put(INSTALL_CERT_EXCEPTION, "The activity is killed unexpectedly.");
-        } else {
-            propertyBag = PropertyBagUtil.fromBundle(resultBundle);
-        }
-        LocalBroadcaster.INSTANCE.broadcast(INSTALL_CERT_BROADCAST_ALIAS, propertyBag);
     }
 
     @Override
@@ -109,18 +98,22 @@ public final class InstallCertActivityWrapper extends Activity {
         Logger.info(methodTag,
                 "Result received from Broker "
                         + "Request code: " + requestCode
-                        + " Result code: " + requestCode
+                        + " Result code: " + resultCode
         );
         mInstallCertificateResultReceived = true;
-        if (resultCode == RESULT_OK) {
-            Logger.verbose(methodTag, "Completing interactive request ");
-            LocalBroadcaster.INSTANCE.broadcast(
-                    INSTALL_CERT_BROADCAST_ALIAS,
-                    PropertyBagUtil.fromBundle(data.getExtras())
-            );
-        } else {
-            returnsExceptionOnActivityUnexpectedlyKilled(data.getExtras());
-        }
+        final PropertyBag propertyBag = getPropertyBagFromBundle(data.getExtras());
+        LocalBroadcaster.INSTANCE.broadcast(INSTALL_CERT_BROADCAST_ALIAS, propertyBag);
         finish();
+    }
+
+    private PropertyBag getPropertyBagFromBundle(@Nullable final Bundle resultBundle) {
+        final PropertyBag propertyBag;
+        if (resultBundle == null) {
+            propertyBag = new PropertyBag();
+            propertyBag.put(INSTALL_CERT_ACTIVITY_ERROR_KEY, "The activity responded with an empty bundle.");
+        } else {
+            propertyBag = PropertyBagUtil.fromBundle(resultBundle);
+        }
+        return propertyBag;
     }
 }
