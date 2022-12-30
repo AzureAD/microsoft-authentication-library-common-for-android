@@ -89,6 +89,7 @@ public class BrowserAuthorizationFragment extends AuthorizationFragment {
     @Nullable
     public static Intent createCustomTabResponseIntent(final Context context,
                                                        final String responseUri) {
+        final String methodTag = TAG + ":createCustomTabResponseIntent";
         if (sCallingActivityClass == null) {
             // can't create intent for response if no activity available, this can happen if the app
             // was closed either by the user or the OS.
@@ -96,7 +97,7 @@ public class BrowserAuthorizationFragment extends AuthorizationFragment {
             // the app after the interactive request started in the browser. After closing, the user
             // returns to the browser and completes authorization and when the OS redirects here,
             // the calling activity class is NULL as the app was closed and memory was wiped.
-            Logger.warn(TAG, "Calling activity class is NULL. Unable to create intent for response.");
+            Logger.warn(methodTag, "Calling activity class is NULL. Unable to create intent for response.");
             return null;
         }
 
@@ -172,7 +173,8 @@ public class BrowserAuthorizationFragment extends AuthorizationFragment {
     }
 
     private void completeAuthorizationInBrowserFlow(@NonNull final String customTabResponseUri) {
-        Logger.info(TAG, null, "Received redirect from customTab/browser.");
+        final String methodTag = TAG + ":completeAuthorizationInBrowserFlow";
+        Logger.info(methodTag, null, "Received redirect from customTab/browser.");
 
         RawAuthorizationResult data = RawAuthorizationResult.fromRedirectUri(customTabResponseUri);
         switch (data.getResultCode()){

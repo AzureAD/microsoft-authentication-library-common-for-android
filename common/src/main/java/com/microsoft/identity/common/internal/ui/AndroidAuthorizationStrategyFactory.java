@@ -62,6 +62,7 @@ public class AndroidAuthorizationStrategyFactory implements IAuthorizationStrate
     @Override
     public IAuthorizationStrategy getAuthorizationStrategy(
             @NonNull final InteractiveTokenCommandParameters parameters) {
+        final String methodTag = TAG + ":getAuthorizationStrategy";
         //Valid if available browser installed. Will fallback to embedded webView if no browser available.
         final AuthorizationAgent validatedAuthorizationAgent = validAuthorizationAgent(
                 parameters.getAuthorizationAgent()
@@ -70,7 +71,7 @@ public class AndroidAuthorizationStrategyFactory implements IAuthorizationStrate
         boolean isBrokerRequest = (parameters instanceof BrokerInteractiveTokenCommandParameters);
 
         if (validatedAuthorizationAgent == AuthorizationAgent.WEBVIEW) {
-            Logger.info(TAG, "Use webView for authorization.");
+            Logger.info(methodTag, "Use webView for authorization.");
             return getGenericAuthorizationStrategy();
         } else if (validatedAuthorizationAgent == AuthorizationAgent.DEFAULT) {
             // When the authorization agent is set to DEFAULT,
@@ -79,19 +80,19 @@ public class AndroidAuthorizationStrategyFactory implements IAuthorizationStrate
             try {
                 BrowserSelector.select(mContext, parameters.getBrowserSafeList());
             } catch (final ClientException exception) {
-                Logger.info(TAG, "No supported browser available found. Fallback to the webView authorization agent.");
+                Logger.info(methodTag, "No supported browser available found. Fallback to the webView authorization agent.");
                 if (ErrorStrings.NO_AVAILABLE_BROWSER_FOUND.equalsIgnoreCase(exception.getErrorCode())) {
                     return getGenericAuthorizationStrategy();
                 }
             }
 
-            Logger.info(TAG, "Use browser for authorization.");
+            Logger.info(methodTag, "Use browser for authorization.");
             return getBrowserAuthorizationStrategy(
                     isBrokerRequest,
                     parameters.getBrowserSafeList());
 
         } else {
-            Logger.info(TAG, "Use browser for authorization.");
+            Logger.info(methodTag, "Use browser for authorization.");
             return getBrowserAuthorizationStrategy(
                     isBrokerRequest,
                     parameters.getBrowserSafeList());
@@ -131,9 +132,10 @@ public class AndroidAuthorizationStrategyFactory implements IAuthorizationStrate
     }
 
     private AuthorizationAgent validAuthorizationAgent(final AuthorizationAgent agent) {
+        final String methodTag = TAG + ":validAuthorizationAgent";
         if (agent != AuthorizationAgent.WEBVIEW
                 && BrowserSelector.getAllBrowsers(mContext).isEmpty()) {
-            Logger.verbose(TAG, "Unable to use browser to do the authorization because "
+            Logger.verbose(methodTag, "Unable to use browser to do the authorization because "
                     + ErrorStrings.NO_AVAILABLE_BROWSER_FOUND + " Use embedded webView instead.");
             return AuthorizationAgent.WEBVIEW;
         } else {

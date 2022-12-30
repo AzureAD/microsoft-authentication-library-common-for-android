@@ -29,11 +29,13 @@ import androidx.annotation.NonNull;
 import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObjectNotFoundException;
 
+import com.microsoft.identity.client.ui.automation.BuildConfig;
+import com.microsoft.identity.client.ui.automation.installer.IAppInstaller;
+import com.microsoft.identity.client.ui.automation.installer.LocalApkInstaller;
 import com.microsoft.identity.client.ui.automation.installer.PlayStore;
 import com.microsoft.identity.client.ui.automation.interaction.FirstPartyAppPromptHandlerParameters;
 import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.MicrosoftStsPromptHandler;
 import com.microsoft.identity.client.ui.automation.logging.Logger;
-import com.microsoft.identity.client.ui.automation.utils.CommonUtils;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
 import org.junit.Assert;
@@ -46,14 +48,30 @@ public class WordApp extends App implements IFirstPartyApp {
     private final static String TAG = WordApp.class.getSimpleName();
     public static final String WORD_PACKAGE_NAME = "com.microsoft.office.word";
     public static final String WORD_APP_NAME = "Microsoft Word";
+    public final static String WORD_APK = "Word.apk";
+    public final static IAppInstaller DEFAULT_WORD_APP_INSTALLER = BuildConfig.INSTALL_SOURCE_LOCAL_APK
+            .equalsIgnoreCase(BuildConfig.WORD_APP_INSTALL_SOURCE)
+            ? new LocalApkInstaller() : new PlayStore();
 
     public WordApp() {
-        super(WORD_PACKAGE_NAME, WORD_APP_NAME, new PlayStore());
+        super(WORD_PACKAGE_NAME, WORD_APP_NAME, DEFAULT_WORD_APP_INSTALLER);
+        localApkFileName = WORD_APK;
+    }
+
+    public WordApp(@NonNull final IAppInstaller appInstaller) {
+        super(WORD_PACKAGE_NAME, WORD_APP_NAME, appInstaller);
+        localApkFileName = WORD_APK;
     }
 
     @Override
     public void handleFirstRun() {
-        CommonUtils.grantPackagePermission(); // grant permission to access storage
+        // First run side loaded in automation does not request for access storage permission
+        // CommonUtils.grantPackagePermission(); // grant permission to access storage
+    }
+
+    @Override
+    public void initialiseAppImpl() {
+        // nothing needed here
     }
 
     @Override
@@ -121,6 +139,18 @@ public class WordApp extends App implements IFirstPartyApp {
     @Override
     public void confirmAccount(@NonNull final String username) {
         Logger.i(TAG, "Confirming account with supplied username is signed in..");
+
+        // Had a screen for microsoft 365 pop up occasionally
+        final UiObject msft365Object = UiAutomatorUtils.obtainUiObjectWithText("Go Premium with Microsoft 365 Personal");
+        if (msft365Object.exists()) {
+            final UiObject skipObject = UiAutomatorUtils.obtainUiObjectWithText("SKIP FOR NOW");
+            try {
+                skipObject.click();
+            } catch (UiObjectNotFoundException e) {
+                Logger.i(TAG, "Ignoring failure to find confirm account UI");
+            }
+        }
+
         UiAutomatorUtils.handleButtonClick("com.microsoft.office.word:id/docsui_me_image");
 
         final UiObject testAccountLabelWord = UiAutomatorUtils.obtainUiObjectWithText(username);

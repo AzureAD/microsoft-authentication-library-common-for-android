@@ -27,7 +27,6 @@ import android.webkit.WebView;
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallenge;
-import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.logging.Logger;
@@ -51,6 +50,7 @@ public final class PKeyAuthChallengeHandler implements IChallengeHandler<PKeyAut
 
     @Override
     public Void processChallenge(final PKeyAuthChallenge pKeyAuthChallenge) {
+        final String methodTag = TAG + ":processChallenge";
         mWebView.stopLoading();
         mChallengeCallback.setPKeyAuthStatus(true);
 
@@ -62,8 +62,8 @@ public final class PKeyAuthChallengeHandler implements IChallengeHandler<PKeyAut
                 @Override
                 public void run() {
                     String loadUrl = pKeyAuthChallenge.getSubmitUrl();
-                    Logger.info(TAG, "Respond to pkeyAuth challenge");
-                    Logger.infoPII(TAG, "Challenge submit url:" + pKeyAuthChallenge.getSubmitUrl());
+                    Logger.info(methodTag, "Respond to pkeyAuth challenge");
+                    Logger.infoPII(methodTag, "Challenge submit url:" + pKeyAuthChallenge.getSubmitUrl());
 
                     mWebView.loadUrl(loadUrl, header);
                 }

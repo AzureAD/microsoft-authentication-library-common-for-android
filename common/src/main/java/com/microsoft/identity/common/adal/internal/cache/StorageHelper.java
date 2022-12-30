@@ -246,20 +246,20 @@ public class StorageHelper implements IStorageHelper {
     @Override
     public String encrypt(final String clearText)
             throws GeneralSecurityException, IOException {
-        final String methodName = ":encrypt";
+        final String methodTag = TAG + ":encrypt";
 
         if (StringExtensions.isNullOrBlank(clearText)) {
             throw new IllegalArgumentException("Input is empty or null");
         }
 
-        Logger.verbose(TAG + methodName, "Starting encryption");
+        Logger.verbose(methodTag, "Starting encryption");
 
         // load key for encryption if not loaded
         mEncryptionKey = loadSecretKeyForEncryption();
         mEncryptionHMACKey = getHMacKey(mEncryptionKey);
         logIfKeyHasChanged(mEncryptionHMACKey);
 
-        Logger.verbose(TAG + methodName, "Encrypt version:" + mBlobVersion);
+        Logger.verbose(methodTag, "Encrypt version:" + mBlobVersion);
         final byte[] blobVersion = mBlobVersion.getBytes(AuthenticationConstants.CHARSET_UTF8);
         final byte[] bytes = clearText.getBytes(AuthenticationConstants.CHARSET_UTF8);
 
@@ -297,7 +297,7 @@ public class StorageHelper implements IStorageHelper {
 
         final String encryptedText = new String(Base64.encode(blobVerAndEncryptedDataAndIVAndMacDigest,
                 Base64.NO_WRAP), AuthenticationConstants.CHARSET_UTF8);
-        Logger.verbose(TAG + methodName, "Finished encryption");
+        Logger.verbose(methodTag, "Finished encryption");
 
         return getEncodeVersionLengthPrefix() + ENCODE_VERSION + encryptedText;
     }
@@ -316,15 +316,15 @@ public class StorageHelper implements IStorageHelper {
 
     @Override
     public String decrypt(final String encryptedBlob) throws GeneralSecurityException, IOException {
-        final String methodName = ":decrypt";
-        Logger.verbose(TAG + methodName, "Starting decryption");
+        final String methodTag = TAG + ":decrypt";
+        Logger.verbose(methodTag, "Starting decryption");
 
         if (StringExtensions.isNullOrBlank(encryptedBlob)) {
             throw new IllegalArgumentException("Input is empty or null");
         }
 
         if (getEncryptionType(encryptedBlob) == EncryptionType.UNENCRYPTED) {
-            Logger.warn(TAG + methodName, "This string is not encrypted. Finished decryption.");
+            Logger.warn(methodTag, "This string is not encrypted. Finished decryption.");
             return encryptedBlob;
         }
 
@@ -334,11 +334,11 @@ public class StorageHelper implements IStorageHelper {
             try {
                 final SecretKey key = loadSecretKey(KeyType.KEYSTORE_ENCRYPTED_KEY);
                 if (key == null) {
-                    mTelemetryCallback.logEvent(methodName, false, "KEY_DECRYPTION_KEYSTORE_KEY_NOT_INITIALIZED");
+                    mTelemetryCallback.logEvent(methodTag, false, "KEY_DECRYPTION_KEYSTORE_KEY_NOT_INITIALIZED");
                 }
             } catch (final Exception e) {
                 // Best effort.
-                mTelemetryCallback.logEvent(methodName, false, "KEY_DECRYPTION_KEYSTORE_KEY_FAILED_TO_LOAD");
+                mTelemetryCallback.logEvent(methodTag, false, "KEY_DECRYPTION_KEYSTORE_KEY_FAILED_TO_LOAD");
             }
         }
 
@@ -354,7 +354,7 @@ public class StorageHelper implements IStorageHelper {
                 }
 
                 String result = decryptWithSecretKey(bytes, secretKey);
-                Logger.verbose(TAG + methodName, "Finished decryption with keyType:" + keyType.name());
+                Logger.verbose(methodTag, "Finished decryption with keyType:" + keyType.name());
                 return result;
             } catch (GeneralSecurityException | IOException e) {
                 emitDecryptionFailureTelemetryIfNeeded(keyType, e);
@@ -362,7 +362,7 @@ public class StorageHelper implements IStorageHelper {
         }
 
         Logger.info(
-                TAG + methodName,
+                methodTag,
                 "Tried all decryption keys and decryption still fails. Throw an exception.");
 
         throw new GeneralSecurityException(ErrorStrings.DECRYPTION_FAILED);
@@ -371,7 +371,7 @@ public class StorageHelper implements IStorageHelper {
     // This is to make sure that Decryption error failure is only emitted once - to avoid bombarding ARIA.
     private void emitDecryptionFailureTelemetryIfNeeded(@NonNull final KeyType keyType,
                                                         @NonNull final Exception exception) {
-        final String methodName = ":emitDecryptionFailureTelemetryIfNeeded";
+        final String methodTag = TAG + ":emitDecryptionFailureTelemetryIfNeeded";
         final SharedPreferences sharedPreferences = PreferenceManager.
                 getDefaultSharedPreferences(mContext);
         final String previousActiveBroker = sharedPreferences.getString(
@@ -385,7 +385,7 @@ public class StorageHelper implements IStorageHelper {
                     + " Active broker: " + activeBroker
                     + " Exception: " + exception.toString();
 
-            Logger.info(TAG + methodName, message);
+            Logger.info(methodTag, message);
 
             if (mTelemetryCallback != null) {
                 mTelemetryCallback.logEvent(
@@ -522,11 +522,12 @@ public class StorageHelper implements IStorageHelper {
     }
 
     private boolean logIfKeyHasChanged(@NonNull final SecretKey hmacKey) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
+        final String methodTag = TAG + ":logIfKeyHasChanged";
         final String keyThumbPrint = getKeyThumbPrintFromHmacKey(hmacKey);
         if (!LAST_KNOWN_THUMBPRINT.get().equals(keyThumbPrint)) {
             LAST_KNOWN_THUMBPRINT.set(keyThumbPrint);
-            if(!FIRST_TIME.compareAndSet(false, true)) {
-                Logger.info(TAG + ":logIfKeyHasChanged", "Using key with thumbprint that has changed " + keyThumbPrint);
+            if (!FIRST_TIME.compareAndSet(false, true)) {
+                Logger.info(methodTag, "Using key with thumbprint that has changed " + keyThumbPrint);
                 return true;
             }
         }
@@ -556,7 +557,7 @@ public class StorageHelper implements IStorageHelper {
     @Override
     public synchronized SecretKey loadSecretKeyForEncryption() throws IOException,
             GeneralSecurityException {
-        final String methodName = ":loadSecretKeyForEncryption";
+        final String methodTag = TAG + ":loadSecretKeyForEncryption";
 
         // Loading key only once for performance. If API is upgraded, it will
         // restart the device anyway. It will load the correct key for new API.
@@ -572,11 +573,11 @@ public class StorageHelper implements IStorageHelper {
                 try {
                     final SecretKey key = loadSecretKey(KeyType.KEYSTORE_ENCRYPTED_KEY);
                     if (key == null) {
-                        mTelemetryCallback.logEvent(methodName, false, "KEY_ENCRYPTION_KEYSTORE_KEY_NOT_INITIALIZED");
+                        mTelemetryCallback.logEvent(methodTag, false, "KEY_ENCRYPTION_KEYSTORE_KEY_NOT_INITIALIZED");
                     }
                 } catch (final Exception e) {
                     // Best effort.
-                    mTelemetryCallback.logEvent(methodName, false, "KEY_ENCRYPTION_KEYSTORE_KEY_FAILED_TO_LOAD");
+                    mTelemetryCallback.logEvent(methodTag, false, "KEY_ENCRYPTION_KEYSTORE_KEY_FAILED_TO_LOAD");
                 }
             }
 
@@ -605,7 +606,7 @@ public class StorageHelper implements IStorageHelper {
             // If we fail to load key, proceed and generate a new one.
         }
 
-        Logger.verbose(TAG + methodName, "Keystore-encrypted key does not exist, try to generate new keys.");
+        Logger.verbose(methodTag, "Keystore-encrypted key does not exist, try to generate new keys.");
         return generateKeyStoreEncryptedKey();
     }
 
@@ -624,7 +625,7 @@ public class StorageHelper implements IStorageHelper {
      */
     @Nullable
     public SecretKey loadSecretKey(@NonNull final KeyType keyType) throws IOException, GeneralSecurityException {
-        final String methodName = ":loadSecretKey";
+        final String methodTag = TAG + ":loadSecretKey";
 
         switch (keyType) {
             case LEGACY_AUTHENTICATOR_APP_KEY:
@@ -640,7 +641,7 @@ public class StorageHelper implements IStorageHelper {
                 return loadKeyStoreEncryptedKey();
         }
 
-        Logger.verbose(TAG + methodName, "Unknown KeyType. This code should never be reached.");
+        Logger.verbose(methodTag, "Unknown KeyType. This code should never be reached.");
         throw new GeneralSecurityException(ErrorStrings.UNKNOWN_ERROR);
     }
 
@@ -660,11 +661,11 @@ public class StorageHelper implements IStorageHelper {
      * Generate a new keystore-encrypted key and save to storage.
      */
     public synchronized SecretKey generateKeyStoreEncryptedKey() throws GeneralSecurityException, IOException {
-        final String methodName = ":generateKeyStoreEncryptedKey";
+        final String methodTag = TAG + ":generateKeyStoreEncryptedKey";
         mCachedKeyStoreEncryptedKey = generateSecretKey();
         saveKeyStoreEncryptedKey(mCachedKeyStoreEncryptedKey);
 
-        logEvent(methodName,
+        logEvent(methodTag,
                 AuthenticationConstants.TelemetryEvents.KEY_CREATED,
                 false,
                 "New key is generated.");
@@ -682,7 +683,7 @@ public class StorageHelper implements IStorageHelper {
     @Nullable
     private synchronized SecretKey loadKeyStoreEncryptedKey()
             throws GeneralSecurityException, IOException {
-        final String methodName = ":loadKeyStoreEncryptedKey";
+        final String methodTag = TAG + ":loadKeyStoreEncryptedKey";
         if (mCachedKeyStoreEncryptedKey != null) {
             return mCachedKeyStoreEncryptedKey;
         }
@@ -692,7 +693,7 @@ public class StorageHelper implements IStorageHelper {
         } catch (final GeneralSecurityException | IOException e) {
             // Reset KeyPair info so that new request will generate correct KeyPairs.
             // All tokens with previous SecretKey are not possible to decrypt.
-            Logger.error(TAG + methodName, ErrorStrings.ANDROIDKEYSTORE_FAILED, e);
+            Logger.error(methodTag, ErrorStrings.ANDROIDKEYSTORE_FAILED, e);
             mKeyPair = null;
             mCachedKeyStoreEncryptedKey = null;
             deleteKeyFile();
@@ -706,7 +707,7 @@ public class StorageHelper implements IStorageHelper {
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
     private synchronized KeyPair generateKeyPairFromAndroidKeyStore()
             throws GeneralSecurityException, IOException {
-        final String methodName = ":generateKeyPairFromAndroidKeyStore";
+        final String methodTag = TAG + ":generateKeyPairFromAndroidKeyStore";
 
         synchronized (isLocaleCalendarNonGregorian(Locale.getDefault()) ? LOCALE_CHANGE_LOCK : new Object()) {
             // Due to the following bug in lower API versions of keystore, locale workarounds may
@@ -733,18 +734,18 @@ public class StorageHelper implements IStorageHelper {
              */
 
             KeyPair existingPair = readKeyPair();
-            if(existingPair != null){
-                Logger.verbose(TAG + methodName, "Existing keypair was found.  Returning existing key rather than generating new one.");
+            if (existingPair != null) {
+                Logger.verbose(methodTag, "Existing keypair was found.  Returning existing key rather than generating new one.");
                 return existingPair;
             }
 
             try {
-                logFlowStart(methodName, AuthenticationConstants.TelemetryEvents.KEYSTORE_WRITE_START);
+                logFlowStart(methodTag, AuthenticationConstants.TelemetryEvents.KEYSTORE_WRITE_START);
 
                 final KeyStore keyStore = KeyStore.getInstance(ANDROID_KEY_STORE);
                 keyStore.load(null);
 
-                Logger.verbose(TAG + methodName, "Generate KeyPair from AndroidKeyStore");
+                Logger.verbose(methodTag, "Generate KeyPair from AndroidKeyStore");
 
                 final Calendar start = Calendar.getInstance();
                 final Calendar end = Calendar.getInstance();
@@ -759,10 +760,10 @@ public class StorageHelper implements IStorageHelper {
 
                 final KeyPair keyPair = generator.generateKeyPair();
 
-                logFlowSuccess(methodName, AuthenticationConstants.TelemetryEvents.KEYSTORE_WRITE_END, "");
+                logFlowSuccess(methodTag, AuthenticationConstants.TelemetryEvents.KEYSTORE_WRITE_END, "");
                 return keyPair;
             } catch (final GeneralSecurityException | IOException e) {
-                logFlowError(methodName, AuthenticationConstants.TelemetryEvents.KEYSTORE_WRITE_END, e.toString(), e);
+                logFlowError(methodTag, AuthenticationConstants.TelemetryEvents.KEYSTORE_WRITE_END, e.toString(), e);
                 throw e;
             } catch (final IllegalStateException e) {
                 // There is an issue with AndroidKeyStore when attempting to generate keypair
@@ -774,7 +775,7 @@ public class StorageHelper implements IStorageHelper {
                 // The thrown exception in this case is:
                 // java.lang.IllegalStateException: could not generate key in keystore
                 // To avoid app crashing, re-throw as checked exception
-                logFlowError(methodName, AuthenticationConstants.TelemetryEvents.KEYSTORE_WRITE_END, e.toString(), e);
+                logFlowError(methodTag, AuthenticationConstants.TelemetryEvents.KEYSTORE_WRITE_END, e.toString(), e);
                 throw new KeyStoreException(e);
             } finally {
                 // Reset to our default locale after generating keys
@@ -799,11 +800,11 @@ public class StorageHelper implements IStorageHelper {
     @Nullable
     private synchronized KeyPair readKeyPair()
             throws GeneralSecurityException, IOException {
-        final String methodName = ":readKeyPair";
-        Logger.verbose(TAG + methodName, "Reading Key entry");
+        final String methodTag = TAG + ":readKeyPair";
+        Logger.verbose(methodTag, "Reading Key entry");
 
         try {
-            logFlowStart(methodName, AuthenticationConstants.TelemetryEvents.KEYSTORE_READ_START);
+            logFlowStart(methodTag, AuthenticationConstants.TelemetryEvents.KEYSTORE_READ_START);
 
             final KeyStore keyStore = KeyStore.getInstance(ANDROID_KEY_STORE);
             keyStore.load(null);
@@ -812,16 +813,16 @@ public class StorageHelper implements IStorageHelper {
             final Key privateKey = keyStore.getKey(KEY_STORE_CERT_ALIAS, null);
 
             if (cert == null || privateKey == null) {
-                logFlowSuccess(methodName, AuthenticationConstants.TelemetryEvents.KEYSTORE_READ_END, "KeyStore is empty.");
-                Logger.verbose(TAG + methodName, "Key entry doesn't exist.");
+                logFlowSuccess(methodTag, AuthenticationConstants.TelemetryEvents.KEYSTORE_READ_END, "KeyStore is empty.");
+                Logger.verbose(methodTag, "Key entry doesn't exist.");
                 return null;
             }
 
             final KeyPair keyPair = new KeyPair(cert.getPublicKey(), (PrivateKey) privateKey);
-            logFlowSuccess(methodName, AuthenticationConstants.TelemetryEvents.KEYSTORE_READ_END, "KeyStore KeyPair is loaded.");
+            logFlowSuccess(methodTag, AuthenticationConstants.TelemetryEvents.KEYSTORE_READ_END, "KeyStore KeyPair is loaded.");
             return keyPair;
         } catch (final GeneralSecurityException | IOException e) {
-            logFlowError(methodName, AuthenticationConstants.TelemetryEvents.KEYSTORE_READ_END, e.toString(), e);
+            logFlowError(methodTag, AuthenticationConstants.TelemetryEvents.KEYSTORE_READ_END, e.toString(), e);
             throw e;
         } catch (final RuntimeException e) {
             // There is an issue in android keystore that resets keystore
@@ -830,7 +831,7 @@ public class StorageHelper implements IStorageHelper {
             // in this case getEntry throws
             // java.lang.RuntimeException: error:0D07207B:asn1 encoding routines:ASN1_get_object:header too long
             // handle it as regular KeyStoreException
-            logFlowError(methodName, AuthenticationConstants.TelemetryEvents.KEYSTORE_READ_END, e.toString(), e);
+            logFlowError(methodTag, AuthenticationConstants.TelemetryEvents.KEYSTORE_READ_END, e.toString(), e);
             throw new KeyStoreException(e);
         }
     }
@@ -913,13 +914,13 @@ public class StorageHelper implements IStorageHelper {
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
     private synchronized SecretKey getUnwrappedSecretKey()
             throws GeneralSecurityException, IOException {
-        final String methodName = ":getUnwrappedSecretKey";
-        Logger.verbose(TAG + methodName, "Reading SecretKey");
+        final String methodTag = TAG + ":getUnwrappedSecretKey";
+        Logger.verbose(methodTag, "Reading SecretKey");
 
         final SecretKey unwrappedSecretKey;
         final byte[] wrappedSecretKey = readKeyData();
         if (wrappedSecretKey == null) {
-            Logger.verbose(TAG + methodName, "Key data is null");
+            Logger.verbose(methodTag, "Key data is null");
             return null;
         }
 
@@ -932,19 +933,19 @@ public class StorageHelper implements IStorageHelper {
         }
 
         unwrappedSecretKey = unwrap(wrappedSecretKey);
-        Logger.verbose(TAG + methodName, "Finished reading SecretKey");
+        Logger.verbose(methodTag, "Finished reading SecretKey");
         return unwrappedSecretKey;
     }
 
     public void deleteKeyFile() {
-        final String methodName = ":deleteKeyFile";
+        final String methodTag = TAG + ":deleteKeyFile";
 
         final File keyFile = new File(mContext.getDir(getPackageName(),
                 Context.MODE_PRIVATE), ADALKS);
         if (keyFile.exists()) {
-            Logger.verbose(TAG + methodName, "Delete KeyFile");
+            Logger.verbose(methodTag, "Delete KeyFile");
             if (!keyFile.delete()) {
-                Logger.verbose(TAG + methodName, "Delete KeyFile failed");
+                Logger.verbose(methodTag, "Delete KeyFile failed");
             }
         }
     }
@@ -960,9 +961,9 @@ public class StorageHelper implements IStorageHelper {
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
     @SuppressLint("GetInstance")
     private synchronized byte[] wrap(final SecretKey key) throws GeneralSecurityException {
-        final String methodName = ":wrap";
+        final String methodTag = TAG + ":wrap";
 
-        Logger.verbose(TAG + methodName, "Wrap secret key.");
+        Logger.verbose(methodTag, "Wrap secret key.");
         final Cipher wrapCipher = Cipher.getInstance(WRAP_ALGORITHM);
         wrapCipher.init(Cipher.WRAP_MODE, mKeyPair.getPublic());
         return wrapCipher.wrap(key);
@@ -990,9 +991,9 @@ public class StorageHelper implements IStorageHelper {
     }
 
     private void writeKeyData(final byte[] data) throws IOException {
-        final String methodName = ":writeKeyData";
+        final String methodTag = TAG + ":writeKeyData";
 
-        Logger.verbose(TAG + methodName, "Writing key data to a file");
+        Logger.verbose(methodTag, "Writing key data to a file");
         final File keyFile = new File(mContext.getDir(getPackageName(), Context.MODE_PRIVATE),
                 ADALKS);
         final OutputStream out = new FileOutputStream(keyFile);
@@ -1005,7 +1006,7 @@ public class StorageHelper implements IStorageHelper {
 
     @Nullable
     private byte[] readKeyData() throws IOException {
-        final String methodName = ":readKeyData";
+        final String methodTag = TAG + ":readKeyData";
 
         final File keyFile = new File(mContext.getDir(getPackageName(), Context.MODE_PRIVATE),
                 ADALKS);
@@ -1013,7 +1014,7 @@ public class StorageHelper implements IStorageHelper {
             return null;
         }
 
-        Logger.verbose(TAG + methodName, "Reading key data from a file");
+        Logger.verbose(methodTag, "Reading key data from a file");
         final InputStream in = new FileInputStream(keyFile);
         try {
             final ByteArrayOutputStream bytes = new ByteArrayOutputStream();
@@ -1041,38 +1042,38 @@ public class StorageHelper implements IStorageHelper {
      * Since Common isn't wired to telemetry yet at the point of implementation (July 18, 2019)
      * We use these functions to pass telemetry events to the calling ad-accounts.
      */
-    private void logEvent(@NonNull final String methodName,
+    private void logEvent(@NonNull final String methodTag,
                           @NonNull final String operationName,
                           @NonNull final boolean isFailed,
                           @NonNull final String reason) {
-        Logger.verbose(TAG + methodName, operationName + ": " + reason);
+        Logger.verbose(methodTag, operationName + ": " + reason);
         if (mTelemetryCallback != null) {
             mTelemetryCallback.logEvent(operationName, isFailed, reason);
         }
     }
 
-    private void logFlowStart(@NonNull final String methodName,
+    private void logFlowStart(@NonNull final String methodTag,
                               @NonNull final String operationName) {
-        Logger.verbose(TAG + methodName, operationName + " started.");
+        Logger.verbose(methodTag, operationName + " started.");
         if (mTelemetryCallback != null) {
             mTelemetryCallback.logEvent(operationName, false, "");
         }
     }
 
-    private void logFlowSuccess(@NonNull final String methodName,
+    private void logFlowSuccess(@NonNull final String methodTag,
                                 @NonNull final String operationName,
                                 @NonNull final String reason) {
-        Logger.verbose(TAG + methodName, operationName + " successfully finished: " + reason);
+        Logger.verbose(methodTag, operationName + " successfully finished: " + reason);
         if (mTelemetryCallback != null) {
             mTelemetryCallback.logEvent(operationName, false, reason);
         }
     }
 
-    private void logFlowError(@NonNull final String methodName,
+    private void logFlowError(@NonNull final String methodTag,
                               @NonNull final String operationName,
                               @NonNull final String reason,
                               @Nullable Exception e) {
-        Logger.error(TAG + methodName, operationName + " failed: " + reason, e);
+        Logger.error(methodTag, operationName + " failed: " + reason, e);
         if (mTelemetryCallback != null) {
             mTelemetryCallback.logEvent(operationName, true, reason);
         }

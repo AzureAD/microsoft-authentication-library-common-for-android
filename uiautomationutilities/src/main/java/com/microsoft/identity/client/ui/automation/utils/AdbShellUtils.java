@@ -74,7 +74,7 @@ public class AdbShellUtils {
         Logger.i(TAG, "Installing the given package:" + packageName + " on the device..");
         final String result = executeShellCommand("pm install " + packageName);
         Assert.assertNotNull(result);
-        Assert.assertEquals("Success", result.trim());
+        Assert.assertEquals("Package Installation failed for package " + packageName, "Success", result.trim());
     }
 
     /**
@@ -96,7 +96,7 @@ public class AdbShellUtils {
         installCmdBuilder.append(packageName);
         final String result = executeShellCommand(installCmdBuilder.toString());
         Assert.assertNotNull(result);
-        Assert.assertEquals("Success", result.trim());
+        Assert.assertEquals("Package Installation failed for package " + packageName, "Success", result.trim());
     }
 
     /**
@@ -107,6 +107,26 @@ public class AdbShellUtils {
     public static void removePackage(@NonNull final String packageName) {
         Logger.i(TAG, "Remove the " + packageName + " App from device..");
         executeShellCommand("pm uninstall " + packageName);
+    }
+
+    /**
+     * Enable the app with the given package name
+     *
+     * @param packageName the package name to enable
+     */
+    public static void enablePackage(@NonNull final String packageName) {
+        Logger.i(TAG, "Enable the " + packageName + " App..");
+        executeShellCommand("pm enable " + packageName);
+    }
+
+    /**
+     * Disable the app with the given package name
+     *
+     * @param packageName the package name to disable
+     */
+    public static void disablePackage(@NonNull final String packageName) {
+        Logger.i(TAG, "Disable the " + packageName + " App..");
+        executeShellCommand("pm disable " + packageName);
     }
 
     /**

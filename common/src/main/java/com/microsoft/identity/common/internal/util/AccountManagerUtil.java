@@ -23,6 +23,8 @@
 
 package com.microsoft.identity.common.internal.util;
 
+import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.BROKER_ACCOUNT_TYPE;
+
 import android.app.admin.DevicePolicyManager;
 import android.content.Context;
 import android.content.pm.PackageManager;
@@ -31,10 +33,7 @@ import android.os.UserManager;
 
 import androidx.annotation.NonNull;
 
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.logging.Logger;
-
-import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.BROKER_ACCOUNT_TYPE;
 
 public final class AccountManagerUtil {
     private static final String TAG = AccountManagerUtil.class.getSimpleName();
@@ -48,23 +47,28 @@ public final class AccountManagerUtil {
      * To verify if the caller can use to AccountManager to use broker.
      */
     public static boolean canUseAccountManagerOperation(final Context context) {
-        final String methodName = "canUseAccountManagerOperation:";
+        final String methodTag = TAG + ":canUseAccountManagerOperation:";
 
         if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             // Check user policy
             final UserManager userManager = (UserManager) context.getSystemService(Context.USER_SERVICE);
             if (userManager.hasUserRestriction(UserManager.DISALLOW_MODIFY_ACCOUNTS)) {
-                Logger.verbose(TAG + methodName, "UserManager.DISALLOW_MODIFY_ACCOUNTS is enabled for this user.");
+                Logger.verbose(methodTag, "UserManager.DISALLOW_MODIFY_ACCOUNTS is enabled for this user.");
                 return false;
             }
 
             // Check if our account type is disabled.
             final DevicePolicyManager devicePolicyManager =
                     (DevicePolicyManager) context.getSystemService(Context.DEVICE_POLICY_SERVICE);
-            for (final String accountType : devicePolicyManager.getAccountTypesWithManagementDisabled()) {
-                if (BROKER_ACCOUNT_TYPE.equalsIgnoreCase(accountType)) {
-                    Logger.verbose(TAG + methodName, "Broker account type is disabled by MDM.");
-                    return false;
+            if (devicePolicyManager != null) {
+                final String[] accountTypesWithManagementDisabled = devicePolicyManager.getAccountTypesWithManagementDisabled();
+                if (accountTypesWithManagementDisabled != null) {
+                    for (final String accountType : accountTypesWithManagementDisabled) {
+                        if (BROKER_ACCOUNT_TYPE.equalsIgnoreCase(accountType)) {
+                            Logger.verbose(methodTag, "Broker account type is disabled by MDM.");
+                            return false;
+                        }
+                    }
                 }
             }
 
@@ -78,18 +82,18 @@ public final class AccountManagerUtil {
 
         // Unable to determine - treat this as false.
         // If the restriction exists and we make an accountManager call, then the OS will pop a dialog up.
-        Logger.verbose(TAG + methodName,
+        Logger.verbose(methodTag,
                 "Cannot verify. Skipping AccountManager operation.");
         return false;
     }
 
     public static boolean isPermissionGranted(@NonNull final Context context,
                                               @NonNull final String permissionName) {
-        final String methodName = ":isPermissionGranted";
+        final String methodTag = TAG + ":isPermissionGranted";
         final PackageManager pm = context.getPackageManager();
         final boolean isGranted = pm.checkPermission(permissionName, context.getPackageName())
                 == PackageManager.PERMISSION_GRANTED;
-        Logger.verbose(TAG + methodName, "is " + permissionName + " granted? [" + isGranted + "]");
+        Logger.verbose(methodTag, "is " + permissionName + " granted? [" + isGranted + "]");
         return isGranted;
     }
 }

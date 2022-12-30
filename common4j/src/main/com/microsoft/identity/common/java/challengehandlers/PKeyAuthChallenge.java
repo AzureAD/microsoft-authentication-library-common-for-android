@@ -24,22 +24,18 @@ package com.microsoft.identity.common.java.challengehandlers;
 
 import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.CHALLENGE_RESPONSE_HEADER;
 import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.CHALLENGE_RESPONSE_TYPE;
+import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.PKEYAUTH_VERSION;
 
 import com.microsoft.identity.common.java.AuthenticationSettings;
-import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.util.JWSBuilder;
 import com.microsoft.identity.common.java.util.StringUtil;
 
-import java.io.Serializable;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.cert.X509Certificate;
-import java.security.interfaces.RSAPrivateKey;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -49,7 +45,6 @@ import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.experimental.Accessors;
-import sun.rmi.runtime.Log;
 
 /**
  * A class/builder that represents PKeyAuth challenge.
@@ -60,7 +55,7 @@ import sun.rmi.runtime.Log;
 @Builder
 @Getter
 @Accessors(prefix = "m")
-public class PKeyAuthChallenge implements Serializable {
+public class PKeyAuthChallenge {
     private static final String TAG = PKeyAuthChallenge.class.getSimpleName();
 
     enum RequestField {
@@ -90,12 +85,14 @@ public class PKeyAuthChallenge implements Serializable {
      * The mCertAuthorities could be empty when either no certificate or no permission for ADFS
      * service account for the Device container in AD.
      */
+    @Nullable
     private final List<String> mCertAuthorities;
 
     /**
      * The thumbprint of the device certificate that the client MUST present in order to complete proof of possession.
      * This is used by the client in order to determine the right certificate to be presented by the client in order to perform device authentication.
      */
+    @Nullable
     private final String mThumbprint;
 
     /**
@@ -103,7 +100,19 @@ public class PKeyAuthChallenge implements Serializable {
      */
     private final String mVersion;
 
+    /**
+     * The url to submit PKeyAuth response to.
+     */
     private final String mSubmitUrl;
+
+    @Builder.Default
+    private final JWSBuilder mJwsBuilder = new JWSBuilder();
+
+    /**
+     * Home tenant ID of the account that is being challenged.
+     */
+    @Nullable
+    private final String mTenantId;
 
     /**
      * Generate a header to be returned with the PKeyAuth Response.
@@ -124,18 +133,18 @@ public class PKeyAuthChallenge implements Serializable {
             return getChallengeHeaderWithoutSignedJwt();
         }
 
-        // If not device cert exists, alias or private key will not exist on the device
-        // Suppressing unchecked warnings due to the generic type not provided in the object returned from method getDeviceCertificateProxy
-        @SuppressWarnings(WarningType.unchecked_warning)
-        final Class<IDeviceCertificate> certClazz =
-                (Class<IDeviceCertificate>) AuthenticationSettings.INSTANCE.getDeviceCertificateProxy();
-
-        if (certClazz == null) {
-            Logger.warn(TAG + methodName, "Device Certificate Proxy is not initialized");
+        final IDeviceCertificateLoader certificateLoader = AuthenticationSettings.INSTANCE.getCertificateLoader();
+        if (certificateLoader == null) {
+            Logger.warn(TAG + methodName, "Device Certificate loader is not initialized.");
             return getChallengeHeaderWithoutSignedJwt();
         }
 
-        final IDeviceCertificate deviceCertProxy = getWPJAPIInstance(certClazz);
+        final IDeviceCertificate deviceCertProxy = certificateLoader.loadCertificate(mTenantId);
+        if (deviceCertProxy == null) {
+            Logger.warn(TAG + methodName, "Device Certificate not found.");
+            return getChallengeHeaderWithoutSignedJwt();
+        }
+
         if (deviceCertProxy.isValidIssuer(mCertAuthorities)){
             Logger.info(TAG + methodName,
                     "Found a certificate matching the provided authority.");
@@ -158,7 +167,7 @@ public class PKeyAuthChallenge implements Serializable {
         final Map<String, String> headers = new HashMap<>();
         headers.put(CHALLENGE_RESPONSE_HEADER,
                 String.format("%s Context=\"%s\",Version=\"%s\"",
-                        CHALLENGE_RESPONSE_TYPE, mContext, mVersion));
+                        CHALLENGE_RESPONSE_TYPE, mContext, PKEYAUTH_VERSION));
         return headers;
     }
 
@@ -168,27 +177,19 @@ public class PKeyAuthChallenge implements Serializable {
     private Map<String, String> getChallengeHeaderWithSignedJwt(@NonNull final IDeviceCertificate deviceCertProxy) throws ClientException {
         final String methodName = ":getChallengeHeaderWithSignedJwt";
 
-        final PrivateKey privateKey = deviceCertProxy.getPrivateKey();
-        if (privateKey == null) {
-            throw new ClientException(ErrorStrings.KEY_CHAIN_PRIVATE_KEY_EXCEPTION);
+        // This should NEVER happen, but things might change in the future.
+        if (!StringUtil.equalsIgnoreCase(mVersion, PKEYAUTH_VERSION)) {
+            Logger.warn(TAG + methodName,
+                    "PKeyAuth version mismatch, server provides: " + mVersion +
+                            "We support: " + PKEYAUTH_VERSION +
+                            "Proceed anyway with " + PKEYAUTH_VERSION
+                    );
         }
 
-        final PublicKey publicKey = deviceCertProxy.getPublicKey();
-        if (publicKey == null) {
-            throw new ClientException(ErrorStrings.KEY_CHAIN_PUBLIC_KEY_EXCEPTION);
-        }
-
-        final X509Certificate certificate = deviceCertProxy.getCertificate();
-        if (certificate == null) {
-            throw new ClientException(ErrorStrings.KEY_CHAIN_CERTIFICATE_EXCEPTION);
-        }
-
-        final String jwt = (new JWSBuilder()).generateSignedJWT(
+        final String jwt = mJwsBuilder.generateSignedJWT(
                 mNonce,
                 mSubmitUrl,
-                privateKey,
-                publicKey,
-                certificate);
+                deviceCertProxy);
 
         Logger.info(TAG + methodName, "Generated a signed challenge response.");
 
@@ -196,22 +197,7 @@ public class PKeyAuthChallenge implements Serializable {
         headers.put(CHALLENGE_RESPONSE_HEADER,
                 String.format(
                         "%s AuthToken=\"%s\",Context=\"%s\",Version=\"%s\"",
-                        CHALLENGE_RESPONSE_TYPE, jwt, mContext, mVersion));
+                        CHALLENGE_RESPONSE_TYPE, jwt, mContext, PKEYAUTH_VERSION));
         return headers;
-    }
-
-    private static IDeviceCertificate getWPJAPIInstance(@NonNull final Class<IDeviceCertificate> certClazz)
-            throws ClientException {
-        final IDeviceCertificate deviceCertProxy;
-        final Constructor<?> constructor;
-        try {
-            constructor = certClazz.getDeclaredConstructor();
-            deviceCertProxy = (IDeviceCertificate) constructor.newInstance((Object[]) null);
-        } catch (final NoSuchMethodException | InstantiationException | IllegalAccessException
-                | IllegalArgumentException | InvocationTargetException e) {
-            throw new ClientException(ErrorStrings.DEVICE_CERTIFICATE_API_EXCEPTION,
-                    "WPJ Api constructor is not defined", e);
-        }
-        return deviceCertProxy;
     }
 }

@@ -35,4 +35,6 @@ public interface ITokenParameters {
 
     String getClientId();
 
+    String getResource();
+
 }

@@ -73,6 +73,19 @@ public interface ISettings {
                         final String password);
 
     /**
+     * Add the supplied account to the device via Account Manager.
+     *
+     * @param expectedBroker  the broker expected to be used for the account type
+     * @param username        the username of the account to add
+     * @param password        the password of the account to add
+     * @param isFederatedUser whether the user is federated user or not
+     */
+    void addWorkAccount(final ITestBroker expectedBroker,
+                        final String username,
+                        final String password,
+                        final boolean isFederatedUser);
+
+    /**
      * Launch the date & time page in Settings app.
      */
     void launchDateTimeSettingsPage();
@@ -85,7 +98,7 @@ public interface ISettings {
     /**
      * Change the time on the device by seconds.
      *
-     * @seconds time to advance device time by
+     * @param seconds time to advance device time by
      */
     void forwardDeviceTime(long seconds);
 
@@ -117,4 +130,15 @@ public interface ISettings {
      */
     void launchAppInfoPage(String packageName);
 
+    /**
+     * Disable an app through the device's settings page instead of shell command.
+     * @param packageName name of package to be disabled
+     */
+    public void disableAppThroughSettings(@NonNull final String packageName);
+
+    /**
+     * Enable an app through the device's settings page instead of shell command.
+     * @param packageName name of package to be enabled
+     */
+    public void enableAppThroughSettings(@NonNull final String packageName);
 }

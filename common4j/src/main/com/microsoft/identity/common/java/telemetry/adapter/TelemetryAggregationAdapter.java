@@ -24,6 +24,7 @@ package com.microsoft.identity.common.java.telemetry.adapter;
 
 import lombok.NonNull;
 
+import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.telemetry.observers.ITelemetryAggregatedObserver;
 import com.microsoft.identity.common.java.telemetry.rules.TelemetryAggregationRules;
@@ -34,7 +35,7 @@ import java.util.Map;
 
 import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Key;
 
-public final class TelemetryAggregationAdapter implements ITelemetryAdapter<List<Map<String, String>>> {
+public class TelemetryAggregationAdapter implements ITelemetryAdapter<List<Map<String, String>>> {
     private ITelemetryAggregatedObserver mObserver;
     private static final String START = "start";
     private static final String END = "end";
@@ -48,6 +49,10 @@ public final class TelemetryAggregationAdapter implements ITelemetryAdapter<List
     }
 
     public void process(@NonNull final List<Map<String, String>> rawData) {
+        mObserver.onReceived(aggregateEvent(rawData));
+    }
+
+    protected Map<String, String> aggregateEvent(@NonNull final List<Map<String, String>> rawData) {
         final Map<String, String> aggregatedData = new HashMap<>();
         final Map<String, String> responseTimeMap = new HashMap<>();
 
@@ -72,12 +77,11 @@ public final class TelemetryAggregationAdapter implements ITelemetryAdapter<List
                 );
             }
 
-            if (!StringUtil.isNullOrEmpty(event.get(Key.IS_SUCCESSFUL))) {
-                aggregatedData.put(
-                        eventType + Key.IS_SUCCESSFUL,
-                        event.get(Key.IS_SUCCESSFUL)
-                );
-            }
+            final String isSuccessful = event.containsKey(Key.IS_SUCCESSFUL) ? event.get(Key.IS_SUCCESSFUL) : TelemetryEventStrings.Value.FALSE;
+            aggregatedData.put(
+                    eventType + Key.IS_SUCCESSFUL,
+                    StringUtil.isNullOrEmpty(isSuccessful) ? TelemetryEventStrings.Value.FALSE : isSuccessful
+            );
 
             trackEventResponseTime(responseTimeMap, event);
 
@@ -86,10 +90,10 @@ public final class TelemetryAggregationAdapter implements ITelemetryAdapter<List
 
         calculateEventResponseTime(responseTimeMap, aggregatedData);
 
-        mObserver.onReceived(aggregatedData);
+        return aggregatedData;
     }
 
-    private Map<String, String> applyAggregationRule(@NonNull final Map<String, String> properties) {
+    protected Map<String, String> applyAggregationRule(@NonNull final Map<String, String> properties) {
         final Map<String, String> nonPiiProperties = new HashMap<>();
         for (Map.Entry<String, String> entry : properties.entrySet()) {
             if (!StringUtil.isNullOrEmpty(entry.getValue())

@@ -46,6 +46,7 @@ import java.util.UUID;
 
 import static com.microsoft.identity.common.java.providers.Constants.MOCK_PKCE_CHALLENGE;
 import static com.microsoft.identity.common.java.providers.Constants.MOCK_STATE;
+import static com.microsoft.identity.common.java.providers.Constants.MOCK_STATE_ENCODED;
 import static com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest.HIDE_SWITCH_USER_QUERY_PARAMETER;
 import static org.junit.Assert.assertTrue;
 
@@ -141,7 +142,7 @@ public class MicrosoftStsAuthorizationRequestTests {
                         "&response_type=code" +
                         "&client_id=" + DEFAULT_TEST_CLIENT_ID +
                         "&redirect_uri=" + DEFAULT_TEST_REDIRECT_URI_ENCODED +
-                        "&state=" + MOCK_STATE +
+                        "&state=" + MOCK_STATE_ENCODED +
                         "&scope=" + DEFAULT_TEST_SCOPE_ENCODED +
                         "&" + MOCK_FLIGHT_QUERY_1 + "=" + MOCK_FLIGHT_VALUE_1 +
                         "&" + MOCK_FLIGHT_QUERY_2 + "=" + MOCK_FLIGHT_VALUE_2 +

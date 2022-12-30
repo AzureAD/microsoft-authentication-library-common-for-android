@@ -17,10 +17,13 @@ steps:
   clean: true
   submodules: recursive
 - script: touch env.list
-  displayName: 'Create Enviroment file'
+  displayName: 'Create Environment file'
 - script: echo "${{ parameters.EnvVstsMvnAccount }}=$(mvnAccessToken)" >> env.list
   condition: ne('${{ parameters.EnvVstsMvnAccount }}', '')
   displayName: set mvnAccessToken in env.file
+- script: echo "LAB_SECRET=$(AndroidAutomationRunnerAppSecret)" >> env.list
+  condition: ne(variables['AndroidAutomationRunnerAppSecret'], '')
+  displayName: set lab secret in env.file
 - script: docker --version
   displayName: Docker Version
 - script: |

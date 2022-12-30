@@ -128,8 +128,8 @@ public final class BrokerActivity extends Activity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 
-        final String methodName = ":onActivityResult";
-        Logger.info(TAG + methodName,
+        final String methodTag = TAG + ":onActivityResult";
+        Logger.info(methodTag,
                 "Result received from Broker "
                         + "Request code: " + requestCode
                         + " Result code: " + requestCode
@@ -142,7 +142,7 @@ public final class BrokerActivity extends Activity {
                 || resultCode == BROKER_OPERATION_CANCELLED
                 || resultCode == BROKER_ERROR_RESPONSE) {
 
-            Logger.verbose(TAG + methodName, "Completing interactive request ");
+            Logger.verbose(methodTag, "Completing interactive request ");
 
             propertyBag = PropertyBagUtil.fromBundle(data.getExtras());
             propertyBag.put(REQUEST_CODE, BROKER_FLOW);

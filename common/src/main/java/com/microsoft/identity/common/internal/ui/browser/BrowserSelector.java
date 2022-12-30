@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.ui.browser;
 
+import static com.microsoft.identity.common.java.util.BrokerProtocolVersionUtil.compareSemanticVersion;
+
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
@@ -32,10 +34,10 @@ import android.os.Build;
 
 import androidx.annotation.NonNull;
 
-import com.microsoft.identity.common.internal.util.StringUtil;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.ui.BrowserDescriptor;
+import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.logging.Logger;
 import com.microsoft.identity.common.internal.broker.PackageHelper;
 
@@ -58,14 +60,15 @@ public class BrowserSelector {
      * @return Browser selected to use.
      */
     public static Browser select(final Context context, final List<BrowserDescriptor> browserSafeList) throws ClientException {
+        final String methodTag = TAG + ":select";
         final List<Browser> allBrowsers = getAllBrowsers(context);
-        Logger.verbose(TAG, "Select the browser to launch.");
+        Logger.verbose(methodTag, "Select the browser to launch.");
 
         for (final Browser browser : allBrowsers) {
             for (final BrowserDescriptor browserDescriptor : browserSafeList) {
                 if (matches(browserDescriptor, browser)) {
                     Logger.info(
-                            TAG,
+                            methodTag,
                             "Browser's package name: "
                                     + browser.getPackageName()
                                     + " version: "
@@ -75,19 +78,17 @@ public class BrowserSelector {
             }
         }
 
-        Logger.error(TAG, "No available browser installed on the device.", null);
+        Logger.error(methodTag, "No available browser installed on the device.", null);
         throw new ClientException(ErrorStrings.NO_AVAILABLE_BROWSER_FOUND, "No available browser installed on the device.");
     }
 
     private static boolean matches(@NonNull final BrowserDescriptor browserDescriptor,
                                    @NonNull Browser browser) {
-        final String methodName = ":matches";
-
         final BrowserDescriptor descriptor;
         try {
             descriptor = (BrowserDescriptor) browserDescriptor;
         } catch (final ClassCastException e) {
-            Logger.error(TAG + methodName, "Cannot cast IBrowserDescriptor to BrowserDescriptor", e);
+            Logger.error(TAG + ":matches", "Cannot cast IBrowserDescriptor to BrowserDescriptor", e);
             return false;
         }
 
@@ -99,13 +100,13 @@ public class BrowserSelector {
             return false;
         }
 
-        if (!StringUtil.isEmpty(descriptor.getVersionLowerBound())
-                && StringUtil.compareSemanticVersion(browser.getVersion(), descriptor.getVersionLowerBound()) == -1) {
+        if (!StringUtil.isNullOrEmpty(descriptor.getVersionLowerBound())
+                && compareSemanticVersion(browser.getVersion(), descriptor.getVersionLowerBound()) == -1) {
             return false;
         }
 
-        if (!StringUtil.isEmpty(descriptor.getVersionUpperBound())
-                && StringUtil.compareSemanticVersion(browser.getVersion(), descriptor.getVersionUpperBound()) == 1) {
+        if (!StringUtil.isNullOrEmpty(descriptor.getVersionUpperBound())
+                && compareSemanticVersion(browser.getVersion(), descriptor.getVersionUpperBound()) == 1) {
             return false;
         }
 
@@ -120,6 +121,7 @@ public class BrowserSelector {
      * (i.e. their default browser, if set, should be the first entry in the list).
      */
     public static List<Browser> getAllBrowsers(final Context context) {
+        final String methodTag = TAG + ":getAllBrowsers";
         //get the list of browsers
         final Intent BROWSER_INTENT = new Intent(
                 Intent.ACTION_VIEW,
@@ -156,7 +158,7 @@ public class BrowserSelector {
             }
         }
 
-        Logger.verbose(TAG, null, "Found " + browserList.size() + " browsers.");
+        Logger.verbose(methodTag, null, "Found " + browserList.size() + " browsers.");
         return browserList;
     }
 

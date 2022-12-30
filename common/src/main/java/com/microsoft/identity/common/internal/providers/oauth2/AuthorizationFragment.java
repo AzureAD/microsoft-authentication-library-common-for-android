@@ -23,7 +23,9 @@
 package com.microsoft.identity.common.internal.providers.oauth2;
 
 import android.os.Bundle;
+import android.view.View;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -80,7 +82,7 @@ public abstract class AuthorizationFragment extends Fragment {
 
     @Override
     public void onCreate(@Nullable final Bundle savedInstanceState) {
-        final String methodName = "#onCreate";
+        final String methodTag = TAG + ":onCreate";
         super.onCreate(savedInstanceState);
 
         // Register Broadcast receiver to cancel the auth request
@@ -88,36 +90,62 @@ public abstract class AuthorizationFragment extends Fragment {
         LocalBroadcaster.INSTANCE.registerCallback(CANCEL_AUTHORIZATION_REQUEST, mCancelRequestReceiver);
 
         if (savedInstanceState == null && mInstanceState == null) {
-            Logger.warn(TAG, "No stored state. Unable to handle response");
+            Logger.warn(methodTag, "No stored state. Unable to handle response");
             finish();
             return;
         }
 
         if (savedInstanceState == null) {
-            Logger.verbose(TAG + methodName, "Extract state from the intent bundle.");
+            Logger.verbose(methodTag, "Extract state from the intent bundle.");
             extractState(mInstanceState);
         } else {
             // If activity is killed by the os, savedInstance will be the saved bundle.
-            Logger.verbose(TAG + methodName, "Extract state from the saved bundle.");
+            Logger.verbose(methodTag, "Extract state from the saved bundle.");
             extractState(savedInstanceState);
         }
     }
 
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        requireActivity().getOnBackPressedDispatcher().addCallback(getViewLifecycleOwner(), new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                handleBackButtonPressed();
+            }
+        });
+    }
+
     void finish() {
+        final String methodName = "#finish";
         LocalBroadcaster.INSTANCE.unregisterCallback(CANCEL_AUTHORIZATION_REQUEST);
+
         final FragmentActivity activity = getActivity();
         if (activity instanceof AuthorizationActivity) {
             activity.finish();
         } else {
             // The calling activity is not owned by MSAL/Broker.
             // Just remove this fragment.
-            final FragmentManager fragmentManager = getFragmentManager();
-            if (fragmentManager != null) {
-                fragmentManager
-                        .beginTransaction()
-                        .setTransitionStyle(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
-                        .remove(this)
-                        .commit();
+            try {
+                final FragmentManager fragmentManager = getFragmentManager();
+                if (fragmentManager != null) {
+                    fragmentManager
+                            .beginTransaction()
+                            .setTransitionStyle(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
+                            .remove(this)
+                            .commitNow();
+                }
+            }catch(Exception e){
+                /*
+                MATS Telemetry indicated that the normal call to commit() which is async occasionally
+                results in an IllegalStateException.  Current theory is that because we previously were
+                user commit() rather than commitNow() that the fragment manager that we were removing
+                ourselves from was already gone...
+
+                Logging being added here to hopefully to make a more definitive determination of root cause.
+                https://identitydivision.visualstudio.com/Engineering/_workitems/edit/1695851
+                 */
+                Logger.error(TAG + methodName, "Logged as error to capture 'cause'; Exception occurred when removing ourselves from provided FragmentManager", e);
             }
         }
     }
@@ -135,22 +163,22 @@ public abstract class AuthorizationFragment extends Fragment {
      * Initialize based on value provided in intent.
      */
     private static void setDiagnosticContextForNewThread(final String correlationId) {
-        final String methodName = ":setDiagnosticContextForAuthorizationActivity";
+        final String methodTag = TAG + ":setDiagnosticContextForAuthorizationActivity";
         final RequestContext rc = new RequestContext();
         rc.put(DiagnosticContext.CORRELATION_ID, correlationId);
         DiagnosticContext.setRequestContext(rc);
         Logger.verbose(
-                TAG + methodName,
+                methodTag,
                 "Initializing diagnostic context for AuthorizationActivity"
         );
     }
 
     @Override
     public void onStop() {
-        final String methodName = ":onStop";
+        final String methodTag = TAG + ":onStop";
         final FragmentActivity activity = getActivity();
         if (!mAuthResultSent && (activity == null || activity.isFinishing())) {
-            Logger.info(TAG + methodName,
+            Logger.info(methodTag,
                     "Hosting Activity is destroyed before Auth request is completed, sending request cancel"
             );
             Telemetry.emit(new UiEndEvent().isUserCancelled());
@@ -161,10 +189,10 @@ public abstract class AuthorizationFragment extends Fragment {
 
     @Override
     public void onDestroy() {
-        final String methodName = "#onDestroy";
-        Logger.info(TAG + methodName, "");
+        final String methodTag = TAG + ":onDestroy";
+        Logger.info(methodTag, "");
         if (!mAuthResultSent) {
-            Logger.info(TAG + methodName,
+            Logger.info(methodTag,
                     "Hosting Activity is destroyed before Auth request is completed, sending request cancel"
             );
             Telemetry.emit(new UiEndEvent().isUserCancelled());
@@ -175,12 +203,8 @@ public abstract class AuthorizationFragment extends Fragment {
         super.onDestroy();
     }
 
-    /**
-     * NOTE: Fragment-only mode will not support this, as we don't own the activity.
-     * This must be invoked by AuthorizationActivity.onBackPressed().
-     */
-    public boolean onBackPressed() {
-        return false;
+    public void handleBackButtonPressed() {
+        cancelAuthorization(true);
     }
 
     void sendResult(final RawAuthorizationResult.ResultCode resultCode) {
@@ -188,7 +212,8 @@ public abstract class AuthorizationFragment extends Fragment {
     }
 
     void sendResult(@NonNull final RawAuthorizationResult result) {
-        Logger.info(TAG, "Sending result from Authorization Activity, resultCode: " + result.getResultCode());
+        final String methodTag = TAG + ":sendResult";
+        Logger.info(methodTag, "Sending result from Authorization Activity, resultCode: " + result.getResultCode());
 
         final PropertyBag propertyBag = RawAuthorizationResult.toPropertyBag(result);
         propertyBag.put(REQUEST_CODE, BROWSER_FLOW);
@@ -198,11 +223,12 @@ public abstract class AuthorizationFragment extends Fragment {
     }
 
     void cancelAuthorization(final boolean isCancelledByUser) {
+        final String methodTag = TAG + ":cancelAuthorization";
         if (isCancelledByUser) {
-            Logger.info(TAG, "Received Authorization flow cancelled by the user");
+            Logger.info(methodTag, "Received Authorization flow cancelled by the user");
             sendResult(RawAuthorizationResult.ResultCode.CANCELLED);
         } else {
-            Logger.info(TAG, "Received Authorization flow cancel request from SDK");
+            Logger.info(methodTag, "Received Authorization flow cancel request from SDK");
             sendResult(RawAuthorizationResult.ResultCode.SDK_CANCELLED);
         }
 

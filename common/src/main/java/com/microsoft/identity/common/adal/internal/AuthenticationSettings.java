@@ -94,6 +94,8 @@ public enum AuthenticationSettings {
 
     private int mReadTimeOut = DEFAULT_READ_CONNECT_TIMEOUT;
 
+    private boolean mIgnoreKeyLoaderNotFoundError = false;
+
     /**
      * Get bytes to derive secretKey to use in encrypt/decrypt.
      *
@@ -130,11 +132,12 @@ public enum AuthenticationSettings {
      * @param rawKey App related key to use in encrypt/decrypt
      */
     public void setSecretKey(byte[] rawKey) {
+        final String methodTag = TAG + ":setSecretKey";
         if (rawKey == null || rawKey.length != SECRET_RAW_KEY_LENGTH) {
             throw new IllegalArgumentException("rawKey");
         }
         if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-            Logger.warn(":setSecretKey", "You're using setSecretKey in a version of android " +
+            Logger.warn(methodTag, "You're using setSecretKey in a version of android " +
                     "that supports keyStore functionality.  Consider not doing this, as it only exists " +
                     "for devices with an SDK lower than " + Build.VERSION_CODES.JELLY_BEAN_MR2);
         }
@@ -233,34 +236,6 @@ public enum AuthenticationSettings {
             throw new IllegalArgumentException("brokerSignature cannot be empty or null");
         }
         mBrokerSignature = brokerSignature;
-    }
-
-    /**
-     * set class for work place join related API. This is only used from
-     * Authenticator side.
-     *
-     * @param clazz class for workplace join
-     */
-    public void setDeviceCertificateProxyClass(@SuppressWarnings(WarningType.rawtype_warning) Class clazz) {
-        com.microsoft.identity.common.java.AuthenticationSettings.INSTANCE.setDeviceCertificateProxyClass(clazz);
-    }
-
-    /**
-     * get class for work place join related API. This is only used from the
-     * Broker side.
-     *
-     * @return Class
-     */
-    public Class<?> getDeviceCertificateProxy() {
-        return com.microsoft.identity.common.java.AuthenticationSettings.INSTANCE.getDeviceCertificateProxy();
-    }
-
-    /**
-     * remove class for work place join related API. This is only used from
-     * Authenticator side.
-     */
-    public void removeDeviceCertificateProxy() {
-        com.microsoft.identity.common.java.AuthenticationSettings.INSTANCE.removeDeviceCertificateProxy();
     }
 
     /**
@@ -435,5 +410,22 @@ public enum AuthenticationSettings {
      */
     public boolean getDisableWebViewHardwareAcceleration() {
         return mEnableHardwareAcceleration;
+    }
+
+    /**
+     * Method to suppress errors where KeyLoader is not found to decrypt the cache content
+     * @param shouldIgnore if true, ignores keyloader not found errors
+     */
+    @SuppressFBWarnings(ME_ENUM_FIELD_SETTER)
+    public void setIgnoreKeyLoaderNotFoundError(boolean shouldIgnore) {
+        mIgnoreKeyLoaderNotFoundError = shouldIgnore;
+    }
+
+    /**
+     * Method to check whether to suppress errors where KeyLoader is not found to decrypt
+     * the cache content.
+     */
+    public boolean shouldIgnoreKeyLoaderNotFoundError() {
+        return mIgnoreKeyLoaderNotFoundError;
     }
 }

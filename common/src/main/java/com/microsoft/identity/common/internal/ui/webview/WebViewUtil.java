@@ -44,7 +44,7 @@ public class WebViewUtil {
      */
     @SuppressLint("NewApi")
     public static void setDataDirectorySuffix(@NonNull final Context context) {
-        final String methodName = ":setDataDirectorySuffix";
+        final String methodTag = TAG + ":setDataDirectorySuffix";
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             try {
@@ -52,7 +52,7 @@ public class WebViewUtil {
                     WebView.setDataDirectorySuffix(AuthServiceProcess);
                 }
             } catch (final IllegalStateException e) {
-                Logger.warn(TAG + methodName, "WebView is already initialized. IllegalStateException is expected when setDataDirectorySuffix() is invoked");
+                Logger.warn(methodTag, "WebView is already initialized. IllegalStateException is expected when setDataDirectorySuffix() is invoked");
             }
         }
     }

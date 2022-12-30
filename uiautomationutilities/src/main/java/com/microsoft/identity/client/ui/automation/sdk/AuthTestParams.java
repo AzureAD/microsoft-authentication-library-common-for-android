@@ -24,6 +24,8 @@ package com.microsoft.identity.client.ui.automation.sdk;
 
 import android.app.Activity;
 
+import com.microsoft.identity.client.ui.automation.constants.AuthScheme;
+
 import lombok.Getter;
 import lombok.experimental.SuperBuilder;
 
@@ -41,4 +43,5 @@ public class AuthTestParams {
     private final String redirectUri;
     private final String authority;
     private final Activity activity;
+    private final AuthScheme authScheme;
 }

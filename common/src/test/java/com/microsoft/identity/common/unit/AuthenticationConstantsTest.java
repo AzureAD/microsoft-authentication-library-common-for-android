@@ -8,10 +8,6 @@ import org.junit.Test;
 public class AuthenticationConstantsTest {
     @Test
     public void testComputeMaxBrokerHostVersion() {
-        Assert.assertEquals("2.0", AuthenticationConstants.Broker.computeMaxHostBrokerProtocol());
-    }
-    @Test
-    public void testComputeMaxMsalVersion() {
-        Assert.assertEquals("7.0", AuthenticationConstants.Broker.computeMaxMsalBrokerProtocol());
+        Assert.assertEquals("3.0", AuthenticationConstants.Broker.computeMaxHostBrokerProtocol());
     }
 }

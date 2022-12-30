@@ -32,12 +32,13 @@ import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.google.gson.Gson;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
-import com.microsoft.identity.common.components.SettablePlatformComponents;
+import com.microsoft.identity.common.components.MockPlatformComponentsFactory;
 import com.microsoft.identity.common.exception.BrokerCommunicationException;
 import com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle;
 import com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy;
 import com.microsoft.identity.common.java.commands.AcquirePrtSsoTokenResult;
 import com.microsoft.identity.common.java.commands.parameters.AcquirePrtSsoTokenCommandParameters;
+import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -64,7 +65,7 @@ public class BrokerMsalControllerTest {
         final String accountAuthority = "https://login.microsoft.com/anAuthority";
         final String ssoUrl = "https://a.url.that.we.need/that/has/a/path?one_useless_param&sso_nonce=aNonceToUse&anotherUselessParam=foo";
         final String aCookie = "aCookie";
-        final SettablePlatformComponents components = SettablePlatformComponents.builder().build();
+        final IPlatformComponents components = MockPlatformComponentsFactory.getNonFunctionalBuilder().build();
         BrokerMsalController controller = new BrokerMsalController(InstrumentationRegistry.getInstrumentation().getContext(), components) {
             @Override
             public String getActiveBrokerPackageName() {

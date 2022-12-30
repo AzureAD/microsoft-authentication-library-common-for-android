@@ -41,75 +41,65 @@ public abstract class AbstractHttpClient implements HttpClient {
     public HttpResponse method(@NonNull final String httpMethod,
                                @NonNull final URL requestUrl,
                                @NonNull final Map<String, String> requestHeaders,
-                               @Nullable final byte[] requestContent,
-                               @Nullable final SSLContext sslContext) throws IOException {
-        return method(HttpClient.HttpMethod.validateAndNormalizeMethod(httpMethod), requestUrl, requestHeaders, requestContent, sslContext);
+                               @Nullable final byte[] requestContent) throws IOException {
+        return method(HttpClient.HttpMethod.validateAndNormalizeMethod(httpMethod), requestUrl, requestHeaders, requestContent);
     }
 
     @Override
     public abstract HttpResponse method(@NonNull final HttpMethod httpMethod,
                                         @NonNull final URL requestUrl,
                                         @NonNull final Map<String, String> requestHeaders,
-                                        @Nullable final byte[] requestContent,
-                                        @Nullable final SSLContext sslContext) throws IOException;
+                                        @Nullable final byte[] requestContent) throws IOException;
 
     @Override
     public HttpResponse put(@NonNull final URL requestUrl,
                             @NonNull final Map<String, String> requestHeaders,
-                            @Nullable final byte[] requestContent,
-                            @Nullable final SSLContext sslContext) throws IOException {
-        return method(HttpMethod.PUT, requestUrl, requestHeaders, requestContent, sslContext);
+                            @Nullable final byte[] requestContent) throws IOException {
+        return method(HttpMethod.PUT, requestUrl, requestHeaders, requestContent);
     }
 
     @Override
     public HttpResponse patch(@NonNull final URL requestUrl,
                               @NonNull final Map<String, String> requestHeaders,
-                              @Nullable final byte[] requestContent,
-                              @Nullable final SSLContext sslContext) throws IOException {
-        return method(HttpMethod.PATCH, requestUrl, requestHeaders, requestContent, sslContext);
+                              @Nullable final byte[] requestContent) throws IOException {
+        return method(HttpMethod.PATCH, requestUrl, requestHeaders, requestContent);
     }
 
     @Override
     public HttpResponse options(@NonNull final URL requestUrl,
-                                @NonNull final Map<String, String> requestHeaders,
-                                @Nullable final SSLContext sslContext) throws IOException {
-        return method(HttpMethod.OPTIONS, requestUrl, requestHeaders, null, sslContext);
+                                @NonNull final Map<String, String> requestHeaders) throws IOException {
+        return method(HttpMethod.OPTIONS, requestUrl, requestHeaders, null);
     }
 
     @Override
     public HttpResponse post(@NonNull final URL requestUrl,
                              @NonNull final Map<String, String> requestHeaders,
-                             @Nullable final byte[] requestContent,
-                             @Nullable final SSLContext sslContext) throws IOException {
-        return method(HttpMethod.POST, requestUrl, requestHeaders, requestContent, sslContext);
+                             @Nullable final byte[] requestContent) throws IOException {
+        return method(HttpMethod.POST, requestUrl, requestHeaders, requestContent);
     }
 
     @Override
     public HttpResponse delete(@NonNull final URL requestUrl,
                                @NonNull final Map<String, String> requestHeaders,
-                               @Nullable final byte[] requestContent,
-                               @Nullable final SSLContext sslContext) throws IOException {
-        return method(HttpMethod.DELETE, requestUrl, requestHeaders, requestContent, sslContext);
+                               @Nullable final byte[] requestContent) throws IOException {
+        return method(HttpMethod.DELETE, requestUrl, requestHeaders, requestContent);
     }
 
     @Override
     public HttpResponse get(@NonNull final URL requestUrl,
-                            @NonNull final Map<String, String> requestHeaders,
-                            @Nullable final SSLContext sslContext) throws IOException {
-        return method(HttpMethod.GET, requestUrl, requestHeaders, null, sslContext);
+                            @NonNull final Map<String, String> requestHeaders) throws IOException {
+        return method(HttpMethod.GET, requestUrl, requestHeaders, null);
     }
 
     @Override
     public HttpResponse head(@NonNull final URL requestUrl,
-                             @NonNull final Map<String, String> requestHeaders,
-                             @Nullable final SSLContext sslContext) throws IOException {
-        return method(HttpMethod.HEAD, requestUrl, requestHeaders, null, sslContext);
+                             @NonNull final Map<String, String> requestHeaders) throws IOException {
+        return method(HttpMethod.HEAD, requestUrl, requestHeaders, null);
     }
 
     @Override
     public HttpResponse trace(@NonNull final URL requestUrl,
-                              @NonNull final Map<String, String> requestHeaders,
-                              @Nullable final SSLContext sslContext) throws IOException {
-        return method(HttpMethod.TRACE, requestUrl, requestHeaders, null, sslContext);
+                              @NonNull final Map<String, String> requestHeaders) throws IOException {
+        return method(HttpMethod.TRACE, requestUrl, requestHeaders, null);
     }
 }

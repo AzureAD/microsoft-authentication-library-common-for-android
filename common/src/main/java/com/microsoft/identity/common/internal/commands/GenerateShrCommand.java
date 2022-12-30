@@ -68,7 +68,7 @@ public class GenerateShrCommand extends BaseCommand<GenerateShrResult> {
 
     @Override
     public GenerateShrResult execute() throws Exception {
-        final String methodName = ":execute";
+        final String methodTag = TAG + ":execute";
 
         GenerateShrResult result = null;
         final GenerateShrCommandParameters parameters = (GenerateShrCommandParameters) getParameters();
@@ -82,7 +82,7 @@ public class GenerateShrCommand extends BaseCommand<GenerateShrResult> {
             controller = getControllers().get(ii);
 
             com.microsoft.identity.common.internal.logging.Logger.verbose(
-                    TAG + methodName,
+                    methodTag,
                     "Executing with controller: "
                             + controller.getClass().getSimpleName()
             );

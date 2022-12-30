@@ -28,7 +28,6 @@ import java.util.List;
 import java.util.Map;
 
 import cz.msebera.android.httpclient.NameValuePair;
-import cz.msebera.android.httpclient.client.utils.URIBuilder;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.NonNull;
 
@@ -37,12 +36,12 @@ import lombok.NonNull;
  * We want to make sure we never send duplicated parameters to the server.
  * This is done by
  * 1. disabling {@link cz.msebera.android.httpclient.client.utils.URIBuilder#addParameter(String, String)} and
- *    {@link cz.msebera.android.httpclient.client.utils.URIBuilder#addParameters(List))}
+ * {@link cz.msebera.android.httpclient.client.utils.URIBuilder#addParameters(List))}
  * 2. adding {@link CommonURIBuilder#addParametersIfAbsent}
  */
 public class CommonURIBuilder extends cz.msebera.android.httpclient.client.utils.URIBuilder {
 
-    public CommonURIBuilder(){
+    public CommonURIBuilder() {
         super();
     }
 
@@ -149,8 +148,8 @@ public class CommonURIBuilder extends cz.msebera.android.httpclient.client.utils
         return this;
     }
 
-    private boolean containsParam(@NonNull final String param){
-        for (final NameValuePair pair: getQueryParams()) {
+    private boolean containsParam(@NonNull final String param) {
+        for (final NameValuePair pair : getQueryParams()) {
             if (pair.getName().equalsIgnoreCase(param)) {
                 return true;
             }
@@ -159,4 +158,16 @@ public class CommonURIBuilder extends cz.msebera.android.httpclient.client.utils
         return false;
     }
 
+    /**
+     *
+     * @return the last segment in the URI. Returns an empty string if there are no path segments.
+     */
+    public String getLastPathSegment() {
+        final List<String> pathSegments = getPathSegments();
+        if (pathSegments.isEmpty()) {
+            return "";
+        }
+
+        return pathSegments.get(pathSegments.size() - 1);
+    }
 }

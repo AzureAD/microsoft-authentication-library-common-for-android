@@ -191,8 +191,7 @@ public class AzureActiveDirectory
 
         final HttpResponse response =
                 httpClient.get(new URL(instanceDiscoveryRequestUri.toString()),
-                        new HashMap<String, String>(),
-                        null);
+                        new HashMap<String, String>());
 
         if (response.getStatusCode() >= HttpURLConnection.HTTP_BAD_REQUEST) {
             Logger.warn(TAG + methodName, "Error getting cloud information");

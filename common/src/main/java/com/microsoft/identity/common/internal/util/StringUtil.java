@@ -122,6 +122,7 @@ public final class StringUtil {
      * Return value cannot be null, but its values (pair.first, pair.second) may be.
      */
     public static Map.Entry<String, String> getTenantInfo(@NonNull final String homeAccountId) {
+        final String methodTag = TAG + ":getTenantInfo";
         // Split this value by its parts... <uid>.<utid>
         final int EXPECTED_LENGTH = 2;
         final int INDEX_UID = 0;
@@ -138,69 +139,17 @@ public final class StringUtil {
             uid = uidUtidArray[INDEX_UID];
             utid = uidUtidArray[INDEX_UTID];
         } else {
-            Logger.warn(TAG, "We had a home account id that could not be split correctly, " +
+            Logger.warn(methodTag, "We had a home account id that could not be split correctly, " +
                     "We expected it to split into " +
                     EXPECTED_LENGTH + " parts but instead we had " + uidUtidArray.length + " when " +
                     "splitting the string on dot ('.')");
-            Logger.warnPII(TAG, "We had a home account id that could not be split correctly, " +
+            Logger.warnPII(methodTag, "We had a home account id that could not be split correctly, " +
                     "Its value was: '" + homeAccountId + "', and we expected it to split into " +
                     EXPECTED_LENGTH + " parts but instead we had " + uidUtidArray.length + " when " +
                     "splitting the string on dot ('.')");
         }
 
         return new AbstractMap.SimpleEntry<>(uid, utid);
-    }
-
-    /**
-     * The function to compare the two versions.
-     *
-     * @param thisVersion
-     * @param thatVersion
-     * @return int -1 if thisVersion is smaller than thatVersion,
-     * 1 if thisVersion is larger than thatVersion,
-     * 0 if thisVersion is equal to thatVersion.
-     */
-    public static int compareSemanticVersion(@NonNull final String thisVersion,
-                                             @Nullable final String thatVersion) {
-        if (thatVersion == null) {
-            return 1;
-        }
-
-        final String[] thisParts = thisVersion.split("\\.");
-        final String[] thatParts = thatVersion.split("\\.");
-
-        final int length = Math.max(thisParts.length, thatParts.length);
-
-        for (int i = 0; i < length; i++) {
-            int thisPart = i < thisParts.length ? Integer.parseInt(thisParts[i]) : 0;
-            int thatPart = i < thatParts.length ? Integer.parseInt(thatParts[i]) : 0;
-
-            if (thisPart < thatPart) {
-                return -1;
-            }
-
-            if (thisPart > thatPart) {
-                return 1;
-            }
-        }
-
-        return 0;
-    }
-
-    /**
-     * Returns true if the first semantic version is smaller or equal to the second version.
-     */
-    public static boolean isFirstVersionSmallerOrEqual(@NonNull final String first,
-                                                       @Nullable final String second) {
-        return compareSemanticVersion(first, second) <= 0;
-    }
-
-    /**
-     * Returns true if the first semantic version is larger or equal to the second version.
-     */
-    public static boolean isFirstVersionLargerOrEqual(@NonNull final String first,
-                                                      @Nullable final String second) {
-        return compareSemanticVersion(first, second) >= 0;
     }
 
     /**
@@ -211,6 +160,7 @@ public final class StringUtil {
      */
     @SuppressFBWarnings(value = "ES_COMPARING_PARAMETER_STRING_WITH_EQ",
                         justification = "This is actually a reference comparison")
+    @SuppressWarnings("PMD.UseEqualsToCompareStrings")
     public static boolean equalsIgnoreCase(@Nullable final String one, @Nullable final String two) {
         return one == two || (one != null && one.equalsIgnoreCase(two));
     }

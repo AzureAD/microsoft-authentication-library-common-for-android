@@ -52,9 +52,10 @@ public final class DiagnosticContext extends com.microsoft.identity.common.loggi
     }
 
     private static void logDeprecationWarning() {
+        final String methodTag = TAG + ":logDeprecationWarning";
         if (sLogDeprecationWarning) {
             sLogDeprecationWarning = false;
-            Logger.warn(TAG, "This class is deprecated. "
+            Logger.warn(methodTag, "This class is deprecated. "
                     + "Migrate usage to: com.microsoft.identity.common.logging.DiagnosticContext");
         }
     }

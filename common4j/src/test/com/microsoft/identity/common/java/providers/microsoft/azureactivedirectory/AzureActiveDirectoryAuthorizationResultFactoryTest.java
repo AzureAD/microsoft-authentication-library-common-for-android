@@ -49,6 +49,7 @@ import static com.microsoft.identity.common.java.providers.Constants.MOCK_ERROR_
 import static com.microsoft.identity.common.java.providers.Constants.MOCK_ERROR_MESSAGE;
 import static com.microsoft.identity.common.java.providers.Constants.MOCK_REDIRECT_URI;
 import static com.microsoft.identity.common.java.providers.Constants.MOCK_STATE;
+import static com.microsoft.identity.common.java.providers.Constants.MOCK_STATE_ENCODED;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -184,10 +185,11 @@ public class AzureActiveDirectoryAuthorizationResultFactoryTest {
         AzureActiveDirectoryAuthorizationResponse response = result.getAuthorizationResponse();
         assertNotNull(response);
         Assert.assertEquals(MOCK_AUTH_CODE, response.getCode());
-        Assert.assertEquals(MOCK_STATE, response.getState());
+        Assert.assertEquals(MOCK_STATE_ENCODED, response.getState());
         Assert.assertEquals(MOCK_CORRELATION_ID, response.getCorrelationId());
     }
 
+    @Test
     public void testUrlWithIncorrectState() {
         String responseUrl = MOCK_REDIRECT_URI + "?" + MOCK_AUTH_CODE_AND_STATE + "&"
                 + CORRELATION_ID + "=" + MOCK_CORRELATION_ID;

@@ -213,7 +213,6 @@ public abstract class OAuth2Strategy
         headers.put(AuthenticationConstants.SdkPlatformFields.VERSION, Device.getProductVersion());
         headers.putAll(EstsTelemetry.getInstance().getTelemetryHeaders());
         headers.put(HttpConstants.HeaderField.CONTENT_TYPE, TOKEN_REQUEST_CONTENT_TYPE);
-        headers.put(PKEYAUTH_HEADER, PKEYAUTH_VERSION);
 
         if (request instanceof MicrosoftTokenRequest) {
             headers.put(
@@ -224,14 +223,16 @@ public abstract class OAuth2Strategy
                     AuthenticationConstants.AAD.APP_VERSION,
                     ((MicrosoftTokenRequest) request).getClientAppVersion()
             );
+            if (((MicrosoftTokenRequest) request).isPKeyAuthHeaderAllowed()) {
+                headers.put(PKEYAUTH_HEADER, PKEYAUTH_VERSION);
+            }
         }
 
         final URL requestUrl = new URL(getTokenEndpoint());
         final HttpResponse response = httpClient.post(
                 requestUrl,
                 headers,
-                requestBody.getBytes(ObjectMapper.ENCODING_SCHEME),
-                null
+                requestBody.getBytes(ObjectMapper.ENCODING_SCHEME)
         );
 
         // Record the clock skew between *this device* and EVO...
@@ -303,8 +304,7 @@ public abstract class OAuth2Strategy
         final HttpResponse response = httpClient.post(
                 ((MicrosoftStsOAuth2Configuration) mConfig).getDeviceAuthorizationEndpoint(),
                 headers,
-                requestBody.getBytes(ObjectMapper.ENCODING_SCHEME),
-                null
+                requestBody.getBytes(ObjectMapper.ENCODING_SCHEME)
         );
 
         // Create the authorization result

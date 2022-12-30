@@ -302,7 +302,10 @@ public class ExceptionAdapter {
 
         if (e instanceof TerminalException) {
             final String errorCode = ((TerminalException) e).getErrorCode();
-            e = e.getCause();
+            final Throwable cause = exception.getCause();
+            if (cause != null) {
+                e = cause;
+            }
             return new ClientException(
                     errorCode,
                     "An unhandled exception occurred with message: " + e.getMessage(),
@@ -314,6 +317,14 @@ public class ExceptionAdapter {
             return new ClientException(
                     ClientException.IO_ERROR,
                     "An IO error occurred with message: " + e.getMessage(),
+                    e
+            );
+        }
+
+        if (e instanceof InterruptedException) {
+            return new ClientException(
+                    ClientException.INTERRUPTED_OPERATION,
+                    "SDK cancelled operation, the thread execution was interrupted",
                     e
             );
         }

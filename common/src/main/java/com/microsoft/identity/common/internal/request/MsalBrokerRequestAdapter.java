@@ -33,9 +33,11 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CLIENT_ADVERTISED_MAXIMUM_BP_VERSION_KEY;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CLIENT_CONFIGURED_MINIMUM_BP_VERSION_KEY;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ENVIRONMENT;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CAN_FOCI_APPS_CONSTRUCT_ACCOUNTS_FROM_PRT_ID_TOKEN_KEY;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.MSAL_TO_BROKER_PROTOCOL_VERSION_CODE;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.REQUEST_AUTHORITY;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.SHOULD_SEND_PKEYAUTH_HEADER_TO_THE_TOKEN_ENDPOINT;
 import static com.microsoft.identity.common.internal.util.GzipUtil.compressString;
 
 import android.content.Context;
@@ -51,9 +53,8 @@ import com.microsoft.identity.common.java.commands.parameters.AcquirePrtSsoToken
 import com.microsoft.identity.common.java.commands.parameters.GenerateShrCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.RemoveAccountCommandParameters;
 import com.microsoft.identity.common.java.ui.BrowserDescriptor;
-import com.microsoft.identity.common.internal.util.BrokerProtocolVersionUtil;
+import com.microsoft.identity.common.java.util.BrokerProtocolVersionUtil;
 import com.microsoft.identity.common.java.util.QueryParamsAdapter;
-import com.microsoft.identity.common.internal.util.StringUtil;
 import com.microsoft.identity.common.java.authorities.AzureActiveDirectoryAuthority;
 import com.microsoft.identity.common.java.authscheme.AuthenticationSchemeFactory;
 import com.microsoft.identity.common.java.authscheme.INameable;
@@ -66,6 +67,7 @@ import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
 import com.microsoft.identity.common.java.providers.oauth2.OpenIdConnectPromptParameter;
 import com.microsoft.identity.common.java.ui.AuthorizationAgent;
+import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.io.IOException;
@@ -79,7 +81,8 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
     @Override
     public BrokerRequest brokerRequestFromAcquireTokenParameters(@NonNull final InteractiveTokenCommandParameters parameters) {
-        Logger.info(TAG, "Constructing result bundle from AcquireTokenOperationParameters.");
+        final String methodTag = TAG + ":brokerRequestFromAcquireTokenParameters";
+        Logger.info(methodTag, "Constructing result bundle from AcquireTokenOperationParameters.");
 
         final String extraQueryStringParameter = parameters.getExtraQueryStringParameters() != null ?
                 QueryParamsAdapter._toJson(parameters.getExtraQueryStringParameters())
@@ -117,8 +120,9 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
     @Override
     public BrokerRequest brokerRequestFromSilentOperationParameters(@NonNull final SilentTokenCommandParameters parameters) {
+        final String methodTag = TAG + ":brokerRequestFromSilentOperationParameters";
 
-        Logger.info(TAG, "Constructing result bundle from AcquireTokenSilentOperationParameters.");
+        Logger.info(methodTag, "Constructing result bundle from AcquireTokenSilentOperationParameters.");
         final String extraOptions = parameters.getExtraOptions() != null ?
                 QueryParamsAdapter._toJson(parameters.getExtraOptions()) : null;
 
@@ -180,7 +184,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 MSAL_TO_BROKER_PROTOCOL_VERSION_CODE
         );
 
-        if (!StringUtil.isEmpty(parameters.getRequiredBrokerProtocolVersion())) {
+        if (!StringUtil.isNullOrEmpty(parameters.getRequiredBrokerProtocolVersion())) {
             requestBundle.putString(
                     CLIENT_CONFIGURED_MINIMUM_BP_VERSION_KEY,
                     parameters.getRequiredBrokerProtocolVersion()
@@ -200,7 +204,11 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
     public Bundle getRequestBundleForAcquireTokenInteractive(@NonNull final InteractiveTokenCommandParameters parameters,
                                                              @Nullable final String negotiatedBrokerProtocolVersion) {
         final BrokerRequest brokerRequest = brokerRequestFromAcquireTokenParameters(parameters);
-        return getRequestBundleFromBrokerRequest(brokerRequest, negotiatedBrokerProtocolVersion);
+        return getRequestBundleFromBrokerRequest(
+                brokerRequest,
+                negotiatedBrokerProtocolVersion,
+                parameters.getRequiredBrokerProtocolVersion()
+        );
     }
 
     /**
@@ -221,7 +229,8 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
         final Bundle requestBundle = getRequestBundleFromBrokerRequest(
                 brokerRequest,
-                negotiatedBrokerProtocolVersion
+                negotiatedBrokerProtocolVersion,
+                parameters.getRequiredBrokerProtocolVersion()
         );
 
         requestBundle.putInt(
@@ -233,26 +242,28 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
     }
 
     private Bundle getRequestBundleFromBrokerRequest(@NonNull BrokerRequest brokerRequest,
-                                                     @Nullable String negotiatedBrokerProtocolVersion) {
+                                                     @Nullable String negotiatedBrokerProtocolVersion,
+                                                     @Nullable String requiredBrokerProtocolVersion) {
+        final String methodTag = TAG + ":getRequestBundleFromBrokerRequest";
         final Bundle requestBundle = new Bundle();
 
         if (BrokerProtocolVersionUtil.canCompressBrokerPayloads(negotiatedBrokerProtocolVersion)) {
             try {
                 final String jsonString = AuthenticationSchemeTypeAdapter.getGsonInstance().toJson(brokerRequest, BrokerRequest.class);
                 byte[] compressedBytes = compressString(jsonString);
-                Logger.info(TAG, "Broker Result, raw payload size:"
+                Logger.info(methodTag, "Broker Result, raw payload size:"
                         + jsonString.getBytes(AuthenticationConstants.CHARSET_UTF8).length + " ,compressed bytes size: " + compressedBytes.length
                 );
                 requestBundle.putByteArray(BROKER_REQUEST_V2_COMPRESSED, compressedBytes);
             } catch (IOException e) {
-                Logger.error(TAG, "Compression to bytes failed, sending broker request as json String", e);
+                Logger.error(methodTag, "Compression to bytes failed, sending broker request as json String", e);
                 requestBundle.putString(
                         BROKER_REQUEST_V2,
                         AuthenticationSchemeTypeAdapter.getGsonInstance().toJson(brokerRequest, BrokerRequest.class)
                 );
             }
         } else {
-            Logger.info(TAG, "Broker protocol version: " + negotiatedBrokerProtocolVersion +
+            Logger.info(methodTag, "Broker protocol version: " + negotiatedBrokerProtocolVersion +
                     " lower than compression changes, sending as string"
             );
             requestBundle.putString(
@@ -261,6 +272,10 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
             );
         }
         requestBundle.putString(NEGOTIATED_BP_VERSION_KEY, negotiatedBrokerProtocolVersion);
+        requestBundle.putBoolean(
+                SHOULD_SEND_PKEYAUTH_HEADER_TO_THE_TOKEN_ENDPOINT,
+                BrokerProtocolVersionUtil.canSendPKeyAuthHeaderToTheTokenEndpoint(requiredBrokerProtocolVersion)
+        );
         return requestBundle;
     }
 
@@ -277,6 +292,10 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         requestBundle.putString(ACCOUNT_CLIENTID_KEY, parameters.getClientId());
         requestBundle.putString(ACCOUNT_REDIRECT, parameters.getRedirectUri());
         requestBundle.putString(NEGOTIATED_BP_VERSION_KEY, negotiatedBrokerProtocolVersion);
+        requestBundle.putBoolean(
+                CAN_FOCI_APPS_CONSTRUCT_ACCOUNTS_FROM_PRT_ID_TOKEN_KEY,
+                BrokerProtocolVersionUtil.canFociAppsConstructAccountsFromPrtIdTokens(parameters.getRequiredBrokerProtocolVersion())
+        );
         //Disable the environment and tenantID. Just return all accounts belong to this clientID.
         return requestBundle;
     }
@@ -352,7 +371,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
     private boolean getMultipleCloudsSupported(@NonNull final TokenCommandParameters parameters) {
         if (parameters.getAuthority() instanceof AzureActiveDirectoryAuthority) {
             final AzureActiveDirectoryAuthority authority = (AzureActiveDirectoryAuthority) parameters.getAuthority();
-            return authority.getMultipleCloudsSupported();
+            return authority.isMultipleCloudsSupported();
         } else {
             return false;
         }

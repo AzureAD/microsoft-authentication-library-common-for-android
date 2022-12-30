@@ -53,13 +53,13 @@ jobs:
   - task: PublishPipelineArtifact@1
     displayName: 'Publish lint report'
     inputs:
-      targetPath: $(Build.SourcesDirectory)\${{ parameters.project }}\build\reports
+      targetPath: $(Build.SourcesDirectory)/${{ parameters.project }}/build/reports
       ArtifactName: Lint Report and Spotbugs
   - task: PublishPipelineArtifact@1
     displayName: 'Publish Artifact: ${{ parameters.project }} Release'
     inputs:
       ArtifactName: ${{ parameters.project }}Release
-      TargetPath:  $(Build.SourcesDirectory)\${{ parameters.project }}\build\outputs
+      TargetPath:  $(Build.SourcesDirectory)/${{ parameters.project }}/build
   - task: Gradle@2
     displayName: Publish to VSTS
     inputs:

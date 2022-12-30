@@ -22,8 +22,6 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.rules;
 
-import android.util.Log;
-
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.client.ui.automation.app.App;

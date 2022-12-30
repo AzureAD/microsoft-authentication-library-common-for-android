@@ -45,11 +45,17 @@ import com.microsoft.identity.labapi.utilities.constants.TokenType;
 import com.microsoft.identity.labapi.utilities.constants.UserRole;
 import com.microsoft.identity.labapi.utilities.constants.UserType;
 
+import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
+
+import java.lang.reflect.Field;
+
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.experimental.Accessors;
 
 /**
@@ -84,4 +90,30 @@ public class LabQuery {
     private final TokenType mTokenType;
     private final TokenLifetimePolicy mTokenLifetime;
     private final IsAdminConsented mIsAdminConsented;
+
+    // Overriding this to only print NonNull values
+    // The reason is that we're going to use toString as parameter name in Parameterized Tests
+    // If complete String is used then parameter name becomes too long and that means that test name
+    // becomes too long and that means that test output file name becomes too long and JUnit
+    // cannot handle that.
+    @Override
+    public String toString() {
+        final Object myself = this;
+        final ReflectionToStringBuilder toStringBuilder = new ReflectionToStringBuilder(this, ToStringStyle.NO_CLASS_NAME_STYLE) {
+            @Override
+            protected boolean accept(@NonNull final Field field) {
+                try {
+                    // print in toString if field Not Null
+                    return super.accept(field) && field.get(myself) != null;
+                } catch (final IllegalAccessException e) {
+                    System.out.println(e);
+
+                    // we caught an error...let's print the field anyway
+                    return super.accept(field);
+                }
+            }
+        };
+
+        return toStringBuilder.toString();
+    }
 }

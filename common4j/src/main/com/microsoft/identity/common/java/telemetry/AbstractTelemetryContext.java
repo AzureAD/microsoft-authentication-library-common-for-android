@@ -44,10 +44,12 @@ public abstract class AbstractTelemetryContext extends Properties {
         put(Device.TIMEZONE, TimeZone.getDefault().getID());
     }
 
-    protected void addApplicationInfo(final String appName,
+    protected void addApplicationInfo(final String appPackage,
+                                      final String appName,
                                       final String appVersion,
                                       final String appBuildCode){
         put(App.NAME, appName);
+        put(App.PACKAGE, appPackage);
         put(App.VERSION, appVersion);
         put(App.BUILD, appBuildCode);
     }

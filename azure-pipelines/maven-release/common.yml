@@ -24,9 +24,9 @@ jobs:
     envVstsMvnAndroidAccessTokenVar: ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME
     gradleAssembleReleaseTask: common:clean common:build common:assembleDistRelease
     gradleGeneratePomFiletask: common:generatePomFileForDistReleasePublication
-    aarSourceFolder: common\build\outputs\aar
-    jarSourceFolder: common\build\outputs\jar
-    pomSourceFolder: common\build\publications\distRelease
+    aarSourceFolder: common/build/outputs/aar
+    jarSourceFolder: common/build/outputs/jar
+    pomSourceFolder: common/build/publications/distRelease
     gpgAar: true
     gpgSourcesJar: true
     gpgJavadocJar: false

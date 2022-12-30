@@ -119,7 +119,7 @@ public class BrokerOperationExecutor {
                                                       @NonNull final BrokerOperation<U> operation) throws BaseException {
         final CodeMarkerManager codeMarkerManager = CodeMarkerManager.getInstance();
         codeMarkerManager.markCode(PerfConstants.CodeMarkerConstants.BROKER_OPERATION_EXECUTION_START);
-        final String methodName = ":execute";
+        final String methodTag = TAG + ":execute";
 
         emitOperationStartEvent(parameters, operation);
 
@@ -155,7 +155,7 @@ public class BrokerOperationExecutor {
 
         // This means that we've tried every strategies... log everything...
         for (final BrokerCommunicationException e : communicationExceptionStack) {
-            Logger.error(TAG + methodName, e.getMessage(), e);
+            Logger.error(methodTag, e.getMessage(), e);
             exception.addSuppressedException(e);
         }
 
@@ -181,7 +181,7 @@ public class BrokerOperationExecutor {
         final String telemetryApiId = operation.getTelemetryApiId();
         if (telemetryApiId != null) {
             final ApiEndEvent apiEndEvent = new ApiEndEvent();
-            final ApiEndEvent successEvent = apiEndEvent
+            final ApiEndEvent successEvent = (ApiEndEvent) apiEndEvent
                     .putApiId(telemetryApiId)
                     .isApiCallSuccessful(Boolean.TRUE);
             operation.putValueInSuccessEvent(successEvent, result);

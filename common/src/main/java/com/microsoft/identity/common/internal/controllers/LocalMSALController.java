@@ -40,7 +40,8 @@ import com.microsoft.identity.common.java.commands.parameters.DeviceCodeFlowComm
 import com.microsoft.identity.common.java.commands.parameters.GenerateShrCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.RemoveAccountCommandParameters;
 import com.microsoft.identity.common.java.dto.AccountRecord;
-import com.microsoft.identity.common.internal.platform.DevicePoPUtils;
+import com.microsoft.identity.common.java.exception.UiRequiredException;
+import com.microsoft.identity.common.java.platform.DevicePoPUtils;
 import com.microsoft.identity.common.java.constants.OAuth2ErrorCode;
 import com.microsoft.identity.common.java.controllers.BaseController;
 import com.microsoft.identity.common.java.result.AcquireTokenResult;
@@ -99,10 +100,10 @@ public class LocalMSALController extends BaseController {
     public AcquireTokenResult acquireToken(
             @NonNull final InteractiveTokenCommandParameters parameters)
             throws ExecutionException, InterruptedException, ClientException, IOException, ArgumentException {
-        final String methodName = ":acquireToken";
+        final String methodTag = TAG + ":acquireToken";
 
         Logger.verbose(
-                TAG + methodName,
+                methodTag,
                 "Acquiring token..."
         );
 
@@ -148,6 +149,7 @@ public class LocalMSALController extends BaseController {
         // Build up params for Strategy construction
         final OAuth2StrategyParameters strategyParameters = OAuth2StrategyParameters.builder()
                 .platformComponents(parameters.getPlatformComponents())
+                .authenticationScheme(parameters.getAuthenticationScheme())
                 .build();
 
         //1) Get oAuth2Strategy for Authority Type
@@ -242,9 +244,9 @@ public class LocalMSALController extends BaseController {
     public void onFinishAuthorizationSession(int requestCode,
                                              int resultCode,
                                              @NonNull final PropertyBag data) {
-        final String methodName = ":onFinishAuthorizationSession";
+        final String methodTag = TAG + ":onFinishAuthorizationSession";
         Logger.verbose(
-                TAG + methodName,
+                methodTag,
                 "Completing authorization..."
         );
 
@@ -267,9 +269,9 @@ public class LocalMSALController extends BaseController {
     public AcquireTokenResult acquireTokenSilent(
             @NonNull final SilentTokenCommandParameters parameters)
             throws IOException, ClientException, ArgumentException, ServiceException {
-        final String methodName = ":acquireTokenSilent";
+        final String methodTag = TAG + ":acquireTokenSilent";
         Logger.verbose(
-                TAG + methodName,
+                methodTag,
                 "Acquiring token silently..."
         );
 
@@ -300,6 +302,7 @@ public class LocalMSALController extends BaseController {
         final AbstractAuthenticationScheme authScheme = parametersWithScopes.getAuthenticationScheme();
         final OAuth2StrategyParameters strategyParameters = OAuth2StrategyParameters.builder()
                 .platformComponents(parameters.getPlatformComponents())
+                .authenticationScheme(authScheme)
                 .build();
 
         @SuppressWarnings(WarningType.rawtype_warning) final OAuth2Strategy strategy = parametersWithScopes.getAuthority().createOAuth2Strategy(strategyParameters);
@@ -321,7 +324,7 @@ public class LocalMSALController extends BaseController {
                 && fullCacheRecord.getAccessToken() != null
                 && fullCacheRecord.getAccessToken().refreshOnIsActive()) {
             Logger.info(
-                    TAG,
+                    methodTag,
                     "RefreshOn is active. This will extend your token usage in the rare case servers are not available."
             );
         }
@@ -334,7 +337,7 @@ public class LocalMSALController extends BaseController {
                 CommandDispatcher.submitAndForget(refreshOnCommand);
             } else {
                 Logger.warn(
-                        TAG + methodName,
+                        methodTag,
                         "Access token is expired. Removing from cache..."
                 );
                 // Remove the expired token
@@ -345,7 +348,7 @@ public class LocalMSALController extends BaseController {
                         tokenCache,
                         strategy,
                         fullCacheRecord,
-                        TAG + methodName
+                        methodTag
                 );
             }
         } else
@@ -362,12 +365,10 @@ public class LocalMSALController extends BaseController {
                         tokenCache,
                         strategy,
                         fullCacheRecord,
-                        TAG + methodName
+                        methodTag
                 );
             } else {
-                //TODO need the refactor, should just throw the ui required exception, rather than
-                // wrap the exception later in the exception wrapper.
-                final ClientException exception = new ClientException(
+                final UiRequiredException exception = new UiRequiredException(
                         ErrorStrings.NO_TOKENS_FOUND,
                         "No refresh token was found. "
                 );
@@ -382,7 +383,7 @@ public class LocalMSALController extends BaseController {
             }
         } else if (fullCacheRecord.getAccessToken().isExpired()) {
             Logger.warn(
-                    TAG + methodName,
+                    methodTag,
                     "Access token is expired. Removing from cache..."
             );
             // Remove the expired token
@@ -393,12 +394,12 @@ public class LocalMSALController extends BaseController {
                     tokenCache,
                     strategy,
                     fullCacheRecord,
-                    TAG + methodName
+                    methodTag
             );
 
         } else {
             Logger.verbose(
-                    TAG + methodName,
+                    methodTag,
                     "Returning silent result"
             );
             setAcquireTokenResult(acquireTokenSilentResult, parametersWithScopes, cacheRecords);
@@ -437,7 +438,7 @@ public class LocalMSALController extends BaseController {
                          @NonNull final ICacheRecord cacheRecord,
                          @NonNull final String tag) throws IOException, ClientException, ServiceException {
         Logger.verbose(
-                TAG + tag,
+                tag,
                 "Renewing access token..."
         );
         renewAccessToken(
@@ -512,10 +513,10 @@ public class LocalMSALController extends BaseController {
 
     @Override
     public boolean getDeviceMode(CommandParameters parameters) throws Exception {
-        final String methodName = ":getDeviceMode";
+        final String methodTag = TAG + ":getDeviceMode";
 
         final String errorMessage = "LocalMSALController is not eligible to use the broker. Do not check sharedDevice mode and return false immediately.";
-        com.microsoft.identity.common.internal.logging.Logger.warn(TAG + methodName, errorMessage);
+        com.microsoft.identity.common.internal.logging.Logger.warn(methodTag, errorMessage);
 
         return false;
     }
@@ -536,9 +537,9 @@ public class LocalMSALController extends BaseController {
     public AuthorizationResult deviceCodeFlowAuthRequest(final DeviceCodeFlowCommandParameters parameters)
             throws ServiceException, ClientException, IOException {
         // Logging start of method
-        final String methodName = ":deviceCodeFlowAuthRequest";
+        final String methodTag = TAG + ":deviceCodeFlowAuthRequest";
         Logger.verbose(
-                TAG + methodName,
+                methodTag,
                 "Device Code Flow: Authorizing user code..."
         );
 
@@ -578,6 +579,7 @@ public class LocalMSALController extends BaseController {
             // Create OAuth2Strategy using commandParameters and strategyParameters
             final OAuth2StrategyParameters strategyParameters = OAuth2StrategyParameters.builder()
                     .platformComponents(parameters.getPlatformComponents())
+                    .authenticationScheme(parameters.getAuthenticationScheme())
                     .build();
 
             final OAuth2Strategy oAuth2Strategy = parametersWithScopes
@@ -603,7 +605,7 @@ public class LocalMSALController extends BaseController {
         }
 
         Logger.verbose(
-                TAG + methodName,
+                methodTag,
                 "Device Code Flow authorization step finished..."
         );
 
@@ -625,9 +627,9 @@ public class LocalMSALController extends BaseController {
             throws ServiceException, ClientException, IOException {
 
         // Logging start of method
-        final String methodName = ":acquireDeviceCodeFlowToken";
+        final String methodTag = TAG + ":acquireDeviceCodeFlowToken";
         Logger.verbose(
-                TAG + methodName,
+                methodTag,
                 "Device Code Flow: Polling for token..."
         );
 
@@ -653,6 +655,7 @@ public class LocalMSALController extends BaseController {
             // Create OAuth2Strategy using commandParameters and strategyParameters
             final OAuth2StrategyParameters strategyParameters = OAuth2StrategyParameters.builder()
                     .platformComponents(parameters.getPlatformComponents())
+                    .authenticationScheme(parameters.getAuthenticationScheme())
                     .build();
 
             @SuppressWarnings(WarningType.rawtype_warning) final OAuth2Strategy oAuth2Strategy = parameters

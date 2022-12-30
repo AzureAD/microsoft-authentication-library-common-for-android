@@ -29,7 +29,6 @@ import android.widget.Button;
 
 import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
-import androidx.test.uiautomator.UiDevice;
 import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObjectNotFoundException;
 import androidx.test.uiautomator.UiSelector;
@@ -41,8 +40,6 @@ import org.junit.Assert;
 
 import java.util.concurrent.TimeUnit;
 
-import static androidx.test.platform.app.InstrumentationRegistry.getInstrumentation;
-import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT;
 import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.getResourceId;
 import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.isStringPackageName;
 import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.launchApp;
@@ -51,68 +48,59 @@ public class PlayStore implements IAppInstaller {
 
     private final static String TAG = PlayStore.class.getSimpleName();
     private static final String GOOGLE_PLAY_PACKAGE_NAME = "com.android.vending";
+    private static final String INSTALL_APP = "Install";
+    private static final String UPDATE_APP = "Update";
+    private boolean shouldHandleTermsAndServices = true;
 
-    // wait at least 5 mins for app installation from Play Store
-    private static final long PLAY_STORE_INSTALL_APP_TIMEOUT = TimeUnit.MINUTES.toMillis(5);
+    // wait at least 5 mins for app download/install from Play Store
+    private static final long PLAY_STORE_INSTALL_OR_UPDATE_APP_TIMEOUT = TimeUnit.MINUTES.toMillis(5);
+    // During update scenario, we check end of installation with 2 separate button checks, so creating a second timeout
+    private static final long PLAY_STORE_INSTALL_STEP_TIMEOUT = TimeUnit.MINUTES.toMillis(1);
+    // Timeout for finding a ui object during playstore installation/update
+    private static final long PLAY_STORE_UI_OBJECT_TIMEOUT = TimeUnit.SECONDS.toMillis(10);
 
     private void launchMarketPageForPackage(final String appPackageName) {
         Logger.i(TAG, "Launch Market Page For " + appPackageName + " Package..");
         final Context context = ApplicationProvider.getApplicationContext();
         final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + appPackageName)); //sets the intent to start your app
+        intent.setPackage("com.android.vending");
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_MULTIPLE_TASK);  //clear out any previous task, i.e., make sure it starts on the initial screen
         context.startActivity(intent);
     }
 
     private void searchAppOnGooglePlay(@NonNull final String hint) {
         Logger.i(TAG, "Search " + hint + "App on Google Play Store..");
-        final UiDevice device = UiDevice.getInstance(getInstrumentation());
-
         launchApp(GOOGLE_PLAY_PACKAGE_NAME);
 
-        final UiObject searchButton = device.findObject(new UiSelector().resourceId(
-                getResourceId(GOOGLE_PLAY_PACKAGE_NAME, "search_bar_hint")
-        ));
+        final UiObject searchButton = UiAutomatorUtils.obtainUiObjectWithResourceId(
+                getResourceId(GOOGLE_PLAY_PACKAGE_NAME, "search_bar_hint"),
+                PLAY_STORE_UI_OBJECT_TIMEOUT);
         try {
-            searchButton.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
             searchButton.click();
         } catch (final UiObjectNotFoundException e) {
             throw new AssertionError(e);
         }
 
-        final UiObject searchTextField = device.findObject(new UiSelector().resourceId(
-                getResourceId(GOOGLE_PLAY_PACKAGE_NAME, "search_bar_text_input")
-        ));
+        final UiObject searchTextField = UiAutomatorUtils.obtainUiObjectWithResourceId(
+                getResourceId(GOOGLE_PLAY_PACKAGE_NAME, "search_bar_text_input"),
+                PLAY_STORE_UI_OBJECT_TIMEOUT);
         try {
-            searchTextField.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
             searchTextField.setText(hint);
         } catch (final UiObjectNotFoundException e) {
             throw new AssertionError(e);
         }
 
-        device.pressEnter();
+        UiAutomatorUtils.pressEnter();
     }
 
     private void selectGooglePlayAppFromAppList() throws UiObjectNotFoundException {
         Logger.i(TAG, "Select Google Play App From App Search List..");
-        final UiDevice device = UiDevice.getInstance(getInstrumentation());
-
-        // we will just take the first app in the list
-        final UiObject appIconInSearchResult = device.findObject(new UiSelector().resourceId(
-                getResourceId(GOOGLE_PLAY_PACKAGE_NAME, "bucket_items")
-        ));
-
-        appIconInSearchResult.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
-        appIconInSearchResult.click();
+        UiAutomatorUtils.handleButtonClick(getResourceId(GOOGLE_PLAY_PACKAGE_NAME, "bucket_items"), PLAY_STORE_UI_OBJECT_TIMEOUT);
     }
 
     private void selectGooglePlayAppFromInstallBar() throws UiObjectNotFoundException {
         Logger.i(TAG, "Select Google Play App From Install Bar..");
-        final UiDevice device = UiDevice.getInstance(getInstrumentation());
-        final UiObject appInstallBar = device.findObject(new UiSelector().resourceId(
-                getResourceId(GOOGLE_PLAY_PACKAGE_NAME, "install_bar")
-        ));
-        appInstallBar.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
-        appInstallBar.click();
+        UiAutomatorUtils.handleButtonClick(getResourceId(GOOGLE_PLAY_PACKAGE_NAME, "install_bar"), PLAY_STORE_UI_OBJECT_TIMEOUT);
     }
 
     private void selectGooglePlayAppFromAppName() {
@@ -128,50 +116,72 @@ public class PlayStore implements IAppInstaller {
         }
     }
 
-    private void installAppFromMarketPageInternal() throws UiObjectNotFoundException {
-        Logger.i(TAG, "Install App From Market Page Internal..");
-        final UiDevice device = UiDevice.getInstance(getInstrumentation());
-
-        final UiObject installBtn = device.findObject(
-                new UiSelector().className(Button.class).text("Install").enabled(true)
-        );
-
-        installBtn.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
-
-        installBtn.click();
-
-        final UiObject openButton = device.findObject(
-                new UiSelector().className(Button.class).text("Open").enabled(true)
-        );
-
-        // if we see open button, then we know that the installation is complete
-        openButton.waitForExists(PLAY_STORE_INSTALL_APP_TIMEOUT);
-    }
-
-    private void installAppFromMarketPage() {
-        Logger.i(TAG, "Install App From Market Page..");
+    private void installOrUpdateAppFromMarketPage(String playStoreAction) {
         try {
-            installAppFromMarketPageInternal();
+            installOrUpdateAppFromMarketPageInternal(playStoreAction);
         } catch (final UiObjectNotFoundException e) {
             acceptGooglePlayTermsOfService();
             try {
-                installAppFromMarketPageInternal();
+                installOrUpdateAppFromMarketPageInternal(playStoreAction);
             } catch (UiObjectNotFoundException ex) {
-                throw new AssertionError(e);
+                throw new AssertionError(ex.getMessage(), e);
             }
         }
     }
 
-    private void acceptGooglePlayTermsOfService() {
-        Logger.i(TAG, "Accept Google Play Terms Of Service while installing App from Playstore..");
-        final UiObject termsOfService = UiAutomatorUtils.obtainUiObjectWithText("Terms of Service");
-        Assert.assertTrue(termsOfService.exists());
-        final UiObject acceptBtn = UiAutomatorUtils.obtainUiObjectWithText("ACCEPT");
-        Assert.assertTrue(acceptBtn.exists());
+    private void installOrUpdateAppFromMarketPageInternal(String playStoreAction) throws UiObjectNotFoundException {
+        Logger.i(TAG, "Performing " + playStoreAction + " App From Market Page Internal..");
+
+        // There is some inconsistency in how the PlayStore buttons are appearing, regardless of API level
         try {
-            acceptBtn.click();
-        } catch (UiObjectNotFoundException e) {
-            throw new AssertionError(e);
+            final UiObject uiObjBtn = UiAutomatorUtils.obtainUiObjectWithUiSelector(
+                    new UiSelector().description(playStoreAction),
+                    PLAY_STORE_UI_OBJECT_TIMEOUT);
+            uiObjBtn.click();
+            if (playStoreAction.equals(INSTALL_APP)) {
+                checkButtonAfterPlayStoreAction(new UiSelector().description("Uninstall"), PLAY_STORE_INSTALL_OR_UPDATE_APP_TIMEOUT);
+            } else {
+                // In update scenario, Uninstall button is visible before download is finished, so we check for open instead
+                checkButtonAfterPlayStoreAction(new UiSelector().description("Open"), PLAY_STORE_INSTALL_OR_UPDATE_APP_TIMEOUT);
+                // Open button is visible before install is finished, so we check for uninstall button after
+                checkButtonAfterPlayStoreAction(new UiSelector().description("Uninstall"), PLAY_STORE_INSTALL_STEP_TIMEOUT);
+            }
+        } catch (final UiObjectNotFoundException e) {
+            Logger.i(TAG, "Got exception when trying to find Install/Update button for PlayStore: " + e.getMessage());
+            final UiObject uiObjBtn = UiAutomatorUtils.obtainUiObjectWithUiSelector(
+                    new UiSelector().className(Button.class).text(playStoreAction).enabled(true),
+                    PLAY_STORE_UI_OBJECT_TIMEOUT);
+            uiObjBtn.click();
+            if (playStoreAction.equals(INSTALL_APP)) {
+                checkButtonAfterPlayStoreAction(new UiSelector().className(Button.class).text("Uninstall").enabled(true), PLAY_STORE_INSTALL_OR_UPDATE_APP_TIMEOUT);
+            } else {
+                // In update scenario, Uninstall button is visible before download is finished, so we check for open instead
+                checkButtonAfterPlayStoreAction(new UiSelector().className(Button.class).text("Open").enabled(true), PLAY_STORE_INSTALL_OR_UPDATE_APP_TIMEOUT);
+                // Open button is visible before install is finished, however, so we check for uninstall button after
+                checkButtonAfterPlayStoreAction(new UiSelector().className(Button.class).text("Uninstall").enabled(true), PLAY_STORE_INSTALL_STEP_TIMEOUT);
+            }
+        }
+    }
+
+    private void checkButtonAfterPlayStoreAction(@NonNull final UiSelector selector, final long existsTimeout) {
+        final UiObject openButton = UiAutomatorUtils.obtainUiObjectWithUiSelector(selector, existsTimeout);
+        Assert.assertTrue(openButton.exists());
+    }
+
+    private void acceptGooglePlayTermsOfService() {
+        if (shouldHandleTermsAndServices) {
+            Logger.i(TAG, "Accept Google Play Terms Of Service while installing App from Playstore..");
+            final UiObject termsOfService = UiAutomatorUtils.obtainUiObjectWithText("Terms of Service");
+            Assert.assertTrue(termsOfService.exists());
+            final UiObject acceptBtn = UiAutomatorUtils.obtainUiObjectWithText("ACCEPT");
+            Assert.assertTrue(acceptBtn.exists());
+            try {
+                acceptBtn.click();
+            } catch (UiObjectNotFoundException e) {
+                throw new AssertionError(e);
+            }
+
+            shouldHandleTermsAndServices = false;
         }
     }
 
@@ -184,7 +194,18 @@ public class PlayStore implements IAppInstaller {
             selectGooglePlayAppFromAppName();
         }
 
-        installAppFromMarketPage();
+        installOrUpdateAppFromMarketPage(INSTALL_APP);
     }
 
+    @Override
+    public void updateApp(@NonNull final String searchHint) {
+        if (isStringPackageName(searchHint)) {
+            launchMarketPageForPackage(searchHint);
+        } else {
+            searchAppOnGooglePlay(searchHint);
+            selectGooglePlayAppFromAppName();
+        }
+
+        installOrUpdateAppFromMarketPage(UPDATE_APP);
+    }
 }

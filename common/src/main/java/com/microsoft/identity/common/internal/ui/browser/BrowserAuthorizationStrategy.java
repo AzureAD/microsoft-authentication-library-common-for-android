@@ -81,7 +81,7 @@ public abstract class BrowserAuthorizationStrategy<
             GenericAuthorizationRequest authorizationRequest,
             GenericOAuth2Strategy oAuth2Strategy)
             throws ClientException {
-        final String methodName = ":requestAuthorization";
+        final String methodTag = TAG + ":requestAuthorization";
         checkNotDisposed();
         final Context context = getApplicationContext();
         mOAuth2Strategy = oAuth2Strategy;
@@ -93,7 +93,7 @@ public abstract class BrowserAuthorizationStrategy<
         Intent authIntent;
         if (browser.isCustomTabsServiceSupported()) {
             Logger.info(
-                    TAG + methodName,
+                    methodTag,
                     "CustomTabsService is supported."
             );
             //create customTabsIntent
@@ -106,7 +106,7 @@ public abstract class BrowserAuthorizationStrategy<
             }
         } else {
             Logger.warn(
-                    TAG + methodName,
+                    methodTag,
                     "CustomTabsService is NOT supported"
             );
             //create browser auth intent
@@ -151,6 +151,7 @@ public abstract class BrowserAuthorizationStrategy<
 
     @Override
     public void completeAuthorization(int requestCode, @NonNull final RawAuthorizationResult data) {
+        final String methodTag = TAG + ":completeAuthorization";
         if (requestCode == BROWSER_FLOW) {
             dispose();
 
@@ -162,7 +163,7 @@ public abstract class BrowserAuthorizationStrategy<
                     );
             mAuthorizationResultFuture.setResult(result);
         } else {
-            Logger.warnPII(TAG, "Unknown request code " + requestCode);
+            Logger.warnPII(methodTag, "Unknown request code " + requestCode);
         }
     }
 

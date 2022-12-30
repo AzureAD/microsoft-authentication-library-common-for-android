@@ -66,6 +66,8 @@ public final class NtlmChallengeHandler implements IChallengeHandler<NtlmChallen
     }
 
     private void showHttpAuthDialog(final NtlmChallenge ntlmChallenge) {
+        final String methodTag = TAG + ":showHttpAuthDialog";
+
         final LayoutInflater factory = LayoutInflater.from(mActivity);
         final View v = factory.inflate(mActivity.getResources().getLayout(R.layout.http_auth_dialog), null);
         final EditText usernameView = (EditText) v.findViewById(R.id.editUserName);
@@ -77,7 +79,7 @@ public final class NtlmChallengeHandler implements IChallengeHandler<NtlmChallen
                 .setPositiveButton(R.string.http_auth_dialog_login,
                         new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int whichButton) {
-                                Logger.info(TAG, "Proceeding with user supplied username and password.");
+                                Logger.info(methodTag,"Proceeding with user supplied username and password.");
                                 ntlmChallenge.getHandler().proceed(usernameView.getText().toString(), passwordView.getText().toString());
                             }
                         })
@@ -98,7 +100,8 @@ public final class NtlmChallengeHandler implements IChallengeHandler<NtlmChallen
     }
 
     private void cancelRequest() {
-        Logger.info(TAG, "Sending intent to cancel authentication activity");
+        final String methodTag = TAG + ":cancelRequest";
+        Logger.info(methodTag,"Sending intent to cancel authentication activity");
         mChallengeCallback.onChallengeResponseReceived(
                 RawAuthorizationResult.fromResultCode(RawAuthorizationResult.ResultCode.CANCELLED));
     }

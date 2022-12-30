@@ -32,25 +32,25 @@ import androidx.test.uiautomator.UiSelector;
 
 import com.microsoft.identity.client.ui.automation.TestContext;
 import com.microsoft.identity.client.ui.automation.installer.IAppInstaller;
+import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.AdfsLoginComponentHandler;
+import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.MicrosoftStsPromptHandler;
+import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.MicrosoftStsPromptHandlerParameters;
 import com.microsoft.identity.client.ui.automation.powerlift.IPowerLiftIntegratedApp;
 import com.microsoft.identity.client.ui.automation.constants.DeviceAdmin;
 import com.microsoft.identity.client.ui.automation.device.settings.ISettings;
 import com.microsoft.identity.client.ui.automation.device.settings.SamsungSettings;
-import com.microsoft.identity.client.ui.automation.interaction.PromptHandlerParameters;
 import com.microsoft.identity.client.ui.automation.interaction.PromptParameter;
-import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.AadPromptHandler;
 import com.microsoft.identity.client.ui.automation.logging.Logger;
 import com.microsoft.identity.client.ui.automation.utils.CommonUtils;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
 import org.junit.Assert;
-
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
 
 import lombok.Getter;
 
 import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT;
-import static org.junit.Assert.fail;
 
 /**
  * A model for interacting with the Company Portal Broker App during UI Test.
@@ -63,8 +63,14 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
     public final static String COMPANY_PORTAL_APP_PACKAGE_NAME = "com.microsoft.windowsintune.companyportal";
     public final static String COMPANY_PORTAL_APP_NAME = "Intune Company Portal";
     public final static String COMPANY_PORTAL_APK = "CompanyPortal.apk";
+    public final static String OLD_COMPANY_PORTAL_APK = "OldCompanyPortal.apk";
+    private final static int PASSWORD_UI_ATTEMPT_COUNT = 3;
+
+    // Timeout to wait for complete enrollment page to appear
+    final static long COMPLETE_ENROLLMENT_PAGE_TIMEOUT = TimeUnit.SECONDS.toMillis(45);
 
     private boolean enrollmentPerformedSuccessfully;
+    private boolean batteryOptimizationTurnedOff;
 
     public BrokerCompanyPortal() {
         super(COMPANY_PORTAL_APP_PACKAGE_NAME, COMPANY_PORTAL_APP_NAME);
@@ -74,6 +80,13 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
     public BrokerCompanyPortal(@NonNull final IAppInstaller appInstaller) {
         super(COMPANY_PORTAL_APP_PACKAGE_NAME, COMPANY_PORTAL_APP_NAME, appInstaller);
         localApkFileName = COMPANY_PORTAL_APK;
+    }
+
+    public BrokerCompanyPortal(@NonNull final String companyPortalApkName,
+                                        @NonNull final String updateCompanyPortalApkName) {
+        super(COMPANY_PORTAL_APP_PACKAGE_NAME, COMPANY_PORTAL_APP_NAME);
+        localApkFileName = companyPortalApkName;
+        localUpdateApkFileName = updateCompanyPortalApkName;
     }
 
     @Override
@@ -88,10 +101,29 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
     }
 
     @Override
+    public void performDeviceRegistration(@NonNull final String username,
+                                          @NonNull final String password,
+                                          final boolean isFederatedUser) {
+        Logger.i(TAG, "Perform Device Registration for the given federate account..");
+        TestContext.getTestContext().getTestDevice().getSettings().addWorkAccount(
+                this,
+                username,
+                password,
+                isFederatedUser
+        );
+    }
+
+    @Override
     public void performSharedDeviceRegistration(@NonNull final String username,
                                                 @NonNull final String password) {
         //TODO implement shared device registration for CP
         throw new UnsupportedOperationException("Not supported!");
+    }
+
+    @Override
+    public void performSharedDeviceRegistrationDontValidate(@NonNull final String username,
+                                                            @NonNull final String password) {
+        throw new UnsupportedOperationException("Not Supported!");
     }
 
     @Nullable
@@ -109,9 +141,7 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
     public String createPowerLiftIncident() {
         Logger.i(TAG, "Creating Power Lift Incident..");
         launch();
-        if (shouldHandleFirstRun) {
-            handleFirstRun();
-        }
+        handleFirstRun();
 
         try {
             final UiDevice device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
@@ -154,7 +184,6 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
         } catch (final UiObjectNotFoundException e) {
             throw new AssertionError(e);
         }
-
     }
 
     @Override
@@ -164,40 +193,31 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
 
     @Override
     public void handleFirstRun() {
-        // click the I AGREE btn on privacy screen
-        UiAutomatorUtils.handleButtonClick("com.microsoft.windowsintune.companyportal:id/privacy_notice_agree_button");
+        if (shouldHandleFirstRun) {
+            // click the I AGREE btn on privacy screen
+            // First run of CP from playstore does not have a privacy screen
+            // UiAutomatorUtils.handleButtonClick("com.microsoft.windowsintune.companyportal:id/privacy_notice_agree_button");
+            shouldHandleFirstRun = false;
+        }
     }
 
-    @Override
     public void enrollDevice(@NonNull final String username,
-                             @NonNull final String password) {
+                             @NonNull final String password,
+                             final boolean isFederated){
         Logger.i(TAG, "Enroll Device for the given account..");
         launch(); // launch CP app
 
         handleFirstRun(); // handle CP first run
 
-        // click Sign In button on CP welcome page
-        UiAutomatorUtils.handleButtonClick("com.microsoft.windowsintune.companyportal:id/sign_in_button");
-
-        final PromptHandlerParameters promptHandlerParameters = PromptHandlerParameters.builder()
-                .prompt(PromptParameter.LOGIN)
-                .consentPageExpected(false)
-                .expectingLoginPageAccountPicker(false)
-                .sessionExpected(false)
-                .loginHint(null)
-                .build();
-
-        final AadPromptHandler aadPromptHandler = new AadPromptHandler(promptHandlerParameters);
-
-        Logger.i(TAG, "Handle prompt in AAD login page for enrolling device..");
-        // handle AAD login page
-        aadPromptHandler.handlePrompt(username, password);
+        // Company portal password page is somewhat inconsistent, found out turning off battery optimization helps in UI testing
+        turnOffBatteryOptimization();
+        signInThroughFrontPage(username, password, isFederated);
 
         // click the activate device admin btn
         final UiObject accessSetupScreen = UiAutomatorUtils.obtainUiObjectWithText("Access Setup");
         Assert.assertTrue(
                 "CP Enrollment - Access Setup screen appears",
-                accessSetupScreen.exists()
+                accessSetupScreen.waitForExists(CommonUtils.FIND_UI_ELEMENT_TIMEOUT_LONG)
         );
 
         // click on BEGIN button to start enroll
@@ -227,7 +247,7 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
                 "com.microsoft.windowsintune.companyportal:id/setup_title"
         );
 
-        if (!setupCompletePage.exists()) {
+        if (!setupCompletePage.waitForExists(COMPLETE_ENROLLMENT_PAGE_TIMEOUT)) {
             // Something went wrong with enrollment. If we see a device limit reached dialog, then
             // we throw a DeviceLimitReachedException so that we the DeviceEnrollmentRecoveryRule
             // can perform cleanup and recovery for future enrollments.
@@ -258,15 +278,121 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
     }
 
     @Override
+    public void enrollDevice(@NonNull final String username,
+                             @NonNull final String password) {
+        enrollDevice(username, password, false);
+    }
+
+    private void signInThroughFrontPage(@NonNull final String username, @NonNull final String password, final boolean isFederated){
+        // click Sign In button on CP welcome page
+        UiAutomatorUtils.handleButtonClick("com.microsoft.windowsintune.companyportal:id/sign_in_button");
+
+        if (isFederated) {
+            final MicrosoftStsPromptHandlerParameters promptHandlerParameters = MicrosoftStsPromptHandlerParameters.builder()
+                    .prompt(PromptParameter.LOGIN)
+                    .consentPageExpected(false)
+                    .expectingLoginPageAccountPicker(false)
+                    .sessionExpected(false)
+                    .isFederated(true)
+                    .loginHint(null)
+                    .build();
+
+            final MicrosoftStsPromptHandler microsoftStsPromptHandler = new MicrosoftStsPromptHandler(promptHandlerParameters);
+            ((AdfsLoginComponentHandler) microsoftStsPromptHandler.getLoginComponentHandler()).handleEnrollmentPrompt(username, password);
+        } else {
+            final MicrosoftStsPromptHandlerParameters promptHandlerParameters = MicrosoftStsPromptHandlerParameters.builder()
+                    .prompt(PromptParameter.LOGIN)
+                    .broker(this)
+                    .consentPageExpected(false)
+                    .expectingLoginPageAccountPicker(false)
+                    .sessionExpected(false)
+                    .loginHint(null)
+                    .build();
+
+            final MicrosoftStsPromptHandler microsoftStsPromptHandler = new MicrosoftStsPromptHandler(promptHandlerParameters);
+
+            Logger.i(TAG, "Handle prompt in AAD login page for enrolling device..");
+            // handle AAD login page
+            microsoftStsPromptHandler.handlePrompt(username, password);
+        }
+    }
+
+    /**
+     * Method used to complete device enrollment with a Work Profile account. By the end of this automation,
+     * the device should have work profile enabled.
+     *
+     * @param username username of the account
+     * @param password password of the account
+     */
+    public void enrollDeviceForWorkProfile(@NonNull final String username,
+                                           @NonNull final String password) {
+        Logger.i(TAG, "Enroll Device for the given account..");
+        launch(); // launch CP app
+
+        handleFirstRun(); // handle CP first run
+
+        // click Sign In button on CP welcome page
+        UiAutomatorUtils.handleButtonClick("com.microsoft.windowsintune.companyportal:id/sign_in_button");
+
+        final MicrosoftStsPromptHandlerParameters promptHandlerParameters = MicrosoftStsPromptHandlerParameters.builder()
+                .prompt(PromptParameter.LOGIN)
+                .consentPageExpected(false)
+                .expectingLoginPageAccountPicker(false)
+                .sessionExpected(false)
+                .loginHint(null)
+                .build();
+
+        final MicrosoftStsPromptHandler microsoftStsPromptHandler = new MicrosoftStsPromptHandler(promptHandlerParameters);
+
+        Logger.i(TAG, "Handle prompt in AAD login page for enrolling device..");
+        // handle AAD login page
+        microsoftStsPromptHandler.handlePrompt(username, password);
+
+        // click the activate device admin btn
+        final UiObject accessSetupScreen = UiAutomatorUtils.obtainUiObjectWithText("Access Setup");
+        Assert.assertTrue(
+                "CP Enrollment - Access Setup screen appears",
+                accessSetupScreen.exists()
+        );
+
+        // click on BEGIN button to start enroll
+        UiAutomatorUtils.handleButtonClick("com.microsoft.windowsintune.companyportal:id/setup_positive_button");
+
+        // click CONTINUE to ack privacy page
+        UiAutomatorUtils.handleButtonClick("com.microsoft.windowsintune.companyportal:id/ContinueButton");
+
+        UiAutomatorUtils.handleButtonClickForObjectWithText("Accept & continue");
+
+        UiAutomatorUtils.handleButtonClickForObjectWithText("Next");
+
+        UiAutomatorUtils.handleButtonClick("com.microsoft.windowsintune.companyportal:id/setup_positive_button");
+
+        try {
+            Thread.sleep(TimeUnit.SECONDS.toMillis(45));
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        // click on DONE to complete setup
+        UiAutomatorUtils.handleButtonClick(
+                "com.microsoft.windowsintune.companyportal:id/setup_center_button"
+        );
+
+        // Enrollment has been performed successfully
+        enrollmentPerformedSuccessfully = true;
+    }
+
+    @Override
     public void handleAppProtectionPolicy() {
         Logger.i(TAG, "Handle App Protection Policy..");
+
         final UiDevice device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
         // get access screen
         final UiObject getAccessScreen = UiAutomatorUtils.obtainUiObjectWithText("Get Access");
         Assert.assertTrue(
                 "CP - Get Access screen appears",
-                getAccessScreen.exists()
+                getAccessScreen.waitForExists(TimeUnit.MINUTES.toMillis(2))
         );
 
         // get access screen - continue
@@ -377,6 +503,58 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
             UiAutomatorUtils.handleButtonClick("android:id/button1");
         } catch (final UiObjectNotFoundException e) {
             throw new AssertionError(e);
+        }
+    }
+
+    @Override
+    protected void initialiseAppImpl() {
+       // nothing needed here
+    }
+
+    public void turnOffBatteryOptimization() {
+        if (!batteryOptimizationTurnedOff) {
+            Logger.i(TAG, "Turning Off battery optimization...");
+
+            try {
+                final UiDevice device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+
+                // Click more options in the top right
+                final UiObject threeDots = device.findObject(new UiSelector().descriptionContains(
+                        "More options"
+                ));
+                threeDots.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
+                threeDots.click();
+
+                // Select Settings from menu
+                final UiObject settingsBtn = UiAutomatorUtils.obtainUiObjectWithText("Settings");
+                settingsBtn.click();
+
+                // Click TURN OFF Button (Battery Optimization)
+                final UiObject turnOffBtn = device.findObject(
+                        new UiSelector().text("TURN OFF")
+                );
+                turnOffBtn.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
+                turnOffBtn.click();
+
+                // Click Allow
+                UiAutomatorUtils.handleButtonClick(
+                        "android:id/button1"
+                );
+
+                batteryOptimizationTurnedOff = true;
+
+                try {
+                    Thread.sleep(TimeUnit.SECONDS.toMillis(7));
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+                // Return to home page
+                forceStop();
+                launch();
+            } catch (final UiObjectNotFoundException e) {
+                throw new AssertionError(e);
+            }
         }
     }
 }

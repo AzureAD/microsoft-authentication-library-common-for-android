@@ -32,7 +32,6 @@ import com.microsoft.identity.common.java.util.ported.Consumer;
 import com.microsoft.identity.common.java.util.ported.Function;
 import com.microsoft.identity.common.java.util.ported.Supplier;
 
-import net.jcip.annotations.Immutable;
 import net.jcip.annotations.ThreadSafe;
 
 import java.io.BufferedReader;
@@ -52,6 +51,7 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicReference;
 
+import javax.annotation.Nullable;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
@@ -75,44 +75,92 @@ import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.CLI
  * TODO: add telemetry for exceptions/intermediary failures in this class.
  */
 @AllArgsConstructor
-@Builder
 @ThreadSafe
 public class UrlConnectionHttpClient extends AbstractHttpClient {
-
     private static final Object TAG = UrlConnectionHttpClient.class.getName();
 
     protected static final int RETRY_TIME_WAITING_PERIOD_MSEC = 1000;
-    protected static final int STREAM_BUFFER_SIZE_BYTES = 1024;
-    public static final int DEFAULT_CONNECT_TIME_OUT_MS = 30000;
-    public static final int DEFAULT_READ_TIME_OUT_MS = 30000;
-    public static final int DEFAULT_STREAM_BUFFER_SIZE = 1024;
-
-    @Builder.Default
-    private final IRetryPolicy<HttpResponse> retryPolicy = new NoRetryPolicy();
-    @Builder.Default
-    private final int connectTimeoutMs = DEFAULT_CONNECT_TIME_OUT_MS;
-    @Builder.Default
-    private final int readTimeoutMs = DEFAULT_READ_TIME_OUT_MS;
-    @Builder.Default
-    private final Supplier<Integer> connectTimeoutMsSupplier = null;
-    @Builder.Default
-    private final Supplier<Integer> readTimeoutMsSupplier = null;
-    @Builder.Default
-    private final int streamBufferSize = DEFAULT_STREAM_BUFFER_SIZE;
-    @Builder.Default
-    private final List<String> supportedSslProtocol = SSLSocketFactoryWrapper.SUPPORTED_SSL_PROTOCOLS;
-
-
-    private SSLSocketFactoryWrapper sDefault;
-
-    private synchronized SSLSocketFactoryWrapper getDefaultWrapper(){
-        if (sDefault == null){
-            sDefault = new SSLSocketFactoryWrapper((SSLSocketFactory) SSLSocketFactory.getDefault(), supportedSslProtocol);
-        }
-        return sDefault;
-    }
+    protected static final int DEFAULT_CONNECT_TIME_OUT_MS = 30000;
+    protected static final int DEFAULT_READ_TIME_OUT_MS = 30000;
+    protected static final int DEFAULT_STREAM_BUFFER_SIZE_BYTE = 1024;
 
     private static final transient AtomicReference<UrlConnectionHttpClient> defaultReference = new AtomicReference<>(null);
+
+    /**
+     * Retry policy of this HttpClient. Default is {@link NoRetryPolicy}.
+     */
+    private final IRetryPolicy<HttpResponse> retryPolicy;
+
+    /**
+     * Size of the stream buffer.
+     */
+    private final int streamBufferSize;
+
+    /**
+     * To be set in {@link java.net.URLConnection#setConnectTimeout(int)}.
+     * If {@link UrlConnectionHttpClient#connectTimeoutMsSupplier} is provided, the value will be loaded from there instead.
+     * Default is {@link UrlConnectionHttpClient#DEFAULT_CONNECT_TIME_OUT_MS}.
+     */
+    private final int connectTimeoutMs;
+
+    /**
+     * To be set in {@link java.net.URLConnection#setReadTimeout(int)}.
+     * If {@link UrlConnectionHttpClient#readTimeoutMsSupplier} is provided, the value will be loaded from there instead.
+     * Default is {@link UrlConnectionHttpClient#DEFAULT_READ_TIME_OUT_MS}.
+     */
+    private final int readTimeoutMs;
+
+    /**
+     * A provider for loading values to be set in {@link java.net.URLConnection#setConnectTimeout(int)}.
+     */
+    private final Supplier<Integer> connectTimeoutMsSupplier;
+
+    /**
+     * A provider for loading values to be set in {@link java.net.URLConnection#setReadTimeout(int)}.
+     */
+    private final Supplier<Integer> readTimeoutMsSupplier;
+
+    /**
+     * A socket factory for creating the connection's {@link javax.net.ssl.SSLSocket} objects.
+     */
+    private final SSLSocketFactoryWrapper sslSocketFactory;
+
+    /**
+     * Default Constructor, for constructing Lombok's Builder only. Do not expose.
+     */
+    @Builder
+    private UrlConnectionHttpClient(@Nullable final IRetryPolicy<HttpResponse> retryPolicy,
+                                    @Nullable final Integer streamBufferSize,
+                                    @Nullable final Integer connectTimeoutMs,
+                                    @Nullable final Integer readTimeoutMs,
+                                    @Nullable final Supplier<Integer> connectTimeoutMsSupplier,
+                                    @Nullable final Supplier<Integer> readTimeoutMsSupplier,
+                                    @Nullable final List<String> supportedSslProtocols,
+                                    @Nullable final SSLContext sslContext) {
+
+        this.retryPolicy = retryPolicy != null ?
+                retryPolicy : new NoRetryPolicy();
+        this.streamBufferSize = streamBufferSize != null ?
+                streamBufferSize : DEFAULT_STREAM_BUFFER_SIZE_BYTE;
+        this.connectTimeoutMs = connectTimeoutMs != null ?
+                connectTimeoutMs : DEFAULT_CONNECT_TIME_OUT_MS;
+        this.readTimeoutMs = readTimeoutMs != null ?
+                readTimeoutMs : DEFAULT_READ_TIME_OUT_MS;
+        this.connectTimeoutMsSupplier = connectTimeoutMsSupplier;
+        this.readTimeoutMsSupplier = readTimeoutMsSupplier;
+
+        final List<String> protocol = supportedSslProtocols != null ?
+                supportedSslProtocols : SSLSocketFactoryWrapper.SUPPORTED_SSL_PROTOCOLS;
+
+        if (sslContext == null) {
+            // TODO: Build the default SSLContext ourselves with the defined JSSE provider.
+            this.sslSocketFactory = new SSLSocketFactoryWrapper((SSLSocketFactory) SSLSocketFactory.getDefault(),
+                    protocol);
+        } else {
+            this.sslSocketFactory = new SSLSocketFactoryWrapper(sslContext.getSocketFactory(),
+                    protocol);
+        }
+    }
 
     /**
      * Obtain a static default instance of the HTTP Client class.
@@ -123,7 +171,6 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
         UrlConnectionHttpClient reference = defaultReference.get();
         if (reference == null) {
             defaultReference.compareAndSet(null, UrlConnectionHttpClient.builder()
-                    .streamBufferSize(STREAM_BUFFER_SIZE_BYTES)
                     .retryPolicy(StatusCodeAndExceptionRetry.builder()
                             .number(1)
                             .extensionFactor(2)
@@ -187,7 +234,6 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
      * @param requestUrl     The recipient {@link URL}.
      * @param requestHeaders Headers used to send the http request.
      * @param requestContent Optional request body, if applicable.
-     * @param sslContext     an optional {@link SSLContext} object.
      * @return HttpResponse  The response for this request.
      * @throws IOException If an error is encountered while servicing this request.
      */
@@ -195,10 +241,9 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
     public HttpResponse method(@NonNull final HttpClient.HttpMethod httpMethod,
                                @NonNull final URL requestUrl,
                                @NonNull final Map<String, String> requestHeaders,
-                               final byte[] requestContent,
-                               final SSLContext sslContext) throws IOException {
+                               final byte[] requestContent) throws IOException {
         recordHttpTelemetryEventStart(httpMethod.name(), requestUrl, requestHeaders.get(CLIENT_REQUEST_ID));
-        final HttpRequest request = constructHttpRequest(httpMethod, requestUrl, requestHeaders, requestContent, sslContext);
+        final HttpRequest request = constructHttpRequest(httpMethod, requestUrl, requestHeaders, requestContent);
         return retryPolicy.attempt(new Callable<HttpResponse>() {
             public HttpResponse call() throws IOException {
                 return executeHttpSend(request, new Consumer<HttpResponse>() {
@@ -214,8 +259,7 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
     private static HttpRequest constructHttpRequest(@NonNull HttpClient.HttpMethod httpMethod,
                                                     @NonNull URL requestUrl,
                                                     @NonNull Map<String, String> requestHeaders,
-                                                    byte[] requestContent,
-                                                    final SSLContext sslContext) {
+                                                    byte[] requestContent) {
 
         // Apply special backcompat behaviors for PATCH, if reqd
         if (HttpClient.HttpMethod.PATCH == httpMethod) {
@@ -233,8 +277,7 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
                 requestHeaders,
                 httpMethod.name(), // HttpURLConnection doesn't natively support PATCH
                 requestContent,
-                null,
-                sslContext
+                null
         );
     }
 
@@ -335,11 +378,7 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
         }
 
         if (urlConnection instanceof HttpsURLConnection) {
-            final SSLSocketFactory factory =
-                    request.getSslContext() != null ?
-                            new SSLSocketFactoryWrapper(request.getSslContext().getSocketFactory(), supportedSslProtocol) :
-                            getDefaultWrapper();
-            ((HttpsURLConnection) urlConnection).setSSLSocketFactory(factory);
+            ((HttpsURLConnection) urlConnection).setSSLSocketFactory(sslSocketFactory);
         } else if ("https".equalsIgnoreCase(request.getRequestUrl().getProtocol())) {
             throw new IllegalStateException("Trying to initiate a HTTPS request, but didn't get back HttpsURLConnection");
         } else if ("http".equalsIgnoreCase(request.getRequestUrl().getProtocol())) {

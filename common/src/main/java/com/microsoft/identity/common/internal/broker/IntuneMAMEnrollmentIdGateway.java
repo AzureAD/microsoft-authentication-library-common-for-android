@@ -28,6 +28,10 @@ import android.net.Uri;
 import android.os.SystemClock;
 import android.util.LruCache;
 
+import com.microsoft.identity.common.java.telemetry.Telemetry;
+import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings;
+import com.microsoft.identity.common.java.telemetry.events.ContentProviderCallEvent;
+import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.logging.Logger;
 
 import lombok.EqualsAndHashCode;
@@ -132,8 +136,11 @@ public class IntuneMAMEnrollmentIdGateway {
     }
 
     private String callContentProvider(final Context context, final String userId, final String packageName) {
+        final String methodTag = TAG + ":callContentProvider";
+
         final String[] selectionArgs = {packageName, userId};
         final Uri contentURI = Uri.parse(CONTENT_URI);
+        final ContentProviderCallEvent getEnrollmentIdEvent = new ContentProviderCallEvent(CONTENT_URI);
 
         String result = null;
         try {
@@ -147,14 +154,19 @@ public class IntuneMAMEnrollmentIdGateway {
 
                 found.close();
             } else{
-                Logger.verbose(TAG + " callContentProvider", "Cursor was null.  The content provider may not be available. ");
+                Logger.verbose(methodTag, "Cursor was null.  The content provider may not be available. ");
             }
         } catch (final Exception e) {
             // We don't expect this to fail, since the implementation in the Company Portal
             // returns nulls instead of throwing exceptions.  This is a safety measure in
             // case the implementation changes or if there is a bug on the Company Portal side.
-            Logger.warn(TAG, "Unable to query enrollment id: " + e.getMessage());
+            Logger.warn(methodTag, "Unable to query enrollment id: " + e.getMessage());
         }
+
+        getEnrollmentIdEvent.put(TelemetryEventStrings.Key.ENROLLMENT_ID_NULL, String.valueOf(StringUtil.isNullOrEmpty(result)));
+        getEnrollmentIdEvent.put(TelemetryEventStrings.Key.END_TIME, String.valueOf(System.currentTimeMillis()));
+        Telemetry.emit(getEnrollmentIdEvent);
+
         return result;
     }
 }

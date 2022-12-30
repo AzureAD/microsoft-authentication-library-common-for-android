@@ -23,8 +23,10 @@
 package com.microsoft.identity.common.internal.telemetry;
 
 import android.content.Context;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.content.res.Resources;
 import android.os.Build;
 
 import androidx.core.content.pm.PackageInfoCompat;
@@ -39,7 +41,7 @@ import lombok.NonNull;
 /**
  * TelemetryContext for Android.
  * Containing Android Metadata. It also persists data in SharedPreferences.
- * */
+ */
 public class AndroidTelemetryContext extends AbstractTelemetryContext {
 
     private static final String TAG = AndroidTelemetryContext.class.getName();
@@ -54,17 +56,37 @@ public class AndroidTelemetryContext extends AbstractTelemetryContext {
     }
 
     private void addApplicationInfo(@NonNull final Context context) {
+        final String methodTag = TAG + ":addApplicationInfo";
         try {
             final PackageManager packageManager = context.getPackageManager();
             final PackageInfo packageInfo = packageManager.getPackageInfo(context.getPackageName(), 0);
-            long versionCode = PackageInfoCompat.getLongVersionCode(packageInfo);
+            final long versionCode = PackageInfoCompat.getLongVersionCode(packageInfo);
 
-            super.addApplicationInfo(packageInfo.applicationInfo.packageName,
+            final ApplicationInfo applicationInfo = context.getApplicationInfo();
+            // we should capture the application name as well.
+            String applicationName = "";
+            String packageName = "";
+
+            if (applicationInfo != null) {
+                packageName = applicationInfo.packageName;
+
+                if (applicationInfo.labelRes == 0) {
+                    applicationName = applicationInfo.nonLocalizedLabel == null ? packageName :
+                            applicationInfo.nonLocalizedLabel.toString();
+                } else {
+                    applicationName = context.getString(applicationInfo.labelRes);
+                }
+            }
+
+            super.addApplicationInfo(
+                    packageName,
+                    applicationName,
                     packageInfo.versionName,
-                    String.valueOf(versionCode));
+                    String.valueOf(versionCode)
+            );
         } catch (final PackageManager.NameNotFoundException e) {
             //Not throw the exception to break the auth request when getting the app's telemetry
-            Logger.warn(TAG, "Unable to find the app's package name from PackageManager.");
+            Logger.warn(methodTag, "Unable to find the app's package name from PackageManager.");
         }
     }
 

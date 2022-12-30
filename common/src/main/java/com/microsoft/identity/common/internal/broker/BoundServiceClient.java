@@ -128,11 +128,11 @@ public abstract class BoundServiceClient<T extends IInterface> {
      */
     protected @NonNull T connect(@NonNull final String targetServicePackageName)
             throws BrokerCommunicationException, InterruptedException, TimeoutException, ExecutionException {
-        final String methodName = ":connect";
+        final String methodTag = TAG + ":connect";
 
         if (!isBoundServiceSupported(targetServicePackageName)) {
             final String errorMessage = "Bound service is not supported.";
-            Logger.info(TAG + methodName, errorMessage);
+            Logger.info(methodTag, errorMessage);
             throw new BrokerCommunicationException(
                     OPERATION_NOT_SUPPORTED_ON_SERVER_SIDE,
                     BOUND_SERVICE,
@@ -146,7 +146,7 @@ public abstract class BoundServiceClient<T extends IInterface> {
 
         if (!mHasStartedBinding) {
             final String errorMessage = "failed to bind. The service is not available.";
-            Logger.info(TAG + methodName, errorMessage);
+            Logger.info(methodTag, errorMessage);
             throw new BrokerCommunicationException(
                     OPERATION_NOT_SUPPORTED_ON_SERVER_SIDE,
                     BOUND_SERVICE,
@@ -154,7 +154,7 @@ public abstract class BoundServiceClient<T extends IInterface> {
                     null);
         }
 
-        Logger.info(TAG + "connect", "Android is establishing the bound service connection.");
+        Logger.info(methodTag, "Android is establishing the bound service connection.");
         final IBinder binder = future.get(mTimeOutInSeconds, TimeUnit.SECONDS);
         return getInterfaceFromIBinder(binder);
     }
@@ -163,8 +163,17 @@ public abstract class BoundServiceClient<T extends IInterface> {
      * Disconnects (unbinds) from the service.
      */
     public void disconnect() {
+        final String methodTag = TAG + ":disconnect";
         if (mHasStartedBinding) {
-            mContext.unbindService(mConnection);
+            try {
+                mContext.unbindService(mConnection);
+            } catch (final IllegalArgumentException e) {
+                // This is coming from LoadedApk framework code when there is some error unbinding the service,
+                // possibly due to it not having been registered correctly in the first place, or already unregistered.
+                // Since this is the cleanup path, just handle log this and move on.
+                final String errorDescription = "Error occurred while unbinding bound Service with " + getClass().getSimpleName();
+                Logger.error(methodTag, errorDescription, e);
+            }
             mHasStartedBinding = false;
         }
     }

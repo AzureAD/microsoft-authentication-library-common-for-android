@@ -40,7 +40,8 @@ import org.junit.Assert;
 import java.util.Calendar;
 import java.util.concurrent.TimeUnit;
 
-import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT;
+import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT_LONG;
+import static com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils.handleButtonClick;
 import static com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils.obtainUiObjectWithExactText;
 
 /**
@@ -64,17 +65,33 @@ public class GoogleSettings extends BaseSettings {
             assert adminAppListItem != null;
             adminAppListItem.click();
 
-            // scroll down the recycler view to find btn to deactivate admin
-            final UiObject deactivateBtn = UiAutomatorUtils.obtainChildInScrollable(
-                    android.widget.ScrollView.class,
-                    "Deactivate this device admin app"
-            );
+            // Check if work profile is present
+            final UiObject removeWorkProfileBtn = UiAutomatorUtils.obtainUiObjectWithExactText("Remove work profile");
 
-            // click the deactivate admin btn
-            deactivateBtn.click();
+            if (removeWorkProfileBtn.waitForExists(TimeUnit.SECONDS.toMillis(3))) {
+                removeWorkProfileBtn.click();
 
-            // Click confirmation
-            UiAutomatorUtils.handleButtonClick("android:id/button1");
+                // Click confirmation
+                UiAutomatorUtils.handleButtonClick("android:id/button1");
+
+                try {
+                    Thread.sleep(TimeUnit.SECONDS.toMillis(15));
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            } else {
+                // scroll down the recycler view to find btn to deactivate admin
+                final UiObject deactivateBtn = UiAutomatorUtils.obtainChildInScrollable(
+                        android.widget.ScrollView.class,
+                        "Deactivate this device admin app"
+                );
+
+                // click the deactivate admin btn
+                deactivateBtn.click();
+
+                // Click confirmation
+                UiAutomatorUtils.handleButtonClick("android:id/button1");
+            }
         } catch (final UiObjectNotFoundException e) {
             throw new AssertionError(e);
         }
@@ -116,6 +133,13 @@ public class GoogleSettings extends BaseSettings {
     public void addWorkAccount(@NonNull final ITestBroker broker,
                                @NonNull final String username,
                                @NonNull final String password) {
+        addWorkAccount(broker, username, password, false);
+    }
+
+    public void addWorkAccount(@NonNull final ITestBroker broker,
+                               @NonNull final String username,
+                               @NonNull final String password,
+                               final boolean isFederatedUser) {
         Logger.i(TAG, "Adding Work Account on Google Device..");
         launchAddAccountPage();
 
@@ -127,21 +151,25 @@ public class GoogleSettings extends BaseSettings {
             workAccount.click();
 
             // perform Join using the supplied broker
-            broker.performJoinViaJoinActivity(username, password);
+            broker.performJoinViaJoinActivity(username, password, isFederatedUser);
 
             final UiDevice device =
                     UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
             // Find the cert installer and make sure it exists
             UiObject certInstaller = device.findObject(new UiSelector().packageName("com.android.certinstaller"));
-            certInstaller.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
             Assert.assertTrue(
                     "Cert Installer appears while adding work account",
-                    certInstaller.exists()
+                    certInstaller.waitForExists(FIND_UI_ELEMENT_TIMEOUT_LONG)
             );
 
             // Confirm install cert
             UiAutomatorUtils.handleButtonClick("android:id/button1");
+
+            // Confirm cert name (API 30+ only)
+            if (android.os.Build.VERSION.SDK_INT >= 30) {
+                UiAutomatorUtils.handleButtonClickSafely("android:id/button1");
+            }
 
             // Make sure account appears in Join Activity afterwards
             broker.confirmJoinInJoinActivity(username);
@@ -246,7 +274,6 @@ public class GoogleSettings extends BaseSettings {
         );
     }
 
-
     private UiObject obtainDisableAdminButton(final DeviceAdmin deviceAdmin) {
         Logger.i(TAG, "Obtain Disable Admin Button on Google Device..");
         if (android.os.Build.VERSION.SDK_INT == 28) {
@@ -307,10 +334,33 @@ public class GoogleSettings extends BaseSettings {
         if (android.os.Build.VERSION.SDK_INT == 28) {
             UiAutomatorUtils.handleButtonClick("com.android.settings:id/redaction_done_button");
         } else {
-            final UiObject doneButton = UiAutomatorUtils.obtainUiObjectWithExactText("Done");
-            doneButton.click();
+            try {
+                final UiObject doneButton = UiAutomatorUtils.obtainUiObjectWithExactText("Done");
+                doneButton.click();
+            } catch (UiObjectNotFoundException e) {
+                Logger.i(TAG, "First Done button attempt failed: " + e.getMessage());
+                final UiObject doneButton = UiAutomatorUtils.obtainUiObjectWithExactText("DONE");
+                doneButton.click();
+            }
         }
     }
 
+    @Override
+    public void disableAppThroughSettings(@NonNull final String packageName) {
+        Logger.i(TAG, "Disabling app through settings: " + packageName);
+        launchAppInfoPage(packageName);
+        // This is the id for the disable button
+        handleButtonClick("com.android.settings:id/button2");
+        // Confirm disabling app
+        handleButtonClick("android:id/button1");
+    }
+
+    @Override
+    public void enableAppThroughSettings(@NonNull final String packageName) {
+        Logger.i(TAG, "Enabling app through settings");
+        launchAppInfoPage(packageName);
+        // This is the id for the enable button
+        handleButtonClick("com.android.settings:id/button2");
+    }
 }
 

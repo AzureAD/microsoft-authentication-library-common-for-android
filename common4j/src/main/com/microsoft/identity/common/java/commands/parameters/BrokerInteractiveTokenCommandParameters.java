@@ -22,10 +22,11 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.commands.parameters;
 
+import com.google.gson.annotations.Expose;
 import com.microsoft.identity.common.java.broker.IBrokerAccount;
-import com.microsoft.identity.common.java.request.BrokerRequestType;
 import com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache;
 import com.microsoft.identity.common.java.exception.ArgumentException;
+import com.microsoft.identity.common.java.request.BrokerRequestType;
 import com.microsoft.identity.common.java.util.StringUtil;
 
 import java.util.Map;
@@ -38,16 +39,29 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder(toBuilder = true)
 @EqualsAndHashCode(callSuper = true)
 public class BrokerInteractiveTokenCommandParameters extends InteractiveTokenCommandParameters
-          implements IHasExtraParameters {
+        implements IHasExtraParameters, IBrokerTokenCommandParameters {
 
+    @Expose
     private final String callerPackageName;
+
+    @Expose
     private final int callerUid;
+
+    @Expose
     private final String callerAppVersion;
+
+    @Expose
     private final String brokerVersion;
 
+    @Expose
     private final boolean shouldResolveInterrupt;
+
+    @Expose
     private final BrokerRequestType requestType;
+
+    @Expose
     private final String negotiatedBrokerProtocolVersion;
+
     private final Iterable<Map.Entry<String, String>> extraParameters;
 
     private final String enrollmentId;
@@ -57,16 +71,13 @@ public class BrokerInteractiveTokenCommandParameters extends InteractiveTokenCom
     private final String homeAccountId;
     private final String localAccountId;
 
+    // If this flag is true, we will send the x-ms-PKeyAuth Header to the token endpoint.
+    // Note: this flag is transferred to a MicrosoftTokenRequest in BaseController.
+    @Expose
+    private final boolean pKeyAuthHeaderAllowed;
 
-    /**
-     * Helper method to identify if the request originated from Broker itself or from client libraries.
-     *
-     * @return : true if request is the request is originated from Broker, false otherwise
-     */
-    public boolean isRequestFromBroker() {
-        return requestType == BrokerRequestType.BROKER_RT_REQUEST ||
-                requestType == BrokerRequestType.RESOLVE_INTERRUPT;
-    }
+    @Expose
+    private final String homeTenantId;
 
     @Override
     public void validate() throws ArgumentException {

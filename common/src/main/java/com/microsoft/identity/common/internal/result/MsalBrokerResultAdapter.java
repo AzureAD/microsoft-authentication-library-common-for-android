@@ -22,6 +22,20 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.result;
 
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_ACCOUNTS;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_ACCOUNTS_COMPRESSED;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_ACTIVITY_NAME;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_DEVICE_MODE;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_GENERATE_SHR_RESULT;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_GENERATE_SSO_TOKEN_RESULT;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_PACKAGE_NAME;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_RESULT_V2_COMPRESSED;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.HELLO_ERROR_CODE;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.HELLO_ERROR_MESSAGE;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY;
+import static com.microsoft.identity.common.internal.util.GzipUtil.compressString;
+import static com.microsoft.identity.common.java.exception.ClientException.INVALID_BROKER_BUNDLE;
+
 import android.accounts.AccountManager;
 import android.content.Intent;
 import android.os.Bundle;
@@ -33,10 +47,15 @@ import com.google.gson.Gson;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.HashMapExtensions;
 import com.microsoft.identity.common.adal.internal.util.JsonExtensions;
-import com.microsoft.identity.common.java.commands.AcquirePrtSsoTokenResult;
+import com.microsoft.identity.common.internal.broker.BrokerResult;
 import com.microsoft.identity.common.internal.request.AuthenticationSchemeTypeAdapter;
+import com.microsoft.identity.common.internal.util.GzipUtil;
+import com.microsoft.identity.common.java.cache.ICacheRecord;
+import com.microsoft.identity.common.java.commands.AcquirePrtSsoTokenResult;
 import com.microsoft.identity.common.java.constants.OAuth2ErrorCode;
 import com.microsoft.identity.common.java.constants.OAuth2SubErrorCode;
+import com.microsoft.identity.common.java.dto.AccessTokenRecord;
+import com.microsoft.identity.common.java.dto.IAccountRecord;
 import com.microsoft.identity.common.java.exception.ArgumentException;
 import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.exception.ClientException;
@@ -44,20 +63,16 @@ import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.exception.IntuneAppProtectionPolicyRequiredException;
 import com.microsoft.identity.common.java.exception.ServiceException;
 import com.microsoft.identity.common.java.exception.UiRequiredException;
+import com.microsoft.identity.common.java.exception.UnsupportedBrokerException;
 import com.microsoft.identity.common.java.exception.UserCancelException;
-import com.microsoft.identity.common.internal.broker.BrokerResult;
-import com.microsoft.identity.common.java.cache.ICacheRecord;
-import com.microsoft.identity.common.java.dto.AccessTokenRecord;
-import com.microsoft.identity.common.java.dto.IAccountRecord;
 import com.microsoft.identity.common.java.request.SdkType;
-import com.microsoft.identity.common.internal.util.BrokerProtocolVersionUtil;
-import com.microsoft.identity.common.internal.util.GzipUtil;
 import com.microsoft.identity.common.java.result.AcquireTokenResult;
 import com.microsoft.identity.common.java.result.GenerateShrResult;
 import com.microsoft.identity.common.java.result.ILocalAuthenticationResult;
 import com.microsoft.identity.common.java.result.LocalAuthenticationResult;
+import com.microsoft.identity.common.java.util.BrokerProtocolVersionUtil;
 import com.microsoft.identity.common.java.util.HeaderSerializationUtil;
-import com.microsoft.identity.common.internal.util.StringUtil;
+import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.logging.Logger;
 
 import org.json.JSONException;
@@ -65,32 +80,21 @@ import org.json.JSONException;
 import java.io.IOException;
 import java.util.List;
 
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_ACCOUNTS;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_ACCOUNTS_COMPRESSED;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_ACTIVITY_NAME;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_DEVICE_MODE;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_GENERATE_SHR_RESULT;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_GENERATE_SSO_TOKEN_RESULT;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_PACKAGE_NAME;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_RESULT_V2_COMPRESSED;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY;
-import static com.microsoft.identity.common.java.exception.ClientException.INVALID_BROKER_BUNDLE;
-import static com.microsoft.identity.common.internal.util.GzipUtil.compressString;
-
 /**
  * For Broker: constructs result bundle.
  * For MSAL: unpack result bundle.
  */
 public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
 
-    private static final String TAG = MsalBrokerResultAdapter.class.getName();
+    private static final String TAG = MsalBrokerResultAdapter.class.getSimpleName();
     public static final Gson GSON = new Gson();
 
+    @NonNull
     @Override
-    public @NonNull
-    Bundle bundleFromAuthenticationResult(@NonNull final ILocalAuthenticationResult authenticationResult,
-                                          @Nullable final String negotiatedBrokerProtocolVersion) {
-        Logger.info(TAG, "Constructing result bundle from ILocalAuthenticationResult");
+    public Bundle bundleFromAuthenticationResult(@NonNull final ILocalAuthenticationResult authenticationResult,
+                                                 @Nullable final String negotiatedBrokerProtocolVersion) {
+        final String methodTag = TAG + ":bundleFromAuthenticationResult";
+        Logger.info(methodTag, "Constructing result bundle from ILocalAuthenticationResult");
 
         final IAccountRecord accountRecord = authenticationResult.getAccountRecord();
 
@@ -127,11 +131,12 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         return resultBundle;
     }
 
+    @NonNull
     @Override
-    public @NonNull
-    Bundle bundleFromBaseException(@NonNull final BaseException exception,
-                                   @Nullable final String negotiatedBrokerProtocolVersion) {
-        Logger.info(TAG, "Constructing result bundle from ClientException");
+    public Bundle bundleFromBaseException(@NonNull final BaseException exception,
+                                          @Nullable final String negotiatedBrokerProtocolVersion) {
+        final String methodTag = TAG + ":bundleFromBaseException";
+        Logger.info(methodTag, "Constructing result bundle from ClientException");
 
         final BrokerResult.Builder builder = new BrokerResult.Builder()
                 .success(false)
@@ -178,16 +183,17 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         return resultBundle;
     }
 
+    @NonNull
     @Override
-    public @NonNull
-    ILocalAuthenticationResult authenticationResultFromBundle(@NonNull final Bundle resultBundle) throws ClientException {
+    public ILocalAuthenticationResult authenticationResultFromBundle(@NonNull final Bundle resultBundle) throws ClientException {
+        final String methodTag = TAG + ":authenticationResultFromBundle";
         final BrokerResult brokerResult = brokerResultFromBundle(resultBundle);
 
-        Logger.info(TAG, "Broker Result returned from Bundle, constructing authentication result");
+        Logger.info(methodTag, "Broker Result returned from Bundle, constructing authentication result");
 
         final List<ICacheRecord> tenantProfileCacheRecords = brokerResult.getTenantProfileData();
         if (tenantProfileCacheRecords == null) {
-            Logger.error(TAG, "getTenantProfileData is null", null);
+            Logger.error(methodTag, "getTenantProfileData is null", null);
             throw new ClientException(INVALID_BROKER_BUNDLE, "getTenantProfileData is null.");
         }
 
@@ -199,10 +205,11 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         );
     }
 
+    @NonNull
     @Override
-    public @NonNull
-    BaseException getBaseExceptionFromBundle(@NonNull final Bundle resultBundle) {
-        Logger.info(TAG, "Constructing exception from result bundle");
+    public BaseException getBaseExceptionFromBundle(@NonNull final Bundle resultBundle) {
+        final String methodTag = TAG + ":getBaseExceptionFromBundle";
+        Logger.info(methodTag, "Constructing exception from result bundle");
 
         final BrokerResult brokerResult;
         try {
@@ -213,12 +220,12 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
 
         final String exceptionType = brokerResult.getExceptionType();
 
-        if (!StringUtil.isEmpty(exceptionType)) {
+        if (!StringUtil.isNullOrEmpty(exceptionType)) {
             return getBaseExceptionFromExceptionType(exceptionType, brokerResult);
         } else {
             // This code is here for legacy purposes where old versions of broker (3.1.8 or below)
             // wouldn't return exception type in the result.
-            Logger.info(TAG, "Exception type is not returned from the broker, " +
+            Logger.info(methodTag, "Exception type is not returned from the broker, " +
                     "using error codes to transform to the right exception");
             return getBaseExceptionFromErrorCodes(brokerResult);
         }
@@ -230,9 +237,10 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         return GSON.fromJson(resultBundle.getString(BROKER_GENERATE_SSO_TOKEN_RESULT), AcquirePrtSsoTokenResult.class);
     }
 
-    public @NonNull
-    Bundle bundleFromBrokerResult(@NonNull final BrokerResult brokerResult,
-                                  @Nullable final String negotiatedBrokerProtocolVersion) {
+    @NonNull
+    public Bundle bundleFromBrokerResult(@NonNull final BrokerResult brokerResult,
+                                         @Nullable final String negotiatedBrokerProtocolVersion) {
+        final String methodTag = TAG + ":bundleFromBrokerResult";
         final Bundle resultBundle = new Bundle();
         final String brokerResultString = AuthenticationSchemeTypeAdapter.getGsonInstance().toJson(
                 brokerResult,
@@ -241,7 +249,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         if (BrokerProtocolVersionUtil.canCompressBrokerPayloads(negotiatedBrokerProtocolVersion)) {
             try {
                 byte[] compressedBytes = compressString(brokerResultString);
-                Logger.info(TAG, "Broker Result, raw payload size:"
+                Logger.info(methodTag, "Broker Result, raw payload size:"
                         + brokerResultString.getBytes(AuthenticationConstants.CHARSET_UTF8).length + " ,compressed bytes " + compressedBytes.length
                 );
                 resultBundle.putByteArray(
@@ -249,14 +257,14 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                         compressedBytes
                 );
             } catch (IOException e) {
-                Logger.error(TAG, "Failed to compress Broker Result, sending as jsonString ", e);
+                Logger.error(methodTag, "Failed to compress Broker Result, sending as jsonString ", e);
                 resultBundle.putString(
                         AuthenticationConstants.Broker.BROKER_RESULT_V2,
                         brokerResultString
                 );
             }
         } else {
-            Logger.info(TAG, "Broker protocol version: " + negotiatedBrokerProtocolVersion +
+            Logger.info(methodTag, "Broker protocol version: " + negotiatedBrokerProtocolVersion +
                     " lower than compression changes, sending as string"
             );
             resultBundle.putString(
@@ -267,8 +275,9 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         return resultBundle;
     }
 
-    public @NonNull
-    BrokerResult brokerResultFromBundle(@NonNull final Bundle resultBundle) throws ClientException {
+    @NonNull
+    public BrokerResult brokerResultFromBundle(@NonNull final Bundle resultBundle) throws ClientException {
+        final String methodTag = TAG + ":brokerResultFromBundle";
 
         String brokerResultString;
 
@@ -279,27 +288,28 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
             } catch (IOException e) {
                 // We should never hit this ideally unless the string/bytes are malformed for some unknown reason.
                 // The caller should handle the null broker result
-                Logger.error(TAG, "Failed to decompress broker result :", e);
+                Logger.error(methodTag, "Failed to decompress broker result :", e);
                 throw new ClientException(INVALID_BROKER_BUNDLE, "Failed to decompress broker result", e);
             }
         } else {
             brokerResultString = resultBundle.getString(AuthenticationConstants.Broker.BROKER_RESULT_V2);
         }
 
-        if (StringUtil.isEmpty(brokerResultString)) {
-            Logger.error(TAG, "Broker Result not returned from Broker", null);
+        if (StringUtil.isNullOrEmpty(brokerResultString)) {
+            Logger.error(methodTag, "Broker Result not returned from Broker", null);
             throw new ClientException(INVALID_BROKER_BUNDLE, "Broker Result not returned from Broker", null);
         }
 
         return JsonExtensions.getBrokerResultFromJsonString(brokerResultString);
     }
 
-    private @NonNull
-    BaseException getBaseExceptionFromExceptionType(@NonNull final String exceptionType,
-                                                    @NonNull final BrokerResult brokerResult) {
+    @NonNull
+    private BaseException getBaseExceptionFromExceptionType(@NonNull final String exceptionType,
+                                                            @NonNull final BrokerResult brokerResult) {
+        final String methodTag = TAG + ":getBaseExceptionFromExceptionType";
         BaseException baseException;
 
-        Logger.warn(TAG, "Received a " + exceptionType + " from Broker : "
+        Logger.warn(methodTag, "Received a " + exceptionType + " from Broker : "
                 + brokerResult.getErrorCode()
         );
 
@@ -337,7 +347,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
 
         } else {
             // Default to ClientException if null
-            Logger.warn(TAG, " Exception type is unknown : " + exceptionType
+            Logger.warn(methodTag, " Exception type is unknown : " + exceptionType
                     + brokerResult.getErrorCode() + ", defaulting to Client Exception "
             );
             baseException = new ClientException(
@@ -364,8 +374,9 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
      *
      * @return {@link BaseException}
      */
-    private @NonNull
-    BaseException getBaseExceptionFromErrorCodes(@NonNull final BrokerResult brokerResult) {
+    @NonNull
+    private BaseException getBaseExceptionFromErrorCodes(@NonNull final BrokerResult brokerResult) {
+        final String methodTag = TAG + ":getBaseExceptionFromErrorCodes";
         final String errorCode = brokerResult.getErrorCode();
         final BaseException baseException;
 
@@ -375,7 +386,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                 ErrorStrings.INVALID_BROKER_REFRESH_TOKEN.equalsIgnoreCase(errorCode) ||
                 ErrorStrings.NO_TOKENS_FOUND.equalsIgnoreCase(errorCode)) {
 
-            Logger.warn(TAG, "Received a UIRequired exception from Broker : " + errorCode);
+            Logger.warn(methodTag, "Received a UIRequired exception from Broker : " + errorCode);
             baseException = new UiRequiredException(
                     errorCode,
                     brokerResult.getErrorMessage()
@@ -385,34 +396,34 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                         equalsIgnoreCase(brokerResult.getSubErrorCode())) {
 
             Logger.warn(
-                    TAG,
+                    methodTag,
                     "Received a IntuneAppProtectionPolicyRequiredException exception from Broker : "
                             + errorCode);
             baseException = getIntuneProtectionRequiredException(brokerResult);
 
         } else if (ErrorStrings.USER_CANCELLED.equalsIgnoreCase(errorCode)) {
 
-            Logger.warn(TAG, "Received a User cancelled exception from Broker : " + errorCode);
+            Logger.warn(methodTag, "Received a User cancelled exception from Broker : " + errorCode);
             baseException = new UserCancelException();
 
         } else if (ArgumentException.ILLEGAL_ARGUMENT_ERROR_CODE.equalsIgnoreCase(errorCode)) {
 
-            Logger.warn(TAG, "Received a Argument exception from Broker : " + errorCode);
+            Logger.warn(methodTag, "Received a Argument exception from Broker : " + errorCode);
             baseException = new ArgumentException(
                     ArgumentException.BROKER_TOKEN_REQUEST_OPERATION_NAME,
                     errorCode,
                     brokerResult.getErrorMessage()
             );
 
-        } else if (!StringUtil.isEmpty(brokerResult.getHttpResponseHeaders()) ||
-                !StringUtil.isEmpty(brokerResult.getHttpResponseBody())) {
+        } else if (!StringUtil.isNullOrEmpty(brokerResult.getHttpResponseHeaders()) ||
+                !StringUtil.isNullOrEmpty(brokerResult.getHttpResponseBody())) {
 
-            Logger.warn(TAG, "Received a Service exception from Broker : " + errorCode);
+            Logger.warn(methodTag, "Received a Service exception from Broker : " + errorCode);
             baseException = getServiceException(brokerResult);
 
         } else {
 
-            Logger.warn(TAG, "Received a Client exception from Broker : " + errorCode);
+            Logger.warn(methodTag, "Received a Client exception from Broker : " + errorCode);
             baseException = new ClientException(
                     brokerResult.getErrorCode(),
                     brokerResult.getErrorMessage()
@@ -431,9 +442,10 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
     /**
      * Helper method to retrieve IntuneAppProtectionPolicyRequiredException from BrokerResult
      */
-    private @NonNull
-    IntuneAppProtectionPolicyRequiredException getIntuneProtectionRequiredException(
+    @NonNull
+    private IntuneAppProtectionPolicyRequiredException getIntuneProtectionRequiredException(
             @NonNull final BrokerResult brokerResult) {
+        final String methodTag = TAG + ":getIntuneProtectionRequiredException";
         final IntuneAppProtectionPolicyRequiredException exception =
                 new IntuneAppProtectionPolicyRequiredException(
                         brokerResult.getErrorCode(),
@@ -455,7 +467,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                 );
             }
         } catch (JSONException e) {
-            Logger.warn(TAG, "Unable to parse json");
+            Logger.warn(methodTag, "Unable to parse json");
         }
         return exception;
     }
@@ -463,8 +475,9 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
     /**
      * Helper method to retrieve ServiceException from BrokerResult
      */
-    private @NonNull
-    ServiceException getServiceException(@NonNull final BrokerResult brokerResult) {
+    @NonNull
+    private ServiceException getServiceException(@NonNull final BrokerResult brokerResult) {
+        final String methodTag = TAG + ":getServiceException";
         final ServiceException serviceException = new ServiceException(
                 brokerResult.getErrorCode(),
                 brokerResult.getErrorMessage(),
@@ -488,37 +501,37 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
             );
 
         } catch (JSONException e) {
-            Logger.warn(TAG, "Unable to parse json");
+            Logger.warn(methodTag, "Unable to parse json");
         }
         return serviceException;
 
     }
 
-    public @NonNull
-    String verifyHelloFromResultBundle(@Nullable final Bundle bundle) throws ClientException {
-        final String methodName = ":verifyHelloFromResultBundle";
+    @NonNull
+    public String verifyHelloFromResultBundle(@NonNull final String activeBrokerPackageName,
+                                              @Nullable final Bundle bundle) throws BaseException {
+        final String methodTag = TAG + ":verifyHelloFromResultBundle";
 
         // This means that the Broker doesn't support hello().
         if (bundle == null) {
-            Logger.warn(TAG + methodName, "The hello result bundle is null.");
-            throw new ClientException(ErrorStrings.UNSUPPORTED_BROKER_VERSION_ERROR_CODE,
-                    ErrorStrings.UNSUPPORTED_BROKER_VERSION_ERROR_MESSAGE);
+            Logger.warn(methodTag, "The hello result bundle is null.");
+            throw new UnsupportedBrokerException(activeBrokerPackageName);
         }
 
         final String negotiatedBrokerProtocolVersion = bundle.getString(AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY);
-        if (!StringUtil.isEmpty(negotiatedBrokerProtocolVersion)) {
-            Logger.info(TAG + methodName,
+        if (!StringUtil.isNullOrEmpty(negotiatedBrokerProtocolVersion)) {
+            Logger.info(methodTag,
                     "Able to establish the connect, " +
                             "the broker protocol version in common is ["
                             + negotiatedBrokerProtocolVersion + "]");
             return negotiatedBrokerProtocolVersion;
         }
 
-        if (!StringUtil.isEmpty(bundle.getString(AuthenticationConstants.OAuth2.ERROR))
-                && !StringUtil.isEmpty(bundle.getString(AuthenticationConstants.OAuth2.ERROR_DESCRIPTION))) {
-            final String errorCode = bundle.getString(AuthenticationConstants.OAuth2.ERROR);
-            final String errorMessage = bundle.getString(AuthenticationConstants.OAuth2.ERROR_DESCRIPTION);
-            throw new ClientException(errorCode, errorMessage);
+        // Actual handshake error.
+        if (!StringUtil.isNullOrEmpty(bundle.getString(HELLO_ERROR_CODE))) {
+            final String errorCode = bundle.getString(HELLO_ERROR_CODE);
+            final String errorMessage = bundle.getString(HELLO_ERROR_MESSAGE);
+            throw new UnsupportedBrokerException(activeBrokerPackageName, errorCode, errorMessage);
         }
 
         final Object resultObject = bundle.get(AuthenticationConstants.Broker.BROKER_RESULT_V2);
@@ -529,21 +542,19 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         }
 
         // This means that the Broker doesn't support hello().
-        Logger.warn(TAG + methodName, "The result bundle is not in a recognizable format.");
-        throw new ClientException(ErrorStrings.UNSUPPORTED_BROKER_VERSION_ERROR_CODE,
-                ErrorStrings.UNSUPPORTED_BROKER_VERSION_ERROR_MESSAGE);
+        Logger.warn(methodTag, "The result bundle is not in a recognizable format.");
+        throw new UnsupportedBrokerException(activeBrokerPackageName);
     }
 
-
-    public @NonNull
-    Intent getIntentForInteractiveRequestFromResultBundle(@NonNull final Bundle resultBundle,
-                                                          @NonNull final String negotiatedBrokerProtocolVersion) throws ClientException {
+    @NonNull
+    public Intent getIntentForInteractiveRequestFromResultBundle(@NonNull final Bundle resultBundle,
+                                                                 @NonNull final String negotiatedBrokerProtocolVersion) throws ClientException {
         final Bundle interactiveRequestBundle = extractInteractiveRequestBundleFromResultBundle(resultBundle);
 
         final String packageName = interactiveRequestBundle.getString(BROKER_PACKAGE_NAME);
         final String className = interactiveRequestBundle.getString(BROKER_ACTIVITY_NAME);
-        if (StringUtil.isEmpty(packageName) ||
-                StringUtil.isEmpty(className)) {
+        if (StringUtil.isNullOrEmpty(packageName) ||
+                StringUtil.isNullOrEmpty(className)) {
             throw new ClientException(INVALID_BROKER_BUNDLE, "Content of Authorization Intent's package and class name should not be null.");
         }
 
@@ -571,8 +582,8 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         return resultBundle;
     }
 
-    public @NonNull
-    AcquireTokenResult getAcquireTokenResultFromResultBundle(@NonNull final Bundle resultBundle) throws BaseException {
+    @NonNull
+    public AcquireTokenResult getAcquireTokenResultFromResultBundle(@NonNull final Bundle resultBundle) throws BaseException {
         final MsalBrokerResultAdapter resultAdapter = new MsalBrokerResultAdapter();
         if (resultBundle.getBoolean(AuthenticationConstants.Broker.BROKER_REQUEST_V2_SUCCESS)) {
             final AcquireTokenResult acquireTokenResult = new AcquireTokenResult();
@@ -586,25 +597,26 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         throw getBaseExceptionFromBundle(resultBundle);
     }
 
-    public @NonNull
-    Bundle bundleFromAccounts(@NonNull final List<ICacheRecord> cacheRecords,
+    @NonNull
+    public Bundle bundleFromAccounts(@NonNull final List<ICacheRecord> cacheRecords,
                               @Nullable final String negotiatedProtocolVersion) {
+        final String methodTag = TAG + ":bundleFromAccounts";
         final Bundle resultBundle = new Bundle();
 
         final String jsonString = JsonExtensions.getJsonStringFromICacheRecordList(cacheRecords);
         if (BrokerProtocolVersionUtil.canCompressBrokerPayloads(negotiatedProtocolVersion)) {
             try {
                 byte[] bytes = GzipUtil.compressString(jsonString);
-                Logger.info(TAG, "Get accounts, raw payload size :"
+                Logger.info(methodTag, "Get accounts, raw payload size :"
                         + jsonString.getBytes(AuthenticationConstants.CHARSET_UTF8).length + " compressed size " + bytes.length
                 );
                 resultBundle.putByteArray(BROKER_ACCOUNTS_COMPRESSED, bytes);
             } catch (IOException e) {
-                Logger.error(TAG, " Failed to compress account list to bytes, sending as jsonString", e);
+                Logger.error(methodTag, " Failed to compress account list to bytes, sending as jsonString", e);
                 resultBundle.putString(BROKER_ACCOUNTS, jsonString);
             }
         } else {
-            Logger.info(TAG, "Broker protocol version: " + negotiatedProtocolVersion +
+            Logger.info(methodTag, "Broker protocol version: " + negotiatedProtocolVersion +
                     " lower than compression changes, sending as string"
             );
             resultBundle.putString(BROKER_ACCOUNTS, jsonString);
@@ -613,8 +625,9 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         return resultBundle;
     }
 
-    public @NonNull
-    List<ICacheRecord> getAccountsFromResultBundle(@NonNull final Bundle bundle) throws BaseException {
+    @NonNull
+    public List<ICacheRecord> getAccountsFromResultBundle(@NonNull final Bundle bundle) throws BaseException {
+        final String methodTag = TAG + ":getAccountsFromResultBundle";
         String accountJson;
 
         final byte[] compressedData = bundle.getByteArray(BROKER_ACCOUNTS_COMPRESSED);
@@ -622,14 +635,14 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
             try {
                 accountJson = GzipUtil.decompressBytesToString(compressedData);
             } catch (IOException e) {
-                Logger.error(TAG, " Failed to decompress account list to bytes", e);
+                Logger.error(methodTag, " Failed to decompress account list to bytes", e);
                 throw new ClientException(INVALID_BROKER_BUNDLE, " Failed to decompress account list to bytes.");
             }
         } else {
             accountJson = bundle.getString(BROKER_ACCOUNTS);
         }
 
-        if (StringUtil.isEmpty(accountJson)) {
+        if (StringUtil.isNullOrEmpty(accountJson)) {
             throw new MsalBrokerResultAdapter().getBaseExceptionFromBundle(bundle);
         }
 
@@ -637,13 +650,14 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
     }
 
     public void verifyRemoveAccountResultFromBundle(@Nullable final Bundle bundle) throws BaseException {
+        final String methodTag = TAG + ":verifyRemoveAccountResultFromBundle";
         if (bundle == null) {
             // Backward compatibility. We treated null = success.
             return;
         }
 
         final String brokerResultString = bundle.getString(AuthenticationConstants.Broker.BROKER_RESULT_V2);
-        if (StringUtil.isEmpty(brokerResultString)) {
+        if (StringUtil.isNullOrEmpty(brokerResultString)) {
             throw getBaseExceptionFromBundle(bundle);
         }
 
@@ -652,12 +666,12 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
             return;
         }
 
-        Logger.warn(TAG, "Failed to remove account.");
+        Logger.warn(methodTag, "Failed to remove account.");
         throw getBaseExceptionFromBundle(bundle);
     }
 
-    public @NonNull
-    Bundle bundleFromDeviceMode(final boolean isSharedDevice) {
+    @NonNull
+    public Bundle bundleFromDeviceMode(final boolean isSharedDevice) {
         final Bundle resultBundle = new Bundle();
         resultBundle.putBoolean(BROKER_DEVICE_MODE, isSharedDevice);
         return resultBundle;
@@ -671,8 +685,8 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         return bundle.getBoolean(BROKER_DEVICE_MODE);
     }
 
-    public @NonNull
-    ClientException getExceptionForEmptyResultBundle() {
+    @NonNull
+    public ClientException getExceptionForEmptyResultBundle() {
         return new ClientException(INVALID_BROKER_BUNDLE, "Broker Result not returned from Broker.");
     }
 

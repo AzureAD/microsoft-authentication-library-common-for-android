@@ -16,6 +16,14 @@ plugins {
     // module doesn't really have a concept of BuildConfig. This plugin allows us to create similar
     // looking BuildConfig constants in a java project.
     id 'com.github.gmazzo.buildconfig' version '3.0.0'
+
+    // Test fixtures are commonly used to setup the code under test,
+    // or provide utilities aimed at facilitating the tests of a component.
+    // This will automatically create a testFixtures source set, in which you can write your test fixtures.
+    id "java-test-fixtures"
+
+    // This is needed to get Android Studio to resolve test fixtures dependencies
+    id 'idea'
 }
 
 def desugarCode = false
@@ -42,7 +50,7 @@ repositories {
     mavenCentral()
 }
 
-apply from: '../versioning/version_tasks.gradle'
+apply from: './versioning/version_tasks.gradle'
 
 project.ext.vstsUsername = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME") : project.findProperty("vstsUsername")
 project.ext.vstsPassword = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") : project.findProperty("vstsMavenAccessToken")
@@ -172,6 +180,24 @@ sourceSets {
     }
 }
 
+// This is needed to get Android Studio to resolve test fixtures dependencies
+// by default test fixtures dependencies are not resolved in IDE
+configurations {
+    resolvableTestFixturesImplementation {
+        canBeResolved true;
+    }
+}
+
+configurations.testFixturesImplementation.extendsFrom(configurations.resolvableTestFixturesImplementation);
+
+idea {
+    module {
+        // This is needed to get Android Studio to resolve test fixtures dependencies
+        // by default test fixtures dependencies are not resolved in IDE
+        scopes.COMPILE.plus += [configurations.resolvableTestFixturesImplementation]
+    }
+}
+
 dependencies {
     compileOnly 'com.github.spotbugs:spotbugs-annotations:3.1.12'
     compileOnly "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
@@ -187,10 +213,19 @@ dependencies {
     testAnnotationProcessor "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
     testImplementation "junit:junit:$rootProject.ext.junitVersion"
     testImplementation "org.mockito:mockito-core:$rootProject.ext.mockitoCoreVersion"
+
+    testFixturesCompileOnly 'com.github.spotbugs:spotbugs-annotations:3.1.12'
+    testFixturesCompileOnly "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
+    testFixturesAnnotationProcessor "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
+    resolvableTestFixturesImplementation "org.robolectric:junit:$rootProject.ext.robolectricVersion"
+
+    implementation platform("io.opentelemetry:opentelemetry-bom:1.18.0")
+    implementation('io.opentelemetry:opentelemetry-api:1.18.0')
+    implementation('io.opentelemetry:opentelemetry-sdk-trace:1.18.0')
 }
 
-sourceCompatibility = "1.7"
-targetCompatibility = "1.7"
+sourceCompatibility = "1.8"
+targetCompatibility = "1.8"
 
 buildConfig {
     // forces the package (of the generated BuildConfig file). Defaults to '${project.group}'

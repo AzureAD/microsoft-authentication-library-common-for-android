@@ -25,6 +25,8 @@ package com.microsoft.identity.common.internal.providers.oauth2;
 import com.microsoft.identity.common.java.providers.oauth2.DefaultStateGenerator;
 import com.microsoft.identity.common.logging.Logger;
 
+import java.util.Locale;
+
 import lombok.Getter;
 import lombok.NonNull;
 
@@ -51,18 +53,20 @@ public class AndroidTaskStateGenerator extends DefaultStateGenerator {
     @NonNull
     public String generate() {
         String state = super.generate();
-        state = String.format("%d%s%s", this.taskId, SPLITTER, state);
+        // Ensure the string is formatted in only one Locale. Using Locale.US ensures the taskId is always ASCII which is URL safe.
+        state = String.format(Locale.US, "%d%s%s", this.taskId, SPLITTER, state);
         return state;
     }
 
     public static int getTaskFromState(String state) {
+        final String methodTag = TAG + ":getTaskFromState";
         String[] parts = state.split(SPLITTER);
         int returnValue = 0;
         if (parts.length >= 2) {
             try {
                 returnValue = Integer.parseInt(parts[0]);
             } catch (NumberFormatException ex) {
-                Logger.error(TAG, "Unable to parse state", ex);
+                Logger.error(methodTag, "Unable to parse state", ex);
             }
         }
         return returnValue;

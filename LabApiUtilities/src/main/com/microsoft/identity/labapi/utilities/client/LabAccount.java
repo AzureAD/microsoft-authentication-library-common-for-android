@@ -22,12 +22,13 @@
 // THE SOFTWARE.
 package com.microsoft.identity.labapi.utilities.client;
 
+import com.microsoft.identity.internal.test.labapi.model.ConfigInfo;
 import com.microsoft.identity.labapi.utilities.constants.UserType;
 
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.experimental.Accessors;
 
 /**
@@ -35,11 +36,33 @@ import lombok.experimental.Accessors;
  */
 @Getter
 @Accessors(prefix = "m")
-@AllArgsConstructor(access = AccessLevel.PUBLIC)
+@Builder
 @EqualsAndHashCode
 public class LabAccount implements ILabAccount {
+
+    @NonNull
     private final String mUsername;
+
+    @NonNull
     private final String mPassword;
+
+    @NonNull
     private final UserType mUserType;
+
+    @NonNull
     private final String mHomeTenantId;
+
+    // nullable
+    // dependency for Nullable annotation not currently added to LabApiUtilities
+    private final ConfigInfo mConfigInfo;
+
+    @Override
+    public String getAssociatedClientId() {
+        return mConfigInfo.getAppInfo().getAppId();
+    }
+
+    @Override
+    public String getAuthority() {
+        return mConfigInfo.getLabInfo().getAuthority();
+    }
 }

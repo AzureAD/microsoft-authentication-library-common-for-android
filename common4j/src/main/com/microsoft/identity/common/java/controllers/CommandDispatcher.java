@@ -83,24 +83,11 @@ import java.util.concurrent.TimeoutException;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.NonNull;
 
-import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterAliases.CANCEL_AUTHORIZATION_REQUEST;
-import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterAliases.RETURN_AUTHORIZATION_REQUEST_RESULT;
-import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterFields.REQUEST_CODE;
-import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterFields.RESULT_CODE;
-import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.PRODUCT;
-import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.VERSION;
-import static com.microsoft.identity.common.java.commands.SilentTokenCommand.ACQUIRE_TOKEN_SILENT_DEFAULT_TIMEOUT_MILLISECONDS;
-import static com.microsoft.identity.common.java.marker.PerfConstants.CodeMarkerConstants.ACQUIRE_TOKEN_SILENT_COMMAND_EXECUTION_END;
-import static com.microsoft.identity.common.java.marker.PerfConstants.CodeMarkerConstants.ACQUIRE_TOKEN_SILENT_COMMAND_EXECUTION_START;
-import static com.microsoft.identity.common.java.marker.PerfConstants.CodeMarkerConstants.ACQUIRE_TOKEN_SILENT_EXECUTOR_START;
-import static com.microsoft.identity.common.java.marker.PerfConstants.CodeMarkerConstants.ACQUIRE_TOKEN_SILENT_FUTURE_OBJECT_CREATION_END;
-import static com.microsoft.identity.common.java.marker.PerfConstants.CodeMarkerConstants.ACQUIRE_TOKEN_SILENT_START;
-
 public class CommandDispatcher {
 
     private static final String TAG = CommandDispatcher.class.getSimpleName();
     private static final int SILENT_REQUEST_THREAD_POOL_SIZE = 5;
-    private static final ExecutorService sInteractiveExecutor = Executors.newSingleThreadExecutor();
+    private static ExecutorService sInteractiveExecutor = Executors.newSingleThreadExecutor();
     private static final ExecutorService sSilentExecutor = Executors.newFixedThreadPool(SILENT_REQUEST_THREAD_POOL_SIZE);
     private static final Object sLock = new Object();
     private static InteractiveTokenCommand sCommand = null;
@@ -393,9 +380,9 @@ public class CommandDispatcher {
         final String TAG = tag + ":" + parameters.getClass().getSimpleName();
 
         //TODO:1315871 - conversion of PublicApiId in readable form.
-        Logger.info(TAG, DiagnosticContext.INSTANCE.getRequestContext().toJsonString(),
-                "Starting request for correlation id : ##" + correlationId
-                        + ", with PublicApiId : " + publicApiId);
+        Logger.info(TAG, "Starting request with request context: "
+                        + DiagnosticContext.INSTANCE.getRequestContext().toJsonString()
+                        + ", with PublicApiId: " + publicApiId);
 
         if (Logger.isAllowPii()) {
             Logger.infoPII(TAG, ObjectMapper.serializeObjectToJsonString(parameters));
@@ -641,7 +628,21 @@ public class CommandDispatcher {
                 //Cancel interactive request if authorizationInCurrentTask() returns true OR this is a broker request.
                 if (LibraryConfiguration.getInstance().isAuthorizationInCurrentTask() || command.getParameters() instanceof BrokerInteractiveTokenCommandParameters) {
                     // Send a broadcast to cancel if any active auth request is present.
-                    LocalBroadcaster.INSTANCE.broadcast(CANCEL_AUTHORIZATION_REQUEST, new PropertyBag());
+                    if(LocalBroadcaster.INSTANCE.hasReceivers(CANCEL_AUTHORIZATION_REQUEST)) {
+                        LocalBroadcaster.INSTANCE.broadcast(CANCEL_AUTHORIZATION_REQUEST, new PropertyBag());
+                    } else if (LocalBroadcaster.INSTANCE.hasReceivers(RETURN_AUTHORIZATION_REQUEST_RESULT)) {
+                        // This means that there is previous interactive request(s) waiting for Authorization result, however
+                        // the actual authorization process for that request has not been started as there are no registered listener/receivers
+                        // for "CANCEL_AUTHORIZATION_REQUEST". This results in the sInteractiveExecutor thread being in deadlock
+                        // state and not able to process any more interactive requests. To get out of this deadlock and be able to
+                        // process future interactive request we need to shutdown and restart the sInteractiveExecutor executor service.
+                        Logger.info(TAG + methodName,
+                                "The previous interactive request was queued but never got processed and is blocking the interactive thread. " +
+                                        "Restarting the interactive executor service to enable processing interactive requests again.");
+                        List<Runnable> cancelledRequests = sInteractiveExecutor.shutdownNow();
+                        sInteractiveExecutor = Executors.newSingleThreadExecutor();
+                        Logger.info(TAG + methodName, "Cancelled execution of " + cancelledRequests.size() + " interactive requests.");
+                    }
                 }
 
                 sInteractiveExecutor.execute(new Runnable() {

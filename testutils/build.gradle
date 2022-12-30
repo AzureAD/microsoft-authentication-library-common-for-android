@@ -198,6 +198,8 @@ dependencies {
         implementation(group: 'com.microsoft.identity', name: 'labapi', version: '0.0.+')
     }
 
+    implementation project(":LabApiUtilities")
+
     implementation "androidx.test:core:$rootProject.ext.androidxTestCoreVersion"
     implementation "com.google.code.gson:gson:$rootProject.ext.gsonVersion"
     implementation "com.nimbusds:nimbus-jose-jwt:$rootProject.ext.nimbusVersion"

@@ -58,7 +58,15 @@ public enum OpenIdConnectPromptParameter {
     /**
      * acquireToken will send prompt=consent to the authorize endpoint.  The user will be prompted to consent even if consent was granted before.
      */
-    CONSENT;
+    CONSENT,
+
+    /**
+     * acquireToken will send prompt=create to the /authorize endpoint.  The user will be prompted to create a new account.
+     * Requires configuring authority as type "AzureADMyOrg" with a tenant_id.
+     * <p>
+     * Prerequisite: https://docs.microsoft.com/en-us/azure/active-directory/external-identities/self-service-sign-up-user-flow
+     */
+    CREATE;
 
     @Override
     public String toString() {

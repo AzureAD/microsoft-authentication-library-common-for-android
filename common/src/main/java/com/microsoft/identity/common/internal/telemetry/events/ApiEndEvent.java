@@ -22,84 +22,12 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.telemetry.events;
 
-import androidx.annotation.NonNull;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
-import com.microsoft.identity.common.java.exception.BaseException;
-import com.microsoft.identity.common.java.exception.UserCancelException;
-import com.microsoft.identity.common.java.controllers.ExceptionAdapter;
-import com.microsoft.identity.common.java.result.AcquireTokenResult;
-
-import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Event;
-import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.EventType;
-import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Key;
-import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Value;
-
-public class ApiEndEvent extends com.microsoft.identity.common.java.telemetry.events.BaseEvent {
-    public ApiEndEvent() {
-        super();
-        names(Event.API_END_EVENT);
-        types(EventType.API_EVENT);
-    }
-
-    public ApiEndEvent putResult(@NonNull final AcquireTokenResult result) {
-        if (result == null) {
-            return this;
-        }
-
-        if (result.getSucceeded() != null) {
-            put(Key.IS_SUCCESSFUL, result.getSucceeded().toString());
-        }
-
-        if (null != result.getLocalAuthenticationResult()) {
-            put(Key.USER_ID, result.getLocalAuthenticationResult().getUniqueId()); //pii
-            put(Key.TENANT_ID, result.getLocalAuthenticationResult().getTenantId()); //pii
-            put(Key.SPE_RING, result.getLocalAuthenticationResult().getSpeRing());
-            put(Key.RT_AGE, result.getLocalAuthenticationResult().getRefreshTokenAge());
-        }
-
-        return this;
-    }
-
-    public ApiEndEvent putException(@NonNull final Exception exception) {
-        if (exception == null) {
-            return this;
-        }
-
-        final BaseException adaptedException = ExceptionAdapter.baseExceptionFromException(exception);
-        if (adaptedException instanceof UserCancelException) {
-            put(Key.USER_CANCEL, Value.TRUE);
-        }
-
-        put(Key.SERVER_ERROR_CODE, adaptedException.getCliTelemErrorCode());
-        put(Key.SERVER_SUBERROR_CODE, adaptedException.getCliTelemSubErrorCode());
-        put(Key.ERROR_CODE, adaptedException.getErrorCode());
-        put(Key.SPE_RING, adaptedException.getSpeRing());
-        put(Key.ERROR_DESCRIPTION, adaptedException.getMessage()); //oii
-        put(Key.RT_AGE, adaptedException.getRefreshTokenAge());
-        put(Key.IS_SUCCESSFUL, Value.FALSE);
-        return this;
-    }
-
-    public @NonNull ApiEndEvent putApiId(@NonNull final String apiId) {
-        put(Key.API_ID, apiId);
-        return this;
-    }
-
-    @Override
-    public ApiEndEvent put(@NonNull final String propertyName, @NonNull final String propertyValue) {
-        super.put(propertyName, propertyValue);
-        return this;
-    }
-
-    public ApiEndEvent isApiCallSuccessful(final Boolean isSuccessful) {
-        if (isSuccessful != null) {
-            put(Key.IS_SUCCESSFUL, isSuccessful.toString());
-        }
-        return this;
-    }
-
-    public ApiEndEvent putApiErrorCode(@NonNull final String errorCode) {
-        put(Key.ERROR_CODE, errorCode);
-        return this;
-    }
+/**
+ * Deprecated. Use {@link com.microsoft.identity.common.java.telemetry.events.ApiEndEvent} instead.
+ **/
+@SuppressFBWarnings("NM_SAME_SIMPLE_NAME_AS_SUPERCLASS")
+@Deprecated
+public class ApiEndEvent extends com.microsoft.identity.common.java.telemetry.events.ApiEndEvent {
 }

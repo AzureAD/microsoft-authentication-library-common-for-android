@@ -266,6 +266,11 @@ public class ClientException extends BaseException {
     public static final String SIGNING_FAILURE = "failed_to_sign";
 
     /**
+     * Generic decryption failure.
+     */
+    public static final String DECRYPTION_FAILURE = "failed_to_decrypt";
+
+    /**
      * Emitted when an error is encountered during signing.
      */
     public static final String JWT_SIGNING_FAILURE = SIGNING_FAILURE + "_jwt";
@@ -276,6 +281,12 @@ public class ClientException extends BaseException {
      * Example: Client requests a PoP token, but a Bearer token is returned.
      */
     public static final String AUTH_SCHEME_MISMATCH = "auth_scheme_mismatch";
+
+    /**
+     * The requested auth scheme for token requests is not supported
+     * by the required broker protocol version.
+     */
+    public static final String AUTH_SCHEME_NOT_SUPPORTED = "auth_scheme_not_supported";
 
     /**
      * Bound service is unavailable or not supported.
@@ -326,6 +337,16 @@ public class ClientException extends BaseException {
      * The data is malformed.
      */
     public static final String DATA_MALFORMED = "data_malformed";
+
+    /**
+     * The Keyring write operation failed.
+     */
+    public static final String KEY_RING_WRITE_FAILURE = "storage_keyring_write_failure";
+
+    /**
+     * The Keyring read operation failed.
+     */
+    public static final String KEY_RING_READ_FAILURE = "storage_keyring_read_failure";
 
     /**
      * Constructor of ClientException.

@@ -56,7 +56,10 @@ final public class TelemetryPiiOiiRules {
             Key.REDIRECT_URI,
             Key.HTTP_PATH,
             Key.AUTHORITY,
-            Key.IDP_NAME
+            Key.IDP_NAME,
+            Key.CALLER_APP_PACKAGE_NAME,
+            Key.CALLER_APP_UUID,
+            Key.CALLER_APP_VERSION
     };
 
     private TelemetryPiiOiiRules() {

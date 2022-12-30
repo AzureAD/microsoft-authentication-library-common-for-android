@@ -37,11 +37,12 @@ import androidx.fragment.app.Fragment;
 import com.microsoft.identity.common.crypto.AndroidAuthSdkStorageEncryptionManager;
 import com.microsoft.identity.common.crypto.AndroidBrokerStorageEncryptionManager;
 import com.microsoft.identity.common.internal.net.cache.HttpCache;
+import com.microsoft.identity.common.internal.platform.AndroidBroadcaster;
+import com.microsoft.identity.common.internal.platform.AndroidDevicePopManager;
 import com.microsoft.identity.common.java.cache.IMultiTypeNameValueStorage;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
 import com.microsoft.identity.common.internal.platform.AndroidDeviceMetadata;
 import com.microsoft.identity.common.internal.platform.AndroidPlatformUtil;
-import com.microsoft.identity.common.internal.platform.DevicePopManager;
 import com.microsoft.identity.common.internal.providers.oauth2.AndroidTaskStateGenerator;
 import com.microsoft.identity.common.internal.ui.AndroidAuthorizationStrategyFactory;
 import com.microsoft.identity.common.internal.util.ProcessUtil;
@@ -58,6 +59,7 @@ import com.microsoft.identity.common.java.net.DefaultHttpClientWrapper;
 import com.microsoft.identity.common.java.platform.Device;
 import com.microsoft.identity.common.java.providers.oauth2.IStateGenerator;
 import com.microsoft.identity.common.java.util.ClockSkewManager;
+import com.microsoft.identity.common.java.util.IBroadcaster;
 import com.microsoft.identity.common.java.util.IClockSkewManager;
 import com.microsoft.identity.common.java.util.IPlatformUtil;
 import com.microsoft.identity.common.java.util.ported.Predicate;
@@ -97,6 +99,7 @@ public class AndroidPlatformComponents implements IPlatformComponents {
 
     private IClockSkewManager mClockSkewManager;
     private IDevicePopManager mDefaultDevicePoPManager;
+    private IBroadcaster mBroadcaster;
 
     /**
      * True if all of the platform-dependent static classes have been initialized.
@@ -106,9 +109,10 @@ public class AndroidPlatformComponents implements IPlatformComponents {
     /**
      * Initializes platform-dependent static classes.
      * TODO: Once we finish the work, this should be extracted out.
-     *       It should be init separately, not as part of this class' construction.
+     * It should be init separately, not as part of this class' construction.
      */
     private static synchronized void initializeStaticClasses(@NonNull final Context context) {
+        final String methodTag = TAG + ":initializeStaticClasses";
         if (!sInitialized) {
             Device.setDeviceMetadata(new AndroidDeviceMetadata());
             Logger.setAndroidLogger();
@@ -116,7 +120,7 @@ public class AndroidPlatformComponents implements IPlatformComponents {
             if (cacheDir != null) {
                 HttpCache.initialize(cacheDir);
             } else {
-                Logger.warn(TAG, "Http caching is not enabled because the cache dir is null");
+                Logger.warn(methodTag, "Http caching is not enabled because the cache dir is null");
             }
             sInitialized = true;
         }
@@ -156,14 +160,14 @@ public class AndroidPlatformComponents implements IPlatformComponents {
     //       and shouldn't need process to decide which one to return.
     @Override
     public @NonNull IKeyAccessor getStorageEncryptionManager() {
-        final String methodName = ":getStorageEncryptionManager";
+        final String methodTag = TAG + ":getStorageEncryptionManager";
 
         if (ProcessUtil.isBrokerProcess(mContext)) {
-            Logger.info(TAG + methodName, "Returning AndroidBrokerStorageEncryptionManager");
+            Logger.info(methodTag, "Returning AndroidBrokerStorageEncryptionManager");
             return new AndroidBrokerStorageEncryptionManager(mContext, null);
         }
 
-        Logger.info(TAG + methodName, "Returning AndroidAuthSdkStorageEncryptionManager");
+        Logger.info(methodTag, "Returning AndroidAuthSdkStorageEncryptionManager");
         return new AndroidAuthSdkStorageEncryptionManager(mContext, null);
     }
 
@@ -197,9 +201,9 @@ public class AndroidPlatformComponents implements IPlatformComponents {
 
         try {
             if (alias == null) {
-                return new DevicePopManager(mContext);
+                return new AndroidDevicePopManager(mContext);
             } else {
-                return new DevicePopManager(mContext, alias);
+                return new AndroidDevicePopManager(mContext, alias);
             }
         } catch (final KeyStoreException e) {
             exception = e;
@@ -223,6 +227,15 @@ public class AndroidPlatformComponents implements IPlatformComponents {
     }
 
     @Override
+    public synchronized IBroadcaster getBroadcaster() throws ClientException {
+        if (null == mBroadcaster) {
+            mBroadcaster = new AndroidBroadcaster(mContext);
+        }
+        return mBroadcaster;
+    }
+
+
+    @Override
     public <T> INameValueStorage<T> getNameValueStore(final @NonNull String storeName, final @NonNull Class<T> clazz) {
         return getEncryptedNameValueStore(storeName, null, clazz);
     }
@@ -233,12 +246,10 @@ public class AndroidPlatformComponents implements IPlatformComponents {
                                                                final @NonNull Class<T> clazz) {
         final IMultiTypeNameValueStorage mgr = SharedPreferencesFileManager.getSharedPreferences(mContext, storeName, helper);
         if (Long.class.isAssignableFrom(clazz)) {
-            @SuppressWarnings("unchecked")
-            final INameValueStorage<T> store = (INameValueStorage<T>) new SharedPreferenceLongStorage(mgr);
+            @SuppressWarnings("unchecked") final INameValueStorage<T> store = (INameValueStorage<T>) new SharedPreferenceLongStorage(mgr);
             return store;
         } else if (String.class.isAssignableFrom(clazz)) {
-            @SuppressWarnings("unchecked")
-            final INameValueStorage<T> store = (INameValueStorage<T>) new SharedPrefStringNameValueStorage(mgr);
+            @SuppressWarnings("unchecked") final INameValueStorage<T> store = (INameValueStorage<T>) new SharedPrefStringNameValueStorage(mgr);
             return store;
         }
         throw new UnsupportedOperationException("Only Long and String are natively supported as types");

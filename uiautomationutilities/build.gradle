@@ -40,17 +40,21 @@ android {
 
     boolean usePreInstalledApks = project.hasProperty("preferPreInstalledApks")
 
-    def final installSourcePlayStore = "PlayStore"
-    def final installSourceLocalApk = "LocalApk"
+    def final appSourcePlayStore = "PlayStore"
+    def final appSourceLocalApk = "LocalApk"
 
     // defaults to LocalApkFile - the file must be pushed to the device before tests
-    def brokerInstallationSource = installSourcePlayStore
+    def brokerInstallationSource = appSourcePlayStore
+
+    def brokerUpdationSource = appSourcePlayStore
+
+    def wordAppInstallationSource = appSourcePlayStore
 
     if (project.hasProperty("brokerSource")) {
-        if (brokerSource.equalsIgnoreCase(installSourcePlayStore)) {
-            brokerInstallationSource = installSourcePlayStore
-        } else if (brokerSource.equalsIgnoreCase(installSourceLocalApk)) {
-            brokerInstallationSource = installSourceLocalApk
+        if (brokerSource.equalsIgnoreCase(appSourcePlayStore)) {
+            brokerInstallationSource = appSourcePlayStore
+        } else if (brokerSource.equalsIgnoreCase(appSourceLocalApk)) {
+            brokerInstallationSource = appSourceLocalApk
         } else {
             throw new InvalidUserDataException("Unspported broker source provided: "
                     + brokerSource
@@ -58,6 +62,29 @@ android {
         }
     }
 
+    if (project.hasProperty("brokerUpdateSource")) {
+        if (brokerUpdateSource.equalsIgnoreCase(appSourcePlayStore)) {
+            brokerUpdationSource = appSourcePlayStore
+        } else if (brokerUpdateSource.equalsIgnoreCase(appSourceLocalApk)) {
+            brokerUpdationSource = appSourceLocalApk
+        } else {
+            throw new InvalidUserDataException("Unspported update broker source provided: "
+                    + brokerUpdateSource
+                    + " Only the following broker sources are supported: PlayStore , LocalApk");
+        }
+    }
+
+    if (project.hasProperty("wordAppSource")) {
+        if (wordAppSource.equalsIgnoreCase(appSourcePlayStore)) {
+            wordAppInstallationSource = appSourcePlayStore
+        } else if (wordAppSource.equalsIgnoreCase(appSourceLocalApk)) {
+            wordAppInstallationSource = appSourceLocalApk
+        } else {
+            throw new InvalidUserDataException("Unsupported word app source provided: "
+                    + wordAppSource
+                    + " Only the following wordAppSource sources are supported: PlayStore , LocalApk");
+        }
+    }
 
     defaultConfig {
         multiDexEnabled true
@@ -68,9 +95,14 @@ android {
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "BROKER_INSTALL_SOURCE", "\"$brokerInstallationSource\"")
-        buildConfigField("String", "INSTALL_SOURCE_PLAY_STORE", "\"$installSourcePlayStore\"")
-        buildConfigField("String", "INSTALL_SOURCE_LOCAL_APK", "\"$installSourceLocalApk\"")
+        buildConfigField("String", "BROKER_UPDATE_SOURCE", "\"$brokerUpdationSource\"")
+        buildConfigField("String", "WORD_APP_INSTALL_SOURCE", "\"$wordAppInstallationSource\"")
+        buildConfigField("String", "INSTALL_SOURCE_PLAY_STORE", "\"$appSourcePlayStore\"")
+        buildConfigField("String", "INSTALL_SOURCE_LOCAL_APK", "\"$appSourceLocalApk\"")
+        buildConfigField("String", "UPDATE_SOURCE_PLAY_STORE", "\"$appSourcePlayStore\"")
+        buildConfigField("String", "UPDATE_SOURCE_LOCAL_APK", "\"$appSourceLocalApk\"")
         buildConfigField("boolean", "PREFER_PRE_INSTALLED_APKS", "$usePreInstalledApks")
+
 
         // Specifies a sorted list of flavors that the plugin should try to use from
         // a given dimension. The following tells the plugin that, when encountering
@@ -167,15 +199,8 @@ dependencies {
     implementation "androidx.test.uiautomator:uiautomator:$rootProject.ext.uiAutomatorVersion"
     implementation "androidx.test:monitor:$rootProject.ext.androidxTestMonitorVersion"
     implementation "androidx.test:core:$rootProject.ext.androidxTestCoreVersion"
-    if (findProject(":testutils") != null) {
-        //Use project reference if available
-        implementation(project(":testutils")) {
-            transitive = true
-        }
-    } else {
-        //Always use the latest release
-        implementation(group: 'com.microsoft.identity', name: 'testutils', version: '0.0.+')
-    }
+    implementation(project(":LabApiUtilities"))
+    implementation "com.google.code.gson:gson:$rootProject.ext.gsonVersion"
     compileOnly "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
     annotationProcessor "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
     androidTestImplementation "androidx.test:runner:$rootProject.ext.androidxTestRunnerVersion"

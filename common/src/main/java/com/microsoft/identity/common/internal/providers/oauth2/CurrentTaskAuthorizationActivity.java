@@ -60,6 +60,8 @@ public class CurrentTaskAuthorizationActivity extends DualScreenActivity {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        final String methodTag = TAG + ":onCreate";
+
         final Fragment fragment = AuthorizationActivityFactory.getAuthorizationFragmentFromStartIntent(getIntent());
 
         if(fragment instanceof CurrentTaskBrowserAuthorizationFragment){
@@ -67,7 +69,7 @@ public class CurrentTaskAuthorizationActivity extends DualScreenActivity {
             mFragment.setInstanceState(getIntent().getExtras());
         }else{
             IllegalStateException ex = new IllegalStateException("Unexpected fragment type");
-            Logger.error(TAG, "Fragment provided was not of type CurrentTaskBrowserAuthorizationFragment", ex);
+            Logger.error(methodTag, "Fragment provided was not of type CurrentTaskBrowserAuthorizationFragment", ex);
             throw ex;
         }
 
@@ -110,13 +112,6 @@ public class CurrentTaskAuthorizationActivity extends DualScreenActivity {
             LocalBroadcastManager.getInstance(this).registerReceiver(redirectReceiver,
                     new IntentFilter(REDIRECT_RETURNED_ACTION)
             );
-        }
-    }
-
-    @Override
-    public void onBackPressed() {
-        if (!mFragment.onBackPressed()) {
-            super.onBackPressed();
         }
     }
 

@@ -27,6 +27,7 @@ import com.microsoft.identity.common.java.logging.Logger;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import lombok.NonNull;
 
@@ -34,7 +35,7 @@ public enum LocalBroadcaster {
     INSTANCE;
 
     private static final String TAG = LocalBroadcaster.class.getSimpleName();
-    private static final ExecutorService sBroadcastExecutor = Executors.newSingleThreadExecutor();
+    private static ExecutorService sBroadcastExecutor = Executors.newSingleThreadExecutor();
 
     public interface IReceiverCallback {
         void onReceive(@NonNull final PropertyBag propertyBag);
@@ -61,6 +62,10 @@ public enum LocalBroadcaster {
         mReceivers.remove(alias);
     }
 
+    public boolean hasReceivers(@NonNull final String alias) {
+        return mReceivers.containsKey(alias);
+    }
+
     public void broadcast(@NonNull final String alias, @NonNull final PropertyBag propertyBag) {
         final String methodName = ":broadcast";
         sBroadcastExecutor.execute(new Runnable() {
@@ -75,5 +80,29 @@ public enum LocalBroadcaster {
                 }
             }
         });
+    }
+
+    /**
+     * Resets the broadcast executor service.
+     */
+    public static void resetBroadcast() {
+        shutdownAndAwaitTerminationForBroadcasterService();
+        sBroadcastExecutor = Executors.newSingleThreadExecutor();
+    }
+
+    private static void shutdownAndAwaitTerminationForBroadcasterService() {
+        final String methodName = ":shutdownAndAwaitTerminationForBroadcasterService";
+        sBroadcastExecutor.shutdown();
+        try {
+            if (!sBroadcastExecutor.awaitTermination(20, TimeUnit.SECONDS)) {
+                sBroadcastExecutor.shutdownNow();
+                if (!sBroadcastExecutor.awaitTermination(5, TimeUnit.SECONDS)) {
+                    Logger.info(TAG + methodName, "broadcastExecutor did not terminate");
+                }
+            }
+        } catch (InterruptedException ex) {
+            sBroadcastExecutor.shutdownNow();
+            Thread.currentThread().interrupt();
+        }
     }
 }

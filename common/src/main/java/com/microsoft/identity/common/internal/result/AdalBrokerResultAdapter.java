@@ -58,8 +58,9 @@ public class AdalBrokerResultAdapter implements IBrokerResultAdapter {
     @Override
     public @NonNull Bundle bundleFromAuthenticationResult(@NonNull final ILocalAuthenticationResult authenticationResult,
                                                           @Nullable final String negotiatedBrokerProtocolVersion) {
+        final String methodTag = TAG + ":bundleFromAuthenticationResult";
 
-        Logger.verbose(TAG, "Constructing success bundle from Authentication Result.");
+        Logger.verbose(methodTag, "Constructing success bundle from Authentication Result.");
         final Bundle resultBundle = new Bundle();
 
         IAccountRecord accountRecord = authenticationResult.getAccountRecord();
@@ -128,8 +129,9 @@ public class AdalBrokerResultAdapter implements IBrokerResultAdapter {
     @Override
     public @NonNull Bundle bundleFromBaseException(@NonNull BaseException baseException,
                                                    @Nullable final String negotiatedBrokerProtocolVersion) {
+        final String methodTag = TAG + ":bundleFromBaseException";
 
-        Logger.verbose(TAG, "Constructing error bundle from exception.");
+        Logger.verbose(methodTag, "Constructing error bundle from exception.");
         final Bundle resultBundle = new Bundle();
 
         resultBundle.putString(
@@ -175,10 +177,11 @@ public class AdalBrokerResultAdapter implements IBrokerResultAdapter {
      */
     private void mapExceptionToBundle(@NonNull final Bundle resultBundle,
                                       @NonNull BaseException exception) {
+        final String methodTag = TAG + ":mapExceptionToBundle";
 
         if (exception instanceof UserCancelException) {
 
-            Logger.info(TAG, "Setting Bundle result from UserCancelException.");
+            Logger.info(methodTag, "Setting Bundle result from UserCancelException.");
             setErrorToResultBundle(
                     resultBundle,
                     AccountManager.ERROR_CODE_CANCELED,
@@ -186,7 +189,7 @@ public class AdalBrokerResultAdapter implements IBrokerResultAdapter {
 
         } else if (exception instanceof ArgumentException) {
 
-            Logger.info(TAG, "Setting Bundle result from ArgumentException.");
+            Logger.info(methodTag, "Setting Bundle result from ArgumentException.");
             setErrorToResultBundle(
                     resultBundle,
                     AccountManager.ERROR_CODE_BAD_ARGUMENTS,
@@ -208,7 +211,7 @@ public class AdalBrokerResultAdapter implements IBrokerResultAdapter {
 
         } else {
 
-            Logger.info(TAG, "Setting Bundle result for Unknown Exception/Bad result.");
+            Logger.info(methodTag, "Setting Bundle result for Unknown Exception/Bad result.");
 
             setErrorToResultBundle(
                     resultBundle,
@@ -237,7 +240,8 @@ public class AdalBrokerResultAdapter implements IBrokerResultAdapter {
 
     private void setClientExceptionPropertiesToBundle(@NonNull final Bundle resultBundle,
                                                       @NonNull final ClientException clientException) {
-        Logger.info(TAG, "Setting properties from ClientException.");
+        final String methodTag = TAG + ":setClientExceptionPropertiesToBundle";
+        Logger.info(methodTag, "Setting properties from ClientException.");
 
         if (ErrorStrings.DEVICE_NETWORK_NOT_AVAILABLE.equalsIgnoreCase(clientException.getErrorCode())) {
 
@@ -271,8 +275,9 @@ public class AdalBrokerResultAdapter implements IBrokerResultAdapter {
     @SuppressWarnings("deprecation")
     private void setServiceExceptionPropertiesToBundle(@NonNull final Bundle resultBundle,
                                                        @NonNull final ServiceException serviceException) {
+        final String methodTag = TAG + ":setServiceExceptionPropertiesToBundle";
 
-        Logger.info(TAG, "Setting properties from ServiceException.");
+        Logger.info(methodTag, "Setting properties from ServiceException.");
 
         // Silent call in ADAL expects these calls which differs from intercative adal call,
         // so adding values to these constants as well
@@ -299,7 +304,7 @@ public class AdalBrokerResultAdapter implements IBrokerResultAdapter {
         );
 
         if (serviceException instanceof IntuneAppProtectionPolicyRequiredException) {
-            Logger.verbose(TAG, "Exception was IntuneAppProtectionPolicyRequired");
+            Logger.verbose(methodTag, "Exception was IntuneAppProtectionPolicyRequired");
             setIntuneAppProtectionPropertiesToBundle(
                     resultBundle,
                     (IntuneAppProtectionPolicyRequiredException) serviceException
@@ -330,8 +335,9 @@ public class AdalBrokerResultAdapter implements IBrokerResultAdapter {
      */
     private void setIntuneAppProtectionPropertiesToBundle(@NonNull final Bundle resultBundle,
                                                           @NonNull final IntuneAppProtectionPolicyRequiredException exception) {
+        final String methodTag = TAG + ":setIntuneAppProtectionPropertiesToBundle";
 
-        Logger.info(TAG, "Setting properties from IntuneAppProtectionPolicyRequiredException.");
+        Logger.info(methodTag, "Setting properties from IntuneAppProtectionPolicyRequiredException.");
 
         resultBundle.putString(
                 AuthenticationConstants.Browser.RESPONSE_ERROR_CODE,

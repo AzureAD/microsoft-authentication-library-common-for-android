@@ -22,6 +22,7 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.net.cache;
 
+import android.content.Context;
 import android.net.http.HttpResponseCache;
 
 import androidx.annotation.NonNull;
@@ -58,16 +59,16 @@ public class HttpCache {
      * @param cacheFileName  The directory name for the HTTP cache.
      * @param maxSizeBytes   The maximum allowed size of the cache. Once capacity is hit,
      *                       entries are removed according to an LRU strategy.
-     * @return True if the cache was successfully installed. False otherwise.
+     * @return True if the cache was successfully installed or the cache is already initialized. False otherwise.
      */
     public static synchronized boolean initialize(@NonNull final File cacheDirectory,
                                                   @NonNull final String cacheFileName,
                                                   final long maxSizeBytes) {
-        final String methodName = ":initialize (File, Filename, Capacity)";
+        final String methodTag = TAG + ":initialize";
         boolean success = false;
 
         if (HttpResponseCache.getInstalled() != null){
-            Logger.verbose(TAG + methodName, "Cache is already initialized");
+            Logger.verbose(methodTag, "Cache is already initialized");
             return true;
         }
 
@@ -77,7 +78,7 @@ public class HttpCache {
             success = true;
         } catch (final IOException e) {
             Logger.error(
-                    TAG + methodName,
+                    methodTag,
                     "HTTP Response cache installation failed.",
                     e
             );
@@ -96,10 +97,28 @@ public class HttpCache {
     }
 
     /**
+     * Initializes a new {@link HttpResponseCache}, if it hasn't been done yet.
+     *
+     * @return True if the cache was successfully installed or the cache is already initialized. False otherwise.
+     */
+    public static synchronized boolean initialize(@NonNull final Context context) {
+        final String methodTag = TAG + ":initialize";
+
+        final File cacheDir = context.getCacheDir();
+        if (cacheDir != null) {
+            return HttpCache.initialize(cacheDir);
+        } else {
+            Logger.warn(methodTag, "Http caching is not enabled because the cache dir is null");
+        }
+
+        return false;
+    }
+
+    /**
      * Initializes a new {@link HttpResponseCache} inside the provided directory.
      *
      * @param cacheDirectory The parent-directory in which the cache should reside.
-     * @return True if the cache was successfully installed. False otherwise.
+     * @return True if the cache was successfully installed or the cache is already initialized. False otherwise.
      */
     public static synchronized boolean initialize(@NonNull final File cacheDirectory) {
         return initialize(
@@ -123,7 +142,7 @@ public class HttpCache {
      * Convenience function for {@link HttpResponseCache#flush()}.
      */
     public static void flush() {
-        final String methodName = ":flush";
+        final String methodTag = TAG + ":flush";
 
         final HttpResponseCache responseCache = getInstalled();
 
@@ -131,7 +150,7 @@ public class HttpCache {
             responseCache.flush();
         } else {
             Logger.warn(
-                    TAG + methodName,
+                    methodTag,
                     "Unable to flush cache because none is installed."
             );
         }

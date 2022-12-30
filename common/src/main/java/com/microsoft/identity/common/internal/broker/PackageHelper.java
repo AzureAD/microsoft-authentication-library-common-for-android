@@ -68,10 +68,11 @@ public class PackageHelper {
      * @return signature for package
      */
     public String getCurrentSignatureForPackage(final String packageName) {
+        final String methodTag = TAG + ":getCurrentSignatureForPackage";
         try {
             return getCurrentSignatureForPackage(getPackageInfo(mPackageManager, packageName));
         } catch (NameNotFoundException e) {
-            Logger.error(TAG, "Calling App's package does not exist in PackageManager. ", "", e);
+            Logger.error(methodTag, "Calling App's package does not exist in PackageManager. ", "", e);
         }
         return null;
     }
@@ -83,8 +84,9 @@ public class PackageHelper {
      * @return signature for package
      */
     public static String getCurrentSignatureForPackage(final PackageInfo packageInfo) {
+        final String methodTag = TAG + ":getCurrentSignatureForPackage";
         try {
-            final Signature [] signatures = getSignatures(packageInfo);
+            final Signature[] signatures = getSignatures(packageInfo);
             if (signatures != null && signatures.length > 0) {
                 final Signature signature = signatures[0];
                 MessageDigest md = MessageDigest.getInstance("SHA");
@@ -92,7 +94,7 @@ public class PackageHelper {
                 return Base64.encodeToString(md.digest(), Base64.NO_WRAP);
             }
         } catch (NoSuchAlgorithmException e) {
-            Logger.error(TAG, "Digest SHA algorithm does not exists. ", "", e);
+            Logger.error(methodTag, "Digest SHA algorithm does not exists. ", "", e);
         }
         return null;
     }
@@ -104,6 +106,7 @@ public class PackageHelper {
      * @return UID user id
      */
     public int getUIDForPackage(final String packageName) {
+        final String methodTag = TAG + ":getUIDForPackage";
         int callingUID = 0;
         try {
             final ApplicationInfo info = mPackageManager.getApplicationInfo(packageName, 0);
@@ -111,7 +114,7 @@ public class PackageHelper {
                 callingUID = info.uid;
             }
         } catch (NameNotFoundException e) {
-            Logger.error(TAG, "Package is not found. ", "Package name: " + packageName, e);
+            Logger.error(methodTag, "Package is not found. ", "Package name: " + packageName, e);
         }
         return callingUID;
     }
@@ -123,7 +126,7 @@ public class PackageHelper {
      * @return true if the package is installed and enabled. Otherwise, returns false.
      */
     public boolean isPackageInstalledAndEnabled(final Context context, final String packageName) {
-        final String methodName = "#isPackageInstalledAndEnabled";
+        final String methodTag = TAG + ":isPackageInstalledAndEnabled";
         boolean enabled = false;
         PackageManager pm = context.getPackageManager();
         try {
@@ -132,10 +135,10 @@ public class PackageHelper {
                 enabled = applicationInfo.enabled;
             }
         } catch (NameNotFoundException e) {
-            Logger.error(TAG + methodName, "Package is not found. Package name: " + packageName, e);
+            Logger.error(methodTag, "Package is not found. Package name: " + packageName, e);
         }
 
-        Logger.info(TAG + methodName, " Is package installed and enabled? [" + enabled + "]");
+        Logger.info(methodTag, " Is package installed and enabled? [" + enabled + "]");
         return enabled;
     }
 
@@ -147,6 +150,7 @@ public class PackageHelper {
      * @return broker redirect url
      */
     public static String getBrokerRedirectUrl(final String packageName, final String signatureDigest) {
+        final String methodTag = TAG + ":getBrokerRedirectUrl";
         if (!StringExtensions.isNullOrBlank(packageName)
                 && !StringExtensions.isNullOrBlank(signatureDigest)) {
             try {
@@ -157,7 +161,7 @@ public class PackageHelper {
                 // This encoding issue will happen at the beginning of API call,
                 // if it is not supported on this device. ADAL uses one encoding
                 // type.
-                Logger.error(TAG, "", "Encoding is not supported", e);
+                Logger.error(methodTag, "", "Encoding is not supported", e);
             }
         }
         return "";

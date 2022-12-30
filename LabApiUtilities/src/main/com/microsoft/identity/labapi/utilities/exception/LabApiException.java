@@ -32,6 +32,7 @@ import lombok.experimental.Accessors;
 @Getter
 @Accessors(prefix = "m")
 public class LabApiException extends Exception {
+    @NonNull
     private final LabError mErrorCode;
 
     public LabApiException(@NonNull final LabError error) {
@@ -41,6 +42,18 @@ public class LabApiException extends Exception {
 
     public LabApiException(@NonNull final LabError error, @NonNull final Throwable throwable) {
         super(error.name(), throwable);
+        mErrorCode = error;
+    }
+
+    public LabApiException(@NonNull final LabError error, @NonNull final String detailedMessage) {
+        super(error.name() + detailedMessage);
+        mErrorCode = error;
+    }
+
+    public LabApiException(@NonNull final LabError error,
+                           @NonNull final Throwable throwable,
+                           @NonNull final String detailedMessage) {
+        super(error.name() + detailedMessage, throwable);
         mErrorCode = error;
     }
 }

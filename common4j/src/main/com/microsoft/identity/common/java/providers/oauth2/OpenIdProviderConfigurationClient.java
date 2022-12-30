@@ -143,8 +143,7 @@ public class OpenIdProviderConfigurationClient {
             );
 
             final HttpResponse providerConfigResponse = httpClient.get(configUrl.toURL(),
-                    new HashMap<String, String>(),
-                    null);
+                    new HashMap<String, String>());
 
             final int statusCode = providerConfigResponse.getStatusCode();
 

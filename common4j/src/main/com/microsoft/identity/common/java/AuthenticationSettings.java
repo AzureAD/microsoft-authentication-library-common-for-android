@@ -22,44 +22,20 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java;
 
-import com.microsoft.identity.common.java.challengehandlers.IDeviceCertificate;
+import com.microsoft.identity.common.java.challengehandlers.IDeviceCertificateLoader;
 
-import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.experimental.Accessors;
 
+@Accessors(prefix = "m")
 public enum AuthenticationSettings {
     INSTANCE;
 
-    private Class<?> mClazzDeviceCertProxy;
-
-    /**
-     * Set class for work place join related API.
-     * This is only used in the broker process.
-     *
-     * @param clazz class for workplace join
-     */
-    public void setDeviceCertificateProxyClass(@NonNull final Class<?> clazz) {
-        if (IDeviceCertificate.class.isAssignableFrom(clazz)) {
-            mClazzDeviceCertProxy = clazz;
-        } else {
-            throw new IllegalArgumentException("clazz");
-        }
-    }
-
-    /**
-     * Get class for work place join related API.
-     * This is only used in the broker process.
-     *
-     * @return Class
-     */
-    public Class<?> getDeviceCertificateProxy() {
-        return mClazzDeviceCertProxy;
-    }
-
-    /**
-     * Remove class for work place join related API.
-     * This is only used in the broker process.
-     */
-    public void removeDeviceCertificateProxy() {
-        mClazzDeviceCertProxy = null;
-    }
+    @SuppressFBWarnings(value = "ME_ENUM_FIELD_SETTER",
+            justification = "by design (for now), allowing common to use the data initialized by broker.")
+    @Getter
+    @Setter
+    private IDeviceCertificateLoader mCertificateLoader;
 }

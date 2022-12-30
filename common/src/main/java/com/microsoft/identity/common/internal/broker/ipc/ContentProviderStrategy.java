@@ -22,6 +22,12 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.broker.ipc;
 
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.BrokerContentProvider.AUTHORITY;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.BrokerContentProvider.CONTENT_SCHEME;
+import static com.microsoft.identity.common.exception.BrokerCommunicationException.Category.CONNECTION_ERROR;
+import static com.microsoft.identity.common.exception.BrokerCommunicationException.Category.OPERATION_NOT_SUPPORTED_ON_SERVER_SIDE;
+import static com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy.Type.CONTENT_PROVIDER;
+
 import android.content.Context;
 import android.content.pm.ProviderInfo;
 import android.database.Cursor;
@@ -38,12 +44,6 @@ import com.microsoft.identity.common.logging.Logger;
 
 import java.util.List;
 
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.BrokerContentProvider.AUTHORITY;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.BrokerContentProvider.CONTENT_SCHEME;
-import static com.microsoft.identity.common.exception.BrokerCommunicationException.Category.CONNECTION_ERROR;
-import static com.microsoft.identity.common.exception.BrokerCommunicationException.Category.OPERATION_NOT_SUPPORTED_ON_SERVER_SIDE;
-import static com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy.Type.CONTENT_PROVIDER;
-
 /**
  * A strategy for communicating with the targeted broker via Content Provider.
  */
@@ -57,16 +57,19 @@ public class ContentProviderStrategy implements IIpcStrategy {
     }
 
     @Override
-    public @Nullable Bundle communicateToBroker(final @NonNull BrokerOperationBundle brokerOperationBundle)
+    @Nullable
+    public Bundle communicateToBroker(final @NonNull BrokerOperationBundle brokerOperationBundle)
             throws BrokerCommunicationException {
+        final String methodTag = TAG + ":communicateToBroker";
+        final String operationName = brokerOperationBundle.getOperation().name();
 
-        final String methodName = brokerOperationBundle.getOperation().name();
+        Logger.info(methodTag, "Broker operation name: " + operationName +  " brokerPackage: "+brokerOperationBundle.getTargetBrokerAppPackageName());
 
         final Uri uri = getContentProviderURI(
                 brokerOperationBundle.getTargetBrokerAppPackageName(),
                 brokerOperationBundle.getContentProviderPath()
         );
-        Logger.info(TAG + methodName, "Request to BrokerContentProvider for uri path " +
+        Logger.info(methodTag, "Request to BrokerContentProvider for uri path " +
                 brokerOperationBundle.getContentProviderPath()
         );
 
@@ -87,21 +90,28 @@ public class ContentProviderStrategy implements IIpcStrategy {
         );
 
         if (cursor != null) {
-            final Bundle resultBundle = cursor.getExtras();
-            cursor.close();
+            try {
+                final Bundle resultBundle = cursor.getExtras();
 
-            if (resultBundle == null) {
-                final String message = "Received an empty bundle. This means the operation is not supported on the other side. " +
-                        "If you're using a newer feature, please bump the minimum protocol version.";
-                Logger.error(TAG + methodName, message, null);
-                throw new BrokerCommunicationException(OPERATION_NOT_SUPPORTED_ON_SERVER_SIDE, getType(), message, null);
+                if (resultBundle == null) {
+                    final String message = "Received an empty bundle. This means the operation is not supported on the other side. " +
+                            "If you're using a newer feature, please bump the minimum protocol version.";
+                    Logger.error(methodTag, message, null);
+                    throw new BrokerCommunicationException(OPERATION_NOT_SUPPORTED_ON_SERVER_SIDE, getType(), message, null);
+                }
+
+                Logger.info(methodTag, "Received successful result from Broker Content Provider.");
+                return resultBundle;
+            } catch (final RuntimeException exception) {
+                final String message = "Failed to get result from Broker Content Provider";
+                Logger.error(methodTag, message, exception);
+                throw new BrokerCommunicationException(CONNECTION_ERROR, getType(), message, null);
+            } finally {
+                cursor.close();
             }
-
-            Logger.info(TAG + methodName, "Received successful result from Broker Content Provider.");
-            return resultBundle;
         } else {
             final String message = "Failed to get result from Broker Content Provider, cursor is null";
-            Logger.error(TAG + methodName, message, null);
+            Logger.error(methodTag, message, null);
             throw new BrokerCommunicationException(CONNECTION_ERROR, getType(), message, null);
         }
     }
@@ -131,14 +141,14 @@ public class ContentProviderStrategy implements IIpcStrategy {
      * Returns true if the target package name supports this content provider strategy.
      */
     public boolean isBrokerContentProviderAvailable(final @NonNull String targetedBrokerPackageName) {
-        final String methodName = ":isBrokerContentProviderAvailable";
+        final String methodTag = TAG + ":isBrokerContentProviderAvailable";
         final String contentProviderAuthority = getContentProviderAuthority(targetedBrokerPackageName);
 
         final List<ProviderInfo> providers = mContext.getPackageManager()
                 .queryContentProviders(null, 0, 0);
 
         if (providers == null) {
-            Logger.error(TAG + methodName, "Content Provider not found.", null);
+            Logger.error(methodTag, "Content Provider not found.", null);
             return false;
         }
 

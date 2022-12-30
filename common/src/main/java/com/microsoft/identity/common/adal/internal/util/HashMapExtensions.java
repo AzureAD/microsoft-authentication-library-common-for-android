@@ -66,7 +66,7 @@ public final class HashMapExtensions {
      * @return Map key value pairs
      */
     static HashMap<String, String> urlFormDecodeData(String parameters, String delimiter) {
-        final String methodName = ":urlFormDecodeData";
+        final String methodTag = TAG + ":urlFormDecodeData";
         final HashMap<String, String> result = new HashMap<>();
 
         if (!StringExtensions.isNullOrBlank(parameters)) {
@@ -84,7 +84,7 @@ public final class HashMapExtensions {
                         value = StringExtensions.urlFormDecode(elements[1].trim());
                     } catch (UnsupportedEncodingException e) {
                         Logger.errorPII(
-                                TAG + methodName,
+                                methodTag,
                                 "Encoding format is not supported",
                                 e
                         );
@@ -96,7 +96,7 @@ public final class HashMapExtensions {
                         value = "";
                     } catch (UnsupportedEncodingException e) {
                         Logger.errorPII(
-                                TAG + methodName,
+                                methodTag,
                                 "Encoding format is not supported",
                                 e
                         );

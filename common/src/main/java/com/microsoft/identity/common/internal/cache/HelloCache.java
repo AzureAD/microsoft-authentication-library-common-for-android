@@ -94,10 +94,10 @@ public class HelloCache {
      */
     public @Nullable String tryGetNegotiatedProtocolVersion(final @Nullable String clientMinimumProtocolVersion,
                                                             final @NonNull String clientMaximumProtocolVersion) {
-        final String methodName = ":tryGetNegotiatedProtocolVersion";
+        final String methodTag = TAG + ":tryGetNegotiatedProtocolVersion";
 
         if (!sIsEnabled) {
-            Logger.infoPII(TAG + methodName, "hello cache is not enabled.");
+            Logger.infoPII(methodTag, "hello cache is not enabled.");
             return null;
         }
 
@@ -105,7 +105,7 @@ public class HelloCache {
         try {
             key = getNegotiatedProtocolVersionCacheKey(clientMinimumProtocolVersion, clientMaximumProtocolVersion);
         } catch (final PackageManager.NameNotFoundException e) {
-            Logger.error(TAG + methodName, "Failed to retrieve key", e);
+            Logger.error(methodTag, "Failed to retrieve key", e);
             return null;
         }
 
@@ -122,10 +122,10 @@ public class HelloCache {
     public void saveNegotiatedProtocolVersion(final @Nullable String clientMinimumProtocolVersion,
                                               final @NonNull String clientMaximumProtocolVersion,
                                               final @NonNull String negotiatedProtocolVersion) {
-        final String methodName = ":saveNegotiatedProtocolVersion";
+        final String methodTag = TAG + ":saveNegotiatedProtocolVersion";
 
         if (!sIsEnabled) {
-            Logger.infoPII(TAG + methodName, "hello cache is not enabled.");
+            Logger.infoPII(methodTag, "hello cache is not enabled.");
             return;
         }
 
@@ -133,7 +133,7 @@ public class HelloCache {
         try {
             key = getNegotiatedProtocolVersionCacheKey(clientMinimumProtocolVersion, clientMaximumProtocolVersion);
         } catch (final PackageManager.NameNotFoundException e) {
-            Logger.error(TAG + methodName, "Failed to retrieve key", e);
+            Logger.error(methodTag, "Failed to retrieve key", e);
             return;
         }
 

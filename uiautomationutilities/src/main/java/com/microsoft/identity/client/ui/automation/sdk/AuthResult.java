@@ -79,4 +79,8 @@ public abstract class AuthResult {
     public boolean isAccessTokenEqual(String accessToken){
         return accessToken.equals(this.accessToken);
     }
+
+    public String getAccessToken() {
+        return accessToken;
+    }
 }

@@ -22,6 +22,11 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.request;
 
+import static com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme.SerializedNames.NAME;
+import static com.microsoft.identity.common.java.authscheme.BearerAuthenticationSchemeInternal.SCHEME_BEARER;
+import static com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeInternal.SCHEME_POP;
+import static com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeWithClientKeyInternal.SCHEME_POP_WITH_CLIENT_KEY;
+
 import androidx.annotation.NonNull;
 
 import com.google.gson.Gson;
@@ -36,13 +41,10 @@ import com.google.gson.JsonSerializer;
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.java.authscheme.BearerAuthenticationSchemeInternal;
 import com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeInternal;
+import com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeWithClientKeyInternal;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.lang.reflect.Type;
-
-import static com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme.SerializedNames.NAME;
-import static com.microsoft.identity.common.java.authscheme.BearerAuthenticationSchemeInternal.SCHEME_BEARER;
-import static com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeInternal.SCHEME_POP;
 
 /**
  * Gson de/serialization utility class for auth schemes.
@@ -68,6 +70,7 @@ public class AuthenticationSchemeTypeAdapter implements
                                                     @NonNull final Type typeOfT,
                                                     @NonNull final JsonDeserializationContext context)
             throws JsonParseException {
+        final String methodTag = TAG + ":deserialize";
         final JsonObject authScheme = json.getAsJsonObject();
         final JsonElement schemeName = authScheme.get(NAME);
         final String schemeNameStr = schemeName.getAsString();
@@ -79,9 +82,12 @@ public class AuthenticationSchemeTypeAdapter implements
             case SCHEME_POP:
                 return context.deserialize(json, PopAuthenticationSchemeInternal.class);
 
+            case SCHEME_POP_WITH_CLIENT_KEY:
+                return context.deserialize(json, PopAuthenticationSchemeWithClientKeyInternal.class);
+
             default:
                 Logger.warn(
-                        TAG,
+                        methodTag,
                         "Unrecognized auth scheme. Deserializing as null."
                 );
 
@@ -93,6 +99,7 @@ public class AuthenticationSchemeTypeAdapter implements
     public JsonElement serialize(@NonNull final AbstractAuthenticationScheme src,
                                  @NonNull final Type typeOfSrc,
                                  @NonNull final JsonSerializationContext context) {
+        final String methodTag = TAG + ":serialize";
 
         switch (src.getName()) {
             case SCHEME_BEARER:
@@ -101,9 +108,12 @@ public class AuthenticationSchemeTypeAdapter implements
             case SCHEME_POP:
                 return context.serialize(src, PopAuthenticationSchemeInternal.class);
 
+            case SCHEME_POP_WITH_CLIENT_KEY:
+                return context.serialize(src, PopAuthenticationSchemeWithClientKeyInternal.class);
+
             default:
                 Logger.warn(
-                        TAG,
+                        methodTag,
                         "Unrecognized auth scheme. Serializing as null."
                 );
 

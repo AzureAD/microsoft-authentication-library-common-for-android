@@ -1,21 +1,26 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="com.microsoft.identity.common">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- Min Sdk version for YubiKit is 19, so override is needed to avoid build errors with Common's min sdk version -->
+    <uses-sdk tools:overrideLibrary="com.yubico.yubikit.android" />
 
     <application>
+        <!-- Because Android detects plugged in YubiKeys as keyboard config changes, configChanges must have `keyboardHidden` and `keyboard` -->
         <activity
             android:name="com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity"
-            android:configChanges="orientation|keyboardHidden|screenSize|smallestScreenSize|screenLayout" />
+            android:configChanges="orientation|keyboardHidden|screenSize|smallestScreenSize|screenLayout|keyboard" />
 
         <activity
             android:name="com.microsoft.identity.common.internal.providers.oauth2.CurrentTaskAuthorizationActivity"
-            android:configChanges="orientation|keyboardHidden|screenSize|smallestScreenSize|screenLayout" />
+            android:configChanges="orientation|keyboardHidden|screenSize|smallestScreenSize|screenLayout|keyboard" />
 
         <!-- Activity to invoke an interactive request to the intent passed by ad-accounts(Broker) -->
         <activity
-            android:name="com.microsoft.identity.common.internal.broker.BrokerActivity" />
+            android:name="com.microsoft.identity.common.internal.broker.BrokerActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize|screenLayout|keyboard" />
     </application>
 
     <!-- Required for API Level 30 to make sure we can detect browsers and other apps we want to

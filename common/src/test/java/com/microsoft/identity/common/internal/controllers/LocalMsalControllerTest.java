@@ -26,8 +26,8 @@ import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.microsoft.identity.common.AndroidPlatformComponents;
-import com.microsoft.identity.common.internal.util.BrokerProtocolVersionUtil;
+import com.microsoft.identity.common.components.AndroidPlatformComponentsFactory;
+import com.microsoft.identity.common.java.util.BrokerProtocolVersionUtil;
 import com.microsoft.identity.common.java.authorities.Authority;
 import com.microsoft.identity.common.java.authscheme.BearerAuthenticationSchemeInternal;
 import com.microsoft.identity.common.java.cache.MsalOAuth2TokenCache;
@@ -53,6 +53,7 @@ import com.microsoft.identity.labapi.utilities.jwt.JWTParserFactory;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
@@ -95,16 +96,18 @@ public class LocalMsalControllerTest {
     @Before
     public void setup() {
         final Context context = ApplicationProvider.getApplicationContext();
-        mPlatformComponents = AndroidPlatformComponents.createFromContext(
+        mPlatformComponents = AndroidPlatformComponentsFactory.createFromContext(
                 context
         );
     }
 
+    @Ignore("Ignoring as the maven pipeline doesn't lab cert/secret enabled currently.")
     @Test
     public void testCanGetTokenViaRopc() throws Exception {
         acquireTokenUsingRopc();
     }
 
+    @Ignore("Ignoring as the maven pipeline doesn't lab cert/secret enabled currently.")
     @Test
     public void testCanGetTokenSilentlyAfterPerformingRopc() throws Exception {
         final ILocalAuthenticationResult result1 = acquireTokenUsingRopc();

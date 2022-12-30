@@ -38,12 +38,16 @@ import org.junit.Assert;
 import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT;
 import static org.junit.Assert.fail;
 
+import java.util.concurrent.TimeUnit;
+
 /**
  * A login component handler for AAD.
  */
 public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHandler {
 
     private final static String TAG = AadLoginComponentHandler.class.getSimpleName();
+
+    public final static String ACCOUNT_PICKER_DID_NOT_APPEAR_ERROR = "Account picker screen did not show up";
 
     @Override
     public void handleEmailField(@NonNull final String username) {
@@ -78,7 +82,7 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
         final UiObject accountPicker = UiAutomatorUtils.obtainUiObjectWithResourceId("tilesHolder");
 
         if (!accountPicker.waitForExists(FIND_UI_ELEMENT_TIMEOUT)) {
-            fail("Account picker screen did not show up");
+            fail(ACCOUNT_PICKER_DID_NOT_APPEAR_ERROR);
         }
 
         final UiObject account = uiDevice.findObject(new UiSelector()
@@ -95,7 +99,7 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
     }
 
     private UiObject getConsentScreen() {
-        return UiAutomatorUtils.obtainUiObjectWithResourceId("consentHeader");
+        return UiAutomatorUtils.obtainUiObjectWithResourceId("appDomainLinkToAppInfo");
     }
 
     @Override
@@ -103,13 +107,18 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
         Logger.i(TAG, "Confirm Consent on Consent Page Received..");
         final UiObject consentScreen = getConsentScreen();
         Assert.assertTrue(
-                "Consent screen appears",
-                consentScreen.waitForExists(FIND_UI_ELEMENT_TIMEOUT)
+                "Consent screen does not appear",
+                consentScreen.exists()
         );
     }
 
     @Override
     public void acceptConsent() {
+        try {
+            Thread.sleep(TimeUnit.SECONDS.toMillis(2));
+        } catch (InterruptedException e){
+            e.printStackTrace();
+        }
         confirmConsentPageReceived();
         handleNextButton();
     }
@@ -125,7 +134,7 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
         // Confirm On Speed Bump Screen
         final UiObject speedBump = UiAutomatorUtils.obtainUiObjectWithResourceId("appConfirmTitle");
 
-        if (!speedBump.waitForExists(FIND_UI_ELEMENT_TIMEOUT)) {
+        if (!speedBump.exists()) {
             fail("Speed Bump screen did not show up");
         }
 
@@ -163,7 +172,7 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
     public void handleStaySignedIn(final UiResponse staySignedInResponse) {
         final UiObject staySignedInView = UiAutomatorUtils.obtainUiObjectWithText("Stay signed in?");
 
-        if (!staySignedInView.waitForExists(FIND_UI_ELEMENT_TIMEOUT)) {
+        if (!staySignedInView.exists()) {
             fail("Stay signed in page did not show up");
         }
 
@@ -172,5 +181,16 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
         } else {
             handleBackButton();
         }
+    }
+
+    @Override
+    public void handleVerifyYourIdentity() {
+        Logger.i(TAG, "Handle Verify Your Identity Page..");
+
+        final UiObject verifyYourIdentity = UiAutomatorUtils.obtainUiObjectWithResourceId("idDiv_SAOTCS_Title");
+        if (!verifyYourIdentity.exists()) {
+            fail("Verify your identity page did not show up");
+        }
+        UiAutomatorUtils.handleButtonClickForObjectWithText("Call +X XXXXXXXX21");
     }
 }

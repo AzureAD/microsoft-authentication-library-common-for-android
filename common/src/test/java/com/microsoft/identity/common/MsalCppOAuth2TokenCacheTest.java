@@ -26,6 +26,7 @@ import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.microsoft.identity.common.components.AndroidPlatformComponentsFactory;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.authscheme.BearerAuthenticationSchemeInternal;
 import com.microsoft.identity.common.java.cache.AccountDeletionRecord;
@@ -73,7 +74,7 @@ public class MsalCppOAuth2TokenCacheTest {
     public void setUp() throws Exception {
         // Context and related init
         mContext = ApplicationProvider.getApplicationContext();
-        mCppCache = MsalCppOAuth2TokenCache.create(AndroidPlatformComponents.createFromContext(mContext));
+        mCppCache = MsalCppOAuth2TokenCache.create(AndroidPlatformComponentsFactory.createFromContext(mContext));
 
         // Credentials for testing
         mTestBundle = new AccountCredentialTestBundle(
@@ -393,7 +394,6 @@ public class MsalCppOAuth2TokenCacheTest {
         mCppCache.saveAccountRecord(generatedAccount);
 
         mCppCache.saveCredentials(
-                generatedAccount,
                 mTestBundle.mGeneratedAccessToken,
                 mTestBundle.mGeneratedIdToken,
                 mTestBundle.mGeneratedRefreshToken
@@ -429,7 +429,6 @@ public class MsalCppOAuth2TokenCacheTest {
         mCppCache.saveAccountRecord(generatedAccount);
 
         mCppCache.saveCredentials(
-                generatedAccount,
                 mTestBundle.mGeneratedAccessToken,
                 mTestBundle.mGeneratedIdToken,
                 mTestBundle.mGeneratedRefreshToken,

@@ -35,6 +35,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
@@ -65,6 +67,12 @@ public class Logger {
     private static final ReentrantReadWriteLock sLoggersLock = new ReentrantReadWriteLock();
 
     private static final Map<String, ILoggerCallback> sLoggers = new HashMap<>();
+
+    private static final SimpleDateFormat sDateTimeFormatter;
+    static {
+        sDateTimeFormatter = new SimpleDateFormat(DATE_FORMAT, Locale.getDefault());
+        sDateTimeFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
+    }
 
     /**
      * Set the platform string to be used when generating logs.
@@ -138,26 +146,14 @@ public class Logger {
     /**
      * Get only the required metadata from the DiagnosticContext
      * to plug it in the log lines.
-     * Here we are considering the correlation_id and the thread_name.
+     * Here we are considering the correlation_id and the thread_name. Calls private getDiagnosticContextMetadata with
+     * correlationId from existing RequestContext in DiagnosticContext
      * The need for this is because DiagnosticContext contains additional metadata which is not always required to be logged.
      *
      * @return String The concatenation of thread_name and correlation_id to serve as the required metadata in the log lines.
      */
     public static synchronized String getDiagnosticContextMetadata() {
-        String threadName = DiagnosticContext.INSTANCE.getRequestContext().get(DiagnosticContext.THREAD_NAME);
-        String correlationId = DiagnosticContext.INSTANCE.getRequestContext().get(DiagnosticContext.CORRELATION_ID);
-
-        if (StringUtil.isNullOrEmpty(threadName)) {
-            threadName = UNSET;
-        }
-        if (StringUtil.isNullOrEmpty(correlationId)) {
-            correlationId = UNSET;
-        }
-
-        return DiagnosticContext.THREAD_NAME + " : "
-                + threadName + ", "
-                + DiagnosticContext.CORRELATION_ID + " : "
-                + correlationId;
+        return getDiagnosticContextMetadata(DiagnosticContext.INSTANCE.getRequestContext().get(DiagnosticContext.CORRELATION_ID));
     }
 
     /**
@@ -187,7 +183,7 @@ public class Logger {
                              final String correlationID,
                              final String errorMessage,
                              final Throwable exception) {
-        log(tag, LogLevel.ERROR, correlationID, errorMessage, exception, false);
+        log(tag, LogLevel.ERROR, getDiagnosticContextMetadata(correlationID), errorMessage, exception, false);
     }
 
     /**
@@ -217,7 +213,7 @@ public class Logger {
                                 final String correlationID,
                                 final String errorMessage,
                                 final Throwable exception) {
-        log(tag, LogLevel.ERROR, correlationID, errorMessage, exception, true);
+        log(tag, LogLevel.ERROR, getDiagnosticContextMetadata(correlationID), errorMessage, exception, true);
     }
 
     /**
@@ -243,7 +239,7 @@ public class Logger {
     public static void warn(final String tag,
                             final String correlationID,
                             final String message) {
-        log(tag, LogLevel.WARN, correlationID, message, null, false);
+        log(tag, LogLevel.WARN, getDiagnosticContextMetadata(correlationID), message, null, false);
     }
 
     /**
@@ -269,7 +265,7 @@ public class Logger {
     public static void warnPII(final String tag,
                                final String correlationID,
                                final String message) {
-        log(tag, LogLevel.WARN, correlationID, message, null, true);
+        log(tag, LogLevel.WARN, getDiagnosticContextMetadata(correlationID), message, null, true);
     }
 
     /**
@@ -295,7 +291,7 @@ public class Logger {
     public static void info(final String tag,
                             final String correlationID,
                             final String message) {
-        log(tag, LogLevel.INFO, correlationID, message, null, false);
+        log(tag, LogLevel.INFO, getDiagnosticContextMetadata(correlationID), message, null, false);
     }
 
     /**
@@ -321,7 +317,7 @@ public class Logger {
     public static void infoPII(final String tag,
                                final String correlationID,
                                final String message) {
-        log(tag, LogLevel.INFO, correlationID, message, null, true);
+        log(tag, LogLevel.INFO, getDiagnosticContextMetadata(correlationID), message, null, true);
     }
 
     /**
@@ -347,7 +343,7 @@ public class Logger {
     public static void verbose(final String tag,
                                final String correlationID,
                                final String message) {
-        log(tag, LogLevel.VERBOSE, correlationID, message, null, false);
+        log(tag, LogLevel.VERBOSE, getDiagnosticContextMetadata(correlationID), message, null, false);
     }
 
     /**
@@ -373,23 +369,29 @@ public class Logger {
     public static void verbosePII(final String tag,
                                   final String correlationID,
                                   final String message) {
-        log(tag, LogLevel.VERBOSE, correlationID, message, null, true);
+        log(tag, LogLevel.VERBOSE, getDiagnosticContextMetadata(correlationID), message, null, true);
     }
 
     private static void log(final String tag,
                             @NonNull final LogLevel logLevel,
-                            final String correlationID,
+                            final String diagnosticMetadata,
                             final String message,
                             final Throwable throwable,
                             final boolean containsPII) {
+        if (logLevel.compareTo(sLogLevel) > 0 || (!sAllowPii && containsPII)) {
+            return;
+        }
 
-        final String dateTimeStamp = getUTCDateTimeAsString();
+        final Date now = new Date();
 
         sLogExecutor.execute(new Runnable() {
             @Override
+            @SuppressFBWarnings(value = "DE_MIGHT_IGNORE",
+                    justification = "If logging throws, there is nothing left to do but swallow the exception and move on.")
             public void run() {
+                final String dateTimeStamp = sDateTimeFormatter.format(now);
                 //Format the log message.
-                final String logMessage = formatMessage(correlationID, message, dateTimeStamp, throwable);
+                final String logMessage = formatMessage(diagnosticMetadata, sPlatformString, message, dateTimeStamp, throwable);
 
                 sLoggersLock.readLock().lock();
                 try {
@@ -397,18 +399,6 @@ public class Logger {
                         try {
                             final ILoggerCallback callback = sLoggers.get(loggerCallbackKey);
                             if (callback != null) {
-                                if (logLevel.compareTo(sLogLevel) > 0) {
-                                    logDiscardedLogIfApplicable(logMessage, callback, tag, logLevel, containsPII);
-                                    return;
-                                }
-
-                                // Developer turns off PII logging, if the log message contains any PII,
-                                // we should not send it.
-                                if (!sAllowPii && containsPII) {
-                                    logDiscardedLogIfApplicable(logMessage, callback, tag, logLevel, containsPII);
-                                    return;
-                                }
-
                                 callback.log(tag, logLevel, logMessage, containsPII);
                             }
                         } catch (final Exception e) {
@@ -423,39 +413,44 @@ public class Logger {
     }
 
     /**
-     * If applicable, log the discarded log.
-     * This is applicable for testing only (IDetailedLoggerCallback is package-private).
-     */
-    private static void logDiscardedLogIfApplicable(String logMessage, ILoggerCallback callback, @NonNull String tag, @NonNull Logger.LogLevel logLevel, boolean containsPII) {
-        if (callback instanceof IDetailedLoggerCallback) {
-            ((IDetailedLoggerCallback) callback).discardedLog(tag, logLevel, logMessage, containsPII);
-        }
-    }
-
-    /**
      * Wrap the log message.
-     * If correlation id exists:
-     * <library_version> [<timestamp> - <correlation_id>] <log_message>
-     * If correlation id doesn't exist:
+     * If diagnosticMetadata (diagnosticMetadata contains thread name and correlationId) exists:
+     * <library_version> [<timestamp> - <diagnosticMetadata>] <log_message>
+     * If diagnosticMetadata doesn't exist:
      * <library_version> [<timestamp>] <log_message>
      */
-    private static String formatMessage(final String correlationID,
-                                        final String message,
+    private static String formatMessage(@Nullable final String diagnosticMetadata,
+                                        @Nullable final String platformString,
+                                        @Nullable final String message,
                                         @NonNull final String dateTimeStamp,
-                                        final Throwable throwable) {
+                                        @Nullable final Throwable throwable) {
         final String logMessage = StringUtil.isNullOrEmpty(message) ? "N/A" : message;
-        return " [" + dateTimeStamp
-                + (StringUtil.isNullOrEmpty(correlationID) ? "] " : " - " + correlationID + "] ")
-                + sPlatformString + " "
+        return "[" + dateTimeStamp
+                + (StringUtil.isNullOrEmpty(diagnosticMetadata) ? " " : " - " + diagnosticMetadata + " ")
+                + "- " + platformString + "] "
                 + logMessage
                 + (throwable == null ? "" : '\n' + ThrowableUtil.getStackTraceAsString(throwable));
     }
 
-    private static String getUTCDateTimeAsString() {
-        final SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT, Locale.getDefault());
-        dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+    /**
+     * Get only the required metadata from the DiagnosticContext to plug it in the log lines.
+     * Here thread_name is taken from DiagnosticContext, and correlationId from input parameter.
+     * The need for this is because DiagnosticContext contains additional metadata which is not always required to be logged.
+     *
+     * @return String The concatenation of thread_name and correlation_id to serve as the required metadata in the log lines.
+     */
+    private static synchronized String getDiagnosticContextMetadata(@Nullable String correlationId) {
+        String threadName = DiagnosticContext.INSTANCE.getRequestContext().get(DiagnosticContext.THREAD_NAME);
 
-        return dateFormat.format(new Date());
+        if (StringUtil.isNullOrEmpty(threadName)) {
+            threadName = UNSET;
+        }
+        if (StringUtil.isNullOrEmpty(correlationId)) {
+            correlationId = UNSET;
+        }
+
+        return String.format("%s: %s, %s: %s",
+                DiagnosticContext.THREAD_NAME, threadName, DiagnosticContext.CORRELATION_ID, correlationId);
     }
 }
 

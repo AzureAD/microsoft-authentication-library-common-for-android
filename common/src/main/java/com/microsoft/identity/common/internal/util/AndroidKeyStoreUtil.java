@@ -104,7 +104,7 @@ public class AndroidKeyStoreUtil {
     public static synchronized KeyPair generateKeyPair(
             @NonNull final String algorithm,
             @NonNull final AlgorithmParameterSpec algorithmSpec) throws ClientException {
-        final String methodName = ":generateKeyPair";
+        final String methodTag = TAG + ":generateKeyPair";
 
         synchronized (isLocaleCalendarNonGregorian(Locale.getDefault()) ? LOCALE_CHANGE_LOCK : new Object()) {
             final Exception exception;
@@ -117,7 +117,7 @@ public class AndroidKeyStoreUtil {
             applyKeyStoreLocaleWorkarounds(currentLocale);
 
             try {
-                Logger.info(TAG + methodName, "Generating KeyPair from KeyStore");
+                Logger.info(methodTag, "Generating KeyPair from KeyStore");
 
                 // Generate a key with the given algorithm spec
                 final KeyPairGenerator generator = KeyPairGenerator.getInstance(algorithm, ANDROID_KEY_STORE_TYPE);
@@ -125,7 +125,7 @@ public class AndroidKeyStoreUtil {
 
                 final KeyPair keyPair = generator.generateKeyPair();
                 if (keyPair == null) {
-                    Logger.error(TAG + methodName, "Failed to generate a keypair. " +
+                    Logger.error(methodTag, "Failed to generate a keypair. " +
                             "The way we're generating it might be incorrect.", null);
                     throw new ClientException(INVALID_KEY, "Failed to generate a keypair");
                 }
@@ -163,7 +163,7 @@ public class AndroidKeyStoreUtil {
             );
 
             Logger.error(
-                    TAG + methodName,
+                    methodTag,
                     errCode,
                     exception
             );
@@ -178,11 +178,11 @@ public class AndroidKeyStoreUtil {
      * @return true if it does, false otherwise.
      */
     public static synchronized boolean canLoadKey(@NonNull final String keyAlias) {
-        final String methodName = ":hasKey";
+        final String methodTag = TAG + ":hasKey";
         try {
             return getKeyStore().containsAlias(keyAlias);
         } catch (final KeyStoreException | CertificateException | NoSuchAlgorithmException | IOException e) {
-            Logger.error(TAG + methodName, "Failed to check keystore key", e);
+            Logger.error(methodTag, "Failed to check keystore key", e);
             return false;
         }
     }
@@ -195,8 +195,8 @@ public class AndroidKeyStoreUtil {
     @Nullable
     public static synchronized KeyPair readKey(@NonNull final String keyAlias)
             throws ClientException {
-        final String methodName = ":readKeyPair";
-        Logger.verbose(TAG + methodName, "Reading Key from KeyStore");
+        final String methodTag = TAG + ":readKeyPair";
+        Logger.verbose(methodTag, "Reading Key from KeyStore");
 
         final Exception exception;
         final String errCode;
@@ -205,11 +205,11 @@ public class AndroidKeyStoreUtil {
             final Certificate cert = keyStore.getCertificate(keyAlias);
             final Key privateKey = keyStore.getKey(keyAlias, null);
             if (cert == null || privateKey == null) {
-                Logger.verbose(TAG + methodName, "Key entry doesn't exist.");
+                Logger.verbose(methodTag, "Key entry doesn't exist.");
                 return null;
             }
 
-            Logger.verbose(TAG + methodName, "Key read from KeyStore");
+            Logger.verbose(methodTag, "Key read from KeyStore");
             return new KeyPair(cert.getPublicKey(), (PrivateKey) privateKey);
         } catch (final RuntimeException e) {
             // There is an issue in android keystore that resets keystore
@@ -244,7 +244,7 @@ public class AndroidKeyStoreUtil {
         );
 
         Logger.error(
-                TAG + methodName,
+                methodTag,
                 errCode,
                 exception
         );
@@ -270,7 +270,7 @@ public class AndroidKeyStoreUtil {
     public static synchronized void deleteKey(
             @NonNull final String aliasOfKeyToDelete)
             throws ClientException {
-        final String methodName = ":deleteKeyFromKeyStore";
+        final String methodTag = TAG + ":deleteKeyFromKeyStore";
 
         final Exception exception;
         final String errCode;
@@ -300,7 +300,7 @@ public class AndroidKeyStoreUtil {
         );
 
         Logger.error(
-                TAG + methodName,
+                methodTag,
                 errCode,
                 exception
         );
@@ -320,12 +320,12 @@ public class AndroidKeyStoreUtil {
                               @NonNull final KeyPair keyToWrap,
                               @NonNull final String wrapAlgorithm)
             throws ClientException {
-        final String methodName = ":wrap";
+        final String methodTag = TAG + ":wrap";
 
         final Exception exception;
         final String errCode;
         try {
-            Logger.verbose(TAG + methodName, "Wrap secret key with a KeyPair.");
+            Logger.verbose(methodTag, "Wrap secret key with a KeyPair.");
             final Cipher wrapCipher = Cipher.getInstance(wrapAlgorithm);
             wrapCipher.init(Cipher.WRAP_MODE, keyToWrap.getPublic());
             return wrapCipher.wrap(key);
@@ -350,7 +350,7 @@ public class AndroidKeyStoreUtil {
         );
 
         Logger.error(
-                TAG + methodName,
+                methodTag,
                 errCode,
                 exception
         );
@@ -371,7 +371,7 @@ public class AndroidKeyStoreUtil {
                                    @NonNull final String wrappedKeyAlgorithm,
                                    @NonNull final KeyPair keyPairForUnwrapping,
                                    @NonNull final String wrapAlgorithm) throws ClientException {
-        final String methodName = ":unwrap";
+        final String methodTag = TAG + ":unwrap";
         final Exception exception;
         final String errCode;
         try {
@@ -408,7 +408,7 @@ public class AndroidKeyStoreUtil {
         );
 
         Logger.error(
-                TAG + methodName,
+                methodTag,
                 errCode,
                 exception
         );

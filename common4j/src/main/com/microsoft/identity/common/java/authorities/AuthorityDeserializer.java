@@ -33,7 +33,10 @@ import com.microsoft.identity.common.java.util.CommonURIBuilder;
 import net.jcip.annotations.Immutable;
 
 import java.lang.reflect.Type;
+import java.net.URI;
 import java.util.List;
+
+import cz.msebera.android.httpclient.util.TextUtils;
 
 @Immutable
 public class AuthorityDeserializer implements JsonDeserializer<Authority> {
@@ -57,22 +60,19 @@ public class AuthorityDeserializer implements JsonDeserializer<Authority> {
 
                     // The developer might supply authority_url instead of audience.
                     // In that case, we'll try our best to map the audience here.
-
-                    if (aadAuthority != null) {
+                    if (aadAuthority != null && aadAuthority.mAuthorityUrlString != null) {
                         try {
-                            final CommonURIBuilder uri = new CommonURIBuilder(aadAuthority.getAuthorityUri());
+                            final CommonURIBuilder uri = new CommonURIBuilder(URI.create(aadAuthority.mAuthorityUrlString));
                             final String cloudUrl = uri.getScheme() + "://" + uri.getHost();
-                            final List<String> pathSegments = uri.getPathSegments();
-                            if (pathSegments.size() > 0) {
-                                aadAuthority.mAudience = AzureActiveDirectoryAudience.getAzureActiveDirectoryAudience(cloudUrl,
-                                        pathSegments.get(pathSegments.size() - 1));
+                            final String tenant = uri.getLastPathSegment();
+                            if (!TextUtils.isEmpty(tenant)) {
+                                aadAuthority.mAudience = AzureActiveDirectoryAudience.getAzureActiveDirectoryAudience(cloudUrl, tenant);
                             }
                         } catch (final IllegalArgumentException e) {
-                            // Do nothing.
+                            // Do nothing
                             Logger.error(TAG + methodName, e.getMessage(), e);
                         }
                     }
-
                     return aadAuthority;
                 case "B2C":
                     Logger.verbose(

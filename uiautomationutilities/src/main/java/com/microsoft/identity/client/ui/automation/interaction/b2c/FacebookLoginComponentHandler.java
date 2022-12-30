@@ -31,8 +31,6 @@ import androidx.test.uiautomator.UiObjectNotFoundException;
 import com.microsoft.identity.client.ui.automation.logging.Logger;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
-import org.junit.Assert;
-
 /**
  * A login component handler for Facebook IdP.
  */
@@ -42,7 +40,7 @@ public class FacebookLoginComponentHandler extends AbstractB2CLoginComponentHand
 
     @Override
     protected String getHandlerName() {
-        return B2CProvider.Facebook.getProviderName();
+        return B2CProviderWrapper.Facebook.getProviderName();
     }
 
     @Override

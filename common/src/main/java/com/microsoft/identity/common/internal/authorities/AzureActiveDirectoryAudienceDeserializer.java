@@ -47,7 +47,7 @@ public class AzureActiveDirectoryAudienceDeserializer implements JsonDeserialize
     public AzureActiveDirectoryAudience deserialize(final JsonElement json,
                                                     final Type typeOfT,
                                                     final JsonDeserializationContext context) throws JsonParseException {
-        final String methodName = ":deserialize";
+        final String methodTag = TAG + ":deserialize";
         JsonObject audienceObject = json.getAsJsonObject();
         JsonElement type = audienceObject.get("type");
 
@@ -55,31 +55,31 @@ public class AzureActiveDirectoryAudienceDeserializer implements JsonDeserialize
             switch (type.getAsString()) {
                 case "AzureADMyOrg":
                     Logger.verbose(
-                            TAG + methodName,
+                            methodTag,
                             "Type: AzureADMyOrg"
                     );
                     return context.deserialize(audienceObject, AccountsInOneOrganization.class);
                 case "AzureADMultipleOrgs":
                     Logger.verbose(
-                            TAG + methodName,
+                            methodTag,
                             "Type: AzureADMultipleOrgs"
                     );
                     return context.deserialize(audienceObject, AnyOrganizationalAccount.class);
                 case "AzureADandPersonalMicrosoftAccount":
                     Logger.verbose(
-                            TAG + methodName,
+                            methodTag,
                             "Type: AzureADandPersonalMicrosoftAccount"
                     );
                     return context.deserialize(audienceObject, AllAccounts.class);
                 case "PersonalMicrosoftAccount":
                     Logger.verbose(
-                            TAG + methodName,
+                            methodTag,
                             "Type: PersonalMicrosoftAccount"
                     );
                     return context.deserialize(audienceObject, AnyPersonalAccount.class);
                 default:
                     Logger.verbose(
-                            TAG + methodName,
+                            methodTag,
                             "Type: Unknown"
                     );
                     return context.deserialize(audienceObject, UnknownAudience.class);
