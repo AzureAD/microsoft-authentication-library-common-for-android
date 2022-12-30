@@ -85,6 +85,8 @@ public class BrowserEdge extends App implements IBrowser {
 
     public void navigateTo(@NonNull final String url) {
         Logger.i(TAG, "Navigate to the given URL:" + url + " in the browser..");
+        launch();
+
         //  Click on the search bar in the browser UI
         UiAutomatorUtils.handleButtonClick("com.microsoft.emmx:id/search_box_text");
 
@@ -181,7 +183,7 @@ public class BrowserEdge extends App implements IBrowser {
         try {
             emailField.setText(username);
             UiAutomatorUtils.handleButtonClickForObjectWithText("Next");
-        }catch(UiObjectNotFoundException ex){
+        } catch(UiObjectNotFoundException ex){
             throw new AssertionError(ex);
         }
 
@@ -190,9 +192,7 @@ public class BrowserEdge extends App implements IBrowser {
         aadPromptHandler.handlePrompt(username, password);
 
         // Handle confirm page that loads after password prompt
-        UiAutomatorUtils.handleButtonClickForObjectWithText("Confirm");
-        
-        handleFirstRun();
+        UiAutomatorUtils.handleButtonClickForObjectWithTextSafely("Confirm");
     }
 
     public boolean confirmSignedIn(@Nullable final String username) {
