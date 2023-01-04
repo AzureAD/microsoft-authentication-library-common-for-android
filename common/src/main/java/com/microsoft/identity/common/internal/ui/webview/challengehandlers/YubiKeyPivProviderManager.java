@@ -34,22 +34,21 @@ import com.yubico.yubikit.piv.jca.PivProvider;
 import java.security.Security;
 
 /**
- * Utilizes YubiKit in order to detect and interact with YubiKeys for smartcard certificate based authentication.
+ * Manages the addition and removal of YubiKey PIV provider instances in the Java Security static list.
  */
-public abstract class AbstractYubiKitCertBasedAuthManager extends AbstractSmartcardCertBasedAuthManager {
+public class YubiKeyPivProviderManager {
 
-    private static final String TAG = AbstractYubiKitCertBasedAuthManager.class.getSimpleName();
+    private static final String TAG = YubiKeyPivProviderManager.class.getSimpleName();
     protected static final String YUBIKEY_PROVIDER = "YKPiv";
 
     /**
-     * Adds a PivProvider instance to the Java static Security List (and emits relevant telemetry).
+     * Add a YubiKey PIV provider, and remove any existing copies of the provider.
      * @param telemetryHelper CertBasedAuthTelemetryHelper instance.
+     * @param pivProviderCallback A Callback which returns a Callback that will return a new PivSession instance.
      */
-    @Override
-    public void initBeforeProceedingWithRequest(@NonNull final CertBasedAuthTelemetryHelper telemetryHelper) {
-        final String methodTag = TAG + ":initBeforeProceedingWithRequest";
-        //Need to add a PivProvider instance to the beginning of the array of Security providers in order for signature logic to occur.
-        //Note that this provider is removed when the UsbYubiKeyDevice connection is closed.
+    public static void addPivProvider(@NonNull final CertBasedAuthTelemetryHelper telemetryHelper,
+                                      @NonNull final Callback<Callback<Result<PivSession, Exception>>> pivProviderCallback) {
+        final String methodTag = TAG + ":addPivProvider";
         if (Security.getProvider(YUBIKEY_PROVIDER) != null) {
             Security.removeProvider(YUBIKEY_PROVIDER);
             //The PivProvider instance is either unexpectedly being added elsewhere
@@ -61,13 +60,18 @@ public abstract class AbstractYubiKitCertBasedAuthManager extends AbstractSmartc
             Logger.info(methodTag, "Security static list does not have existing PivProvider.");
         }
         //The position parameter is 1-based (1 maps to index 0).
-        Security.insertProviderAt(new PivProvider(getPivProviderCallback()), 1);
+        Security.insertProviderAt(new PivProvider(pivProviderCallback), 1);
         Logger.info(methodTag, "An instance of PivProvider was added to Security static list.");
     }
 
     /**
-     * Used to provide PivProvider constructor a Callback that will establish a new PivSession when it is needed.
-     * @return A Callback which returns a Callback that will return a new PivSession instance.
+     * Removes existing YubiKey PIV provider from static list, if present.
      */
-    abstract Callback<Callback<Result<PivSession, Exception>>> getPivProviderCallback();
+    public static void removePivProvider() {
+        if (Security.getProvider(YUBIKEY_PROVIDER) == null) {
+            return;
+        }
+        Security.removeProvider(YUBIKEY_PROVIDER);
+        Logger.info(TAG, "An instance of PivProvider was removed from Security static list.");
+    }
 }

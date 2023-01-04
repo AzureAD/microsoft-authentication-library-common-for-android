@@ -38,30 +38,30 @@ public class SmartcardCertBasedAuthManagerFactory {
     private static final String TAG = SmartcardCertBasedAuthManagerFactory.class.getSimpleName();
 
     /**
-     * Creates and returns an applicable instance of AbstractSmartcardCertBasedAuthManager that handles USB connections.
+     * Creates and returns an applicable instance of AbstractUsbSmartcardCertBasedAuthManager that handles USB connections.
      * @param context current Context.
-     * @return An AbstractSmartcardCertBasedAuthManager if the USB_SERVICE is supported by the device; null otherwise.
+     * @return An AbstractUsbSmartcardCertBasedAuthManager if the USB_SERVICE is supported by the device; null otherwise.
      */
     @Nullable
-    static AbstractSmartcardCertBasedAuthManager createSmartcardUsbCertBasedAuthManager(@NonNull final Context context) {
-        final String methodTag = TAG + ":createSmartcardUsbCertBasedAuthManager";
+    static AbstractUsbSmartcardCertBasedAuthManager createUsbSmartcardCertBasedAuthManager(@NonNull final Context context) {
+        final String methodTag = TAG + ":createUsbSmartcardCertBasedAuthManager";
         if (context.getSystemService(Context.USB_SERVICE) == null) {
             Logger.info(methodTag, "Certificate Based Authentication via YubiKey not enabled due to device not supporting the USB_SERVICE system service.");
             return null;
         }
-        return new YubiKitUsbCertBasedAuthManager(context);
+        return new YubiKitUsbSmartcardCertBasedAuthManager(context);
     }
 
     /**
-     * Creates and returns an applicable instance of AbstractSmartcardCertBasedAuthManager that handles NFC connections.
+     * Creates and returns an applicable instance of AbstractNfcSmartcardCertBasedAuthManager that handles NFC connections.
      * @param context current Context.
-     * @return An AbstractSmartcardCertBasedAuthManager if NFC is supported on the device; null otherwise.
+     * @return An AbstractNfcSmartcardCertBasedAuthManager if NFC is supported on the device; null otherwise.
      */
     @Nullable
-    static AbstractSmartcardCertBasedAuthManager createSmartcardNfcCertBasedAuthManager(@NonNull final Context context) {
-        final String methodTag = TAG + ":createSmartcardNfcCertBasedAuthManager";
+    static AbstractNfcSmartcardCertBasedAuthManager createNfcSmartcardCertBasedAuthManager(@NonNull final Context context) {
+        final String methodTag = TAG + ":createNfcSmartcardCertBasedAuthManager";
         try {
-            return new YubiKitNfcCertBasedAuthManager(context);
+            return new YubiKitNfcSmartcardCertBasedAuthManager(context);
         } catch (final NfcNotAvailable e) {
             //This means that the device does not have an NFC reader.
             Logger.info(methodTag, "Device does not support NFC capabilities.");

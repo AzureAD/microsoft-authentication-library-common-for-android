@@ -29,25 +29,48 @@ import android.webkit.ClientCertRequest;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 
+import com.microsoft.identity.common.R;
 import com.microsoft.identity.common.java.opentelemetry.CertBasedAuthTelemetryHelper;
+import com.microsoft.identity.common.logging.Logger;
 
 /**
  * Handles a received ClientCertRequest by prompting the user to choose from certificates
- *  stored on a smartcard device connected via NFC.
+ *  stored on a smartcard device connected via USB.
  */
-public class SmartcardNfcCertBasedAuthChallengeHandler extends AbstractSmartcardCertBasedAuthChallengeHandler{
+public class UsbSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcardCertBasedAuthChallengeHandler {
+
     /**
-     * Creates new instance of SmartcardNfcCertBasedAuthChallengeHandler.
+     * Creates new instance of UsbSmartcardCertBasedAuthChallengeHandler.
+     * A manager for smartcard CBA is retrieved, and discovery for USB devices is started.
      * @param activity current host activity.
-     * @param smartcardNfcCertBasedAuthManager SmartcardNfcCertBasedAuthManager instance.
+     * @param usbSmartcardCertBasedAuthManager AbstractUsbSmartcardCertBasedAuthManager instance.
      * @param dialogHolder DialogHolder instance.
      * @param telemetryHelper CertBasedAuthTelemetryHelder instance.
      */
-    public SmartcardNfcCertBasedAuthChallengeHandler(@NonNull final Activity activity,
-                                                     @NonNull final AbstractSmartcardCertBasedAuthManager smartcardNfcCertBasedAuthManager,
+    public UsbSmartcardCertBasedAuthChallengeHandler(@NonNull final Activity activity,
+                                                     @NonNull final AbstractUsbSmartcardCertBasedAuthManager usbSmartcardCertBasedAuthManager,
                                                      @NonNull final DialogHolder dialogHolder,
                                                      @NonNull final CertBasedAuthTelemetryHelper telemetryHelper) {
-        super(activity, smartcardNfcCertBasedAuthManager, dialogHolder, telemetryHelper, SmartcardNfcCertBasedAuthChallengeHandler.class.getSimpleName());
+        super(activity, usbSmartcardCertBasedAuthManager, dialogHolder, telemetryHelper, UsbSmartcardCertBasedAuthChallengeHandler.class.getSimpleName());
+        final String methodTag = TAG + ":UsbSmartcardCertBasedAuthChallengeHandler";
+        mSmartcardCertBasedAuthManager.setConnectionCallback(new AbstractSmartcardCertBasedAuthManager.IConnectionCallback() {
+            @Override
+            public void onCreateConnection() {
+                //Reset DialogHolder to null if necessary.
+                //In this case, DialogHolder would be an ErrorDialog if not null.
+                mDialogHolder.dismissDialog();
+            }
+
+            @Override
+            public void onClosedConnection() {
+                if (mDialogHolder.isDialogShowing()) {
+                    //Show an error dialog informing users that they have unplugged their device.
+                    mDialogHolder.onCancelCba();
+                    mDialogHolder.showErrorDialog(R.string.smartcard_early_unplug_dialog_title, R.string.smartcard_early_unplug_dialog_message);
+                    Logger.verbose(methodTag, "Smartcard was disconnected while dialog was still displayed.");
+                }
+            }
+        });
     }
 
     /**
@@ -55,7 +78,7 @@ public class SmartcardNfcCertBasedAuthChallengeHandler extends AbstractSmartcard
      */
     @Override
     protected void onGetSessionFinished() {
-        mSmartcardCertBasedAuthManager.stopDiscovery(mActivity);
+        //Nothing needed
     }
 
     /**
@@ -73,42 +96,20 @@ public class SmartcardNfcCertBasedAuthChallengeHandler extends AbstractSmartcard
             @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
             @Override
             public void onClick(@NonNull final char[] pin) {
-                //For NFC, we need another dialog prompting the user to hold the smartcard to the phone again.
-                mDialogHolder.showSmartcardNfcPromptDialog(new SmartcardNfcPromptDialog.CancelCbaCallback() {
+                mSmartcardCertBasedAuthManager.requestDeviceSession(new AbstractSmartcardCertBasedAuthManager.ISessionCallback() {
                     @Override
-                    public void onCancel() {
-                        mDialogHolder.dismissDialog();
-                        mTelemetryHelper.setResultFailure(USER_CANCEL_MESSAGE);
+                    public void onGetSession(@NonNull final ISmartcardSession session) throws Exception {
+                        tryUsingSmartcardWithPin(pin, certDetails, request, session);
+                        clearPin(pin);
+                    }
+
+                    @Override
+                    public void onException(@NonNull final Exception e) {
+                        indicateGeneralException(methodTag, e);
                         request.cancel();
+                        clearPin(pin);
                     }
                 });
-                mSmartcardCertBasedAuthManager.setConnectionCallback(new AbstractSmartcardCertBasedAuthManager.IConnectionCallback() {
-                    @Override
-                    public void onCreateConnection() {
-                        mDialogHolder.showDialog(new SmartcardNfcLoadingDialog(mActivity));
-                        mSmartcardCertBasedAuthManager.requestDeviceSession(new AbstractSmartcardCertBasedAuthManager.ISessionCallback() {
-                            @Override
-                            public void onGetSession(@NonNull final ISmartcardSession session) throws Exception {
-                                tryUsingSmartcardWithPin(pin, certDetails, request, session);
-                                clearPin(pin);
-                            }
-
-                            @Override
-                            public void onException(@NonNull final Exception e) {
-                                indicateGeneralException(methodTag, e);
-                                request.cancel();
-                                clearPin(pin);
-                                mSmartcardCertBasedAuthManager.stopDiscovery(mActivity);
-                            }
-                        });
-                    }
-
-                    @Override
-                    public void onClosedConnection() {
-                        //Nothing needed.
-                    }
-                });
-                mSmartcardCertBasedAuthManager.startDiscovery(mActivity);
             }
         };
     }
@@ -135,27 +136,14 @@ public class SmartcardNfcCertBasedAuthChallengeHandler extends AbstractSmartcard
             useSmartcardCertForAuth(certDetails, pin, session, request);
             return;
         }
-        final int attemptsRemaining = session.getPinAttemptsRemaining();
-        mSmartcardCertBasedAuthManager.stopDiscovery(mActivity);
         // If the number of attempts is 0, no more attempts will be allowed.
-        if (attemptsRemaining == 0) {
+        if (session.getPinAttemptsRemaining() == 0) {
             //We must display a dialog informing the user that they have made too many incorrect attempts,
             // and the user will need to figure out a way to reset their key outside of our library.
             indicateTooManyFailedAttempts(methodTag);
             request.cancel();
             return;
         }
-        mDialogHolder.showPinDialog(
-                getSmartcardPinDialogPositiveButtonListener(certDetails, request),
-                new SmartcardPinDialog.CancelCbaCallback() {
-                    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-                    @Override
-                    public void onCancel() {
-                        mDialogHolder.dismissDialog();
-                        mTelemetryHelper.setResultFailure(USER_CANCEL_MESSAGE);
-                        request.cancel();
-                    }
-                });
         //Update Dialog to indicate that an incorrect attempt was made.
         mDialogHolder.setPinDialogErrorMode();
     }
