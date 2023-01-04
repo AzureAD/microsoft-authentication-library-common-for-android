@@ -124,7 +124,6 @@ public class UsbSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
      * @param session An ISmartcardSession created to help with interactions pertaining to certificates.
      */
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-    @Override
     protected void tryUsingSmartcardWithPin(@NonNull final char[] pin,
                                             @NonNull final ICertDetails certDetails,
                                             @NonNull final ClientCertRequest request,

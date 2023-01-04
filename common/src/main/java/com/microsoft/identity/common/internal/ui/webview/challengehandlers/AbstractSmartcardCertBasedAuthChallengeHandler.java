@@ -207,22 +207,6 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandler implements 
                                                                                                              @NonNull final ClientCertRequest request);
 
     /**
-     * Checks to see if PIN for smartcard is correct.
-     * If so, proceed to attempt authentication.
-     * Otherwise, handle the incorrect PIN based on how many PIN attempts are remaining.
-     * @param pin char array containing PIN attempt.
-     * @param certDetails ICertDetails of the selected certificate from the SmartcardCertPickerDialog.
-     * @param request ClientCertRequest received from AzureActiveDirectoryWebViewClient.onReceivedClientCertRequest.
-     * @param session An ISmartcardSession created to help with interactions pertaining to certificates.
-     */
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-    protected abstract void tryUsingSmartcardWithPin(@NonNull final char[] pin,
-                                                     @NonNull final ICertDetails certDetails,
-                                                     @NonNull final ClientCertRequest request,
-                                                     @NonNull final ISmartcardSession session)
-            throws Exception;
-
-    /**
      * Authenticates using smartcard certificate.
      * @param certDetails ICertDetails of chosen certificate for authentication.
      * @param pin char array containing PIN.
