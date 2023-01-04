@@ -97,11 +97,24 @@ public class CertBasedAuthTelemetryHelper {
 
     /**
      * Sets attribute that indicates the user's intended choice for CBA (smartcard or on-device).
-     * @param choice string indicating user's intended choice for CBA.
+     * @param choice enum indicating user's intended choice for CBA.
      */
-    public void setUserChoice(@NonNull final String choice) {
-        mSpan.setAttribute(
-                AttributeName.cert_based_auth_user_choice.name(),
-                choice);
+    public void setUserChoice(@NonNull final CertBasedAuthChoice choice) {
+        switch(choice) {
+            case ON_DEVICE_CHOICE:
+                mSpan.setAttribute(
+                        AttributeName.cert_based_auth_user_choice.name(),
+                        "on-device");
+                break;
+            case SMARTCARD_CHOICE:
+                mSpan.setAttribute(
+                        AttributeName.cert_based_auth_user_choice.name(),
+                        "smartcard");
+                break;
+            default:
+                mSpan.setAttribute(
+                        AttributeName.cert_based_auth_user_choice.name(),
+                        "N/A");
+        }
     }
 }

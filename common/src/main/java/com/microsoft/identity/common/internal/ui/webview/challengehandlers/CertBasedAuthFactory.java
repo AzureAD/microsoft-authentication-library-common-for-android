@@ -29,15 +29,15 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
+import com.microsoft.identity.common.java.opentelemetry.CertBasedAuthChoice;
 import com.microsoft.identity.common.java.opentelemetry.CertBasedAuthTelemetryHelper;
 
 /**
  * Instantiates handlers for certificate based authentication.
  */
 public class CertBasedAuthFactory {
+
     private static final String USER_CANCEL_MESSAGE = "User canceled smartcard CBA flow.";
-    private static final String ON_DEVICE_CHOICE = "on-device";
-    private static final String SMARTCARD_CHOICE = "smartcard";
     private static final String NON_APPLICABLE = "N/A";
     private final Activity mActivity;
     private final AbstractUsbSmartcardCertBasedAuthManager mUsbSmartcardCertBasedAuthManager;
@@ -70,7 +70,7 @@ public class CertBasedAuthFactory {
      */
     public void createCertBasedAuthChallengeHandler(@NonNull final CertBasedAuthChallengeHandlerCallback callback) {
         final CertBasedAuthTelemetryHelper telemetryHelper = new CertBasedAuthTelemetryHelper();
-        telemetryHelper.setUserChoice(NON_APPLICABLE);
+        telemetryHelper.setUserChoice(CertBasedAuthChoice.NON_APPLICABLE);
         telemetryHelper.setCertBasedAuthChallengeHandler(NON_APPLICABLE);
         if (mUsbSmartcardCertBasedAuthManager == null) {
             //Smartcard CBA is not available, so default to on-device.
@@ -81,7 +81,7 @@ public class CertBasedAuthFactory {
         }
 
         if (mUsbSmartcardCertBasedAuthManager.isDeviceConnected()) {
-            telemetryHelper.setUserChoice(SMARTCARD_CHOICE);
+            telemetryHelper.setUserChoice(CertBasedAuthChoice.SMARTCARD_CHOICE);
             callback.onReceived(new UsbSmartcardCertBasedAuthChallengeHandler(
                     mActivity,
                     mUsbSmartcardCertBasedAuthManager,
@@ -99,13 +99,13 @@ public class CertBasedAuthFactory {
                 //Position 1 -> Smartcard
                 if (checkedPosition == 0) {
                     mDialogHolder.dismissDialog();
-                    telemetryHelper.setUserChoice(ON_DEVICE_CHOICE);
+                    telemetryHelper.setUserChoice(CertBasedAuthChoice.ON_DEVICE_CHOICE);
                     callback.onReceived(new OnDeviceCertBasedAuthChallengeHandler(
                             mActivity,
                             telemetryHelper));
                     return;
                 }
-                telemetryHelper.setUserChoice(SMARTCARD_CHOICE);
+                telemetryHelper.setUserChoice(CertBasedAuthChoice.SMARTCARD_CHOICE);
                 setUpForSmartcardCertBasedAuth(callback, telemetryHelper);
             }
         }, new UserChoiceDialog.CancelCbaCallback() {
