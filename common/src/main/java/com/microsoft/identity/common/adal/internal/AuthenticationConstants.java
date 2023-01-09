@@ -1138,6 +1138,11 @@ public final class AuthenticationConstants {
         public static final String CALLER_INFO_PACKAGE = "caller.info.package";
 
         /**
+         * String to return Broker DCF Auth Result.
+         */
+        public static final String BROKER_DCF_AUTH_RESULT = "broker_dcf_auth_result";
+
+        /**
          * String to send Msal V2 Request params.
          */
         public static final String BROKER_REQUEST_V2 = "broker_request_v2";

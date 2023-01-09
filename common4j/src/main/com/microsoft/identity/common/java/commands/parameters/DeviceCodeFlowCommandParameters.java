@@ -41,21 +41,10 @@ public class DeviceCodeFlowCommandParameters extends TokenCommandParameters {
     private final int callerUid;
     private final String brokerVersion;
     private final String negotiatedBrokerProtocolVersion;
+    private final String callerPackageName;
 
     @Override
     public void validate() throws ArgumentException {
-        if (callerUid == 0) {
-            throw new ArgumentException(
-                    ArgumentException.ACQUIRE_TOKEN_WITH_DEVICE_CODE_OPERATION_NAME,
-                    "mCallerUId", "Caller Uid is not set"
-            );
-        }
-        if (!(getOAuth2TokenCache() instanceof BrokerOAuth2TokenCache)) {
-            throw new ArgumentException(
-                    ArgumentException.ACQUIRE_TOKEN_WITH_DEVICE_CODE_OPERATION_NAME,
-                    "AcquireTokenSilentOperationParameters",
-                    "OAuth2Cache not an instance of BrokerOAuth2TokenCache"
-            );
-        }
+        super.validate();
     }
 }

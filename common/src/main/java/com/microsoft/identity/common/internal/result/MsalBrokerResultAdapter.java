@@ -90,7 +90,6 @@ import java.util.List;
 public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
 
     private static final String TAG = MsalBrokerResultAdapter.class.getSimpleName();
-    private static final String AUTHORIZATION_PENDING = "authorization_pending";
     public static final Gson GSON = new Gson();
 
     @NonNull
@@ -183,7 +182,6 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
 
         final Bundle resultBundle = bundleFromBrokerResult(builder.build(), negotiatedBrokerProtocolVersion);
         resultBundle.putBoolean(AuthenticationConstants.Broker.BROKER_REQUEST_V2_SUCCESS, false);
-        resultBundle.putString("errorCode", exception.getErrorCode());
         return resultBundle;
     }
 
@@ -587,26 +585,35 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
     }
 
     @NonNull
-    public AuthorizationResult getDeviceCodeFlowAuthResultFromResultBundle(@NonNull final Bundle resultBundle) throws BaseException {
-        String serializedDCFResult = resultBundle.getString("dcfResultBundle");
-        AuthorizationResult dcfResult = ObjectMapper.deserializeJsonStringToObject(serializedDCFResult, MicrosoftStsAuthorizationResult.class);
+    public AuthorizationResult getDeviceCodeFlowAuthResultFromResultBundle(@NonNull final Bundle resultBundle) throws BaseException, ClientException {
+        String serializedDCFAuthResult = resultBundle.getString(AuthenticationConstants.Broker.BROKER_DCF_AUTH_RESULT);
+        if (serializedDCFAuthResult != null) {
+            AuthorizationResult authorizationResult = ObjectMapper.deserializeJsonStringToObject(serializedDCFAuthResult, MicrosoftStsAuthorizationResult.class);
+            return authorizationResult;
+        }
 
-        return dcfResult;
+        // DCF not supported
+        BrokerResult brokerResult = brokerResultFromBundle(resultBundle);
+        if (brokerResult.getErrorCode() != null && brokerResult.getErrorCode().equals(ErrorStrings.DEVICE_CODE_FLOW_NOT_SUPPORTED)) {
+            throw new ClientException(ErrorStrings.DEVICE_CODE_FLOW_NOT_SUPPORTED, "deviceCodeFlowAuthRequest() not supported in BrokerMsalController");
+        }
+
+        throw getBaseExceptionFromBundle(resultBundle);
     }
 
     @NonNull
     public AcquireTokenResult getDeviceCodeFlowTokenResultFromResultBundle(@NonNull final Bundle resultBundle) throws BaseException {
-        final MsalBrokerResultAdapter resultAdapter = new MsalBrokerResultAdapter();
-        //TODO (ppunhani): refactor this
+        // DCF not supported
+        BrokerResult brokerResult = brokerResultFromBundle(resultBundle);
+        if (brokerResult.getErrorCode() != null && brokerResult.getErrorCode().equals(ErrorStrings.DEVICE_CODE_FLOW_NOT_SUPPORTED)) {
+            throw new ClientException(ErrorStrings.DEVICE_CODE_FLOW_NOT_SUPPORTED, "acquireDeviceCodeFlowToken() not supported in BrokerMsalController");
+        }
+
         if (resultBundle.getBoolean(AuthenticationConstants.Broker.BROKER_REQUEST_V2_SUCCESS)) {
             final AcquireTokenResult acquireTokenResult = new AcquireTokenResult();
-            acquireTokenResult.setLocalAuthenticationResult(
-                    resultAdapter.authenticationResultFromBundle(resultBundle)
-            );
-
+            acquireTokenResult.setLocalAuthenticationResult(authenticationResultFromBundle(resultBundle));
             return acquireTokenResult;
-        } else if (resultBundle.getString("errorCode").contains(AUTHORIZATION_PENDING)) {
-            //TODO (ppunhani): refactor this
+        } else if (brokerResult.getErrorCode().equals(ErrorStrings.DEVICE_CODE_FLOW_AUTHORIZATION_PENDING_ERROR_CODE)) {
             return null;
         }
 

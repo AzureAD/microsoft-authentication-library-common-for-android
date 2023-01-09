@@ -96,9 +96,17 @@ public class TokenCommandParameters extends CommandParameters {
                         "scope is empty or null"
                 );
             }
-            if (this instanceof InteractiveTokenCommandParameters || this instanceof DeviceCodeFlowCommandParameters) {
+
+            if (this instanceof InteractiveTokenCommandParameters) {
                 throw new ArgumentException(
                         ArgumentException.ACQUIRE_TOKEN_OPERATION_NAME,
+                        ArgumentException.SCOPE_ARGUMENT_NAME,
+                        "scope is empty or null");
+            }
+
+            if (this instanceof DeviceCodeFlowCommandParameters) {
+                throw new ArgumentException(
+                        ArgumentException.ACQUIRE_TOKEN_WITH_DEVICE_CODE_OPERATION_NAME,
                         ArgumentException.SCOPE_ARGUMENT_NAME,
                         "scope is empty or null");
             }
@@ -114,9 +122,17 @@ public class TokenCommandParameters extends CommandParameters {
                 );
             }
 
-            if (this instanceof InteractiveTokenCommandParameters || this instanceof DeviceCodeFlowCommandParameters) {
+            if (this instanceof InteractiveTokenCommandParameters) {
                 throw new ArgumentException(
                         ArgumentException.ACQUIRE_TOKEN_OPERATION_NAME,
+                        ArgumentException.AUTHENTICATION_SCHEME_ARGUMENT_NAME,
+                        "authentication scheme is undefined"
+                );
+            }
+
+            if (this instanceof DeviceCodeFlowCommandParameters) {
+                throw new ArgumentException(
+                        ArgumentException.ACQUIRE_TOKEN_WITH_DEVICE_CODE_OPERATION_NAME,
                         ArgumentException.AUTHENTICATION_SCHEME_ARGUMENT_NAME,
                         "authentication scheme is undefined"
                 );

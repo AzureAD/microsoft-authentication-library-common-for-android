@@ -437,131 +437,120 @@ public class BrokerMsalController extends BaseController {
     @SuppressWarnings(WarningType.rawtype_warning)
     @Override
     public AuthorizationResult deviceCodeFlowAuthRequest(final DeviceCodeFlowCommandParameters parameters)
-            throws BaseException {
-        //TODO (ppunhani): change to FlightNames.ENABLE_NGMS_FLOW
-        if (true) {
-            // IPC to Broker : AcquireTokenWithDCF user code fetch API in Broker
-            return mBrokerOperationExecutor.execute(parameters,
-                    new BrokerOperation<AuthorizationResult>() {
-                        private String negotiatedBrokerProtocolVersion;
+            throws BaseException, ClientException {
+        // IPC to Broker : fetch DCF auth result
+        return mBrokerOperationExecutor.execute(parameters,
+                new BrokerOperation<AuthorizationResult>() {
+                    private String negotiatedBrokerProtocolVersion;
 
-                        @Override
-                        public void performPrerequisites(final @NonNull IIpcStrategy strategy) throws BaseException {
-                            // hello ipc
-                            negotiatedBrokerProtocolVersion = hello(strategy, parameters.getRequiredBrokerProtocolVersion());
+                    @Override
+                    public void performPrerequisites(final @NonNull IIpcStrategy strategy) throws BaseException {
+                        negotiatedBrokerProtocolVersion = hello(strategy, parameters.getRequiredBrokerProtocolVersion());
+                    }
+
+                    @Override
+                    public BrokerOperationBundle getBundle() {
+                        return new BrokerOperationBundle(MSAL_FETCH_DCF_AUTH_RESULT,
+                                mActiveBrokerPackageName,
+                                mRequestAdapter.getRequestBundleForDeviceCodeFlowAuthRequest(
+                                        mApplicationContext,
+                                        parameters,
+                                        negotiatedBrokerProtocolVersion));
+                    }
+
+                    @Override
+                    public AuthorizationResult extractResultBundle(final @Nullable Bundle resultBundle) throws BaseException {
+                        if (resultBundle == null) {
+                            throw mResultAdapter.getExceptionForEmptyResultBundle();
                         }
 
-                        @Override
-                        public BrokerOperationBundle getBundle() {
-                            // Call Broker to make a request to fetch DCF authorization result
-                            // Note : Broker API here is to only fetch the authorization result which has the verificationUri, userCode, expiration time and message.
-                            return new BrokerOperationBundle(MSAL_FETCH_DCF_AUTH_RESULT,
-                                    mActiveBrokerPackageName,
-                                    mRequestAdapter.getRequestBundleForDeviceCodeFlowAuthRequest(
-                                            mApplicationContext,
-                                            parameters,
-                                            negotiatedBrokerProtocolVersion));
-                        }
+                        return mResultAdapter.getDeviceCodeFlowAuthResultFromResultBundle(resultBundle);
+                    }
 
-                        @Override
-                        public AuthorizationResult extractResultBundle(final @Nullable Bundle resultBundle) throws BaseException {
-                            // extract resultBundle here and convert into DeviceCodeFlowAuthResponse
-                            // DeviceCodeFlowAuthResponse would be returned to Client app by callback in DeviceCodeFlowCommand
-                            if (resultBundle == null) {
-                                throw mResultAdapter.getExceptionForEmptyResultBundle();
-                            }
-                            return mResultAdapter.getDeviceCodeFlowAuthResultFromResultBundle(resultBundle);
-                        }
+                    @Override
+                    public @NonNull
+                    String getMethodName() {
+                        return ":deviceCodeFlowAuthRequest";
+                    }
 
-                        @Override
-                        public @NonNull
-                        String getMethodName() {
-                            return ":deviceCodeFlowAuthRequest";
-                        }
+                    @Override
+                    public @Nullable
+                    String getTelemetryApiId() {
+                        return null;
+                    }
 
-                        @Override
-                        public @Nullable
-                        String getTelemetryApiId() {
-                            return null;
-                        }
+                    @Override
+                    public void putValueInSuccessEvent(final @NonNull ApiEndEvent event, final @NonNull AuthorizationResult result) {
+                    }
 
-                        @Override
-                        public void putValueInSuccessEvent(final @NonNull ApiEndEvent event, final @NonNull AuthorizationResult result) {
-                        }
-
-                    });
-        } else {
-            throw new ClientException("deviceCodeFlowAuthRequest() not supported in BrokerMsalController");
-        }
+                });
     }
 
     public AcquireTokenResult acquireDeviceCodeFlowToken(
             @SuppressWarnings(WarningType.rawtype_warning) final AuthorizationResult authorizationResult,
             final DeviceCodeFlowCommandParameters parameters)
             throws BaseException {
-        //TODO (ppunhani): change to FlightNames.ENABLE_NGMS_FLOW
-        if (true) {
-            // IPC to Broker : AcquireTokenWithDCF API in Broker
-            return mBrokerOperationExecutor.execute(parameters,
-                    new BrokerOperation<AcquireTokenResult>() {
-                        private String negotiatedBrokerProtocolVersion;
 
-                        @Override
-                        public void performPrerequisites(final @NonNull IIpcStrategy strategy) throws BaseException {
-                            // hello ipc
-                            negotiatedBrokerProtocolVersion = hello(strategy, parameters.getRequiredBrokerProtocolVersion());
+        // IPC to Broker : AcquireTokenWithDCF API in Broker
+        return mBrokerOperationExecutor.execute(parameters,
+                new BrokerOperation<AcquireTokenResult>() {
+                    private String negotiatedBrokerProtocolVersion;
+
+                    @Override
+                    public void performPrerequisites(final @NonNull IIpcStrategy strategy) throws BaseException {
+                        // hello ipc
+                        negotiatedBrokerProtocolVersion = hello(strategy, parameters.getRequiredBrokerProtocolVersion());
+                    }
+
+                    @Override
+                    public BrokerOperationBundle getBundle() {
+                        // Call Broker to make a request to fetch DCF authorization result
+                        // Note : Broker API here is to only fetch the authorization result which has the verificationUri, userCode, expiration time and message.
+                        return new BrokerOperationBundle(MSAL_ACQUIRE_TOKEN_DCF,
+                                mActiveBrokerPackageName,
+                                mRequestAdapter.getRequestBundleForDeviceCodeFlowTokenRequest(
+                                        mApplicationContext,
+                                        parameters,
+                                        authorizationResult,
+                                        negotiatedBrokerProtocolVersion));
+                    }
+
+                    @Override
+                    public AcquireTokenResult extractResultBundle(final @Nullable Bundle resultBundle) throws BaseException {
+                        if (resultBundle == null) {
+                            throw mResultAdapter.getExceptionForEmptyResultBundle();
                         }
 
-                        @Override
-                        public BrokerOperationBundle getBundle() {
-                            // Call Broker to make a request to fetch DCF authorization result
-                            // Note : Broker API here is to only fetch the authorization result which has the verificationUri, userCode, expiration time and message.
-                            return new BrokerOperationBundle(MSAL_ACQUIRE_TOKEN_DCF,
-                                    mActiveBrokerPackageName,
-                                    mRequestAdapter.getRequestBundleForDeviceCodeFlowTokenRequest(
-                                            mApplicationContext,
-                                            parameters,
-                                            authorizationResult,
-                                            negotiatedBrokerProtocolVersion));
+                        AcquireTokenResult acquireTokenResult = mResultAdapter.getDeviceCodeFlowTokenResultFromResultBundle(resultBundle);
+                        // If authorization_pending continue polling for token
+                        if (acquireTokenResult == null) {
+                            // Wait between polls for 5 secs
+                            ThreadUtils.sleepSafely(5000, TAG,
+                                    "Attempting to sleep thread during Device Code Flow token polling...");
+                            return acquireDeviceCodeFlowToken(authorizationResult, parameters);
+                        } else {
+                            return acquireTokenResult;
                         }
+                    }
 
-                        @Override
-                        public AcquireTokenResult extractResultBundle(final @Nullable Bundle resultBundle) throws BaseException {
-                            if (resultBundle == null) {
-                                throw mResultAdapter.getExceptionForEmptyResultBundle();
-                            }
-                            AcquireTokenResult acquireTokenResult = mResultAdapter.getDeviceCodeFlowTokenResultFromResultBundle(resultBundle);
-                            if (acquireTokenResult == null) {
-                                // Wait between polls for 5 secs
-                                ThreadUtils.sleepSafely(5000, TAG,
-                                        "Attempting to sleep thread during Device Code Flow token polling...");
-                                return acquireDeviceCodeFlowToken(authorizationResult, parameters);
-                            } else {
-                                return acquireTokenResult;
-                            }
-                        }
+                    @Override
+                    public @NonNull
+                    String getMethodName() {
+                        return ":deviceCodeFlowAuthRequest";
+                    }
 
-                        @Override
-                        public @NonNull
-                        String getMethodName() {
-                            return ":deviceCodeFlowAuthRequest";
-                        }
+                    @Override
+                    public @Nullable
+                    String getTelemetryApiId() {
+                        return null;
+                    }
 
-                        @Override
-                        public @Nullable
-                        String getTelemetryApiId() {
-                            return null;
-                        }
+                    @Override
+                    public void putValueInSuccessEvent(final @NonNull ApiEndEvent event, final @NonNull AcquireTokenResult result) {
+                        event.putResult(result);
+                    }
 
-                        @Override
-                        public void putValueInSuccessEvent(final @NonNull ApiEndEvent event, final @NonNull AcquireTokenResult result) {
-                            event.putResult(result);
-                        }
-
-                    });
-        } else {
-            throw new ClientException("acquireDeviceCodeFlowToken() not supported in BrokerMsalController");
-        }
+                });
     }
 
     /**
