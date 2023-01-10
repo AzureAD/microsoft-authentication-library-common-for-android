@@ -44,13 +44,13 @@ import java.util.List;
  * Abstract class which handles a received ClientCertRequest by prompting the user to choose from certificates
  *  stored on a smartcard device.
  */
-public abstract class AbstractSmartcardCertBasedAuthChallengeHandler implements ICertBasedAuthChallengeHandler {
+public abstract class AbstractSmartcardCertBasedAuthChallengeHandler<T extends AbstractSmartcardCertBasedAuthManager> implements ICertBasedAuthChallengeHandler {
     protected static final String MAX_ATTEMPTS_MESSAGE = "User has reached the maximum failed attempts allowed.";
     protected static final String NO_PIV_CERTS_FOUND_MESSAGE = "No PIV certificates found on smartcard device.";
     protected static final String USER_CANCEL_MESSAGE = "User canceled smartcard CBA flow.";
     protected final String TAG;
     protected final Activity mActivity;
-    protected final AbstractSmartcardCertBasedAuthManager mSmartcardCertBasedAuthManager;
+    protected final T mCbaManager;
     protected final DialogHolder mDialogHolder;
     protected final CertBasedAuthTelemetryHelper mTelemetryHelper;
     protected boolean mIsSmartcardCertBasedAuthProceeding;
@@ -64,14 +64,14 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandler implements 
      * @param tag name of challenge handler, for logging purposes.
      */
     public AbstractSmartcardCertBasedAuthChallengeHandler(@NonNull final Activity activity,
-                                                          @NonNull final AbstractSmartcardCertBasedAuthManager smartcardCertBasedAuthManager,
+                                                          @NonNull final T smartcardCertBasedAuthManager,
                                                           @NonNull final DialogHolder dialogHolder,
                                                           @NonNull final CertBasedAuthTelemetryHelper telemetryHelper,
                                                           @NonNull final String tag) {
         TAG = tag;
         mActivity = activity;
         mIsSmartcardCertBasedAuthProceeding = false;
-        mSmartcardCertBasedAuthManager = smartcardCertBasedAuthManager;
+        mCbaManager = smartcardCertBasedAuthManager;
         mDialogHolder = dialogHolder;
         mTelemetryHelper = telemetryHelper;
         mTelemetryHelper.setCertBasedAuthChallengeHandler(TAG);
@@ -89,7 +89,7 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandler implements 
     @Override
     public Void processChallenge(ClientCertRequest request) {
         final String methodTag = TAG + ":processChallenge";
-        mSmartcardCertBasedAuthManager.requestDeviceSession(new AbstractSmartcardCertBasedAuthManager.ISessionCallback() {
+        mCbaManager.requestDeviceSession(new AbstractSmartcardCertBasedAuthManager.ISessionCallback() {
             @Override
             public void onGetSession(@NonNull final ISmartcardSession session) throws Exception {
                 if (session.getPinAttemptsRemaining() == 0) {
@@ -220,7 +220,7 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandler implements 
                                            @NonNull final ClientCertRequest request)
             throws Exception {
         //Each type of smartcard manager could have different preparation steps before proceeding with a ClientCertRequest.
-        mSmartcardCertBasedAuthManager.initBeforeProceedingWithRequest(mTelemetryHelper);
+        mCbaManager.initBeforeProceedingWithRequest(mTelemetryHelper);
         //PivPrivateKey implements PrivateKey. Note that the PIN is copied in pivPrivateKey.
         final PrivateKey privateKey = session.getKeyForAuth(certDetails, pin);
         //Cert chain only needs the cert to be used for authentication.
@@ -270,7 +270,7 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandler implements 
     @Override
     public void cleanUp() {
         mDialogHolder.dismissDialog();
-        //Reset IConnectionCallback local variable of mSmartcardCertBasedAuthManager.
-        mSmartcardCertBasedAuthManager.setConnectionCallback(null);
+        //Reset IConnectionCallback local variable of mCbaManager.
+        mCbaManager.clearConnectionCallback();
     }
 }

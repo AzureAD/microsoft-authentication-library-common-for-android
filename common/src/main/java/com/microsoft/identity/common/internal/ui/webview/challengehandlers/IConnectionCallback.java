@@ -22,16 +22,12 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.ui.webview.challengehandlers;
 
-import lombok.Getter;
-
 /**
- * An abstract smartcard CertBasedAuth manager specifically for NFC.
+ * Callback methods to be run upon initial connection of a smartcard device.
  */
-public abstract class AbstractNfcSmartcardCertBasedAuthManager extends AbstractSmartcardCertBasedAuthManager<IConnectionCallback> {
-
-    /* boolean based on the most recently connected smartcard device
-    being the same as the previously connected smartcard device.
-    true if most recently connected smartcard device is the same as the previous.
-    false otherwise (including if no previous smartcard device exists). */
-    @Getter protected boolean isDeviceChanged;
+public interface IConnectionCallback {
+    /**
+     * Logic to be run upon initial connection of a smartcard device.
+     */
+    void onCreateConnection();
 }

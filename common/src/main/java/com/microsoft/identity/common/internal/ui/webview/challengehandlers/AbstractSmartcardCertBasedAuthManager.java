@@ -37,11 +37,9 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 /**
  * An abstract manager that can control connections for a particular type of smartcard.
  */
-public abstract class AbstractSmartcardCertBasedAuthManager {
+public abstract class AbstractSmartcardCertBasedAuthManager<T extends IConnectionCallback> {
 
-    protected IConnectionCallback mConnectionCallback;
-    @SuppressFBWarnings //This callback isn't currently being used, but added for completion for future smartcard managers.
-    protected IDiscoveryExceptionCallback mDiscoveryExceptionCallback;
+    protected T mConnectionCallback;
 
     /**
      * Logic to prepare an Android device to detect smartcards.
@@ -84,43 +82,15 @@ public abstract class AbstractSmartcardCertBasedAuthManager {
      * Sets callbacks to be run for when a smartcard connection is started and ended.
      * @param connectionCallback an implementation of IConnectionCallback.
      */
-    public void setConnectionCallback(@Nullable final IConnectionCallback connectionCallback) {
+    public void setConnectionCallback(@Nullable final T connectionCallback) {
         mConnectionCallback = connectionCallback;
     }
 
     /**
-     * Sets callback to be run for when an exception is thrown during discovery start up.
-     * @param discoveryExceptionCallback an implementation of IDiscoveryExceptionCallback.
+     * Sets connection callback to null.
      */
-    public void setDiscoveryExceptionCallback(@Nullable final IDiscoveryExceptionCallback discoveryExceptionCallback) {
-        mDiscoveryExceptionCallback = discoveryExceptionCallback;
-    }
-
-    /**
-     * Callback methods to be run upon initial connection and disconnection of a smartcard device.
-     */
-    interface IConnectionCallback {
-        /**
-         * Logic to be run upon initial connection of a smartcard device.
-         */
-        void onCreateConnection();
-
-        /**
-         * Logic to be run upon disconnection of a smartcard device via usb.
-         */
-        void onClosedConnection();
-    }
-
-    /**
-     * Callback method to be run upon an exception thrown during discovery start up.
-     */
-    interface IDiscoveryExceptionCallback {
-        /**
-         * Logic to be run when an exception is thrown.
-         * @param exception thrown Exception instance.
-         */
-        @SuppressFBWarnings
-        void onException(@NonNull final Exception exception);
+    public void clearConnectionCallback() {
+        mConnectionCallback = null;
     }
 
     /**

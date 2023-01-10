@@ -61,7 +61,7 @@ public class YubiKitNfcSmartcardCertBasedAuthManager extends AbstractNfcSmartcar
 
     public YubiKitNfcSmartcardCertBasedAuthManager(@NonNull final Context context) throws NfcNotAvailable {
         mNfcYubiKitManager = new NfcYubiKeyManager(context.getApplicationContext(), null);
-        mIsCurrDiffFromPrevDevice = false;
+        isDeviceChanged = false;
     }
 
     /**
@@ -81,7 +81,7 @@ public class YubiKitNfcSmartcardCertBasedAuthManager extends AbstractNfcSmartcar
                         public void invoke(@NonNull NfcYubiKeyDevice value) {
                             mNfcDevice = value;
                             final byte[] tagId = mNfcDevice.getTag().getId();
-                            mIsCurrDiffFromPrevDevice = (mTagId != null && !Arrays.equals(mTagId, tagId));
+                            isDeviceChanged = (mTagId != null && !Arrays.equals(mTagId, tagId));
                             mTagId = tagId;
                             if (mConnectionCallback != null) {
                                 mConnectionCallback.onCreateConnection();

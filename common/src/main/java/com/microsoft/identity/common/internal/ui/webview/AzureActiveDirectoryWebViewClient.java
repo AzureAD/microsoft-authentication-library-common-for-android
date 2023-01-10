@@ -464,7 +464,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         }
         mCertBasedAuthFactory.createCertBasedAuthChallengeHandler(new CertBasedAuthFactory.CertBasedAuthChallengeHandlerCallback() {
             @Override
-            public void onReceived(@Nullable ICertBasedAuthChallengeHandler challengeHandler) {
+            public void onReceived(@Nullable final ICertBasedAuthChallengeHandler challengeHandler) {
                 mCertBasedAuthChallengeHandler = challengeHandler;
                 if (mCertBasedAuthChallengeHandler == null) {
                     //User cancelled out of CBA.

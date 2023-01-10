@@ -54,14 +54,10 @@ public class CertBasedAuthFactory {
         mUsbSmartcardCertBasedAuthManager = SmartcardCertBasedAuthManagerFactory.createUsbSmartcardCertBasedAuthManager(mActivity.getApplicationContext());
         mNfcSmartcardCertBasedAuthManager = SmartcardCertBasedAuthManagerFactory.createNfcSmartcardCertBasedAuthManager(mActivity.getApplicationContext());
         mDialogHolder = new DialogHolder(mActivity);
-        if (mUsbSmartcardCertBasedAuthManager == null) {
-            //This means that a user cannot use a smartcard via USB.
-            //For consistency, we aren't going to allow the user to authenticate via smartcard CBA.
-            //In the rare case a user is able to use NFC but not USB, this will require some different design work.
-            return;
+        if (mUsbSmartcardCertBasedAuthManager != null) {
+            //Connection and disconnection callbacks for discovery are set in the SmartcardCertBasedAuthChallengeHandlers.
+            mUsbSmartcardCertBasedAuthManager.startDiscovery(activity);
         }
-        //Connection and disconnection callbacks for discovery are set in the SmartcardCertBasedAuthChallengeHandlers.
-        mUsbSmartcardCertBasedAuthManager.startDiscovery(activity);
     }
 
     /**
@@ -72,15 +68,9 @@ public class CertBasedAuthFactory {
         final CertBasedAuthTelemetryHelper telemetryHelper = new CertBasedAuthTelemetryHelper();
         telemetryHelper.setUserChoice(CertBasedAuthChoice.NON_APPLICABLE);
         telemetryHelper.setCertBasedAuthChallengeHandler(NON_APPLICABLE);
-        if (mUsbSmartcardCertBasedAuthManager == null) {
-            //Smartcard CBA is not available, so default to on-device.
-            callback.onReceived(new OnDeviceCertBasedAuthChallengeHandler(
-                    mActivity,
-                    telemetryHelper));
-            return;
-        }
 
-        if (mUsbSmartcardCertBasedAuthManager.isDeviceConnected()) {
+        if (mUsbSmartcardCertBasedAuthManager != null
+            && mUsbSmartcardCertBasedAuthManager.isDeviceConnected()) {
             telemetryHelper.setUserChoice(CertBasedAuthChoice.SMARTCARD_CHOICE);
             callback.onReceived(new UsbSmartcardCertBasedAuthChallengeHandler(
                     mActivity,
@@ -139,7 +129,8 @@ public class CertBasedAuthFactory {
     private void setUpForSmartcardCertBasedAuth(@NonNull final CertBasedAuthChallengeHandlerCallback callback,
                                                 @NonNull final CertBasedAuthTelemetryHelper telemetryHelper) {
         //If smartcard is already plugged in, go straight to cert picker.
-        if (mUsbSmartcardCertBasedAuthManager.isDeviceConnected()) {
+        if (mUsbSmartcardCertBasedAuthManager != null
+                && mUsbSmartcardCertBasedAuthManager.isDeviceConnected()) {
             callback.onReceived(new UsbSmartcardCertBasedAuthChallengeHandler(
                     mActivity,
                     mUsbSmartcardCertBasedAuthManager,
@@ -186,45 +177,45 @@ public class CertBasedAuthFactory {
             }
         });
 
-        mUsbSmartcardCertBasedAuthManager.setConnectionCallback(new AbstractSmartcardCertBasedAuthManager.IConnectionCallback() {
-            @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-            @Override
-            public void onCreateConnection() {
-                if (mNfcSmartcardCertBasedAuthManager != null) {
-                    mNfcSmartcardCertBasedAuthManager.stopDiscovery(mActivity);
+        if (mUsbSmartcardCertBasedAuthManager != null) {
+            mUsbSmartcardCertBasedAuthManager.setConnectionCallback(new IUsbConnectionCallback() {
+                @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+                @Override
+                public void onCreateConnection() {
+                    if (mNfcSmartcardCertBasedAuthManager != null) {
+                        mNfcSmartcardCertBasedAuthManager.stopDiscovery(mActivity);
+                        mNfcSmartcardCertBasedAuthManager.clearConnectionCallback();
+                    }
+                    challengeHandlerCallback.onReceived(new UsbSmartcardCertBasedAuthChallengeHandler(
+                            mActivity,
+                            mUsbSmartcardCertBasedAuthManager,
+                            mDialogHolder,
+                            telemetryHelper));
                 }
-                challengeHandlerCallback.onReceived(new UsbSmartcardCertBasedAuthChallengeHandler(
-                        mActivity,
-                        mUsbSmartcardCertBasedAuthManager,
-                        mDialogHolder,
-                        telemetryHelper));
-            }
 
-            @Override
-            public void onClosedConnection() {
-                //ConnectionCallback will be changed before ever reaching this method.
-            }
-        });
+                @Override
+                public void onClosedConnection() {
+                    //ConnectionCallback will be changed before ever reaching this method.
+                }
+            });
+        }
 
         if (mNfcSmartcardCertBasedAuthManager == null) {
             return;
         }
-        mNfcSmartcardCertBasedAuthManager.setConnectionCallback(new AbstractSmartcardCertBasedAuthManager.IConnectionCallback() {
+        mNfcSmartcardCertBasedAuthManager.setConnectionCallback(new IConnectionCallback() {
             @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
             @Override
             public void onCreateConnection() {
-                mUsbSmartcardCertBasedAuthManager.setConnectionCallback(null);
+                if (mUsbSmartcardCertBasedAuthManager != null) {
+                    mUsbSmartcardCertBasedAuthManager.clearConnectionCallback();
+                }
                 mDialogHolder.showSmartcardNfcLoadingDialog();
                 challengeHandlerCallback.onReceived(new NfcSmartcardCertBasedAuthChallengeHandler(
                         mActivity,
                         mNfcSmartcardCertBasedAuthManager,
                         mDialogHolder,
                         telemetryHelper));
-            }
-
-            @Override
-            public void onClosedConnection() {
-                //ConnectionCallback will be changed before ever reaching this method.
             }
         });
     }

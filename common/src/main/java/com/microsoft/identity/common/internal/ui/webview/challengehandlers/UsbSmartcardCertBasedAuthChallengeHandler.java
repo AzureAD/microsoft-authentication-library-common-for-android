@@ -37,7 +37,7 @@ import com.microsoft.identity.common.logging.Logger;
  * Handles a received ClientCertRequest by prompting the user to choose from certificates
  *  stored on a smartcard device connected via USB.
  */
-public class UsbSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcardCertBasedAuthChallengeHandler {
+public class UsbSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcardCertBasedAuthChallengeHandler<AbstractUsbSmartcardCertBasedAuthManager> {
 
     /**
      * Creates new instance of UsbSmartcardCertBasedAuthChallengeHandler.
@@ -53,7 +53,7 @@ public class UsbSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
                                                      @NonNull final CertBasedAuthTelemetryHelper telemetryHelper) {
         super(activity, usbSmartcardCertBasedAuthManager, dialogHolder, telemetryHelper, UsbSmartcardCertBasedAuthChallengeHandler.class.getSimpleName());
         final String methodTag = TAG + ":UsbSmartcardCertBasedAuthChallengeHandler";
-        mSmartcardCertBasedAuthManager.setConnectionCallback(new AbstractSmartcardCertBasedAuthManager.IConnectionCallback() {
+        mCbaManager.setConnectionCallback(new IUsbConnectionCallback() {
             @Override
             public void onCreateConnection() {
                 //Reset DialogHolder to null if necessary.
@@ -96,7 +96,7 @@ public class UsbSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
             @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
             @Override
             public void onClick(@NonNull final char[] pin) {
-                mSmartcardCertBasedAuthManager.requestDeviceSession(new AbstractSmartcardCertBasedAuthManager.ISessionCallback() {
+                mCbaManager.requestDeviceSession(new AbstractSmartcardCertBasedAuthManager.ISessionCallback() {
                     @Override
                     public void onGetSession(@NonNull final ISmartcardSession session) throws Exception {
                         tryUsingSmartcardWithPin(pin, certDetails, request, session);

@@ -35,7 +35,7 @@ import com.microsoft.identity.common.java.opentelemetry.CertBasedAuthTelemetryHe
  * Handles a received ClientCertRequest by prompting the user to choose from certificates
  *  stored on a smartcard device connected via NFC.
  */
-public class NfcSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcardCertBasedAuthChallengeHandler{
+public class NfcSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcardCertBasedAuthChallengeHandler<AbstractNfcSmartcardCertBasedAuthManager> {
     /**
      * Creates new instance of NfcSmartcardCertBasedAuthChallengeHandler.
      * @param activity current host activity.
@@ -55,7 +55,7 @@ public class NfcSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
      */
     @Override
     protected void onGetSessionFinished() {
-        mSmartcardCertBasedAuthManager.stopDiscovery(mActivity);
+        mCbaManager.stopDiscovery(mActivity);
     }
 
     /**
@@ -82,20 +82,19 @@ public class NfcSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
                         request.cancel();
                     }
                 });
-                mSmartcardCertBasedAuthManager.setConnectionCallback(new AbstractSmartcardCertBasedAuthManager.IConnectionCallback() {
+                mCbaManager.setConnectionCallback(new IConnectionCallback() {
                     @Override
                     public void onCreateConnection() {
                         mDialogHolder.showDialog(new SmartcardNfcLoadingDialog(mActivity));
-                        if (mSmartcardCertBasedAuthManager instanceof AbstractNfcSmartcardCertBasedAuthManager
-                            && ((AbstractNfcSmartcardCertBasedAuthManager)mSmartcardCertBasedAuthManager).isCurrDiffFromPrevConnectedDevice()) {
+                        if (mCbaManager.isDeviceChanged()) {
                             //In a future version, an error dialog with a custom message could be shown here instead of a general error.
                             indicateGeneralException(methodTag, new Exception("Device connected via NFC is different from initially connected device."));
                             request.cancel();
                             clearPin(pin);
-                            mSmartcardCertBasedAuthManager.stopDiscovery(mActivity);
+                            mCbaManager.stopDiscovery(mActivity);
                             return;
                         }
-                        mSmartcardCertBasedAuthManager.requestDeviceSession(new AbstractSmartcardCertBasedAuthManager.ISessionCallback() {
+                        mCbaManager.requestDeviceSession(new AbstractSmartcardCertBasedAuthManager.ISessionCallback() {
                             @Override
                             public void onGetSession(@NonNull final ISmartcardSession session) throws Exception {
                                 tryUsingSmartcardWithPin(pin, certDetails, request, session);
@@ -107,17 +106,12 @@ public class NfcSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
                                 indicateGeneralException(methodTag, e);
                                 request.cancel();
                                 clearPin(pin);
-                                mSmartcardCertBasedAuthManager.stopDiscovery(mActivity);
+                                mCbaManager.stopDiscovery(mActivity);
                             }
                         });
                     }
-
-                    @Override
-                    public void onClosedConnection() {
-                        //Nothing needed.
-                    }
                 });
-                mSmartcardCertBasedAuthManager.startDiscovery(mActivity);
+                mCbaManager.startDiscovery(mActivity);
             }
         };
     }
@@ -144,7 +138,7 @@ public class NfcSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
             return;
         }
         final int attemptsRemaining = session.getPinAttemptsRemaining();
-        mSmartcardCertBasedAuthManager.stopDiscovery(mActivity);
+        mCbaManager.stopDiscovery(mActivity);
         // If the number of attempts is 0, no more attempts will be allowed.
         if (attemptsRemaining == 0) {
             //We must display a dialog informing the user that they have made too many incorrect attempts,
