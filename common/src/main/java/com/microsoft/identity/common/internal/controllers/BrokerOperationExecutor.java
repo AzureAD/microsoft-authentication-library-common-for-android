@@ -25,18 +25,20 @@ package com.microsoft.identity.common.internal.controllers;
 
 import android.os.Bundle;
 
-import com.microsoft.identity.common.java.marker.CodeMarkerManager;
-import com.microsoft.identity.common.java.marker.PerfConstants;
 import com.microsoft.identity.common.exception.BrokerCommunicationException;
 import com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle;
 import com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy;
-import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.telemetry.events.ApiEndEvent;
 import com.microsoft.identity.common.internal.telemetry.events.ApiStartEvent;
+import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
+import com.microsoft.identity.common.java.marker.CodeMarkerManager;
+import com.microsoft.identity.common.java.marker.PerfConstants;
+import com.microsoft.identity.common.java.opentelemetry.OTelUtility;
+import com.microsoft.identity.common.java.opentelemetry.SpanName;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.logging.Logger;
 
@@ -45,6 +47,9 @@ import java.util.List;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.context.Scope;
 import lombok.NonNull;
 
 /**
@@ -214,11 +219,22 @@ public class BrokerOperationExecutor {
                         + strategy.getClass().getSimpleName()
         );
 
-        operation.performPrerequisites(strategy);
-        final BrokerOperationBundle brokerOperationBundle = operation.getBundle();
-        final Bundle resultBundle = strategy.communicateToBroker(brokerOperationBundle);
-        return operation.extractResultBundle(resultBundle);
+        final Span span = OTelUtility.createSpan(SpanName.MSAL_PerformIpcStrategy.name());
 
-        // TODO: Emit success rate and performance of each strategy to eSTS in a finally block.
+        try (final Scope scope = span.makeCurrent()) {
+            span.setAttribute("strategy", strategy.getType().name());
+            operation.performPrerequisites(strategy);
+            final BrokerOperationBundle brokerOperationBundle = operation.getBundle();
+            final Bundle resultBundle = strategy.communicateToBroker(brokerOperationBundle);
+            span.setStatus(StatusCode.OK);
+            return operation.extractResultBundle(resultBundle);
+            // TODO: Emit success rate and performance of each strategy to eSTS in a finally block.
+        } catch (final Throwable throwable) {
+            span.setStatus(StatusCode.ERROR);
+            span.recordException(throwable);
+            throw throwable;
+        } finally {
+            span.end();
+        }
     }
 }

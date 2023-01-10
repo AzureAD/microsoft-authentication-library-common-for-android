@@ -31,7 +31,9 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.LongCounter;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.sdk.trace.ReadableSpan;
 import lombok.NonNull;
 
@@ -48,6 +50,24 @@ public class OTelUtility {
 
         // Current span is the parent of span just created.
         span.setAttribute(parent_span_name.name(), getCurrentSpanName());
+        return span;
+    }
+
+    /**
+     * Creates a span (with shared basic attributes).
+     **/
+    @NonNull
+    public static Span createSpanFromParent(@NonNull final String name,
+                                            @NonNull final SpanContext parentSpanContext) {
+        final Tracer tracer = GlobalOpenTelemetry.getTracer(TAG);
+        final Span span = tracer.spanBuilder(name)
+                .setParent(Context.current().with(Span.wrap(parentSpanContext)))
+                .startSpan();
+
+        if (parentSpanContext instanceof SerializableSpanContext) {
+            span.setAttribute(parent_span_name.name(), ((SerializableSpanContext) parentSpanContext).getParentSpanName());
+        }
+
         return span;
     }
 
@@ -80,13 +100,13 @@ public class OTelUtility {
     /**
      * Get name of the current span, if possible.
      **/
-    @Nullable
+    @NonNull
     public static String getCurrentSpanName() {
         final Span span = SpanExtension.current();
         if (span instanceof ReadableSpan) {
             return ((ReadableSpan) span).getName();
         }
-        return null;
+        return "null";
     }
 
 }
