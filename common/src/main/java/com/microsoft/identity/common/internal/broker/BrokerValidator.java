@@ -56,7 +56,7 @@ public class BrokerValidator {
 
     private static final String TAG = "BrokerValidator";
 
-    private static boolean sShouldTrustDebugBrokers = BuildConfig.DEBUG;
+    private static boolean sShouldTrustDebugBrokers = true;
 
     public static void setShouldTrustDebugBrokers(final boolean shouldTrustDebugBrokers) {
         final String methodTag = TAG + ":setShouldTrustDebugBrokers";
