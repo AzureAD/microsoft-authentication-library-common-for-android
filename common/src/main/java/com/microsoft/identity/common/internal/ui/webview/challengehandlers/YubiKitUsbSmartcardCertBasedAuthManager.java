@@ -103,6 +103,10 @@ public class YubiKitUsbSmartcardCertBasedAuthManager extends AbstractUsbSmartcar
      */
     @Override
     void stopDiscovery(@NonNull final Activity activity) {
+        //Usb discovery is meant to be on for the duration of the authentication WebView being active.
+        //Therefore, discovery for Usb should only be stopped upon the WebView being terminated.
+        //Note that this differs from the Nfc implementation, where Nfc discovery is only turned on
+        // at specific times where it is necessary to connect.
         synchronized (sDeviceLock) {
             mUsbDevice = null;
             mUsbYubiKeyManager.disable();

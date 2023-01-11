@@ -93,7 +93,7 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandler<T extends A
             @Override
             public void onGetSession(@NonNull final ISmartcardSession session) throws Exception {
                 if (session.getPinAttemptsRemaining() == 0) {
-                    indicateTooManyFailedAttempts(methodTag);
+                    promptTooManyFailedPinAttempts(methodTag);
                     request.cancel();
                     onGetSessionFinished();
                     return;
@@ -148,7 +148,7 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandler<T extends A
      *  too many failed login attempts have occurred.
      * @param methodTag tag from calling method.
      */
-    protected void indicateTooManyFailedAttempts(@NonNull final String methodTag) {
+    protected void promptTooManyFailedPinAttempts(@NonNull final String methodTag) {
         Logger.info(methodTag,  MAX_ATTEMPTS_MESSAGE);
         mTelemetryHelper.setResultFailure(MAX_ATTEMPTS_MESSAGE);
         mDialogHolder.showErrorDialog(

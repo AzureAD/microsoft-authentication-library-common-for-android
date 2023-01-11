@@ -139,11 +139,8 @@ public class NfcSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
         }
         final int attemptsRemaining = session.getPinAttemptsRemaining();
         mCbaManager.stopDiscovery(mActivity);
-        // If the number of attempts is 0, no more attempts will be allowed.
         if (attemptsRemaining == 0) {
-            //We must display a dialog informing the user that they have made too many incorrect attempts,
-            // and the user will need to figure out a way to reset their key outside of our library.
-            indicateTooManyFailedAttempts(methodTag);
+            promptTooManyFailedPinAttempts(methodTag);
             request.cancel();
             return;
         }

@@ -58,7 +58,7 @@ public class UserChoiceDialog extends SmartcardDialog {
     @Override
     void createDialog() {
         //Create array for auth choices to pass into the AlertDialog.
-        ArrayList<String> choicesList = new ArrayList<>();
+        final ArrayList<String> choicesList = new ArrayList<>();
         choicesList.add(mActivity.getResources().getString(R.string.user_choice_dialog_on_device_name));
         choicesList.add(mActivity.getResources().getString(R.string.user_choice_dialog_smartcard_name));
         String[] choicesArray = Arrays.copyOf(choicesList.toArray(), choicesList.size(), String[].class);

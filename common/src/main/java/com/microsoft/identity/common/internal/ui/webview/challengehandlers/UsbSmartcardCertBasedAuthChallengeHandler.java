@@ -139,7 +139,7 @@ public class UsbSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
         if (session.getPinAttemptsRemaining() == 0) {
             //We must display a dialog informing the user that they have made too many incorrect attempts,
             // and the user will need to figure out a way to reset their key outside of our library.
-            indicateTooManyFailedAttempts(methodTag);
+            promptTooManyFailedPinAttempts(methodTag);
             request.cancel();
             return;
         }
