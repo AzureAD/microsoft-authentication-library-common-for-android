@@ -359,6 +359,8 @@ public class BrokerHost extends AbstractTestBroker {
         UiAutomatorUtils.handleInput("com.microsoft.identity.testuserapp:id/editTextFlights", flightsJson);
         // Click Set Flights button
         UiAutomatorUtils.handleButtonClick("com.microsoft.identity.testuserapp:id/overwriteFlightsButton");
+        // Confirm flight was set successfully
+        Assert.assertTrue(UiAutomatorUtils.obtainUiObjectWithText("Flight set in broker host.").exists());
     }
 
     @Override
