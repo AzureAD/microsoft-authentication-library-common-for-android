@@ -24,6 +24,8 @@ package com.microsoft.identity.common.java.opentelemetry;
 
 import static com.microsoft.identity.common.java.opentelemetry.AttributeName.parent_span_name;
 
+import com.microsoft.identity.common.java.logging.Logger;
+
 import javax.annotation.Nullable;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
@@ -54,11 +56,23 @@ public class OTelUtility {
     }
 
     /**
-     * Creates a span (with shared basic attributes).
+     * Creates a span from a parent Span Context (with shared basic attributes).
      **/
     @NonNull
     public static Span createSpanFromParent(@NonNull final String name,
-                                            @NonNull final SpanContext parentSpanContext) {
+                                            @Nullable final SpanContext parentSpanContext) {
+        final String methodTag = TAG + ":createSpanFromParent";
+
+        if (parentSpanContext == null) {
+            Logger.verbose(methodTag, "parentSpanContext is NULL. Creating span without parent.");
+            return createSpan(name);
+        }
+
+        if (!parentSpanContext.isValid()) {
+            Logger.warn(methodTag, "parentSpanContext is INVALID. Creating span without parent.");
+            return createSpan(name);
+        }
+
         final Tracer tracer = GlobalOpenTelemetry.getTracer(TAG);
         final Span span = tracer.spanBuilder(name)
                 .setParent(Context.current().with(Span.wrap(parentSpanContext)))

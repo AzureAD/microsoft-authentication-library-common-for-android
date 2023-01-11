@@ -24,8 +24,6 @@ package com.microsoft.identity.common.java.opentelemetry;
 
 import com.google.gson.annotations.SerializedName;
 
-import javax.annotation.Nullable;
-
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.TraceFlags;
 import io.opentelemetry.api.trace.TraceState;
@@ -34,6 +32,9 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.Accessors;
 
+/**
+ * A JSON Serializable implementation of {@link SpanContext}.
+ */
 @Builder
 @Accessors(prefix = "m")
 public class SerializableSpanContext implements SpanContext {
