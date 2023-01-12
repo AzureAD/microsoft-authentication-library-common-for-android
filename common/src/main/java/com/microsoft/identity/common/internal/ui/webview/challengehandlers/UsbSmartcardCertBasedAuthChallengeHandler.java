@@ -74,11 +74,12 @@ public class UsbSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
     }
 
     /**
-     * Additional logic to run upon before the end of processChallenge.
+     * Pauses smartcard discovery, if the particular authentication method isn't meant to have
+     *  discovery active throughout the entire flow.
      */
     @Override
-    protected void onGetSessionFinished() {
-        //Nothing needed
+    protected void onPausedSmartcardDiscovery() {
+        //Nothing needed, since usb discovery should always remain active for the duration of the authentication flow.
     }
 
     /**
@@ -115,35 +116,15 @@ public class UsbSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
     }
 
     /**
-     * Checks to see if PIN for smartcard is correct.
-     * If so, proceed to attempt authentication.
-     * Otherwise, handle the incorrect PIN based on how many PIN attempts are remaining.
-     * @param pin char array containing PIN attempt.
+     * Shows PIN dialog, if not already showing, and sets dialog to error mode.
+     *
      * @param certDetails ICertDetails of the selected certificate from the SmartcardCertPickerDialog.
-     * @param request ClientCertRequest received from AzureActiveDirectoryWebViewClient.onReceivedClientCertRequest.
-     * @param session An ISmartcardSession created to help with interactions pertaining to certificates.
+     * @param request     ClientCertRequest received from AzureActiveDirectoryWebViewClient.onReceivedClientCertRequest.
      */
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-    protected void tryUsingSmartcardWithPin(@NonNull final char[] pin,
-                                            @NonNull final ICertDetails certDetails,
-                                            @NonNull final ClientCertRequest request,
-                                            @NonNull final ISmartcardSession session)
-            throws Exception {
-        final String methodTag = TAG + ":tryUsingSmartcardWithPin";
-        if (session.verifyPin(pin)) {
-            //If pin is successfully verified, we will use the certificate to perform the rest of the logic for authentication.
-            useSmartcardCertForAuth(certDetails, pin, session, request);
-            return;
-        }
-        // If the number of attempts is 0, no more attempts will be allowed.
-        if (session.getPinAttemptsRemaining() == 0) {
-            //We must display a dialog informing the user that they have made too many incorrect attempts,
-            // and the user will need to figure out a way to reset their key outside of our library.
-            promptTooManyFailedPinAttempts(methodTag);
-            request.cancel();
-            return;
-        }
-        //Update Dialog to indicate that an incorrect attempt was made.
+    @Override
+    protected void setPinDialogForIncorrectAttempt(@NonNull ICertDetails certDetails,
+                                                   @NonNull ClientCertRequest request) {
         mDialogHolder.setPinDialogErrorMode();
     }
 }

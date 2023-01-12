@@ -51,10 +51,13 @@ public class NfcSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
     }
 
     /**
-     * Additional logic to run upon before the end of processChallenge.
+     * Pauses smartcard discovery, if the particular authentication method isn't meant to have
+     *  discovery active throughout the entire flow.
      */
     @Override
-    protected void onGetSessionFinished() {
+    protected void onPausedSmartcardDiscovery() {
+        //Helps prevent unnecessary callback trigger. Nfc discovery should only be active when
+        // the user is prompted to tap.
         mCbaManager.stopDiscovery(mActivity);
     }
 
@@ -91,7 +94,7 @@ public class NfcSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
                             indicateGeneralException(methodTag, new Exception("Device connected via NFC is different from initially connected device."));
                             request.cancel();
                             clearPin(pin);
-                            mCbaManager.stopDiscovery(mActivity);
+                            onPausedSmartcardDiscovery();
                             return;
                         }
                         mCbaManager.requestDeviceSession(new AbstractSmartcardCertBasedAuthManager.ISessionCallback() {
@@ -106,7 +109,7 @@ public class NfcSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
                                 indicateGeneralException(methodTag, e);
                                 request.cancel();
                                 clearPin(pin);
-                                mCbaManager.stopDiscovery(mActivity);
+                                onPausedSmartcardDiscovery();
                             }
                         });
                     }
@@ -117,33 +120,15 @@ public class NfcSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
     }
 
     /**
-     * Checks to see if PIN for smartcard is correct.
-     * If so, proceed to attempt authentication.
-     * Otherwise, handle the incorrect PIN based on how many PIN attempts are remaining.
-     * @param pin char array containing PIN attempt.
+     * Shows PIN dialog, if not already showing, and sets dialog to error mode.
+     *
      * @param certDetails ICertDetails of the selected certificate from the SmartcardCertPickerDialog.
-     * @param request ClientCertRequest received from AzureActiveDirectoryWebViewClient.onReceivedClientCertRequest.
-     * @param session An ISmartcardSession created to help with interactions pertaining to certificates.
+     * @param request     ClientCertRequest received from AzureActiveDirectoryWebViewClient.onReceivedClientCertRequest.
      */
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-    protected void tryUsingSmartcardWithPin(@NonNull final char[] pin,
-                                            @NonNull final ICertDetails certDetails,
-                                            @NonNull final ClientCertRequest request,
-                                            @NonNull final ISmartcardSession session)
-            throws Exception {
-        final String methodTag = TAG + ":tryUsingSmartcardWithPin";
-        if (session.verifyPin(pin)) {
-            //If pin is successfully verified, we will use the certificate to perform the rest of the logic for authentication.
-            useSmartcardCertForAuth(certDetails, pin, session, request);
-            return;
-        }
-        final int attemptsRemaining = session.getPinAttemptsRemaining();
-        mCbaManager.stopDiscovery(mActivity);
-        if (attemptsRemaining == 0) {
-            promptTooManyFailedPinAttempts(methodTag);
-            request.cancel();
-            return;
-        }
+    @Override
+    protected void setPinDialogForIncorrectAttempt(@NonNull ICertDetails certDetails,
+                                                   @NonNull ClientCertRequest request) {
         mDialogHolder.showPinDialog(
                 getSmartcardPinDialogPositiveButtonListener(certDetails, request),
                 new SmartcardPinDialog.CancelCbaCallback() {

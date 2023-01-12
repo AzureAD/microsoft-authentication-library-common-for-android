@@ -44,7 +44,7 @@ import java.util.List;
  * Abstract class which handles a received ClientCertRequest by prompting the user to choose from certificates
  *  stored on a smartcard device.
  */
-public abstract class AbstractSmartcardCertBasedAuthChallengeHandler<T extends AbstractSmartcardCertBasedAuthManager> implements ICertBasedAuthChallengeHandler {
+public abstract class AbstractSmartcardCertBasedAuthChallengeHandler<T extends AbstractSmartcardCertBasedAuthManager<?>> implements ICertBasedAuthChallengeHandler {
     protected static final String MAX_ATTEMPTS_MESSAGE = "User has reached the maximum failed attempts allowed.";
     protected static final String NO_PIV_CERTS_FOUND_MESSAGE = "No PIV certificates found on smartcard device.";
     protected static final String USER_CANCEL_MESSAGE = "User canceled smartcard CBA flow.";
@@ -95,7 +95,7 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandler<T extends A
                 if (session.getPinAttemptsRemaining() == 0) {
                     promptTooManyFailedPinAttempts(methodTag);
                     request.cancel();
-                    onGetSessionFinished();
+                    onPausedSmartcardDiscovery();
                     return;
                 }
                 //Create List that contains cert details only pertinent to the cert picker.
@@ -108,7 +108,7 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandler<T extends A
                             R.string.smartcard_no_cert_dialog_title,
                             R.string.smartcard_no_cert_dialog_message);
                     request.cancel();
-                    onGetSessionFinished();
+                    onPausedSmartcardDiscovery();
                     return;
                 }
 
@@ -126,7 +126,7 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandler<T extends A
                             }
                         });
 
-                onGetSessionFinished();
+                onPausedSmartcardDiscovery();
             }
 
             @Override
@@ -139,9 +139,10 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandler<T extends A
     }
 
     /**
-     * Additional logic to run upon before the end of processChallenge.
+     * Pauses smartcard discovery, if the particular authentication method isn't meant to have
+     *  discovery active throughout the entire flow.
      */
-    protected abstract void onGetSessionFinished();
+    protected abstract void onPausedSmartcardDiscovery();
 
     /**
      * Helper method to log and show an error dialog with messages indicating that
@@ -203,8 +204,46 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandler<T extends A
      * @param request ClientCertRequest received from AzureActiveDirectoryWebViewClient.onReceivedClientCertRequest.
      * @return A PositiveButtonListener to be set for a SmartcardPinDialog.
      */
-    protected abstract SmartcardPinDialog.PositiveButtonListener getSmartcardPinDialogPositiveButtonListener(@NonNull final ICertDetails certDetails,
-                                                                                                             @NonNull final ClientCertRequest request);
+    protected abstract SmartcardPinDialog.PositiveButtonListener getSmartcardPinDialogPositiveButtonListener(@NonNull final ICertDetails certDetails, @NonNull final ClientCertRequest request);
+
+    /**
+     * Checks to see if PIN for smartcard is correct.
+     * If so, proceed to attempt authentication.
+     * Otherwise, handle the incorrect PIN based on how many PIN attempts are remaining.
+     * @param pin char array containing PIN attempt.
+     * @param certDetails ICertDetails of the selected certificate from the SmartcardCertPickerDialog.
+     * @param request ClientCertRequest received from AzureActiveDirectoryWebViewClient.onReceivedClientCertRequest.
+     * @param session An ISmartcardSession created to help with interactions pertaining to certificates.
+     */
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    protected void tryUsingSmartcardWithPin(@NonNull final char[] pin,
+                                            @NonNull final ICertDetails certDetails,
+                                            @NonNull final ClientCertRequest request,
+                                            @NonNull final ISmartcardSession session)
+            throws Exception {
+        final String methodTag = TAG + ":tryUsingSmartcardWithPin";
+        if (session.verifyPin(pin)) {
+            //If pin is successfully verified, we will use the certificate to perform the rest of the logic for authentication.
+            useSmartcardCertForAuth(certDetails, pin, session, request);
+            return;
+        }
+        final int attemptsRemaining = session.getPinAttemptsRemaining();
+        onPausedSmartcardDiscovery();
+        if (attemptsRemaining == 0) {
+            promptTooManyFailedPinAttempts(methodTag);
+            request.cancel();
+            return;
+        }
+        setPinDialogForIncorrectAttempt(certDetails, request);
+    }
+
+    /**
+     * Shows PIN dialog, if not already showing, and sets dialog to error mode.
+     * @param certDetails ICertDetails of the selected certificate from the SmartcardCertPickerDialog.
+     * @param request ClientCertRequest received from AzureActiveDirectoryWebViewClient.onReceivedClientCertRequest.
+     */
+    protected abstract void setPinDialogForIncorrectAttempt(@NonNull final ICertDetails certDetails,
+                                                            @NonNull final ClientCertRequest request);
 
     /**
      * Authenticates using smartcard certificate.
