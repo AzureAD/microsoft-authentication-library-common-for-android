@@ -285,7 +285,7 @@ public class UiAutomatorUtils {
         try {
             button.click();
         } catch (final UiObjectNotFoundException e) {
-            Logger.i(TAG, "Button " + resourceId + " was not found: " + e.getMessage());
+            Logger.w(TAG, "Button " + resourceId + " was not found: " + e.getMessage());
         }
     }
 
@@ -318,6 +318,22 @@ public class UiAutomatorUtils {
             button.click();
         } catch (final UiObjectNotFoundException e) {
             throw new AssertionError(e);
+        }
+    }
+
+    /**
+     * Clicks the button element associated to the supplied text.
+     * Do not throw an exception if the button is not found.
+     *
+     * @param text the text on the button to click
+     */
+    public static void handleButtonClickForObjectWithTextSafely(@NonNull final String text) {
+        final UiObject button = obtainUiObjectWithText(text);
+
+        try {
+            button.click();
+        } catch (final UiObjectNotFoundException e) {
+            Logger.w(TAG, "Button with text \"" + text + "\" was not found: " + e.getMessage());
         }
     }
 
