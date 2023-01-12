@@ -36,7 +36,5 @@ public enum SpanName {
     DoDiscovery,
     WorkplaceLeave,
     DeviceState,
-    MSAL_AcquireTokenInteractive,
-    MSAL_AcquireTokenSilent,
     MSAL_PerformIpcStrategy,
 }
