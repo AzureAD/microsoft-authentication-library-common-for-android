@@ -20,7 +20,7 @@ jobs:
   displayName: Publish  ${{ parameters.project }} to internal feed
   cancelTimeoutInMinutes: 1
   pool:
-    name: 1ES-AndroidPool-EOC
+    name: 1ES-AndroidPool-EOC-Test
   steps:
   - checkout: self
     clean: true
@@ -50,19 +50,19 @@ jobs:
       spotbugsCommand: ${{ parameters.spotbugsCommand }}
       ${{ if ne(parameters.spotbugsCwdRoot, 'none') }}:
         cwd: ${{ parameters.spotbugsCwdRoot }}
-  - task: PublishPipelineArtifact@1
-    displayName: 'Publish lint report'
-    inputs:
-      targetPath: $(Build.SourcesDirectory)/${{ parameters.project }}/build/reports
-      ArtifactName: Lint Report and Spotbugs
-  - task: PublishPipelineArtifact@1
-    displayName: 'Publish Artifact: ${{ parameters.project }} Release'
-    inputs:
-      ArtifactName: ${{ parameters.project }}Release
-      TargetPath:  $(Build.SourcesDirectory)/${{ parameters.project }}/build
-  - task: Gradle@2
-    displayName: Publish to VSTS
-    inputs:
-      tasks: ${{ parameters.project }}:${{ parameters.publishTask }}
-      publishJUnitResults: false
+#  - task: PublishPipelineArtifact@1
+#    displayName: 'Publish lint report'
+#    inputs:
+#      targetPath: $(Build.SourcesDirectory)/${{ parameters.project }}/build/reports
+#      ArtifactName: Lint Report and Spotbugs
+#  - task: PublishPipelineArtifact@1
+#    displayName: 'Publish Artifact: ${{ parameters.project }} Release'
+#    inputs:
+#      ArtifactName: ${{ parameters.project }}Release
+#      TargetPath:  $(Build.SourcesDirectory)/${{ parameters.project }}/build
+#  - task: Gradle@2
+#    displayName: Publish to VSTS
+#    inputs:
+#      tasks: ${{ parameters.project }}:${{ parameters.publishTask }}
+#      publishJUnitResults: false
 ...
