@@ -41,6 +41,7 @@ import java.util.Calendar;
 import java.util.concurrent.TimeUnit;
 
 import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT_LONG;
+import static com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils.handleButtonClick;
 import static com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils.obtainUiObjectWithExactText;
 
 /**
@@ -344,5 +345,22 @@ public class GoogleSettings extends BaseSettings {
         }
     }
 
+    @Override
+    public void disableAppThroughSettings(@NonNull final String packageName) {
+        Logger.i(TAG, "Disabling app through settings: " + packageName);
+        launchAppInfoPage(packageName);
+        // This is the id for the disable button
+        handleButtonClick("com.android.settings:id/button2");
+        // Confirm disabling app
+        handleButtonClick("android:id/button1");
+    }
+
+    @Override
+    public void enableAppThroughSettings(@NonNull final String packageName) {
+        Logger.i(TAG, "Enabling app through settings");
+        launchAppInfoPage(packageName);
+        // This is the id for the enable button
+        handleButtonClick("com.android.settings:id/button2");
+    }
 }
 

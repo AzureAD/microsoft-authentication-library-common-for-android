@@ -78,5 +78,15 @@ public enum AttributeName {
     /**
      * Indicates which CBA flow the user intended to select.
      */
-    cert_based_auth_user_choice
+    cert_based_auth_user_choice,
+
+    /**
+     * The type of the error. Generally the class name of an exception.
+     */
+    error_type,
+
+    /**
+     * An error code.
+     */
+    error_code
 }

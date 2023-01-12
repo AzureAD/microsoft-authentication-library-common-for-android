@@ -1,7 +1,14 @@
 V.Next
 ----------
 
+V.9.1.0
+----------
+- [MINOR] Convert crypto operation spans into metrics (#1909)
+- [PATCH] Move clearClientCertPreferences to onCreateView only (#1915)
 
+V.9.0.1
+----------
+- [PATCH] Moving ClearClientCertPreferences back to onCreate and handleBackButtonPressed (#1908)
 
 V.9.0.0
 ----------
