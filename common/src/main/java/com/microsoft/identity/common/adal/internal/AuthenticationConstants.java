@@ -579,6 +579,8 @@ public final class AuthenticationConstants {
          */
         public static final String BROKER_VERSION = "broker.version";
 
+        public static final String UPLOAD_BROKER_LOGS_SUCCEEDED = "upload_broker_logs_succeeded";
+
         /**
          * String of broker package name.
          */
@@ -1283,6 +1285,19 @@ public final class AuthenticationConstants {
         public static final String AUTH_SCHEME_PARAMS_POP = "pop_parameters";
 
         /**
+         * The Bundle key name of incidentId for powerlift incident
+         */
+        public static final String POWERLIFT_INCIDENT_ID = "powerLiftincidentId";
+        /**
+         * The Bundle key name of powerliftApiKey for uploading powerlift incident
+         */
+        public static final String POWERLIFT_API_KEY = "powerLiftApiKey";
+        /**
+         * The Bundle key name of tenantId  for uploading powerlift incident
+         */
+        public static final String POWERLIFT_TENANT_ID = "powerLiftTenantId";
+
+        /**
          * Bundle identifiers for x-ms-clitelem info.
          */
         public static final class CliTelemInfo {
@@ -1417,6 +1432,7 @@ public final class AuthenticationConstants {
             SIGN_OUT_FROM_SHARED_DEVICE(MSAL_SIGN_OUT_FROM_SHARED_DEVICE_PATH, null, VERSION_3),
             GENERATE_SHR(GENERATE_SHR_PATH, null, VERSION_6),
             BROKER_HELLO(BROKER_API_HELLO_PATH, BROKER_VERSION_1, null),
+            BROKER_UPLOAD_LOGS(BROKER_API_UPLOAD_LOGS,null, VERSION_7),
             BROKER_GET_ACCOUNTS(BROKER_API_GET_BROKER_ACCOUNTS_PATH, BROKER_VERSION_1, null),
             BROKER_REMOVE_ACCOUNT(BROKER_API_REMOVE_BROKER_ACCOUNT_PATH, BROKER_VERSION_1, null),
             BROKER_UPDATE_BRT(BROKER_API_UPDATE_BRT_PATH, BROKER_VERSION_1, null),
@@ -1488,6 +1504,8 @@ public final class AuthenticationConstants {
          * URI Path constant for BrokerApi-to-Broker hello request using ContentProvider.
          */
         public static final String BROKER_API_HELLO_PATH = "/brokerApi/hello";
+
+        public static final String BROKER_API_UPLOAD_LOGS = "/brokerApi/uploadBrokerLogs";
 
         /**
          * URI Path constant for BrokerApi-to-Broker getBrokerAccounts request using ContentProvider.
