@@ -77,6 +77,8 @@ public class JweResponse {
 
     String mAuthenticationTag;
 
+    String mAuthenticationData;
+
     public JweHeader getJweHeader() {
         return mJweHeader;
     }
@@ -97,6 +99,10 @@ public class JweResponse {
         return mAuthenticationTag;
     }
 
+    public String getAuthenticationData() {
+        return mAuthenticationData;
+    }
+
     public static JweResponse parseJwe(String jwe) throws JSONException {
         final Span span = SpanExtension.current();
         JweResponse response = new JweResponse();
@@ -113,6 +119,7 @@ public class JweResponse {
         response.mEncryptedKey = split[1];
         response.mIv = split[2];
         response.mPayload = split[3];
+        response.mAuthenticationData = header;
 
         if (split.length > 4) {
             response.mAuthenticationTag = split[4];

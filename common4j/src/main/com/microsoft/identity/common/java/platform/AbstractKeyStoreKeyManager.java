@@ -299,4 +299,23 @@ public abstract class AbstractKeyStoreKeyManager<K extends KeyStore.Entry> imple
         final Base64URL thumbprint = rsaKey.computeThumbprint();
         return thumbprint.toString();
     }
+
+    /**
+     * Given a {@link RSAKey}, compute its thumbprint.
+     *
+     * @param keyPair the {@link KeyPair}
+     * @return the thumbprint of the key
+     * @throws JOSEException if an error occurs while computing thumbprint
+     */
+    public static String getThumbprintForKeyPair(@NonNull KeyPair keyPair) throws ClientException {
+        final RSAKey rsaKey = getRsaKeyForKeyPair(keyPair);
+        try {
+            final Base64URL thumbprint = rsaKey.computeThumbprint();
+            return thumbprint.toString();
+        } catch (JOSEException e) {
+            throw new ClientException("JOSEException", e.getMessage());
+        }
+
+
+    }
 }

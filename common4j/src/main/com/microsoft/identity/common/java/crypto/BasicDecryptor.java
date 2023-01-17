@@ -31,11 +31,15 @@ import com.microsoft.identity.common.java.opentelemetry.ICryptoOperation;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.Key;
+import java.security.spec.MGF1ParameterSpec;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.OAEPParameterSpec;
+import javax.crypto.spec.PSource;
 
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
@@ -52,7 +56,9 @@ public class BasicDecryptor implements IDecryptor {
     public byte[] decrypt(@NonNull final Key key,
                           @NonNull final String decryptAlgorithm,
                           final byte[] iv,
-                          byte[] dataToBeDecrypted) throws ClientException {
+                          final byte[] dataToBeDecrypted,
+                          final byte[] tag,
+                          final byte[] aad) throws ClientException {
         return performCryptoOperationAndUploadTelemetry(
                 CryptoObjectName.Cipher,
                 decryptAlgorithm,

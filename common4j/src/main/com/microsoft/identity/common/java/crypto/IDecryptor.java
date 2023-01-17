@@ -48,5 +48,8 @@ public interface IDecryptor {
     byte[] decrypt(@NonNull final Key key,
                    @NonNull final String decryptAlgorithm,
                    final byte[] iv,
-                   final byte[] dataToBeDecrypted) throws ClientException;
+                   final byte[] dataToBeDecrypted,
+                   final byte[] tag,
+                   final byte[] aad
+                   ) throws ClientException;
 }
