@@ -580,6 +580,9 @@ public final class AuthenticationConstants {
          */
         public static final String BROKER_VERSION = "broker.version";
 
+        /**
+         * String of broker log upload result.
+         */
         public static final String UPLOAD_BROKER_LOGS_RESULT = "upload_broker_logs_result";
 
         /**
@@ -1287,15 +1290,15 @@ public final class AuthenticationConstants {
         public static final String AUTH_SCHEME_PARAMS_POP = "pop_parameters";
 
         /**
-         * The Bundle key name of incidentId for powerlift incident
+         * The Bundle key name of incidentId for powerlift incident.
          */
         public static final String POWERLIFT_INCIDENT_ID = "powerLiftincidentId";
         /**
-         * The Bundle key name of powerliftApiKey for uploading powerlift incident
+         * The Bundle key name of powerliftApiKey for uploading powerlift incident.
          */
         public static final String POWERLIFT_API_KEY = "powerLiftApiKey";
         /**
-         * The Bundle key name of tenantId  for uploading powerlift incident
+         * The Bundle key name of tenantId  for uploading powerlift incident.
          */
         public static final String POWERLIFT_TENANT_ID = "powerLiftTenantId";
 
@@ -1433,7 +1436,6 @@ public final class AuthenticationConstants {
             SIGN_OUT_FROM_SHARED_DEVICE(MSAL_SIGN_OUT_FROM_SHARED_DEVICE_PATH, null, VERSION_3),
             GENERATE_SHR(GENERATE_SHR_PATH, null, VERSION_6),
             BROKER_HELLO(BROKER_API_HELLO_PATH, BROKER_VERSION_1, null),
-            BROKER_UPLOAD_LOGS(BROKER_API_UPLOAD_LOGS, BROKER_VERSION_4, null),
             BROKER_GET_ACCOUNTS(BROKER_API_GET_BROKER_ACCOUNTS_PATH, BROKER_VERSION_1, null),
             BROKER_REMOVE_ACCOUNT(BROKER_API_REMOVE_BROKER_ACCOUNT_PATH, BROKER_VERSION_1, null),
             BROKER_UPDATE_BRT(BROKER_API_UPDATE_BRT_PATH, BROKER_VERSION_1, null),
@@ -1442,6 +1444,7 @@ public final class AuthenticationConstants {
             GET_SSO_TOKEN(GET_SSO_TOKEN_PATH, null, VERSION_7),
             UNKNOWN(null, null, null),
             DEVICE_REGISTRATION_PROTOCOLS(DEVICE_REGISTRATION_PROTOCOLS_PATH, null, null),
+            BROKER_UPLOAD_LOGS(BROKER_API_UPLOAD_LOGS, BROKER_VERSION_4, null)
             ;
             /**
              * The content provider path that the API exists behind.
