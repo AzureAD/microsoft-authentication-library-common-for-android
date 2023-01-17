@@ -43,7 +43,7 @@ public final class AuthenticationConstants {
     /**
      * The logging tag for this class.
      */
-    private static final String TAG =  AuthenticationConstants.class.getSimpleName();
+    private static final String TAG = AuthenticationConstants.class.getSimpleName();
 
     /**
      * ADAL package name.
@@ -91,6 +91,7 @@ public final class AuthenticationConstants {
     public static final String ONE_POINT_ZERO = "1.0";
     public static final String TWO_POINT_ZERO = "2.0";
     public static final String THREE_POINT_ZERO = "3.0";
+    public static final String FOUR_POINT_ZERO = "4.0";
 
 
     /**
@@ -579,7 +580,7 @@ public final class AuthenticationConstants {
          */
         public static final String BROKER_VERSION = "broker.version";
 
-        public static final String UPLOAD_BROKER_LOGS_SUCCEEDED = "upload_broker_logs_succeeded";
+        public static final String UPLOAD_BROKER_LOGS_RESULT = "upload_broker_logs_result";
 
         /**
          * String of broker package name.
@@ -598,6 +599,7 @@ public final class AuthenticationConstants {
 
         /**
          * The newest Msal-To-Broker protocol version.
+         *
          * @see <a href="ttps://identitydivision.visualstudio.com/DevEx/_git/AuthLibrariesApiReview?path=/%5BAndroid%5D%20Broker%20API/broker_protocol_versions.md">Android Auth Broker Protocol Versions</a>
          */
         public static final String MSAL_TO_BROKER_PROTOCOL_VERSION_CODE = "11.0";
@@ -607,7 +609,7 @@ public final class AuthenticationConstants {
          */
         public static final String SSO_TOKEN_CLIENT_ID = "broker.sso.clientId";
 
-         /**
+        /**
          * The key indicating that this is an ssoUrl parameter in a Bundle.
          */
         public static final String BROKER_SSO_URL_KEY = "ssoUrl";
@@ -1409,14 +1411,13 @@ public final class AuthenticationConstants {
         private static final String VERSION_7 = "7.0";
         private static final String BROKER_VERSION_1 = ONE_POINT_ZERO;
         private static final String BROKER_VERSION_3 = THREE_POINT_ZERO;
+        private static final String BROKER_VERSION_4 = FOUR_POINT_ZERO;
 
         /**
          * Tie the API paths and codes into a single object structure to stop us from having to keep
          * them in sync.  This is designed to pull all the parts of the API definition into a single
          * place, so that we only need to make updates in one location, and it's clearer what we need
          * to do when adding new APIs.
-         *
-         *
          */
         @Getter
         @Accessors(prefix = "m")
@@ -1432,7 +1433,7 @@ public final class AuthenticationConstants {
             SIGN_OUT_FROM_SHARED_DEVICE(MSAL_SIGN_OUT_FROM_SHARED_DEVICE_PATH, null, VERSION_3),
             GENERATE_SHR(GENERATE_SHR_PATH, null, VERSION_6),
             BROKER_HELLO(BROKER_API_HELLO_PATH, BROKER_VERSION_1, null),
-            BROKER_UPLOAD_LOGS(BROKER_API_UPLOAD_LOGS,null, VERSION_7),
+            BROKER_UPLOAD_LOGS(BROKER_API_UPLOAD_LOGS, BROKER_VERSION_4, null),
             BROKER_GET_ACCOUNTS(BROKER_API_GET_BROKER_ACCOUNTS_PATH, BROKER_VERSION_1, null),
             BROKER_REMOVE_ACCOUNT(BROKER_API_REMOVE_BROKER_ACCOUNT_PATH, BROKER_VERSION_1, null),
             BROKER_UPDATE_BRT(BROKER_API_UPDATE_BRT_PATH, BROKER_VERSION_1, null),
@@ -1455,6 +1456,7 @@ public final class AuthenticationConstants {
              */
             private String mMsalVersion;
         }
+
         /**
          * URI Path constant for MSAL-to-Broker hello request using ContentProvider.
          */
@@ -1694,7 +1696,7 @@ public final class AuthenticationConstants {
          * Custom Tabs does not provide a mechanism to programmtically close custom tabs... hence we have to make this happen via the activity used
          * to launch custom tabs and intent flags to clear the task.
          */
-        public static final String REFRESH_TO_CLOSE= "refresh_to_close";
+        public static final String REFRESH_TO_CLOSE = "refresh_to_close";
     }
 
     public static final class TelemetryEvents {
