@@ -1,5 +1,6 @@
 V.Next
 ----------
+- [MINOR] Write back read successes to cache and stop extra lookups in getAll #1927
 
 V.9.1.0
 ----------
