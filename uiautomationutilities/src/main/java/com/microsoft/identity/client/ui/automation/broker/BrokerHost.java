@@ -359,8 +359,16 @@ public class BrokerHost extends AbstractTestBroker {
         UiAutomatorUtils.handleInput("com.microsoft.identity.testuserapp:id/editTextFlights", flightsJson);
         // Click Set Flights button
         UiAutomatorUtils.handleButtonClick("com.microsoft.identity.testuserapp:id/overwriteFlightsButton");
-        // Confirm flight was set successfully
+        // Confirm flight was set successfully popup
         Assert.assertTrue(UiAutomatorUtils.obtainUiObjectWithText("Flight set in broker host.").exists());
+        UiAutomatorUtils.handleButtonClick("android:id/button1");
+
+        // Sleep for a second after flight overwrite
+        try {
+            Thread.sleep(TimeUnit.SECONDS.toMillis(1));
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -381,6 +389,16 @@ public class BrokerHost extends AbstractTestBroker {
         UiAutomatorUtils.handleInput("com.microsoft.identity.testuserapp:id/editTextFlights", flightsJson);
         // Click Set Flights button
         UiAutomatorUtils.handleButtonClick("com.microsoft.identity.testuserapp:id/setFlightsButton");
+        // Confirm flight was added successfully popup
+        Assert.assertTrue(UiAutomatorUtils.obtainUiObjectWithText("Add flights succeeded.").exists());
+        UiAutomatorUtils.handleButtonClick("android:id/button1");
+
+        // Sleep for a second after flight set
+        try {
+            Thread.sleep(TimeUnit.SECONDS.toMillis(1));
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
 
