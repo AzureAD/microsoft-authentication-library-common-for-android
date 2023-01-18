@@ -1,5 +1,6 @@
 V.Next
 ----------
+- [MINOR] Remove unnecessary synchronization when storage access is already guarded (#1928)
 
 V.9.1.0
 ----------
