@@ -1365,7 +1365,7 @@ public final class AuthenticationConstants {
 
         public static final String ACQUIRE_TOKEN_SILENT = "ACQUIRE_TOKEN_SILENT";
 
-        public static final String FETCH_DCF_AUTH_RESULT_PATH = "FETCH_DCF_AUTH_RESULT_PATH";
+        public static final String FETCH_DCF_AUTH_RESULT = "FETCH_DCF_AUTH_RESULT";
 
         public static final String ACQUIRE_TOKEN_DCF = "ACQUIRE_TOKEN_DCF";
 
@@ -1419,7 +1419,7 @@ public final class AuthenticationConstants {
             MSAL_HELLO(MSAL_HELLO_PATH, null, VERSION_3),
             ACQUIRE_TOKEN_INTERACTIVE(MSAL_ACQUIRE_TOKEN_INTERACTIVE_PATH, null, VERSION_3),
             ACQUIRE_TOKEN_SILENT(MSAL_ACQUIRE_TOKEN_SILENT_PATH, null, VERSION_3),
-            FETCH_DCF_AUTH_RESULT_PATH(MSAL_FETCH_DCF_AUTH_RESULT_PATH, null, VERSION_3),
+            FETCH_DCF_AUTH_RESULT(MSAL_FETCH_DCF_AUTH_RESULT_PATH, null, VERSION_3),
             ACQUIRE_TOKEN_DCF(MSAL_ACQUIRE_TOKEN_DCF_PATH, null, VERSION_3),
             GET_ACCOUNTS(MSAL_GET_ACCOUNTS_PATH, null, VERSION_3),
             REMOVE_ACCOUNT(MSAL_REMOVE_ACCOUNT_PATH, null, VERSION_3),

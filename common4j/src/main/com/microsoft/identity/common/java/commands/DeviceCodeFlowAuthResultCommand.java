@@ -31,11 +31,9 @@ import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
 import lombok.NonNull;
 
 /**
- * This command is used to execute the device code flow protocol.
+ * This command is used in the Device Code Flow (DCF) protocol to fetch DCF code.
  * Takes in a parameters object containing the  desired access scopes along and returns
- * a token result.
- * Class also includes some pre-defined error codes and messages to be used in
- * exception handling.
+ * authorization result.
  */
 public class DeviceCodeFlowAuthResultCommand extends BaseCommand<AuthorizationResult> {
     private static final String TAG = DeviceCodeFlowAuthResultCommand.class.getSimpleName();

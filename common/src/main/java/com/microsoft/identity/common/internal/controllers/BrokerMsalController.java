@@ -435,6 +435,7 @@ public class BrokerMsalController extends BaseController {
 
     // Suppressing rawtype warnings due to the generic type AuthorizationResult
     @SuppressWarnings(WarningType.rawtype_warning)
+    // After IPC, we check if FlightNames.ENABLE_NGMS_FLOW is false, and throw "DCF not supported" exception
     @Override
     public AuthorizationResult deviceCodeFlowAuthRequest(final DeviceCodeFlowCommandParameters parameters)
             throws BaseException, ClientException {
@@ -486,10 +487,11 @@ public class BrokerMsalController extends BaseController {
                 });
     }
 
+    // After IPC, we check if FlightNames.ENABLE_NGMS_FLOW is false, and throw "DCF not supported" exception
     public AcquireTokenResult acquireDeviceCodeFlowToken(
             @SuppressWarnings(WarningType.rawtype_warning) final AuthorizationResult authorizationResult,
             final DeviceCodeFlowCommandParameters parameters)
-            throws BaseException {
+            throws BaseException, ClientException {
 
         // IPC to Broker : AcquireTokenWithDCF API in Broker
         return mBrokerOperationExecutor.execute(parameters,

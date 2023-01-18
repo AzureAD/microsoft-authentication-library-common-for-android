@@ -22,9 +22,6 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.commands.parameters;
 
-import com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache;
-import com.microsoft.identity.common.java.exception.ArgumentException;
-
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.experimental.SuperBuilder;
@@ -42,9 +39,4 @@ public class DeviceCodeFlowCommandParameters extends TokenCommandParameters {
     private final String brokerVersion;
     private final String negotiatedBrokerProtocolVersion;
     private final String callerPackageName;
-
-    @Override
-    public void validate() throws ArgumentException {
-        super.validate();
-    }
 }

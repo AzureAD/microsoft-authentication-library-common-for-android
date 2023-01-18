@@ -32,11 +32,9 @@ import com.microsoft.identity.common.java.result.AcquireTokenResult;
 import lombok.NonNull;
 
 /**
- * This command is used to execute the device code flow protocol.
+ * This command is used in the Device Code Flow (DCF) protocol to acquire token.
  * Takes in a parameters object containing the  desired access scopes along and returns
  * a token result.
- * Class also includes some pre-defined error codes and messages to be used in
- * exception handling.
  */
 public class DeviceCodeFlowTokenResultCommand extends TokenCommand{
     private static final String TAG = DeviceCodeFlowTokenResultCommand.class.getSimpleName();

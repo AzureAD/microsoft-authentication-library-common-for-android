@@ -23,8 +23,6 @@
 
 package com.microsoft.identity.common.internal.request;
 
-import android.os.Bundle;
-
 import com.microsoft.identity.common.internal.broker.BrokerRequest;
 import com.microsoft.identity.common.java.commands.parameters.DeviceCodeFlowCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCommandParameters;
@@ -37,5 +35,4 @@ public interface IBrokerRequestAdapter {
     BrokerRequest brokerRequestFromSilentOperationParameters(SilentTokenCommandParameters parameters);
 
     BrokerRequest brokerRequestFromDeviceCodeFlowCommandParameters(DeviceCodeFlowCommandParameters parameters);
-
 }

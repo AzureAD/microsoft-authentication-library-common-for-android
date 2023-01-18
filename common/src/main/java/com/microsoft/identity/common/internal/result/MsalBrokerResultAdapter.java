@@ -182,6 +182,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
 
         final Bundle resultBundle = bundleFromBrokerResult(builder.build(), negotiatedBrokerProtocolVersion);
         resultBundle.putBoolean(AuthenticationConstants.Broker.BROKER_REQUEST_V2_SUCCESS, false);
+
         return resultBundle;
     }
 

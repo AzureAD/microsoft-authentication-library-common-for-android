@@ -245,7 +245,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
     }
 
     /**
-     * Method to construct a request bundle for broker acquireTokenSilent request.
+     * Method to construct a request bundle for broker deviceCodeFlowAuthRequest request.
      *
      * @param context                         {@link Context}
      * @param parameters                      input parameters
@@ -275,7 +275,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
     }
 
     /**
-     * Method to construct a request bundle for broker acquireTokenSilent request.
+     * Method to construct a request bundle for broker acquireDeviceCodeFlowToken request.
      *
      * @param context                         {@link Context}
      * @param parameters                      input parameters
@@ -303,7 +303,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         );
 
         MicrosoftStsAuthorizationResult microsoftStsAuthorizationResult= (MicrosoftStsAuthorizationResult) authorizationResult;
-        requestBundle.putString("authorizationResultBundle", ObjectMapper.serializeObjectToJsonString(microsoftStsAuthorizationResult));
+        requestBundle.putString(AuthenticationConstants.Broker.BROKER_DCF_AUTH_RESULT, ObjectMapper.serializeObjectToJsonString(microsoftStsAuthorizationResult));
 
         return requestBundle;
     }
