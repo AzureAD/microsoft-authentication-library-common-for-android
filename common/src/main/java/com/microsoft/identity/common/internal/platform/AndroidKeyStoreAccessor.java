@@ -94,6 +94,8 @@ public class AndroidKeyStoreAccessor {
             return getKeyAccessor((IDevicePopManager.Cipher) suite.cipher(), suite.signingAlgorithm(), popManager);
         }
         final KeyStore instance = KeyStore.getInstance(ANDROID_KEYSTORE);
+        instance.load(null);
+
         final AndroidDeviceKeyManager<KeyStore.SecretKeyEntry> keyManager = new AndroidDeviceKeyManager<>(instance, alias);
         return new AndroidSecretKeyAccessor(keyManager, suite) {
             @Override
@@ -193,6 +195,11 @@ public class AndroidKeyStoreAccessor {
         return getKeyAccessor(cipher, signingAlg, popManager);
     }
 
+    public static IKeyAccessor newInstance(@NonNull final SymmetricCipher cipher, @NonNull final boolean needRawAccess)
+            throws InvalidAlgorithmParameterException, CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException, ClientException, NoSuchProviderException {
+        return newInstance(cipher, needRawAccess, UUID.randomUUID().toString());
+    }
+
     /**
      * Construct an accessor for a KeyStore backed entry using a random alias.
      *
@@ -204,10 +211,11 @@ public class AndroidKeyStoreAccessor {
      * @throws KeyStoreException
      * @throws IOException
      */
-    public static IKeyAccessor newInstance(@NonNull final SymmetricCipher cipher, @NonNull final boolean needRawAccess)
+    public static IKeyAccessor newInstance(@NonNull final SymmetricCipher cipher,
+                                           @NonNull final boolean needRawAccess,
+                                           @NonNull final String alias)
             throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException, ClientException,
             NoSuchProviderException, InvalidAlgorithmParameterException {
-        final String alias = UUID.randomUUID().toString();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !needRawAccess) {
             final KeyStore instance = KeyStore.getInstance(ANDROID_KEYSTORE);
             instance.load(null);

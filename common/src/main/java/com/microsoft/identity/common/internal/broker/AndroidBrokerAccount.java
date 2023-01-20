@@ -62,6 +62,12 @@ public class AndroidBrokerAccount implements IBrokerAccount {
         return mAccount.name;
     }
 
+    @Override
+    @NonNull
+    public String getType() {
+        return mAccount.type;
+    }
+
     /**
      * Logs and throw {@link ClassCastException} if it fails to parse.
      */

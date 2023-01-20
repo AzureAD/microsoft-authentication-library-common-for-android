@@ -31,4 +31,10 @@ public interface IBrokerAccount {
      * */
     @NonNull
     String getUsername();
+
+    /**
+     * Get account's type.
+     * */
+    @NonNull
+    String getType();
 }

@@ -22,18 +22,19 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.crypto;
 
+import static com.microsoft.identity.common.java.AuthenticationConstants.ENCODING_UTF8;
+
 import com.microsoft.identity.common.java.exception.ClientException;
 
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 
-import static com.microsoft.identity.common.java.AuthenticationConstants.ENCODING_UTF8;
-
 /**
  * Add helper functions which takes in parameter or produce results in a ready-to-store (String) form.
+ * Kept for backward compatibilty. For post migration, use Base64KeyAccessorStringAdapter instead.
  */
 @AllArgsConstructor
-public class KeyAccessorStringAdapter {
+public class UTF8KeyAccessorStringAdapter implements IKeyAccessorStringAdapter {
 
     private final IKeyAccessor mKeyAcccesor;
 
