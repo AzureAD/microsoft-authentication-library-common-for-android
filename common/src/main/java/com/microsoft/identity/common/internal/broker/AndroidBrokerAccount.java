@@ -47,6 +47,7 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 @Accessors(prefix = "m")
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @EqualsAndHashCode
+@Deprecated
 public class AndroidBrokerAccount implements IBrokerAccount {
     private static final String TAG = AndroidBrokerAccount.class.getSimpleName();
 
@@ -68,6 +69,7 @@ public class AndroidBrokerAccount implements IBrokerAccount {
         return mAccount.type;
     }
 
+    // TODO: we need to get rid of this if we want to move away from account mgr.
     /**
      * Logs and throw {@link ClassCastException} if it fails to parse.
      */
