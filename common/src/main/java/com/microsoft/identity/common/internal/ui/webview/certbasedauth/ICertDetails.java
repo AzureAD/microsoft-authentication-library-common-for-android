@@ -20,28 +20,22 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.ui.webview.challengehandlers;
-
-import android.webkit.ClientCertRequest;
+package com.microsoft.identity.common.internal.ui.webview.certbasedauth;
 
 import androidx.annotation.NonNull;
 
-import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
+import java.security.cert.X509Certificate;
 
 /**
- * ChallengeHandler extended interface specifically for certificate based authentication (CBA)
- *  implementations.
+ * Holds X509Certificate and other important details that may be implementation specific.
  */
-public interface ICertBasedAuthChallengeHandler extends IChallengeHandler<ClientCertRequest, Void> {
-    
-    /**
-     * Emit telemetry for results from certificate based authentication (CBA) if CBA occurred.
-     * @param response a RawAuthorizationResult object received upon a challenge response received.
-     */
-    void emitTelemetryForCertBasedAuthResults(@NonNull final RawAuthorizationResult response);
+public interface ICertDetails {
 
     /**
-     * Clean up logic to run when ICertBasedAuthChallengeHandler is no longer going to be used.
+     * Gets certificate.
+     * @return certificate.
      */
-    void cleanUp();
+    @NonNull
+    X509Certificate getCertificate();
+
 }

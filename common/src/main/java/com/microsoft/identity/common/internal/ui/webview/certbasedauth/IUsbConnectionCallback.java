@@ -20,14 +20,14 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.ui.webview.challengehandlers;
+package com.microsoft.identity.common.internal.ui.webview.certbasedauth;
 
 /**
- * Callback methods to be run upon initial connection of a smartcard device.
+ * Callback methods to be run upon initial usb connection and disconnection of a smartcard device.
  */
-public interface IConnectionCallback {
+public interface IUsbConnectionCallback extends IConnectionCallback {
     /**
-     * Logic to be run upon initial connection of a smartcard device.
+     * Logic to be run upon disconnection of a smartcard device via usb.
      */
-    void onCreateConnection();
+    void onClosedConnection();
 }
