@@ -37,6 +37,7 @@ import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.marker.CodeMarkerManager;
 import com.microsoft.identity.common.java.marker.PerfConstants;
+import com.microsoft.identity.common.java.opentelemetry.AttributeName;
 import com.microsoft.identity.common.java.opentelemetry.OTelUtility;
 import com.microsoft.identity.common.java.opentelemetry.SpanName;
 import com.microsoft.identity.common.java.util.StringUtil;
@@ -222,7 +223,7 @@ public class BrokerOperationExecutor {
         final Span span = OTelUtility.createSpan(SpanName.MSAL_PerformIpcStrategy.name());
 
         try (final Scope scope = span.makeCurrent()) {
-            span.setAttribute("strategy", strategy.getType().name());
+            span.setAttribute(AttributeName.ipc_strategy.name(), strategy.getType().name());
             operation.performPrerequisites(strategy);
             final BrokerOperationBundle brokerOperationBundle = operation.getBundle();
             final Bundle resultBundle = strategy.communicateToBroker(brokerOperationBundle);
