@@ -126,7 +126,7 @@ public class OTelUtility {
         if (span instanceof ReadableSpan) {
             return ((ReadableSpan) span).getName();
         }
-        return "null";
+        return "";
     }
 
 }
