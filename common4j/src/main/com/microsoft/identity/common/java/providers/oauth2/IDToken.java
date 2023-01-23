@@ -241,7 +241,7 @@ public class IDToken {
                     e
             );
 
-            throw new ServiceException("Failed to parse JWT", ErrorStrings.INVALID_JWT, e);
+            throw new ServiceException(ErrorStrings.INVALID_JWT, "Failed to parse JWT", e);
         }
 
         return result;
