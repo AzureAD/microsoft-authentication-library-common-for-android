@@ -365,6 +365,16 @@ public class ClientException extends BaseException {
     public static final String KEY_RING_READ_FAILURE = "storage_keyring_read_failure";
 
     /**
+     * The powerLift log upload operation failed.
+     */
+    public static final String LOG_UPLOAD_FAILURE = "log_upload_failure";
+
+    /**
+     * The powerLift api key is invalid (empty/null).
+     */
+    public static final String INVALID_POWERLIFT_API_KEY = "invalid_powerlift_api_key";
+
+    /**
      * Constructor of ClientException.
      *
      * @param errorCode String

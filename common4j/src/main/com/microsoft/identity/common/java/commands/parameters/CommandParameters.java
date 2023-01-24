@@ -25,6 +25,7 @@ package com.microsoft.identity.common.java.commands.parameters;
 import com.google.gson.annotations.Expose;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
+import com.microsoft.identity.common.java.opentelemetry.SerializableSpanContext;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2TokenCache;
 import com.microsoft.identity.common.java.request.SdkType;
 
@@ -86,4 +87,7 @@ public class CommandParameters {
     @EqualsAndHashCode.Exclude
     @Expose()
     private String correlationId;
+
+    @Expose()
+    private SerializableSpanContext spanContext;
 }

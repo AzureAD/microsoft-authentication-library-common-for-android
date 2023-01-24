@@ -61,4 +61,10 @@ public interface IMicrosoftStsLoginComponentHandler extends IOAuth2LoginComponen
      * @param staySignedInResponse denotes whether to accept or decline the staySignedIn prompt.
      */
     void handleStaySignedIn(UiResponse staySignedInResponse);
+
+    /**
+     * Clicks the call option in the verify your identity page to allow auto mfa account to proceed with
+     * interactive request.
+     */
+    void handleVerifyYourIdentity();
 }

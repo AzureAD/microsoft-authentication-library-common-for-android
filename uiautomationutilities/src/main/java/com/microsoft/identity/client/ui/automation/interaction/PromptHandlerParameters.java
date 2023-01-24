@@ -123,6 +123,12 @@ public class PromptHandlerParameters {
     private final boolean staySignedInPageExpected;
 
     /**
+     * Denotes whether or not the Verify Your Identity page is expected to appear during an interactive
+     * token request
+     */
+    private final boolean verifyYourIdentityPageExpected;
+
+    /**
      * Denotes the way in which we want to respond to the enroll page for this request.
      */
     @Builder.Default

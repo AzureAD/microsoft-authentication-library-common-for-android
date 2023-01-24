@@ -96,6 +96,9 @@ public class RulesHelper {
         Log.i(TAG, "Adding RemoveBrokersBeforeTestRule");
         ruleChain = ruleChain.around(new RemoveBrokersBeforeTestRule());
 
+        Log.i(TAG, "Adding RemoveFirstPartyAppsTestRule");
+        ruleChain = ruleChain.around(new RemoveFirstPartyAppsTestRule());
+
         if (broker != null) {
             Log.i(TAG, "Adding BrokerSupportRule");
             ruleChain = ruleChain.around(new BrokerSupportRule(broker));
