@@ -83,7 +83,7 @@ public class ClientException extends BaseException {
     public static final String SCOPE_EMPTY_OR_NULL = "scope_empty_or_null";
 
     /**
-     * Emitted when the device Token is not present in successful response
+     * Emitted when the device Token is not present in successful response.
      */
     public static final String DEVICE_TOKEN_EMPTY_OR_NULL = "device_token_empty_or_null";
 
