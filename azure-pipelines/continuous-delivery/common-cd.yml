@@ -66,7 +66,6 @@ jobs:
   dependsOn:
   - keyvault_phase
   - labapi_phase
-  - common_phase
   steps:
   - template: ../templates/steps/continuous-delivery/assemble-publish-projversion.yml
     parameters:
@@ -78,7 +77,6 @@ jobs:
   displayName: 'UI Automation utilities: Build, Test and Publish'
   dependsOn:
   - testutils_phase
-  - common_phase
   steps:
   - template: ../templates/steps/continuous-delivery/assemble-publish-projversion.yml
     parameters:
