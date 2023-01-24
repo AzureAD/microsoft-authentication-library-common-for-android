@@ -9,6 +9,7 @@ V.9.1.0
 ----------
 - [MINOR] Convert crypto operation spans into metrics (#1909)
 - [PATCH] Move clearClientCertPreferences to onCreateView only (#1915)
+- [MINOR] Propagate span context from MSAL to Broker (#1926)
 
 V.9.0.1
 ----------
