@@ -153,7 +153,7 @@ public class ClientException extends BaseException {
      * Unsupported url, cannot perform adfs authority validation.
      */
     public static final String UNSUPPORTED_URL = "unsupported_url";
-    
+
     /**
      * The authority is not supported for authority validation. The sdk supports b2c authority, but we don't support b2c authority validation yet.
      * Only well-known host will be supported.
