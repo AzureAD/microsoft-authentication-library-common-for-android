@@ -24,6 +24,8 @@ package com.microsoft.identity.common.java.opentelemetry;
 
 import com.google.gson.annotations.SerializedName;
 
+import java.io.Serializable;
+
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.TraceFlags;
 import io.opentelemetry.api.trace.TraceState;
@@ -37,7 +39,7 @@ import lombok.experimental.Accessors;
  */
 @Builder
 @Accessors(prefix = "m")
-public class SerializableSpanContext implements SpanContext {
+public class SerializableSpanContext implements SpanContext, Serializable {
 
     public static class SerializedNames {
         public static final String TRACE_ID = "trace_id";
