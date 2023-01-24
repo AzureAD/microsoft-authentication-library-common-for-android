@@ -75,8 +75,9 @@ public class MicrosoftAuthClient extends BoundServiceClient<IMicrosoftAuthServic
     }
 
     @Override
-    @Nullable Bundle performOperationInternal(@NonNull final BrokerOperationBundle brokerOperationBundle,
-                                              @NonNull final IMicrosoftAuthService microsoftAuthService)
+    @NonNull
+    Bundle performOperationInternal(@NonNull final BrokerOperationBundle brokerOperationBundle,
+                                    @NonNull final IMicrosoftAuthService microsoftAuthService)
             throws RemoteException, BrokerCommunicationException {
 
         final Bundle inputBundle = brokerOperationBundle.getBundle();

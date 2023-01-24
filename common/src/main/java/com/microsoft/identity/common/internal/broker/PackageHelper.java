@@ -125,7 +125,7 @@ public class PackageHelper {
      * @param packageName the package name to look up.
      * @return true if the package is installed and enabled. Otherwise, returns false.
      */
-    public boolean isPackageInstalledAndEnabled(final Context context, final String packageName) {
+    public static boolean isPackageInstalledAndEnabled(final Context context, final String packageName) {
         final String methodTag = TAG + ":isPackageInstalledAndEnabled";
         boolean enabled = false;
         PackageManager pm = context.getPackageManager();

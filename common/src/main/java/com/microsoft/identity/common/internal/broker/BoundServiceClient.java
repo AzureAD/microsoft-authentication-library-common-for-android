@@ -67,14 +67,16 @@ public abstract class BoundServiceClient<T extends IInterface> {
     /**
      * Perform the given operation with the given .aidl {@link IInterface}
      */
-    abstract @Nullable Bundle performOperationInternal(@NonNull final BrokerOperationBundle inputBundle,
-                                                       @NonNull final T aidlInterface) throws RemoteException, BrokerCommunicationException;
+    @NonNull
+    abstract Bundle performOperationInternal(@NonNull final BrokerOperationBundle inputBundle,
+                                             @NonNull final T aidlInterface) throws RemoteException, BrokerCommunicationException;
 
     /**
      * Extracts {@link IInterface} from a given {@link IBinder}
      * i.e. T.Stub.asInterface(binder), where T is an .aidl {@link IInterface}.
      */
-    abstract @NonNull T getInterfaceFromIBinder(@NonNull final IBinder binder);
+    @NonNull
+    abstract T getInterfaceFromIBinder(@NonNull final IBinder binder);
 
     /**
      * BoundServiceClient's constructor.
@@ -115,7 +117,8 @@ public abstract class BoundServiceClient<T extends IInterface> {
      * @param inputBundle a {@link BrokerOperationBundle} containing a request bundle.
      * @return a bundle that contains a response from the AIDL service.
      */
-    public @Nullable Bundle performOperation(@NonNull final BrokerOperationBundle inputBundle)
+    @NonNull
+    public Bundle performOperation(@NonNull final BrokerOperationBundle inputBundle)
             throws RemoteException, BrokerCommunicationException, InterruptedException, ExecutionException, TimeoutException {
         final T aidlInterface = connect(inputBundle.getTargetBrokerAppPackageName());
         return performOperationInternal(inputBundle, aidlInterface);
@@ -126,7 +129,8 @@ public abstract class BoundServiceClient<T extends IInterface> {
      *
      * @param targetServicePackageName Package name of the app this client will talk to.
      */
-    protected @NonNull T connect(@NonNull final String targetServicePackageName)
+    @NonNull
+    protected T connect(@NonNull final String targetServicePackageName)
             throws BrokerCommunicationException, InterruptedException, TimeoutException, ExecutionException {
         final String methodTag = TAG + ":connect";
 

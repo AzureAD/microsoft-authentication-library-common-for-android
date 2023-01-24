@@ -83,21 +83,19 @@ public class BrokerAccountServiceClient extends BoundServiceClient<IBrokerAccoun
     }
 
     @Override
-    public @Nullable Bundle performOperationInternal(@NonNull BrokerOperationBundle brokerOperationBundle,
-                                                     @NonNull IBrokerAccountService brokerAccountService)
+    @NonNull
+    public Bundle performOperationInternal(@NonNull BrokerOperationBundle brokerOperationBundle,
+                                           @NonNull IBrokerAccountService brokerAccountService)
             throws RemoteException, BrokerCommunicationException {
         final Bundle inputBundle = brokerOperationBundle.getBundle();
-        switch (brokerOperationBundle.getOperation()) {
-            case BROKER_GET_KEY_FROM_INACTIVE_BROKER:
-                return brokerAccountService.getInactiveBrokerKey(inputBundle);
-
-            default:
-                throw new BrokerCommunicationException(
-                        OPERATION_NOT_SUPPORTED_ON_CLIENT_SIDE,
-                        BOUND_SERVICE,
-                        "Operation not supported. Wrong BoundServiceClient used.",
-                        null);
+        if (brokerOperationBundle.getOperation() == BrokerOperationBundle.Operation.BROKER_GET_KEY_FROM_INACTIVE_BROKER) {
+            return brokerAccountService.getInactiveBrokerKey(inputBundle);
         }
+        throw new BrokerCommunicationException(
+                OPERATION_NOT_SUPPORTED_ON_CLIENT_SIDE,
+                BOUND_SERVICE,
+                "Operation not supported. Wrong BoundServiceClient used.",
+                null);
     }
 }
 

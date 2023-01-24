@@ -57,8 +57,8 @@ public class ContentProviderStrategy implements IIpcStrategy {
     }
 
     @Override
-    @Nullable
-    public Bundle communicateToBroker(final @NonNull BrokerOperationBundle brokerOperationBundle)
+    @NonNull
+    public @lombok.NonNull Bundle communicateToBroker(final @NonNull BrokerOperationBundle brokerOperationBundle)
             throws BrokerCommunicationException {
         final String methodTag = TAG + ":communicateToBroker";
         final String operationName = brokerOperationBundle.getOperation().name();
@@ -94,7 +94,7 @@ public class ContentProviderStrategy implements IIpcStrategy {
                 final Bundle resultBundle = cursor.getExtras();
 
                 if (resultBundle == null) {
-                    final String message = "Received an empty bundle. This means the operation is not supported on the other side. " +
+                    final String message = "Received no bundle. This means the operation is not supported on the other side. " +
                             "If you're using a newer feature, please bump the minimum protocol version.";
                     Logger.error(methodTag, message, null);
                     throw new BrokerCommunicationException(OPERATION_NOT_SUPPORTED_ON_SERVER_SIDE, getType(), message, null);

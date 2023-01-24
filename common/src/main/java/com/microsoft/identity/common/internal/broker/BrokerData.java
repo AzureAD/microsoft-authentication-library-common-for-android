@@ -29,6 +29,7 @@ import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.java.exception.ClientException;
 
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -47,7 +48,7 @@ import lombok.ToString;
  * Represents packageName and SignatureHash of a broker app.
  */
 @ToString
-public class BrokerData {
+public class BrokerData implements Serializable {
 
     public static final BrokerData MICROSOFT_AUTHENTICATOR_DEBUG = new BrokerData(
             AZURE_AUTHENTICATOR_APP_PACKAGE_NAME,
@@ -69,9 +70,27 @@ public class BrokerData {
             BROKER_HOST_APP_SIGNATURE
     );
 
+    public static final BrokerData MOCK_LTW = new BrokerData(
+            "com.microsoft.mockltw",
+            BROKER_HOST_APP_SIGNATURE
+    );
+
+    public static final BrokerData MOCK_CP = new BrokerData(
+            "com.microsoft.mockcp",
+            BROKER_HOST_APP_SIGNATURE
+    );
+
+    public static final BrokerData MOCK_AUTHAPP = new BrokerData(
+            "com.microsoft.mockauthapp",
+            BROKER_HOST_APP_SIGNATURE
+    );
+
     private static final Set<BrokerData> DEBUG_BROKERS = Collections.unmodifiableSet(new HashSet<BrokerData>() {{
         add(MICROSOFT_AUTHENTICATOR_DEBUG);
         add(BROKER_HOST);
+        add(MOCK_LTW);
+        add(MOCK_CP);
+        add(MOCK_AUTHAPP);
     }});
 
     private static final Set<BrokerData> PROD_BROKERS = Collections.unmodifiableSet(new HashSet<BrokerData>() {{
@@ -87,7 +106,7 @@ public class BrokerData {
     public final String packageName;
     public final String signatureHash;
 
-    private BrokerData(@NonNull final String packageName,
+    public BrokerData(@NonNull final String packageName,
                        @NonNull final String hash) {
         this.packageName = packageName;
         this.signatureHash = hash;

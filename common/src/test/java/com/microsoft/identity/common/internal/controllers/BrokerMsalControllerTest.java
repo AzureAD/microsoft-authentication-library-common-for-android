@@ -76,8 +76,8 @@ public class BrokerMsalControllerTest {
             @Override
             protected List<IIpcStrategy> getIpcStrategies(Context applicationContext, String activeBrokerPackageName) {
                 return Collections.<IIpcStrategy>singletonList(new IIpcStrategy() {
-                    @Nullable
                     @Override
+                    @NonNull
                     public Bundle communicateToBroker(@NonNull BrokerOperationBundle bundle) throws BrokerCommunicationException {
                         Bundle retBundle = new Bundle();
                         if (bundle.getOperation().equals(BrokerOperationBundle.Operation.MSAL_HELLO)) {

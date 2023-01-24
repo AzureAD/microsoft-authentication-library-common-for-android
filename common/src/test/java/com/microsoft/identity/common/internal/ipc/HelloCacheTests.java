@@ -167,7 +167,9 @@ public class HelloCacheTests {
         class MockStrategy implements IIpcStrategy {
             int triggered = 0;
 
-            @Nullable @Override public Bundle communicateToBroker(@NonNull BrokerOperationBundle bundle) throws BrokerCommunicationException {
+            @Override
+            @NonNull
+            public Bundle communicateToBroker(@NonNull BrokerOperationBundle bundle) throws BrokerCommunicationException {
                 triggered += 1;
                 if (triggered == 2) {
                     Assert.fail("Should never be triggered");

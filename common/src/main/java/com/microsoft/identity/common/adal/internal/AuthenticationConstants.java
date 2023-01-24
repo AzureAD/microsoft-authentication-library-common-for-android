@@ -1425,6 +1425,7 @@ public final class AuthenticationConstants {
             GET_SSO_TOKEN(GET_SSO_TOKEN_PATH, null, VERSION_7),
             UNKNOWN(null, null, null),
             DEVICE_REGISTRATION_PROTOCOLS(DEVICE_REGISTRATION_PROTOCOLS_PATH, null, null),
+            BROKER_METADATA_DISCOVERY(BROKER_METADATA_DISCOVERY_PATH, null, null),
             ;
             /**
              * The content provider path that the API exists behind.
@@ -1523,6 +1524,11 @@ public final class AuthenticationConstants {
          * Broker api path constant for execute device registration protocols.
          */
         public static final String DEVICE_REGISTRATION_PROTOCOLS_PATH = "/deviceRegistration/protocols";
+
+        /**
+         * Broker api path constant for execute device registration protocols.
+         */
+        public static final String BROKER_METADATA_DISCOVERY_PATH = "/brokerDiscovery";
 
         /**
          * BrokerContentProvider URI code constant for MSAL-to-Broker hello request.
