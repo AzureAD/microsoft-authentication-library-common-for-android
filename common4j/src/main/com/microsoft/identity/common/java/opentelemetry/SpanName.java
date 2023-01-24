@@ -37,5 +37,6 @@ public enum SpanName {
     WorkplaceLeave,
     DeviceState,
     UploadBrokerLogs,
-    InitializePowerLift
+    InitializePowerLift,
+    MSAL_PerformIpcStrategy
 }
