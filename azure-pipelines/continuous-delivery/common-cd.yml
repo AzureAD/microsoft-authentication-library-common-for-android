@@ -19,29 +19,6 @@ variables:
 pool:
   name: Hosted Windows 2019 with VS2019
 jobs:
-# common4j
-- job: common4j_phase
-  displayName: 'common4j: Build, Test and Publish'
-  steps:
-  - template: ../templates/steps/continuous-delivery/assemble-publish-projversion.yml
-    parameters:
-      project: common4j
-      buildArguments: '-PprojVersion=$(versionNumber)'
-      artifactFolder: 'common4j/build/outputs'
-# common
-- job: common_phase
-  displayName: 'common: Build, Test and Publish'
-  dependsOn:
-  - common4j_phase
-  steps:
-  - template: ../templates/steps/automation-cert.yml
-    parameters:
-      envVstsMvnAt: ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN
-  - template: ../templates/steps/continuous-delivery/assemble-publish-projversion.yml
-    parameters:
-      project: common
-      buildArguments: '-PprojVersion=$(versionNumber) -PdistCommon4jVersion=$(versionNumber)'
-      artifactFolder: 'common/build/outputs'
 # Key Vault
 - job: keyvault_phase
   displayName: 'Key Vault: Build, Test and Publish'
