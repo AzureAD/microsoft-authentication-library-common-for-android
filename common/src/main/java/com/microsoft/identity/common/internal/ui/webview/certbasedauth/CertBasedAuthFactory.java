@@ -31,6 +31,7 @@ import androidx.annotation.RequiresApi;
 
 import com.microsoft.identity.common.java.opentelemetry.CertBasedAuthChoice;
 import com.microsoft.identity.common.java.opentelemetry.CertBasedAuthTelemetryHelper;
+import com.microsoft.identity.common.java.opentelemetry.ICertBasedAuthTelemetryHelper;
 
 /**
  * Instantiates handlers for certificate based authentication.
@@ -42,7 +43,7 @@ public class CertBasedAuthFactory {
     private final Activity mActivity;
     private final AbstractUsbSmartcardCertBasedAuthManager mUsbSmartcardCertBasedAuthManager;
     private final AbstractNfcSmartcardCertBasedAuthManager mNfcSmartcardCertBasedAuthManager;
-    private final DialogHolder mDialogHolder;
+    private final IDialogHolder mDialogHolder;
 
     /**
      * Creates an instance of CertBasedAuthFactory.
@@ -65,7 +66,7 @@ public class CertBasedAuthFactory {
      * @param callback logic to run after a ICertBasedAuthChallengeHandler is chosen.
      */
     public void createCertBasedAuthChallengeHandler(@NonNull final CertBasedAuthChallengeHandlerCallback callback) {
-        final CertBasedAuthTelemetryHelper telemetryHelper = new CertBasedAuthTelemetryHelper();
+        final ICertBasedAuthTelemetryHelper telemetryHelper = new CertBasedAuthTelemetryHelper();
         telemetryHelper.setUserChoice(CertBasedAuthChoice.NON_APPLICABLE);
         telemetryHelper.setCertBasedAuthChallengeHandler(NON_APPLICABLE);
 
@@ -113,7 +114,7 @@ public class CertBasedAuthFactory {
      * @param telemetryHelper CertBasedAuthTelemetryHelper instance.
      */
     private void onCancelHelper(@NonNull final CertBasedAuthChallengeHandlerCallback callback,
-                                @NonNull final CertBasedAuthTelemetryHelper telemetryHelper) {
+                                @NonNull final ICertBasedAuthTelemetryHelper telemetryHelper) {
         mDialogHolder.dismissDialog();
         telemetryHelper.setResultFailure(USER_CANCEL_MESSAGE);
         callback.onReceived(null);
@@ -127,7 +128,7 @@ public class CertBasedAuthFactory {
      * @param telemetryHelper CertBasedAuthTelemetryHelper instance.
      */
     private void setUpForSmartcardCertBasedAuth(@NonNull final CertBasedAuthChallengeHandlerCallback callback,
-                                                @NonNull final CertBasedAuthTelemetryHelper telemetryHelper) {
+                                                @NonNull final ICertBasedAuthTelemetryHelper telemetryHelper) {
         //If smartcard is already plugged in, go straight to cert picker.
         if (mUsbSmartcardCertBasedAuthManager != null
                 && mUsbSmartcardCertBasedAuthManager.isDeviceConnected()) {
@@ -146,7 +147,8 @@ public class CertBasedAuthFactory {
                 @Override
                 public void onClick() {
                     //If smartcard is already plugged in, go straight to cert picker.
-                    if (mUsbSmartcardCertBasedAuthManager.isDeviceConnected()) {
+                    if (mUsbSmartcardCertBasedAuthManager != null
+                    && mUsbSmartcardCertBasedAuthManager.isDeviceConnected()) {
                         callback.onReceived(new UsbSmartcardCertBasedAuthChallengeHandler(
                                 mActivity,
                                 mUsbSmartcardCertBasedAuthManager,
@@ -168,7 +170,7 @@ public class CertBasedAuthFactory {
      * @param telemetryHelper CertBasedAuthTelemetryHelper instance.
      */
     private void showSmartcardPromptDialogAndSetConnectionCallback(@NonNull final CertBasedAuthChallengeHandlerCallback challengeHandlerCallback,
-                                                                   @NonNull final CertBasedAuthTelemetryHelper telemetryHelper) {
+                                                                   @NonNull final ICertBasedAuthTelemetryHelper telemetryHelper) {
         mDialogHolder.showSmartcardPromptDialog(new SmartcardPromptDialog.CancelCbaCallback() {
             @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
             @Override

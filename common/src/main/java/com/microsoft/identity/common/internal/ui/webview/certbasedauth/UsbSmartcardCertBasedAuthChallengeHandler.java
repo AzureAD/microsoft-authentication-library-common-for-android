@@ -30,7 +30,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 
 import com.microsoft.identity.common.R;
-import com.microsoft.identity.common.java.opentelemetry.CertBasedAuthTelemetryHelper;
+import com.microsoft.identity.common.java.opentelemetry.ICertBasedAuthTelemetryHelper;
 import com.microsoft.identity.common.logging.Logger;
 
 /**
@@ -49,8 +49,8 @@ public class UsbSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
      */
     public UsbSmartcardCertBasedAuthChallengeHandler(@NonNull final Activity activity,
                                                      @NonNull final AbstractUsbSmartcardCertBasedAuthManager usbSmartcardCertBasedAuthManager,
-                                                     @NonNull final DialogHolder dialogHolder,
-                                                     @NonNull final CertBasedAuthTelemetryHelper telemetryHelper) {
+                                                     @NonNull final IDialogHolder dialogHolder,
+                                                     @NonNull final ICertBasedAuthTelemetryHelper telemetryHelper) {
         super(activity, usbSmartcardCertBasedAuthManager, dialogHolder, telemetryHelper, UsbSmartcardCertBasedAuthChallengeHandler.class.getSimpleName());
         final String methodTag = TAG + ":UsbSmartcardCertBasedAuthChallengeHandler";
         mCbaManager.setConnectionCallback(new IUsbConnectionCallback() {

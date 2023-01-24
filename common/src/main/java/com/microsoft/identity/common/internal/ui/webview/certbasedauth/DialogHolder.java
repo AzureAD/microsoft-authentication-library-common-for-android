@@ -37,7 +37,7 @@ import java.util.List;
  * Builds and shows SmartcardDialog instances while keeping track of the current dialog being shown to the user.
  */
 @ThreadSafe
-public class DialogHolder {
+public class DialogHolder implements IDialogHolder {
     //Current host activity.
     private final Activity mActivity;
     //The current dialog that is showing, if any.

@@ -23,52 +23,33 @@
 package com.microsoft.identity.common.java.opentelemetry;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.StatusCode;
 import lombok.NonNull;
 
 /**
  * Assists classes associated with Certificate Based Authentication (CBA) with
  *  telemetry-related tasks.
  */
-public class CertBasedAuthTelemetryHelper implements ICertBasedAuthTelemetryHelper{
-
-    private final Span mSpan;
-
-    public CertBasedAuthTelemetryHelper() {
-        mSpan = OTelUtility.createSpan(SpanName.CertBasedAuth.name());
-    }
+public interface ICertBasedAuthTelemetryHelper {
 
     /**
      * Sets attribute that indicates the ICertBasedAuthChallengeHandler handling the current CBA flow.
      * @param challengeHandlerName name of the ICertBasedAuthChallengeHandler class.
      */
-    public void setCertBasedAuthChallengeHandler(@NonNull final String challengeHandlerName) {
-        mSpan.setAttribute(
-                AttributeName.cert_based_auth_challenge_handler.name(),
-                challengeHandlerName);
-    }
+    void setCertBasedAuthChallengeHandler(@NonNull final String challengeHandlerName);
 
     /**
      * Sets attribute that indicates if a PivProvider instance is already present in the
      *  Java Security static list upon adding a new instance.
      * @param present true if PivProvider instance present; false otherwise.
      */
-    public void setExistingPivProviderPresent(final boolean present) {
-        mSpan.setAttribute(
-                AttributeName.cert_based_auth_existing_piv_provider_present.name(),
-                present);
-    }
+    void setExistingPivProviderPresent(final boolean present);
 
     /**
      * Indicates on the Span that CBA was successful and then ends current Span.
      */
     //Suppressing warnings for RETURN_VALUE_IGNORED_NO_SIDE_EFFECT
     @SuppressFBWarnings
-    public void setResultSuccess() {
-        mSpan.setStatus(StatusCode.OK);
-        mSpan.end();
-    }
+    void setResultSuccess();
 
     /**
      * Indicates on the Span that CBA failed and then ends current Span.
@@ -78,10 +59,7 @@ public class CertBasedAuthTelemetryHelper implements ICertBasedAuthTelemetryHelp
      */
     //Suppressing warnings for RETURN_VALUE_IGNORED_NO_SIDE_EFFECT
     @SuppressFBWarnings
-    public void setResultFailure(@NonNull final String message) {
-        mSpan.setStatus(StatusCode.ERROR, message);
-        mSpan.end();
-    }
+    void setResultFailure(@NonNull final String message);
 
     /**
      * Indicates on the Span that CBA failed and then ends current Span.
@@ -89,32 +67,11 @@ public class CertBasedAuthTelemetryHelper implements ICertBasedAuthTelemetryHelp
      */
     //Suppressing warnings for RETURN_VALUE_IGNORED_NO_SIDE_EFFECT
     @SuppressFBWarnings
-    public void setResultFailure(@NonNull final Exception exception) {
-        mSpan.recordException(exception);
-        mSpan.setStatus(StatusCode.ERROR);
-        mSpan.end();
-    }
+    void setResultFailure(@NonNull final Exception exception);
 
     /**
      * Sets attribute that indicates the user's intended choice for CBA (smartcard or on-device).
      * @param choice enum indicating user's intended choice for CBA.
      */
-    public void setUserChoice(@NonNull final CertBasedAuthChoice choice) {
-        switch(choice) {
-            case ON_DEVICE_CHOICE:
-                mSpan.setAttribute(
-                        AttributeName.cert_based_auth_user_choice.name(),
-                        "on-device");
-                break;
-            case SMARTCARD_CHOICE:
-                mSpan.setAttribute(
-                        AttributeName.cert_based_auth_user_choice.name(),
-                        "smartcard");
-                break;
-            default:
-                mSpan.setAttribute(
-                        AttributeName.cert_based_auth_user_choice.name(),
-                        "N/A");
-        }
-    }
+    void setUserChoice(@NonNull final CertBasedAuthChoice choice);
 }

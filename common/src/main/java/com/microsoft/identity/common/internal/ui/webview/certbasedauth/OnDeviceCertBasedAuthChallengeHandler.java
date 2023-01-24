@@ -33,7 +33,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 
 import com.microsoft.identity.common.java.exception.BaseException;
-import com.microsoft.identity.common.java.opentelemetry.CertBasedAuthTelemetryHelper;
+import com.microsoft.identity.common.java.opentelemetry.ICertBasedAuthTelemetryHelper;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.logging.Logger;
 
@@ -49,7 +49,7 @@ public class OnDeviceCertBasedAuthChallengeHandler implements ICertBasedAuthChal
     private static final String TAG = OnDeviceCertBasedAuthChallengeHandler.class.getSimpleName();
     private static final String ACCEPTABLE_ISSUER = "CN=MS-Organization-Access";
     private final Activity mActivity;
-    private final CertBasedAuthTelemetryHelper mTelemetryHelper;
+    private final ICertBasedAuthTelemetryHelper mTelemetryHelper;
     private boolean mIsOnDeviceCertBasedAuthProceeding;
 
     /**
@@ -58,7 +58,7 @@ public class OnDeviceCertBasedAuthChallengeHandler implements ICertBasedAuthChal
      * @param telemetryHelper CertBasedAuthTelemetryHelder instance.
      */
     public OnDeviceCertBasedAuthChallengeHandler(@NonNull final Activity activity,
-                                                 @NonNull final CertBasedAuthTelemetryHelper telemetryHelper) {
+                                                 @NonNull final ICertBasedAuthTelemetryHelper telemetryHelper) {
         mActivity = activity;
         mTelemetryHelper = telemetryHelper;
         mTelemetryHelper.setCertBasedAuthChallengeHandler(TAG);

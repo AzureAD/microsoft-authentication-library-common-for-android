@@ -30,7 +30,7 @@ import android.webkit.ClientCertRequest;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 
-import com.microsoft.identity.common.java.opentelemetry.CertBasedAuthTelemetryHelper;
+import com.microsoft.identity.common.java.opentelemetry.ICertBasedAuthTelemetryHelper;
 import com.microsoft.identity.common.logging.Logger;
 import com.yubico.yubikit.android.transport.usb.UsbConfiguration;
 import com.yubico.yubikit.android.transport.usb.UsbYubiKeyDevice;
@@ -160,7 +160,7 @@ public class YubiKitUsbSmartcardCertBasedAuthManager extends AbstractUsbSmartcar
      * @param telemetryHelper CertBasedAuthTelemetryHelper instance.
      */
     @Override
-    void initBeforeProceedingWithRequest(@NonNull CertBasedAuthTelemetryHelper telemetryHelper) {
+    void initBeforeProceedingWithRequest(@NonNull ICertBasedAuthTelemetryHelper telemetryHelper) {
         YubiKeyPivProviderManager.addPivProvider(telemetryHelper, getPivProviderCallback());
     }
 

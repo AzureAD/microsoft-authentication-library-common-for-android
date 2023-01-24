@@ -30,7 +30,7 @@ import android.webkit.ClientCertRequest;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 
-import com.microsoft.identity.common.java.opentelemetry.CertBasedAuthTelemetryHelper;
+import com.microsoft.identity.common.java.opentelemetry.ICertBasedAuthTelemetryHelper;
 import com.microsoft.identity.common.logging.Logger;
 import com.yubico.yubikit.android.transport.nfc.NfcConfiguration;
 import com.yubico.yubikit.android.transport.nfc.NfcNotAvailable;
@@ -164,7 +164,7 @@ public class YubiKitNfcSmartcardCertBasedAuthManager extends AbstractNfcSmartcar
      * @param telemetryHelper CertBasedAuthTelemetryHelper instance.
      */
     @Override
-    void initBeforeProceedingWithRequest(@NonNull CertBasedAuthTelemetryHelper telemetryHelper) {
+    void initBeforeProceedingWithRequest(@NonNull ICertBasedAuthTelemetryHelper telemetryHelper) {
         //Need to add a PivProvider instance to the beginning of the array of Security providers in order for signature logic to occur.
         //Note that this provider is removed when the UsbYubiKeyDevice connection is closed.
         YubiKeyPivProviderManager.addPivProvider(telemetryHelper, getPivProviderCallback());
