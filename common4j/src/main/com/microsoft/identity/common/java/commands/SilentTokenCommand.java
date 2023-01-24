@@ -30,10 +30,16 @@ import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.exception.UiRequiredException;
 import com.microsoft.identity.common.java.logging.Logger;
+import com.microsoft.identity.common.java.opentelemetry.AttributeName;
+import com.microsoft.identity.common.java.opentelemetry.OTelUtility;
+import com.microsoft.identity.common.java.opentelemetry.SpanName;
 import com.microsoft.identity.common.java.result.AcquireTokenResult;
 
 import java.util.List;
 
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.context.Scope;
 import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 
@@ -63,46 +69,60 @@ public class SilentTokenCommand extends TokenCommand {
         AcquireTokenResult result = null;
         final String methodName = ":execute";
 
-        for (int ii = 0; ii < this.getControllers().size(); ii++) {
-            final BaseController controller = this.getControllers().get(ii);
+        final Span span = OTelUtility.createSpan(SpanName.AcquireTokenSilent.name());
+        span.setAttribute(AttributeName.application_name.name(), getParameters().getApplicationName());
+        span.setAttribute(AttributeName.public_api_id.name(), getPublicApiId());
 
-            try {
-                Logger.verbose(
-                        TAG + methodName,
-                        "Executing with controller: "
-                                + controller.getClass().getSimpleName()
-                );
+        try (final Scope scope = span.makeCurrent()) {
+            for (int ii = 0; ii < this.getControllers().size(); ii++) {
+                final BaseController controller = this.getControllers().get(ii);
 
-                result = controller.acquireTokenSilent(
-                        (SilentTokenCommandParameters) getParameters()
-                );
+                span.setAttribute(AttributeName.controller_name.name(), controller.getClass().getSimpleName());
 
-                if (result.getSucceeded()) {
+                try {
                     Logger.verbose(
                             TAG + methodName,
                             "Executing with controller: "
                                     + controller.getClass().getSimpleName()
-                                    + ": Succeeded"
                     );
 
-                    return result;
-                }
-            } catch (UiRequiredException | ClientException e) {
-                if (e.getErrorCode().equals(OAuth2ErrorCode.INVALID_GRANT) // was invalid_grant
-                        && this.getControllers().size() > ii + 1) { // isn't the last controller we can try
-                    continue;
-                } else if ((e.getErrorCode().equals(ErrorStrings.NO_TOKENS_FOUND)
-                        || e.getErrorCode().equals(ErrorStrings.NO_ACCOUNT_FOUND))
-                        && this.getControllers().size() > ii + 1) {
-                    //if no token or account for this silent call, we should continue to the next silent call.
-                    continue;
-                } else {
-                    throw e;
+                    result = controller.acquireTokenSilent(
+                            (SilentTokenCommandParameters) getParameters()
+                    );
+
+                    if (result.getSucceeded()) {
+                        Logger.verbose(
+                                TAG + methodName,
+                                "Executing with controller: "
+                                        + controller.getClass().getSimpleName()
+                                        + ": Succeeded"
+                        );
+
+                        return result;
+                    }
+                } catch (UiRequiredException | ClientException e) {
+                    if (e.getErrorCode().equals(OAuth2ErrorCode.INVALID_GRANT) // was invalid_grant
+                            && this.getControllers().size() > ii + 1) { // isn't the last controller we can try
+                        continue;
+                    } else if ((e.getErrorCode().equals(ErrorStrings.NO_TOKENS_FOUND)
+                            || e.getErrorCode().equals(ErrorStrings.NO_ACCOUNT_FOUND))
+                            && this.getControllers().size() > ii + 1) {
+                        //if no token or account for this silent call, we should continue to the next silent call.
+                        continue;
+                    } else {
+                        throw e;
+                    }
                 }
             }
-        }
 
-        return result;
+            return result;
+        } catch (final Throwable throwable) {
+            span.setStatus(StatusCode.ERROR);
+            span.recordException(throwable);
+            throw throwable;
+        } finally {
+            span.end();
+        }
     }
 
     @Override
