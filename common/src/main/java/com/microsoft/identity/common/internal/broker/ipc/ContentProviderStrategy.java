@@ -58,7 +58,7 @@ public class ContentProviderStrategy implements IIpcStrategy {
 
     @Override
     @NonNull
-    public @lombok.NonNull Bundle communicateToBroker(final @NonNull BrokerOperationBundle brokerOperationBundle)
+    public Bundle communicateToBroker(final @NonNull BrokerOperationBundle brokerOperationBundle)
             throws BrokerCommunicationException {
         final String methodTag = TAG + ":communicateToBroker";
         final String operationName = brokerOperationBundle.getOperation().name();
