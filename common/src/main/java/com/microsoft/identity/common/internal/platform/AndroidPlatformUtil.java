@@ -38,9 +38,9 @@ import android.os.SystemClock;
 import com.microsoft.identity.common.adal.internal.net.DefaultConnectionService;
 import com.microsoft.identity.common.internal.broker.BrokerValidator;
 import com.microsoft.identity.common.internal.broker.IntuneMAMEnrollmentIdGateway;
-import com.microsoft.identity.common.java.commands.InteractiveTokenCommand;
 import com.microsoft.identity.common.internal.ui.webview.WebViewUtil;
 import com.microsoft.identity.common.java.commands.ICommand;
+import com.microsoft.identity.common.java.commands.InteractiveTokenCommand;
 import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCommandParameters;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
@@ -170,6 +170,12 @@ public class AndroidPlatformUtil implements IPlatformUtil {
         return KeyManagerFactory.getInstance("X509");
     }
 
+    @Nullable
+    @Override
+    public String getPackageNameFromUid(int uid) {
+        return mContext.getPackageManager().getNameForUid(uid);
+    }
+
     /**
      * This method optionally re-orders tasks to bring the task that launched
      * the interactive activity to the foreground. This is useful when the activity provided
@@ -182,7 +188,7 @@ public class AndroidPlatformUtil implements IPlatformUtil {
     private void optionallyReorderTasks(@NonNull final ICommand<?> command) {
         final String methodTag = TAG + ":optionallyReorderTasks";
         if (command instanceof InteractiveTokenCommand) {
-            if (mActivity == null){
+            if (mActivity == null) {
                 throw new IllegalStateException("Activity cannot be null in an interactive session.");
             }
 

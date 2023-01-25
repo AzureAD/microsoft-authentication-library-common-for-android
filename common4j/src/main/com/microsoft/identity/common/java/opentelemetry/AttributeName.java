@@ -72,5 +72,10 @@ public enum AttributeName {
     /**
      * An error code.
      */
-    error_code
+    error_code,
+
+    /**
+     * The IPC strategy being used.
+     */
+    ipc_strategy,
 }
