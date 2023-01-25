@@ -364,6 +364,11 @@ public class ClientException extends BaseException {
     public static final String INVALID_POWERLIFT_API_KEY = "invalid_powerlift_api_key";
 
     /**
+     * The broker log upload feature is disabled.
+     */
+    public static final String LOG_UPLOAD_TO_POWERLIFT_FEATURE_DISABLED = "log_upload_to_powerlift_feature_disabled";
+
+    /**
      * Constructor of ClientException.
      *
      * @param errorCode String
