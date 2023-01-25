@@ -87,6 +87,9 @@ class BrokerOperationBundle (val operation: Operation,
         ),
         MSAL_BROKER_DISCOVERY(
             BrokerApi.BROKER_DISCOVERY, null
+        ),
+        BROKER_SET_ACTIVE_BROKER(
+            BrokerApi.BROKER_SET_ACTIVE_BROKER, null
         );
     }
 

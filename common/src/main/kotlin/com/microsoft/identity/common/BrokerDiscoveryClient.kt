@@ -28,15 +28,16 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
 
         const val ACTIVE_BROKER_PACKAGE_NAME_BUNDLE_KEY = "ACTIVE_BROKER_PACKAGE_NAME_BUNDLE_KEY"
         const val ACTIVE_BROKER_SIGNATURE_HASH_BUNDLE_KEY = "ACTIVE_BROKER_SIGNATURE_HASH_BUNDLE_KEY"
+        const val ERROR_BUNDLE_KEY = "ERROR_BUNDLE_KEY"
 
+        // TODO: add tests on this.
         fun getActiveBrokerFromAccountManagerFunc(context: Context) : () -> BrokerData? {
             return {
                 val activeBroker = BrokerValidator(context).currentActiveBrokerPackageName
-                if (activeBroker != null){
+                activeBroker?.let {
                     BrokerData(activeBroker,
                         PackageHelper(context.packageManager).getCurrentSignatureForPackage(activeBroker))
                 }
-                null
             }
         }
 
@@ -56,8 +57,13 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
                         Bundle()
                     )
                     val result = ipcStrategy.communicateToBroker(operationBundle)
+                    if (isErrorBundle(result)) {
+                        throw result.getSerializable(ERROR_BUNDLE_KEY) as Throwable
+                    }
+
                     val packageName = result.getString(ACTIVE_BROKER_PACKAGE_NAME_BUNDLE_KEY)!!
-                    val signatureHash = result.getString(ACTIVE_BROKER_SIGNATURE_HASH_BUNDLE_KEY)!!
+                    val signatureHash =
+                        result.getString(ACTIVE_BROKER_SIGNATURE_HASH_BUNDLE_KEY)!!
                     Logger.info(methodTag, "Acquired Active broker from ${candidate.packageName}. The active broker is $packageName")
                     return BrokerData(packageName, signatureHash)
                 } catch (e: BrokerCommunicationException) {
@@ -69,6 +75,10 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
             }
 
             return null
+        }
+
+        fun isErrorBundle(result: Bundle): Boolean {
+            return result.containsKey(ERROR_BUNDLE_KEY)
         }
     }
 

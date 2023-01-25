@@ -88,5 +88,8 @@ enum class BrokerApi (val path: String,
     ),
     BROKER_DISCOVERY(
         AuthenticationConstants.BrokerContentProvider.BROKER_DISCOVERY_PATH
+    ),
+    BROKER_SET_ACTIVE_BROKER(
+        AuthenticationConstants.BrokerContentProvider.BROKER_SET_ACTIVE_BROKER_PATH
     );
 }

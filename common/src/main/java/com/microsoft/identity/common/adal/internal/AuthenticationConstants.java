@@ -28,6 +28,8 @@ import com.microsoft.identity.common.BrokerApi;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.java.broker.BrokerAccountDataName;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.nio.charset.Charset;
 
 import lombok.AccessLevel;
@@ -1479,6 +1481,8 @@ public final class AuthenticationConstants {
 
         public static final String BROKER_DISCOVERY_PATH = "/brokerDiscovery";
 
+        public static final String BROKER_SET_ACTIVE_BROKER_PATH = "/setActiveBroker";
+
         /**
          * BrokerContentProvider URI code constant for MSAL-to-Broker hello request.
          */
@@ -1543,7 +1547,6 @@ public final class AuthenticationConstants {
          * BrokerContentProvider URI code constant for MSAL-to-Broker generateSHR request.
          */
         public static final int MSAL_GENERATE_SHR_CODE = 13;
-
     }
 
     public static final class CompanyPortalContentProviderCall {
