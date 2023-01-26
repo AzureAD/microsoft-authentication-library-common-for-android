@@ -179,6 +179,7 @@ public class TelemetryTest {
     @Test
     public void testTelemetryMap() {
         Telemetry.emit(new HttpStartEvent().putMethod("GET"));
+        Assert.fail("Intentional fail");
         testTelemetryMapHelper();
         testTelemetryMapHelper();
     }
