@@ -74,7 +74,7 @@ public enum DiagnosticContext {
      * Clear the local request context thread.
      */
     public void clear() {
-//        REQUEST_CONTEXT_THREAD_LOCAL.remove();
+        REQUEST_CONTEXT_THREAD_LOCAL.remove();
     }
 
 }
