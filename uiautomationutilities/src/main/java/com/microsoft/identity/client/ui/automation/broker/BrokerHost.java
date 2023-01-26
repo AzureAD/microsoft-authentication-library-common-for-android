@@ -357,6 +357,8 @@ public class BrokerHost extends AbstractTestBroker {
         UiAutomatorUtils.obtainChildInScrollable("Overwrite flights (When BrokerHost is the active broker)");
         // input flights string in flights input box
         UiAutomatorUtils.handleInput("com.microsoft.identity.testuserapp:id/editTextFlights", flightsJson);
+        // Set to use LocalStorage Flights
+        UiAutomatorUtils.handleButtonClick("com.microsoft.identity.testuserapp:id/flightProvider_localStorage");
         // Click Set Flights button
         UiAutomatorUtils.handleButtonClick("com.microsoft.identity.testuserapp:id/overwriteFlightsButton");
         // Confirmation button
@@ -386,6 +388,8 @@ public class BrokerHost extends AbstractTestBroker {
         UiAutomatorUtils.obtainChildInScrollable("Set Flights");
         // input flights string in flights input box
         UiAutomatorUtils.handleInput("com.microsoft.identity.testuserapp:id/editTextFlights", flightsJson);
+        // Set to use LocalStorage Flights
+        UiAutomatorUtils.handleButtonClick("com.microsoft.identity.testuserapp:id/flightProvider_localStorage");
         // Click Set Flights button
         UiAutomatorUtils.handleButtonClick("com.microsoft.identity.testuserapp:id/setFlightsButton");
         // Confirm button
