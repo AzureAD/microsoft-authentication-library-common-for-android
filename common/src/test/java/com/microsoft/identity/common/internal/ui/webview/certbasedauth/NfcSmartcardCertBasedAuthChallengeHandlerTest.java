@@ -35,8 +35,9 @@ import java.util.List;
 
 @RunWith(RobolectricTestRunner.class)
 public class NfcSmartcardCertBasedAuthChallengeHandlerTest extends AbstractSmartcardCertBasedAuthChallengeHandlerTest {
+
     private NfcSmartcardCertBasedAuthChallengeHandler mChallengeHandler;
-    final TestCertBasedAuthTelemetryHelper mTestCertBasedAuthTelemetryHelper = new TestCertBasedAuthTelemetryHelper();
+    private final TestCertBasedAuthTelemetryHelper mTestCertBasedAuthTelemetryHelper = new TestCertBasedAuthTelemetryHelper();
 
     @Test
     public void testCancelAtNfcPromptDialog() {
@@ -125,7 +126,7 @@ public class NfcSmartcardCertBasedAuthChallengeHandlerTest extends AbstractSmart
     }
 
     @Override
-    protected void setAndProcessChallengeHandler(@NonNull List<X509Certificate> certList) {
+    protected void setAndProcessChallengeHandler(@NonNull final List<X509Certificate> certList) {
         mChallengeHandler = new NfcSmartcardCertBasedAuthChallengeHandler(
                 mActivity,
                 new TestNfcSmartcardCertBasedAuthManager(certList),

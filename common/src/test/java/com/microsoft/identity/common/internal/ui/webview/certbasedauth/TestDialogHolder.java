@@ -44,17 +44,10 @@ class TestDialogHolder implements IDialogHolder {
     private SmartcardNfcReminderDialog.DismissCallback mNfcReminderDismissCallback;
     private List<ICertDetails> mCertList;
 
-
-    public TestDialogHolder() {
-        mCurrentDialog = null;
-        mCertPickerPositiveButtonListener = null;
-        mCertPickerCancelCbaCallback = null;
-        mPinPositiveButtonListener = null;
-        mPinCancelCbaCallback = null;
-    }
-
     @Override
-    public void showCertPickerDialog(@NonNull List<ICertDetails> certList, @NonNull SmartcardCertPickerDialog.PositiveButtonListener positiveButtonListener, @NonNull SmartcardCertPickerDialog.CancelCbaCallback cancelCbaCallback) {
+    public void showCertPickerDialog(@NonNull final List<ICertDetails> certList,
+                                     @NonNull final SmartcardCertPickerDialog.PositiveButtonListener positiveButtonListener,
+                                     @NonNull final SmartcardCertPickerDialog.CancelCbaCallback cancelCbaCallback) {
         mCurrentDialog = TestDialog.cert_picker;
         mCertPickerPositiveButtonListener = positiveButtonListener;
         mCertPickerCancelCbaCallback = cancelCbaCallback;
@@ -62,26 +55,29 @@ class TestDialogHolder implements IDialogHolder {
     }
 
     @Override
-    public void showPinDialog(@NonNull SmartcardPinDialog.PositiveButtonListener positiveButtonListener, @NonNull SmartcardPinDialog.CancelCbaCallback cancelCbaCallback) {
+    public void showPinDialog(@NonNull final SmartcardPinDialog.PositiveButtonListener positiveButtonListener,
+                              @NonNull final SmartcardPinDialog.CancelCbaCallback cancelCbaCallback) {
         mCurrentDialog = TestDialog.pin;
         mPinPositiveButtonListener = positiveButtonListener;
         mPinCancelCbaCallback = cancelCbaCallback;
     }
 
     @Override
-    public void showErrorDialog(int titleStringResourceId, int messageStringResourceId) {
+    public void showErrorDialog(final int titleStringResourceId,
+                                final int messageStringResourceId) {
         mCurrentDialog = TestDialog.error;
     }
 
     @Override
-    public void showUserChoiceDialog(@NonNull UserChoiceDialog.PositiveButtonListener positiveButtonListener, @NonNull UserChoiceDialog.CancelCbaCallback cancelCbaCallback) {
+    public void showUserChoiceDialog(@NonNull final UserChoiceDialog.PositiveButtonListener positiveButtonListener,
+                                     @NonNull final UserChoiceDialog.CancelCbaCallback cancelCbaCallback) {
         mCurrentDialog = TestDialog.user_choice;
         mUserChoicePositiveButtonListener = positiveButtonListener;
         mUserChoiceCancelCbaCallback = cancelCbaCallback;
     }
 
     @Override
-    public void showSmartcardPromptDialog(@NonNull SmartcardPromptDialog.CancelCbaCallback cancelCbaCallback) {
+    public void showSmartcardPromptDialog(@NonNull final SmartcardPromptDialog.CancelCbaCallback cancelCbaCallback) {
         mCurrentDialog = TestDialog.prompt;
         mPromptCancelCbaCallback = cancelCbaCallback;
     }
@@ -92,13 +88,13 @@ class TestDialogHolder implements IDialogHolder {
     }
 
     @Override
-    public void showSmartcardNfcPromptDialog(@NonNull SmartcardNfcPromptDialog.CancelCbaCallback cancelCbaCallback) {
+    public void showSmartcardNfcPromptDialog(@NonNull final SmartcardNfcPromptDialog.CancelCbaCallback cancelCbaCallback) {
         mCurrentDialog = TestDialog.nfc_prompt;
         mNfcPromptCancelCbaCallback = cancelCbaCallback;
     }
 
     @Override
-    public void showSmartcardNfcReminderDialog(@NonNull SmartcardNfcReminderDialog.DismissCallback dismissCallback) {
+    public void showSmartcardNfcReminderDialog(@NonNull final SmartcardNfcReminderDialog.DismissCallback dismissCallback) {
         mCurrentDialog = TestDialog.nfc_reminder;
         mNfcReminderDismissCallback = dismissCallback;
     }
@@ -109,9 +105,7 @@ class TestDialogHolder implements IDialogHolder {
     }
 
     @Override
-    public void showDialog(@Nullable SmartcardDialog dialog) {
-
-    }
+    public void showDialog(@Nullable SmartcardDialog dialog) {}
 
     @Override
     public boolean isDialogShowing() {
@@ -119,12 +113,8 @@ class TestDialogHolder implements IDialogHolder {
     }
 
     @Override
-    public void onCancelCba() {
-
-    }
+    public void onCancelCba() {}
 
     @Override
-    public void setPinDialogErrorMode() {
-
-    }
+    public void setPinDialogErrorMode() {}
 }

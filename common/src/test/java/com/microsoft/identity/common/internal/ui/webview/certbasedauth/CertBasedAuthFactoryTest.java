@@ -43,8 +43,6 @@ public class CertBasedAuthFactoryTest extends AbstractCertBasedAuthTest {
     private CertBasedAuthFactory mFactory;
     protected TestUsbSmartcardCertBasedAuthManager mUsbManager;
     protected TestNfcSmartcardCertBasedAuthManager mNfcManager;
-    final TestCertBasedAuthTelemetryHelper mTestCertBasedAuthTelemetryHelper = new TestCertBasedAuthTelemetryHelper();
-
 
     @Before
     public void factorySetUp() {

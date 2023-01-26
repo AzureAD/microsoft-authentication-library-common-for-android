@@ -22,12 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.ui.webview.certbasedauth;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
-import android.app.Activity;
 import android.webkit.ClientCertRequest;
 
 import androidx.annotation.NonNull;
@@ -78,15 +74,15 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandlerTest extends
     }
 
     @Test
-    public abstract void testLockedOut();
-
-    @Test
     public void testExceptionThrownWhenGettingCertDetailsList() {
         final List<X509Certificate> certList = new ArrayList<>();
         certList.add(getMockCertificate("Exception", "Exception"));
         setAndProcessChallengeHandler(certList);
         checkIfCorrectDialogIsShowing(TestDialog.error);
     }
+
+    @Test
+    public abstract void testLockedOut();
 
     @Test
     public abstract void testExceptionThrownWhenVerifyingPin();
@@ -103,7 +99,6 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandlerTest extends
         checkIfCorrectDialogIsShowing(TestDialog.pin);
     }
 
-    //Return a list containing two mock certificates.
     @NonNull
     protected List<X509Certificate> getMockCertList() {
         final X509Certificate cert1 = getMockCertificate("SomeIssuer1", "SomeSubject1");
@@ -114,48 +109,6 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandlerTest extends
         return certList;
     }
 
-    //Return an empty ClientCertRequest only to be used for testing.
-    @NonNull
-    protected ClientCertRequest getMockClientCertRequest() {
-        return new ClientCertRequest() {
-            @Override
-            public String[] getKeyTypes() {
-                return new String[0];
-            }
-
-            @Override
-            public Principal[] getPrincipals() {
-                return new Principal[0];
-            }
-
-            @Override
-            public String getHost() {
-                return null;
-            }
-
-            @Override
-            public int getPort() {
-                return 0;
-            }
-
-            @Override
-            public void proceed(PrivateKey privateKey, X509Certificate[] x509Certificates) {
-
-            }
-
-            @Override
-            public void ignore() {
-
-            }
-
-            @Override
-            public void cancel() {
-
-            }
-        };
-    }
-
-    //Return a mock certificate only to be used for testing.
     @NonNull
     protected X509Certificate getMockCertificate(@Nullable final String issuerDNName, @Nullable final String subjectDNName) {
         return new X509Certificate() {
@@ -298,6 +251,46 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandlerTest extends
             @Override
             public byte[] getExtensionValue(String s) {
                 return new byte[0];
+            }
+        };
+    }
+
+    @NonNull
+    protected ClientCertRequest getMockClientCertRequest() {
+        return new ClientCertRequest() {
+            @Override
+            public String[] getKeyTypes() {
+                return new String[0];
+            }
+
+            @Override
+            public Principal[] getPrincipals() {
+                return new Principal[0];
+            }
+
+            @Override
+            public String getHost() {
+                return null;
+            }
+
+            @Override
+            public int getPort() {
+                return 0;
+            }
+
+            @Override
+            public void proceed(PrivateKey privateKey, X509Certificate[] x509Certificates) {
+
+            }
+
+            @Override
+            public void ignore() {
+
+            }
+
+            @Override
+            public void cancel() {
+
             }
         };
     }

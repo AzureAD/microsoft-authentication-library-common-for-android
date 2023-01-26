@@ -34,15 +34,14 @@ import java.util.List;
 
 class TestNfcSmartcardCertBasedAuthManager extends AbstractNfcSmartcardCertBasedAuthManager {
 
-    private boolean mIsConnected;
     private final List<ICertDetails> mCertDetailsList;
+    private boolean mIsConnected;
     private int mPinAttemptsRemaining;
 
     public TestNfcSmartcardCertBasedAuthManager(@NonNull final List<X509Certificate> certList) {
         mIsConnected = false;
         //Attempts remaining is usually 3, but 2 attempts is all that's necessary for testing.
         mPinAttemptsRemaining = 2;
-        //Convert cert list into certDetails list.
         mCertDetailsList = new ArrayList<>();
         for (X509Certificate cert : certList) {
             mCertDetailsList.add(new ICertDetails() {
@@ -56,17 +55,17 @@ class TestNfcSmartcardCertBasedAuthManager extends AbstractNfcSmartcardCertBased
     }
 
     @Override
-    boolean startDiscovery(@NonNull Activity activity) {
+    boolean startDiscovery(@NonNull final Activity activity) {
         return false;
     }
 
     @Override
-    void stopDiscovery(@NonNull Activity activity) {
+    void stopDiscovery(@NonNull final Activity activity) {
         mockDisconnect();
     }
 
     @Override
-    void requestDeviceSession(@NonNull ISessionCallback callback) {
+    void requestDeviceSession(@NonNull final ISessionCallback callback) {
         try {
             callback.onGetSession(new TestSmartcardSession(mCertDetailsList, mPinAttemptsRemaining, new TestSmartcardSession.ITestSessionCallback() {
                 @Override
@@ -85,12 +84,10 @@ class TestNfcSmartcardCertBasedAuthManager extends AbstractNfcSmartcardCertBased
     }
 
     @Override
-    void initBeforeProceedingWithRequest(@NonNull ICertBasedAuthTelemetryHelper telemetryHelper) {
-
-    }
+    void initBeforeProceedingWithRequest(@NonNull final ICertBasedAuthTelemetryHelper telemetryHelper) {}
 
     @Override
-    void onDestroy(@NonNull Activity activity) {
+    void onDestroy(@NonNull final Activity activity) {
         stopDiscovery(activity);
     }
 

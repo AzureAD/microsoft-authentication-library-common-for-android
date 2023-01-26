@@ -31,9 +31,9 @@ import org.robolectric.annotation.Implements;
 @Implements(CertBasedAuthTelemetryHelper.class)
 public class ShadowCertBasedAuthTelemetryHelper {
 
-    public void setCertBasedAuthChallengeHandler(String challengeHandlerName) {}
+    public void setCertBasedAuthChallengeHandler(final String challengeHandlerName) {}
 
-    public void setExistingPivProviderPresent(boolean present) {}
+    public void setExistingPivProviderPresent(final boolean present) {}
 
     public void setResultSuccess() {}
 

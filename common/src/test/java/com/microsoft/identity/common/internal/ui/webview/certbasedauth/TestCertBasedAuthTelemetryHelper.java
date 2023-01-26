@@ -28,32 +28,20 @@ import com.microsoft.identity.common.java.opentelemetry.ICertBasedAuthTelemetryH
 class TestCertBasedAuthTelemetryHelper implements ICertBasedAuthTelemetryHelper {
 
     @Override
-    public void setCertBasedAuthChallengeHandler(String challengeHandlerName) {
-
-    }
+    public void setCertBasedAuthChallengeHandler(String challengeHandlerName) {}
 
     @Override
-    public void setExistingPivProviderPresent(boolean present) {
-
-    }
+    public void setExistingPivProviderPresent(boolean present) {}
 
     @Override
-    public void setResultSuccess() {
-
-    }
+    public void setResultSuccess() {}
 
     @Override
-    public void setResultFailure(String message) {
-
-    }
+    public void setResultFailure(String message) {}
 
     @Override
-    public void setResultFailure(Exception exception) {
-
-    }
+    public void setResultFailure(Exception exception) {}
 
     @Override
-    public void setUserChoice(CertBasedAuthChoice choice) {
-
-    }
+    public void setUserChoice(CertBasedAuthChoice choice) {}
 }

@@ -32,9 +32,7 @@ import android.app.Activity;
 import androidx.annotation.Nullable;
 
 import org.junit.Before;
-import org.junit.runner.RunWith;
 import org.robolectric.Robolectric;
-import org.robolectric.RobolectricTestRunner;
 
 public class AbstractCertBasedAuthTest {
     protected Activity mActivity;

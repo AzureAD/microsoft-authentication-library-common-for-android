@@ -35,8 +35,9 @@ import java.util.List;
 
 @RunWith(RobolectricTestRunner.class)
 public class UsbSmartcardCertBasedAuthChallengeHandlerTest extends AbstractSmartcardCertBasedAuthChallengeHandlerTest {
+
     private UsbSmartcardCertBasedAuthChallengeHandler mChallengeHandler;
-    final TestCertBasedAuthTelemetryHelper mTestCertBasedAuthTelemetryHelper = new TestCertBasedAuthTelemetryHelper();
+    private final TestCertBasedAuthTelemetryHelper mTestCertBasedAuthTelemetryHelper = new TestCertBasedAuthTelemetryHelper();
 
     @Test
     public void testUnplugAtPickerDialog() {
@@ -57,9 +58,6 @@ public class UsbSmartcardCertBasedAuthChallengeHandlerTest extends AbstractSmart
         checkIfCorrectDialogIsShowing(TestDialog.error);
     }
 
-    //Incorrect PIN attempts before reaching limit should remain on same dialog with error message.
-    //Upon no PIN attempts remaining, an error dialog should show instead.
-    //Note: pin attempts remaining is initially set to 2.
     @Override
     @Test
     public void testLockedOut() {

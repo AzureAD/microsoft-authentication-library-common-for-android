@@ -28,15 +28,12 @@ import java.security.PrivateKey;
 import java.util.Arrays;
 import java.util.List;
 
-//Implements ISmartcardSession in order to carry out testing of dialogs.
-//Only meant to be used for testing purposes.
 class TestSmartcardSession implements ISmartcardSession {
 
     private final List<ICertDetails> mCertDetailsList;
     private final char[] mPin;
-    private int mPinAttemptsRemaining;
-
     private final TestSmartcardSession.ITestSessionCallback mCallback;
+    private int mPinAttemptsRemaining;
 
     //Used to keep the pinAttemptsRemaining variable consistent between the manager and session.
     interface ITestSessionCallback {
