@@ -33,13 +33,8 @@ import android.webkit.ClientCertRequest;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.microsoft.identity.common.java.opentelemetry.CertBasedAuthChoice;
-import com.microsoft.identity.common.java.opentelemetry.ICertBasedAuthTelemetryHelper;
-
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.robolectric.Robolectric;
 import org.robolectric.RobolectricTestRunner;
 
 import java.math.BigInteger;
@@ -48,23 +43,12 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
-import lombok.Getter;
-
 @RunWith(RobolectricTestRunner.class)
-public abstract class AbstractSmartcardCertBasedAuthChallengeHandlerTest {
-    protected Activity mActivity;
-    protected TestDialogHolder mDialogHolder;
-
-    @Before
-    public void setUp() {
-        mActivity = Robolectric.buildActivity(Activity.class).get();
-        mDialogHolder = new TestDialogHolder();
-    }
+public abstract class AbstractSmartcardCertBasedAuthChallengeHandlerTest extends AbstractCertBasedAuthTest {
 
     @Test
     public void testNoCertsOnSmartcard() {
@@ -111,16 +95,6 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandlerTest {
     public abstract void testExceptionThrownWhenGettingKey();
 
     protected abstract void setAndProcessChallengeHandler(@NonNull final List<X509Certificate> certList);
-
-    protected void checkIfCorrectDialogIsShowing(@Nullable final TestDialog expectedDialog) {
-        if (expectedDialog == null) {
-            assertFalse(mDialogHolder.isDialogShowing());
-            return;
-        }
-        assertNotNull(mDialogHolder.getMCurrentDialog());
-        assertTrue(mDialogHolder.isDialogShowing());
-        assertEquals(expectedDialog, mDialogHolder.getMCurrentDialog());
-    }
 
     protected void goToPinDialog() {
         final SmartcardCertPickerDialog.PositiveButtonListener listener = mDialogHolder.getMCertPickerPositiveButtonListener();
@@ -326,225 +300,5 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandlerTest {
                 return new byte[0];
             }
         };
-    }
-
-    //Implements ISmartcardSession in order to carry out testing of dialogs.
-    //Only meant to be used for testing purposes.
-    protected static class TestSmartcardSession implements ISmartcardSession {
-
-        private final List<ICertDetails> mCertDetailsList;
-        private final char[] mPin;
-        private int mPinAttemptsRemaining;
-
-        private final TestSmartcardSession.ITestSessionCallback mCallback;
-
-        //Used to keep the pinAttemptsRemaining variable consistent between the manager and session.
-        interface ITestSessionCallback {
-            void onIncorrectAttempt();
-        }
-
-        public TestSmartcardSession(@NonNull final List<ICertDetails> certDetailsList,
-                                    final int pinAttemptsRemaining,
-                                    @NonNull final TestSmartcardSession.ITestSessionCallback callback) {
-            mCertDetailsList = certDetailsList;
-            mPin = new char[]{'1', '2', '3', '4', '5', '6'};
-            mPinAttemptsRemaining = pinAttemptsRemaining;
-            mCallback = callback;
-        }
-
-        @NonNull
-        @Override
-        public List<ICertDetails> getCertDetailsList() throws Exception {
-            //Check for a specific testing case where if there's only one cert
-            // and it has a subject value of "Exception", throw an Exception.
-            if (mCertDetailsList.size() == 1 &&
-                    mCertDetailsList.get(0).getCertificate().getIssuerDN().getName().equals("Exception")) {
-                throw new Exception();
-            }
-            return mCertDetailsList;
-        }
-
-        @Override
-        public boolean verifyPin(@NonNull final char[] pin) throws Exception {
-            if (Arrays.equals(mPin, pin)) {
-                return true;
-            }
-            else if (Arrays.equals(new char[]{'e', 'x', 'c'}, pin)) {
-                //This is a special case where we want to test handling an exception.
-                throw new Exception();
-            }
-            else {
-                mPinAttemptsRemaining = mPinAttemptsRemaining > 0 ? mPinAttemptsRemaining - 1 : 0;
-                mCallback.onIncorrectAttempt();
-                return false;
-            }
-        }
-
-        @Override
-        public int getPinAttemptsRemaining() {
-            return mPinAttemptsRemaining;
-        }
-
-        //This method is going to be used to test handling a thrown exception,
-        // so we should never get to the return statement.
-        @NonNull
-        @Override
-        public PrivateKey getKeyForAuth(@NonNull final ICertDetails certDetails, @NonNull final char[] pin) throws Exception {
-            if (Arrays.equals(mPin, pin)) {
-                throw new Exception("Testing, 1,2,3");
-            }
-            return new PrivateKey() {
-                @Override
-                public String getAlgorithm() {
-                    return null;
-                }
-
-                @Override
-                public String getFormat() {
-                    return null;
-                }
-
-                @Override
-                public byte[] getEncoded() {
-                    return new byte[0];
-                }
-            };
-        }
-    }
-
-    enum TestDialog {
-        cert_picker,
-        pin,
-        error,
-        user_choice,
-        prompt,
-        nfc_loading,
-        nfc_prompt,
-        nfc_reminder
-    }
-
-    @Getter
-    protected static class TestDialogHolder implements IDialogHolder {
-
-        private TestDialog mCurrentDialog;
-        private SmartcardCertPickerDialog.PositiveButtonListener mCertPickerPositiveButtonListener;
-        private SmartcardCertPickerDialog.CancelCbaCallback mCertPickerCancelCbaCallback;
-        private SmartcardPinDialog.PositiveButtonListener mPinPositiveButtonListener;
-        private SmartcardPinDialog.CancelCbaCallback mPinCancelCbaCallback;
-        private SmartcardNfcPromptDialog.CancelCbaCallback mNfcPromptCancelCbaCallback;
-        private List<ICertDetails> mCertList;
-
-
-        TestDialogHolder() {
-            mCurrentDialog = null;
-            mCertPickerPositiveButtonListener = null;
-            mCertPickerCancelCbaCallback = null;
-            mPinPositiveButtonListener = null;
-            mPinCancelCbaCallback = null;
-        }
-
-        @Override
-        public void showCertPickerDialog(@NonNull List<ICertDetails> certList, @NonNull SmartcardCertPickerDialog.PositiveButtonListener positiveButtonListener, @NonNull SmartcardCertPickerDialog.CancelCbaCallback cancelCbaCallback) {
-            mCurrentDialog = TestDialog.cert_picker;
-            mCertPickerPositiveButtonListener = positiveButtonListener;
-            mCertPickerCancelCbaCallback = cancelCbaCallback;
-            mCertList = certList;
-        }
-
-        @Override
-        public void showPinDialog(@NonNull SmartcardPinDialog.PositiveButtonListener positiveButtonListener, @NonNull SmartcardPinDialog.CancelCbaCallback cancelCbaCallback) {
-            mCurrentDialog = TestDialog.pin;
-            mPinPositiveButtonListener = positiveButtonListener;
-            mPinCancelCbaCallback = cancelCbaCallback;
-        }
-
-        @Override
-        public void showErrorDialog(int titleStringResourceId, int messageStringResourceId) {
-            mCurrentDialog = TestDialog.error;
-        }
-
-        @Override
-        public void showUserChoiceDialog(@NonNull UserChoiceDialog.PositiveButtonListener positiveButtonListener, @NonNull UserChoiceDialog.CancelCbaCallback cancelCbaCallback) {
-            mCurrentDialog = TestDialog.user_choice;
-        }
-
-        @Override
-        public void showSmartcardPromptDialog(@NonNull SmartcardPromptDialog.CancelCbaCallback cancelCbaCallback) {
-            mCurrentDialog = TestDialog.prompt;
-        }
-
-        @Override
-        public void showSmartcardNfcLoadingDialog() {
-            mCurrentDialog = TestDialog.nfc_loading;
-        }
-
-        @Override
-        public void showSmartcardNfcPromptDialog(@NonNull SmartcardNfcPromptDialog.CancelCbaCallback cancelCbaCallback) {
-            mCurrentDialog = TestDialog.nfc_prompt;
-            mNfcPromptCancelCbaCallback = cancelCbaCallback;
-        }
-
-        @Override
-        public void showSmartcardNfcReminderDialog(@NonNull SmartcardNfcReminderDialog.DismissCallback dismissCallback) {
-            mCurrentDialog = TestDialog.nfc_reminder;
-        }
-
-        @Override
-        public void dismissDialog() {
-            mCurrentDialog = null;
-        }
-
-        @Override
-        public void showDialog(@Nullable SmartcardDialog dialog) {
-
-        }
-
-        @Override
-        public boolean isDialogShowing() {
-            return mCurrentDialog != null;
-        }
-
-        @Override
-        public void onCancelCba() {
-
-        }
-
-        @Override
-        public void setPinDialogErrorMode() {
-
-        }
-    }
-
-    protected static class TestCertBasedAuthTelemetryHelper implements ICertBasedAuthTelemetryHelper {
-
-        @Override
-        public void setCertBasedAuthChallengeHandler(String challengeHandlerName) {
-
-        }
-
-        @Override
-        public void setExistingPivProviderPresent(boolean present) {
-
-        }
-
-        @Override
-        public void setResultSuccess() {
-
-        }
-
-        @Override
-        public void setResultFailure(String message) {
-
-        }
-
-        @Override
-        public void setResultFailure(Exception exception) {
-
-        }
-
-        @Override
-        public void setUserChoice(CertBasedAuthChoice choice) {
-
-        }
     }
 }

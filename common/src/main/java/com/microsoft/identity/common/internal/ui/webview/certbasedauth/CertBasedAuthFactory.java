@@ -28,6 +28,7 @@ import android.os.Build;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
+import androidx.annotation.VisibleForTesting;
 
 import com.microsoft.identity.common.java.opentelemetry.CertBasedAuthChoice;
 import com.microsoft.identity.common.java.opentelemetry.CertBasedAuthTelemetryHelper;
@@ -59,6 +60,24 @@ public class CertBasedAuthFactory {
             //Connection and disconnection callbacks for discovery are set in the SmartcardCertBasedAuthChallengeHandlers.
             mUsbSmartcardCertBasedAuthManager.startDiscovery(activity);
         }
+    }
+
+    /**
+     * Creates an instance of CertBasedAuthFactory for testing purposes.
+     * @param activity host activity.
+     * @param usbManager manager for usb connections.
+     * @param nfcManager manager for nfc connections.
+     * @param dialogHolder IDialogHolder instance.
+     */
+    @VisibleForTesting
+    protected CertBasedAuthFactory(@NonNull final Activity activity,
+                                   @NonNull final AbstractUsbSmartcardCertBasedAuthManager usbManager,
+                                   @NonNull final AbstractNfcSmartcardCertBasedAuthManager nfcManager,
+                                   @NonNull final IDialogHolder dialogHolder) {
+        mActivity = activity;
+        mUsbSmartcardCertBasedAuthManager = usbManager;
+        mNfcSmartcardCertBasedAuthManager = nfcManager;
+        mDialogHolder = dialogHolder;
     }
 
     /**
