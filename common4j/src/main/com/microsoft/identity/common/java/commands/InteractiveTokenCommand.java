@@ -62,7 +62,9 @@ public class InteractiveTokenCommand extends TokenCommand {
     public AcquireTokenResult execute() throws Exception {
         final String methodName = ":execute";
 
-        final Span span = OTelUtility.createSpan(SpanName.AcquireTokenInteractive.name());
+        final Span span = OTelUtility.createSpanFromParent(
+                SpanName.AcquireTokenInteractive.name(), getParameters().getSpanContext()
+        );
         span.setAttribute(AttributeName.application_name.name(), getParameters().getApplicationName());
         span.setAttribute(AttributeName.public_api_id.name(), getPublicApiId());
 
