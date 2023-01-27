@@ -13,7 +13,7 @@ parameters:
 
 steps:
 - task: Gradle@3
-  displayName: 'Run Spotbugs'
+  displayName: 'Run Spotbugs' ${{ parameters.cwd }}
   inputs:
     cwd: ${{ parameters.cwd }}
     tasks: ${{ parameters.project }}:${{ parameters.spotbugsCommand }}
