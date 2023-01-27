@@ -45,7 +45,7 @@ import org.junit.Assert;
 public class BrokerAuthenticatorUpdatedVersionImpl extends BrokerMicrosoftAuthenticator {
 
     private static final String TAG = BrokerAuthenticatorUpdatedVersionImpl.class.getSimpleName();
-    private static final boolean isExpectingMFA = true;
+    public static boolean shouldUseDeviceSettingsPage = true;
 
     @Override
     public void performDeviceRegistration(@NonNull final String username,
@@ -53,7 +53,7 @@ public class BrokerAuthenticatorUpdatedVersionImpl extends BrokerMicrosoftAuthen
                                           final boolean isFederatedUser) {
 
         Logger.i(TAG, "Performing Device Registration for the given account..");
-        if (isExpectingMFA) {
+        if (shouldUseDeviceSettingsPage) {
             // TO-DO after authenticator app removes the MFA prompt during registration,
             // we can remove this flag (isExpectingMFA) or set it to false
             TestContext.getTestContext().getTestDevice().getSettings().addWorkAccount(
@@ -69,30 +69,26 @@ public class BrokerAuthenticatorUpdatedVersionImpl extends BrokerMicrosoftAuthen
                     password,
                     "workPlaceTextField",
                     "workPlaceRegisterButton",
-                    isFederatedUser
+                    isFederatedUser,
+                    AUTHENTICATOR_IS_REGISTER_EXPECTED
             );
 
 
             try {
                 // after device registration, make sure that we see the unregister btn to confirm successful
                 // registration
-                final UiObject unRegisterBtn = UiAutomatorUtils.obtainUiObjectWithResourceId(
-                        "com.azure.authenticator:id/unregister_button"
+                final UiObject unRegisterBtn = UiAutomatorUtils.obtainUiObjectWithExactText(
+                        "UNREGISTER DEVICE"
                 );
                 Assert.assertTrue(
                         "Microsoft Authenticator - Unregister Button appears.",
                         unRegisterBtn.exists()
                 );
 
-                Assert.assertTrue(
-                        "Microsoft Authenticator - Unregister Button is clickable.",
-                        unRegisterBtn.isClickable()
-                );
-
                 // after device registration, make sure that the current registration upn matches with
                 // with what was passed in
                 final UiObject currentRegistration = UiAutomatorUtils.obtainUiObjectWithResourceId(
-                        "com.azure.authenticator:id/current_registered_email"
+                        "workPlaceRegisteredAccountEmailText"
                 );
 
                 Assert.assertTrue(
@@ -119,7 +115,8 @@ public class BrokerAuthenticatorUpdatedVersionImpl extends BrokerMicrosoftAuthen
                 password,
                 "sharedWorkPlaceTextField",
                 "sharedWorkPlaceRegisterButton",
-                false
+                false,
+                AUTHENTICATOR_IS_REGISTER_EXPECTED_SHARED
         );
 
         final UiDevice device =
@@ -137,6 +134,20 @@ public class BrokerAuthenticatorUpdatedVersionImpl extends BrokerMicrosoftAuthen
                 sharedDeviceConfirmation.exists());
 
         isInSharedDeviceMode = true;
+    }
+
+    @Override
+    public void performSharedDeviceRegistrationDontValidate(@NonNull final String username,
+                                                @NonNull final String password) {
+        Logger.i(TAG, "Performing Shared Device Registration for the given account without validating we are in shared device mode.");
+        performDeviceRegistrationHelper(
+                username,
+                password,
+                "sharedWorkPlaceTextField",
+                "sharedWorkPlaceRegisterButton",
+                false,
+                AUTHENTICATOR_IS_REGISTER_EXPECTED_SHARED
+        );
     }
     
     @Override

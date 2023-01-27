@@ -1,10 +1,36 @@
 V.Next
 ----------
+- [MINOR] Format thread+correlationId metadata only once logging is clearly opted-in (#1917)
+- [MINOR] Remove unnecessary synchronization when storage access is already guarded (#1928)
+- [MINOR] Write back read successes to cache and stop extra lookups in getAll (#1927)
+- [MINOR] Add method to platform util to get package name from uid (#1932)
+
+V.9.1.0
+----------
+- [MINOR] Convert crypto operation spans into metrics (#1909)
+- [PATCH] Move clearClientCertPreferences to onCreateView only (#1915)
+- [MINOR] Propagate span context from MSAL to Broker (#1926)
+
+V.9.0.1
+----------
+- [PATCH] Moving ClearClientCertPreferences back to onCreate and handleBackButtonPressed (#1908)
+
+V.9.0.0
+----------
 - [MINOR] Add BrokerContentProvider path and IpcStrategy for new device registration API (#1843)
 - [PATCH] Adding cached credential service request id to telemetry (#1866)
 - [MAJOR] Add support for client/application managed key in pop flow (#1854)
 - [PATCH] Moved clearClientCertPreferences to onPageLoaded. (#1855)
 - [MINOR] Add new exception type for broker protocol not supported exception during msal-broker handshake (#1859)
+- [MINOR] Leverage Otel Utility create span method (#1877)
+- [MINOR] Add Open Telemetry explicitly in common as transitive is set to false (#1882)
+- [MINOR] Add open telemetry to consumer rules (#1883)
+- [PATCH] Fixes MSAL Issue #1715 (#1894)
+- [MINOR] Add support to reset broadcast Executor service (#1895)
+
+V.8.0.3
+----------
+- [PATCH] Add null checks for devices that do not support USB_SERVICE. (#1885)
 
 V.8.0.2
 ----------
@@ -115,7 +141,7 @@ Version 4.0.3
 
 Version 4.0.2
 ----------
-- [PATCH] Port #1662 into the new common4j class - since StorageHelper is no longer used (#1689, #1690) 
+- [PATCH] Port #1662 into the new common4j class - since StorageHelper is no longer used (#1689, #1690)
 
 Version 4.0.1
 ----------

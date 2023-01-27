@@ -83,6 +83,11 @@ public class ClientException extends BaseException {
     public static final String SCOPE_EMPTY_OR_NULL = "scope_empty_or_null";
 
     /**
+     * Emitted when the device Token is not present in successful response.
+     */
+    public static final String DEVICE_TOKEN_EMPTY_OR_NULL = "device_token_empty_or_null";
+
+    /**
      * The sdk failed to parse the Json format.
      */
     public static final String JSON_PARSE_FAILURE = "json_parse_failure";
@@ -337,6 +342,31 @@ public class ClientException extends BaseException {
      * The data is malformed.
      */
     public static final String DATA_MALFORMED = "data_malformed";
+
+    /**
+     * The Keyring write operation failed.
+     */
+    public static final String KEY_RING_WRITE_FAILURE = "storage_keyring_write_failure";
+
+    /**
+     * The Keyring read operation failed.
+     */
+    public static final String KEY_RING_READ_FAILURE = "storage_keyring_read_failure";
+
+    /**
+     * The powerLift log upload operation failed.
+     */
+    public static final String LOG_UPLOAD_FAILURE = "log_upload_failure";
+
+    /**
+     * The powerLift api key is invalid (empty/null).
+     */
+    public static final String INVALID_POWERLIFT_API_KEY = "invalid_powerlift_api_key";
+
+    /**
+     * The broker log upload feature is disabled.
+     */
+    public static final String LOG_UPLOAD_TO_POWERLIFT_FEATURE_DISABLED = "log_upload_to_powerlift_feature_disabled";
 
     /**
      * Constructor of ClientException.

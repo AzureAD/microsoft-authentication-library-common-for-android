@@ -49,6 +49,7 @@ import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.microsoft.identity.common.components.AndroidPlatformComponentsFactory;
 import com.microsoft.identity.common.java.cache.BrokerApplicationMetadata;
 import com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache;
 import com.microsoft.identity.common.java.cache.CacheKeyValueDelegate;
@@ -125,7 +126,7 @@ public class BrokerOAuth2TokenCacheTest {
         mMockCredentialAdapter = PowerMockito.mock(IAccountCredentialAdapter.class);
 
         mContext = ApplicationProvider.getApplicationContext();
-        mPlatformComponents = AndroidPlatformComponents.createFromContext(mContext);
+        mPlatformComponents = AndroidPlatformComponentsFactory.createFromContext(mContext);
 
         mApplicationMetadataCache = new NameValueStorageBrokerApplicationMetadataCache(mPlatformComponents);
 
@@ -287,9 +288,6 @@ public class BrokerOAuth2TokenCacheTest {
 
     private INameValueStorage<String> getAppUidFileManager(final IPlatformComponents components,
                                                            final int appUid) {
-        if (!(components instanceof AndroidPlatformComponents)) {
-            throw new IllegalStateException("This component must be migrated to support the new platform abstraction");
-        }
         return components.getEncryptedNameValueStore(
                 getBrokerUidSequesteredFilename(appUid),
                 components.getStorageEncryptionManager(),
@@ -297,9 +295,6 @@ public class BrokerOAuth2TokenCacheTest {
     }
 
     private INameValueStorage<String> getFociFileManager(final IPlatformComponents components) {
-        if (!(components instanceof AndroidPlatformComponents)) {
-            throw new IllegalStateException("This component must be migrated to support the new platform abstraction");
-        }
         return components.getEncryptedNameValueStore(
                 BROKER_FOCI_ACCOUNT_CREDENTIAL_SHARED_PREFERENCES,
                 components.getStorageEncryptionManager(),
@@ -335,10 +330,6 @@ public class BrokerOAuth2TokenCacheTest {
 
 
     private MsalOAuth2TokenCache initAppUidCache(final IPlatformComponents components, final int uid) {
-        if (!(components instanceof AndroidPlatformComponents)) {
-            throw new IllegalStateException("This component must be migrated to support the new platform abstraction");
-        }
-
         final INameValueStorage<String> appUidCacheFileManager = getAppUidFileManager(
                 components,
                 uid
@@ -350,9 +341,6 @@ public class BrokerOAuth2TokenCacheTest {
     }
 
     private void initFociCache(final IPlatformComponents components) {
-        if (!(components instanceof AndroidPlatformComponents)) {
-            throw new IllegalStateException("This component must be migrated to support the new platform abstraction");
-        }
         @SuppressWarnings("unchecked")
         final INameValueStorage<String> fociCacheFileManager = getFociFileManager(components);
 
@@ -790,7 +778,7 @@ public class BrokerOAuth2TokenCacheTest {
         for (final int testUid : testAppUids) {
             // Create the cache to query...
             mBrokerOAuth2TokenCache = new BrokerOAuth2TokenCache(
-                    AndroidPlatformComponents.createFromContext(mContext),
+                    AndroidPlatformComponentsFactory.createFromContext(mContext),
                     testUid,
                     mApplicationMetadataCache,
                     new BrokerOAuth2TokenCache.ProcessUidCacheFactory() {
@@ -860,7 +848,7 @@ public class BrokerOAuth2TokenCacheTest {
         for (final int testUid : testAppUids) {
             // Create the cache to query...
             mBrokerOAuth2TokenCache = new BrokerOAuth2TokenCache(
-                    AndroidPlatformComponents.createFromContext(mContext),
+                    AndroidPlatformComponentsFactory.createFromContext(mContext),
                     testUid,
                     mApplicationMetadataCache,
                     new BrokerOAuth2TokenCache.ProcessUidCacheFactory() {

@@ -28,5 +28,15 @@ public enum SpanName {
     AcquireAtUsingPrt,
     AcquireTokenInteractive,
     AcquireTokenSilent,
-    CryptoFactoryEvent
+    CryptoFactoryEvent,
+    SetScopeForDMAgentForFoci,
+    GetAccounts,
+    RemoveAccount,
+    WorkplaceJoin,
+    DoDiscovery,
+    WorkplaceLeave,
+    DeviceState,
+    UploadBrokerLogs,
+    InitializePowerLift,
+    MSAL_PerformIpcStrategy
 }

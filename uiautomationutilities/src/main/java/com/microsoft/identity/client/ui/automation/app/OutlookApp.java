@@ -27,6 +27,7 @@ import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND
 import androidx.annotation.NonNull;
 import androidx.test.uiautomator.UiObject;
 
+import com.microsoft.identity.client.ui.automation.installer.IAppInstaller;
 import com.microsoft.identity.client.ui.automation.installer.PlayStore;
 import com.microsoft.identity.client.ui.automation.interaction.FirstPartyAppPromptHandlerParameters;
 import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.MicrosoftStsPromptHandler;
@@ -44,9 +45,15 @@ public class OutlookApp extends App implements IFirstPartyApp {
     private final static String TAG = OutlookApp.class.getSimpleName();
     private static final String OUTLOOK_PACKAGE_NAME = "com.microsoft.office.outlook";
     private static final String OUTLOOK_APP_NAME = "Microsoft Outlook";
+    private static final String OUTLOOK_APK = "Outlook.apk";
 
     public OutlookApp() {
         super(OUTLOOK_PACKAGE_NAME, OUTLOOK_APP_NAME, new PlayStore());
+    }
+
+    public OutlookApp(@NonNull final IAppInstaller appInstaller) {
+        super(OUTLOOK_PACKAGE_NAME, OUTLOOK_APP_NAME, appInstaller);
+        localApkFileName = OUTLOOK_APK;
     }
 
     @Override

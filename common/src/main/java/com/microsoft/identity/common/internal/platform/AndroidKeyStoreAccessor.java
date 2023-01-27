@@ -28,27 +28,23 @@ import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyProperties;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
-import com.microsoft.identity.common.AndroidPlatformComponents;
+import com.microsoft.identity.common.components.AndroidPlatformComponentsFactory;
 import com.microsoft.identity.common.java.crypto.CryptoSuite;
+import com.microsoft.identity.common.java.crypto.IDevicePopManager;
 import com.microsoft.identity.common.java.crypto.IKeyAccessor;
 import com.microsoft.identity.common.java.crypto.IKeyStoreKeyManager;
 import com.microsoft.identity.common.java.crypto.RawKeyAccessor;
 import com.microsoft.identity.common.java.crypto.SecureHardwareState;
 import com.microsoft.identity.common.java.crypto.SigningAlgorithm;
 import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.java.util.Supplier;
-import com.microsoft.identity.common.java.crypto.IDevicePopManager;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
-import com.microsoft.identity.common.logging.Logger;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.ProviderException;
@@ -59,12 +55,7 @@ import java.security.cert.CertificateException;
 import java.text.ParseException;
 import java.util.UUID;
 
-import javax.crypto.BadPaddingException;
-import javax.crypto.Cipher;
-import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.KeyGenerator;
-import javax.crypto.NoSuchPaddingException;
-import javax.crypto.SecretKey;
 
 /**
  * This class is a static factory providing access to KeyStore objects.  Since all of the construction
@@ -94,7 +85,7 @@ public class AndroidKeyStoreAccessor {
      */
     public static IKeyAccessor forAlias(@NonNull final Context context, @NonNull final String alias, @NonNull final CryptoSuite suite)
             throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException, ClientException {
-        final IPlatformComponents commonComponents = AndroidPlatformComponents.createFromContext(context);
+        final IPlatformComponents commonComponents = AndroidPlatformComponentsFactory.createFromContext(context);
         final IDevicePopManager popManager = commonComponents.getDevicePopManager(alias);
         if (suite.cipher() instanceof IDevicePopManager.Cipher) {
             if (!popManager.asymmetricKeyExists()) {
@@ -196,7 +187,7 @@ public class AndroidKeyStoreAccessor {
                                            @NonNull final SigningAlgorithm signingAlg)
             throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException, ClientException {
         final String alias = UUID.randomUUID().toString();
-        final IPlatformComponents commonComponents = AndroidPlatformComponents.createFromContext(context);
+        final IPlatformComponents commonComponents = AndroidPlatformComponentsFactory.createFromContext(context);
         final IDevicePopManager popManager = commonComponents.getDevicePopManager(alias);
         popManager.generateAsymmetricKey();
         return getKeyAccessor(cipher, signingAlg, popManager);
