@@ -36,7 +36,6 @@ import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 import org.junit.Assert;
 
 import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT;
-import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT_LONG;
 import static org.junit.Assert.fail;
 
 import java.util.concurrent.TimeUnit;
@@ -109,7 +108,7 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
         final UiObject consentScreen = getConsentScreen();
         Assert.assertTrue(
                 "Consent screen does not appear",
-                consentScreen.waitForExists(FIND_UI_ELEMENT_TIMEOUT)
+                consentScreen.exists()
         );
     }
 
@@ -135,7 +134,7 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
         // Confirm On Speed Bump Screen
         final UiObject speedBump = UiAutomatorUtils.obtainUiObjectWithResourceId("appConfirmTitle");
 
-        if (!speedBump.waitForExists(FIND_UI_ELEMENT_TIMEOUT_LONG)) {
+        if (!speedBump.exists()) {
             fail("Speed Bump screen did not show up");
         }
 
@@ -182,5 +181,16 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
         } else {
             handleBackButton();
         }
+    }
+
+    @Override
+    public void handleVerifyYourIdentity() {
+        Logger.i(TAG, "Handle Verify Your Identity Page..");
+
+        final UiObject verifyYourIdentity = UiAutomatorUtils.obtainUiObjectWithResourceId("idDiv_SAOTCS_Title");
+        if (!verifyYourIdentity.exists()) {
+            fail("Verify your identity page did not show up");
+        }
+        UiAutomatorUtils.handleButtonClickForObjectWithText("Call +X XXXXXXXX21");
     }
 }

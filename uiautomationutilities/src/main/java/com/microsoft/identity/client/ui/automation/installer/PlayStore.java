@@ -52,8 +52,10 @@ public class PlayStore implements IAppInstaller {
     private static final String UPDATE_APP = "Update";
     private boolean shouldHandleTermsAndServices = true;
 
-    // wait at least 5 mins for app installation from Play Store
+    // wait at least 5 mins for app download/install from Play Store
     private static final long PLAY_STORE_INSTALL_OR_UPDATE_APP_TIMEOUT = TimeUnit.MINUTES.toMillis(5);
+    // During update scenario, we check end of installation with 2 separate button checks, so creating a second timeout
+    private static final long PLAY_STORE_INSTALL_STEP_TIMEOUT = TimeUnit.MINUTES.toMillis(1);
     // Timeout for finding a ui object during playstore installation/update
     private static final long PLAY_STORE_UI_OBJECT_TIMEOUT = TimeUnit.SECONDS.toMillis(10);
 
@@ -61,6 +63,7 @@ public class PlayStore implements IAppInstaller {
         Logger.i(TAG, "Launch Market Page For " + appPackageName + " Package..");
         final Context context = ApplicationProvider.getApplicationContext();
         final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + appPackageName)); //sets the intent to start your app
+        intent.setPackage("com.android.vending");
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_MULTIPLE_TASK);  //clear out any previous task, i.e., make sure it starts on the initial screen
         context.startActivity(intent);
     }
@@ -135,19 +138,33 @@ public class PlayStore implements IAppInstaller {
                     new UiSelector().description(playStoreAction),
                     PLAY_STORE_UI_OBJECT_TIMEOUT);
             uiObjBtn.click();
-            checkInstallCompletion(new UiSelector().description("Uninstall"));
+            if (playStoreAction.equals(INSTALL_APP)) {
+                checkButtonAfterPlayStoreAction(new UiSelector().description("Uninstall"), PLAY_STORE_INSTALL_OR_UPDATE_APP_TIMEOUT);
+            } else {
+                // In update scenario, Uninstall button is visible before download is finished, so we check for open instead
+                checkButtonAfterPlayStoreAction(new UiSelector().description("Open"), PLAY_STORE_INSTALL_OR_UPDATE_APP_TIMEOUT);
+                // Open button is visible before install is finished, so we check for uninstall button after
+                checkButtonAfterPlayStoreAction(new UiSelector().description("Uninstall"), PLAY_STORE_INSTALL_STEP_TIMEOUT);
+            }
         } catch (final UiObjectNotFoundException e) {
             Logger.i(TAG, "Got exception when trying to find Install/Update button for PlayStore: " + e.getMessage());
             final UiObject uiObjBtn = UiAutomatorUtils.obtainUiObjectWithUiSelector(
                     new UiSelector().className(Button.class).text(playStoreAction).enabled(true),
                     PLAY_STORE_UI_OBJECT_TIMEOUT);
             uiObjBtn.click();
-            checkInstallCompletion(new UiSelector().className(Button.class).text("Uninstall").enabled(true));
+            if (playStoreAction.equals(INSTALL_APP)) {
+                checkButtonAfterPlayStoreAction(new UiSelector().className(Button.class).text("Uninstall").enabled(true), PLAY_STORE_INSTALL_OR_UPDATE_APP_TIMEOUT);
+            } else {
+                // In update scenario, Uninstall button is visible before download is finished, so we check for open instead
+                checkButtonAfterPlayStoreAction(new UiSelector().className(Button.class).text("Open").enabled(true), PLAY_STORE_INSTALL_OR_UPDATE_APP_TIMEOUT);
+                // Open button is visible before install is finished, however, so we check for uninstall button after
+                checkButtonAfterPlayStoreAction(new UiSelector().className(Button.class).text("Uninstall").enabled(true), PLAY_STORE_INSTALL_STEP_TIMEOUT);
+            }
         }
     }
 
-    private void checkInstallCompletion(@NonNull final UiSelector selector) {
-        final UiObject openButton = UiAutomatorUtils.obtainUiObjectWithUiSelector(selector, PLAY_STORE_INSTALL_OR_UPDATE_APP_TIMEOUT);
+    private void checkButtonAfterPlayStoreAction(@NonNull final UiSelector selector, final long existsTimeout) {
+        final UiObject openButton = UiAutomatorUtils.obtainUiObjectWithUiSelector(selector, existsTimeout);
         Assert.assertTrue(openButton.exists());
     }
 

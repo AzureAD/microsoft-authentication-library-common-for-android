@@ -44,6 +44,15 @@ public interface ILabClient {
     ILabAccount getLabAccount(LabQuery labQuery) throws LabApiException;
 
     /**
+     * Load an existing account from Lab Api based on the upn given.
+     *
+     * @param upn upn of the desired lab account
+     * @return a {@link LabAccount} object
+     * @throws LabApiException if an error occurs while trying to fetch account from lab
+     */
+    ILabAccount getLabAccount(@NonNull final String upn) throws LabApiException;
+
+    /**
      * Loads existing account(s) from Lab Api based on the provided query.
      *
      * @param labQuery parameters that determine what kind of account(s) to fetch from lab

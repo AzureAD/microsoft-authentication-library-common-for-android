@@ -28,6 +28,11 @@ package com.microsoft.identity.client.ui.automation.app;
 public interface IApp {
 
     /**
+     * Returns the package name of the app.
+     */
+    String getPackageName();
+
+    /**
      * Install this app on the device.
      */
     void install();

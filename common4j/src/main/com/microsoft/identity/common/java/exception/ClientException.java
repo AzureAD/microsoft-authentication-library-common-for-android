@@ -83,7 +83,7 @@ public class ClientException extends BaseException {
     public static final String SCOPE_EMPTY_OR_NULL = "scope_empty_or_null";
 
     /**
-     * A scope is required when making a token request
+     * Emitted when the device Token is not present in successful response.
      */
     public static final String DEVICE_TOKEN_EMPTY_OR_NULL = "device_token_empty_or_null";
 
@@ -144,11 +144,6 @@ public class ClientException extends BaseException {
     public static final String INVALID_JWT = "invalid_jwt";
 
     /**
-     * JWE returned by the server is not valid, empty or malformed.
-     */
-    public static final String INVALID_JWE = "invalid_jwe";
-
-    /**
      * State from authorization response did not match the state in the authorization request.
      * For authorization requests, the sdk will verify the state returned from redirect and the one sent in the request.
      */
@@ -158,12 +153,6 @@ public class ClientException extends BaseException {
      * Unsupported url, cannot perform adfs authority validation.
      */
     public static final String UNSUPPORTED_URL = "unsupported_url";
-
-    /**
-     * Unsupported android api version.
-     */
-    public static final String UNSUPPORTED_ANDROID_API_VERSION = "unsupported_android_api_version";
-
 
     /**
      * The authority is not supported for authority validation. The sdk supports b2c authority, but we don't support b2c authority validation yet.
@@ -363,6 +352,21 @@ public class ClientException extends BaseException {
      * The Keyring read operation failed.
      */
     public static final String KEY_RING_READ_FAILURE = "storage_keyring_read_failure";
+
+    /**
+     * The powerLift log upload operation failed.
+     */
+    public static final String LOG_UPLOAD_FAILURE = "log_upload_failure";
+
+    /**
+     * The powerLift api key is invalid (empty/null).
+     */
+    public static final String INVALID_POWERLIFT_API_KEY = "invalid_powerlift_api_key";
+
+    /**
+     * The broker log upload feature is disabled.
+     */
+    public static final String LOG_UPLOAD_TO_POWERLIFT_FEATURE_DISABLED = "log_upload_to_powerlift_feature_disabled";
 
     /**
      * Constructor of ClientException.
