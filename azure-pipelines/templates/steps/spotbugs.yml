@@ -17,9 +17,9 @@ steps:
   inputs:
     cwd: ${{ parameters.cwd }}
     tasks: ${{ parameters.project }}:${{ parameters.spotbugsCommand }}
-# - task: PublishPipelineArtifact@1
-#   displayName: 'Publish Artifact: SpotBugs'
-#   inputs:
-#     targetPath: '$(Build.SourcesDirectory)\${{ parameters.project }}\build\reports\'
-#     ArtifactName: ${{ parameters.artifactName }}
-#   condition: failed()
+- task: PublishPipelineArtifact@1
+  displayName: 'Publish Artifact: SpotBugs'
+  inputs:
+    targetPath: '$(Build.SourcesDirectory)\${{ parameters.project }}\build\reports\'
+    ArtifactName: ${{ parameters.artifactName }}
+  condition: failed()
