@@ -361,8 +361,6 @@ public class BrokerHost extends AbstractTestBroker {
         UiAutomatorUtils.handleButtonClick("com.microsoft.identity.testuserapp:id/flightProvider_localStorage");
         // Click Set Flights button
         UiAutomatorUtils.handleButtonClick("com.microsoft.identity.testuserapp:id/overwriteFlightsButton");
-        // Confirmation button
-        UiAutomatorUtils.handleButtonClick("android:id/button1");
 
         // Sleep for a second after flight overwrite
         try {
@@ -385,15 +383,13 @@ public class BrokerHost extends AbstractTestBroker {
         }
 
         // scroll to find the set flights button
-        UiAutomatorUtils.obtainChildInScrollable("Set Flights");
+        UiAutomatorUtils.obtainChildInScrollable("Update Flights");
         // input flights string in flights input box
         UiAutomatorUtils.handleInput("com.microsoft.identity.testuserapp:id/editTextFlights", flightsJson);
         // Set to use LocalStorage Flights
         UiAutomatorUtils.handleButtonClick("com.microsoft.identity.testuserapp:id/flightProvider_localStorage");
         // Click Set Flights button
         UiAutomatorUtils.handleButtonClick("com.microsoft.identity.testuserapp:id/setFlightsButton");
-        // Confirm button
-        UiAutomatorUtils.handleButtonClick("android:id/button1");
 
         // Sleep for a second after flight set
         try {
