@@ -103,19 +103,28 @@ public interface IPlatformUtil {
     /**
      * BouncyCastle doesn't play well with Conscrypt (Android 11's default SSLSocket implementation)
      * https://developer.android.com/about/versions/11/behavior-changes-all#ssl-sockets-conscrypt
-     *
+     * <p>
      * This causes the DRS request TLS handshake to fail - 'key not found' - even if cert is provided.
-     *
+     * <p>
      * As a short-term work around, we're going to use the 'default' KeyManagerFactory in Android,
      * and keeps using BouncyCastle in Linux.
-     *
+     * <p>
      * Long term, we're going to move away from platform's default implementation
      * and use external libraries that are FIPS compliant.
-     *
+     * <p>
      * We use KeyManagerFactory to construct an {@link javax.net.ssl.SSLContext} object
      * with a WPJ certificate - to authenticate into DRS (via TLS challenge).
      *
      * @link https://developer.android.com/reference/javax/net/ssl/KeyManagerFactory
      **/
     KeyManagerFactory getSslContextKeyManagerFactory() throws NoSuchAlgorithmException;
+
+    /**
+     * Returns the package name of the app for which the uid is supplied.
+     *
+     * @param uid the uid of the app for which to return package name
+     * @return package name
+     */
+    @Nullable
+    String getPackageNameFromUid(final int uid);
 }

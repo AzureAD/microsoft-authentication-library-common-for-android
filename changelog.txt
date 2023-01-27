@@ -1,8 +1,16 @@
 V.Next
 ----------
+- [MINOR] Format thread+correlationId metadata only once logging is clearly opted-in (#1917)
+- [MINOR] Remove unnecessary synchronization when storage access is already guarded (#1928)
+- [MINOR] Write back read successes to cache and stop extra lookups in getAll (#1927)
+- [MINOR] Add method to platform util to get package name from uid (#1932)
+
+V.9.1.0
+----------
 - [MINOR] Convert crypto operation spans into metrics (#1909)
 - [PATCH] Move clearClientCertPreferences to onCreateView only (#1915)
 - [MINOR] Fix custom fragment logic - fulfill mReferencedFragment with intent.getExtras() (#1704)
+- [MINOR] Propagate span context from MSAL to Broker (#1926)
 
 V.9.0.1
 ----------
