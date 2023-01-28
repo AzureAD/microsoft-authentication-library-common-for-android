@@ -26,11 +26,17 @@ import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCommandParameters;
 import com.microsoft.identity.common.java.controllers.BaseController;
 import com.microsoft.identity.common.java.logging.Logger;
+import com.microsoft.identity.common.java.opentelemetry.AttributeName;
+import com.microsoft.identity.common.java.opentelemetry.OTelUtility;
+import com.microsoft.identity.common.java.opentelemetry.SpanName;
 import com.microsoft.identity.common.java.result.AcquireTokenResult;
 import com.microsoft.identity.common.java.util.ported.PropertyBag;
 
 import java.util.List;
 
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.context.Scope;
 import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 
@@ -55,18 +61,34 @@ public class InteractiveTokenCommand extends TokenCommand {
     @Override
     public AcquireTokenResult execute() throws Exception {
         final String methodName = ":execute";
-        if (getParameters() instanceof InteractiveTokenCommandParameters) {
-            Logger.info(
-                    TAG + methodName,
-                    "Executing interactive token command..."
-            );
 
-            return getDefaultController()
-                    .acquireToken(
-                            (InteractiveTokenCommandParameters) getParameters()
-                    );
-        } else {
-            throw new IllegalArgumentException("Invalid operation parameters");
+        final Span span = OTelUtility.createSpanFromParent(
+                SpanName.AcquireTokenInteractive.name(), getParameters().getSpanContext()
+        );
+        span.setAttribute(AttributeName.application_name.name(), getParameters().getApplicationName());
+        span.setAttribute(AttributeName.public_api_id.name(), getPublicApiId());
+
+        try (final Scope scope = span.makeCurrent()) {
+            if (getParameters() instanceof InteractiveTokenCommandParameters) {
+                Logger.info(
+                        TAG + methodName,
+                        "Executing interactive token command..."
+                );
+
+                final BaseController controller = getDefaultController();
+
+                span.setAttribute(AttributeName.controller_name.name(), controller.getClass().getSimpleName());
+
+                return controller.acquireToken((InteractiveTokenCommandParameters) getParameters());
+            } else {
+                throw new IllegalArgumentException("Invalid operation parameters");
+            }
+        } catch (final Throwable throwable) {
+            span.setStatus(StatusCode.ERROR);
+            span.recordException(throwable);
+            throw throwable;
+        } finally {
+            span.end();
         }
     }
 
