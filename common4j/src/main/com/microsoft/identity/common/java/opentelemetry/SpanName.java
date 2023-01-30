@@ -36,5 +36,8 @@ public enum SpanName {
     DoDiscovery,
     WorkplaceLeave,
     DeviceState,
-    CertBasedAuth
+    CertBasedAuth,
+    UploadBrokerLogs,
+    InitializePowerLift,
+    MSAL_PerformIpcStrategy
 }

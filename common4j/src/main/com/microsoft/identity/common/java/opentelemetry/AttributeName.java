@@ -88,5 +88,25 @@ public enum AttributeName {
     /**
      * An error code.
      */
-    error_code
+    error_code,
+
+    /**
+     * The IPC strategy being used.
+     */
+    ipc_strategy,
+
+    /**
+     * The API ID of an MSAL PCA method.
+     */
+    public_api_id,
+
+    /**
+     * The name of the controller being used to process the request.
+     */
+    controller_name,
+
+    /**
+     * The name of the application making the request.
+     */
+    application_name
 }

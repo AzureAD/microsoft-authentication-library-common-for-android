@@ -2,11 +2,17 @@ V.Next
 ----------
 - [MINOR] Add NFC compatibility and telemetry to CBA (#1896)
 - [MINOR] Format thread+correlationId metadata only once logging is clearly opted-in (#1917)
+- [MINOR] Remove unnecessary synchronization when storage access is already guarded (#1928)
+- [MINOR] Write back read successes to cache and stop extra lookups in getAll (#1927)
+- [MINOR] Add method to platform util to get package name from uid (#1932)
+- [MINOR] Move instrumentation of Token Requests from controllers to commands (#1939)
+- [MINOR] Capture span status and error codes in missing scenarios (#1940)
 
 V.9.1.0
 ----------
 - [MINOR] Convert crypto operation spans into metrics (#1909)
 - [PATCH] Move clearClientCertPreferences to onCreateView only (#1915)
+- [MINOR] Propagate span context from MSAL to Broker (#1926)
 
 V.9.0.1
 ----------
