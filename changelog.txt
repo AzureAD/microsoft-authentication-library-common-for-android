@@ -4,6 +4,8 @@ V.Next
 - [MINOR] Remove unnecessary synchronization when storage access is already guarded (#1928)
 - [MINOR] Write back read successes to cache and stop extra lookups in getAll (#1927)
 - [MINOR] Add method to platform util to get package name from uid (#1932)
+- [MINOR] Move instrumentation of Token Requests from controllers to commands (#1939)
+- [MINOR] Capture span status and error codes in missing scenarios (#1940)
 
 V.9.1.0
 ----------
