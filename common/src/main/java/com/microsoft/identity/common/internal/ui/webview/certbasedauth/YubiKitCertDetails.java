@@ -20,22 +20,52 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.ui.webview.challengehandlers;
+package com.microsoft.identity.common.internal.ui.webview.certbasedauth;
 
 import androidx.annotation.NonNull;
 
+import com.yubico.yubikit.piv.Slot;
+
 import java.security.cert.X509Certificate;
 
+import javax.annotation.Nonnull;
+
 /**
- * Holds X509Certificate and other important details that may be implementation specific.
+ * Holds certificate found on YubiKey and its corresponding slot.
  */
-public interface ICertDetails {
+public class YubiKitCertDetails implements ICertDetails {
+    private final X509Certificate mCert;
+    private final Slot mSlot;
+
+    /**
+     * Creates new instance of YubiKitCertDetails.
+     * @param cert Certificate found on YubiKey.
+     * @param slot PIV slot on YubiKey where certificate is located.
+     */
+    public YubiKitCertDetails(@NonNull final X509Certificate cert,
+                              @NonNull final Slot slot) {
+        mCert = cert;
+        mSlot = slot;
+    }
 
     /**
      * Gets certificate.
      * @return certificate.
      */
+    @Override
     @NonNull
-    X509Certificate getCertificate();
+    public X509Certificate getCertificate() {
+        return mCert;
+    }
 
+
+    /**
+     * Gets PIV Slot where certificate is located.
+     * @return Slot where certificate is located.
+     */
+    @Nonnull
+    public Slot getSlot() {
+        return mSlot;
+    }
 }
+

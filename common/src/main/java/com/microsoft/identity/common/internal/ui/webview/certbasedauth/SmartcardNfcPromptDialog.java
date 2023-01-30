@@ -20,7 +20,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.ui.webview.challengehandlers;
+package com.microsoft.identity.common.internal.ui.webview.certbasedauth;
 
 import android.app.Activity;
 import android.content.DialogInterface;
@@ -32,19 +32,13 @@ import com.microsoft.identity.common.R;
 import lombok.NonNull;
 
 /**
- * Builds a dialog that prompts the user to connect their smartcard, either by plugging in (USB) or holding to back of phone (NFC).
+ * Builds a dialog that prompts the user to connect their smartcard by holding it to the back of their phone (NFC).
  */
-public class SmartcardPromptDialog extends SmartcardDialog {
+public class SmartcardNfcPromptDialog extends SmartcardDialog {
 
     private final CancelCbaCallback mCancelCbaCallback;
-
-    /**
-     * Creates new instance of SmartcardPromptDialog.
-     *
-     * @param activity Host activity.
-     */
-    public SmartcardPromptDialog(@NonNull final CancelCbaCallback cancelCbaCallback,
-                                 @NonNull final Activity activity) {
+    public SmartcardNfcPromptDialog(@NonNull final CancelCbaCallback cancelCbaCallback,
+                                    @NonNull final Activity activity) {
         super(activity);
         mCancelCbaCallback = cancelCbaCallback;
         createDialog();
@@ -60,10 +54,9 @@ public class SmartcardPromptDialog extends SmartcardDialog {
             public void run() {
                 final AlertDialog.Builder builder = new AlertDialog.Builder(mActivity, R.style.UserChoiceAlertDialogTheme)
                         //Sets topmost text of dialog.
-                        .setTitle(R.string.smartcard_prompt_dialog_title)
-                        //Sets subtext of the title.
-                        .setMessage(R.string.smartcard_prompt_dialog_message)
-                        .setNegativeButton(R.string.smartcard_prompt_dialog_negative_button, new DialogInterface.OnClickListener() {
+                        .setTitle(R.string.smartcard_nfc_prompt_dialog_title)
+                        .setMessage(R.string.smartcard_nfc_prompt_dialog_message)
+                        .setNegativeButton(R.string.smartcard_nfc_prompt_dialog_negative_button, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
                                 mCancelCbaCallback.onCancel();
@@ -73,13 +66,6 @@ public class SmartcardPromptDialog extends SmartcardDialog {
                 //If user touches outside dialog, the default behavior makes the dialog disappear without really doing anything.
                 //Adding this line in disables this default behavior so that the user can only exit by hitting the positive button.
                 dialog.setCanceledOnTouchOutside(false);
-                //Handle back button the same as the negative button.
-                dialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
-                    @Override
-                    public void onCancel(DialogInterface dialog) {
-                        mCancelCbaCallback.onCancel();
-                    }
-                });
                 mDialog = dialog;
             }
         });
@@ -90,7 +76,7 @@ public class SmartcardPromptDialog extends SmartcardDialog {
      */
     @Override
     void onCancelCba() {
-        mCancelCbaCallback.onCancel();
+
     }
 
     /**

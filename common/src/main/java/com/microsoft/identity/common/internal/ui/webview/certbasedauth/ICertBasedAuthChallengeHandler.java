@@ -20,14 +20,29 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.ui.webview.challengehandlers;
+package com.microsoft.identity.common.internal.ui.webview.certbasedauth;
+
+import android.webkit.ClientCertRequest;
+
+import androidx.annotation.NonNull;
+
+import com.microsoft.identity.common.internal.ui.webview.challengehandlers.IChallengeHandler;
+import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 
 /**
- * Callback methods to be run upon initial usb connection and disconnection of a smartcard device.
+ * ChallengeHandler extended interface specifically for certificate based authentication (CBA)
+ *  implementations.
  */
-public interface IUsbConnectionCallback extends IConnectionCallback {
+public interface ICertBasedAuthChallengeHandler extends IChallengeHandler<ClientCertRequest, Void> {
+    
     /**
-     * Logic to be run upon disconnection of a smartcard device via usb.
+     * Emit telemetry for results from certificate based authentication (CBA) if CBA occurred.
+     * @param response a RawAuthorizationResult object received upon a challenge response received.
      */
-    void onClosedConnection();
+    void emitTelemetryForCertBasedAuthResults(@NonNull final RawAuthorizationResult response);
+
+    /**
+     * Clean up logic to run when ICertBasedAuthChallengeHandler is no longer going to be used.
+     */
+    void cleanUp();
 }
