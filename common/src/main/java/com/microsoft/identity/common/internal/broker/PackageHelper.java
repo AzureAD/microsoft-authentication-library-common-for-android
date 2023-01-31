@@ -182,7 +182,11 @@ public class PackageHelper {
             if (packageInfo.signingInfo == null) {
                 return null;
             }
+            //Adding linke here: https://developer.android.com/reference/android/content/pm/SigningInfo#getSigningCertificateHistory()
+            //if the package has multiple signers the certificates may never be changed....
+            //if not then they can change and getSigningCertificateHistory includes current and former signing keys
             if (packageInfo.signingInfo.hasMultipleSigners()) {
+                //TODO: We should add this to telemetry (send to ESTS?) so we know which apps and how many
                 return packageInfo.signingInfo.getApkContentsSigners();
             } else {
                 return packageInfo.signingInfo.getSigningCertificateHistory();

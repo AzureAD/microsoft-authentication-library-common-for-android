@@ -357,8 +357,17 @@ public class BrokerHost extends AbstractTestBroker {
         UiAutomatorUtils.obtainChildInScrollable("Overwrite flights (When BrokerHost is the active broker)");
         // input flights string in flights input box
         UiAutomatorUtils.handleInput("com.microsoft.identity.testuserapp:id/editTextFlights", flightsJson);
+        // Set to use LocalStorage Flights
+        UiAutomatorUtils.handleButtonClick("com.microsoft.identity.testuserapp:id/flightProvider_localStorage");
         // Click Set Flights button
         UiAutomatorUtils.handleButtonClick("com.microsoft.identity.testuserapp:id/overwriteFlightsButton");
+
+        // Sleep for a second after flight overwrite
+        try {
+            Thread.sleep(TimeUnit.SECONDS.toMillis(1));
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -374,13 +383,21 @@ public class BrokerHost extends AbstractTestBroker {
         }
 
         // scroll to find the set flights button
-        UiAutomatorUtils.obtainChildInScrollable("Set Flights");
+        UiAutomatorUtils.obtainChildInScrollable("Update Flights");
         // input flights string in flights input box
         UiAutomatorUtils.handleInput("com.microsoft.identity.testuserapp:id/editTextFlights", flightsJson);
+        // Set to use LocalStorage Flights
+        UiAutomatorUtils.handleButtonClick("com.microsoft.identity.testuserapp:id/flightProvider_localStorage");
         // Click Set Flights button
         UiAutomatorUtils.handleButtonClick("com.microsoft.identity.testuserapp:id/setFlightsButton");
-    }
 
+        // Sleep for a second after flight set
+        try {
+            Thread.sleep(TimeUnit.SECONDS.toMillis(1));
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
 
     @Override
     public String getFlights() {
