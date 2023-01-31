@@ -21,9 +21,10 @@
         <activity
             android:name="com.microsoft.identity.common.internal.broker.BrokerActivity"
             android:configChanges="orientation|keyboardHidden|screenSize|screenLayout|keyboard" />
-
+        <!-- Activity to launch a install WPJ certificate activity and get the result -->
         <activity
-            android:name="com.microsoft.identity.common.internal.broker.InstallCertActivityWrapper"
+            android:name="com.microsoft.identity.common.internal.broker.InstallCertActivityLauncher"
+            android:theme="@style/Theme.AppCompat.Light"
             android:configChanges="orientation|keyboardHidden|screenSize|screenLayout|keyboard" />
 
     </application>
