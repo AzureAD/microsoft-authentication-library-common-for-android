@@ -1544,8 +1544,11 @@ public final class AuthenticationConstants {
 
         /**
          * Broker api path constant for execute device registration protocols.
+         * Note: The path was updated because in release 9.0.1 a part of the NEW WPJ API was exposed
+         * but the WpjController used in this release is still the legacy controller, which can
+         * produce errors if an app using the NEW WPJ API communicates with this version of the broker.
          */
-        public static final String DEVICE_REGISTRATION_PROTOCOLS_PATH = "/deviceRegistration/protocols";
+        public static final String DEVICE_REGISTRATION_PROTOCOLS_PATH = "/multipledeviceRegistration/protocols";
 
         /**
          * BrokerContentProvider URI code constant for MSAL-to-Broker hello request.
