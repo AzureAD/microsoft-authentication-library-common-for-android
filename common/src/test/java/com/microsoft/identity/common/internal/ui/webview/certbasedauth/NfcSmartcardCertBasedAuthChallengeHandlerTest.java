@@ -44,12 +44,12 @@ public class NfcSmartcardCertBasedAuthChallengeHandlerTest extends AbstractSmart
         setAndProcessChallengeHandler(getMockCertList());
         checkIfCorrectDialogIsShowing(TestDialog.cert_picker);
         goToPinDialog();
-        final SmartcardPinDialog.PositiveButtonListener pinListener = mDialogHolder.getMPinPositiveButtonListener();
+        final SmartcardPinDialog.PositiveButtonListener pinListener = mDialogHolder.getPinPositiveButtonListener();
         assertNotNull(pinListener);
         final char[] pin = {'1', '2', '3'};
         pinListener.onClick(pin);
         checkIfCorrectDialogIsShowing(TestDialog.nfc_prompt);
-        final SmartcardNfcPromptDialog.CancelCbaCallback nfcCancelCallback = mDialogHolder.getMNfcPromptCancelCbaCallback();
+        final SmartcardNfcPromptDialog.CancelCbaCallback nfcCancelCallback = mDialogHolder.getNfcPromptCancelCbaCallback();
         assertNotNull(nfcCancelCallback);
         nfcCancelCallback.onCancel();
         checkIfCorrectDialogIsShowing(null);
@@ -62,7 +62,7 @@ public class NfcSmartcardCertBasedAuthChallengeHandlerTest extends AbstractSmart
         setAndProcessChallengeHandler(manager);
         checkIfCorrectDialogIsShowing(TestDialog.cert_picker);
         goToPinDialog();
-        final SmartcardPinDialog.PositiveButtonListener pinListener = mDialogHolder.getMPinPositiveButtonListener();
+        final SmartcardPinDialog.PositiveButtonListener pinListener = mDialogHolder.getPinPositiveButtonListener();
         assertNotNull(pinListener);
         final char[] wrongPin = {'1', '2', '3'};
         pinListener.onClick(wrongPin);
@@ -84,7 +84,7 @@ public class NfcSmartcardCertBasedAuthChallengeHandlerTest extends AbstractSmart
         setAndProcessChallengeHandler(manager);
         checkIfCorrectDialogIsShowing(TestDialog.cert_picker);
         goToPinDialog();
-        final SmartcardPinDialog.PositiveButtonListener pinListener = mDialogHolder.getMPinPositiveButtonListener();
+        final SmartcardPinDialog.PositiveButtonListener pinListener = mDialogHolder.getPinPositiveButtonListener();
         assertNotNull(pinListener);
         final char[] exceptionPin = {'e', 'x', 'c'};
         pinListener.onClick(exceptionPin);
@@ -100,7 +100,7 @@ public class NfcSmartcardCertBasedAuthChallengeHandlerTest extends AbstractSmart
         setAndProcessChallengeHandler(manager);
         checkIfCorrectDialogIsShowing(TestDialog.cert_picker);
         goToPinDialog();
-        final SmartcardPinDialog.PositiveButtonListener pinListener = mDialogHolder.getMPinPositiveButtonListener();
+        final SmartcardPinDialog.PositiveButtonListener pinListener = mDialogHolder.getPinPositiveButtonListener();
         assertNotNull(pinListener);
         final char[] pin = {'1', '2', '3', '4', '5', '6'};
         pinListener.onClick(pin);
@@ -116,7 +116,7 @@ public class NfcSmartcardCertBasedAuthChallengeHandlerTest extends AbstractSmart
         setAndProcessChallengeHandler(manager);
         checkIfCorrectDialogIsShowing(TestDialog.cert_picker);
         goToPinDialog();
-        final SmartcardPinDialog.PositiveButtonListener pinListener = mDialogHolder.getMPinPositiveButtonListener();
+        final SmartcardPinDialog.PositiveButtonListener pinListener = mDialogHolder.getPinPositiveButtonListener();
         assertNotNull(pinListener);
         final char[] pin = {'1', '2', '3', '4', '5', '6'};
         pinListener.onClick(pin);

@@ -28,8 +28,9 @@ import androidx.annotation.Nullable;
 import java.util.List;
 
 import lombok.Getter;
+import lombok.experimental.Accessors;
 
-@Getter
+@Getter @Accessors(prefix = "m")
 class TestDialogHolder implements IDialogHolder {
 
     private TestDialog mCurrentDialog;

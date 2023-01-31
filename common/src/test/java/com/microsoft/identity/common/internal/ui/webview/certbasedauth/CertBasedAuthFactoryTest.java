@@ -70,7 +70,7 @@ public class CertBasedAuthFactoryTest extends AbstractCertBasedAuthTest {
     public void testCancelAtUserChoiceDialog() {
         challengeHandlerHelper(ExpectedChallengeHandler.NULL);
         checkIfCorrectDialogIsShowing(TestDialog.user_choice);
-        final UserChoiceDialog.CancelCbaCallback callback = mDialogHolder.getMUserChoiceCancelCbaCallback();
+        final UserChoiceDialog.CancelCbaCallback callback = mDialogHolder.getUserChoiceCancelCbaCallback();
         assertNotNull(callback);
         callback.onCancel();
         checkIfCorrectDialogIsShowing(null);
@@ -81,7 +81,7 @@ public class CertBasedAuthFactoryTest extends AbstractCertBasedAuthTest {
         challengeHandlerHelper(ExpectedChallengeHandler.USB);
         checkIfCorrectDialogIsShowing(TestDialog.user_choice);
         mUsbManager.mockConnect();
-        final UserChoiceDialog.PositiveButtonListener listener = mDialogHolder.getMUserChoicePositiveButtonListener();
+        final UserChoiceDialog.PositiveButtonListener listener = mDialogHolder.getUserChoicePositiveButtonListener();
         assertNotNull(listener);
         listener.onClick(1);
     }
@@ -90,11 +90,11 @@ public class CertBasedAuthFactoryTest extends AbstractCertBasedAuthTest {
     public void testCancelAtPromptDialog() {
         challengeHandlerHelper(ExpectedChallengeHandler.NULL);
         checkIfCorrectDialogIsShowing(TestDialog.user_choice);
-        final UserChoiceDialog.PositiveButtonListener listener = mDialogHolder.getMUserChoicePositiveButtonListener();
+        final UserChoiceDialog.PositiveButtonListener listener = mDialogHolder.getUserChoicePositiveButtonListener();
         assertNotNull(listener);
         listener.onClick(1);
         checkIfCorrectDialogIsShowing(TestDialog.prompt);
-        final SmartcardPromptDialog.CancelCbaCallback callback = mDialogHolder.getMPromptCancelCbaCallback();
+        final SmartcardPromptDialog.CancelCbaCallback callback = mDialogHolder.getPromptCancelCbaCallback();
         assertNotNull(callback);
         callback.onCancel();
         checkIfCorrectDialogIsShowing(null);
@@ -104,7 +104,7 @@ public class CertBasedAuthFactoryTest extends AbstractCertBasedAuthTest {
     public void testChooseSmartcardAndProceedWithUsb() {
         challengeHandlerHelper(ExpectedChallengeHandler.USB);
         checkIfCorrectDialogIsShowing(TestDialog.user_choice);
-        final UserChoiceDialog.PositiveButtonListener listener = mDialogHolder.getMUserChoicePositiveButtonListener();
+        final UserChoiceDialog.PositiveButtonListener listener = mDialogHolder.getUserChoicePositiveButtonListener();
         assertNotNull(listener);
         listener.onClick(1);
         checkIfCorrectDialogIsShowing(TestDialog.prompt);
@@ -115,7 +115,7 @@ public class CertBasedAuthFactoryTest extends AbstractCertBasedAuthTest {
     public void testChooseSmartcardAndProceedWithNfc() {
         challengeHandlerHelper(ExpectedChallengeHandler.NFC);
         checkIfCorrectDialogIsShowing(TestDialog.user_choice);
-        final UserChoiceDialog.PositiveButtonListener listener = mDialogHolder.getMUserChoicePositiveButtonListener();
+        final UserChoiceDialog.PositiveButtonListener listener = mDialogHolder.getUserChoicePositiveButtonListener();
         assertNotNull(listener);
         listener.onClick(1);
         checkIfCorrectDialogIsShowing(TestDialog.prompt);

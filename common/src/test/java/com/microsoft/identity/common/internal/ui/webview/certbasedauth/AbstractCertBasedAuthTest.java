@@ -49,8 +49,8 @@ public class AbstractCertBasedAuthTest {
             assertFalse(mDialogHolder.isDialogShowing());
             return;
         }
-        assertNotNull(mDialogHolder.getMCurrentDialog());
+        assertNotNull(mDialogHolder.getCurrentDialog());
         assertTrue(mDialogHolder.isDialogShowing());
-        assertEquals(expectedDialog, mDialogHolder.getMCurrentDialog());
+        assertEquals(expectedDialog, mDialogHolder.getCurrentDialog());
     }
 }

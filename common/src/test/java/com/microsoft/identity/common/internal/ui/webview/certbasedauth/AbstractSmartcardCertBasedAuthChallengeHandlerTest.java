@@ -56,7 +56,7 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandlerTest extends
     public void testCancelAtPickerDialog() {
         setAndProcessChallengeHandler(getMockCertList());
         checkIfCorrectDialogIsShowing(TestDialog.cert_picker);
-        final SmartcardCertPickerDialog.CancelCbaCallback callback =  mDialogHolder.getMCertPickerCancelCbaCallback();
+        final SmartcardCertPickerDialog.CancelCbaCallback callback =  mDialogHolder.getCertPickerCancelCbaCallback();
         assertNotNull(callback);
         callback.onCancel();
         checkIfCorrectDialogIsShowing(null);
@@ -67,7 +67,7 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandlerTest extends
         setAndProcessChallengeHandler(getMockCertList());
         checkIfCorrectDialogIsShowing(TestDialog.cert_picker);
         goToPinDialog();
-        final SmartcardPinDialog.CancelCbaCallback callback = mDialogHolder.getMPinCancelCbaCallback();
+        final SmartcardPinDialog.CancelCbaCallback callback = mDialogHolder.getPinCancelCbaCallback();
         assertNotNull(callback);
         callback.onCancel();
         checkIfCorrectDialogIsShowing(null);
@@ -93,9 +93,9 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandlerTest extends
     protected abstract void setAndProcessChallengeHandler(@NonNull final List<X509Certificate> certList);
 
     protected void goToPinDialog() {
-        final SmartcardCertPickerDialog.PositiveButtonListener listener = mDialogHolder.getMCertPickerPositiveButtonListener();
+        final SmartcardCertPickerDialog.PositiveButtonListener listener = mDialogHolder.getCertPickerPositiveButtonListener();
         assertNotNull(listener);
-        listener.onClick(mDialogHolder.getMCertList().get(0));
+        listener.onClick(mDialogHolder.getCertList().get(0));
         checkIfCorrectDialogIsShowing(TestDialog.pin);
     }
 
