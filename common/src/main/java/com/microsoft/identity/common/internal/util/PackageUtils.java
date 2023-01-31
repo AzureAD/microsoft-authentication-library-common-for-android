@@ -116,6 +116,7 @@ public final class PackageUtils {
                         certStream);
                 certificates.add(x509Certificate);
             } catch (final CertificateException e) {
+                //This exception is odd given the name of this function...
                 throw new ClientException(BROKER_APP_VERIFICATION_FAILED);
             }
         }
@@ -147,6 +148,7 @@ public final class PackageUtils {
             // Check the hash for signer cert is the same as what we hardcoded.
             final String signatureHash = Base64.encodeToString(messageDigest.digest(), Base64.NO_WRAP);
 
+            //Collecting output for logging
             hashListStringBuilder.append(signatureHash);
             hashListStringBuilder.append(',');
 
