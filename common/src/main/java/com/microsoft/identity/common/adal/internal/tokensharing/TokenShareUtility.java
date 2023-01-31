@@ -183,7 +183,9 @@ public class TokenShareUtility implements ITokenShareInternal {
         // Query the cache for the IdTokenRecord, RefreshTokenRecord, etc.
         return mTokenCache.load(
                 mClientId,
-                null, // wildcard (*)
+                null, // wildcard (*),
+                null,
+                null,
                 localAccountRecord,
                 new BearerAuthenticationSchemeInternal() // Auth scheme is inconsequential - only using RT
         );

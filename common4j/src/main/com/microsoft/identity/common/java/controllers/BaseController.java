@@ -282,7 +282,8 @@ public abstract class BaseController {
                             .setAuthority(requestAuthority.getAuthorityURL())
                             .setMultipleCloudAware(requestAuthority.isMultipleCloudsSupported())
                             .setState(interactiveTokenCommandParameters.getPlatformComponents().getStateGenerator().generate())
-                            .setSlice(requestAuthority.mSlice);
+                            .setSlice(requestAuthority.mSlice)
+                            .setApplicationIdentifier(parameters.getApplicationIdentifier());
                 }
             }
 
@@ -618,6 +619,8 @@ public abstract class BaseController {
         @SuppressWarnings("unchecked")
         final List<ICacheRecord> cacheRecords = cache.loadWithAggregatedAccountData(
                 parameters.getClientId(),
+                parameters.getApplicationIdentifier(),
+                parameters.getMamEnrollmentId(),
                 StringUtil.join(" ", parameters.getScopes()),
                 targetAccount,
                 authScheme

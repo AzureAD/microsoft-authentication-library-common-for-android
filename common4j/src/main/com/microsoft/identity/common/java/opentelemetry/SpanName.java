@@ -38,5 +38,5 @@ public enum SpanName {
     DeviceState,
     UploadBrokerLogs,
     InitializePowerLift,
-    MSAL_PerformIpcStrategy
+    MSAL_PerformIpcStrategy,
 }
