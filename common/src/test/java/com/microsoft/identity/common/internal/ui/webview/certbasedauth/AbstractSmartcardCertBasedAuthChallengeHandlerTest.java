@@ -22,20 +22,20 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.ui.webview.certbasedauth;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-
-import android.webkit.ClientCertRequest;
+import static org.junit.Assert.assertTrue;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 
 import java.math.BigInteger;
 import java.security.Principal;
-import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
@@ -46,10 +46,18 @@ import java.util.Set;
 @RunWith(RobolectricTestRunner.class)
 public abstract class AbstractSmartcardCertBasedAuthChallengeHandlerTest extends AbstractCertBasedAuthTest {
 
+    protected TestClientCertRequest mRequest;
+
+    @Before
+    public void handlerSetUp() {
+        mRequest = new TestClientCertRequest();
+    }
+
     @Test
     public void testNoCertsOnSmartcard() {
         setAndProcessChallengeHandler(new ArrayList<>());
         checkIfCorrectDialogIsShowing(TestDialog.error);
+        checkIfProceeded(false);
     }
 
     @Test
@@ -60,6 +68,7 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandlerTest extends
         assertNotNull(callback);
         callback.onCancel();
         checkIfCorrectDialogIsShowing(null);
+        checkIfProceeded(false);
     }
 
     @Test
@@ -71,6 +80,7 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandlerTest extends
         assertNotNull(callback);
         callback.onCancel();
         checkIfCorrectDialogIsShowing(null);
+        checkIfProceeded(false);
     }
 
     @Test
@@ -79,6 +89,7 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandlerTest extends
         certList.add(getMockCertificate("Exception", "Exception"));
         setAndProcessChallengeHandler(certList);
         checkIfCorrectDialogIsShowing(TestDialog.error);
+        checkIfProceeded(false);
     }
 
     @Test
@@ -90,6 +101,9 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandlerTest extends
     @Test
     public abstract void testExceptionThrownWhenGettingKey();
 
+    @Test
+    public abstract void testProceed();
+
     protected abstract void setAndProcessChallengeHandler(@NonNull final List<X509Certificate> certList);
 
     protected void goToPinDialog() {
@@ -97,6 +111,16 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandlerTest extends
         assertNotNull(listener);
         listener.onClick(mDialogHolder.getCertList().get(0));
         checkIfCorrectDialogIsShowing(TestDialog.pin);
+    }
+
+    protected void checkIfProceeded(final boolean isExpected) {
+        if (isExpected) {
+            assertTrue(mRequest.isProceeded());
+            assertFalse(mRequest.isCancelled());
+        } else {
+            assertFalse(mRequest.isProceeded());
+            assertTrue(mRequest.isCancelled());
+        }
     }
 
     @NonNull
@@ -251,46 +275,6 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandlerTest extends
             @Override
             public byte[] getExtensionValue(String s) {
                 return new byte[0];
-            }
-        };
-    }
-
-    @NonNull
-    protected ClientCertRequest getMockClientCertRequest() {
-        return new ClientCertRequest() {
-            @Override
-            public String[] getKeyTypes() {
-                return new String[0];
-            }
-
-            @Override
-            public Principal[] getPrincipals() {
-                return new Principal[0];
-            }
-
-            @Override
-            public String getHost() {
-                return null;
-            }
-
-            @Override
-            public int getPort() {
-                return 0;
-            }
-
-            @Override
-            public void proceed(PrivateKey privateKey, X509Certificate[] x509Certificates) {
-
-            }
-
-            @Override
-            public void ignore() {
-
-            }
-
-            @Override
-            public void cancel() {
-
             }
         };
     }

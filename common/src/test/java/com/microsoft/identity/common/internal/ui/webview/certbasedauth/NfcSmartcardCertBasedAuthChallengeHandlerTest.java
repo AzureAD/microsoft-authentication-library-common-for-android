@@ -31,6 +31,7 @@ import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 
 import java.security.cert.X509Certificate;
+import java.util.ArrayList;
 import java.util.List;
 
 @RunWith(RobolectricTestRunner.class)
@@ -53,6 +54,7 @@ public class NfcSmartcardCertBasedAuthChallengeHandlerTest extends AbstractSmart
         assertNotNull(nfcCancelCallback);
         nfcCancelCallback.onCancel();
         checkIfCorrectDialogIsShowing(null);
+        checkIfProceeded(false);
     }
 
     @Override
@@ -75,6 +77,7 @@ public class NfcSmartcardCertBasedAuthChallengeHandlerTest extends AbstractSmart
         checkIfCorrectDialogIsShowing(TestDialog.nfc_prompt);
         manager.mockConnect(false);
         checkIfCorrectDialogIsShowing(TestDialog.error);
+        checkIfProceeded(false);
     }
 
     @Override
@@ -91,12 +94,15 @@ public class NfcSmartcardCertBasedAuthChallengeHandlerTest extends AbstractSmart
         checkIfCorrectDialogIsShowing(TestDialog.nfc_prompt);
         manager.mockConnect(false);
         checkIfCorrectDialogIsShowing(TestDialog.error);
+        checkIfProceeded(false);
     }
 
     @Override
     @Test
     public void testExceptionThrownWhenGettingKey() {
-        final TestNfcSmartcardCertBasedAuthManager manager = new TestNfcSmartcardCertBasedAuthManager(getMockCertList());
+        final List<X509Certificate> certList = new ArrayList<>();
+        certList.add(getMockCertificate("ExceptionKey", "ExceptionKey"));
+        final TestNfcSmartcardCertBasedAuthManager manager = new TestNfcSmartcardCertBasedAuthManager(certList);
         setAndProcessChallengeHandler(manager);
         checkIfCorrectDialogIsShowing(TestDialog.cert_picker);
         goToPinDialog();
@@ -108,6 +114,25 @@ public class NfcSmartcardCertBasedAuthChallengeHandlerTest extends AbstractSmart
         manager.mockConnect(false);
         //In between, loading dialog will show.
         checkIfCorrectDialogIsShowing(TestDialog.error);
+        checkIfProceeded(false);
+    }
+
+    @Override
+    @Test
+    public void testProceed() {
+        final TestNfcSmartcardCertBasedAuthManager manager = new TestNfcSmartcardCertBasedAuthManager(getMockCertList());
+        setAndProcessChallengeHandler(manager);
+        checkIfCorrectDialogIsShowing(TestDialog.cert_picker);
+        goToPinDialog();
+        final SmartcardPinDialog.PositiveButtonListener pinListener = mDialogHolder.getPinPositiveButtonListener();
+        assertNotNull(pinListener);
+        final char[] pin = {'1', '2', '3', '4', '5', '6'};
+        pinListener.onClick(pin);
+        checkIfCorrectDialogIsShowing(TestDialog.nfc_prompt);
+        manager.mockConnect(false);
+        //In between, loading dialog will show.
+        checkIfCorrectDialogIsShowing(null);
+        checkIfProceeded(true);
     }
 
     @Test
@@ -123,6 +148,7 @@ public class NfcSmartcardCertBasedAuthChallengeHandlerTest extends AbstractSmart
         checkIfCorrectDialogIsShowing(TestDialog.nfc_prompt);
         manager.mockConnect(true);
         checkIfCorrectDialogIsShowing(TestDialog.error);
+        checkIfProceeded(false);
     }
 
     @Override
@@ -133,7 +159,7 @@ public class NfcSmartcardCertBasedAuthChallengeHandlerTest extends AbstractSmart
                 mDialogHolder,
                 mTestCertBasedAuthTelemetryHelper
         );
-        mChallengeHandler.processChallenge(getMockClientCertRequest());
+        mChallengeHandler.processChallenge(mRequest);
     }
 
     private void setAndProcessChallengeHandler(@NonNull final TestNfcSmartcardCertBasedAuthManager manager) {
@@ -143,6 +169,6 @@ public class NfcSmartcardCertBasedAuthChallengeHandlerTest extends AbstractSmart
                 mDialogHolder,
                 mTestCertBasedAuthTelemetryHelper
         );
-        mChallengeHandler.processChallenge(getMockClientCertRequest());
+        mChallengeHandler.processChallenge(mRequest);
     }
 }

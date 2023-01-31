@@ -114,7 +114,25 @@ class TestDialogHolder implements IDialogHolder {
     }
 
     @Override
-    public void onCancelCba() {}
+    public void onCancelCba() {
+        switch (mCurrentDialog) {
+            case cert_picker:
+                mCertPickerCancelCbaCallback.onCancel();
+                break;
+            case pin:
+                mPinCancelCbaCallback.onCancel();
+                break;
+            case user_choice:
+                mUserChoiceCancelCbaCallback.onCancel();
+                break;
+            case prompt:
+                mPromptCancelCbaCallback.onCancel();
+                break;
+            case nfc_prompt:
+                mNfcPromptCancelCbaCallback.onCancel();
+                break;
+        }
+    }
 
     @Override
     public void setPinDialogErrorMode() {}

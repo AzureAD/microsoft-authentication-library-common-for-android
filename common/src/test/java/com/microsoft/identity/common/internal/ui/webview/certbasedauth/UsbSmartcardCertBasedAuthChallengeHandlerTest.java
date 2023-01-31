@@ -31,6 +31,7 @@ import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 
 import java.security.cert.X509Certificate;
+import java.util.ArrayList;
 import java.util.List;
 
 @RunWith(RobolectricTestRunner.class)
@@ -46,6 +47,7 @@ public class UsbSmartcardCertBasedAuthChallengeHandlerTest extends AbstractSmart
         checkIfCorrectDialogIsShowing(TestDialog.cert_picker);
         manager.stopDiscovery(mActivity);
         checkIfCorrectDialogIsShowing(TestDialog.error);
+        checkIfProceeded(false);
     }
 
     @Test
@@ -56,6 +58,7 @@ public class UsbSmartcardCertBasedAuthChallengeHandlerTest extends AbstractSmart
         goToPinDialog();
         manager.stopDiscovery(mActivity);
         checkIfCorrectDialogIsShowing(TestDialog.error);
+        checkIfProceeded(false);
     }
 
     @Override
@@ -71,6 +74,7 @@ public class UsbSmartcardCertBasedAuthChallengeHandlerTest extends AbstractSmart
         checkIfCorrectDialogIsShowing(TestDialog.pin);
         pinListener.onClick(wrongPin);
         checkIfCorrectDialogIsShowing(TestDialog.error);
+        checkIfProceeded(false);
     }
 
     @Override
@@ -84,12 +88,15 @@ public class UsbSmartcardCertBasedAuthChallengeHandlerTest extends AbstractSmart
         final char[] exceptionPin = {'e', 'x', 'c'};
         pinListener.onClick(exceptionPin);
         checkIfCorrectDialogIsShowing(TestDialog.error);
+        checkIfProceeded(false);
     }
 
     @Override
     @Test
     public void testExceptionThrownWhenGettingKey() {
-        setAndProcessChallengeHandler(getMockCertList());
+        final List<X509Certificate> certList = new ArrayList<>();
+        certList.add(getMockCertificate("ExceptionKey", "ExceptionKey"));
+        setAndProcessChallengeHandler(certList);
         checkIfCorrectDialogIsShowing(TestDialog.cert_picker);
         goToPinDialog();
         final SmartcardPinDialog.PositiveButtonListener pinListener = mDialogHolder.getPinPositiveButtonListener();
@@ -97,6 +104,21 @@ public class UsbSmartcardCertBasedAuthChallengeHandlerTest extends AbstractSmart
         final char[] pin = {'1', '2', '3', '4', '5', '6'};
         pinListener.onClick(pin);
         checkIfCorrectDialogIsShowing(TestDialog.error);
+        checkIfProceeded(false);
+    }
+
+    @Override
+    @Test
+    public void testProceed() {
+        setAndProcessChallengeHandler(getMockCertList());
+        checkIfCorrectDialogIsShowing(TestDialog.cert_picker);
+        goToPinDialog();
+        final SmartcardPinDialog.PositiveButtonListener pinListener = mDialogHolder.getPinPositiveButtonListener();
+        assertNotNull(pinListener);
+        final char[] pin = {'1', '2', '3', '4', '5', '6'};
+        pinListener.onClick(pin);
+        checkIfCorrectDialogIsShowing(null);
+        checkIfProceeded(true);
     }
 
     @Override
@@ -107,7 +129,7 @@ public class UsbSmartcardCertBasedAuthChallengeHandlerTest extends AbstractSmart
                 mDialogHolder,
                 mTestCertBasedAuthTelemetryHelper
         );
-        mChallengeHandler.processChallenge(getMockClientCertRequest());
+        mChallengeHandler.processChallenge(mRequest);
     }
 
     private void setAndProcessChallengeHandler(@NonNull final TestUsbSmartcardCertBasedAuthManager manager) {
@@ -117,6 +139,6 @@ public class UsbSmartcardCertBasedAuthChallengeHandlerTest extends AbstractSmart
                 mDialogHolder,
                 mTestCertBasedAuthTelemetryHelper
         );
-        mChallengeHandler.processChallenge(getMockClientCertRequest());
+        mChallengeHandler.processChallenge(mRequest);
     }
 }

@@ -87,7 +87,8 @@ class TestSmartcardSession implements ISmartcardSession {
     @NonNull
     @Override
     public PrivateKey getKeyForAuth(@NonNull final ICertDetails certDetails, @NonNull final char[] pin) throws Exception {
-        if (Arrays.equals(mPin, pin)) {
+        if (certDetails.getCertificate().getIssuerDN().getName().equals("ExceptionKey")
+            && Arrays.equals(mPin, pin)) {
             throw new Exception("Testing, 1,2,3");
         }
         return new PrivateKey() {
