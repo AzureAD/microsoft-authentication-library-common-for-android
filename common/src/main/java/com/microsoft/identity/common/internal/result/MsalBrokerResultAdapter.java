@@ -318,6 +318,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                     brokerResult.getErrorCode(),
                     brokerResult.getErrorMessage()
             );
+            ((UiRequiredException)baseException).setOauthSubErrorCode(brokerResult.getSubErrorCode());
         } else if (exceptionType.equalsIgnoreCase(ServiceException.sName)) {
 
             baseException = getServiceException(brokerResult);
@@ -391,6 +392,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                     errorCode,
                     brokerResult.getErrorMessage()
             );
+            ((UiRequiredException)baseException).setOauthSubErrorCode(brokerResult.getSubErrorCode());
         } else if (OAuth2ErrorCode.UNAUTHORIZED_CLIENT.equalsIgnoreCase(errorCode) &&
                 OAuth2SubErrorCode.PROTECTION_POLICY_REQUIRED.
                         equalsIgnoreCase(brokerResult.getSubErrorCode())) {
