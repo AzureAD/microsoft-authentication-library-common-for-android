@@ -26,6 +26,8 @@ import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.commands.parameters.SilentTokenCommandParameters;
 import com.microsoft.identity.common.java.constants.OAuth2ErrorCode;
 import com.microsoft.identity.common.java.controllers.BaseController;
+import com.microsoft.identity.common.java.controllers.ExceptionAdapter;
+import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.exception.UiRequiredException;
@@ -100,6 +102,12 @@ public class SilentTokenCommand extends TokenCommand {
                                         + ": Succeeded"
                         );
 
+                        span.setAttribute(
+                                AttributeName.is_serviced_from_cache.name(),
+                                result.getLocalAuthenticationResult().isServicedFromCache()
+                        );
+
+                        span.setStatus(StatusCode.OK);
                         return result;
                     }
                 } catch (UiRequiredException | ClientException e) {
@@ -114,6 +122,20 @@ public class SilentTokenCommand extends TokenCommand {
                     } else {
                         throw e;
                     }
+                }
+            }
+
+            if (result == null) {
+                span.setStatus(StatusCode.ERROR, "empty result");
+            } else if (result.getSucceeded()) {
+                span.setStatus(StatusCode.OK);
+            } else {
+                final BaseException exception = ExceptionAdapter.exceptionFromAcquireTokenResult(result, getParameters());
+                if (exception != null) {
+                    span.recordException(exception);
+                    span.setStatus(StatusCode.ERROR);
+                } else {
+                    span.setStatus(StatusCode.ERROR, "empty exception");
                 }
             }
 

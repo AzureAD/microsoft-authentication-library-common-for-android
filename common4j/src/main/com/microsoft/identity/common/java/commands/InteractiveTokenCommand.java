@@ -25,6 +25,8 @@ package com.microsoft.identity.common.java.commands;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCommandParameters;
 import com.microsoft.identity.common.java.controllers.BaseController;
+import com.microsoft.identity.common.java.controllers.ExceptionAdapter;
+import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.opentelemetry.AttributeName;
 import com.microsoft.identity.common.java.opentelemetry.OTelUtility;
@@ -79,7 +81,23 @@ public class InteractiveTokenCommand extends TokenCommand {
 
                 span.setAttribute(AttributeName.controller_name.name(), controller.getClass().getSimpleName());
 
-                return controller.acquireToken((InteractiveTokenCommandParameters) getParameters());
+                final AcquireTokenResult result = controller.acquireToken((InteractiveTokenCommandParameters) getParameters());
+
+                if (result == null) {
+                    span.setStatus(StatusCode.ERROR, "empty result");
+                } else if (result.getSucceeded()) {
+                    span.setStatus(StatusCode.OK);
+                } else {
+                    final BaseException exception = ExceptionAdapter.exceptionFromAcquireTokenResult(result, getParameters());
+                    if (exception != null) {
+                        span.recordException(exception);
+                        span.setStatus(StatusCode.ERROR);
+                    } else {
+                        span.setStatus(StatusCode.ERROR, "empty exception");
+                    }
+                }
+
+                return result;
             } else {
                 throw new IllegalArgumentException("Invalid operation parameters");
             }

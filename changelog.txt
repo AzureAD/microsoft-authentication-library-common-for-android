@@ -6,6 +6,8 @@ V.Next
 - [MINOR] Add method to platform util to get package name from uid (#1932)
 - [MINOR] Move instrumentation of Token Requests from controllers to commands (#1939)
 - [MINOR] Added application identifier to cache (physical identifier).  Prevents multiple apps using the same logical identifier from sharing tokens. (#1660)
+- [MINOR] Capture whether token is returned from cache during silent token requests (#1941)
+- [MINOR] Capture span status and error codes in missing scenarios (#1940)
 
 V.9.1.0
 ----------
