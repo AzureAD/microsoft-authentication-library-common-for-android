@@ -102,6 +102,11 @@ public class SilentTokenCommand extends TokenCommand {
                                         + ": Succeeded"
                         );
 
+                        span.setAttribute(
+                                AttributeName.is_serviced_from_cache.name(),
+                                result.getLocalAuthenticationResult().isServicedFromCache()
+                        );
+
                         span.setStatus(StatusCode.OK);
                         return result;
                     }
