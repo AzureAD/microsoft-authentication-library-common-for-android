@@ -23,6 +23,7 @@
 package com.microsoft.identity.common;
 
 import android.content.Context;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
@@ -66,6 +67,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static com.microsoft.identity.common.MicrosoftStsAccountCredentialAdapterTest.MOCK_ID_TOKEN_WITH_CLAIMS;
+import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.APPLICATION_IDENTIFIER;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.AUTHORITY_TYPE;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.BEARER_AUTHENTICATION_SCHEME;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.CACHED_AT;
@@ -74,6 +76,7 @@ import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCa
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.EXPIRES_ON;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.HOME_ACCOUNT_ID;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.LOCAL_ACCOUNT_ID;
+import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.MAM_ENROLLMENT_IDENTIFIER;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.REALM;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.REALM2;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.SECRET;
@@ -152,6 +155,8 @@ public class MsalOAuth2TokenCacheTest {
                                     final String expiresOn,
                                     final String atSecret,
                                     final String clientId, //guid
+                                    final String applicationIdentifier,
+                                    final String mamEnrollmentIdentifier,
                                     final String rtSecret,
                                     final String idTokenSecret,
                                     final String familyId,
@@ -175,6 +180,8 @@ public class MsalOAuth2TokenCacheTest {
             mGeneratedAccessToken.setEnvironment(environment);
             mGeneratedAccessToken.setCredentialType(AccessToken.name());
             mGeneratedAccessToken.setClientId(clientId);
+            mGeneratedAccessToken.setApplicationIdentifier(applicationIdentifier);
+            mGeneratedAccessToken.setMamEnrollmentIdentifier(mamEnrollmentIdentifier);
 
             mGeneratedRefreshToken = new RefreshTokenRecord();
             mGeneratedRefreshToken.setSecret(rtSecret);
@@ -230,6 +237,8 @@ public class MsalOAuth2TokenCacheTest {
                 EXPIRES_ON,
                 SECRET,
                 CLIENT_ID,
+                APPLICATION_IDENTIFIER,
+                MAM_ENROLLMENT_IDENTIFIER,
                 SECRET,
                 MOCK_ID_TOKEN_WITH_CLAIMS,
                 null,
@@ -249,6 +258,8 @@ public class MsalOAuth2TokenCacheTest {
                 EXPIRES_ON,
                 SECRET,
                 CLIENT_ID,
+                APPLICATION_IDENTIFIER,
+                MAM_ENROLLMENT_IDENTIFIER,
                 SECRET,
                 MOCK_ID_TOKEN_WITH_CLAIMS,
                 null,
@@ -643,6 +654,8 @@ public class MsalOAuth2TokenCacheTest {
         accessTokenToClear.setEnvironment(ENVIRONMENT);
         accessTokenToClear.setCredentialType(AccessToken.name());
         accessTokenToClear.setClientId(CLIENT_ID);
+        accessTokenToClear.setApplicationIdentifier(APPLICATION_IDENTIFIER);
+        accessTokenToClear.setMamEnrollmentIdentifier(MAM_ENROLLMENT_IDENTIFIER);
         accessTokenToClear.setTarget(TARGET);
 
         // Save this dummy AT
@@ -700,6 +713,8 @@ public class MsalOAuth2TokenCacheTest {
 
         final ICacheRecord cacheRecord = mOauth2TokenCache.load(
                 CLIENT_ID,
+                APPLICATION_IDENTIFIER,
+                MAM_ENROLLMENT_IDENTIFIER,
                 TARGET,
                 account,
                 BEARER_AUTHENTICATION_SCHEME
@@ -788,6 +803,8 @@ public class MsalOAuth2TokenCacheTest {
                             EXPIRES_ON,
                             SECRET,
                             CLIENT_ID,
+                            APPLICATION_IDENTIFIER,
+                            MAM_ENROLLMENT_IDENTIFIER,
                             SECRET,
                             MOCK_ID_TOKEN_WITH_CLAIMS,
                             null,
@@ -959,6 +976,8 @@ public class MsalOAuth2TokenCacheTest {
                             EXPIRES_ON,
                             SECRET,
                             CLIENT_ID,
+                            APPLICATION_IDENTIFIER,
+                            MAM_ENROLLMENT_IDENTIFIER,
                             SECRET,
                             MOCK_ID_TOKEN_WITH_CLAIMS,
                             null,
@@ -1013,6 +1032,8 @@ public class MsalOAuth2TokenCacheTest {
                             EXPIRES_ON,
                             SECRET,
                             CLIENT_ID,
+                            APPLICATION_IDENTIFIER,
+                            MAM_ENROLLMENT_IDENTIFIER,
                             SECRET,
                             MOCK_ID_TOKEN_WITH_CLAIMS,
                             null,
@@ -1193,6 +1214,8 @@ public class MsalOAuth2TokenCacheTest {
 
         final ICacheRecord secondaryLoad = mOauth2TokenCache.load(
                 CLIENT_ID,
+                APPLICATION_IDENTIFIER,
+                MAM_ENROLLMENT_IDENTIFIER,
                 TARGET,
                 defaultTestBundleV2.mGeneratedAccount,
                 BEARER_AUTHENTICATION_SCHEME
@@ -1212,6 +1235,8 @@ public class MsalOAuth2TokenCacheTest {
 
         final ICacheRecord secondaryLoad = mOauth2TokenCache.load(
                 CLIENT_ID,
+                APPLICATION_IDENTIFIER,
+                MAM_ENROLLMENT_IDENTIFIER,
                 TARGET,
                 defaultTestBundleV1.mGeneratedAccount,
                 BEARER_AUTHENTICATION_SCHEME
@@ -1232,6 +1257,8 @@ public class MsalOAuth2TokenCacheTest {
         final List<ICacheRecord> secondaryLoad =
                 mOauth2TokenCache.loadWithAggregatedAccountData(
                         CLIENT_ID,
+                        APPLICATION_IDENTIFIER,
+                        MAM_ENROLLMENT_IDENTIFIER,
                         TARGET,
                         defaultTestBundleV2.mGeneratedAccount,
                         BEARER_AUTHENTICATION_SCHEME
@@ -1259,6 +1286,8 @@ public class MsalOAuth2TokenCacheTest {
         final List<ICacheRecord> secondaryLoad =
                 mOauth2TokenCache.loadWithAggregatedAccountData(
                         CLIENT_ID,
+                        APPLICATION_IDENTIFIER,
+                        MAM_ENROLLMENT_IDENTIFIER,
                         TARGET,
                         defaultTestBundleV1.mGeneratedAccount,
                         BEARER_AUTHENTICATION_SCHEME
@@ -1287,6 +1316,8 @@ public class MsalOAuth2TokenCacheTest {
 
         final ICacheRecord secondaryLoad = mOauth2TokenCache.load(
                 CLIENT_ID,
+                APPLICATION_IDENTIFIER,
+                MAM_ENROLLMENT_IDENTIFIER,
                 TARGET,
                 defaultTestBundleV2.mGeneratedAccount,
                 BEARER_AUTHENTICATION_SCHEME
@@ -1311,6 +1342,8 @@ public class MsalOAuth2TokenCacheTest {
 
         final ICacheRecord secondaryLoad = mOauth2TokenCache.load(
                 CLIENT_ID,
+                APPLICATION_IDENTIFIER,
+                MAM_ENROLLMENT_IDENTIFIER,
                 TARGET,
                 defaultTestBundleV2.mGeneratedAccount,
                 BEARER_AUTHENTICATION_SCHEME
@@ -1335,6 +1368,8 @@ public class MsalOAuth2TokenCacheTest {
 
         final ICacheRecord secondaryLoad = mOauth2TokenCache.load(
                 CLIENT_ID,
+                APPLICATION_IDENTIFIER,
+                MAM_ENROLLMENT_IDENTIFIER,
                 TARGET,
                 defaultTestBundleV2.mGeneratedAccount,
                 BEARER_AUTHENTICATION_SCHEME
@@ -1355,6 +1390,8 @@ public class MsalOAuth2TokenCacheTest {
 
         final ICacheRecord secondaryLoad = mOauth2TokenCache.load(
                 CLIENT_ID,
+                APPLICATION_IDENTIFIER,
+                MAM_ENROLLMENT_IDENTIFIER,
                 TARGET,
                 defaultTestBundleV2.mGeneratedAccount,
                 BEARER_AUTHENTICATION_SCHEME
@@ -1454,6 +1491,8 @@ public class MsalOAuth2TokenCacheTest {
 
         final ICacheRecord secondaryLoad = mOauth2TokenCache.load(
                 entry.getAccessToken().getClientId(),
+                APPLICATION_IDENTIFIER,
+                MAM_ENROLLMENT_IDENTIFIER,
                 TARGET,
                 entry.getAccount(),
                 BEARER_AUTHENTICATION_SCHEME

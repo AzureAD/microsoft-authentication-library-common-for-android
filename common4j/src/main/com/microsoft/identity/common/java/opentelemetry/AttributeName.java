@@ -108,5 +108,10 @@ public enum AttributeName {
     /**
      * The name of the application making the request.
      */
-    application_name
+    application_name,
+
+    /**
+     * Indicates if token was return from token cache
+     */
+    is_serviced_from_cache;
 }
