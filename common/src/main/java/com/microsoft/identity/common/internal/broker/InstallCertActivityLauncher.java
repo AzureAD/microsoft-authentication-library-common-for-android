@@ -31,15 +31,16 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContract;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.microsoft.identity.common.PropertyBagUtil;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.util.StringUtil;
+import com.microsoft.identity.common.java.util.ported.LocalBroadcaster;
+import com.microsoft.identity.common.java.util.ported.PropertyBag;
 
-import lombok.AccessLevel;
-import lombok.Setter;
+
 import lombok.experimental.Accessors;
 
 /**
@@ -50,17 +51,11 @@ import lombok.experimental.Accessors;
 public final class InstallCertActivityLauncher extends AppCompatActivity {
     private static final String TAG = InstallCertActivityLauncher.class.getSimpleName();
     private static final String INSTALL_CERT_INTENT_STARTED = "broker_intent_started";
-    public static final String INSTALL_CERT_INTENT = "install_cert_intent";
+    private static final String INSTALL_CERT_INTENT = "install_cert_intent";
+    private static final String INSTALL_CERT_BROADCAST_ALIAS = "install_cert_broadcast_alias";
     private Intent mInstallCertificateIntent;
     private Boolean mInstallCertificateIntentStarted = false;
     private Boolean mInstallCertificateResultReceived = false;
-
-    @Setter(AccessLevel.PROTECTED)
-    private static IInstallCertCallback mCallback;
-    @Setter(AccessLevel.PROTECTED)
-    private static String mResultKey;
-    @Setter(AccessLevel.PROTECTED)
-    private static String mErrorKey;
 
     // installCertActivityResultLauncher creates an ActivityResultLauncher<Intent>
     // to process the result form the install cert activity
@@ -69,30 +64,19 @@ public final class InstallCertActivityLauncher extends AppCompatActivity {
             activityResult -> {
                 final String methodTag = TAG + "#installCertActivityResultLauncher";
                 Logger.info(methodTag, "Result received from Broker, Result code: " + activityResult.getResultCode());
-                // Verify that the activity returned data
-                final Intent intentData = activityResult.getData();
-                if (intentData == null || intentData.getExtras() == null) {
-                    onError("Certificate installation failed with an empty response");
-                    mInstallCertificateResultReceived = true;
-                    finish();
-                    return;
-                }
-                // Get data
-                final Bundle resultBundle = intentData.getExtras();
-                final String result = resultBundle.getString(mResultKey, "false");
-                final boolean isCertificateInstalled = Boolean.parseBoolean(result);
-                final String errorMessage = resultBundle.getString(mErrorKey, null);
-                // Send response to callback
-                if (activityResult.getResultCode() == Activity.RESULT_OK) {
-                    onSuccess(isCertificateInstalled);
-                } else if (activityResult.getResultCode() == Activity.RESULT_CANCELED) {
-                    onError("Certificate not Installed, user cancelled operation");
+                final Intent intentWithData = activityResult.getData();
+                final PropertyBag resultBag;
+                if (intentWithData == null || intentWithData.getExtras() == null) {
+                    Logger.error(methodTag, "Certificate installation failed with an empty response", null);
+                    resultBag = new PropertyBag();
                 } else {
-                    onError(errorMessage);
+                    resultBag = PropertyBagUtil.fromBundle(intentWithData.getExtras());
                 }
                 mInstallCertificateResultReceived = true;
+                LocalBroadcaster.INSTANCE.broadcast(INSTALL_CERT_BROADCAST_ALIAS, resultBag);
                 finish();
             });
+
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
@@ -122,7 +106,8 @@ public final class InstallCertActivityLauncher extends AppCompatActivity {
     protected void onDestroy() {
         // If the broker process crashes, registerForActivityResult will not be triggered.
         if (!mInstallCertificateResultReceived) {
-            onError("The activity is killed unexpectedly.");
+            Logger.error(TAG, "The activity is killed unexpectedly.", null);
+            LocalBroadcaster.INSTANCE.broadcast(INSTALL_CERT_BROADCAST_ALIAS, new PropertyBag());
         }
         super.onDestroy();
     }
@@ -134,31 +119,15 @@ public final class InstallCertActivityLauncher extends AppCompatActivity {
         outState.putBoolean(INSTALL_CERT_INTENT_STARTED, mInstallCertificateIntentStarted);
     }
 
-    private void onError(@Nullable final String errorMessage) {
-        final String defaultErrorMessage = "Unexpected error: Certificate not installed";
-        if (mCallback != null) {
-            final String message = StringUtil.isNullOrEmpty(errorMessage) ? defaultErrorMessage : errorMessage;
-            mCallback.onError(
-                    new ClientException(ClientException.UNKNOWN_ERROR, message)
-            );
-        }
-    }
-
-    private void onSuccess(final boolean isCertificateInstalled) {
-        if (mCallback != null) {
-            mCallback.onSuccess(isCertificateInstalled);
-        }
-    }
-
     /**
      * Starts the InstallCertActivityLauncher, the activity in charge to launch the install certificate intent,
      * and extracts the result from this activity to pass it to the callback.
      *
-     * @param activity calling activity
+     * @param activity                 calling activity
      * @param installCertificateIntent Install certificate intent
-     * @param callback callback to run when the activity ends
-     * @param keyToExtractResult key to extract the result from the install cert intent
-     * @param keyToExtractError key to extract the error from the install cert intent
+     * @param callback                 callback to run when the activity ends
+     * @param keyToExtractResult       key to extract the result from the install cert intent
+     * @param keyToExtractError        key to extract the error from the install cert intent
      */
     static public void installCertificate(@NonNull final Activity activity,
                                           @NonNull final Intent installCertificateIntent,
@@ -167,9 +136,32 @@ public final class InstallCertActivityLauncher extends AppCompatActivity {
                                           @NonNull final String keyToExtractError) {
         final Intent installCertLauncher = new Intent(activity, InstallCertActivityLauncher.class);
         installCertLauncher.putExtra(INSTALL_CERT_INTENT, installCertificateIntent);
-        mCallback = callback;
-        mResultKey = keyToExtractResult;
-        mErrorKey = keyToExtractError;
+        registerCallbackAndParseResult(callback, keyToExtractResult, keyToExtractError);
         activity.startActivity(installCertLauncher);
+    }
+
+    /**
+     * Registers a listener in a local broadcaster to get a propertyBag from the install cert activity,
+     * the registered callback parse the result and invokes the callback provided by the API caller.
+     *
+     * @param callback           callback to run when the activity ends
+     * @param keyToExtractResult key to extract the result from the install cert intent
+     * @param keyToExtractError  key to extract the error from the install cert intent
+     */
+    private static void registerCallbackAndParseResult(@NonNull final IInstallCertCallback callback,
+                                                       @NonNull final String keyToExtractResult,
+                                                       @NonNull final String keyToExtractError) {
+        LocalBroadcaster.INSTANCE.registerCallback(
+                INSTALL_CERT_BROADCAST_ALIAS,
+                propertyBag -> {
+                    final String isCertInstalled = propertyBag.get(keyToExtractResult);
+                    final String exceptionMessage = propertyBag.get(keyToExtractError);
+                    if (StringUtil.isNullOrEmpty(exceptionMessage)) {
+                        callback.onSuccess(Boolean.parseBoolean(isCertInstalled));
+                    } else {
+                        callback.onError(new ClientException(ClientException.UNKNOWN_ERROR, exceptionMessage));
+                    }
+                    LocalBroadcaster.INSTANCE.unregisterCallback(INSTALL_CERT_BROADCAST_ALIAS);
+                });
     }
 }

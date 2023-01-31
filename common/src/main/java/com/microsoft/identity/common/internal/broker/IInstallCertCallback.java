@@ -35,8 +35,17 @@ import com.microsoft.identity.common.java.exception.BaseException;
  * Otherwise, a {@link BaseException} will be returned through onError.
  */
 public interface IInstallCertCallback {
-
+    /**
+     * This method will be called if the install WPJ certificate activity returns a status and no error message.
+     *
+     * @param isCertInstalled  it is true if the operation succeeds and the certificate was installed, otherwise false.
+     */
     void onSuccess(final boolean isCertInstalled);
 
+    /**
+     * This method will be called if the install WPJ certificate activity returns a error message.
+     *
+     * @param exception the error that causes the installation of the WPJ certificate to fail
+     */
     void onError(@NonNull final BaseException exception);
 }
