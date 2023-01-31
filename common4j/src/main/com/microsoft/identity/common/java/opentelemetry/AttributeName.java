@@ -78,4 +78,24 @@ public enum AttributeName {
      * The IPC strategy being used.
      */
     ipc_strategy,
+
+    /**
+     * The API ID of an MSAL PCA method.
+     */
+    public_api_id,
+
+    /**
+     * The name of the controller being used to process the request.
+     */
+    controller_name,
+
+    /**
+     * The name of the application making the request.
+     */
+    application_name,
+
+    /**
+     * Indicates if token was return from token cache
+     */
+    is_serviced_from_cache;
 }
