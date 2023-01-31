@@ -24,7 +24,7 @@ package com.microsoft.identity.common.internal.ui.webview.certbasedauth;
 
 import androidx.annotation.NonNull;
 
-import com.microsoft.identity.common.java.opentelemetry.CertBasedAuthTelemetryHelper;
+import com.microsoft.identity.common.java.opentelemetry.ICertBasedAuthTelemetryHelper;
 import com.microsoft.identity.common.logging.Logger;
 import com.yubico.yubikit.core.util.Callback;
 import com.yubico.yubikit.core.util.Result;
@@ -46,7 +46,7 @@ public class YubiKeyPivProviderManager {
      * @param telemetryHelper CertBasedAuthTelemetryHelper instance.
      * @param pivProviderCallback A Callback which returns a Callback that will return a new PivSession instance.
      */
-    public static void addPivProvider(@NonNull final CertBasedAuthTelemetryHelper telemetryHelper,
+    public static void addPivProvider(@NonNull final ICertBasedAuthTelemetryHelper telemetryHelper,
                                       @NonNull final Callback<Callback<Result<PivSession, Exception>>> pivProviderCallback) {
         final String methodTag = TAG + ":addPivProvider";
         if (Security.getProvider(YUBIKEY_PROVIDER) != null) {

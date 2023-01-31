@@ -27,7 +27,7 @@ import android.app.Activity;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.microsoft.identity.common.java.opentelemetry.CertBasedAuthTelemetryHelper;
+import com.microsoft.identity.common.java.opentelemetry.ICertBasedAuthTelemetryHelper;
 
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
@@ -68,7 +68,7 @@ public abstract class AbstractSmartcardCertBasedAuthManager<T extends IConnectio
      * Runs implementation specific processes that may need to occur just before calling {@link android.webkit.ClientCertRequest#proceed(PrivateKey, X509Certificate[])}.
      * @param telemetryHelper CertBasedAuthTelemetryHelper instance.
      */
-    abstract void initBeforeProceedingWithRequest(@NonNull final CertBasedAuthTelemetryHelper telemetryHelper);
+    abstract void initBeforeProceedingWithRequest(@NonNull final ICertBasedAuthTelemetryHelper telemetryHelper);
 
     /**
      * Cleanup to be done upon host activity being destroyed.

@@ -29,7 +29,7 @@ import android.webkit.ClientCertRequest;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 
-import com.microsoft.identity.common.java.opentelemetry.CertBasedAuthTelemetryHelper;
+import com.microsoft.identity.common.java.opentelemetry.ICertBasedAuthTelemetryHelper;
 
 /**
  * Handles a received ClientCertRequest by prompting the user to choose from certificates
@@ -45,8 +45,8 @@ public class NfcSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
      */
     public NfcSmartcardCertBasedAuthChallengeHandler(@NonNull final Activity activity,
                                                      @NonNull final AbstractNfcSmartcardCertBasedAuthManager nfcSmartcardCertBasedAuthManager,
-                                                     @NonNull final DialogHolder dialogHolder,
-                                                     @NonNull final CertBasedAuthTelemetryHelper telemetryHelper) {
+                                                     @NonNull final IDialogHolder dialogHolder,
+                                                     @NonNull final ICertBasedAuthTelemetryHelper telemetryHelper) {
         super(activity, nfcSmartcardCertBasedAuthManager, dialogHolder, telemetryHelper, NfcSmartcardCertBasedAuthChallengeHandler.class.getSimpleName());
     }
 
@@ -88,7 +88,7 @@ public class NfcSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
                 mCbaManager.setConnectionCallback(new IConnectionCallback() {
                     @Override
                     public void onCreateConnection() {
-                        mDialogHolder.showDialog(new SmartcardNfcLoadingDialog(mActivity));
+                        mDialogHolder.showSmartcardNfcLoadingDialog();
                         if (mCbaManager.isDeviceChanged()) {
                             //In a future version, an error dialog with a custom message could be shown here instead of a general error.
                             indicateGeneralException(methodTag, new Exception("Device connected via NFC is different from initially connected device."));

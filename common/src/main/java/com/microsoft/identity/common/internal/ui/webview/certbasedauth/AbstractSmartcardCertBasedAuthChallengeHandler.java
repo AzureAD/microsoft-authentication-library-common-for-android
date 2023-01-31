@@ -31,7 +31,7 @@ import androidx.annotation.RequiresApi;
 
 import com.microsoft.identity.common.R;
 import com.microsoft.identity.common.java.exception.BaseException;
-import com.microsoft.identity.common.java.opentelemetry.CertBasedAuthTelemetryHelper;
+import com.microsoft.identity.common.java.opentelemetry.ICertBasedAuthTelemetryHelper;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.logging.Logger;
 
@@ -51,8 +51,8 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandler<T extends A
     protected final String TAG;
     protected final Activity mActivity;
     protected final T mCbaManager;
-    protected final DialogHolder mDialogHolder;
-    protected final CertBasedAuthTelemetryHelper mTelemetryHelper;
+    protected final IDialogHolder mDialogHolder;
+    protected final ICertBasedAuthTelemetryHelper mTelemetryHelper;
     protected boolean mIsSmartcardCertBasedAuthProceeding;
 
     /**
@@ -65,8 +65,8 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandler<T extends A
      */
     public AbstractSmartcardCertBasedAuthChallengeHandler(@NonNull final Activity activity,
                                                           @NonNull final T smartcardCertBasedAuthManager,
-                                                          @NonNull final DialogHolder dialogHolder,
-                                                          @NonNull final CertBasedAuthTelemetryHelper telemetryHelper,
+                                                          @NonNull final IDialogHolder dialogHolder,
+                                                          @NonNull final ICertBasedAuthTelemetryHelper telemetryHelper,
                                                           @NonNull final String tag) {
         TAG = tag;
         mActivity = activity;
