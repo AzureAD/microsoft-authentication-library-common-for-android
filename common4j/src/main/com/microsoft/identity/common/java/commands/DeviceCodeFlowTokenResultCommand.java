@@ -33,8 +33,8 @@ import lombok.NonNull;
 
 /**
  * This command is used in the Device Code Flow (DCF) protocol to acquire token.
- * Takes in a parameters object containing the  desired access scopes along and returns
- * a token result.
+ * Takes in a parameters object containing the  desired access scopes along with authorizationResult {@link AuthorizationResult}
+ * and returns a token result.
  */
 public class DeviceCodeFlowTokenResultCommand extends TokenCommand{
     private static final String TAG = DeviceCodeFlowTokenResultCommand.class.getSimpleName();
@@ -56,7 +56,7 @@ public class DeviceCodeFlowTokenResultCommand extends TokenCommand{
         final String methodTag = TAG + ":execute";
         Logger.verbose(
                 methodTag,
-                "DCFTokenFetchCommand initiating..."
+                "DeviceCodeFlowTokenResultCommand initiating..."
         );
 
         // Get the controller used to execute the command
@@ -70,7 +70,7 @@ public class DeviceCodeFlowTokenResultCommand extends TokenCommand{
 
         Logger.verbose(
                 methodTag,
-                "DCFTokenFetchCommand exiting with token..."
+                "DeviceCodeFlowTokenResultCommand exiting with token..."
         );
 
         return tokenResult;
