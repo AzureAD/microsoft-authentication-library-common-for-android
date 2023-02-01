@@ -10,7 +10,7 @@
     <string name="http_auth_dialog_cancel">Odustani</string>
 
     <!-- strings for CBA dialogs and layouts -->
-    <string name="smartcard_cert_dialog_title">Odaberite certifikat pametne kartice za prijavu</string>
+    <string name="smartcard_cert_dialog_title">Odaberite certifikat za prijavu</string>
     <string name="smartcard_cert_dialog_positive_button">Nastavi</string>
     <string name="smartcard_cert_dialog_negative_button">Otkaži</string>
 
@@ -30,8 +30,29 @@
     <string name="smartcard_early_unplug_dialog_message">Uređaj pametne kartice je uklonjen. Ponovno umetnite uređaj prije ponovnog pokušaja prijave.</string>
 
     <string name="smartcard_no_cert_dialog_title">Nisu pronađeni primjenjivi certifikati.</string>
-    <string name="smartcard_no_cert_dialog_message">Provjerite jesu li certifikati pravilno dodijeljeni na vaš uređaj pametne kartice.</string>
+    <string name="smartcard_no_cert_dialog_message">Potvrdite da je certifikat pravilno dodijeljen na vaš uređaj pametne kartice.</string>
 
     <string name="smartcard_general_error_dialog_title">Pokušajte ponovno poslije</string>
     <string name="smartcard_general_error_dialog_message">Došlo je do neočekivane pogreške. Pokušajte ponovno kasnije.</string>
+
+    <string name="user_choice_dialog_title">Kako se želite prijaviti?</string>
+    <string name="user_choice_dialog_on_device_name">Certifikat na vašem uređaju</string>
+    <string name="user_choice_dialog_smartcard_name">Fizička pametna kartica</string>
+    <string name="user_choice_dialog_positive_button">Nastavi</string>
+    <string name="user_choice_dialog_negative_button">Odustani</string>
+
+    <string name="smartcard_prompt_dialog_title">Pripremite pametnu karticu</string>
+    <string name="smartcard_prompt_dialog_message">Priključite ili držite pametnu karticu na stražnjem dijelu telefona.</string>
+    <string name="smartcard_prompt_dialog_negative_button">Odustani</string>
+
+    <string name="smartcard_nfc_loading_dialog_title">Čitanje pametne kartice</string>
+    <string name="smartcard_nfc_loading_dialog_message">Držite pametnu karticu na mjestu.</string>
+
+    <string name="smartcard_nfc_prompt_dialog_title">Pripremite pametnu karticu</string>
+    <string name="smartcard_nfc_prompt_dialog_message">Držite pametnu karticu na stražnjem dijelu telefona.</string>
+    <string name="smartcard_nfc_prompt_dialog_negative_button">Odustani</string>
+
+    <string name="smartcard_nfc_reminder_dialog_title">Uključite NFC u postavkama uređaja</string>
+    <string name="smartcard_nfc_reminder_dialog_message">Da biste se prijavili putem NFC-a, uključite NFC u postavkama uređaja. Zatim se ponovno prijavite.</string>
+    <string name="smartcard_nfc_reminder_dialog_positive_button">Shvaćam</string>
 </resources>

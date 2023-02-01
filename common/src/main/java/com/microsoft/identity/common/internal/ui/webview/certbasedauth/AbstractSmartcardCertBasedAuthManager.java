@@ -20,33 +20,37 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.ui.webview.challengehandlers;
+package com.microsoft.identity.common.internal.ui.webview.certbasedauth;
+
+import android.app.Activity;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
+import com.microsoft.identity.common.java.opentelemetry.ICertBasedAuthTelemetryHelper;
 
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-
 /**
  * An abstract manager that can control connections for a particular type of smartcard.
  */
-public abstract class AbstractSmartcardCertBasedAuthManager {
+public abstract class AbstractSmartcardCertBasedAuthManager<T extends IConnectionCallback> {
 
-    protected IConnectionCallback mConnectionCallback;
-    @SuppressFBWarnings //This callback isn't currently being used, but added for completion for future smartcard managers.
-    protected IDiscoveryExceptionCallback mDiscoveryExceptionCallback;
+    protected T mConnectionCallback;
 
     /**
-     * Logic to prepare an Android device to detect smartcards via usb.
+     * Logic to prepare an Android device to detect smartcards.
+     * @param activity current host activity.
+     * @return boolean value dependent on implementation.
      */
-    abstract void startDiscovery();
+    abstract boolean startDiscovery(@NonNull final Activity activity);
 
     /**
-     * Cease usb discovery of smartcards.
+     * Cease discovery of smartcards.
+     * @param activity current host activity.
      */
-    abstract void stopDiscovery();
+    abstract void stopDiscovery(@NonNull final Activity activity);
 
     /**
      * Request an instance of a session in order to carry out methods specific to ISmartcardSession.
@@ -62,53 +66,29 @@ public abstract class AbstractSmartcardCertBasedAuthManager {
 
     /**
      * Runs implementation specific processes that may need to occur just before calling {@link android.webkit.ClientCertRequest#proceed(PrivateKey, X509Certificate[])}.
+     * @param telemetryHelper CertBasedAuthTelemetryHelper instance.
      */
-    abstract void initBeforeProceedingWithRequest();
+    abstract void initBeforeProceedingWithRequest(@NonNull final ICertBasedAuthTelemetryHelper telemetryHelper);
 
     /**
      * Cleanup to be done upon host activity being destroyed.
+     * @param activity current host activity.
      */
-    abstract void onDestroy();
+    abstract void onDestroy(@NonNull final Activity activity);
 
     /**
      * Sets callbacks to be run for when a smartcard connection is started and ended.
      * @param connectionCallback an implementation of IConnectionCallback.
      */
-    public void setConnectionCallback(final IConnectionCallback connectionCallback) {
+    public void setConnectionCallback(@Nullable final T connectionCallback) {
         mConnectionCallback = connectionCallback;
     }
 
     /**
-     * Sets callback to be run for when an exception is thrown during discovery start up.
-     * @param discoveryExceptionCallback an implementation of IDiscoveryExceptionCallback.
+     * Sets connection callback to null.
      */
-    public void setDiscoveryExceptionCallback(final IDiscoveryExceptionCallback discoveryExceptionCallback) {
-        mDiscoveryExceptionCallback = discoveryExceptionCallback;
-    }
-
-    /**
-     * Callback methods to be run upon initial connection and disconnection of a smartcard device.
-     */
-    interface IConnectionCallback {
-        /**
-         * Logic to be run upon initial connection of a smartcard device.
-         */
-        void onCreateConnection();
-
-        /**
-         * Logic to be run upon disconnection of a smartcard device.
-         */
-        void onClosedConnection();
-    }
-
-    /**
-     * Callback method to be run upon an exception thrown during discovery start up.
-     */
-    interface IDiscoveryExceptionCallback {
-        /**
-         * Logic to be run when an exception is thrown.
-         */
-        void onException();
+    public void clearConnectionCallback() {
+        mConnectionCallback = null;
     }
 
     /**
