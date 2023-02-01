@@ -10,11 +10,11 @@
     <string name="http_auth_dialog_cancel">إلغاء</string>
 
     <!-- strings for CBA dialogs and layouts -->
-    <string name="smartcard_cert_dialog_title">مطلوب اختيار شهادة بطاقة ذكية لتسجيل الدخول</string>
+    <string name="smartcard_cert_dialog_title">حدد الشهادة لتسجيل الدخول</string>
     <string name="smartcard_cert_dialog_positive_button">متابعة</string>
     <string name="smartcard_cert_dialog_negative_button">إلغاء الأمر</string>
 
-    <string name="smartcard_pin_dialog_title">فتح قفل البطاقة الذكية</string>
+    <string name="smartcard_pin_dialog_title">إلغاء تأمين البطاقة الذكية</string>
     <string name="smartcard_pin_dialog_message">أدخل رقم التعريف الشخصي (PIN) للبطاقة الذكية للوصول إلى الشهادة وتسجيل الدخول</string>
     <string name="smartcard_pin_dialog_positive_button">فتح القفل</string>
     <string name="smartcard_pin_dialog_negative_button">إلغاء الأمر</string>
@@ -30,8 +30,29 @@
     <string name="smartcard_early_unplug_dialog_message">تمت إزالة جهاز البطاقة الذكية. الرجاء إعادة إدخال الجهاز قبل محاولة تسجيل الدخول مجدداً.</string>
 
     <string name="smartcard_no_cert_dialog_title">ما من شهادات قابلة للتطبيق موجودة.</string>
-    <string name="smartcard_no_cert_dialog_message">الرجاء تأكيد أن شهادتك مزودة بالخدمة بشكل صحيح على جهاز البطاقة الذكية.</string>
+    <string name="smartcard_no_cert_dialog_message">تأكيد أن شهادتك مزودة بالخدمة بشكل صحيح على جهاز البطاقة الذكية.</string>
 
     <string name="smartcard_general_error_dialog_title">حاول مجدداً لاحقاً</string>
     <string name="smartcard_general_error_dialog_message">حدث خطأ غير متوقع. الرجاء إعادة المحاولة لاحقًا.</string>
+
+    <string name="user_choice_dialog_title">كيف ترغب في الإعداد؟</string>
+    <string name="user_choice_dialog_on_device_name">الشهادة على جهازك</string>
+    <string name="user_choice_dialog_smartcard_name">بطاقة ذكية فعلية</string>
+    <string name="user_choice_dialog_positive_button">متابعة</string>
+    <string name="user_choice_dialog_negative_button">إلغاء الأمر</string>
+
+    <string name="smartcard_prompt_dialog_title">إعداد بطاقتك الذكية</string>
+    <string name="smartcard_prompt_dialog_message">قم بتوصيل بطاقة ذكية أو الاحتفاظ بها في الجزء الخلفي من هاتفك.</string>
+    <string name="smartcard_prompt_dialog_negative_button">إلغاء الأمر</string>
+
+    <string name="smartcard_nfc_loading_dialog_title">قراءة بطاقتك الذكية</string>
+    <string name="smartcard_nfc_loading_dialog_message">احتفظ ببطاقتك الذكية في مكانها.</string>
+
+    <string name="smartcard_nfc_prompt_dialog_title">إعداد بطاقتك الذكية</string>
+    <string name="smartcard_nfc_prompt_dialog_message">ضع بطاقة ذكية في الجزء الخلفي من هاتفك.</string>
+    <string name="smartcard_nfc_prompt_dialog_negative_button">إلغاء الأمر</string>
+
+    <string name="smartcard_nfc_reminder_dialog_title">تشغيل NFC في إعدادات الجهاز</string>
+    <string name="smartcard_nfc_reminder_dialog_message">لتسجيل الدخول باستخدام NFC، قم بتشغيل NFC في إعدادات جهازك. ثم قم بتسجيل الدخول مرة أخرى.</string>
+    <string name="smartcard_nfc_reminder_dialog_positive_button">فهمت</string>
 </resources>

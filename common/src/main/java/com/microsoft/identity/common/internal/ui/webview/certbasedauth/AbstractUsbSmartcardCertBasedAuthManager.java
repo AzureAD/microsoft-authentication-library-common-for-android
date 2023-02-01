@@ -20,28 +20,10 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.ui.webview.challengehandlers;
-
-import android.webkit.ClientCertRequest;
-
-import androidx.annotation.NonNull;
-
-import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
+package com.microsoft.identity.common.internal.ui.webview.certbasedauth;
 
 /**
- * ChallengeHandler extended interface specifically for certificate based authentication (CBA)
- *  implementations.
+ * An abstract smartcard CertBasedAuth manager specifically for USB.
  */
-public interface ICertBasedAuthChallengeHandler extends IChallengeHandler<ClientCertRequest, Void> {
-    
-    /**
-     * Emit telemetry for results from certificate based authentication (CBA) if CBA occurred.
-     * @param response a RawAuthorizationResult object received upon a challenge response received.
-     */
-    void emitTelemetryForCertBasedAuthResults(@NonNull final RawAuthorizationResult response);
-
-    /**
-     * Clean up logic to run when ICertBasedAuthChallengeHandler is no longer going to be used.
-     */
-    void cleanUp();
+public abstract class AbstractUsbSmartcardCertBasedAuthManager extends AbstractSmartcardCertBasedAuthManager<IUsbConnectionCallback> {
 }

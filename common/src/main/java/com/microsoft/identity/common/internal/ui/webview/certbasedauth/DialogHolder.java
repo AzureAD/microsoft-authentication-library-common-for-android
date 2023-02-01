@@ -20,7 +20,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.ui.webview.challengehandlers;
+package com.microsoft.identity.common.internal.ui.webview.certbasedauth;
 
 import android.app.Activity;
 import android.os.Build;
@@ -37,7 +37,7 @@ import java.util.List;
  * Builds and shows SmartcardDialog instances while keeping track of the current dialog being shown to the user.
  */
 @ThreadSafe
-public class DialogHolder {
+public class DialogHolder implements IDialogHolder {
     //Current host activity.
     private final Activity mActivity;
     //The current dialog that is showing, if any.
@@ -102,6 +102,61 @@ public class DialogHolder {
                     }
                 },
                 mActivity));
+    }
+
+    /**
+     * Builds and shows dialog that prompts user to choose if they would like to proceed with on-device
+     * or smartcard certificate based authentication.
+     * @param positiveButtonListener A Listener containing code to be run upon a positive button click.
+     * @param cancelCbaCallback A Callback that holds code to be run when CBA is being cancelled.
+     */
+    public synchronized void showUserChoiceDialog(@NonNull final UserChoiceDialog.PositiveButtonListener positiveButtonListener,
+                                                  @NonNull final UserChoiceDialog.CancelCbaCallback cancelCbaCallback) {
+        showDialog(new UserChoiceDialog(
+                positiveButtonListener,
+                 cancelCbaCallback,
+                mActivity
+        ));
+    }
+
+    /**
+     * Builds and shows a SmartcardDialog that prompts the user to connect their smartcard,
+     * either by plugging in (USB) or holding to back of phone (NFC).
+     * @param cancelCbaCallback A Callback that holds code to be run when CBA is being cancelled.
+     */
+    public synchronized void showSmartcardPromptDialog(@NonNull final SmartcardPromptDialog.CancelCbaCallback cancelCbaCallback) {
+        showDialog(new SmartcardPromptDialog(
+                cancelCbaCallback,
+                mActivity
+        ));
+    }
+
+    /**
+     * Builds and shows a SmartcardDialog that reminds the user to remain holding their smartcard device to their phone.
+     */
+    public synchronized void showSmartcardNfcLoadingDialog() {
+        showDialog(new SmartcardNfcLoadingDialog(mActivity));
+    }
+
+    /**
+     * Builds and shows a SmartcardDialog that prompts the user to connect their smartcard by holding it to the back of their phone.
+     * @param cancelCbaCallback A Callback that holds code to be run when CBA is being cancelled.
+     */
+    public synchronized void showSmartcardNfcPromptDialog(@NonNull final SmartcardNfcPromptDialog.CancelCbaCallback cancelCbaCallback) {
+        showDialog(new SmartcardNfcPromptDialog(
+                cancelCbaCallback,
+                mActivity));
+    }
+
+    /**
+     * Builds and shows a SmartcardDialog that notifies user that NFC is not on for their device.
+     * @param dismissCallback a callback that holds logic to be run upon dismissal of the dialog.
+     */
+    public synchronized void showSmartcardNfcReminderDialog(@NonNull final SmartcardNfcReminderDialog.DismissCallback dismissCallback) {
+        showDialog(new SmartcardNfcReminderDialog(
+                dismissCallback,
+                mActivity
+        ));
     }
 
     /**

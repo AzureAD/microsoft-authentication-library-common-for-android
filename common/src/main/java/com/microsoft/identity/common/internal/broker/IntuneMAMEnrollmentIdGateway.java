@@ -51,13 +51,18 @@ public class IntuneMAMEnrollmentIdGateway {
 
     private static final String TAG = "IntuneMAMEnrollmentIdGateway";
 
-    // entries live in the cache for 30 seconds
-    private static final long CACHE_TTL_MS = 30000;
-    // the cache size is somewhat arbitrary, but we don't want entries
+    // Historical: entries lived in the cache for 30 seconds
+    // Latest: We are reducing this time significantly to support the customer
+    // scenario.  We want to ensure that if the MAM enrollment ID is removed
+    // that it won't be returned from the cache.  We still want some debounce
+    // protection.... 2 seconds was selected
+    private static final long CACHE_TTL_MS = 2000;
+    // Historical: the cache size is somewhat arbitrary, but we don't want entries
     // kicked out before their 30 second TTL is up.  30 seems like a
     // reasonable number of userId/packageName combinations in a
     // 30 second period.
-    private static final int CACHE_SIZE = 30;
+    // Latest: Reducing this to coincide with the reduction in cache expiration time
+    private static final int CACHE_SIZE = 10;
     // to handle the case where an app becomes enrolled, we need to
     // return the enrollment id sooner than 30 seconds since the last
     // request.  This somewhat degrades the effect of caching for apps
