@@ -24,6 +24,8 @@ package com.microsoft.identity.common.java.cache;
 
 import static com.microsoft.identity.common.java.AuthenticationConstants.DEFAULT_SCOPES;
 
+import com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeInternal;
+import com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeWithClientKeyInternal;
 import com.microsoft.identity.common.java.dto.AccessTokenRecord;
 import com.microsoft.identity.common.java.dto.AccountRecord;
 import com.microsoft.identity.common.java.dto.Credential;
@@ -32,6 +34,7 @@ import com.microsoft.identity.common.java.dto.IdTokenRecord;
 import com.microsoft.identity.common.java.dto.PrimaryRefreshTokenRecord;
 import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.java.logging.Logger;
+import com.microsoft.identity.common.java.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.java.util.StringUtil;
 
 import java.util.ArrayList;
@@ -241,7 +244,14 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
                     atType = atType.trim();
                 }
 
-                matches = matches && authScheme.equalsIgnoreCase(atType);
+                if (atType.equalsIgnoreCase(TokenRequest.TokenType.POP)) {
+                    matches = matches && (
+                            authScheme.equalsIgnoreCase(PopAuthenticationSchemeWithClientKeyInternal.SCHEME_POP_WITH_CLIENT_KEY)
+                            || authScheme.equalsIgnoreCase(PopAuthenticationSchemeInternal.SCHEME_POP)
+                    );
+                } else {
+                    matches = matches && authScheme.equalsIgnoreCase(atType);
+                }
             }
 
             if(mustMatchOnKid && credential instanceof AccessTokenRecord) {
