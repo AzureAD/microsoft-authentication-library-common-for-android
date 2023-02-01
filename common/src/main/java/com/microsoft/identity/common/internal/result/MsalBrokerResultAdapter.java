@@ -314,11 +314,15 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         );
 
         if (exceptionType.equalsIgnoreCase(UiRequiredException.sName)) {
+            final String errorCode = brokerResult.getErrorCode();
             baseException = new UiRequiredException(
                     brokerResult.getErrorCode(),
                     brokerResult.getErrorMessage()
             );
-            ((UiRequiredException)baseException).setOauthSubErrorCode(brokerResult.getSubErrorCode());
+            if (OAuth2ErrorCode.INTERACTION_REQUIRED.equalsIgnoreCase(errorCode) ||
+                    OAuth2ErrorCode.INVALID_GRANT.equalsIgnoreCase(errorCode)) {
+                ((UiRequiredException) baseException).setOauthSubErrorCode(brokerResult.getSubErrorCode());
+            }
 
         } else if (exceptionType.equalsIgnoreCase(ServiceException.sName)) {
 
