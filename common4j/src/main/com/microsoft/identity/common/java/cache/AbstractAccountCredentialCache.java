@@ -244,7 +244,7 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
                     atType = atType.trim();
                 }
 
-                if (atType.equalsIgnoreCase(TokenRequest.TokenType.POP)) {
+                if (TokenRequest.TokenType.POP.equalsIgnoreCase(atType)) {
                     matches = matches && (
                             authScheme.equalsIgnoreCase(PopAuthenticationSchemeWithClientKeyInternal.SCHEME_POP_WITH_CLIENT_KEY)
                             || authScheme.equalsIgnoreCase(PopAuthenticationSchemeInternal.SCHEME_POP)
