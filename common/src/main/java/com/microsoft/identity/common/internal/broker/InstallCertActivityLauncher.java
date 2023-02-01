@@ -53,6 +53,7 @@ public final class InstallCertActivityLauncher extends AppCompatActivity {
     private static final String INSTALL_CERT_INTENT_STARTED = "broker_intent_started";
     private static final String INSTALL_CERT_INTENT = "install_cert_intent";
     private static final String INSTALL_CERT_BROADCAST_ALIAS = "install_cert_broadcast_alias";
+    private static final String CERT_INSTALLATION_FAILED_WITH_EMPTY_RESPONSE = "Certificate installation failed with an empty response";
     private Intent mInstallCertificateIntent;
     private Boolean mInstallCertificateIntentStarted = false;
     private Boolean mInstallCertificateResultReceived = false;
@@ -67,7 +68,7 @@ public final class InstallCertActivityLauncher extends AppCompatActivity {
                 final Intent intentWithData = activityResult.getData();
                 final PropertyBag resultBag;
                 if (intentWithData == null || intentWithData.getExtras() == null) {
-                    Logger.error(methodTag, "Certificate installation failed with an empty response", null);
+                    Logger.error(methodTag, CERT_INSTALLATION_FAILED_WITH_EMPTY_RESPONSE, null);
                     resultBag = new PropertyBag();
                 } else {
                     resultBag = PropertyBagUtil.fromBundle(intentWithData.getExtras());
@@ -156,10 +157,12 @@ public final class InstallCertActivityLauncher extends AppCompatActivity {
                 propertyBag -> {
                     final String isCertInstalled = propertyBag.get(keyToExtractResult);
                     final String exceptionMessage = propertyBag.get(keyToExtractError);
-                    if (StringUtil.isNullOrEmpty(exceptionMessage)) {
+                    if (StringUtil.isNullOrEmpty(exceptionMessage) && !StringUtil.isNullOrEmpty(isCertInstalled)) {
                         callback.onSuccess(Boolean.parseBoolean(isCertInstalled));
                     } else {
-                        callback.onError(new ClientException(ClientException.UNKNOWN_ERROR, exceptionMessage));
+                        final String errorMessage = StringUtil.isNullOrEmpty(exceptionMessage) ?
+                                CERT_INSTALLATION_FAILED_WITH_EMPTY_RESPONSE : exceptionMessage;
+                        callback.onError(new ClientException(ClientException.UNKNOWN_ERROR, errorMessage));
                     }
                     LocalBroadcaster.INSTANCE.unregisterCallback(INSTALL_CERT_BROADCAST_ALIAS);
                 });
