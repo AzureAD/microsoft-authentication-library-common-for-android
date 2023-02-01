@@ -515,6 +515,11 @@ public class AuthenticationConstants {
         public static final long BROKER_TASK_DEFAULT_TIMEOUT_MILLISECONDS = TimeUnit.SECONDS.toMillis(30);
 
         /**
+         * Timeout for DCF token request
+         */
+        public static final long DCF_TOKEN_REQUEST_TIMEOUT_MILLISECONDS = TimeUnit.MINUTES.toMillis(14);
+
+        /**
          * String of challenge response header.
          */
         public static final String CHALLENGE_RESPONSE_HEADER = "Authorization";
