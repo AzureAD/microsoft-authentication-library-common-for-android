@@ -10,7 +10,7 @@
     <string name="http_auth_dialog_cancel">Annuleren</string>
 
     <!-- strings for CBA dialogs and layouts -->
-    <string name="smartcard_cert_dialog_title">Kies een smartcard-certificaat om u aan te melden</string>
+    <string name="smartcard_cert_dialog_title">Selecteer een certificaat om u aan te melden</string>
     <string name="smartcard_cert_dialog_positive_button">Doorgaan</string>
     <string name="smartcard_cert_dialog_negative_button">Annuleren</string>
 
@@ -27,11 +27,32 @@
     <string name="smartcard_max_attempt_dialog_message">Te veel mislukte pogingen. Probeer het later opnieuw.</string>
 
     <string name="smartcard_early_unplug_dialog_title">Opnieuw proberen</string>
-    <string name="smartcard_early_unplug_dialog_message">Smartcard-apparaat is verwijderd. Plaats het apparaat opnieuw voordat u zich opnieuw probeert aan te melden.</string>
+    <string name="smartcard_early_unplug_dialog_message">Smartcardapparaat is verwijderd. Plaats het apparaat opnieuw voordat u zich opnieuw probeert aan te melden.</string>
 
     <string name="smartcard_no_cert_dialog_title">Er zijn geen toepasselijke certificaten gevonden.</string>
-    <string name="smartcard_no_cert_dialog_message">Controleer of uw certificaat correct is ingericht op uw smartcard-apparaat.</string>
+    <string name="smartcard_no_cert_dialog_message">Controleer of uw certificaat correct is ingericht op uw smartcardapparaat.</string>
 
     <string name="smartcard_general_error_dialog_title">Probeer het later opnieuw</string>
     <string name="smartcard_general_error_dialog_message">Er is een onverwachte fout opgetreden. Probeer het later opnieuw.</string>
+
+    <string name="user_choice_dialog_title">Hoe wilt u zich aanmelden?</string>
+    <string name="user_choice_dialog_on_device_name">Certificaat op uw apparaat</string>
+    <string name="user_choice_dialog_smartcard_name">Fysieke smartcard</string>
+    <string name="user_choice_dialog_positive_button">Doorgaan</string>
+    <string name="user_choice_dialog_negative_button">Annuleren</string>
+
+    <string name="smartcard_prompt_dialog_title">Uw smartcard voorbereiden</string>
+    <string name="smartcard_prompt_dialog_message">Sluit een smartcard aan op de achterkant van uw telefoon of houd deze vast.</string>
+    <string name="smartcard_prompt_dialog_negative_button">Annuleren</string>
+
+    <string name="smartcard_nfc_loading_dialog_title">Uw smartcard lezen</string>
+    <string name="smartcard_nfc_loading_dialog_message">Houd uw smartcard op zijn plaats.</string>
+
+    <string name="smartcard_nfc_prompt_dialog_title">Uw smartcard voorbereiden</string>
+    <string name="smartcard_nfc_prompt_dialog_message">Houd een smartcard vast aan de achterkant van uw telefoon.</string>
+    <string name="smartcard_nfc_prompt_dialog_negative_button">Annuleren</string>
+
+    <string name="smartcard_nfc_reminder_dialog_title">NFC inschakelen in apparaatinstellingen</string>
+    <string name="smartcard_nfc_reminder_dialog_message">Als u zich wilt aanmelden met NFC, schakelt u NFC in de apparaatinstellingen in. Meld u vervolgens opnieuw aan.</string>
+    <string name="smartcard_nfc_reminder_dialog_positive_button">OK</string>
 </resources>

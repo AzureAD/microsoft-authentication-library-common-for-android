@@ -35,13 +35,14 @@ import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.broker.PackageHelper;
-import com.microsoft.identity.common.internal.ui.webview.challengehandlers.CertBasedAuthFactory;
-import com.microsoft.identity.common.internal.ui.webview.challengehandlers.ICertBasedAuthChallengeHandler;
+import com.microsoft.identity.common.internal.ui.webview.certbasedauth.CertBasedAuthFactory;
+import com.microsoft.identity.common.internal.ui.webview.certbasedauth.ICertBasedAuthChallengeHandler;
 import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallenge;
 import com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallengeFactory;
@@ -461,8 +462,18 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         if (mCertBasedAuthChallengeHandler != null) {
             mCertBasedAuthChallengeHandler.cleanUp();
         }
-        mCertBasedAuthChallengeHandler = mCertBasedAuthFactory.createCertBasedAuthChallengeHandler();
-        mCertBasedAuthChallengeHandler.processChallenge(clientCertRequest);
+        mCertBasedAuthFactory.createCertBasedAuthChallengeHandler(new CertBasedAuthFactory.CertBasedAuthChallengeHandlerCallback() {
+            @Override
+            public void onReceived(@Nullable final ICertBasedAuthChallengeHandler challengeHandler) {
+                mCertBasedAuthChallengeHandler = challengeHandler;
+                if (mCertBasedAuthChallengeHandler == null) {
+                    //User cancelled out of CBA.
+                    clientCertRequest.cancel();
+                    return;
+                }
+                mCertBasedAuthChallengeHandler.processChallenge(clientCertRequest);
+            }
+        });
     }
 
     /**

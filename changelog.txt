@@ -1,5 +1,7 @@
 V.Next
 ----------
+- [MINOR] Add application identifier during authorization request initialization (#1942)
+- [MINOR] Add NFC compatibility and telemetry to CBA (#1896)
 - [MINOR] Format thread+correlationId metadata only once logging is clearly opted-in (#1917)
 - [MINOR] Remove unnecessary synchronization when storage access is already guarded (#1928)
 - [MINOR] Write back read successes to cache and stop extra lookups in getAll (#1927)
