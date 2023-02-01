@@ -269,6 +269,10 @@ public abstract class BaseController {
             ((MicrosoftAuthorizationRequest.Builder) builder).setCorrelationId(correlationId);
         }
 
+        if (builder instanceof MicrosoftStsAuthorizationRequest.Builder) {
+            ((MicrosoftStsAuthorizationRequest.Builder) builder).setApplicationIdentifier(parameters.getApplicationIdentifier());
+        }
+
         final Set<String> scopes = parameters.getScopes();
 
         if (parameters instanceof InteractiveTokenCommandParameters) {
