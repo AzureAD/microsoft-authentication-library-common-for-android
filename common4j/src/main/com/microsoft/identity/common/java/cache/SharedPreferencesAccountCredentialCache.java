@@ -23,7 +23,6 @@
 package com.microsoft.identity.common.java.cache;
 
 import com.microsoft.identity.common.java.dto.AccessTokenRecord;
-import com.microsoft.identity.common.java.dto.AccountCredentialBase;
 import com.microsoft.identity.common.java.dto.AccountRecord;
 import com.microsoft.identity.common.java.dto.Credential;
 import com.microsoft.identity.common.java.dto.CredentialType;
@@ -89,12 +88,6 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
 
     private final ICacheKeyValueDelegate mCacheValueDelegate;
 
-    private final Object mCacheLock = new Object();
-    private boolean mLoaded = false;
-
-    private Map<String, AccountRecord> mCachedAccountRecordsWithKeys = new HashMap<>();
-    private Map<String, Credential> mCachedCredentialsWithKeys = new HashMap<>();
-
     /**
      * Constructor of SharedPreferencesAccountCredentialCache.
      *
@@ -107,153 +100,113 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
         Logger.verbose(TAG, "Init: " + TAG);
         mSharedPreferencesFileManager = sharedPreferencesFileManager;
         mCacheValueDelegate = accountCacheValueDelegate;
-        new Thread(() -> load()).start();
-    }
-
-    private void load() {
-        final String methodTag = TAG + ":load";
-
-        synchronized (mCacheLock) {
-            try {
-                mCachedAccountRecordsWithKeys = loadAccountsWithKeys();
-                Logger.info(methodTag, "Loaded " + mCachedAccountRecordsWithKeys.size() + " AccountRecords");
-                mCachedCredentialsWithKeys = loadCredentialsWithKeys();
-                Logger.info(methodTag, "Loaded " + mCachedCredentialsWithKeys.size() + " Credentials");
-            } catch (final Throwable t) {
-                Logger.error(methodTag, "Failed to load initial accounts or credentials from SharedPreferences", t);
-            } finally {
-                mLoaded = true;
-                mCacheLock.notifyAll();
-            }
-        }
-    }
-
-    private void waitForInitialLoad() {
-        final String methodTag = TAG + ":waitForInitialLoad";
-
-        while (!mLoaded) {
-            try {
-                mCacheLock.wait();
-            } catch (final InterruptedException e) {
-                Logger.error(methodTag, "Caught InterruptedException while waiting", e);
-            }
-        }
     }
 
     @Override
-    public void saveAccount(@NonNull final AccountRecord accountInput) {
-        final String methodTag = TAG + ":saveAccount";
-
-        AccountRecord accountToSave = null;
-        try {
-            accountToSave = (AccountRecord) accountInput.clone();
-        } catch (final CloneNotSupportedException e) {
-            Logger.error(methodTag, "Failed to clone AccountRecord", e);
-            return;
-        }
-
-        Logger.verbose(methodTag, "Saving Account...");
-        Logger.verbose(methodTag, "Account type: [" + accountToSave.getClass().getSimpleName() + "]");
+    public synchronized void saveAccount(@NonNull final AccountRecord accountToSave) {
+        Logger.verbose(TAG, "Saving Account...");
+        Logger.verbose(TAG, "Account type: [" + accountToSave.getClass().getSimpleName() + "]");
         final String cacheKey = mCacheValueDelegate.generateCacheKey(accountToSave);
-        Logger.verbosePII(methodTag, "Generated cache key: [" + cacheKey + "]");
+        Logger.verbosePII(TAG, "Generated cache key: [" + cacheKey + "]");
 
-        synchronized (mCacheLock) {
-            waitForInitialLoad();
+        // Perform any necessary field merging on the Account to save...
+        final AccountRecord existingAccount = getAccount(cacheKey);
 
-            // Perform any necessary field merging on the Account to save...
-            final AccountRecord existingAccount = getAccount(cacheKey);
-
-            if (null != existingAccount) {
-                accountToSave.mergeAdditionalFields(existingAccount);
-            }
-
-            final String cacheValue = mCacheValueDelegate.generateCacheValue(accountToSave);
-            mSharedPreferencesFileManager.put(cacheKey, cacheValue);
-            mCachedAccountRecordsWithKeys.put(cacheKey, accountToSave);
+        if (null != existingAccount) {
+            accountToSave.mergeAdditionalFields(existingAccount);
         }
+
+        final String cacheValue = mCacheValueDelegate.generateCacheValue(accountToSave);
+        mSharedPreferencesFileManager.put(cacheKey, cacheValue);
     }
 
     @Override
-    public void saveCredential(@NonNull Credential credentialInput) {
-        final String methodTag = TAG + ":saveCredential";
-
-        Credential credentialToSave = null;
-        try {
-            credentialToSave = (Credential) credentialInput.clone();
-        } catch (final CloneNotSupportedException e) {
-            Logger.error(methodTag, "Failed to clone Credential", e);
-            return;
-        }
-
-        Logger.verbose(methodTag, "Saving credential...");
+    public synchronized void saveCredential(@NonNull Credential credentialToSave) {
+        Logger.verbose(TAG, "Saving credential...");
         final String cacheKey = mCacheValueDelegate.generateCacheKey(credentialToSave);
-        Logger.verbosePII(methodTag, "Generated cache key: [" + cacheKey + "]");
+        Logger.verbosePII(TAG, "Generated cache key: [" + cacheKey + "]");
 
-        synchronized (mCacheLock) {
-            waitForInitialLoad();
+        // Perform any necessary field merging on the Credential to save...
+        final Credential existingCredential = getCredential(cacheKey);
 
-            // Perform any necessary field merging on the Credential to save...
-            final Credential existingCredential = getCredential(cacheKey);
-
-            if (null != existingCredential) {
-                credentialToSave.mergeAdditionalFields(existingCredential);
-            }
-
-            final String cacheValue = mCacheValueDelegate.generateCacheValue(credentialToSave);
-            mSharedPreferencesFileManager.put(cacheKey, cacheValue);
-            mCachedCredentialsWithKeys.put(cacheKey, credentialToSave);
+        if (null != existingCredential) {
+            credentialToSave.mergeAdditionalFields(existingCredential);
         }
+
+        final String cacheValue = mCacheValueDelegate.generateCacheValue(credentialToSave);
+        mSharedPreferencesFileManager.put(cacheKey, cacheValue);
     }
 
     @Override
     public AccountRecord getAccount(@NonNull final String cacheKey) {
-        final String methodTag = TAG + ":getAccount";
+        Logger.verbose(TAG, "Loading Account by key...");
+        AccountRecord account = mCacheValueDelegate.fromCacheValue(
+                mSharedPreferencesFileManager.get(cacheKey),
+                AccountRecord.class
+        );
 
-        AccountRecord foundValue;
-
-        synchronized (mCacheLock) {
-            waitForInitialLoad();
-            foundValue = mCachedAccountRecordsWithKeys.get(cacheKey);
+        if (null == account) {
+            // We could not deserialize the target AccountRecord...
+            // Maybe it was encrypted for another application?
+            Logger.warn(
+                    TAG,
+                    ACCOUNT_RECORD_DESERIALIZATION_FAILED
+            );
+        } else if (EMPTY_ACCOUNT.equals(account)) {
+            Logger.warn(TAG, "The returned Account was uninitialized. Removing...");
+            mSharedPreferencesFileManager.remove(cacheKey);
+            account = null;
         }
 
-        try {
-            if (foundValue != null) {
-                foundValue = (AccountRecord) foundValue.clone();
-            }
-        } catch (final CloneNotSupportedException e) {
-            Logger.error(methodTag, "Failed to clone AccountRecord", e);
-        }
-        return foundValue;
+        return account;
     }
 
     @Override
     @Nullable
     public Credential getCredential(@NonNull final String cacheKey) {
-        final String methodTag = TAG + ":getCredential";
+        // TODO add support for more Credential types...
+        Logger.verbose(TAG, "getCredential()");
+        Logger.verbosePII(TAG, "Using cache key: [" + cacheKey + "]");
 
-        Credential foundValue;
+        final CredentialType type = getCredentialTypeForCredentialCacheKey(cacheKey);
+        Class<? extends Credential> clazz = null;
 
-        synchronized (mCacheLock) {
-            waitForInitialLoad();
-            foundValue = mCachedCredentialsWithKeys.get(cacheKey);
+        if (null != type) {
+            clazz = getTargetClassForCredentialType(cacheKey, type);
         }
 
-        try {
-            if (foundValue != null) {
-                foundValue = (Credential) foundValue.clone();
-            }
-        } catch (final CloneNotSupportedException e) {
-            Logger.error(methodTag, "Failed to clone Credential", e);
+        Credential credential = null;
+
+        if (null != clazz) {
+            credential = mCacheValueDelegate.fromCacheValue(
+                    mSharedPreferencesFileManager.get(cacheKey),
+                    clazz
+            );
         }
 
-        return foundValue;
+        if (null == credential) {
+            // We could not deserialize the target Credential...
+            // Maybe it was encrypted for another application?
+            Logger.warn(
+                    TAG,
+                    CREDENTIAL_DESERIALIZATION_FAILED
+            );
+        } else if ((AccessTokenRecord.class == clazz && EMPTY_AT.equals(credential))
+                || (RefreshTokenRecord.class == clazz && EMPTY_RT.equals(credential))
+                || (IdTokenRecord.class == clazz) && EMPTY_ID.equals(credential)) {
+            // The returned credential came back uninitialized...
+            // Remove the entry and return null...
+            Logger.warn(TAG, "The returned Credential was uninitialized. Removing...");
+            mSharedPreferencesFileManager.remove(cacheKey);
+            credential = null;
+        }
+
+        return credential;
     }
 
     @NonNull
-    private Map<String, AccountRecord> loadAccountsWithKeys() {
-        final String methodTag = TAG + ":loadAccountsWithKeys";
-
-        Logger.verbose(methodTag, "Loading Accounts + keys...");
+    private Map<String, AccountRecord> getAccountsWithKeys() {
+        Logger.verbose(TAG, "Loading Accounts + keys...");
         final Iterator<Map.Entry<String, String>> cacheValues = mSharedPreferencesFileManager.getAllFilteredByKey(new Predicate<String>() {
             @Override
             public boolean test(String value) {
@@ -271,17 +224,14 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
                 );
 
                 if (null == account) {
-                    Logger.warn(methodTag, ACCOUNT_RECORD_DESERIALIZATION_FAILED);
-                } else if (EMPTY_ACCOUNT.equals(account)) {
-                    Logger.warn(methodTag, "The returned Account was uninitialized. Removing...");
-                    mSharedPreferencesFileManager.remove(cacheKey);
+                    Logger.warn(TAG, ACCOUNT_RECORD_DESERIALIZATION_FAILED);
                 } else {
                     accounts.put(cacheKey, account);
                 }
             }
         }
 
-        Logger.verbose(methodTag, "Returning [" + accounts.size() + "] Accounts w/ keys...");
+        Logger.verbose(TAG, "Returning [" + accounts.size() + "] Accounts w/ keys...");
 
         return accounts;
     }
@@ -291,20 +241,10 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
     public List<AccountRecord> getAccounts() {
         final String methodTag = TAG + ":getAccounts";
         Logger.verbose(methodTag, "Loading Accounts...(no arg)");
-
-        synchronized (mCacheLock) {
-            waitForInitialLoad();
-            final List<AccountRecord> accounts = new ArrayList<>();
-            for (AccountRecord record : mCachedAccountRecordsWithKeys.values()) {
-                try {
-                    accounts.add((AccountRecord) record.clone());
-                } catch (final CloneNotSupportedException e) {
-                    Logger.error(methodTag, "Failed to clone AccountRecord", e);
-                }
-            }
-            Logger.info(methodTag, "Found [" + accounts.size() + "] Accounts...");
-            return accounts;
-        }
+        final Map<String, AccountRecord> allAccounts = getAccountsWithKeys();
+        final List<AccountRecord> accounts = new ArrayList<>(allAccounts.values());
+        Logger.info(methodTag, "Found [" + accounts.size() + "] Accounts...");
+        return accounts;
     }
 
     @Override
@@ -331,10 +271,9 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
     }
 
     @NonNull
-    private Map<String, Credential> loadCredentialsWithKeys() {
+    private Map<String, Credential> getCredentialsWithKeys() {
         final String methodTag = TAG + ":getCredentialsWithKeys";
         Logger.verbose(methodTag, "Loading Credentials with keys...");
-
         final Map<String, Credential> credentials = new HashMap<>();
         final Iterator<Map.Entry<String, String>> cacheValues = mSharedPreferencesFileManager.getAllFilteredByKey(new Predicate<String>() {
             @Override
@@ -346,23 +285,14 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
         while (cacheValues.hasNext()) {
             Map.Entry<String, ?> cacheValue = cacheValues.next();
             final String cacheKey = cacheValue.getKey();
-            final Class<? extends AccountCredentialBase> clazz = credentialClassForType(cacheKey);
             final Credential credential = mCacheValueDelegate.fromCacheValue(
                     cacheValue.getValue().toString(),
-                    clazz
+                    credentialClassForType(cacheKey)
             );
 
             if (null == credential) {
                 Logger.warn(methodTag, CREDENTIAL_DESERIALIZATION_FAILED);
-            } else if ((AccessTokenRecord.class == clazz && EMPTY_AT.equals(credential))
-                || (RefreshTokenRecord.class == clazz && EMPTY_RT.equals(credential))
-                || (IdTokenRecord.class == clazz) && EMPTY_ID.equals(credential)) {
-                // The returned credential came back uninitialized...
-                // Remove the entry and return null...
-                Logger.warn(methodTag, "The returned Credential was uninitialized. Removing...");
-                mSharedPreferencesFileManager.remove(cacheKey);
-            }
-            else {
+            } else {
                 credentials.put(cacheKey, credential);
             }
         }
@@ -377,19 +307,9 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
     public List<Credential> getCredentials() {
         final String methodTag = TAG + ":getCredentials";
         Logger.verbose(methodTag, "Loading Credentials...");
-
-        synchronized (mCacheLock) {
-            waitForInitialLoad();
-            ArrayList<Credential> credentials = new ArrayList<>();
-            for (Credential credential : mCachedCredentialsWithKeys.values()) {
-                try {
-                    credentials.add((Credential)credential.clone());
-                } catch (final CloneNotSupportedException e) {
-                    Logger.error(methodTag, "Failed to clone Credential", e);
-                }
-            }
-            return credentials;
-        }
+        final Map<String, Credential> allCredentials = getCredentialsWithKeys();
+        final List<Credential> creds = new ArrayList<>(allCredentials.values());
+        return creds;
     }
 
     @Override
@@ -619,20 +539,16 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
 
         final String cacheKey = mCacheValueDelegate.generateCacheKey(accountToRemove);
 
-        synchronized (mCacheLock) {
-            waitForInitialLoad();
-            boolean accountRemoved = false;
-            if (mSharedPreferencesFileManager.keySet().contains(cacheKey))
-            {
-                mSharedPreferencesFileManager.remove(cacheKey);
-                accountRemoved = true;
-            }
-            Logger.info(methodTag, "Account was removed? [" + accountRemoved + "]");
-
-            mCachedAccountRecordsWithKeys.remove(cacheKey);
-
-            return accountRemoved;
+        boolean accountRemoved = false;
+        if (mSharedPreferencesFileManager.keySet().contains(cacheKey))
+        {
+            mSharedPreferencesFileManager.remove(cacheKey);
+            accountRemoved = true;
         }
+
+        Logger.info(methodTag, "Account was removed? [" + accountRemoved + "]");
+
+        return accountRemoved;
     }
 
     @Override
@@ -646,33 +562,23 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
 
         final String cacheKey = mCacheValueDelegate.generateCacheKey(credentialToRemove);
 
-        synchronized (mCacheLock) {
-            waitForInitialLoad();
-            boolean credentialRemoved = false;
-            if (mSharedPreferencesFileManager.keySet().contains(cacheKey)) {
-                mSharedPreferencesFileManager.remove(cacheKey);
-                credentialRemoved = true;
-            }
-
-            Logger.info(methodTag, "Credential was removed? [" + credentialRemoved + "]");
-
-            mCachedCredentialsWithKeys.remove(cacheKey);
-
-            return credentialRemoved;
+        boolean credentialRemoved = false;
+        if (mSharedPreferencesFileManager.keySet().contains(cacheKey))
+        {
+            mSharedPreferencesFileManager.remove(cacheKey);
+            credentialRemoved = true;
         }
 
+        Logger.info(methodTag, "Credential was removed? [" + credentialRemoved + "]");
+
+        return credentialRemoved;
     }
 
     @Override
     public void clearAll() {
         final String methodTag = TAG + ":clearAll";
         Logger.info(methodTag, "Clearing all SharedPreferences entries...");
-        synchronized (mCacheLock) {
-            waitForInitialLoad();
-            mSharedPreferencesFileManager.clear();
-            mCachedCredentialsWithKeys.clear();
-            mCachedAccountRecordsWithKeys.clear();
-        }
+        mSharedPreferencesFileManager.clear();
         Logger.info(methodTag, "SharedPreferences cleared.");
     }
 
