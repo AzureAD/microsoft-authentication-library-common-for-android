@@ -20,8 +20,9 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.ui.webview.challengehandlers;
+package com.microsoft.identity.common.internal.ui.webview.certbasedauth;
 
+import android.app.Activity;
 import android.os.Build;
 import android.webkit.ClientCertRequest;
 
@@ -29,12 +30,9 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 
 import com.microsoft.identity.common.R;
-import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.java.exception.BaseException;
+import com.microsoft.identity.common.java.opentelemetry.ICertBasedAuthTelemetryHelper;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
-import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings;
-import com.microsoft.identity.common.java.telemetry.events.CertBasedAuthResultEvent;
-import com.microsoft.identity.common.java.telemetry.events.ErrorEvent;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.security.PrivateKey;
@@ -43,45 +41,40 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * Handles a received ClientCertRequest by prompting the user to choose from certificates
- *  stored on a connected smartcard device.
+ * Abstract class which handles a received ClientCertRequest by prompting the user to choose from certificates
+ *  stored on a smartcard device.
  */
-public class SmartcardCertBasedAuthChallengeHandler implements ICertBasedAuthChallengeHandler {
-    private static final String TAG = SmartcardCertBasedAuthChallengeHandler.class.getSimpleName();
-    protected final AbstractSmartcardCertBasedAuthManager mSmartcardCertBasedAuthManager;
-    private final DialogHolder mDialogHolder;
-    private boolean mIsSmartcardCertBasedAuthProceeding;
+public abstract class AbstractSmartcardCertBasedAuthChallengeHandler<T extends AbstractSmartcardCertBasedAuthManager<?>> implements ICertBasedAuthChallengeHandler {
+    protected static final String MAX_ATTEMPTS_MESSAGE = "User has reached the maximum failed attempts allowed.";
+    protected static final String NO_PIV_CERTS_FOUND_MESSAGE = "No PIV certificates found on smartcard device.";
+    protected static final String USER_CANCEL_MESSAGE = "User canceled smartcard CBA flow.";
+    protected final String TAG;
+    protected final Activity mActivity;
+    protected final T mCbaManager;
+    protected final IDialogHolder mDialogHolder;
+    protected final ICertBasedAuthTelemetryHelper mTelemetryHelper;
+    protected boolean mIsSmartcardCertBasedAuthProceeding;
 
     /**
-     * Creates new instance of SmartcardCertBasedAuthChallengeHandler.
-     * A manager for smartcard CBA is retrieved, and discovery for USB devices is started.
-     * @param smartcardCertBasedAuthManager AbstractSmartcardCertBasedAuthManager instance.
+     * Creates new instance of AbstractSmartcardCertBasedAuthChallengeHandler.
+     * @param activity current host activity.
+     * @param smartcardCertBasedAuthManager AbstractSmartcardCertBasedAuthManager implementation instance.
      * @param dialogHolder DialogHolder instance.
+     * @param telemetryHelper CertBasedAuthTelemetryHelper instance.
+     * @param tag name of challenge handler, for logging purposes.
      */
-    public SmartcardCertBasedAuthChallengeHandler(@NonNull final AbstractSmartcardCertBasedAuthManager smartcardCertBasedAuthManager,
-                                                  @NonNull final DialogHolder dialogHolder) {
-        final String methodTag = TAG + ":SmartcardCertBasedAuthChallengeHandler";
+    public AbstractSmartcardCertBasedAuthChallengeHandler(@NonNull final Activity activity,
+                                                          @NonNull final T smartcardCertBasedAuthManager,
+                                                          @NonNull final IDialogHolder dialogHolder,
+                                                          @NonNull final ICertBasedAuthTelemetryHelper telemetryHelper,
+                                                          @NonNull final String tag) {
+        TAG = tag;
+        mActivity = activity;
         mIsSmartcardCertBasedAuthProceeding = false;
-        mSmartcardCertBasedAuthManager = smartcardCertBasedAuthManager;
+        mCbaManager = smartcardCertBasedAuthManager;
         mDialogHolder = dialogHolder;
-        mSmartcardCertBasedAuthManager.setConnectionCallback(new AbstractSmartcardCertBasedAuthManager.IConnectionCallback() {
-            @Override
-            public void onCreateConnection() {
-                //Reset DialogHolder to null if necessary.
-                //In this case, DialogHolder would be an ErrorDialog if not null.
-                mDialogHolder.dismissDialog();
-            }
-
-            @Override
-            public void onClosedConnection() {
-                //Show an error dialog informing users that they have unplugged their device only if a dialog is still showing.
-                if (mDialogHolder.isDialogShowing()) {
-                    mDialogHolder.onCancelCba();
-                    mDialogHolder.showErrorDialog(R.string.smartcard_early_unplug_dialog_title, R.string.smartcard_early_unplug_dialog_message);
-                    Logger.verbose(methodTag, "Smartcard was disconnected while dialog was still displayed.");
-                }
-            }
-        });
+        mTelemetryHelper = telemetryHelper;
+        mTelemetryHelper.setCertBasedAuthChallengeHandler(TAG);
     }
 
     /**
@@ -96,23 +89,26 @@ public class SmartcardCertBasedAuthChallengeHandler implements ICertBasedAuthCha
     @Override
     public Void processChallenge(ClientCertRequest request) {
         final String methodTag = TAG + ":processChallenge";
-        mSmartcardCertBasedAuthManager.requestDeviceSession(new AbstractSmartcardCertBasedAuthManager.ISessionCallback() {
+        mCbaManager.requestDeviceSession(new AbstractSmartcardCertBasedAuthManager.ISessionCallback() {
             @Override
             public void onGetSession(@NonNull final ISmartcardSession session) throws Exception {
                 if (session.getPinAttemptsRemaining() == 0) {
-                    indicateTooManyFailedAttempts(methodTag);
+                    promptTooManyFailedPinAttempts(methodTag);
                     request.cancel();
+                    onPausedSmartcardDiscovery();
                     return;
                 }
                 //Create List that contains cert details only pertinent to the cert picker.
                 final List<ICertDetails> certList = session.getCertDetailsList();
                 //If no certs were found, cancel flow.
                 if (certList.isEmpty()) {
-                    Logger.info(methodTag,  "No PIV certificates found on smartcard device.");
+                    Logger.info(methodTag,  NO_PIV_CERTS_FOUND_MESSAGE);
+                    mTelemetryHelper.setResultFailure(NO_PIV_CERTS_FOUND_MESSAGE);
                     mDialogHolder.showErrorDialog(
                             R.string.smartcard_no_cert_dialog_title,
                             R.string.smartcard_no_cert_dialog_message);
                     request.cancel();
+                    onPausedSmartcardDiscovery();
                     return;
                 }
 
@@ -125,9 +121,12 @@ public class SmartcardCertBasedAuthChallengeHandler implements ICertBasedAuthCha
                             @Override
                             public void onCancel() {
                                 mDialogHolder.dismissDialog();
+                                mTelemetryHelper.setResultFailure(USER_CANCEL_MESSAGE);
                                 request.cancel();
                             }
                         });
+
+                onPausedSmartcardDiscovery();
             }
 
             @Override
@@ -140,12 +139,19 @@ public class SmartcardCertBasedAuthChallengeHandler implements ICertBasedAuthCha
     }
 
     /**
+     * Pauses smartcard discovery, if the particular authentication method isn't meant to have
+     *  discovery active throughout the entire flow.
+     */
+    protected abstract void onPausedSmartcardDiscovery();
+
+    /**
      * Helper method to log and show an error dialog with messages indicating that
      *  too many failed login attempts have occurred.
      * @param methodTag tag from calling method.
      */
-    private void indicateTooManyFailedAttempts(@NonNull final String methodTag) {
-        Logger.info(methodTag,  "User has reached the maximum failed attempts allowed.");
+    protected void promptTooManyFailedPinAttempts(@NonNull final String methodTag) {
+        Logger.info(methodTag,  MAX_ATTEMPTS_MESSAGE);
+        mTelemetryHelper.setResultFailure(MAX_ATTEMPTS_MESSAGE);
         mDialogHolder.showErrorDialog(
                 R.string.smartcard_max_attempt_dialog_title,
                 R.string.smartcard_max_attempt_dialog_message);
@@ -157,13 +163,13 @@ public class SmartcardCertBasedAuthChallengeHandler implements ICertBasedAuthCha
      * @param methodTag tag from calling method.
      * @param e Exception thrown.
      */
-    private void indicateGeneralException(@NonNull final String methodTag, @NonNull final Exception e) {
+    protected void indicateGeneralException(@NonNull final String methodTag, @NonNull final Exception e) {
         Logger.error(methodTag, e.getMessage(), e);
+        mTelemetryHelper.setResultFailure(e);
         //Show general error dialog.
         mDialogHolder.showErrorDialog(
                 R.string.smartcard_general_error_dialog_title,
                 R.string.smartcard_general_error_dialog_message);
-        Telemetry.emit(new ErrorEvent().putException(e));
     }
 
     /**
@@ -184,6 +190,7 @@ public class SmartcardCertBasedAuthChallengeHandler implements ICertBasedAuthCha
                             @Override
                             public void onCancel() {
                                 mDialogHolder.dismissDialog();
+                                mTelemetryHelper.setResultFailure(USER_CANCEL_MESSAGE);
                                 request.cancel();
                             }
                         });
@@ -197,31 +204,7 @@ public class SmartcardCertBasedAuthChallengeHandler implements ICertBasedAuthCha
      * @param request ClientCertRequest received from AzureActiveDirectoryWebViewClient.onReceivedClientCertRequest.
      * @return A PositiveButtonListener to be set for a SmartcardPinDialog.
      */
-    private SmartcardPinDialog.PositiveButtonListener getSmartcardPinDialogPositiveButtonListener(@NonNull final ICertDetails certDetails,
-                                                                                                  @NonNull final ClientCertRequest request) {
-        final String methodTag = TAG + ":getSmartcardPinDialogPositiveButtonListener";
-
-        return new SmartcardPinDialog.PositiveButtonListener() {
-            @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-            @Override
-            public void onClick(@NonNull final char[] pin) {
-                mSmartcardCertBasedAuthManager.requestDeviceSession(new AbstractSmartcardCertBasedAuthManager.ISessionCallback() {
-                    @Override
-                    public void onGetSession(@NonNull final ISmartcardSession session) throws Exception {
-                        tryUsingSmartcardWithPin(pin, certDetails, request, session);
-                        clearPin(pin);
-                    }
-
-                    @Override
-                    public void onException(@NonNull final Exception e) {
-                        indicateGeneralException(methodTag, e);
-                        request.cancel();
-                        clearPin(pin);
-                    }
-                });
-            }
-        };
-    }
+    protected abstract SmartcardPinDialog.PositiveButtonListener getSmartcardPinDialogPositiveButtonListener(@NonNull final ICertDetails certDetails, @NonNull final ClientCertRequest request);
 
     /**
      * Checks to see if PIN for smartcard is correct.
@@ -233,46 +216,50 @@ public class SmartcardCertBasedAuthChallengeHandler implements ICertBasedAuthCha
      * @param session An ISmartcardSession created to help with interactions pertaining to certificates.
      */
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-    private void tryUsingSmartcardWithPin(@NonNull final char[] pin,
-                                          @NonNull final ICertDetails certDetails,
-                                          @NonNull final ClientCertRequest request,
-                                          @NonNull final ISmartcardSession session)
+    protected void tryUsingSmartcardWithPin(@NonNull final char[] pin,
+                                            @NonNull final ICertDetails certDetails,
+                                            @NonNull final ClientCertRequest request,
+                                            @NonNull final ISmartcardSession session)
             throws Exception {
         final String methodTag = TAG + ":tryUsingSmartcardWithPin";
         if (session.verifyPin(pin)) {
             //If pin is successfully verified, we will use the certificate to perform the rest of the logic for authentication.
             useSmartcardCertForAuth(certDetails, pin, session, request);
+            return;
         }
-        else {
-            // If the number of attempts is 0, no more attempts will be allowed.
-            if (session.getPinAttemptsRemaining() == 0) {
-                //We must display a dialog informing the user that they have made too many incorrect attempts,
-                // and the user will need to figure out a way to reset their key outside of our library.
-                indicateTooManyFailedAttempts(methodTag);
-                request.cancel();
-            } else {
-                //Update Dialog to indicate that an incorrect attempt was made.
-                mDialogHolder.setPinDialogErrorMode();
-            }
-
+        final int attemptsRemaining = session.getPinAttemptsRemaining();
+        onPausedSmartcardDiscovery();
+        if (attemptsRemaining == 0) {
+            promptTooManyFailedPinAttempts(methodTag);
+            request.cancel();
+            return;
         }
+        setPinDialogForIncorrectAttempt(certDetails, request);
     }
 
     /**
-     * Attempts to authenticate using smartcard certificate.
+     * Shows PIN dialog, if not already showing, and sets dialog to error mode.
+     * @param certDetails ICertDetails of the selected certificate from the SmartcardCertPickerDialog.
+     * @param request ClientCertRequest received from AzureActiveDirectoryWebViewClient.onReceivedClientCertRequest.
+     */
+    protected abstract void setPinDialogForIncorrectAttempt(@NonNull final ICertDetails certDetails,
+                                                            @NonNull final ClientCertRequest request);
+
+    /**
+     * Authenticates using smartcard certificate.
      * @param certDetails ICertDetails of chosen certificate for authentication.
      * @param pin char array containing PIN.
      * @param session An ISmartcardSession created to help with interactions pertaining to certificates.
      * @param request ClientCertRequest received from AzureActiveDirectoryWebViewClient.onReceivedClientCertRequest.
      */
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-    private void useSmartcardCertForAuth(@NonNull final ICertDetails certDetails,
-                                         @NonNull final char[] pin,
-                                         @NonNull final ISmartcardSession session,
-                                         @NonNull final ClientCertRequest request)
+    protected void useSmartcardCertForAuth(@NonNull final ICertDetails certDetails,
+                                           @NonNull final char[] pin,
+                                           @NonNull final ISmartcardSession session,
+                                           @NonNull final ClientCertRequest request)
             throws Exception {
         //Each type of smartcard manager could have different preparation steps before proceeding with a ClientCertRequest.
-        mSmartcardCertBasedAuthManager.initBeforeProceedingWithRequest();
+        mCbaManager.initBeforeProceedingWithRequest(mTelemetryHelper);
         //PivPrivateKey implements PrivateKey. Note that the PIN is copied in pivPrivateKey.
         final PrivateKey privateKey = session.getKeyForAuth(certDetails, pin);
         //Cert chain only needs the cert to be used for authentication.
@@ -287,7 +274,7 @@ public class SmartcardCertBasedAuthChallengeHandler implements ICertBasedAuthCha
      * Sets all chars in the PIN array to 0.
      * @param pin char array containing PIN.
      */
-    private void clearPin(@NonNull final char[] pin) {
+    protected void clearPin(@NonNull final char[] pin) {
         Arrays.fill(pin, Character.MIN_VALUE);
     }
 
@@ -297,16 +284,23 @@ public class SmartcardCertBasedAuthChallengeHandler implements ICertBasedAuthCha
      */
     @Override
     public void emitTelemetryForCertBasedAuthResults(@NonNull final RawAuthorizationResult response) {
-        if (mIsSmartcardCertBasedAuthProceeding) {
-            final CertBasedAuthResultEvent certBasedAuthResultEvent = new CertBasedAuthResultEvent(TelemetryEventStrings.Event.CERT_BASED_AUTH_RESULT_SMARTCARD_EVENT);
-            mIsSmartcardCertBasedAuthProceeding = false;
-            Telemetry.emit(certBasedAuthResultEvent.putResponseCode(response.getResultCode().toString()));
-            //If an exception was provided, emit an ErrorEvent.
+        if (!mIsSmartcardCertBasedAuthProceeding) {
+            return;
+        }
+        final RawAuthorizationResult.ResultCode resultCode = response.getResultCode();
+        if (resultCode == RawAuthorizationResult.ResultCode.NON_OAUTH_ERROR
+                || resultCode == RawAuthorizationResult.ResultCode.SDK_CANCELLED
+                || resultCode == RawAuthorizationResult.ResultCode.CANCELLED) {
             final BaseException exception = response.getException();
             if (exception != null) {
-                Telemetry.emit(new ErrorEvent().putException(exception));
+                mTelemetryHelper.setResultFailure(exception);
+                return;
             }
+            //Putting result code as message.
+            mTelemetryHelper.setResultFailure(resultCode.toString());
+            return;
         }
+        mTelemetryHelper.setResultSuccess();
     }
 
     /**
@@ -315,7 +309,7 @@ public class SmartcardCertBasedAuthChallengeHandler implements ICertBasedAuthCha
     @Override
     public void cleanUp() {
         mDialogHolder.dismissDialog();
-        //Reset IConnectionCallback local variable of mSmartcardCertBasedAuthManager.
-        mSmartcardCertBasedAuthManager.setConnectionCallback(null);
+        //Reset IConnectionCallback local variable of mCbaManager.
+        mCbaManager.clearConnectionCallback();
     }
 }

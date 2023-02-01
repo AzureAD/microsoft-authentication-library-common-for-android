@@ -20,22 +20,59 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.ui.webview.challengehandlers;
+package com.microsoft.identity.common.internal.ui.webview.certbasedauth;
 
-import androidx.annotation.NonNull;
+import android.webkit.ClientCertRequest;
 
+import androidx.annotation.Nullable;
+
+import java.security.Principal;
+import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 
-/**
- * Holds X509Certificate and other important details that may be implementation specific.
- */
-public interface ICertDetails {
+import lombok.Getter;
+import lombok.experimental.Accessors;
 
-    /**
-     * Gets certificate.
-     * @return certificate.
-     */
-    @NonNull
-    X509Certificate getCertificate();
+@Getter @Accessors(prefix = "m")
+public class TestClientCertRequest extends ClientCertRequest {
 
+    private boolean mProceeded;
+    private boolean mCancelled;
+
+    @Nullable
+    @Override
+    public String[] getKeyTypes() {
+        return new String[0];
+    }
+
+    @Nullable
+    @Override
+    public Principal[] getPrincipals() {
+        return new Principal[0];
+    }
+
+    @Override
+    public String getHost() {
+        return null;
+    }
+
+    @Override
+    public int getPort() {
+        return 0;
+    }
+
+    @Override
+    public void proceed(PrivateKey privateKey, X509Certificate[] chain) {
+        mProceeded = true;
+    }
+
+    @Override
+    public void ignore() {
+
+    }
+
+    @Override
+    public void cancel() {
+        mCancelled = true;
+    }
 }

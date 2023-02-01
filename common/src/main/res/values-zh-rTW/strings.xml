@@ -10,7 +10,7 @@
     <string name="http_auth_dialog_cancel">取消</string>
 
     <!-- strings for CBA dialogs and layouts -->
-    <string name="smartcard_cert_dialog_title">選擇要登入的智慧卡憑證</string>
+    <string name="smartcard_cert_dialog_title">選取憑證以登入</string>
     <string name="smartcard_cert_dialog_positive_button">繼續</string>
     <string name="smartcard_cert_dialog_negative_button">取消</string>
 
@@ -30,8 +30,29 @@
     <string name="smartcard_early_unplug_dialog_message">智慧卡裝置已移除。嘗試重新登入之前，請先重新插入裝置。</string>
 
     <string name="smartcard_no_cert_dialog_title">找不到適用的憑證。</string>
-    <string name="smartcard_no_cert_dialog_message">請確認您的憑證已正確佈建至您的智慧卡裝置。</string>
+    <string name="smartcard_no_cert_dialog_message">確認您的憑證已正確佈建至您的智慧卡裝置。</string>
 
     <string name="smartcard_general_error_dialog_title">請稍後再試</string>
     <string name="smartcard_general_error_dialog_message">發生意外錯誤。請稍後再試一次。</string>
+
+    <string name="user_choice_dialog_title">您想要如何登入?</string>
+    <string name="user_choice_dialog_on_device_name">您裝置上的憑證</string>
+    <string name="user_choice_dialog_smartcard_name">實體智慧卡</string>
+    <string name="user_choice_dialog_positive_button">繼續</string>
+    <string name="user_choice_dialog_negative_button">取消</string>
+
+    <string name="smartcard_prompt_dialog_title">準備您的智慧卡</string>
+    <string name="smartcard_prompt_dialog_message">插入或將智慧卡放在手機背面。</string>
+    <string name="smartcard_prompt_dialog_negative_button">取消</string>
+
+    <string name="smartcard_nfc_loading_dialog_title">讀取您的智慧卡</string>
+    <string name="smartcard_nfc_loading_dialog_message">將智慧卡放在適當位置。</string>
+
+    <string name="smartcard_nfc_prompt_dialog_title">準備您的智慧卡</string>
+    <string name="smartcard_nfc_prompt_dialog_message">將智慧卡放在手機背面。</string>
+    <string name="smartcard_nfc_prompt_dialog_negative_button">取消</string>
+
+    <string name="smartcard_nfc_reminder_dialog_title">在裝置設定中開啟 NFC</string>
+    <string name="smartcard_nfc_reminder_dialog_message">若要使用 NFC 來登入，請在裝置設定中開啟 NFC。然後重新登入。</string>
+    <string name="smartcard_nfc_reminder_dialog_positive_button">了解</string>
 </resources>
