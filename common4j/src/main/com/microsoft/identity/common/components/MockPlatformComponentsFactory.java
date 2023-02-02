@@ -232,5 +232,11 @@ public class MockPlatformComponentsFactory {
         public KeyManagerFactory getSslContextKeyManagerFactory() {
             throw new UnsupportedOperationException();
         }
+
+        @Nullable
+        @Override
+        public String getPackageNameFromUid(int uid) {
+            return null;
+        }
     };
 }

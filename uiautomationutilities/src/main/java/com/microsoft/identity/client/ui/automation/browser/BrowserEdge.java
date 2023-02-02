@@ -31,6 +31,7 @@ import androidx.test.uiautomator.UiObjectNotFoundException;
 import androidx.test.uiautomator.UiSelector;
 
 import com.microsoft.identity.client.ui.automation.app.App;
+import com.microsoft.identity.client.ui.automation.installer.IAppInstaller;
 import com.microsoft.identity.client.ui.automation.interaction.FirstPartyAppPromptHandlerParameters;
 import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.AadPromptHandler;
 import com.microsoft.identity.client.ui.automation.logging.Logger;
@@ -45,10 +46,28 @@ public class BrowserEdge extends App implements IBrowser {
     private final static String TAG = BrowserEdge.class.getSimpleName();
     private static final String EDGE_PACKAGE_NAME = "com.microsoft.emmx";
     private static final String EDGE_APP_NAME = "Microsoft Edge";
-    private boolean shouldHandleFirstRun = true;
+    private static final String EDGE_APK = "Edge.apk";
+    private boolean shouldHandleAutoFill = true;
 
     public BrowserEdge() {
         super(EDGE_PACKAGE_NAME, EDGE_APP_NAME);
+    }
+
+    public BrowserEdge(@NonNull final IAppInstaller appInstaller) {
+        super(EDGE_PACKAGE_NAME, EDGE_APP_NAME, appInstaller);
+        localApkFileName = EDGE_APK;
+    }
+
+    /**
+     * Overriding the launch function to add a check for autofill ui
+     */
+    @Override
+    public void launch() {
+        super.launch();
+        if (shouldHandleAutoFill) {
+            UiAutomatorUtils.handleButtonClickForObjectWithTextSafely("No, thanks");
+            shouldHandleAutoFill = false;
+        }
     }
 
     @Override
@@ -66,6 +85,8 @@ public class BrowserEdge extends App implements IBrowser {
 
     public void navigateTo(@NonNull final String url) {
         Logger.i(TAG, "Navigate to the given URL:" + url + " in the browser..");
+        launch();
+
         //  Click on the search bar in the browser UI
         UiAutomatorUtils.handleButtonClick("com.microsoft.emmx:id/search_box_text");
 
@@ -144,11 +165,16 @@ public class BrowserEdge extends App implements IBrowser {
     private void signInWithWorkOrSchoolAccount(@NonNull final String username,
                                                @NonNull final String password,
                                                @NonNull final FirstPartyAppPromptHandlerParameters promptHandlerParameters) throws UiObjectNotFoundException {
+        // click Sign In with work or school account btn
         final UiObject signInWithWorkAccountBtn = UiAutomatorUtils.obtainUiObjectWithText(
                 "Add account"
         );
 
-        // click Sign In with work or school account btn
+        // Sometimes, we don't see the "Sign in to turn on sync page", so we must navigate to it.
+        if (!signInWithWorkAccountBtn.exists()) {
+            UiAutomatorUtils.handleButtonClick("com.microsoft.emmx:id/edge_account_image_view");
+            UiAutomatorUtils.handleButtonClickForObjectWithText("sign in to sync");
+        }
         signInWithWorkAccountBtn.click();
 
         Logger.i(TAG, "Handle Sign-In Prompt for Work or School account..");
@@ -157,7 +183,7 @@ public class BrowserEdge extends App implements IBrowser {
         try {
             emailField.setText(username);
             UiAutomatorUtils.handleButtonClickForObjectWithText("Next");
-        }catch(UiObjectNotFoundException ex){
+        } catch(UiObjectNotFoundException ex){
             throw new AssertionError(ex);
         }
 
@@ -166,9 +192,7 @@ public class BrowserEdge extends App implements IBrowser {
         aadPromptHandler.handlePrompt(username, password);
 
         // Handle confirm page that loads after password prompt
-        UiAutomatorUtils.handleButtonClickForObjectWithText("Confirm");
-        
-        handleFirstRun();
+        UiAutomatorUtils.handleButtonClickForObjectWithTextSafely("Confirm");
     }
 
     public boolean confirmSignedIn(@Nullable final String username) {

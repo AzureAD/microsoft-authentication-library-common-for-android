@@ -20,7 +20,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.ui.webview.challengehandlers;
+package com.microsoft.identity.common.internal.ui.webview.certbasedauth;
 
 import android.app.Activity;
 import android.content.DialogInterface;
@@ -31,47 +31,39 @@ import androidx.appcompat.app.AlertDialog;
 import com.microsoft.identity.common.R;
 
 /**
- * Show simple dialog when the user has encountered an error or unexpected exception.
+ * Builds a dialog that notifies the user to turn on NFC in settings if they want to authenticate via NFC.
  */
-public class SmartcardErrorDialog extends SmartcardDialog {
+public class SmartcardNfcReminderDialog extends SmartcardDialog {
 
-    private final int mTitleStringResourceId;
-    private final int mMessageStringResourceId;
     private final DismissCallback mDismissCallback;
 
     /**
-     * Create new instance of SmartcardErrorDialog.
-     * @param titleStringResourceId String resource id for text to be displayed as the title in dialog.
-     * @param messageStringResourceId String resource id for text to be displayed as the message in dialog.
-     * @param dismissCallback Implemented callback for when dialog is to be dismissed (positive button click or back button).
-     * @param activity Host activity.
+     * Creates new instance of SmartcardNfcReminderDialog.
+     * @param dismissCallback callback containing logic to be run upon dialog dismissal.
+     * @param activity current host activity.
      */
-    public SmartcardErrorDialog(final int titleStringResourceId,
-                                final int messageStringResourceId,
-                                @NonNull final DismissCallback dismissCallback,
-                                @NonNull final Activity activity) {
+    public SmartcardNfcReminderDialog(@NonNull final DismissCallback dismissCallback,
+                                      @NonNull final Activity activity) {
         super(activity);
-        mTitleStringResourceId = titleStringResourceId;
-        mMessageStringResourceId = messageStringResourceId;
         mDismissCallback = dismissCallback;
         createDialog();
     }
 
     /**
-     * Builds an AlertDialog which informs users that they have encountered an error or unexpected exception.
+     * Should build an Android Dialog object and set it to mDialog.
+     * Dialog objects must be built/interacted with on the UI thread.
      */
-    protected void createDialog() {
+    @Override
+    void createDialog() {
         mActivity.runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                //Start building dialog
-                final AlertDialog.Builder builder = new AlertDialog.Builder(mActivity, R.style.ErrorAlertDialogTheme)
+                final AlertDialog.Builder builder = new AlertDialog.Builder(mActivity, R.style.UserChoiceAlertDialogTheme)
                         //Sets topmost text of dialog.
-                        .setTitle(mTitleStringResourceId)
+                        .setTitle(R.string.smartcard_nfc_reminder_dialog_title)
                         //Sets subtext of the title.
-                        .setMessage(mMessageStringResourceId)
-                        //In most cases, will set local dialog variable to null.
-                        .setPositiveButton(R.string.smartcard_error_dialog_positive_button, new DialogInterface.OnClickListener() {
+                        .setMessage(R.string.smartcard_nfc_reminder_dialog_message)
+                        .setPositiveButton(R.string.smartcard_nfc_reminder_dialog_positive_button, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
                                 mDismissCallback.onClick();
@@ -79,7 +71,7 @@ public class SmartcardErrorDialog extends SmartcardDialog {
                         });
                 final AlertDialog dialog = builder.create();
                 //If user touches outside dialog, the default behavior makes the dialog disappear without really doing anything.
-                //Adding this line in disables this default behavior so that the user can only exit by hitting the positive button.
+                //Adding this line in disables this default behavior so that the user can only exit by hitting the cancel button.
                 dialog.setCanceledOnTouchOutside(false);
                 //Handle back button the same as the positive button.
                 dialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
@@ -94,16 +86,15 @@ public class SmartcardErrorDialog extends SmartcardDialog {
     }
 
     /**
-     * Handles scenario when CBA is canceled unexpectedly (for example. when a YubiKey is unplugged while a dialog is showing).
+     * Should dismiss dialog and call the appropriate methods to help cancel the CBA flow.
      */
     @Override
     void onCancelCba() {
-        //Handle cancelling the same as the positive button.
-        mDismissCallback.onClick();
+        //This method will never be called on this dialog, so no logic needed.
     }
 
     /**
-     * Callback interface for when dialog is to be dismissed (usually by positive button click or back button).
+     * Callback interface for a dialog dismissal.
      */
     public interface DismissCallback {
         void onClick();

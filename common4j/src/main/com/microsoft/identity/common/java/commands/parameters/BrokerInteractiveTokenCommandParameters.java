@@ -42,9 +42,6 @@ public class BrokerInteractiveTokenCommandParameters extends InteractiveTokenCom
         implements IHasExtraParameters, IBrokerTokenCommandParameters {
 
     @Expose
-    private final String callerPackageName;
-
-    @Expose
     private final int callerUid;
 
     @Expose
@@ -109,12 +106,6 @@ public class BrokerInteractiveTokenCommandParameters extends InteractiveTokenCom
                 throw new ArgumentException(
                         ArgumentException.ACQUIRE_TOKEN_OPERATION_NAME,
                         "mCallerUId", "Caller Uid is not set"
-                );
-            }
-            if (StringUtil.isNullOrEmpty(callerPackageName)) {
-                throw new ArgumentException(
-                        ArgumentException.ACQUIRE_TOKEN_OPERATION_NAME,
-                        "mCallerPackageName", "Caller package name is not set"
                 );
             }
             if (!(getOAuth2TokenCache() instanceof BrokerOAuth2TokenCache)) {

@@ -310,6 +310,8 @@ public class LocalMSALController extends BaseController {
         // Suppressing unchecked warning of converting List<ICacheRecord> to List due to generic type not provided for tokenCache
         @SuppressWarnings(WarningType.unchecked_warning) final List<ICacheRecord> cacheRecords = tokenCache.loadWithAggregatedAccountData(
                 parametersWithScopes.getClientId(),
+                parameters.getApplicationIdentifier(),
+                parameters.getMamEnrollmentId(),
                 TextUtils.join(" ", parametersWithScopes.getScopes()),
                 targetAccount,
                 authScheme

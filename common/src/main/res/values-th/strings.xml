@@ -10,7 +10,7 @@
     <string name="http_auth_dialog_cancel">ยกเลิก</string>
 
     <!-- strings for CBA dialogs and layouts -->
-    <string name="smartcard_cert_dialog_title">เลือกใบรับรองสมาร์ทการ์ดเพื่อลงชื่อเข้าใช้</string>
+    <string name="smartcard_cert_dialog_title">เลือกใบรับรองเพื่อลงชื่อเข้าใช้</string>
     <string name="smartcard_cert_dialog_positive_button">ดำเนินการต่อ</string>
     <string name="smartcard_cert_dialog_negative_button">ยกเลิก</string>
 
@@ -30,8 +30,29 @@
     <string name="smartcard_early_unplug_dialog_message">นำอุปกรณ์สมาร์ทการ์ดออกแล้ว โปรดใส่อุปกรณ์ใหม่ก่อนที่จะพยายามเข้าสู่ระบบอีกครั้ง</string>
 
     <string name="smartcard_no_cert_dialog_title">ไม่พบใบรับรองที่เกี่ยวข้อง</string>
-    <string name="smartcard_no_cert_dialog_message">โปรดยืนยันว่าใบรับรองของคุณได้รับการเตรียมใช้งานอย่างถูกต้องบนอุปกรณ์สมาร์ทการ์ดของคุณ</string>
+    <string name="smartcard_no_cert_dialog_message">ยืนยันว่าใบรับรองของคุณได้รับการเตรียมใช้งานอย่างถูกต้องบนอุปกรณ์สมาร์ทการ์ดของคุณ</string>
 
     <string name="smartcard_general_error_dialog_title">ลองอีกครั้งในภายหลัง</string>
     <string name="smartcard_general_error_dialog_message">เกิดข้อผิดพลาดที่ไม่คาดคิด โปรดลองอีกครั้งภายหลัง</string>
+
+    <string name="user_choice_dialog_title">คุณต้องการลงชื่อเข้าใช้อย่างไร</string>
+    <string name="user_choice_dialog_on_device_name">ใบรับรองบนอุปกรณ์ของคุณ</string>
+    <string name="user_choice_dialog_smartcard_name">สมาร์ทการ์ดจริง</string>
+    <string name="user_choice_dialog_positive_button">ดำเนินการต่อ</string>
+    <string name="user_choice_dialog_negative_button">ยกเลิก</string>
+
+    <string name="smartcard_prompt_dialog_title">เตรียมสมาร์ทการ์ดของคุณ</string>
+    <string name="smartcard_prompt_dialog_message">เสียบปลั๊กหรือถือสมาร์ทการ์ดไว้ที่ด้านหลังของโทรศัพท์ของคุณ</string>
+    <string name="smartcard_prompt_dialog_negative_button">ยกเลิก</string>
+
+    <string name="smartcard_nfc_loading_dialog_title">การอ่านสมาร์ทการ์ดของคุณ</string>
+    <string name="smartcard_nfc_loading_dialog_message">เก็บสมาร์ทการ์ดของคุณให้เข้าที่</string>
+
+    <string name="smartcard_nfc_prompt_dialog_title">เตรียมสมาร์ทการ์ดของคุณ</string>
+    <string name="smartcard_nfc_prompt_dialog_message">ถือสมาร์ทการ์ดไว้ที่ด้านหลังของโทรศัพท์ของคุณ</string>
+    <string name="smartcard_nfc_prompt_dialog_negative_button">ยกเลิก</string>
+
+    <string name="smartcard_nfc_reminder_dialog_title">เปิดใช้งาน NFC ในการตั้งค่าอุปกรณ์</string>
+    <string name="smartcard_nfc_reminder_dialog_message">เมื่อต้องการลงชื่อเข้าใช้ด้วย NFC ให้เปิดใช้งาน NFC ในการตั้งค่าอุปกรณ์ของคุณ จากนั้นลงชื่อเข้าใช้อีกครั้ง</string>
+    <string name="smartcard_nfc_reminder_dialog_positive_button">เข้าใจแล้ว</string>
 </resources>
