@@ -10,7 +10,7 @@
     <string name="http_auth_dialog_cancel">Utzi</string>
 
     <!-- strings for CBA dialogs and layouts -->
-    <string name="smartcard_cert_dialog_title">Aukeratu saioa hasteko txartel adimendunaren ziurtagiri bat</string>
+    <string name="smartcard_cert_dialog_title">Hautatu ziurtagiri bat saioa hasteko</string>
     <string name="smartcard_cert_dialog_positive_button">Jarraitu</string>
     <string name="smartcard_cert_dialog_negative_button">Utzi</string>
 
@@ -34,4 +34,25 @@
 
     <string name="smartcard_general_error_dialog_title">Saiatu berriro geroago</string>
     <string name="smartcard_general_error_dialog_message">Ustekabeko errore bat gertatu da. Saiatu berriro geroago.</string>
+
+    <string name="user_choice_dialog_title">Nola hasi nahi duzu saioa?</string>
+    <string name="user_choice_dialog_on_device_name">Gailuko ziurtagiria</string>
+    <string name="user_choice_dialog_smartcard_name">Txartel adimendun fisikoa</string>
+    <string name="user_choice_dialog_positive_button">Jarraitu</string>
+    <string name="user_choice_dialog_negative_button">Utzi</string>
+
+    <string name="smartcard_prompt_dialog_title">Prestatu txartel adimenduna</string>
+    <string name="smartcard_prompt_dialog_message">Konektatu edo jarri txartel adimenduna mugikorraren atzealdean.</string>
+    <string name="smartcard_prompt_dialog_negative_button">Utzi</string>
+
+    <string name="smartcard_nfc_loading_dialog_title">Txartel adimenduna irakurtzen</string>
+    <string name="smartcard_nfc_loading_dialog_message">Mantendu txartel adimenduna bere lekuan.</string>
+
+    <string name="smartcard_nfc_prompt_dialog_title">Prestatu txartel adimenduna</string>
+    <string name="smartcard_nfc_prompt_dialog_message">Jarri txartel adimenduna mugikorraren atzealdean.</string>
+    <string name="smartcard_nfc_prompt_dialog_negative_button">Utzi</string>
+
+    <string name="smartcard_nfc_reminder_dialog_title">Aktibatu NFC gailuaren ezarpenetan</string>
+    <string name="smartcard_nfc_reminder_dialog_message">NFCrekin saioa hasteko, aktibatu NFC gailuaren ezarpenetan. Ondoren, hasi saioa berriro.</string>
+    <string name="smartcard_nfc_reminder_dialog_positive_button">Ados</string>
 </resources>
