@@ -4,6 +4,7 @@ plugins {
     id 'pmd'
     id 'checkstyle'
     id 'maven-publish'
+    id 'kotlin-android'
 }
 
 apply from: '../versioning/version_tasks.gradle'
@@ -113,7 +114,7 @@ android {
             manifest.srcFile 'src/main/AndroidManifest.xml'
 
             // Also load source from common-java
-            java.srcDirs = ['src/main/java']
+            java.srcDirs = ['src/main/java', 'src/main/kotlin']
             res.srcDirs = ['src/main/res']
         }
     }
@@ -136,6 +137,10 @@ dependencies {
     distApi("com.microsoft.identity:common4j:${common4jVersion}") {
         transitive = false
     }
+
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.kotlinVersion}"
+    testImplementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.kotlinVersion}"
+    androidTestImplementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.kotlinVersion}"
 
     implementation(group: 'com.microsoft.device.display', name: 'display-mask', version: '0.3.0')
 
