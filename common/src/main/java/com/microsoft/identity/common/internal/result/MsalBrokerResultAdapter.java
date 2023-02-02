@@ -314,15 +314,8 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         );
 
         if (exceptionType.equalsIgnoreCase(UiRequiredException.sName)) {
-            final String errorCode = brokerResult.getErrorCode();
-            baseException = new UiRequiredException(
-                    brokerResult.getErrorCode(),
-                    brokerResult.getErrorMessage()
-            );
-            if (OAuth2ErrorCode.INTERACTION_REQUIRED.equalsIgnoreCase(errorCode) ||
-                    OAuth2ErrorCode.INVALID_GRANT.equalsIgnoreCase(errorCode)) {
-                ((UiRequiredException) baseException).setOauthSubErrorCode(brokerResult.getSubErrorCode());
-            }
+
+            baseException = getUiRequiredException(brokerResult);
 
         } else if (exceptionType.equalsIgnoreCase(ServiceException.sName)) {
 
@@ -393,15 +386,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                 ErrorStrings.NO_TOKENS_FOUND.equalsIgnoreCase(errorCode)) {
 
             Logger.warn(methodTag, "Received a UIRequired exception from Broker : " + errorCode);
-            baseException = new UiRequiredException(
-                    errorCode,
-                    brokerResult.getErrorMessage()
-            );
-
-            if (OAuth2ErrorCode.INTERACTION_REQUIRED.equalsIgnoreCase(errorCode) ||
-                    OAuth2ErrorCode.INVALID_GRANT.equalsIgnoreCase(errorCode)) {
-                ((UiRequiredException) baseException).setOauthSubErrorCode(brokerResult.getSubErrorCode());
-            }
+            baseException = getUiRequiredException(brokerResult);
 
         } else if (OAuth2ErrorCode.UNAUTHORIZED_CLIENT.equalsIgnoreCase(errorCode) &&
                 OAuth2SubErrorCode.PROTECTION_POLICY_REQUIRED.
@@ -517,6 +502,25 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         }
         return serviceException;
 
+    }
+
+    /**
+     * Helper method to retrieve UiRequiredException from BrokerResult
+     *
+     * @return {@link com.microsoft.identity.common.java.exception.UiRequiredException}
+     */
+    @NonNull
+    private UiRequiredException getUiRequiredException(@NonNull final BrokerResult brokerResult) {
+        final String errorCode = brokerResult.getErrorCode();
+        final UiRequiredException exception = new UiRequiredException(
+                brokerResult.getErrorCode(),
+                brokerResult.getErrorMessage()
+        );
+        if (OAuth2ErrorCode.INTERACTION_REQUIRED.equalsIgnoreCase(errorCode) ||
+                OAuth2ErrorCode.INVALID_GRANT.equalsIgnoreCase(errorCode)) {
+            exception.setOauthSubErrorCode(brokerResult.getSubErrorCode());
+        }
+        return exception;
     }
 
     @NonNull
