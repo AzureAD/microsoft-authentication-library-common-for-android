@@ -1,6 +1,9 @@
 V.Next
 ----------
 - [MINOR] Setting sub error codes to UiRequiredException for MsalUiRequiredException (#1944)
+- [MINOR] Add activity (InstallCertActivityLauncher) to launch the Install WPJ cert activity (#1924)
+- [MINOR] Format thread+correlationId metadata only once logging is clearly opted-in (#1917)
+- [MINOR] Add application identifier during authorization request initialization (#1942)
 - [MINOR] Add NFC compatibility and telemetry to CBA (#1896)
 - [MINOR] Format thread+correlationId metadata only once logging is clearly opted-in (#1917)
 - [MINOR] Remove unnecessary synchronization when storage access is already guarded (#1928)
@@ -10,7 +13,6 @@ V.Next
 - [MINOR] Added application identifier to cache (physical identifier).  Prevents multiple apps using the same logical identifier from sharing tokens. (#1660)
 - [MINOR] Capture whether token is returned from cache during silent token requests (#1941)
 - [MINOR] Capture span status and error codes in missing scenarios (#1940)
-- [MINOR] Keep in-memory cache of all credentials and accountrecords (#1929)
 
 V.9.1.0
 ----------

@@ -57,9 +57,7 @@ import java.util.Map;
 
 import static com.microsoft.identity.common.java.cache.CacheKeyValueDelegate.CACHE_VALUE_SEPARATOR;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -1840,10 +1838,6 @@ public class SharedPreferencesAccountCredentialCacheTest {
         final String cacheKey = mDelegate.generateCacheKey(account);
 
         mSharedPreferencesFileManager.put(cacheKey, "{\"thing\" : \"not an account\"}");
-        mSharedPreferencesAccountCredentialCache = new SharedPreferencesAccountCredentialCache(
-                mDelegate,
-                mSharedPreferencesFileManager
-        );
 
         final AccountRecord malformedAccount = mSharedPreferencesAccountCredentialCache.getAccount(cacheKey);
         assertNull(malformedAccount);
@@ -1880,10 +1874,6 @@ public class SharedPreferencesAccountCredentialCacheTest {
         final String cacheKey = mDelegate.generateCacheKey(accessToken);
 
         mSharedPreferencesFileManager.put(cacheKey, "{\"thing\" : \"not an accessToken\"}");
-        mSharedPreferencesAccountCredentialCache = new SharedPreferencesAccountCredentialCache(
-                mDelegate,
-                mSharedPreferencesFileManager
-        );
 
         final AccessTokenRecord malformedAccessToken = (AccessTokenRecord) mSharedPreferencesAccountCredentialCache.getCredential(cacheKey);
         assertNull(malformedAccessToken);
@@ -1920,10 +1910,6 @@ public class SharedPreferencesAccountCredentialCacheTest {
         final String cacheKey = mDelegate.generateCacheKey(refreshToken);
 
         mSharedPreferencesFileManager.put(cacheKey, "{\"thing\" : \"not a refreshToken\"}");
-        mSharedPreferencesAccountCredentialCache = new SharedPreferencesAccountCredentialCache(
-                mDelegate,
-                mSharedPreferencesFileManager
-        );
 
         final RefreshTokenRecord malformedRefreshToken = (RefreshTokenRecord) mSharedPreferencesAccountCredentialCache.getCredential(cacheKey);
         assertNull(malformedRefreshToken);
@@ -1960,10 +1946,6 @@ public class SharedPreferencesAccountCredentialCacheTest {
         final String cacheKey = mDelegate.generateCacheKey(idToken);
 
         mSharedPreferencesFileManager.put(cacheKey, "{\"thing\" : \"not an idToken\"}");
-        mSharedPreferencesAccountCredentialCache = new SharedPreferencesAccountCredentialCache(
-                mDelegate,
-                mSharedPreferencesFileManager
-        );
 
         final IdTokenRecord restoredIdToken = (IdTokenRecord) mSharedPreferencesAccountCredentialCache.getCredential(cacheKey);
         assertNull(restoredIdToken);
@@ -2391,127 +2373,5 @@ public class SharedPreferencesAccountCredentialCacheTest {
         final Credential restoredIdToken = mSharedPreferencesAccountCredentialCache.getCredential(credentialCacheKey);
         assertTrue(refreshTokenFirst.equals(restoredIdToken));
         assertEquals(additionalValue2, restoredIdToken.getAdditionalFields().get(additionalKey).getAsString());
-    }
-
-    AccountRecord buildDefaultAccountRecord() {
-        final AccountRecord account = new AccountRecord();
-        account.setHomeAccountId(HOME_ACCOUNT_ID);
-        account.setEnvironment(ENVIRONMENT);
-        account.setRealm(REALM);
-        account.setLocalAccountId(LOCAL_ACCOUNT_ID);
-        account.setUsername(USERNAME);
-        account.setAuthorityType(AUTHORITY_TYPE);
-        account.setMiddleName(MIDDLE_NAME);
-        account.setName(NAME);
-        return account;
-    }
-
-    RefreshTokenRecord buildDefaultRefreshToken() {
-        final RefreshTokenRecord rt = new RefreshTokenRecord();
-        rt.setCredentialType(CredentialType.RefreshToken.name());
-        rt.setHomeAccountId(HOME_ACCOUNT_ID);
-        rt.setEnvironment(ENVIRONMENT);
-        rt.setClientId(CLIENT_ID);
-        rt.setCachedAt(CACHED_AT);
-        rt.setSecret(SECRET);
-        return rt;
-    }
-
-    @Test
-    public void testSavedAccountIsCloned() {
-        AccountRecord account = buildDefaultAccountRecord();
-        mSharedPreferencesAccountCredentialCache.saveAccount(account);
-
-        final String cacheKey = mDelegate.generateCacheKey(account);
-        AccountRecord retrieved = (AccountRecord) mSharedPreferencesAccountCredentialCache.getAccount(cacheKey);
-        assertNotSame(account, retrieved);
-        assertEquals(account, retrieved);
-
-        account.setLocalAccountId("banana");
-        retrieved = (AccountRecord) mSharedPreferencesAccountCredentialCache.getAccount(cacheKey);
-        assertNotSame(account, retrieved);
-        assertNotEquals(account, retrieved);
-    }
-
-    @Test
-    public void testSavedCredentialIsCloned() {
-        RefreshTokenRecord rt = buildDefaultRefreshToken();
-        mSharedPreferencesAccountCredentialCache.saveCredential(rt);
-
-        final String cacheKey = mDelegate.generateCacheKey(rt);
-        RefreshTokenRecord retrieved = (RefreshTokenRecord) mSharedPreferencesAccountCredentialCache.getCredential(cacheKey);
-        assertNotSame(rt, retrieved);
-        assertEquals(rt, retrieved);
-
-        rt.setCachedAt("banana");
-        retrieved = (RefreshTokenRecord) mSharedPreferencesAccountCredentialCache.getCredential(cacheKey);
-        assertNotSame(rt, retrieved);
-        assertNotEquals(rt, retrieved);
-    }
-
-    @Test
-    public void testReturnedAccountIsCloned() {
-        AccountRecord account = buildDefaultAccountRecord();
-        mSharedPreferencesAccountCredentialCache.saveAccount(account);
-
-        final String cacheKey = mDelegate.generateCacheKey(account);
-        AccountRecord retrieved1 = (AccountRecord) mSharedPreferencesAccountCredentialCache.getAccount(cacheKey);
-        retrieved1.setLocalAccountId("banana");
-
-        AccountRecord retrieved2 = (AccountRecord) mSharedPreferencesAccountCredentialCache.getAccount(cacheKey);
-        assertNotSame(retrieved1, retrieved2);
-        assertNotEquals(retrieved1, retrieved2);
-    }
-
-    @Test
-    public void testReturnedCredentialIsCloned() {
-        RefreshTokenRecord rt = buildDefaultRefreshToken();
-        mSharedPreferencesAccountCredentialCache.saveCredential(rt);
-
-        final String cacheKey = mDelegate.generateCacheKey(rt);
-        RefreshTokenRecord retrieved1 = (RefreshTokenRecord) mSharedPreferencesAccountCredentialCache.getCredential(cacheKey);
-        retrieved1.setCachedAt("banana");
-
-        RefreshTokenRecord retrieved2 = (RefreshTokenRecord) mSharedPreferencesAccountCredentialCache.getCredential(cacheKey);
-        assertNotSame(retrieved1, retrieved2);
-        assertNotEquals(retrieved1, retrieved2);
-    }
-
-    @Test
-    public void testReturnedAllAccountsAreCloned() {
-        AccountRecord account = buildDefaultAccountRecord();
-        mSharedPreferencesAccountCredentialCache.saveAccount(account);
-
-        List<AccountRecord> accounts1 = mSharedPreferencesAccountCredentialCache.getAccounts();
-        assertEquals(1, accounts1.size());
-
-        List<AccountRecord> accounts2 = mSharedPreferencesAccountCredentialCache.getAccounts();
-        assertEquals(1, accounts2.size());
-
-        assertNotSame(accounts1, accounts2);
-        assertNotSame(accounts1.get(0), accounts2.get(0));
-        assertEquals(accounts1.get(0), accounts2.get(0));
-
-        accounts1.get(0).setLocalAccountId("banana");
-        assertNotEquals(accounts1.get(0), accounts2.get(0));
-    }
-
-    @Test
-    public void testReturnedAllCredentialsAreCloned() {
-        RefreshTokenRecord rt = buildDefaultRefreshToken();
-        mSharedPreferencesAccountCredentialCache.saveCredential(rt);
-
-        List<Credential> creds1 = mSharedPreferencesAccountCredentialCache.getCredentials();
-        assertEquals(1, creds1.size());
-
-        List<Credential> creds2 = mSharedPreferencesAccountCredentialCache.getCredentials();
-        assertEquals(1, creds2.size());
-
-        assertNotSame(creds1, creds2);
-        assertNotSame(creds1.get(0), creds2.get(0));
-        assertEquals(creds1.get(0), creds2.get(0));
-
-        creds1.get(0).setCachedAt("banana");
-        assertNotEquals(creds1.get(0), creds2.get(0));
     }
 }
