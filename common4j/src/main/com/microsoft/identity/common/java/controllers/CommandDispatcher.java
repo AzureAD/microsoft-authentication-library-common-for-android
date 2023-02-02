@@ -88,8 +88,8 @@ public class CommandDispatcher {
 
     private static final String TAG = CommandDispatcher.class.getSimpleName();
     private static final int SILENT_REQUEST_THREAD_POOL_SIZE = 5;
-    private static ExecutorService sInteractiveExecutor = Context.current().wrap(Executors.newSingleThreadExecutor());
-    private static final ExecutorService sSilentExecutor = Context.current().wrap(Executors.newFixedThreadPool(SILENT_REQUEST_THREAD_POOL_SIZE));
+    private static ExecutorService sInteractiveExecutor = Executors.newSingleThreadExecutor();
+    private static final ExecutorService sSilentExecutor = Executors.newFixedThreadPool(SILENT_REQUEST_THREAD_POOL_SIZE);
     private static final Object sLock = new Object();
     private static InteractiveTokenCommand sCommand = null;
     private static final CommandResultCache sCommandResultCache = new CommandResultCache();
@@ -252,7 +252,7 @@ public class CommandDispatcher {
                 finalFuture.whenComplete(getCommandResultConsumer(command));
             }
 
-            sSilentExecutor.execute(new Runnable() {
+            sSilentExecutor.execute(Context.current().wrap(new Runnable() {
                 @Override
                 public void run() {
                     codeMarkerManager.markCode(ACQUIRE_TOKEN_SILENT_EXECUTOR_START);
@@ -308,7 +308,7 @@ public class CommandDispatcher {
                     }
                     codeMarkerManager.markCode(ACQUIRE_TOKEN_SILENT_FUTURE_OBJECT_CREATION_END);
                 }
-            });
+            }));
             return finalFuture;
         }
     }
@@ -339,7 +339,7 @@ public class CommandDispatcher {
         synchronized (mapAccessLock) {
             final FinalizableResultFuture<CommandResult> finalFuture = new FinalizableResultFuture<>();
             finalFuture.whenComplete(getCommandResultConsumer(command));
-            sSilentExecutor.execute(new Runnable() {
+            sSilentExecutor.execute(Context.current().wrap(new Runnable() {
                 @Override
                 public void run() {
 
@@ -365,7 +365,7 @@ public class CommandDispatcher {
                     }
 
                 }
-            });
+            }));
             return finalFuture;
         }
     }
@@ -646,7 +646,7 @@ public class CommandDispatcher {
                     }
                 }
 
-                sInteractiveExecutor.execute(new Runnable() {
+                sInteractiveExecutor.execute(Context.current().wrap(new Runnable() {
                     @Override
                     public void run() {
                         final CommandParameters commandParameters = command.getParameters();
@@ -696,7 +696,7 @@ public class CommandDispatcher {
                             DiagnosticContext.INSTANCE.clear();
                         }
                     }
-                });
+                }));
             }
         }
 
