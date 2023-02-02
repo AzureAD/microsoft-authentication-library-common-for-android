@@ -1,5 +1,6 @@
 V.Next
 ----------
+- [MINOR] Setting sub error codes to UiRequiredException for MsalUiRequiredException (#1944)
 - [MINOR] Add NFC compatibility and telemetry to CBA (#1896)
 - [MINOR] Format thread+correlationId metadata only once logging is clearly opted-in (#1917)
 - [MINOR] Remove unnecessary synchronization when storage access is already guarded (#1928)
