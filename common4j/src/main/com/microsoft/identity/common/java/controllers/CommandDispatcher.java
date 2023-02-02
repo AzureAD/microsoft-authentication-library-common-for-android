@@ -81,14 +81,15 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
+import io.opentelemetry.context.Context;
 import lombok.NonNull;
 
 public class CommandDispatcher {
 
     private static final String TAG = CommandDispatcher.class.getSimpleName();
     private static final int SILENT_REQUEST_THREAD_POOL_SIZE = 5;
-    private static ExecutorService sInteractiveExecutor = Executors.newSingleThreadExecutor();
-    private static final ExecutorService sSilentExecutor = Executors.newFixedThreadPool(SILENT_REQUEST_THREAD_POOL_SIZE);
+    private static ExecutorService sInteractiveExecutor = Context.current().wrap(Executors.newSingleThreadExecutor());
+    private static final ExecutorService sSilentExecutor = Context.current().wrap(Executors.newFixedThreadPool(SILENT_REQUEST_THREAD_POOL_SIZE));
     private static final Object sLock = new Object();
     private static InteractiveTokenCommand sCommand = null;
     private static final CommandResultCache sCommandResultCache = new CommandResultCache();
