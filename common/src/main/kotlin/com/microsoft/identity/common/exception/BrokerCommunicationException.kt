@@ -11,7 +11,7 @@ class BrokerCommunicationException(
     val strategyType: IIpcStrategy.Type,
     errorMessage: String?,
     throwable: Throwable?) :
-    BaseException(category.toString(), errorMessage, throwable) {
+    BaseException(category.errorCode, errorMessage, throwable) {
 
     enum class Category(val errorCode: String) {
         // The operation is not supported on the client (calling) side of IPC connection.
@@ -23,12 +23,6 @@ class BrokerCommunicationException(
             return errorCode
         }
     }
-
-    override val message: String
-        get() = String.format(
-            "[%s] [%s] :%s",
-            category.toString() ?: "", strategyType.toString() ?: "", super.message
-        )
 
     override fun isCacheable(): Boolean {
         return category != Category.CONNECTION_ERROR

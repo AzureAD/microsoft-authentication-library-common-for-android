@@ -90,6 +90,9 @@ class BrokerOperationBundle (val operation: Operation,
         ),
         BROKER_SET_ACTIVE_BROKER(
             BrokerApi.BROKER_SET_ACTIVE_BROKER, null
+        ),
+        BROKER_EMPTY_REQUEST_TEST(
+            BrokerApi.BROKER_EMPTY_REQUEST_TEST, null
         );
     }
 

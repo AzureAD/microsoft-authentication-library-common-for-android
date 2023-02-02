@@ -91,5 +91,8 @@ enum class BrokerApi (val path: String,
     ),
     BROKER_SET_ACTIVE_BROKER(
         AuthenticationConstants.BrokerContentProvider.BROKER_SET_ACTIVE_BROKER_PATH
+    ),
+    BROKER_EMPTY_REQUEST_TEST(
+        AuthenticationConstants.BrokerContentProvider.BROKER_EMPTY_REQUEST_TEST_PATH
     );
 }

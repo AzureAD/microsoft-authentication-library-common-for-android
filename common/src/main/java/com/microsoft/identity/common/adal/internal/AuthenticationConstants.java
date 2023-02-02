@@ -1483,6 +1483,8 @@ public final class AuthenticationConstants {
 
         public static final String BROKER_SET_ACTIVE_BROKER_PATH = "/setActiveBroker";
 
+        public static final String BROKER_EMPTY_REQUEST_TEST_PATH = "/emptyRequest";
+
         /**
          * BrokerContentProvider URI code constant for MSAL-to-Broker hello request.
          */
