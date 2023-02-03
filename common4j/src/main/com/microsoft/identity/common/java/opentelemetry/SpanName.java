@@ -28,6 +28,7 @@ public enum SpanName {
     AcquireAtUsingPrt,
     AcquireTokenInteractive,
     AcquireTokenSilent,
+    AcquireTokenDcf,
     AcquireTokenDcfAuthRequest,
     AcquireTokenDcfFetchToken,
     CryptoFactoryEvent,

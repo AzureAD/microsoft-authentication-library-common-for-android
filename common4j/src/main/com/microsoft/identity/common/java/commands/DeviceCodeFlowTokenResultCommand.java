@@ -25,10 +25,19 @@ package com.microsoft.identity.common.java.commands;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.commands.parameters.DeviceCodeFlowCommandParameters;
 import com.microsoft.identity.common.java.controllers.BaseController;
+import com.microsoft.identity.common.java.controllers.ExceptionAdapter;
+import com.microsoft.identity.common.java.exception.BaseException;
+import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.logging.Logger;
+import com.microsoft.identity.common.java.opentelemetry.AttributeName;
+import com.microsoft.identity.common.java.opentelemetry.OTelUtility;
+import com.microsoft.identity.common.java.opentelemetry.SpanName;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.java.result.AcquireTokenResult;
 
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.context.Scope;
 import lombok.NonNull;
 
 /**
@@ -59,21 +68,51 @@ public class DeviceCodeFlowTokenResultCommand extends TokenCommand{
                 "DeviceCodeFlowTokenResultCommand initiating..."
         );
 
-        // Get the controller used to execute the command
-        final BaseController controller = getDefaultController();
-
-        // Fetch the parameters
-        final DeviceCodeFlowCommandParameters commandParameters = (DeviceCodeFlowCommandParameters) getParameters();
-
-        // Call acquireDeviceCodeFlowToken to get token result (Part 2 of DCF)
-        final AcquireTokenResult tokenResult = controller.acquireDeviceCodeFlowToken(mAuthorizationResult, commandParameters);
-
-        Logger.verbose(
-                methodTag,
-                "DeviceCodeFlowTokenResultCommand exiting with token..."
+        final Span span = OTelUtility.createSpanFromParent(
+                SpanName.AcquireTokenDcf.name(), getParameters().getSpanContext()
         );
+        span.setAttribute(AttributeName.application_name.name(), getParameters().getApplicationName());
+        span.setAttribute(AttributeName.public_api_id.name(), getPublicApiId());
 
-        return tokenResult;
+        try (final Scope scope = span.makeCurrent()) {
+            // Get the controller used to execute the command
+            final BaseController controller = getDefaultController();
+
+            // Fetch the parameters
+            final DeviceCodeFlowCommandParameters commandParameters = (DeviceCodeFlowCommandParameters) getParameters();
+
+            // Call acquireDeviceCodeFlowToken to get token result (Part 2 of DCF)
+            final AcquireTokenResult tokenResult = controller.acquireDeviceCodeFlowToken(mAuthorizationResult, commandParameters);
+
+            if (tokenResult == null) {
+                span.setStatus(StatusCode.ERROR, "empty result");
+            } else if (tokenResult.getSucceeded()) {
+                span.setStatus(StatusCode.OK);
+            } else {
+                final BaseException exception = ExceptionAdapter.exceptionFromAcquireTokenResult(tokenResult, getParameters());
+                if (!(exception.getErrorCode().equals(ErrorStrings.DEVICE_CODE_FLOW_AUTHORIZATION_PENDING_ERROR_CODE))) {
+                    if (exception != null) {
+                        span.recordException(exception);
+                        span.setStatus(StatusCode.ERROR);
+                    } else {
+                        span.setStatus(StatusCode.ERROR, "empty exception");
+                    }
+                }
+            }
+
+            Logger.verbose(
+                    methodTag,
+                    "DeviceCodeFlowTokenResultCommand exiting with token..."
+            );
+
+            return tokenResult;
+        } catch (final Throwable throwable) {
+            span.setStatus(StatusCode.ERROR);
+            span.recordException(throwable);
+            throw throwable;
+        } finally {
+            span.end();
+        }
     }
 
     @Override
