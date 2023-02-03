@@ -513,7 +513,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
     private UiRequiredException getUiRequiredException(@NonNull final BrokerResult brokerResult) {
         final String errorCode = brokerResult.getErrorCode();
         final UiRequiredException exception = new UiRequiredException(
-                brokerResult.getErrorCode(),
+                errorCode,
                 brokerResult.getErrorMessage()
         );
         if (OAuth2ErrorCode.INTERACTION_REQUIRED.equalsIgnoreCase(errorCode) ||
