@@ -38,5 +38,4 @@ public class DeviceCodeFlowCommandParameters extends TokenCommandParameters {
     private final int callerUid;
     private final String brokerVersion;
     private final String negotiatedBrokerProtocolVersion;
-    private final String callerPackageName;
 }
