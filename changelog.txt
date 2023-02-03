@@ -1,5 +1,6 @@
 V.Next
 ----------
+- [MINOR] Setting sub error codes to UiRequiredException for MsalUiRequiredException (#1944)
 - [MINOR] Add activity (InstallCertActivityLauncher) to launch the Install WPJ cert activity (#1924)
 - [MINOR] Format thread+correlationId metadata only once logging is clearly opted-in (#1917)
 - [MINOR] Add application identifier during authorization request initialization (#1942)
