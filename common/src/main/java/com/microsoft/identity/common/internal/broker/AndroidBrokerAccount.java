@@ -131,7 +131,7 @@ public class AndroidBrokerAccount implements IBrokerAccount {
     }
 
     @Nullable
-    private static Account getAccount(@NonNull final AccountManager accountManager,
+    public static Account getAccount(@NonNull final AccountManager accountManager,
                                       @Nullable final String accountName,
                                       @NonNull final String accountType) {
         final String methodTag = TAG + ":getAccount";

@@ -82,6 +82,9 @@ class BrokerOperationBundle (val operation: Operation,
         DEVICE_REGISTRATION_OPERATIONS(
             BrokerApi.DEVICE_REGISTRATION_PROTOCOLS, null
         ),
+        BROKER_UPLOAD_LOGS(
+            BrokerApi.BROKER_UPLOAD_LOGS, null
+        ),
         BROKER_METADATA_RETRIEVAL(
             BrokerApi.BROKER_METADATA_RETRIEVAL, null
         ),

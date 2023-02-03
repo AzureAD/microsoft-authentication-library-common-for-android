@@ -269,6 +269,10 @@ public abstract class BaseController {
             ((MicrosoftAuthorizationRequest.Builder) builder).setCorrelationId(correlationId);
         }
 
+        if (builder instanceof MicrosoftStsAuthorizationRequest.Builder) {
+            ((MicrosoftStsAuthorizationRequest.Builder) builder).setApplicationIdentifier(parameters.getApplicationIdentifier());
+        }
+
         final Set<String> scopes = parameters.getScopes();
 
         if (parameters instanceof InteractiveTokenCommandParameters) {
@@ -282,7 +286,8 @@ public abstract class BaseController {
                             .setAuthority(requestAuthority.getAuthorityURL())
                             .setMultipleCloudAware(requestAuthority.isMultipleCloudsSupported())
                             .setState(interactiveTokenCommandParameters.getPlatformComponents().getStateGenerator().generate())
-                            .setSlice(requestAuthority.mSlice);
+                            .setSlice(requestAuthority.mSlice)
+                            .setApplicationIdentifier(parameters.getApplicationIdentifier());
                 }
             }
 
@@ -618,6 +623,8 @@ public abstract class BaseController {
         @SuppressWarnings("unchecked")
         final List<ICacheRecord> cacheRecords = cache.loadWithAggregatedAccountData(
                 parameters.getClientId(),
+                parameters.getApplicationIdentifier(),
+                parameters.getMamEnrollmentId(),
                 StringUtil.join(" ", parameters.getScopes()),
                 targetAccount,
                 authScheme

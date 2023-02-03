@@ -138,7 +138,7 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
     }
 
     @Override
-    public synchronized AccountRecord getAccount(@NonNull final String cacheKey) {
+    public AccountRecord getAccount(@NonNull final String cacheKey) {
         Logger.verbose(TAG, "Loading Account by key...");
         AccountRecord account = mCacheValueDelegate.fromCacheValue(
                 mSharedPreferencesFileManager.get(cacheKey),
@@ -163,7 +163,7 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
 
     @Override
     @Nullable
-    public synchronized Credential getCredential(@NonNull final String cacheKey) {
+    public Credential getCredential(@NonNull final String cacheKey) {
         // TODO add support for more Credential types...
         Logger.verbose(TAG, "getCredential()");
         Logger.verbosePII(TAG, "Using cache key: [" + cacheKey + "]");
@@ -238,7 +238,7 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
 
     @Override
     @NonNull
-    public synchronized List<AccountRecord> getAccounts() {
+    public List<AccountRecord> getAccounts() {
         final String methodTag = TAG + ":getAccounts";
         Logger.verbose(methodTag, "Loading Accounts...(no arg)");
         final Map<String, AccountRecord> allAccounts = getAccountsWithKeys();
@@ -304,7 +304,7 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
 
     @Override
     @NonNull
-    public synchronized List<Credential> getCredentials() {
+    public List<Credential> getCredentials() {
         final String methodTag = TAG + ":getCredentials";
         Logger.verbose(methodTag, "Loading Credentials...");
         final Map<String, Credential> allCredentials = getCredentialsWithKeys();
@@ -319,6 +319,8 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
             @Nullable final String environment,
             @Nullable final CredentialType credentialType,
             @Nullable final String clientId,
+            @Nullable final String applicationIdentifier,
+            @Nullable final String mamEnrollmentIdentifier,
             @Nullable final String realm,
             @Nullable final String target,
             @Nullable final String authScheme) {
@@ -333,6 +335,8 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
                 environment,
                 credentialType,
                 clientId,
+                applicationIdentifier,
+                mamEnrollmentIdentifier,
                 realm,
                 target,
                 authScheme,
@@ -351,6 +355,8 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
             @Nullable final String environment,
             @Nullable final CredentialType credentialType,
             @Nullable final String clientId,
+            @Nullable final String applicationIdentifier,
+            @Nullable final String mamEnrollmentIdentifier,
             @Nullable final String realm,
             @Nullable final String target,
             @Nullable final String authScheme,
@@ -364,6 +370,8 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
                 environment,
                 credentialType,
                 clientId,
+                applicationIdentifier,
+                mamEnrollmentIdentifier,
                 realm,
                 target,
                 authScheme,
@@ -383,6 +391,8 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
             @Nullable final String environment,
             @Nullable final CredentialType credentialType,
             @Nullable final String clientId,
+            @Nullable final String applicationIdentifier,
+            @Nullable final String mamEnrollmentIdentifier,
             @Nullable final String realm,
             @Nullable final String target,
             @Nullable final String authScheme,
@@ -398,6 +408,8 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
                 environment,
                 credentialType,
                 clientId,
+                applicationIdentifier,
+                mamEnrollmentIdentifier,
                 realm,
                 target,
                 authScheme,
@@ -417,6 +429,8 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
             @Nullable final String environment,
             @Nullable final CredentialType credentialType,
             @Nullable final String clientId,
+            @Nullable final String applicationIdentifier,
+            @Nullable final String mamEnrollmentIdentifier,
             @Nullable final String realm,
             @Nullable final String target,
             @Nullable final String authScheme,
@@ -431,6 +445,8 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
                 environment,
                 credentialType,
                 clientId,
+                applicationIdentifier,
+                mamEnrollmentIdentifier,
                 realm,
                 target,
                 authScheme,
@@ -448,6 +464,8 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
                                                      @Nullable final String environment,
                                                      @NonNull final Set<CredentialType> credentialTypes,
                                                      @Nullable final String clientId,
+                                                     @Nullable final String applicationIdentifier,
+                                                     @Nullable final String mamEnrollmentIdentifier,
                                                      @Nullable final String realm,
                                                      @Nullable final String target,
                                                      @Nullable final String authScheme,
@@ -463,6 +481,8 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
                             environment,
                             type,
                             clientId,
+                            applicationIdentifier,
+                            mamEnrollmentIdentifier,
                             realm,
                             target,
                             authScheme,
@@ -477,16 +497,18 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
 
     @Override
     public List<Credential> getCredentialsFilteredBy(
-            final List<Credential> inputCredentials,
-            final String homeAccountId,
-            final String environment,
-            final CredentialType credentialType,
-            final String clientId,
-            final String realm,
-            final String target,
-            final String authScheme,
-            final String requestedClaims,
-            final String kid ) {
+            @Nullable List<Credential> inputCredentials,
+            @Nullable final String homeAccountId,
+            @Nullable final String environment,
+            @Nullable final CredentialType credentialType,
+            @Nullable final String clientId,
+            @Nullable final String applicationIdentifier,
+            @Nullable final String mamEnrollmentIdentifier,
+            @Nullable final String realm,
+            @Nullable final String target,
+            @Nullable final String authScheme,
+            @Nullable final String requestedClaims,
+            @Nullable final String kid ) {
         final List<Credential> result = new ArrayList<>();
         result.addAll(
                 getCredentialsFilteredByInternal(
@@ -495,6 +517,8 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
                         environment,
                         credentialType,
                         clientId,
+                        applicationIdentifier,
+                        mamEnrollmentIdentifier,
                         realm,
                         target,
                         authScheme,

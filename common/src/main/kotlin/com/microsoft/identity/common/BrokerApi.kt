@@ -83,6 +83,10 @@ enum class BrokerApi (val path: String,
     DEVICE_REGISTRATION_PROTOCOLS(
         AuthenticationConstants.BrokerContentProvider.DEVICE_REGISTRATION_PROTOCOLS_PATH
     ),
+    BROKER_UPLOAD_LOGS(
+        AuthenticationConstants.BrokerContentProvider.DEVICE_REGISTRATION_PROTOCOLS_PATH,
+        brokerVersion = AuthenticationConstants.VERSION_4
+    ),
     BROKER_METADATA_RETRIEVAL(
         AuthenticationConstants.BrokerContentProvider.BROKER_METADATA_RETRIEVAL_PATH
     ),
