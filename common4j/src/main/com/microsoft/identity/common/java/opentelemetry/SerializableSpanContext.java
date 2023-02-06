@@ -59,11 +59,6 @@ public class SerializableSpanContext implements SpanContext, Serializable {
     @SerializedName(SerializedNames.TRACE_FLAGS)
     private final byte mTraceFlags;
 
-    @Getter
-    @SerializedName(SerializedNames.PARENT_SPAN_NAME)
-    @NonNull
-    private final String mParentSpanName;
-
     @Override
     public String getTraceId() {
         return mTraceId;

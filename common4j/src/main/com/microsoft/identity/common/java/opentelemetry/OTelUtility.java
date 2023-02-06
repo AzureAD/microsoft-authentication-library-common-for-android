@@ -68,21 +68,10 @@ public class OTelUtility {
         }
 
         final Tracer tracer = GlobalOpenTelemetry.getTracer(TAG);
-        final Span span = tracer.spanBuilder(name)
+
+        return tracer.spanBuilder(name)
                 .setParent(Context.current().with(Span.wrap(parentSpanContext)))
                 .startSpan();
-
-        if (parentSpanContext instanceof SerializableSpanContext) {
-            span.setAttribute(parent_span_name.name(), ((SerializableSpanContext) parentSpanContext).getParentSpanName());
-        } else {
-            Logger.warn(
-                    methodTag,
-                    "span context received is not of type SerializableSpanContext, " +
-                            "instead received: [" + parentSpanContext.getClass().getSimpleName() + "]"
-            );
-        }
-
-        return span;
     }
 
     /**
