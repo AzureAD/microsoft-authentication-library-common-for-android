@@ -29,14 +29,12 @@ import com.microsoft.identity.common.java.logging.Logger;
 import javax.annotation.Nullable;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.LongCounter;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.sdk.trace.ReadableSpan;
 import lombok.NonNull;
 
 public class OTelUtility {
@@ -48,11 +46,7 @@ public class OTelUtility {
     @NonNull
     public static Span createSpan(@NonNull final String name) {
         final Tracer tracer = GlobalOpenTelemetry.getTracer(TAG);
-        final Span span = tracer.spanBuilder(name).startSpan();
-
-        // Current span is the parent of span just created.
-        span.setAttribute(parent_span_name.name(), getCurrentSpanName());
-        return span;
+        return tracer.spanBuilder(name).startSpan();
     }
 
     /**
@@ -104,29 +98,4 @@ public class OTelUtility {
                 .setUnit("count")
                 .build();
     }
-
-    /**
-     * Get name of the current span, if possible.
-     **/
-    @Nullable
-    public static Attributes getCurrentSpanAttributes() {
-        final Span span = SpanExtension.current();
-        if (span instanceof ReadableSpan) {
-            return ((ReadableSpan) span).toSpanData().getAttributes();
-        }
-        return null;
-    }
-
-    /**
-     * Get name of the current span, if possible.
-     **/
-    @NonNull
-    public static String getCurrentSpanName() {
-        final Span span = SpanExtension.current();
-        if (span instanceof ReadableSpan) {
-            return ((ReadableSpan) span).getName();
-        }
-        return "";
-    }
-
 }
