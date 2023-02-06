@@ -12,6 +12,7 @@ V.Next
 - [MAJOR] Added application identifier to cache (physical identifier).  Prevents multiple apps using the same logical identifier from sharing tokens. (#1660)
 - [MINOR] Capture whether token is returned from cache during silent token requests (#1941)
 - [MINOR] Capture span status and error codes in missing scenarios (#1940)
+- [MINOR] Remove OTel SDK from common and common4j (#1948)
 
 V.9.1.0
 ----------
