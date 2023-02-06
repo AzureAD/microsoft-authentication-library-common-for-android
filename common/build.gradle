@@ -179,7 +179,6 @@ dependencies {
 
     implementation platform("io.opentelemetry:opentelemetry-bom:1.18.0")
     implementation('io.opentelemetry:opentelemetry-api:1.18.0')
-    implementation('io.opentelemetry:opentelemetry-sdk-trace:1.18.0')
 }
 
 // Create tasks to generate javadoc
