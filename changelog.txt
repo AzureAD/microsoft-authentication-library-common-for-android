@@ -1,4 +1,4 @@
-V.Next
+V.10.0.0
 ----------
 - [MINOR] Add activity (InstallCertActivityLauncher) to launch the Install WPJ cert activity (#1924)
 - [MINOR] Format thread+correlationId metadata only once logging is clearly opted-in (#1917)
