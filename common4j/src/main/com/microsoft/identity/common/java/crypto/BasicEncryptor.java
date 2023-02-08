@@ -59,7 +59,7 @@ public class BasicEncryptor implements IEncryptor {
                 new ICryptoOperation<byte[]>() {
                     @Override
                     public byte[] perform() throws ClientException {
-                        return encryptWithCipher(key, encryptAlgorithm, iv, dataToBeEncrypted);
+                        return encryptWithIv(key, encryptAlgorithm, iv, dataToBeEncrypted);
                     }
                 }
         );
@@ -79,7 +79,7 @@ public class BasicEncryptor implements IEncryptor {
                 new ICryptoOperation<byte[]>() {
                     @Override
                     public byte[] perform() throws ClientException {
-                        return encryptWithCipher(
+                        return encryptWithGcm(
                                 key, encryptAlgorithm, iv, dataToBeEncrypted, tagLength, aad
                         );
                     }
@@ -87,10 +87,10 @@ public class BasicEncryptor implements IEncryptor {
         );
     }
 
-    private byte[] encryptWithCipher(@NonNull final Key key,
-                                     @NonNull final String encryptAlgorithm,
-                                     final byte[] iv,
-                                     byte[] dataToBeEncrypted)
+    private byte[] encryptWithIv(@NonNull final Key key,
+                                 @NonNull final String encryptAlgorithm,
+                                 final byte[] iv,
+                                 byte[] dataToBeEncrypted)
             throws ClientException {
         final Cipher cipher = mCryptoFactory.getCipher(encryptAlgorithm);
         try {
@@ -113,12 +113,12 @@ public class BasicEncryptor implements IEncryptor {
     }
 
     @SuppressWarnings("NewApi")
-    private byte[] encryptWithCipher(@NonNull final Key key,
-                                     @NonNull final String encryptAlgorithm,
-                                     final byte[] iv,
-                                     byte[] dataToBeEncrypted,
-                                     final int tagLength,
-                                     final byte[] aad)
+    private byte[] encryptWithGcm(@NonNull final Key key,
+                                  @NonNull final String encryptAlgorithm,
+                                  final byte[] iv,
+                                  byte[] dataToBeEncrypted,
+                                  final int tagLength,
+                                  final byte[] aad)
             throws ClientException {
         final Cipher cipher = mCryptoFactory.getCipher(encryptAlgorithm);
         try {
