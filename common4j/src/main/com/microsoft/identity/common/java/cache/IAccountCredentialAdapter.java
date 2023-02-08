@@ -24,14 +24,18 @@ package com.microsoft.identity.common.java.cache;
 
 import com.microsoft.identity.common.java.BaseAccount;
 import com.microsoft.identity.common.java.WarningType;
+import com.microsoft.identity.common.java.commands.parameters.TokenCommandParameters;
 import com.microsoft.identity.common.java.dto.AccessTokenRecord;
 import com.microsoft.identity.common.java.dto.AccountRecord;
 import com.microsoft.identity.common.java.dto.IdTokenRecord;
 import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
+import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.exception.ServiceException;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.java.providers.oauth2.RefreshToken;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResponse;
+import com.microsoft.identity.common.java.request.SdkType;
 
 /**
  * Provides Adapters to the MsalOAuth2TokenCache.
@@ -113,4 +117,44 @@ public interface IAccountCredentialAdapter
      * @return The newly constructed IdToken.
      */
     IdTokenRecord asIdToken(W account, X refreshToken);
+
+    /**
+     * Constructs an Account.
+     *
+     * @param parameters Token parameters for the OAuth2 request
+     * @param sdkType  {@link SdkType}
+     * @param response The authz response.
+     * @return The derived Account.
+     */
+    AccountRecord createAccountRecord(TokenCommandParameters parameters, SdkType sdkType, V response) throws ServiceException;
+
+    /**
+     * Constructs an AccessTokenRecord from request parameters, account record and
+     * authz response
+     * @param parameters Request parameters
+     * @param accountRecord The account record
+     * @param response Token response
+     * @return
+     */
+    AccessTokenRecord createAccessTokenRecord(TokenCommandParameters parameters, AccountRecord accountRecord, V response) throws ClientException;
+
+    /**
+     * Constructs an {@link RefreshTokenRecord} from request parameters, account record and
+     * authz response
+     * @param parameters Request parameters
+     * @param accountRecord The account record
+     * @param response Token response
+     * @return
+     */
+    RefreshTokenRecord createRefreshTokenRecord(TokenCommandParameters parameters, AccountRecord accountRecord, V response);
+
+    /**
+     * Constructs an {@link IdTokenRecord} from request parameters, account record and
+     * authz response
+     * @param parameters Request parameters
+     * @param accountRecord The account record
+     * @param response Token response
+     * @return
+     */
+    IdTokenRecord createIdTokenRecord(TokenCommandParameters parameters, AccountRecord accountRecord, V response);
 }
