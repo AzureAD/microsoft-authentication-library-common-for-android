@@ -1,4 +1,4 @@
-V.Next
+V.10.0.0
 ----------
 - [MINOR] Setting sub error codes to UiRequiredException for MsalUiRequiredException (#1944)
 - [MINOR] Add activity (InstallCertActivityLauncher) to launch the Install WPJ cert activity (#1924)
@@ -8,11 +8,12 @@ V.Next
 - [MINOR] Format thread+correlationId metadata only once logging is clearly opted-in (#1917)
 - [MINOR] Remove unnecessary synchronization when storage access is already guarded (#1928)
 - [MINOR] Write back read successes to cache and stop extra lookups in getAll (#1927)
-- [MINOR] Add method to platform util to get package name from uid (#1932)
+- [MAJOR] Add method to platform util to get package name from uid (#1932)
 - [MINOR] Move instrumentation of Token Requests from controllers to commands (#1939)
-- [MINOR] Added application identifier to cache (physical identifier).  Prevents multiple apps using the same logical identifier from sharing tokens. (#1660)
+- [MAJOR] Added application identifier to cache (physical identifier).  Prevents multiple apps using the same logical identifier from sharing tokens. (#1660)
 - [MINOR] Capture whether token is returned from cache during silent token requests (#1941)
 - [MINOR] Capture span status and error codes in missing scenarios (#1940)
+- [MINOR] Remove OTel SDK from common and common4j (#1948)
 
 V.9.1.0
 ----------

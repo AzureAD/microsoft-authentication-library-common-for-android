@@ -122,7 +122,6 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                         .traceId(SpanExtension.current().getSpanContext().getTraceId())
                         .spanId(SpanExtension.current().getSpanContext().getSpanId())
                         .traceFlags(SpanExtension.current().getSpanContext().getTraceFlags().asByte())
-                        .parentSpanName(OTelUtility.getCurrentSpanName())
                         .build()
                 )
                 .build();
@@ -162,7 +161,6 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                         .traceId(SpanExtension.current().getSpanContext().getTraceId())
                         .spanId(SpanExtension.current().getSpanContext().getSpanId())
                         .traceFlags(SpanExtension.current().getSpanContext().getTraceFlags().asByte())
-                        .parentSpanName(OTelUtility.getCurrentSpanName())
                         .build()
                 )
                 .build();
