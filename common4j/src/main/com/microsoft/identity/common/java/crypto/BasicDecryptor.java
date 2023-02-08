@@ -35,8 +35,10 @@ import java.security.Key;
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.IvParameterSpec;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 
@@ -66,20 +68,73 @@ public class BasicDecryptor implements IDecryptor {
         );
     }
 
+    @Override
+    public byte[] decrypt(@NonNull final Key key,
+                          @NonNull final String decryptAlgorithm,
+                          final byte[] iv,
+                          final byte[] dataToBeDecrypted,
+                          final int tagLength,
+                          final byte[] aad) throws ClientException {
+        return performCryptoOperationAndUploadTelemetry(
+                CryptoObjectName.Cipher,
+                decryptAlgorithm,
+                mCryptoFactory,
+                new ICryptoOperation<byte[]>() {
+                    @Override
+                    public byte[] perform() throws ClientException {
+                        return decryptWithCipher(
+                                key, decryptAlgorithm, iv, dataToBeDecrypted, tagLength, aad
+                        );
+                    }
+                }
+        );
+    }
+
     private byte[] decryptWithCipher(@NonNull final Key key,
                                      @NonNull final String decryptAlgorithm,
                                      final byte[] iv,
                                      byte[] dataToBeDecrypted)
             throws ClientException {
         final Cipher cipher = mCryptoFactory.getCipher(decryptAlgorithm);
-        try{
+        try {
             if (iv != null && iv.length > 0) {
                 final IvParameterSpec ivSpec = new IvParameterSpec(iv);
                 cipher.init(Cipher.DECRYPT_MODE, key, ivSpec);
             } else {
                 cipher.init(Cipher.DECRYPT_MODE, key);
             }
-                return cipher.doFinal(dataToBeDecrypted);
+            return cipher.doFinal(dataToBeDecrypted);
+        } catch (final BadPaddingException e) {
+            throw new ClientException(ClientException.BAD_PADDING, e.getMessage(), e);
+        } catch (final IllegalBlockSizeException e) {
+            throw new ClientException(ClientException.INVALID_BLOCK_SIZE, e.getMessage(), e);
+        } catch (final InvalidKeyException e) {
+            throw new ClientException(ClientException.INVALID_KEY, e.getMessage(), e);
+        } catch (final InvalidAlgorithmParameterException e) {
+            throw new ClientException(ClientException.INVALID_ALG_PARAMETER, e.getMessage(), e);
+        }
+    }
+
+    @SuppressWarnings("NewApi")
+    private byte[] decryptWithCipher(@NonNull final Key key,
+                                     @NonNull final String decryptAlgorithm,
+                                     final byte[] iv,
+                                     byte[] dataToBeDecrypted,
+                                     final int tagLength,
+                                     @Nullable final byte[] aad)
+            throws ClientException {
+        final Cipher cipher = mCryptoFactory.getCipher(decryptAlgorithm);
+        try {
+            final GCMParameterSpec spec = new GCMParameterSpec(tagLength * 8, iv);
+            cipher.init(Cipher.DECRYPT_MODE, key, spec);
+
+            if (aad != null) {
+                cipher.updateAAD(aad);
+            }
+
+            return cipher.doFinal(
+                    dataToBeDecrypted, iv.length, dataToBeDecrypted.length - iv.length
+            );
         } catch (final BadPaddingException e) {
             throw new ClientException(ClientException.BAD_PADDING, e.getMessage(), e);
         } catch (final IllegalBlockSizeException e) {

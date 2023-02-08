@@ -46,4 +46,20 @@ public interface IEncryptor {
                    @NonNull final String encryptAlgorithm,
                    final byte[] iv,
                    final byte[] dataToBeEncrypted) throws ClientException;
+
+    /**
+     * Encrypt the given byte array.
+     *
+     * @param key               the key to encrypt with.
+     * @param encryptAlgorithm  algorithm to encrypt with.
+     * @param iv                an initialization vector (IV).
+     * @param dataToBeEncrypted the data to be encrypted.
+     * @return a decrypted byte array.
+     */
+    byte[] encrypt(@NonNull final Key key,
+                   @NonNull final String encryptAlgorithm,
+                   final byte[] iv,
+                   final byte[] dataToBeEncrypted,
+                   final int tagLength,
+                   final byte[] aad) throws ClientException;
 }

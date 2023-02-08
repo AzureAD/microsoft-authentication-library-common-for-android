@@ -28,6 +28,7 @@ import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.opentelemetry.CryptoObjectName;
 import com.microsoft.identity.common.java.opentelemetry.ICryptoOperation;
 
+import java.nio.ByteBuffer;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.Key;
@@ -35,6 +36,7 @@ import java.security.Key;
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.IvParameterSpec;
 
 import lombok.AllArgsConstructor;
@@ -63,6 +65,28 @@ public class BasicEncryptor implements IEncryptor {
         );
     }
 
+    @Override
+    public byte[] encrypt(@NonNull final Key key,
+                          @NonNull final String encryptAlgorithm,
+                          final byte[] iv,
+                          final byte[] dataToBeEncrypted,
+                          final int tagLength,
+                          final byte[] aad) throws ClientException {
+        return performCryptoOperationAndUploadTelemetry(
+                CryptoObjectName.Cipher,
+                encryptAlgorithm,
+                mCryptoFactory,
+                new ICryptoOperation<byte[]>() {
+                    @Override
+                    public byte[] perform() throws ClientException {
+                        return encryptWithCipher(
+                                key, encryptAlgorithm, iv, dataToBeEncrypted, tagLength, aad
+                        );
+                    }
+                }
+        );
+    }
+
     private byte[] encryptWithCipher(@NonNull final Key key,
                                      @NonNull final String encryptAlgorithm,
                                      final byte[] iv,
@@ -77,6 +101,40 @@ public class BasicEncryptor implements IEncryptor {
                 cipher.init(Cipher.ENCRYPT_MODE, key);
             }
             return cipher.doFinal(dataToBeEncrypted);
+        } catch (final BadPaddingException e) {
+            throw new ClientException(ClientException.BAD_PADDING, e.getMessage(), e);
+        } catch (final IllegalBlockSizeException e) {
+            throw new ClientException(ClientException.INVALID_BLOCK_SIZE, e.getMessage(), e);
+        } catch (final InvalidKeyException e) {
+            throw new ClientException(ClientException.INVALID_KEY, e.getMessage(), e);
+        } catch (final InvalidAlgorithmParameterException e) {
+            throw new ClientException(ClientException.INVALID_ALG_PARAMETER, e.getMessage(), e);
+        }
+    }
+
+    @SuppressWarnings("NewApi")
+    private byte[] encryptWithCipher(@NonNull final Key key,
+                                     @NonNull final String encryptAlgorithm,
+                                     final byte[] iv,
+                                     byte[] dataToBeEncrypted,
+                                     final int tagLength,
+                                     final byte[] aad)
+            throws ClientException {
+        final Cipher cipher = mCryptoFactory.getCipher(encryptAlgorithm);
+        try {
+            final GCMParameterSpec ivSpec = new GCMParameterSpec(tagLength * Byte.SIZE, iv);
+            cipher.init(Cipher.ENCRYPT_MODE, key, ivSpec);
+
+            if (aad != null) {
+                cipher.updateAAD(aad);
+            }
+
+            final byte[] cipherText = cipher.doFinal(dataToBeEncrypted);
+
+            final ByteBuffer encryptedText = ByteBuffer.allocate(iv.length + cipherText.length);
+            encryptedText.put(iv);
+            encryptedText.put(cipherText);
+            return encryptedText.array();
         } catch (final BadPaddingException e) {
             throw new ClientException(ClientException.BAD_PADDING, e.getMessage(), e);
         } catch (final IllegalBlockSizeException e) {

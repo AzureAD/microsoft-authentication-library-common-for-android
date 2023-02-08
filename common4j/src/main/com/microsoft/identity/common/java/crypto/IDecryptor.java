@@ -49,4 +49,20 @@ public interface IDecryptor {
                    @NonNull final String decryptAlgorithm,
                    final byte[] iv,
                    final byte[] dataToBeDecrypted) throws ClientException;
+
+    /**
+     * Decrypt the given byte array.
+     *
+     * @param key               the key to decrypt with.
+     * @param decryptAlgorithm  algorithm to decrypt with.
+     * @param iv                an initialization vector (IV).
+     * @param dataToBeDecrypted the data to be encrypted.
+     * @return a decrypted byte array.
+     */
+    byte[] decrypt(@NonNull final Key key,
+                   @NonNull final String decryptAlgorithm,
+                   final byte[] iv,
+                   final byte[] dataToBeDecrypted,
+                   final int tagLength,
+                   final byte[] aad) throws ClientException;
 }
