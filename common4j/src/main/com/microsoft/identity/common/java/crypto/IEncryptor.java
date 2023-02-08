@@ -54,7 +54,9 @@ public interface IEncryptor {
      * @param encryptAlgorithm  algorithm to encrypt with.
      * @param iv                an initialization vector (IV).
      * @param dataToBeEncrypted the data to be encrypted.
-     * @return a decrypted byte array.
+     * @param tagLength the length of tag being used
+     * @param aad the additional authentication data
+     * @return an encrypted byte array.
      */
     byte[] encrypt(@NonNull final Key key,
                    @NonNull final String encryptAlgorithm,

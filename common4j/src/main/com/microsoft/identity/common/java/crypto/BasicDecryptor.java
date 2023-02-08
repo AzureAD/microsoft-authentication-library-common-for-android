@@ -125,7 +125,7 @@ public class BasicDecryptor implements IDecryptor {
             throws ClientException {
         final Cipher cipher = mCryptoFactory.getCipher(decryptAlgorithm);
         try {
-            final GCMParameterSpec spec = new GCMParameterSpec(tagLength * 8, iv);
+            final GCMParameterSpec spec = new GCMParameterSpec(tagLength * Byte.SIZE, iv);
             cipher.init(Cipher.DECRYPT_MODE, key, spec);
 
             if (aad != null) {

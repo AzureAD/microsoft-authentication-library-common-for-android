@@ -57,6 +57,8 @@ public interface IDecryptor {
      * @param decryptAlgorithm  algorithm to decrypt with.
      * @param iv                an initialization vector (IV).
      * @param dataToBeDecrypted the data to be encrypted.
+     * @param tagLength the length of tag being used
+     * @param aad the additional authentication data
      * @return a decrypted byte array.
      */
     byte[] decrypt(@NonNull final Key key,
