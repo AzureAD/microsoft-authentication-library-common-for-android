@@ -82,7 +82,7 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
                         try {
                             ipcStrategy.communicateToBroker(operationBundle)
                         } catch (e: Exception) {
-                            // do nothing.
+                            // log and try next one.
                         }
 
                         return@async;
