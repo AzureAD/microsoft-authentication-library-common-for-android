@@ -28,6 +28,7 @@ public class TestConstants {
         private static final String CONFIG_FILE_PATH_PREFIX = "src/test/res/raw/";
         public static final String B2C_GLOBAL_DOMAIN_CONFIG_FILE_PATH = CONFIG_FILE_PATH_PREFIX + "b2c_global_domain_test_config.json";
         public static final String B2C_CUSTOM_DOMAIN_CONFIG_FILE_PATH = CONFIG_FILE_PATH_PREFIX + "b2c_custom_domain_test_config.json";
+        public static final String MULTIPLE_ACCOUNT_MODE_CIAM_CONFIG_FILE_PATH = CONFIG_FILE_PATH_PREFIX + "multiple_account_ciam_test_config.json";
         public static final String MULTIPLE_ACCOUNT_MODE_AAD_CONFIG_FILE_PATH = CONFIG_FILE_PATH_PREFIX + "multiple_account_aad_test_config.json";
         public static final String SINGLE_ACCOUNT_MODE_AAD_CONFIG_FILE_PATH = CONFIG_FILE_PATH_PREFIX + "single_account_aad_test_config.json";
         public static final String MULTIPLE_ACCOUNT_MODE_AAD_MOONCAKE_CONFIG_FILE_PATH = CONFIG_FILE_PATH_PREFIX + "msal_mooncake_config.json";
