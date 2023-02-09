@@ -310,12 +310,12 @@ public class MicrosoftStsAccountCredentialAdapter
 
         URL authority = parameters.getAuthority().getAuthorityURL();
 
-        // If token response has authority set it else fallback to request authority
+        // If token response has authority set it, else fallback to request authority
         if (!microsoftStsTokenResponse.getAuthority().isEmpty()) {
             try {
                 authority = new URL(microsoftStsTokenResponse.getAuthority());
-            } catch (MalformedURLException e) {
-                Logger.error(TAG,
+            } catch (final MalformedURLException e) {
+                Logger.error(methodTag,
                         "Authority url construction failed, setting request authority to result",
                         e
                 );
@@ -340,7 +340,7 @@ public class MicrosoftStsAccountCredentialAdapter
             @NonNull final TokenCommandParameters parameters,
             @NonNull final AccountRecord accountRecord,
             @NonNull final MicrosoftStsTokenResponse tokenResponse) throws ClientException {
-        final String methodTag = TAG + ":getAccessTokenRecord";
+        final String methodTag = TAG + ":createAccessTokenRecord";
         final AccessTokenRecord accessTokenRecord = new AccessTokenRecord();
         accessTokenRecord.setHomeAccountId(accountRecord.getHomeAccountId());
         accessTokenRecord.setRealm(accountRecord.getRealm());
@@ -388,7 +388,7 @@ public class MicrosoftStsAccountCredentialAdapter
             @NonNull final TokenCommandParameters parameters,
             @NonNull final AccountRecord accountRecord,
             @NonNull final MicrosoftStsTokenResponse tokenResponse) {
-        final String methodTag = TAG + ":getRefreshTokenRecord";
+        final String methodTag = TAG + ":createRefreshTokenRecord";
         final RefreshTokenRecord refreshToken = new RefreshTokenRecord();
 
         // Required
@@ -413,7 +413,7 @@ public class MicrosoftStsAccountCredentialAdapter
             @NonNull final TokenCommandParameters parameters,
             @NonNull final AccountRecord accountRecord,
             @NonNull final MicrosoftStsTokenResponse tokenResponse) {
-        final String methodTag = TAG + ":getIdTokenRecord";
+        final String methodTag = TAG + ":createIdTokenRecord";
         final IdTokenRecord idToken = new IdTokenRecord();
 
         // Required fields
