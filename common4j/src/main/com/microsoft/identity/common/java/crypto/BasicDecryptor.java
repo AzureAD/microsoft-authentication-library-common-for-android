@@ -132,9 +132,7 @@ public class BasicDecryptor implements IDecryptor {
                 cipher.updateAAD(aad);
             }
 
-            return cipher.doFinal(
-                    dataToBeDecrypted, iv.length, dataToBeDecrypted.length - iv.length
-            );
+            return cipher.doFinal(dataToBeDecrypted);
         } catch (final BadPaddingException e) {
             throw new ClientException(ClientException.BAD_PADDING, e.getMessage(), e);
         } catch (final IllegalBlockSizeException e) {

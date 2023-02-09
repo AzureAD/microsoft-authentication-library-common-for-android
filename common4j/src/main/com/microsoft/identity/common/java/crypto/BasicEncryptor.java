@@ -28,7 +28,6 @@ import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.opentelemetry.CryptoObjectName;
 import com.microsoft.identity.common.java.opentelemetry.ICryptoOperation;
 
-import java.nio.ByteBuffer;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.Key;
@@ -129,12 +128,7 @@ public class BasicEncryptor implements IEncryptor {
                 cipher.updateAAD(aad);
             }
 
-            final byte[] cipherText = cipher.doFinal(dataToBeEncrypted);
-
-            final ByteBuffer encryptedText = ByteBuffer.allocate(iv.length + cipherText.length);
-            encryptedText.put(iv);
-            encryptedText.put(cipherText);
-            return encryptedText.array();
+            return cipher.doFinal(dataToBeEncrypted);
         } catch (final BadPaddingException e) {
             throw new ClientException(ClientException.BAD_PADDING, e.getMessage(), e);
         } catch (final IllegalBlockSizeException e) {
