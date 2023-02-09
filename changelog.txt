@@ -1,3 +1,7 @@
+V.Next
+----------
+- [MINOR] Wrap Runnable with Current Telemetry Context (#1956)
+
 V.10.0.0
 ----------
 - [MINOR] Setting sub error codes to UiRequiredException for MsalUiRequiredException (#1944)
