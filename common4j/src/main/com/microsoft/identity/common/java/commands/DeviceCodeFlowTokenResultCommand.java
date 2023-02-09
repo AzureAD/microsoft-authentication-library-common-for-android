@@ -90,13 +90,11 @@ public class DeviceCodeFlowTokenResultCommand extends TokenCommand{
                 span.setStatus(StatusCode.OK);
             } else {
                 final BaseException exception = ExceptionAdapter.exceptionFromAcquireTokenResult(tokenResult, getParameters());
-                if (!(exception.getErrorCode().equals(ErrorStrings.DEVICE_CODE_FLOW_AUTHORIZATION_PENDING_ERROR_CODE))) {
-                    if (exception != null) {
-                        span.recordException(exception);
-                        span.setStatus(StatusCode.ERROR);
-                    } else {
-                        span.setStatus(StatusCode.ERROR, "empty exception");
-                    }
+                if (exception != null && !(exception.getErrorCode().equals(ErrorStrings.DEVICE_CODE_FLOW_AUTHORIZATION_PENDING_ERROR_CODE))) {
+                    span.recordException(exception);
+                    span.setStatus(StatusCode.ERROR);
+                } else {
+                    span.setStatus(StatusCode.ERROR, "empty exception");
                 }
             }
 

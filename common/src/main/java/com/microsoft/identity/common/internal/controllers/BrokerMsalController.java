@@ -122,6 +122,7 @@ import lombok.EqualsAndHashCode;
 public class BrokerMsalController extends BaseController {
 
     private static final String TAG = BrokerMsalController.class.getSimpleName();
+    private static final int WAIT_BETWEEN_POLLING_MILLISECONDS = 5000;
 
     protected final MsalBrokerRequestAdapter mRequestAdapter = new MsalBrokerRequestAdapter();
     protected final MsalBrokerResultAdapter mResultAdapter = new MsalBrokerResultAdapter();
@@ -525,7 +526,7 @@ public class BrokerMsalController extends BaseController {
                         // If authorization_pending continue polling for token
                         if (acquireTokenResult == null) {
                             // Wait between polls for 5 secs
-                            ThreadUtils.sleepSafely(5000, TAG,
+                            ThreadUtils.sleepSafely(WAIT_BETWEEN_POLLING_MILLISECONDS, TAG,
                                     "Attempting to sleep thread during Device Code Flow token polling...");
                             return acquireDeviceCodeFlowToken(authorizationResult, parameters);
                         } else {

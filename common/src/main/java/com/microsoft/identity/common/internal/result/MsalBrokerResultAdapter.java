@@ -601,6 +601,13 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         return resultBundle;
     }
 
+    /**
+     * Get authorizationResult from resultBundle for Device Code Flow
+     * @param resultBundle The bundle to interpret
+     * @return authorizationResult {@link AuthorizationResult}
+     * @throws BaseException
+     * @throws ClientException
+     */
     @NonNull
     public AuthorizationResult getDeviceCodeFlowAuthResultFromResultBundle(@NonNull final Bundle resultBundle) throws BaseException, ClientException {
         String serializedDCFAuthResult = resultBundle.getString(AuthenticationConstants.Broker.BROKER_DCF_AUTH_RESULT);
@@ -609,20 +616,29 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
             return authorizationResult;
         }
 
-        // DCF not supported
+        // DCF not supported - thrown when BrokerFlight.ENABLE_DCF_IN_BROKER is false
         BrokerResult brokerResult = brokerResultFromBundle(resultBundle);
         if (brokerResult.getErrorCode() != null && brokerResult.getErrorCode().equals(ErrorStrings.DEVICE_CODE_FLOW_NOT_SUPPORTED)) {
+            Logger.error(TAG, "deviceCodeFlowAuthRequest() not supported in BrokerMsalController", new ClientException(ErrorStrings.DEVICE_CODE_FLOW_NOT_SUPPORTED, "deviceCodeFlowAuthRequest() not supported in BrokerMsalController"));
             throw new ClientException(ErrorStrings.DEVICE_CODE_FLOW_NOT_SUPPORTED, "deviceCodeFlowAuthRequest() not supported in BrokerMsalController");
         }
 
         throw getBaseExceptionFromBundle(resultBundle);
     }
 
+    /**
+     * Get acquireTokenResult from resultBundle for Device Code Flow
+     * @param resultBundle The bundle to interpret
+     * @return acquireTokenResult {@link AcquireTokenResult}
+     * @throws BaseException
+     * @throws ClientException
+     */
     @NonNull
-    public AcquireTokenResult getDeviceCodeFlowTokenResultFromResultBundle(@NonNull final Bundle resultBundle) throws BaseException {
-        // DCF not supported
+    public AcquireTokenResult getDeviceCodeFlowTokenResultFromResultBundle(@NonNull final Bundle resultBundle) throws BaseException, ClientException {
+        // DCF not supported - thrown when BrokerFlight.ENABLE_DCF_IN_BROKER is false
         BrokerResult brokerResult = brokerResultFromBundle(resultBundle);
         if (brokerResult.getErrorCode() != null && brokerResult.getErrorCode().equals(ErrorStrings.DEVICE_CODE_FLOW_NOT_SUPPORTED)) {
+            Logger.error(TAG, "acquireDeviceCodeFlowToken() not supported in BrokerMsalController", new ClientException(ErrorStrings.DEVICE_CODE_FLOW_NOT_SUPPORTED, "deviceCodeFlowAuthRequest() not supported in BrokerMsalController"));
             throw new ClientException(ErrorStrings.DEVICE_CODE_FLOW_NOT_SUPPORTED, "acquireDeviceCodeFlowToken() not supported in BrokerMsalController");
         }
 
