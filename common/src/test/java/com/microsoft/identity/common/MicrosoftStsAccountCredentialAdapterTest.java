@@ -22,7 +22,13 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common;
 
+import com.microsoft.identity.common.java.authorities.Authority;
 import com.microsoft.identity.common.java.cache.MicrosoftStsAccountCredentialAdapter;
+import com.microsoft.identity.common.java.commands.parameters.TokenCommandParameters;
+import com.microsoft.identity.common.java.dto.CredentialType;
+import com.microsoft.identity.common.java.dto.IdTokenRecord;
+import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.exception.ServiceException;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
 import com.microsoft.identity.common.java.dto.AccessTokenRecord;
 import com.microsoft.identity.common.java.dto.AccountRecord;
@@ -30,6 +36,7 @@ import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAccount;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
+import com.microsoft.identity.common.java.request.SdkType;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
@@ -52,6 +59,7 @@ import java.security.SecureRandom;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.Set;
 
 import cz.msebera.android.httpclient.extras.Base64;
 
@@ -80,6 +88,8 @@ public class MicrosoftStsAccountCredentialAdapterTest {
     private static final String MOCK_UTID = "mock_utid";
     private static final String MOCK_CLIENT_INFO = createRawClientInfo(MOCK_UID, MOCK_UTID);
     private static final String MOCK_SCOPE = "user.read openid profile offline_access";
+    private static final String MOCK_CLIENT_ID = "mock_client_id";
+    private static final String MOCK_REFRESH_TOKEN = "mock_refresh_token";
     private static final String MOCK_FAMILY_ID = "1";
     private static final long MOCK_EXPIRES_IN = 3600L;
     private static final long MOCK_EXT_EXPIRES_IN = MOCK_EXPIRES_IN * 2;
@@ -134,7 +144,8 @@ public class MicrosoftStsAccountCredentialAdapterTest {
     MicrosoftStsAuthorizationRequest mockRequest;
     MicrosoftStsTokenResponse mockResponse;
     MicrosoftStsAccount mockAccount;
-
+    TokenCommandParameters mockParameters;
+    AccountRecord mockAccountRecord;
     private MicrosoftStsAccountCredentialAdapter mAccountCredentialAdapter;
 
     @Before
@@ -143,6 +154,8 @@ public class MicrosoftStsAccountCredentialAdapterTest {
         mockRequest = Mockito.mock(MicrosoftStsAuthorizationRequest.class);
         mockResponse = Mockito.mock(MicrosoftStsTokenResponse.class);
         mockAccount = Mockito.mock(MicrosoftStsAccount.class);
+        mockParameters = Mockito.mock(TokenCommandParameters.class);
+        mockAccountRecord = Mockito.mock(AccountRecord.class);
         when(mockStrategy.createAccount(any(MicrosoftStsTokenResponse.class))).thenReturn(mockAccount);
         when(mockStrategy.getIssuerCacheIdentifier(mockRequest)).thenReturn(MOCK_ENVIRONMENT);
         when(mockStrategy.getIssuerCacheIdentifierFromTokenEndpoint()).thenReturn(MOCK_ENVIRONMENT);
@@ -167,6 +180,12 @@ public class MicrosoftStsAccountCredentialAdapterTest {
         when(mockResponse.getExpiresIn()).thenReturn(MOCK_EXPIRES_IN);
         when(mockResponse.getExtExpiresIn()).thenReturn(MOCK_EXT_EXPIRES_IN);
         when(mockResponse.getFamilyId()).thenReturn(MOCK_FAMILY_ID);
+        when(mockResponse.getAuthority()).thenReturn(MOCK_AUTHORITY);
+        when(mockResponse.getRefreshToken()).thenReturn(MOCK_REFRESH_TOKEN);
+        when(mockParameters.getAuthority()).thenReturn(Authority.getAuthorityFromAuthorityUrl(MOCK_AUTHORITY));
+        when(mockParameters.getClientId()).thenReturn(MOCK_CLIENT_ID);
+        when(mockAccountRecord.getHomeAccountId()).thenReturn(MOCK_UID + "." + MOCK_UTID);
+        when(mockAccountRecord.getRealm()).thenReturn(MOCK_TID);
         mAccountCredentialAdapter = new MicrosoftStsAccountCredentialAdapter();
     }
 
@@ -210,6 +229,62 @@ public class MicrosoftStsAccountCredentialAdapterTest {
         assertEquals(MOCK_SCOPE, refreshToken.getTarget());
         assertNotNull(refreshToken.getCachedAt());
         assertEquals(MOCK_FAMILY_ID, refreshToken.getFamilyId());
+    }
+
+    @Test
+    public void testCreateAccountRecord() throws ServiceException {
+        final AccountRecord account = mAccountCredentialAdapter.createAccountRecord(
+                mockParameters, SdkType.MSAL, mockResponse);
+        assertNotNull(account);
+        assertEquals(MOCK_UID + "." + MOCK_UTID, account.getHomeAccountId());
+        assertEquals(MOCK_ENVIRONMENT, account.getEnvironment());
+        assertEquals(MOCK_CLIENT_INFO, account.getClientInfo());
+        assertEquals(MOCK_UTID, account.getRealm());
+        assertEquals(MOCK_OID, account.getLocalAccountId());
+        assertEquals(MOCK_PREFERRED_USERNAME, account.getUsername());
+        assertEquals(AUTHORITY_TYPE_MS_STS, account.getAuthorityType());
+        assertEquals(MOCK_GIVEN_NAME, account.getFirstName());
+        assertEquals(MOCK_FAMILY_NAME, account.getFamilyName());
+        assertEquals(MOCK_MIDDLE_NAME, account.getMiddleName());
+        assertEquals(MOCK_NAME, account.getName());
+    }
+
+    @Test
+    public void testCreateAccessTokenRecord() throws ClientException {
+        final AccessTokenRecord accessTokenRecord = mAccountCredentialAdapter.createAccessTokenRecord(
+                mockParameters, mockAccountRecord, mockResponse);
+        assertNotNull(accessTokenRecord);
+        assertNotNull(accessTokenRecord.getCachedAt());
+        assertNotNull(accessTokenRecord.getExpiresOn());
+        assertEquals(MOCK_TID, accessTokenRecord.getRealm());
+        assertEquals(MOCK_AUTHORITY, accessTokenRecord.getAuthority());
+        assertEquals(MOCK_ENVIRONMENT, accessTokenRecord.getEnvironment());
+        assertNotNull(accessTokenRecord.getExtendedExpiresOn());
+        assertEquals(MOCK_UID + "." + MOCK_UTID, accessTokenRecord.getHomeAccountId());;
+    }
+
+    @Test
+    public void testCreateRefreshTokenRecord() {
+        final RefreshTokenRecord refreshTokenRecord = mAccountCredentialAdapter.createRefreshTokenRecord(
+                mockParameters, mockAccountRecord, mockResponse);
+        assertNotNull(refreshTokenRecord);
+        assertNotNull(refreshTokenRecord.getCachedAt());
+        assertEquals(MOCK_FAMILY_ID, refreshTokenRecord.getFamilyId());
+        assertEquals(MOCK_UID + "." + MOCK_UTID, refreshTokenRecord.getHomeAccountId());
+        assertEquals(MOCK_REFRESH_TOKEN, refreshTokenRecord.getSecret());
+        assertEquals(MOCK_CLIENT_ID, refreshTokenRecord.getClientId());
+        assertEquals(CredentialType.RefreshToken.name(), refreshTokenRecord.getCredentialType());
+    }
+
+    @Test
+    public void testCreateIdTokenRecord() {
+        final IdTokenRecord idTokenRecord = mAccountCredentialAdapter.createIdTokenRecord(
+                mockParameters, mockAccountRecord, mockResponse);
+        assertNotNull(idTokenRecord);
+        assertEquals(MOCK_TID, idTokenRecord.getRealm());
+        assertEquals(MOCK_UID + "." + MOCK_UTID, idTokenRecord.getHomeAccountId());
+        assertEquals(MOCK_ID_TOKEN_WITH_CLAIMS, idTokenRecord.getSecret());
+        assertEquals(MOCK_CLIENT_ID, idTokenRecord.getClientId());
     }
 
     static String createRawClientInfo(final String uid, final String utid) {
