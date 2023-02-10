@@ -25,6 +25,7 @@ package com.microsoft.identity.common.adal.internal.net;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.net.ConnectivityManager;
+import android.net.NetworkCapabilities;
 import android.net.NetworkInfo;
 import android.os.Build;
 
@@ -61,10 +62,22 @@ public class DefaultConnectionService implements IConnectionService {
     public boolean isConnectionAvailable() {
         ConnectivityManager connectivityManager = (ConnectivityManager) mConnectionContext
                 .getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo activeNetwork = connectivityManager.getActiveNetworkInfo();
 
-        @SuppressWarnings("deprecation")
-        final boolean isConnectionAvailable = activeNetwork != null && activeNetwork.isConnectedOrConnecting();
+        final boolean isConnectionAvailable;
+
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+            final NetworkCapabilities networkCapabilities =
+                    connectivityManager.getNetworkCapabilities(connectivityManager.getActiveNetwork());
+            isConnectionAvailable =
+                    networkCapabilities != null
+                    && networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                    && networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED);
+        } else {
+            @SuppressWarnings("deprecation")
+            final NetworkInfo activeNetwork = connectivityManager.getActiveNetworkInfo();
+            isConnectionAvailable = activeNetwork != null && activeNetwork.isConnectedOrConnecting();
+        }
+
         Telemetry.emit((BaseEvent) new BaseEvent().put(TelemetryEventStrings.Key.NETWORK_CONNECTION, String.valueOf(isConnectionAvailable)));
         return isConnectionAvailable;
     }
