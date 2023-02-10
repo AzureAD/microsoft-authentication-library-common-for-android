@@ -25,9 +25,6 @@ package com.microsoft.identity.common.java.crypto;
 import com.microsoft.identity.common.java.exception.ClientException;
 
 import java.security.Key;
-import java.security.PrivateKey;
-
-import javax.crypto.SecretKey;
 
 import lombok.NonNull;
 
@@ -45,10 +42,10 @@ public interface IDecryptor {
      * @param dataToBeDecrypted the data to be encrypted.
      * @return a decrypted byte array.
      */
-    byte[] decrypt(@NonNull final Key key,
-                   @NonNull final String decryptAlgorithm,
-                   final byte[] iv,
-                   final byte[] dataToBeDecrypted) throws ClientException;
+    byte[] decryptWithIv(@NonNull final Key key,
+                         @NonNull final String decryptAlgorithm,
+                         final byte[] iv,
+                         final byte[] dataToBeDecrypted) throws ClientException;
 
     /**
      * Decrypt the given byte array.
@@ -57,14 +54,14 @@ public interface IDecryptor {
      * @param decryptAlgorithm  algorithm to decrypt with.
      * @param iv                an initialization vector (IV).
      * @param dataToBeDecrypted the data to be encrypted.
-     * @param tagLength the length of tag being used
-     * @param aad the additional authentication data
+     * @param tagLength         the length of tag being used
+     * @param aad               the additional authentication data
      * @return a decrypted byte array.
      */
-    byte[] decrypt(@NonNull final Key key,
-                   @NonNull final String decryptAlgorithm,
-                   final byte[] iv,
-                   final byte[] dataToBeDecrypted,
-                   final int tagLength,
-                   final byte[] aad) throws ClientException;
+    byte[] decryptWithGcm(@NonNull final Key key,
+                          @NonNull final String decryptAlgorithm,
+                          final byte[] iv,
+                          final byte[] dataToBeDecrypted,
+                          final int tagLength,
+                          final byte[] aad) throws ClientException;
 }

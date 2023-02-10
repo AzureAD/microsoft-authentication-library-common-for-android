@@ -42,10 +42,10 @@ public interface IEncryptor {
      * @param dataToBeEncrypted the data to be encrypted.
      * @return a decrypted byte array.
      */
-    byte[] encrypt(@NonNull final Key key,
-                   @NonNull final String encryptAlgorithm,
-                   final byte[] iv,
-                   final byte[] dataToBeEncrypted) throws ClientException;
+    byte[] encryptWithIv(@NonNull final Key key,
+                         @NonNull final String encryptAlgorithm,
+                         final byte[] iv,
+                         final byte[] dataToBeEncrypted) throws ClientException;
 
     /**
      * Encrypt the given byte array.
@@ -54,14 +54,14 @@ public interface IEncryptor {
      * @param encryptAlgorithm  algorithm to encrypt with.
      * @param iv                an initialization vector (IV).
      * @param dataToBeEncrypted the data to be encrypted.
-     * @param tagLength the length of tag being used
-     * @param aad the additional authentication data
+     * @param tagLength         the length of tag being used
+     * @param aad               the additional authentication data
      * @return an encrypted byte array.
      */
-    byte[] encrypt(@NonNull final Key key,
-                   @NonNull final String encryptAlgorithm,
-                   final byte[] iv,
-                   final byte[] dataToBeEncrypted,
-                   final int tagLength,
-                   final byte[] aad) throws ClientException;
+    byte[] encryptWithGcm(@NonNull final Key key,
+                          @NonNull final String encryptAlgorithm,
+                          final byte[] iv,
+                          final byte[] dataToBeEncrypted,
+                          final int tagLength,
+                          final byte[] aad) throws ClientException;
 }

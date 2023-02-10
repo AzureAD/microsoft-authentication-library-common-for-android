@@ -51,10 +51,10 @@ public class BasicDecryptor implements IDecryptor {
     private final ICryptoFactory mCryptoFactory;
 
     @Override
-    public byte[] decrypt(@NonNull final Key key,
-                          @NonNull final String decryptAlgorithm,
-                          final byte[] iv,
-                          byte[] dataToBeDecrypted) throws ClientException {
+    public byte[] decryptWithIv(@NonNull final Key key,
+                                @NonNull final String decryptAlgorithm,
+                                final byte[] iv,
+                                byte[] dataToBeDecrypted) throws ClientException {
         return performCryptoOperationAndUploadTelemetry(
                 CryptoObjectName.Cipher,
                 decryptAlgorithm,
@@ -62,19 +62,19 @@ public class BasicDecryptor implements IDecryptor {
                 new ICryptoOperation<byte[]>() {
                     @Override
                     public byte[] perform() throws ClientException {
-                        return decryptWithIv(key, decryptAlgorithm, iv, dataToBeDecrypted);
+                        return decryptWithIvInternal(key, decryptAlgorithm, iv, dataToBeDecrypted);
                     }
                 }
         );
     }
 
     @Override
-    public byte[] decrypt(@NonNull final Key key,
-                          @NonNull final String decryptAlgorithm,
-                          final byte[] iv,
-                          final byte[] dataToBeDecrypted,
-                          final int tagLength,
-                          final byte[] aad) throws ClientException {
+    public byte[] decryptWithGcm(@NonNull final Key key,
+                                 @NonNull final String decryptAlgorithm,
+                                 final byte[] iv,
+                                 final byte[] dataToBeDecrypted,
+                                 final int tagLength,
+                                 final byte[] aad) throws ClientException {
         return performCryptoOperationAndUploadTelemetry(
                 CryptoObjectName.Cipher,
                 decryptAlgorithm,
@@ -82,7 +82,7 @@ public class BasicDecryptor implements IDecryptor {
                 new ICryptoOperation<byte[]>() {
                     @Override
                     public byte[] perform() throws ClientException {
-                        return decryptWithGcm(
+                        return decryptWithGcmInternal(
                                 key, decryptAlgorithm, iv, dataToBeDecrypted, tagLength, aad
                         );
                     }
@@ -90,10 +90,10 @@ public class BasicDecryptor implements IDecryptor {
         );
     }
 
-    private byte[] decryptWithIv(@NonNull final Key key,
-                                 @NonNull final String decryptAlgorithm,
-                                 final byte[] iv,
-                                 byte[] dataToBeDecrypted)
+    private byte[] decryptWithIvInternal(@NonNull final Key key,
+                                         @NonNull final String decryptAlgorithm,
+                                         final byte[] iv,
+                                         byte[] dataToBeDecrypted)
             throws ClientException {
         final Cipher cipher = mCryptoFactory.getCipher(decryptAlgorithm);
         try {
@@ -116,12 +116,12 @@ public class BasicDecryptor implements IDecryptor {
     }
 
     @SuppressWarnings("NewApi")
-    private byte[] decryptWithGcm(@NonNull final Key key,
-                                  @NonNull final String decryptAlgorithm,
-                                  final byte[] iv,
-                                  byte[] dataToBeDecrypted,
-                                  final int tagLength,
-                                  @Nullable final byte[] aad)
+    private byte[] decryptWithGcmInternal(@NonNull final Key key,
+                                          @NonNull final String decryptAlgorithm,
+                                          final byte[] iv,
+                                          byte[] dataToBeDecrypted,
+                                          final int tagLength,
+                                          @Nullable final byte[] aad)
             throws ClientException {
         final Cipher cipher = mCryptoFactory.getCipher(decryptAlgorithm);
         try {
