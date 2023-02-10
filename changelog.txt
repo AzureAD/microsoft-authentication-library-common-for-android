@@ -1,6 +1,7 @@
 vNext
 ----------
 - [MINOR] Adding new methods in IAccountCredentialAdapter (#1954)
+- [MINOR] Add preferred browser support (#1957)
 
 V.10.0.0
 ----------
