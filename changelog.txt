@@ -1,7 +1,8 @@
 vNext
 ----------
-- [MINOR] Adding new methods in IAccountCredentialAdapter (#1954)
 - [MINOR] Add preferred browser support (#1957)
+- [MINOR] Adding new methods in IAccountCredentialAdapter (#1954)
+- [MINOR] Add a Basic Encryptor Interface + Add support to Encrypt / Decrypt using AES GCM (#1953)
 
 V.10.0.0
 ----------
