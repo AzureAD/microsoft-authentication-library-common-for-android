@@ -28,6 +28,7 @@ import android.os.Build;
 import android.webkit.ClientCertRequest;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
 import com.microsoft.identity.common.java.opentelemetry.ICertBasedAuthTelemetryHelper;
@@ -102,7 +103,8 @@ public class YubiKitUsbSmartcardCertBasedAuthManager extends AbstractUsbSmartcar
      * Usually called when a host fragment is destroyed.
      */
     @Override
-    void stopDiscovery(@NonNull final Activity activity) {
+    void stopDiscovery(@NonNull final Activity activity,
+                       @Nullable final IDisconnectCallback callback) {
         //Usb discovery is meant to be on for the duration of the authentication WebView being active.
         //Therefore, discovery for Usb should only be stopped upon the WebView being terminated.
         //Note that this differs from the Nfc implementation, where Nfc discovery is only turned on
@@ -111,6 +113,12 @@ public class YubiKitUsbSmartcardCertBasedAuthManager extends AbstractUsbSmartcar
             mUsbDevice = null;
             mUsbYubiKeyManager.disable();
         }
+    }
+
+    @Override
+    void disconnect(@NonNull IDisconnectCallback callback) {
+        //TODO: do something else here?
+        callback.onDisconnect();
     }
 
     /**
@@ -170,7 +178,7 @@ public class YubiKitUsbSmartcardCertBasedAuthManager extends AbstractUsbSmartcar
      */
     @Override
     void onDestroy(@NonNull final Activity activity) {
-        stopDiscovery(activity);
+        stopDiscovery(activity, null);
     }
 
     /**

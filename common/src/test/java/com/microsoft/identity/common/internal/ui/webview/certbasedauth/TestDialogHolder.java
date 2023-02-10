@@ -113,8 +113,14 @@ class TestDialogHolder implements IDialogHolder {
         return mCurrentDialog != null;
     }
 
+    @Nullable
     @Override
-    public void onCancelCba() {
+    public String getDialogClassShowing() {
+        return null;
+    }
+
+    @Override
+    public void onSmartcardRemoval() {
         switch (mCurrentDialog) {
             case cert_picker:
                 mCertPickerCancelCbaCallback.onCancel();

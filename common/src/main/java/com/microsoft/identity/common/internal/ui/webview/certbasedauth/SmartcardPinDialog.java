@@ -114,7 +114,7 @@ public class SmartcardPinDialog extends SmartcardDialog {
      * Handles scenario when CBA is canceled unexpectedly (for example. when a YubiKey is unplugged while a dialog is showing).
      */
     @Override
-    public void onCancelCba() {
+    public void onSmartcardRemoval() {
         //Call CancelCbaCallback's onCancel
         mCancelCbaCallback.onCancel();
     }

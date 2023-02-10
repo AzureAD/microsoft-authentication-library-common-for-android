@@ -98,7 +98,7 @@ public class UserChoiceDialog extends SmartcardDialog {
      * Should dismiss dialog and call the appropriate methods to help cancel the CBA flow.
      */
     @Override
-    void onCancelCba() {
+    void onSmartcardRemoval() {
         mCancelCbaCallback.onCancel();
     }
 

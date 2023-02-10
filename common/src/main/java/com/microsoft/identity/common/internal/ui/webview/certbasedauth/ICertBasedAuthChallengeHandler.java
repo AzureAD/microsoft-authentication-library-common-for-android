@@ -41,6 +41,8 @@ public interface ICertBasedAuthChallengeHandler extends IChallengeHandler<Client
      */
     void emitTelemetryForCertBasedAuthResults(@NonNull final RawAuthorizationResult response);
 
+    //TODO: create a method here to basically show a dialog and block the last result
+
     /**
      * Clean up logic to run when ICertBasedAuthChallengeHandler is no longer going to be used.
      */

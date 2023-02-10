@@ -56,4 +56,6 @@
     <string name="smartcard_nfc_reminder_dialog_message">To sign in with NFC, turn on NFC in your device settings. Then sign in again.</string>
     <string name="smartcard_nfc_reminder_dialog_positive_button">Got it</string>
 
+    <string name="smartcard_removal_dialog_title">You can now remove your smart card</string>
+
 </resources>

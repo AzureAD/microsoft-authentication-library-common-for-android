@@ -55,10 +55,11 @@ public class NfcSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
      *  discovery active throughout the entire flow.
      */
     @Override
-    protected void onPausedSmartcardDiscovery() {
+    protected void onPausedSmartcardDiscovery(@NonNull final AbstractSmartcardCertBasedAuthManager.IDisconnectCallback callback) {
         //Helps prevent unnecessary callback trigger. Nfc discovery should only be active when
         // the user is prompted to tap.
-        mCbaManager.stopDiscovery(mActivity);
+        mDialogHolder.showSmartcardRemovalPromptDialog(null);
+        mCbaManager.stopDiscovery(mActivity, callback);
     }
 
     /**
@@ -82,6 +83,7 @@ public class NfcSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
                     public void onCancel() {
                         mDialogHolder.dismissDialog();
                         mTelemetryHelper.setResultFailure(USER_CANCEL_MESSAGE);
+                        mCbaManager.stopDiscovery(mActivity, null);
                         request.cancel();
                     }
                 });
@@ -90,11 +92,15 @@ public class NfcSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
                     public void onCreateConnection() {
                         mDialogHolder.showSmartcardNfcLoadingDialog();
                         if (mCbaManager.isDeviceChanged()) {
-                            //In a future version, an error dialog with a custom message could be shown here instead of a general error.
-                            indicateGeneralException(methodTag, new Exception("Device connected via NFC is different from initially connected device."));
-                            request.cancel();
                             clearPin(pin);
-                            onPausedSmartcardDiscovery();
+                            request.cancel();
+                            onPausedSmartcardDiscovery(new AbstractSmartcardCertBasedAuthManager.IDisconnectCallback() {
+                                @Override
+                                public void onDisconnect() {
+                                    //In a future version, an error dialog with a custom message could be shown here instead of a general error.
+                                    indicateGeneralException(methodTag, new Exception("Device connected via NFC is different from initially connected device."));
+                                }
+                            });
                             return;
                         }
                         mCbaManager.requestDeviceSession(new AbstractSmartcardCertBasedAuthManager.ISessionCallback() {
@@ -106,10 +112,14 @@ public class NfcSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
 
                             @Override
                             public void onException(@NonNull final Exception e) {
-                                indicateGeneralException(methodTag, e);
-                                request.cancel();
                                 clearPin(pin);
-                                onPausedSmartcardDiscovery();
+                                request.cancel();
+                                onPausedSmartcardDiscovery(new AbstractSmartcardCertBasedAuthManager.IDisconnectCallback() {
+                                    @Override
+                                    public void onDisconnect() {
+                                        indicateGeneralException(methodTag, e);
+                                    }
+                                });
                             }
                         });
                     }

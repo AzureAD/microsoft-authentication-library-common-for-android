@@ -159,6 +159,13 @@ public class DialogHolder implements IDialogHolder {
         ));
     }
 
+    @Override
+    public void showSmartcardRemovalPromptDialog(@Nullable final SmartcardRemovalPromptDialog.RemovalCallback removalCallback) {
+        showDialog(new SmartcardRemovalPromptDialog(
+                removalCallback,
+                mActivity));
+    }
+
     /**
      * Dismisses current dialog, if one is showing.
      */
@@ -191,13 +198,21 @@ public class DialogHolder implements IDialogHolder {
         return (mCurrentDialog != null);
     }
 
+    @Nullable
+    public synchronized String getDialogClassShowing() {
+        if (mCurrentDialog == null) {
+            return null;
+        }
+        return mCurrentDialog.getClass().getSimpleName();
+    }
+
     /**
-     * Runs the onCancelCbaCallback code for the current dialog.
-     * Used when YubiKey is unexpectedly disconnected from device.
+     * Runs callback code for the current dialog when
+     * a smartcard is disconnected from the device and a dialog is currently showing.
      */
-    public synchronized void onCancelCba() {
+    public synchronized void onSmartcardRemoval() {
         if (mCurrentDialog != null) {
-            mCurrentDialog.onCancelCba();
+            mCurrentDialog.onSmartcardRemoval();
         }
     }
 

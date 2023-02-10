@@ -204,7 +204,7 @@ public class CertBasedAuthFactory {
                 @Override
                 public void onCreateConnection() {
                     if (mNfcSmartcardCertBasedAuthManager != null) {
-                        mNfcSmartcardCertBasedAuthManager.stopDiscovery(mActivity);
+                        mNfcSmartcardCertBasedAuthManager.stopDiscovery(mActivity, null);
                         mNfcSmartcardCertBasedAuthManager.clearConnectionCallback();
                     }
                     challengeHandlerCallback.onReceived(new UsbSmartcardCertBasedAuthChallengeHandler(

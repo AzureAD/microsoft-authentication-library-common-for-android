@@ -92,41 +92,42 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandler<T extends A
         mCbaManager.requestDeviceSession(new AbstractSmartcardCertBasedAuthManager.ISessionCallback() {
             @Override
             public void onGetSession(@NonNull final ISmartcardSession session) throws Exception {
-                if (session.getPinAttemptsRemaining() == 0) {
-                    promptTooManyFailedPinAttempts(methodTag);
-                    request.cancel();
-                    onPausedSmartcardDiscovery();
-                    return;
-                }
-                //Create List that contains cert details only pertinent to the cert picker.
+                final int pinAttemptsRemaining = session.getPinAttemptsRemaining();
                 final List<ICertDetails> certList = session.getCertDetailsList();
-                //If no certs were found, cancel flow.
-                if (certList.isEmpty()) {
-                    Logger.info(methodTag,  NO_PIV_CERTS_FOUND_MESSAGE);
-                    mTelemetryHelper.setResultFailure(NO_PIV_CERTS_FOUND_MESSAGE);
-                    mDialogHolder.showErrorDialog(
-                            R.string.smartcard_no_cert_dialog_title,
-                            R.string.smartcard_no_cert_dialog_message);
-                    request.cancel();
-                    onPausedSmartcardDiscovery();
-                    return;
-                }
+                onPausedSmartcardDiscovery(new AbstractSmartcardCertBasedAuthManager.IDisconnectCallback() {
+                    @Override
+                    public void onDisconnect() {
+                        if (pinAttemptsRemaining == 0) {
+                            promptTooManyFailedPinAttempts(methodTag);
+                            request.cancel();
+                            return;
+                        }
+                        //If no certs were found, cancel flow.
+                        if (certList.isEmpty()) {
+                            Logger.info(methodTag,  NO_PIV_CERTS_FOUND_MESSAGE);
+                            mTelemetryHelper.setResultFailure(NO_PIV_CERTS_FOUND_MESSAGE);
+                            mDialogHolder.showErrorDialog(
+                                    R.string.smartcard_no_cert_dialog_title,
+                                    R.string.smartcard_no_cert_dialog_message);
+                            request.cancel();
+                            return;
+                        }
 
-                //Build and show Smartcard cert picker, which also handles the rest of the smartcard CBA flow.
-                mDialogHolder.showCertPickerDialog(
-                        certList,
-                        getSmartcardCertPickerDialogPositiveButtonListener(request),
-                        new SmartcardCertPickerDialog.CancelCbaCallback() {
-                            @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-                            @Override
-                            public void onCancel() {
-                                mDialogHolder.dismissDialog();
-                                mTelemetryHelper.setResultFailure(USER_CANCEL_MESSAGE);
-                                request.cancel();
-                            }
-                        });
-
-                onPausedSmartcardDiscovery();
+                        //Build and show Smartcard cert picker, which also handles the rest of the smartcard CBA flow.
+                        mDialogHolder.showCertPickerDialog(
+                                certList,
+                                getSmartcardCertPickerDialogPositiveButtonListener(request),
+                                new SmartcardCertPickerDialog.CancelCbaCallback() {
+                                    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+                                    @Override
+                                    public void onCancel() {
+                                        mDialogHolder.dismissDialog();
+                                        mTelemetryHelper.setResultFailure(USER_CANCEL_MESSAGE);
+                                        request.cancel();
+                                    }
+                                });
+                    }
+                });
             }
 
             @Override
@@ -142,7 +143,7 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandler<T extends A
      * Pauses smartcard discovery, if the particular authentication method isn't meant to have
      *  discovery active throughout the entire flow.
      */
-    protected abstract void onPausedSmartcardDiscovery();
+    protected abstract void onPausedSmartcardDiscovery(@NonNull final AbstractSmartcardCertBasedAuthManager.IDisconnectCallback callback);
 
     /**
      * Helper method to log and show an error dialog with messages indicating that
@@ -228,13 +229,17 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandler<T extends A
             return;
         }
         final int attemptsRemaining = session.getPinAttemptsRemaining();
-        onPausedSmartcardDiscovery();
-        if (attemptsRemaining == 0) {
-            promptTooManyFailedPinAttempts(methodTag);
-            request.cancel();
-            return;
-        }
-        setPinDialogForIncorrectAttempt(certDetails, request);
+        onPausedSmartcardDiscovery(new AbstractSmartcardCertBasedAuthManager.IDisconnectCallback() {
+            @Override
+            public void onDisconnect() {
+                if (attemptsRemaining == 0) {
+                    promptTooManyFailedPinAttempts(methodTag);
+                    request.cancel();
+                    return;
+                }
+                setPinDialogForIncorrectAttempt(certDetails, request);
+            }
+        });
     }
 
     /**

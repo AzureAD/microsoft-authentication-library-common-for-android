@@ -53,7 +53,7 @@ public abstract class SmartcardDialog {
     /**
      * Should dismiss dialog and call the appropriate methods to help cancel the CBA flow.
      */
-    abstract void onCancelCba();
+    abstract void onSmartcardRemoval();
 
     /**
      * Show mDialog on the main thread.

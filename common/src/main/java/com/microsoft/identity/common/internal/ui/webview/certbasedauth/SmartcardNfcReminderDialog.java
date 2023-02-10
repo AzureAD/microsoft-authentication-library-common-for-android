@@ -89,7 +89,7 @@ public class SmartcardNfcReminderDialog extends SmartcardDialog {
      * Should dismiss dialog and call the appropriate methods to help cancel the CBA flow.
      */
     @Override
-    void onCancelCba() {
+    void onSmartcardRemoval() {
         //This method will never be called on this dialog, so no logic needed.
     }
 

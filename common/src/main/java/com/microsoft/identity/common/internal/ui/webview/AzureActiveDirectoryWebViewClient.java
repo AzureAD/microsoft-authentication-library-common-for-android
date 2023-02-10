@@ -490,7 +490,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      * A wrapper to emit telemetry for results from certificate based authentication (CBA) if CBA occurred.
      * @param response a RawAuthorizationResult object received upon a challenge response received.
      */
-    public void emitTelemetryForCertBasedAuthResult(@NonNull final RawAuthorizationResult response) {
+    public void finalizeCertBasedAuthResult(@NonNull final RawAuthorizationResult response) {
         if (mCertBasedAuthChallengeHandler != null) {
             //The challenge handler checks if CBA was proceeded with and emits telemetry.
             mCertBasedAuthChallengeHandler.emitTelemetryForCertBasedAuthResults(response);

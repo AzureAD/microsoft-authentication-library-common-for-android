@@ -50,7 +50,10 @@ public abstract class AbstractSmartcardCertBasedAuthManager<T extends IConnectio
      * Cease discovery of smartcards.
      * @param activity current host activity.
      */
-    abstract void stopDiscovery(@NonNull final Activity activity);
+    abstract void stopDiscovery(@NonNull final Activity activity,
+                                @Nullable final IDisconnectCallback callback);
+
+    abstract void disconnect(@NonNull final IDisconnectCallback callback);
 
     /**
      * Request an instance of a session in order to carry out methods specific to ISmartcardSession.
@@ -106,5 +109,10 @@ public abstract class AbstractSmartcardCertBasedAuthManager<T extends IConnectio
          * @param e Exception thrown.
          */
         void onException(@NonNull final Exception e);
+    }
+
+    interface IDisconnectCallback {
+
+        void onDisconnect();
     }
 }

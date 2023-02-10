@@ -33,6 +33,8 @@ import com.microsoft.identity.common.R;
 import com.microsoft.identity.common.java.opentelemetry.ICertBasedAuthTelemetryHelper;
 import com.microsoft.identity.common.logging.Logger;
 
+import java.util.Objects;
+
 /**
  * Handles a received ClientCertRequest by prompting the user to choose from certificates
  *  stored on a smartcard device connected via USB.
@@ -64,10 +66,12 @@ public class UsbSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
             @Override
             public void onClosedConnection() {
                 if (mDialogHolder.isDialogShowing()) {
-                    //Show an error dialog informing users that they have unplugged their device.
-                    mDialogHolder.onCancelCba();
-                    mDialogHolder.showErrorDialog(R.string.smartcard_early_unplug_dialog_title, R.string.smartcard_early_unplug_dialog_message);
-                    Logger.verbose(methodTag, "Smartcard was disconnected while dialog was still displayed.");
+                    mDialogHolder.onSmartcardRemoval();
+                    if (!Objects.equals(mDialogHolder.getDialogClassShowing(),
+                            SmartcardRemovalPromptDialog.class.getSimpleName())) {
+                        mDialogHolder.showErrorDialog(R.string.smartcard_early_unplug_dialog_title, R.string.smartcard_early_unplug_dialog_message);
+                        Logger.verbose(methodTag, "Smartcard was disconnected while dialog was still displayed.");
+                    }
                 }
             }
         });
@@ -78,7 +82,7 @@ public class UsbSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
      *  discovery active throughout the entire flow.
      */
     @Override
-    protected void onPausedSmartcardDiscovery() {
+    protected void onPausedSmartcardDiscovery(@NonNull final AbstractSmartcardCertBasedAuthManager.IDisconnectCallback callback) {
         //Nothing needed, since usb discovery should always remain active for the duration of the authentication flow.
     }
 
