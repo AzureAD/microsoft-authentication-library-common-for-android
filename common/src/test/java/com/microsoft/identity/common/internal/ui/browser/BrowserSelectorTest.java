@@ -20,7 +20,12 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common;
+package com.microsoft.identity.common.internal.ui.browser;
+
+import static org.junit.Assert.assertNotNull;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+import static org.robolectric.Shadows.shadowOf;
 
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -38,24 +43,19 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
-import com.microsoft.identity.common.internal.ui.browser.Browser;
-import com.microsoft.identity.common.internal.ui.browser.BrowserSelector;
 import com.microsoft.identity.common.java.ui.BrowserDescriptor;
 
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
+import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowPackageManager;
 
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-
-import static org.junit.Assert.assertNotNull;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-import static org.robolectric.Shadows.shadowOf;
 
 @RunWith(RobolectricTestRunner.class)
 public class BrowserSelectorTest {
@@ -101,7 +101,7 @@ public class BrowserSelectorTest {
     public void testSelect_getAllBrowser() throws NameNotFoundException {
         setBrowserList(CHROME, FIREFOX);
 
-        List<Browser> allBrowsers = BrowserSelector.getAllBrowsers(ApplicationProvider.getApplicationContext());
+        List<Browser> allBrowsers = BrowserSelector.getBrowsers(ApplicationProvider.getApplicationContext(), null);
         assert (allBrowsers.get(0).getPackageName().equals(CHROME.mPackageName));
         assert (allBrowsers.get(1).getPackageName().equals(FIREFOX.mPackageName));
     }
@@ -112,7 +112,7 @@ public class BrowserSelectorTest {
 
         final List<BrowserDescriptor> browserSafelist = new ArrayList<>();
         try {
-            BrowserSelector.select(ApplicationProvider.getApplicationContext(), browserSafelist);
+            BrowserSelector.select(ApplicationProvider.getApplicationContext(), browserSafelist, null);
         } catch (final ClientException exception) {
             assertNotNull(exception);
             assert (exception.getErrorCode().equalsIgnoreCase(ErrorStrings.NO_AVAILABLE_BROWSER_FOUND));
@@ -123,20 +123,93 @@ public class BrowserSelectorTest {
     public void testSelect_versionNotSupportedBrowser() throws NameNotFoundException {
         setBrowserList(CHROME, FIREFOX);
 
-        List<BrowserDescriptor> browserSafelist = new ArrayList<>();
+        final List<BrowserDescriptor> browserSafelist = new ArrayList<>();
         browserSafelist.add(
                 new BrowserDescriptor(
-                        "com.android.chrome",
-                        "ChromeSignature",
+                        CHROME.mPackageName,
+                        CHROME.mSignatureHashes,
                         "51",
                         null)
         );
 
         try {
-            BrowserSelector.select(ApplicationProvider.getApplicationContext(), browserSafelist);
+            BrowserSelector.select(ApplicationProvider.getApplicationContext(), browserSafelist, null);
         } catch (final ClientException exception) {
             assertNotNull(exception);
             assert (exception.getErrorCode().equalsIgnoreCase(ErrorStrings.NO_AVAILABLE_BROWSER_FOUND));
+        }
+    }
+
+    @Test
+    public void testSelect_preferredBrowserSelected() throws NameNotFoundException {
+        setBrowserList(CHROME, DOLPHIN, FIREFOX);
+
+        final BrowserDescriptor preferredBrowser = new BrowserDescriptor(
+                DOLPHIN.mPackageName,
+                DOLPHIN.mSignatureHashes,
+                "1.4.1",
+                null);
+
+        List<BrowserDescriptor> browserSafelist = new ArrayList<>();
+        browserSafelist.add(
+                new BrowserDescriptor(
+                        "com.android.chrome",
+                        "ChromeSignature",
+                        "50",
+                        null)
+        );
+        browserSafelist.add(preferredBrowser);
+        browserSafelist.add(
+                new BrowserDescriptor(
+                        "org.mozilla.firefox",
+                        "FireFoxSignature",
+                        "10",
+                        null)
+        );
+
+
+        try {
+            final Browser browser = BrowserSelector.select(ApplicationProvider.getApplicationContext(), browserSafelist, preferredBrowser);
+            Assert.assertEquals(preferredBrowser.getPackageName(), browser.getPackageName());
+            Assert.assertEquals(preferredBrowser.getSignatureHashes(), browser.getSignatureHashes());
+        } catch (final ClientException exception) {
+            Assert.fail();
+        }
+    }
+
+    @Test
+    public void testSelect_preferredBrowserSelected_preferredBrowserNotInstalled() throws NameNotFoundException {
+        setBrowserList(CHROME, DOLPHIN, FIREFOX);
+
+        final BrowserDescriptor preferredBrowser = new BrowserDescriptor(
+                DOLPHIN.mPackageName,
+                DOLPHIN.mSignatureHashes,
+                "1.4.1",
+                null);
+
+        List<BrowserDescriptor> browserSafelist = new ArrayList<>();
+        browserSafelist.add(
+                new BrowserDescriptor(
+                        CHROME.mPackageName,
+                        CHROME.mSignatureHashes,
+                        "50",
+                        null)
+        );
+        browserSafelist.add(
+                new BrowserDescriptor(
+                        FIREFOX.mPackageName,
+                        FIREFOX.mSignatureHashes,
+                        "10",
+                        null)
+        );
+
+
+        try {
+            // First app (default browser) should be returned.
+            final Browser browser = BrowserSelector.select(ApplicationProvider.getApplicationContext(), browserSafelist, preferredBrowser);
+            Assert.assertEquals("com.android.chrome", browser.getPackageName());
+        } catch (final ClientException exception) {
+            Assert.fail();
         }
     }
 
