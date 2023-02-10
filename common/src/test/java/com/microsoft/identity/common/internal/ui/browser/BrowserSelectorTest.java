@@ -153,16 +153,16 @@ public class BrowserSelectorTest {
         List<BrowserDescriptor> browserSafelist = new ArrayList<>();
         browserSafelist.add(
                 new BrowserDescriptor(
-                        "com.android.chrome",
-                        "ChromeSignature",
+                        CHROME.mPackageName,
+                        CHROME.mSignatureHashes,
                         "50",
                         null)
         );
         browserSafelist.add(preferredBrowser);
         browserSafelist.add(
                 new BrowserDescriptor(
-                        "org.mozilla.firefox",
-                        "FireFoxSignature",
+                        FIREFOX.mPackageName,
+                        FIREFOX.mSignatureHashes,
                         "10",
                         null)
         );

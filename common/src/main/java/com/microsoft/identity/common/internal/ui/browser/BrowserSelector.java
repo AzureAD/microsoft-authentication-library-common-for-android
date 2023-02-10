@@ -82,17 +82,9 @@ public class BrowserSelector {
         throw new ClientException(ErrorStrings.NO_AVAILABLE_BROWSER_FOUND, "No available browser installed on the device.");
     }
 
-    private static boolean matches(@NonNull final BrowserDescriptor browserDescriptor,
+    private static boolean matches(@NonNull final BrowserDescriptor descriptor,
                                    @NonNull Browser browser) {
         final String methodTag = TAG + ":matches";
-
-        final BrowserDescriptor descriptor;
-        try {
-            descriptor = (BrowserDescriptor) browserDescriptor;
-        } catch (final ClassCastException e) {
-            Logger.error(methodTag, "Cannot cast IBrowserDescriptor to BrowserDescriptor", e);
-            return false;
-        }
 
         if (!StringUtil.equalsIgnoreCase(descriptor.getPackageName(), browser.getPackageName())) {
             return false;
