@@ -64,11 +64,9 @@ public class CryptoFactoryTelemetryHelper {
         try {
             return cryptoOperation.perform();
         } catch (final Exception e) {
-            final String parentSpanName = OTelUtility.getCurrentSpanName();
             final Attributes attributes = Attributes.of(
                     stringKey(crypto_controller.name()), cryptoFactory.getTelemetryClassName().name(),
                     stringKey(crypto_operation.name()), getCryptoOperationEventName(operationName, algorithmName),
-                    stringKey(parent_span_name.name()), parentSpanName == null ? "N/A" : parentSpanName,
                     stringKey(error_type.name()), e.getClass().getSimpleName(),
                     stringKey(error_code.name()), e instanceof IErrorInformation ? ((IErrorInformation) e).getErrorCode() : "N/A",
                     stringKey(crypto_exception_stack_trace.name()), ThrowableUtil.getStackTraceAsString(e)
