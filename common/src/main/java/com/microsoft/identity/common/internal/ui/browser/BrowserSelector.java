@@ -84,11 +84,13 @@ public class BrowserSelector {
 
     private static boolean matches(@NonNull final BrowserDescriptor browserDescriptor,
                                    @NonNull Browser browser) {
+        final String methodTag = TAG + ":matches";
+
         final BrowserDescriptor descriptor;
         try {
             descriptor = (BrowserDescriptor) browserDescriptor;
         } catch (final ClassCastException e) {
-            Logger.error(TAG + ":matches", "Cannot cast IBrowserDescriptor to BrowserDescriptor", e);
+            Logger.error(methodTag, "Cannot cast IBrowserDescriptor to BrowserDescriptor", e);
             return false;
         }
 
@@ -97,13 +99,13 @@ public class BrowserSelector {
         }
 
         if (!descriptor.getSignatureHashes().equals(browser.getSignatureHashes())) {
-            Logger.warn(TAG + ":matches", "Browser" + browser.getPackageName() + " signature hash not match");
+            Logger.warn(methodTag, "Browser" + browser.getPackageName() + " signature hash not match");
             return false;
         }
 
         if (!StringUtil.isNullOrEmpty(descriptor.getVersionLowerBound())
                 && compareSemanticVersion(browser.getVersion(), descriptor.getVersionLowerBound()) == -1) {
-            Logger.warn(TAG + ":matches",  "Browser" + browser.getPackageName() +
+            Logger.warn(methodTag,  "Browser" + browser.getPackageName() +
                     " version too low (Expected: " + descriptor.getVersionLowerBound() +
                     " Get: " + browser.getVersion() + ")");
             return false;
@@ -111,7 +113,7 @@ public class BrowserSelector {
 
         if (!StringUtil.isNullOrEmpty(descriptor.getVersionUpperBound())
                 && compareSemanticVersion(browser.getVersion(), descriptor.getVersionUpperBound()) == 1) {
-            Logger.warn(TAG + ":matches", "Browser" + browser.getPackageName() +
+            Logger.warn(methodTag, "Browser" + browser.getPackageName() +
                     " version too high (Expected: " + descriptor.getVersionUpperBound() +
                     " Get: " + browser.getVersion() + ")");
             return false;
