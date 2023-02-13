@@ -23,6 +23,8 @@
 
 package com.microsoft.identity.common.java.platform;
 
+import com.microsoft.identity.common.java.AuthenticationConstants;
+import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.opentelemetry.AttributeName;
 import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
 import com.microsoft.identity.common.java.util.StringUtil;
@@ -35,10 +37,14 @@ import io.opentelemetry.api.trace.Span;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.experimental.Accessors;
 
+@Getter
+@Accessors(prefix = "m")
 public class JweResponse {
 
+    private static final String TAG = JweResponse.class.getSimpleName();
     /**
      * The code defines a valid JWE as one that has at least the header, encryptedKey, IV,
      * and Payload.
@@ -69,39 +75,24 @@ public class JweResponse {
 
     JweHeader mJweHeader;
 
-    String mEncryptedKey;
+    byte[] mEncryptedKey;
 
-    String mIv;
+    byte[] mIv;
 
-    String mPayload;
+    byte[] mPayload;
 
-    String mAuthenticationTag;
+    byte[] mAuthenticationTag;
 
-    public JweHeader getJweHeader() {
-        return mJweHeader;
-    }
+    /**
+     * Additional Authenticated Data
+     */
+    byte[] mAAD;
 
-    public String getEncryptedKey() {
-        return mEncryptedKey;
-    }
-
-    public String getIV() {
-        return mIv;
-    }
-
-    public String getPayload() {
-        return mPayload;
-    }
-
-    public String getAuthenticationTag() {
-        return mAuthenticationTag;
-    }
-
-    public static JweResponse parseJwe(String jwe) throws JSONException {
+    public static JweResponse parseJwe(@NonNull final String jwe) throws JSONException {
         final Span span = SpanExtension.current();
-        JweResponse response = new JweResponse();
+        final JweResponse response = new JweResponse();
 
-        String[] split = jwe.split("\\.");
+        final String[] split = jwe.split("\\.");
 
         span.setAttribute(AttributeName.jwt_valid.name(), split.length >= LENGTH_OF_VALID_JWE);
 
@@ -109,19 +100,23 @@ public class JweResponse {
             throw new IllegalArgumentException("Invalid JWE");
         }
 
-        String header = split[0];
-        response.mEncryptedKey = split[1];
-        response.mIv = split[2];
-        response.mPayload = split[3];
+        // NOTE: EVOsts sends mIv and mPayload as Base64UrlEncoded
+        final String header = split[0];
+        response.mEncryptedKey = base64Decode(split[1], Base64.URL_SAFE, "Encrypted key is not base64 url-encoded");
+        response.mIv = base64Decode(split[2], Base64.URL_SAFE, "IV not base64 url-encoded.");
+        response.mPayload = base64Decode(split[3], Base64.URL_SAFE, "Payload is not base64 url-encoded.");
+
+        // AAD is header read as ASCII
+        response.mAAD = header.getBytes(AuthenticationConstants.CHARSET_ASCII);
 
         if (split.length > 4) {
-            response.mAuthenticationTag = split[4];
+            response.mAuthenticationTag = Base64.decode(split[4], Base64.URL_SAFE);
         }
 
-        byte[] headerDecodedBytes = Base64.decode(header, Base64.URL_SAFE);
-        String decodedHeader = StringUtil.fromByteArray(headerDecodedBytes);
+        final byte[] headerDecodedBytes = Base64.decode(header, Base64.URL_SAFE);
+        final String decodedHeader = StringUtil.fromByteArray(headerDecodedBytes);
 
-        JSONObject jsonObject = new JSONObject(decodedHeader);
+        final JSONObject jsonObject = new JSONObject(decodedHeader);
 
         span.setAttribute(AttributeName.jwt_alg.name(), jsonObject.optString("alg"));
 
@@ -137,5 +132,21 @@ public class JweResponse {
                 .build();
 
         return response;
+    }
+
+    /***
+     * Helper to perform base64 decoding with logging.
+     * @param input Input string
+     * @param flags
+     * @param failureMessage The message to log in case of failure.
+     */
+    public static byte[] base64Decode(@NonNull final String input, int flags, @NonNull final String failureMessage) {
+        final String methodTag = TAG + ":base64Decode";
+        try {
+            return Base64.decode(input, flags);
+        } catch (IllegalArgumentException e) {
+            Logger.error(methodTag, failureMessage + " " + e.getMessage(), null);
+            throw e;
+        }
     }
 }
