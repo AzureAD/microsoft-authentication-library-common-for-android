@@ -188,10 +188,13 @@ public class BrowserSelector {
         final List<ResolveInfo> resolvedActivityList =
                 pm.queryIntentActivities(BROWSER_INTENT, queryFlag);
 
+        Logger.verbose(methodTag, "Querying browsers. Got back " + resolvedActivityList.size() + " browsers.");
+
         final List<Browser> browserList = new ArrayList<>();
         for (ResolveInfo info : resolvedActivityList) {
             // ignore handlers which are not browsers
             if (!isFullBrowser(info)) {
+                Logger.verbose(methodTag, "Browser " + info.activityInfo.packageName + " is not a full browser app.");
                 continue;
             }
 
@@ -200,12 +203,15 @@ public class BrowserSelector {
                 //TODO if the browser is in the block list, do not add it into the return browserList.
                 if (isCustomTabsServiceSupported(context, packageInfo)) {
                     //if the browser has custom tab enabled, set the custom tab support as true.
+                    Logger.verbose(methodTag, "Browser " + info.activityInfo.packageName + " supports custom tab.");
                     browserList.add(new Browser(packageInfo, true));
                 } else {
+                    Logger.verbose(methodTag, "Browser " + info.activityInfo.packageName + " does NOT support custom tab.");
                     browserList.add(new Browser(packageInfo, false));
                 }
             } catch (PackageManager.NameNotFoundException e) {
                 // a browser cannot be generated without the package info
+                Logger.warn(methodTag, "Browser " + info.activityInfo.packageName + " cannot be generated without the package info.");
             }
         }
 
