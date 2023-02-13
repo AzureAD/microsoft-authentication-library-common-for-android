@@ -110,10 +110,10 @@ public class JweResponse {
         response.mAAD = header.getBytes(AuthenticationConstants.CHARSET_ASCII);
 
         if (split.length > 4) {
-            response.mAuthenticationTag = Base64.decode(split[4], Base64.URL_SAFE);
+            response.mAuthenticationTag = base64Decode(split[4], Base64.URL_SAFE, "Tag is not base64 url-encoded");
         }
 
-        final byte[] headerDecodedBytes = Base64.decode(header, Base64.URL_SAFE);
+        final byte[] headerDecodedBytes = base64Decode(header, Base64.URL_SAFE, "Header is not base url-encoded");
         final String decodedHeader = StringUtil.fromByteArray(headerDecodedBytes);
 
         final JSONObject jsonObject = new JSONObject(decodedHeader);
