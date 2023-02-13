@@ -39,20 +39,21 @@ import lombok.experimental.SuperBuilder;
 public class BrokerDeviceCodeFlowCommandParameters extends DeviceCodeFlowCommandParameters implements IBrokerTokenCommandParameters {
     @Expose
     private final String callerAppVersion;
+    @Expose
+    private final String brokerVersion;
+    @Expose
+    private final String negotiatedBrokerProtocolVersion;
+    @Expose
+    private final boolean pKeyAuthHeaderAllowed;
+    @Expose
+    private final BrokerRequestType requestType;
+    @Expose
+    private final String homeTenantId;
 
     private final IBrokerAccount brokerAccount;
     private final String homeAccountId;
     private final String localAccountId;
     private final int sleepTimeBeforePrtAcquisition;
-
-    @Expose
-    private final boolean pKeyAuthHeaderAllowed;
-
-    @Expose
-    private final BrokerRequestType requestType;
-
-    @Expose
-    private final String homeTenantId;
 
     @Override
     public void validate() throws ArgumentException {

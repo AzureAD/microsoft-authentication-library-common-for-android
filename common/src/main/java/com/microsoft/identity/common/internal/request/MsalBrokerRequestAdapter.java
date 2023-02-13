@@ -274,10 +274,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
     public Bundle getRequestBundleForDeviceCodeFlowAuthRequest(@NonNull final Context context,
                                                         @NonNull final DeviceCodeFlowCommandParameters parameters,
                                                         @Nullable final String negotiatedBrokerProtocolVersion) {
-        final MsalBrokerRequestAdapter msalBrokerRequestAdapter = new MsalBrokerRequestAdapter();
-
-        final BrokerRequest brokerRequest = msalBrokerRequestAdapter.
-                brokerRequestFromDeviceCodeFlowCommandParameters(parameters);
+        final BrokerRequest brokerRequest = this.brokerRequestFromDeviceCodeFlowCommandParameters(parameters);
 
         final Bundle requestBundle = getRequestBundleFromBrokerRequest(
                 brokerRequest,
