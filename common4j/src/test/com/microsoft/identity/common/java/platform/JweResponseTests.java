@@ -32,7 +32,7 @@ import org.junit.runners.JUnit4;
  * Tests for {@link JweResponse}.
  */
 @RunWith(JUnit4.class)
-public class JwtResponseTests {
+public class JweResponseTests {
 
     @Test
     public void testParseJwe() {
@@ -55,18 +55,15 @@ public class JwtResponseTests {
 
     @Test(expected = IllegalArgumentException.class)
     public void testParseJweInvalidJweLength() {
-        final StringBuilder builder = new StringBuilder();
         final String header = "eyJlbmMiOiJBMjU2R0NNIiwiYWxnIjoiUlNBLU9BRVAifQ";
-        builder.append(header).append(".")
-                .append("AIMpIcH77YJ_c5hSUxtR-Ja0bSawRHMaoT_hkNBD87vgI2IVjRaJoHDv8NXz72Ryjh1Wrk6jEIUeB197srVMgVw1IiVWL16KORZUfb4tX3ho4W9KN0y8AO9wVfmJuzR-eWsaqHKrW7SQo68nguxZ-HrXwAOCOGK3Abm47rXKsjBjgNa9zeLCpowMVI7ZKAJzxjPGuJ_eqClFTCCfC3BMUOH0TzHc4vFGQyMnOqfHIg1dd48jFZ6ObBNsu1tikaKIYA8M47dYEK9f5NtRTAKUxhoifROK2rdTTODJwTfjZqH_WEbCcL14CpaIgxouYJiFxaSVy0qIxICxOZDXzDRTodQ.")
-                .append("9pLxwR4TjvMrPN6l.");
-        final String jwe = builder.toString();
+        final String jwe = header + "." +
+                "AIMpIcH77YJ_c5hSUxtR-Ja0bSawRHMaoT_hkNBD87vgI2IVjRaJoHDv8NXz72Ryjh1Wrk6jEIUeB197srVMgVw1IiVWL16KORZUfb4tX3ho4W9KN0y8AO9wVfmJuzR-eWsaqHKrW7SQo68nguxZ-HrXwAOCOGK3Abm47rXKsjBjgNa9zeLCpowMVI7ZKAJzxjPGuJ_eqClFTCCfC3BMUOH0TzHc4vFGQyMnOqfHIg1dd48jFZ6ObBNsu1tikaKIYA8M47dYEK9f5NtRTAKUxhoifROK2rdTTODJwTfjZqH_WEbCcL14CpaIgxouYJiFxaSVy0qIxICxOZDXzDRTodQ." +
+                "9pLxwR4TjvMrPN6l.";
         final JweResponse jweResponse = JweResponse.parseJwe(jwe);
     }
 
     @Test(expected = JSONException.class)
     public void testParseJweJson() {
-        final StringBuilder builder = new StringBuilder();
         final String json = "{\"refresh_token\":\"ab.cd.ef.gh\"}";
         final JweResponse jweResponse = JweResponse.parseJwe(json);
     }

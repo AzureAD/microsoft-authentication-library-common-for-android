@@ -40,8 +40,7 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.Accessors;
 
-@Getter
-@Accessors(prefix = "m")
+
 public class JweResponse {
 
     private static final String TAG = JweResponse.class.getSimpleName();
@@ -75,18 +74,46 @@ public class JweResponse {
 
     JweHeader mJweHeader;
 
-    byte[] mEncryptedKey;
+    private String mEncryptedKey;
 
-    byte[] mIv;
+    private String mIv;
 
-    byte[] mPayload;
+    private String mPayload;
 
-    byte[] mAuthenticationTag;
+    private String mAuthenticationTag;
 
     /**
-     * Additional Authenticated Data
+     * Additional Authenticated Data. This is encoded header read as ASCII.
      */
-    byte[] mAAD;
+    private String mAAD;
+
+    public JweHeader getJweHeader() {
+        return mJweHeader;
+    }
+
+    public byte[] getEncryptedKey() {
+        return base64Decode(this.mEncryptedKey, Base64.URL_SAFE, "Encrypted key is not base64 url-encoded");
+    }
+
+    public byte[] getIv() {
+        return base64Decode(this.mIv, Base64.URL_SAFE, "IV not base64 url-encoded.");
+    }
+
+    public byte[] getPayload() {
+        return base64Decode(this.mPayload, Base64.URL_SAFE, "Payload is not base64 url-encoded.");
+    }
+
+    public byte[] getAuthenticationTag() {
+        if (this.mAuthenticationTag != null) {
+            return base64Decode(this.mAuthenticationTag, Base64.URL_SAFE, "Tag is not base64 url-encoded");
+        }
+
+        return null;
+    }
+
+    public byte[] getAAD() {
+        return this.mAAD.getBytes(AuthenticationConstants.CHARSET_ASCII);
+    }
 
     public static JweResponse parseJwe(@NonNull final String jwe) throws JSONException {
         final Span span = SpanExtension.current();
@@ -102,15 +129,15 @@ public class JweResponse {
 
         // NOTE: EVOsts sends mIv and mPayload as Base64UrlEncoded
         final String header = split[0];
-        response.mEncryptedKey = base64Decode(split[1], Base64.URL_SAFE, "Encrypted key is not base64 url-encoded");
-        response.mIv = base64Decode(split[2], Base64.URL_SAFE, "IV not base64 url-encoded.");
-        response.mPayload = base64Decode(split[3], Base64.URL_SAFE, "Payload is not base64 url-encoded.");
+        response.mEncryptedKey = split[1];
+        response.mIv = split[2];
+        response.mPayload = split[3];
 
         // AAD is header read as ASCII
-        response.mAAD = header.getBytes(AuthenticationConstants.CHARSET_ASCII);
+        response.mAAD = header;
 
         if (split.length > 4) {
-            response.mAuthenticationTag = base64Decode(split[4], Base64.URL_SAFE, "Tag is not base64 url-encoded");
+            response.mAuthenticationTag = split[4];
         }
 
         final byte[] headerDecodedBytes = base64Decode(header, Base64.URL_SAFE, "Header is not base url-encoded");
