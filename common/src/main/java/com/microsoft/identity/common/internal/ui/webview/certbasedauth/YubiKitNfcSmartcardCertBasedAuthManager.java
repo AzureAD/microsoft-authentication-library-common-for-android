@@ -51,7 +51,7 @@ import java.util.concurrent.Callable;
 public class YubiKitNfcSmartcardCertBasedAuthManager extends AbstractNfcSmartcardCertBasedAuthManager {
     private static final String TAG = YubiKitNfcSmartcardCertBasedAuthManager.class.getSimpleName();
     private static final String DEVICE_ERROR_MESSAGE = "No NFC device is currently connected.";
-    private static final int NFC_TIMEOUT = 5000;
+    private static final int NFC_TIMEOUT = 10000;
 
     private final NfcYubiKeyManager mNfcYubiKitManager;
     private NfcYubiKeyDevice mNfcDevice;
