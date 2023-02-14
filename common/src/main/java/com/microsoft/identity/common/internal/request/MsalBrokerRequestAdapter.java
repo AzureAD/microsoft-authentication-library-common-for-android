@@ -124,6 +124,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                         .traceFlags(SpanExtension.current().getSpanContext().getTraceFlags().asByte())
                         .build()
                 )
+                .preferredBrowser(parameters.getPreferredBrowser())
                 .build();
 
         return brokerRequest;
