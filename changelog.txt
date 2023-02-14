@@ -1,5 +1,6 @@
 vNext
 ----------
+- [MINOR] Add preferred browser support (#1957)
 - [PATCH] Use android.net.NetworkCapabilities to check internet connectivity (#1887)
 - [MINOR] Adding new methods in IAccountCredentialAdapter (#1954)
 - [MINOR] Add a Basic Encryptor Interface + Add support to Encrypt / Decrypt using AES GCM (#1953)
