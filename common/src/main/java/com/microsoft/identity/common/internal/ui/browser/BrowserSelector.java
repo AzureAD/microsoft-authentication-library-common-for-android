@@ -51,6 +51,9 @@ public class BrowserSelector {
     private static final String SCHEME_HTTP = "http";
     private static final String SCHEME_HTTPS = "https";
 
+    // Added to avoid "avoidduplicateliterals" issues in pmd.
+    private static final String LOGGING_MSG_BROWSER = "Browser: ";
+
     /**
      * Searches through all browsers for the best match.
      * Browsers are evaluated in the order returned by the package manager,
@@ -91,13 +94,13 @@ public class BrowserSelector {
         }
 
         if (!descriptor.getSignatureHashes().equals(browser.getSignatureHashes())) {
-            Logger.warn(methodTag, "Browser" + browser.getPackageName() + " signature hash not match");
+            Logger.warn(methodTag,LOGGING_MSG_BROWSER + browser.getPackageName() + " signature hash not match");
             return false;
         }
 
         if (!StringUtil.isNullOrEmpty(descriptor.getVersionLowerBound())
                 && compareSemanticVersion(browser.getVersion(), descriptor.getVersionLowerBound()) == -1) {
-            Logger.warn(methodTag,  "Browser" + browser.getPackageName() +
+            Logger.warn(methodTag,LOGGING_MSG_BROWSER + browser.getPackageName() +
                     " version too low (Expected: " + descriptor.getVersionLowerBound() +
                     " Get: " + browser.getVersion() + ")");
             return false;
@@ -105,7 +108,7 @@ public class BrowserSelector {
 
         if (!StringUtil.isNullOrEmpty(descriptor.getVersionUpperBound())
                 && compareSemanticVersion(browser.getVersion(), descriptor.getVersionUpperBound()) == 1) {
-            Logger.warn(methodTag, "Browser" + browser.getPackageName() +
+            Logger.warn(methodTag,LOGGING_MSG_BROWSER + browser.getPackageName() +
                     " version too high (Expected: " + descriptor.getVersionUpperBound() +
                     " Get: " + browser.getVersion() + ")");
             return false;
@@ -194,7 +197,7 @@ public class BrowserSelector {
         for (ResolveInfo info : resolvedActivityList) {
             // ignore handlers which are not browsers
             if (!isFullBrowser(info)) {
-                Logger.verbose(methodTag, "Browser " + info.activityInfo.packageName + " is not a full browser app.");
+                Logger.verbose(methodTag,LOGGING_MSG_BROWSER + info.activityInfo.packageName + " is not a full browser app.");
                 continue;
             }
 
@@ -203,15 +206,15 @@ public class BrowserSelector {
                 //TODO if the browser is in the block list, do not add it into the return browserList.
                 if (isCustomTabsServiceSupported(context, packageInfo)) {
                     //if the browser has custom tab enabled, set the custom tab support as true.
-                    Logger.verbose(methodTag, "Browser " + info.activityInfo.packageName + " supports custom tab.");
+                    Logger.verbose(methodTag,LOGGING_MSG_BROWSER + info.activityInfo.packageName + " supports custom tab.");
                     browserList.add(new Browser(packageInfo, true));
                 } else {
-                    Logger.verbose(methodTag, "Browser " + info.activityInfo.packageName + " does NOT support custom tab.");
+                    Logger.verbose(methodTag,LOGGING_MSG_BROWSER + info.activityInfo.packageName + " does NOT support custom tab.");
                     browserList.add(new Browser(packageInfo, false));
                 }
             } catch (PackageManager.NameNotFoundException e) {
                 // a browser cannot be generated without the package info
-                Logger.warn(methodTag, "Browser " + info.activityInfo.packageName + " cannot be generated without the package info.");
+                Logger.warn(methodTag,LOGGING_MSG_BROWSER + info.activityInfo.packageName + " cannot be generated without the package info.");
             }
         }
 
