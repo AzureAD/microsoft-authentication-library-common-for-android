@@ -33,6 +33,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import cz.msebera.android.httpclient.extras.Base64;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import io.opentelemetry.api.trace.Span;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
@@ -72,14 +73,22 @@ public class JweResponse {
         private final String mContext;
     }
 
-    JweHeader mJweHeader;
+    @NonNull
+    private JweHeader mJweHeader;
 
+    @NonNull
     private String mEncryptedKey;
 
+    @NonNull
     private String mIv;
 
+    @NonNull
     private String mPayload;
 
+    /**
+     * Tag may not be present for all algorithms. Hence marked nullable
+     */
+    @Nullable
     private String mAuthenticationTag;
 
     /**
@@ -92,20 +101,20 @@ public class JweResponse {
     }
 
     public byte[] getEncryptedKey() {
-        return base64Decode(this.mEncryptedKey, Base64.URL_SAFE, "Encrypted key is not base64 url-encoded");
+        return StringUtil.base64Decode(this.mEncryptedKey, Base64.URL_SAFE, "Encrypted key is not base64 url-encoded");
     }
 
     public byte[] getIv() {
-        return base64Decode(this.mIv, Base64.URL_SAFE, "IV not base64 url-encoded.");
+        return StringUtil.base64Decode(this.mIv, Base64.URL_SAFE, "IV not base64 url-encoded.");
     }
 
     public byte[] getPayload() {
-        return base64Decode(this.mPayload, Base64.URL_SAFE, "Payload is not base64 url-encoded.");
+        return StringUtil.base64Decode(this.mPayload, Base64.URL_SAFE, "Payload is not base64 url-encoded.");
     }
 
     public byte[] getAuthenticationTag() {
         if (this.mAuthenticationTag != null) {
-            return base64Decode(this.mAuthenticationTag, Base64.URL_SAFE, "Tag is not base64 url-encoded");
+            return StringUtil.base64Decode(this.mAuthenticationTag, Base64.URL_SAFE, "Tag is not base64 url-encoded");
         }
 
         return null;
@@ -140,7 +149,7 @@ public class JweResponse {
             response.mAuthenticationTag = split[4];
         }
 
-        final byte[] headerDecodedBytes = base64Decode(header, Base64.URL_SAFE, "Header is not base url-encoded");
+        final byte[] headerDecodedBytes = StringUtil.base64Decode(header, Base64.URL_SAFE, "Header is not base url-encoded");
         final String decodedHeader = StringUtil.fromByteArray(headerDecodedBytes);
 
         final JSONObject jsonObject = new JSONObject(decodedHeader);
@@ -159,21 +168,5 @@ public class JweResponse {
                 .build();
 
         return response;
-    }
-
-    /***
-     * Helper to perform base64 decoding with logging.
-     * @param input Input string
-     * @param flags
-     * @param failureMessage The message to log in case of failure.
-     */
-    public static byte[] base64Decode(@NonNull final String input, int flags, @NonNull final String failureMessage) {
-        final String methodTag = TAG + ":base64Decode";
-        try {
-            return Base64.decode(input, flags);
-        } catch (IllegalArgumentException e) {
-            Logger.error(methodTag, failureMessage + " " + e.getMessage(), null);
-            throw e;
-        }
     }
 }

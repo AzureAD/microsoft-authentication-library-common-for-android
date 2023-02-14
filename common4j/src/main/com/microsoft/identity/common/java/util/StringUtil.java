@@ -485,4 +485,20 @@ public class StringUtil {
             throw new NullPointerException(argumentName + " is null or empty.");
         }
     }
+
+    /***
+     * Helper to perform base64 decoding with logging.
+     * @param input Input string
+     * @param flags
+     * @param failureMessage The message to log in case of failure.
+     */
+    public static byte[] base64Decode(@NonNull final String input, int flags, @NonNull final String failureMessage) {
+        final String methodTag = TAG + ":base64Decode";
+        try {
+            return Base64.decode(input, flags);
+        } catch (IllegalArgumentException e) {
+            Logger.error(methodTag, failureMessage + " " + e.getMessage(), null);
+            throw e;
+        }
+    }
 }
