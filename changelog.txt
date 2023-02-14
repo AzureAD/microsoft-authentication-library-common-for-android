@@ -1,5 +1,6 @@
 vNext
 ----------
+- [MINOR] Add flighting capability for common (#1961)
 - [MINOR] Add preferred browser support (#1957)
 - [PATCH] Use android.net.NetworkCapabilities to check internet connectivity (#1887)
 - [MINOR] Adding new methods in IAccountCredentialAdapter (#1954)
