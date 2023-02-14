@@ -30,6 +30,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 
 import com.microsoft.identity.common.R;
+import com.microsoft.identity.common.internal.ui.webview.FinalizeResultCallback;
 import com.microsoft.identity.common.java.opentelemetry.ICertBasedAuthTelemetryHelper;
 import com.microsoft.identity.common.logging.Logger;
 
@@ -44,10 +45,11 @@ public class UsbSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
     /**
      * Creates new instance of UsbSmartcardCertBasedAuthChallengeHandler.
      * A manager for smartcard CBA is retrieved, and discovery for USB devices is started.
-     * @param activity current host activity.
+     *
+     * @param activity                         current host activity.
      * @param usbSmartcardCertBasedAuthManager AbstractUsbSmartcardCertBasedAuthManager instance.
-     * @param dialogHolder DialogHolder instance.
-     * @param telemetryHelper CertBasedAuthTelemetryHelder instance.
+     * @param dialogHolder                     DialogHolder instance.
+     * @param telemetryHelper                  CertBasedAuthTelemetryHelder instance.
      */
     public UsbSmartcardCertBasedAuthChallengeHandler(@NonNull final Activity activity,
                                                      @NonNull final AbstractUsbSmartcardCertBasedAuthManager usbSmartcardCertBasedAuthManager,
@@ -79,17 +81,20 @@ public class UsbSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
 
     /**
      * Pauses smartcard discovery, if the particular authentication method isn't meant to have
-     *  discovery active throughout the entire flow.
+     * discovery active throughout the entire flow.
      */
     @Override
-    protected void onPausedSmartcardDiscovery(@NonNull final AbstractSmartcardCertBasedAuthManager.IDisconnectCallback callback) {
-        //Nothing needed, since usb discovery should always remain active for the duration of the authentication flow.
+    protected void pauseForRemoval(@NonNull final SmartcardRemovalPromptDialog.RemovalCallback callback) {
+        //Usb discovery and connection should always remain active for the duration of the authentication flow.
+        //Therefore, we merely invoke the callback here.
+        callback.onRemoved();
     }
 
     /**
      * Upon a positive button click in the smartcard PIN dialog, verify the provided PIN and handle the results.
+     *
      * @param certDetails ICertDetails of the selected certificate from the SmartcardCertPickerDialog.
-     * @param request ClientCertRequest received from AzureActiveDirectoryWebViewClient.onReceivedClientCertRequest.
+     * @param request     ClientCertRequest received from AzureActiveDirectoryWebViewClient.onReceivedClientCertRequest.
      * @return A PositiveButtonListener to be set for a SmartcardPinDialog.
      */
     @Override
@@ -130,5 +135,19 @@ public class UsbSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
     protected void setPinDialogForIncorrectAttempt(@NonNull ICertDetails certDetails,
                                                    @NonNull ClientCertRequest request) {
         mDialogHolder.setPinDialogErrorMode();
+    }
+
+    @Override
+    public void promptSmartcardRemovalForResult(@NonNull final FinalizeResultCallback callback) {
+        if (mCbaManager.isDeviceConnected()) {
+            mDialogHolder.showSmartcardRemovalPromptDialog(new SmartcardRemovalPromptDialog.RemovalCallback() {
+                @Override
+                public void onRemoved() {
+                    callback.onResultReady();
+                }
+            });
+            return;
+        }
+        callback.onResultReady();
     }
 }

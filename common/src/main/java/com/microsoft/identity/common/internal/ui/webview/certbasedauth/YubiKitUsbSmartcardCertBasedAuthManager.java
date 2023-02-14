@@ -103,8 +103,7 @@ public class YubiKitUsbSmartcardCertBasedAuthManager extends AbstractUsbSmartcar
      * Usually called when a host fragment is destroyed.
      */
     @Override
-    void stopDiscovery(@NonNull final Activity activity,
-                       @Nullable final IDisconnectCallback callback) {
+    void stopDiscovery(@NonNull final Activity activity) {
         //Usb discovery is meant to be on for the duration of the authentication WebView being active.
         //Therefore, discovery for Usb should only be stopped upon the WebView being terminated.
         //Note that this differs from the Nfc implementation, where Nfc discovery is only turned on
@@ -178,7 +177,7 @@ public class YubiKitUsbSmartcardCertBasedAuthManager extends AbstractUsbSmartcar
      */
     @Override
     void onDestroy(@NonNull final Activity activity) {
-        stopDiscovery(activity, null);
+        stopDiscovery(activity);
     }
 
     /**

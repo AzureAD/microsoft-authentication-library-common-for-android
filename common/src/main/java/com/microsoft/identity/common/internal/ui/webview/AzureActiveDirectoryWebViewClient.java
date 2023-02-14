@@ -41,6 +41,7 @@ import androidx.annotation.RequiresApi;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.broker.PackageHelper;
+import com.microsoft.identity.common.internal.ui.webview.certbasedauth.AbstractSmartcardCertBasedAuthChallengeHandler;
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.CertBasedAuthFactory;
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.ICertBasedAuthChallengeHandler;
 import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
@@ -490,11 +491,19 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      * A wrapper to emit telemetry for results from certificate based authentication (CBA) if CBA occurred.
      * @param response a RawAuthorizationResult object received upon a challenge response received.
      */
-    public void finalizeCertBasedAuthResult(@NonNull final RawAuthorizationResult response) {
-        if (mCertBasedAuthChallengeHandler != null) {
-            //The challenge handler checks if CBA was proceeded with and emits telemetry.
-            mCertBasedAuthChallengeHandler.emitTelemetryForCertBasedAuthResults(response);
+    public void finalizeResult(@NonNull final RawAuthorizationResult response,
+                               @NonNull final FinalizeResultCallback callback) {
+        if (mCertBasedAuthChallengeHandler == null) {
+            callback.onResultReady();
+            return;
         }
+        //The challenge handler checks if CBA was proceeded with and emits telemetry.
+        mCertBasedAuthChallengeHandler.emitTelemetryForCertBasedAuthResults(response);
+        if (!(mCertBasedAuthChallengeHandler instanceof AbstractSmartcardCertBasedAuthChallengeHandler)) {
+            callback.onResultReady();
+            return;
+        }
+        ((AbstractSmartcardCertBasedAuthChallengeHandler<?>)mCertBasedAuthChallengeHandler).promptSmartcardRemovalForResult(callback);
     }
 
 }

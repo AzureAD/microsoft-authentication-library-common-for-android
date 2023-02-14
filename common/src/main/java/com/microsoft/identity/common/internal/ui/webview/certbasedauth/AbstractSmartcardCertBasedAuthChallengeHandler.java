@@ -30,6 +30,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 
 import com.microsoft.identity.common.R;
+import com.microsoft.identity.common.internal.ui.webview.FinalizeResultCallback;
 import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.opentelemetry.ICertBasedAuthTelemetryHelper;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
@@ -94,9 +95,9 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandler<T extends A
             public void onGetSession(@NonNull final ISmartcardSession session) throws Exception {
                 final int pinAttemptsRemaining = session.getPinAttemptsRemaining();
                 final List<ICertDetails> certList = session.getCertDetailsList();
-                onPausedSmartcardDiscovery(new AbstractSmartcardCertBasedAuthManager.IDisconnectCallback() {
+                pauseForRemoval(new SmartcardRemovalPromptDialog.RemovalCallback() {
                     @Override
-                    public void onDisconnect() {
+                    public void onRemoved() {
                         if (pinAttemptsRemaining == 0) {
                             promptTooManyFailedPinAttempts(methodTag);
                             request.cancel();
@@ -143,7 +144,7 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandler<T extends A
      * Pauses smartcard discovery, if the particular authentication method isn't meant to have
      *  discovery active throughout the entire flow.
      */
-    protected abstract void onPausedSmartcardDiscovery(@NonNull final AbstractSmartcardCertBasedAuthManager.IDisconnectCallback callback);
+    protected abstract void pauseForRemoval(@NonNull final SmartcardRemovalPromptDialog.RemovalCallback callback);
 
     /**
      * Helper method to log and show an error dialog with messages indicating that
@@ -229,9 +230,9 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandler<T extends A
             return;
         }
         final int attemptsRemaining = session.getPinAttemptsRemaining();
-        onPausedSmartcardDiscovery(new AbstractSmartcardCertBasedAuthManager.IDisconnectCallback() {
+        pauseForRemoval(new SmartcardRemovalPromptDialog.RemovalCallback() {
             @Override
-            public void onDisconnect() {
+            public void onRemoved() {
                 if (attemptsRemaining == 0) {
                     promptTooManyFailedPinAttempts(methodTag);
                     request.cancel();
@@ -307,6 +308,8 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandler<T extends A
         }
         mTelemetryHelper.setResultSuccess();
     }
+
+    public abstract void promptSmartcardRemovalForResult(@NonNull final FinalizeResultCallback callback);
 
     /**
      * Clean up logic to run when ICertBasedAuthChallengeHandler is no longer going to be used.

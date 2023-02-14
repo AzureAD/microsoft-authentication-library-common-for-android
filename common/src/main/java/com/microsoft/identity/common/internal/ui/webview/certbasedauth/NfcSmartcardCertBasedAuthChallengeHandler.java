@@ -29,6 +29,7 @@ import android.webkit.ClientCertRequest;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 
+import com.microsoft.identity.common.internal.ui.webview.FinalizeResultCallback;
 import com.microsoft.identity.common.java.opentelemetry.ICertBasedAuthTelemetryHelper;
 
 /**
@@ -55,11 +56,17 @@ public class NfcSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
      *  discovery active throughout the entire flow.
      */
     @Override
-    protected void onPausedSmartcardDiscovery(@NonNull final AbstractSmartcardCertBasedAuthManager.IDisconnectCallback callback) {
+    protected void pauseForRemoval(@NonNull final SmartcardRemovalPromptDialog.RemovalCallback callback) {
         //Helps prevent unnecessary callback trigger. Nfc discovery should only be active when
         // the user is prompted to tap.
-        mDialogHolder.showSmartcardRemovalPromptDialog(null);
-        mCbaManager.stopDiscovery(mActivity, callback);
+        mDialogHolder.showSmartcardRemovalPromptDialog(callback);
+        mCbaManager.disconnect(new AbstractSmartcardCertBasedAuthManager.IDisconnectCallback() {
+            @Override
+            public void onDisconnect() {
+                mDialogHolder.onSmartcardRemoval();
+                mCbaManager.stopDiscovery(mActivity);
+            }
+        });
     }
 
     /**
@@ -83,7 +90,7 @@ public class NfcSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
                     public void onCancel() {
                         mDialogHolder.dismissDialog();
                         mTelemetryHelper.setResultFailure(USER_CANCEL_MESSAGE);
-                        mCbaManager.stopDiscovery(mActivity, null);
+                        mCbaManager.stopDiscovery(mActivity);
                         request.cancel();
                     }
                 });
@@ -94,9 +101,9 @@ public class NfcSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
                         if (mCbaManager.isDeviceChanged()) {
                             clearPin(pin);
                             request.cancel();
-                            onPausedSmartcardDiscovery(new AbstractSmartcardCertBasedAuthManager.IDisconnectCallback() {
+                            pauseForRemoval(new SmartcardRemovalPromptDialog.RemovalCallback() {
                                 @Override
-                                public void onDisconnect() {
+                                public void onRemoved() {
                                     //In a future version, an error dialog with a custom message could be shown here instead of a general error.
                                     indicateGeneralException(methodTag, new Exception("Device connected via NFC is different from initially connected device."));
                                 }
@@ -114,9 +121,9 @@ public class NfcSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
                             public void onException(@NonNull final Exception e) {
                                 clearPin(pin);
                                 request.cancel();
-                                onPausedSmartcardDiscovery(new AbstractSmartcardCertBasedAuthManager.IDisconnectCallback() {
+                                pauseForRemoval(new SmartcardRemovalPromptDialog.RemovalCallback() {
                                     @Override
-                                    public void onDisconnect() {
+                                    public void onRemoved() {
                                         indicateGeneralException(methodTag, e);
                                     }
                                 });
@@ -152,5 +159,26 @@ public class NfcSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
                 });
         //Update Dialog to indicate that an incorrect attempt was made.
         mDialogHolder.setPinDialogErrorMode();
+    }
+
+    @Override
+    public void promptSmartcardRemovalForResult(@NonNull final FinalizeResultCallback callback) {
+        if (mCbaManager.isDeviceConnected()) {
+            mDialogHolder.showSmartcardRemovalPromptDialog(new SmartcardRemovalPromptDialog.RemovalCallback() {
+                @Override
+                public void onRemoved() {
+                    callback.onResultReady();
+                }
+            });
+            mCbaManager.disconnect(new AbstractSmartcardCertBasedAuthManager.IDisconnectCallback() {
+                @Override
+                public void onDisconnect() {
+                    mDialogHolder.onSmartcardRemoval();
+                    mCbaManager.stopDiscovery(mActivity);
+                }
+            });
+            return;
+        }
+        callback.onResultReady();
     }
 }

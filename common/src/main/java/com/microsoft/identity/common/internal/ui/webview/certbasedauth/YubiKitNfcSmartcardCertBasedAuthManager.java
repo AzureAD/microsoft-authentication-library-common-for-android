@@ -103,24 +103,17 @@ public class YubiKitNfcSmartcardCertBasedAuthManager extends AbstractNfcSmartcar
      * @param activity current host activity.
      */
     @Override
-    void stopDiscovery(@NonNull Activity activity,
-                       @Nullable final IDisconnectCallback callback) {
+    void stopDiscovery(@NonNull Activity activity) {
         synchronized (sDeviceLock) {
-            if (isDeviceConnected()) {
-                disconnect(new IDisconnectCallback() {
-                    @Override
-                    public void onDisconnect() {
-                        mNfcYubiKitManager.disable(activity);
-                        if (callback != null) {
-                            callback.onDisconnect();
-                        }
-                    }
-                });
-            }
+            mNfcDevice = null;
+            mNfcYubiKitManager.disable(activity);
         }
-        mNfcYubiKitManager.disable(activity);
     }
 
+    /**
+     * TODO
+     * @param callback logic to be run upon disconnection.
+     */
     @Override
     void disconnect(@NonNull final IDisconnectCallback callback) {
         synchronized (sDeviceLock) {

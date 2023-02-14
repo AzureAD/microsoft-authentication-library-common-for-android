@@ -40,6 +40,7 @@ import androidx.annotation.VisibleForTesting;
 import androidx.fragment.app.FragmentActivity;
 
 import com.microsoft.identity.common.R;
+import com.microsoft.identity.common.internal.ui.webview.FinalizeResultCallback;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
@@ -296,7 +297,14 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
             Logger.info(methodTag, null, "onChallengeResponseReceived:" + response.getResultCode());
             if (mAADWebViewClient != null) {
                 //No telemetry will be emitted if CBA did not occur.
-                mAADWebViewClient.finalizeCertBasedAuthResult(response);
+                mAADWebViewClient.finalizeResult(response, new FinalizeResultCallback() {
+                    @Override
+                    public void onResultReady() {
+                        sendResult(response);
+                        finish();
+                    }
+                });
+                return;
             }
             sendResult(response);
             finish();
