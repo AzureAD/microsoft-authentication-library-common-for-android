@@ -71,20 +71,23 @@ public class BrowserSelectorTest {
                     .withBrowserDefaults()
                     .setVersion("50")
                     .addSignature("ChromeSignature")
+                    .setIsCustomTabsSupported(true)
                     .build();
 
     private static final TestBrowser FIREFOX =
             new TestBrowserBuilder("org.mozilla.firefox")
                     .withBrowserDefaults()
-                    .setVersion("10")
-                    .addSignature("FirefoxSignature")
-                    .build();
-
-    private static final TestBrowser FIREFOX_CUSTOM_TAB =
-            new TestBrowserBuilder("org.mozilla.firefox")
-                    .withBrowserDefaults()
                     .setVersion("57")
                     .addSignature("FirefoxSignature")
+                    .setIsCustomTabsSupported(true)
+                    .build();
+
+    private static final TestBrowser FIREFOX_NO_CUSTOM_TAB =
+            new TestBrowserBuilder("org.mozilla.firefox")
+                    .withBrowserDefaults()
+                    .setVersion("10")
+                    .addSignature("FirefoxSignature")
+                    .setIsCustomTabsSupported(false)
                     .build();
 
     private static final TestBrowser DOLPHIN =
@@ -92,6 +95,7 @@ public class BrowserSelectorTest {
                     .withBrowserDefaults()
                     .setVersion("1.4.1")
                     .addSignature("DolphinSignature")
+                    .setIsCustomTabsSupported(true)
                     .build();
 
 
@@ -120,7 +124,7 @@ public class BrowserSelectorTest {
     }
 
     @Test
-    public void testSelect_versionNotSupportedBrowser() throws NameNotFoundException {
+    public void testSelect_versionNotSupported() throws NameNotFoundException {
         setBrowserList(CHROME, FIREFOX);
 
         final List<BrowserDescriptor> browserSafelist = new ArrayList<>();
@@ -140,6 +144,27 @@ public class BrowserSelectorTest {
         }
     }
 
+    @Test
+    public void testSelect_customTabsNotSupported() throws NameNotFoundException {
+        setBrowserList(FIREFOX_NO_CUSTOM_TAB);
+
+        final List<BrowserDescriptor> browserSafelist = new ArrayList<>();
+        browserSafelist.add(
+                new BrowserDescriptor(
+                        FIREFOX_NO_CUSTOM_TAB.mPackageName,
+                        FIREFOX_NO_CUSTOM_TAB.mSignatureHashes,
+                        null,
+                        null)
+        );
+
+        try {
+            BrowserSelector.select(ApplicationProvider.getApplicationContext(), browserSafelist, null);
+        } catch (final ClientException exception) {
+            assertNotNull(exception);
+            assert (exception.getErrorCode().equalsIgnoreCase(ErrorStrings.NO_AVAILABLE_BROWSER_FOUND));
+        }
+
+    }
     @Test
     public void testSelect_preferredBrowserSelected() throws NameNotFoundException {
         setBrowserList(CHROME, DOLPHIN, FIREFOX);
@@ -179,6 +204,43 @@ public class BrowserSelectorTest {
 
     @Test
     public void testSelect_preferredBrowserSelected_preferredBrowserNotInstalled() throws NameNotFoundException {
+        setBrowserList(CHROME, FIREFOX);
+
+        final BrowserDescriptor preferredBrowser = new BrowserDescriptor(
+                DOLPHIN.mPackageName,
+                DOLPHIN.mSignatureHashes,
+                "1.4.1",
+                null);
+
+        List<BrowserDescriptor> browserSafelist = new ArrayList<>();
+        browserSafelist.add(
+                new BrowserDescriptor(
+                        CHROME.mPackageName,
+                        CHROME.mSignatureHashes,
+                        "50",
+                        null)
+        );
+        browserSafelist.add(preferredBrowser);
+        browserSafelist.add(
+                new BrowserDescriptor(
+                        FIREFOX.mPackageName,
+                        FIREFOX.mSignatureHashes,
+                        "10",
+                        null)
+        );
+
+
+        try {
+            // It should return the first installed browser.
+            final Browser browser = BrowserSelector.select(ApplicationProvider.getApplicationContext(), browserSafelist, preferredBrowser);
+            Assert.assertEquals(CHROME.mPackageName, browser.getPackageName());
+        } catch (final ClientException exception) {
+            Assert.fail();
+        }
+    }
+
+    @Test
+    public void testSelect_preferredBrowserSelected_preferredBrowserNotInSafeList() throws NameNotFoundException {
         setBrowserList(CHROME, DOLPHIN, FIREFOX);
 
         final BrowserDescriptor preferredBrowser = new BrowserDescriptor(
@@ -205,9 +267,10 @@ public class BrowserSelectorTest {
 
 
         try {
-            // First app (default browser) should be returned.
+            // The safe list shouldn't matter, given that we've already specified all info in preferredBrowser's BrowserDescriptor.
             final Browser browser = BrowserSelector.select(ApplicationProvider.getApplicationContext(), browserSafelist, preferredBrowser);
-            Assert.assertEquals("com.android.chrome", browser.getPackageName());
+            Assert.assertEquals(preferredBrowser.getPackageName(), browser.getPackageName());
+            Assert.assertEquals(preferredBrowser.getSignatureHashes(), browser.getSignatureHashes());
         } catch (final ClientException exception) {
             Assert.fail();
         }
@@ -227,6 +290,18 @@ public class BrowserSelectorTest {
         for (TestBrowser browser : browsers) {
             shadowPackageManager.installPackage(browser.mPackageInfo);
             shadowPackageManager.addResolveInfoForIntent(BROWSER_INTENT, browser.mResolveInfo);
+
+            final Intent packageSpecificIntent = new Intent(
+                    Intent.ACTION_VIEW,
+                    Uri.parse("http://www.example.com"));
+            packageSpecificIntent.setPackage(browser.mPackageName);
+            shadowPackageManager.addResolveInfoForIntent(packageSpecificIntent, browser.mResolveInfo);
+
+            if (browser.mIsCustomTabsSupported) {
+                final Intent customTabsIntent = new Intent("android.support.customtabs.action.CustomTabsService");
+                customTabsIntent.setPackage(browser.mPackageName);
+                shadowPackageManager.addResolveInfoForIntent(packageSpecificIntent, browser.mResolveInfo);
+            }
         }
     }
 
@@ -235,16 +310,19 @@ public class BrowserSelectorTest {
         final ResolveInfo mResolveInfo;
         final PackageInfo mPackageInfo;
         final Set<String> mSignatureHashes;
+        final Boolean mIsCustomTabsSupported;
 
         TestBrowser(
                 String packageName,
                 PackageInfo packageInfo,
                 ResolveInfo resolveInfo,
-                Set<String> signatureHashes) {
+                Set<String> signatureHashes,
+                Boolean isCustomTabsSupported) {
             mPackageName = packageName;
             mResolveInfo = resolveInfo;
             mPackageInfo = packageInfo;
             mSignatureHashes = signatureHashes;
+            mIsCustomTabsSupported = isCustomTabsSupported;
         }
     }
 
@@ -256,6 +334,7 @@ public class BrowserSelectorTest {
         private final List<String> mSchemes = new ArrayList<>();
         private final List<String> mAuthorities = new ArrayList<>();
         private String mVersion;
+        private Boolean mIsCustomTabsSupported;
 
         TestBrowserBuilder(String packageName) {
             mPackageName = packageName;
@@ -295,6 +374,11 @@ public class BrowserSelectorTest {
 
         public TestBrowserBuilder setVersion(String version) {
             mVersion = version;
+            return this;
+        }
+
+        public TestBrowserBuilder setIsCustomTabsSupported(Boolean isCustomTabsSupported) {
+            mIsCustomTabsSupported = isCustomTabsSupported;
             return this;
         }
 
@@ -345,7 +429,7 @@ public class BrowserSelectorTest {
                 ri.filter.addDataAuthority(authority, null);
             }
 
-            return new TestBrowser(mPackageName, pi, ri, signatureHashes);
+            return new TestBrowser(mPackageName, pi, ri, signatureHashes, mIsCustomTabsSupported);
         }
     }
 }
