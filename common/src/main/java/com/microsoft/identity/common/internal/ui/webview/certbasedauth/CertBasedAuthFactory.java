@@ -81,8 +81,8 @@ public class CertBasedAuthFactory {
     }
 
     /**
-     * Asynchronously chooses and returns a AbstractCertBasedAuthChallengeHandler.
-     * @param callback logic to run after a AbstractCertBasedAuthChallengeHandler is chosen.
+     * Asynchronously chooses and returns an AbstractCertBasedAuthChallengeHandler.
+     * @param callback logic to run after an AbstractCertBasedAuthChallengeHandler is chosen.
      */
     public void createCertBasedAuthChallengeHandler(@NonNull final CertBasedAuthChallengeHandlerCallback callback) {
         final ICertBasedAuthTelemetryHelper telemetryHelper = new CertBasedAuthTelemetryHelper();
@@ -129,7 +129,7 @@ public class CertBasedAuthFactory {
 
     /**
      * Helper method for logic to be run upon user cancelling out of CBA.
-     * @param callback logic to run after a AbstractCertBasedAuthChallengeHandler is chosen.
+     * @param callback logic to run after an AbstractCertBasedAuthChallengeHandler is chosen.
      * @param telemetryHelper CertBasedAuthTelemetryHelper instance.
      */
     private void onCancelHelper(@NonNull final CertBasedAuthChallengeHandlerCallback callback,

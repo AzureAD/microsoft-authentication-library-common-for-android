@@ -130,7 +130,7 @@ public class OnDeviceCertBasedAuthChallengeHandler extends AbstractCertBasedAuth
     }
 
     /**
-     * Clean up logic to run when AbstractCertBasedAuthChallengeHandler is no longer going to be used.
+     * Clean up logic to run when OnDeviceCertBasedAuthChallengeHandler is no longer going to be used.
      */
     @Override
     public void cleanUp() {

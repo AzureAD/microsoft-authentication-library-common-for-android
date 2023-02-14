@@ -275,7 +275,7 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandler<T extends A
     }
 
     /**
-     * Clean up logic to run when AbstractCertBasedAuthChallengeHandler is no longer going to be used.
+     * Clean up logic to run when AbstractSmartcardCertBasedAuthChallengeHandler is no longer going to be used.
      */
     @Override
     public void cleanUp() {
