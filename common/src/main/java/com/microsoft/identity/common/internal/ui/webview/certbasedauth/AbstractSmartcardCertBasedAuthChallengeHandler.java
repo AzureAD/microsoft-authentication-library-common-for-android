@@ -31,9 +31,7 @@ import androidx.annotation.RequiresApi;
 
 import com.microsoft.identity.common.R;
 import com.microsoft.identity.common.internal.ui.webview.FinalizeResultCallback;
-import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.opentelemetry.ICertBasedAuthTelemetryHelper;
-import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.security.PrivateKey;
@@ -45,7 +43,7 @@ import java.util.List;
  * Abstract class which handles a received ClientCertRequest by prompting the user to choose from certificates
  *  stored on a smartcard device.
  */
-public abstract class AbstractSmartcardCertBasedAuthChallengeHandler<T extends AbstractSmartcardCertBasedAuthManager<?>> implements ICertBasedAuthChallengeHandler {
+public abstract class AbstractSmartcardCertBasedAuthChallengeHandler<T extends AbstractSmartcardCertBasedAuthManager<?>> extends AbstractCertBasedAuthChallengeHandler {
     protected static final String MAX_ATTEMPTS_MESSAGE = "User has reached the maximum failed attempts allowed.";
     protected static final String NO_PIV_CERTS_FOUND_MESSAGE = "No PIV certificates found on smartcard device.";
     protected static final String USER_CANCEL_MESSAGE = "User canceled smartcard CBA flow.";
@@ -53,8 +51,6 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandler<T extends A
     protected final Activity mActivity;
     protected final T mCbaManager;
     protected final IDialogHolder mDialogHolder;
-    protected final ICertBasedAuthTelemetryHelper mTelemetryHelper;
-    protected boolean mIsSmartcardCertBasedAuthProceeding;
 
     /**
      * Creates new instance of AbstractSmartcardCertBasedAuthChallengeHandler.
@@ -71,7 +67,7 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandler<T extends A
                                                           @NonNull final String tag) {
         TAG = tag;
         mActivity = activity;
-        mIsSmartcardCertBasedAuthProceeding = false;
+        mIsCertBasedAuthProceeding = false;
         mCbaManager = smartcardCertBasedAuthManager;
         mDialogHolder = dialogHolder;
         mTelemetryHelper = telemetryHelper;
@@ -272,7 +268,7 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandler<T extends A
         final X509Certificate[] chain = new X509Certificate[]{certDetails.getCertificate()};
         //Clear current dialog.
         mDialogHolder.dismissDialog();
-        mIsSmartcardCertBasedAuthProceeding = true;
+        mIsCertBasedAuthProceeding = true;
         request.proceed(privateKey, chain);
     }
 
@@ -285,34 +281,13 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandler<T extends A
     }
 
     /**
-     * Emit telemetry for results from certificate based authentication (CBA) if CBA occurred.
-     * @param response a RawAuthorizationResult object received upon a challenge response received.
+     * TODO:
+     * @param callback
      */
-    @Override
-    public void emitTelemetryForCertBasedAuthResults(@NonNull final RawAuthorizationResult response) {
-        if (!mIsSmartcardCertBasedAuthProceeding) {
-            return;
-        }
-        final RawAuthorizationResult.ResultCode resultCode = response.getResultCode();
-        if (resultCode == RawAuthorizationResult.ResultCode.NON_OAUTH_ERROR
-                || resultCode == RawAuthorizationResult.ResultCode.SDK_CANCELLED
-                || resultCode == RawAuthorizationResult.ResultCode.CANCELLED) {
-            final BaseException exception = response.getException();
-            if (exception != null) {
-                mTelemetryHelper.setResultFailure(exception);
-                return;
-            }
-            //Putting result code as message.
-            mTelemetryHelper.setResultFailure(resultCode.toString());
-            return;
-        }
-        mTelemetryHelper.setResultSuccess();
-    }
-
     public abstract void promptSmartcardRemovalForResult(@NonNull final FinalizeResultCallback callback);
 
     /**
-     * Clean up logic to run when ICertBasedAuthChallengeHandler is no longer going to be used.
+     * Clean up logic to run when AbstractSmartcardCertBasedAuthChallengeHandler is no longer going to be used.
      */
     @Override
     public void cleanUp() {

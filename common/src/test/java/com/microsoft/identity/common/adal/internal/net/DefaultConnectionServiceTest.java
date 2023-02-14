@@ -51,7 +51,7 @@ import static org.robolectric.Shadows.shadowOf;
 @RunWith(RobolectricTestRunner.class)
 @Config(shadows = {
         PowerManagerWrapperShadow.class
-})
+}, sdk = 28)
 public class DefaultConnectionServiceTest {
 
     protected Context mContext;

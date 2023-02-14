@@ -26,8 +26,10 @@ import android.app.Activity;
 import android.content.Context;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import com.microsoft.identity.common.internal.ui.browser.Browser;
 import com.microsoft.identity.common.internal.ui.browser.DefaultBrowserAuthorizationStrategy;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.exception.ClientException;
@@ -64,51 +66,38 @@ public class AndroidAuthorizationStrategyFactory implements IAuthorizationStrate
             @NonNull final InteractiveTokenCommandParameters parameters) {
         final String methodTag = TAG + ":getAuthorizationStrategy";
         //Valid if available browser installed. Will fallback to embedded webView if no browser available.
-        final AuthorizationAgent validatedAuthorizationAgent = validAuthorizationAgent(
-                parameters.getAuthorizationAgent()
-        );
 
-        boolean isBrokerRequest = (parameters instanceof BrokerInteractiveTokenCommandParameters);
-
-        if (validatedAuthorizationAgent == AuthorizationAgent.WEBVIEW) {
+        if (parameters.getAuthorizationAgent() == AuthorizationAgent.WEBVIEW) {
             Logger.info(methodTag, "Use webView for authorization.");
             return getGenericAuthorizationStrategy();
-        } else if (validatedAuthorizationAgent == AuthorizationAgent.DEFAULT) {
-            // When the authorization agent is set to DEFAULT,
-            // Use device browser auth flow as default.
-            // Fall back to webview if no browser found.
-            try {
-                BrowserSelector.select(mContext, parameters.getBrowserSafeList());
-            } catch (final ClientException exception) {
-                Logger.info(methodTag, "No supported browser available found. Fallback to the webView authorization agent.");
-                if (ErrorStrings.NO_AVAILABLE_BROWSER_FOUND.equalsIgnoreCase(exception.getErrorCode())) {
-                    return getGenericAuthorizationStrategy();
-                }
-            }
+        }
+
+        try {
+            final Browser browser = BrowserSelector.select(
+                    mContext,
+                    parameters.getBrowserSafeList(),
+                    parameters.getPreferredBrowser());
 
             Logger.info(methodTag, "Use browser for authorization.");
             return getBrowserAuthorizationStrategy(
-                    isBrokerRequest,
-                    parameters.getBrowserSafeList());
-
-        } else {
-            Logger.info(methodTag, "Use browser for authorization.");
-            return getBrowserAuthorizationStrategy(
-                    isBrokerRequest,
-                    parameters.getBrowserSafeList());
+                    browser,
+                    (parameters instanceof BrokerInteractiveTokenCommandParameters));
+        } catch (final ClientException e) {
+            Logger.info(methodTag, "Unable to use browser to do the authorization because "
+                    + ErrorStrings.NO_AVAILABLE_BROWSER_FOUND + " Use embedded webView instead.");
+            return getGenericAuthorizationStrategy();
         }
     }
 
-    private IAuthorizationStrategy getBrowserAuthorizationStrategy(@NonNull final boolean isBrokerRequest,
-                                                                   @NonNull final List<BrowserDescriptor> browserSafeList) {
+    private IAuthorizationStrategy getBrowserAuthorizationStrategy(@NonNull final Browser browser,
+                                                                   final boolean isBrokerRequest) {
         if (LibraryConfiguration.getInstance().isAuthorizationInCurrentTask()) {
             final CurrentTaskBrowserAuthorizationStrategy currentTaskBrowserAuthorizationStrategy =
                     new CurrentTaskBrowserAuthorizationStrategy(
                             mContext,
                             mActivity,
                             mFragment);
-            currentTaskBrowserAuthorizationStrategy.setBrowserSafeList(browserSafeList);
-
+            currentTaskBrowserAuthorizationStrategy.setBrowser(browser);
             return currentTaskBrowserAuthorizationStrategy;
         } else {
             final DefaultBrowserAuthorizationStrategy defaultBrowserAuthorizationStrategy = new DefaultBrowserAuthorizationStrategy(
@@ -117,7 +106,7 @@ public class AndroidAuthorizationStrategyFactory implements IAuthorizationStrate
                     mFragment,
                     isBrokerRequest
             );
-            defaultBrowserAuthorizationStrategy.setBrowserSafeList(browserSafeList);
+            defaultBrowserAuthorizationStrategy.setBrowser(browser);
             return defaultBrowserAuthorizationStrategy;
         }
     }
@@ -129,17 +118,5 @@ public class AndroidAuthorizationStrategyFactory implements IAuthorizationStrate
                 mContext,
                 mActivity,
                 mFragment);
-    }
-
-    private AuthorizationAgent validAuthorizationAgent(final AuthorizationAgent agent) {
-        final String methodTag = TAG + ":validAuthorizationAgent";
-        if (agent != AuthorizationAgent.WEBVIEW
-                && BrowserSelector.getAllBrowsers(mContext).isEmpty()) {
-            Logger.verbose(methodTag, "Unable to use browser to do the authorization because "
-                    + ErrorStrings.NO_AVAILABLE_BROWSER_FOUND + " Use embedded webView instead.");
-            return AuthorizationAgent.WEBVIEW;
-        } else {
-            return agent;
-        }
     }
 }

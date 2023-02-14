@@ -1,6 +1,14 @@
+vNext
+----------
+- [MINOR] Add flighting capability for common (#1961)
+- [MINOR] Add preferred browser support (#1957)
+- [PATCH] Use android.net.NetworkCapabilities to check internet connectivity (#1887)
+- [MINOR] Adding new methods in IAccountCredentialAdapter (#1954)
+- [MINOR] Add a Basic Encryptor Interface + Add support to Encrypt / Decrypt using AES GCM (#1953)
+- [MINOR] Setting sub error codes to UiRequiredException for MsalUiRequiredException (#1944)
+
 V.10.0.0
 ----------
-- [MINOR] Setting sub error codes to UiRequiredException for MsalUiRequiredException (#1944)
 - [MINOR] Add activity (InstallCertActivityLauncher) to launch the Install WPJ cert activity (#1924)
 - [MINOR] Format thread+correlationId metadata only once logging is clearly opted-in (#1917)
 - [MINOR] Add application identifier during authorization request initialization (#1942)
