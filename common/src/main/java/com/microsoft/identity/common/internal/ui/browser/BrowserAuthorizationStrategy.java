@@ -61,7 +61,7 @@ public abstract class BrowserAuthorizationStrategy<
 
     private CustomTabsManager mCustomTabManager;
     private ResultFuture<AuthorizationResult> mAuthorizationResultFuture;
-    private List<BrowserDescriptor> mBrowserSafeList;
+    private Browser mBrowser;
     private boolean mDisposed;
     private GenericOAuth2Strategy mOAuth2Strategy; //NOPMD
     private GenericAuthorizationRequest mAuthorizationRequest; //NOPMD
@@ -72,8 +72,8 @@ public abstract class BrowserAuthorizationStrategy<
         super(applicationContext, activity, fragment);
     }
 
-    public void setBrowserSafeList(final List<BrowserDescriptor> browserSafeList) {
-        mBrowserSafeList = browserSafeList;
+    public void setBrowser(final Browser browser) {
+        mBrowser = browser;
     }
 
     @Override
@@ -87,18 +87,17 @@ public abstract class BrowserAuthorizationStrategy<
         mOAuth2Strategy = oAuth2Strategy;
         mAuthorizationRequest = authorizationRequest;
         mAuthorizationResultFuture = new ResultFuture<>();
-        final Browser browser = BrowserSelector.select(context, mBrowserSafeList);
 
         //ClientException will be thrown if no browser found.
         Intent authIntent;
-        if (browser.isCustomTabsServiceSupported()) {
+        if (mBrowser.isCustomTabsServiceSupported()) {
             Logger.info(
                     methodTag,
                     "CustomTabsService is supported."
             );
             //create customTabsIntent
             mCustomTabManager = new CustomTabsManager(context);
-            if (!mCustomTabManager.bind(context, browser.getPackageName())) {
+            if (!mCustomTabManager.bind(context, mBrowser.getPackageName())) {
                 //create browser auth intent
                 authIntent = new Intent(Intent.ACTION_VIEW);
             } else {
@@ -113,7 +112,7 @@ public abstract class BrowserAuthorizationStrategy<
             authIntent = new Intent(Intent.ACTION_VIEW);
         }
 
-        authIntent.setPackage(browser.getPackageName());
+        authIntent.setPackage(mBrowser.getPackageName());
         final URI requestUrl = authorizationRequest.getAuthorizationRequestAsHttpRequest();
 
         authIntent.setData(Uri.parse(requestUrl.toString()));
