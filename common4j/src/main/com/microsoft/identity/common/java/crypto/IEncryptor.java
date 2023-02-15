@@ -29,39 +29,39 @@ import java.security.Key;
 import lombok.NonNull;
 
 /**
- * Interface for a Decryptor.
+ * Interface for an Encryptor.
  */
-public interface IDecryptor {
+public interface IEncryptor {
 
     /**
-     * Decrypt the given byte array.
+     * Encrypt the given byte array.
      *
-     * @param key               the key to decrypt with.
-     * @param decryptAlgorithm  algorithm to decrypt with.
+     * @param key               the key to encrypt with.
+     * @param encryptAlgorithm  algorithm to encrypt with.
      * @param iv                an initialization vector (IV).
-     * @param dataToBeDecrypted the data to be encrypted.
+     * @param dataToBeEncrypted the data to be encrypted.
      * @return a decrypted byte array.
      */
-    byte[] decryptWithIv(@NonNull final Key key,
-                         @NonNull final String decryptAlgorithm,
+    byte[] encryptWithIv(@NonNull final Key key,
+                         @NonNull final String encryptAlgorithm,
                          final byte[] iv,
-                         final byte[] dataToBeDecrypted) throws ClientException;
+                         final byte[] dataToBeEncrypted) throws ClientException;
 
     /**
-     * Decrypt the given byte array.
+     * Encrypt the given byte array.
      *
-     * @param key               the key to decrypt with.
-     * @param decryptAlgorithm  algorithm to decrypt with.
+     * @param key               the key to encrypt with.
+     * @param encryptAlgorithm  algorithm to encrypt with.
      * @param iv                an initialization vector (IV).
-     * @param dataToBeDecrypted the data to be encrypted.
+     * @param dataToBeEncrypted the data to be encrypted.
      * @param tagLength         the length of tag being used
      * @param aad               the additional authentication data
-     * @return a decrypted byte array.
+     * @return an encrypted byte array.
      */
-    byte[] decryptWithGcm(@NonNull final Key key,
-                          @NonNull final String decryptAlgorithm,
+    byte[] encryptWithGcm(@NonNull final Key key,
+                          @NonNull final String encryptAlgorithm,
                           final byte[] iv,
-                          final byte[] dataToBeDecrypted,
+                          final byte[] dataToBeEncrypted,
                           final int tagLength,
                           final byte[] aad) throws ClientException;
 }

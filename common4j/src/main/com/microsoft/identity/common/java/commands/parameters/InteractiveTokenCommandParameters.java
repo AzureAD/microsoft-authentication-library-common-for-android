@@ -43,6 +43,8 @@ public class InteractiveTokenCommandParameters extends TokenCommandParameters {
 
     private final transient List<BrowserDescriptor> browserSafeList;
 
+    private final transient BrowserDescriptor preferredBrowser;
+
     private final transient HashMap<String, String> requestHeaders;
 
     private final boolean brokerBrowserSupportEnabled;

@@ -20,29 +20,34 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.ui.webview.certbasedauth;
 
-import android.webkit.ClientCertRequest;
+package com.microsoft.identity.common.java.flighting;
 
-import androidx.annotation.NonNull;
-
-import com.microsoft.identity.common.internal.ui.webview.challengehandlers.IChallengeHandler;
-import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
+import lombok.NonNull;
 
 /**
- * ChallengeHandler extended interface specifically for certificate based authentication (CBA)
- *  implementations.
+ * List of Active Common flights.
  */
-public interface ICertBasedAuthChallengeHandler extends IChallengeHandler<ClientCertRequest, Void> {
-    
+public enum CommonFlight implements IFlightConfig {
     /**
-     * Emit telemetry for results from certificate based authentication (CBA) if CBA occurred.
-     * @param response a RawAuthorizationResult object received upon a challenge response received.
+     * Flight to control whether or not to use Network capability for performing network check.
      */
-    void emitTelemetryForCertBasedAuthResults(@NonNull final RawAuthorizationResult response);
+    USE_NETWORK_CAPABILITY_FOR_NETWORK_CHECK("UseNetworkCapabilityForNetworkCheck", false);
 
-    /**
-     * Clean up logic to run when ICertBasedAuthChallengeHandler is no longer going to be used.
-     */
-    void cleanUp();
+    private String key;
+    private Object defaultValue;
+    CommonFlight(@NonNull String key, @NonNull Object defaultValue) {
+        this.key = key;
+        this.defaultValue = defaultValue;
+    }
+
+    @Override
+    public String getKey() {
+        return this.key;
+    }
+
+    @Override
+    public Object getDefaultValue() {
+        return this.defaultValue;
+    }
 }
