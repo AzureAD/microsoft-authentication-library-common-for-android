@@ -126,7 +126,7 @@ public class CertBasedAuthFactoryTest extends AbstractCertBasedAuthTest {
     private void challengeHandlerHelper(@NonNull final ExpectedChallengeHandler expectedChallengeHandler) {
         mFactory.createCertBasedAuthChallengeHandler(new CertBasedAuthFactory.CertBasedAuthChallengeHandlerCallback() {
             @Override
-            public void onReceived(@Nullable ICertBasedAuthChallengeHandler challengeHandler) {
+            public void onReceived(@Nullable AbstractCertBasedAuthChallengeHandler challengeHandler) {
                 switch (expectedChallengeHandler) {
                     case USB:
                         assertTrue(challengeHandler instanceof UsbSmartcardCertBasedAuthChallengeHandler);

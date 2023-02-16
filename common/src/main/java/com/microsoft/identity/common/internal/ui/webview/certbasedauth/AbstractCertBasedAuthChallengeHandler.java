@@ -27,22 +27,43 @@ import android.webkit.ClientCertRequest;
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.IChallengeHandler;
+import com.microsoft.identity.common.java.exception.BaseException;
+import com.microsoft.identity.common.java.opentelemetry.ICertBasedAuthTelemetryHelper;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 
 /**
- * ChallengeHandler extended interface specifically for certificate based authentication (CBA)
+ * ChallengeHandler extended abstract class specifically for certificate based authentication (CBA)
  *  implementations.
  */
-public interface ICertBasedAuthChallengeHandler extends IChallengeHandler<ClientCertRequest, Void> {
-    
+public abstract class AbstractCertBasedAuthChallengeHandler implements IChallengeHandler<ClientCertRequest, Void> {
+    protected boolean mIsCertBasedAuthProceeding;
+    protected ICertBasedAuthTelemetryHelper mTelemetryHelper;
     /**
      * Emit telemetry for results from certificate based authentication (CBA) if CBA occurred.
      * @param response a RawAuthorizationResult object received upon a challenge response received.
      */
-    void emitTelemetryForCertBasedAuthResults(@NonNull final RawAuthorizationResult response);
+    public void emitTelemetryForCertBasedAuthResults(@NonNull final RawAuthorizationResult response) {
+        if (!mIsCertBasedAuthProceeding) {
+            return;
+        }
+        final RawAuthorizationResult.ResultCode resultCode = response.getResultCode();
+        if (resultCode == RawAuthorizationResult.ResultCode.NON_OAUTH_ERROR
+                || resultCode == RawAuthorizationResult.ResultCode.SDK_CANCELLED
+                || resultCode == RawAuthorizationResult.ResultCode.CANCELLED) {
+            final BaseException exception = response.getException();
+            if (exception != null) {
+                mTelemetryHelper.setResultFailure(exception);
+                return;
+            }
+            //Putting result code as message.
+            mTelemetryHelper.setResultFailure(resultCode.toString());
+            return;
+        }
+        mTelemetryHelper.setResultSuccess();
+    }
 
     /**
-     * Clean up logic to run when ICertBasedAuthChallengeHandler is no longer going to be used.
+     * Clean up logic to run when AbstractCertBasedAuthChallengeHandler is no longer going to be used.
      */
-    void cleanUp();
+    public abstract void cleanUp();
 }
