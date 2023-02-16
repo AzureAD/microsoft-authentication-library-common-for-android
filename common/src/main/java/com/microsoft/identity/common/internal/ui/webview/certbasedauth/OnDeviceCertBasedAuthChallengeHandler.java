@@ -47,7 +47,6 @@ public class OnDeviceCertBasedAuthChallengeHandler extends AbstractCertBasedAuth
     private static final String TAG = OnDeviceCertBasedAuthChallengeHandler.class.getSimpleName();
     private static final String ACCEPTABLE_ISSUER = "CN=MS-Organization-Access";
     private final Activity mActivity;
-    private final ICertBasedAuthTelemetryHelper mTelemetryHelper;
 
     /**
      * Creates new instance of OnDeviceCertBasedAuthChallengeHandler.
