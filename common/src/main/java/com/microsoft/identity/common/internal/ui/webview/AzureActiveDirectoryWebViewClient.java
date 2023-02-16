@@ -488,11 +488,12 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     }
 
     /**
-     * A wrapper to emit telemetry for results from certificate based authentication (CBA) if CBA occurred.
-     * @param response a RawAuthorizationResult object received upon a challenge response received.
+     * Call methods to be run before sending auth results.
+     * @param response {@link RawAuthorizationResult}
+     * @param callback {@link SendResultCallback}
      */
-    public void finalizeResult(@NonNull final RawAuthorizationResult response,
-                               @NonNull final FinalizeResultCallback callback) {
+    public void finalizeBeforeSendingResult(@NonNull final RawAuthorizationResult response,
+                                            @NonNull final SendResultCallback callback) {
         if (mCertBasedAuthChallengeHandler == null) {
             callback.onResultReady();
             return;
@@ -503,6 +504,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             callback.onResultReady();
             return;
         }
+        //The challenge handler will make sure no smartcard is connected before result is sent.
         ((AbstractSmartcardCertBasedAuthChallengeHandler<?>)mCertBasedAuthChallengeHandler).promptSmartcardRemovalForResult(callback);
     }
 

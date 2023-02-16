@@ -25,5 +25,5 @@ package com.microsoft.identity.common.internal.ui.webview.certbasedauth;
 /**
  * An abstract smartcard CertBasedAuth manager specifically for USB.
  */
-public abstract class AbstractUsbSmartcardCertBasedAuthManager extends AbstractSmartcardCertBasedAuthManager<IUsbConnectionCallback> {
+public abstract class AbstractUsbSmartcardCertBasedAuthManager extends AbstractSmartcardCertBasedAuthManager {
 }

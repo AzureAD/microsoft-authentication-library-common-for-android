@@ -10,12 +10,8 @@ import com.microsoft.identity.common.R;
 
 public class SmartcardRemovalPromptDialog extends SmartcardDialog {
 
-    private final RemovalCallback mRemovalCallback;
-
-    public SmartcardRemovalPromptDialog(@Nullable RemovalCallback removalCallback,
-                                        @NonNull Activity activity) {
+    public SmartcardRemovalPromptDialog(@NonNull Activity activity) {
         super(activity);
-        mRemovalCallback = removalCallback;
         createDialog();
     }
 
@@ -38,12 +34,6 @@ public class SmartcardRemovalPromptDialog extends SmartcardDialog {
 
     @Override
     void onSmartcardRemoval() {
-        if (mRemovalCallback != null) {
-            mRemovalCallback.onRemoved();
-        }
-    }
-
-    public interface RemovalCallback {
-        void onRemoved();
+        //TODO: what to put here
     }
 }

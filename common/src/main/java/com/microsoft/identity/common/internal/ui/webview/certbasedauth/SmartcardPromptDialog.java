@@ -36,14 +36,14 @@ import lombok.NonNull;
  */
 public class SmartcardPromptDialog extends SmartcardDialog {
 
-    private final CancelCbaCallback mCancelCbaCallback;
+    private final ICancelCbaCallback mCancelCbaCallback;
 
     /**
      * Creates new instance of SmartcardPromptDialog.
      *
      * @param activity Host activity.
      */
-    public SmartcardPromptDialog(@NonNull final CancelCbaCallback cancelCbaCallback,
+    public SmartcardPromptDialog(@NonNull final ICancelCbaCallback cancelCbaCallback,
                                  @NonNull final Activity activity) {
         super(activity);
         mCancelCbaCallback = cancelCbaCallback;
@@ -91,12 +91,5 @@ public class SmartcardPromptDialog extends SmartcardDialog {
     @Override
     void onSmartcardRemoval() {
         mCancelCbaCallback.onCancel();
-    }
-
-    /**
-     * Callback interface for when CBA is being cancelled.
-     */
-    public interface CancelCbaCallback {
-        void onCancel();
     }
 }

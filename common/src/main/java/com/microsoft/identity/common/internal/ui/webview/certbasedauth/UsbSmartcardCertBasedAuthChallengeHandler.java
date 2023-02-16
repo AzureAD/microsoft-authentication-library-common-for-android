@@ -30,11 +30,9 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 
 import com.microsoft.identity.common.R;
-import com.microsoft.identity.common.internal.ui.webview.FinalizeResultCallback;
+import com.microsoft.identity.common.internal.ui.webview.SendResultCallback;
 import com.microsoft.identity.common.java.opentelemetry.ICertBasedAuthTelemetryHelper;
 import com.microsoft.identity.common.logging.Logger;
-
-import java.util.Objects;
 
 /**
  * Handles a received ClientCertRequest by prompting the user to choose from certificates
@@ -56,25 +54,12 @@ public class UsbSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
                                                      @NonNull final IDialogHolder dialogHolder,
                                                      @NonNull final ICertBasedAuthTelemetryHelper telemetryHelper) {
         super(activity, usbSmartcardCertBasedAuthManager, dialogHolder, telemetryHelper, UsbSmartcardCertBasedAuthChallengeHandler.class.getSimpleName());
-        final String methodTag = TAG + ":UsbSmartcardCertBasedAuthChallengeHandler";
-        mCbaManager.setConnectionCallback(new IUsbConnectionCallback() {
+        mCbaManager.setConnectionCallback(new IConnectionCallback() {
             @Override
             public void onCreateConnection() {
                 //Reset DialogHolder to null if necessary.
                 //In this case, DialogHolder would be an ErrorDialog if not null.
                 mDialogHolder.dismissDialog();
-            }
-
-            @Override
-            public void onClosedConnection() {
-                if (mDialogHolder.isDialogShowing()) {
-                    mDialogHolder.onSmartcardRemoval();
-                    if (!Objects.equals(mDialogHolder.getDialogClassShowing(),
-                            SmartcardRemovalPromptDialog.class.getSimpleName())) {
-                        mDialogHolder.showErrorDialog(R.string.smartcard_early_unplug_dialog_title, R.string.smartcard_early_unplug_dialog_message);
-                        Logger.verbose(methodTag, "Smartcard was disconnected while dialog was still displayed.");
-                    }
-                }
             }
         });
     }
@@ -84,10 +69,21 @@ public class UsbSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
      * discovery active throughout the entire flow.
      */
     @Override
-    protected void pauseForRemoval(@NonNull final SmartcardRemovalPromptDialog.RemovalCallback callback) {
+    protected void pauseForRemoval(@NonNull final IDisconnectionCallback callback) {
         //Usb discovery and connection should always remain active for the duration of the authentication flow.
         //Therefore, we merely invoke the callback here.
-        callback.onRemoved();
+        callback.onClosedConnection();
+    }
+
+    /**
+     * Helper method to log and show a disconnection error.
+     *
+     * @param methodTag tag from calling method.
+     */
+    @Override
+    protected void indicateDisconnectionError(@NonNull String methodTag) {
+        mDialogHolder.showErrorDialog(R.string.smartcard_early_unplug_dialog_title, R.string.smartcard_early_unplug_dialog_message);
+        Logger.verbose(methodTag, "Smartcard was disconnected while dialog was still displayed.");
     }
 
     /**
@@ -137,15 +133,21 @@ public class UsbSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
         mDialogHolder.setPinDialogErrorMode();
     }
 
+    /**
+     * TODO
+     * @param callback
+     */
     @Override
-    public void promptSmartcardRemovalForResult(@NonNull final FinalizeResultCallback callback) {
+    public void promptSmartcardRemovalForResult(@NonNull final SendResultCallback callback) {
         if (mCbaManager.isDeviceConnected()) {
-            mDialogHolder.showSmartcardRemovalPromptDialog(new SmartcardRemovalPromptDialog.RemovalCallback() {
+            mCbaManager.setDisconnectionCallback(new IDisconnectionCallback() {
                 @Override
-                public void onRemoved() {
+                public void onClosedConnection() {
+                    mDialogHolder.dismissDialog();
                     callback.onResultReady();
                 }
             });
+            mDialogHolder.showSmartcardRemovalPromptDialog();
             return;
         }
         callback.onResultReady();

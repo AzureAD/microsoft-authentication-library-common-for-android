@@ -36,7 +36,7 @@ import java.util.Arrays;
 public class UserChoiceDialog extends SmartcardDialog {
 
     private final PositiveButtonListener mPositiveButtonListener;
-    private final CancelCbaCallback mCancelCbaCallback;
+    private final ICancelCbaCallback mCancelCbaCallback;
 
     /**
      * Creates new instance of SmartcardDialog.
@@ -44,7 +44,7 @@ public class UserChoiceDialog extends SmartcardDialog {
      * @param activity Host activity.
      */
     public UserChoiceDialog(@NonNull final PositiveButtonListener positiveButtonListener,
-                            @NonNull final CancelCbaCallback cancelCbaCallback,
+                            @NonNull final ICancelCbaCallback cancelCbaCallback,
                             @NonNull final Activity activity) {
         super(activity);
         mPositiveButtonListener = positiveButtonListener;
@@ -107,12 +107,5 @@ public class UserChoiceDialog extends SmartcardDialog {
      */
     public interface PositiveButtonListener {
         void onClick(final int checkedPosition);
-    }
-
-    /**
-     * Callback interface for when CBA is being cancelled.
-     */
-    public interface CancelCbaCallback {
-        void onCancel();
     }
 }

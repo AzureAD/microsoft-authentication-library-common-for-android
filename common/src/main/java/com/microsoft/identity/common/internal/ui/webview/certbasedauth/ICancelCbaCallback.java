@@ -23,11 +23,8 @@
 package com.microsoft.identity.common.internal.ui.webview.certbasedauth;
 
 /**
- * Callback methods to be run upon initial usb connection and disconnection of a smartcard device.
+ * Callback interface for when CBA is being cancelled.
  */
-public interface IUsbConnectionCallback extends IConnectionCallback {
-    /**
-     * Logic to be run upon disconnection of a smartcard device via usb.
-     */
-    void onClosedConnection();
+public interface ICancelCbaCallback {
+    void onCancel();
 }

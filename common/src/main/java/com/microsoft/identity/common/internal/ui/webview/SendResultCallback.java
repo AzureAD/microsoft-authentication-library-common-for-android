@@ -20,18 +20,9 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.ui.webview.certbasedauth;
+package com.microsoft.identity.common.internal.ui.webview;
 
-import lombok.Getter;
+public interface SendResultCallback {
 
-/**
- * An abstract smartcard CertBasedAuth manager specifically for NFC.
- */
-public abstract class AbstractNfcSmartcardCertBasedAuthManager extends AbstractSmartcardCertBasedAuthManager {
-
-    /* boolean based on the most recently connected smartcard device
-    being the same as the previously connected smartcard device.
-    true if most recently connected smartcard device is the same as the previous.
-    false otherwise (including if no previous smartcard device exists). */
-    @Getter protected boolean isDeviceChanged;
+    void onResultReady();
 }

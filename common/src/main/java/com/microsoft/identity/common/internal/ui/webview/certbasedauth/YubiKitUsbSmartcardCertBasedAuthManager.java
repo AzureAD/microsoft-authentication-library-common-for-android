@@ -86,8 +86,8 @@ public class YubiKitUsbSmartcardCertBasedAuthManager extends AbstractUsbSmartcar
                                 mUsbDevice = null;
                             }
                             YubiKeyPivProviderManager.removePivProvider();
-                            if (mConnectionCallback != null) {
-                                mConnectionCallback.onClosedConnection();
+                            if (mDisconnectionCallback != null) {
+                                mDisconnectionCallback.onClosedConnection();
                             }
                         }
 
@@ -115,9 +115,12 @@ public class YubiKitUsbSmartcardCertBasedAuthManager extends AbstractUsbSmartcar
     }
 
     @Override
-    void disconnect(@NonNull IDisconnectCallback callback) {
+    void disconnect() {
         //TODO: do something else here?
-        callback.onDisconnect();
+        if (mUsbDevice != null) {
+            mUsbDevice.close();
+            mUsbDevice = null;
+        }
     }
 
     /**
