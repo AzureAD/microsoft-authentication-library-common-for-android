@@ -490,10 +490,10 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     /**
      * Call methods to be run before sending auth results.
      * @param response {@link RawAuthorizationResult}
-     * @param callback {@link SendResultCallback}
+     * @param callback {@link ISendResultCallback}
      */
     public void finalizeBeforeSendingResult(@NonNull final RawAuthorizationResult response,
-                                            @NonNull final SendResultCallback callback) {
+                                            @NonNull final ISendResultCallback callback) {
         if (mCertBasedAuthChallengeHandler == null) {
             callback.onResultReady();
             return;

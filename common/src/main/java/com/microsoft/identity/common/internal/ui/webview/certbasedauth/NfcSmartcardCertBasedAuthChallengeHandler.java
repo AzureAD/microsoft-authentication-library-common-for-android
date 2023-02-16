@@ -29,7 +29,7 @@ import android.webkit.ClientCertRequest;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 
-import com.microsoft.identity.common.internal.ui.webview.SendResultCallback;
+import com.microsoft.identity.common.internal.ui.webview.ISendResultCallback;
 import com.microsoft.identity.common.java.opentelemetry.ICertBasedAuthTelemetryHelper;
 
 /**
@@ -169,7 +169,7 @@ public class NfcSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
      * @param callback
      */
     @Override
-    public void promptSmartcardRemovalForResult(@NonNull final SendResultCallback callback) {
+    public void promptSmartcardRemovalForResult(@NonNull final ISendResultCallback callback) {
         if (mCbaManager.isDeviceConnected()) {
             pauseForRemoval(new IDisconnectionCallback() {
                 @Override

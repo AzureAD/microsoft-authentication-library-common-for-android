@@ -22,7 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.ui.webview;
 
-public interface SendResultCallback {
+public interface ISendResultCallback {
 
     void onResultReady();
 }

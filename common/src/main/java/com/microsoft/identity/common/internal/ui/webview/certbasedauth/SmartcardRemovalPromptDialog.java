@@ -31,9 +31,4 @@ public class SmartcardRemovalPromptDialog extends SmartcardDialog {
             }
         });
     }
-
-    @Override
-    void onSmartcardRemoval() {
-        //TODO: what to put here
-    }
 }

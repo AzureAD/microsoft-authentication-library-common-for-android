@@ -66,12 +66,4 @@ public class SmartcardNfcLoadingDialog extends SmartcardDialog {
             }
         });
     }
-
-    /**
-     * Should dismiss dialog and call the appropriate methods to help cancel the CBA flow.
-     */
-    @Override
-    void onSmartcardRemoval() {
-        //No options to cancel here.
-    }
 }

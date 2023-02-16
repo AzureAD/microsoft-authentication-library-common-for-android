@@ -30,7 +30,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 
 import com.microsoft.identity.common.R;
-import com.microsoft.identity.common.internal.ui.webview.SendResultCallback;
+import com.microsoft.identity.common.internal.ui.webview.ISendResultCallback;
 import com.microsoft.identity.common.java.opentelemetry.ICertBasedAuthTelemetryHelper;
 import com.microsoft.identity.common.logging.Logger;
 
@@ -312,7 +312,7 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandler<T extends A
      * TODO:
      * @param callback
      */
-    public abstract void promptSmartcardRemovalForResult(@NonNull final SendResultCallback callback);
+    public abstract void promptSmartcardRemovalForResult(@NonNull final ISendResultCallback callback);
 
     /**
      * Clean-up logic to run when AbstractSmartcardCertBasedAuthChallengeHandler is no longer going to be used.

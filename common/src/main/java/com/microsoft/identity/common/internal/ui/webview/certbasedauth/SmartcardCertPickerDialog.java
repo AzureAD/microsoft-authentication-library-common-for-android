@@ -144,15 +144,6 @@ public class SmartcardCertPickerDialog extends SmartcardDialog {
     }
 
     /**
-     * Handles scenario when CBA is canceled unexpectedly (for example. when a YubiKey is unplugged while a dialog is showing).
-     */
-    @Override
-    public void onSmartcardRemoval() {
-        //Call CancelCbaCallback's onCancel
-        mCancelCbaCallback.onCancel();
-    }
-
-    /**
      * Listener interface for a positive button click.
      */
     public interface PositiveButtonListener {

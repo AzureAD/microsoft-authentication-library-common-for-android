@@ -84,12 +84,4 @@ public class SmartcardPromptDialog extends SmartcardDialog {
             }
         });
     }
-
-    /**
-     * Should dismiss dialog and call the appropriate methods to help cancel the CBA flow.
-     */
-    @Override
-    void onSmartcardRemoval() {
-        mCancelCbaCallback.onCancel();
-    }
 }

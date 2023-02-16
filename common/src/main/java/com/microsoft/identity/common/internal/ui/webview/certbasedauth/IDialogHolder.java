@@ -114,15 +114,6 @@ public interface IDialogHolder {
      */
     boolean isDialogShowing();
 
-    @Nullable
-    String getDialogClassShowing();
-
-        /**
-         * Runs callback code for the current dialog when
-         * a smartcard is disconnected from the device and a dialog is currently showing.
-         */
-    void onSmartcardRemoval();
-
     /**
      * Sets error mode for an existing SmartcardPinDialog.
      */

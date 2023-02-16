@@ -111,15 +111,6 @@ public class SmartcardPinDialog extends SmartcardDialog {
     }
 
     /**
-     * Handles scenario when CBA is canceled unexpectedly (for example. when a YubiKey is unplugged while a dialog is showing).
-     */
-    @Override
-    public void onSmartcardRemoval() {
-        //Call CancelCbaCallback's onCancel
-        mCancelCbaCallback.onCancel();
-    }
-
-    /**
      * In order to add custom UI for errors, the positive button must be overwritten.
      * Note that the dialog needs to be shown before we can get a reference and override the positive button's behavior.
      */
