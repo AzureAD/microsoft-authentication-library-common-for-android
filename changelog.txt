@@ -1,6 +1,6 @@
 vNext
 ----------
-- [MINOR] Add dialogs to prompt user to remove smartcard within CBA flow (#1965)
+- [MINOR] Add dialogs to prompt user to remove smartcard within CBA flow (#1966)
 - [MINOR] Add flighting capability for common (#1961)
 - [MINOR] Add preferred browser support (#1957)
 - [PATCH] Use android.net.NetworkCapabilities to check internet connectivity (#1887)
