@@ -28,9 +28,6 @@ public enum SpanName {
     AcquireAtUsingPrt,
     AcquireTokenInteractive,
     AcquireTokenSilent,
-    AcquireTokenDcf,
-    AcquireTokenDcfAuthRequest,
-    AcquireTokenDcfFetchToken,
     CryptoFactoryEvent,
     SetScopeForDMAgentForFoci,
     GetAccounts,
@@ -42,5 +39,8 @@ public enum SpanName {
     CertBasedAuth,
     UploadBrokerLogs,
     InitializePowerLift,
-    MSAL_PerformIpcStrategy
+    MSAL_PerformIpcStrategy,
+    AcquireTokenDcf,
+    AcquireTokenDcfAuthRequest,
+    AcquireTokenDcfFetchToken
 }

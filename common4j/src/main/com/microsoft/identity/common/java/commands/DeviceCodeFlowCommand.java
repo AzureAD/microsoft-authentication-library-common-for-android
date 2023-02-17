@@ -72,6 +72,7 @@ public class DeviceCodeFlowCommand extends TokenCommand {
         final Span span = OTelUtility.createSpanFromParent(
                 SpanName.AcquireTokenDcf.name(), getParameters().getSpanContext()
         );
+        span.setAttribute(AttributeName.correlation_id.name(), getParameters().getCorrelationId());
         span.setAttribute(AttributeName.application_name.name(), getParameters().getApplicationName());
         span.setAttribute(AttributeName.public_api_id.name(), getPublicApiId());
 

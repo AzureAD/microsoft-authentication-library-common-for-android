@@ -60,8 +60,6 @@ public class BrokerOperationBundle {
         MSAL_HELLO(API.MSAL_HELLO, BrokerAccountManagerOperation.HELLO),
         MSAL_GET_INTENT_FOR_INTERACTIVE_REQUEST(API.ACQUIRE_TOKEN_INTERACTIVE, BrokerAccountManagerOperation.GET_INTENT_FOR_INTERACTIVE_REQUEST),
         MSAL_ACQUIRE_TOKEN_SILENT(API.ACQUIRE_TOKEN_SILENT, BrokerAccountManagerOperation.ACQUIRE_TOKEN_SILENT),
-        MSAL_FETCH_DCF_AUTH_RESULT(API.FETCH_DCF_AUTH_RESULT, BrokerAccountManagerOperation.FETCH_DCF_AUTH_RESULT),
-        MSAL_ACQUIRE_TOKEN_DCF(API.ACQUIRE_TOKEN_DCF, BrokerAccountManagerOperation.ACQUIRE_TOKEN_DCF),
         MSAL_GET_ACCOUNTS(API.GET_ACCOUNTS, BrokerAccountManagerOperation.GET_ACCOUNTS),
         MSAL_REMOVE_ACCOUNT(API.REMOVE_ACCOUNT, BrokerAccountManagerOperation.REMOVE_ACCOUNT),
         MSAL_GET_DEVICE_MODE(API.GET_DEVICE_MODE, BrokerAccountManagerOperation.GET_DEVICE_MODE),
@@ -77,7 +75,9 @@ public class BrokerOperationBundle {
         BROKER_SET_FLIGHTS(API.BROKER_SET_FLIGHTS, null),
         MSAL_SSO_TOKEN(API.GET_SSO_TOKEN, null),
         DEVICE_REGISTRATION_OPERATIONS(API.DEVICE_REGISTRATION_PROTOCOLS, null),
-        BROKER_API_UPLOAD_LOGS(API.BROKER_UPLOAD_LOGS, null);
+        BROKER_API_UPLOAD_LOGS(API.BROKER_UPLOAD_LOGS, null),
+        MSAL_FETCH_DCF_AUTH_RESULT(API.FETCH_DCF_AUTH_RESULT, null),
+        MSAL_ACQUIRE_TOKEN_DCF(API.ACQUIRE_TOKEN_DCF, null);
         final API mContentApi;
         final String mAccountManagerOperation;
         Operation(API contentApi, String accountManagerOperation) {

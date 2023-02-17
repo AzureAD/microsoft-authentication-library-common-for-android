@@ -111,6 +111,11 @@ public enum AttributeName {
     application_name,
 
     /**
+     * The correlation id sent from client app
+     */
+    correlation_id,
+
+    /**
      * Indicates if token was return from token cache
      */
     is_serviced_from_cache;
