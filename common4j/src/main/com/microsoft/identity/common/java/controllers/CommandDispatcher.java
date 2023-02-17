@@ -54,6 +54,7 @@ import com.microsoft.identity.common.java.logging.DiagnosticContext;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.logging.RequestContext;
 import com.microsoft.identity.common.java.marker.CodeMarkerManager;
+import com.microsoft.identity.common.java.opentelemetry.OtelContextExtension;
 import com.microsoft.identity.common.java.request.SdkType;
 import com.microsoft.identity.common.java.result.AcquireTokenResult;
 import com.microsoft.identity.common.java.result.FinalizableResultFuture;
@@ -252,7 +253,7 @@ public class CommandDispatcher {
                 finalFuture.whenComplete(getCommandResultConsumer(command));
             }
 
-            sSilentExecutor.execute(Context.current().wrap(new Runnable() {
+            sSilentExecutor.execute(OtelContextExtension.wrap(new Runnable() {
                 @Override
                 public void run() {
                     codeMarkerManager.markCode(ACQUIRE_TOKEN_SILENT_EXECUTOR_START);
@@ -339,7 +340,7 @@ public class CommandDispatcher {
         synchronized (mapAccessLock) {
             final FinalizableResultFuture<CommandResult> finalFuture = new FinalizableResultFuture<>();
             finalFuture.whenComplete(getCommandResultConsumer(command));
-            sSilentExecutor.execute(Context.current().wrap(new Runnable() {
+            sSilentExecutor.execute(OtelContextExtension.wrap(new Runnable() {
                 @Override
                 public void run() {
 
@@ -646,7 +647,7 @@ public class CommandDispatcher {
                     }
                 }
 
-                sInteractiveExecutor.execute(Context.current().wrap(new Runnable() {
+                sInteractiveExecutor.execute(OtelContextExtension.wrap(new Runnable() {
                     @Override
                     public void run() {
                         final CommandParameters commandParameters = command.getParameters();
