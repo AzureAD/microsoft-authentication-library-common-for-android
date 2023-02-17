@@ -40,6 +40,9 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_HOST_APP_SIGNATURE;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_APP_RELEASE_SIGNATURE;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.LTW_APP_DEBUG_SIGNATURE;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.LTW_APP_PACKAGE_NAME;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.LTW_APP_RELEASE_SIGNATURE;
 
 import lombok.ToString;
 
@@ -69,14 +72,26 @@ public class BrokerData {
             BROKER_HOST_APP_SIGNATURE
     );
 
+    public static final BrokerData LTW_DEBUG = new BrokerData(
+            LTW_APP_PACKAGE_NAME,
+            LTW_APP_DEBUG_SIGNATURE
+    );
+
+    public static final BrokerData LTW_PROD = new BrokerData(
+            LTW_APP_PACKAGE_NAME,
+            LTW_APP_RELEASE_SIGNATURE
+    );
+
     private static final Set<BrokerData> DEBUG_BROKERS = Collections.unmodifiableSet(new HashSet<BrokerData>() {{
         add(MICROSOFT_AUTHENTICATOR_DEBUG);
         add(BROKER_HOST);
+        add(LTW_DEBUG);
     }});
 
     private static final Set<BrokerData> PROD_BROKERS = Collections.unmodifiableSet(new HashSet<BrokerData>() {{
         add(MICROSOFT_AUTHENTICATOR_PROD);
         add(COMPANY_PORTAL);
+        add(LTW_PROD);
     }});
 
     private static final Set<BrokerData> ALL_BROKERS = Collections.unmodifiableSet(new HashSet<BrokerData>() {{

@@ -1018,6 +1018,11 @@ public final class AuthenticationConstants {
         public static final String COMPANY_PORTAL_APP_PACKAGE_NAME = "com.microsoft.windowsintune.companyportal";
 
         /**
+         * LTW (Link To Windows) app package name.
+         */
+        public static final String LTW_APP_PACKAGE_NAME = "com.microsoft.appmanager";
+
+        /**
          * Signature info for Intune Company portal app that installs authenticator
          * component.
          */
@@ -1041,6 +1046,15 @@ public final class AuthenticationConstants {
          */
         public static final String BROKER_HOST_APP_SIGNATURE = "1wIqXSqBj7w+h11ZifsnqwgyKrY=";
 
+        /**
+         * Signature info for LTW release
+         */
+        public static final String LTW_APP_RELEASE_SIGNATURE = "r7XE90wdLmd4th42y2Om6AWdKB0=";
+
+        /**
+         * Signature info for LTW debug
+         */
+        public static final String LTW_APP_DEBUG_SIGNATURE = "9XEEFdgYfvrXod8PFQR8QiiGSGk=";
 
         /**
          * Teams IP Phones (Sakurai devices) is supported by Intune, but does not have a back button nor browser.
