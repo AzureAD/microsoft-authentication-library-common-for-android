@@ -160,7 +160,7 @@ public class DialogHolder implements IDialogHolder {
     }
 
     /**
-     *
+     * Builds and shows a SmartcardDialog that prompts the user to remove their smartcard from the device.
      */
     @Override
     public void showSmartcardRemovalPromptDialog() {

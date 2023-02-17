@@ -194,6 +194,9 @@ public class CertBasedAuthFactory {
             @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
             @Override
             public void onCancel() {
+                if (mNfcSmartcardCertBasedAuthManager != null) {
+                    mNfcSmartcardCertBasedAuthManager.stopDiscovery(mActivity);
+                }
                 onCancelHelper(challengeHandlerCallback, telemetryHelper);
             }
         });

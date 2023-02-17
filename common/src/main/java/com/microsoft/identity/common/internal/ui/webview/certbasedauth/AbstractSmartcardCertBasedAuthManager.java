@@ -78,7 +78,7 @@ public abstract class AbstractSmartcardCertBasedAuthManager {
     abstract void onDestroy(@NonNull final Activity activity);
 
     /**
-     * Sets callbacks to be run for when a smartcard connection is started and ended.
+     * Sets callback to be run for when a smartcard connection is started.
      * @param callback an implementation of IConnectionCallback.
      */
     public void setConnectionCallback(@Nullable final IConnectionCallback callback) {
@@ -86,7 +86,8 @@ public abstract class AbstractSmartcardCertBasedAuthManager {
     }
 
     /**
-     *TODO
+     * Sets callback to be run for when a smartcard connection is ended.
+     * @param callback an implementation of IDisconnectionCallback.
      */
     public void setDisconnectionCallback(@Nullable final IDisconnectionCallback callback) {
         mDisconnectionCallback = callback;
@@ -100,7 +101,7 @@ public abstract class AbstractSmartcardCertBasedAuthManager {
     }
 
     /**
-     * TODO
+     * Sets disconnection callback to null.
      */
     public void clearDisconnectionCallback() {
         mDisconnectionCallback = null;

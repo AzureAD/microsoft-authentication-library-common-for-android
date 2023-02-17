@@ -26,5 +26,8 @@ package com.microsoft.identity.common.internal.ui.webview.certbasedauth;
  * Callback interface for when CBA is being cancelled.
  */
 public interface ICancelCbaCallback {
+    /**
+     * Method to be invoked upon a user cancelling out of CBA.
+     */
     void onCancel();
 }

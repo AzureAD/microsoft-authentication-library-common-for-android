@@ -92,7 +92,7 @@ public interface IDialogHolder {
     void showSmartcardNfcReminderDialog(@NonNull final SmartcardNfcReminderDialog.DismissCallback dismissCallback);
 
     /**
-     * TODO
+     * Builds and shows a SmartcardDialog that prompts the user to remove their smartcard from the device.
      */
     void showSmartcardRemovalPromptDialog();
 

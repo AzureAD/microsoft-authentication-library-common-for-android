@@ -49,8 +49,7 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandler<T extends A
     protected static final String USER_CANCEL_MESSAGE = "User canceled smartcard CBA flow.";
     protected final String TAG;
     protected final Activity mActivity;
-    protected final T
-            mCbaManager;
+    protected final T mCbaManager;
     protected final IDialogHolder mDialogHolder;
 
     /**
@@ -139,8 +138,9 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandler<T extends A
     }
 
     /**
-     * When a connection is no longer actively being used, should pause so the user can remove their smartcard
-     *  before flow can continue.
+     * When a connection is no longer actively being used, the dialog flow should pause
+     * so the user can remove their smartcard before flow can continue.
+     * @param callback {@link IDisconnectionCallback}
      */
     protected abstract void pauseToCloseConnection(@NonNull final IDisconnectionCallback callback);
 

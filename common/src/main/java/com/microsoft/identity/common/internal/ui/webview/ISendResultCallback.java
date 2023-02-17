@@ -22,7 +22,13 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.ui.webview;
 
+/**
+ * Should send a form of a result when invoked.
+ */
 public interface ISendResultCallback {
 
+    /**
+     * Runs logic that sends a form of a result.
+     */
     void onResultReady();
 }

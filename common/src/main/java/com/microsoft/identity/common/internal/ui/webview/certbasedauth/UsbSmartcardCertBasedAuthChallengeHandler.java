@@ -65,8 +65,9 @@ public class UsbSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
     }
 
     /**
-     * Pauses smartcard discovery, if the particular authentication method isn't meant to have
-     * discovery active throughout the entire flow.
+     * When a connection is no longer actively being used, the dialog flow should pause
+     * so the user can remove their smartcard before flow can continue.
+     * @param callback {@link IDisconnectionCallback}
      */
     @Override
     protected void pauseToCloseConnection(@NonNull final IDisconnectionCallback callback) {

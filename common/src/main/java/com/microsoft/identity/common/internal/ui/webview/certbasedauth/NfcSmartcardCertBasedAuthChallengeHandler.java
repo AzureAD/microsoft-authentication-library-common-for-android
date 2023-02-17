@@ -52,19 +52,24 @@ public class NfcSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
     }
 
     /**
-     * Pauses smartcard discovery, if the particular authentication method isn't meant to have
-     *  discovery active throughout the entire flow.
+     * When a connection is no longer actively being used, the dialog flow should pause
+     * so the user can remove their smartcard before flow can continue.
+     * @param callback {@link IDisconnectionCallback}
      */
     @Override
     protected void pauseToCloseConnection(@NonNull final IDisconnectionCallback callback) {
-        //Helps prevent unnecessary callback trigger. Nfc discovery should only be active when
-        // the user is prompted to tap.
+        if (!mCbaManager.isDeviceConnected()) {
+            callback.onClosedConnection();
+            return;
+        }
         mDialogHolder.showSmartcardRemovalPromptDialog();
         mCbaManager.setDisconnectionCallback(new IDisconnectionCallback() {
             @Override
             public void onClosedConnection() {
                 mDialogHolder.dismissDialog();
                 mCbaManager.clearDisconnectionCallback();
+                //Helps prevent unnecessary callback trigger. Nfc discovery should only be active when
+                // the user is prompted to tap.
                 mCbaManager.stopDiscovery(mActivity);
                 callback.onClosedConnection();
             }
