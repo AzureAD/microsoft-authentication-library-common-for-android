@@ -130,8 +130,13 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandler<T extends A
 
             @Override
             public void onException(@NonNull final Exception e) {
-                indicateGeneralException(methodTag, e);
                 request.cancel();
+                pauseToCloseConnection(new IDisconnectionCallback() {
+                    @Override
+                    public void onClosedConnection() {
+                        indicateGeneralException(methodTag, e);
+                    }
+                });
             }
         });
         return null;

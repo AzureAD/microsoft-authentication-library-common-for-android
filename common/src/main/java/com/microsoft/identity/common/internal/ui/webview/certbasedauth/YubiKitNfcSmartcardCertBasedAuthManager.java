@@ -28,7 +28,6 @@ import android.os.Build;
 import android.webkit.ClientCertRequest;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
 import com.microsoft.identity.common.java.opentelemetry.ICertBasedAuthTelemetryHelper;

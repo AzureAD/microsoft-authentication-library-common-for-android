@@ -64,7 +64,7 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandlerTest extends
     public void testCancelAtPickerDialog() {
         setAndProcessChallengeHandler(getMockCertList());
         checkIfCorrectDialogIsShowing(TestDialog.cert_picker);
-        final SmartcardCertPickerDialog.CancelCbaCallback callback =  mDialogHolder.getCertPickerCancelCbaCallback();
+        final ICancelCbaCallback callback =  mDialogHolder.getCancelCbaCallback();
         assertNotNull(callback);
         callback.onCancel();
         checkIfCorrectDialogIsShowing(null);
@@ -76,7 +76,7 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandlerTest extends
         setAndProcessChallengeHandler(getMockCertList());
         checkIfCorrectDialogIsShowing(TestDialog.cert_picker);
         goToPinDialog();
-        final SmartcardPinDialog.CancelCbaCallback callback = mDialogHolder.getPinCancelCbaCallback();
+        final ICancelCbaCallback callback =  mDialogHolder.getCancelCbaCallback();
         assertNotNull(callback);
         callback.onCancel();
         checkIfCorrectDialogIsShowing(null);
