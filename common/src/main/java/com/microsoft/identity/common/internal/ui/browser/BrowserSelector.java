@@ -33,6 +33,7 @@ import android.net.Uri;
 import android.os.Build;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
@@ -50,6 +51,9 @@ public class BrowserSelector {
     private static final String SCHEME_HTTP = "http";
     private static final String SCHEME_HTTPS = "https";
 
+    // Added to avoid "avoidduplicateliterals" issues in pmd.
+    private static final String LOGGING_MSG_BROWSER = "Browser: ";
+
     /**
      * Searches through all browsers for the best match.
      * Browsers are evaluated in the order returned by the package manager,
@@ -59,11 +63,85 @@ public class BrowserSelector {
      * @param context {@link Context} to use for accessing {@link PackageManager}.
      * @return Browser selected to use.
      */
-    public static Browser select(final Context context, final List<BrowserDescriptor> browserSafeList) throws ClientException {
+    public static Browser select(@NonNull final Context context,
+                                 @NonNull final List<BrowserDescriptor> browserSafeList,
+                                 @Nullable final BrowserDescriptor preferredBrowserDescriptor) throws ClientException {
         final String methodTag = TAG + ":select";
-        final List<Browser> allBrowsers = getAllBrowsers(context);
         Logger.verbose(methodTag, "Select the browser to launch.");
 
+        if (preferredBrowserDescriptor != null){
+            final Browser preferredBrowser = getPreferredBrowser(context, preferredBrowserDescriptor);
+            if (preferredBrowser != null) {
+                return preferredBrowser;
+            }
+        }
+
+        final Browser defaultBrowser = getDefaultBrowser(context, browserSafeList);
+        if (defaultBrowser != null) {
+            return defaultBrowser;
+        }
+
+        Logger.error(methodTag, "No available browser installed on the device.", null);
+        throw new ClientException(ErrorStrings.NO_AVAILABLE_BROWSER_FOUND, "No available browser installed on the device.");
+    }
+
+    private static boolean matches(@NonNull final BrowserDescriptor descriptor,
+                                   @NonNull Browser browser) {
+        final String methodTag = TAG + ":matches";
+
+        if (!StringUtil.equalsIgnoreCase(descriptor.getPackageName(), browser.getPackageName())) {
+            return false;
+        }
+
+        if (!descriptor.getSignatureHashes().equals(browser.getSignatureHashes())) {
+            Logger.warn(methodTag,LOGGING_MSG_BROWSER + browser.getPackageName() + " signature hash not match");
+            return false;
+        }
+
+        if (!StringUtil.isNullOrEmpty(descriptor.getVersionLowerBound())
+                && compareSemanticVersion(browser.getVersion(), descriptor.getVersionLowerBound()) == -1) {
+            Logger.warn(methodTag,LOGGING_MSG_BROWSER + browser.getPackageName() +
+                    " version too low (Expected: " + descriptor.getVersionLowerBound() +
+                    " Get: " + browser.getVersion() + ")");
+            return false;
+        }
+
+        if (!StringUtil.isNullOrEmpty(descriptor.getVersionUpperBound())
+                && compareSemanticVersion(browser.getVersion(), descriptor.getVersionUpperBound()) == 1) {
+            Logger.warn(methodTag,LOGGING_MSG_BROWSER + browser.getPackageName() +
+                    " version too high (Expected: " + descriptor.getVersionUpperBound() +
+                    " Get: " + browser.getVersion() + ")");
+            return false;
+        }
+
+        return true;
+    }
+
+    private static Browser getPreferredBrowser(@NonNull final Context context,
+                                              @NonNull final BrowserDescriptor preferredBrowserDescriptor){
+        final String methodTag = TAG + ":getPreferredBrowser";
+
+        final List<Browser> allBrowsers = getBrowsers(context, preferredBrowserDescriptor);
+        for (final Browser browser : allBrowsers) {
+            if (matches(preferredBrowserDescriptor, browser)) {
+                Logger.info(
+                        methodTag,
+                        "Preferred Browser's package name: "
+                                + browser.getPackageName()
+                                + " version: "
+                                + browser.getVersion());
+                return browser;
+            }
+        }
+
+        return null;
+    }
+
+    private static Browser getDefaultBrowser(@NonNull final Context context,
+                                             @NonNull final List<BrowserDescriptor> browserSafeList) {
+        final String methodTag = TAG + ":getDefaultBrowser";
+
+        final List<Browser> allBrowsers = getBrowsers(context, null);
         for (final Browser browser : allBrowsers) {
             for (final BrowserDescriptor browserDescriptor : browserSafeList) {
                 if (matches(browserDescriptor, browser)) {
@@ -78,40 +156,9 @@ public class BrowserSelector {
             }
         }
 
-        Logger.error(methodTag, "No available browser installed on the device.", null);
-        throw new ClientException(ErrorStrings.NO_AVAILABLE_BROWSER_FOUND, "No available browser installed on the device.");
+        return null;
     }
 
-    private static boolean matches(@NonNull final BrowserDescriptor browserDescriptor,
-                                   @NonNull Browser browser) {
-        final BrowserDescriptor descriptor;
-        try {
-            descriptor = (BrowserDescriptor) browserDescriptor;
-        } catch (final ClassCastException e) {
-            Logger.error(TAG + ":matches", "Cannot cast IBrowserDescriptor to BrowserDescriptor", e);
-            return false;
-        }
-
-        if (!StringUtil.equalsIgnoreCase(descriptor.getPackageName(), browser.getPackageName())) {
-            return false;
-        }
-
-        if (!descriptor.getSignatureHashes().equals(browser.getSignatureHashes())) {
-            return false;
-        }
-
-        if (!StringUtil.isNullOrEmpty(descriptor.getVersionLowerBound())
-                && compareSemanticVersion(browser.getVersion(), descriptor.getVersionLowerBound()) == -1) {
-            return false;
-        }
-
-        if (!StringUtil.isNullOrEmpty(descriptor.getVersionUpperBound())
-                && compareSemanticVersion(browser.getVersion(), descriptor.getVersionUpperBound()) == 1) {
-            return false;
-        }
-
-        return true;
-    }
 
     /**
      * Retrieves the full list of browsers installed on the device.
@@ -120,27 +167,37 @@ public class BrowserSelector {
      * order returned by the package manager, so indirectly reflects the user's preferences
      * (i.e. their default browser, if set, should be the first entry in the list).
      */
-    public static List<Browser> getAllBrowsers(final Context context) {
-        final String methodTag = TAG + ":getAllBrowsers";
+    protected static List<Browser> getBrowsers(@NonNull final Context context,
+                                               @Nullable final BrowserDescriptor preferredBrowserDescriptor) {
+        final String methodTag = TAG + ":getBrowsers";
+
         //get the list of browsers
         final Intent BROWSER_INTENT = new Intent(
                 Intent.ACTION_VIEW,
                 Uri.parse("http://www.example.com"));
 
-        List<Browser> browserList = new ArrayList<>();
-        PackageManager pm = context.getPackageManager();
+        if (preferredBrowserDescriptor != null){
+            Logger.info(methodTag, "Querying preferred browser: " + preferredBrowserDescriptor.getPackageName());
+            BROWSER_INTENT.setPackage(preferredBrowserDescriptor.getPackageName());
+        }
+
+        final PackageManager pm = context.getPackageManager();
 
         int queryFlag = PackageManager.GET_RESOLVED_FILTER;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             queryFlag |= PackageManager.MATCH_DEFAULT_ONLY;
         }
 
-        List<ResolveInfo> resolvedActivityList =
+        final List<ResolveInfo> resolvedActivityList =
                 pm.queryIntentActivities(BROWSER_INTENT, queryFlag);
 
+        Logger.verbose(methodTag, "Querying browsers. Got back " + resolvedActivityList.size() + " browsers.");
+
+        final List<Browser> browserList = new ArrayList<>();
         for (ResolveInfo info : resolvedActivityList) {
             // ignore handlers which are not browsers
             if (!isFullBrowser(info)) {
+                Logger.verbose(methodTag,LOGGING_MSG_BROWSER + info.activityInfo.packageName + " is not a full browser app.");
                 continue;
             }
 
@@ -149,12 +206,15 @@ public class BrowserSelector {
                 //TODO if the browser is in the block list, do not add it into the return browserList.
                 if (isCustomTabsServiceSupported(context, packageInfo)) {
                     //if the browser has custom tab enabled, set the custom tab support as true.
+                    Logger.verbose(methodTag,LOGGING_MSG_BROWSER + info.activityInfo.packageName + " supports custom tab.");
                     browserList.add(new Browser(packageInfo, true));
                 } else {
+                    Logger.verbose(methodTag,LOGGING_MSG_BROWSER + info.activityInfo.packageName + " does NOT support custom tab.");
                     browserList.add(new Browser(packageInfo, false));
                 }
             } catch (PackageManager.NameNotFoundException e) {
                 // a browser cannot be generated without the package info
+                Logger.warn(methodTag,LOGGING_MSG_BROWSER + info.activityInfo.packageName + " cannot be generated without the package info.");
             }
         }
 

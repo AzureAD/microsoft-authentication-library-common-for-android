@@ -24,15 +24,27 @@ package com.microsoft.identity.common.java.cache;
 
 import static com.microsoft.identity.common.java.AuthenticationConstants.DEFAULT_SCOPES;
 
+import com.microsoft.identity.common.java.authorities.Authority;
+import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
+import com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeInternal;
+import com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeWithClientKeyInternal;
+import com.microsoft.identity.common.java.commands.parameters.TokenCommandParameters;
+import com.microsoft.identity.common.java.crypto.IDevicePopManager;
 import com.microsoft.identity.common.java.dto.AccessTokenRecord;
 import com.microsoft.identity.common.java.dto.AccountRecord;
+import com.microsoft.identity.common.java.dto.Credential;
 import com.microsoft.identity.common.java.dto.CredentialType;
 import com.microsoft.identity.common.java.dto.IdTokenRecord;
 import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ServiceException;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAccount;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftRefreshToken;
+import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenResponse;
+import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
+import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryAccount;
+import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.ClientInfo;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAccount;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
@@ -40,9 +52,13 @@ import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.Micro
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
 import com.microsoft.identity.common.java.providers.oauth2.IDToken;
 import com.microsoft.identity.common.java.providers.oauth2.TokenRequest;
+import com.microsoft.identity.common.java.request.SdkType;
 import com.microsoft.identity.common.java.util.SchemaUtil;
 import com.microsoft.identity.common.java.util.StringUtil;
+import com.microsoft.identity.common.java.util.ported.DateUtilities;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -266,6 +282,195 @@ public class MicrosoftStsAccountCredentialAdapter
         idToken.setAuthority(SchemaUtil.getAuthority(msIdToken));
 
         return idToken;
+    }
+
+    @Override
+    public AccountRecord createAccountRecord(
+            @NonNull final TokenCommandParameters parameters,
+            final SdkType sdkType,
+            @NonNull final MicrosoftStsTokenResponse microsoftStsTokenResponse) throws ServiceException {
+        final String methodTag = TAG + ":createAccountRecord";
+        final ClientInfo clientInfo = new ClientInfo(microsoftStsTokenResponse.getClientInfo());
+        AccountRecord accountRecord;
+
+        if (sdkType.equals(SdkType.ADAL)) {
+            final AzureActiveDirectoryAccount azureActiveDirectoryAccount =
+                    new AzureActiveDirectoryAccount(
+                            new IDToken(microsoftStsTokenResponse.getIdToken()),
+                            clientInfo
+                    );
+            accountRecord = new AccountRecord(azureActiveDirectoryAccount);
+        } else {
+            final MicrosoftStsAccount microsoftStsAccount = new MicrosoftStsAccount(
+                    new IDToken(microsoftStsTokenResponse.getIdToken()),
+                    clientInfo
+            );
+            accountRecord = new AccountRecord(microsoftStsAccount);
+        }
+
+        URL authority = parameters.getAuthority().getAuthorityURL();
+
+        // If token response has authority set it, else fallback to request authority
+        if (!microsoftStsTokenResponse.getAuthority().isEmpty()) {
+            try {
+                authority = new URL(microsoftStsTokenResponse.getAuthority());
+            } catch (final MalformedURLException e) {
+                Logger.error(methodTag,
+                        "Authority url construction failed, setting request authority to result",
+                        e
+                );
+            }
+        }
+
+        final AzureActiveDirectoryCloud cloudEnv =
+                AzureActiveDirectory.getAzureActiveDirectoryCloud(authority);
+
+        if (cloudEnv != null) {
+            Logger.info(methodTag, "Using preferred cache host name...");
+            accountRecord.setEnvironment(cloudEnv.getPreferredCacheHostName());
+        } else {
+            accountRecord.setEnvironment(authority.getHost());
+        }
+
+        return accountRecord;
+    }
+
+    @Override
+    public AccessTokenRecord createAccessTokenRecord(
+            @NonNull final TokenCommandParameters parameters,
+            @NonNull final AccountRecord accountRecord,
+            @NonNull final MicrosoftStsTokenResponse tokenResponse) throws ClientException {
+        final String methodTag = TAG + ":createAccessTokenRecord";
+        final AccessTokenRecord accessTokenRecord = new AccessTokenRecord();
+        accessTokenRecord.setHomeAccountId(accountRecord.getHomeAccountId());
+        accessTokenRecord.setRealm(accountRecord.getRealm());
+        final AbstractAuthenticationScheme authenticationScheme = parameters.getAuthenticationScheme();
+
+        if (authenticationScheme instanceof PopAuthenticationSchemeInternal) {
+            final IDevicePopManager devicePopManager = parameters.getPlatformComponents().getDefaultDevicePopManager();
+            accessTokenRecord.setCredentialType(CredentialType.AccessToken_With_AuthScheme.name());
+            accessTokenRecord.setKid(devicePopManager.getAsymmetricKeyThumbprint());
+        } else if (authenticationScheme instanceof PopAuthenticationSchemeWithClientKeyInternal) {
+            accessTokenRecord.setCredentialType(CredentialType.AccessToken_With_AuthScheme.name());
+            accessTokenRecord.setKid(((PopAuthenticationSchemeWithClientKeyInternal) authenticationScheme).getKid());
+        } else {
+            accessTokenRecord.setCredentialType(CredentialType.AccessToken.name());
+        }
+
+        accessTokenRecord.setClientId(parameters.getClientId());
+        accessTokenRecord.setApplicationIdentifier(parameters.getApplicationIdentifier());
+        accessTokenRecord.setSecret(tokenResponse.getAccessToken());
+        accessTokenRecord.setAccessTokenType(tokenResponse.getTokenType());
+        accessTokenRecord.setTarget(StringUtil.join(" ", parameters.getScopes()));
+        setCredentialEnvironment(accessTokenRecord, parameters.getAuthority(), tokenResponse, methodTag);
+
+        if (tokenResponse.getExpiresIn() != null) {
+            accessTokenRecord.setExpiresOn(
+                    String.valueOf(DateUtilities.getExpiresOn(tokenResponse.getExpiresIn()))
+            );
+        }
+
+        if (tokenResponse.getExtExpiresIn() != null) {
+            accessTokenRecord.setExtendedExpiresOn(
+                    String.valueOf(DateUtilities.getExpiresOn(tokenResponse.getExtExpiresIn()))
+            );
+        }
+
+        accessTokenRecord.setCachedAt(
+                String.valueOf(TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()))
+        );
+
+        return accessTokenRecord;
+    }
+
+    @Override
+    public RefreshTokenRecord createRefreshTokenRecord(
+            @NonNull final TokenCommandParameters parameters,
+            @NonNull final AccountRecord accountRecord,
+            @NonNull final MicrosoftStsTokenResponse tokenResponse) {
+        final String methodTag = TAG + ":createRefreshTokenRecord";
+        final RefreshTokenRecord refreshToken = new RefreshTokenRecord();
+
+        // Required
+        refreshToken.setHomeAccountId(accountRecord.getHomeAccountId());
+        refreshToken.setCredentialType(CredentialType.RefreshToken.name());
+        setCredentialEnvironment(refreshToken, parameters.getAuthority(), tokenResponse, methodTag);
+        refreshToken.setClientId(parameters.getClientId());
+        refreshToken.setSecret(tokenResponse.getRefreshToken());
+
+        // Optional
+        refreshToken.setFamilyId(tokenResponse.getFamilyId());
+        refreshToken.setTarget(StringUtil.join(" ", parameters.getScopes()));
+        refreshToken.setCachedAt(
+                String.valueOf(TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()))
+        );
+
+        return refreshToken;
+    }
+
+    @Override
+    public IdTokenRecord createIdTokenRecord(
+            @NonNull final TokenCommandParameters parameters,
+            @NonNull final AccountRecord accountRecord,
+            @NonNull final MicrosoftStsTokenResponse tokenResponse) {
+        final String methodTag = TAG + ":createIdTokenRecord";
+        final IdTokenRecord idToken = new IdTokenRecord();
+
+        // Required fields
+        idToken.setHomeAccountId(accountRecord.getHomeAccountId());
+        idToken.setRealm(accountRecord.getRealm());
+        idToken.setCredentialType(SchemaUtil.getCredentialTypeFromVersion(
+                tokenResponse.getIdToken())
+        );
+        idToken.setClientId(parameters.getClientId());
+        idToken.setSecret(tokenResponse.getIdToken());
+
+        setCredentialEnvironment(idToken, parameters.getAuthority(), tokenResponse, methodTag);
+
+        return idToken;
+    }
+
+    /**
+     * Helper method to set environment to the credential.
+     */
+    private void setCredentialEnvironment(@NonNull final Credential credential,
+                                          @NonNull final Authority requestAuthority,
+                                          @NonNull final MicrosoftTokenResponse tokenResponse,
+                                          @NonNull final String callingMethodTag
+    ) {
+        final String methodTag = callingMethodTag + ":setCredentialEnvironment";
+        URL authority = requestAuthority.getAuthorityURL();
+
+        // If token response has authority set it else fallback to request authority
+        if (!tokenResponse.getAuthority().isEmpty()) {
+            try {
+                authority = new URL(tokenResponse.getAuthority());
+            } catch (MalformedURLException e) {
+                Logger.error(methodTag,
+                        "Authority url construction failed, setting request authority to result",
+                        e
+                );
+            }
+        }
+        final AzureActiveDirectoryCloud cloudEnv =
+                AzureActiveDirectory.getAzureActiveDirectoryCloud(authority);
+
+        if (cloudEnv != null) {
+            Logger.info(methodTag, "Using preferred cache host name...");
+            credential.setEnvironment(cloudEnv.getPreferredCacheHostName());
+        } else {
+            credential.setEnvironment(authority.getHost());
+        }
+
+        // For IdtokenRecord we need to set the authority as well in addition to environment
+        if (credential instanceof IdTokenRecord) {
+            ((IdTokenRecord) credential).setAuthority(authority.toString());
+        }
+
+        // For AccessTokenRecord we need to set the authority as well in addition to environment
+        if (credential instanceof AccessTokenRecord) {
+            ((AccessTokenRecord) credential).setAuthority(authority.toString());
+        }
     }
 
     private String getExtendedExpiresOn(final MicrosoftStsTokenResponse response) {

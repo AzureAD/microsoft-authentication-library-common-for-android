@@ -38,72 +38,68 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.IvParameterSpec;
 
-import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 
-/**
- * A basic Decryptor class.
- */
 @AllArgsConstructor
-public class BasicDecryptor implements IDecryptor {
+public class BasicEncryptor implements IEncryptor {
 
     private final ICryptoFactory mCryptoFactory;
 
     @Override
-    public byte[] decryptWithIv(@NonNull final Key key,
-                                @NonNull final String decryptAlgorithm,
+    public byte[] encryptWithIv(@NonNull final Key key,
+                                @NonNull final String encryptAlgorithm,
                                 final byte[] iv,
-                                byte[] dataToBeDecrypted) throws ClientException {
+                                byte[] dataToBeEncrypted) throws ClientException {
         return performCryptoOperationAndUploadTelemetry(
                 CryptoObjectName.Cipher,
-                decryptAlgorithm,
+                encryptAlgorithm,
                 mCryptoFactory,
                 new ICryptoOperation<byte[]>() {
                     @Override
                     public byte[] perform() throws ClientException {
-                        return decryptWithIvInternal(key, decryptAlgorithm, iv, dataToBeDecrypted);
+                        return encryptWithIvInternal(key, encryptAlgorithm, iv, dataToBeEncrypted);
                     }
                 }
         );
     }
 
     @Override
-    public byte[] decryptWithGcm(@NonNull final Key key,
-                                 @NonNull final String decryptAlgorithm,
+    public byte[] encryptWithGcm(@NonNull final Key key,
+                                 @NonNull final String encryptAlgorithm,
                                  final byte[] iv,
-                                 final byte[] dataToBeDecrypted,
+                                 final byte[] dataToBeEncrypted,
                                  final int tagLength,
                                  final byte[] aad) throws ClientException {
         return performCryptoOperationAndUploadTelemetry(
                 CryptoObjectName.Cipher,
-                decryptAlgorithm,
+                encryptAlgorithm,
                 mCryptoFactory,
                 new ICryptoOperation<byte[]>() {
                     @Override
                     public byte[] perform() throws ClientException {
-                        return decryptWithGcmInternal(
-                                key, decryptAlgorithm, iv, dataToBeDecrypted, tagLength, aad
+                        return encryptWithGcmInternal(
+                                key, encryptAlgorithm, iv, dataToBeEncrypted, tagLength, aad
                         );
                     }
                 }
         );
     }
 
-    private byte[] decryptWithIvInternal(@NonNull final Key key,
-                                         @NonNull final String decryptAlgorithm,
+    private byte[] encryptWithIvInternal(@NonNull final Key key,
+                                         @NonNull final String encryptAlgorithm,
                                          final byte[] iv,
-                                         byte[] dataToBeDecrypted)
+                                         byte[] dataToBeEncrypted)
             throws ClientException {
-        final Cipher cipher = mCryptoFactory.getCipher(decryptAlgorithm);
+        final Cipher cipher = mCryptoFactory.getCipher(encryptAlgorithm);
         try {
             if (iv != null && iv.length > 0) {
                 final IvParameterSpec ivSpec = new IvParameterSpec(iv);
-                cipher.init(Cipher.DECRYPT_MODE, key, ivSpec);
+                cipher.init(Cipher.ENCRYPT_MODE, key, ivSpec);
             } else {
-                cipher.init(Cipher.DECRYPT_MODE, key);
+                cipher.init(Cipher.ENCRYPT_MODE, key);
             }
-            return cipher.doFinal(dataToBeDecrypted);
+            return cipher.doFinal(dataToBeEncrypted);
         } catch (final BadPaddingException e) {
             throw new ClientException(ClientException.BAD_PADDING, e.getMessage(), e);
         } catch (final IllegalBlockSizeException e) {
@@ -116,23 +112,23 @@ public class BasicDecryptor implements IDecryptor {
     }
 
     @SuppressWarnings("NewApi")
-    private byte[] decryptWithGcmInternal(@NonNull final Key key,
-                                          @NonNull final String decryptAlgorithm,
+    private byte[] encryptWithGcmInternal(@NonNull final Key key,
+                                          @NonNull final String encryptAlgorithm,
                                           final byte[] iv,
-                                          byte[] dataToBeDecrypted,
+                                          byte[] dataToBeEncrypted,
                                           final int tagLength,
-                                          @Nullable final byte[] aad)
+                                          final byte[] aad)
             throws ClientException {
-        final Cipher cipher = mCryptoFactory.getCipher(decryptAlgorithm);
+        final Cipher cipher = mCryptoFactory.getCipher(encryptAlgorithm);
         try {
-            final GCMParameterSpec spec = new GCMParameterSpec(tagLength * Byte.SIZE, iv);
-            cipher.init(Cipher.DECRYPT_MODE, key, spec);
+            final GCMParameterSpec ivSpec = new GCMParameterSpec(tagLength * Byte.SIZE, iv);
+            cipher.init(Cipher.ENCRYPT_MODE, key, ivSpec);
 
             if (aad != null) {
                 cipher.updateAAD(aad);
             }
 
-            return cipher.doFinal(dataToBeDecrypted);
+            return cipher.doFinal(dataToBeEncrypted);
         } catch (final BadPaddingException e) {
             throw new ClientException(ClientException.BAD_PADDING, e.getMessage(), e);
         } catch (final IllegalBlockSizeException e) {

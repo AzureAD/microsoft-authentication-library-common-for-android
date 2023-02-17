@@ -20,27 +20,48 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.labapi.utilities.constants;
+package com.microsoft.identity.common.java.flighting;
 
-public enum FederationProvider {
-    NONE(LabConstants.FederationProvider.NONE),
-    ADFS_V2(LabConstants.FederationProvider.ADFS_V2),
-    ADFS_V3(LabConstants.FederationProvider.ADFS_V3),
-    ADFS_V4(LabConstants.FederationProvider.ADFS_V4),
-    ADFS_V2019(LabConstants.FederationProvider.ADFS_V2019),
-    B2C(LabConstants.FederationProvider.B2C),
-    PING(LabConstants.FederationProvider.PING),
-    SHIBBOLETH(LabConstants.FederationProvider.SHIBBOLETH),
-    CIAM(LabConstants.FederationProvider.CIAM);
+import java.util.HashMap;
+import java.util.Map;
 
-    final String value;
+public class MockFlightsProvider implements IFlightsProvider {
+    private final Map<String, String> mFlights;
+    public MockFlightsProvider() {
+        mFlights = new HashMap<>();
+    }
 
-    FederationProvider(final String value) {
-        this.value = value;
+    public void addFlight(String key, String value) {
+        mFlights.put(key, value);
+    }
+
+    public void removeFlight(String key) {
+        mFlights.remove(key);
+    }
+    @Override
+    public boolean isFlightEnabled(IFlightConfig flightConfig) {
+        return Boolean.parseBoolean(
+                mFlights.getOrDefault(
+                        flightConfig.getKey(), flightConfig.getDefaultValue().toString()));
     }
 
     @Override
-    public String toString() {
-        return value;
+    public boolean getBooleanValue(IFlightConfig flightConfig) {
+        return false;
+    }
+
+    @Override
+    public int getIntValue(IFlightConfig flightConfig) {
+        return 0;
+    }
+
+    @Override
+    public double getDoubleValue(IFlightConfig flightConfig) {
+        return 0;
+    }
+
+    @Override
+    public String getStringValue(IFlightConfig flightConfig) {
+        return null;
     }
 }
