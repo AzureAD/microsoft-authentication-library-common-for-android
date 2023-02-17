@@ -6,6 +6,7 @@ vNext
 - [MINOR] Adding new methods in IAccountCredentialAdapter (#1954)
 - [MINOR] Add a Basic Encryptor Interface + Add support to Encrypt / Decrypt using AES GCM (#1953)
 - [MINOR] Setting sub error codes to UiRequiredException for MsalUiRequiredException (#1944)
+- [MINOR] Wrap Runnable with Current Telemetry Context (#1956)
 
 V.10.0.0
 ----------
