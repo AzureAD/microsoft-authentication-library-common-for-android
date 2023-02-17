@@ -34,4 +34,9 @@ public abstract class AbstractNfcSmartcardCertBasedAuthManager extends AbstractS
     true if most recently connected smartcard device is the same as the previous.
     false otherwise (including if no previous smartcard device exists). */
     @Getter protected boolean isDeviceChanged;
+
+    /**
+     * Disconnects a connected smartcard.
+     */
+    abstract void disconnect();
 }

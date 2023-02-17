@@ -69,7 +69,7 @@ public class UsbSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
      * discovery active throughout the entire flow.
      */
     @Override
-    protected void pauseForRemoval(@NonNull final IDisconnectionCallback callback) {
+    protected void pauseToCloseConnection(@NonNull final IDisconnectionCallback callback) {
         //Usb discovery and connection should always remain active for the duration of the authentication flow.
         //Therefore, we merely invoke the callback here.
         callback.onClosedConnection();
@@ -134,8 +134,9 @@ public class UsbSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
     }
 
     /**
-     * TODO
-     * @param callback
+     * If a smartcard is currently connected, prompt user to remove the smartcard before
+     *  proceeding with results.
+     * @param callback {@link ISendResultCallback}
      */
     @Override
     public void promptSmartcardRemovalForResult(@NonNull final ISendResultCallback callback) {

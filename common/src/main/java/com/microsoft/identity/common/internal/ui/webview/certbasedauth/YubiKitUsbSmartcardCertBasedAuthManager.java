@@ -114,15 +114,6 @@ public class YubiKitUsbSmartcardCertBasedAuthManager extends AbstractUsbSmartcar
         }
     }
 
-    @Override
-    void disconnect() {
-        //TODO: do something else here?
-        if (mUsbDevice != null) {
-            mUsbDevice.close();
-            mUsbDevice = null;
-        }
-    }
-
     /**
      * Request a PivSession instance in order to carry out methods
      *  implemented in YubiKitSmartcardSession.

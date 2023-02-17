@@ -54,11 +54,6 @@ public abstract class AbstractSmartcardCertBasedAuthManager {
     abstract void stopDiscovery(@NonNull final Activity activity);
 
     /**
-     * Disconnects or prompts a user to disconnect a connected smartcard.
-     */
-    abstract void disconnect();
-
-    /**
      * Request an instance of a session in order to carry out methods specific to ISmartcardSession.
      * @param callback Contains callbacks to run when a ISmartcardSession is successfully instantiated and when any exception is thrown due to a connection issue.
      */

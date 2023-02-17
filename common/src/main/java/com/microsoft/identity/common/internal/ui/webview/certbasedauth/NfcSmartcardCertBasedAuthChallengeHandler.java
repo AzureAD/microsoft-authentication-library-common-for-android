@@ -56,7 +56,7 @@ public class NfcSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
      *  discovery active throughout the entire flow.
      */
     @Override
-    protected void pauseForRemoval(@NonNull final IDisconnectionCallback callback) {
+    protected void pauseToCloseConnection(@NonNull final IDisconnectionCallback callback) {
         //Helps prevent unnecessary callback trigger. Nfc discovery should only be active when
         // the user is prompted to tap.
         mDialogHolder.showSmartcardRemovalPromptDialog();
@@ -79,7 +79,7 @@ public class NfcSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
      */
     @Override
     protected void indicateDisconnectionError(@NonNull String methodTag) {
-        //Nothing needed
+        //Nothing needed for NFC.
     }
 
     /**
@@ -112,7 +112,7 @@ public class NfcSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
                         if (mCbaManager.isDeviceChanged()) {
                             clearPin(pin);
                             request.cancel();
-                            pauseForRemoval(new IDisconnectionCallback() {
+                            pauseToCloseConnection(new IDisconnectionCallback() {
                                 @Override
                                 public void onClosedConnection() {
                                     //In a future version, an error dialog with a custom message could be shown here instead of a general error.
@@ -132,7 +132,7 @@ public class NfcSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
                             public void onException(@NonNull final Exception e) {
                                 clearPin(pin);
                                 request.cancel();
-                                pauseForRemoval(new IDisconnectionCallback() {
+                                pauseToCloseConnection(new IDisconnectionCallback() {
                                     @Override
                                     public void onClosedConnection() {
                                         indicateGeneralException(methodTag, e);
@@ -165,13 +165,14 @@ public class NfcSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
     }
 
     /**
-     * TODO
-     * @param callback
+     * If a smartcard is currently connected, prompt user to remove the smartcard before
+     *  proceeding with results.
+     * @param callback {@link ISendResultCallback}
      */
     @Override
     public void promptSmartcardRemovalForResult(@NonNull final ISendResultCallback callback) {
         if (mCbaManager.isDeviceConnected()) {
-            pauseForRemoval(new IDisconnectionCallback() {
+            pauseToCloseConnection(new IDisconnectionCallback() {
                 @Override
                 public void onClosedConnection() {
                     callback.onResultReady();

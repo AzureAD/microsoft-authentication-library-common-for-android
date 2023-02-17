@@ -111,7 +111,7 @@ public class YubiKitNfcSmartcardCertBasedAuthManager extends AbstractNfcSmartcar
     }
 
     /**
-     * TODO
+     * Disconnects a connected smartcard.
      */
     @Override
     void disconnect() {

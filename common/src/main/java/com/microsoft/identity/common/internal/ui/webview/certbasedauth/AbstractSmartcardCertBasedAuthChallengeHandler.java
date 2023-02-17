@@ -49,7 +49,8 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandler<T extends A
     protected static final String USER_CANCEL_MESSAGE = "User canceled smartcard CBA flow.";
     protected final String TAG;
     protected final Activity mActivity;
-    protected final T mCbaManager;
+    protected final T
+            mCbaManager;
     protected final IDialogHolder mDialogHolder;
 
     /**
@@ -91,7 +92,7 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandler<T extends A
             public void onGetSession(@NonNull final ISmartcardSession session) throws Exception {
                 final int pinAttemptsRemaining = session.getPinAttemptsRemaining();
                 final List<ICertDetails> certList = session.getCertDetailsList();
-                pauseForRemoval(new IDisconnectionCallback() {
+                pauseToCloseConnection(new IDisconnectionCallback() {
                     @Override
                     public void onClosedConnection() {
                         if (pinAttemptsRemaining == 0) {
@@ -138,10 +139,10 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandler<T extends A
     }
 
     /**
-     * Pauses smartcard discovery, if the particular authentication method isn't meant to have
-     *  discovery active throughout the entire flow.
+     * When a connection is no longer actively being used, should pause so the user can remove their smartcard
+     *  before flow can continue.
      */
-    protected abstract void pauseForRemoval(@NonNull final IDisconnectionCallback callback);
+    protected abstract void pauseToCloseConnection(@NonNull final IDisconnectionCallback callback);
 
     /**
      * Returns a callback that dismisses the current dialog, sends telemetry, and cancels the ClientCertRequest.
@@ -187,7 +188,8 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandler<T extends A
      * @param methodTag tag from calling method.
      * @param e Exception thrown.
      */
-    protected void indicateGeneralException(@NonNull final String methodTag, @NonNull final Exception e) {
+    protected void indicateGeneralException(@NonNull final String methodTag,
+                                            @NonNull final Exception e) {
         Logger.error(methodTag, e.getMessage(), e);
         mTelemetryHelper.setResultFailure(e);
         //Show general error dialog.
@@ -229,7 +231,8 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandler<T extends A
      * @param request ClientCertRequest received from AzureActiveDirectoryWebViewClient.onReceivedClientCertRequest.
      * @return A PositiveButtonListener to be set for a SmartcardPinDialog.
      */
-    protected abstract SmartcardPinDialog.PositiveButtonListener getSmartcardPinDialogPositiveButtonListener(@NonNull final ICertDetails certDetails, @NonNull final ClientCertRequest request);
+    protected abstract SmartcardPinDialog.PositiveButtonListener getSmartcardPinDialogPositiveButtonListener(@NonNull final ICertDetails certDetails,
+                                                                                                             @NonNull final ClientCertRequest request);
 
     /**
      * Checks to see if PIN for smartcard is correct.
@@ -253,7 +256,7 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandler<T extends A
             return;
         }
         final int attemptsRemaining = session.getPinAttemptsRemaining();
-        pauseForRemoval(new IDisconnectionCallback() {
+        pauseToCloseConnection(new IDisconnectionCallback() {
             @Override
             public void onClosedConnection() {
                 if (attemptsRemaining == 0) {
@@ -309,8 +312,9 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandler<T extends A
     }
 
     /**
-     * TODO:
-     * @param callback
+     * If a smartcard is currently connected, prompt user to remove the smartcard before
+     *  proceeding with results.
+     * @param callback {@link ISendResultCallback}
      */
     public abstract void promptSmartcardRemovalForResult(@NonNull final ISendResultCallback callback);
 
