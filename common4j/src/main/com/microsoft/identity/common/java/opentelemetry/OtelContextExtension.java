@@ -45,6 +45,13 @@ public class OtelContextExtension {
 
     private static final String TAG = OtelContextExtension.class.getSimpleName();
 
+    /**
+     * Returns a Runnable that makes this the current context and then invokes the input Runnable.
+     * See {@link Context#current()#wrap(Runnable)}
+     *
+     * @param runnable the runnable to wrap
+     * @return the wrapped runnable
+     */
     public static Runnable wrap(final Runnable runnable) {
         try {
             return Context.current().wrap(runnable);
