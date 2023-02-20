@@ -7,6 +7,7 @@ vNext
 - [MINOR] Add a Basic Encryptor Interface + Add support to Encrypt / Decrypt using AES GCM (#1953)
 - [MINOR] Setting sub error codes to UiRequiredException for MsalUiRequiredException (#1944)
 - [MINOR] Wrap Runnable with Current Telemetry Context (#1956)
+- [MINOR] Update JweResponse APIs and added Additional Authenticated Data (AAD) (#1958)
 
 V.10.0.0
 ----------
