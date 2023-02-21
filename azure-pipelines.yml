@@ -9,14 +9,20 @@ trigger:
 pool:
   vmImage: macOS-latest
 
-steps:
-- script: echo Hello, world!
-  displayName: 'Run a one-line script'
+resources:
+  repositories:
+    - repository: self
+      type: git
+      ref: dev
 
+steps:
+- checkout: self
+  clean: true
+  persistCredentials: True
 - script: |
-    echo Add other tasks to build, test, and deploy your project.
-    echo See https://aka.ms/yaml
     #!/usr/bin/env bash
+    echo Starting android emulator
+    echo See https://learn.microsoft.com/en-us/azure/devops/pipelines/ecosystems/android?view=azure-devops#test-on-the-android-emulator
 
     # Install AVD files
     echo "y" | $ANDROID_HOME/tools/bin/sdkmanager --install 'system-images;android-27;google_apis;x86'
@@ -29,10 +35,18 @@ steps:
     echo "Starting emulator"
 
     # Start emulator in background
-    nohup $ANDROID_HOME/emulator/emulator -avd android_emulator -no-snapshot > /dev/null 2>&1 &
+    nohup $ANDROID_HOME/emulator/emulator -avd android_emulator -no-window -no-audio -wipe-data -no-snapshot > /dev/null 2>&1 &
     $ANDROID_HOME/platform-tools/adb wait-for-device shell 'while [[ -z $(getprop sys.boot_completed | tr -d '\r') ]]; do sleep 1; done; input keyevent 82'
 
     $ANDROID_HOME/platform-tools/adb devices
 
     echo "Emulator started"
   displayName: 'Starting android emulator'
+- task: Gradle@3
+  inputs:
+    gradleWrapperFile: 'gradlew'
+    options: '-i -Psugar=true'
+    tasks: 'common:connectedLocalDebugAndroidTest'
+    publishJUnitResults: true
+    testResultsFiles: '**/TEST-*.xml'
+    javaHomeOption: 'JDKVersion'
