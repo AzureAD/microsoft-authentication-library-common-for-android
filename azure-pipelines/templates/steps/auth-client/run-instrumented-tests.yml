@@ -32,6 +32,8 @@ jobs:
   variables:
   - name: android.system.image
     value: system-images;android-${{ parameters.androidAPIlevel }};${{ parameters.androidVariant }};${{ parameters.androidABI }}
+  - name: project.variant
+    value: ${{ parameters.projectVariantName }}
   steps:
   - checkout: ${{ parameters.gitProject }}
     clean: true
@@ -72,6 +74,5 @@ jobs:
       publishJUnitResults: true
       testResultsFiles: '**/TEST-*.xml'
       javaHomeOption: 'JDKVersion'
-      displayName: Run instrumented test
-  - script: echo "##vso[build.addbuildtag]projectVariant-${{ parameters.projectVariantName }}_systemImage-$(android.system.image)"
+  - script: echo "##vso[build.addbuildtag]projectVariant=$(project.variant) AndroidSystemImage=$(android.system.image)"
     displayName: Create tag
