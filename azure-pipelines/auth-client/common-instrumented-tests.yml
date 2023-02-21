@@ -1,7 +1,8 @@
 # File: azure-pipelines\auth-client\common-instrumented-test.yml
 # Description: Run common instrumented test.
 
-trigger: dev
+trigger:
+- main
 
 jobs:
 - template: ../templates/steps/auth-client/run-instrumented-tests.yml
