@@ -10,6 +10,9 @@ parameters:
   # Build variant of your project
 - name: projectVariantName
   default: LocalDebug
+  # Specifies the command line options that will be passed to the Gradle wrapper.
+- name: gradleOptions
+  default: -Psugar=true
 # https://developer.android.com/studio/releases/platforms
 - name: androidAPILevel
   default: 30
@@ -27,7 +30,7 @@ jobs:
   pool:
     vmImage: macOS-latest
   variables:
-  - name: androidSystemImage
+  - name: android.system.image
     value: system-images;android-${{ parameters.androidAPIlevel }};${{ parameters.androidVariant }};${{ parameters.androidABI }}
   steps:
   - checkout: ${{ parameters.gitProject }}
@@ -44,10 +47,10 @@ jobs:
       echo See https://developer.android.com/studio/command-line/adb
 
       # Install AVD files
-      echo "y" | $ANDROID_HOME/tools/bin/sdkmanager --install $SYSTEM_IMAGE
+      echo "y" | $ANDROID_HOME/tools/bin/sdkmanager --install $ANDROID_SYSTEM_IMAGE
 
       # Create emulator
-      echo "no" | $ANDROID_HOME/tools/bin/avdmanager create avd -n android_emulator -k $SYSTEM_IMAGE --force
+      echo "no" | $ANDROID_HOME/tools/bin/avdmanager create avd -n android_emulator -k $ANDROID_SYSTEM_IMAGE --force
 
       $ANDROID_HOME/emulator/emulator -list-avds
 
@@ -61,14 +64,14 @@ jobs:
 
       echo "Emulator started"
     displayName: 'Starting android emulator'
-    env:
-      SYSTEM_IMAGE: $(androidSystemImage)
   - task: Gradle@3
     inputs:
       gradleWrapperFile: 'gradlew'
-      options: '-Psugar=true'
+      options: ${{ parameters.gradleOptions }}
       tasks: '${{ parameters.projectName }}:connected${{ parameters.projectVariantName }}AndroidTest'
       publishJUnitResults: true
       testResultsFiles: '**/TEST-*.xml'
       javaHomeOption: 'JDKVersion'
-  - script: Write-Host "##vso[build.addbuildtag]projectVariant-${{ parameters.projectVariantName }}_systemImage-$(androidSystemImage)"
+      displayName: Run instrumented test
+  - script: echo "##vso[build.addbuildtag]projectVariant-${{ parameters.projectVariantName }}_systemImage-$(android.system.image)"
+    displayName: Create tag
