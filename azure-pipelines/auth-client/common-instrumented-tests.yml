@@ -4,10 +4,15 @@
 trigger:
 - main
 
+resources:
+ repositories:
+ - repository: android-complete
+   type: github
+   name: AzureAD/android-complete
+   ref: pedroro/instrumented-test
+   endpoint: ANDROID_GITHUB
+
 jobs:
-- template: ../templates/steps/auth-client/run-instrumented-tests.yml
+- template: azure-pipelines/instrumented-tests/run-instrumented-tests.yml@android-complete
   parameters:
     projectName: common
-
-
-# trigger new pipeline
