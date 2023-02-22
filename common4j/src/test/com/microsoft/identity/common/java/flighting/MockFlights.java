@@ -20,27 +20,28 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.labapi.utilities.constants;
+package com.microsoft.identity.common.java.flighting;
 
-public enum FederationProvider {
-    NONE(LabConstants.FederationProvider.NONE),
-    ADFS_V2(LabConstants.FederationProvider.ADFS_V2),
-    ADFS_V3(LabConstants.FederationProvider.ADFS_V3),
-    ADFS_V4(LabConstants.FederationProvider.ADFS_V4),
-    ADFS_V2019(LabConstants.FederationProvider.ADFS_V2019),
-    B2C(LabConstants.FederationProvider.B2C),
-    PING(LabConstants.FederationProvider.PING),
-    SHIBBOLETH(LabConstants.FederationProvider.SHIBBOLETH),
-    CIAM(LabConstants.FederationProvider.CIAM);
+import lombok.NonNull;
 
-    final String value;
+public enum MockFlights implements IFlightConfig{
+    ENABLED_FLIGHT("enabledFlight", false),
+    DISABLED_FLIGHT("disabledFlight", false);
 
-    FederationProvider(final String value) {
-        this.value = value;
+    private String key;
+    private Object defaultValue;
+    MockFlights(@NonNull String key, @NonNull Object defaultValue) {
+        this.key = key;
+        this.defaultValue = defaultValue;
     }
 
     @Override
-    public String toString() {
-        return value;
+    public String getKey() {
+        return this.key;
+    }
+
+    @Override
+    public Object getDefaultValue() {
+        return this.defaultValue;
     }
 }
