@@ -24,7 +24,7 @@ parameters:
   default: google_apis
 # Key used to store the access token, AT for the Android DevX Feed.
 - name: accessTokenKey
-  default: 'null'
+  default: none
 
 jobs:
 - job:
@@ -43,9 +43,9 @@ jobs:
     submodules: recursive
   - script: echo "##vso[build.addbuildtag]projectVariant=$(project.variant) AndroidSystemImage=$(android.system.image)"
     displayName: Create tag
-  - script: echo "##vso[task.setvariable variable=${{ parameters.accessTokenKey }}]$(System.AccessToken)"
-    displayName: Set AccessToken
-    condition: ne(variables['parameters.accessTokenKey'], 'null')
+  - ${{ if ne(parameters.accessTokenKey, 'none') }}:
+    - script: echo "##vso[task.setvariable variable=${{ parameters.accessTokenKey }}]$(System.AccessToken)"
+      displayName: Set AccessToken
   - script: |
       #!/usr/bin/env bash
       echo Starting android emulator
