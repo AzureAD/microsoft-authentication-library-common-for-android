@@ -41,6 +41,8 @@ jobs:
     submodules: recursive
   - script: echo "##vso[build.addbuildtag]projectVariant=$(project.variant) AndroidSystemImage=$(android.system.image)"
     displayName: Create tag
+  - script: echo "##vso[task.setvariable variable=ENV_VSTS_MVN_ANDROIDADACCOUNTS_ACCESSTOKEN]$(System.AccessToken)"
+    displayName: Set AccessToken
   - script: |
       #!/usr/bin/env bash
       echo Starting android emulator
