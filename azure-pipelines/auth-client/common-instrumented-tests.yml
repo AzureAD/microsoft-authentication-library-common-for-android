@@ -8,3 +8,6 @@ jobs:
 - template: ../templates/steps/auth-client/run-instrumented-tests.yml
   parameters:
     projectName: common
+
+
+# trigger new pipeline
