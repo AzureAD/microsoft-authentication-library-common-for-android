@@ -31,6 +31,7 @@ import com.microsoft.identity.common.java.opentelemetry.ICryptoOperation;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.Key;
+import java.util.Arrays;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -69,7 +70,7 @@ public class BasicEncryptor implements IEncryptor {
                                  @NonNull final String encryptAlgorithm,
                                  final byte[] iv,
                                  final byte[] dataToBeEncrypted,
-                                 final int tagLength,
+                                 final byte[] tag,
                                  final byte[] aad) throws ClientException {
         return performCryptoOperationAndUploadTelemetry(
                 CryptoObjectName.Cipher,
@@ -79,7 +80,7 @@ public class BasicEncryptor implements IEncryptor {
                     @Override
                     public byte[] perform() throws ClientException {
                         return encryptWithGcmInternal(
-                                key, encryptAlgorithm, iv, dataToBeEncrypted, tagLength, aad
+                                key, encryptAlgorithm, iv, dataToBeEncrypted, tag, aad
                         );
                     }
                 }
@@ -116,19 +117,25 @@ public class BasicEncryptor implements IEncryptor {
                                           @NonNull final String encryptAlgorithm,
                                           final byte[] iv,
                                           byte[] dataToBeEncrypted,
-                                          final int tagLength,
+                                          final byte[] tag,
                                           final byte[] aad)
             throws ClientException {
         final Cipher cipher = mCryptoFactory.getCipher(encryptAlgorithm);
         try {
-            final GCMParameterSpec ivSpec = new GCMParameterSpec(tagLength * Byte.SIZE, iv);
+            final GCMParameterSpec ivSpec = new GCMParameterSpec(tag.length * Byte.SIZE, iv);
             cipher.init(Cipher.ENCRYPT_MODE, key, ivSpec);
 
             if (aad != null) {
                 cipher.updateAAD(aad);
             }
 
-            return cipher.doFinal(dataToBeEncrypted);
+            final byte[] cipherText = cipher.doFinal(dataToBeEncrypted);
+            System.arraycopy(cipherText, cipherText.length - tag.length, tag, 0, tag.length);
+            return Arrays.copyOfRange(
+                    cipherText,
+                    0,
+                    dataToBeEncrypted.length
+            );
         } catch (final BadPaddingException e) {
             throw new ClientException(ClientException.BAD_PADDING, e.getMessage(), e);
         } catch (final IllegalBlockSizeException e) {

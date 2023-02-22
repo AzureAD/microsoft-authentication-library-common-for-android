@@ -54,7 +54,7 @@ public interface IEncryptor {
      * @param encryptAlgorithm  algorithm to encrypt with.
      * @param iv                an initialization vector (IV).
      * @param dataToBeEncrypted the data to be encrypted.
-     * @param tagLength         the length of tag being used
+     * @param tag               the byte array that is meant to hold the tag
      * @param aad               the additional authentication data
      * @return an encrypted byte array.
      */
@@ -62,6 +62,6 @@ public interface IEncryptor {
                           @NonNull final String encryptAlgorithm,
                           final byte[] iv,
                           final byte[] dataToBeEncrypted,
-                          final int tagLength,
+                          final byte[] tag,
                           final byte[] aad) throws ClientException;
 }

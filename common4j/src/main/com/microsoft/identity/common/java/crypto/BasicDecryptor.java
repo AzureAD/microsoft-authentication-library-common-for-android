@@ -27,7 +27,9 @@ import static com.microsoft.identity.common.java.opentelemetry.CryptoFactoryTele
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.opentelemetry.CryptoObjectName;
 import com.microsoft.identity.common.java.opentelemetry.ICryptoOperation;
+import com.nimbusds.jose.crypto.bc.BouncyCastleProviderSingleton;
 
+import java.nio.ByteBuffer;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.Key;
@@ -125,14 +127,20 @@ public class BasicDecryptor implements IDecryptor {
             throws ClientException {
         final Cipher cipher = mCryptoFactory.getCipher(decryptAlgorithm);
         try {
-            final GCMParameterSpec spec = new GCMParameterSpec(tag.length * Byte.SIZE, iv);
+            final GCMParameterSpec spec = new GCMParameterSpecWithTag(tag, iv);
             cipher.init(Cipher.DECRYPT_MODE, key, spec);
 
             if (aad != null) {
                 cipher.updateAAD(aad);
             }
 
-            return cipher.doFinal(dataToBeDecrypted);
+            final byte[] payloadToDecrypt =
+                    ByteBuffer.allocate(dataToBeDecrypted.length + tag.length)
+                            .put(dataToBeDecrypted)
+                            .put(tag)
+                            .array();
+
+            return cipher.doFinal(payloadToDecrypt);
         } catch (final BadPaddingException e) {
             throw new ClientException(ClientException.BAD_PADDING, e.getMessage(), e);
         } catch (final IllegalBlockSizeException e) {
