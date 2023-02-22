@@ -39,6 +39,8 @@ jobs:
     clean: true
     persistCredentials: True
     submodules: recursive
+  - script: echo "##vso[build.addbuildtag]projectVariant=$(project.variant) AndroidSystemImage=$(android.system.image)"
+    displayName: Create tag
   - script: |
       #!/usr/bin/env bash
       echo Starting android emulator
@@ -74,5 +76,3 @@ jobs:
       publishJUnitResults: true
       testResultsFiles: '**/TEST-*.xml'
       javaHomeOption: 'JDKVersion'
-  - script: echo "##vso[build.addbuildtag]projectVariant=$(project.variant) AndroidSystemImage=$(android.system.image)"
-    displayName: Create tag
