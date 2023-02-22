@@ -73,7 +73,7 @@ public class BasicDecryptor implements IDecryptor {
                                  @NonNull final String decryptAlgorithm,
                                  final byte[] iv,
                                  final byte[] dataToBeDecrypted,
-                                 final int tagLength,
+                                 final byte[] tag,
                                  final byte[] aad) throws ClientException {
         return performCryptoOperationAndUploadTelemetry(
                 CryptoObjectName.Cipher,
@@ -83,7 +83,7 @@ public class BasicDecryptor implements IDecryptor {
                     @Override
                     public byte[] perform() throws ClientException {
                         return decryptWithGcmInternal(
-                                key, decryptAlgorithm, iv, dataToBeDecrypted, tagLength, aad
+                                key, decryptAlgorithm, iv, dataToBeDecrypted, tag, aad
                         );
                     }
                 }
@@ -120,12 +120,12 @@ public class BasicDecryptor implements IDecryptor {
                                           @NonNull final String decryptAlgorithm,
                                           final byte[] iv,
                                           byte[] dataToBeDecrypted,
-                                          final int tagLength,
+                                          final byte[] tag,
                                           @Nullable final byte[] aad)
             throws ClientException {
         final Cipher cipher = mCryptoFactory.getCipher(decryptAlgorithm);
         try {
-            final GCMParameterSpec spec = new GCMParameterSpec(tagLength * Byte.SIZE, iv);
+            final GCMParameterSpec spec = new GCMParameterSpec(tag.length * Byte.SIZE, iv);
             cipher.init(Cipher.DECRYPT_MODE, key, spec);
 
             if (aad != null) {

@@ -54,7 +54,7 @@ public interface IDecryptor {
      * @param decryptAlgorithm  algorithm to decrypt with.
      * @param iv                an initialization vector (IV).
      * @param dataToBeDecrypted the data to be encrypted.
-     * @param tagLength         the length of tag being used
+     * @param tag               the authentication tag being used
      * @param aad               the additional authentication data
      * @return a decrypted byte array.
      */
@@ -62,6 +62,6 @@ public interface IDecryptor {
                           @NonNull final String decryptAlgorithm,
                           final byte[] iv,
                           final byte[] dataToBeDecrypted,
-                          final int tagLength,
+                          final byte[] tag,
                           final byte[] aad) throws ClientException;
 }
