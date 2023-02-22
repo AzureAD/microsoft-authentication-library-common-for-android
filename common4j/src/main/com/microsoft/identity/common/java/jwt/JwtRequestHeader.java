@@ -27,12 +27,17 @@ import com.google.gson.annotations.SerializedName;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 
+/**
+ * Represents header in a JWT. These JWTs can be used in token requests
+ */
 public final class JwtRequestHeader extends AbstractJwtRequest {
 
     private static final String JWT_VALUE = "JWT";
 
+    // HMAC using SHA256 - symmetric key signing algorithm
     public static final String ALG_VALUE_HS256 = "HS256";
 
+    // RSA using SHA256 - asymmetric key signing algorithm
     public static final String ALG_VALUE_RS256 = "RS256";
 
     @SerializedName("typ")

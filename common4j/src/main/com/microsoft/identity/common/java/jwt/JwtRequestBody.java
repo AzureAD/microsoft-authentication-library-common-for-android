@@ -27,6 +27,9 @@ import com.google.gson.annotations.SerializedName;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 
+/**
+ * Represents body of JWT. These JWTs can be used in token requests.
+ */
 public final class JwtRequestBody extends AbstractJwtRequest {
 
     @Setter
