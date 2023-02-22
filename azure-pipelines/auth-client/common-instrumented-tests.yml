@@ -13,6 +13,6 @@ resources:
    endpoint: ANDROID_GITHUB
 
 jobs:
-- template: azure-pipelines/instrumented-tests/run-instrumented-tests.yml@android-complete
+- template: azure-pipelines/templates/run-instrumented-tests.yml@android-complete
   parameters:
     projectName: common
