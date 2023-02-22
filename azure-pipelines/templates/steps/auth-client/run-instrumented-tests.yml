@@ -22,7 +22,9 @@ parameters:
 # Variant corresponds to specific features implemented by the system image; possible values include google_apis, android_wear.
 - name: androidVariant
   default: google_apis
-
+# Key used to store the access token, AT for the Android DevX Feed.
+- name: accessTokenKey
+  default: 'null'
 
 jobs:
 - job:
@@ -41,8 +43,9 @@ jobs:
     submodules: recursive
   - script: echo "##vso[build.addbuildtag]projectVariant=$(project.variant) AndroidSystemImage=$(android.system.image)"
     displayName: Create tag
-  - script: echo "##vso[task.setvariable variable=ENV_VSTS_MVN_ANDROIDADACCOUNTS_ACCESSTOKEN]$(System.AccessToken)"
+  - script: echo "##vso[task.setvariable variable=${{ parameters.accessTokenKey }}]$(System.AccessToken)"
     displayName: Set AccessToken
+    condition: ne(variables['parameters.accessTokenKey'], 'null')
   - script: |
       #!/usr/bin/env bash
       echo Starting android emulator
