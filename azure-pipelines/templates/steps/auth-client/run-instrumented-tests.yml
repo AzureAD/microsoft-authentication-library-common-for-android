@@ -18,7 +18,7 @@ parameters:
   default: 30
 # https://developer.android.com/ndk/guides/abis
 - name: androidABI
-  default: x86
+  default: x86_64
 # Variant corresponds to specific features implemented by the system image; possible values include google_apis, android_wear.
 - name: androidVariant
   default: google_apis
