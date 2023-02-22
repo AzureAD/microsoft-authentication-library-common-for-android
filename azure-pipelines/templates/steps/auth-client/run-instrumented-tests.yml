@@ -28,6 +28,7 @@ parameters:
 
 jobs:
 - job:
+  timeoutInMinutes: 120
   displayName: Run ${{ parameters.projectName }} ${{ parameters.projectVariantName }} instrumented test
   pool:
     vmImage: macOS-latest
