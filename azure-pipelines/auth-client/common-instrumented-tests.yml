@@ -9,7 +9,7 @@ resources:
  - repository: android-complete
    type: github
    name: AzureAD/android-complete
-   ref: pedroro/instrumented-test
+   ref: master
    endpoint: ANDROID_GITHUB
 
 jobs:
