@@ -243,14 +243,9 @@ stages:
           workingDirectory: $(Agent.BuildDirectory)/s/OneAuth
 
       - task: MavenAuthenticate@0
-        displayName: Authenticate to the IdentityDivision Android Maven feed
+        displayName: Authenticate to the OneAuth_Upstream Android Maven feed
         inputs:
-          MavenServiceConnections: IdentityDivision
-
-      - task: MavenAuthenticate@0
-        displayName: Authenticate to the Intune_App_SDK feed
-        inputs:
-          MavenServiceConnections: Intune_App_SDK
+          MavenServiceConnections: OneAuth_Upstream
 
       - task: Bash@3
         displayName: Install ninja
