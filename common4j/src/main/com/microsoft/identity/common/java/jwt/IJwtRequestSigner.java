@@ -20,27 +20,24 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.labapi.utilities.constants;
+package com.microsoft.identity.common.java.jwt;
 
-public enum FederationProvider {
-    NONE(LabConstants.FederationProvider.NONE),
-    ADFS_V2(LabConstants.FederationProvider.ADFS_V2),
-    ADFS_V3(LabConstants.FederationProvider.ADFS_V3),
-    ADFS_V4(LabConstants.FederationProvider.ADFS_V4),
-    ADFS_V2019(LabConstants.FederationProvider.ADFS_V2019),
-    B2C(LabConstants.FederationProvider.B2C),
-    PING(LabConstants.FederationProvider.PING),
-    SHIBBOLETH(LabConstants.FederationProvider.SHIBBOLETH),
-    CIAM(LabConstants.FederationProvider.CIAM);
+import com.microsoft.identity.common.java.exception.ClientException;
 
-    final String value;
+import java.security.cert.CertificateEncodingException;
 
-    FederationProvider(final String value) {
-        this.value = value;
-    }
+import lombok.NonNull;
 
-    @Override
-    public String toString() {
-        return value;
-    }
+/**
+ * Interface for signing JWT for broker token requests
+ * given JWT payload.
+ */
+public interface IJwtRequestSigner {
+    /**
+     * Generate signed JWT given payload.
+     * Payload is provided as {@link JwtRequestBody}
+     * @param jwtRequestBody JWT payload
+     * @return Return signed JWT string (encodedJwtHeader.encodedJwtBody.Signature(encodedJwtHeader, encodedJwtBody))
+     */
+    @NonNull String getSignedJwt(@NonNull final JwtRequestBody jwtRequestBody) throws ClientException, CertificateEncodingException;
 }

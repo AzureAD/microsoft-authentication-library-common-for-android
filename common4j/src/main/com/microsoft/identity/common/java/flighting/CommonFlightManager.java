@@ -20,27 +20,34 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.labapi.utilities.constants;
+package com.microsoft.identity.common.java.flighting;
 
-public enum FederationProvider {
-    NONE(LabConstants.FederationProvider.NONE),
-    ADFS_V2(LabConstants.FederationProvider.ADFS_V2),
-    ADFS_V3(LabConstants.FederationProvider.ADFS_V3),
-    ADFS_V4(LabConstants.FederationProvider.ADFS_V4),
-    ADFS_V2019(LabConstants.FederationProvider.ADFS_V2019),
-    B2C(LabConstants.FederationProvider.B2C),
-    PING(LabConstants.FederationProvider.PING),
-    SHIBBOLETH(LabConstants.FederationProvider.SHIBBOLETH),
-    CIAM(LabConstants.FederationProvider.CIAM);
+import lombok.NonNull;
 
-    final String value;
+/**
+ * Class to set Flight Provider for Common Flights
+ * Consumer of commons needs to implement {@link IFlightsProvider} interface
+ * and set it using CommonFlightManager.setFlightProvider(@NonNull IFlightsProvider flightProvider)
+ * to provide Flight Values for CommonFlights
+ * If no Flight Provider is set, default value of the flight will be used
+ */
+public class CommonFlightManager {
+    private static IFlightsProvider mFlightProvider;
 
-    FederationProvider(final String value) {
-        this.value = value;
+    public static void setFlightProvider(@NonNull IFlightsProvider flightProvider) {
+        mFlightProvider = flightProvider;
     }
 
-    @Override
-    public String toString() {
-        return value;
+    /**
+     * Checks if a flight is enabled
+     * @param flightConfig flight to check
+     * @return true if the flight is enabled otherwise returns the defaultValue
+     */
+    public static boolean isFlightEnabled(@NonNull IFlightConfig flightConfig) {
+        if (mFlightProvider == null) {
+            return (Boolean) flightConfig.getDefaultValue();
+        }
+
+        return mFlightProvider.isFlightEnabled(flightConfig);
     }
 }

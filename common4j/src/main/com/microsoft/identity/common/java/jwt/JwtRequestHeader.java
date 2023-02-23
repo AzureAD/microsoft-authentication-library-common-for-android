@@ -20,27 +20,40 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.labapi.utilities.constants;
+package com.microsoft.identity.common.java.jwt;
 
-public enum FederationProvider {
-    NONE(LabConstants.FederationProvider.NONE),
-    ADFS_V2(LabConstants.FederationProvider.ADFS_V2),
-    ADFS_V3(LabConstants.FederationProvider.ADFS_V3),
-    ADFS_V4(LabConstants.FederationProvider.ADFS_V4),
-    ADFS_V2019(LabConstants.FederationProvider.ADFS_V2019),
-    B2C(LabConstants.FederationProvider.B2C),
-    PING(LabConstants.FederationProvider.PING),
-    SHIBBOLETH(LabConstants.FederationProvider.SHIBBOLETH),
-    CIAM(LabConstants.FederationProvider.CIAM);
+import com.google.gson.annotations.SerializedName;
 
-    final String value;
+import lombok.Setter;
+import lombok.experimental.Accessors;
 
-    FederationProvider(final String value) {
-        this.value = value;
-    }
+/**
+ * Represents header in a JWT. These JWTs can be used in token requests
+ */
+public final class JwtRequestHeader extends AbstractJwtRequest {
 
-    @Override
-    public String toString() {
-        return value;
+    private static final String JWT_VALUE = "JWT";
+
+    // HMAC using SHA256 - symmetric key signing algorithm
+    public static final String ALG_VALUE_HS256 = "HS256";
+
+    // RSA using SHA256 - asymmetric key signing algorithm
+    public static final String ALG_VALUE_RS256 = "RS256";
+
+    @SerializedName("typ")
+    private String mType;
+
+    @Setter
+    @Accessors(prefix = "m")
+    @SerializedName("alg")
+    private String mAlg;
+
+    @Setter
+    @Accessors(prefix = "m")
+    @SerializedName("kid")
+    private String mKId;
+
+    public void setType() {
+        mType = JWT_VALUE;
     }
 }

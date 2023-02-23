@@ -39,5 +39,6 @@ public enum SpanName {
     CertBasedAuth,
     UploadBrokerLogs,
     InitializePowerLift,
-    MSAL_PerformIpcStrategy
+    MSAL_PerformIpcStrategy,
+    DeviceRegistrationApi
 }
