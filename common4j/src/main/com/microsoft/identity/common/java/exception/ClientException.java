@@ -369,7 +369,7 @@ public class ClientException extends BaseException {
     public static final String LOG_UPLOAD_TO_POWERLIFT_FEATURE_DISABLED = "log_upload_to_powerlift_feature_disabled";
 
     /**
-     * The android version used does not support the operation
+     * The android version used does not support the operation.
      */
     public static final String UNSUPPORTED_ANDROID_API_VERSION = "unsupported_android_api_version";
 
