@@ -2,7 +2,7 @@
 # Description: Run common instrumented test.
 
 trigger:
-- main
+- dev
 
 resources:
  repositories:
