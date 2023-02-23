@@ -32,7 +32,7 @@ resources:
   - repository: OneAuth
     type: git
     name: OneAuth/OneAuthAndroidCommonWrapper
-    ref: main
+    ref: amgusain/update-repositories
     endpoint: OneAuthServiceConnection_2
 
 stages:
