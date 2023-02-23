@@ -27,6 +27,14 @@ import javax.crypto.spec.GCMParameterSpec;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 
+/**
+ * An implementation of {@link GCMParameterSpec} that can hold the actual tag (as opposed to just
+ * the tag length).
+ * <p>
+ * We need this to be able to use WolfCrypt when decrypting with AES GCM because WolfCrypt requires
+ * us to supply them the whole tag as WolfCrypt internally recalculates the tag and compares it with
+ * the supplied tag.
+ */
 @SuppressWarnings("NewApi")
 @Accessors(prefix = "m")
 @Getter
