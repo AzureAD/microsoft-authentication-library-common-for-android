@@ -8,6 +8,7 @@ vNext
 - [MINOR] Setting sub error codes to UiRequiredException for MsalUiRequiredException (#1944)
 - [MINOR] Wrap Runnable with Current Telemetry Context (#1956)
 - [MINOR] Update JweResponse APIs and added Additional Authenticated Data (AAD) (#1958)
+- [MINOR] Move JWT classes to common (#1968)
 - [MINOR] Take whole tag when decrypting with AES GCM (#1970)
 
 V.10.0.0
