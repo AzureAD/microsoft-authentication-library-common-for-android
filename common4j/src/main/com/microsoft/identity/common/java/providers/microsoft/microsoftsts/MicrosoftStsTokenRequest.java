@@ -35,9 +35,9 @@ import lombok.experimental.Accessors;
 @Accessors(prefix = "m")
 public class MicrosoftStsTokenRequest extends MicrosoftTokenRequest {
     /**
-     * Additional parameters which would be used to create JWT based token requests
+     * Additional JWT claims which would be used to create JWT based token requests
      */
-    private transient Map<String, String> mJwtRequestParams;
+    private transient Map<String, String> mJwtClaims;
     public MicrosoftStsTokenRequest() {
         super();
     }

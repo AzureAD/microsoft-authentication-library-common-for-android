@@ -24,12 +24,17 @@ package com.microsoft.identity.common.java.jwt;
 
 import com.google.gson.annotations.SerializedName;
 
+import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 
 /**
  * Represents header in a JWT. These JWTs can be used in token requests
  */
+@Getter
+@Setter
+@Accessors(prefix = "m")
 public final class JwtRequestHeader extends AbstractJwtRequest {
 
     private static final String JWT_VALUE = "JWT";
@@ -40,18 +45,18 @@ public final class JwtRequestHeader extends AbstractJwtRequest {
     // RSA using SHA256 - asymmetric key signing algorithm
     public static final String ALG_VALUE_RS256 = "RS256";
 
-    @SerializedName("typ")
+    @Setter(AccessLevel.NONE)
+    @SerializedName(ClaimNames.TYPE)
     private String mType;
 
-    @Setter
-    @Accessors(prefix = "m")
-    @SerializedName("alg")
+    @SerializedName(ClaimNames.CTX)
+    private String mCtx;
+
+    @SerializedName(ClaimNames.ALG)
     private String mAlg;
 
-    @Setter
-    @Accessors(prefix = "m")
-    @SerializedName("kid")
-    private String mKId;
+    @SerializedName(ClaimNames.KID)
+    private String mKid;
 
     public void setType() {
         mType = JWT_VALUE;
