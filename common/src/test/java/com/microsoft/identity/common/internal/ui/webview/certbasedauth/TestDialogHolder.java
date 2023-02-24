@@ -35,20 +35,20 @@ class TestDialogHolder implements IDialogHolder {
 
     private TestDialog mCurrentDialog;
     private SmartcardCertPickerDialog.PositiveButtonListener mCertPickerPositiveButtonListener;
-    private SmartcardCertPickerDialog.CancelCbaCallback mCertPickerCancelCbaCallback;
+    private ICancelCbaCallback mCertPickerCancelCbaCallback;
     private SmartcardPinDialog.PositiveButtonListener mPinPositiveButtonListener;
-    private SmartcardPinDialog.CancelCbaCallback mPinCancelCbaCallback;
+    private ICancelCbaCallback mPinCancelCbaCallback;
     private UserChoiceDialog.PositiveButtonListener mUserChoicePositiveButtonListener;
-    private UserChoiceDialog.CancelCbaCallback mUserChoiceCancelCbaCallback;
-    private SmartcardPromptDialog.CancelCbaCallback mPromptCancelCbaCallback;
-    private SmartcardNfcPromptDialog.CancelCbaCallback mNfcPromptCancelCbaCallback;
+    private ICancelCbaCallback mUserChoiceCancelCbaCallback;
+    private ICancelCbaCallback mPromptCancelCbaCallback;
+    private ICancelCbaCallback mNfcPromptCancelCbaCallback;
     private SmartcardNfcReminderDialog.DismissCallback mNfcReminderDismissCallback;
     private List<ICertDetails> mCertList;
 
     @Override
     public void showCertPickerDialog(@NonNull final List<ICertDetails> certList,
                                      @NonNull final SmartcardCertPickerDialog.PositiveButtonListener positiveButtonListener,
-                                     @NonNull final SmartcardCertPickerDialog.CancelCbaCallback cancelCbaCallback) {
+                                     @NonNull final ICancelCbaCallback cancelCbaCallback) {
         mCurrentDialog = TestDialog.cert_picker;
         mCertPickerPositiveButtonListener = positiveButtonListener;
         mCertPickerCancelCbaCallback = cancelCbaCallback;
@@ -57,7 +57,7 @@ class TestDialogHolder implements IDialogHolder {
 
     @Override
     public void showPinDialog(@NonNull final SmartcardPinDialog.PositiveButtonListener positiveButtonListener,
-                              @NonNull final SmartcardPinDialog.CancelCbaCallback cancelCbaCallback) {
+                              @NonNull final ICancelCbaCallback cancelCbaCallback) {
         mCurrentDialog = TestDialog.pin;
         mPinPositiveButtonListener = positiveButtonListener;
         mPinCancelCbaCallback = cancelCbaCallback;
@@ -71,14 +71,14 @@ class TestDialogHolder implements IDialogHolder {
 
     @Override
     public void showUserChoiceDialog(@NonNull final UserChoiceDialog.PositiveButtonListener positiveButtonListener,
-                                     @NonNull final UserChoiceDialog.CancelCbaCallback cancelCbaCallback) {
+                                     @NonNull final ICancelCbaCallback cancelCbaCallback) {
         mCurrentDialog = TestDialog.user_choice;
         mUserChoicePositiveButtonListener = positiveButtonListener;
         mUserChoiceCancelCbaCallback = cancelCbaCallback;
     }
 
     @Override
-    public void showSmartcardPromptDialog(@NonNull final SmartcardPromptDialog.CancelCbaCallback cancelCbaCallback) {
+    public void showSmartcardPromptDialog(@NonNull final ICancelCbaCallback cancelCbaCallback) {
         mCurrentDialog = TestDialog.prompt;
         mPromptCancelCbaCallback = cancelCbaCallback;
     }
@@ -89,7 +89,7 @@ class TestDialogHolder implements IDialogHolder {
     }
 
     @Override
-    public void showSmartcardNfcPromptDialog(@NonNull final SmartcardNfcPromptDialog.CancelCbaCallback cancelCbaCallback) {
+    public void showSmartcardNfcPromptDialog(@NonNull final ICancelCbaCallback cancelCbaCallback) {
         mCurrentDialog = TestDialog.nfc_prompt;
         mNfcPromptCancelCbaCallback = cancelCbaCallback;
     }

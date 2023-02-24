@@ -77,7 +77,7 @@ public class NfcSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
             @Override
             public void onClick(@NonNull final char[] pin) {
                 //For NFC, we need another dialog prompting the user to hold the smartcard to the phone again.
-                mDialogHolder.showSmartcardNfcPromptDialog(new SmartcardNfcPromptDialog.CancelCbaCallback() {
+                mDialogHolder.showSmartcardNfcPromptDialog(new ICancelCbaCallback() {
                     @Override
                     public void onCancel() {
                         mDialogHolder.dismissDialog();
@@ -131,7 +131,7 @@ public class NfcSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
                                                    @NonNull ClientCertRequest request) {
         mDialogHolder.showPinDialog(
                 getSmartcardPinDialogPositiveButtonListener(certDetails, request),
-                new SmartcardPinDialog.CancelCbaCallback() {
+                new ICancelCbaCallback() {
                     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
                     @Override
                     public void onCancel() {

@@ -112,7 +112,7 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandler<T extends A
                 mDialogHolder.showCertPickerDialog(
                         certList,
                         getSmartcardCertPickerDialogPositiveButtonListener(request),
-                        new SmartcardCertPickerDialog.CancelCbaCallback() {
+                        new ICancelCbaCallback() {
                             @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
                             @Override
                             public void onCancel() {
@@ -181,7 +181,7 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandler<T extends A
                 //Need to prompt user for pin and verify pin. The positive button listener will handle the rest of the CBA flow.
                 mDialogHolder.showPinDialog(
                         getSmartcardPinDialogPositiveButtonListener(certDetails, request),
-                        new SmartcardPinDialog.CancelCbaCallback() {
+                        new ICancelCbaCallback() {
                             @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
                             @Override
                             public void onCancel() {

@@ -36,8 +36,8 @@ import lombok.NonNull;
  */
 public class SmartcardNfcPromptDialog extends SmartcardDialog {
 
-    private final CancelCbaCallback mCancelCbaCallback;
-    public SmartcardNfcPromptDialog(@NonNull final CancelCbaCallback cancelCbaCallback,
+    private final ICancelCbaCallback mCancelCbaCallback;
+    public SmartcardNfcPromptDialog(@NonNull final ICancelCbaCallback cancelCbaCallback,
                                     @NonNull final Activity activity) {
         super(activity);
         mCancelCbaCallback = cancelCbaCallback;
@@ -77,12 +77,5 @@ public class SmartcardNfcPromptDialog extends SmartcardDialog {
     @Override
     void onCancelCba() {
 
-    }
-
-    /**
-     * Callback interface for when CBA is being cancelled.
-     */
-    public interface CancelCbaCallback {
-        void onCancel();
     }
 }
