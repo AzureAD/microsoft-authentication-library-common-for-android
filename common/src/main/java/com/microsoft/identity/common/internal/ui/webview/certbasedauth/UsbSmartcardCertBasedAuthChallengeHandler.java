@@ -70,7 +70,7 @@ public class UsbSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
      * @param callback {@link IDisconnectionCallback}
      */
     @Override
-    protected void pauseToCloseConnection(@NonNull final IDisconnectionCallback callback) {
+    protected void pauseSmartcardConnection(@NonNull final IDisconnectionCallback callback) {
         //Usb discovery and connection should always remain active for the duration of the authentication flow.
         //Therefore, we merely invoke the callback here.
         callback.onClosedConnection();

@@ -57,7 +57,7 @@ public class NfcSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
      * @param callback {@link IDisconnectionCallback}
      */
     @Override
-    protected void pauseToCloseConnection(@NonNull final IDisconnectionCallback callback) {
+    protected void pauseSmartcardConnection(@NonNull final IDisconnectionCallback callback) {
         if (!mCbaManager.isDeviceConnected()) {
             callback.onClosedConnection();
             return;
@@ -117,7 +117,7 @@ public class NfcSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
                         if (mCbaManager.isDeviceChanged()) {
                             clearPin(pin);
                             request.cancel();
-                            pauseToCloseConnection(new IDisconnectionCallback() {
+                            pauseSmartcardConnection(new IDisconnectionCallback() {
                                 @Override
                                 public void onClosedConnection() {
                                     //In a future version, an error dialog with a custom message could be shown here instead of a general error.
@@ -137,7 +137,7 @@ public class NfcSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
                             public void onException(@NonNull final Exception e) {
                                 clearPin(pin);
                                 request.cancel();
-                                pauseToCloseConnection(new IDisconnectionCallback() {
+                                pauseSmartcardConnection(new IDisconnectionCallback() {
                                     @Override
                                     public void onClosedConnection() {
                                         indicateGeneralException(methodTag, e);
@@ -177,7 +177,7 @@ public class NfcSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
     @Override
     public void promptSmartcardRemovalForResult(@NonNull final ISendResultCallback callback) {
         if (mCbaManager.isDeviceConnected()) {
-            pauseToCloseConnection(new IDisconnectionCallback() {
+            pauseSmartcardConnection(new IDisconnectionCallback() {
                 @Override
                 public void onClosedConnection() {
                     callback.onResultReady();

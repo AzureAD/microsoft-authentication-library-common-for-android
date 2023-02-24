@@ -91,7 +91,8 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandler<T extends A
             public void onGetSession(@NonNull final ISmartcardSession session) throws Exception {
                 final int pinAttemptsRemaining = session.getPinAttemptsRemaining();
                 final List<ICertDetails> certList = session.getCertDetailsList();
-                pauseToCloseConnection(new IDisconnectionCallback() {
+                //We have the necessary data, so we don't need the connection to the smartcard (for now)
+                pauseSmartcardConnection(new IDisconnectionCallback() {
                     @Override
                     public void onClosedConnection() {
                         if (pinAttemptsRemaining == 0) {
@@ -131,7 +132,7 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandler<T extends A
             @Override
             public void onException(@NonNull final Exception e) {
                 request.cancel();
-                pauseToCloseConnection(new IDisconnectionCallback() {
+                pauseSmartcardConnection(new IDisconnectionCallback() {
                     @Override
                     public void onClosedConnection() {
                         indicateGeneralException(methodTag, e);
@@ -147,7 +148,7 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandler<T extends A
      * so the user can remove their smartcard before flow can continue.
      * @param callback {@link IDisconnectionCallback}
      */
-    protected abstract void pauseToCloseConnection(@NonNull final IDisconnectionCallback callback);
+    protected abstract void pauseSmartcardConnection(@NonNull final IDisconnectionCallback callback);
 
     /**
      * Returns a callback that dismisses the current dialog, sends telemetry, and cancels the ClientCertRequest.
@@ -261,7 +262,7 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandler<T extends A
             return;
         }
         final int attemptsRemaining = session.getPinAttemptsRemaining();
-        pauseToCloseConnection(new IDisconnectionCallback() {
+        pauseSmartcardConnection(new IDisconnectionCallback() {
             @Override
             public void onClosedConnection() {
                 if (attemptsRemaining == 0) {
