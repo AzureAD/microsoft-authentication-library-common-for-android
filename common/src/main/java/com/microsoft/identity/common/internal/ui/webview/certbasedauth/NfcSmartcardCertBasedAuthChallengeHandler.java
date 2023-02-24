@@ -80,9 +80,8 @@ public class NfcSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
                 mDialogHolder.showSmartcardNfcPromptDialog(new ICancelCbaCallback() {
                     @Override
                     public void onCancel() {
-                        mDialogHolder.dismissDialog();
-                        mTelemetryHelper.setResultFailure(USER_CANCEL_MESSAGE);
-                        request.cancel();
+                        getGeneralCancelCbaCallback(request).onCancel();
+                        mCbaManager.stopDiscovery(mActivity);
                     }
                 });
                 mCbaManager.setConnectionCallback(new IConnectionCallback() {
@@ -131,15 +130,7 @@ public class NfcSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
                                                    @NonNull ClientCertRequest request) {
         mDialogHolder.showPinDialog(
                 getSmartcardPinDialogPositiveButtonListener(certDetails, request),
-                new ICancelCbaCallback() {
-                    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-                    @Override
-                    public void onCancel() {
-                        mDialogHolder.dismissDialog();
-                        mTelemetryHelper.setResultFailure(USER_CANCEL_MESSAGE);
-                        request.cancel();
-                    }
-                });
+                getGeneralCancelCbaCallback(request));
         //Update Dialog to indicate that an incorrect attempt was made.
         mDialogHolder.setPinDialogErrorMode();
     }
