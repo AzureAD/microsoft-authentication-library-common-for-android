@@ -26,7 +26,9 @@ package com.microsoft.identity.common.internal.broker;
 import android.content.Context;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
+import com.microsoft.identity.common.internal.util.StringUtil;
 import com.microsoft.identity.common.java.exception.ClientException;
 
 import java.io.Serializable;
@@ -135,5 +137,16 @@ public class BrokerData implements Serializable {
 
     public static Set<BrokerData> getAllBrokers() {
         return ALL_BROKERS;
+    }
+
+    @Override
+    public boolean equals(@Nullable @org.jetbrains.annotations.Nullable Object obj) {
+        if (!(obj instanceof BrokerData)){
+            return false;
+        }
+
+        final BrokerData other = (BrokerData) obj;
+        return StringUtil.equalsIgnoreCase(other.packageName, packageName) &&
+                StringUtil.equalsIgnoreCase(other.signatureHash, signatureHash);
     }
 }
