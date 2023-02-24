@@ -141,7 +141,6 @@ public class UsbSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
      */
     @Override
     public void promptSmartcardRemovalForResult(@NonNull final ISendResultCallback callback) {
-        //TODO: Is it ok to prompt users here to remove their USB connected YubiKey? Or is the user experience better without?
         if (mCbaManager.isDeviceConnected()) {
             mCbaManager.setDisconnectionCallback(new IDisconnectionCallback() {
                 @Override
