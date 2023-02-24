@@ -80,9 +80,9 @@ stages:
       displayName: Echo branch name
   # msal
   - job: msalValidation
-    enabled: false
     displayName: MSAL
     dependsOn: setupBranch
+    condition: failed()
     variables:
       commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
     steps:
@@ -112,9 +112,9 @@ stages:
         tasks: msal:testLocalDebugUnitTest -Plabtest -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}}
   # broker
   - job: brokerValidation
-    enabled: false
     displayName: Broker
     dependsOn: setupBranch
+    condition: failed()
     variables:
       commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
     steps:
@@ -173,9 +173,9 @@ stages:
         tasks: AADAuthenticator:testLocalDebugUnitTest -Plabtest -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}}
   # adal
   - job: adalValidation
-    enabled: false
     displayName: ADAL
     dependsOn: setupBranch
+    condition: failed()
     variables:
       commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
     steps:
