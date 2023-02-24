@@ -1,5 +1,6 @@
 vNext
 ----------
+- [PATCH] Minor fixes to stop NFC discovery upon cancellation of some dialogs (#1972)
 - [MINOR] Add flighting capability for common (#1961)
 - [MINOR] Add preferred browser support (#1957)
 - [PATCH] Use android.net.NetworkCapabilities to check internet connectivity (#1887)
