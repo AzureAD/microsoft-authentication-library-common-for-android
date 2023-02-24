@@ -6,7 +6,13 @@ interface IBrokerMetadataCache {
 
     fun getCachedActiveBroker(): BrokerData?
 
-    fun setCachedActiveBroker(brokerData: BrokerData)
+    /**
+     * Persists the active broker and protocol version to the cache.
+     * Do not invoke this if the result is obtained via AccountManager.
+     */
+    fun setCachedActiveBroker(brokerData: BrokerData, protocolVersion: String)
 
     fun clearCachedActiveBroker()
+
+    fun getKnownProtocolVersion(): String?
 }
