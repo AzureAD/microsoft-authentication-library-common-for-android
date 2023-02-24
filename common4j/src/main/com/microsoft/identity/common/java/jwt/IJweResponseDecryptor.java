@@ -20,27 +20,21 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.labapi.utilities.constants;
+package com.microsoft.identity.common.java.jwt;
 
-public enum FederationProvider {
-    NONE(LabConstants.FederationProvider.NONE),
-    ADFS_V2(LabConstants.FederationProvider.ADFS_V2),
-    ADFS_V3(LabConstants.FederationProvider.ADFS_V3),
-    ADFS_V4(LabConstants.FederationProvider.ADFS_V4),
-    ADFS_V2019(LabConstants.FederationProvider.ADFS_V2019),
-    B2C(LabConstants.FederationProvider.B2C),
-    PING(LabConstants.FederationProvider.PING),
-    SHIBBOLETH(LabConstants.FederationProvider.SHIBBOLETH),
-    CIAM(LabConstants.FederationProvider.CIAM);
+import com.microsoft.identity.common.java.exception.ClientException;
 
-    final String value;
+import lombok.NonNull;
 
-    FederationProvider(final String value) {
-        this.value = value;
-    }
-
-    @Override
-    public String toString() {
-        return value;
-    }
+/**
+ * Facilitate decoding and decrypting JWE token response
+ * using session key per PRT protocol.
+ */
+public interface IJweResponseDecryptor {
+    /**
+     * Decrypt jwe token response using session key.
+     * @param jwe the JWE token response
+     * @return decrypted response
+     */
+    String decryptJwe(@NonNull String jwe) throws ClientException;
 }
