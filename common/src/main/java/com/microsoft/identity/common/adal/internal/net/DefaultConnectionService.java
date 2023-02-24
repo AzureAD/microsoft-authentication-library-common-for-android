@@ -33,8 +33,11 @@ import com.microsoft.identity.common.adal.internal.PowerManagerWrapper;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
 import com.microsoft.identity.common.java.flighting.CommonFlightManager;
+import com.microsoft.identity.common.java.opentelemetry.OTelUtility;
 import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings;
 import com.microsoft.identity.common.java.telemetry.events.BaseEvent;
+
+import io.opentelemetry.api.metrics.LongCounter;
 
 /**
  * Default connection service check network connectivity.
@@ -46,7 +49,14 @@ import com.microsoft.identity.common.java.telemetry.events.BaseEvent;
 public class DefaultConnectionService implements IConnectionService {
 
     private final Context mConnectionContext;
-
+    private static final LongCounter sNetworkCheckFailureCount = OTelUtility.createLongCounter(
+            "network_check_failure_count",
+            "Number of times network was not available"
+    );
+    private static final LongCounter sNetworkCheckSuccessCount = OTelUtility.createLongCounter(
+            "network_check_success_count",
+            "Number of times network was available"
+    );
     /**
      * Constructor of DefaultConnectionService.
      *
@@ -75,6 +85,12 @@ public class DefaultConnectionService implements IConnectionService {
                     networkCapabilities != null
                     && networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
                     && networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED);
+
+            if (isConnectionAvailable) {
+                sNetworkCheckSuccessCount.add(1);
+            } else {
+                sNetworkCheckFailureCount.add(1);
+            }
         } else {
             @SuppressWarnings("deprecation")
             final NetworkInfo activeNetwork = connectivityManager.getActiveNetworkInfo();
