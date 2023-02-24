@@ -36,7 +36,7 @@
     <string name="smartcard_general_error_dialog_message">Δυστυχώς, παρουσιάστηκε ένα απρόσμενο σφάλμα. Δοκιμάστε ξανά αργότερα.</string>
 
     <string name="user_choice_dialog_title">Πώς θέλετε να εισέλθετε;</string>
-    <string name="user_choice_dialog_on_device_name">Πιστοποιητικό στη συσκευή σας</string>
+    <string name="user_choice_dialog_on_device_name">Πιστοποιητικό σε αυτήν τη συσκευή</string>
     <string name="user_choice_dialog_smartcard_name">Φυσική έξυπνη κάρτα</string>
     <string name="user_choice_dialog_positive_button">Συνέχεια</string>
     <string name="user_choice_dialog_negative_button">Άκυρο</string>
@@ -55,4 +55,6 @@
     <string name="smartcard_nfc_reminder_dialog_title">Ενεργοποίηση NFC στις ρυθμίσεις συσκευής</string>
     <string name="smartcard_nfc_reminder_dialog_message">Για να εισέλθετε με NFC, ενεργοποιήστε το NFC στις ρυθμίσεις της συσκευής σας. Στη συνέχεια, εισέλθετε ξανά.</string>
     <string name="smartcard_nfc_reminder_dialog_positive_button">Το κατάλαβα</string>
+
+    <string name="smartcard_removal_prompt_dialog_title">Τώρα μπορείτε να καταργήσετε την έξυπνη κάρτα σας</string>
 </resources>

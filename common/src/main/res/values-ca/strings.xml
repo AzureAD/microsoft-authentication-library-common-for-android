@@ -36,7 +36,7 @@
     <string name="smartcard_general_error_dialog_message">S\'ha produït un error inesperat. Torneu-ho a provar més tard.</string>
 
     <string name="user_choice_dialog_title">Com t\'agradaria iniciar sessió?</string>
-    <string name="user_choice_dialog_on_device_name">Certificat al dispositiu</string>
+    <string name="user_choice_dialog_on_device_name">Certificat d\'aquest dispositiu</string>
     <string name="user_choice_dialog_smartcard_name">Targeta intel·ligent física</string>
     <string name="user_choice_dialog_positive_button">Continua</string>
     <string name="user_choice_dialog_negative_button">Cancel·la</string>
@@ -55,4 +55,6 @@
     <string name="smartcard_nfc_reminder_dialog_title">Activa l\'NFC a la configuració del dispositiu</string>
     <string name="smartcard_nfc_reminder_dialog_message">Per iniciar la sessió amb l\'NFC, activeu l\'NFC a la configuració del dispositiu. A continuació, torneu a iniciar la sessió.</string>
     <string name="smartcard_nfc_reminder_dialog_positive_button">Entesos</string>
+
+    <string name="smartcard_removal_prompt_dialog_title">Ara ja podeu suprimir la targeta intel·ligent</string>
 </resources>
