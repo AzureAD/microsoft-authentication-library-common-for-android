@@ -22,8 +22,14 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.ui.webview.certbasedauth;
 
+import lombok.Getter;
+import lombok.experimental.Accessors;
+
 /**
  * An abstract smartcard CertBasedAuth manager specifically for USB.
  */
 public abstract class AbstractUsbSmartcardCertBasedAuthManager extends AbstractSmartcardCertBasedAuthManager {
+    //Helps with deciding whether or not we want to show the user a prompt to unplug at the end of the CBA flow.
+    @Getter @Accessors(prefix = "m")
+    protected boolean mUsbDeviceInitiallyPluggedIn;
 }

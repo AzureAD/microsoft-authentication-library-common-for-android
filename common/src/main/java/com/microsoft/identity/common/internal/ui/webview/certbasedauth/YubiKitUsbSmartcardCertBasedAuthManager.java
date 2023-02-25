@@ -24,6 +24,8 @@ package com.microsoft.identity.common.internal.ui.webview.certbasedauth;
 
 import android.app.Activity;
 import android.content.Context;
+import android.hardware.usb.UsbDevice;
+import android.hardware.usb.UsbManager;
 import android.os.Build;
 import android.webkit.ClientCertRequest;
 
@@ -45,11 +47,14 @@ import com.yubico.yubikit.piv.PivSession;
 import java.io.IOException;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.concurrent.Callable;
 
 public class YubiKitUsbSmartcardCertBasedAuthManager extends AbstractUsbSmartcardCertBasedAuthManager {
     private static final String TAG = YubiKitUsbSmartcardCertBasedAuthManager.class.getSimpleName();
     private static final String DEVICE_ERROR_MESSAGE = "No USB device is currently connected.";
+    public final static int YUBICO_VENDOR_ID = 0x1050;
 
     private final UsbYubiKeyManager mUsbYubiKeyManager;
     private UsbYubiKeyDevice mUsbDevice;
@@ -58,7 +63,18 @@ public class YubiKitUsbSmartcardCertBasedAuthManager extends AbstractUsbSmartcar
     private static final Object sDeviceLock = new Object();
 
     public YubiKitUsbSmartcardCertBasedAuthManager(@NonNull final Context context) {
+        //This constructor will only be called after checking if the USB_SERVICE is not null,
+        // so no NPE should be thrown here.
         mUsbYubiKeyManager = new UsbYubiKeyManager(context.getApplicationContext());
+        final UsbManager usbManager = (UsbManager) context.getSystemService(Context.USB_SERVICE);
+        final Collection<UsbDevice> usbDevices = usbManager.getDeviceList().values();
+        for (final UsbDevice device : usbDevices) {
+            if (device.getVendorId() == YUBICO_VENDOR_ID) {
+                Logger.verbose(TAG, "A YubiKey device is plugged-in upon manager start-up.");
+                mUsbDeviceInitiallyPluggedIn = true;
+                return;
+            }
+        }
     }
 
     /**

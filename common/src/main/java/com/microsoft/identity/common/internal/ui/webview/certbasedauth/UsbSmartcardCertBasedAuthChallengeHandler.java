@@ -141,7 +141,10 @@ public class UsbSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
      */
     @Override
     public void promptSmartcardRemovalForResult(@NonNull final ISendResultCallback callback) {
-        if (mCbaManager.isDeviceConnected()) {
+        //If a usb device was originally plugged in, unplugging would cause a config change.
+        //So we won't ask the user to unplug in that case.
+        if (mCbaManager.isDeviceConnected()
+                && !mCbaManager.isUsbDeviceInitiallyPluggedIn()) {
             mCbaManager.setDisconnectionCallback(new IDisconnectionCallback() {
                 @Override
                 public void onClosedConnection() {
