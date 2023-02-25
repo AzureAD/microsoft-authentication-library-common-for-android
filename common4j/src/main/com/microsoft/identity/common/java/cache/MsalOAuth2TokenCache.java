@@ -368,10 +368,15 @@ public class MsalOAuth2TokenCache
 
         // Save the Account and Credentials...
         saveAccounts(accountToSave);
-        synchronized(sCacheLock) {
-            saveCredentialsInternal(accessTokenToSave, refreshTokenToSave, idTokenToSave);
+        synchronized (sCacheLock) {
+            if (response.getIsRequestForNAA())
+                saveCredentialsInternal(accessTokenToSave, idTokenToSave);
+            else {
+                saveCredentialsInternal(accessTokenToSave, refreshTokenToSave, idTokenToSave);
+            }
             // Remove old refresh tokens (except for the one we just saved) if it's MRRT or FRT
-            removeAllRefreshTokensExcept(accountToSave, refreshTokenToSave);
+            if (!response.getIsRequestForNAA())
+                removeAllRefreshTokensExcept(accountToSave, refreshTokenToSave);
         }
 
         final CacheRecord.CacheRecordBuilder result = CacheRecord.builder();
@@ -714,7 +719,7 @@ public class MsalOAuth2TokenCache
                 authScheme.getName(),
                 null,
                 kid
-                );
+        );
 
         // Load the RefreshTokens
         List<Credential> refreshTokens = mAccountCredentialCache.getCredentialsFilteredBy(
@@ -1618,6 +1623,36 @@ public class MsalOAuth2TokenCache
             }
 
             mAccountCredentialCache.saveCredential(credential);
+        }
+    }
+
+    public void saveRefreshTokenForNAA(@NonNull final GenericOAuth2Strategy oAuth2Strategy,
+                                       @NonNull final GenericAuthorizationRequest request,
+                                       @NonNull final GenericTokenResponse response) throws ClientException {
+        final AccountRecord accountToSave =
+                mAccountCredentialAdapter.createAccount(
+                        oAuth2Strategy,
+                        request,
+                        response
+                );
+        // Create the RefreshToken
+        final RefreshTokenRecord refreshTokenToSave =
+                mAccountCredentialAdapter.createRefreshToken(
+                        oAuth2Strategy,
+                        request,
+                        response
+                );
+        final boolean isRefreshTokenCompliant = isRefreshTokenSchemaCompliant(refreshTokenToSave);
+        if (!isRefreshTokenCompliant) {
+            throw new ClientException(
+                    CREDENTIAL_IS_SCHEMA_NONCOMPLIANT,
+                    "(RT)"
+            );
+        }
+        synchronized (sCacheLock) {
+            saveCredentialsInternal(refreshTokenToSave);
+            // Remove old refresh tokens (except for the one we just saved) if it's MRRT or FRT
+                removeAllRefreshTokensExcept(accountToSave, refreshTokenToSave);
         }
     }
 

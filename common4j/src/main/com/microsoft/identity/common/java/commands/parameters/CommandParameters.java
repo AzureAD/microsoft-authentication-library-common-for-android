@@ -80,6 +80,12 @@ public class CommandParameters {
     private String redirectUri;
 
     @Expose()
+    private String brkClientId;
+
+    @Expose()
+    private String brkRedirectUri;
+
+    @Expose()
     private boolean powerOptCheckEnabled;
 
     @Expose()
@@ -100,7 +106,7 @@ public class CommandParameters {
     private SerializableSpanContext spanContext;
     
     //Overriding what Lombok would otherwise generate for me
-    public String getApplicationIdentifier(){
+    public String getApplicationIdentifier() {
         return String.format(APPLICATION_IDENTIFIER_FORMAT, this.callerPackageName, this.callerSignature);
     }
 

@@ -88,9 +88,12 @@ import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.util.ported.PropertyBag;
 
 import java.io.IOException;
+import java.util.AbstractMap;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Pattern;
@@ -261,9 +264,11 @@ public abstract class BaseController {
         } catch (IllegalArgumentException ex) {
             Logger.error(TAG, "correlation id from diagnostic context is not a UUID", ex);
         }
-
+////
         builder.setClientId(parameters.getClientId())
-                .setRedirectUri(parameters.getRedirectUri());
+                .setRedirectUri(parameters.getRedirectUri()).setBrkClientId(parameters.getBrkClientId()).setBrkRedirectUri(parameters.getBrkRedirectUri());
+//               builder.setClientId(parameters.getClientId())
+//                               .setRedirectUri(parameters.getRedirectUri());
 
         if (builder instanceof MicrosoftAuthorizationRequest.Builder) {
             ((MicrosoftAuthorizationRequest.Builder) builder).setCorrelationId(correlationId);
@@ -358,6 +363,11 @@ public abstract class BaseController {
                 msBuilder.setInstalledCompanyPortalVersion(installedCompanyPortalVersion);
             }
         }
+        final List<Map.Entry<String, String>> extraQueryParameter = new LinkedList<>();
+        extraQueryParameter.add(new AbstractMap.SimpleEntry<>("dc", "ESTS-PUB-WUS2-AZ1-FD000-TEST1"));
+        extraQueryParameter.add(new AbstractMap.SimpleEntry<>("nativepwbroker", "true"));
+        extraQueryParameter.add(new AbstractMap.SimpleEntry<>("stopemitpwbrokerappid", "true"));
+        builder.setExtraQueryParams(extraQueryParameter);
     }
 
     // Suppressing rawtype warnings due to the generic type AuthorizationRequest, OAuth2Strategy and Builder
@@ -437,7 +447,10 @@ public abstract class BaseController {
                     methodTag,
                     "Token request was successful"
             );
-
+            if (parameters.getBrkClientId() != null && !parameters.getBrkClientId().equalsIgnoreCase(parameters.getClientId()))
+            {
+                tokenResult.getTokenResponse().setIsNaaRequest(true);
+            }
             // Suppressing unchecked warnings due to casting of rawtypes to generic types of OAuth2TokenCache's instance tokenCache while calling method saveAndLoadAggregatedAccountData
             @SuppressWarnings(WarningType.unchecked_warning) final List<ICacheRecord> savedRecords = tokenCache.saveAndLoadAggregatedAccountData(
                     strategy,
@@ -734,6 +747,11 @@ public abstract class BaseController {
 
         final TokenRequest refreshTokenRequest = strategy.createRefreshTokenRequest(parameters.getAuthenticationScheme());
         refreshTokenRequest.setClientId(parameters.getClientId());
+        if (parameters.getBrkClientId() != null) {
+            refreshTokenRequest.setBrkClientId(parameters.getBrkClientId());
+            refreshTokenRequest.setBrkRedirectUri(parameters.getBrkRedirectUri());
+            refreshTokenRequest.setRedirectUri(parameters.getRedirectUri());
+        }
         refreshTokenRequest.setScope(StringUtil.join(" ", parameters.getScopes()));
         refreshTokenRequest.setRefreshToken(refreshToken.getSecret());
 
@@ -1025,6 +1043,7 @@ public abstract class BaseController {
 
     public ICacheRecord finalizeCacheRecordForResult(@NonNull final ICacheRecord cacheRecord,
                                                      @NonNull final AbstractAuthenticationScheme scheme) throws ClientException {
+      //  if (redirectUri == cacheRecord.getAccessToken().)
         if (scheme instanceof ITokenAuthenticationSchemeInternal &&
                 !StringUtil.isNullOrEmpty(cacheRecord.getAccessToken().getSecret())) {
             final ITokenAuthenticationSchemeInternal tokenAuthScheme = (ITokenAuthenticationSchemeInternal) scheme;

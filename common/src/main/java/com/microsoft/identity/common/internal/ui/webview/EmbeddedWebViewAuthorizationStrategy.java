@@ -84,6 +84,7 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
         mAuthorizationRequest = authorizationRequest;
         Logger.info(methodTag,"Perform the authorization request with embedded webView.");
         final URI requestUrl = authorizationRequest.getAuthorizationRequestAsHttpRequest();
+
         final Intent authIntent = buildAuthorizationActivityStartIntent(requestUrl);
 
         launchIntent(authIntent);

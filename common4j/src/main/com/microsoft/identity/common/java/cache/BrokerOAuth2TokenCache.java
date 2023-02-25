@@ -23,6 +23,8 @@
 package com.microsoft.identity.common.java.cache;
 
 
+import static com.microsoft.identity.common.java.exception.ErrorStrings.CREDENTIAL_IS_SCHEMA_NONCOMPLIANT;
+
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
@@ -132,8 +134,8 @@ public class BrokerOAuth2TokenCache
         /**
          * Returns an instance of the {@link MsalOAuth2TokenCache} for the supplied params.
          *
-         * @param context           The application context to use.
-         * @param uid               Unix's UID.
+         * @param context The application context to use.
+         * @param uid     Unix's UID.
          * @return
          */
         MsalOAuth2TokenCache getTokenCache(final IPlatformComponents context, final int uid);
@@ -230,14 +232,30 @@ public class BrokerOAuth2TokenCache
                     accessTokenRecord
             );
         }
-
-        updateApplicationMetadataCache(
-                result.getAccessToken().getClientId(),
-                result.getAccessToken().getEnvironment(),
-                familyId,
-                mUid
-        );
-
+        if (result.getAccessToken().getClientId() != result.getRefreshToken().getClientId()) {
+            // NAA scenario, we need to have multiple entries for updating the metadata to indicate the presence of AT for nested app and RT of host app
+            // Update entry using clientId on AT (For nested app)
+            updateApplicationMetadataCache(
+                    result.getAccessToken().getClientId(),
+                    result.getAccessToken().getEnvironment(),
+                    null,
+                    mUid
+            );
+            // update entry using clientId on RT (For host app)
+            updateApplicationMetadataCache(
+                    result.getRefreshToken().getClientId(),
+                    result.getRefreshToken().getEnvironment(),
+                    familyId,
+                    mUid
+            );
+        } else {
+            updateApplicationMetadataCache(
+                    result.getAccessToken().getClientId(),
+                    result.getAccessToken().getEnvironment(),
+                    familyId,
+                    mUid
+            );
+        }
         return result;
     }
 
@@ -292,14 +310,30 @@ public class BrokerOAuth2TokenCache
                     refreshTokenRecord
             );
         }
-
-        updateApplicationMetadataCache(
-                result.getAccessToken().getClientId(),
-                result.getAccessToken().getEnvironment(),
-                familyId,
-                mUid
-        );
-
+        if (result.getAccessToken().getClientId() != result.getRefreshToken().getClientId()) {
+            // NAA scenario, we need to have multiple entries for updating the metadata to indicate the presence of AT for nested app and RT of host app
+            // Update entry using clientId on AT (For nested app)
+            updateApplicationMetadataCache(
+                    result.getAccessToken().getClientId(),
+                    result.getAccessToken().getEnvironment(),
+                    null,
+                    mUid
+            );
+            // update entry using clientId on RT (For host app)
+            updateApplicationMetadataCache(
+                    result.getRefreshToken().getClientId(),
+                    result.getRefreshToken().getEnvironment(),
+                    familyId,
+                    mUid
+            );
+        } else {
+            updateApplicationMetadataCache(
+                    result.getRefreshToken().getClientId(),
+                    result.getRefreshToken().getEnvironment(),
+                    familyId,
+                    mUid
+            );
+        }
         return result;
     }
 
@@ -359,7 +393,7 @@ public class BrokerOAuth2TokenCache
                 mUid
         );
 
-        if (cache == null){
+        if (cache == null) {
             Logger.warn(TAG + methodName, "Cache not found for clientid: " + clientId +
                     "environment:" + environment +
                     "processUid: " + mUid);
@@ -415,14 +449,30 @@ public class BrokerOAuth2TokenCache
                 request,
                 response
         );
-
-        updateApplicationMetadataCache(
-                result.getRefreshToken().getClientId(),
-                result.getRefreshToken().getEnvironment(),
-                result.getRefreshToken().getFamilyId(),
-                mUid
-        );
-
+        if (result.getAccessToken().getClientId() != result.getRefreshToken().getClientId()) {
+            // NAA scenario, we need to have multiple entries for updating the metadata to indicate the presence of AT for nested app and RT of host app
+            // Update entry using clientId on AT (For nested app)
+            updateApplicationMetadataCache(
+                    result.getAccessToken().getClientId(),
+                    result.getAccessToken().getEnvironment(),
+                    null,
+                    mUid
+            );
+            // update entry using clientId on RT (For host app)
+            updateApplicationMetadataCache(
+                    result.getAccessToken().getClientId(),
+                    result.getAccessToken().getEnvironment(),
+                    result.getRefreshToken().getFamilyId(),
+                    mUid
+            );
+        } else {
+            updateApplicationMetadataCache(
+                    result.getAccessToken().getClientId(),
+                    result.getAccessToken().getEnvironment(),
+                    result.getRefreshToken().getFamilyId(),
+                    mUid
+            );
+        }
         return result;
     }
 
@@ -436,7 +486,7 @@ public class BrokerOAuth2TokenCache
             final String methodName = ":saveAndLoadAggregatedAccountData";
 
             final boolean isFoci = !StringUtil.isNullOrEmpty(response.getFamilyId());
-
+            final boolean isNaaRequest = response.getIsRequestForNAA();
             OAuth2TokenCache targetCache;
 
             Logger.info(
@@ -445,30 +495,69 @@ public class BrokerOAuth2TokenCache
                             + isFoci
                             + "]"
             );
+            List<ICacheRecord> resultToSave = new ArrayList<>();
+            if (!isNaaRequest) {
+                if (isFoci) {
+                    targetCache = mFociCache;
+                } else {
+                    targetCache = initializeProcessUidCache(getComponents(), mUid);
+                }
 
-            if (isFoci) {
-                targetCache = mFociCache;
+                final List<ICacheRecord> result = targetCache.saveAndLoadAggregatedAccountData(
+                        oAuth2Strategy,
+                        request,
+                        response
+                );
+                resultToSave = result;
+            } else if (isFoci) {
+                targetCache = initializeProcessUidCache(getComponents(), mUid);
+                // For NAA, we have to separately save RT in FOCI cache and AT in Non-FOCI cache if RT retrieved has foci property
+                final List<ICacheRecord> result = targetCache.saveAndLoadAggregatedAccountData(
+                        oAuth2Strategy,
+                        request,
+                        response
+                );
+                resultToSave = result;
             } else {
                 targetCache = initializeProcessUidCache(getComponents(), mUid);
+                // For NAA, we have to separately save RT in FOCI cache and AT in Non-FOCI cache if RT retrieved has foci property
+                final List<ICacheRecord> result = targetCache.saveAndLoadAggregatedAccountData(
+                        oAuth2Strategy,
+                        request,
+                        response
+                );
+                ((MsalOAuth2TokenCache) targetCache).saveRefreshTokenForNAA(oAuth2Strategy,
+                        request,
+                        response);
+                resultToSave = result;
             }
-
-            final List<ICacheRecord> result = targetCache.saveAndLoadAggregatedAccountData(
-                    oAuth2Strategy,
-                    request,
-                    response
-            );
-
             // The 0th element contains the record we *just* saved. Other records are corollary data.
-            final ICacheRecord justSavedRecord = result.get(0);
-
-            updateApplicationMetadataCache(
-                    justSavedRecord.getRefreshToken().getClientId(),
-                    justSavedRecord.getRefreshToken().getEnvironment(),
-                    justSavedRecord.getRefreshToken().getFamilyId(),
-                    mUid
-            );
-
-            return result;
+            final ICacheRecord justSavedRecord = resultToSave.get(0);
+            if (!justSavedRecord.getAccessToken().getClientId().equalsIgnoreCase(justSavedRecord.getRefreshToken().getClientId()) || response.getIsRequestForNAA()) {
+                // NAA scenario, we need to have multiple entries for updating the metadata to indicate the presence of AT for nested app and RT of host app
+                // Update entry using clientId on AT (For nested app)
+                updateApplicationMetadataCache(
+                        justSavedRecord.getAccessToken().getClientId(),
+                        justSavedRecord.getAccessToken().getEnvironment(),
+                        null,
+                        mUid
+                );
+                // update entry using clientId on RT (For host app)
+                updateApplicationMetadataCache(
+                        justSavedRecord.getRefreshToken().getClientId(),
+                        justSavedRecord.getRefreshToken().getEnvironment(),
+                        justSavedRecord.getRefreshToken().getFamilyId(),
+                        mUid
+                );
+            } else {
+                updateApplicationMetadataCache(
+                        justSavedRecord.getRefreshToken().getClientId(),
+                        justSavedRecord.getRefreshToken().getEnvironment(),
+                        justSavedRecord.getRefreshToken().getFamilyId(),
+                        mUid
+                );
+            }
+            return resultToSave;
         }
     }
 
@@ -1228,7 +1317,7 @@ public class BrokerOAuth2TokenCache
      * @return An {@link AccountDeletionRecord} indicating which AccountRecords were removed, if any.
      */
     @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE",
-                        justification = "Lombok inserts null checks that may be redundant")
+            justification = "Lombok inserts null checks that may be redundant")
     @SuppressWarnings(UNCHECKED)
     public AccountDeletionRecord removeAccountFromDevice(@NonNull final AccountRecord accountRecord) {
         final String methodName = ":removeAccountFromDevice";
@@ -1702,9 +1791,9 @@ public class BrokerOAuth2TokenCache
     /**
      * Returns the {@link MsalOAuth2TokenCache} to use for supplied client id and environment.
      *
-     * @param clientId          The target client id.
-     * @param environment       The target environment.
-     * @param uid               uid of the current unix user.
+     * @param clientId    The target client id.
+     * @param environment The target environment.
+     * @param uid         uid of the current unix user.
      * @return The {@link MsalOAuth2TokenCache} matching the supplied criteria or null, if no matching
      * cache was found.
      */
@@ -1754,6 +1843,7 @@ public class BrokerOAuth2TokenCache
         }
         try {
             targetCacheSetSingleSignOnState(account, refreshToken, targetCache);
+
             updateApplicationMetadataCache(
                     refreshToken.getClientId(),
                     refreshToken.getEnvironment(),

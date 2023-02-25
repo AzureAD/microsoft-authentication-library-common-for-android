@@ -53,6 +53,9 @@ public class BrokerRequest implements Serializable {
         final static String SCOPE = "scopes";
         final static String REDIRECT = "redirect_uri";
         final static String CLIENT_ID = "client_id";
+
+        final static String BRK_REDIRECT = "brk_redirect_uri";
+        final static String BRK_CLIENT_ID = "brk_client_id";
         final static String HOME_ACCOUNT_ID = "home_account_id";
         final static String LOCAL_ACCOUNT_ID = "local_account_id";
         final static String USERNAME = "username";
@@ -101,6 +104,18 @@ public class BrokerRequest implements Serializable {
     @NonNull
     @SerializedName(SerializedNames.CLIENT_ID)
     private String mClientId;
+
+    /**
+     * The redirect uri for the request.
+     */
+    @SerializedName(SerializedNames.BRK_REDIRECT)
+    private String mBrkRedirect;
+
+    /**
+     * The client id of the application.
+     */
+    @SerializedName(SerializedNames.BRK_CLIENT_ID)
+    private String mBrkClientId;
 
     /**
      * The username for the request.

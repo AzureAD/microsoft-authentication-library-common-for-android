@@ -53,6 +53,12 @@ public class IdTokenRecord extends Credential {
     private String mAuthority;
 
     /**
+     * String of redirectUri.
+     */
+    @SerializedName(REDIRECT_URI)
+    private final String REDIRECT_URI = "redirect_uri";
+
+    /**
      * Gets the authority.
      *
      * @return The authority to get.

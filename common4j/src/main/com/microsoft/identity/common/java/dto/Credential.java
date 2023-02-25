@@ -194,6 +194,7 @@ public abstract class Credential extends AccountCredentialBase {
         mClientId = clientId;
     }
 
+
     /**
      * Gets the secret.
      *

@@ -371,7 +371,9 @@ public class MicrosoftStsOAuth2Strategy
         tokenRequest.setCodeVerifier(request.getPkceCodeVerifier());
         tokenRequest.setCode(response.getCode());
         tokenRequest.setRedirectUri(request.getRedirectUri());
+        tokenRequest.setBrkRedirectUri(request.getBrkRedirectUri());
         tokenRequest.setClientId(request.getClientId());
+        tokenRequest.setBrkClientId(request.getBrkClientId());
         tokenRequest.setScope(request.getTokenScope());
         tokenRequest.setClaims(request.getClaims());
         setTokenRequestCorrelationId(tokenRequest);

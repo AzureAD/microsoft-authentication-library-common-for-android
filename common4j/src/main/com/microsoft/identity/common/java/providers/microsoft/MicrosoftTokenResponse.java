@@ -37,6 +37,7 @@ public class MicrosoftTokenResponse extends TokenResponse {
     private static final String EXT_EXPIRES_IN = "ext_expires_in";
 
     private static final String FAMILY_ID = "foci";
+
     private static final String REFRESH_TOKEN_EXPIRES_IN = "refresh_token_expires_in";
 
     /**
@@ -63,6 +64,8 @@ public class MicrosoftTokenResponse extends TokenResponse {
     public void setRefreshTokenExpiresIn(String mRefreshTokenExpiresIn) {
         this.mRefreshTokenExpiresIn = mRefreshTokenExpiresIn;
     }
+
+
 
     /**
      * If this request includes an encrypted session key, return it here.

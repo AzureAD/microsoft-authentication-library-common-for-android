@@ -32,6 +32,8 @@ public class TokenResult implements IResult {
     private TokenResponse mTokenResponse;
     private TokenErrorResponse mTokenErrorResponse;
     private CliTelemInfo mCliTelemInfo;
+
+    private boolean mIsNaaRequest = false;
     private boolean mSuccess = false;
 
     public TokenResult() {
@@ -108,6 +110,10 @@ public class TokenResult implements IResult {
      */
     public void setCliTelemInfo(final CliTelemInfo cliTelemInfo) {
         mCliTelemInfo = cliTelemInfo;
+    }
+
+    public void setIsNaaRequest(final boolean isNaaRequest) {
+        mIsNaaRequest = isNaaRequest;
     }
 
     /**

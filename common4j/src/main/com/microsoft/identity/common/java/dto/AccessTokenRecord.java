@@ -29,6 +29,7 @@ import static com.microsoft.identity.common.java.dto.AccessTokenRecord.Serialize
 import static com.microsoft.identity.common.java.dto.AccessTokenRecord.SerializedNames.KID;
 import static com.microsoft.identity.common.java.dto.AccessTokenRecord.SerializedNames.MAM_ENROLLMENT_IDENTIFIER;
 import static com.microsoft.identity.common.java.dto.AccessTokenRecord.SerializedNames.REALM;
+import static com.microsoft.identity.common.java.dto.AccessTokenRecord.SerializedNames.REDIRECT_URI;
 import static com.microsoft.identity.common.java.dto.AccessTokenRecord.SerializedNames.REFRESH_ON;
 import static com.microsoft.identity.common.java.dto.AccessTokenRecord.SerializedNames.REQUESTED_CLAIMS;
 import static com.microsoft.identity.common.java.dto.AccessTokenRecord.SerializedNames.TARGET;
@@ -62,6 +63,11 @@ public class AccessTokenRecord extends Credential {
          * String of authority.
          */
         public static final String AUTHORITY = "authority";
+
+        /**
+         * String of redirectUri.
+         */
+        public static final String REDIRECT_URI = "redirect_uri";
 
         /**
          * String of extended expires on.
@@ -150,6 +156,9 @@ public class AccessTokenRecord extends Credential {
      */
     @SerializedName(REALM)
     private String mRealm;
+
+    @SerializedName(REDIRECT_URI)
+    private String mRedirectUri;
 
     /**
      * Permissions that are included in the token. Formats for endpoints will be different. 
@@ -281,6 +290,10 @@ public class AccessTokenRecord extends Credential {
         return mAccessTokenType;
     }
 
+    public String getRedirectUri() {
+        return mRedirectUri;
+    }
+
     /**
      * Sets the access_token_type.
      *
@@ -394,6 +407,11 @@ public class AccessTokenRecord extends Credential {
      * @param mamEnrollmentIdentifier
      */
     public void setMamEnrollmentIdentifier(final String mamEnrollmentIdentifier) { mMamEnrollmentIdentifier = mamEnrollmentIdentifier; }
+
+
+    public void setRedirectUri(final String redirectUri) {
+        mRedirectUri = redirectUri;
+    }
 
     private boolean isExpired(final String expires) {
         // Init a Calendar for the current time/date

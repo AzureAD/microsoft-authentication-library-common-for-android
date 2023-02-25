@@ -195,8 +195,8 @@ public abstract class OAuth2Strategy
                 TAG + methodName,
                 "Performing token request..."
         );
-
         final String requestBody = getRequestBody(request);
+      //  final String requestBody = getRequestBody(request) + "&brk_redirect_uri=msauth://com.microsoft.skype.teams.dev/VCpKgbYCXucoq1mZ4BZPsh5taNE%3D&brk_client_id=1fec8e78-bce4-4aaf-ab1b-5451cc387264";
         final Map<String, String> headers = new TreeMap<>();
         headers.put(CLIENT_REQUEST_ID, DiagnosticContext.INSTANCE.getRequestContext().get(DiagnosticContext.CORRELATION_ID));
 
@@ -227,8 +227,7 @@ public abstract class OAuth2Strategy
                 headers.put(PKEYAUTH_HEADER, PKEYAUTH_VERSION);
             }
         }
-
-        final URL requestUrl = new URL(getTokenEndpoint());
+        final URL requestUrl = new URL(getTokenEndpoint()+"?dc=ESTS-PUB-WUS2-AZ1-FD000-TEST1&nativepwbroker=true&stopemitpwbrokerappid=true");
         final HttpResponse response = httpClient.post(
                 requestUrl,
                 headers,
