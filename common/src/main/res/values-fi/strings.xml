@@ -36,7 +36,7 @@
     <string name="smartcard_general_error_dialog_message">Tapahtui odottamaton virhe. Yritä myöhemmin uudelleen.</string>
 
     <string name="user_choice_dialog_title">Miten haluat kirjautua sisään?</string>
-    <string name="user_choice_dialog_on_device_name">Varmenne laitteessasi</string>
+    <string name="user_choice_dialog_on_device_name">Varmenne tässä laitteessa</string>
     <string name="user_choice_dialog_smartcard_name">Fyysinen älykortti</string>
     <string name="user_choice_dialog_positive_button">Jatka</string>
     <string name="user_choice_dialog_negative_button">Peruuta</string>
@@ -55,4 +55,6 @@
     <string name="smartcard_nfc_reminder_dialog_title">NFC:n ottaminen käyttöön laitteen asetuksissa</string>
     <string name="smartcard_nfc_reminder_dialog_message">Jos haluat kirjautua sisään NFC:llä, ota NFC käyttöön laitteesi asetuksissa. Kirjaudu sitten uudelleen sisään.</string>
     <string name="smartcard_nfc_reminder_dialog_positive_button">Selvä juttu</string>
+
+    <string name="smartcard_removal_prompt_dialog_title">Voit nyt poistaa älykortin</string>
 </resources>

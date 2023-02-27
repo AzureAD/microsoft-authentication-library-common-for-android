@@ -36,7 +36,7 @@
     <string name="smartcard_general_error_dialog_message">发生意外错误。请稍后再试。</string>
 
     <string name="user_choice_dialog_title">你希望如何登录?</string>
-    <string name="user_choice_dialog_on_device_name">设备上的证书</string>
+    <string name="user_choice_dialog_on_device_name">此设备上的证书</string>
     <string name="user_choice_dialog_smartcard_name">物理智能卡</string>
     <string name="user_choice_dialog_positive_button">继续</string>
     <string name="user_choice_dialog_negative_button">取消</string>
@@ -55,4 +55,6 @@
     <string name="smartcard_nfc_reminder_dialog_title">在设备设置中打开 NFC</string>
     <string name="smartcard_nfc_reminder_dialog_message">若要使用 NFC 登录，请在设备设置中启用 NFC。然后再次登录。</string>
     <string name="smartcard_nfc_reminder_dialog_positive_button">知道了</string>
+
+    <string name="smartcard_removal_prompt_dialog_title">现在可以取下智能卡</string>
 </resources>

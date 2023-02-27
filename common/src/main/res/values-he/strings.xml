@@ -36,7 +36,7 @@
     <string name="smartcard_general_error_dialog_message">‏‏אירעה שגיאה בלתי צפויה. נסה שוב מאוחר יותר.</string>
 
     <string name="user_choice_dialog_title">כיצד ברצונך להיכנס?</string>
-    <string name="user_choice_dialog_on_device_name">אישור בהתקן שלך</string>
+    <string name="user_choice_dialog_on_device_name">אישור במכשיר זה</string>
     <string name="user_choice_dialog_smartcard_name">כרטיס חכם פיזי</string>
     <string name="user_choice_dialog_positive_button">המשך</string>
     <string name="user_choice_dialog_negative_button">ביטול</string>
@@ -55,4 +55,6 @@
     <string name="smartcard_nfc_reminder_dialog_title">הפעל את NFC בהגדרות ההתקן</string>
     <string name="smartcard_nfc_reminder_dialog_message">כדי להיכנס באמצעות NFC, הפעל את NFC בהגדרות המכשיר שלך. לאחר מכן היכנס שוב.</string>
     <string name="smartcard_nfc_reminder_dialog_positive_button">הבנתי</string>
+
+    <string name="smartcard_removal_prompt_dialog_title">כעת באפשרותך להסיר את הכרטיס החכם שלך</string>
 </resources>

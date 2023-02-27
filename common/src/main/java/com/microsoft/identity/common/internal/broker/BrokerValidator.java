@@ -22,6 +22,11 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.broker;
 
+import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.BROKER_ACCOUNT_TYPE;
+import static com.microsoft.identity.common.java.exception.ClientException.NO_SUCH_ALGORITHM;
+import static com.microsoft.identity.common.java.exception.ErrorStrings.APP_PACKAGE_NAME_NOT_FOUND;
+import static com.microsoft.identity.common.java.exception.ErrorStrings.BROKER_VERIFICATION_FAILED;
+
 import android.accounts.AccountManager;
 import android.accounts.AuthenticatorDescription;
 import android.annotation.SuppressLint;
@@ -33,10 +38,9 @@ import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.BuildConfig;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
-import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.util.PackageUtils;
 import com.microsoft.identity.common.internal.util.StringUtil;
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.io.IOException;
@@ -46,11 +50,6 @@ import java.security.cert.X509Certificate;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-
-import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.BROKER_ACCOUNT_TYPE;
-import static com.microsoft.identity.common.java.exception.ClientException.NO_SUCH_ALGORITHM;
-import static com.microsoft.identity.common.java.exception.ErrorStrings.APP_PACKAGE_NAME_NOT_FOUND;
-import static com.microsoft.identity.common.java.exception.ErrorStrings.BROKER_VERIFICATION_FAILED;
 
 public class BrokerValidator {
 
@@ -201,27 +200,34 @@ public class BrokerValidator {
     }
 
     /**
-     * Returns the package that is currently active relative to the Work Account custom account type
-     * Note: either the company portal or the authenticator
-     * <p>
-     * There may be multiple packages containing the android authenticator implementation (custom account)
-     * but there is only one entry for custom account type currently registered by the AccountManager.
-     * If another app tries to install same authenticator (custom account type) type, it will
-     * queue up and will be active after first one is uninstalled.
+     * Determines which app is the broker based on having the work account registration in Account Manager.
      *
-     * @return String current active broker package name, null if no broker is available
+     * Known issue: When we're in an AccountManager callback (Especially on older Android devices, i.e. Android 10)
+     * Android For Work throws a SecurityException when we're calling AccountManager.getAuthenticatorTypes()
+     * i.e. E.g. Company Portal main process can call this freely, broker process can call this freely, but once running in AccountManager,
+     * on the work profile (user != 0), apparently sometimes it tries to get accounts from user 0 (personal profile) and fails.
+     *
+     * In such case, this method will return null.
+     *
+     * @return PackageName of the broker, or null if it cannot be obtained.
      */
     @Nullable
     public String getCurrentActiveBrokerPackageName() {
-        AuthenticatorDescription[] authenticators = AccountManager.get(mContext).getAuthenticatorTypes();
-        for (AuthenticatorDescription authenticator : authenticators) {
-            if (authenticator.type.equals(BROKER_ACCOUNT_TYPE)
-                    && verifySignature(authenticator.packageName)) {
-                return authenticator.packageName;
+        final String methodTag = TAG + ":getCurrentActiveBrokerPackageName";
+        try {
+            final AuthenticatorDescription[] authenticators = AccountManager.get(mContext).getAuthenticatorTypes();
+            for (AuthenticatorDescription authenticator : authenticators) {
+                if (authenticator.type.equals(BROKER_ACCOUNT_TYPE)) {
+                    return authenticator.packageName;
+                }
             }
+        } catch (Exception e){
+            Logger.warn(methodTag, "Failed to query Active Broker package name" + e.getMessage());
+            return null;
         }
         return null;
     }
+
 
     public static boolean isValidBrokerRedirect(@Nullable final String redirectUri,
                                                 @NonNull final Context context,

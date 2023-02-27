@@ -36,7 +36,7 @@
     <string name="smartcard_general_error_dialog_message">Ocorreu um erro inesperado. Tente novamente mais tarde.</string>
 
     <string name="user_choice_dialog_title">Como gostaria de iniciar sessão?</string>
-    <string name="user_choice_dialog_on_device_name">Certificado no seu dispositivo</string>
+    <string name="user_choice_dialog_on_device_name">Certificado neste dispositivo</string>
     <string name="user_choice_dialog_smartcard_name">Smart card físico</string>
     <string name="user_choice_dialog_positive_button">Continuar</string>
     <string name="user_choice_dialog_negative_button">Cancelar</string>
@@ -55,4 +55,6 @@
     <string name="smartcard_nfc_reminder_dialog_title">Ligue o NFC nas definições do dispositivo</string>
     <string name="smartcard_nfc_reminder_dialog_message">Para iniciar sessão com NFC, ligue o NFC nas definições do seu dispositivo. Em seguida, volte a iniciar sessão.</string>
     <string name="smartcard_nfc_reminder_dialog_positive_button">OK</string>
+
+    <string name="smartcard_removal_prompt_dialog_title">Agora pode remover o seu smart card</string>
 </resources>
