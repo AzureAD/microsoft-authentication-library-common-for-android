@@ -1,5 +1,6 @@
 vNext
 ----------
+- [PATCH] Add metric to measure network check success, failure counts (#1962)
 - [MINOR] Add flighting capability for common (#1961)
 - [MINOR] Add preferred browser support (#1957)
 - [PATCH] Use android.net.NetworkCapabilities to check internet connectivity (#1887)
