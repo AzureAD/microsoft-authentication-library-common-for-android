@@ -354,7 +354,7 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
             // privacy dialog
             UiAutomatorUtils.handleButtonClick("com.azure.authenticator:id/privacy_consent_button");
             // Continue button
-            UiAutomatorUtils.handleButtonClickForObjectWithText("Continue");
+            UiAutomatorUtils.handleButtonClickForObjectWithTextSafely("Continue");
             // the skip button
             UiAutomatorUtils.handleButtonClick("com.azure.authenticator:id/frx_skip_button");
             shouldHandleFirstRun = false;
