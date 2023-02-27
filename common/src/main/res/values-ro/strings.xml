@@ -36,7 +36,7 @@
     <string name="smartcard_general_error_dialog_message">A apărut o eroare neașteptată. Încercați din nou mai târziu.</string>
 
     <string name="user_choice_dialog_title">Cum doriți să vă conectați?</string>
-    <string name="user_choice_dialog_on_device_name">Certificat pe dispozitivul dvs.</string>
+    <string name="user_choice_dialog_on_device_name">Certificat pe acest dispozitiv</string>
     <string name="user_choice_dialog_smartcard_name">Smart card fizic</string>
     <string name="user_choice_dialog_positive_button">Continuați</string>
     <string name="user_choice_dialog_negative_button">Anulați</string>
@@ -55,4 +55,6 @@
     <string name="smartcard_nfc_reminder_dialog_title">Activați NFC în setările dispozitivului</string>
     <string name="smartcard_nfc_reminder_dialog_message">Pentru a vă conecta cu NFC, activați NFC în setările dispozitivului. Apoi conectați-vă din nou.</string>
     <string name="smartcard_nfc_reminder_dialog_positive_button">Am înțeles</string>
+
+    <string name="smartcard_removal_prompt_dialog_title">Acum vă puteți elimina smart card-ul</string>
 </resources>
