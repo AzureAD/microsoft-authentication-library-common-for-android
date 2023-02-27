@@ -36,7 +36,7 @@
     <string name="smartcard_general_error_dialog_message">Prišlo je do nepričakovane napake. Poskusite znova pozneje.</string>
 
     <string name="user_choice_dialog_title">Kako se želite vpisati?</string>
-    <string name="user_choice_dialog_on_device_name">Potrdilo v vaši napravi</string>
+    <string name="user_choice_dialog_on_device_name">Potrdilo v tej napravi</string>
     <string name="user_choice_dialog_smartcard_name">Fizična pametna kartica</string>
     <string name="user_choice_dialog_positive_button">Nadaljuj</string>
     <string name="user_choice_dialog_negative_button">Prekliči</string>
@@ -55,4 +55,6 @@
     <string name="smartcard_nfc_reminder_dialog_title">Vklopite NFC v nastavitvah naprave</string>
     <string name="smartcard_nfc_reminder_dialog_message">Če se želite vpisati s tehnologijo NFC, v nastavitvah naprave vklopite NFC. Nato se znova vpišite.</string>
     <string name="smartcard_nfc_reminder_dialog_positive_button">Razumem</string>
+
+    <string name="smartcard_removal_prompt_dialog_title">Zdaj lahko odstranite pametno kartico</string>
 </resources>

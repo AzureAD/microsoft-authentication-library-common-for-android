@@ -36,7 +36,7 @@
     <string name="smartcard_general_error_dialog_message">Terjadi kesalahan yang tidak terduga. Coba lagi nanti.</string>
 
     <string name="user_choice_dialog_title">Bagaimana Anda ingin masuk?</string>
-    <string name="user_choice_dialog_on_device_name">Sertifikat di perangkat Anda</string>
+    <string name="user_choice_dialog_on_device_name">Sertifikat pada perangkat ini</string>
     <string name="user_choice_dialog_smartcard_name">Kartu pintar fisik</string>
     <string name="user_choice_dialog_positive_button">Lanjutkan</string>
     <string name="user_choice_dialog_negative_button">Batal</string>
@@ -55,4 +55,6 @@
     <string name="smartcard_nfc_reminder_dialog_title">Aktifkan NFC di pengaturan perangkat</string>
     <string name="smartcard_nfc_reminder_dialog_message">Untuk masuk dengan NFC, aktifkan NFC di pengaturan perangkat Anda. Kemudian, masuk lagi.</string>
     <string name="smartcard_nfc_reminder_dialog_positive_button">Mengerti</string>
+
+    <string name="smartcard_removal_prompt_dialog_title">Kini Anda dapat menghapus kartu pintar</string>
 </resources>
