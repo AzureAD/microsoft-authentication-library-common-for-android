@@ -27,6 +27,7 @@ import android.os.Build;
 import android.webkit.ClientCertRequest;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
 import com.microsoft.identity.common.R;
@@ -65,26 +66,42 @@ public class UsbSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
     }
 
     /**
-     * When a connection is no longer actively being used, the dialog flow should pause
-     * so the user can remove their smartcard before flow can continue.
-     * @param callback {@link IDisconnectionCallback}
+     * To be called when user interaction is needed, or to prepare for any unexpected user interaction.
+     * @param nextInteractionCallback the next logic to be run.
+     * @param unexpectedDisconnectionCallback to be called when smartcard disconnects unexpectedly.
      */
     @Override
-    protected void pauseSmartcardConnection(@NonNull final IDisconnectionCallback callback) {
+    protected void prepForNextUserInteraction(@Nullable final IDisconnectionCallback nextInteractionCallback,
+                                              @Nullable final IDisconnectionCallback unexpectedDisconnectionCallback) {
+        if (unexpectedDisconnectionCallback != null) {
+            mCbaManager.setDisconnectionCallback(unexpectedDisconnectionCallback);
+        }
         //Usb discovery and connection should always remain active for the duration of the authentication flow.
         //Therefore, we merely invoke the callback here.
-        callback.onClosedConnection();
+        if (nextInteractionCallback != null) {
+            nextInteractionCallback.onClosedConnection();
+        }
+    }
+
+    /**
+     * Clears appropriate connection and/or disconnection callbacks for when the Cert Based Auth flow ends.
+     */
+    @Override
+    protected void clearAppropriateCallbacksUponCbaEnding() {
+        mCbaManager.clearDisconnectionCallback();
     }
 
     /**
      * Helper method to log and show a disconnection error.
      *
-     * @param methodTag tag from calling method.
+     * @param methodName calling method name.
      */
     @Override
-    protected void indicateDisconnectionError(@NonNull String methodTag) {
+    protected void indicateDisconnectionError(@NonNull final String methodName) {
+        final String methodTag = TAG + ":" + methodName;
         mDialogHolder.showErrorDialog(R.string.smartcard_early_unplug_dialog_title, R.string.smartcard_early_unplug_dialog_message);
         Logger.verbose(methodTag, "Smartcard was disconnected while dialog was still displayed.");
+        mCbaManager.clearDisconnectionCallback();
     }
 
     /**
@@ -113,6 +130,7 @@ public class UsbSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
                     @Override
                     public void onException(@NonNull final Exception e) {
                         indicateGeneralException(methodTag, e);
+                        clearAppropriateCallbacksUponCbaEnding();
                         request.cancel();
                         clearPin(pin);
                     }

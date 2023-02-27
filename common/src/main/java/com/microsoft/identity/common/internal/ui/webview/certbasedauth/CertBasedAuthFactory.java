@@ -136,6 +136,8 @@ public class CertBasedAuthFactory {
                                 @NonNull final ICertBasedAuthTelemetryHelper telemetryHelper) {
         mDialogHolder.dismissDialog();
         telemetryHelper.setResultFailure(USER_CANCEL_MESSAGE);
+        mNfcSmartcardCertBasedAuthManager.clearConnectionCallback();
+        mUsbSmartcardCertBasedAuthManager.clearConnectionCallback();
         callback.onReceived(null);
     }
 
@@ -208,7 +210,7 @@ public class CertBasedAuthFactory {
                 public void onCreateConnection() {
                     if (mNfcSmartcardCertBasedAuthManager != null) {
                         mNfcSmartcardCertBasedAuthManager.stopDiscovery(mActivity);
-                        mNfcSmartcardCertBasedAuthManager.clearConnectionCallback();
+                        clearAllSmartcardConnectionAndDisconnectionCallbacks();
                     }
                     challengeHandlerCallback.onReceived(new UsbSmartcardCertBasedAuthChallengeHandler(
                             mActivity,
@@ -227,7 +229,7 @@ public class CertBasedAuthFactory {
             @Override
             public void onCreateConnection() {
                 if (mUsbSmartcardCertBasedAuthManager != null) {
-                    mUsbSmartcardCertBasedAuthManager.clearConnectionCallback();
+                    clearAllSmartcardConnectionAndDisconnectionCallbacks();
                 }
                 mDialogHolder.showSmartcardNfcLoadingDialog();
                 challengeHandlerCallback.onReceived(new NfcSmartcardCertBasedAuthChallengeHandler(
@@ -237,6 +239,15 @@ public class CertBasedAuthFactory {
                         telemetryHelper));
             }
         });
+    }
+
+    /**
+     * Clears all connection and disconnection callbacks for smartcard managers.
+     */
+    public void clearAllSmartcardConnectionAndDisconnectionCallbacks() {
+        mUsbSmartcardCertBasedAuthManager.clearConnectionCallback();
+        mUsbSmartcardCertBasedAuthManager.clearDisconnectionCallback();
+        mNfcSmartcardCertBasedAuthManager.clearConnectionCallback();
     }
 
     /**

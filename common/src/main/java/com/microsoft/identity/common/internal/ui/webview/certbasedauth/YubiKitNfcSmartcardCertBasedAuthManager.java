@@ -28,6 +28,7 @@ import android.os.Build;
 import android.webkit.ClientCertRequest;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
 import com.microsoft.identity.common.java.opentelemetry.ICertBasedAuthTelemetryHelper;
@@ -111,17 +112,18 @@ public class YubiKitNfcSmartcardCertBasedAuthManager extends AbstractNfcSmartcar
 
     /**
      * Disconnects a connected smartcard.
+     * @param callback logic to be called after smartcard is removed.
      */
     @Override
-    void disconnect() {
+    void disconnect(@Nullable final IDisconnectionCallback callback) {
         synchronized (sDeviceLock) {
             if (mNfcDevice != null) {
                 mNfcDevice.remove(new Runnable() {
                     @Override
                     public void run() {
                         mNfcDevice = null;
-                        if (mDisconnectionCallback != null) {
-                            mDisconnectionCallback.onClosedConnection();
+                        if (callback!= null) {
+                            callback.onClosedConnection();
                         }
                     }
                 });

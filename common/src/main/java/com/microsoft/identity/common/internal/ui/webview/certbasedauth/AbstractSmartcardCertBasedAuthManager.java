@@ -38,7 +38,6 @@ import java.security.cert.X509Certificate;
 public abstract class AbstractSmartcardCertBasedAuthManager {
 
     protected IConnectionCallback mConnectionCallback;
-    protected IDisconnectionCallback mDisconnectionCallback;
 
     /**
      * Logic to prepare an Android device to detect smartcards.
@@ -86,25 +85,10 @@ public abstract class AbstractSmartcardCertBasedAuthManager {
     }
 
     /**
-     * Sets callback to be run for when a smartcard connection is ended.
-     * @param callback an implementation of IDisconnectionCallback.
-     */
-    public void setDisconnectionCallback(@Nullable final IDisconnectionCallback callback) {
-        mDisconnectionCallback = callback;
-    }
-
-    /**
      * Sets connection callback to null.
      */
     public void clearConnectionCallback() {
         mConnectionCallback = null;
-    }
-
-    /**
-     * Sets disconnection callback to null.
-     */
-    public void clearDisconnectionCallback() {
-        mDisconnectionCallback = null;
     }
 
     /**

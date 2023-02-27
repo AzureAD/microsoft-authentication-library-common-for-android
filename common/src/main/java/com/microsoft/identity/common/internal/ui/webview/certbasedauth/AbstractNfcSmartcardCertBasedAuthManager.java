@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.ui.webview.certbasedauth;
 
+import androidx.annotation.Nullable;
+
 import lombok.Getter;
 
 /**
@@ -37,6 +39,7 @@ public abstract class AbstractNfcSmartcardCertBasedAuthManager extends AbstractS
 
     /**
      * Disconnects a connected smartcard.
+     * @param callback logic to be called after smartcard is removed.
      */
-    abstract void disconnect();
+    abstract void disconnect(@Nullable final IDisconnectionCallback callback);
 }
