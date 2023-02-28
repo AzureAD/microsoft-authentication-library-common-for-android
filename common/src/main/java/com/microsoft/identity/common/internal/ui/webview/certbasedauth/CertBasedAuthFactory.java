@@ -118,7 +118,7 @@ public class CertBasedAuthFactory {
                 telemetryHelper.setUserChoice(CertBasedAuthChoice.SMARTCARD_CHOICE);
                 setUpForSmartcardCertBasedAuth(callback, telemetryHelper);
             }
-        }, new UserChoiceDialog.CancelCbaCallback() {
+        }, new ICancelCbaCallback() {
             @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
             @Override
             public void onCancel() {
@@ -190,10 +190,13 @@ public class CertBasedAuthFactory {
      */
     private void showSmartcardPromptDialogAndSetConnectionCallback(@NonNull final CertBasedAuthChallengeHandlerCallback challengeHandlerCallback,
                                                                    @NonNull final ICertBasedAuthTelemetryHelper telemetryHelper) {
-        mDialogHolder.showSmartcardPromptDialog(new SmartcardPromptDialog.CancelCbaCallback() {
+        mDialogHolder.showSmartcardPromptDialog(new ICancelCbaCallback() {
             @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
             @Override
             public void onCancel() {
+                if (mNfcSmartcardCertBasedAuthManager != null) {
+                    mNfcSmartcardCertBasedAuthManager.stopDiscovery(mActivity);
+                }
                 onCancelHelper(challengeHandlerCallback, telemetryHelper);
             }
         });
