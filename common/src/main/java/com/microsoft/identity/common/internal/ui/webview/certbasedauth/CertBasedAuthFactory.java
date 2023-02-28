@@ -166,7 +166,7 @@ public class CertBasedAuthFactory {
             //Inform user to turn on NFC if they want to use NFC.
             mDialogHolder.showSmartcardNfcReminderDialog(new IDismissCallback() {
                 @Override
-                public void onAction() {
+                public void onDismiss() {
                     //If smartcard is already plugged in, go straight to cert picker.
                     if (mUsbSmartcardCertBasedAuthManager != null
                     && mUsbSmartcardCertBasedAuthManager.isDeviceConnected()) {

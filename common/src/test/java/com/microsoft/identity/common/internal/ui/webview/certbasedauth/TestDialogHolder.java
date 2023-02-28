@@ -101,7 +101,7 @@ class TestDialogHolder implements IDialogHolder {
         mCurrentDialog = TestDialog.removal_prompt;
         mDismissCallback = new IDismissCallback() {
             @Override
-            public void onAction() {
+            public void onDismiss() {
                 dismissDialog();
             }
         };
@@ -140,7 +140,7 @@ class TestDialogHolder implements IDialogHolder {
             case nfc_prompt:
             case nfc_reminder:
             case removal_prompt:
-                mDismissCallback.onAction();
+                mDismissCallback.onDismiss();
                 break;
 
         }

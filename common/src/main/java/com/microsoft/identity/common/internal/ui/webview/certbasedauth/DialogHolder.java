@@ -96,7 +96,7 @@ public class DialogHolder implements IDialogHolder {
                 messageStringResourceId,
                 new IDismissCallback() {
                     @Override
-                    public void onAction() {
+                    public void onDismiss() {
                         //Call dismissDialog
                         dismissDialog();
                     }
@@ -166,7 +166,7 @@ public class DialogHolder implements IDialogHolder {
     public void showSmartcardRemovalPromptDialog() {
         showDialog(new SmartcardRemovalPromptDialog(new IDismissCallback() {
             @Override
-            public void onAction() {
+            public void onDismiss() {
                 dismissDialog();
             }
         }, mActivity));

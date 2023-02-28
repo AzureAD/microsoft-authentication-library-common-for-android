@@ -74,6 +74,6 @@ public class SmartcardRemovalPromptDialog extends SmartcardDialog {
     @Override
     void onUnexpectedUnplug() {
         //Unplugging is expected here... so let's actually dismiss the dialog.
-        mDismissCallback.onAction();
+        mDismissCallback.onDismiss();
     }
 }

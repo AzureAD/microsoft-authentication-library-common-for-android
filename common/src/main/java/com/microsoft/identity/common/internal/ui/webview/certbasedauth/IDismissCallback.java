@@ -30,5 +30,5 @@ public interface IDismissCallback {
     /**
      * Action that prompts dismissal.
      */
-    void onAction();
+    void onDismiss();
 }

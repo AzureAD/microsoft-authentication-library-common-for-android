@@ -66,7 +66,7 @@ public class SmartcardNfcReminderDialog extends SmartcardDialog {
                         .setPositiveButton(R.string.smartcard_nfc_reminder_dialog_positive_button, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                mDismissCallback.onAction();
+                                mDismissCallback.onDismiss();
                             }
                         });
                 final AlertDialog dialog = builder.create();
@@ -77,7 +77,7 @@ public class SmartcardNfcReminderDialog extends SmartcardDialog {
                 dialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
                     @Override
                     public void onCancel(DialogInterface dialog) {
-                        mDismissCallback.onAction();
+                        mDismissCallback.onDismiss();
                     }
                 });
                 mDialog = dialog;
