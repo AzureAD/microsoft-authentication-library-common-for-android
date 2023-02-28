@@ -70,7 +70,7 @@ public class CertBasedAuthFactoryTest extends AbstractCertBasedAuthTest {
     public void testCancelAtUserChoiceDialog() {
         challengeHandlerHelper(ExpectedChallengeHandler.NULL);
         checkIfCorrectDialogIsShowing(TestDialog.user_choice);
-        final ICancelCbaCallback callback = mDialogHolder.getUserChoiceCancelCbaCallback();
+        final ICancelCbaCallback callback = mDialogHolder.getCancelCbaCallback();
         assertNotNull(callback);
         callback.onCancel();
         checkIfCorrectDialogIsShowing(null);
@@ -94,7 +94,7 @@ public class CertBasedAuthFactoryTest extends AbstractCertBasedAuthTest {
         assertNotNull(listener);
         listener.onClick(1);
         checkIfCorrectDialogIsShowing(TestDialog.prompt);
-        final ICancelCbaCallback callback = mDialogHolder.getPromptCancelCbaCallback();
+        final ICancelCbaCallback callback = mDialogHolder.getCancelCbaCallback();
         assertNotNull(callback);
         callback.onCancel();
         checkIfCorrectDialogIsShowing(null);

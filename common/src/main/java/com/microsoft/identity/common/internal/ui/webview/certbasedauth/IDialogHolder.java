@@ -89,7 +89,7 @@ public interface IDialogHolder {
      * Builds and shows a SmartcardDialog that notifies user that NFC is not on for their device.
      * @param dismissCallback a callback that holds logic to be run upon dismissal of the dialog.
      */
-    void showSmartcardNfcReminderDialog(@NonNull final SmartcardNfcReminderDialog.DismissCallback dismissCallback);
+    void showSmartcardNfcReminderDialog(@NonNull final IDismissCallback dismissCallback);
 
     /**
      * Dismisses current dialog, if one is showing.
