@@ -1,10 +1,7 @@
 vNext
 ----------
-<<<<<<< HEAD
 - [MINOR] Add dialogs to prompt user to remove smartcard within CBA flow (#1966)
-=======
 - [PATCH] Minor fixes to stop NFC discovery upon cancellation of some dialogs (#1972)
->>>>>>> origin/dev
 - [PATCH] Add metric to measure network check success, failure counts (#1962)
 - [MINOR] Add flighting capability for common (#1961)
 - [MINOR] Add preferred browser support (#1957)
