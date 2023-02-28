@@ -94,9 +94,9 @@ public class DialogHolder implements IDialogHolder {
         showDialog(new SmartcardErrorDialog(
                 titleStringResourceId,
                 messageStringResourceId,
-                new SmartcardErrorDialog.DismissCallback() {
+                new IDismissCallback() {
                     @Override
-                    public void onClick() {
+                    public void onDismiss() {
                         //Call dismissDialog
                         dismissDialog();
                     }
@@ -152,7 +152,7 @@ public class DialogHolder implements IDialogHolder {
      * Builds and shows a SmartcardDialog that notifies user that NFC is not on for their device.
      * @param dismissCallback a callback that holds logic to be run upon dismissal of the dialog.
      */
-    public synchronized void showSmartcardNfcReminderDialog(@NonNull final SmartcardNfcReminderDialog.DismissCallback dismissCallback) {
+    public synchronized void showSmartcardNfcReminderDialog(@NonNull final IDismissCallback dismissCallback) {
         showDialog(new SmartcardNfcReminderDialog(
                 dismissCallback,
                 mActivity
