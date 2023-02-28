@@ -80,7 +80,7 @@ public class MicrosoftStsPromptHandler extends AbstractPromptHandler {
         }
 
         if (parameters.isHowWouldYouLikeToSignInExpected()) {
-            aadLoginComponentHandler.handleHowWouldYouLikeToSignInExpected();
+            aadLoginComponentHandler.handleHowWouldYouLikeToSignIn();
         }
 
         if (parameters.isPasswordPageExpected() || parameters.getPrompt() == PromptParameter.LOGIN || !parameters.isSessionExpected()) {

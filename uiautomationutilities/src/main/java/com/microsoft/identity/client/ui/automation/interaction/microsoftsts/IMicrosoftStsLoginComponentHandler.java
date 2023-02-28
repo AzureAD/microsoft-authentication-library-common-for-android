@@ -71,5 +71,5 @@ public interface IMicrosoftStsLoginComponentHandler extends IOAuth2LoginComponen
     /**
      * Handle the How would you like to sign in
      */
-    void handleHowWouldYouLikeToSignInExpected();
+    void handleHowWouldYouLikeToSignIn();
 }
