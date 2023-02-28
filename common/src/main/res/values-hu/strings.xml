@@ -36,7 +36,7 @@
     <string name="smartcard_general_error_dialog_message">Váratlan hiba történt. Később próbálja meg újból.</string>
 
     <string name="user_choice_dialog_title">Hogyan szeretne bejelentkezni?</string>
-    <string name="user_choice_dialog_on_device_name">Tanúsítvány az eszközön</string>
+    <string name="user_choice_dialog_on_device_name">Tanúsítvány ezen az eszközön</string>
     <string name="user_choice_dialog_smartcard_name">Fizikai intelligens kártya</string>
     <string name="user_choice_dialog_positive_button">Folytatás</string>
     <string name="user_choice_dialog_negative_button">Mégse</string>
@@ -55,4 +55,6 @@
     <string name="smartcard_nfc_reminder_dialog_title">NFC bekapcsolása az eszközbeállításokban</string>
     <string name="smartcard_nfc_reminder_dialog_message">Ha NFC-vel szeretne bejelentkezni, kapcsolja be az NFC-t az eszköz beállításai között. Ezután jelentkezzen be újra.</string>
     <string name="smartcard_nfc_reminder_dialog_positive_button">Értem</string>
+
+    <string name="smartcard_removal_prompt_dialog_title">Most már eltávolíthatja az intelligens kártyát</string>
 </resources>

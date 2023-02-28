@@ -36,7 +36,7 @@
     <string name="smartcard_general_error_dialog_message">Ralat tidak dijangka telah berlaku. Sila cuba semula sebentar lagi.</string>
 
     <string name="user_choice_dialog_title">Bagaimanakah cara anda ingin mendaftar masuk?</string>
-    <string name="user_choice_dialog_on_device_name">Sijil pada peranti anda</string>
+    <string name="user_choice_dialog_on_device_name">Sijil pada peranti ini</string>
     <string name="user_choice_dialog_smartcard_name">Kad pintar fizikal</string>
     <string name="user_choice_dialog_positive_button">Teruskan</string>
     <string name="user_choice_dialog_negative_button">Batal</string>
@@ -55,4 +55,6 @@
     <string name="smartcard_nfc_reminder_dialog_title">Hidupkan NFC dalam seting peranti</string>
     <string name="smartcard_nfc_reminder_dialog_message">Untuk mendaftar masuk dengan NFC, hidupkan NFC dalam seting peranti anda. Kemudian daftar masuk sekali lagi.</string>
     <string name="smartcard_nfc_reminder_dialog_positive_button">Faham</string>
+
+    <string name="smartcard_removal_prompt_dialog_title">Anda kini boleh mengalih keluar kad pintar anda</string>
 </resources>

@@ -48,7 +48,7 @@ public class SmartcardPinDialog extends SmartcardDialog {
     private static final String TAG = SmartcardPinDialog.class.getSimpleName();
     private View mPinLayout;
     private final PositiveButtonListener mPositiveButtonListener;
-    private final CancelCbaCallback mCancelCbaCallback;
+    private final ICancelCbaCallback mCancelCbaCallback;
 
     /**
      * Creates new instance of SmartcardPinDialog.
@@ -57,7 +57,7 @@ public class SmartcardPinDialog extends SmartcardDialog {
      * @param activity Host activity.
      */
     public SmartcardPinDialog(@NonNull final PositiveButtonListener positiveButtonListener,
-                              @NonNull final CancelCbaCallback cancelCbaCallback,
+                              @NonNull final ICancelCbaCallback cancelCbaCallback,
                               @NonNull final Activity activity) {
         super(activity);
         mPositiveButtonListener = positiveButtonListener;
@@ -213,12 +213,4 @@ public class SmartcardPinDialog extends SmartcardDialog {
     public interface PositiveButtonListener {
         void onClick(@NonNull final char[] pin);
     }
-
-    /**
-     * Callback interface for when CBA is being cancelled.
-     */
-    public interface CancelCbaCallback {
-        void onCancel();
-    }
-
 }
