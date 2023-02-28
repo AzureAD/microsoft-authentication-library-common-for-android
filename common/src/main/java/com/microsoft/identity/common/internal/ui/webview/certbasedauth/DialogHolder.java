@@ -163,7 +163,7 @@ public class DialogHolder implements IDialogHolder {
      * Builds and shows a SmartcardDialog that prompts the user to remove their smartcard from the device.
      */
     @Override
-    public void showSmartcardRemovalPromptDialog() {
+    public synchronized void showSmartcardRemovalPromptDialog() {
         showDialog(new SmartcardRemovalPromptDialog(new IDismissCallback() {
             @Override
             public void onDismiss() {
@@ -210,7 +210,7 @@ public class DialogHolder implements IDialogHolder {
      * @return True if the current dialog showing is an instance of SmartcardRemovalPromptDialog. False otherwise.
      */
     @Override
-    public boolean isSmartcardRemovalPromptDialogShowing() {
+    public synchronized boolean isSmartcardRemovalPromptDialogShowing() {
         if (mCurrentDialog != null) {
             return mCurrentDialog instanceof SmartcardRemovalPromptDialog;
         }
@@ -221,7 +221,7 @@ public class DialogHolder implements IDialogHolder {
      * Used when smartcard is unexpectedly disconnected via USB from device.
      */
     @Override
-    public void onUnexpectedUnplug() {
+    public synchronized void onUnexpectedUnplug() {
         if (mCurrentDialog != null) {
             mCurrentDialog.onUnexpectedUnplug();
         }
