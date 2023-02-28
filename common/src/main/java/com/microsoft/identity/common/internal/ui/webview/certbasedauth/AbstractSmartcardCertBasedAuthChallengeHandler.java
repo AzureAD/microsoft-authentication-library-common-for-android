@@ -92,7 +92,9 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandler<T extends A
             public void onGetSession(@NonNull final ISmartcardSession session) throws Exception {
                 final int pinAttemptsRemaining = session.getPinAttemptsRemaining();
                 final List<ICertDetails> certList = session.getCertDetailsList();
-                //We have the necessary data, so we don't need the connection to the smartcard (for now)
+                //We have the necessary data, so we pause for any necessary smartcard disconnections before proceeding with the rest of CBA.
+                //For NFC, we close the connection and prompt the user to remove their smartcard (connection is not meant to be constant. They'll be asked to tap again for the PIN).
+                //For USB, no disconnection is happening here, since the connection is supposed to be constant. Just the callback is invoked.
                 prepForNextUserInteraction(new IDisconnectionCallback() {
                     @Override
                     public void onClosedConnection() {
@@ -101,7 +103,6 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandler<T extends A
                             request.cancel();
                             return;
                         }
-                        //If no certs were found, cancel flow.
                         if (certList.isEmpty()) {
                             Logger.info(methodTag, NO_PIV_CERTS_FOUND_MESSAGE);
                             mTelemetryHelper.setResultFailure(NO_PIV_CERTS_FOUND_MESSAGE);
@@ -111,7 +112,8 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandler<T extends A
                             request.cancel();
                             return;
                         }
-
+                        //No errors found, so we can continue with showing the cert picker.
+                        //The button listener/callback will handle the rest of the CBA flow.
                         mDialogHolder.showCertPickerDialog(
                                 certList,
                                 getSmartcardCertPickerDialogPositiveButtonListener(request),
@@ -206,6 +208,7 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandler<T extends A
             @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
             @Override
             public void onClick(@NonNull final ICertDetails certDetails) {
+                //Need to prompt user for pin and verify pin. The positive button listener will handle the rest of the CBA flow.
                 mDialogHolder.showPinDialog(
                         getSmartcardPinDialogPositiveButtonListener(certDetails, request),
                         getGeneralCancelCbaCallback(request)

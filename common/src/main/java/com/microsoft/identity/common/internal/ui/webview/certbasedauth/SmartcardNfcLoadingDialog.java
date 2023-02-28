@@ -73,6 +73,6 @@ public class SmartcardNfcLoadingDialog extends SmartcardDialog {
      */
     @Override
     void onUnexpectedUnplug() {
-        //This method is for USB, so it will never be called from here.
+        //This method is for NFC, so it will never be called from here.
     }
 }
