@@ -51,6 +51,12 @@ public abstract class SmartcardDialog {
     abstract void createDialog();
 
     /**
+     * Called when smartcard is unexpectedly disconnected via USB from device.
+     * Used to run any cancellation logic needed (without the cancel button needing to be pressed).
+     */
+    abstract void onUnexpectedUnplug();
+
+    /**
      * Show mDialog on the main thread.
      */
     public void show() {

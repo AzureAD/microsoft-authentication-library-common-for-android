@@ -95,6 +95,16 @@ public class UserChoiceDialog extends SmartcardDialog {
     }
 
     /**
+     * Called when smartcard is unexpectedly disconnected via USB from device.
+     * Used to run any cancellation logic needed (without the cancel button needing to be pressed).
+     */
+    @Override
+    void onUnexpectedUnplug() {
+        //Unplugging isn't necessarily unexpected for this dialog (maybe a user is still deciding between USB and NFC)
+        //No need to do anything here.
+    }
+
+    /**
      * Listener interface for a positive button click.
      */
     public interface PositiveButtonListener {

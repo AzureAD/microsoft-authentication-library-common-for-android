@@ -34,12 +34,16 @@ import com.microsoft.identity.common.R;
  */
 public class SmartcardRemovalPromptDialog extends SmartcardDialog {
 
+    private final IDismissCallback mDismissCallback;
+
     /**
      * Creates new instance of SmartcardRemovalPromptDialog.
      * @param activity Host activity.
      */
-    public SmartcardRemovalPromptDialog(@NonNull Activity activity) {
+    public SmartcardRemovalPromptDialog(@NonNull final IDismissCallback dismissCallback,
+                                        @NonNull final Activity activity) {
         super(activity);
+        mDismissCallback = dismissCallback;
         createDialog();
     }
 
@@ -61,5 +65,15 @@ public class SmartcardRemovalPromptDialog extends SmartcardDialog {
                 mDialog = dialog;
             }
         });
+    }
+
+    /**
+     * Called when smartcard is unexpectedly disconnected via USB from device.
+     * Used to run any cancellation logic needed (without the cancel button needing to be pressed).
+     */
+    @Override
+    void onUnexpectedUnplug() {
+        //Unplugging is expected here... so let's actually dismiss the dialog.
+        mDismissCallback.onAction();
     }
 }

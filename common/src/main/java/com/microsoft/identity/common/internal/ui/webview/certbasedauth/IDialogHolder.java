@@ -89,7 +89,7 @@ public interface IDialogHolder {
      * Builds and shows a SmartcardDialog that notifies user that NFC is not on for their device.
      * @param dismissCallback a callback that holds logic to be run upon dismissal of the dialog.
      */
-    void showSmartcardNfcReminderDialog(@NonNull final SmartcardNfcReminderDialog.DismissCallback dismissCallback);
+    void showSmartcardNfcReminderDialog(@NonNull final IDismissCallback dismissCallback);
 
     /**
      * Builds and shows a SmartcardDialog that prompts the user to remove their smartcard from the device.
@@ -113,6 +113,17 @@ public interface IDialogHolder {
      * @return True if a SmartcardDialog is currently showing. False otherwise.
      */
     boolean isDialogShowing();
+
+    /**
+     * Informs if a {@link SmartcardRemovalPromptDialog} is currently showing.
+     * @return True if the current dialog showing is an instance of SmartcardRemovalPromptDialog. False otherwise.
+     */
+    boolean isSmartcardRemovalPromptDialogShowing();
+
+    /**
+     * Used when smartcard is unexpectedly disconnected via USB from device.
+     */
+    void onUnexpectedUnplug();
 
     /**
      * Sets error mode for an existing SmartcardPinDialog.

@@ -94,9 +94,9 @@ public class DialogHolder implements IDialogHolder {
         showDialog(new SmartcardErrorDialog(
                 titleStringResourceId,
                 messageStringResourceId,
-                new SmartcardErrorDialog.DismissCallback() {
+                new IDismissCallback() {
                     @Override
-                    public void onClick() {
+                    public void onAction() {
                         //Call dismissDialog
                         dismissDialog();
                     }
@@ -152,7 +152,7 @@ public class DialogHolder implements IDialogHolder {
      * Builds and shows a SmartcardDialog that notifies user that NFC is not on for their device.
      * @param dismissCallback a callback that holds logic to be run upon dismissal of the dialog.
      */
-    public synchronized void showSmartcardNfcReminderDialog(@NonNull final SmartcardNfcReminderDialog.DismissCallback dismissCallback) {
+    public synchronized void showSmartcardNfcReminderDialog(@NonNull final IDismissCallback dismissCallback) {
         showDialog(new SmartcardNfcReminderDialog(
                 dismissCallback,
                 mActivity
@@ -164,7 +164,12 @@ public class DialogHolder implements IDialogHolder {
      */
     @Override
     public void showSmartcardRemovalPromptDialog() {
-        showDialog(new SmartcardRemovalPromptDialog(mActivity));
+        showDialog(new SmartcardRemovalPromptDialog(new IDismissCallback() {
+            @Override
+            public void onAction() {
+                dismissDialog();
+            }
+        }, mActivity));
     }
 
     /**
@@ -197,6 +202,29 @@ public class DialogHolder implements IDialogHolder {
      */
     public synchronized boolean isDialogShowing() {
         return (mCurrentDialog != null);
+    }
+
+    /**
+     * Informs if a {@link SmartcardRemovalPromptDialog} is currently showing.
+     *
+     * @return True if the current dialog showing is an instance of SmartcardRemovalPromptDialog. False otherwise.
+     */
+    @Override
+    public boolean isSmartcardRemovalPromptDialogShowing() {
+        if (mCurrentDialog != null) {
+            return mCurrentDialog instanceof SmartcardRemovalPromptDialog;
+        }
+        return false;
+    }
+
+    /**
+     * Used when smartcard is unexpectedly disconnected via USB from device.
+     */
+    @Override
+    public void onUnexpectedUnplug() {
+        if (mCurrentDialog != null) {
+            mCurrentDialog.onUnexpectedUnplug();
+        }
     }
 
     /**

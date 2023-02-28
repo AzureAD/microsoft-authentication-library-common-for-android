@@ -63,32 +63,32 @@ public class UsbSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
                 mDialogHolder.dismissDialog();
             }
         });
+        mCbaManager.setDisconnectionCallback(new IDisconnectionCallback() {
+            @Override
+            public void onClosedConnection() {
+                if (mDialogHolder.isDialogShowing()) {
+                    mDialogHolder.onUnexpectedUnplug();
+                    if (!mDialogHolder.isSmartcardRemovalPromptDialogShowing()) {
+                        //Show an error dialog informing users that they have unplugged their device.
+                        mDialogHolder.showErrorDialog(R.string.smartcard_early_unplug_dialog_title, R.string.smartcard_early_unplug_dialog_message);
+                        Logger.verbose(TAG, "Smartcard was disconnected while dialog was still displayed.");
+                    }
+                }
+            }
+        });
     }
 
     /**
      * To be called when user interaction is needed, or to prepare for any unexpected user interaction.
      * @param nextInteractionCallback the next logic to be run.
-     * @param unexpectedDisconnectionCallback to be called when smartcard disconnects unexpectedly.
      */
     @Override
-    protected void prepForNextUserInteraction(@Nullable final IDisconnectionCallback nextInteractionCallback,
-                                              @Nullable final IDisconnectionCallback unexpectedDisconnectionCallback) {
-        if (unexpectedDisconnectionCallback != null) {
-            mCbaManager.setDisconnectionCallback(unexpectedDisconnectionCallback);
-        }
+    protected void prepForNextUserInteraction(@Nullable final IDisconnectionCallback nextInteractionCallback) {
         //Usb discovery and connection should always remain active for the duration of the authentication flow.
         //Therefore, we merely invoke the callback here.
         if (nextInteractionCallback != null) {
             nextInteractionCallback.onClosedConnection();
         }
-    }
-
-    /**
-     * Clears appropriate connection and/or disconnection callbacks for when the Cert Based Auth flow ends.
-     */
-    @Override
-    protected void clearAppropriateCallbacksUponCbaEnding() {
-        mCbaManager.clearDisconnectionCallback();
     }
 
     /**
@@ -130,7 +130,7 @@ public class UsbSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
                     @Override
                     public void onException(@NonNull final Exception e) {
                         indicateGeneralException(methodTag, e);
-                        clearAppropriateCallbacksUponCbaEnding();
+                        clearAllManagerCallbacks();
                         request.cancel();
                         clearPin(pin);
                     }
@@ -174,5 +174,14 @@ public class UsbSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
             return;
         }
         callback.onResultReady();
+    }
+
+    /**
+     * Clears appropriate connection and/or disconnection callbacks.
+     */
+    @Override
+    protected void clearAllManagerCallbacks() {
+        mCbaManager.clearConnectionCallback();
+        mCbaManager.clearDisconnectionCallback();
     }
 }

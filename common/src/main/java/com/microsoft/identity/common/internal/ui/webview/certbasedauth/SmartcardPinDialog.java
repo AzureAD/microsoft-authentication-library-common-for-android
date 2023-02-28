@@ -111,6 +111,15 @@ public class SmartcardPinDialog extends SmartcardDialog {
     }
 
     /**
+     * Called when smartcard is unexpectedly disconnected via USB from device.
+     * Used to run any cancellation logic needed (without the cancel button needing to be pressed).
+     */
+    @Override
+    void onUnexpectedUnplug() {
+        mCancelCbaCallback.onCancel();
+    }
+
+    /**
      * In order to add custom UI for errors, the positive button must be overwritten.
      * Note that the dialog needs to be shown before we can get a reference and override the positive button's behavior.
      */

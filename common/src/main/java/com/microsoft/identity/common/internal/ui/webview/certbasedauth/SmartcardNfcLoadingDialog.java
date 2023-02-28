@@ -66,4 +66,13 @@ public class SmartcardNfcLoadingDialog extends SmartcardDialog {
             }
         });
     }
+
+    /**
+     * Called when smartcard is unexpectedly disconnected via USB from device.
+     * Used to run any cancellation logic needed (without the cancel button needing to be pressed).
+     */
+    @Override
+    void onUnexpectedUnplug() {
+        //This method is for USB, so it will never be called from here.
+    }
 }

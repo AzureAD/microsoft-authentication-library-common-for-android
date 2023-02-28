@@ -144,6 +144,15 @@ public class SmartcardCertPickerDialog extends SmartcardDialog {
     }
 
     /**
+     * Called when smartcard is unexpectedly disconnected via USB from device.
+     * Used to run any cancellation logic needed (without the cancel button needing to be pressed).
+     */
+    @Override
+    void onUnexpectedUnplug() {
+        mCancelCbaCallback.onCancel();
+    }
+
+    /**
      * Listener interface for a positive button click.
      */
     public interface PositiveButtonListener {

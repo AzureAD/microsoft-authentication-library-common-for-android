@@ -37,7 +37,7 @@ class TestDialogHolder implements IDialogHolder {
     private SmartcardCertPickerDialog.PositiveButtonListener mCertPickerPositiveButtonListener;
     private SmartcardPinDialog.PositiveButtonListener mPinPositiveButtonListener;
     private UserChoiceDialog.PositiveButtonListener mUserChoicePositiveButtonListener;
-    private SmartcardNfcReminderDialog.DismissCallback mNfcReminderDismissCallback;
+    private IDismissCallback mDismissCallback;
     private ICancelCbaCallback mCancelCbaCallback;
     private List<ICertDetails> mCertList;
 
@@ -91,14 +91,20 @@ class TestDialogHolder implements IDialogHolder {
     }
 
     @Override
-    public void showSmartcardNfcReminderDialog(@NonNull final SmartcardNfcReminderDialog.DismissCallback dismissCallback) {
+    public void showSmartcardNfcReminderDialog(@NonNull final IDismissCallback dismissCallback) {
         mCurrentDialog = TestDialog.nfc_reminder;
-        mNfcReminderDismissCallback = dismissCallback;
+        mDismissCallback = dismissCallback;
     }
 
     @Override
     public void showSmartcardRemovalPromptDialog() {
         mCurrentDialog = TestDialog.removal_prompt;
+        mDismissCallback = new IDismissCallback() {
+            @Override
+            public void onAction() {
+                dismissDialog();
+            }
+        };
     }
 
     @Override
@@ -112,6 +118,32 @@ class TestDialogHolder implements IDialogHolder {
     @Override
     public boolean isDialogShowing() {
         return mCurrentDialog != null;
+    }
+
+    @Override
+    public boolean isSmartcardRemovalPromptDialogShowing() {
+        if (mCurrentDialog != null) {
+            return mCurrentDialog == TestDialog.removal_prompt;
+        }
+        return false;
+    }
+
+    @Override
+    public void onUnexpectedUnplug() {
+        switch (mCurrentDialog) {
+            case cert_picker:
+            case pin:
+            case user_choice:
+            case prompt:
+                mCancelCbaCallback.onCancel();
+                break;
+            case nfc_prompt:
+            case nfc_reminder:
+            case removal_prompt:
+                mDismissCallback.onAction();
+                break;
+
+        }
     }
 
     @Override

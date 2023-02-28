@@ -35,14 +35,14 @@ import com.microsoft.identity.common.R;
  */
 public class SmartcardNfcReminderDialog extends SmartcardDialog {
 
-    private final DismissCallback mDismissCallback;
+    private final IDismissCallback mDismissCallback;
 
     /**
      * Creates new instance of SmartcardNfcReminderDialog.
      * @param dismissCallback callback containing logic to be run upon dialog dismissal.
      * @param activity current host activity.
      */
-    public SmartcardNfcReminderDialog(@NonNull final DismissCallback dismissCallback,
+    public SmartcardNfcReminderDialog(@NonNull final IDismissCallback dismissCallback,
                                       @NonNull final Activity activity) {
         super(activity);
         mDismissCallback = dismissCallback;
@@ -66,7 +66,7 @@ public class SmartcardNfcReminderDialog extends SmartcardDialog {
                         .setPositiveButton(R.string.smartcard_nfc_reminder_dialog_positive_button, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                mDismissCallback.onClick();
+                                mDismissCallback.onAction();
                             }
                         });
                 final AlertDialog dialog = builder.create();
@@ -77,7 +77,7 @@ public class SmartcardNfcReminderDialog extends SmartcardDialog {
                 dialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
                     @Override
                     public void onCancel(DialogInterface dialog) {
-                        mDismissCallback.onClick();
+                        mDismissCallback.onAction();
                     }
                 });
                 mDialog = dialog;
@@ -86,9 +86,11 @@ public class SmartcardNfcReminderDialog extends SmartcardDialog {
     }
 
     /**
-     * Callback interface for a dialog dismissal.
+     * Called when smartcard is unexpectedly disconnected via USB from device.
+     * Used to run any cancellation logic needed (without the cancel button needing to be pressed).
      */
-    public interface DismissCallback {
-        void onClick();
+    @Override
+    void onUnexpectedUnplug() {
+        //This method is for USB, so it will never be called from here.
     }
 }

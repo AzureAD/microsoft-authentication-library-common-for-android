@@ -57,11 +57,9 @@ public class NfcSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
      * When a connection is no longer actively being used, the dialog flow should pause
      * so the user can remove their smartcard before flow can continue.
      * @param nextInteractionCallback the next logic to be run after a user removes their smartcard.
-     * @param unexpectedDisconnectionCallback to be called when smartcard disconnects unexpectedly; not used for NFC.
      */
     @Override
-    protected void prepForNextUserInteraction(@Nullable final IDisconnectionCallback nextInteractionCallback,
-                                              @Nullable final IDisconnectionCallback unexpectedDisconnectionCallback) {
+    protected void prepForNextUserInteraction(@Nullable final IDisconnectionCallback nextInteractionCallback) {
         if (nextInteractionCallback == null) {
             return;
         }
@@ -80,14 +78,6 @@ public class NfcSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
                 nextInteractionCallback.onClosedConnection();
             }
         });
-    }
-
-    /**
-     * Clears appropriate connection and disconnection callbacks for when the Cert Based Auth flow ends.
-     */
-    @Override
-    protected void clearAppropriateCallbacksUponCbaEnding() {
-        mCbaManager.clearConnectionCallback();
     }
 
     /**
@@ -128,7 +118,7 @@ public class NfcSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
                         mDialogHolder.showSmartcardNfcLoadingDialog();
                         if (mCbaManager.isDeviceChanged()) {
                             clearPin(pin);
-                            clearAppropriateCallbacksUponCbaEnding();
+                            clearAllManagerCallbacks();
                             request.cancel();
                             prepForNextUserInteraction(new IDisconnectionCallback() {
                                 @Override
@@ -136,7 +126,7 @@ public class NfcSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
                                     //In a future version, an error dialog with a custom message could be shown here instead of a general error.
                                     indicateGeneralException(methodTag, new Exception("Device connected via NFC is different from initially connected device."));
                                 }
-                            }, null);
+                            });
                             return;
                         }
                         mCbaManager.requestDeviceSession(new AbstractSmartcardCertBasedAuthManager.ISessionCallback() {
@@ -153,10 +143,10 @@ public class NfcSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
                                 prepForNextUserInteraction(new IDisconnectionCallback() {
                                     @Override
                                     public void onClosedConnection() {
-                                        clearAppropriateCallbacksUponCbaEnding();
+                                        clearAllManagerCallbacks();
                                         indicateGeneralException(methodTag, e);
                                     }
-                                }, null);
+                                });
                             }
                         });
                     }
@@ -196,9 +186,17 @@ public class NfcSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
                 public void onClosedConnection() {
                     callback.onResultReady();
                 }
-            }, null);
+            });
             return;
         }
         callback.onResultReady();
+    }
+
+    /**
+     * Clears appropriate connection and disconnection callbacks.
+     */
+    @Override
+    protected void clearAllManagerCallbacks() {
+        mCbaManager.clearConnectionCallback();
     }
 }
