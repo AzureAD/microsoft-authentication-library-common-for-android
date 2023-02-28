@@ -96,7 +96,7 @@ public class DialogHolder implements IDialogHolder {
                 messageStringResourceId,
                 new IDismissCallback() {
                     @Override
-                    public void onAction() {
+                    public void onDismiss() {
                         //Call dismissDialog
                         dismissDialog();
                     }

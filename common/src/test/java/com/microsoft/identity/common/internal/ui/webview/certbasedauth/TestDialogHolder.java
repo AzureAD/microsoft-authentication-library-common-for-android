@@ -119,7 +119,7 @@ class TestDialogHolder implements IDialogHolder {
                 mCancelCbaCallback.onCancel();
                 break;
             case nfc_prompt:
-                mDismissCallback.onAction();
+                mDismissCallback.onDismiss();
                 break;
         }
     }
