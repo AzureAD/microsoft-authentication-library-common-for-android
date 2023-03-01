@@ -118,7 +118,7 @@ public class CertBasedAuthFactory {
                 telemetryHelper.setUserChoice(CertBasedAuthChoice.SMARTCARD_CHOICE);
                 setUpForSmartcardCertBasedAuth(callback, telemetryHelper);
             }
-        }, new UserChoiceDialog.CancelCbaCallback() {
+        }, new ICancelCbaCallback() {
             @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
             @Override
             public void onCancel() {
@@ -162,9 +162,9 @@ public class CertBasedAuthFactory {
         if (mNfcSmartcardCertBasedAuthManager != null
                 && mNfcSmartcardCertBasedAuthManager.startDiscovery(mActivity)) {
             //Inform user to turn on NFC if they want to use NFC.
-            mDialogHolder.showSmartcardNfcReminderDialog(new SmartcardNfcReminderDialog.DismissCallback() {
+            mDialogHolder.showSmartcardNfcReminderDialog(new IDismissCallback() {
                 @Override
-                public void onClick() {
+                public void onDismiss() {
                     //If smartcard is already plugged in, go straight to cert picker.
                     if (mUsbSmartcardCertBasedAuthManager != null
                     && mUsbSmartcardCertBasedAuthManager.isDeviceConnected()) {
@@ -190,10 +190,13 @@ public class CertBasedAuthFactory {
      */
     private void showSmartcardPromptDialogAndSetConnectionCallback(@NonNull final CertBasedAuthChallengeHandlerCallback challengeHandlerCallback,
                                                                    @NonNull final ICertBasedAuthTelemetryHelper telemetryHelper) {
-        mDialogHolder.showSmartcardPromptDialog(new SmartcardPromptDialog.CancelCbaCallback() {
+        mDialogHolder.showSmartcardPromptDialog(new ICancelCbaCallback() {
             @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
             @Override
             public void onCancel() {
+                if (mNfcSmartcardCertBasedAuthManager != null) {
+                    mNfcSmartcardCertBasedAuthManager.stopDiscovery(mActivity);
+                }
                 onCancelHelper(challengeHandlerCallback, telemetryHelper);
             }
         });

@@ -50,7 +50,7 @@ public class NfcSmartcardCertBasedAuthChallengeHandlerTest extends AbstractSmart
         final char[] pin = {'1', '2', '3'};
         pinListener.onClick(pin);
         checkIfCorrectDialogIsShowing(TestDialog.nfc_prompt);
-        final SmartcardNfcPromptDialog.CancelCbaCallback nfcCancelCallback = mDialogHolder.getNfcPromptCancelCbaCallback();
+        final ICancelCbaCallback nfcCancelCallback = mDialogHolder.getCancelCbaCallback();
         assertNotNull(nfcCancelCallback);
         nfcCancelCallback.onCancel();
         checkIfCorrectDialogIsShowing(null);

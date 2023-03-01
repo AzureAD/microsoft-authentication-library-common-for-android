@@ -107,20 +107,13 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandler<T extends A
                     onPausedSmartcardDiscovery();
                     return;
                 }
-
+                final ICancelCbaCallback cancelCallback = getGeneralCancelCbaCallback(request);
                 //Build and show Smartcard cert picker, which also handles the rest of the smartcard CBA flow.
                 mDialogHolder.showCertPickerDialog(
                         certList,
                         getSmartcardCertPickerDialogPositiveButtonListener(request),
-                        new SmartcardCertPickerDialog.CancelCbaCallback() {
-                            @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-                            @Override
-                            public void onCancel() {
-                                mDialogHolder.dismissDialog();
-                                mTelemetryHelper.setResultFailure(USER_CANCEL_MESSAGE);
-                                request.cancel();
-                            }
-                        });
+                        cancelCallback
+                );
 
                 onPausedSmartcardDiscovery();
             }
@@ -141,6 +134,24 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandler<T extends A
     protected abstract void onPausedSmartcardDiscovery();
 
     /**
+     * Returns a callback that dismisses the current dialog, sends telemetry, and cancels the ClientCertRequest.
+     * @param request {@link ClientCertRequest}
+     * @return {@link ICancelCbaCallback}
+     */
+    @NonNull
+    protected ICancelCbaCallback getGeneralCancelCbaCallback(@NonNull final ClientCertRequest request) {
+        return new ICancelCbaCallback() {
+            @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+            @Override
+            public void onCancel() {
+                mDialogHolder.dismissDialog();
+                mTelemetryHelper.setResultFailure(USER_CANCEL_MESSAGE);
+                request.cancel();
+            }
+        };
+    }
+
+    /**
      * Helper method to log and show an error dialog with messages indicating that
      *  too many failed login attempts have occurred.
      * @param methodTag tag from calling method.
@@ -159,7 +170,8 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandler<T extends A
      * @param methodTag tag from calling method.
      * @param e Exception thrown.
      */
-    protected void indicateGeneralException(@NonNull final String methodTag, @NonNull final Exception e) {
+    protected void indicateGeneralException(@NonNull final String methodTag,
+                                            @NonNull final Exception e) {
         Logger.error(methodTag, e.getMessage(), e);
         mTelemetryHelper.setResultFailure(e);
         //Show general error dialog.
@@ -179,17 +191,11 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandler<T extends A
             @Override
             public void onClick(@NonNull final ICertDetails certDetails) {
                 //Need to prompt user for pin and verify pin. The positive button listener will handle the rest of the CBA flow.
+                final ICancelCbaCallback cancelCallback = getGeneralCancelCbaCallback(request);
                 mDialogHolder.showPinDialog(
                         getSmartcardPinDialogPositiveButtonListener(certDetails, request),
-                        new SmartcardPinDialog.CancelCbaCallback() {
-                            @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-                            @Override
-                            public void onCancel() {
-                                mDialogHolder.dismissDialog();
-                                mTelemetryHelper.setResultFailure(USER_CANCEL_MESSAGE);
-                                request.cancel();
-                            }
-                        });
+                        cancelCallback
+                );
             }
         };
     }

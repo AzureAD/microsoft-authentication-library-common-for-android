@@ -36,7 +36,7 @@
     <string name="smartcard_general_error_dialog_message">Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es später noch einmal.</string>
 
     <string name="user_choice_dialog_title">Wie möchten Sie sich anmelden?</string>
-    <string name="user_choice_dialog_on_device_name">Zertifikat auf Ihrem Gerät</string>
+    <string name="user_choice_dialog_on_device_name">Zertifikat auf diesem Gerät</string>
     <string name="user_choice_dialog_smartcard_name">Physische Smartcard</string>
     <string name="user_choice_dialog_positive_button">Weiter</string>
     <string name="user_choice_dialog_negative_button">Abbrechen</string>
@@ -55,4 +55,6 @@
     <string name="smartcard_nfc_reminder_dialog_title">NFC in den Geräteeinstellungen aktivieren</string>
     <string name="smartcard_nfc_reminder_dialog_message">Um sich mit NFC anzumelden, aktivieren Sie NFC in ihren Geräteeinstellungen. Melden Sie sich dann erneut an.</string>
     <string name="smartcard_nfc_reminder_dialog_positive_button">OK</string>
+
+    <string name="smartcard_removal_prompt_dialog_title">Sie können jetzt Ihre Smartcard entfernen.</string>
 </resources>
