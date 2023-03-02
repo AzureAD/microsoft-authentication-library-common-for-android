@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.opentelemetry;
 
+import io.opentelemetry.api.NoopOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import lombok.Getter;
 import lombok.NonNull;
@@ -48,10 +49,12 @@ import lombok.experimental.Accessors;
  */
 public class OpenTelemetryHolder {
 
+    private static final OpenTelemetry NOOP = new NoopOpenTelemetry();
+
     @Accessors(prefix = "s")
     @Setter
     @Getter
     @NonNull
-    private static OpenTelemetry sOpenTelemetry = OpenTelemetry.noop();
+    private static OpenTelemetry sOpenTelemetry = NOOP;
 
 }
