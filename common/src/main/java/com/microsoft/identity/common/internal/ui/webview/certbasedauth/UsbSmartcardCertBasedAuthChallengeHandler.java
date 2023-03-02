@@ -170,7 +170,12 @@ public class UsbSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
                     callback.onResultReady();
                 }
             });
-            mDialogHolder.showSmartcardRemovalPromptDialog();
+            mDialogHolder.showSmartcardRemovalPromptDialog(new IDismissCallback() {
+                @Override
+                public void onDismiss() {
+                    callback.onResultReady();
+                }
+            });
             return;
         }
         callback.onResultReady();

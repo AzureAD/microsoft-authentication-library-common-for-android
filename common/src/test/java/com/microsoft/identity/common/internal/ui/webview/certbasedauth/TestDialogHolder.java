@@ -97,12 +97,15 @@ class TestDialogHolder implements IDialogHolder {
     }
 
     @Override
-    public void showSmartcardRemovalPromptDialog() {
+    public void showSmartcardRemovalPromptDialog(@Nullable final IDismissCallback dismissCallback) {
         mCurrentDialog = TestDialog.removal_prompt;
         mDismissCallback = new IDismissCallback() {
             @Override
             public void onDismiss() {
                 dismissDialog();
+                if (dismissCallback != null) {
+                    dismissCallback.onDismiss();
+                }
             }
         };
     }

@@ -93,8 +93,9 @@ public interface IDialogHolder {
 
     /**
      * Builds and shows a SmartcardDialog that prompts the user to remove their smartcard from the device.
+     * @param dismissCallback a callback that holds logic to be run upon dismissal of the dialog.
      */
-    void showSmartcardRemovalPromptDialog();
+    void showSmartcardRemovalPromptDialog(@Nullable IDismissCallback dismissCallback);
 
     /**
      * Dismisses current dialog, if one is showing.

@@ -67,11 +67,13 @@ public class NfcSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
             nextInteractionCallback.onClosedConnection();
             return;
         }
-        mDialogHolder.showSmartcardRemovalPromptDialog();
-        mCbaManager.disconnect(new IDisconnectionCallback() {
+        clearAllManagerCallbacks();
+        //This would normally be where we would use the remove() YubiKit method within a wrapper.
+        //But there seems to be some concurrency issues that arise when using this method with certain Android devices.
+        //So for now, the prompt that tells the user they can remove their smartcard will have a button where they can dismiss it themselves.
+        mDialogHolder.showSmartcardRemovalPromptDialog(new IDismissCallback() {
             @Override
-            public void onClosedConnection() {
-                mDialogHolder.dismissDialog();
+            public void onDismiss() {
                 //Helps prevent unnecessary callback trigger. Nfc discovery should only be active when
                 // the user is prompted to tap.
                 mCbaManager.stopDiscovery(mActivity);
@@ -118,7 +120,6 @@ public class NfcSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
                         mDialogHolder.showSmartcardNfcLoadingDialog();
                         if (mCbaManager.isDeviceChanged()) {
                             clearPin(pin);
-                            clearAllManagerCallbacks();
                             request.cancel();
                             prepForNextUserInteraction(new IDisconnectionCallback() {
                                 @Override
@@ -143,7 +144,6 @@ public class NfcSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
                                 prepForNextUserInteraction(new IDisconnectionCallback() {
                                     @Override
                                     public void onClosedConnection() {
-                                        clearAllManagerCallbacks();
                                         indicateGeneralException(methodTag, e);
                                     }
                                 });

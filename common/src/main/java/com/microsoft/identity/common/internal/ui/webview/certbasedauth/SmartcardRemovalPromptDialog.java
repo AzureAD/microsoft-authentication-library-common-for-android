@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.ui.webview.certbasedauth;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.DialogInterface;
 
 import androidx.annotation.NonNull;
 
@@ -57,7 +58,13 @@ public class SmartcardRemovalPromptDialog extends SmartcardDialog {
             public void run() {
                 final AlertDialog.Builder builder = new AlertDialog.Builder(mActivity, R.style.TitleOnlyAlertDialogTheme)
                         //Sets topmost text of dialog.
-                        .setTitle(R.string.smartcard_removal_prompt_dialog_title);
+                        .setTitle(R.string.smartcard_removal_prompt_dialog_title)
+                        .setPositiveButton(R.string.smartcard_removal_prompt_dialog_positive_button, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                mDismissCallback.onDismiss();
+                            }
+                        });;
                 final AlertDialog dialog = builder.create();
                 //If user touches outside dialog, the default behavior makes the dialog disappear without really doing anything.
                 //Adding this line in disables this default behavior so that the user can only exit by hitting the positive button.

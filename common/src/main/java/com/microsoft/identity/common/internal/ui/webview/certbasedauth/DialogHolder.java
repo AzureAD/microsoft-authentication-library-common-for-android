@@ -161,13 +161,17 @@ public class DialogHolder implements IDialogHolder {
 
     /**
      * Builds and shows a SmartcardDialog that prompts the user to remove their smartcard from the device.
+     * @param dismissCallback a callback that holds logic to be run upon dismissal of the dialog.
      */
     @Override
-    public synchronized void showSmartcardRemovalPromptDialog() {
+    public synchronized void showSmartcardRemovalPromptDialog(@Nullable final IDismissCallback dismissCallback) {
         showDialog(new SmartcardRemovalPromptDialog(new IDismissCallback() {
             @Override
             public void onDismiss() {
                 dismissDialog();
+                if (dismissCallback != null) {
+                    dismissCallback.onDismiss();
+                }
             }
         }, mActivity));
     }

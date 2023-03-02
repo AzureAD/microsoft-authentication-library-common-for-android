@@ -100,17 +100,4 @@ class TestNfcSmartcardCertBasedAuthManager extends AbstractNfcSmartcardCertBased
             mConnectionCallback.onCreateConnection();
         }
     }
-
-    public void mockDisconnect() {
-        mIsConnected = false;
-        if (mDisconnectionCallback != null) {
-            mDisconnectionCallback.onClosedConnection();
-            mDisconnectionCallback = null;
-        }
-    }
-
-    @Override
-    void disconnect(@Nullable final IDisconnectionCallback callback) {
-        mDisconnectionCallback = callback;
-    }
 }

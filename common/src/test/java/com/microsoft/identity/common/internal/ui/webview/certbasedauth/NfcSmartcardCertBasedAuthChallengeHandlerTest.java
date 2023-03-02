@@ -71,14 +71,18 @@ public class NfcSmartcardCertBasedAuthChallengeHandlerTest extends AbstractSmart
         checkIfCorrectDialogIsShowing(TestDialog.nfc_prompt);
         manager.mockConnect(false);
         checkIfCorrectDialogIsShowing(TestDialog.removal_prompt);
-        manager.mockDisconnect();
+        final IDismissCallback dismissCallback = mDialogHolder.getDismissCallback();
+        assertNotNull(dismissCallback);
+        dismissCallback.onDismiss();
         checkIfCorrectDialogIsShowing(TestDialog.pin);
 
         pinListener.onClick(wrongPin);
         checkIfCorrectDialogIsShowing(TestDialog.nfc_prompt);
         manager.mockConnect(false);
         checkIfCorrectDialogIsShowing(TestDialog.removal_prompt);
-        manager.mockDisconnect();
+        final IDismissCallback dismissCallback2 = mDialogHolder.getDismissCallback();
+        assertNotNull(dismissCallback2);
+        dismissCallback2.onDismiss();
         checkIfCorrectDialogIsShowing(TestDialog.error);
         checkIfProceeded(false);
     }
@@ -97,7 +101,9 @@ public class NfcSmartcardCertBasedAuthChallengeHandlerTest extends AbstractSmart
         checkIfCorrectDialogIsShowing(TestDialog.nfc_prompt);
         manager.mockConnect(false);
         checkIfCorrectDialogIsShowing(TestDialog.removal_prompt);
-        manager.mockDisconnect();
+        final IDismissCallback dismissCallback = mDialogHolder.getDismissCallback();
+        assertNotNull(dismissCallback);
+        dismissCallback.onDismiss();
         checkIfCorrectDialogIsShowing(TestDialog.error);
         checkIfProceeded(false);
     }
@@ -119,7 +125,9 @@ public class NfcSmartcardCertBasedAuthChallengeHandlerTest extends AbstractSmart
         manager.mockConnect(false);
         //In between, loading dialog will show.
         checkIfCorrectDialogIsShowing(TestDialog.removal_prompt);
-        manager.mockDisconnect();
+        final IDismissCallback dismissCallback = mDialogHolder.getDismissCallback();
+        assertNotNull(dismissCallback);
+        dismissCallback.onDismiss();
         checkIfCorrectDialogIsShowing(TestDialog.error);
         checkIfProceeded(false);
     }
@@ -155,7 +163,9 @@ public class NfcSmartcardCertBasedAuthChallengeHandlerTest extends AbstractSmart
         checkIfCorrectDialogIsShowing(TestDialog.nfc_prompt);
         manager.mockConnect(true);
         checkIfCorrectDialogIsShowing(TestDialog.removal_prompt);
-        manager.mockDisconnect();
+        final IDismissCallback dismissCallback = mDialogHolder.getDismissCallback();
+        assertNotNull(dismissCallback);
+        dismissCallback.onDismiss();
         checkIfCorrectDialogIsShowing(TestDialog.error);
         checkIfProceeded(false);
     }
@@ -172,7 +182,9 @@ public class NfcSmartcardCertBasedAuthChallengeHandlerTest extends AbstractSmart
         );
         mChallengeHandler.processChallenge(mRequest);
         checkIfCorrectDialogIsShowing(TestDialog.removal_prompt);
-        manager.mockDisconnect();
+        final IDismissCallback dismissCallback = mDialogHolder.getDismissCallback();
+        assertNotNull(dismissCallback);
+        dismissCallback.onDismiss();;
     }
 
     private void setAndProcessChallengeHandler(@NonNull final TestNfcSmartcardCertBasedAuthManager manager) {
@@ -185,6 +197,8 @@ public class NfcSmartcardCertBasedAuthChallengeHandlerTest extends AbstractSmart
         );
         mChallengeHandler.processChallenge(mRequest);
         checkIfCorrectDialogIsShowing(TestDialog.removal_prompt);
-        manager.mockDisconnect();
+        final IDismissCallback dismissCallback = mDialogHolder.getDismissCallback();
+        assertNotNull(dismissCallback);
+        dismissCallback.onDismiss();
     }
 }

@@ -116,29 +116,6 @@ public class YubiKitNfcSmartcardCertBasedAuthManager extends AbstractNfcSmartcar
     }
 
     /**
-     * Disconnects a connected smartcard.
-     * @param callback logic to be called after smartcard is removed.
-     */
-    @Override
-    void disconnect(@Nullable final IDisconnectionCallback callback) {
-        final String methodTag = TAG + ":disconnect";
-        synchronized (sDeviceLock) {
-            if (mNfcDevice != null) {
-                mNfcDevice.remove(new Runnable() {
-                    @Override
-                    public void run() {
-                        Logger.info(methodTag, "YubiKey connected via NFC has been disconnected");
-                        mNfcDevice = null;
-                        if (callback!= null) {
-                            callback.onClosedConnection();
-                        }
-                    }
-                });
-            }
-        }
-    }
-
-    /**
      * Request a PivSession instance in order to carry out methods
      *  implemented in YubiKitSmartcardSession.
      * @param callback Contains callbacks to run when a PivSession is successfully instantiated and when any exception is thrown due to a connection issue.
