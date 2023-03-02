@@ -1,3 +1,7 @@
+V.10.0.1
+----------
+- [PATCH] Create a custom safe Global Open Telemetry that doesn't crash (#1977)
+
 V.10.0.0
 ----------
 - [MINOR] Add activity (InstallCertActivityLauncher) to launch the Install WPJ cert activity (#1924)
