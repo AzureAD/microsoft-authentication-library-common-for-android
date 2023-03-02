@@ -45,7 +45,7 @@ public class OTelUtility {
      **/
     @NonNull
     public static Span createSpan(@NonNull final String name) {
-        final Tracer tracer = GlobalOpenTelemetry.getTracer(TAG);
+        final Tracer tracer = OpenTelemetryHolder.getOpenTelemetry().getTracer(TAG);
         return tracer.spanBuilder(name).startSpan();
     }
 
@@ -67,7 +67,7 @@ public class OTelUtility {
             return createSpan(name);
         }
 
-        final Tracer tracer = GlobalOpenTelemetry.getTracer(TAG);
+        final Tracer tracer = OpenTelemetryHolder.getOpenTelemetry().getTracer(TAG);
 
         return tracer.spanBuilder(name)
                 .setParent(Context.current().with(Span.wrap(parentSpanContext)))
@@ -79,7 +79,7 @@ public class OTelUtility {
      **/
     @NonNull
     public static LongCounter createLongCounter(@NonNull final String name, @NonNull final String description) {
-        final Meter meter = GlobalOpenTelemetry.getMeter(TAG);
+        final Meter meter = OpenTelemetryHolder.getOpenTelemetry().getMeter(TAG);
 
         return meter
                 .counterBuilder(name)
