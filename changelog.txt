@@ -11,6 +11,7 @@ vNext
 - [MINOR] Wrap Runnable with Current Telemetry Context (#1956)
 - [MINOR] Update JweResponse APIs and added Additional Authenticated Data (AAD) (#1958)
 - [MINOR] Move JWT classes to common (#1968)
+- [PATCH] Create a custom safe Global Open Telemetry that doesn't crash (#1977)
 
 V.10.0.0
 ----------
