@@ -2,7 +2,6 @@ V.Next
 ----------
 - [MINOR] Format thread+correlationId metadata only once logging is clearly opted-in (#1917)
 - [MINOR] Remove unnecessary synchronization when storage access is already guarded (#1928)
-- [MINOR] Write back read successes to cache and stop extra lookups in getAll #1927
 - [MINOR] Keep in-memory cache of all credentials and accountrecords (#1929)
 
 V.9.1.0
