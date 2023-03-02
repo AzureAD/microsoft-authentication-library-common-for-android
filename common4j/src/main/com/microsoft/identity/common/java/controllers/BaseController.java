@@ -264,7 +264,7 @@ public abstract class BaseController {
         } catch (IllegalArgumentException ex) {
             Logger.error(TAG, "correlation id from diagnostic context is not a UUID", ex);
         }
-////
+
         builder.setClientId(parameters.getClientId())
                 .setRedirectUri(parameters.getRedirectUri()).setBrkClientId(parameters.getBrkClientId()).setBrkRedirectUri(parameters.getBrkRedirectUri());
 //               builder.setClientId(parameters.getClientId())

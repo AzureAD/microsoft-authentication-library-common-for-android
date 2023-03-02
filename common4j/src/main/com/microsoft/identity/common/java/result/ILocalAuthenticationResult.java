@@ -79,7 +79,7 @@ public interface ILocalAuthenticationResult {
     Date getExpiresOn();
 
     /**
-     * @return A unique tenant identifier that was used in token acquisiton. Could be null if tenant information is not
+     * @return A unique tenant identifier that was used in token acquisition. Could be null if tenant information is not
      * returned by the service.
      */
     String getTenantId();

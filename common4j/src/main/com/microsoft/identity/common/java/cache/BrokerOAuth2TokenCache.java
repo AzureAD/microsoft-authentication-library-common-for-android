@@ -495,7 +495,7 @@ public class BrokerOAuth2TokenCache
                             + isFoci
                             + "]"
             );
-            List<ICacheRecord> resultToSave = new ArrayList<>();
+            List<ICacheRecord> result = new ArrayList<>();
             if (!isNaaRequest) {
                 if (isFoci) {
                     targetCache = mFociCache;
@@ -503,25 +503,30 @@ public class BrokerOAuth2TokenCache
                     targetCache = initializeProcessUidCache(getComponents(), mUid);
                 }
 
-                final List<ICacheRecord> result = targetCache.saveAndLoadAggregatedAccountData(
+                 result = targetCache.saveAndLoadAggregatedAccountData(
                         oAuth2Strategy,
                         request,
                         response
                 );
-                resultToSave = result;
+
             } else if (isFoci) {
+                // This means that it is NAA request & also a FOCI scenario!!
                 targetCache = initializeProcessUidCache(getComponents(), mUid);
                 // For NAA, we have to separately save RT in FOCI cache and AT in Non-FOCI cache if RT retrieved has foci property
-                final List<ICacheRecord> result = targetCache.saveAndLoadAggregatedAccountData(
+                result = targetCache.saveAndLoadAggregatedAccountData(
                         oAuth2Strategy,
                         request,
                         response
                 );
-                resultToSave = result;
+
+                mFociCache.saveRefreshTokenForNAA(oAuth2Strategy,
+                        request,
+                        response);
+
             } else {
+                // This means that it is NAA request but not FOCI scenario
                 targetCache = initializeProcessUidCache(getComponents(), mUid);
-                // For NAA, we have to separately save RT in FOCI cache and AT in Non-FOCI cache if RT retrieved has foci property
-                final List<ICacheRecord> result = targetCache.saveAndLoadAggregatedAccountData(
+                result = targetCache.saveAndLoadAggregatedAccountData(
                         oAuth2Strategy,
                         request,
                         response
@@ -529,11 +534,10 @@ public class BrokerOAuth2TokenCache
                 ((MsalOAuth2TokenCache) targetCache).saveRefreshTokenForNAA(oAuth2Strategy,
                         request,
                         response);
-                resultToSave = result;
             }
             // The 0th element contains the record we *just* saved. Other records are corollary data.
-            final ICacheRecord justSavedRecord = resultToSave.get(0);
-            if (!justSavedRecord.getAccessToken().getClientId().equalsIgnoreCase(justSavedRecord.getRefreshToken().getClientId()) || response.getIsRequestForNAA()) {
+            final ICacheRecord justSavedRecord = result.get(0);
+            if (isNaaRequest) {
                 // NAA scenario, we need to have multiple entries for updating the metadata to indicate the presence of AT for nested app and RT of host app
                 // Update entry using clientId on AT (For nested app)
                 updateApplicationMetadataCache(
@@ -557,7 +561,7 @@ public class BrokerOAuth2TokenCache
                         mUid
                 );
             }
-            return resultToSave;
+            return result;
         }
     }
 
