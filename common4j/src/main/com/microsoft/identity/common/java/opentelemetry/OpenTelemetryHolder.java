@@ -24,6 +24,8 @@ package com.microsoft.identity.common.java.opentelemetry;
 
 import io.opentelemetry.api.NoopOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.metrics.Meter;
+import io.opentelemetry.api.trace.Tracer;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
@@ -56,5 +58,19 @@ public class OpenTelemetryHolder {
     @Getter
     @NonNull
     private static OpenTelemetry sOpenTelemetry = NOOP;
+
+    /**
+     * See {@link io.opentelemetry.api.GlobalOpenTelemetry#getTracer(String)}.
+     */
+    public static Tracer getTracer(final String instrumentationScopeName) {
+        return sOpenTelemetry.getTracerProvider().get(instrumentationScopeName);
+    }
+
+    /**
+     * See {@link io.opentelemetry.api.GlobalOpenTelemetry#getMeter(String)}.
+     */
+    public static Meter getMeter(String instrumentationScopeName) {
+        return sOpenTelemetry.getMeterProvider().get(instrumentationScopeName);
+    }
 
 }
