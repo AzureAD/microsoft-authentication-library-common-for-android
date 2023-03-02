@@ -57,4 +57,5 @@
     <string name="smartcard_nfc_reminder_dialog_positive_button">了解</string>
 
     <string name="smartcard_removal_prompt_dialog_title">您現在可以移除智慧卡</string>
+    <string name="smartcard_removal_prompt_dialog_positive_button">了解</string>
 </resources>
