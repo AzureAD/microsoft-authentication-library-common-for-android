@@ -57,4 +57,5 @@
     <string name="smartcard_nfc_reminder_dialog_positive_button">הבנתי</string>
 
     <string name="smartcard_removal_prompt_dialog_title">כעת באפשרותך להסיר את הכרטיס החכם שלך</string>
+    <string name="smartcard_removal_prompt_dialog_positive_button">הבנתי</string>
 </resources>
