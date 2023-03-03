@@ -25,7 +25,6 @@ package com.microsoft.identity.common.internal.ui.webview.certbasedauth;
 import android.app.Activity;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.java.opentelemetry.ICertBasedAuthTelemetryHelper;
 
@@ -38,8 +37,6 @@ class TestNfcSmartcardCertBasedAuthManager extends AbstractNfcSmartcardCertBased
     private final List<ICertDetails> mCertDetailsList;
     private boolean mIsConnected;
     private int mPinAttemptsRemaining;
-    //Need to keep track of disconnection callback here in order to mock disconnection.
-    private IDisconnectionCallback mDisconnectionCallback;
 
     public TestNfcSmartcardCertBasedAuthManager(@NonNull final List<X509Certificate> certList) {
         mIsConnected = false;
