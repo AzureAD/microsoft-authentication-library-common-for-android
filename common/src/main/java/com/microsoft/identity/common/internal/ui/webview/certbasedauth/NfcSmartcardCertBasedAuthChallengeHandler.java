@@ -29,8 +29,10 @@ import android.webkit.ClientCertRequest;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 
+import com.microsoft.identity.common.R;
 import com.microsoft.identity.common.internal.ui.webview.ISendResultCallback;
 import com.microsoft.identity.common.java.opentelemetry.ICertBasedAuthTelemetryHelper;
+import com.microsoft.identity.common.logging.Logger;
 
 /**
  * Handles a received ClientCertRequest by prompting the user to choose from certificates
@@ -121,7 +123,13 @@ public class NfcSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
                                 @Override
                                 public void onClosedConnection() {
                                     //In a future version, an error dialog with a custom message could be shown here instead of a general error.
-                                    indicateGeneralException(methodTag, new Exception("Device connected via NFC is different from initially connected device."));
+                                    final String errorMessage = "Device connected via NFC is different from initially connected device.";
+                                    Logger.info(methodTag, errorMessage);
+                                    mTelemetryHelper.setResultFailure(errorMessage);
+                                    //Show general error dialog.
+                                    mDialogHolder.showErrorDialog(
+                                            R.string.smartcard_general_error_dialog_title,
+                                            R.string.smartcard_general_error_dialog_message);
                                 }
                             });
                             return;
