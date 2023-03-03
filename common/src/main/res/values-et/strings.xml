@@ -57,4 +57,5 @@
     <string name="smartcard_nfc_reminder_dialog_positive_button">Sain aru</string>
 
     <string name="smartcard_removal_prompt_dialog_title">Võite nüüd kiipkaardi eemaldada</string>
+    <string name="smartcard_removal_prompt_dialog_positive_button">Sain aru</string>
 </resources>
