@@ -215,10 +215,7 @@ public class DialogHolder implements IDialogHolder {
      */
     @Override
     public synchronized boolean isSmartcardRemovalPromptDialogShowing() {
-        if (mCurrentDialog != null) {
-            return mCurrentDialog instanceof SmartcardRemovalPromptDialog;
-        }
-        return false;
+        return mCurrentDialog instanceof SmartcardRemovalPromptDialog;
     }
 
     /**
