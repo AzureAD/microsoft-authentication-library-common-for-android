@@ -4,6 +4,7 @@ plugins {
     id 'pmd'
     id 'checkstyle'
     id 'maven-publish'
+    id 'kotlin-android'
 }
 
 apply from: '../versioning/version_tasks.gradle'
@@ -30,7 +31,7 @@ codeCoverageReport {
 
 // In dev, we want to keep the dependencies(common4j, broker4j, common) to 0.0.+ to be able to be consumed by daily dev pipeline.
 // In release/*, we change these to specific versions being consumed.
-def common4jVersion = "7.0.1"
+def common4jVersion = "0.0.+"
 if (project.hasProperty("distCommon4jVersion") && project.distCommon4jVersion != '') {
     common4jVersion = project.distCommon4jVersion
 }
@@ -113,7 +114,7 @@ android {
             manifest.srcFile 'src/main/AndroidManifest.xml'
 
             // Also load source from common-java
-            java.srcDirs = ['src/main/java']
+            java.srcDirs = ['src/main/java', 'src/main/kotlin']
             res.srcDirs = ['src/main/res']
         }
     }
@@ -136,6 +137,10 @@ dependencies {
     distApi("com.microsoft.identity:common4j:${common4jVersion}") {
         transitive = false
     }
+
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.kotlinVersion}"
+    testImplementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.kotlinVersion}"
+    androidTestImplementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.kotlinVersion}"
 
     implementation(group: 'com.microsoft.device.display', name: 'display-mask', version: '0.3.0')
 

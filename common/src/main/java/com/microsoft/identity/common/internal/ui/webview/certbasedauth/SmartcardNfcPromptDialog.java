@@ -36,8 +36,8 @@ import lombok.NonNull;
  */
 public class SmartcardNfcPromptDialog extends SmartcardDialog {
 
-    private final CancelCbaCallback mCancelCbaCallback;
-    public SmartcardNfcPromptDialog(@NonNull final CancelCbaCallback cancelCbaCallback,
+    private final ICancelCbaCallback mCancelCbaCallback;
+    public SmartcardNfcPromptDialog(@NonNull final ICancelCbaCallback cancelCbaCallback,
                                     @NonNull final Activity activity) {
         super(activity);
         mCancelCbaCallback = cancelCbaCallback;
@@ -72,17 +72,11 @@ public class SmartcardNfcPromptDialog extends SmartcardDialog {
     }
 
     /**
-     * Should dismiss dialog and call the appropriate methods to help cancel the CBA flow.
+     * Called when smartcard is unexpectedly disconnected via USB from device.
+     * Used to run any cancellation logic needed (without the cancel button needing to be pressed).
      */
     @Override
-    void onCancelCba() {
-
-    }
-
-    /**
-     * Callback interface for when CBA is being cancelled.
-     */
-    public interface CancelCbaCallback {
-        void onCancel();
+    void onUnexpectedUnplug() {
+        //This method is for NFC, so it will never be called from here.
     }
 }

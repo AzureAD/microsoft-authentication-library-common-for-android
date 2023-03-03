@@ -36,7 +36,7 @@
     <string name="smartcard_general_error_dialog_message">예기치 않은 오류가 발생했습니다. 나중에 다시 시도하세요.</string>
 
     <string name="user_choice_dialog_title">어떻게 로그인하길 원하시나요?</string>
-    <string name="user_choice_dialog_on_device_name">장치의 인증서</string>
+    <string name="user_choice_dialog_on_device_name">이 디바이스의 인증서</string>
     <string name="user_choice_dialog_smartcard_name">실물 스마트 카드</string>
     <string name="user_choice_dialog_positive_button">계속</string>
     <string name="user_choice_dialog_negative_button">취소</string>
@@ -55,4 +55,7 @@
     <string name="smartcard_nfc_reminder_dialog_title">장치 설정에서 NFC를 활성화하세요.</string>
     <string name="smartcard_nfc_reminder_dialog_message">NFC로 로그인하려면 장치 설정에서 NFC를 활성화하세요. 그런 다음 다시 로그인하세요.</string>
     <string name="smartcard_nfc_reminder_dialog_positive_button">확인</string>
+
+    <string name="smartcard_removal_prompt_dialog_title">이제 스마트 카드를 제거할 수 있습니다.</string>
+    <string name="smartcard_removal_prompt_dialog_positive_button">확인</string>
 </resources>

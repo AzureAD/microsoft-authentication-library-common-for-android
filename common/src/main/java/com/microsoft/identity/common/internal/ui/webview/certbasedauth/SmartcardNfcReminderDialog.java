@@ -35,14 +35,14 @@ import com.microsoft.identity.common.R;
  */
 public class SmartcardNfcReminderDialog extends SmartcardDialog {
 
-    private final DismissCallback mDismissCallback;
+    private final IDismissCallback mDismissCallback;
 
     /**
      * Creates new instance of SmartcardNfcReminderDialog.
      * @param dismissCallback callback containing logic to be run upon dialog dismissal.
      * @param activity current host activity.
      */
-    public SmartcardNfcReminderDialog(@NonNull final DismissCallback dismissCallback,
+    public SmartcardNfcReminderDialog(@NonNull final IDismissCallback dismissCallback,
                                       @NonNull final Activity activity) {
         super(activity);
         mDismissCallback = dismissCallback;
@@ -66,7 +66,7 @@ public class SmartcardNfcReminderDialog extends SmartcardDialog {
                         .setPositiveButton(R.string.smartcard_nfc_reminder_dialog_positive_button, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                mDismissCallback.onClick();
+                                mDismissCallback.onDismiss();
                             }
                         });
                 final AlertDialog dialog = builder.create();
@@ -77,7 +77,7 @@ public class SmartcardNfcReminderDialog extends SmartcardDialog {
                 dialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
                     @Override
                     public void onCancel(DialogInterface dialog) {
-                        mDismissCallback.onClick();
+                        mDismissCallback.onDismiss();
                     }
                 });
                 mDialog = dialog;
@@ -86,17 +86,11 @@ public class SmartcardNfcReminderDialog extends SmartcardDialog {
     }
 
     /**
-     * Should dismiss dialog and call the appropriate methods to help cancel the CBA flow.
+     * Called when smartcard is unexpectedly disconnected via USB from device.
+     * Used to run any cancellation logic needed (without the cancel button needing to be pressed).
      */
     @Override
-    void onCancelCba() {
-        //This method will never be called on this dialog, so no logic needed.
-    }
-
-    /**
-     * Callback interface for a dialog dismissal.
-     */
-    public interface DismissCallback {
-        void onClick();
+    void onUnexpectedUnplug() {
+        //This method is for NFC, so it will never be called from here.
     }
 }

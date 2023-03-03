@@ -52,7 +52,7 @@ public class SmartcardCertPickerDialog extends SmartcardDialog {
     private static final String TAG = SmartcardCertPickerDialog.class.getSimpleName();
     private final List<ICertDetails> mCertList;
     private final PositiveButtonListener mPositiveButtonListener;
-    private final CancelCbaCallback mCancelCbaCallback;
+    private final ICancelCbaCallback mCancelCbaCallback;
 
     /**
      * Creates new instance of SmartcardCertPickerDialog.
@@ -63,7 +63,7 @@ public class SmartcardCertPickerDialog extends SmartcardDialog {
      */
     public SmartcardCertPickerDialog(@NonNull final List<ICertDetails> certList,
                                      @NonNull final PositiveButtonListener positiveButtonListener,
-                                     @NonNull final CancelCbaCallback cancelCbaCallback,
+                                     @NonNull final ICancelCbaCallback cancelCbaCallback,
                                      @NonNull final Activity activity) {
         super(activity);
         mCertList = certList;
@@ -144,11 +144,11 @@ public class SmartcardCertPickerDialog extends SmartcardDialog {
     }
 
     /**
-     * Handles scenario when CBA is canceled unexpectedly (for example. when a YubiKey is unplugged while a dialog is showing).
+     * Called when smartcard is unexpectedly disconnected via USB from device.
+     * Used to run any cancellation logic needed (without the cancel button needing to be pressed).
      */
     @Override
-    public void onCancelCba() {
-        //Call CancelCbaCallback's onCancel
+    void onUnexpectedUnplug() {
         mCancelCbaCallback.onCancel();
     }
 
@@ -157,13 +157,6 @@ public class SmartcardCertPickerDialog extends SmartcardDialog {
      */
     public interface PositiveButtonListener {
         void onClick(@NonNull final ICertDetails certDetails);
-    }
-
-    /**
-     * Callback interface for when CBA is being cancelled.
-     */
-    public interface CancelCbaCallback {
-        void onCancel();
     }
 
     /**

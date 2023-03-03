@@ -30,5 +30,6 @@ enum TestDialog {
     prompt,
     nfc_loading,
     nfc_prompt,
-    nfc_reminder
+    nfc_reminder,
+    removal_prompt
 }

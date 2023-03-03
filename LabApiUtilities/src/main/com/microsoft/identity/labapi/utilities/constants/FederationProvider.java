@@ -30,7 +30,8 @@ public enum FederationProvider {
     ADFS_V2019(LabConstants.FederationProvider.ADFS_V2019),
     B2C(LabConstants.FederationProvider.B2C),
     PING(LabConstants.FederationProvider.PING),
-    SHIBBOLETH(LabConstants.FederationProvider.SHIBBOLETH);
+    SHIBBOLETH(LabConstants.FederationProvider.SHIBBOLETH),
+    CIAM(LabConstants.FederationProvider.CIAM);
 
     final String value;
 

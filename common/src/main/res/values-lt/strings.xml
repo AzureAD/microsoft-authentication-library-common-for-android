@@ -36,7 +36,7 @@
     <string name="smartcard_general_error_dialog_message">Įvyko nenumatyta klaida. Bandykite dar kartą vėliau.</string>
 
     <string name="user_choice_dialog_title">Kaip norėtumėte prisijungti?</string>
-    <string name="user_choice_dialog_on_device_name">Sertifikatas jūsų įrenginyje</string>
+    <string name="user_choice_dialog_on_device_name">Sertifikatas šiame įrenginyje</string>
     <string name="user_choice_dialog_smartcard_name">Fizinė intelektualioji kortelė</string>
     <string name="user_choice_dialog_positive_button">Tęsti</string>
     <string name="user_choice_dialog_negative_button">Atšaukti</string>
@@ -55,4 +55,7 @@
     <string name="smartcard_nfc_reminder_dialog_title">Įjungti NFC įrenginio parametruose</string>
     <string name="smartcard_nfc_reminder_dialog_message">Norėdami prisijungti naudodami NFC, įrenginio parametruose įjunkite NFC. Tada prisijunkite dar kartą.</string>
     <string name="smartcard_nfc_reminder_dialog_positive_button">Supratau</string>
+
+    <string name="smartcard_removal_prompt_dialog_title">Dabar galite pašalinti savo intelektualiąją kortelę</string>
+    <string name="smartcard_removal_prompt_dialog_positive_button">Supratau</string>
 </resources>

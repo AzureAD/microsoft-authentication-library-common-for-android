@@ -35,9 +35,9 @@ import java.security.cert.X509Certificate;
 /**
  * An abstract manager that can control connections for a particular type of smartcard.
  */
-public abstract class AbstractSmartcardCertBasedAuthManager<T extends IConnectionCallback> {
+public abstract class AbstractSmartcardCertBasedAuthManager {
 
-    protected T mConnectionCallback;
+    protected IConnectionCallback mConnectionCallback;
 
     /**
      * Logic to prepare an Android device to detect smartcards.
@@ -77,11 +77,11 @@ public abstract class AbstractSmartcardCertBasedAuthManager<T extends IConnectio
     abstract void onDestroy(@NonNull final Activity activity);
 
     /**
-     * Sets callbacks to be run for when a smartcard connection is started and ended.
-     * @param connectionCallback an implementation of IConnectionCallback.
+     * Sets callback to be run for when a smartcard connection is started.
+     * @param callback an implementation of IConnectionCallback.
      */
-    public void setConnectionCallback(@Nullable final T connectionCallback) {
-        mConnectionCallback = connectionCallback;
+    public void setConnectionCallback(@Nullable final IConnectionCallback callback) {
+        mConnectionCallback = callback;
     }
 
     /**

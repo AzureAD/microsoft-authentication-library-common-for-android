@@ -24,6 +24,9 @@ plugins {
 
     // This is needed to get Android Studio to resolve test fixtures dependencies
     id 'idea'
+
+    // Add kotlin support
+    id 'org.jetbrains.kotlin.jvm'
 }
 
 def desugarCode = false
@@ -199,6 +202,9 @@ idea {
 }
 
 dependencies {
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.kotlinVersion}"
+    testImplementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.kotlinVersion}"
+
     compileOnly 'com.github.spotbugs:spotbugs-annotations:3.1.12'
     compileOnly "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
     annotationProcessor "org.projectlombok:lombok:$rootProject.ext.lombokVersion"

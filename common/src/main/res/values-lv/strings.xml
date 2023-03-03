@@ -36,7 +36,7 @@
     <string name="smartcard_general_error_dialog_message">Radās neparedzēta kļūda. Vēlāk mēģiniet vēlreiz.</string>
 
     <string name="user_choice_dialog_title">Kā vēlaties pierakstīties?</string>
-    <string name="user_choice_dialog_on_device_name">Sertifikāts jūsu ierīcē</string>
+    <string name="user_choice_dialog_on_device_name">Sertifikāts šajā ierīcē</string>
     <string name="user_choice_dialog_smartcard_name">Fiziska viedkarte</string>
     <string name="user_choice_dialog_positive_button">Turpināt</string>
     <string name="user_choice_dialog_negative_button">Atcelt</string>
@@ -55,4 +55,7 @@
     <string name="smartcard_nfc_reminder_dialog_title">Ieslēdziet NFC ierīces iestatījumos</string>
     <string name="smartcard_nfc_reminder_dialog_message">Lai pierakstītos, izmantojot NFC, ieslēdziet NFC ierīces iestatījumos. Pēc tam pierakstieties vēlreiz.</string>
     <string name="smartcard_nfc_reminder_dialog_positive_button">Sapratu</string>
+
+    <string name="smartcard_removal_prompt_dialog_title">Tagad varat noņemt viedkarti</string>
+    <string name="smartcard_removal_prompt_dialog_positive_button">Sapratu</string>
 </resources>

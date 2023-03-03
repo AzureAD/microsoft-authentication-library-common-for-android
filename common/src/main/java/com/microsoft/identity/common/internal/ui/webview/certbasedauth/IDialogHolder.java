@@ -40,7 +40,7 @@ public interface IDialogHolder {
      */
     void showCertPickerDialog(@NonNull final List<ICertDetails> certList,
                               @NonNull final SmartcardCertPickerDialog.PositiveButtonListener positiveButtonListener,
-                              @NonNull final SmartcardCertPickerDialog.CancelCbaCallback cancelCbaCallback);
+                              @NonNull final ICancelCbaCallback cancelCbaCallback);
 
     /**
      * Build and show PIN dialog that prompts user to type in their PIN for their YubiKey.
@@ -48,7 +48,7 @@ public interface IDialogHolder {
      * @param cancelCbaCallback      A Callback that holds code to be run when CBA is being cancelled.
      */
     void showPinDialog(@NonNull final SmartcardPinDialog.PositiveButtonListener positiveButtonListener,
-                       @NonNull final SmartcardPinDialog.CancelCbaCallback cancelCbaCallback);
+                       @NonNull final ICancelCbaCallback cancelCbaCallback);
 
     /**
      * Builds and shows dialog informing the user of an expected or unexpected error.
@@ -65,14 +65,14 @@ public interface IDialogHolder {
      * @param cancelCbaCallback A Callback that holds code to be run when CBA is being cancelled.
      */
     void showUserChoiceDialog(@NonNull final UserChoiceDialog.PositiveButtonListener positiveButtonListener,
-                              @NonNull final UserChoiceDialog.CancelCbaCallback cancelCbaCallback);
+                              @NonNull final ICancelCbaCallback cancelCbaCallback);
 
     /**
      * Builds and shows a SmartcardDialog that prompts the user to connect their smartcard,
      * either by plugging in (USB) or holding to back of phone (NFC).
      * @param cancelCbaCallback A Callback that holds code to be run when CBA is being cancelled.
      */
-    void showSmartcardPromptDialog(@NonNull final SmartcardPromptDialog.CancelCbaCallback cancelCbaCallback);
+    void showSmartcardPromptDialog(@NonNull final ICancelCbaCallback cancelCbaCallback);
 
     /**
      * Builds and shows a SmartcardDialog that reminds the user to remain holding their smartcard device to their phone.
@@ -83,13 +83,19 @@ public interface IDialogHolder {
      * Builds and shows a SmartcardDialog that prompts the user to connect their smartcard by holding it to the back of their phone.
      * @param cancelCbaCallback A Callback that holds code to be run when CBA is being cancelled.
      */
-    void showSmartcardNfcPromptDialog(@NonNull final SmartcardNfcPromptDialog.CancelCbaCallback cancelCbaCallback);
+    void showSmartcardNfcPromptDialog(@NonNull final ICancelCbaCallback cancelCbaCallback);
 
     /**
      * Builds and shows a SmartcardDialog that notifies user that NFC is not on for their device.
      * @param dismissCallback a callback that holds logic to be run upon dismissal of the dialog.
      */
-    void showSmartcardNfcReminderDialog(@NonNull final SmartcardNfcReminderDialog.DismissCallback dismissCallback);
+    void showSmartcardNfcReminderDialog(@NonNull final IDismissCallback dismissCallback);
+
+    /**
+     * Builds and shows a SmartcardDialog that prompts the user to remove their smartcard from the device.
+     * @param dismissCallback a callback that holds logic to be run upon dismissal of the dialog.
+     */
+    void showSmartcardRemovalPromptDialog(@Nullable IDismissCallback dismissCallback);
 
     /**
      * Dismisses current dialog, if one is showing.
@@ -110,10 +116,15 @@ public interface IDialogHolder {
     boolean isDialogShowing();
 
     /**
-     * Runs the onCancelCbaCallback code for the current dialog.
-     * Used when YubiKey is unexpectedly disconnected from device.
+     * Informs if a {@link SmartcardRemovalPromptDialog} is currently showing.
+     * @return True if the current dialog showing is an instance of SmartcardRemovalPromptDialog. False otherwise.
      */
-    void onCancelCba();
+    boolean isSmartcardRemovalPromptDialogShowing();
+
+    /**
+     * Used when smartcard is unexpectedly disconnected via USB from device.
+     */
+    void onUnexpectedUnplug();
 
     /**
      * Sets error mode for an existing SmartcardPinDialog.

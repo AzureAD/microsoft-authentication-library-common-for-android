@@ -81,8 +81,8 @@ public class CertBasedAuthFactory {
     }
 
     /**
-     * Asynchronously chooses and returns a ICertBasedAuthChallengeHandler.
-     * @param callback logic to run after a ICertBasedAuthChallengeHandler is chosen.
+     * Asynchronously chooses and returns an AbstractCertBasedAuthChallengeHandler.
+     * @param callback logic to run after an AbstractCertBasedAuthChallengeHandler is chosen.
      */
     public void createCertBasedAuthChallengeHandler(@NonNull final CertBasedAuthChallengeHandlerCallback callback) {
         final ICertBasedAuthTelemetryHelper telemetryHelper = new CertBasedAuthTelemetryHelper();
@@ -118,7 +118,7 @@ public class CertBasedAuthFactory {
                 telemetryHelper.setUserChoice(CertBasedAuthChoice.SMARTCARD_CHOICE);
                 setUpForSmartcardCertBasedAuth(callback, telemetryHelper);
             }
-        }, new UserChoiceDialog.CancelCbaCallback() {
+        }, new ICancelCbaCallback() {
             @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
             @Override
             public void onCancel() {
@@ -129,13 +129,15 @@ public class CertBasedAuthFactory {
 
     /**
      * Helper method for logic to be run upon user cancelling out of CBA.
-     * @param callback logic to run after a ICertBasedAuthChallengeHandler is chosen.
+     * @param callback logic to run after an AbstractCertBasedAuthChallengeHandler is chosen.
      * @param telemetryHelper CertBasedAuthTelemetryHelper instance.
      */
     private void onCancelHelper(@NonNull final CertBasedAuthChallengeHandlerCallback callback,
                                 @NonNull final ICertBasedAuthTelemetryHelper telemetryHelper) {
         mDialogHolder.dismissDialog();
         telemetryHelper.setResultFailure(USER_CANCEL_MESSAGE);
+        mNfcSmartcardCertBasedAuthManager.clearConnectionCallback();
+        mUsbSmartcardCertBasedAuthManager.clearConnectionCallback();
         callback.onReceived(null);
     }
 
@@ -162,9 +164,9 @@ public class CertBasedAuthFactory {
         if (mNfcSmartcardCertBasedAuthManager != null
                 && mNfcSmartcardCertBasedAuthManager.startDiscovery(mActivity)) {
             //Inform user to turn on NFC if they want to use NFC.
-            mDialogHolder.showSmartcardNfcReminderDialog(new SmartcardNfcReminderDialog.DismissCallback() {
+            mDialogHolder.showSmartcardNfcReminderDialog(new IDismissCallback() {
                 @Override
-                public void onClick() {
+                public void onDismiss() {
                     //If smartcard is already plugged in, go straight to cert picker.
                     if (mUsbSmartcardCertBasedAuthManager != null
                     && mUsbSmartcardCertBasedAuthManager.isDeviceConnected()) {
@@ -190,33 +192,31 @@ public class CertBasedAuthFactory {
      */
     private void showSmartcardPromptDialogAndSetConnectionCallback(@NonNull final CertBasedAuthChallengeHandlerCallback challengeHandlerCallback,
                                                                    @NonNull final ICertBasedAuthTelemetryHelper telemetryHelper) {
-        mDialogHolder.showSmartcardPromptDialog(new SmartcardPromptDialog.CancelCbaCallback() {
+        mDialogHolder.showSmartcardPromptDialog(new ICancelCbaCallback() {
             @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
             @Override
             public void onCancel() {
+                if (mNfcSmartcardCertBasedAuthManager != null) {
+                    mNfcSmartcardCertBasedAuthManager.stopDiscovery(mActivity);
+                }
                 onCancelHelper(challengeHandlerCallback, telemetryHelper);
             }
         });
 
         if (mUsbSmartcardCertBasedAuthManager != null) {
-            mUsbSmartcardCertBasedAuthManager.setConnectionCallback(new IUsbConnectionCallback() {
+            mUsbSmartcardCertBasedAuthManager.setConnectionCallback(new IConnectionCallback() {
                 @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
                 @Override
                 public void onCreateConnection() {
                     if (mNfcSmartcardCertBasedAuthManager != null) {
                         mNfcSmartcardCertBasedAuthManager.stopDiscovery(mActivity);
-                        mNfcSmartcardCertBasedAuthManager.clearConnectionCallback();
+                        clearAllSmartcardConnectionAndDisconnectionCallbacks();
                     }
                     challengeHandlerCallback.onReceived(new UsbSmartcardCertBasedAuthChallengeHandler(
                             mActivity,
                             mUsbSmartcardCertBasedAuthManager,
                             mDialogHolder,
                             telemetryHelper));
-                }
-
-                @Override
-                public void onClosedConnection() {
-                    //ConnectionCallback will be changed before ever reaching this method.
                 }
             });
         }
@@ -229,7 +229,7 @@ public class CertBasedAuthFactory {
             @Override
             public void onCreateConnection() {
                 if (mUsbSmartcardCertBasedAuthManager != null) {
-                    mUsbSmartcardCertBasedAuthManager.clearConnectionCallback();
+                    clearAllSmartcardConnectionAndDisconnectionCallbacks();
                 }
                 mDialogHolder.showSmartcardNfcLoadingDialog();
                 challengeHandlerCallback.onReceived(new NfcSmartcardCertBasedAuthChallengeHandler(
@@ -239,6 +239,15 @@ public class CertBasedAuthFactory {
                         telemetryHelper));
             }
         });
+    }
+
+    /**
+     * Clears all connection and disconnection callbacks for smartcard managers.
+     */
+    public void clearAllSmartcardConnectionAndDisconnectionCallbacks() {
+        mUsbSmartcardCertBasedAuthManager.clearConnectionCallback();
+        mUsbSmartcardCertBasedAuthManager.clearDisconnectionCallback();
+        mNfcSmartcardCertBasedAuthManager.clearConnectionCallback();
     }
 
     /**
@@ -259,8 +268,8 @@ public class CertBasedAuthFactory {
     public interface CertBasedAuthChallengeHandlerCallback {
         /**
          * Callback object that should contain logic to run after a CertBasedAuthChallengeHandler is chosen by the factory.
-         * @param challengeHandler An ICertBasedAuthChallengeHandler implementation instance, or null if user cancels out of CBA.
+         * @param challengeHandler An AbstractCertBasedAuthChallengeHandler implementation instance, or null if user cancels out of CBA.
          */
-        void onReceived(@Nullable final ICertBasedAuthChallengeHandler challengeHandler);
+        void onReceived(@Nullable final AbstractCertBasedAuthChallengeHandler challengeHandler);
     }
 }

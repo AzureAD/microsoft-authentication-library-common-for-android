@@ -290,6 +290,23 @@ public class UiAutomatorUtils {
     }
 
     /**
+     * Clicks the button element associated to the supplied resource id with a custom timeout.
+     * Do not throw an exception if the button is not found.
+     *
+     * @param resourceId the resource id of the button to click
+     */
+    public static void handleButtonClickSafely(@NonNull final String resourceId, final long existsTimeout) {
+        Logger.i(TAG, "Clicks the button element associated to the resource id:" + resourceId);
+        final UiObject button = obtainUiObjectWithResourceId(resourceId, existsTimeout);
+
+        try {
+            button.click();
+        } catch (final UiObjectNotFoundException e) {
+            Logger.w(TAG, "Button " + resourceId + " was not found: " + e.getMessage());
+        }
+    }
+
+    /**
      * Clicks the button element associated to the supplied resource id with a longer timeout.
      * Add parameter to give a custom timeout.
      * @param resourceId the resource id of the button to click

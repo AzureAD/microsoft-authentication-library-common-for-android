@@ -20,29 +20,24 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.ui.webview.certbasedauth;
+package com.microsoft.identity.common.java.jwt;
 
-import android.webkit.ClientCertRequest;
+import com.microsoft.identity.common.java.exception.ClientException;
 
-import androidx.annotation.NonNull;
+import java.security.cert.CertificateEncodingException;
 
-import com.microsoft.identity.common.internal.ui.webview.challengehandlers.IChallengeHandler;
-import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
+import lombok.NonNull;
 
 /**
- * ChallengeHandler extended interface specifically for certificate based authentication (CBA)
- *  implementations.
+ * Interface for signing JWT for broker token requests
+ * given JWT payload.
  */
-public interface ICertBasedAuthChallengeHandler extends IChallengeHandler<ClientCertRequest, Void> {
-    
+public interface IJwtRequestSigner {
     /**
-     * Emit telemetry for results from certificate based authentication (CBA) if CBA occurred.
-     * @param response a RawAuthorizationResult object received upon a challenge response received.
+     * Generate signed JWT given payload.
+     * Payload is provided as {@link JwtRequestBody}
+     * @param jwtRequestBody JWT payload
+     * @return Return signed JWT string (encodedJwtHeader.encodedJwtBody.Signature(encodedJwtHeader, encodedJwtBody))
      */
-    void emitTelemetryForCertBasedAuthResults(@NonNull final RawAuthorizationResult response);
-
-    /**
-     * Clean up logic to run when ICertBasedAuthChallengeHandler is no longer going to be used.
-     */
-    void cleanUp();
+    @NonNull String getSignedJwt(@NonNull final JwtRequestBody jwtRequestBody) throws ClientException, CertificateEncodingException;
 }

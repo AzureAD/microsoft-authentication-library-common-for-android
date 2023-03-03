@@ -20,14 +20,34 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.ui.webview.certbasedauth;
+
+package com.microsoft.identity.common.java.flighting;
+
+import lombok.NonNull;
 
 /**
- * Callback methods to be run upon initial usb connection and disconnection of a smartcard device.
+ * List of Active Common flights.
  */
-public interface IUsbConnectionCallback extends IConnectionCallback {
+public enum CommonFlight implements IFlightConfig {
     /**
-     * Logic to be run upon disconnection of a smartcard device via usb.
+     * Flight to control whether or not to use Network capability for performing network check.
      */
-    void onClosedConnection();
+    USE_NETWORK_CAPABILITY_FOR_NETWORK_CHECK("UseNetworkCapabilityForNetworkCheck", false);
+
+    private String key;
+    private Object defaultValue;
+    CommonFlight(@NonNull String key, @NonNull Object defaultValue) {
+        this.key = key;
+        this.defaultValue = defaultValue;
+    }
+
+    @Override
+    public String getKey() {
+        return this.key;
+    }
+
+    @Override
+    public Object getDefaultValue() {
+        return this.defaultValue;
+    }
 }

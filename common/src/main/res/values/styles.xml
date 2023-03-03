@@ -39,4 +39,13 @@
         <item name="colorAccent">@color/dialogButtonText</item>
     </style>
 
+    <!-- Certificate AlertDialog Theme for Title-Only Dialogs -->
+    <style name="TitleOnlyAlertDialogTheme" parent="Theme.AppCompat.Light.Dialog.Alert">
+        <!-- everything -->
+        <item name="android:textColor">@color/dialogTitleText</item>
+        <item name="textAllCaps">false</item>
+        <!-- Title -->
+        <item name="android:windowTitleSize">20sp</item>
+    </style>
+
 </resources>
