@@ -86,10 +86,11 @@ public class SmartcardPromptDialog extends SmartcardDialog {
     }
 
     /**
-     * Should dismiss dialog and call the appropriate methods to help cancel the CBA flow.
+     * Called when smartcard is unexpectedly disconnected via USB from device.
+     * Used to run any cancellation logic needed (without the cancel button needing to be pressed).
      */
     @Override
-    void onCancelCba() {
+    void onUnexpectedUnplug() {
         mCancelCbaCallback.onCancel();
     }
 }

@@ -23,46 +23,49 @@
 package com.microsoft.identity.common.internal.ui.webview.certbasedauth;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.DialogInterface;
 
-import androidx.appcompat.app.AlertDialog;
+import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.R;
 
-import lombok.NonNull;
-
 /**
- * Builds a dialog that prompts the user to connect their smartcard by holding it to the back of their phone (NFC).
+ * Builds a dialog that prompts the user to remove their smartcard in order to proceed.
  */
-public class SmartcardNfcPromptDialog extends SmartcardDialog {
+public class SmartcardRemovalPromptDialog extends SmartcardDialog {
 
-    private final ICancelCbaCallback mCancelCbaCallback;
-    public SmartcardNfcPromptDialog(@NonNull final ICancelCbaCallback cancelCbaCallback,
-                                    @NonNull final Activity activity) {
+    private final IDismissCallback mDismissCallback;
+
+    /**
+     * Creates new instance of SmartcardRemovalPromptDialog.
+     * @param activity Host activity.
+     */
+    public SmartcardRemovalPromptDialog(@NonNull final IDismissCallback dismissCallback,
+                                        @NonNull final Activity activity) {
         super(activity);
-        mCancelCbaCallback = cancelCbaCallback;
+        mDismissCallback = dismissCallback;
         createDialog();
     }
 
     /**
-     * Builds an Android Dialog object and set it to mDialog.
+     * Builds an AndroidDialog object and sets it to the local variable.
      */
     @Override
     void createDialog() {
         mActivity.runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                final AlertDialog.Builder builder = new AlertDialog.Builder(mActivity, R.style.UserChoiceAlertDialogTheme)
+                final AlertDialog.Builder builder = new AlertDialog.Builder(mActivity, R.style.TitleOnlyAlertDialogTheme)
                         //Sets topmost text of dialog.
-                        .setTitle(R.string.smartcard_nfc_prompt_dialog_title)
-                        .setMessage(R.string.smartcard_nfc_prompt_dialog_message)
-                        .setNegativeButton(R.string.smartcard_nfc_prompt_dialog_negative_button, new DialogInterface.OnClickListener() {
+                        .setTitle(R.string.smartcard_removal_prompt_dialog_title)
+                        .setPositiveButton(R.string.smartcard_removal_prompt_dialog_positive_button, new DialogInterface.OnClickListener() {
                             @Override
-                            public void onClick(DialogInterface dialogInterface, int i) {
-                                mCancelCbaCallback.onCancel();
+                            public void onClick(DialogInterface dialog, int which) {
+                                mDismissCallback.onDismiss();
                             }
-                        });
-                final androidx.appcompat.app.AlertDialog dialog = builder.create();
+                        });;
+                final AlertDialog dialog = builder.create();
                 //If user touches outside dialog, the default behavior makes the dialog disappear without really doing anything.
                 //Adding this line in disables this default behavior so that the user can only exit by hitting the positive button.
                 dialog.setCanceledOnTouchOutside(false);
@@ -77,6 +80,7 @@ public class SmartcardNfcPromptDialog extends SmartcardDialog {
      */
     @Override
     void onUnexpectedUnplug() {
-        //This method is for NFC, so it will never be called from here.
+        //Unplugging is expected here... so let's actually dismiss the dialog.
+        mDismissCallback.onDismiss();
     }
 }

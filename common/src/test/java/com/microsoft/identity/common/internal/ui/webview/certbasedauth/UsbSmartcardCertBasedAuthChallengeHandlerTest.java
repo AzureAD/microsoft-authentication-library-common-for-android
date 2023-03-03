@@ -110,7 +110,8 @@ public class UsbSmartcardCertBasedAuthChallengeHandlerTest extends AbstractSmart
     @Override
     @Test
     public void testProceed() {
-        setAndProcessChallengeHandler(getMockCertList());
+        final TestUsbSmartcardCertBasedAuthManager manager = new TestUsbSmartcardCertBasedAuthManager(getMockCertList());
+        setAndProcessChallengeHandler(manager);
         checkIfCorrectDialogIsShowing(TestDialog.cert_picker);
         goToPinDialog();
         final SmartcardPinDialog.PositiveButtonListener pinListener = mDialogHolder.getPinPositiveButtonListener();
@@ -123,9 +124,11 @@ public class UsbSmartcardCertBasedAuthChallengeHandlerTest extends AbstractSmart
 
     @Override
     protected void setAndProcessChallengeHandler(@NonNull final List<X509Certificate> certList) {
+        final TestUsbSmartcardCertBasedAuthManager manager = new TestUsbSmartcardCertBasedAuthManager(certList);
+        manager.mockConnect();
         mChallengeHandler = new UsbSmartcardCertBasedAuthChallengeHandler(
                 mActivity,
-                new TestUsbSmartcardCertBasedAuthManager(certList),
+                manager,
                 mDialogHolder,
                 mTestCertBasedAuthTelemetryHelper
         );
@@ -133,6 +136,7 @@ public class UsbSmartcardCertBasedAuthChallengeHandlerTest extends AbstractSmart
     }
 
     private void setAndProcessChallengeHandler(@NonNull final TestUsbSmartcardCertBasedAuthManager manager) {
+        manager.mockConnect();
         mChallengeHandler = new UsbSmartcardCertBasedAuthChallengeHandler(
                 mActivity,
                 manager,

@@ -22,12 +22,14 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.ui.webview.certbasedauth;
 
+import androidx.annotation.Nullable;
+
 import lombok.Getter;
 
 /**
  * An abstract smartcard CertBasedAuth manager specifically for NFC.
  */
-public abstract class AbstractNfcSmartcardCertBasedAuthManager extends AbstractSmartcardCertBasedAuthManager<IConnectionCallback> {
+public abstract class AbstractNfcSmartcardCertBasedAuthManager extends AbstractSmartcardCertBasedAuthManager {
 
     /* boolean based on the most recently connected smartcard device
     being the same as the previously connected smartcard device.
