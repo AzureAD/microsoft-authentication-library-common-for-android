@@ -308,7 +308,6 @@ public class ClientException extends BaseException {
      */
     public static final String NOT_VALID_BROKER_FOUND = "not_valid_broker_found";
 
-
     /**
      * An account manager operation failed.
      */

@@ -40,8 +40,8 @@ import androidx.annotation.Nullable;
 import com.microsoft.identity.common.BuildConfig;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.util.PackageUtils;
-import com.microsoft.identity.common.internal.util.StringUtil;
 import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.io.IOException;
@@ -151,6 +151,7 @@ public class BrokerValidator {
 
     /**
      * Get an iterator of access to valid broker signatures.
+     *
      * @return an iterator of access to valid broker signatures.
      */
     public Iterator<String> getValidBrokerSignatures() {
@@ -202,12 +203,12 @@ public class BrokerValidator {
 
     /**
      * Determines which app is the broker based on having the work account registration in Account Manager.
-     *
+     * <p>
      * Known issue: When we're in an AccountManager callback (Especially on older Android devices, i.e. Android 10)
      * Android For Work throws a SecurityException when we're calling AccountManager.getAuthenticatorTypes()
      * i.e. E.g. Company Portal main process can call this freely, broker process can call this freely, but once running in AccountManager,
      * on the work profile (user != 0), apparently sometimes it tries to get accounts from user 0 (personal profile) and fails.
-     *
+     * <p>
      * In such case, this method will return null.
      *
      * @return PackageName of the broker, or null if it cannot be obtained.
@@ -222,7 +223,7 @@ public class BrokerValidator {
                     return authenticator.packageName;
                 }
             }
-        } catch (Exception e){
+        } catch (Exception e) {
             Logger.warn(methodTag, "Failed to query Active Broker package name" + e.getMessage());
             return null;
         }
@@ -231,12 +232,12 @@ public class BrokerValidator {
 
     /**
      * Determines which app is the broker based on having the work account registration in Account Manager.
-     *
+     * <p>
      * Known issue: When we're in an AccountManager callback (Especially on older Android devices, i.e. Android 10)
      * Android For Work throws a SecurityException when we're calling AccountManager.getAuthenticatorTypes()
      * i.e. E.g. Company Portal main process can call this freely, broker process can call this freely, but once running in AccountManager,
      * on the work profile (user != 0), apparently sometimes it tries to get accounts from user 0 (personal profile) and fails.
-     *
+     * <p>
      * In such case, this method will return null.
      *
      * @return PackageName of the broker
@@ -278,7 +279,7 @@ public class BrokerValidator {
             final PackageHelper info = new PackageHelper(context.getPackageManager());
             final String signatureDigest = info.getCurrentSignatureForPackage(packageName);
             if (BrokerData.MICROSOFT_AUTHENTICATOR_PROD.signatureHash.equals(signatureDigest)
-                || BrokerData.MICROSOFT_AUTHENTICATOR_DEBUG.signatureHash.equals(signatureDigest)) {
+                    || BrokerData.MICROSOFT_AUTHENTICATOR_DEBUG.signatureHash.equals(signatureDigest)) {
                 // If the caller is the Authenticator, check if the redirect uri matches with either
                 // the one generated with package name and signature or broker redirect uri.
                 isValidBrokerRedirect |= StringUtil.equalsIgnoreCase(redirectUri, AuthenticationConstants.Broker.BROKER_REDIRECT_URI);
