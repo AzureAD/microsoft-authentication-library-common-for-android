@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.broker;
 
 import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.BROKER_ACCOUNT_TYPE;
+import static com.microsoft.identity.common.java.exception.ClientException.NOT_VALID_BROKER_FOUND;
 import static com.microsoft.identity.common.java.exception.ClientException.NO_SUCH_ALGORITHM;
 import static com.microsoft.identity.common.java.exception.ErrorStrings.APP_PACKAGE_NAME_NOT_FOUND;
 import static com.microsoft.identity.common.java.exception.ErrorStrings.BROKER_VERIFICATION_FAILED;
@@ -228,6 +229,44 @@ public class BrokerValidator {
         return null;
     }
 
+    /**
+     * Determines which app is the broker based on having the work account registration in Account Manager.
+     *
+     * Known issue: When we're in an AccountManager callback (Especially on older Android devices, i.e. Android 10)
+     * Android For Work throws a SecurityException when we're calling AccountManager.getAuthenticatorTypes()
+     * i.e. E.g. Company Portal main process can call this freely, broker process can call this freely, but once running in AccountManager,
+     * on the work profile (user != 0), apparently sometimes it tries to get accounts from user 0 (personal profile) and fails.
+     *
+     * In such case, this method will return null.
+     *
+     * @return PackageName of the broker
+     */
+    @NonNull
+    // TODO: Consolidate getCurrentActiveBrokerPackageName and getValidActiveBrokerPackageName into one.
+    public String getValidActiveBrokerPackageName() throws ClientException {
+        final String methodTag = TAG + ":getValidActiveBrokerPackageName";
+
+        final int numberOfAuthenticators;
+        try {
+            final AuthenticatorDescription[] authenticators = AccountManager.get(mContext).getAuthenticatorTypes();
+            numberOfAuthenticators = authenticators.length;
+            Logger.info(methodTag, numberOfAuthenticators + " Authenticators registered.");
+            for (final AuthenticatorDescription authenticator : authenticators) {
+                if (BROKER_ACCOUNT_TYPE.equals(authenticator.type)) {
+                    verifySignatureAndThrow(authenticator.packageName);
+                    return authenticator.packageName;
+                }
+            }
+        } catch (final Exception exception) {
+            final ClientException clientException = new ClientException(NOT_VALID_BROKER_FOUND, exception.getMessage());
+            Logger.error(methodTag, exception.getMessage(), exception);
+            throw clientException;
+        }
+        final String errorMessage = "None of the " + numberOfAuthenticators + " authenticators, is type: " + BROKER_ACCOUNT_TYPE;
+        final ClientException clientException = new ClientException(NOT_VALID_BROKER_FOUND, errorMessage);
+        Logger.error(methodTag, errorMessage, clientException);
+        throw clientException;
+    }
 
     public static boolean isValidBrokerRedirect(@Nullable final String redirectUri,
                                                 @NonNull final Context context,
