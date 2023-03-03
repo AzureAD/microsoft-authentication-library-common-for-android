@@ -27,7 +27,6 @@ import android.os.Build;
 import android.webkit.ClientCertRequest;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
 import com.microsoft.identity.common.internal.ui.webview.ISendResultCallback;
@@ -59,10 +58,7 @@ public class NfcSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
      * @param nextInteractionCallback the next logic to be run after a user removes their smartcard.
      */
     @Override
-    protected void prepForNextUserInteraction(@Nullable final IDisconnectionCallback nextInteractionCallback) {
-        if (nextInteractionCallback == null) {
-            return;
-        }
+    protected void prepForNextUserInteraction(@NonNull final IDisconnectionCallback nextInteractionCallback) {
         if (!mCbaManager.isDeviceConnected()) {
             nextInteractionCallback.onClosedConnection();
             return;

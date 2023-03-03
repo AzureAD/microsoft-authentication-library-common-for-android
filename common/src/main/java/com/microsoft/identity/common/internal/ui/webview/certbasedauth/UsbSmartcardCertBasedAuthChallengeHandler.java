@@ -27,7 +27,6 @@ import android.os.Build;
 import android.webkit.ClientCertRequest;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
 import com.microsoft.identity.common.R;
@@ -83,12 +82,10 @@ public class UsbSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
      * @param nextInteractionCallback the next logic to be run.
      */
     @Override
-    protected void prepForNextUserInteraction(@Nullable final IDisconnectionCallback nextInteractionCallback) {
+    protected void prepForNextUserInteraction(@NonNull final IDisconnectionCallback nextInteractionCallback) {
         //Usb discovery and connection should always remain active for the duration of the authentication flow.
         //Therefore, we merely invoke the callback here.
-        if (nextInteractionCallback != null) {
-            nextInteractionCallback.onClosedConnection();
-        }
+        nextInteractionCallback.onClosedConnection();
     }
 
     /**

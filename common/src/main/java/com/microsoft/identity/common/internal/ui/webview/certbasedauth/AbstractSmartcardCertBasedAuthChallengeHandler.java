@@ -27,7 +27,6 @@ import android.os.Build;
 import android.webkit.ClientCertRequest;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
 import com.microsoft.identity.common.R;
@@ -143,7 +142,7 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandler<T extends A
      * so the user can remove their smartcard before flow can continue.
      * @param nextInteractionCallback the next logic to be run.
      */
-    protected abstract void prepForNextUserInteraction(@Nullable final IDisconnectionCallback nextInteractionCallback);
+    protected abstract void prepForNextUserInteraction(@NonNull final IDisconnectionCallback nextInteractionCallback);
 
     /**
      * Returns a callback that dismisses the current dialog, sends telemetry, and cancels the ClientCertRequest.
