@@ -304,6 +304,11 @@ public class ClientException extends BaseException {
     public static final String INVALID_BROKER_BUNDLE = "invalid_broker_bundle";
 
     /**
+     * A valid broker was not found using account manager.
+     */
+    public static final String NOT_VALID_BROKER_FOUND = "not_valid_broker_found";
+
+    /**
      * An account manager operation failed.
      */
     public static final String ACCOUNT_MANAGER_OPERATION_ERROR = "account_manager_operation_error";

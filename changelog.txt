@@ -1,5 +1,6 @@
 V.10.0.1
 ----------
+- [PATCH] Improve the exception stack trace when a not valid broker is found (#1980)
 - [PATCH] Create a custom safe Global Open Telemetry that doesn't crash (#1977)
 
 V.10.0.0
