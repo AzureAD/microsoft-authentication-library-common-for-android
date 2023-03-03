@@ -25,9 +25,11 @@ package com.microsoft.identity.common.internal.ui.webview.certbasedauth;
 import android.app.Activity;
 import android.content.Context;
 import android.os.Build;
+import android.util.Log;
 import android.webkit.ClientCertRequest;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
 import com.microsoft.identity.common.java.opentelemetry.ICertBasedAuthTelemetryHelper;
@@ -62,6 +64,32 @@ public class YubiKitNfcSmartcardCertBasedAuthManager extends AbstractNfcSmartcar
     public YubiKitNfcSmartcardCertBasedAuthManager(@NonNull final Context context) throws NfcNotAvailable {
         mNfcYubiKitManager = new NfcYubiKeyManager(context.getApplicationContext(), null);
         isDeviceChanged = false;
+        com.yubico.yubikit.core.Logger.setLogger(new com.yubico.yubikit.core.Logger() {
+            /**
+             * Specifies how debug messages are logged.
+             * <p>
+             * If this method is not overridden, then debug messages will not be logged.
+             *
+             * @param message the message can to be logged
+             */
+            @Override
+            protected void logDebug(String message) {
+                Log.i("YubiKit", message);
+            }
+
+            /**
+             * Specifies how error messages (with exceptions) are logged.
+             * <p>
+             * If this method is not overridden, then error messages will not be logged.
+             *
+             * @param message   the message can to be logged
+             * @param throwable the exception that can to be logged or counted
+             */
+            @Override
+            protected void logError(String message, Throwable throwable) {
+                Log.e("YubiKit", message, throwable);
+            }
+        });
     }
 
     /**
@@ -207,5 +235,29 @@ public class YubiKitNfcSmartcardCertBasedAuthManager extends AbstractNfcSmartcar
                 }
             }
         };
+    }
+
+    /**
+     * Disconnects a connected smartcard.
+     *
+     * @param callback logic to be called after smartcard is removed.
+     */
+    @Override
+    void disconnect(@Nullable IDisconnectionCallback callback) {
+        final String methodTag = TAG + ":disconnect";
+        synchronized (sDeviceLock) {
+            if (mNfcDevice != null) {
+                mNfcDevice.remove(new Runnable() {
+                    @Override
+                    public void run() {
+                        Logger.info(methodTag, "YubiKey connected via NFC has been disconnected");
+                        mNfcDevice = null;
+                        if (callback!= null) {
+                            callback.onClosedConnection();
+                        }
+                    }
+                });
+            }
+        }
     }
 }

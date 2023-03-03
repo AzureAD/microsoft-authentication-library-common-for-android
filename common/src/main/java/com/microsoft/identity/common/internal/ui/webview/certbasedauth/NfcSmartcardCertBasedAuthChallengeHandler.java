@@ -78,6 +78,14 @@ public class NfcSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
                 nextInteractionCallback.onClosedConnection();
             }
         });
+        mCbaManager.disconnect(new IDisconnectionCallback() {
+            @Override
+            public void onClosedConnection() {
+                mDialogHolder.dismissDialog();
+                mCbaManager.stopDiscovery(mActivity);
+                nextInteractionCallback.onClosedConnection();
+            }
+        });
     }
 
     /**
