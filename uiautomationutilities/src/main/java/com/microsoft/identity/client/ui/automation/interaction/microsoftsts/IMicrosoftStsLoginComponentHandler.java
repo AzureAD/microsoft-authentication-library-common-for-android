@@ -67,4 +67,9 @@ public interface IMicrosoftStsLoginComponentHandler extends IOAuth2LoginComponen
      * interactive request.
      */
     void handleVerifyYourIdentity();
+
+    /**
+     * Handle the How would you like to sign in
+     */
+    void handleHowWouldYouLikeToSignIn();
 }
