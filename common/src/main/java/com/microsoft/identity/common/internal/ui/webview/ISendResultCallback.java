@@ -20,16 +20,15 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.ui.webview.certbasedauth;
+package com.microsoft.identity.common.internal.ui.webview;
 
-enum TestDialog {
-    cert_picker,
-    pin,
-    error,
-    user_choice,
-    prompt,
-    nfc_loading,
-    nfc_prompt,
-    nfc_reminder,
-    removal_prompt
+/**
+ * Should send a form of a result when invoked.
+ */
+public interface ISendResultCallback {
+
+    /**
+     * Runs logic that sends a form of a result.
+     */
+    void onResultReady();
 }

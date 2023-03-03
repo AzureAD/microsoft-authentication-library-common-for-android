@@ -22,8 +22,35 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.ui.webview.certbasedauth;
 
+import androidx.annotation.Nullable;
+
+import lombok.Getter;
+import lombok.Setter;
+import lombok.experimental.Accessors;
+
 /**
  * An abstract smartcard CertBasedAuth manager specifically for USB.
  */
-public abstract class AbstractUsbSmartcardCertBasedAuthManager extends AbstractSmartcardCertBasedAuthManager<IUsbConnectionCallback> {
+public abstract class AbstractUsbSmartcardCertBasedAuthManager extends AbstractSmartcardCertBasedAuthManager {
+    @Accessors(prefix = "m")
+    protected IDisconnectionCallback mDisconnectionCallback;
+
+    //Helps with deciding whether or not we want to show the user a prompt to unplug at the end of the CBA flow.
+    @Getter @Accessors(prefix = "m")
+    protected boolean mUsbDeviceInitiallyPluggedIn;
+
+    /**
+     * Sets callback to be run for when a smartcard connection is ended.
+     * @param callback an implementation of IDisconnectionCallback.
+     */
+    public void setDisconnectionCallback(@Nullable final IDisconnectionCallback callback) {
+        mDisconnectionCallback = callback;
+    }
+
+    /**
+     * Sets disconnection callback to null.
+     */
+    public void clearDisconnectionCallback() {
+        mDisconnectionCallback = null;
+    }
 }

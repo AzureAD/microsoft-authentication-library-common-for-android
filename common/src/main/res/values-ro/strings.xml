@@ -57,4 +57,6 @@
     <string name="smartcard_nfc_reminder_dialog_positive_button">Am înțeles</string>
 
     <string name="smartcard_removal_prompt_dialog_title">Acum vă puteți elimina smart card-ul</string>
+    <string name="smartcard_removal_prompt_dialog_positive_button">Am înțeles</string>
+
 </resources>

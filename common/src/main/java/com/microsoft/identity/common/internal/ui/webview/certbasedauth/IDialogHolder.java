@@ -92,6 +92,12 @@ public interface IDialogHolder {
     void showSmartcardNfcReminderDialog(@NonNull final IDismissCallback dismissCallback);
 
     /**
+     * Builds and shows a SmartcardDialog that prompts the user to remove their smartcard from the device.
+     * @param dismissCallback a callback that holds logic to be run upon dismissal of the dialog.
+     */
+    void showSmartcardRemovalPromptDialog(@Nullable IDismissCallback dismissCallback);
+
+    /**
      * Dismisses current dialog, if one is showing.
      */
     void dismissDialog();
@@ -110,10 +116,15 @@ public interface IDialogHolder {
     boolean isDialogShowing();
 
     /**
-     * Runs the onCancelCbaCallback code for the current dialog.
-     * Used when YubiKey is unexpectedly disconnected from device.
+     * Informs if a {@link SmartcardRemovalPromptDialog} is currently showing.
+     * @return True if the current dialog showing is an instance of SmartcardRemovalPromptDialog. False otherwise.
      */
-    void onCancelCba();
+    boolean isSmartcardRemovalPromptDialogShowing();
+
+    /**
+     * Used when smartcard is unexpectedly disconnected via USB from device.
+     */
+    void onUnexpectedUnplug();
 
     /**
      * Sets error mode for an existing SmartcardPinDialog.
