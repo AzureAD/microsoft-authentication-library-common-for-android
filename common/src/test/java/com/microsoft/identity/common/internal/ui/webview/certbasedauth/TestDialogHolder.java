@@ -97,6 +97,20 @@ class TestDialogHolder implements IDialogHolder {
     }
 
     @Override
+    public void showSmartcardRemovalPromptDialog(@Nullable final IDismissCallback dismissCallback) {
+        mCurrentDialog = TestDialog.removal_prompt;
+        mDismissCallback = new IDismissCallback() {
+            @Override
+            public void onDismiss() {
+                dismissDialog();
+                if (dismissCallback != null) {
+                    dismissCallback.onDismiss();
+                }
+            }
+        };
+    }
+
+    @Override
     public void dismissDialog() {
         mCurrentDialog = null;
     }
@@ -110,7 +124,15 @@ class TestDialogHolder implements IDialogHolder {
     }
 
     @Override
-    public void onCancelCba() {
+    public boolean isSmartcardRemovalPromptDialogShowing() {
+        if (mCurrentDialog != null) {
+            return mCurrentDialog == TestDialog.removal_prompt;
+        }
+        return false;
+    }
+
+    @Override
+    public void onUnexpectedUnplug() {
         switch (mCurrentDialog) {
             case cert_picker:
             case pin:
@@ -119,8 +141,11 @@ class TestDialogHolder implements IDialogHolder {
                 mCancelCbaCallback.onCancel();
                 break;
             case nfc_prompt:
+            case nfc_reminder:
+            case removal_prompt:
                 mDismissCallback.onDismiss();
                 break;
+
         }
     }
 

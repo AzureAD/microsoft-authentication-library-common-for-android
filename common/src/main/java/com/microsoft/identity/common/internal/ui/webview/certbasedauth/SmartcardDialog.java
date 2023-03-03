@@ -51,9 +51,10 @@ public abstract class SmartcardDialog {
     abstract void createDialog();
 
     /**
-     * Should dismiss dialog and call the appropriate methods to help cancel the CBA flow.
+     * Called when smartcard is unexpectedly disconnected via USB from device.
+     * Used to run any cancellation logic needed (without the cancel button needing to be pressed).
      */
-    abstract void onCancelCba();
+    abstract void onUnexpectedUnplug();
 
     /**
      * Show mDialog on the main thread.

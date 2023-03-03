@@ -30,6 +30,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 
 import com.microsoft.identity.common.R;
+import com.microsoft.identity.common.internal.ui.webview.ISendResultCallback;
 import com.microsoft.identity.common.java.opentelemetry.ICertBasedAuthTelemetryHelper;
 import com.microsoft.identity.common.logging.Logger;
 
@@ -42,50 +43,69 @@ public class UsbSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
     /**
      * Creates new instance of UsbSmartcardCertBasedAuthChallengeHandler.
      * A manager for smartcard CBA is retrieved, and discovery for USB devices is started.
-     * @param activity current host activity.
+     *
+     * @param activity                         current host activity.
      * @param usbSmartcardCertBasedAuthManager AbstractUsbSmartcardCertBasedAuthManager instance.
-     * @param dialogHolder DialogHolder instance.
-     * @param telemetryHelper CertBasedAuthTelemetryHelder instance.
+     * @param dialogHolder                     DialogHolder instance.
+     * @param telemetryHelper                  CertBasedAuthTelemetryHelder instance.
      */
     public UsbSmartcardCertBasedAuthChallengeHandler(@NonNull final Activity activity,
                                                      @NonNull final AbstractUsbSmartcardCertBasedAuthManager usbSmartcardCertBasedAuthManager,
                                                      @NonNull final IDialogHolder dialogHolder,
                                                      @NonNull final ICertBasedAuthTelemetryHelper telemetryHelper) {
         super(activity, usbSmartcardCertBasedAuthManager, dialogHolder, telemetryHelper, UsbSmartcardCertBasedAuthChallengeHandler.class.getSimpleName());
-        final String methodTag = TAG + ":UsbSmartcardCertBasedAuthChallengeHandler";
-        mCbaManager.setConnectionCallback(new IUsbConnectionCallback() {
+        mCbaManager.setConnectionCallback(new IConnectionCallback() {
             @Override
             public void onCreateConnection() {
                 //Reset DialogHolder to null if necessary.
                 //In this case, DialogHolder would be an ErrorDialog if not null.
                 mDialogHolder.dismissDialog();
             }
-
+        });
+        mCbaManager.setDisconnectionCallback(new IDisconnectionCallback() {
             @Override
             public void onClosedConnection() {
                 if (mDialogHolder.isDialogShowing()) {
-                    //Show an error dialog informing users that they have unplugged their device.
-                    mDialogHolder.onCancelCba();
-                    mDialogHolder.showErrorDialog(R.string.smartcard_early_unplug_dialog_title, R.string.smartcard_early_unplug_dialog_message);
-                    Logger.verbose(methodTag, "Smartcard was disconnected while dialog was still displayed.");
+                    mDialogHolder.onUnexpectedUnplug();
+                    if (!mDialogHolder.isSmartcardRemovalPromptDialogShowing()) {
+                        //Show an error dialog informing users that they have unplugged their device.
+                        mDialogHolder.showErrorDialog(R.string.smartcard_early_unplug_dialog_title, R.string.smartcard_early_unplug_dialog_message);
+                        Logger.verbose(TAG, "Smartcard was disconnected while dialog was still displayed.");
+                    }
                 }
             }
         });
     }
 
     /**
-     * Pauses smartcard discovery, if the particular authentication method isn't meant to have
-     *  discovery active throughout the entire flow.
+     * To be called when user interaction is needed, or to prepare for any unexpected user interaction.
+     * @param nextInteractionCallback the next logic to be run.
      */
     @Override
-    protected void onPausedSmartcardDiscovery() {
-        //Nothing needed, since usb discovery should always remain active for the duration of the authentication flow.
+    protected void prepForNextUserInteraction(@NonNull final IDisconnectionCallback nextInteractionCallback) {
+        //Usb discovery and connection should always remain active for the duration of the authentication flow.
+        //Therefore, we merely invoke the callback here.
+        nextInteractionCallback.onClosedConnection();
+    }
+
+    /**
+     * Helper method to log and show a disconnection error.
+     *
+     * @param methodName calling method name.
+     */
+    @Override
+    protected void indicateDisconnectionError(@NonNull final String methodName) {
+        final String methodTag = TAG + ":" + methodName;
+        mDialogHolder.showErrorDialog(R.string.smartcard_early_unplug_dialog_title, R.string.smartcard_early_unplug_dialog_message);
+        Logger.verbose(methodTag, "Smartcard was disconnected while dialog was still displayed.");
+        mCbaManager.clearDisconnectionCallback();
     }
 
     /**
      * Upon a positive button click in the smartcard PIN dialog, verify the provided PIN and handle the results.
+     *
      * @param certDetails ICertDetails of the selected certificate from the SmartcardCertPickerDialog.
-     * @param request ClientCertRequest received from AzureActiveDirectoryWebViewClient.onReceivedClientCertRequest.
+     * @param request     ClientCertRequest received from AzureActiveDirectoryWebViewClient.onReceivedClientCertRequest.
      * @return A PositiveButtonListener to be set for a SmartcardPinDialog.
      */
     @Override
@@ -107,6 +127,7 @@ public class UsbSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
                     @Override
                     public void onException(@NonNull final Exception e) {
                         indicateGeneralException(methodTag, e);
+                        clearAllManagerCallbacks();
                         request.cancel();
                         clearPin(pin);
                     }
@@ -126,5 +147,43 @@ public class UsbSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
     protected void setPinDialogForIncorrectAttempt(@NonNull ICertDetails certDetails,
                                                    @NonNull ClientCertRequest request) {
         mDialogHolder.setPinDialogErrorMode();
+    }
+
+    /**
+     * If a smartcard is currently connected, prompt user to remove the smartcard before
+     *  proceeding with results.
+     * @param callback {@link ISendResultCallback}
+     */
+    @Override
+    public void promptSmartcardRemovalForResult(@NonNull final ISendResultCallback callback) {
+        //If a usb device was originally plugged in, unplugging would cause a config change.
+        //So we won't ask the user to unplug in that case.
+        if (mCbaManager.isDeviceConnected()
+                && !mCbaManager.isUsbDeviceInitiallyPluggedIn()) {
+            mCbaManager.setDisconnectionCallback(new IDisconnectionCallback() {
+                @Override
+                public void onClosedConnection() {
+                    mDialogHolder.dismissDialog();
+                    callback.onResultReady();
+                }
+            });
+            mDialogHolder.showSmartcardRemovalPromptDialog(new IDismissCallback() {
+                @Override
+                public void onDismiss() {
+                    callback.onResultReady();
+                }
+            });
+            return;
+        }
+        callback.onResultReady();
+    }
+
+    /**
+     * Clears appropriate connection and/or disconnection callbacks.
+     */
+    @Override
+    protected void clearAllManagerCallbacks() {
+        mCbaManager.clearConnectionCallback();
+        mCbaManager.clearDisconnectionCallback();
     }
 }

@@ -57,4 +57,5 @@
     <string name="smartcard_nfc_reminder_dialog_positive_button">Entendi</string>
 
     <string name="smartcard_removal_prompt_dialog_title">Agora você pode remover seu cartão inteligente</string>
+    <string name="smartcard_removal_prompt_dialog_positive_button">Entendi</string>
 </resources>

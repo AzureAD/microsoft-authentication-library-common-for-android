@@ -86,10 +86,11 @@ public class SmartcardNfcReminderDialog extends SmartcardDialog {
     }
 
     /**
-     * Should dismiss dialog and call the appropriate methods to help cancel the CBA flow.
+     * Called when smartcard is unexpectedly disconnected via USB from device.
+     * Used to run any cancellation logic needed (without the cancel button needing to be pressed).
      */
     @Override
-    void onCancelCba() {
-        //This method will never be called on this dialog, so no logic needed.
+    void onUnexpectedUnplug() {
+        //This method is for NFC, so it will never be called from here.
     }
 }

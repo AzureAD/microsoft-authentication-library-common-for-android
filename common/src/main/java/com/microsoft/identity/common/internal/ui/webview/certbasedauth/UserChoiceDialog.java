@@ -95,11 +95,13 @@ public class UserChoiceDialog extends SmartcardDialog {
     }
 
     /**
-     * Should dismiss dialog and call the appropriate methods to help cancel the CBA flow.
+     * Called when smartcard is unexpectedly disconnected via USB from device.
+     * Used to run any cancellation logic needed (without the cancel button needing to be pressed).
      */
     @Override
-    void onCancelCba() {
-        mCancelCbaCallback.onCancel();
+    void onUnexpectedUnplug() {
+        //Unplugging isn't necessarily unexpected for this dialog (maybe a user is still deciding between USB and NFC)
+        //No need to do anything here.
     }
 
     /**
