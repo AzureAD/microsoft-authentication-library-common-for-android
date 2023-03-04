@@ -52,7 +52,7 @@ public class SilentTokenCommandParameters extends TokenCommandParameters {
 
         if (getAccount() == null) {
             Logger.warn(TAG, "The account set on silent operation parameters is NULL.");
-            // if the authority is B2C, then we do not need check if matches with the account enviroment
+            // if the authority is B2C, then we do not need check if matches with the account environment
             // as B2C only exists in one cloud and can use custom domains
         } else if (!isAuthorityB2C() && !authorityMatchesAccountEnvironment()) {
             throw new ArgumentException(

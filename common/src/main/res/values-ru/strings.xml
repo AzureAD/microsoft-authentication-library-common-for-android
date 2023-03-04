@@ -10,11 +10,11 @@
     <string name="http_auth_dialog_cancel">Отмена</string>
 
     <!-- strings for CBA dialogs and layouts -->
-    <string name="smartcard_cert_dialog_title">Выберите сертификат смарт-карты для входа</string>
+    <string name="smartcard_cert_dialog_title">Выбор сертификата входа</string>
     <string name="smartcard_cert_dialog_positive_button">Продолжить</string>
     <string name="smartcard_cert_dialog_negative_button">Отмена</string>
 
-    <string name="smartcard_pin_dialog_title">Разблокировать смарт-карту</string>
+    <string name="smartcard_pin_dialog_title">Разблокировка смарт-карты</string>
     <string name="smartcard_pin_dialog_message">Введите ПИН-код смарт-карты для доступа к сертификату и входа</string>
     <string name="smartcard_pin_dialog_positive_button">Разблокировать</string>
     <string name="smartcard_pin_dialog_negative_button">Отмена</string>
@@ -34,4 +34,28 @@
 
     <string name="smartcard_general_error_dialog_title">Повторите попытку позже</string>
     <string name="smartcard_general_error_dialog_message">Произошла непредвиденная ошибка. Повторите попытку позже.</string>
+
+    <string name="user_choice_dialog_title">Выбор способа входа.</string>
+    <string name="user_choice_dialog_on_device_name">Сертификат на этом устройстве</string>
+    <string name="user_choice_dialog_smartcard_name">Физическая смарт-карта</string>
+    <string name="user_choice_dialog_positive_button">Продолжить</string>
+    <string name="user_choice_dialog_negative_button">Отмена</string>
+
+    <string name="smartcard_prompt_dialog_title">Подготовка смарт-карты</string>
+    <string name="smartcard_prompt_dialog_message">Подключите смарт-карту или приложите ее к задней части телефона.</string>
+    <string name="smartcard_prompt_dialog_negative_button">Отмена</string>
+
+    <string name="smartcard_nfc_loading_dialog_title">Чтение смарт-карты</string>
+    <string name="smartcard_nfc_loading_dialog_message">Приготовьте смарт-карту к использованию.</string>
+
+    <string name="smartcard_nfc_prompt_dialog_title">Подготовка смарт-карты</string>
+    <string name="smartcard_nfc_prompt_dialog_message">Приложите смарт-карту к задней части телефона.</string>
+    <string name="smartcard_nfc_prompt_dialog_negative_button">Отмена</string>
+
+    <string name="smartcard_nfc_reminder_dialog_title">Включение NFC в параметрах устройства</string>
+    <string name="smartcard_nfc_reminder_dialog_message">Чтобы войти с помощью NFC, включите NFC в параметрах устройства. Затем войдите еще раз.</string>
+    <string name="smartcard_nfc_reminder_dialog_positive_button">Понятно</string>
+
+    <string name="smartcard_removal_prompt_dialog_title">Теперь вы можете удалить смарт-карту</string>
+    <string name="smartcard_removal_prompt_dialog_positive_button">Понятно</string>
 </resources>

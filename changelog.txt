@@ -1,7 +1,45 @@
-V.Next
+vNext
+----------
+- [MINOR] Add dialogs to prompt user to remove smartcard within CBA flow (#1966)
+- [PATCH] Minor fixes to stop NFC discovery upon cancellation of some dialogs (#1972)
+- [PATCH] Add metric to measure network check success, failure counts (#1962)
+- [MINOR] Add flighting capability for common (#1961)
+- [MINOR] Add preferred browser support (#1957)
+- [PATCH] Use android.net.NetworkCapabilities to check internet connectivity (#1887)
+- [MINOR] Adding new methods in IAccountCredentialAdapter (#1954)
+- [MINOR] Add a Basic Encryptor Interface + Add support to Encrypt / Decrypt using AES GCM (#1953)
+- [MINOR] Setting sub error codes to UiRequiredException for MsalUiRequiredException (#1944)
+- [MINOR] Wrap Runnable with Current Telemetry Context (#1956)
+- [MINOR] Update JweResponse APIs and added Additional Authenticated Data (AAD) (#1958)
+- [MINOR] Move JWT classes to common (#1968)
+- [PATCH] Create a custom safe Global Open Telemetry that doesn't crash (#1977)
+
+V.10.0.1
+----------
+- [PATCH] Improve the exception stack trace when a not valid broker is found (#1980)
+- [PATCH] Create a custom safe Global Open Telemetry that doesn't crash (#1977)
+
+V.10.0.0
+----------
+- [MINOR] Add activity (InstallCertActivityLauncher) to launch the Install WPJ cert activity (#1924)
+- [MINOR] Format thread+correlationId metadata only once logging is clearly opted-in (#1917)
+- [MINOR] Add application identifier during authorization request initialization (#1942)
+- [MINOR] Add NFC compatibility and telemetry to CBA (#1896)
+- [MINOR] Format thread+correlationId metadata only once logging is clearly opted-in (#1917)
+- [MINOR] Remove unnecessary synchronization when storage access is already guarded (#1928)
+- [MINOR] Write back read successes to cache and stop extra lookups in getAll (#1927)
+- [MAJOR] Add method to platform util to get package name from uid (#1932)
+- [MINOR] Move instrumentation of Token Requests from controllers to commands (#1939)
+- [MAJOR] Added application identifier to cache (physical identifier).  Prevents multiple apps using the same logical identifier from sharing tokens. (#1660)
+- [MINOR] Capture whether token is returned from cache during silent token requests (#1941)
+- [MINOR] Capture span status and error codes in missing scenarios (#1940)
+- [MINOR] Remove OTel SDK from common and common4j (#1948)
+
+V.9.1.0
 ----------
 - [MINOR] Convert crypto operation spans into metrics (#1909)
 - [PATCH] Move clearClientCertPreferences to onCreateView only (#1915)
+- [MINOR] Propagate span context from MSAL to Broker (#1926)
 
 V.9.0.1
 ----------

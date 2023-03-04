@@ -10,12 +10,12 @@
     <string name="http_auth_dialog_cancel">Бас тарту</string>
 
     <!-- strings for CBA dialogs and layouts -->
-    <string name="smartcard_cert_dialog_title">Кіру үшін смарт-карта сертификатын таңдаңыз</string>
+    <string name="smartcard_cert_dialog_title">Кіру үшін сертификатты таңдаңыз</string>
     <string name="smartcard_cert_dialog_positive_button">Жалғастыру</string>
     <string name="smartcard_cert_dialog_negative_button">Бас тарту</string>
 
-    <string name="smartcard_pin_dialog_title">Смарт-картаның құлпын ашу</string>
-    <string name="smartcard_pin_dialog_message">Сертификатқа қол жеткізу және жүйеге кіру үшін смарт-карта PIN кодын енгізіңіз</string>
+    <string name="smartcard_pin_dialog_title">Смарт картаның құлпын ашу</string>
+    <string name="smartcard_pin_dialog_message">Сертификатқа қол жеткізу және жүйеге кіру үшін смарт карта PIN кодын енгізіңіз</string>
     <string name="smartcard_pin_dialog_positive_button">Құлыпты ашу</string>
     <string name="smartcard_pin_dialog_negative_button">Бас тарту</string>
     <string name="smartcard_pin_dialog_error_message">Сіз енгізген PIN код дұрыс емес</string>
@@ -27,11 +27,35 @@
     <string name="smartcard_max_attempt_dialog_message">Сәтсіз әрекеттер тым көп. Кейінірек қайталап көріңіз.</string>
 
     <string name="smartcard_early_unplug_dialog_title">Әрекетті қайталау</string>
-    <string name="smartcard_early_unplug_dialog_message">Смарт-карта құрылғысы жойылды. Қайта кіруге әрекет жасамас бұрын құрылғыны қайта кірістіріңіз.</string>
+    <string name="smartcard_early_unplug_dialog_message">Смарт карта құрылғысы жойылды. Қайта кіруге әрекет жасамас бұрын құрылғыны қайта кірістіріңіз.</string>
 
     <string name="smartcard_no_cert_dialog_title">Жарамды сертификаттар табылмады.</string>
-    <string name="smartcard_no_cert_dialog_message">Сертификат смарт-карта құрылғысында дұрыс дайындалғанын тексеріңіз.</string>
+    <string name="smartcard_no_cert_dialog_message">Сертификат смарт карта құрылғысында дұрыс дайындалғанын тексеріңіз.</string>
 
     <string name="smartcard_general_error_dialog_title">Әрекетті кейінірек қайталаңыз</string>
     <string name="smartcard_general_error_dialog_message">Күтпеген қате пайда болды. Кейінірек қайталап көріңіз.</string>
+
+    <string name="user_choice_dialog_title">Қалау кіргіңіз келеді?</string>
+    <string name="user_choice_dialog_on_device_name">Осы құрылғыдағы сертификат</string>
+    <string name="user_choice_dialog_smartcard_name">Физикалық смарт карта</string>
+    <string name="user_choice_dialog_positive_button">Жалғастыру</string>
+    <string name="user_choice_dialog_negative_button">Бас тарту</string>
+
+    <string name="smartcard_prompt_dialog_title">Смарт картаны дайындау</string>
+    <string name="smartcard_prompt_dialog_message">Смарт картаны қосыңыз немесе оны телефоныңыздың артқы жағына жалғаңыз немесе ұстап тұрыңыз.</string>
+    <string name="smartcard_prompt_dialog_negative_button">Бас тарту</string>
+
+    <string name="smartcard_nfc_loading_dialog_title">Смарт карта оқылуда</string>
+    <string name="smartcard_nfc_loading_dialog_message">Смарт картаны пайдалануға дайындаңыз.</string>
+
+    <string name="smartcard_nfc_prompt_dialog_title">Смарт картаны дайындау</string>
+    <string name="smartcard_nfc_prompt_dialog_message">Смарт картаны қосыңыз немесе оны телефоныңыздың артқы жағына тіркеп ұстап тұрыңыз.</string>
+    <string name="smartcard_nfc_prompt_dialog_negative_button">Бас тарту</string>
+
+    <string name="smartcard_nfc_reminder_dialog_title">Құрылғы параметрлерінде NFC функциясын қосу</string>
+    <string name="smartcard_nfc_reminder_dialog_message">NFC көмегімен кіру үшін, құрылғы параметрлерінде NFC функциясын қосыңыз. Содан кейін қайта кіріңіз.</string>
+    <string name="smartcard_nfc_reminder_dialog_positive_button">Түсінікті</string>
+
+    <string name="smartcard_removal_prompt_dialog_title">Енді смарт картаны шығаруға болады</string>
+    <string name="smartcard_removal_prompt_dialog_positive_button">Түсінікті</string>
 </resources>

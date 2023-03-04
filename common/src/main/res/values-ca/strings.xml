@@ -10,7 +10,7 @@
     <string name="http_auth_dialog_cancel">Cancel·la</string>
 
     <!-- strings for CBA dialogs and layouts -->
-    <string name="smartcard_cert_dialog_title">Trieu un certificat de targeta intel·ligent per iniciar la sessió</string>
+    <string name="smartcard_cert_dialog_title">Seleccioneu un certificat per iniciar la sessió</string>
     <string name="smartcard_cert_dialog_positive_button">Continua</string>
     <string name="smartcard_cert_dialog_negative_button">Cancel·la</string>
 
@@ -34,4 +34,28 @@
 
     <string name="smartcard_general_error_dialog_title">Torneu-ho a provar més tard.</string>
     <string name="smartcard_general_error_dialog_message">S\'ha produït un error inesperat. Torneu-ho a provar més tard.</string>
+
+    <string name="user_choice_dialog_title">Com t\'agradaria iniciar sessió?</string>
+    <string name="user_choice_dialog_on_device_name">Certificat d\'aquest dispositiu</string>
+    <string name="user_choice_dialog_smartcard_name">Targeta intel·ligent física</string>
+    <string name="user_choice_dialog_positive_button">Continua</string>
+    <string name="user_choice_dialog_negative_button">Cancel·la</string>
+
+    <string name="smartcard_prompt_dialog_title">Prepara la targeta intel·ligent</string>
+    <string name="smartcard_prompt_dialog_message">Connecta o mantén premuda una targeta intel·ligent a la part posterior del telèfon.</string>
+    <string name="smartcard_prompt_dialog_negative_button">Cancel·la</string>
+
+    <string name="smartcard_nfc_loading_dialog_title">S\'està llegint la targeta intel·ligent</string>
+    <string name="smartcard_nfc_loading_dialog_message">Manteniu la targeta intel·ligent al lloc.</string>
+
+    <string name="smartcard_nfc_prompt_dialog_title">Prepara la targeta intel·ligent</string>
+    <string name="smartcard_nfc_prompt_dialog_message">Mantén premuda una targeta intel·ligent a la part posterior del telèfon.</string>
+    <string name="smartcard_nfc_prompt_dialog_negative_button">Cancel·la</string>
+
+    <string name="smartcard_nfc_reminder_dialog_title">Activa l\'NFC a la configuració del dispositiu</string>
+    <string name="smartcard_nfc_reminder_dialog_message">Per iniciar la sessió amb l\'NFC, activeu l\'NFC a la configuració del dispositiu. A continuació, torneu a iniciar la sessió.</string>
+    <string name="smartcard_nfc_reminder_dialog_positive_button">Entesos</string>
+
+    <string name="smartcard_removal_prompt_dialog_title">Ara ja podeu suprimir la targeta intel·ligent</string>
+    <string name="smartcard_removal_prompt_dialog_positive_button">Entesos</string>
 </resources>

@@ -43,7 +43,7 @@ public final class AuthenticationConstants {
     /**
      * The logging tag for this class.
      */
-    private static final String TAG =  AuthenticationConstants.class.getSimpleName();
+    private static final String TAG = AuthenticationConstants.class.getSimpleName();
 
     /**
      * ADAL package name.
@@ -91,6 +91,7 @@ public final class AuthenticationConstants {
     public static final String ONE_POINT_ZERO = "1.0";
     public static final String TWO_POINT_ZERO = "2.0";
     public static final String THREE_POINT_ZERO = "3.0";
+    public static final String FOUR_POINT_ZERO = "4.0";
 
 
     /**
@@ -580,6 +581,11 @@ public final class AuthenticationConstants {
         public static final String BROKER_VERSION = "broker.version";
 
         /**
+         * String of broker log upload result.
+         */
+        public static final String UPLOAD_BROKER_LOGS_RESULT = "upload_broker_logs_result";
+
+        /**
          * String of broker package name.
          */
         public static final String BROKER_PACKAGE_NAME = "broker.package.name";
@@ -596,16 +602,17 @@ public final class AuthenticationConstants {
 
         /**
          * The newest Msal-To-Broker protocol version.
-         * @see <a href="ttps://identitydivision.visualstudio.com/DevEx/_git/AuthLibrariesApiReview?path=/%5BAndroid%5D%20Broker%20API/broker_protocol_versions.md">Android Auth Broker Protocol Versions</a>
+         *
+         * @see <a href="https://identitydivision.visualstudio.com/DevEx/_git/AuthLibrariesApiReview?path=/%5BAndroid%5D%20Broker%20API/broker_protocol_versions.md">Android Auth Broker Protocol Versions</a>
          */
-        public static final String MSAL_TO_BROKER_PROTOCOL_VERSION_CODE = "11.0";
+        public static final String MSAL_TO_BROKER_PROTOCOL_VERSION_CODE = "12.0";
 
         /**
          * A client id for requesting the SSO token.
          */
         public static final String SSO_TOKEN_CLIENT_ID = "broker.sso.clientId";
 
-         /**
+        /**
          * The key indicating that this is an ssoUrl parameter in a Bundle.
          */
         public static final String BROKER_SSO_URL_KEY = "ssoUrl";
@@ -1283,6 +1290,19 @@ public final class AuthenticationConstants {
         public static final String AUTH_SCHEME_PARAMS_POP = "pop_parameters";
 
         /**
+         * The Bundle key name of incidentId for powerlift incident.
+         */
+        public static final String POWERLIFT_INCIDENT_ID = "powerLiftincidentId";
+        /**
+         * The Bundle key name of powerliftApiKey for uploading powerlift incident.
+         */
+        public static final String POWERLIFT_API_KEY = "powerLiftApiKey";
+        /**
+         * The Bundle key name of tenantId  for uploading powerlift incident.
+         */
+        public static final String POWERLIFT_TENANT_ID = "powerLiftTenantId";
+
+        /**
          * Bundle identifiers for x-ms-clitelem info.
          */
         public static final class CliTelemInfo {
@@ -1394,14 +1414,13 @@ public final class AuthenticationConstants {
         private static final String VERSION_7 = "7.0";
         private static final String BROKER_VERSION_1 = ONE_POINT_ZERO;
         private static final String BROKER_VERSION_3 = THREE_POINT_ZERO;
+        private static final String BROKER_VERSION_4 = FOUR_POINT_ZERO;
 
         /**
          * Tie the API paths and codes into a single object structure to stop us from having to keep
          * them in sync.  This is designed to pull all the parts of the API definition into a single
          * place, so that we only need to make updates in one location, and it's clearer what we need
          * to do when adding new APIs.
-         *
-         *
          */
         @Getter
         @Accessors(prefix = "m")
@@ -1425,6 +1444,7 @@ public final class AuthenticationConstants {
             GET_SSO_TOKEN(GET_SSO_TOKEN_PATH, null, VERSION_7),
             UNKNOWN(null, null, null),
             DEVICE_REGISTRATION_PROTOCOLS(DEVICE_REGISTRATION_PROTOCOLS_PATH, null, null),
+            BROKER_UPLOAD_LOGS(BROKER_API_UPLOAD_LOGS, BROKER_VERSION_4, null)
             ;
             /**
              * The content provider path that the API exists behind.
@@ -1439,6 +1459,7 @@ public final class AuthenticationConstants {
              */
             private String mMsalVersion;
         }
+
         /**
          * URI Path constant for MSAL-to-Broker hello request using ContentProvider.
          */
@@ -1489,6 +1510,8 @@ public final class AuthenticationConstants {
          */
         public static final String BROKER_API_HELLO_PATH = "/brokerApi/hello";
 
+        public static final String BROKER_API_UPLOAD_LOGS = "/brokerApi/uploadBrokerLogs";
+
         /**
          * URI Path constant for BrokerApi-to-Broker getBrokerAccounts request using ContentProvider.
          */
@@ -1521,8 +1544,11 @@ public final class AuthenticationConstants {
 
         /**
          * Broker api path constant for execute device registration protocols.
+         * Note: The path was updated because in release 9.0.1 a part of the NEW WPJ API was exposed
+         * but the WpjController used in this release is still the legacy controller, which can
+         * produce errors if an app using the NEW WPJ API communicates with this version of the broker.
          */
-        public static final String DEVICE_REGISTRATION_PROTOCOLS_PATH = "/deviceRegistration/protocols";
+        public static final String DEVICE_REGISTRATION_PROTOCOLS_PATH = "/multipledeviceRegistration/protocols";
 
         /**
          * BrokerContentProvider URI code constant for MSAL-to-Broker hello request.
@@ -1676,7 +1702,7 @@ public final class AuthenticationConstants {
          * Custom Tabs does not provide a mechanism to programmtically close custom tabs... hence we have to make this happen via the activity used
          * to launch custom tabs and intent flags to clear the task.
          */
-        public static final String REFRESH_TO_CLOSE= "refresh_to_close";
+        public static final String REFRESH_TO_CLOSE = "refresh_to_close";
     }
 
     public static final class TelemetryEvents {

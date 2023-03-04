@@ -342,12 +342,19 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
         }
     }
 
+    public void setShouldUseDeviceSettingsPage(final boolean shouldUseDeviceSettingsPage) {
+        Assert.assertTrue("Cannot set shouldUseDeviceSettingsPage for BrokerAuthenticatorPreviousVersionImpl", brokerMicrosoftAuthenticatorImpl instanceof BrokerAuthenticatorUpdatedVersionImpl);
+        ((BrokerAuthenticatorUpdatedVersionImpl) brokerMicrosoftAuthenticatorImpl).shouldUseDeviceSettingsPage = shouldUseDeviceSettingsPage;
+    }
+
     @Override
     public void handleFirstRun() {
         if (shouldHandleFirstRun) {
             Logger.i(TAG, "Handle First Run of the APP..");
             // privacy dialog
             UiAutomatorUtils.handleButtonClick("com.azure.authenticator:id/privacy_consent_button");
+            // Continue button
+            UiAutomatorUtils.handleButtonClickForObjectWithTextSafely("Continue");
             // the skip button
             UiAutomatorUtils.handleButtonClick("com.azure.authenticator:id/frx_skip_button");
             shouldHandleFirstRun = false;

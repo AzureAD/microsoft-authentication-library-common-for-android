@@ -65,6 +65,22 @@ public enum AttributeName {
     ccs_request_id,
 
     /**
+     * Indicates which CertBasedAuthChallengeHandler was handling the CBA flow.
+     */
+    cert_based_auth_challenge_handler,
+
+    /**
+     * Indicates if PivProvider (part of YubiKit) was already present in the
+     *  Security static list prior to adding a new PivProvider.
+     */
+    cert_based_auth_existing_piv_provider_present,
+
+    /**
+     * Indicates which CBA flow the user intended to select.
+     */
+    cert_based_auth_user_choice,
+
+    /**
      * The type of the error. Generally the class name of an exception.
      */
     error_type,
@@ -72,5 +88,30 @@ public enum AttributeName {
     /**
      * An error code.
      */
-    error_code
+    error_code,
+
+    /**
+     * The IPC strategy being used.
+     */
+    ipc_strategy,
+
+    /**
+     * The API ID of an MSAL PCA method.
+     */
+    public_api_id,
+
+    /**
+     * The name of the controller being used to process the request.
+     */
+    controller_name,
+
+    /**
+     * The name of the application making the request.
+     */
+    application_name,
+
+    /**
+     * Indicates if token was return from token cache
+     */
+    is_serviced_from_cache;
 }

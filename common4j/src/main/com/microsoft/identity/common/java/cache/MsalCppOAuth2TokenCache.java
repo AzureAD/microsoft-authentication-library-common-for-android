@@ -146,7 +146,7 @@ public class MsalCppOAuth2TokenCache
      *
      * @param accountRecord : accountRecord to be saved.
      */
-    public synchronized void saveAccountRecord(@NonNull final AccountRecord accountRecord) {
+    public void saveAccountRecord(@NonNull final AccountRecord accountRecord) {
         getAccountCredentialCache().saveAccount(accountRecord);
     }
 
@@ -155,7 +155,7 @@ public class MsalCppOAuth2TokenCache
      * Note: This method is intended to be only used for testing purposes.
      */
     //@VisibleForTesting(otherwise = VisibleForTesting.NONE)
-    public synchronized void clearCache() {
+    public void clearCache() {
         getAccountCredentialCache().clearAll();
     }
 
@@ -166,7 +166,7 @@ public class MsalCppOAuth2TokenCache
      * @return A immutable List of Credentials contained in this cache.
      */
     //@VisibleForTesting(otherwise = VisibleForTesting.NONE)
-    public synchronized List<Credential> getCredentials() {
+    public List<Credential> getCredentials() {
         return Collections.unmodifiableList(
                 getAccountCredentialCache().getCredentials()
         );
@@ -249,9 +249,11 @@ public class MsalCppOAuth2TokenCache
                 homeAccountId,
                 normalizedEnvironment,
                 CredentialType.RefreshToken,
-                null,
+                null, //wildcard (*)
+                null, //wildcard (*)
+                null, //wildcard (*)
                 normalizedRealm,
-                null,
+                null, //wildcard (*)
                 SCHEME_BEARER
         );
 

@@ -4,6 +4,7 @@ plugins {
     id 'pmd'
     id 'checkstyle'
     id 'maven-publish'
+    id 'kotlin-android'
 }
 
 apply from: '../versioning/version_tasks.gradle'
@@ -113,7 +114,7 @@ android {
             manifest.srcFile 'src/main/AndroidManifest.xml'
 
             // Also load source from common-java
-            java.srcDirs = ['src/main/java']
+            java.srcDirs = ['src/main/java', 'src/main/kotlin']
             res.srcDirs = ['src/main/res']
         }
     }
@@ -144,6 +145,9 @@ dependencies {
     implementation libs.gson
     implementation libs.browser
     implementation libs.constraintLayout
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.kotlinVersion}"
+    testImplementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.kotlinVersion}"
+    androidTestImplementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.kotlinVersion}"
 
     //For Executive Order work
     implementation libs.yubikitAndroid
@@ -177,7 +181,7 @@ dependencies {
 
     implementation platform(libs.opentelemetryBom)
     implementation libs.opentelemetryApi
-    implementation libs.opentelemetrySdkTrace
+    implementation ("androidx.fragment:fragment:1.3.2")
 }
 
 // Create tasks to generate javadoc

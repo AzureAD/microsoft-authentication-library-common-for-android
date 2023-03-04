@@ -10,12 +10,12 @@
     <string name="http_auth_dialog_cancel">Cancelar</string>
 
     <!-- strings for CBA dialogs and layouts -->
-    <string name="smartcard_cert_dialog_title">Elegir un certificado de tarjeta inteligente para iniciar sesión</string>
+    <string name="smartcard_cert_dialog_title">Seleccionar un certificado con el que iniciar sesión</string>
     <string name="smartcard_cert_dialog_positive_button">Continuar</string>
     <string name="smartcard_cert_dialog_negative_button">Cancelar</string>
 
     <string name="smartcard_pin_dialog_title">Desbloquear tarjeta inteligente</string>
-    <string name="smartcard_pin_dialog_message">Escriba el PIN de la tarjeta inteligente para acceder al certificado e iniciar sesión</string>
+    <string name="smartcard_pin_dialog_message">Escribir el PIN de la tarjeta inteligente para acceder al certificado e iniciar sesión</string>
     <string name="smartcard_pin_dialog_positive_button">Desbloquear</string>
     <string name="smartcard_pin_dialog_negative_button">Cancelar</string>
     <string name="smartcard_pin_dialog_error_message">El PIN que introdujo no es correcto</string>
@@ -34,4 +34,28 @@
 
     <string name="smartcard_general_error_dialog_title">Volver a intentarlo más tarde</string>
     <string name="smartcard_general_error_dialog_message">Ha ocurrido un error inesperado. Inténtalo de nuevo más tarde.</string>
+
+    <string name="user_choice_dialog_title">¿Cómo desea iniciar sesión?</string>
+    <string name="user_choice_dialog_on_device_name">Certificado en este dispositivo</string>
+    <string name="user_choice_dialog_smartcard_name">Tarjeta inteligente física</string>
+    <string name="user_choice_dialog_positive_button">Continuar</string>
+    <string name="user_choice_dialog_negative_button">Cancelar</string>
+
+    <string name="smartcard_prompt_dialog_title">Preparar la tarjeta inteligente</string>
+    <string name="smartcard_prompt_dialog_message">Conecte o mantenga presionada una tarjeta inteligente en la parte posterior del teléfono.</string>
+    <string name="smartcard_prompt_dialog_negative_button">Cancelar</string>
+
+    <string name="smartcard_nfc_loading_dialog_title">Leyendo la tarjeta inteligente</string>
+    <string name="smartcard_nfc_loading_dialog_message">Mantenga la tarjeta inteligente en su lugar.</string>
+
+    <string name="smartcard_nfc_prompt_dialog_title">Preparar la tarjeta inteligente</string>
+    <string name="smartcard_nfc_prompt_dialog_message">Mantenga una tarjeta inteligente en la parte posterior del teléfono.</string>
+    <string name="smartcard_nfc_prompt_dialog_negative_button">Cancelar</string>
+
+    <string name="smartcard_nfc_reminder_dialog_title">Activar NFC en la configuración del dispositivo</string>
+    <string name="smartcard_nfc_reminder_dialog_message">Para iniciar sesión con NFC, active NFC en la configuración del dispositivo. Después, vuelva a iniciar sesión.</string>
+    <string name="smartcard_nfc_reminder_dialog_positive_button">Entendido</string>
+
+    <string name="smartcard_removal_prompt_dialog_title">Ahora es posible quitar la tarjeta inteligente</string>
+    <string name="smartcard_removal_prompt_dialog_positive_button">Entendido</string>
 </resources>

@@ -10,12 +10,12 @@
     <string name="http_auth_dialog_cancel">Zrušiť</string>
 
     <!-- strings for CBA dialogs and layouts -->
-    <string name="smartcard_cert_dialog_title">Vyberte certifikát čipovej karty na prihlásenie</string>
+    <string name="smartcard_cert_dialog_title">Vyberte certifikát na prihlásenie</string>
     <string name="smartcard_cert_dialog_positive_button">Pokračovať</string>
     <string name="smartcard_cert_dialog_negative_button">Zrušiť</string>
 
-    <string name="smartcard_pin_dialog_title">Odomknúť čipovú kartu</string>
-    <string name="smartcard_pin_dialog_message">Zadajte PIN kód čipovej karty na prístup k certifikátu a prihláste sa</string>
+    <string name="smartcard_pin_dialog_title">Odomknúť inteligentnú kartu</string>
+    <string name="smartcard_pin_dialog_message">Zadajte PIN kód inteligentnej karty na prístup k certifikátu a prihláste sa</string>
     <string name="smartcard_pin_dialog_positive_button">Odomknúť</string>
     <string name="smartcard_pin_dialog_negative_button">Zrušiť</string>
     <string name="smartcard_pin_dialog_error_message">PIN kód, ktorý ste zadali, bol nesprávny</string>
@@ -27,11 +27,35 @@
     <string name="smartcard_max_attempt_dialog_message">Príliš veľa neúspešných pokusov, skúste to znova neskôr.</string>
 
     <string name="smartcard_early_unplug_dialog_title">Skúsiť znova</string>
-    <string name="smartcard_early_unplug_dialog_message">Zariadenie s čipovou kartou bolo odobraté. Pred opätovným pokusom o prihlásenie znova vložte zariadenie.</string>
+    <string name="smartcard_early_unplug_dialog_message">Zariadenie s inteligentnou kartou bolo odobraté. Pred opätovným pokusom o prihlásenie znova vložte zariadenie.</string>
 
     <string name="smartcard_no_cert_dialog_title">Nenašli sa žiadne použiteľné certifikáty.</string>
-    <string name="smartcard_no_cert_dialog_message">Potvrďte, že certifikát bol správne poskytnutý v zariadení s čipovou kartou.</string>
+    <string name="smartcard_no_cert_dialog_message">Potvrďte, že certifikát bol správne poskytnutý v zariadení s inteligentnou kartou.</string>
 
     <string name="smartcard_general_error_dialog_title">Skúste to znova neskôr</string>
     <string name="smartcard_general_error_dialog_message">Vyskytla sa neočakávaná chyba. Skúste to znova neskôr.</string>
+
+    <string name="user_choice_dialog_title">Ako sa chcete prihlásiť?</string>
+    <string name="user_choice_dialog_on_device_name">Certifikát v tomto zariadení</string>
+    <string name="user_choice_dialog_smartcard_name">Fyzická inteligentná karta</string>
+    <string name="user_choice_dialog_positive_button">Pokračovať</string>
+    <string name="user_choice_dialog_negative_button">Zrušiť</string>
+
+    <string name="smartcard_prompt_dialog_title">Príprava inteligentnej karty</string>
+    <string name="smartcard_prompt_dialog_message">Pripojte alebo podržte inteligentnú kartu na zadnej strane telefónu.</string>
+    <string name="smartcard_prompt_dialog_negative_button">Zrušiť</string>
+
+    <string name="smartcard_nfc_loading_dialog_title">Čítanie inteligentnej karty</string>
+    <string name="smartcard_nfc_loading_dialog_message">Udržujte inteligentnú kartu na mieste.</string>
+
+    <string name="smartcard_nfc_prompt_dialog_title">Príprava inteligentnej karty</string>
+    <string name="smartcard_nfc_prompt_dialog_message">Podržte inteligentnú kartu na zadnej strane telefónu.</string>
+    <string name="smartcard_nfc_prompt_dialog_negative_button">Zrušiť</string>
+
+    <string name="smartcard_nfc_reminder_dialog_title">Zapnúť technológiu NFC v nastaveniach zariadenia</string>
+    <string name="smartcard_nfc_reminder_dialog_message">Ak sa chcete prihlásiť pomocou technológie NFC, zapnite technológiu NFC v nastaveniach zariadenia. Potom sa znova prihláste.</string>
+    <string name="smartcard_nfc_reminder_dialog_positive_button">Rozumiem</string>
+
+    <string name="smartcard_removal_prompt_dialog_title">Teraz môžete inteligentnú kartu odobrať</string>
+    <string name="smartcard_removal_prompt_dialog_positive_button">Rozumiem</string>
 </resources>

@@ -10,11 +10,11 @@
     <string name="http_auth_dialog_cancel">Скасувати</string>
 
     <!-- strings for CBA dialogs and layouts -->
-    <string name="smartcard_cert_dialog_title">Виберіть сертифікат смарт-картки для входу</string>
+    <string name="smartcard_cert_dialog_title">Виберіть сертифікат, щоб увійти</string>
     <string name="smartcard_cert_dialog_positive_button">Продовжити</string>
     <string name="smartcard_cert_dialog_negative_button">Скасувати</string>
 
-    <string name="smartcard_pin_dialog_title">Розблокувати смарт-картку</string>
+    <string name="smartcard_pin_dialog_title">Розблокування смарт-картки</string>
     <string name="smartcard_pin_dialog_message">Введіть PIN-код смарт-картки, щоб отримати доступ до сертифіката, і ввійдіть</string>
     <string name="smartcard_pin_dialog_positive_button">Розблокувати</string>
     <string name="smartcard_pin_dialog_negative_button">Скасувати</string>
@@ -27,11 +27,35 @@
     <string name="smartcard_max_attempt_dialog_message">Забагато невдалих спроб. Спробуйте ще раз пізніше.</string>
 
     <string name="smartcard_early_unplug_dialog_title">Повторити спробу</string>
-    <string name="smartcard_early_unplug_dialog_message">Пристрій смарт-картки видалено. Вставте пристрій ще раз, перш ніж знову спробувати ввійти.</string>
+    <string name="smartcard_early_unplug_dialog_message">Пристрій читання смарт-карток вилучено. Вставте пристрій ще раз, перш ніж спробувати ввійти знову.</string>
 
     <string name="smartcard_no_cert_dialog_title">Застосовні сертифікати не знайдено.</string>
-    <string name="smartcard_no_cert_dialog_message">Переконайтеся, що сертифікат належним чином підготовлено на пристрої смарт-картки.</string>
+    <string name="smartcard_no_cert_dialog_message">Переконайтеся, що сертифікат належним чином підготовлено на пристрої читання смарт-карток.</string>
 
     <string name="smartcard_general_error_dialog_title">Спробуйте знову пізніше</string>
     <string name="smartcard_general_error_dialog_message">Сталася неочікувана помилка. Спробуйте ще раз пізніше.</string>
+
+    <string name="user_choice_dialog_title">Як потрібно ввійти?</string>
+    <string name="user_choice_dialog_on_device_name">Сертифікат на цьому пристрої</string>
+    <string name="user_choice_dialog_smartcard_name">Фізична смарт-картка</string>
+    <string name="user_choice_dialog_positive_button">Продовжити</string>
+    <string name="user_choice_dialog_negative_button">Скасувати</string>
+
+    <string name="smartcard_prompt_dialog_title">Підготовка смарт-картки</string>
+    <string name="smartcard_prompt_dialog_message">Вставте смарт-картку або прикладіть її до задньої панелі телефона.</string>
+    <string name="smartcard_prompt_dialog_negative_button">Скасувати</string>
+
+    <string name="smartcard_nfc_loading_dialog_title">Читання смарт-картки</string>
+    <string name="smartcard_nfc_loading_dialog_message">Тримайте смарт-картку на місці.</string>
+
+    <string name="smartcard_nfc_prompt_dialog_title">Підготовка смарт-картки</string>
+    <string name="smartcard_nfc_prompt_dialog_message">Прикладіть смарт-картку до задньої панелі телефона.</string>
+    <string name="smartcard_nfc_prompt_dialog_negative_button">Скасувати</string>
+
+    <string name="smartcard_nfc_reminder_dialog_title">Увімкнення NFC в параметрах пристрою</string>
+    <string name="smartcard_nfc_reminder_dialog_message">Щоб увійти за допомогою NFC, увімкніть NFC в параметрах пристрою. Потім увійдіть ще раз.</string>
+    <string name="smartcard_nfc_reminder_dialog_positive_button">Зрозуміло</string>
+
+    <string name="smartcard_removal_prompt_dialog_title">Тепер ви можете видалити смарт-картку</string>
+    <string name="smartcard_removal_prompt_dialog_positive_button">Зрозуміло</string>
 </resources>

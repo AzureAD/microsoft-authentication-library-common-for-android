@@ -24,6 +24,9 @@ plugins {
 
     // This is needed to get Android Studio to resolve test fixtures dependencies
     id 'idea'
+
+    // Add kotlin support
+    id 'org.jetbrains.kotlin.jvm'
 }
 
 def desugarCode = false
@@ -207,6 +210,8 @@ dependencies {
     implementation libs.json
     implementation libs.jcipAnnotations
     implementation libs.httpclient
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.kotlinVersion}"
+    testImplementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.kotlinVersion}"
 
     testCompileOnly libs.spotbugsAnnotations4J
     testCompileOnly libs.lombok
@@ -221,7 +226,6 @@ dependencies {
 
     implementation platform(libs.opentelemetryBom)
     implementation libs.opentelemetryApi
-    implementation libs.opentelemetrySdkTrace
 }
 
 sourceCompatibility = "1.8"
