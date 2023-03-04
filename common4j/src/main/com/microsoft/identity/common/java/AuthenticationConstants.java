@@ -548,6 +548,11 @@ public class AuthenticationConstants {
         public static final String BROKER_ACCOUNT_TYPE = "com.microsoft.workaccount";
 
         /**
+         * Account type string.
+         */
+        public static final String BROKER_MSA_ACCOUNT_TYPE = "com.microsoft.personalaccount";
+
+        /**
          * String of broker client ID.
          */
         public static final String BROKER_CLIENT_ID = "29d9ed98-a469-4536-ade2-f981bc1d605e";
