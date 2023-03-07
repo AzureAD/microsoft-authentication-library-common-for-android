@@ -36,7 +36,7 @@
     <string name="smartcard_general_error_dialog_message">حدث خطأ غير متوقع. الرجاء إعادة المحاولة لاحقًا.</string>
 
     <string name="user_choice_dialog_title">كيف ترغب في الإعداد؟</string>
-    <string name="user_choice_dialog_on_device_name">الشهادة على جهازك</string>
+    <string name="user_choice_dialog_on_device_name">شهادة على هذا الجهاز</string>
     <string name="user_choice_dialog_smartcard_name">بطاقة ذكية فعلية</string>
     <string name="user_choice_dialog_positive_button">متابعة</string>
     <string name="user_choice_dialog_negative_button">إلغاء الأمر</string>
@@ -55,4 +55,7 @@
     <string name="smartcard_nfc_reminder_dialog_title">تشغيل NFC في إعدادات الجهاز</string>
     <string name="smartcard_nfc_reminder_dialog_message">لتسجيل الدخول باستخدام NFC، قم بتشغيل NFC في إعدادات جهازك. ثم قم بتسجيل الدخول مرة أخرى.</string>
     <string name="smartcard_nfc_reminder_dialog_positive_button">فهمت</string>
+
+    <string name="smartcard_removal_prompt_dialog_title">يمكنك الآن إزالة بطاقتك الذكية</string>
+    <string name="smartcard_removal_prompt_dialog_positive_button">فهمت</string>
 </resources>

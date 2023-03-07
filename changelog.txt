@@ -1,5 +1,8 @@
 vNext
 ----------
+- [MINOR] Add dialogs to prompt user to remove smartcard within CBA flow (#1966)
+- [PATCH] Minor fixes to stop NFC discovery upon cancellation of some dialogs (#1972)
+- [PATCH] Add metric to measure network check success, failure counts (#1962)
 - [MINOR] Add flighting capability for common (#1961)
 - [MINOR] Add preferred browser support (#1957)
 - [PATCH] Use android.net.NetworkCapabilities to check internet connectivity (#1887)
@@ -9,6 +12,12 @@ vNext
 - [MINOR] Wrap Runnable with Current Telemetry Context (#1956)
 - [MINOR] Update JweResponse APIs and added Additional Authenticated Data (AAD) (#1958)
 - [MINOR] Move JWT classes to common (#1968)
+- [PATCH] Create a custom safe Global Open Telemetry that doesn't crash (#1977)
+
+V.10.0.1
+----------
+- [PATCH] Improve the exception stack trace when a not valid broker is found (#1980)
+- [PATCH] Create a custom safe Global Open Telemetry that doesn't crash (#1977)
 
 V.10.0.0
 ----------

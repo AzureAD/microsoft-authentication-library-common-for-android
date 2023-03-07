@@ -36,7 +36,7 @@
     <string name="smartcard_general_error_dialog_message">Je nám líto, ale objevila se nečekaná chyba. Zkuste to prosím znovu později.</string>
 
     <string name="user_choice_dialog_title">Jak se chcete přihlásit?</string>
-    <string name="user_choice_dialog_on_device_name">Certifikát na vašem zařízení</string>
+    <string name="user_choice_dialog_on_device_name">Certifikát na tomto zařízení</string>
     <string name="user_choice_dialog_smartcard_name">Fyzická čipová karta</string>
     <string name="user_choice_dialog_positive_button">Pokračovat</string>
     <string name="user_choice_dialog_negative_button">Zrušit</string>
@@ -55,4 +55,7 @@
     <string name="smartcard_nfc_reminder_dialog_title">Zapnutí NFC v nastavení zařízení</string>
     <string name="smartcard_nfc_reminder_dialog_message">Pokud se chcete přihlásit pomocí NFC, zapněte v nastavení zařízení možnost NFC. Pak se znovu přihlaste.</string>
     <string name="smartcard_nfc_reminder_dialog_positive_button">Rozumím</string>
+
+    <string name="smartcard_removal_prompt_dialog_title">Teď můžete čipovou kartu odebrat.</string>
+    <string name="smartcard_removal_prompt_dialog_positive_button">Rozumím</string>
 </resources>

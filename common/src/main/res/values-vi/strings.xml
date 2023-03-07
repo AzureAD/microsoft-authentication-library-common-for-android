@@ -36,7 +36,7 @@
     <string name="smartcard_general_error_dialog_message">Đã xảy ra lỗi bất ngờ. Xin thử lại sau.</string>
 
     <string name="user_choice_dialog_title">Bạn muốn đăng nhập như thế nào?</string>
-    <string name="user_choice_dialog_on_device_name">Chứng chỉ trên thiết bị của bạn</string>
+    <string name="user_choice_dialog_on_device_name">Chứng chỉ trên thiết bị này</string>
     <string name="user_choice_dialog_smartcard_name">Thẻ thông minh vật lý</string>
     <string name="user_choice_dialog_positive_button">Tiếp tục</string>
     <string name="user_choice_dialog_negative_button">Hủy</string>
@@ -55,4 +55,7 @@
     <string name="smartcard_nfc_reminder_dialog_title">Bật NFC trong cài đặt thiết bị</string>
     <string name="smartcard_nfc_reminder_dialog_message">Để đăng nhập bằng NFC, hãy bật NFC trong cài đặt thiết bị của bạn. Sau đó đăng nhập lại.</string>
     <string name="smartcard_nfc_reminder_dialog_positive_button">Đã hiểu</string>
+
+    <string name="smartcard_removal_prompt_dialog_title">Giờ đây, bạn có thể loại bỏ thẻ thông minh của mình</string>
+    <string name="smartcard_removal_prompt_dialog_positive_button">Đã hiểu</string>
 </resources>

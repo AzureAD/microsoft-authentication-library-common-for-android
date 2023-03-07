@@ -118,7 +118,7 @@ public class CertBasedAuthFactory {
                 telemetryHelper.setUserChoice(CertBasedAuthChoice.SMARTCARD_CHOICE);
                 setUpForSmartcardCertBasedAuth(callback, telemetryHelper);
             }
-        }, new UserChoiceDialog.CancelCbaCallback() {
+        }, new ICancelCbaCallback() {
             @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
             @Override
             public void onCancel() {
@@ -136,6 +136,8 @@ public class CertBasedAuthFactory {
                                 @NonNull final ICertBasedAuthTelemetryHelper telemetryHelper) {
         mDialogHolder.dismissDialog();
         telemetryHelper.setResultFailure(USER_CANCEL_MESSAGE);
+        mNfcSmartcardCertBasedAuthManager.clearConnectionCallback();
+        mUsbSmartcardCertBasedAuthManager.clearConnectionCallback();
         callback.onReceived(null);
     }
 
@@ -162,9 +164,9 @@ public class CertBasedAuthFactory {
         if (mNfcSmartcardCertBasedAuthManager != null
                 && mNfcSmartcardCertBasedAuthManager.startDiscovery(mActivity)) {
             //Inform user to turn on NFC if they want to use NFC.
-            mDialogHolder.showSmartcardNfcReminderDialog(new SmartcardNfcReminderDialog.DismissCallback() {
+            mDialogHolder.showSmartcardNfcReminderDialog(new IDismissCallback() {
                 @Override
-                public void onClick() {
+                public void onDismiss() {
                     //If smartcard is already plugged in, go straight to cert picker.
                     if (mUsbSmartcardCertBasedAuthManager != null
                     && mUsbSmartcardCertBasedAuthManager.isDeviceConnected()) {
@@ -190,33 +192,31 @@ public class CertBasedAuthFactory {
      */
     private void showSmartcardPromptDialogAndSetConnectionCallback(@NonNull final CertBasedAuthChallengeHandlerCallback challengeHandlerCallback,
                                                                    @NonNull final ICertBasedAuthTelemetryHelper telemetryHelper) {
-        mDialogHolder.showSmartcardPromptDialog(new SmartcardPromptDialog.CancelCbaCallback() {
+        mDialogHolder.showSmartcardPromptDialog(new ICancelCbaCallback() {
             @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
             @Override
             public void onCancel() {
+                if (mNfcSmartcardCertBasedAuthManager != null) {
+                    mNfcSmartcardCertBasedAuthManager.stopDiscovery(mActivity);
+                }
                 onCancelHelper(challengeHandlerCallback, telemetryHelper);
             }
         });
 
         if (mUsbSmartcardCertBasedAuthManager != null) {
-            mUsbSmartcardCertBasedAuthManager.setConnectionCallback(new IUsbConnectionCallback() {
+            mUsbSmartcardCertBasedAuthManager.setConnectionCallback(new IConnectionCallback() {
                 @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
                 @Override
                 public void onCreateConnection() {
                     if (mNfcSmartcardCertBasedAuthManager != null) {
                         mNfcSmartcardCertBasedAuthManager.stopDiscovery(mActivity);
-                        mNfcSmartcardCertBasedAuthManager.clearConnectionCallback();
+                        clearAllSmartcardConnectionAndDisconnectionCallbacks();
                     }
                     challengeHandlerCallback.onReceived(new UsbSmartcardCertBasedAuthChallengeHandler(
                             mActivity,
                             mUsbSmartcardCertBasedAuthManager,
                             mDialogHolder,
                             telemetryHelper));
-                }
-
-                @Override
-                public void onClosedConnection() {
-                    //ConnectionCallback will be changed before ever reaching this method.
                 }
             });
         }
@@ -229,7 +229,7 @@ public class CertBasedAuthFactory {
             @Override
             public void onCreateConnection() {
                 if (mUsbSmartcardCertBasedAuthManager != null) {
-                    mUsbSmartcardCertBasedAuthManager.clearConnectionCallback();
+                    clearAllSmartcardConnectionAndDisconnectionCallbacks();
                 }
                 mDialogHolder.showSmartcardNfcLoadingDialog();
                 challengeHandlerCallback.onReceived(new NfcSmartcardCertBasedAuthChallengeHandler(
@@ -239,6 +239,15 @@ public class CertBasedAuthFactory {
                         telemetryHelper));
             }
         });
+    }
+
+    /**
+     * Clears all connection and disconnection callbacks for smartcard managers.
+     */
+    public void clearAllSmartcardConnectionAndDisconnectionCallbacks() {
+        mUsbSmartcardCertBasedAuthManager.clearConnectionCallback();
+        mUsbSmartcardCertBasedAuthManager.clearDisconnectionCallback();
+        mNfcSmartcardCertBasedAuthManager.clearConnectionCallback();
     }
 
     /**

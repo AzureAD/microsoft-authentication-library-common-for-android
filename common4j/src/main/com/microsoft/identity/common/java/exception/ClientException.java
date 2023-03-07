@@ -304,6 +304,11 @@ public class ClientException extends BaseException {
     public static final String INVALID_BROKER_BUNDLE = "invalid_broker_bundle";
 
     /**
+     * A valid broker was not found using account manager.
+     */
+    public static final String NOT_VALID_BROKER_FOUND = "not_valid_broker_found";
+
+    /**
      * An account manager operation failed.
      */
     public static final String ACCOUNT_MANAGER_OPERATION_ERROR = "account_manager_operation_error";
@@ -367,6 +372,11 @@ public class ClientException extends BaseException {
      * The broker log upload feature is disabled.
      */
     public static final String LOG_UPLOAD_TO_POWERLIFT_FEATURE_DISABLED = "log_upload_to_powerlift_feature_disabled";
+
+    /**
+     * The android version used does not support the operation.
+     */
+    public static final String UNSUPPORTED_ANDROID_API_VERSION = "unsupported_android_api_version";
 
     /**
      * Constructor of ClientException.

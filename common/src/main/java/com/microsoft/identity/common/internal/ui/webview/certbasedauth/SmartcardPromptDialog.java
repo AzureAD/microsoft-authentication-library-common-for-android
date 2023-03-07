@@ -36,14 +36,14 @@ import lombok.NonNull;
  */
 public class SmartcardPromptDialog extends SmartcardDialog {
 
-    private final CancelCbaCallback mCancelCbaCallback;
+    private final ICancelCbaCallback mCancelCbaCallback;
 
     /**
      * Creates new instance of SmartcardPromptDialog.
      *
      * @param activity Host activity.
      */
-    public SmartcardPromptDialog(@NonNull final CancelCbaCallback cancelCbaCallback,
+    public SmartcardPromptDialog(@NonNull final ICancelCbaCallback cancelCbaCallback,
                                  @NonNull final Activity activity) {
         super(activity);
         mCancelCbaCallback = cancelCbaCallback;
@@ -86,17 +86,11 @@ public class SmartcardPromptDialog extends SmartcardDialog {
     }
 
     /**
-     * Should dismiss dialog and call the appropriate methods to help cancel the CBA flow.
+     * Called when smartcard is unexpectedly disconnected via USB from device.
+     * Used to run any cancellation logic needed (without the cancel button needing to be pressed).
      */
     @Override
-    void onCancelCba() {
+    void onUnexpectedUnplug() {
         mCancelCbaCallback.onCancel();
-    }
-
-    /**
-     * Callback interface for when CBA is being cancelled.
-     */
-    public interface CancelCbaCallback {
-        void onCancel();
     }
 }

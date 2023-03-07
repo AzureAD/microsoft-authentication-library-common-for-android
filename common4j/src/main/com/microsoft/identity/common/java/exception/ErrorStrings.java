@@ -161,6 +161,11 @@ public final class ErrorStrings {
     public static final String INVALID_REQUEST = "invalid_request";
 
     /**
+     * The request's Redirect URI is not matching the Redirect URI configured for the application.
+     */
+    public static final String INVALID_CLIENT = "invalid_client";
+
+    /**
      * The client is not authorized to request an authorization code.
      */
     public static final String UNAUTHORIZED_CLIENT = "unauthorized_client";

@@ -36,7 +36,7 @@
     <string name="smartcard_general_error_dialog_message">Er is een onverwachte fout opgetreden. Probeer het later opnieuw.</string>
 
     <string name="user_choice_dialog_title">Hoe wilt u zich aanmelden?</string>
-    <string name="user_choice_dialog_on_device_name">Certificaat op uw apparaat</string>
+    <string name="user_choice_dialog_on_device_name">Certificaat op dit apparaat</string>
     <string name="user_choice_dialog_smartcard_name">Fysieke smartcard</string>
     <string name="user_choice_dialog_positive_button">Doorgaan</string>
     <string name="user_choice_dialog_negative_button">Annuleren</string>
@@ -55,4 +55,7 @@
     <string name="smartcard_nfc_reminder_dialog_title">NFC inschakelen in apparaatinstellingen</string>
     <string name="smartcard_nfc_reminder_dialog_message">Als u zich wilt aanmelden met NFC, schakelt u NFC in de apparaatinstellingen in. Meld u vervolgens opnieuw aan.</string>
     <string name="smartcard_nfc_reminder_dialog_positive_button">OK</string>
+
+    <string name="smartcard_removal_prompt_dialog_title">U kunt nu uw smartcard verwijderen</string>
+    <string name="smartcard_removal_prompt_dialog_positive_button">OK</string>
 </resources>

@@ -36,7 +36,7 @@
     <string name="smartcard_general_error_dialog_message">Ocorreu un erro inesperado. Ténteo novamente máis tarde.</string>
 
     <string name="user_choice_dialog_title">Como quere iniciar sesión?</string>
-    <string name="user_choice_dialog_on_device_name">Certificado no dispositivo</string>
+    <string name="user_choice_dialog_on_device_name">Certificado neste dispositivo</string>
     <string name="user_choice_dialog_smartcard_name">Cartón intelixente físico</string>
     <string name="user_choice_dialog_positive_button">Continuar</string>
     <string name="user_choice_dialog_negative_button">Cancelar</string>
@@ -55,4 +55,7 @@
     <string name="smartcard_nfc_reminder_dialog_title">Activar a NFC na configuración do dispositivo</string>
     <string name="smartcard_nfc_reminder_dialog_message">Para iniciar sesión con NFC, active a NFC na configuración do dispositivo. Logo inicie sesión de novo.</string>
     <string name="smartcard_nfc_reminder_dialog_positive_button">Entendido</string>
+
+    <string name="smartcard_removal_prompt_dialog_title">Agora podes eliminar o teu cartón intelixente</string>
+    <string name="smartcard_removal_prompt_dialog_positive_button">Entendido</string>
 </resources>

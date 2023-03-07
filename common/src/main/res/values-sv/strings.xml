@@ -36,7 +36,7 @@
     <string name="smartcard_general_error_dialog_message">Ett oväntat fel uppstod. Försök igen senare.</string>
 
     <string name="user_choice_dialog_title">Hur vill du logga in?</string>
-    <string name="user_choice_dialog_on_device_name">Certifikat på din enhet</string>
+    <string name="user_choice_dialog_on_device_name">Certifikat på den här enheten</string>
     <string name="user_choice_dialog_smartcard_name">Fysiskt smartkort</string>
     <string name="user_choice_dialog_positive_button">Fortsätt</string>
     <string name="user_choice_dialog_negative_button">Avbryt</string>
@@ -55,4 +55,7 @@
     <string name="smartcard_nfc_reminder_dialog_title">Aktivera NFC i enhetsinställningarna</string>
     <string name="smartcard_nfc_reminder_dialog_message">Aktivera NFC i enhetsinställningarna om du vill logga in med NFC. Logga sedan in igen.</string>
     <string name="smartcard_nfc_reminder_dialog_positive_button">Jag förstår</string>
+
+    <string name="smartcard_removal_prompt_dialog_title">Nu kan du ta bort smartkortet</string>
+    <string name="smartcard_removal_prompt_dialog_positive_button">Jag förstår</string>
 </resources>

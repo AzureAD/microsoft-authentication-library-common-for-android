@@ -36,7 +36,7 @@
     <string name="smartcard_general_error_dialog_message">An unexpected error has occurred. Please try again later.</string>
 
     <string name="user_choice_dialog_title">How would you like to sign in?</string>
-    <string name="user_choice_dialog_on_device_name">Certificate on your device</string>
+    <string name="user_choice_dialog_on_device_name">Certificate on this device</string>
     <string name="user_choice_dialog_smartcard_name">Physical smart card</string>
     <string name="user_choice_dialog_positive_button">Continue</string>
     <string name="user_choice_dialog_negative_button">Cancel</string>
@@ -55,5 +55,8 @@
     <string name="smartcard_nfc_reminder_dialog_title">Turn on NFC in device settings</string>
     <string name="smartcard_nfc_reminder_dialog_message">To sign in with NFC, turn on NFC in your device settings. Then sign in again.</string>
     <string name="smartcard_nfc_reminder_dialog_positive_button">Got it</string>
+
+    <string name="smartcard_removal_prompt_dialog_title">You can now remove your smart card</string>
+    <string name="smartcard_removal_prompt_dialog_positive_button">Got it</string>
 
 </resources>

@@ -37,7 +37,7 @@ public class SmartcardErrorDialog extends SmartcardDialog {
 
     private final int mTitleStringResourceId;
     private final int mMessageStringResourceId;
-    private final DismissCallback mDismissCallback;
+    private final IDismissCallback mDismissCallback;
 
     /**
      * Create new instance of SmartcardErrorDialog.
@@ -48,7 +48,7 @@ public class SmartcardErrorDialog extends SmartcardDialog {
      */
     public SmartcardErrorDialog(final int titleStringResourceId,
                                 final int messageStringResourceId,
-                                @NonNull final DismissCallback dismissCallback,
+                                @NonNull final IDismissCallback dismissCallback,
                                 @NonNull final Activity activity) {
         super(activity);
         mTitleStringResourceId = titleStringResourceId;
@@ -74,7 +74,7 @@ public class SmartcardErrorDialog extends SmartcardDialog {
                         .setPositiveButton(R.string.smartcard_error_dialog_positive_button, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                mDismissCallback.onClick();
+                                mDismissCallback.onDismiss();
                             }
                         });
                 final AlertDialog dialog = builder.create();
@@ -85,7 +85,7 @@ public class SmartcardErrorDialog extends SmartcardDialog {
                 dialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
                     @Override
                     public void onCancel(DialogInterface dialog) {
-                        mDismissCallback.onClick();
+                        mDismissCallback.onDismiss();
                     }
                 });
                 mDialog = dialog;
@@ -94,18 +94,11 @@ public class SmartcardErrorDialog extends SmartcardDialog {
     }
 
     /**
-     * Handles scenario when CBA is canceled unexpectedly (for example. when a YubiKey is unplugged while a dialog is showing).
+     * Called when smartcard is unexpectedly disconnected via USB from device.
+     * Used to run any cancellation logic needed (without the cancel button needing to be pressed).
      */
     @Override
-    void onCancelCba() {
-        //Handle cancelling the same as the positive button.
-        mDismissCallback.onClick();
-    }
-
-    /**
-     * Callback interface for when dialog is to be dismissed (usually by positive button click or back button).
-     */
-    public interface DismissCallback {
-        void onClick();
+    void onUnexpectedUnplug() {
+        mDismissCallback.onDismiss();
     }
 }

@@ -23,11 +23,11 @@
 package com.microsoft.identity.common.internal.ui.webview.certbasedauth;
 
 /**
- * Callback methods to be run upon initial usb connection and disconnection of a smartcard device.
+ * Callback methods to be run upon initial disconnection of a smartcard device.
  */
-public interface IUsbConnectionCallback extends IConnectionCallback {
+public interface IDisconnectionCallback {
     /**
-     * Logic to be run upon disconnection of a smartcard device via usb.
+     * Logic to be run upon disconnection of a smartcard device.
      */
     void onClosedConnection();
 }

@@ -36,7 +36,7 @@
     <string name="smartcard_general_error_dialog_message">Ustekabeko errore bat gertatu da. Saiatu berriro geroago.</string>
 
     <string name="user_choice_dialog_title">Nola hasi nahi duzu saioa?</string>
-    <string name="user_choice_dialog_on_device_name">Gailuko ziurtagiria</string>
+    <string name="user_choice_dialog_on_device_name">Ziurtagiria gailu honetan</string>
     <string name="user_choice_dialog_smartcard_name">Txartel adimendun fisikoa</string>
     <string name="user_choice_dialog_positive_button">Jarraitu</string>
     <string name="user_choice_dialog_negative_button">Utzi</string>
@@ -55,4 +55,7 @@
     <string name="smartcard_nfc_reminder_dialog_title">Aktibatu NFC gailuaren ezarpenetan</string>
     <string name="smartcard_nfc_reminder_dialog_message">NFCrekin saioa hasteko, aktibatu NFC gailuaren ezarpenetan. Ondoren, hasi saioa berriro.</string>
     <string name="smartcard_nfc_reminder_dialog_positive_button">Ados</string>
+
+    <string name="smartcard_removal_prompt_dialog_title">Txartel adimenduna kendu dezakezu orain</string>
+    <string name="smartcard_removal_prompt_dialog_positive_button">Ados</string>
 </resources>
