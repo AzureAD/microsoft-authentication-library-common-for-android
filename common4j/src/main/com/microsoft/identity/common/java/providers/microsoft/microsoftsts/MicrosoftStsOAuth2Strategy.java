@@ -120,7 +120,7 @@ public class MicrosoftStsOAuth2Strategy
      */
     private static final String RESOURCE_DEFAULT_SCOPE = "/.default";
 
-    private final HttpClient httpClient = UrlConnectionHttpClient.getDefaultInstance();
+    protected final HttpClient httpClient = UrlConnectionHttpClient.getDefaultInstance();
 
     /**
      * Constructor of MicrosoftStsOAuth2Strategy.
