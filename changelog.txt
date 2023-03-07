@@ -1,8 +1,9 @@
 vNext
 ----------
 
-V.10.1.0
+V.10.1.1
 ----------
+- [PATCH] V10.1.0 was incorrectly built with RC versions, need to increment to V10.1.1
 - [MINOR] Add dialogs to prompt user to remove smartcard within CBA flow (#1966)
 - [PATCH] Minor fixes to stop NFC discovery upon cancellation of some dialogs (#1972)
 - [PATCH] Add metric to measure network check success, failure counts (#1962)
