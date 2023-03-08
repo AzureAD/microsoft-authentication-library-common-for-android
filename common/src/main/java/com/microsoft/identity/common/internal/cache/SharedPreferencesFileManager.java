@@ -34,7 +34,7 @@ import androidx.annotation.VisibleForTesting;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.cache.IMultiTypeNameValueStorage;
 import com.microsoft.identity.common.java.crypto.IKeyAccessor;
-import com.microsoft.identity.common.java.crypto.KeyAccessorStringAdapter;
+import com.microsoft.identity.common.java.crypto.UTF8KeyAccessorStringAdapter;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.util.ported.Predicate;
@@ -59,7 +59,7 @@ public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage 
     private final LruCache<String, String> fileCache = new LruCache<>(256);
     @GuardedBy("cacheLock")
     private final SharedPreferences mSharedPreferences;
-    private final KeyAccessorStringAdapter mEncryptionManager;
+    private final UTF8KeyAccessorStringAdapter mEncryptionManager;
     @VisibleForTesting
     private final String mSharedPreferencesFileName;
     // This is making a huge assumption - that we don't need to separate this cache by context.
@@ -121,7 +121,7 @@ public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage 
         mSharedPreferencesFileName = name;
 
         if (encryptionManager != null) {
-            mEncryptionManager = new KeyAccessorStringAdapter(encryptionManager);
+            mEncryptionManager = new UTF8KeyAccessorStringAdapter(encryptionManager);
         } else {
             mEncryptionManager = null;
         }

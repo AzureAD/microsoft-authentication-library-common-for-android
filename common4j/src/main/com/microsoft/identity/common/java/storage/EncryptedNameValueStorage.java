@@ -23,7 +23,7 @@
 package com.microsoft.identity.common.java.storage;
 
 import com.microsoft.identity.common.java.crypto.IKeyAccessor;
-import com.microsoft.identity.common.java.crypto.KeyAccessorStringAdapter;
+import com.microsoft.identity.common.java.crypto.UTF8KeyAccessorStringAdapter;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.java.logging.Logger;
@@ -62,7 +62,7 @@ public class EncryptedNameValueStorage<T> implements INameValueStorage<T> {
     private final INameValueStorage<String> mRawNameValueStorage;
 
     @NonNull
-    private final KeyAccessorStringAdapter mEncryptionManager;
+    private final UTF8KeyAccessorStringAdapter mEncryptionManager;
 
     @NonNull
     private final IGenericTypeStringAdapter<T> mStringAdapter;
@@ -81,7 +81,7 @@ public class EncryptedNameValueStorage<T> implements INameValueStorage<T> {
                                      @NonNull final IKeyAccessor encryptionManager,
                                      @NonNull final IGenericTypeStringAdapter<T> stringAdapter) {
         this.mRawNameValueStorage = rawNameValueStringStorage;
-        this.mEncryptionManager = new KeyAccessorStringAdapter(encryptionManager);
+        this.mEncryptionManager = new UTF8KeyAccessorStringAdapter(encryptionManager);
         this.mStringAdapter = stringAdapter;
     }
 
