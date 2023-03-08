@@ -22,13 +22,15 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.broker;
 
-import lombok.NonNull;
-
-public interface IBrokerAccount {
+interface IBrokerAccount {
 
     /**
      * Get account's (unique) username.
-     * */
-    @NonNull
-    String getUsername();
+     */
+    fun getUsername(): String
+
+    /**
+     * Get account's type.
+     */
+    fun getType(): String
 }
