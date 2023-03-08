@@ -32,7 +32,7 @@ interface IKeyAccessorStringAdapter {
      * @return the encoded ciphertext.
      */
     @Throws(ClientException::class)
-    fun encrypt(plainText: String): String?
+    fun encrypt(plainText: String): String
 
     /**
      * Decrypt an encoded ciphertext, returning the decrypted values.
@@ -41,5 +41,5 @@ interface IKeyAccessorStringAdapter {
      * @return the decrypted string.
      */
     @Throws(ClientException::class)
-    fun decrypt(cipherText: String): String?
+    fun decrypt(cipherText: String): String
 }
