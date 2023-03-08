@@ -1,5 +1,6 @@
 vNext
 ----------
+- [MINOR] Make changes for jetpack datastore broker support (#1986)
 - [MINOR] Add dialogs to prompt user to remove smartcard within CBA flow (#1966)
 - [PATCH] Minor fixes to stop NFC discovery upon cancellation of some dialogs (#1972)
 - [PATCH] Add metric to measure network check success, failure counts (#1962)
