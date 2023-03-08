@@ -1288,6 +1288,7 @@ public class MsalOAuth2TokenCache
                     accountRecord
             );
 
+            // may use idToken entries
             if (idTokensForAccount == null || idTokensForAccount.size() == 0) {
                 // Skip returning account record if there is no corresponding idToken record in the cache for the given clientId
                 continue;

@@ -25,6 +25,8 @@ package com.microsoft.identity.common.internal.request;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ACCOUNT_CLIENTID_KEY;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ACCOUNT_CORRELATIONID;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ACCOUNT_HOME_ACCOUNT_ID;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ACCOUNT_HOST_CLIENTID_KEY;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ACCOUNT_HOST_REDIRECT;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ACCOUNT_REDIRECT;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.AUTH_SCHEME_PARAMS_POP;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_REQUEST_V2;
@@ -314,6 +316,8 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         final Bundle requestBundle = new Bundle();
         requestBundle.putString(ACCOUNT_CLIENTID_KEY, parameters.getClientId());
         requestBundle.putString(ACCOUNT_REDIRECT, parameters.getRedirectUri());
+        requestBundle.putString(ACCOUNT_HOST_CLIENTID_KEY, parameters.getBrkClientId());
+        requestBundle.putString(ACCOUNT_HOST_REDIRECT, parameters.getBrkRedirectUri());
         requestBundle.putString(NEGOTIATED_BP_VERSION_KEY, negotiatedBrokerProtocolVersion);
         requestBundle.putBoolean(
                 CAN_FOCI_APPS_CONSTRUCT_ACCOUNTS_FROM_PRT_ID_TOKEN_KEY,

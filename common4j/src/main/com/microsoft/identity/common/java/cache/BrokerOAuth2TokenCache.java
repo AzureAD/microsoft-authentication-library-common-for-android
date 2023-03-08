@@ -503,7 +503,7 @@ public class BrokerOAuth2TokenCache
                     targetCache = initializeProcessUidCache(getComponents(), mUid);
                 }
 
-                 result = targetCache.saveAndLoadAggregatedAccountData(
+                result = targetCache.saveAndLoadAggregatedAccountData(
                         oAuth2Strategy,
                         request,
                         response
@@ -534,6 +534,16 @@ public class BrokerOAuth2TokenCache
                 ((MsalOAuth2TokenCache) targetCache).saveRefreshTokenForNAA(oAuth2Strategy,
                         request,
                         response);
+//                targetCache = initializeProcessUidCacheForNestedApp(getComponents(), mUid, request.getClientId());
+//                result = targetCache.saveAndLoadAggregatedAccountData(
+//                        oAuth2Strategy,
+//                        request,
+//                        response
+//                );
+//                OAuth2TokenCache hostAppTargetCache = initializeProcessUidCacheForNestedApp(getComponents(), mUid, request.getBrkClientId());
+//                ((MsalOAuth2TokenCache) hostAppTargetCache).saveRefreshTokenForNAA(oAuth2Strategy,
+//                        request,
+//                        response);
             }
             // The 0th element contains the record we *just* saved. Other records are corollary data.
             final ICacheRecord justSavedRecord = result.get(0);
@@ -979,13 +989,22 @@ public class BrokerOAuth2TokenCache
                     result.add(mFociCache);
                     containsFoci = true;
                 } else if (!processUidCacheInitialized) {
-                    // App is not foci, see if we can find its real cache...
-                    final OAuth2TokenCache candidateCache = initializeProcessUidCache(getComponents(), mUid);
+//                    // it could be a nested app request. so first check for nested app cache
+//                    final OAuth2TokenCache candidateCacheForNestedApp = initializeProcessUidCacheForNestedApp(getComponents(), mUid, metadata.getClientId());
+//                    if (candidateCacheForNestedApp != null) {
+//                        result.add(candidateCacheForNestedApp);
+//                        processUidCacheInitialized = true;
+//                    }
 
-                    if (null != candidateCache) {
+
+                    if (!processUidCacheInitialized) {
+                        // App is not foci, see if we can find its real cache...
+                        final OAuth2TokenCache candidateCache = initializeProcessUidCache(getComponents(), mUid);
                         result.add(candidateCache);
                         processUidCacheInitialized = true;
                     }
+
+
                 }
             }
         }
@@ -1713,6 +1732,36 @@ public class BrokerOAuth2TokenCache
         return getTokenCache(components, sharedPreferencesFileManager, false);
     }
 
+    private MsalOAuth2TokenCache initializeProcessUidCacheForNestedApp(@NonNull final IPlatformComponents components,
+                                                                       final int uid, final String clientId) {
+        final String methodName = ":initializeProcessUidCache";
+
+        Logger.verbose(
+                TAG + methodName,
+                "Initializing uid cache."
+        );
+
+        if (null != mDelegate) {
+            Logger.warn(
+                    TAG + methodName,
+                    "Using swapped delegate cache."
+            );
+
+            return mDelegate.getTokenCache(components, uid);
+        }
+
+        final INameValueStorage<String> sharedPreferencesFileManager =
+                components.getEncryptedNameValueStore(
+                        SharedPreferencesAccountCredentialCache
+                                .getBrokerUidSequesteredFilenameForNestedApp(uid, clientId),
+                        components.
+                                getStorageEncryptionManager(),
+                        String.class
+                );
+
+        return getTokenCache(components, sharedPreferencesFileManager, false);
+    }
+
     private static MicrosoftFamilyOAuth2TokenCache initializeFociCache(@NonNull final IPlatformComponents components) {
         final String methodName = ":initializeFociCache";
         Logger.verbose(
@@ -1778,7 +1827,11 @@ public class BrokerOAuth2TokenCache
             if (isFoci) {
                 targetCache = mFociCache;
             } else {
-                targetCache = initializeProcessUidCache(getComponents(), metadata.getUid());
+//                // First lookup for nested app cache
+//                targetCache = initializeProcessUidCacheForNestedApp(getComponents(), metadata.getUid(), metadata.getClientId());
+                if (targetCache == null) {
+                    targetCache = initializeProcessUidCache(getComponents(), metadata.getUid());
+                }
             }
         }
 

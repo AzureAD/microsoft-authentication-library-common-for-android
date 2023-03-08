@@ -733,6 +733,11 @@ public final class AuthenticationConstants {
         public static final String ACCOUNT_CLIENTID_KEY = "account.clientid.key";
 
         /**
+         * String of account client id key.
+         */
+        public static final String ACCOUNT_HOST_CLIENTID_KEY = "account.hostClientid.key";
+
+        /**
          * String of account client secret key.
          */
         public static final String ACCOUNT_CLIENT_SECRET_KEY = "account.client.secret.key";
@@ -776,6 +781,11 @@ public final class AuthenticationConstants {
          * String of account redirect.
          */
         public static final String ACCOUNT_REDIRECT = "account.redirect";
+
+        /**
+         * String of account redirect.
+         */
+        public static final String ACCOUNT_HOST_REDIRECT = "account.host.redirect";
 
         /**
          * String of account authority.

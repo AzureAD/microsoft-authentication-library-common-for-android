@@ -75,6 +75,20 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
                 + uid;
     }
 
+    /**
+     * Returns the generated filename for UID-specific caches for nested apps
+     *
+     * @param uid The uid of the current (or targeted) application.
+     * @return The uid-based cache filename.
+     */
+    public static String getBrokerUidSequesteredFilenameForNestedApp(final int uid, final String clientId) {
+        return DEFAULT_ACCOUNT_CREDENTIAL_SHARED_PREFERENCES
+                + ".uid-"
+                + uid
+                + ".clientId-"
+                + clientId;
+    }
+
     private static final AccountRecord EMPTY_ACCOUNT = new AccountRecord();
     private static final AccessTokenRecord EMPTY_AT = new AccessTokenRecord();
     private static final RefreshTokenRecord EMPTY_RT = new RefreshTokenRecord();
