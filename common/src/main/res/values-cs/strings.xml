@@ -10,12 +10,12 @@
     <string name="http_auth_dialog_cancel">Zrušit</string>
 
     <!-- strings for CBA dialogs and layouts -->
-    <string name="smartcard_cert_dialog_title">Zvolte certifikát čipové karty pro přihlášení</string>
+    <string name="smartcard_cert_dialog_title">Vyberte certifikát, který se má použít k přihlášení</string>
     <string name="smartcard_cert_dialog_positive_button">Pokračovat</string>
     <string name="smartcard_cert_dialog_negative_button">Zrušit</string>
 
     <string name="smartcard_pin_dialog_title">Odemknout čipovou kartu</string>
-    <string name="smartcard_pin_dialog_message">Zadejte PIN kód čipové karty pro přístup k certifikátu a přihlaste se</string>
+    <string name="smartcard_pin_dialog_message">Zadejte PIN kód čipové karty pro přístup k certifikátu a přihlaste se.</string>
     <string name="smartcard_pin_dialog_positive_button">Odemknout</string>
     <string name="smartcard_pin_dialog_negative_button">Zrušit</string>
     <string name="smartcard_pin_dialog_error_message">Pin kód, který jste zadali, byl nesprávný</string>
@@ -30,8 +30,32 @@
     <string name="smartcard_early_unplug_dialog_message">Zařízení čipové karty se odebralo. Než se znovu pokusíte přihlásit, znovu vložte zařízení.</string>
 
     <string name="smartcard_no_cert_dialog_title">Nenašly se žádné použitelné certifikáty.</string>
-    <string name="smartcard_no_cert_dialog_message">Ověřte prosím, že se váš certifikát správně zřídil na zařízení s čipovou kartou.</string>
+    <string name="smartcard_no_cert_dialog_message">Ověřte, že se váš certifikát správně zřídil na zařízení s čipovou kartou.</string>
 
     <string name="smartcard_general_error_dialog_title">Zkuste to znovu později</string>
     <string name="smartcard_general_error_dialog_message">Je nám líto, ale objevila se nečekaná chyba. Zkuste to prosím znovu později.</string>
+
+    <string name="user_choice_dialog_title">Jak se chcete přihlásit?</string>
+    <string name="user_choice_dialog_on_device_name">Certifikát na tomto zařízení</string>
+    <string name="user_choice_dialog_smartcard_name">Fyzická čipová karta</string>
+    <string name="user_choice_dialog_positive_button">Pokračovat</string>
+    <string name="user_choice_dialog_negative_button">Zrušit</string>
+
+    <string name="smartcard_prompt_dialog_title">Příprava čipové karty</string>
+    <string name="smartcard_prompt_dialog_message">Připojte nebo podržte čipovou kartu na zadní straně telefonu.</string>
+    <string name="smartcard_prompt_dialog_negative_button">Zrušit</string>
+
+    <string name="smartcard_nfc_loading_dialog_title">Čtení čipové karty</string>
+    <string name="smartcard_nfc_loading_dialog_message">Udržujte čipovou kartu na místě.</string>
+
+    <string name="smartcard_nfc_prompt_dialog_title">Příprava čipové karty</string>
+    <string name="smartcard_nfc_prompt_dialog_message">Podržte čipovou kartu na zadní straně telefonu.</string>
+    <string name="smartcard_nfc_prompt_dialog_negative_button">Zrušit</string>
+
+    <string name="smartcard_nfc_reminder_dialog_title">Zapnutí NFC v nastavení zařízení</string>
+    <string name="smartcard_nfc_reminder_dialog_message">Pokud se chcete přihlásit pomocí NFC, zapněte v nastavení zařízení možnost NFC. Pak se znovu přihlaste.</string>
+    <string name="smartcard_nfc_reminder_dialog_positive_button">Rozumím</string>
+
+    <string name="smartcard_removal_prompt_dialog_title">Teď můžete čipovou kartu odebrat.</string>
+    <string name="smartcard_removal_prompt_dialog_positive_button">Rozumím</string>
 </resources>

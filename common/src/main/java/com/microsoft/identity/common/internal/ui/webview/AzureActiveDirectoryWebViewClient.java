@@ -35,13 +35,15 @@ import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.broker.PackageHelper;
-import com.microsoft.identity.common.internal.ui.webview.challengehandlers.CertBasedAuthFactory;
-import com.microsoft.identity.common.internal.ui.webview.challengehandlers.ICertBasedAuthChallengeHandler;
+import com.microsoft.identity.common.internal.ui.webview.certbasedauth.AbstractSmartcardCertBasedAuthChallengeHandler;
+import com.microsoft.identity.common.internal.ui.webview.certbasedauth.AbstractCertBasedAuthChallengeHandler;
+import com.microsoft.identity.common.internal.ui.webview.certbasedauth.CertBasedAuthFactory;
 import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallenge;
 import com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallengeFactory;
@@ -79,7 +81,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     public static final String ERROR_DESCRIPTION = "error_description";
     private final String mRedirectUrl;
     private final CertBasedAuthFactory mCertBasedAuthFactory;
-    private ICertBasedAuthChallengeHandler mCertBasedAuthChallengeHandler;
+    private AbstractCertBasedAuthChallengeHandler mCertBasedAuthChallengeHandler;
 
     public AzureActiveDirectoryWebViewClient(@NonNull final Activity activity,
                                              @NonNull final IAuthorizationCompletionCallback completionCallback,
@@ -461,8 +463,18 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         if (mCertBasedAuthChallengeHandler != null) {
             mCertBasedAuthChallengeHandler.cleanUp();
         }
-        mCertBasedAuthChallengeHandler = mCertBasedAuthFactory.createCertBasedAuthChallengeHandler();
-        mCertBasedAuthChallengeHandler.processChallenge(clientCertRequest);
+        mCertBasedAuthFactory.createCertBasedAuthChallengeHandler(new CertBasedAuthFactory.CertBasedAuthChallengeHandlerCallback() {
+            @Override
+            public void onReceived(@Nullable final AbstractCertBasedAuthChallengeHandler challengeHandler) {
+                mCertBasedAuthChallengeHandler = challengeHandler;
+                if (mCertBasedAuthChallengeHandler == null) {
+                    //User cancelled out of CBA.
+                    clientCertRequest.cancel();
+                    return;
+                }
+                mCertBasedAuthChallengeHandler.processChallenge(clientCertRequest);
+            }
+        });
     }
 
     /**
@@ -476,14 +488,24 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     }
 
     /**
-     * A wrapper to emit telemetry for results from certificate based authentication (CBA) if CBA occurred.
-     * @param response a RawAuthorizationResult object received upon a challenge response received.
+     * Call methods to be run before sending auth results.
+     * @param response {@link RawAuthorizationResult}
+     * @param callback {@link ISendResultCallback}
      */
-    public void emitTelemetryForCertBasedAuthResult(@NonNull final RawAuthorizationResult response) {
-        if (mCertBasedAuthChallengeHandler != null) {
-            //The challenge handler checks if CBA was proceeded with and emits telemetry.
-            mCertBasedAuthChallengeHandler.emitTelemetryForCertBasedAuthResults(response);
+    public void finalizeBeforeSendingResult(@NonNull final RawAuthorizationResult response,
+                                            @NonNull final ISendResultCallback callback) {
+        if (mCertBasedAuthChallengeHandler == null) {
+            callback.onResultReady();
+            return;
         }
+        //The challenge handler checks if CBA was proceeded with and emits telemetry.
+        mCertBasedAuthChallengeHandler.emitTelemetryForCertBasedAuthResults(response);
+        if (!(mCertBasedAuthChallengeHandler instanceof AbstractSmartcardCertBasedAuthChallengeHandler)) {
+            callback.onResultReady();
+            return;
+        }
+        //The challenge handler will make sure no smartcard is connected before result is sent.
+        ((AbstractSmartcardCertBasedAuthChallengeHandler<?>)mCertBasedAuthChallengeHandler).promptSmartcardRemovalForResult(callback);
     }
 
 }

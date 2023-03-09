@@ -72,6 +72,24 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
     private final String mUtid;
 
     /**
+     * Since some physical application packages share client ids we want to be able to distinguish between
+     * these relative to access tokens in the cache.
+     */
+    @SuppressFBWarnings("SE_TRANSIENT_FIELD_NOT_RESTORED")
+    @Getter
+    @Accessors(prefix = "m")
+    private final transient String mApplicationIdentifier;
+
+    /**
+     * Since some physical application packages share client ids we want to be able to distinguish between
+     * these relative to access tokens in the cache.
+     */
+    @SuppressFBWarnings("SE_TRANSIENT_FIELD_NOT_RESTORED")
+    @Getter
+    @Accessors(prefix = "m")
+    private final transient String mMamEnrollmentIdentifier;
+
+    /**
      * Version name of the installed Company Portal app.
      */
     @Expose()
@@ -141,6 +159,8 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
         mTokenScope = builder.mTokenScope;
         mSlice = builder.mSlice;
         mFlightParameters = builder.mFlightParameters;
+        mApplicationIdentifier = builder.mApplicationIdentifier;
+        mMamEnrollmentIdentifier = builder.mMamEnrollmentIdentifier;
     }
 
     public static class Builder extends MicrosoftAuthorizationRequest.Builder<MicrosoftStsAuthorizationRequest.Builder> {
@@ -148,6 +168,8 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
         private String mUid;
         private String mUtid;
         private String mDisplayableId;
+        private String mApplicationIdentifier;
+        private String mMamEnrollmentIdentifier;
         private String mTokenScope;
         private String mCompanyPortalVersion;
         private String mPrompt;
@@ -161,6 +183,16 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
 
         public MicrosoftStsAuthorizationRequest.Builder setUtid(String utid) {
             mUtid = utid;
+            return self();
+        }
+
+        public MicrosoftStsAuthorizationRequest.Builder setApplicationIdentifier(String appliationIdentifier) {
+            mApplicationIdentifier = appliationIdentifier;
+            return self();
+        }
+
+        public MicrosoftStsAuthorizationRequest.Builder setMamEnrollmentIdentifier(String mamEnrollmentIdentifier) {
+            mMamEnrollmentIdentifier = mamEnrollmentIdentifier;
             return self();
         }
 

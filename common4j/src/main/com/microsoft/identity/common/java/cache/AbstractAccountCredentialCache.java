@@ -24,6 +24,8 @@ package com.microsoft.identity.common.java.cache;
 
 import static com.microsoft.identity.common.java.AuthenticationConstants.DEFAULT_SCOPES;
 
+import com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeInternal;
+import com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeWithClientKeyInternal;
 import com.microsoft.identity.common.java.dto.AccessTokenRecord;
 import com.microsoft.identity.common.java.dto.AccountRecord;
 import com.microsoft.identity.common.java.dto.Credential;
@@ -32,6 +34,7 @@ import com.microsoft.identity.common.java.dto.IdTokenRecord;
 import com.microsoft.identity.common.java.dto.PrimaryRefreshTokenRecord;
 import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.java.logging.Logger;
+import com.microsoft.identity.common.java.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.java.util.StringUtil;
 
 import java.util.ArrayList;
@@ -130,6 +133,8 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
                                                                 @Nullable final String environment,
                                                                 @Nullable final CredentialType credentialType,
                                                                 @Nullable final String clientId,
+                                                                @Nullable final String applicationIdentifier,
+                                                                @Nullable final String mamEnrollmentIdentifier,
                                                                 @Nullable final String realm,
                                                                 @Nullable final String target,
                                                                 @Nullable final String authScheme,
@@ -140,6 +145,8 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
         final boolean mustMatchOnRealm = !StringUtil.isNullOrEmpty(realm);
         final boolean mustMatchOnTarget = !StringUtil.isNullOrEmpty(target);
         final boolean mustMatchOnClientId = !StringUtil.isNullOrEmpty(clientId);
+        final boolean mustMatchOnApplicationIdentifier = !StringUtil.isNullOrEmpty(applicationIdentifier);
+        final boolean mustMatchOnMamEnrollmentIdentifier = !StringUtil.isNullOrEmpty(mamEnrollmentIdentifier);
         final boolean mustMatchOnCredentialType = null != credentialType;
         final boolean mustMatchOnAuthScheme = mustMatchOnCredentialType
                 && !StringUtil.isNullOrEmpty(authScheme)
@@ -156,6 +163,10 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
                         + "Credential lookup filtered by target? [" + mustMatchOnTarget + "]"
                         + NEW_LINE
                         + "Credential lookup filtered by clientId? [" + mustMatchOnClientId + "]"
+                        + NEW_LINE
+                        + "Credential lookup filtered by applicationIdentifier? [" + mustMatchOnApplicationIdentifier + "]"
+                        + NEW_LINE
+                        + "Credential lookup filtered by mamEnrollmentIdentifier? [" + mustMatchOnMamEnrollmentIdentifier + "]"
                         + NEW_LINE
                         + "Credential lookup filtered by credential type? [" + mustMatchOnCredentialType + "]"
                         + NEW_LINE
@@ -183,6 +194,24 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
 
             if (mustMatchOnClientId) {
                 matches = matches && StringUtil.equalsIgnoreCaseTrimBoth(clientId, credential.getClientId());
+            }
+
+            if (mustMatchOnApplicationIdentifier) {
+                if (credential instanceof AccessTokenRecord) {
+                    final AccessTokenRecord accessToken = (AccessTokenRecord) credential;
+                    matches = matches && StringUtil.equalsIgnoreCaseTrimBoth(applicationIdentifier, accessToken.getApplicationIdentifier());
+                } else {
+                    Logger.verbose(TAG, "Query specified applicationIdentifier match, but credential type does not have application identifier");
+                }
+            }
+
+            if (mustMatchOnMamEnrollmentIdentifier) {
+                if (credential instanceof AccessTokenRecord) {
+                    final AccessTokenRecord accessToken = (AccessTokenRecord) credential;
+                    matches = matches && StringUtil.equalsIgnoreCaseTrimBoth(mamEnrollmentIdentifier, accessToken.getMamEnrollmentIdentifier());
+                } else {
+                    Logger.verbose(TAG, "Query specified mamEnrollmentIdentifier match, but credential type does not have MAM enrollment identifier");
+                }
             }
 
             if (mustMatchOnRealm && credential instanceof AccessTokenRecord) {
@@ -215,7 +244,14 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
                     atType = atType.trim();
                 }
 
-                matches = matches && authScheme.equalsIgnoreCase(atType);
+                if (TokenRequest.TokenType.POP.equalsIgnoreCase(atType)) {
+                    matches = matches && (
+                            authScheme.equalsIgnoreCase(PopAuthenticationSchemeWithClientKeyInternal.SCHEME_POP_WITH_CLIENT_KEY)
+                            || authScheme.equalsIgnoreCase(PopAuthenticationSchemeInternal.SCHEME_POP)
+                    );
+                } else {
+                    matches = matches && authScheme.equalsIgnoreCase(atType);
+                }
             }
 
             if(mustMatchOnKid && credential instanceof AccessTokenRecord) {

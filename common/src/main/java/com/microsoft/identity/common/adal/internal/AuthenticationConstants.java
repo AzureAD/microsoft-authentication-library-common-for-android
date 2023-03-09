@@ -603,9 +603,9 @@ public final class AuthenticationConstants {
         /**
          * The newest Msal-To-Broker protocol version.
          *
-         * @see <a href="ttps://identitydivision.visualstudio.com/DevEx/_git/AuthLibrariesApiReview?path=/%5BAndroid%5D%20Broker%20API/broker_protocol_versions.md">Android Auth Broker Protocol Versions</a>
+         * @see <a href="https://identitydivision.visualstudio.com/DevEx/_git/AuthLibrariesApiReview?path=/%5BAndroid%5D%20Broker%20API/broker_protocol_versions.md">Android Auth Broker Protocol Versions</a>
          */
-        public static final String MSAL_TO_BROKER_PROTOCOL_VERSION_CODE = "11.0";
+        public static final String MSAL_TO_BROKER_PROTOCOL_VERSION_CODE = "12.0";
 
         /**
          * A client id for requesting the SSO token.
@@ -1544,8 +1544,11 @@ public final class AuthenticationConstants {
 
         /**
          * Broker api path constant for execute device registration protocols.
+         * Note: The path was updated because in release 9.0.1 a part of the NEW WPJ API was exposed
+         * but the WpjController used in this release is still the legacy controller, which can
+         * produce errors if an app using the NEW WPJ API communicates with this version of the broker.
          */
-        public static final String DEVICE_REGISTRATION_PROTOCOLS_PATH = "/deviceRegistration/protocols";
+        public static final String DEVICE_REGISTRATION_PROTOCOLS_PATH = "/multipledeviceRegistration/protocols";
 
         /**
          * BrokerContentProvider URI code constant for MSAL-to-Broker hello request.

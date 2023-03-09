@@ -4,6 +4,14 @@ project.ext.vstsPassword = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN
 
 buildscript {
     apply from: rootProject.file("../gradle/versions.gradle")
+
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${rootProject.ext.kotlinVersion}"
+    }
 }
 
 allprojects {
