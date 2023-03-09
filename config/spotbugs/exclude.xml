@@ -32,4 +32,9 @@
     <Package name="com.microsoft.identity.common.java.commands.*" />
     <Bug pattern="RV_RETURN_VALUE_IGNORED_NO_SIDE_EFFECT" />
 </Match>
+    <Match>
+        <!-- Spotbugs doesn't seem to work well with kotlin...
+        https://github.com/spotbugs/spotbugs/issues/573 -->
+        <Source name="~.*\.kt"/>
+    </Match>
 </FindBugsFilter>
