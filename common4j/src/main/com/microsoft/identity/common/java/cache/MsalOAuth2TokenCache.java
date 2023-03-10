@@ -220,6 +220,53 @@ public class MsalOAuth2TokenCache
         return result.build();
     }
 
+//    ICacheRecord save(final @NonNull AccountRecord accountRecord,
+//                      final @NonNull IdTokenRecord idTokenRecord,
+//                      final @NonNull AccessTokenRecord accessTokenRecord,
+//                      final @Nullable RefreshTokenRecord refreshTokenRecord,
+//                      boolean isNAARequest) throws ClientException {
+//        final String methodName = ":save (4 arg)";
+//
+//        // Validate the supplied Accounts/Credentials
+//        if (!isAccountSchemaCompliant(accountRecord)) {
+//            throw new ClientException(ACCOUNT_IS_SCHEMA_NONCOMPLIANT);
+//        }
+//
+//        if (!isIdTokenSchemaCompliant(idTokenRecord)) {
+//            throw new ClientException(CREDENTIAL_IS_SCHEMA_NONCOMPLIANT, "[(ID)]");
+//        }
+//
+//        if (!isAccessTokenSchemaCompliant(accessTokenRecord)) {
+//            throw new ClientException(CREDENTIAL_IS_SCHEMA_NONCOMPLIANT, "[(AT)]");
+//        }
+//
+//        if (refreshTokenRecord != null && !isRefreshTokenSchemaCompliant(refreshTokenRecord)) {
+//            throw new ClientException(CREDENTIAL_IS_SCHEMA_NONCOMPLIANT, "[(RT)]");
+//        }
+//
+//        Logger.verbose(
+//                TAG + methodName,
+//                "Accounts/Credentials are valid.... proceeding"
+//        );
+//
+//        saveAccounts(accountRecord);
+//        saveCredentialsInternal(idTokenRecord, accessTokenRecord, refreshTokenRecord);
+//
+//        final CacheRecord.CacheRecordBuilder result = CacheRecord.builder();
+//        result.account(accountRecord);
+//        result.accessToken(accessTokenRecord);
+//        result.refreshToken(refreshTokenRecord);
+//
+//        if (CredentialType.V1IdToken.name().equalsIgnoreCase(idTokenRecord.getCredentialType())) {
+//            result.v1IdToken(idTokenRecord);
+//        } else {
+//            result.idToken(idTokenRecord);
+//        }
+//
+//        return result.build();
+//    }
+
+
     /**
      * @param accountRecord      The {@link AccountRecord} to store.
      * @param idTokenRecord      The {@link IdTokenRecord} to store.
@@ -1654,6 +1701,22 @@ public class MsalOAuth2TokenCache
             saveCredentialsInternal(refreshTokenToSave);
             // Remove old refresh tokens (except for the one we just saved) if it's MRRT or FRT
                 removeAllRefreshTokensExcept(accountToSave, refreshTokenToSave);
+        }
+    }
+
+    public void saveRefreshTokenForNAA(@Nullable final AccountRecord accountRecord,
+                                       @NonNull final RefreshTokenRecord refreshTokenRecord) throws ClientException {
+        final boolean isRefreshTokenCompliant = isRefreshTokenSchemaCompliant(refreshTokenRecord);
+        if (!isRefreshTokenCompliant) {
+            throw new ClientException(
+                    CREDENTIAL_IS_SCHEMA_NONCOMPLIANT,
+                    "(RT)"
+            );
+        }
+        synchronized (sCacheLock) {
+            saveCredentialsInternal(refreshTokenRecord);
+            // Remove old refresh tokens (except for the one we just saved) if it's MRRT or FRT
+            removeAllRefreshTokensExcept(accountRecord, refreshTokenRecord);
         }
     }
 

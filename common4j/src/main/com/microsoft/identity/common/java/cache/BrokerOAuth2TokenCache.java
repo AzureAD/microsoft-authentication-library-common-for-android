@@ -310,7 +310,7 @@ public class BrokerOAuth2TokenCache
                     refreshTokenRecord
             );
         }
-        if (result.getAccessToken().getClientId() != result.getRefreshToken().getClientId()) {
+        if (!result.getAccessToken().getClientId().equalsIgnoreCase(result.getRefreshToken().getClientId())) {
             // NAA scenario, we need to have multiple entries for updating the metadata to indicate the presence of AT for nested app and RT of host app
             // Update entry using clientId on AT (For nested app)
             updateApplicationMetadataCache(
@@ -335,6 +335,113 @@ public class BrokerOAuth2TokenCache
             );
         }
         return result;
+    }
+
+    /**
+     * Broker-only API to persist WPJ's Accounts & their associated credentials.
+     *
+     * @param accountRecord      The {@link AccountRecord} to store.
+     * @param idTokenRecord      The {@link IdTokenRecord} to store.
+     * @param accessTokenRecord  The {@link AccessTokenRecord} to store.
+     * @param refreshTokenRecord The {@link RefreshTokenRecord} to store.
+     * @param familyId           The family_id or null, if not applicable.
+     * @return The {@link ICacheRecord} result of this save action.
+     * @throws ClientException If the supplied Accounts or Credentials are schema invalid.
+     */
+    public ICacheRecord save(@NonNull AccountRecord accountRecord,
+                             @NonNull IdTokenRecord idTokenRecord,
+                             @NonNull AccessTokenRecord accessTokenRecord,
+                             @Nullable RefreshTokenRecord refreshTokenRecord,
+                             @Nullable String familyId,
+                             boolean isNAARequest) throws ClientException {
+        final String methodName = ":save (6 args)";
+
+        if (isNAARequest) {
+             ICacheRecord result;
+
+            final boolean isFoci = !StringUtil.isNullOrEmpty(familyId);
+
+            Logger.info(
+                    TAG + methodName,
+                    "Saving to FOCI cache? ["
+                            + isFoci
+                            + "]"
+            );
+
+            if (isFoci) {
+                // Save RT to the foci cache....
+                result = mFociCache.save(
+                        null,
+                        null,
+                        null,
+                        refreshTokenRecord
+                );
+                final MsalOAuth2TokenCache targetCache = initializeProcessUidCacheForNestedApp(
+                        getComponents(),
+                        mUid,
+                        accessTokenRecord.getClientId()
+                );
+                result = targetCache.save(
+                        accountRecord,
+                        idTokenRecord,
+                        accessTokenRecord,
+                        null
+                );
+                // Set RT also before returning!!
+
+            } else {
+                // Save to the processUid cache... or create a new one
+//                final MsalOAuth2TokenCache targetCache = initializeProcessUidCache(
+//                        getComponents(),
+//                        mUid
+//                );
+                final MsalOAuth2TokenCache targetCache = initializeProcessUidCacheForNestedApp(
+                        getComponents(),
+                        mUid,
+                        accessTokenRecord.getClientId()
+                );
+                result = targetCache.save(
+                        accountRecord,
+                        idTokenRecord,
+                        accessTokenRecord,
+                        null
+                );
+
+                final MsalOAuth2TokenCache hostTargetCache = initializeProcessUidCache(
+                        getComponents(),
+                        mUid
+                );
+                hostTargetCache.saveRefreshTokenForNAA(accountRecord, refreshTokenRecord);
+
+            }
+            if (!result.getAccessToken().getClientId().equalsIgnoreCase(result.getRefreshToken().getClientId())) {
+                // NAA scenario, we need to have multiple entries for updating the metadata to indicate the presence of AT for nested app and RT of host app
+                // Update entry using clientId on AT (For nested app)
+                updateApplicationMetadataCache(
+                        result.getAccessToken().getClientId(),
+                        result.getAccessToken().getEnvironment(),
+                        null,
+                        mUid
+                );
+                // update entry using clientId on RT (For host app)
+                updateApplicationMetadataCache(
+                        result.getRefreshToken().getClientId(),
+                        result.getRefreshToken().getEnvironment(),
+                        familyId,
+                        mUid
+                );
+            } else {
+                updateApplicationMetadataCache(
+                        result.getRefreshToken().getClientId(),
+                        result.getRefreshToken().getEnvironment(),
+                        familyId,
+                        mUid
+                );
+            }
+            return result;
+        } else {
+            return save(accountRecord, idTokenRecord, accessTokenRecord, refreshTokenRecord, familyId);
+        }
     }
 
     @Deprecated
@@ -370,6 +477,28 @@ public class BrokerOAuth2TokenCache
                     accessTokenRecord,
                     refreshTokenRecord,
                     familyId
+            );
+
+            return loadAggregatedAccountData(authScheme, cacheRecord);
+        }
+    }
+
+    public synchronized List<ICacheRecord> saveAndLoadAggregatedAccountData(
+            final @NonNull AccountRecord accountRecord,
+            final @NonNull IdTokenRecord idTokenRecord,
+            final @NonNull AccessTokenRecord accessTokenRecord,
+            final @Nullable RefreshTokenRecord refreshTokenRecord,
+            final @Nullable String familyId,
+            final @NonNull AbstractAuthenticationScheme authScheme,
+            boolean isNAARequest) throws ClientException {
+        synchronized (this) {
+            final ICacheRecord cacheRecord = save(
+                    accountRecord,
+                    idTokenRecord,
+                    accessTokenRecord,
+                    refreshTokenRecord,
+                    familyId,
+                    isNAARequest
             );
 
             return loadAggregatedAccountData(authScheme, cacheRecord);
@@ -949,6 +1078,24 @@ public class BrokerOAuth2TokenCache
             );
 
             result = resultByAggregatedAccountData;
+
+            // Also get the records from nested child apps caches
+//            final List<OAuth2TokenCache> caches = getTokenCachesForUid(mUid);
+//            for (final OAuth2TokenCache cache : caches) {
+//
+//                // Suppressing unchecked warning as the generic type was not provided for cache
+//                @SuppressWarnings(WarningType.unchecked_warning)
+//                List<ICacheRecord> accountsWithAggregatedAccountData = cache.getAccountsWithAggregatedAccountData(
+//                        null,
+//                        clientId, finetune this to actually take the clientId retrieved from metadata.
+//                        homeAccountId
+//                );
+//
+//                result.addAll(
+//                        accountsWithAggregatedAccountData
+//                );
+//            }
+
         } else {
             // If no environment was specified, return all of the accounts across all of the envs...
             // Callers should really specify an environment...
@@ -984,6 +1131,42 @@ public class BrokerOAuth2TokenCache
 
         for (final BrokerApplicationMetadata metadata : allMetadata) {
             if (clientId.equals(metadata.getClientId())) {
+                if (null != metadata.getFoci() && !containsFoci) {
+                    // Add the foci cache, but only once...
+                    result.add(mFociCache);
+                    containsFoci = true;
+                } else if (!processUidCacheInitialized) {
+                    // it could be a nested app request. so first check for nested app cache
+                    final OAuth2TokenCache candidateCacheForNestedApp = initializeProcessUidCacheForNestedApp(getComponents(), mUid, metadata.getClientId());
+                    if (candidateCacheForNestedApp != null) {
+                        result.add(candidateCacheForNestedApp);
+                        processUidCacheInitialized = true;
+                    }
+
+
+                    if (!processUidCacheInitialized) {
+                        // App is not foci, see if we can find its real cache...
+                        final OAuth2TokenCache candidateCache = initializeProcessUidCache(getComponents(), mUid);
+                        result.add(candidateCache);
+                        processUidCacheInitialized = true;
+                    }
+
+
+                }
+            }
+        }
+
+        return result;
+    }
+
+    private List<OAuth2TokenCache> getTokenCachesForUid(@NonNull final int uid) {
+        final List<BrokerApplicationMetadata> allMetadata = mApplicationMetadataCache.getAll();
+        final List<OAuth2TokenCache> result = new ArrayList<>();
+        boolean containsFoci = false;
+        boolean processUidCacheInitialized = false;
+
+        for (final BrokerApplicationMetadata metadata : allMetadata) {
+            if (uid == metadata.getUid()) {
                 if (null != metadata.getFoci() && !containsFoci) {
                     // Add the foci cache, but only once...
                     result.add(mFociCache);
@@ -1208,6 +1391,7 @@ public class BrokerOAuth2TokenCache
         OAuth2TokenCache targetCache;
 
         if (null != environment) {
+
             targetCache = getTokenCacheForClient(
                     clientId,
                     environment,
@@ -1248,6 +1432,48 @@ public class BrokerOAuth2TokenCache
 
         return result;
     }
+
+    public List<ICacheRecord> getAccountsWithAggregatedAccountDataForNestedApp(@Nullable String environment,
+                                                                               @NonNull String clientId) {
+        final String methodName = ":getAccountsWithAggregatedAccountData";
+
+         List<ICacheRecord> result = new ArrayList<>();
+        OAuth2TokenCache targetCache;
+
+        if (null != environment) {
+            targetCache = getTokenCacheForClientForNestedApp(
+                    clientId,
+                    environment,
+                    mUid
+            );
+
+            if (targetCache!=null) {
+                // Suppressing unchecked warning as the generic type was not provided for targetCache
+                @SuppressWarnings(WarningType.unchecked_warning)
+                List<ICacheRecord> targetCacheAccountsWithAggregatedAccountData = targetCache.getAccountsWithAggregatedAccountData(environment, clientId);
+                result = targetCacheAccountsWithAggregatedAccountData;
+            }
+        } else {
+            // If no environment was specified, return all of the accounts across all of the envs...
+            // Callers should really specify an environment...
+            final List<OAuth2TokenCache> caches = getTokenCachesForClientId(clientId);
+
+            // Declare a new List to which we will add all of our results...
+            result = new ArrayList<>();
+
+            for (final OAuth2TokenCache cache : caches) {
+
+                // Suppressing unchecked warning as the generic type was not provided for cache
+                @SuppressWarnings(WarningType.unchecked_warning)
+                List<ICacheRecord> cacheAccountsWithAggregatedAccountData = cache.getAccountsWithAggregatedAccountData(null, clientId);
+
+                result.addAll(cacheAccountsWithAggregatedAccountData);
+            }
+        }
+
+        return result;
+    }
+
 
     @Override
     public List<IdTokenRecord> getIdTokensForAccountRecord(@NonNull final String clientId,
@@ -1315,7 +1541,7 @@ public class BrokerOAuth2TokenCache
                 );
             }
         }
-        Logger.info(TAG + methodName, "in getAccounts "+allAccounts.size());
+        Logger.info(TAG + methodName, "in getAccounts " + allAccounts.size());
         // Hit the FOCI cache
         allAccounts.addAll(mFociCache.getAccountCredentialCache().getAccounts());
 
@@ -1845,6 +2071,28 @@ public class BrokerOAuth2TokenCache
         return targetCache;
     }
 
+
+    @Nullable
+    private MsalOAuth2TokenCache getTokenCacheForClientForNestedApp(@Nullable final BrokerApplicationMetadata metadata) {
+        final String methodName = ":getTokenCacheForClient(bamNA)";
+
+        MsalOAuth2TokenCache targetCache = null;
+
+        if (null != metadata) {
+            // First lookup for nested app cache
+            targetCache = initializeProcessUidCacheForNestedApp(getComponents(), metadata.getUid(), metadata.getClientId());
+        }
+
+        if (null == targetCache) {
+            Logger.warn(
+                    TAG + methodName,
+                    "Could not locate a cache for this app."
+            );
+        }
+
+        return targetCache;
+    }
+
     /**
      * Returns the {@link MsalOAuth2TokenCache} to use for supplied client id and environment.
      *
@@ -1869,6 +2117,23 @@ public class BrokerOAuth2TokenCache
         Logger.info(TAG + methodName, "Found metadata? " + (null != metadata));
 
         return getTokenCacheForClient(metadata);
+    }
+
+    @Nullable
+    private MsalOAuth2TokenCache getTokenCacheForClientForNestedApp(@NonNull final String clientId,
+                                                                    @NonNull final String environment,
+                                                                    final int uid) {
+        final String methodName = ":getTokenCacheForClient(id, env, uid)";
+
+        final BrokerApplicationMetadata metadata = mApplicationMetadataCache.getMetadata(
+                clientId,
+                environment,
+                uid
+        );
+
+        Logger.info(TAG + methodName, "Found metadata? " + (null != metadata));
+
+        return getTokenCacheForClientForNestedApp(metadata);
     }
 
     /**

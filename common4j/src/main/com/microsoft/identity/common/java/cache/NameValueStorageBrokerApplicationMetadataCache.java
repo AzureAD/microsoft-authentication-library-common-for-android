@@ -171,6 +171,37 @@ public class NameValueStorageBrokerApplicationMetadataCache
         return result;
     }
 
+    @Nullable
+    public BrokerApplicationMetadata getMetadataWithUid(
+                                                 final int processUid) {
+        final String methodName = ":getMetadata";
+
+        final List<BrokerApplicationMetadata> allMetadata = getAll();
+        BrokerApplicationMetadata result = null;
+
+        for (final BrokerApplicationMetadata metadata : allMetadata) {
+            if (processUid == metadata.getUid()) {
+                Logger.verbose(
+                        TAG + metadata,
+                        "Metadata located."
+                );
+
+                result = metadata;
+                break;
+            }
+        }
+
+        if (null == result) {
+            Logger.warn(
+                    TAG + methodName,
+                    "Metadata could not be found for clientId, environment: ["
+                            + "]"
+            );
+        }
+
+        return result;
+    }
+
     public void remove(@NonNull final String clientId,
                        final int processUid) {
         final List<BrokerApplicationMetadata> allMetadata = getAll();
