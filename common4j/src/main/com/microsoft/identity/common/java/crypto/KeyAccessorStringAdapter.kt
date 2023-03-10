@@ -28,7 +28,7 @@ import com.microsoft.identity.common.java.exception.ClientException
 /**
  * Add helper functions which takes in parameter or produce results in a ready-to-store (String) form.
  */
-class UTF8KeyAccessorStringAdapter(private val mKeyAccessor: IKeyAccessor)
+class KeyAccessorStringAdapter(private val mKeyAccessor: IKeyAccessor)
     : IKeyAccessorStringAdapter{
 
     /**
@@ -39,8 +39,8 @@ class UTF8KeyAccessorStringAdapter(private val mKeyAccessor: IKeyAccessor)
      */
     @Throws(ClientException::class)
     override fun encrypt(plainText: String): String {
-        val result = mKeyAccessor.encrypt(plainText.toByteArray(AuthenticationConstants.ENCODING_UTF8))
-        return String(result, AuthenticationConstants.ENCODING_UTF8)
+        val result = mKeyAccessor.encrypt(plainText.toByteArray(AuthenticationConstants.CHARSET_UTF8))
+        return String(result, AuthenticationConstants.CHARSET_UTF8)
     }
 
     /**
@@ -52,7 +52,7 @@ class UTF8KeyAccessorStringAdapter(private val mKeyAccessor: IKeyAccessor)
     @Throws(ClientException::class)
     override fun decrypt(cipherText: String): String {
         val result =
-            mKeyAccessor.decrypt(cipherText.toByteArray(AuthenticationConstants.ENCODING_UTF8))
-        return String(result, AuthenticationConstants.ENCODING_UTF8)
+            mKeyAccessor.decrypt(cipherText.toByteArray(AuthenticationConstants.CHARSET_UTF8))
+        return String(result, AuthenticationConstants.CHARSET_UTF8)
     }
 }
