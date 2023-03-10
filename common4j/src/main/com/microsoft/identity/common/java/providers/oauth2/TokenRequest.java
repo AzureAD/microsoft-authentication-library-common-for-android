@@ -256,6 +256,8 @@ public class TokenRequest implements IHasExtraParameters {
         public static final String PASSWORD = "password";
         public static final String DEVICE_CODE = "urn:ietf:params:oauth:grant-type:device_code";
         public final static String CLIENT_CREDENTIALS = "client_credentials";
+        // The grant type is used when token request contains a JWT
+        // e.g. used in Primary Refresh Token acquisition flows
         public static final String JWT_BEARER = "urn:ietf:params:oauth:grant-type:jwt-bearer";
     }
 

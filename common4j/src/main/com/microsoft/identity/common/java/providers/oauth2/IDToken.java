@@ -247,4 +247,10 @@ public class IDToken {
         return result;
     }
 
+    /**
+     * @return Claim value for given claim name.
+     */
+    public Object getClaim(@NonNull final String claimName) {
+        return mTokenClaims != null ? this.mTokenClaims.get(claimName) : null;
+    }
 }

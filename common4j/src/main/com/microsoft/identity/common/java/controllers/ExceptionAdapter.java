@@ -83,9 +83,17 @@ public class ExceptionAdapter {
         return exceptionFromTokenResult(result.getTokenResult(), commandParameters);
     }
 
-    public static BaseException exceptionFromAuthorizationResult(final AuthorizationResult authorizationResult, final CommandParameters commandParameters) {
+    public static BaseException exceptionFromAuthorizationResult(@NonNull  final AuthorizationResult authorizationResult, @Nullable final CommandParameters commandParameters) {
         final String methodTag = TAG + ":exceptionFromAuthorizationResult";
         final AuthorizationErrorResponse authorizationErrorResponse = authorizationResult.getAuthorizationErrorResponse();
+        if (authorizationErrorResponse == null) {
+            Logger.warn(
+                    methodTag,
+                    "AuthorizationErrorResponse is not set"
+            );
+            return new ClientException(ClientException.UNKNOWN_ERROR, "Authorization failed with unknown error. Authorization Status: " +authorizationResult.getAuthorizationStatus());
+        }
+
         //THERE ARE CURRENTLY NO USAGES of INVALID_REQUEST
         switch (authorizationResult.getAuthorizationStatus()) {
             case FAIL:
@@ -125,7 +133,7 @@ public class ExceptionAdapter {
                         methodTag,
                         "No AuthorizationResult status set"
                 );
-                return new ClientException(ClientException.UNKNOWN_ERROR, "Authorization failed with unknown error");
+                return new ClientException(authorizationErrorResponse.getError(), authorizationErrorResponse.getErrorDescription());
         }
     }
 
@@ -316,6 +324,7 @@ public class ExceptionAdapter {
         return clientExceptionFromException(e);
     }
 
+    @NonNull
     public static ClientException clientExceptionFromException(final Throwable exception) {
         Throwable e = exception;
         if (exception instanceof ExecutionException) {

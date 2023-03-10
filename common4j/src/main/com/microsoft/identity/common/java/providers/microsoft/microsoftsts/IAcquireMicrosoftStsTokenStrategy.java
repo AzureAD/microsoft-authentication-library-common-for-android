@@ -32,7 +32,7 @@ import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
 import lombok.NonNull;
 
 /**
- * Acquire token for strategy for Microsoft STS
+ * Acquire token strategy for Microsoft STS
  *  * @param <T> is expected to be either {@link InteractiveTokenCommandParameters}
  *  *           or {@link SilentTokenCommandParameters}
  */
