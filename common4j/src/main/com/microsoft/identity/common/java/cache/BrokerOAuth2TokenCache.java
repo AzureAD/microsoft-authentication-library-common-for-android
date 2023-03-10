@@ -525,25 +525,25 @@ public class BrokerOAuth2TokenCache
 
             } else {
                 // This means that it is NAA request but not FOCI scenario
-                targetCache = initializeProcessUidCache(getComponents(), mUid);
-                result = targetCache.saveAndLoadAggregatedAccountData(
-                        oAuth2Strategy,
-                        request,
-                        response
-                );
-                ((MsalOAuth2TokenCache) targetCache).saveRefreshTokenForNAA(oAuth2Strategy,
-                        request,
-                        response);
-//                targetCache = initializeProcessUidCacheForNestedApp(getComponents(), mUid, request.getClientId());
+//                targetCache = initializeProcessUidCache(getComponents(), mUid);
 //                result = targetCache.saveAndLoadAggregatedAccountData(
 //                        oAuth2Strategy,
 //                        request,
 //                        response
 //                );
-//                OAuth2TokenCache hostAppTargetCache = initializeProcessUidCacheForNestedApp(getComponents(), mUid, request.getBrkClientId());
-//                ((MsalOAuth2TokenCache) hostAppTargetCache).saveRefreshTokenForNAA(oAuth2Strategy,
+//                ((MsalOAuth2TokenCache) targetCache).saveRefreshTokenForNAA(oAuth2Strategy,
 //                        request,
 //                        response);
+                targetCache = initializeProcessUidCacheForNestedApp(getComponents(), mUid, request.getClientId());
+                result = targetCache.saveAndLoadAggregatedAccountData(
+                        oAuth2Strategy,
+                        request,
+                        response
+                );
+                OAuth2TokenCache hostAppTargetCache = initializeProcessUidCache(getComponents(), mUid);
+                ((MsalOAuth2TokenCache) hostAppTargetCache).saveRefreshTokenForNAA(oAuth2Strategy,
+                        request,
+                        response);
             }
             // The 0th element contains the record we *just* saved. Other records are corollary data.
             final ICacheRecord justSavedRecord = result.get(0);
@@ -989,12 +989,12 @@ public class BrokerOAuth2TokenCache
                     result.add(mFociCache);
                     containsFoci = true;
                 } else if (!processUidCacheInitialized) {
-//                    // it could be a nested app request. so first check for nested app cache
-//                    final OAuth2TokenCache candidateCacheForNestedApp = initializeProcessUidCacheForNestedApp(getComponents(), mUid, metadata.getClientId());
-//                    if (candidateCacheForNestedApp != null) {
-//                        result.add(candidateCacheForNestedApp);
-//                        processUidCacheInitialized = true;
-//                    }
+                    // it could be a nested app request. so first check for nested app cache
+                    final OAuth2TokenCache candidateCacheForNestedApp = initializeProcessUidCacheForNestedApp(getComponents(), mUid, metadata.getClientId());
+                    if (candidateCacheForNestedApp != null) {
+                        result.add(candidateCacheForNestedApp);
+                        processUidCacheInitialized = true;
+                    }
 
 
                     if (!processUidCacheInitialized) {
@@ -1315,13 +1315,13 @@ public class BrokerOAuth2TokenCache
                 );
             }
         }
-
+        Logger.info(TAG + methodName, "in getAccounts "+allAccounts.size());
         // Hit the FOCI cache
         allAccounts.addAll(mFociCache.getAccountCredentialCache().getAccounts());
 
         final List<AccountRecord> allAccountsResult = new ArrayList<>(allAccounts);
 
-        Logger.verbose(
+        Logger.info(
                 TAG + methodName,
                 "Found ["
                         + allAccountsResult.size()
@@ -1827,8 +1827,8 @@ public class BrokerOAuth2TokenCache
             if (isFoci) {
                 targetCache = mFociCache;
             } else {
-//                // First lookup for nested app cache
-//                targetCache = initializeProcessUidCacheForNestedApp(getComponents(), metadata.getUid(), metadata.getClientId());
+                // First lookup for nested app cache
+                targetCache = initializeProcessUidCacheForNestedApp(getComponents(), metadata.getUid(), metadata.getClientId());
                 if (targetCache == null) {
                     targetCache = initializeProcessUidCache(getComponents(), metadata.getUid());
                 }
