@@ -44,7 +44,7 @@ public interface IAcquireMicrosoftStsTokenStrategy<T extends TokenCommandParamet
      * @return a new PRT
      */
     @NonNull
-    MicrosoftStsTokenRequest createTokenRequest(@NonNull T parameters) throws BaseException;
+    MicrosoftStsTokenRequest createTokenRequest(@NonNull final T parameters) throws BaseException;
 
     /**
      * Acquire token given the request
@@ -53,6 +53,6 @@ public interface IAcquireMicrosoftStsTokenStrategy<T extends TokenCommandParamet
      * @throws ClientException
      */
     @NonNull
-    TokenResult acquireToken(@NonNull MicrosoftStsTokenRequest tokenRequest) throws ClientException;
+    TokenResult acquireToken(@NonNull final MicrosoftStsTokenRequest tokenRequest) throws ClientException;
 }
 
