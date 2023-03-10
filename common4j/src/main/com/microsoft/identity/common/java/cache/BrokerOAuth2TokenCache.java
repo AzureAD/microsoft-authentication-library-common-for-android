@@ -1204,12 +1204,13 @@ public class BrokerOAuth2TokenCache
             }
         }
 
+        Logger.info(TAG + methodName, "in getAccounts "+allAccounts.size());
         // Hit the FOCI cache
         allAccounts.addAll(mFociCache.getAccountCredentialCache().getAccounts());
 
         final List<AccountRecord> allAccountsResult = new ArrayList<>(allAccounts);
 
-        Logger.verbose(
+        Logger.info(
                 TAG + methodName,
                 "Found ["
                         + allAccountsResult.size()
