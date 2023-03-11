@@ -461,6 +461,8 @@ public class LocalMSALController extends BaseController {
                         .putApiId(TelemetryEventStrings.Api.LOCAL_GET_ACCOUNTS)
         );
 
+        Logger.info(
+                TAG, "in getAccounts of LocalMsalController");
         @SuppressWarnings(WarningType.unchecked_warning) final List<ICacheRecord> accountsInCache =
                 parameters
                         .getOAuth2TokenCache()
@@ -468,7 +470,12 @@ public class LocalMSALController extends BaseController {
                                 null, // * wildcard
                                 parameters.getClientId()
                         );
-
+        Logger.info(
+                TAG, "in getAccounts of LocalMsalController, no.of accountsInCache "+ accountsInCache.size());
+        for (ICacheRecord cacheRecord : accountsInCache) {
+            Logger.info(
+                    TAG, cacheRecord.getAccount().getUsername());
+        }
         Telemetry.emit(
                 new ApiEndEvent()
                         .putApiId(TelemetryEventStrings.Api.LOCAL_GET_ACCOUNTS)
