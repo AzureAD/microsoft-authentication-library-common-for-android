@@ -24,56 +24,50 @@ package com.microsoft.identity.common.java.jwt;
 
 import com.google.gson.annotations.SerializedName;
 
+import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 
 /**
  * Represents body of JWT. These JWTs can be used in token requests.
  */
+@Getter
+@Setter
+@Accessors(prefix = "m")
 public final class JwtRequestBody extends AbstractJwtRequest {
 
-    @Setter
-    @Accessors(prefix = "m")
-    @SerializedName("scope")
+    @SerializedName(ClaimNames.SCOPE)
     private String mJwtScope;
 
-    @Setter
-    @Accessors(prefix = "m")
-    @SerializedName("aud")
+    @SerializedName(ClaimNames.AUDIENCE)
     private String mAudience;
 
-    @Setter
-    @Accessors(prefix = "m")
-    @SerializedName("iss")
+    @SerializedName(ClaimNames.ISSUER)
     private String mIssuer;
 
-    @Setter
-    @Accessors(prefix = "m")
-    @SerializedName("assertion")
+    @SerializedName(ClaimNames.ASSERTION)
     private String mAssertion;
 
-    @Setter
-    @Accessors(prefix = "m")
-    @SerializedName("grant_type")
+    @SerializedName(ClaimNames.GRANT_TYPE)
     private String mGrantType;
 
-    @Setter
-    @Accessors(prefix = "m")
-    @SerializedName("request_nonce")
+    @SerializedName(ClaimNames.NONCE)
     private String mNonce;
 
-    @Setter
-    @Accessors(prefix = "m")
-    @SerializedName("redirect_uri")
+    @SerializedName(ClaimNames.REDIRECT_URI)
     private String mRedirectUri;
 
-    @SerializedName("iat")
+    @Setter(AccessLevel.NONE)
+    @SerializedName(ClaimNames.IAT)
     private String mIat;
 
-    @SerializedName("nbf")
+    @Setter(AccessLevel.NONE)
+    @SerializedName(ClaimNames.NBF)
     private String mNbf;
 
-    @SerializedName("exp")
+    @Setter(AccessLevel.NONE)
+    @SerializedName(ClaimNames.EXP)
     private String mExp;
 
     public void setIat(final long iat) {
