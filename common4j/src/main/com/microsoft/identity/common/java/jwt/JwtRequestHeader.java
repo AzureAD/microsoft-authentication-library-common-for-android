@@ -56,7 +56,7 @@ public final class JwtRequestHeader extends AbstractJwtRequest {
     private String mAlg;
 
     @SerializedName(ClaimNames.KID)
-    private String mKid;
+    private String mKId;
 
     public void setType() {
         mType = JWT_VALUE;

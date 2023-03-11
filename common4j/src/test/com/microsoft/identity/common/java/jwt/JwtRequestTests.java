@@ -43,7 +43,7 @@ public class JwtRequestTests {
         final JwtRequestHeader header = new JwtRequestHeader();
         header.setType();
         header.setAlg(JwtRequestHeader.ALG_VALUE_HS256);
-        header.setKid("session");
+        header.setKId("session");
         header.setCtx("context");
         final Map<String, Object> map = ObjectMapper.serializeObjectHashMap(header);
         Assert.assertEquals("JWT", map.get(AbstractJwtRequest.ClaimNames.TYPE));
