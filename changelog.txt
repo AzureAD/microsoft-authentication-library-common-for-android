@@ -1,6 +1,7 @@
 vNext
 ----------
 - [MINOR] Make changes for jetpack datastore broker support (#1986)
+- [MINOR] Add JWT Claims to MicrosoftStsTokenRequest to support PRT v3 (#1969)
 
 V.10.1.1
 ----------
