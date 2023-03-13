@@ -1450,7 +1450,7 @@ public class BrokerOAuth2TokenCache
 
         final List<BrokerApplicationMetadata> allMetadata = mApplicationMetadataCache.getAll();
         final List<AccountDeletionRecord> deletionRecordList = new ArrayList<>();
-
+        Logger.info(TAG, "removeAccountInternal, uid : "+ mUid );
         for (final BrokerApplicationMetadata metadata : allMetadata) {
             final OAuth2TokenCache candidateCache = getTokenCacheForClient(
                     metadata.getClientId(),

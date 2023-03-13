@@ -644,8 +644,11 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         if (StringUtil.isEmpty(accountJson)) {
             throw new MsalBrokerResultAdapter().getBaseExceptionFromBundle(bundle);
         }
-
-        return JsonExtensions.getICacheRecordListFromJsonString(accountJson);
+        List<ICacheRecord>  cacheRecords = JsonExtensions.getICacheRecordListFromJsonString(accountJson);
+        for (ICacheRecord cacheRecord : cacheRecords) {
+            Logger.info(methodTag, "cache record in broker msal controller "+ cacheRecord.getAccount().getUsername());
+        }
+        return cacheRecords;
     }
 
     public void verifyRemoveAccountResultFromBundle(@Nullable final Bundle bundle) throws BaseException {

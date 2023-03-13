@@ -457,6 +457,7 @@ public class LocalMSALController extends BaseController {
                         .putApiId(TelemetryEventStrings.Api.LOCAL_GET_ACCOUNTS)
         );
 
+        Logger.info(TAG, "querying in localMSALController for accounts in cache");
         @SuppressWarnings(WarningType.unchecked_warning) final List<ICacheRecord> accountsInCache =
                 parameters
                         .getOAuth2TokenCache()
@@ -464,7 +465,10 @@ public class LocalMSALController extends BaseController {
                                 null, // * wildcard
                                 parameters.getClientId()
                         );
-
+        Logger.info(TAG, "no. of accounts found in local msal cache "+ accountsInCache.size());
+        for (ICacheRecord  cacheRecord : accountsInCache) {
+            Logger.info(TAG, "account : "+ cacheRecord.getAccount().getUsername());
+        }
         Telemetry.emit(
                 new ApiEndEvent()
                         .putApiId(TelemetryEventStrings.Api.LOCAL_GET_ACCOUNTS)
@@ -490,7 +494,7 @@ public class LocalMSALController extends BaseController {
         if (parameters.getAccount() != null) {
             realm = parameters.getAccount().getRealm();
         }
-
+        Logger.info(TAG, "remove account from MSAL cache called with account==null? "+ parameters.getAccount());
         final boolean localRemoveAccountSuccess = !parameters
                 .getOAuth2TokenCache()
                 .removeAccount(
@@ -505,7 +509,7 @@ public class LocalMSALController extends BaseController {
                         .put(TelemetryEventStrings.Key.IS_SUCCESSFUL, String.valueOf(localRemoveAccountSuccess))
                         .putApiId(TelemetryEventStrings.Api.LOCAL_REMOVE_ACCOUNT)
         );
-
+        Logger.info(TAG, "removed account from MSAL cache success? "+ localRemoveAccountSuccess);
         return localRemoveAccountSuccess;
     }
 
