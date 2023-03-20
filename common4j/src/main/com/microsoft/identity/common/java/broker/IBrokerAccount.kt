@@ -20,25 +20,17 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java.providers.microsoft.microsoftsts;
+package com.microsoft.identity.common.java.broker;
 
-import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenRequest;
+interface IBrokerAccount {
 
-import java.util.Map;
-
-import lombok.Getter;
-import lombok.Setter;
-import lombok.experimental.Accessors;
-
-@Setter
-@Getter
-@Accessors(prefix = "m")
-public class MicrosoftStsTokenRequest extends MicrosoftTokenRequest {
     /**
-     * Additional JWT claims which would be used to create JWT based token requests
+     * Get account's (unique) username.
      */
-    private transient Map<String, String> mJwtClaims;
-    public MicrosoftStsTokenRequest() {
-        super();
-    }
+    fun getUsername(): String
+
+    /**
+     * Get account's type.
+     */
+    fun getType(): String
 }

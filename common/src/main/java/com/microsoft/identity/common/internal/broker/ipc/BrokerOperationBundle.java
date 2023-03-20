@@ -93,39 +93,6 @@ public class BrokerOperationBundle {
     @Getter
     @Nullable final private Bundle bundle;
 
-    /**
-     * Packs the response bundle with the account manager key.
-     */
-    public Bundle getAccountManagerBundle()
-            throws BrokerCommunicationException {
-        Bundle requestBundle = bundle;
-        if (requestBundle == null) {
-            requestBundle = new Bundle();
-        }
-
-        requestBundle.putString(
-                AuthenticationConstants.Broker.BROKER_ACCOUNT_MANAGER_OPERATION_KEY,
-                getAccountManagerAddAccountOperationKey());
-
-        return requestBundle;
-    }
-
-    private String getAccountManagerAddAccountOperationKey() throws BrokerCommunicationException{
-        final String methodTag = TAG + ":getAccountManagerAddAccountOperationKey";
-
-        String accountManagerKey = operation.getAccountManagerOperation();
-        if (accountManagerKey == null) {
-            final String errorMessage = "Operation " + operation.name() + " is not supported by AccountManager addAccount().";
-            Logger.warn(methodTag, errorMessage);
-            throw new BrokerCommunicationException(
-                    OPERATION_NOT_SUPPORTED_ON_CLIENT_SIDE,
-                    ACCOUNT_MANAGER_ADD_ACCOUNT,
-                    errorMessage,
-                    null);
-        }
-        return accountManagerKey;
-    }
-
     public String getContentProviderPath() throws BrokerCommunicationException {
         final String methodTag = TAG + ":getContentProviderUriPath";
 

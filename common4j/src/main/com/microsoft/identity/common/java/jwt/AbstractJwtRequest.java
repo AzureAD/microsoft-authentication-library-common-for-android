@@ -26,47 +26,54 @@ import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.java.util.StringUtil;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 
-@SuppressFBWarnings({"URF_UNREAD_FIELD", "URF_UNREAD_FIELD"})
+@Getter
+@Setter
+@Accessors(prefix = "m")
 public abstract class AbstractJwtRequest {
 
-    @Setter
-    @Accessors(prefix = "m")
-    @SerializedName("ctx")
-    @SuppressFBWarnings(value = "URF_UNREAD_FIELD", justification = "This is output through serialization")
-    private String mCtx;
+    public static class ClaimNames {
+        public static final String CTX = "ctx";
+        public static final String REFRESH_TOKEN = "refresh_token";
+        public static final String X5C = "x5c";
+        public static final String CLIENT_ID = "client_id";
+        public static final String SCOPE = "scope";
+        public static final String AUDIENCE = "aud";
+        public static final String ISSUER = "iss";
+        public static final String GRANT_TYPE = "grant_type";
+        public static final String NONCE = "request_nonce";
+        public static final String REDIRECT_URI = "redirect_uri";
+        public static final String RESOURCE = "resource";
+        public static final String USE = "use";
+        public static final String ALG = "alg";
+        public static final String KID = "kid";
+        public static final String TYPE = "typ";
+        public static final String IAT = "iat";
+        public static final String NBF = "nbf";
+        public static final String EXP = "exp";
+        public static final String ASSERTION = "assertion";
+    }
 
-    @Setter
-    @Accessors(prefix = "m")
-    @SerializedName("refresh_token")
-    @SuppressFBWarnings(value = "URF_UNREAD_FIELD", justification = "This is output through serialization")
+    @SerializedName(ClaimNames.REFRESH_TOKEN)
     private String mRefreshToken;
 
-    @Setter
-    @Accessors(prefix = "m")
-    @SerializedName("x5c")
-    @SuppressFBWarnings(value = "URF_UNREAD_FIELD", justification = "This is output through serialization")
+    @SerializedName(ClaimNames.X5C)
     private String mCert;
 
-    @Setter
-    @Accessors(prefix = "m")
-    @SerializedName("client_id")
-    @SuppressFBWarnings(value = "URF_UNREAD_FIELD", justification = "This is output through serialization")
+    @SerializedName(ClaimNames.CLIENT_ID)
     private String mClientId;
 
-    @Setter
-    @Accessors(prefix = "m")
-    @SerializedName("use")
+    @SerializedName(ClaimNames.USE)
     private String mUse;
 
-    @SerializedName("resource")
+    @SerializedName(ClaimNames.RESOURCE)
     private String mResource;
 
     // HACKHACK: once AAD fixes the bug where it cannot accept scopes unless there is a resource,
     // remove this and fix all compiler errors and unused variable warnings
-    @SuppressFBWarnings(value = "URF_UNREAD_FIELD", justification = "This may be required for some time")
     public void setResource(final String resource) {
         if (!StringUtil.isNullOrEmpty(resource)) {
             mResource = resource;
