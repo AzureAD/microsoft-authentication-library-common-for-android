@@ -645,6 +645,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
             throw new MsalBrokerResultAdapter().getBaseExceptionFromBundle(bundle);
         }
         List<ICacheRecord>  cacheRecords = JsonExtensions.getICacheRecordListFromJsonString(accountJson);
+        Logger.info(methodTag, "BrokerMSALController is returning accounts of size : "  + cacheRecords.size());
         for (ICacheRecord cacheRecord : cacheRecords) {
             Logger.info(methodTag, "cache record in broker msal controller "+ cacheRecord.getAccount().getUsername());
         }

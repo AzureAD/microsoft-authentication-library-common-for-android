@@ -102,7 +102,7 @@ public class LocalMSALController extends BaseController {
             throws ExecutionException, InterruptedException, ClientException, IOException, ArgumentException {
         final String methodTag = TAG + ":acquireToken";
 
-        Logger.verbose(
+        Logger.info(
                 methodTag,
                 "Acquiring token..."
         );
@@ -269,7 +269,7 @@ public class LocalMSALController extends BaseController {
             @NonNull final SilentTokenCommandParameters parameters)
             throws IOException, ClientException, ArgumentException, ServiceException {
         final String methodTag = TAG + ":acquireTokenSilent";
-        Logger.verbose(
+        Logger.info(
                 methodTag,
                 "Acquiring token silently..."
         );

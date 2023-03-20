@@ -265,6 +265,7 @@ public class BrokerMsalController extends BaseController {
                         .putApiId(TelemetryEventStrings.Api.BROKER_ACQUIRE_TOKEN_INTERACTIVE)
         );
 
+        Logger.info(methodTag, "In acquireToken method of BrokerMsalController!");
         //Create BrokerResultFuture to block on response from the broker... response will be return as an activity result
         //BrokerActivity will receive the result and ask the API dispatcher to complete the request
         //In completeAcquireToken below we will set the result on the future and unblock the flow.
@@ -435,6 +436,7 @@ public class BrokerMsalController extends BaseController {
     @Override
     public @NonNull
     AcquireTokenResult acquireTokenSilent(final @NonNull SilentTokenCommandParameters parameters) throws BaseException {
+       Logger.info(TAG, ":In acquireToken Silent of BrokerMsalController!");
         return mBrokerOperationExecutor.execute(parameters,
                 new BrokerOperation<AcquireTokenResult>() {
                     private String negotiatedBrokerProtocolVersion;
