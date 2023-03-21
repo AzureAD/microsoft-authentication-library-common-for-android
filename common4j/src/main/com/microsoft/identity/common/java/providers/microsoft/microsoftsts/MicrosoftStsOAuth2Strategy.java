@@ -82,6 +82,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -619,10 +620,26 @@ public class MicrosoftStsOAuth2Strategy
                     tokenResponse.setCliTelemSubErrorCode(cliTelemInfo.getServerSubErrorCode());
                 }
             }
+            final String ccsRequestId = response.getHeaderValue(XMS_CCS_REQUEST_ID, 0);
+            if(null != ccsRequestId)
+            {
+                if(null != tokenResponse)
+                {
+                    Map<String, String> mapWithAdditionalEntry = new HashMap<String, String>();
+                    mapWithAdditionalEntry.put(XMS_CCS_REQUEST_ID, ccsRequestId);
+                    if(null != tokenResponse.getExtraParameters())
+                    {
+                        for(Map.Entry<String, String> entry : tokenResponse.getExtraParameters())
+                        {
+                            mapWithAdditionalEntry.put(entry.getKey(), entry.getValue());
+                        }
+                    }
+                    tokenResponse.setExtraParameters(mapWithAdditionalEntry.entrySet());
+                }
 
-            SpanExtension.current().setAttribute(
-                    AttributeName.ccs_request_id.name(),
-                    response.getHeaderValue(XMS_CCS_REQUEST_ID, 0));
+                SpanExtension.current().setAttribute(
+                        AttributeName.ccs_request_id.name(), ccsRequestId);
+            }
         }
 
         return result;
