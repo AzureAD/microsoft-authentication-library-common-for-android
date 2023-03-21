@@ -202,30 +202,35 @@ idea {
 }
 
 dependencies {
-    compileOnly libs.spotbugsAnnotations4J
+    compileOnly libs.spotbugsAnnotations4j
     compileOnly libs.lombok
+
     annotationProcessor libs.lombok
+
     implementation libs.nimbusJoseJwt
     implementation libs.gson
     implementation libs.json
     implementation libs.jcipAnnotations
     implementation libs.httpclient
-    implementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.kotlinVersion}"
-    testImplementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.kotlinVersion}"
+    implementation libs.kotlinStdlib
+    implementation platform(libs.opentelemetryBom)
+    implementation libs.opentelemetryApi
 
-    testCompileOnly libs.spotbugsAnnotations4J
+    testCompileOnly libs.spotbugsAnnotations4j
     testCompileOnly libs.lombok
+
     testAnnotationProcessor libs.lombok
+
+    testImplementation libs.kotlinStdlib
     testImplementation libs.junit
     testImplementation libs.mockitoCore
 
-    testFixturesCompileOnly libs.spotbugsAnnotations4J
+    testFixturesCompileOnly libs.spotbugsAnnotations4j
     testFixturesCompileOnly libs.lombok
-    testFixturesAnnotationProcessor libs.lombok
-    resolvableTestFixturesImplementation libs.robolectric4j
 
-    implementation platform(libs.opentelemetryBom)
-    implementation libs.opentelemetryApi
+    testFixturesAnnotationProcessor libs.lombok
+    
+    resolvableTestFixturesImplementation libs.robolectric4j
 }
 
 sourceCompatibility = "1.8"

@@ -73,16 +73,18 @@ dependencies {
         implementation(group: 'com.microsoft.identity', name: 'labapi', version: '0.0.+')
     }
 
+    compileOnly libs.lombok
+    annotationProcessor libs.lombok
+
     implementation libs.nimbusJoseJwt
     implementation libs.msal4j
     implementation libs.adal4j
-    testImplementation libs.junit
-    compileOnly libs.lombok
-    annotationProcessor libs.lombok
     implementation libs.commonsLang
 
     testCompileOnly libs.lombok
     testAnnotationProcessor libs.lombok
+
+    testImplementation libs.junit
 }
 
 afterEvaluate {
