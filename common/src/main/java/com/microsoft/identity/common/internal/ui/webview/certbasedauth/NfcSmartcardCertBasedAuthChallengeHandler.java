@@ -34,6 +34,8 @@ import com.microsoft.identity.common.internal.ui.webview.ISendResultCallback;
 import com.microsoft.identity.common.java.opentelemetry.ICertBasedAuthTelemetryHelper;
 import com.microsoft.identity.common.logging.Logger;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 /**
  * Handles a received ClientCertRequest by prompting the user to choose from certificates
  *  stored on a smartcard device connected via NFC.
@@ -66,24 +68,30 @@ public class NfcSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
             return;
         }
         clearAllManagerCallbacks();
-        //This would normally be where we would use the remove() YubiKit method within a wrapper.
-        //But there seems to be some concurrency issues that arise when using this method with certain Android devices.
-        //So for now, the prompt that tells the user they can remove their smartcard will have a button where they can dismiss it themselves.
+        //To prevent from running the same callback logic twice.
+        final AtomicBoolean hasCallbackBeenCalled = new AtomicBoolean(false);
         mDialogHolder.showSmartcardRemovalPromptDialog(new IDismissCallback() {
+            //If the user removes their smartcard and for whatever reason gets stuck at this dialog,
+            // a dismiss button was added so that they aren't blocked.
             @Override
             public void onDismiss() {
-                //Helps prevent unnecessary callback trigger. Nfc discovery should only be active when
-                // the user is prompted to tap.
-                mCbaManager.stopDiscovery(mActivity);
-                nextInteractionCallback.onClosedConnection();
+                if (hasCallbackBeenCalled.compareAndSet(false, true)) {
+                    mCbaManager.stopDiscovery(mActivity);
+                    nextInteractionCallback.onClosedConnection();
+                }
+
             }
         });
         mCbaManager.disconnect(new IDisconnectionCallback() {
             @Override
             public void onClosedConnection() {
-                mDialogHolder.dismissDialog();
-                mCbaManager.stopDiscovery(mActivity);
-                nextInteractionCallback.onClosedConnection();
+                if (hasCallbackBeenCalled.compareAndSet(false, true)) {
+                    mDialogHolder.dismissDialog();
+                    //Helps prevent unnecessary callback trigger. Nfc discovery should only be active when
+                    // the user is prompted to tap.
+                    mCbaManager.stopDiscovery(mActivity);
+                    nextInteractionCallback.onClosedConnection();
+                }
             }
         });
     }
