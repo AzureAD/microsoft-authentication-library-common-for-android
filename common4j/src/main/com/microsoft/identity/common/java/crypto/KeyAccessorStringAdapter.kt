@@ -20,22 +20,16 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java.crypto;
+package com.microsoft.identity.common.java.crypto
 
-import com.microsoft.identity.common.java.exception.ClientException;
-
-import lombok.AllArgsConstructor;
-import lombok.NonNull;
-
-import static com.microsoft.identity.common.java.AuthenticationConstants.ENCODING_UTF8;
+import com.microsoft.identity.common.java.AuthenticationConstants
+import com.microsoft.identity.common.java.exception.ClientException
 
 /**
  * Add helper functions which takes in parameter or produce results in a ready-to-store (String) form.
  */
-@AllArgsConstructor
-public class KeyAccessorStringAdapter {
-
-    private final IKeyAccessor mKeyAcccesor;
+class KeyAccessorStringAdapter(private val mKeyAccessor: IKeyAccessor)
+    : IKeyAccessorStringAdapter{
 
     /**
      * Encrypt a plaintext string, returning an encrypted UTF-8 encoded string.
@@ -43,9 +37,10 @@ public class KeyAccessorStringAdapter {
      * @param plainText the plaintext to encrypt.
      * @return the encrypted UTF-8 string.
      */
-    public String encrypt(@NonNull String plainText) throws ClientException {
-        final byte[] result = mKeyAcccesor.encrypt(plainText.getBytes(ENCODING_UTF8));
-        return new String(result, ENCODING_UTF8);
+    @Throws(ClientException::class)
+    override fun encrypt(plainText: String): String {
+        val result = mKeyAccessor.encrypt(plainText.toByteArray(AuthenticationConstants.CHARSET_UTF8))
+        return String(result, AuthenticationConstants.CHARSET_UTF8)
     }
 
     /**
@@ -54,8 +49,10 @@ public class KeyAccessorStringAdapter {
      * @param cipherText the UTF-8 ciphertext to decrypt.
      * @return the decrypted string.
      */
-    public String decrypt(@NonNull String cipherText) throws ClientException {
-        final byte[] result = mKeyAcccesor.decrypt(cipherText.getBytes(ENCODING_UTF8));
-        return new String(result, ENCODING_UTF8);
+    @Throws(ClientException::class)
+    override fun decrypt(cipherText: String): String {
+        val result =
+            mKeyAccessor.decrypt(cipherText.toByteArray(AuthenticationConstants.CHARSET_UTF8))
+        return String(result, AuthenticationConstants.CHARSET_UTF8)
     }
 }
