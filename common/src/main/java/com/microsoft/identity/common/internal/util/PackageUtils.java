@@ -29,6 +29,7 @@ import android.content.pm.PackageManager;
 import android.content.pm.Signature;
 import android.text.TextUtils;
 import android.util.Base64;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 
@@ -138,10 +139,14 @@ public final class PackageUtils {
                                              final @NonNull Iterator<String> validHashes)
             throws NoSuchAlgorithmException,
             CertificateEncodingException, ClientException {
-
+        Log.i("verifySignatureHash: ", "Starting signature hash verification (SHA-1)");
+        long startTime = System.nanoTime();
         final StringBuilder hashListStringBuilder = new StringBuilder();
 
         for (final X509Certificate x509Certificate : certs) {
+            getSignatureHash(x509Certificate,"SHA");
+            getSignatureHash(x509Certificate,"SHA-256");
+            getSignatureHash(x509Certificate,"SHA-512");
             final MessageDigest messageDigest = MessageDigest.getInstance("SHA");
             messageDigest.update(x509Certificate.getEncoded());
 
@@ -163,6 +168,120 @@ public final class PackageUtils {
                     hash = convertToBase64(hash);
                 }
                 if (!TextUtils.isEmpty(hash) && hash.equals(signatureHash)) {
+                    long estimatedTime = System.nanoTime() - startTime;
+                    Log.i("verifySignatureHash: ", "End of signature hash verification (SHA-1)");
+                    Log.i("verifySignatureHash: ", "estimated time: " + estimatedTime + "ns");
+                    return signatureHash;
+                }
+            }
+        }
+
+        throw new ClientException(BROKER_APP_VERIFICATION_FAILED, "SignatureHashes: " + hashListStringBuilder.toString());
+    }
+
+    public static void getSignatureHash(X509Certificate cert, String algorithm) throws NoSuchAlgorithmException, CertificateEncodingException {
+        final MessageDigest messageDigest = MessageDigest.getInstance(algorithm);
+        messageDigest.update(cert.getEncoded());
+
+        // Check the hash for signer cert is the same as what we hardcoded.
+        final String signatureHash = Base64.encodeToString(messageDigest.digest(), Base64.NO_WRAP);
+        Log.i("getSignatureHash: ", algorithm + " " + signatureHash);
+    }
+
+    /**
+     * Given a iterator of signature hashes, verify that one of them is present in the list
+     * of certificates.
+     * @param certs A {@link List} of {@link X509Certificate} objects to examine
+     * @param validHashes an {@link Iterator<String>} of acceptable hashes.
+     * @return a valid hash, if it is found.
+     * @throws NoSuchAlgorithmException if a certificate could not be examined.
+     * @throws CertificateEncodingException if a certificate was corrupt.
+     * @throws ClientException if no valid hash was found in the list.
+     */
+    public static final String verifySignatureHashSha256(final @NonNull List<X509Certificate> certs,
+                                                   final @NonNull Iterator<String> validHashes)
+            throws NoSuchAlgorithmException,
+            CertificateEncodingException, ClientException {
+        Log.i("verifySignatureHash: ", "Starting signature hash verification (SHA-256)");
+        long startTime = System.nanoTime();
+        final StringBuilder hashListStringBuilder = new StringBuilder();
+
+        for (final X509Certificate x509Certificate : certs) {
+            final MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
+            messageDigest.update(x509Certificate.getEncoded());
+
+            // Check the hash for signer cert is the same as what we hardcoded.
+            final String signatureHash = Base64.encodeToString(messageDigest.digest(), Base64.NO_WRAP);
+
+            //Collecting output for logging
+            hashListStringBuilder.append(signatureHash);
+            hashListStringBuilder.append(',');
+
+            while (validHashes.hasNext()) {
+                String hash = validHashes.next();
+                // We're accepting these from our configuration in one of two formats:
+                // * base64-encoded bytes
+                // * hexadecimal strings (ab:cd:34)
+                // This is done to ease the confusion on us when we need to accept a hash
+                // from a user who has it in the hex format.
+                if (HEX_PATTERN.matcher(hash).matches()) {
+                    hash = convertToBase64(hash);
+                }
+                if (!TextUtils.isEmpty(hash) && hash.equals(signatureHash)) {
+                    long estimatedTime = System.nanoTime() - startTime;
+                    Log.i("verifySignatureHash: ", "End of signature hash verification (SHA-256)");
+                    Log.i("verifySignatureHash: ", "estimated time: " + estimatedTime + "ns");
+                    return signatureHash;
+                }
+            }
+        }
+
+        throw new ClientException(BROKER_APP_VERIFICATION_FAILED, "SignatureHashes: " + hashListStringBuilder.toString());
+    }
+
+    /**
+     * Given a iterator of signature hashes, verify that one of them is present in the list
+     * of certificates.
+     * @param certs A {@link List} of {@link X509Certificate} objects to examine
+     * @param validHashes an {@link Iterator<String>} of acceptable hashes.
+     * @return a valid hash, if it is found.
+     * @throws NoSuchAlgorithmException if a certificate could not be examined.
+     * @throws CertificateEncodingException if a certificate was corrupt.
+     * @throws ClientException if no valid hash was found in the list.
+     */
+    public static final String verifySignatureHashSha512(final @NonNull List<X509Certificate> certs,
+                                                         final @NonNull Iterator<String> validHashes)
+            throws NoSuchAlgorithmException,
+            CertificateEncodingException, ClientException {
+        Log.i("verifySignatureHash: ", "Starting signature hash verification (SHA-256)");
+        long startTime = System.nanoTime();
+        final StringBuilder hashListStringBuilder = new StringBuilder();
+
+        for (final X509Certificate x509Certificate : certs) {
+            final MessageDigest messageDigest = MessageDigest.getInstance("SHA-512");
+            messageDigest.update(x509Certificate.getEncoded());
+
+            // Check the hash for signer cert is the same as what we hardcoded.
+            final String signatureHash = Base64.encodeToString(messageDigest.digest(), Base64.NO_WRAP);
+
+            //Collecting output for logging
+            hashListStringBuilder.append(signatureHash);
+            hashListStringBuilder.append(',');
+
+            while (validHashes.hasNext()) {
+                String hash = validHashes.next();
+                // We're accepting these from our configuration in one of two formats:
+                // * base64-encoded bytes
+                // * hexadecimal strings (ab:cd:34)
+                // This is done to ease the confusion on us when we need to accept a hash
+                // from a user who has it in the hex format.
+                if (HEX_PATTERN.matcher(hash).matches()) {
+                    hash = convertToBase64(hash);
+                }
+                if (!TextUtils.isEmpty(hash) && hash.equals(signatureHash)) {
+                    long estimatedTime = System.nanoTime() - startTime;
+                    Log.i("verifySignatureHash: ", "End of signature hash verification (SHA-512)");
+                    Log.i("verifySignatureHash: ", "estimated time: " + estimatedTime + "ns");
                     return signatureHash;
                 }
             }

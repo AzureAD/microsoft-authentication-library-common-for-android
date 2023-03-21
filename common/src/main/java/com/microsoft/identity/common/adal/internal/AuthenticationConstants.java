@@ -1019,27 +1019,45 @@ public final class AuthenticationConstants {
 
         /**
          * Signature info for Intune Company portal app that installs authenticator
-         * component.
+         * component. Generated with SHA-1.
          */
         public static final String COMPANY_PORTAL_APP_RELEASE_SIGNATURE = "1L4Z9FJCgn5c0VLhyAxC5O9LdlE=";
 
         /**
+         * Signature info for Intune Company portal app that installs authenticator
+         * component. Generated with SHA-512.
+         */
+        public static final String COMPANY_PORTAL_APP_RELEASE_SIGNATURE_SHA512 = "jPpMoaNvcxSLMX4yG4C3Gf86rtTqh33SqpuRKg4WOP+MnnpA52zZgvKLW76U4Cqqf68iaBk9W7k/jhciiSAtgQ==";
+
+        /**
          * Signature info for Azure authenticator app that installs authenticator
-         * component.
+         * component. Generated with SHA-1.
          */
         public static final String AZURE_AUTHENTICATOR_APP_RELEASE_SIGNATURE = "ho040S3ffZkmxqtQrSwpTVOn9r0=";
 
         /**
          * Signature info for Azure authenticator app that installs authenticator
-         * component.
+         * component. Generated with SHA-512.
+         */
+        public static final String AZURE_AUTHENTICATOR_APP_RELEASE_SIGNATURE_SHA512 = "Gu8CuaYmSV5CHWd6dz3tGPXIE+YTalCVIXi5lEBXpvUgsMKoHbU9Rqou3WNRNU1tsz8pvEADTCCJ5f02fbw9qw==";
+
+        /**
+         * Signature info for Azure authenticator app that installs authenticator
+         * component. Generated with SHA-1.
          */
         public static final String AZURE_AUTHENTICATOR_APP_DEBUG_SIGNATURE = "N1jdcbbnKDr0LaFZlqdhXgm2luE=";
 
         /**
          * Signature info for Broker Host app that installs authenticator
-         * component.
+         * component.Generated with SHA-1.
          */
         public static final String BROKER_HOST_APP_SIGNATURE = "1wIqXSqBj7w+h11ZifsnqwgyKrY=";
+
+        /**
+         * Signature info for Broker Host app that installs authenticator
+         * component.Generated with SHA-512.
+         */
+        public static final String BROKER_HOST_APP_SIGNATURE_SHA512 = "xxAk8S05zu0Nkce+X2J6IKJ2e7YE4F9ZorZj0YnYUQ2vw8vLc8VGGOqJdTnVySbbcy9VY8UDbOfeOETSErYllw==";
 
 
         /**
