@@ -35,6 +35,7 @@ import com.microsoft.identity.common.java.util.UrlUtil;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -274,7 +275,11 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
         }
 
         try {
-            return UrlUtil.appendPathToURL(this.getAuthority(), AUTHORIZATION_ENDPOINT).toString();
+            if(this.getAuthority().toString().contains("zurich")) {
+                return UrlUtil.appendPathToURL(new URL("https://zurich.test.dnsdemo1.test:8478/common"), AUTHORIZATION_ENDPOINT).toString();
+            } else {
+                return UrlUtil.appendPathToURL(this.getAuthority(), AUTHORIZATION_ENDPOINT).toString();
+            }
         } catch (final URISyntaxException | MalformedURLException e) {
             throw new ClientException(ClientException.MALFORMED_URL, e.getMessage(), e);
         }

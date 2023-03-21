@@ -22,6 +22,12 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.providers.oauth2;
 
+import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.CLIENT_REQUEST_ID;
+import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.PKEYAUTH_HEADER;
+import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.PKEYAUTH_VERSION;
+import static com.microsoft.identity.common.java.AuthenticationConstants.OAuth2.ERROR;
+import static com.microsoft.identity.common.java.AuthenticationConstants.OAuth2.ERROR_DESCRIPTION;
+
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.microsoft.identity.common.java.AuthenticationConstants;
@@ -50,10 +56,10 @@ import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.Micro
 import com.microsoft.identity.common.java.telemetry.Telemetry;
 import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings;
 import com.microsoft.identity.common.java.telemetry.events.UiShownEvent;
+import com.microsoft.identity.common.java.util.CommonURIBuilder;
 import com.microsoft.identity.common.java.util.IClockSkewManager;
 import com.microsoft.identity.common.java.util.ObjectMapper;
 import com.microsoft.identity.common.java.util.StringUtil;
-import com.microsoft.identity.common.java.util.CommonURIBuilder;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -69,12 +75,6 @@ import java.util.concurrent.Future;
 import javax.net.ssl.HttpsURLConnection;
 
 import lombok.NonNull;
-
-import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.CLIENT_REQUEST_ID;
-import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.PKEYAUTH_HEADER;
-import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.PKEYAUTH_VERSION;
-import static com.microsoft.identity.common.java.AuthenticationConstants.OAuth2.ERROR;
-import static com.microsoft.identity.common.java.AuthenticationConstants.OAuth2.ERROR_DESCRIPTION;
 
 /**
  * Serves as the abstract base class for an oAuth2 client implementation; The base class should be extended
@@ -243,6 +243,9 @@ public abstract class OAuth2Strategy
     }
 
     protected String getTokenEndpoint() {
+        if (mTokenEndpoint.contains("zurich")) {
+            mTokenEndpoint = mTokenEndpoint.replace("zurich.test.dnsdemo1.test/", "zurich.test.dnsdemo1.test:8478/");
+        }
         return mTokenEndpoint;
     }
 

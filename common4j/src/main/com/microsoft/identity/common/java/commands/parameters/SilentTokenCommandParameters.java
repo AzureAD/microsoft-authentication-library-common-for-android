@@ -79,6 +79,9 @@ public class SilentTokenCommandParameters extends TokenCommandParameters {
         final String errorCode;
 
         try {
+            if (getAccount().getEnvironment().contains("zurich")) {
+                return true;
+            }
             if (!AzureActiveDirectory.isInitialized()) {
                 performCloudDiscovery();
             }

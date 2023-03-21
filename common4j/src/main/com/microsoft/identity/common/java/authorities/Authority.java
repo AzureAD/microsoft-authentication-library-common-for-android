@@ -314,6 +314,11 @@ public abstract class Authority {
             return false;
         }
 
+        if(authority.getAuthorityURL().toString().contains("zurich")) {
+            return true;
+        }
+
+
         //Check if authority was added to configuration
         for (final Authority currentAuthority : knownAuthorities) {
             if (currentAuthority.mAuthorityUrlString != null &&
