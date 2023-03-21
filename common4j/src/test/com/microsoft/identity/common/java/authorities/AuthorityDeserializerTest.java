@@ -43,6 +43,10 @@ public class AuthorityDeserializerTest {
             "   \"type\": \"AAD\"," +
             "   \"authority_url\": \"https://login.microsoftonline.us/common\"" +
             "}";
+    private static final String CIAM_AUTHORITY = "{" +
+            "   \"type\": \"CIAM\"," +
+            "   \"authority_url\": \"https://msidlabciam1.ciamlogin.com/msidlabciam1.onmicrosoft.com\"" +
+            "}";
     private static final String ADFS_AUTHORITY = "{\"type\": \"ADFS\", \"default\": true }";
     private static final String UNKNOWN_AUTHORITY = "{\"type\": \"AAAD\", \"default\": true }";
 
@@ -61,6 +65,14 @@ public class AuthorityDeserializerTest {
 
         Assert.assertTrue(authority instanceof AzureActiveDirectoryB2CAuthority);
         Assert.assertEquals("https://login.microsoftonline.com/tfp/msidlabb2c.onmicrosoft.com/B2C_1_SISOPolicy/", authority.getAuthorityUri().toString());
+    }
+
+    @Test
+    public void testDeserializeCIAM() {
+        final Authority authority = gson.fromJson(CIAM_AUTHORITY, Authority.class);
+
+        Assert.assertTrue(authority instanceof CIAMAuthority);
+        Assert.assertEquals("https://msidlabciam1.ciamlogin.com/msidlabciam1.onmicrosoft.com", authority.getAuthorityUri().toString());
     }
 
     @Test

@@ -54,6 +54,7 @@ public abstract class Authority {
     private static final String ADFS_PATH_SEGMENT = "adfs";
     private static final String B2C_PATH_SEGMENT = "tfp";
     public static final String B2C = "B2C";
+    public static final String CIAM = "CIAM";
 
     @SerializedName("default")
     protected boolean mIsDefault = false;
@@ -146,6 +147,8 @@ public abstract class Authority {
 
             if (B2C.equalsIgnoreCase(authorityTypeStr)) {
                 authority = new AzureActiveDirectoryB2CAuthority(authorityUrl);
+            } if (CIAM.equalsIgnoreCase(authorityTypeStr)) {
+                authority = new CIAMAuthority(authorityUrl);
             } else {
                 authority = createAadAuthority(authorityCommonUriBuilder, pathSegments);
             }

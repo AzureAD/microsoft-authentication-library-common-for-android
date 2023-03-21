@@ -20,51 +20,26 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.java.authorities;
+package com.microsoft.identity.internal.testutils.authorities;
 
+import com.microsoft.identity.common.java.authorities.CIAMAuthority;
 import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.java.logging.Logger;
-import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration;
-import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters;
+import com.microsoft.identity.internal.testutils.strategies.ResourceOwnerPasswordCredentialsTestStrategy;
 
-public class CIAMAuthority extends Authority {
-    private static transient final String TAG = CIAMAuthority.class.getSimpleName();
+public class CIAMTestAuthority extends CIAMAuthority {
 
-    public CIAMAuthority(String authorityUrl) {
-        mAuthorityTypeString = "CIAM";
-        mAuthorityUrlString = authorityUrl;
-    }
-
-    protected MicrosoftStsOAuth2Configuration createOAuth2Configuration() {
-        final String methodName = ":createOAuth2Configuration";
-        Logger.verbose(
-                TAG + methodName,
-                "Creating OAuth2Configuration"
-        );
-        MicrosoftStsOAuth2Configuration config = new MicrosoftStsOAuth2Configuration();
-        config.setAuthorityUrl(this.getAuthorityURL());
-        config.setMultipleCloudsSupported(false);
-
-        if (mSlice != null) {
-            Logger.info(
-                    TAG + methodName,
-                    "Setting slice parameters..."
-            );
-            final AzureActiveDirectorySlice slice = new AzureActiveDirectorySlice();
-            slice.setSlice(mSlice.getSlice());
-            slice.setDataCenter(mSlice.getDataCenter());
-            config.setSlice(slice);
-        }
-
-        return config;
+    public CIAMTestAuthority(String authorityUrl) {
+        super(authorityUrl);
     }
 
     @Override
     public OAuth2Strategy createOAuth2Strategy(OAuth2StrategyParameters parameters) throws ClientException {
-            MicrosoftStsOAuth2Configuration config = createOAuth2Configuration();
-            return new MicrosoftStsOAuth2Strategy(config, parameters);
+        final MicrosoftStsOAuth2Configuration config = createOAuth2Configuration();
+
+        // return a custom ropc test strategy to perform ropc flow for test automation
+        return new ResourceOwnerPasswordCredentialsTestStrategy(config);
     }
 }
