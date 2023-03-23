@@ -30,8 +30,15 @@ import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.Micro
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters;
 
+import lombok.NonNull;
+
 public class CIAMAuthority extends Authority {
     private static transient final String TAG = CIAMAuthority.class.getSimpleName();
+
+    // Adding this flag to indicate whether or not we should load the OpenId Configuration as part of handling
+    // CIAM flows. This is currently relevant for fetching the authorization endpoint from OpenId rather than
+    // using the authority itself + adding the default authorization endpoint.
+    private final boolean CIAM_USE_OPENID_CONFIGURATION = true;
 
     public CIAMAuthority(String authorityUrl) {
         mAuthorityTypeString = "CIAM";
@@ -65,6 +72,24 @@ public class CIAMAuthority extends Authority {
     @Override
     public OAuth2Strategy createOAuth2Strategy(OAuth2StrategyParameters parameters) throws ClientException {
             MicrosoftStsOAuth2Configuration config = createOAuth2Configuration();
-            return new MicrosoftStsOAuth2Strategy(config, parameters);
+            final MicrosoftStsOAuth2Strategy strategy = new MicrosoftStsOAuth2Strategy(config, parameters);
+            if (CIAM_USE_OPENID_CONFIGURATION) {
+                strategy.loadOpenIdProviderConfiguration();
+            }
+            return strategy;
+    }
+
+    /**
+     * This method takes a CIAM authority string of format "tenant.ciamlogin.com" or "https://tenant.ciamlogin.com"
+     * @param authorityNoPath
+     * @return
+     */
+    public static String getFullAuthorityUrlFromAuthorityWithoutPath(@NonNull String authorityNoPath){
+        if (authorityNoPath.startsWith("https://")){
+            authorityNoPath = authorityNoPath.substring(8);
+        }
+        // Split environment to isolate the tenant
+        final String tenant = authorityNoPath.split("\\.")[0];
+        return "https://" + authorityNoPath + "/" + tenant + ".onmicrosoft.com";
     }
 }

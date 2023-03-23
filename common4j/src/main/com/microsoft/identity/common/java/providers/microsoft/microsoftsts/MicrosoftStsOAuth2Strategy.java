@@ -66,6 +66,8 @@ import com.microsoft.identity.common.java.providers.oauth2.IAuthorizationStrateg
 import com.microsoft.identity.common.java.providers.oauth2.IDToken;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters;
+import com.microsoft.identity.common.java.providers.oauth2.OpenIdProviderConfiguration;
+import com.microsoft.identity.common.java.providers.oauth2.OpenIdProviderConfigurationClient;
 import com.microsoft.identity.common.java.providers.oauth2.TokenErrorResponse;
 import com.microsoft.identity.common.java.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
@@ -89,7 +91,6 @@ import java.util.UUID;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import io.opentelemetry.api.trace.Span;
 import lombok.NonNull;
 
 // Suppressing rawtype warnings due to the generic type AuthorizationStrategy, AuthorizationResult, AuthorizationResultFactory and MicrosoftAuthorizationRequest
@@ -121,6 +122,7 @@ public class MicrosoftStsOAuth2Strategy
     private static final String RESOURCE_DEFAULT_SCOPE = "/.default";
 
     private final HttpClient httpClient = UrlConnectionHttpClient.getDefaultInstance();
+    private OpenIdProviderConfiguration mOpenIdProviderConfiguration;
 
     /**
      * Constructor of MicrosoftStsOAuth2Strategy.
@@ -307,11 +309,11 @@ public class MicrosoftStsOAuth2Strategy
             builder.setSlice(mConfig.getSlice());
         }
 
-
         builder.setLibraryName(DiagnosticContext.INSTANCE.getRequestContext().get(PRODUCT));
         builder.setLibraryVersion(Device.getProductVersion());
         builder.setFlightParameters(mConfig.getFlightParameters());
         builder.setMultipleCloudAware(mConfig.getMultipleCloudsSupported());
+        builder.setOpenIdProviderConfiguration(mOpenIdProviderConfiguration);
 
         return builder;
     }
@@ -808,5 +810,22 @@ public class MicrosoftStsOAuth2Strategy
         }
 
         return deviceKid.equals(atKid);
+    }
+
+    /**
+     * Using this method to load the {@link OpenIdProviderConfiguration}
+     */
+    public void loadOpenIdProviderConfiguration() {
+        try {
+            final OpenIdProviderConfigurationClient client =
+                    new OpenIdProviderConfigurationClient(mConfig.getAuthorityUrl().toString());
+            mOpenIdProviderConfiguration = client.loadOpenIdProviderConfiguration();
+        } catch (URISyntaxException | ServiceException e) {
+            Logger.error(
+                    TAG,
+                    "There was a problem with loading the openIdConfiguration",
+                    e
+            );
+        }
     }
 }

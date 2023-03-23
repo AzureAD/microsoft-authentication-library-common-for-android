@@ -136,6 +136,10 @@ public abstract class Authority {
         final List<String> pathSegments = authorityCommonUriBuilder.getPathSegments();
 
         if (pathSegments.size() == 0) {
+            if (authorityUrl.contains("ciamlogin.com")){
+                // This is a CIAM authority, return CIAMTestAuthority
+                return new CIAMAuthority(CIAMAuthority.getFullAuthorityUrlFromAuthorityWithoutPath(authorityUrl));
+            }
             return new UnknownAuthority();
         }
 
