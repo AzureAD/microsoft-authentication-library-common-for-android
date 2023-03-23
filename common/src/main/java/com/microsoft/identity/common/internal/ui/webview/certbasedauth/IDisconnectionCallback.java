@@ -20,15 +20,14 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java.broker;
+package com.microsoft.identity.common.internal.ui.webview.certbasedauth;
 
-import lombok.NonNull;
-
-public interface IBrokerAccount {
-
+/**
+ * Callback methods to be run upon initial disconnection of a smartcard device.
+ */
+public interface IDisconnectionCallback {
     /**
-     * Get account's (unique) username.
-     * */
-    @NonNull
-    String getUsername();
+     * Logic to be run upon disconnection of a smartcard device.
+     */
+    void onClosedConnection();
 }

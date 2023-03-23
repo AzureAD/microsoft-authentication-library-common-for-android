@@ -160,6 +160,23 @@ public class DialogHolder implements IDialogHolder {
     }
 
     /**
+     * Builds and shows a SmartcardDialog that prompts the user to remove their smartcard from the device.
+     * @param dismissCallback a callback that holds logic to be run upon dismissal of the dialog.
+     */
+    @Override
+    public synchronized void showSmartcardRemovalPromptDialog(@Nullable final IDismissCallback dismissCallback) {
+        showDialog(new SmartcardRemovalPromptDialog(new IDismissCallback() {
+            @Override
+            public void onDismiss() {
+                dismissDialog();
+                if (dismissCallback != null) {
+                    dismissCallback.onDismiss();
+                }
+            }
+        }, mActivity));
+    }
+
+    /**
      * Dismisses current dialog, if one is showing.
      */
     public synchronized void dismissDialog() {
@@ -192,12 +209,22 @@ public class DialogHolder implements IDialogHolder {
     }
 
     /**
-     * Runs the onCancelCbaCallback code for the current dialog.
-     * Used when YubiKey is unexpectedly disconnected from device.
+     * Informs if a {@link SmartcardRemovalPromptDialog} is currently showing.
+     *
+     * @return True if the current dialog showing is an instance of SmartcardRemovalPromptDialog. False otherwise.
      */
-    public synchronized void onCancelCba() {
+    @Override
+    public synchronized boolean isSmartcardRemovalPromptDialogShowing() {
+        return mCurrentDialog instanceof SmartcardRemovalPromptDialog;
+    }
+
+    /**
+     * Used when smartcard is unexpectedly disconnected via USB from device.
+     */
+    @Override
+    public synchronized void onUnexpectedUnplug() {
         if (mCurrentDialog != null) {
-            mCurrentDialog.onCancelCba();
+            mCurrentDialog.onUnexpectedUnplug();
         }
     }
 

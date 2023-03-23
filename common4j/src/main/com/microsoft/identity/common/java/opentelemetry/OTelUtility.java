@@ -22,13 +22,10 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.opentelemetry;
 
-import static com.microsoft.identity.common.java.opentelemetry.AttributeName.parent_span_name;
-
 import com.microsoft.identity.common.java.logging.Logger;
 
 import javax.annotation.Nullable;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.metrics.LongCounter;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.trace.Span;
@@ -45,7 +42,7 @@ public class OTelUtility {
      **/
     @NonNull
     public static Span createSpan(@NonNull final String name) {
-        final Tracer tracer = GlobalOpenTelemetry.getTracer(TAG);
+        final Tracer tracer = OpenTelemetryHolder.getTracer(TAG);
         return tracer.spanBuilder(name).startSpan();
     }
 
@@ -67,7 +64,7 @@ public class OTelUtility {
             return createSpan(name);
         }
 
-        final Tracer tracer = GlobalOpenTelemetry.getTracer(TAG);
+        final Tracer tracer = OpenTelemetryHolder.getTracer(TAG);
 
         return tracer.spanBuilder(name)
                 .setParent(Context.current().with(Span.wrap(parentSpanContext)))
@@ -79,7 +76,7 @@ public class OTelUtility {
      **/
     @NonNull
     public static LongCounter createLongCounter(@NonNull final String name, @NonNull final String description) {
-        final Meter meter = GlobalOpenTelemetry.getMeter(TAG);
+        final Meter meter = OpenTelemetryHolder.getMeter(TAG);
 
         return meter
                 .counterBuilder(name)

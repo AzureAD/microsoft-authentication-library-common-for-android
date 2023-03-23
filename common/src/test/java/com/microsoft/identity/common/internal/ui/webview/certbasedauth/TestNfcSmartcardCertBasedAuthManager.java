@@ -61,7 +61,6 @@ class TestNfcSmartcardCertBasedAuthManager extends AbstractNfcSmartcardCertBased
 
     @Override
     void stopDiscovery(@NonNull final Activity activity) {
-        mockDisconnect();
     }
 
     @Override
@@ -97,9 +96,5 @@ class TestNfcSmartcardCertBasedAuthManager extends AbstractNfcSmartcardCertBased
         if (mConnectionCallback != null) {
             mConnectionCallback.onCreateConnection();
         }
-    }
-
-    public void mockDisconnect() {
-        mIsConnected = false;
     }
 }

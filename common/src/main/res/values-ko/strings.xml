@@ -57,4 +57,5 @@
     <string name="smartcard_nfc_reminder_dialog_positive_button">확인</string>
 
     <string name="smartcard_removal_prompt_dialog_title">이제 스마트 카드를 제거할 수 있습니다.</string>
+    <string name="smartcard_removal_prompt_dialog_positive_button">확인</string>
 </resources>

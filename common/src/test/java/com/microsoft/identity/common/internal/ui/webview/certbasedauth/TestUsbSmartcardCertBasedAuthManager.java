@@ -101,8 +101,8 @@ class TestUsbSmartcardCertBasedAuthManager extends AbstractUsbSmartcardCertBased
 
     public void mockDisconnect() {
         mIsConnected = false;
-        if (mConnectionCallback != null) {
-            mConnectionCallback.onClosedConnection();
+        if (mDisconnectionCallback != null) {
+            mDisconnectionCallback.onClosedConnection();
         }
     }
 }

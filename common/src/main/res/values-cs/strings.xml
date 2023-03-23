@@ -57,4 +57,5 @@
     <string name="smartcard_nfc_reminder_dialog_positive_button">Rozumím</string>
 
     <string name="smartcard_removal_prompt_dialog_title">Teď můžete čipovou kartu odebrat.</string>
+    <string name="smartcard_removal_prompt_dialog_positive_button">Rozumím</string>
 </resources>

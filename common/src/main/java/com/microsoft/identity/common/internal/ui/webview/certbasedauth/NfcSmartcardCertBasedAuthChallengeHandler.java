@@ -29,7 +29,10 @@ import android.webkit.ClientCertRequest;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 
+import com.microsoft.identity.common.R;
+import com.microsoft.identity.common.internal.ui.webview.ISendResultCallback;
 import com.microsoft.identity.common.java.opentelemetry.ICertBasedAuthTelemetryHelper;
+import com.microsoft.identity.common.logging.Logger;
 
 /**
  * Handles a received ClientCertRequest by prompting the user to choose from certificates
@@ -51,14 +54,39 @@ public class NfcSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
     }
 
     /**
-     * Pauses smartcard discovery, if the particular authentication method isn't meant to have
-     *  discovery active throughout the entire flow.
+     * To be called when user interaction is needed, or to prepare for any unexpected user interaction.
+     * When a connection is no longer actively being used, the dialog flow should pause
+     * so the user can remove their smartcard before flow can continue.
+     * @param nextInteractionCallback the next logic to be run after a user removes their smartcard.
      */
     @Override
-    protected void onPausedSmartcardDiscovery() {
-        //Helps prevent unnecessary callback trigger. Nfc discovery should only be active when
-        // the user is prompted to tap.
-        mCbaManager.stopDiscovery(mActivity);
+    protected void prepForNextUserInteraction(@NonNull final IDisconnectionCallback nextInteractionCallback) {
+        if (!mCbaManager.isDeviceConnected()) {
+            nextInteractionCallback.onClosedConnection();
+            return;
+        }
+        clearAllManagerCallbacks();
+        //This would normally be where we would use the remove() YubiKit method within a wrapper.
+        //But there seems to be some concurrency issues that arise when using this method with certain Android devices.
+        //So for now, the prompt that tells the user they can remove their smartcard will have a button where they can dismiss it themselves.
+        mDialogHolder.showSmartcardRemovalPromptDialog(new IDismissCallback() {
+            @Override
+            public void onDismiss() {
+                //Helps prevent unnecessary callback trigger. Nfc discovery should only be active when
+                // the user is prompted to tap.
+                mCbaManager.stopDiscovery(mActivity);
+                nextInteractionCallback.onClosedConnection();
+            }
+        });
+    }
+
+    /**
+     * Helper method to log and show a disconnection error.
+     * @param methodName calling method name.
+     */
+    @Override
+    protected void indicateDisconnectionError(@NonNull String methodName) {
+        //Nothing needed for NFC.
     }
 
     /**
@@ -89,11 +117,21 @@ public class NfcSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
                     public void onCreateConnection() {
                         mDialogHolder.showSmartcardNfcLoadingDialog();
                         if (mCbaManager.isDeviceChanged()) {
-                            //In a future version, an error dialog with a custom message could be shown here instead of a general error.
-                            indicateGeneralException(methodTag, new Exception("Device connected via NFC is different from initially connected device."));
-                            request.cancel();
                             clearPin(pin);
-                            onPausedSmartcardDiscovery();
+                            request.cancel();
+                            prepForNextUserInteraction(new IDisconnectionCallback() {
+                                @Override
+                                public void onClosedConnection() {
+                                    //In a future version, an error dialog with a custom message could be shown here instead of a general error.
+                                    final String errorMessage = "Device connected via NFC is different from initially connected device.";
+                                    Logger.info(methodTag, errorMessage);
+                                    mTelemetryHelper.setResultFailure(errorMessage);
+                                    //Show general error dialog.
+                                    mDialogHolder.showErrorDialog(
+                                            R.string.smartcard_general_error_dialog_title,
+                                            R.string.smartcard_general_error_dialog_message);
+                                }
+                            });
                             return;
                         }
                         mCbaManager.requestDeviceSession(new AbstractSmartcardCertBasedAuthManager.ISessionCallback() {
@@ -105,10 +143,14 @@ public class NfcSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
 
                             @Override
                             public void onException(@NonNull final Exception e) {
-                                indicateGeneralException(methodTag, e);
-                                request.cancel();
                                 clearPin(pin);
-                                onPausedSmartcardDiscovery();
+                                request.cancel();
+                                prepForNextUserInteraction(new IDisconnectionCallback() {
+                                    @Override
+                                    public void onClosedConnection() {
+                                        indicateGeneralException(methodTag, e);
+                                    }
+                                });
                             }
                         });
                     }
@@ -133,5 +175,32 @@ public class NfcSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
                 getGeneralCancelCbaCallback(request));
         //Update Dialog to indicate that an incorrect attempt was made.
         mDialogHolder.setPinDialogErrorMode();
+    }
+
+    /**
+     * If a smartcard is currently connected, prompt user to remove the smartcard before
+     *  proceeding with results.
+     * @param callback {@link ISendResultCallback}
+     */
+    @Override
+    public void promptSmartcardRemovalForResult(@NonNull final ISendResultCallback callback) {
+        if (mCbaManager.isDeviceConnected()) {
+            prepForNextUserInteraction(new IDisconnectionCallback() {
+                @Override
+                public void onClosedConnection() {
+                    callback.onResultReady();
+                }
+            });
+            return;
+        }
+        callback.onResultReady();
+    }
+
+    /**
+     * Clears appropriate connection and disconnection callbacks.
+     */
+    @Override
+    protected void clearAllManagerCallbacks() {
+        mCbaManager.clearConnectionCallback();
     }
 }

@@ -20,14 +20,26 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.ui.webview.certbasedauth;
+package com.microsoft.identity.common.java.crypto
 
-/**
- * Callback methods to be run upon initial usb connection and disconnection of a smartcard device.
- */
-public interface IUsbConnectionCallback extends IConnectionCallback {
+import com.microsoft.identity.common.java.exception.ClientException
+
+interface IKeyAccessorStringAdapter {
     /**
-     * Logic to be run upon disconnection of a smartcard device via usb.
+     * Encrypt a plaintext string, returning an encrypted encoded string.
+     *
+     * @param plainText the plaintext to encrypt.
+     * @return the encoded ciphertext.
      */
-    void onClosedConnection();
+    @Throws(ClientException::class)
+    fun encrypt(plainText: String): String
+
+    /**
+     * Decrypt an encoded ciphertext, returning the decrypted values.
+     *
+     * @param cipherText the encoded ciphertext to decrypt.
+     * @return the decrypted string.
+     */
+    @Throws(ClientException::class)
+    fun decrypt(cipherText: String): String
 }
