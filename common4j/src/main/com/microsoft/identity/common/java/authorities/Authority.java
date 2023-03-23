@@ -135,9 +135,10 @@ public abstract class Authority {
 
         final List<String> pathSegments = authorityCommonUriBuilder.getPathSegments();
 
-        if (pathSegments.size() == 0) {
+        // Adding check in case we have a trailing "/" at the end of the authority
+        if (pathSegments.size() == 0 || (pathSegments.size() == 1 && pathSegments.get(0).equals(""))) {
             if (authorityUrl.contains("ciamlogin.com")){
-                // This is a CIAM authority, return CIAMTestAuthority
+                // This is a CIAM authority, return CIAMAuthority
                 return new CIAMAuthority(CIAMAuthority.getFullAuthorityUrlFromAuthorityWithoutPath(authorityUrl));
             }
             return new UnknownAuthority();

@@ -81,10 +81,11 @@ public class CIAMAuthority extends Authority {
 
     /**
      * This method takes a CIAM authority string of format "tenant.ciamlogin.com" or "https://tenant.ciamlogin.com"
-     * @param authorityNoPath
-     * @return
+     * @param authorityNoPath authority to be transformed
+     * @return full CIAM authority with path
      */
     public static String getFullAuthorityUrlFromAuthorityWithoutPath(@NonNull String authorityNoPath){
+        // Remove "https://" if it was included as part of the authority
         if (authorityNoPath.startsWith("https://")){
             authorityNoPath = authorityNoPath.substring(8);
         }
