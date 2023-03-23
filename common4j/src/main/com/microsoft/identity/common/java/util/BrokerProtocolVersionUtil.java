@@ -38,6 +38,8 @@ public class BrokerProtocolVersionUtil {
     public static final String MSAL_TO_BROKER_PROTOCOL_PKEYAUTH_HEADER_CHANGES_MINIMUM_VERSION = "9.0";
     public static final String MSAL_TO_BROKER_PROTOCOL_POP_SCHEME_WITH_CLIENT_KEY_MINIMUM_VERSION = "11.0";
 
+    public static final String MSAL_TO_BROKER_PROTOCOL_NESTED_APP_AUTH_WITH_CLIENT_KEY_MINIMUM_VERSION = "12.0";
+
     /**
      * Verifies if negotiated broker protocol version allows to decompressing/compressing broker payloads.
      *
@@ -88,6 +90,19 @@ public class BrokerProtocolVersionUtil {
         return isProvidedBrokerProtocolLargerOrEqualThanRequiredBrokerProtocol(
                 clientRequiredBrokerProtocolVersion,
                 MSAL_TO_BROKER_PROTOCOL_POP_SCHEME_WITH_CLIENT_KEY_MINIMUM_VERSION);
+    }
+
+    /**
+     * Verifies if client required broker protocol version supports Nested app authentication.
+     *
+     * @param clientRequiredBrokerProtocolVersion broker protocol version of the calling app.
+     * @return true if the broker protocol version of the calling app is larger or equal than
+     * the {@link BrokerProtocolVersionUtil#MSAL_TO_BROKER_PROTOCOL_POP_SCHEME_WITH_CLIENT_KEY_MINIMUM_VERSION}.
+     */
+    public static boolean canSupportNestedAppAuthentication(@Nullable final String clientRequiredBrokerProtocolVersion) {
+        return isProvidedBrokerProtocolLargerOrEqualThanRequiredBrokerProtocol(
+                clientRequiredBrokerProtocolVersion,
+                MSAL_TO_BROKER_PROTOCOL_NESTED_APP_AUTH_WITH_CLIENT_KEY_MINIMUM_VERSION);
     }
 
     /**

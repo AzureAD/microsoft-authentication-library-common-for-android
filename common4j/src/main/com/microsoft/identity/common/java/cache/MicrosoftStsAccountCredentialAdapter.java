@@ -88,7 +88,9 @@ public class MicrosoftStsAccountCredentialAdapter
             accessToken.setRealm(getRealm(strategy, response));
             accessToken.setEnvironment(strategy.getIssuerCacheIdentifierFromTokenEndpoint());
             accessToken.setClientId(request.getClientId());
-            accessToken.setRedirectUri(request.getRedirectUri());
+            if (response.isRequestForNAA()) {
+                accessToken.setRedirectUri(request.getRedirectUri());
+            }
             accessToken.setTarget(
                     getTarget(
                             request.getScope(),
@@ -171,7 +173,7 @@ public class MicrosoftStsAccountCredentialAdapter
             refreshToken.setCredentialType(CredentialType.RefreshToken.name());
             refreshToken.setEnvironment(strategy.getIssuerCacheIdentifierFromTokenEndpoint());
             refreshToken.setHomeAccountId(SchemaUtil.getHomeAccountId(clientInfo));
-            if (response.getIsRequestForNAA()) {
+            if (response.isRequestForNAA()) {
                 refreshToken.setClientId(request.getBrkClientId());
             } else {
                 refreshToken.setClientId(request.getClientId());

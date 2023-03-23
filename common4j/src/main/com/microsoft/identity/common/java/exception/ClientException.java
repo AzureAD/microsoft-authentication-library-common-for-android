@@ -294,6 +294,12 @@ public class ClientException extends BaseException {
     public static final String AUTH_SCHEME_NOT_SUPPORTED = "auth_scheme_not_supported";
 
     /**
+     * Nested app authentication is not supported
+     * by the required broker protocol version.
+     */
+    public static final String NESTED_APP_AUTH_NOT_SUPPORTED = "nested_app_auth_not_supported";
+
+    /**
      * Bound service is unavailable or not supported.
      */
     public static final String BOUND_SERVICE_UNAVAILABLE_OR_NOT_SUPPORTED = "bound_service_unavaliable_or_not_supported";

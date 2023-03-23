@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.logging;
 
+import android.util.Log;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -222,6 +224,7 @@ public class Logger extends com.microsoft.identity.common.logging.Logger {
                             final com.microsoft.identity.common.logging.Logger.LogLevel logLevel,
                             final String message,
                             final boolean containsPII) {
+                Log.d(tag, message);
                 externalLogger.log(tag, adapt(logLevel), message, containsPII);
             }
         });

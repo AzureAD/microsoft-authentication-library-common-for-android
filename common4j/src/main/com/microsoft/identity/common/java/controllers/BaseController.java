@@ -863,6 +863,7 @@ public abstract class BaseController {
 
         AccountRecord targetAccount = getCachedAccountRecordFromCallingAppCache(parameters);
         if (targetAccount != null) {
+            Logger.info(methodTag, "Account found in app cache..");
             return targetAccount;
         } else {
             Logger.info(methodTag, "Account not found in app cache..");

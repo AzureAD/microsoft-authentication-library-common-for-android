@@ -983,5 +983,11 @@ public class BrokerMsalController extends BaseController {
                     "The min broker protocol version for PopAuthenticationSchemeWithClientKey should be equal or more than 11.0."
             + " Current required version is set to: " + parameters.getRequiredBrokerProtocolVersion());
         }
+
+        if (parameters.getBrkClientId() != null  && !BrokerProtocolVersionUtil.canSupportNestedAppAuthentication(requiredProtocolVersion)) {
+            throw new ClientException(ClientException.NESTED_APP_AUTH_NOT_SUPPORTED,
+                    "The min broker protocol version for Nested app auth should be equal or more than 12.0."
+                            + " Current required version is set to: " + parameters.getRequiredBrokerProtocolVersion());
+        }
     }
 }
