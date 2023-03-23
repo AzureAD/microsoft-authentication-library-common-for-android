@@ -386,10 +386,10 @@ public class Logger {
                         try {
                             final ILoggerCallback callback = sLoggers.get(loggerCallbackKey);
                             if (callback != null) {
-                                if (logLevel.compareTo(sLogLevel) > 0) {
-                                    logDiscardedLogIfApplicable(logMessage, callback, tag, logLevel, containsPII);
-                                    return;
-                                }
+//                                if (logLevel.compareTo(sLogLevel) > 0) {
+//                                    logDiscardedLogIfApplicable(logMessage, callback, tag, logLevel, containsPII);
+//                                    return;
+//                                }
 
                                 // Developer turns off PII logging, if the log message contains any PII,
                                 // we should not send it.
