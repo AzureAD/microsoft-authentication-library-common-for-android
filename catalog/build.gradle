@@ -23,6 +23,7 @@ catalog {
         version('jupiterApi', '5.6.0')
 
         // library versions
+        version('kotlinCoroutines', '1.6.4')
         version('coreLibraryDesugaring', '1.0.9')
         version('androidxTest', '1.4.0')
         version('annotation', '1.0.0')
@@ -71,7 +72,7 @@ catalog {
         version('adalLegacy', '1.15.0')
         version('adalSnapshot', '3.1.1-SNAPSHOT')
         version('adalLatest', '3.1.1')
-        version('spotbugs', '4.2.3')
+        version('spotbugs', '4.3.0')
         version('spotbugs4j', '3.1.2')
         version('jcip', '1.0-1')
         version('commonsLang', '2.6')
@@ -88,13 +89,11 @@ catalog {
         version('secretService', '1.6.2')
         version('opentelemetry', '1.18.0')
         version('fragment', '1.3.2')
-
-        // TSL versions
-        version('yubikit', '2.0.0')
-        version('yubikit', '2.0.0')
-        version('yubikit', '2.0.0')
-        version('yubikit', '2.0.0')
-        version('yubikit', '2.0.0')
+        version('datastorePreferences', '1.0.0')
+        version('javaFxLinux', '15:linux')
+        version('javaFxWindows', '15:win')
+        version('junitJupiterEngine', '5.7.2')
+        version('junitVintageEngine', '5.7.2')
 
 
         // libraries
@@ -125,7 +124,11 @@ catalog {
         library('opentelemetryBom', 'io.opentelemetry', 'opentelemetry-bom').versionRef('opentelemetry')
         library('opentelemetryApi', 'io.opentelemetry', 'opentelemetry-api').versionRef('opentelemetry')
         library('opentelemetrySdkTrace', 'io.opentelemetry', 'opentelemetry-sdk-trace').versionRef('opentelemetry')
+        library('opentelemetrySdk', 'io.opentelemetry', 'opentelemetry-sdk').versionRef('opentelemetry')
         library('kotlinStdlib', 'org.jetbrains.kotlin', 'kotlin-stdlib').versionRef('kotlin')
+        library('kotlinCoroutinesCore', 'org.jetbrains.kotlinx', 'kotlinx-coroutines-core').versionRef('kotlinCoroutines')
+        library('powerlift', 'com.microsoft.powerlift', 'powerlift').versionRef('powerliftAndroid')
+        library('powerliftGson', 'com.microsoft.powerlift', 'powerlift-gson').versionRef('powerliftAndroid')
 
         // android libraries
         library('appcompat', 'androidx.appcompat', 'appcompat').versionRef('appcompat')
@@ -140,13 +143,16 @@ catalog {
         library('dagger', 'com.google.dagger', 'dagger').versionRef('dagger')
         library('daggerCompiler', 'com.google.dagger', 'dagger-compiler').versionRef('dagger')
         library('tokenShare', 'com.microsoft', 'tokenshare').versionRef('tokenShare')
-        library('ariaAndroid', 'com.microsoft.applications', 'ariaandroidjavasdk').versionRef('ariaAndroid')
+        library('ariaAndroid', 'com.microsoft.applications', 'ariaandroidjavasdk-release').versionRef('ariaAndroid')
         library('knoxSdk', 'com.samsung.android.knox', 'sdk').versionRef('knoxSdk')
         library('knoxSupportLib', 'com.samsung.android.knox', 'supportlib').versionRef('knoxSupportLib')
         library('robotiumSolo', 'com.jayway.android.robotium', 'robotium-solo').versionRef('robotium')
         library('yubikitAndroid', 'com.yubico.yubikit', 'android').versionRef('yubikit')
         library('yubikitPiv', 'com.yubico.yubikit', 'piv').versionRef('yubikit')
         library('fragment', 'androidx.fragment', 'fragment').versionRef('fragment')
+        library('powerliftAndroid', 'com.microsoft.powerlift', 'powerlift-android').versionRef('powerliftAndroid')
+        library('kotlinCoroutinesAndroid', 'org.jetbrains.kotlinx', 'kotlinx-coroutines-android').versionRef('kotlinCoroutines')
+        library('datastorePreferences', 'androidx.datastore', 'datastore-preferences').versionRef('datastorePreferences')
 
         // test libraries
         library('junit', 'junit', 'junit').versionRef('junit')
@@ -156,11 +162,16 @@ catalog {
         library('powermockModuleJunit4Rule', 'org.powermock', 'powermock-module-junit4-rule').versionRef('powermock')
         library('powermockApiMockito2', 'org.powermock', 'powermock-api-mockito2').versionRef('powermock')
         library('powermockClassloadingXstream', 'org.powermock', 'powermock-classloading-xstream').versionRef('powermock')
-        library('junitJupiterApi', 'org.junit.jupiter', 'junit-jupiter-api').versionRef('powermock')
+        library('junitJupiterApi', 'org.junit.jupiter', 'junit-jupiter-api').versionRef('jupiterApi')
+        library('junitVintageEngine', 'org.junit.vintage', 'junit-vintage-engine').versionRef('junitVintageEngine')
+        library('junitJupiterEngine', 'org.junit.jupiter', 'junit-jupiter-engine').versionRef('junitJupiterEngine')
+        library('junitJupiterParams', 'org.junit.jupiter', 'junit-jupiter-params').versionRef('junitJupiterEngine')
         library('robolectric4j', 'org.robolectric', 'junit').versionRef('robolectric')
         library('jacocoMavenPlugin', 'org.jacoco', 'jacoco-maven-plugin').versionRef('jacoco')
         library('openpojo', 'com.openpojo', 'openpojo').versionRef('openpojo')
         library('equalsVerifier', 'nl.jqno.equalsverifier', 'equalsverifier').versionRef('equalsVerifier')
+        library('jsonGenerator', 'net.jimblackler', 'jsongenerator').versionRef('jsonGenerator')
+        library('jsonSchemaFriend', 'net.jimblackler', 'jsonschemafriend').versionRef('jsonSchemaFriend')
 
         // android test libraries
         library('robolectric', 'org.robolectric', 'robolectric').versionRef('robolectric')
@@ -170,7 +181,7 @@ catalog {
         library('androidxTestRules', 'androidx.test', 'rules').versionRef('androidxTest')
         library('androidxTestOrchestrator', 'androidx.test', 'orchestrator').versionRef('androidxTest')
         library('androidxJUnit', 'androidx.test.ext', 'junit').versionRef('androidxJUnit')
-        library('uiAutomator', 'androidx.test', 'uiautomator').versionRef('uiAutomator')
+        library('uiAutomator', 'androidx.test.uiautomator', 'uiautomator').versionRef('uiAutomator')
         library('mockitoAndroid', 'org.mockito', 'mockito-android').versionRef('mockito')
         library('espressoCore', 'androidx.test.espresso', 'espresso-core').versionRef('espresso')
     }

@@ -138,6 +138,7 @@ dependencies {
         transitive = false
     }
 
+    compileOnly libs.spotbugsAnnotations
     compileOnly libs.lombok
     annotationProcessor libs.lombok
 
