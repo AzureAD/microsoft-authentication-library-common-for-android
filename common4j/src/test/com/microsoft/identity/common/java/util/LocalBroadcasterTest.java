@@ -26,24 +26,24 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import com.microsoft.identity.common.java.util.ported.LocalBroadcaster;
-import com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterAliases.RETURN_AUTHORIZATION_REQUEST_RESULT;
+import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterAliases.RETURN_AUTHORIZATION_REQUEST_RESULT;
 
 public class LocalBroadcasterTest {
 
     @Test
     public void testClearReceivers() {
         LocalBroadcaster.INSTANCE.registerCallback(RETURN_AUTHORIZATION_REQUEST_RESULT, null);
-        Assert.assertEquals(LocalBroadcaster.mReceivers.size(), 1);
+        Assert.assertEquals(LocalBroadcaster.INSTANCE.hasReceivers(RETURN_AUTHORIZATION_REQUEST_RESULT), true);
         LocalBroadcaster.INSTANCE.clearReceivers();
-        Assert.assertEquals(LocalBroadcaster.mReceivers.size(), 0);
+        Assert.assertEquals(LocalBroadcaster.INSTANCE.hasReceivers(RETURN_AUTHORIZATION_REQUEST_RESULT), true);
     }
 
     @Test
     public void testResetBroadcast() {
         LocalBroadcaster.INSTANCE.registerCallback(RETURN_AUTHORIZATION_REQUEST_RESULT, null);
-        Assert.assertEquals(LocalBroadcaster.mReceivers.size(), 1);
+        Assert.assertEquals(LocalBroadcaster.INSTANCE.hasReceivers(RETURN_AUTHORIZATION_REQUEST_RESULT), true);
         LocalBroadcaster.INSTANCE.clearReceivers();
         LocalBroadcaster.resetBroadcast();
-        Assert.assertEquals(LocalBroadcaster.mReceivers.size(), 0);
+        Assert.assertEquals(LocalBroadcaster.INSTANCE.hasReceivers(RETURN_AUTHORIZATION_REQUEST_RESULT), true);
     }
 }
