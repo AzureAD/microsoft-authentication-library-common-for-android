@@ -37,7 +37,7 @@ public class LocalBroadcasterTest {
         LocalBroadcaster.INSTANCE.registerCallback(AuthenticationConstants.RETURN_AUTHORIZATION_REQUEST_RESULT, null);
         Assert.assertEquals(LocalBroadcaster.mReceivers.size(), 1);
         LocalBroadcaster.INSTANCE.clearReceivers();
-        LocalBroadcaster.resetBroadcast()
+        LocalBroadcaster.resetBroadcast();
         Assert.assertEquals(LocalBroadcaster.mReceivers.size(), 0);
     }
 }
