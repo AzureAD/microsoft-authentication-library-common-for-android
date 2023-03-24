@@ -25,6 +25,9 @@ package com.microsoft.identity.common.java.util;
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.microsoft.identity.common.java.util.ported.LocalBroadcaster;
+import com.microsoft.identity.common.java.AuthenticationConstants;
+
 public class LocalBroadcasterTest {
 
     @Test
