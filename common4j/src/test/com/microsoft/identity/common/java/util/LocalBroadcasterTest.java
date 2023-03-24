@@ -22,6 +22,9 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.util;
 
+import org.junit.Assert;
+import org.junit.Test;
+
 public class LocalBroadcasterTest {
 
     @Test
