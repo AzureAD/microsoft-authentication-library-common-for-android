@@ -37,7 +37,7 @@ public class LocalBroadcasterTest {
         });
         Assert.assertEquals(LocalBroadcaster.INSTANCE.hasReceivers(RETURN_AUTHORIZATION_REQUEST_RESULT), true);
         LocalBroadcaster.INSTANCE.clearReceivers();
-        Assert.assertEquals(LocalBroadcaster.INSTANCE.hasReceivers(RETURN_AUTHORIZATION_REQUEST_RESULT), true);
+        Assert.assertEquals(LocalBroadcaster.INSTANCE.hasReceivers(RETURN_AUTHORIZATION_REQUEST_RESULT), false);
     }
 
     @Test
@@ -48,6 +48,6 @@ public class LocalBroadcasterTest {
         Assert.assertEquals(LocalBroadcaster.INSTANCE.hasReceivers(RETURN_AUTHORIZATION_REQUEST_RESULT), true);
         LocalBroadcaster.INSTANCE.clearReceivers();
         LocalBroadcaster.resetBroadcast();
-        Assert.assertEquals(LocalBroadcaster.INSTANCE.hasReceivers(RETURN_AUTHORIZATION_REQUEST_RESULT), true);
+        Assert.assertEquals(LocalBroadcaster.INSTANCE.hasReceivers(RETURN_AUTHORIZATION_REQUEST_RESULT), false);
     }
 }
