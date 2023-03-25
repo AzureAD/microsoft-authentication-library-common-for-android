@@ -67,5 +67,10 @@ public class LocalBroadcasterTest {
         final PropertyBag propertyBag = new PropertyBag();
         propertyBag.put(RESULT_CODE, 1);
         LocalBroadcaster.INSTANCE.broadcast(RETURN_AUTHORIZATION_REQUEST_RESULT, propertyBag);
+
+        LocalBroadcaster.INSTANCE.unregisterCallback(RETURN_AUTHORIZATION_REQUEST_RESULT);
+        Assert.assertEquals(LocalBroadcaster.INSTANCE.hasReceivers(RETURN_AUTHORIZATION_REQUEST_RESULT), false);
+        propertyBag.put(RESULT_CODE, 2);
+        LocalBroadcaster.INSTANCE.broadcast(RETURN_AUTHORIZATION_REQUEST_RESULT, propertyBag);
     }
 }
