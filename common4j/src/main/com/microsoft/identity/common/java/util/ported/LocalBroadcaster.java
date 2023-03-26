@@ -68,18 +68,18 @@ public enum LocalBroadcaster {
 
     public void broadcast(@NonNull final String alias, @NonNull final PropertyBag propertyBag) {
         final String methodName = ":broadcast";
-//        sBroadcastExecutor.execute(new Runnable() {
-//            public void run() {
-        final IReceiverCallback receiver = mReceivers.get(alias);
-        if (receiver != null) {
-            Logger.info(TAG + methodName, "broadcasting to alias: " + alias);
-            receiver.onReceive(propertyBag);
-        } else {
-            Logger.info(TAG + methodName, "No callback is registered with alias: " + alias +
-                    ". Do nothing.");
-        }
-//            }
-        //});
+        sBroadcastExecutor.execute(new Runnable() {
+            public void run() {
+                final IReceiverCallback receiver = mReceivers.get(alias);
+                if (receiver != null) {
+                    Logger.info(TAG + methodName, "broadcasting to alias: " + alias);
+                    receiver.onReceive(propertyBag);
+                } else {
+                    Logger.info(TAG + methodName, "No callback is registered with alias: " + alias +
+                            ". Do nothing.");
+                }
+            }
+        });
     }
 
     /**
