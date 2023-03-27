@@ -818,9 +818,9 @@ public class MicrosoftStsOAuth2Strategy
     public void loadOpenIdProviderConfiguration() {
         try {
             final OpenIdProviderConfigurationClient client =
-                    new OpenIdProviderConfigurationClient(mConfig.getAuthorityUrl().toString());
-            mOpenIdProviderConfiguration = client.loadOpenIdProviderConfiguration();
-        } catch (URISyntaxException | ServiceException e) {
+                    new OpenIdProviderConfigurationClient();
+            mOpenIdProviderConfiguration = client.loadOpenIdProviderConfigurationFromAuthority(mConfig.getAuthorityUrl().toString());
+        } catch (ServiceException e) {
             Logger.error(
                     TAG,
                     "There was a problem with loading the openIdConfiguration",
