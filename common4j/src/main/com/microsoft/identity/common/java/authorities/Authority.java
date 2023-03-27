@@ -152,7 +152,7 @@ public abstract class Authority {
 
             if (B2C.equalsIgnoreCase(authorityTypeStr)) {
                 authority = new AzureActiveDirectoryB2CAuthority(authorityUrl);
-            } if (CIAM.equalsIgnoreCase(authorityTypeStr)) {
+            } else if (CIAM.equalsIgnoreCase(authorityTypeStr)) {
                 authority = new CIAMAuthority(authorityUrl);
             } else {
                 authority = createAadAuthority(authorityCommonUriBuilder, pathSegments);
