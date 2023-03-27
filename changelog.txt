@@ -5,6 +5,7 @@ vNext
 - [PATCH] Getting rid of account manager strategy in MSAL/OneAuth (#1988)
 - [MINOR] Add JWT Claims to MicrosoftStsTokenRequest to support PRT v3 (#1969)
 - [MAJOR] Some improvements to Open Id Provider Configuration Client (#1990)
+- [PATCH] Revert 'Write back read successes to cache and stop extra lookups in getAll (#1927)' (#1997)
 
 V.10.1.1
 ----------
