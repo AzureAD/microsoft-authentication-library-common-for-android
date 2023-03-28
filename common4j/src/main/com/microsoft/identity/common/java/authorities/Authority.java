@@ -137,7 +137,7 @@ public abstract class Authority {
 
         // Adding check in case we have a trailing "/" at the end of the authority
         if (pathSegments.size() == 0 || (pathSegments.size() == 1 && pathSegments.get(0).equals(""))) {
-            if (authorityUrl.contains("ciamlogin.com")){
+            if (authorityUrl.contains(CIAMAuthority.CIAM_LOGIN_URL_SEGMENT)){
                 // This is a CIAM authority, return CIAMAuthority
                 return new CIAMAuthority(CIAMAuthority.getFullAuthorityUrlFromAuthorityWithoutPath(authorityUrl));
             }

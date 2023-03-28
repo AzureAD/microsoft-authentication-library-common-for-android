@@ -29,9 +29,15 @@ import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.Micro
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters;
+import com.microsoft.identity.common.java.providers.oauth2.OpenIdProviderConfiguration;
 
 import lombok.NonNull;
 
+/**
+ * Authority class to support CIAM Authority type.
+ *
+ * This class utilizes {@link OpenIdProviderConfiguration} to supply endpoints directly from Open ID
+ */
 public class CIAMAuthority extends Authority {
     private static transient final String TAG = CIAMAuthority.class.getSimpleName();
 
@@ -40,8 +46,10 @@ public class CIAMAuthority extends Authority {
     // using the authority itself + adding the default authorization endpoint.
     private final boolean CIAM_USE_OPENID_CONFIGURATION = true;
 
-    public CIAMAuthority(String authorityUrl) {
-        mAuthorityTypeString = "CIAM";
+    public static final String CIAM_LOGIN_URL_SEGMENT = "ciamlogin.com";
+
+    public CIAMAuthority(@NonNull final String authorityUrl) {
+        mAuthorityTypeString = Authority.CIAM;
         mAuthorityUrlString = authorityUrl;
     }
 
@@ -51,7 +59,7 @@ public class CIAMAuthority extends Authority {
                 TAG + methodName,
                 "Creating OAuth2Configuration"
         );
-        MicrosoftStsOAuth2Configuration config = new MicrosoftStsOAuth2Configuration();
+        final MicrosoftStsOAuth2Configuration config = new MicrosoftStsOAuth2Configuration();
         config.setAuthorityUrl(this.getAuthorityURL());
         config.setMultipleCloudsSupported(false);
 
@@ -71,7 +79,7 @@ public class CIAMAuthority extends Authority {
 
     @Override
     public OAuth2Strategy createOAuth2Strategy(OAuth2StrategyParameters parameters) throws ClientException {
-            MicrosoftStsOAuth2Configuration config = createOAuth2Configuration();
+            final MicrosoftStsOAuth2Configuration config = createOAuth2Configuration();
             final MicrosoftStsOAuth2Strategy strategy = new MicrosoftStsOAuth2Strategy(config, parameters);
             if (CIAM_USE_OPENID_CONFIGURATION) {
                 strategy.loadOpenIdProviderConfiguration();
@@ -81,6 +89,7 @@ public class CIAMAuthority extends Authority {
 
     /**
      * This method takes a CIAM authority string of format "tenant.ciamlogin.com" or "https://tenant.ciamlogin.com"
+     * and converts it into a full authority url with a path segment of format "/tenant.onmicrosoft.com"
      * @param authorityNoPath authority to be transformed
      * @return full CIAM authority with path
      */
