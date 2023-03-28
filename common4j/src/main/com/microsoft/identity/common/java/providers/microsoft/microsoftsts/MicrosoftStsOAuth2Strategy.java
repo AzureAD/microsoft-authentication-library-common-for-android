@@ -828,4 +828,21 @@ public class MicrosoftStsOAuth2Strategy
             );
         }
     }
+
+    /**
+     * Using this method to load the {@link OpenIdProviderConfiguration}
+     */
+    public void loadOpenIdProviderConfiguration(final String extraParams) {
+        try {
+            final OpenIdProviderConfigurationClient client =
+                    new OpenIdProviderConfigurationClient();
+            mOpenIdProviderConfiguration = client.loadOpenIdProviderConfigurationFromAuthorityWithExtraParams(mConfig.getAuthorityUrl().toString(), extraParams);
+        } catch (ServiceException e) {
+            Logger.error(
+                    TAG,
+                    "There was a problem with loading the openIdConfiguration",
+                    e
+            );
+        }
+    }
 }
