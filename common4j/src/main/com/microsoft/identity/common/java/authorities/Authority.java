@@ -178,12 +178,21 @@ public abstract class Authority {
                     authority = new AzureActiveDirectoryB2CAuthority(authorityUrl);
                     break;
                 default:
-                    Logger.verbose(
-                            TAG + methodName,
-                            "Authority type default: AAD"
-                    );
-                    authority = createAadAuthority(authorityCommonUriBuilder, pathSegments);
-                    break;
+                    if (authorityUrl.contains(CIAMAuthority.CIAM_LOGIN_URL_SEGMENT)) {
+                        Logger.verbose(
+                                TAG + methodName,
+                                "Authority type is CIAM"
+                        );
+                        authority = new CIAMAuthority(authorityUrl);
+                        break;
+                    } else {
+                        Logger.verbose(
+                                TAG + methodName,
+                                "Authority type default: AAD"
+                        );
+                        authority = createAadAuthority(authorityCommonUriBuilder, pathSegments);
+                        break;
+                    }
             }
         }
 
