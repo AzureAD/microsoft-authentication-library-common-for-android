@@ -46,6 +46,8 @@ import com.microsoft.identity.common.java.dto.IAccountRecord;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.exception.ServiceException;
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightManager;
 import com.microsoft.identity.common.java.logging.DiagnosticContext;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.net.HttpClient;
@@ -622,17 +624,18 @@ public class MicrosoftStsOAuth2Strategy
             }
             final String ccsRequestId = response.getHeaderValue(XMS_CCS_REQUEST_ID, 0);
             if(null != ccsRequestId){
-                if(null != tokenResponse){
-                    final Map<String, String> mapWithAdditionalEntry = new HashMap<String, String>();
-                    mapWithAdditionalEntry.put(XMS_CCS_REQUEST_ID, ccsRequestId);
-                    if(null != tokenResponse.getExtraParameters()){
-                        for(final Map.Entry<String, String> entry : tokenResponse.getExtraParameters()){
-                            mapWithAdditionalEntry.put(entry.getKey(), entry.getValue());
+                if(CommonFlightManager.isFlightEnabled(CommonFlight.EXPOSE_CCS_REQUEST_ID_IN_TOKENRESPONSE)){
+                    if(null != tokenResponse){
+                        final Map<String, String> mapWithAdditionalEntry = new HashMap<String, String>();
+                        mapWithAdditionalEntry.put(XMS_CCS_REQUEST_ID, ccsRequestId);
+                        if(null != tokenResponse.getExtraParameters()){
+                            for(final Map.Entry<String, String> entry : tokenResponse.getExtraParameters()){
+                                mapWithAdditionalEntry.put(entry.getKey(), entry.getValue());
+                            }
                         }
+                        tokenResponse.setExtraParameters(mapWithAdditionalEntry.entrySet());
                     }
-                    tokenResponse.setExtraParameters(mapWithAdditionalEntry.entrySet());
                 }
-
                 SpanExtension.current().setAttribute(
                         AttributeName.ccs_request_id.name(), ccsRequestId);
             }
