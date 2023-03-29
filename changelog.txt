@@ -1,5 +1,6 @@
 vNext
 ----------
+- [PATCH] Expose Cached Credential Service request ID in tokenResponse (#1991)
 - [MINOR] Adding YubiKit remove method back in; bumping YubiKit Versions (#1994)
 - [PATCH] Make changes for jetpack datastore broker support (#1986)
 - [PATCH] Getting rid of account manager strategy in MSAL/OneAuth (#1988)
