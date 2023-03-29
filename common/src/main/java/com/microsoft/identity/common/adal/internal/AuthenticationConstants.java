@@ -605,7 +605,7 @@ public final class AuthenticationConstants {
          *
          * @see <a href="https://identitydivision.visualstudio.com/DevEx/_git/AuthLibrariesApiReview?path=/%5BAndroid%5D%20Broker%20API/broker_protocol_versions.md">Android Auth Broker Protocol Versions</a>
          */
-        public static final String MSAL_TO_BROKER_PROTOCOL_VERSION_CODE = "12.0";
+        public static final String MSAL_TO_BROKER_PROTOCOL_VERSION_CODE = "13.0";
 
         /**
          * A client id for requesting the SSO token.
