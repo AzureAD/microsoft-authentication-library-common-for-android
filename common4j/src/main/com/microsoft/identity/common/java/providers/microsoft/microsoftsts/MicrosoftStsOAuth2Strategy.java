@@ -623,13 +623,13 @@ public class MicrosoftStsOAuth2Strategy
                 }
             }
             final String ccsRequestId = response.getHeaderValue(XMS_CCS_REQUEST_ID, 0);
-            if(null != ccsRequestId){
-                if(CommonFlightManager.isFlightEnabled(CommonFlight.EXPOSE_CCS_REQUEST_ID_IN_TOKENRESPONSE)){
-                    if(null != tokenResponse){
+            if (null != ccsRequestId){
+                if (CommonFlightManager.isFlightEnabled(CommonFlight.EXPOSE_CCS_REQUEST_ID_IN_TOKENRESPONSE)){
+                    if (null != tokenResponse){
                         final Map<String, String> mapWithAdditionalEntry = new HashMap<String, String>();
                         mapWithAdditionalEntry.put(XMS_CCS_REQUEST_ID, ccsRequestId);
-                        if(null != tokenResponse.getExtraParameters()){
-                            for(final Map.Entry<String, String> entry : tokenResponse.getExtraParameters()){
+                        if (null != tokenResponse.getExtraParameters()){
+                            for (final Map.Entry<String, String> entry : tokenResponse.getExtraParameters()){
                                 mapWithAdditionalEntry.put(entry.getKey(), entry.getValue());
                             }
                         }
