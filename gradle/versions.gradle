@@ -70,6 +70,13 @@ ext {
     yubikitPivVersion = "2.2.0"
     powerliftAndroidVersion="1.0.0"
 
+    // Native auth additions
+    kotlinXCoroutinesVersion = "1.3.9"
+    kotlinXCoroutinesTestVersion = "1.4.2"
+    coreKtxVersion = "1.6.0"
+    kotlinVersion = '1.5.30'
+    mockitoKotlinVersion = '4.1.0'
+
     // microsoft-diagnostics-uploader app versions
     powerliftVersion = "0.14.7"
     cliktVersion = "3.4.2"
