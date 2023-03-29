@@ -28,11 +28,14 @@ import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.UiDevice;
 import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObjectNotFoundException;
+import androidx.test.uiautomator.UiSelector;
 
 import com.microsoft.identity.client.ui.automation.app.App;
+import com.microsoft.identity.client.ui.automation.installer.IAppInstaller;
 import com.microsoft.identity.client.ui.automation.interaction.FirstPartyAppPromptHandlerParameters;
 import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.AadPromptHandler;
 import com.microsoft.identity.client.ui.automation.logging.Logger;
+import com.microsoft.identity.client.ui.automation.utils.CommonUtils;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
 /**
@@ -43,30 +46,36 @@ public class BrowserEdge extends App implements IBrowser {
     private final static String TAG = BrowserEdge.class.getSimpleName();
     private static final String EDGE_PACKAGE_NAME = "com.microsoft.emmx";
     private static final String EDGE_APP_NAME = "Microsoft Edge";
-    private boolean shouldHandleFirstRun = true;
+    private static final String EDGE_APK = "Edge.apk";
+    private boolean shouldHandleAutoFill = true;
 
     public BrowserEdge() {
         super(EDGE_PACKAGE_NAME, EDGE_APP_NAME);
     }
 
+    public BrowserEdge(@NonNull final IAppInstaller appInstaller) {
+        super(EDGE_PACKAGE_NAME, EDGE_APP_NAME, appInstaller);
+        localApkFileName = EDGE_APK;
+    }
+
+    /**
+     * Overriding the launch function to add a check for autofill ui
+     */
+    @Override
+    public void launch() {
+        super.launch();
+        if (shouldHandleAutoFill) {
+            UiAutomatorUtils.handleButtonClickForObjectWithTextSafely("No, thanks");
+            shouldHandleAutoFill = false;
+        }
+    }
+
     @Override
     public void handleFirstRun() {
-        if (shouldHandleFirstRun) {
-            Logger.i(TAG, "Handle First Run of Browser..");
-            // cancel sync in Edge
-            UiAutomatorUtils.handleButtonClick("com.microsoft.emmx:id/not_now");
-            sleep(); // need to use sleep due to Edge animations
-            // cancel sharing data
-            UiAutomatorUtils.handleButtonClick("com.microsoft.emmx:id/not_now");
-            sleep(); // need to use sleep due to Edge animations
-            // cancel personalization
-            UiAutomatorUtils.handleButtonClick("com.microsoft.emmx:id/fre_share_not_now");
-            sleep();// need to use sleep due to Edge animations
-            // avoid setting default
-            UiAutomatorUtils.handleButtonClick("com.microsoft.emmx:id/no");
-            sleep();// need to use sleep due to Edge animations
-            shouldHandleFirstRun = false;
-        }
+        Logger.i(TAG, "Handle First Run of Browser..");
+        // cancel sync in Edge
+        UiAutomatorUtils.handleButtonClickForObjectWithText("Not now");
+        sleep(); // need to use sleep due to Edge animations
     }
 
     @Override
@@ -76,6 +85,8 @@ public class BrowserEdge extends App implements IBrowser {
 
     public void navigateTo(@NonNull final String url) {
         Logger.i(TAG, "Navigate to the given URL:" + url + " in the browser..");
+        launch();
+
         //  Click on the search bar in the browser UI
         UiAutomatorUtils.handleButtonClick("com.microsoft.emmx:id/search_box_text");
 
@@ -154,19 +165,34 @@ public class BrowserEdge extends App implements IBrowser {
     private void signInWithWorkOrSchoolAccount(@NonNull final String username,
                                                @NonNull final String password,
                                                @NonNull final FirstPartyAppPromptHandlerParameters promptHandlerParameters) throws UiObjectNotFoundException {
+        // click Sign In with work or school account btn
         final UiObject signInWithWorkAccountBtn = UiAutomatorUtils.obtainUiObjectWithText(
-                "Sign in with a work or school account"
+                "Add account"
         );
 
-        // click Sign In with work or school account btn
+        // Sometimes, we don't see the "Sign in to turn on sync page", so we must navigate to it.
+        if (!signInWithWorkAccountBtn.exists()) {
+            UiAutomatorUtils.handleButtonClick("com.microsoft.emmx:id/edge_account_image_view");
+            UiAutomatorUtils.handleButtonClickForObjectWithText("sign in to sync");
+        }
         signInWithWorkAccountBtn.click();
 
         Logger.i(TAG, "Handle Sign-In Prompt for Work or School account..");
+        // handle email field - the email field in Edge UI is missing a resource id, so we find it with EditText class
+        final UiObject emailField = UiAutomatorUtils.obtainUiObjectWithUiSelector(new UiSelector().className("android.widget.EditText"), CommonUtils.FIND_UI_ELEMENT_TIMEOUT);
+        try {
+            emailField.setText(username);
+            UiAutomatorUtils.handleButtonClickForObjectWithText("Next");
+        } catch(UiObjectNotFoundException ex){
+            throw new AssertionError(ex);
+        }
+
         // handle prompt
         final AadPromptHandler aadPromptHandler = new AadPromptHandler(promptHandlerParameters);
         aadPromptHandler.handlePrompt(username, password);
 
-        handleFirstRun();
+        // Handle confirm page that loads after password prompt
+        UiAutomatorUtils.handleButtonClickForObjectWithTextSafely("Confirm");
     }
 
     public boolean confirmSignedIn(@Nullable final String username) {

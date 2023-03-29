@@ -22,6 +22,7 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.authorities;
 
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
@@ -35,6 +36,7 @@ import static org.junit.Assert.assertTrue;
 import com.microsoft.identity.common.java.authorities.AllAccounts;
 import com.microsoft.identity.common.java.authorities.AnyOrganizationalAccount;
 import com.microsoft.identity.common.java.authorities.AzureActiveDirectoryAuthority;
+import com.microsoft.identity.common.java.exception.ClientException;
 
 @RunWith(RobolectricTestRunner.class)
 public class AzureActiveDirectoryAuthorityTests {
@@ -71,5 +73,22 @@ public class AzureActiveDirectoryAuthorityTests {
         assertFalse(authorityWW.isSameCloudAsAuthority(authorityCN));
         assertFalse(authorityCN.isSameCloudAsAuthority(authorityUSGov));
         assertFalse(authorityUSGov.isSameCloudAsAuthority(authorityWW));
+    }
+
+    @Test
+    public void testConvertToDefaultAuthority() throws ClientException {
+        final String authority = "https://login.microsoftonline.com/tenant-id";
+        String defaultAuthority = AzureActiveDirectoryAuthority.convertToDefaultAuthority(authority);
+        Assert.assertEquals("https://login.microsoftonline.com/common", defaultAuthority);
+    }
+
+    @Test
+    public void testConvertToDefaultAuthorityMalformedUrl() {
+        final String authority = "malformed_url";
+        try {
+            String defaultAuthority = AzureActiveDirectoryAuthority.convertToDefaultAuthority(authority);
+        } catch (final ClientException e) {
+            Assert.assertEquals(ClientException.MALFORMED_URL, e.getErrorCode());
+        }
     }
 }

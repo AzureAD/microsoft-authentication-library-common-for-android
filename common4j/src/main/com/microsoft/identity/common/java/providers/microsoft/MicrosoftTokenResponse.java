@@ -88,11 +88,11 @@ public class MicrosoftTokenResponse extends TokenResponse {
     /**
      * Set the session key JWE associated with this result, or null if none.
      *
-     * @param sesionKey the session key JWE associated with this result, or null if none.
+     * @param sessionKeyJwe the session key JWE associated with this result, or null if none.
      * @return
      */
-    public String setSessionKeyJwe(String sesionKey) {
-        return mSessionKeyJwe;
+    public void setSessionKeyJwe(final String sessionKeyJwe) {
+        mSessionKeyJwe = sessionKeyJwe;
     }
 
     /**
@@ -126,7 +126,7 @@ public class MicrosoftTokenResponse extends TokenResponse {
     // The token returned is cached with this authority as key.
     // We expect the subsequent requests to AcquireToken will use this authority as the authority parameter,
     // otherwise the AcquireTokenSilent will fail
-    public final String getAuthority() {
+    public String getAuthority() {
         return mAuthority;
     }
 

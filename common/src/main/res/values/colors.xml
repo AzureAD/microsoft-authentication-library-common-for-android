@@ -4,9 +4,11 @@
     <!-- colors for CBA dialogs -->
     <color name="dialogTitleText">#0078D4</color>
     <color name="dialogMessageText">#919191</color>
+    <color name="dialogMessageTextSecondChoice">#212121</color>
     <color name="dialogRadioButton">#0078D4</color>
     <color name="dialogButtonText">#0078D4</color>
     <color name="dialogPinEditText">#0078D4</color>
+    <color name="dialogProgress">#616161</color>
     <color name="certIssuerTitle">#212121</color>
     <color name="dialogErrorText">#D92C2C</color>
 </resources>

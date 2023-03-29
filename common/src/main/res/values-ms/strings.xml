@@ -10,7 +10,7 @@
     <string name="http_auth_dialog_cancel">Batal</string>
 
     <!-- strings for CBA dialogs and layouts -->
-    <string name="smartcard_cert_dialog_title">Pilih sijil kad pintar untuk mendaftar masuk</string>
+    <string name="smartcard_cert_dialog_title">Pilih sijil untuk mendaftar masuk</string>
     <string name="smartcard_cert_dialog_positive_button">Teruskan</string>
     <string name="smartcard_cert_dialog_negative_button">Batalkan</string>
 
@@ -34,4 +34,28 @@
 
     <string name="smartcard_general_error_dialog_title">Cuba lagi kemudian</string>
     <string name="smartcard_general_error_dialog_message">Ralat tidak dijangka telah berlaku. Sila cuba semula sebentar lagi.</string>
+
+    <string name="user_choice_dialog_title">Bagaimanakah cara anda ingin mendaftar masuk?</string>
+    <string name="user_choice_dialog_on_device_name">Sijil pada peranti ini</string>
+    <string name="user_choice_dialog_smartcard_name">Kad pintar fizikal</string>
+    <string name="user_choice_dialog_positive_button">Teruskan</string>
+    <string name="user_choice_dialog_negative_button">Batal</string>
+
+    <string name="smartcard_prompt_dialog_title">Sediakan kad pintar anda</string>
+    <string name="smartcard_prompt_dialog_message">Pasang masuk atau tahan kad pintar ke belakang telefon anda.</string>
+    <string name="smartcard_prompt_dialog_negative_button">Batal</string>
+
+    <string name="smartcard_nfc_loading_dialog_title">Membaca kad pintar anda</string>
+    <string name="smartcard_nfc_loading_dialog_message">Kekalkan kad pintar anda pada tempatnya.</string>
+
+    <string name="smartcard_nfc_prompt_dialog_title">Sediakan kad pintar anda</string>
+    <string name="smartcard_nfc_prompt_dialog_message">Tahan kad pintar ke belakang telefon anda.</string>
+    <string name="smartcard_nfc_prompt_dialog_negative_button">Batal</string>
+
+    <string name="smartcard_nfc_reminder_dialog_title">Hidupkan NFC dalam seting peranti</string>
+    <string name="smartcard_nfc_reminder_dialog_message">Untuk mendaftar masuk dengan NFC, hidupkan NFC dalam seting peranti anda. Kemudian daftar masuk sekali lagi.</string>
+    <string name="smartcard_nfc_reminder_dialog_positive_button">Faham</string>
+
+    <string name="smartcard_removal_prompt_dialog_title">Anda kini boleh mengalih keluar kad pintar anda</string>
+    <string name="smartcard_removal_prompt_dialog_positive_button">Faham</string>
 </resources>

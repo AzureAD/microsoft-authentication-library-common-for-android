@@ -10,12 +10,12 @@
     <string name="http_auth_dialog_cancel">रद्द करें</string>
 
     <!-- strings for CBA dialogs and layouts -->
-    <string name="smartcard_cert_dialog_title">साइन इन करने के लिए कोई स्मार्टकार्ड प्रमाणपत्र चुनें</string>
+    <string name="smartcard_cert_dialog_title">साइन इन करने के लिए किसी प्रमाणपत्र का चयन करें</string>
     <string name="smartcard_cert_dialog_positive_button">जारी रखें</string>
     <string name="smartcard_cert_dialog_negative_button">रद्द करें</string>
 
-    <string name="smartcard_pin_dialog_title">स्मार्टकार्ड अनलॉक करें</string>
-    <string name="smartcard_pin_dialog_message">प्रमाणपत्र पर पहुँच प्राप्त करने और साइन इन करने के लिए स्मार्टकार्ड पिन दर्ज करें</string>
+    <string name="smartcard_pin_dialog_title">स्मार्ट कार्ड का लॉक खोलें</string>
+    <string name="smartcard_pin_dialog_message">प्रमाणपत्र पर पहुँच प्राप्त करने और साइन इन करने के लिए स्मार्ट कार्ड पिन दर्ज करें</string>
     <string name="smartcard_pin_dialog_positive_button">अनलॉक करें</string>
     <string name="smartcard_pin_dialog_negative_button">रद्द करें</string>
     <string name="smartcard_pin_dialog_error_message">आपके द्वारा दर्ज किया गया PIN गलत था.</string>
@@ -27,11 +27,35 @@
     <string name="smartcard_max_attempt_dialog_message">बहुत अधिक विफल प्रयास, बाद में फिर से कोशिश करें.</string>
 
     <string name="smartcard_early_unplug_dialog_title">फिर से कोशिश करें</string>
-    <string name="smartcard_early_unplug_dialog_message">स्मार्टकार्ड डिवाइस निकाल दिया गया था. कृपया फिर से लॉग इन करने की कोशिश करने से पहले डिवाइस को फिर से लगाएँ.</string>
+    <string name="smartcard_early_unplug_dialog_message">स्मार् टकार्ड डिवाइस निकाल दिया गया था. कृपया फिर से लॉग इन करने की कोशिश करने से पहले डिवाइस को फिर से लगाएँ.</string>
 
     <string name="smartcard_no_cert_dialog_title">कोई लागू होने लायक प्रमाण पत्र नहीं मिले.</string>
-    <string name="smartcard_no_cert_dialog_message">कृपया पुष्टि करें कि आपके प्रमाणपत्र का आपके स्मार्टकार्ड डिवाइस पर सही तरीके से प्रावधान किया गया है.</string>
+    <string name="smartcard_no_cert_dialog_message">पुष्टि करें कि आपके प्रमाणपत्र का आपके स्मार्टकार्ड डिवाइस पर सही तरीके से प्रावधान किया गया है.</string>
 
     <string name="smartcard_general_error_dialog_title">बाद में फिर से कोशिश करें</string>
     <string name="smartcard_general_error_dialog_message">एक अनपेक्षित त्रुटि हुई है. कृपया बाद में पुनः प्रयास करें.</string>
+
+    <string name="user_choice_dialog_title">आप कैसे साइन इन करना चाहेंगे?</string>
+    <string name="user_choice_dialog_on_device_name">इस डिवाइस पर प्रमाणपत्र</string>
+    <string name="user_choice_dialog_smartcard_name">फ़िज़िकल स्मार्ट कार्ड</string>
+    <string name="user_choice_dialog_positive_button">जारी रखें</string>
+    <string name="user_choice_dialog_negative_button">कैंसिल करें</string>
+
+    <string name="smartcard_prompt_dialog_title">अपना स्मार्ट कार्ड तैयार करें</string>
+    <string name="smartcard_prompt_dialog_message">अपने फ़ोन के पीछे किसी स्मार्ट कार्ड को प्लग इन या होल्ड करें.</string>
+    <string name="smartcard_prompt_dialog_negative_button">कैंसिल करें</string>
+
+    <string name="smartcard_nfc_loading_dialog_title">आपका स्मार्ट कार्ड पढ़ा जा रहा है</string>
+    <string name="smartcard_nfc_loading_dialog_message">अपने स्मार्ट कार्ड को अपने स्थान पर रखें.</string>
+
+    <string name="smartcard_nfc_prompt_dialog_title">अपना स्मार्ट कार्ड तैयार करें</string>
+    <string name="smartcard_nfc_prompt_dialog_message">स्मार्ट कार्ड को अपने फ़ोन के पीछे होल्ड करें.</string>
+    <string name="smartcard_nfc_prompt_dialog_negative_button">कैंसिल करें</string>
+
+    <string name="smartcard_nfc_reminder_dialog_title">डिवाइस सेटिंग्स में NFC चालू करें</string>
+    <string name="smartcard_nfc_reminder_dialog_message">NFC के साथ साइन इन करने के लिए, अपनी डिवाइस सेटिंग्स में NFC चालू करें. फिर से साइन इन करें.</string>
+    <string name="smartcard_nfc_reminder_dialog_positive_button">समझ गया</string>
+
+    <string name="smartcard_removal_prompt_dialog_title">अब आप अपना स्मार्ट कार्ड निकाल सकते हैं</string>
+    <string name="smartcard_removal_prompt_dialog_positive_button">समझ गया</string>
 </resources>

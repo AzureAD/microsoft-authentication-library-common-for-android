@@ -247,4 +247,7 @@ public class IDToken {
         return result;
     }
 
+    public String getStringClaim(@NonNull final String claimName) {
+        return mTokenClaims != null ? (String) this.mTokenClaims.get(claimName) : null;
+    }
 }

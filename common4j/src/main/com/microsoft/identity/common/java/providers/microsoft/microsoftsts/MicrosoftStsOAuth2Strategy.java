@@ -680,7 +680,7 @@ public class MicrosoftStsOAuth2Strategy
 
         String clientException = null;
         String tokens = "";
-        final String tokensMissingMessage = "Missing required tokens of type: {0}";
+        final String tokensMissingMessage = "Missing required tokens of type: %s";
 
         // PRT interrupt flow do not return AT.
         if (!StringUtil.containsSubString(request.getScope(), CLAIMS_UPDATE_RESOURCE) &&

@@ -27,8 +27,10 @@ import androidx.annotation.Nullable;
 
 import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
+import com.microsoft.identity.common.java.opentelemetry.SerializableSpanContext;
 import com.microsoft.identity.common.java.providers.oauth2.OpenIdConnectPromptParameter;
 import com.microsoft.identity.common.java.request.SdkType;
+import com.microsoft.identity.common.java.ui.BrowserDescriptor;
 
 import java.io.Serializable;
 
@@ -69,6 +71,8 @@ public class BrokerRequest implements Serializable {
         final static String AUTHORIZATION_AGENT = "authorization_agent";
         final static String AUTHENTICATION_SCHEME = "authentication_scheme";
         final static String POWER_OPT_CHECK_ENABLED = "power_opt_check_enabled";
+        final static String SPAN_CONTEXT = "span_context";
+        final static String PREFERRED_BROWSER = "preferred_browser";
     }
 
     /**
@@ -218,5 +222,13 @@ public class BrokerRequest implements Serializable {
     @Nullable
     @SerializedName(SerializedNames.POWER_OPT_CHECK_ENABLED)
     private boolean mPowerOptCheckEnabled;
+
+    @Nullable
+    @SerializedName(SerializedNames.SPAN_CONTEXT)
+    private SerializableSpanContext mSpanContext;
+
+    @Nullable
+    @SerializedName(SerializedNames.PREFERRED_BROWSER)
+    private BrowserDescriptor mPreferredBrowser;
 
 }

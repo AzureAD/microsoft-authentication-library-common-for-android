@@ -70,44 +70,8 @@ public class ExceptionAdapter {
         final AuthorizationResult authorizationResult = result.getAuthorizationResult();
 
         if (null != authorizationResult) {
-            final AuthorizationErrorResponse authorizationErrorResponse = authorizationResult.getAuthorizationErrorResponse();
             if (!authorizationResult.getSuccess()) {
-                //THERE ARE CURRENTLY NO USAGES of INVALID_REQUEST
-                switch (result.getAuthorizationResult().getAuthorizationStatus()) {
-                    case FAIL:
-                        // Check if the error is to register device and throw DEVICE_REGISTRATION_NEEDED exception
-                        if (authorizationErrorResponse instanceof MicrosoftAuthorizationErrorResponse) {
-                            MicrosoftAuthorizationErrorResponse microsoftAuthorizationErrorResponse =
-                                    (MicrosoftAuthorizationErrorResponse) authorizationErrorResponse;
-
-                            if (microsoftAuthorizationErrorResponse.getError().equals(
-                                    MicrosoftAuthorizationErrorResponse.DEVICE_REGISTRATION_NEEDED)) {
-
-                                return new DeviceRegistrationRequiredException(
-                                        microsoftAuthorizationErrorResponse.getError(),
-                                        microsoftAuthorizationErrorResponse.getErrorDescription(),
-                                        microsoftAuthorizationErrorResponse.getUpnToWpj()
-                                );
-                            }
-                        }
-
-                        return new ServiceException(
-                                authorizationErrorResponse.getError(),
-                                authorizationErrorResponse.getErrorDescription(),
-                                ServiceException.DEFAULT_STATUS_CODE,
-                                null
-                        );
-
-                    case SDK_CANCEL:
-                        return new ClientException(
-                                authorizationErrorResponse.getError(),
-                                authorizationErrorResponse.getErrorDescription()
-                        );
-
-                    case USER_CANCEL:
-                        return new UserCancelException();
-
-                }
+                return exceptionFromAuthorizationResult(authorizationResult, commandParameters);
             }
         } else {
             Logger.warn(
@@ -117,6 +81,60 @@ public class ExceptionAdapter {
         }
 
         return exceptionFromTokenResult(result.getTokenResult(), commandParameters);
+    }
+
+    public static BaseException exceptionFromAuthorizationResult(@NonNull  final AuthorizationResult authorizationResult, @Nullable final CommandParameters commandParameters) {
+        final String methodTag = TAG + ":exceptionFromAuthorizationResult";
+        final AuthorizationErrorResponse authorizationErrorResponse = authorizationResult.getAuthorizationErrorResponse();
+        if (authorizationErrorResponse == null) {
+            Logger.warn(
+                    methodTag,
+                    "AuthorizationErrorResponse is not set"
+            );
+            return new ClientException(ClientException.UNKNOWN_ERROR, "Authorization failed with unknown error. Authorization Status: " +authorizationResult.getAuthorizationStatus());
+        }
+
+        //THERE ARE CURRENTLY NO USAGES of INVALID_REQUEST
+        switch (authorizationResult.getAuthorizationStatus()) {
+            case FAIL:
+                // Check if the error is to register device and throw DEVICE_REGISTRATION_NEEDED exception
+                if (authorizationErrorResponse instanceof MicrosoftAuthorizationErrorResponse) {
+                    MicrosoftAuthorizationErrorResponse microsoftAuthorizationErrorResponse =
+                            (MicrosoftAuthorizationErrorResponse) authorizationErrorResponse;
+
+                    if (microsoftAuthorizationErrorResponse.getError().equals(
+                            MicrosoftAuthorizationErrorResponse.DEVICE_REGISTRATION_NEEDED)) {
+
+                        return new DeviceRegistrationRequiredException(
+                                microsoftAuthorizationErrorResponse.getError(),
+                                microsoftAuthorizationErrorResponse.getErrorDescription(),
+                                microsoftAuthorizationErrorResponse.getUpnToWpj()
+                        );
+                    }
+                }
+
+                return new ServiceException(
+                        authorizationErrorResponse.getError(),
+                        authorizationErrorResponse.getErrorDescription(),
+                        ServiceException.DEFAULT_STATUS_CODE,
+                        null
+                );
+
+            case SDK_CANCEL:
+                return new ClientException(
+                        authorizationErrorResponse.getError(),
+                        authorizationErrorResponse.getErrorDescription()
+                );
+
+            case USER_CANCEL:
+                return new UserCancelException();
+            default:
+                Logger.warn(
+                        methodTag,
+                        "No AuthorizationResult status set"
+                );
+                return new ClientException(authorizationErrorResponse.getError(), authorizationErrorResponse.getErrorDescription());
+        }
     }
 
     /**
@@ -299,6 +317,19 @@ public class ExceptionAdapter {
         if (exception instanceof ExecutionException) {
             e = exception.getCause();
         }
+        if (e instanceof BaseException) {
+            return (BaseException) e;
+        }
+
+        return clientExceptionFromException(e);
+    }
+
+    @NonNull
+    public static ClientException clientExceptionFromException(@NonNull final Throwable exception) {
+        Throwable e = exception;
+        if (exception instanceof ExecutionException) {
+            e = exception.getCause();
+        }
 
         if (e instanceof TerminalException) {
             final String errorCode = ((TerminalException) e).getErrorCode();
@@ -327,10 +358,6 @@ public class ExceptionAdapter {
                     "SDK cancelled operation, the thread execution was interrupted",
                     e
             );
-        }
-
-        if (e instanceof BaseException) {
-            return (BaseException) e;
         }
 
         return new ClientException(

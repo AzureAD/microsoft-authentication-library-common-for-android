@@ -129,6 +129,11 @@ public class PromptHandlerParameters {
     private final boolean verifyYourIdentityPageExpected;
 
     /**
+     * Denotes whether or not to expect "How would you like to sign in?" Prompt
+     */
+    private final boolean howWouldYouLikeToSignInExpected;
+
+    /**
      * Denotes the way in which we want to respond to the enroll page for this request.
      */
     @Builder.Default
