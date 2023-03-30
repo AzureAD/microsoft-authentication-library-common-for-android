@@ -1,5 +1,6 @@
 vNext
 ----------
+- [PATCH] Send AT on KEY_AUTHTOKEN for ADAL Acquire token silently with Broker (#1996)
 - [PATCH] Expose Cached Credential Service request ID in tokenResponse (#1991)
 - [MINOR] Adding YubiKit remove method back in; bumping YubiKit Versions (#1994)
 - [PATCH] Make changes for jetpack datastore broker support (#1986)
