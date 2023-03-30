@@ -82,7 +82,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
-import io.opentelemetry.context.Context;
 import lombok.NonNull;
 
 public class CommandDispatcher {
@@ -90,7 +89,7 @@ public class CommandDispatcher {
     private static final String TAG = CommandDispatcher.class.getSimpleName();
     private static final int SILENT_REQUEST_THREAD_POOL_SIZE = 5;
     private static ExecutorService sInteractiveExecutor = Executors.newSingleThreadExecutor();
-    private static final ExecutorService sSilentExecutor = Executors.newFixedThreadPool(SILENT_REQUEST_THREAD_POOL_SIZE);
+    private static ExecutorService sSilentExecutor = Executors.newFixedThreadPool(SILENT_REQUEST_THREAD_POOL_SIZE);
     private static final Object sLock = new Object();
     private static InteractiveTokenCommand sCommand = null;
     private static final CommandResultCache sCommandResultCache = new CommandResultCache();
@@ -755,6 +754,24 @@ public class CommandDispatcher {
         }
 
 
+    public static void stopSilentRequestExecutor() {
+        final String methodTag = TAG + ":stopSilentRequestExecutor";
+        Logger.info(methodTag, "shutting down..");
+        sSilentExecutor.shutdown();
+        try {
+            if (!sSilentExecutor.awaitTermination(1000, TimeUnit.MILLISECONDS)) {
+                Logger.warn(methodTag, "terminating now");
+                sSilentExecutor.shutdownNow();
+            }
+        } catch (final InterruptedException e) {
+            Logger.warn(methodTag, "terminating again");
+            sSilentExecutor.shutdownNow();
+        }
+    }
 
+    public static void resetSilentRequestExecutor() {
+        Logger.info(TAG + ":resetSilentRequestExecutor", "Resetting silent Executor");
+        sSilentExecutor = Executors.newFixedThreadPool(SILENT_REQUEST_THREAD_POOL_SIZE);
+    }
 }
 
