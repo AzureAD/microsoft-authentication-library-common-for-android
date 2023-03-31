@@ -24,6 +24,7 @@ package com.microsoft.identity.internal.testutils.authorities;
 
 import com.microsoft.identity.common.java.authorities.CIAMAuthority;
 import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters;
@@ -33,6 +34,21 @@ public class CIAMTestAuthority extends CIAMAuthority {
 
     public CIAMTestAuthority(String authorityUrl) {
         super(authorityUrl);
+    }
+
+    private MicrosoftStsOAuth2Configuration createOAuth2Configuration() {
+        final MicrosoftStsOAuth2Configuration config = new MicrosoftStsOAuth2Configuration();
+        config.setAuthorityUrl(this.getAuthorityURL());
+        config.setMultipleCloudsSupported(false);
+
+        if (mSlice != null) {
+            final AzureActiveDirectorySlice slice = new AzureActiveDirectorySlice();
+            slice.setSlice(mSlice.getSlice());
+            slice.setDataCenter(mSlice.getDataCenter());
+            config.setSlice(slice);
+        }
+
+        return config;
     }
 
     @Override

@@ -150,9 +150,9 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
     public static final String HIDE_SWITCH_USER_QUERY_PARAMETER = "hsu";
 
     /**
-     * Add this field to store the openIdConfiguration passed as part of the builder.
-     * This will be used to fetch the atuorization endpoint from openID Configutration if it was
-     * loaded.
+     * Store the openIdConfiguration passed as part of the builder.
+     * This will be used to fetch the authorization endpoint from OpenID Configuration rather than
+     * generating a default endpoint.
      */
     private transient final OpenIdProviderConfiguration mOpenIdProviderConfiguration;
 

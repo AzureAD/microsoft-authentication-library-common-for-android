@@ -138,6 +138,9 @@ public class MicrosoftStsOAuth2Strategy
                                       @NonNull final OAuth2StrategyParameters parameters) throws ClientException {
         super(config, parameters);
         setTokenEndpoint(config.getTokenEndpoint().toString());
+        if (parameters.isUsingOpenIdConfiguration()){
+            loadOpenIdProviderConfiguration();
+        }
     }
 
     /**
@@ -830,8 +833,10 @@ public class MicrosoftStsOAuth2Strategy
 
     /**
      * Using this method to load the {@link OpenIdProviderConfiguration}
+     * This will cause the strategy to fetch the authorization endpoint from OpenId Configuration rather
+     * than generating one with the default authorization endpoint
      */
-    public void loadOpenIdProviderConfiguration() {
+    private void loadOpenIdProviderConfiguration() {
         try {
             final OpenIdProviderConfigurationClient client =
                     new OpenIdProviderConfigurationClient();
@@ -846,9 +851,11 @@ public class MicrosoftStsOAuth2Strategy
     }
 
     /**
-     * Using this method to load the {@link OpenIdProviderConfiguration}
+     * Using this method to load the {@link OpenIdProviderConfiguration} with extra parameters
+     * This will cause the strategy to fetch the authorization endpoint from OpenId Configuration rather
+     * than generating one with the default authorization endpoint
      */
-    public void loadOpenIdProviderConfiguration(final String extraParams) {
+    private void loadOpenIdProviderConfiguration(final String extraParams) {
         try {
             final OpenIdProviderConfigurationClient client =
                     new OpenIdProviderConfigurationClient();

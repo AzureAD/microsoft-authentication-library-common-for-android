@@ -53,7 +53,7 @@ public class CIAMAuthority extends Authority {
         mAuthorityUrlString = authorityUrl;
     }
 
-    protected MicrosoftStsOAuth2Configuration createOAuth2Configuration() {
+    private MicrosoftStsOAuth2Configuration createOAuth2Configuration() {
         final String methodName = ":createOAuth2Configuration";
         Logger.verbose(
                 TAG + methodName,
@@ -79,12 +79,14 @@ public class CIAMAuthority extends Authority {
 
     @Override
     public OAuth2Strategy createOAuth2Strategy(OAuth2StrategyParameters parameters) throws ClientException {
-            final MicrosoftStsOAuth2Configuration config = createOAuth2Configuration();
-            final MicrosoftStsOAuth2Strategy strategy = new MicrosoftStsOAuth2Strategy(config, parameters);
-            if (CIAM_USE_OPENID_CONFIGURATION) {
-                strategy.loadOpenIdProviderConfiguration();
-            }
-            return strategy;
+        final MicrosoftStsOAuth2Configuration config = createOAuth2Configuration();
+
+        // CIAM Authorities fetch endpoints from open if configuration, communicate that to
+        // strategy through parameters
+        parameters.setUsingOpenIdConfiguration(CIAM_USE_OPENID_CONFIGURATION);
+
+        final MicrosoftStsOAuth2Strategy strategy = new MicrosoftStsOAuth2Strategy(config, parameters);
+        return strategy;
     }
 
     /**
@@ -97,6 +99,9 @@ public class CIAMAuthority extends Authority {
         // Remove "https://" if it was included as part of the authority
         if (authorityNoPath.startsWith("https://")){
             authorityNoPath = authorityNoPath.substring(8);
+        }
+        if (authorityNoPath.endsWith("/")){
+            authorityNoPath = authorityNoPath.substring(0, authorityNoPath.length() - 1);
         }
         // Split environment to isolate the tenant
         final String tenant = authorityNoPath.split("\\.")[0];

@@ -184,15 +184,14 @@ public abstract class Authority {
                                 "Authority type is CIAM"
                         );
                         authority = new CIAMAuthority(authorityUrl);
-                        break;
                     } else {
                         Logger.verbose(
                                 TAG + methodName,
                                 "Authority type default: AAD"
                         );
                         authority = createAadAuthority(authorityCommonUriBuilder, pathSegments);
-                        break;
                     }
+                    break;
             }
         }
 
