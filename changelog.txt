@@ -1,5 +1,7 @@
 vNext
 ----------
+- [MINOR] Add CommandDispatcher methods to stop and reset silent request executor. (#2000)
+- [MINOR] Support CIAM Authority Type (#1992)
 - [PATCH] Send AT on KEY_AUTHTOKEN for ADAL Acquire token silently with Broker (#1996)
 - [PATCH] Expose Cached Credential Service request ID in tokenResponse (#1991)
 - [MINOR] Adding YubiKit remove method back in; bumping YubiKit Versions (#1994)

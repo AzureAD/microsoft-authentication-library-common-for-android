@@ -28,6 +28,7 @@ import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.experimental.Accessors;
 
 /**
@@ -42,4 +43,9 @@ public class OAuth2StrategyParameters {
 
     @Nullable
     private final transient AbstractAuthenticationScheme mAuthenticationScheme;
+
+    // TODO: Consider moving this field into MicrosoftStsOAuth2Configuration and updating it's endpoint methods
+    //  to use OpenId Configuration.
+    @Setter
+    private transient boolean mUsingOpenIdConfiguration;
 }
