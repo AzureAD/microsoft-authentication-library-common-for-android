@@ -341,6 +341,49 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
             aadPromptHandler.handlePrompt(username, password);
         }
     }
+    protected void performDeviceRegistrationHelperWithButtonText(@NonNull final String username,
+                                                   @NonNull final String password,
+                                                   @NonNull final String emailInputResourceId,
+                                                   @NonNull final String registerBtnText,
+                                                   final boolean isFederatedUser,
+                                                   final boolean isRegistrationPageExpected) {
+        Logger.i(TAG, "Execution of Helper for Device Registration..");
+        // open device registration page
+        openDeviceRegistrationPage();
+
+        // enter email
+        UiAutomatorUtils.handleInput(
+                emailInputResourceId,
+                username
+        );
+
+        // click register
+        UiAutomatorUtils.handleButtonClickForObjectWithText(registerBtnText);
+
+        final PromptHandlerParameters promptHandlerParameters = PromptHandlerParameters.builder()
+                .prompt(PromptParameter.LOGIN)
+                .broker(this)
+                .consentPageExpected(false)
+                .expectingBrokerAccountChooserActivity(false)
+                .expectingLoginPageAccountPicker(false)
+                .sessionExpected(false)
+                .registerPageExpected(isRegistrationPageExpected)
+                .loginHint(username)
+                .build();
+
+        if (isFederatedUser) {
+            final AdfsPromptHandler adfsPromptHandler = new AdfsPromptHandler(promptHandlerParameters);
+            Logger.i(TAG, "Handle prompt of ADFS login page for Device Registration..");
+            // handle ADFS login page
+            adfsPromptHandler.handlePrompt(username, password);
+        } else {
+            final AadPromptHandler aadPromptHandler = new AadPromptHandler(promptHandlerParameters);
+
+            Logger.i(TAG, "Handle AAD Login page prompt for Device Registration..");
+            // handle AAD login page
+            aadPromptHandler.handlePrompt(username, password);
+        }
+    }
 
     public void setShouldUseDeviceSettingsPage(final boolean shouldUseDeviceSettingsPage) {
         Assert.assertTrue("Cannot set shouldUseDeviceSettingsPage for BrokerAuthenticatorPreviousVersionImpl", brokerMicrosoftAuthenticatorImpl instanceof BrokerAuthenticatorUpdatedVersionImpl);
