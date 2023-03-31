@@ -855,6 +855,7 @@ public class MicrosoftStsOAuth2Strategy
      * This will cause the strategy to fetch the authorization endpoint from OpenId Configuration rather
      * than generating one with the default authorization endpoint
      */
+    @SuppressFBWarnings
     private void loadOpenIdProviderConfiguration(final String extraParams) {
         try {
             final OpenIdProviderConfigurationClient client =

@@ -136,7 +136,7 @@ public class OpenIdProviderConfigurationClient {
      *
      * @return OpenIdProviderConfiguration
      */
-    private synchronized OpenIdProviderConfiguration loadOpenIdProviderConfigurationInternal(@NonNull final String tenantedAuthorityString, String extraParams)
+    private synchronized OpenIdProviderConfiguration loadOpenIdProviderConfigurationInternal(@NonNull final String tenantedAuthorityString, final String extraParams)
             throws ServiceException {
         final String methodName = ":loadOpenIdProviderConfiguration";
 
