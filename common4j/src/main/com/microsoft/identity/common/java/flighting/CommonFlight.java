@@ -32,7 +32,12 @@ public enum CommonFlight implements IFlightConfig {
     /**
      * Flight to control whether or not to use Network capability for performing network check.
      */
-    USE_NETWORK_CAPABILITY_FOR_NETWORK_CHECK("UseNetworkCapabilityForNetworkCheck", false);
+    USE_NETWORK_CAPABILITY_FOR_NETWORK_CHECK("UseNetworkCapabilityForNetworkCheck", false),
+    /**
+     * Flight to control whether to expose the CCS (CachedCredService) request ID in TokenResponse.
+     * This flight is default-on 
+     */
+    EXPOSE_CCS_REQUEST_ID_IN_TOKENRESPONSE("ExposeCcsRequestIdInTokenResponse", true);
 
     private String key;
     private Object defaultValue;
