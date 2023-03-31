@@ -753,7 +753,12 @@ public class CommandDispatcher {
             return ", with the status : " + status;
         }
 
-
+    /***
+     * Stops the SilentRequestsExecutor.
+     * Waits 1 Sec for existing silent requests to finish, before terminating them.
+     * WARN!! No new silent requests will be processed after this until the executor is reset
+     * This is expected to be called when in Shared Device Mode when global signout is performed.
+     */
     public static void stopSilentRequestExecutor() {
         final String methodTag = TAG + ":stopSilentRequestExecutor";
         Logger.info(methodTag, "shutting down..");
@@ -769,6 +774,12 @@ public class CommandDispatcher {
         }
     }
 
+    /***
+     * Resets the SilentRequestsExecutor.
+     * This creates a new Executor for the silent request.
+     * This is expected to be called after global signout is performed in Shared Device mode.
+     * This should be called if previously the Executor was stopped using 'stopSilentRequestExecutor'
+     */
     public static void resetSilentRequestExecutor() {
         Logger.info(TAG + ":resetSilentRequestExecutor", "Resetting silent Executor");
         sSilentExecutor = Executors.newFixedThreadPool(SILENT_REQUEST_THREAD_POOL_SIZE);
