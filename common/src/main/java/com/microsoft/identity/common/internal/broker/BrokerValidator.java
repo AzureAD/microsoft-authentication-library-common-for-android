@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.broker;
 
 import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.BROKER_ACCOUNT_TYPE;
+import static com.microsoft.identity.common.java.exception.ClientException.ACCOUNT_MANAGER_FAILED;
 import static com.microsoft.identity.common.java.exception.ClientException.NOT_VALID_BROKER_FOUND;
 import static com.microsoft.identity.common.java.exception.ClientException.NO_SUCH_ALGORITHM;
 import static com.microsoft.identity.common.java.exception.ErrorStrings.APP_PACKAGE_NAME_NOT_FOUND;
@@ -253,13 +254,14 @@ public class BrokerValidator {
             numberOfAuthenticators = authenticators.length;
             Logger.info(methodTag, numberOfAuthenticators + " Authenticators registered.");
             for (final AuthenticatorDescription authenticator : authenticators) {
+                Logger.info(methodTag, "Authenticator: " + authenticator.packageName + " type: " + authenticator.type );
                 if (BROKER_ACCOUNT_TYPE.equals(authenticator.type)) {
                     verifySignatureAndThrow(authenticator.packageName);
                     return authenticator.packageName;
                 }
             }
         } catch (final Exception exception) {
-            final ClientException clientException = new ClientException(NOT_VALID_BROKER_FOUND, exception.getMessage());
+            final ClientException clientException = new ClientException(ACCOUNT_MANAGER_FAILED, exception.getMessage());
             Logger.error(methodTag, exception.getMessage(), exception);
             throw clientException;
         }
