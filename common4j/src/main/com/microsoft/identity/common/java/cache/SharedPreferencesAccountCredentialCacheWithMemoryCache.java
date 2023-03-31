@@ -46,43 +46,14 @@ import java.util.Set;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.NonNull;
 
+/**
+ * Alternative version of {@link SharedPreferencesAccountCredentialCache} that assumes all writes and reads
+ * are done through a single-instance and can thereforce be cached in memory.
+ */
 @SuppressWarnings("PMD.AvoidDuplicateLiterals")
 public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends AbstractAccountCredentialCache {
 
     private static final String TAG = SharedPreferencesAccountCredentialCacheWithMemoryCache.class.getSimpleName();
-
-    /**
-     * The name of the SharedPreferences file on disk.
-     */
-    public static final String DEFAULT_ACCOUNT_CREDENTIAL_SHARED_PREFERENCES =
-            "com.microsoft.identity.client.account_credential_cache";
-
-    /**
-     * The name of the Broker FOCI file on disk.
-     */
-    public static final String BROKER_FOCI_ACCOUNT_CREDENTIAL_SHARED_PREFERENCES =
-            DEFAULT_ACCOUNT_CREDENTIAL_SHARED_PREFERENCES
-                    + ".foci-1";
-
-    /**
-     * Returns the generated filename for UID-specific caches.
-     *
-     * @param uid The uid of the current (or targeted) application.
-     * @return The uid-based cache filename.
-     */
-    public static String getBrokerUidSequesteredFilename(final int uid) {
-        return DEFAULT_ACCOUNT_CREDENTIAL_SHARED_PREFERENCES
-                + ".uid-"
-                + uid;
-    }
-
-    private static final AccountRecord EMPTY_ACCOUNT = new AccountRecord();
-    private static final AccessTokenRecord EMPTY_AT = new AccessTokenRecord();
-    private static final RefreshTokenRecord EMPTY_RT = new RefreshTokenRecord();
-    private static final IdTokenRecord EMPTY_ID = new IdTokenRecord();
-    private static final String DESERIALIZATION_FAILED = "Deserialization failed. Skipping ";
-    private static final String ACCOUNT_RECORD_DESERIALIZATION_FAILED = DESERIALIZATION_FAILED + AccountRecord.class.getSimpleName();
-    private static final String CREDENTIAL_DESERIALIZATION_FAILED = DESERIALIZATION_FAILED + Credential.class.getSimpleName();
 
     // SharedPreferences used to store Accounts and Credentials
     private final INameValueStorage<String> mSharedPreferencesFileManager;
@@ -271,8 +242,8 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
                 );
 
                 if (null == account) {
-                    Logger.warn(methodTag, ACCOUNT_RECORD_DESERIALIZATION_FAILED);
-                } else if (EMPTY_ACCOUNT.equals(account)) {
+                    Logger.warn(methodTag, SharedPreferencesAccountCredentialCache.ACCOUNT_RECORD_DESERIALIZATION_FAILED);
+                } else if (SharedPreferencesAccountCredentialCache.EMPTY_ACCOUNT.equals(account)) {
                     Logger.warn(methodTag, "The returned Account was uninitialized. Removing...");
                     mSharedPreferencesFileManager.remove(cacheKey);
                 } else {
@@ -353,10 +324,10 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
             );
 
             if (null == credential) {
-                Logger.warn(methodTag, CREDENTIAL_DESERIALIZATION_FAILED);
-            } else if ((AccessTokenRecord.class == clazz && EMPTY_AT.equals(credential))
-                || (RefreshTokenRecord.class == clazz && EMPTY_RT.equals(credential))
-                || (IdTokenRecord.class == clazz) && EMPTY_ID.equals(credential)) {
+                Logger.warn(methodTag, SharedPreferencesAccountCredentialCache.CREDENTIAL_DESERIALIZATION_FAILED);
+            } else if ((AccessTokenRecord.class == clazz && SharedPreferencesAccountCredentialCache.EMPTY_AT.equals(credential))
+                || (RefreshTokenRecord.class == clazz && SharedPreferencesAccountCredentialCache.EMPTY_RT.equals(credential))
+                || (IdTokenRecord.class == clazz) && SharedPreferencesAccountCredentialCache.EMPTY_ID.equals(credential)) {
                 // The returned credential came back uninitialized...
                 // Remove the entry and return null...
                 Logger.warn(methodTag, "The returned Credential was uninitialized. Removing...");

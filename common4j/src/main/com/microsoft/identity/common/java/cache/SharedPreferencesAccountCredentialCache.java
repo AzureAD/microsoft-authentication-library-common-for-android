@@ -75,13 +75,13 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
                 + uid;
     }
 
-    private static final AccountRecord EMPTY_ACCOUNT = new AccountRecord();
-    private static final AccessTokenRecord EMPTY_AT = new AccessTokenRecord();
-    private static final RefreshTokenRecord EMPTY_RT = new RefreshTokenRecord();
-    private static final IdTokenRecord EMPTY_ID = new IdTokenRecord();
-    private static final String DESERIALIZATION_FAILED = "Deserialization failed. Skipping ";
-    private static final String ACCOUNT_RECORD_DESERIALIZATION_FAILED = DESERIALIZATION_FAILED + AccountRecord.class.getSimpleName();
-    private static final String CREDENTIAL_DESERIALIZATION_FAILED = DESERIALIZATION_FAILED + Credential.class.getSimpleName();
+    public static final AccountRecord EMPTY_ACCOUNT = new AccountRecord();
+    public static final AccessTokenRecord EMPTY_AT = new AccessTokenRecord();
+    public static final RefreshTokenRecord EMPTY_RT = new RefreshTokenRecord();
+    public static final IdTokenRecord EMPTY_ID = new IdTokenRecord();
+    public static final String DESERIALIZATION_FAILED = "Deserialization failed. Skipping ";
+    public static final String ACCOUNT_RECORD_DESERIALIZATION_FAILED = DESERIALIZATION_FAILED + AccountRecord.class.getSimpleName();
+    public static final String CREDENTIAL_DESERIALIZATION_FAILED = DESERIALIZATION_FAILED + Credential.class.getSimpleName();
 
     // SharedPreferences used to store Accounts and Credentials
     private final INameValueStorage<String> mSharedPreferencesFileManager;

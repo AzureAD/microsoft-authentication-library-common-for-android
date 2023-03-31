@@ -80,7 +80,7 @@ public abstract class AccountCredentialBase implements Cloneable {
 
     @Override
     public AccountCredentialBase clone() throws CloneNotSupportedException {
-        AccountCredentialBase other = (AccountCredentialBase) super.clone();
+        final AccountCredentialBase other = (AccountCredentialBase) super.clone();
         other.setAdditionalFields(new HashMap<>(mAdditionalFields));
         return other;
     }
