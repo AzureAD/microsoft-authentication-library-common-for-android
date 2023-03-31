@@ -44,6 +44,8 @@ public class OAuth2StrategyParameters {
     @Nullable
     private final transient AbstractAuthenticationScheme mAuthenticationScheme;
 
+    // TODO: Consider moving this field into MicrosoftStsOAuth2Configuration and updating it's endpoint methods
+    //  to use OpenId Configuration.
     @Setter
     private transient boolean mUsingOpenIdConfiguration;
 }

@@ -856,7 +856,7 @@ public class MicrosoftStsOAuth2Strategy
      * than generating one with the default authorization endpoint
      */
     @SuppressFBWarnings
-    private void loadOpenIdProviderConfiguration(final String extraParams) {
+    private void loadOpenIdProviderConfiguration(@NonNull final String extraParams) {
         try {
             final OpenIdProviderConfigurationClient client =
                     new OpenIdProviderConfigurationClient();
