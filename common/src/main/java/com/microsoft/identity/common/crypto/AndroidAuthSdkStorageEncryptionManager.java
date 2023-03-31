@@ -67,19 +67,21 @@ public class AndroidAuthSdkStorageEncryptionManager extends StorageEncryptionMan
     @Override
     public @NonNull AES256KeyLoader getKeyLoaderForEncryption() {
         if (mPredefinedKeyLoader != null) {
+            Logger.info(TAG, "getKeyLoaderForEncryption returning predefined key loader");
             return mPredefinedKeyLoader;
         }
-
+        Logger.info(TAG, "getKeyLoaderForEncryption returning mKeyStoreKeyLoader");
         return mKeyStoreKeyLoader;
     }
 
     @Override
     public @NonNull List<AbstractSecretKeyLoader> getKeyLoaderForDecryption(@NonNull byte[] cipherText) {
         final String methodTag = TAG + ":getKeyLoaderForDecryption";
-
+        Logger.info(methodTag, "starting to getKeyLoaderForDecryption");
         final String keyIdentifier = getKeyIdentifierFromCipherText(cipherText);
         if (PredefinedKeyLoader.USER_PROVIDED_KEY_IDENTIFIER.equalsIgnoreCase(keyIdentifier)) {
             if (mPredefinedKeyLoader != null) {
+                Logger.info(TAG, "getKeyLoaderForEncryption returning mPredefinedKeyLoader "+ keyIdentifier);
                 return Collections.<AbstractSecretKeyLoader>singletonList(mPredefinedKeyLoader);
             } else {
                 throw new IllegalStateException(
@@ -87,6 +89,7 @@ public class AndroidAuthSdkStorageEncryptionManager extends StorageEncryptionMan
                                 "but mPredefinedKeyLoader is null.");
             }
         } else if (AndroidWrappedKeyLoader.KEY_IDENTIFIER.equalsIgnoreCase(keyIdentifier)) {
+            Logger.info(TAG, "getKeyLoaderForEncryption returning mKeyStoreKeyLoader "+keyIdentifier);
             return Collections.<AbstractSecretKeyLoader>singletonList(mKeyStoreKeyLoader);
         }
 

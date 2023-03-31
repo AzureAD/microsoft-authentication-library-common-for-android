@@ -187,13 +187,13 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
     @Override
     public byte[] decrypt(final byte[] cipherText) throws ClientException {
         final String methodName = ":decrypt";
-        Logger.verbose(TAG + methodName, "Starting decryption");
+        Logger.info(TAG + methodName, "Starting decryption "+ cipherText);
 
         final byte[] dataBytes;
         try {
             dataBytes = stripEncodeVersionFromCipherText(cipherText);
         } catch (final ClientException e){
-            Logger.verbose(TAG + methodName,
+            Logger.info(TAG + methodName,
                     "Failed to strip encode version from cipherText, string might not be encrypted. Exception: ", e.getMessage());
             return cipherText;
         }

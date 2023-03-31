@@ -93,17 +93,21 @@ public class AndroidBrokerStorageEncryptionManager extends StorageEncryptionMana
 
     @Override
     public @NonNull AbstractSecretKeyLoader getKeyLoaderForEncryption() {
+        Logger.info(TAG, "starting to getKeyLoaderForDecryption 0 param");
         if (StorageHelper.sShouldEncryptWithKeyStoreKey) {
+            Logger.info(TAG, "sShouldEncryptWithKeyStoreKey=true");
             return mKeyStoreKeyLoader;
         }
 
         final String packageName = getPackageName();
         if (AZURE_AUTHENTICATOR_APP_PACKAGE_NAME.equalsIgnoreCase(packageName)) {
+            Logger.info(TAG, "AZURE_AUTHENTICATOR_APP_PACKAGE_NAME=true");
             return mLegacyAuthAppKeyLoader;
         }
 
         if (COMPANY_PORTAL_APP_PACKAGE_NAME.equalsIgnoreCase(packageName) ||
                 BROKER_HOST_APP_PACKAGE_NAME.equalsIgnoreCase(packageName)) {
+            Logger.info(TAG, "COMPANY_PORTAL_APP_PACKAGE_NAME=true");
             return mLegacyCPKeyLoader;
         }
 
@@ -114,16 +118,19 @@ public class AndroidBrokerStorageEncryptionManager extends StorageEncryptionMana
     public @NonNull List<AbstractSecretKeyLoader> getKeyLoaderForDecryption(@NonNull byte[] cipherText) {
         final String methodTag = TAG + ":getKeyLoaderForDecryption";
         final String packageName = getPackageName();
-
+        Logger.info(methodTag, "starting to getKeyLoaderForDecryption");
         final ArrayList<AbstractSecretKeyLoader> keyLoaders = new ArrayList<>();
 
         if (isEncryptedByThisKeyIdentifier(cipherText, PredefinedKeyLoader.USER_PROVIDED_KEY_IDENTIFIER)) {
+            Logger.info(methodTag, "USER_PROVIDED_KEY_IDENTIFIER=true");
             if (COMPANY_PORTAL_APP_PACKAGE_NAME.equalsIgnoreCase(packageName) ||
                     BROKER_HOST_APP_PACKAGE_NAME.equalsIgnoreCase(packageName)) {
+                Logger.info(methodTag, "adding CP and AuthApp key loaders");
                 keyLoaders.add(mLegacyCPKeyLoader);
                 keyLoaders.add(mLegacyAuthAppKeyLoader);
                 return keyLoaders;
             } else if (AZURE_AUTHENTICATOR_APP_PACKAGE_NAME.equalsIgnoreCase(packageName)) {
+                Logger.info(methodTag, "adding  AuthApp and CP key loaders");
                 keyLoaders.add(mLegacyAuthAppKeyLoader);
                 keyLoaders.add(mLegacyCPKeyLoader);
                 return keyLoaders;
@@ -134,6 +141,7 @@ public class AndroidBrokerStorageEncryptionManager extends StorageEncryptionMana
         }
 
         if (isEncryptedByThisKeyIdentifier(cipherText, AndroidWrappedKeyLoader.KEY_IDENTIFIER)) {
+            Logger.info(methodTag, "KEY_IDENTIFIER=true");
             keyLoaders.add(mKeyStoreKeyLoader);
             return keyLoaders;
         }

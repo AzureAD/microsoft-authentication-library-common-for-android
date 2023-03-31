@@ -141,6 +141,7 @@ public enum AuthenticationSettings {
                     "that supports keyStore functionality.  Consider not doing this, as it only exists " +
                     "for devices with an SDK lower than " + Build.VERSION_CODES.JELLY_BEAN_MR2);
         }
+        Logger.info(methodTag, "Writing a secret key!!!");
         mSecretKeyData.set(rawKey);
     }
 
