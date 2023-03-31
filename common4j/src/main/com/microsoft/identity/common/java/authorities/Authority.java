@@ -158,40 +158,36 @@ public abstract class Authority {
                 authority = createAadAuthority(authorityCommonUriBuilder, pathSegments);
             }
         } else {
-            String authorityType = pathSegments.get(0);
+            String authorityType = pathSegments.get(0).toLowerCase(Locale.ROOT);
 
-            switch (authorityType.toLowerCase(Locale.ROOT)) {
-                case ADFS_PATH_SEGMENT:
-                    //Return new Azure Active Directory Federation Services Authority
-                    Logger.verbose(
-                            TAG + methodName,
-                            "Authority type is ADFS"
-                    );
-                    authority = new ActiveDirectoryFederationServicesAuthority(authorityUrl);
-                    break;
-                case B2C_PATH_SEGMENT:
-                    //Return new B2C Authority
-                    Logger.verbose(
-                            TAG + methodName,
-                            "Authority type is B2C"
-                    );
-                    authority = new AzureActiveDirectoryB2CAuthority(authorityUrl);
-                    break;
-                default:
-                    if (authorityUrl.contains(CIAMAuthority.CIAM_LOGIN_URL_SEGMENT)) {
-                        Logger.verbose(
-                                TAG + methodName,
-                                "Authority type is CIAM"
-                        );
-                        authority = new CIAMAuthority(authorityUrl);
-                    } else {
-                        Logger.verbose(
-                                TAG + methodName,
-                                "Authority type default: AAD"
-                        );
-                        authority = createAadAuthority(authorityCommonUriBuilder, pathSegments);
-                    }
-                    break;
+            if (authorityType.equals(ADFS_PATH_SEGMENT)) {
+                //Return new Azure Active Directory Federation Services Authority
+                Logger.verbose(
+                        TAG + methodName,
+                        "Authority type is ADFS"
+                );
+                authority = new ActiveDirectoryFederationServicesAuthority(authorityUrl);
+            } else if (authorityType.equals(B2C_PATH_SEGMENT)) {
+                //Return new B2C Authority
+                Logger.verbose(
+                        TAG + methodName,
+                        "Authority type is B2C"
+                );
+                authority = new AzureActiveDirectoryB2CAuthority(authorityUrl);
+            } else if (authorityUrl.contains(CIAMAuthority.CIAM_LOGIN_URL_SEGMENT)) {
+                //Return new CIAM Authority
+                Logger.verbose(
+                        TAG + methodName,
+                        "Authority type is CIAM"
+                );
+                authority = new CIAMAuthority(authorityUrl);
+            } else {
+                //Return new AAD Authority
+                Logger.verbose(
+                        TAG + methodName,
+                        "Authority type default: AAD"
+                );
+                authority = createAadAuthority(authorityCommonUriBuilder, pathSegments);
             }
         }
 
