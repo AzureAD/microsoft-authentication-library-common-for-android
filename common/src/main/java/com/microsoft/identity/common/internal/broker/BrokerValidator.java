@@ -252,13 +252,15 @@ public class BrokerValidator {
             numberOfAuthenticators = authenticators.length;
             Logger.info(methodTag, numberOfAuthenticators + " Authenticators registered.");
             for (final AuthenticatorDescription authenticator : authenticators) {
+                Logger.info(methodTag, "Authenticator: " + authenticator.packageName + ", type" + authenticator.type);
                 if (BROKER_ACCOUNT_TYPE.equals(authenticator.type)) {
+                    Logger.info(methodTag, "Verification");
                     verifySignatureAndThrow(authenticator.packageName);
                     return authenticator.packageName;
                 }
             }
         } catch (final Exception exception) {
-            final ClientException clientException = new ClientException(NOT_VALID_BROKER_FOUND, exception.getMessage());
+            final ClientException clientException = new ClientException("ACCOUNT_MANAGER_EXCEPTION", exception.getMessage());
             Logger.error(methodTag, exception.getMessage(), exception);
             throw clientException;
         }
