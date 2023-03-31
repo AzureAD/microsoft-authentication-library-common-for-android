@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.commands.parameters;
 
+import com.microsoft.identity.common.java.authorities.CIAMAuthority;
 import com.microsoft.identity.common.java.exception.ArgumentException;
 import com.microsoft.identity.common.java.exception.TerminalException;
 import com.microsoft.identity.common.java.authorities.AzureActiveDirectoryB2CAuthority;
@@ -54,7 +55,8 @@ public class SilentTokenCommandParameters extends TokenCommandParameters {
             Logger.warn(TAG, "The account set on silent operation parameters is NULL.");
             // if the authority is B2C, then we do not need check if matches with the account environment
             // as B2C only exists in one cloud and can use custom domains
-        } else if (!isAuthorityB2C() && !authorityMatchesAccountEnvironment()) {
+            // This logic should also apply to CIAM authorities
+        } else if (!isAuthorityB2C() && !isAuthorityCIAM() && !authorityMatchesAccountEnvironment()) {
             throw new ArgumentException(
                     ArgumentException.ACQUIRE_TOKEN_SILENT_OPERATION_NAME,
                     ArgumentException.AUTHORITY_ARGUMENT_NAME,
@@ -65,6 +67,10 @@ public class SilentTokenCommandParameters extends TokenCommandParameters {
 
     private boolean isAuthorityB2C() {
         return getAuthority() instanceof AzureActiveDirectoryB2CAuthority;
+    }
+
+    private boolean isAuthorityCIAM() {
+        return getAuthority() instanceof CIAMAuthority;
     }
 
     /**
