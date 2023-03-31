@@ -309,6 +309,16 @@ public class ClientException extends BaseException {
     public static final String NOT_VALID_BROKER_FOUND = "not_valid_broker_found";
 
     /**
+     * The broker verification failed.
+     */
+    public static final String BROKER_VERIFICATION_FAILED_ERROR = "broker_app_verification_failed";
+
+    /**
+     * Account manager failed to query for the Authenticator types.
+     */
+    public static final String ACCOUNT_MANAGER_FAILED = "account_manager_failed";
+
+    /**
      * An account manager operation failed.
      */
     public static final String ACCOUNT_MANAGER_OPERATION_ERROR = "account_manager_operation_error";
