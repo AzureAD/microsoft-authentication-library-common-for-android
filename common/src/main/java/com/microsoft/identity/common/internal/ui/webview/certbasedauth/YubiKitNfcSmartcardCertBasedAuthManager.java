@@ -208,4 +208,26 @@ public class YubiKitNfcSmartcardCertBasedAuthManager extends AbstractNfcSmartcar
             }
         };
     }
+
+    /**
+     * Disconnects a connected smartcard.
+     *
+     * @param callback logic to be called after smartcard is removed.
+     */
+    @Override
+    void disconnect(@NonNull final IDisconnectionCallback callback) {
+        final String methodTag = TAG + ":disconnect";
+        synchronized (sDeviceLock) {
+            if (mNfcDevice != null) {
+                mNfcDevice.remove(new Runnable() {
+                    @Override
+                    public void run() {
+                        Logger.info(methodTag, "YubiKey connected via NFC has been disconnected");
+                        mNfcDevice = null;
+                        callback.onClosedConnection();
+                    }
+                });
+            }
+        }
+    }
 }

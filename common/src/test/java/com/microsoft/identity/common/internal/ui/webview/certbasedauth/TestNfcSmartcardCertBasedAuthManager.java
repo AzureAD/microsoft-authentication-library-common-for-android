@@ -97,4 +97,10 @@ class TestNfcSmartcardCertBasedAuthManager extends AbstractNfcSmartcardCertBased
             mConnectionCallback.onCreateConnection();
         }
     }
+
+    @Override
+    void disconnect(@NonNull IDisconnectionCallback callback) {
+        //Unit tests make use of the dismiss button on the dialog instead of mocking a disconnection.
+        //Disconnections are tested manually.
+    }
 }

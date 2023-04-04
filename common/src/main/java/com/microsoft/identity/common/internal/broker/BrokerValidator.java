@@ -23,6 +23,8 @@
 package com.microsoft.identity.common.internal.broker;
 
 import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.BROKER_ACCOUNT_TYPE;
+import static com.microsoft.identity.common.java.exception.ClientException.ACCOUNT_MANAGER_FAILED;
+import static com.microsoft.identity.common.java.exception.ClientException.BROKER_VERIFICATION_FAILED_ERROR;
 import static com.microsoft.identity.common.java.exception.ClientException.NOT_VALID_BROKER_FOUND;
 import static com.microsoft.identity.common.java.exception.ClientException.NO_SUCH_ALGORITHM;
 import static com.microsoft.identity.common.java.exception.ErrorStrings.APP_PACKAGE_NAME_NOT_FOUND;
@@ -110,11 +112,11 @@ public class BrokerValidator {
 
             return signatureHash;
         } catch (NameNotFoundException e) {
-            throw new ClientException(APP_PACKAGE_NAME_NOT_FOUND, e.getMessage(), e);
+            throw new ClientException(BROKER_VERIFICATION_FAILED_ERROR, APP_PACKAGE_NAME_NOT_FOUND + " "+ e.getMessage(), e);
         } catch (NoSuchAlgorithmException e) {
             throw new ClientException(NO_SUCH_ALGORITHM, e.getMessage(), e);
         } catch (final IOException | GeneralSecurityException e) {
-            throw new ClientException(BROKER_VERIFICATION_FAILED, e.getMessage(), e);
+            throw new ClientException(BROKER_VERIFICATION_FAILED_ERROR, e.getMessage(), e);
         }
     }
 
@@ -248,22 +250,27 @@ public class BrokerValidator {
     public String getValidActiveBrokerPackageName() throws ClientException {
         final String methodTag = TAG + ":getValidActiveBrokerPackageName";
 
-        final int numberOfAuthenticators;
+        final AuthenticatorDescription[] authenticators;
         try {
-            final AuthenticatorDescription[] authenticators = AccountManager.get(mContext).getAuthenticatorTypes();
-            numberOfAuthenticators = authenticators.length;
-            Logger.info(methodTag, numberOfAuthenticators + " Authenticators registered.");
-            for (final AuthenticatorDescription authenticator : authenticators) {
-                if (BROKER_ACCOUNT_TYPE.equals(authenticator.type)) {
-                    verifySignatureAndThrow(authenticator.packageName);
-                    return authenticator.packageName;
-                }
-            }
+            authenticators = AccountManager.get(mContext).getAuthenticatorTypes();
         } catch (final Exception exception) {
-            final ClientException clientException = new ClientException(NOT_VALID_BROKER_FOUND, exception.getMessage());
+            final ClientException clientException = new ClientException(ACCOUNT_MANAGER_FAILED, exception.getMessage());
             Logger.error(methodTag, exception.getMessage(), exception);
             throw clientException;
         }
+
+        final int numberOfAuthenticators = authenticators.length;
+        Logger.info(methodTag, numberOfAuthenticators + " Authenticators registered.");
+        for (final AuthenticatorDescription authenticator : authenticators) {
+            // TODO: remove or change to verbose once we're confident this is working.
+            Logger.info(methodTag, "Authenticator: " + authenticator.packageName + ",  type: " + authenticator.type );
+            if (BROKER_ACCOUNT_TYPE.equals(authenticator.type)) {
+                Logger.info(methodTag, "Verify: " + authenticator.packageName);
+                verifySignatureAndThrow(authenticator.packageName);
+                return authenticator.packageName;
+            }
+        }
+
         final String errorMessage = "None of the " + numberOfAuthenticators + " authenticators, is type: " + BROKER_ACCOUNT_TYPE;
         final ClientException clientException = new ClientException(NOT_VALID_BROKER_FOUND, errorMessage);
         Logger.error(methodTag, errorMessage, clientException);

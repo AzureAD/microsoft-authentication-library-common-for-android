@@ -20,42 +20,39 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java.crypto;
+package com.microsoft.identity.common.java.providers.microsoft.microsoftsts;
 
+import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.SilentTokenCommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.TokenCommandParameters;
+import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
 
-import lombok.AllArgsConstructor;
 import lombok.NonNull;
 
-import static com.microsoft.identity.common.java.AuthenticationConstants.ENCODING_UTF8;
-
 /**
- * Add helper functions which takes in parameter or produce results in a ready-to-store (String) form.
+ * Acquire token strategy for Microsoft STS
+ *  * @param <T> is expected to be either {@link InteractiveTokenCommandParameters}
+ *  *           or {@link SilentTokenCommandParameters}
  */
-@AllArgsConstructor
-public class KeyAccessorStringAdapter {
-
-    private final IKeyAccessor mKeyAcccesor;
+public interface IAcquireMicrosoftStsTokenStrategy<T extends TokenCommandParameters> {
 
     /**
-     * Encrypt a plaintext string, returning an encrypted UTF-8 encoded string.
-     *
-     * @param plainText the plaintext to encrypt.
-     * @return the encrypted UTF-8 string.
+     * Create a token request
+     * @param parameters Silent or Interactive request parameters
+     * @return a new PRT
      */
-    public String encrypt(@NonNull String plainText) throws ClientException {
-        final byte[] result = mKeyAcccesor.encrypt(plainText.getBytes(ENCODING_UTF8));
-        return new String(result, ENCODING_UTF8);
-    }
+    @NonNull
+    MicrosoftStsTokenRequest createTokenRequest(@NonNull final T parameters) throws BaseException;
 
     /**
-     * Decrypt a UTF-8 ciphertext, returning the decrypted values.
-     *
-     * @param cipherText the UTF-8 ciphertext to decrypt.
-     * @return the decrypted string.
+     * Acquire token given the request
+     * @param tokenRequest Token request
+     * @return Token result
+     * @throws ClientException
      */
-    public String decrypt(@NonNull String cipherText) throws ClientException {
-        final byte[] result = mKeyAcccesor.decrypt(cipherText.getBytes(ENCODING_UTF8));
-        return new String(result, ENCODING_UTF8);
-    }
+    @NonNull
+    TokenResult acquireToken(@NonNull final MicrosoftStsTokenRequest tokenRequest) throws ClientException;
 }
+

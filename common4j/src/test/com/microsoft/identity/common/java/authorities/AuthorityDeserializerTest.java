@@ -43,6 +43,18 @@ public class AuthorityDeserializerTest {
             "   \"type\": \"AAD\"," +
             "   \"authority_url\": \"https://login.microsoftonline.us/common\"" +
             "}";
+    private static final String CIAM_AUTHORITY_TENANT_DOMAIN = "{" +
+            "   \"type\": \"CIAM\"," +
+            "   \"authority_url\": \"https://msidlabciam1.ciamlogin.com/msidlabciam1.onmicrosoft.com\"" +
+            "}";
+    private static final String CIAM_AUTHORITY_TENANT_GUID = "{" +
+            "   \"type\": \"CIAM\"," +
+            "   \"authority_url\": \"https://msidlabciam1.ciamlogin.com/d57fb3d4-4b5a-4144-9328-9c1f7d58179d\"" +
+            "}";
+    private static final String CIAM_AUTHORITY_NO_PATH = "{" +
+            "   \"type\": \"CIAM\"," +
+            "   \"authority_url\": \"https://msidlabciam1.ciamlogin.com\"" +
+            "}";
     private static final String ADFS_AUTHORITY = "{\"type\": \"ADFS\", \"default\": true }";
     private static final String UNKNOWN_AUTHORITY = "{\"type\": \"AAAD\", \"default\": true }";
 
@@ -61,6 +73,22 @@ public class AuthorityDeserializerTest {
 
         Assert.assertTrue(authority instanceof AzureActiveDirectoryB2CAuthority);
         Assert.assertEquals("https://login.microsoftonline.com/tfp/msidlabb2c.onmicrosoft.com/B2C_1_SISOPolicy/", authority.getAuthorityUri().toString());
+    }
+
+    @Test
+    public void testDeserializeCIAM() {
+        final Authority authorityTenantDomain = gson.fromJson(CIAM_AUTHORITY_TENANT_DOMAIN, Authority.class);
+        Assert.assertTrue(authorityTenantDomain instanceof CIAMAuthority);
+        Assert.assertEquals("https://msidlabciam1.ciamlogin.com/msidlabciam1.onmicrosoft.com", authorityTenantDomain.getAuthorityUri().toString());
+
+        final Authority authorityTenantGUID = gson.fromJson(CIAM_AUTHORITY_TENANT_GUID, Authority.class);
+        Assert.assertTrue(authorityTenantGUID instanceof CIAMAuthority);
+        Assert.assertEquals("https://msidlabciam1.ciamlogin.com/d57fb3d4-4b5a-4144-9328-9c1f7d58179d", authorityTenantGUID.getAuthorityUri().toString());
+
+        // We shouldn't be changing the authority url at this point for a no-path CIAM authority
+        final Authority authorityNoPath = gson.fromJson(CIAM_AUTHORITY_NO_PATH, Authority.class);
+        Assert.assertTrue(authorityNoPath instanceof CIAMAuthority);
+        Assert.assertEquals("https://msidlabciam1.ciamlogin.com", authorityNoPath.getAuthorityUri().toString());
     }
 
     @Test

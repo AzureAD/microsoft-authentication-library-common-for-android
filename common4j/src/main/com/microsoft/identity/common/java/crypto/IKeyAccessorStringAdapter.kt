@@ -20,15 +20,26 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java.broker;
+package com.microsoft.identity.common.java.crypto
 
-import lombok.NonNull;
+import com.microsoft.identity.common.java.exception.ClientException
 
-public interface IBrokerAccount {
+interface IKeyAccessorStringAdapter {
+    /**
+     * Encrypt a plaintext string, returning an encrypted encoded string.
+     *
+     * @param plainText the plaintext to encrypt.
+     * @return the encoded ciphertext.
+     */
+    @Throws(ClientException::class)
+    fun encrypt(plainText: String): String
 
     /**
-     * Get account's (unique) username.
-     * */
-    @NonNull
-    String getUsername();
+     * Decrypt an encoded ciphertext, returning the decrypted values.
+     *
+     * @param cipherText the encoded ciphertext to decrypt.
+     * @return the decrypted string.
+     */
+    @Throws(ClientException::class)
+    fun decrypt(cipherText: String): String
 }

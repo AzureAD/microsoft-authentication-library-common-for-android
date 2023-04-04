@@ -20,26 +20,17 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.ui.webview.certbasedauth;
+package com.microsoft.identity.common.java.broker;
 
-import androidx.annotation.NonNull;
-
-import lombok.Getter;
-
-/**
- * An abstract smartcard CertBasedAuth manager specifically for NFC.
- */
-public abstract class AbstractNfcSmartcardCertBasedAuthManager extends AbstractSmartcardCertBasedAuthManager {
-
-    /* boolean based on the most recently connected smartcard device
-    being the same as the previously connected smartcard device.
-    true if most recently connected smartcard device is the same as the previous.
-    false otherwise (including if no previous smartcard device exists). */
-    @Getter protected boolean isDeviceChanged;
+interface IBrokerAccount {
 
     /**
-     * Disconnects a connected smartcard.
-     * @param callback logic to be called after smartcard is removed.
+     * Get account's (unique) username.
      */
-    abstract void disconnect(@NonNull final IDisconnectionCallback callback);
+    fun getUsername(): String
+
+    /**
+     * Get account's type.
+     */
+    fun getType(): String
 }
