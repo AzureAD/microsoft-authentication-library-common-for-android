@@ -27,6 +27,7 @@ import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.N
 import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.NativeAuthRequestProvider
 import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.NativeAuthResponseHandler
 import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.interactors.SignUpInteractor
+import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.interactors.SsprInteractor
 import com.microsoft.identity.common.java.net.UrlConnectionHttpClient
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters
 
@@ -49,6 +50,11 @@ class NativeAuthOAuth2StrategyFactory {
                     nativeAuthRequestProvider = NativeAuthRequestProvider(config = config),
                     nativeAuthResponseHandler = NativeAuthResponseHandler()
                 ),
+                ssprInteractor = SsprInteractor(
+                    httpClient = UrlConnectionHttpClient.getDefaultInstance(),
+                    nativeAuthRequestProvider = NativeAuthRequestProvider(config = config),
+                    nativeAuthResponseHandler = NativeAuthResponseHandler()
+                )
             )
         }
     }

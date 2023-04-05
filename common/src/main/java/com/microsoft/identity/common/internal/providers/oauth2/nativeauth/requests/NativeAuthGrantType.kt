@@ -2,5 +2,5 @@ package com.microsoft.identity.common.internal.providers.oauth2.nativeauth.reque
 
 enum class NativeAuthGrantType(val jsonValue: String) {
     PASSWORD("password"),
-    PASSWORDLESS_OTP("passwordless_otp")
+    PASSWORDLESS_OTP("oob")
 }

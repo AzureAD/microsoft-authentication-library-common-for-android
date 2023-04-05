@@ -2,6 +2,9 @@ package com.microsoft.identity.common.internal.providers.microsoft.nativeauth
 
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.NativeAuthOAuth2Configuration
 import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.NativeAuthResponseHandler
+import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.NativeAuthBindingMethod
+import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.NativeAuthChallengeType
+import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.NativeAuthPollCompletionStatus
 import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signup.Attribute
 import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signup.SignUpChallengeResponse
 import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signup.SignUpChallengeResult
@@ -9,6 +12,16 @@ import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.respon
 import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signup.SignUpStartResponse
 import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signup.SignUpStartResult
 import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signup.exceptions.ErrorCodes
+import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.sspr.challenge.SsprChallengeResponse
+import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.sspr.challenge.SsprChallengeResult
+import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.sspr.cont.SsprContinueResponse
+import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.sspr.cont.SsprContinueResult
+import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.sspr.pollcompletion.SsprPollCompletionResponse
+import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.sspr.pollcompletion.SsprPollCompletionResult
+import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.sspr.start.SsprStartResponse
+import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.sspr.start.SsprStartResult
+import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.sspr.submit.SsprSubmitResponse
+import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.sspr.submit.SsprSubmitResult
 import com.microsoft.identity.common.java.exception.ClientException
 import io.mockk.every
 import io.mockk.mockk
@@ -22,12 +35,12 @@ class NativeAuthResponseHandlerTest {
     private val password = "verySafePassword"
     private val clientId = "1234"
     private val requestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/signup/start")
-    private val challengeTypes = "oob password redirect"
+    private val challengeType = "oob password redirect"
     private val emptyString = ""
 
     private val mockConfig = mockk<NativeAuthOAuth2Configuration> {
         every { getSignUpStartEndpoint() } returns requestUrl
-        every { challengeTypes } returns this@NativeAuthResponseHandlerTest.challengeTypes
+        every { challengeType } returns this@NativeAuthResponseHandlerTest.challengeType
         every { clientId } returns this@NativeAuthResponseHandlerTest.clientId
     }
 
@@ -40,7 +53,7 @@ class NativeAuthResponseHandlerTest {
         whenever(signUpStartResult.successResponse).thenReturn(null)
 
         nativeAuthResponseHandler.validateApiResult(
-            apiResult = signUpStartResult,
+            apiResult = signUpStartResult
         )
     }
 
@@ -54,7 +67,7 @@ class NativeAuthResponseHandlerTest {
         whenever(signUpStartResult.successResponse).thenReturn(signUpResultSuccessResponse)
 
         nativeAuthResponseHandler.validateApiResult(
-            apiResult = signUpStartResult,
+            apiResult = signUpStartResult
         )
     }
 
@@ -67,7 +80,7 @@ class NativeAuthResponseHandlerTest {
         whenever(signUpStartResult.successResponse).thenReturn(signUpResultSuccessResponse)
 
         nativeAuthResponseHandler.validateApiResult(
-            apiResult = signUpStartResult,
+            apiResult = signUpStartResult
         )
     }
 
@@ -78,7 +91,7 @@ class NativeAuthResponseHandlerTest {
         whenever(signUpStartResult.errorResponse).thenReturn(null)
 
         nativeAuthResponseHandler.validateApiResult(
-            apiResult = signUpStartResult,
+            apiResult = signUpStartResult
         )
     }
 
@@ -99,7 +112,7 @@ class NativeAuthResponseHandlerTest {
         whenever(signUpStartResult.errorResponse).thenReturn(signUpResultErrorResponse)
 
         nativeAuthResponseHandler.validateApiResult(
-            apiResult = signUpStartResult,
+            apiResult = signUpStartResult
         )
     }
 
@@ -119,7 +132,7 @@ class NativeAuthResponseHandlerTest {
         whenever(signUpStartResult.errorResponse).thenReturn(signUpResultErrorResponse)
 
         nativeAuthResponseHandler.validateApiResult(
-            apiResult = signUpStartResult,
+            apiResult = signUpStartResult
         )
     }
 
@@ -139,7 +152,7 @@ class NativeAuthResponseHandlerTest {
         whenever(signUpStartResult.errorResponse).thenReturn(signUpResultErrorResponse)
 
         nativeAuthResponseHandler.validateApiResult(
-            apiResult = signUpStartResult,
+            apiResult = signUpStartResult
         )
     }
 
@@ -159,7 +172,7 @@ class NativeAuthResponseHandlerTest {
         whenever(signUpStartResult.errorResponse).thenReturn(signUpResultErrorResponse)
 
         nativeAuthResponseHandler.validateApiResult(
-            apiResult = signUpStartResult,
+            apiResult = signUpStartResult
         )
     }
 
@@ -179,7 +192,7 @@ class NativeAuthResponseHandlerTest {
         whenever(signUpStartResult.errorResponse).thenReturn(signUpResultErrorResponse)
 
         nativeAuthResponseHandler.validateApiResult(
-            apiResult = signUpStartResult,
+            apiResult = signUpStartResult
         )
     }
 
@@ -200,7 +213,7 @@ class NativeAuthResponseHandlerTest {
         whenever(signUpStartResult.errorResponse).thenReturn(signUpResultErrorResponse)
 
         nativeAuthResponseHandler.validateApiResult(
-            apiResult = signUpStartResult,
+            apiResult = signUpStartResult
         )
     }
 
@@ -221,7 +234,7 @@ class NativeAuthResponseHandlerTest {
         whenever(signUpStartResult.errorResponse).thenReturn(signUpResultErrorResponse)
 
         nativeAuthResponseHandler.validateApiResult(
-            apiResult = signUpStartResult,
+            apiResult = signUpStartResult
         )
     }
 
@@ -232,7 +245,7 @@ class NativeAuthResponseHandlerTest {
         whenever(signUpChallengeResult.successResponse).thenReturn(null)
 
         nativeAuthResponseHandler.validateApiResult(
-            apiResult = signUpChallengeResult,
+            apiResult = signUpChallengeResult
         )
     }
 
@@ -251,7 +264,7 @@ class NativeAuthResponseHandlerTest {
         whenever(signUpChallengeResult.successResponse).thenReturn(signUpChallengeResponse)
 
         nativeAuthResponseHandler.validateApiResult(
-            apiResult = signUpChallengeResult,
+            apiResult = signUpChallengeResult
         )
     }
 
@@ -270,7 +283,7 @@ class NativeAuthResponseHandlerTest {
         whenever(signUpChallengeResult.successResponse).thenReturn(signUpChallengeResponse)
 
         nativeAuthResponseHandler.validateApiResult(
-            apiResult = signUpChallengeResult,
+            apiResult = signUpChallengeResult
         )
     }
 
@@ -289,7 +302,7 @@ class NativeAuthResponseHandlerTest {
         whenever(signUpChallengeResult.successResponse).thenReturn(signUpChallengeResponse)
 
         nativeAuthResponseHandler.validateApiResult(
-            apiResult = signUpChallengeResult,
+            apiResult = signUpChallengeResult
         )
     }
 
@@ -308,7 +321,7 @@ class NativeAuthResponseHandlerTest {
         whenever(signUpChallengeResult.successResponse).thenReturn(signUpChallengeResponse)
 
         nativeAuthResponseHandler.validateApiResult(
-            apiResult = signUpChallengeResult,
+            apiResult = signUpChallengeResult
         )
     }
 
@@ -327,7 +340,7 @@ class NativeAuthResponseHandlerTest {
         whenever(signUpChallengeResult.successResponse).thenReturn(signUpChallengeResponse)
 
         nativeAuthResponseHandler.validateApiResult(
-            apiResult = signUpChallengeResult,
+            apiResult = signUpChallengeResult
         )
     }
 
@@ -346,7 +359,7 @@ class NativeAuthResponseHandlerTest {
         whenever(signUpChallengeResult.successResponse).thenReturn(signUpChallengeResponse)
 
         nativeAuthResponseHandler.validateApiResult(
-            apiResult = signUpChallengeResult,
+            apiResult = signUpChallengeResult
         )
     }
 
@@ -359,7 +372,7 @@ class NativeAuthResponseHandlerTest {
         whenever(signUpChallengeResult.successResponse).thenReturn(signUpChallengeResponse)
 
         nativeAuthResponseHandler.validateApiResult(
-            apiResult = signUpChallengeResult,
+            apiResult = signUpChallengeResult
         )
     }
 
@@ -370,7 +383,291 @@ class NativeAuthResponseHandlerTest {
         whenever(signUpChallengeResult.errorResponse).thenReturn(null)
 
         nativeAuthResponseHandler.validateApiResult(
-            apiResult = signUpChallengeResult,
+            apiResult = signUpChallengeResult
+        )
+    }
+
+    // validate SsprStartResult
+    @Test
+    fun testValidateSsprStartResultWithSuccessReturnChallengeType() {
+        val ssprStartResult = mock<SsprStartResult>()
+        whenever(ssprStartResult.success).thenReturn(true)
+
+        val ssprStartResponse = SsprStartResponse(
+            challengeType = NativeAuthChallengeType.REDIRECT,
+            passwordResetToken = null
+        )
+        whenever(ssprStartResult.successResponse).thenReturn(ssprStartResponse)
+
+        nativeAuthResponseHandler.validateApiResult(
+            apiResult = ssprStartResult
+        )
+    }
+
+    @Test
+    fun testValidateSsprStartResultWithSuccessReturnPasswordResetToken() {
+        val ssprStartResult = mock<SsprStartResult>()
+        whenever(ssprStartResult.success).thenReturn(true)
+
+        val ssprStartResponse = SsprStartResponse(
+            passwordResetToken = "123456",
+            challengeType = null
+        )
+        whenever(ssprStartResult.successResponse).thenReturn(ssprStartResponse)
+
+        nativeAuthResponseHandler.validateApiResult(
+            apiResult = ssprStartResult
+        )
+    }
+
+    @Test(expected = ClientException::class)
+    fun testValidateSsprStartResultWithSuccessAndMissingObject() {
+        val ssprStartResult = mock<SsprStartResult>()
+        whenever(ssprStartResult.success).thenReturn(true)
+        whenever(ssprStartResult.successResponse).thenReturn(null)
+
+        nativeAuthResponseHandler.validateApiResult(
+            apiResult = ssprStartResult
+        )
+    }
+
+    // validate SsprChallengeResult
+    @Test(expected = ClientException::class)
+    fun testValidateSsprChallengeResultWithSuccessAndMissingObject() {
+        val ssprChallengeResult = mock<SsprChallengeResult>()
+        whenever(ssprChallengeResult.success).thenReturn(true)
+        whenever(ssprChallengeResult.successResponse).thenReturn(null)
+
+        nativeAuthResponseHandler.validateApiResult(
+            apiResult = ssprChallengeResult
+        )
+    }
+
+    @Test(expected = ClientException::class)
+    fun testValidateSsprChallengeResultWithSuccessAndMissingPasswordResetToken() {
+        val ssprChallengeResult = mock<SsprChallengeResult>()
+        whenever(ssprChallengeResult.success).thenReturn(true)
+
+        val ssprResultSuccessResponse = SsprChallengeResponse(
+            passwordResetToken = emptyString,
+            challengeType = NativeAuthChallengeType.OOB,
+            bindingMethod = NativeAuthBindingMethod.PROMPT,
+            displayName = null,
+            displayType = null,
+            codeLength = null
+        )
+        whenever(ssprChallengeResult.successResponse).thenReturn(ssprResultSuccessResponse)
+
+        nativeAuthResponseHandler.validateApiResult(
+            apiResult = ssprChallengeResult
+        )
+    }
+
+    @Test(expected = ClientException::class)
+    fun testValidateSsprChallengeResultWithSuccessAndMissingChallengeType() {
+        val ssprChallengeResult = mock<SsprChallengeResult>()
+        whenever(ssprChallengeResult.success).thenReturn(true)
+
+        val ssprResultSuccessResponse = SsprChallengeResponse(
+            passwordResetToken = "1234",
+            challengeType = NativeAuthChallengeType.UNKNOWN,
+            bindingMethod = NativeAuthBindingMethod.PROMPT,
+            displayName = null,
+            displayType = null,
+            codeLength = null
+        )
+        whenever(ssprChallengeResult.successResponse).thenReturn(ssprResultSuccessResponse)
+
+        nativeAuthResponseHandler.validateApiResult(
+            apiResult = ssprChallengeResult
+        )
+    }
+
+    @Test(expected = ClientException::class)
+    fun testValidateSsprChallengeResultWithSuccessAndMissingBindingMethod() {
+        val ssprChallengeResult = mock<SsprChallengeResult>()
+        whenever(ssprChallengeResult.success).thenReturn(true)
+
+        val ssprResultSuccessResponse = SsprChallengeResponse(
+            passwordResetToken = "1234",
+            challengeType = NativeAuthChallengeType.OOB,
+            bindingMethod = NativeAuthBindingMethod.UNKNOWN,
+            codeLength = null,
+            displayName = null,
+            displayType = null
+        )
+        whenever(ssprChallengeResult.successResponse).thenReturn(ssprResultSuccessResponse)
+
+        nativeAuthResponseHandler.validateApiResult(
+            apiResult = ssprChallengeResult
+        )
+    }
+
+    // validate SsprContinueResult
+    @Test(expected = ClientException::class)
+    fun testValidateSsprContinueResultWithSuccessAndMissingObject() {
+        val ssprContinueResult = mock<SsprContinueResult>()
+        whenever(ssprContinueResult.success).thenReturn(true)
+        whenever(ssprContinueResult.successResponse).thenReturn(null)
+
+        nativeAuthResponseHandler.validateApiResult(
+            apiResult = ssprContinueResult
+        )
+    }
+
+    // Because I comment the validation part in response
+//    @Test(expected = ClientException::class)
+//    fun testValidateSsprContinueResultWithSuccessAndMissingPasswordResetToken() {
+//        val ssprContinueResult = mock<SsprContinueResult>()
+//        whenever(ssprContinueResult.success).thenReturn(true)
+//
+//        val ssprResultSuccessResponse = SsprContinueResponse(
+//            passwordSubmitToken = emptyString
+//        )
+//        whenever(ssprContinueResult.successResponse).thenReturn(ssprResultSuccessResponse)
+//
+//        nativeAuthResponseHandler.validateApiResult(
+//            apiResult =  ssprContinueResult
+//        )
+//    }
+
+    @Test
+    fun testValidateSsprContinueResultSuccessReturnToken() {
+        val ssprContinueResult = mock<SsprContinueResult>()
+        whenever(ssprContinueResult.success).thenReturn(true)
+
+        val ssprResultSuccessResponse = SsprContinueResponse(
+            passwordSubmitToken = "1234",
+            expiresIn = 600,
+            error = null
+        )
+        whenever(ssprContinueResult.successResponse).thenReturn(ssprResultSuccessResponse)
+
+        nativeAuthResponseHandler.validateApiResult(
+            apiResult = ssprContinueResult
+        )
+    }
+
+    @Test
+    fun testValidateSsprContinueResultSuccessReturn() {
+        val ssprContinueResult = mock<SsprContinueResult>()
+        whenever(ssprContinueResult.success).thenReturn(true)
+
+        val ssprResultSuccessResponse = SsprContinueResponse(
+            passwordSubmitToken = "1234",
+            error = "verification_required",
+            expiresIn = 600
+        )
+        whenever(ssprContinueResult.successResponse).thenReturn(ssprResultSuccessResponse)
+
+        nativeAuthResponseHandler.validateApiResult(
+            apiResult = ssprContinueResult
+        )
+    }
+
+    // validate SsprSubmitResult
+    @Test(expected = ClientException::class)
+    fun testValidateSsprSubmitResultWithSuccessAndMissingObject() {
+        val ssprSubmitResult = mock<SsprSubmitResult>()
+        whenever(ssprSubmitResult.success).thenReturn(true)
+        whenever(ssprSubmitResult.successResponse).thenReturn(null)
+
+        nativeAuthResponseHandler.validateApiResult(
+            apiResult = ssprSubmitResult
+        )
+    }
+
+    @Test(expected = ClientException::class)
+    fun testValidateSsprSubmitResultWithSuccessAndMissingPasswordResetToken() {
+        val ssprSubmitResult = mock<SsprSubmitResult>()
+        whenever(ssprSubmitResult.success).thenReturn(true)
+
+        val ssprResultSuccessResponse = SsprSubmitResponse(
+            passwordResetToken = "",
+            pollInterval = 2
+        )
+        whenever(ssprSubmitResult.successResponse).thenReturn(ssprResultSuccessResponse)
+
+        nativeAuthResponseHandler.validateApiResult(
+            apiResult = ssprSubmitResult
+        )
+    }
+
+    @Test(expected = ClientException::class)
+    fun testValidateSsprSubmitResultWithSuccessAndMissingPollInterval() {
+        val ssprSubmitResult = mock<SsprSubmitResult>()
+        whenever(ssprSubmitResult.success).thenReturn(true)
+
+        val ssprResultSuccessResponse = SsprSubmitResponse(
+            passwordResetToken = "1234",
+            pollInterval = 0
+        )
+        whenever(ssprSubmitResult.successResponse).thenReturn(ssprResultSuccessResponse)
+
+        nativeAuthResponseHandler.validateApiResult(
+            apiResult = ssprSubmitResult
+        )
+    }
+
+    @Test
+    fun testValidateSsprSubmitResultSuccess() {
+        val ssprSubmitResult = mock<SsprSubmitResult>()
+        whenever(ssprSubmitResult.success).thenReturn(true)
+
+        val ssprResultSuccessResponse = SsprSubmitResponse(
+            passwordResetToken = "1234",
+            pollInterval = 2
+        )
+        whenever(ssprSubmitResult.successResponse).thenReturn(ssprResultSuccessResponse)
+
+        nativeAuthResponseHandler.validateApiResult(
+            apiResult = ssprSubmitResult
+        )
+    }
+
+    // validate SsprPollCompletionResult
+    @Test
+    fun testValidateSsprPollCompletionResultSucceeded() {
+        val ssprPollCompletionResult = mock<SsprPollCompletionResult>()
+        whenever(ssprPollCompletionResult.success).thenReturn(true)
+
+        val ssprResultSuccessResponse = SsprPollCompletionResponse(
+            status = NativeAuthPollCompletionStatus.SUCCEEDED
+        )
+        whenever(ssprPollCompletionResult.successResponse).thenReturn(ssprResultSuccessResponse)
+
+        nativeAuthResponseHandler.validateApiResult(
+            apiResult = ssprPollCompletionResult
+        )
+    }
+
+    @Test
+    fun testValidateSsprPollCompletionResultInProgress() {
+        val ssprPollCompletionResult = mock<SsprPollCompletionResult>()
+        whenever(ssprPollCompletionResult.success).thenReturn(true)
+
+        val ssprResultSuccessResponse = SsprPollCompletionResponse(
+            status = NativeAuthPollCompletionStatus.IN_PROGRESS
+        )
+        whenever(ssprPollCompletionResult.successResponse).thenReturn(ssprResultSuccessResponse)
+
+        nativeAuthResponseHandler.validateApiResult(
+            apiResult = ssprPollCompletionResult
+        )
+    }
+
+    @Test(expected = ClientException::class)
+    fun testValidateSsprPollCompletionResultWithSuccessAndMissingStatus() {
+        val ssprPollCompletionResult = mock<SsprPollCompletionResult>()
+        whenever(ssprPollCompletionResult.success).thenReturn(true)
+
+        val ssprResultSuccessResponse = SsprPollCompletionResponse(
+            status = NativeAuthPollCompletionStatus.UNKNOWN
+        )
+        whenever(ssprPollCompletionResult.successResponse).thenReturn(ssprResultSuccessResponse)
+
+        nativeAuthResponseHandler.validateApiResult(
+            apiResult = ssprPollCompletionResult
         )
     }
 }

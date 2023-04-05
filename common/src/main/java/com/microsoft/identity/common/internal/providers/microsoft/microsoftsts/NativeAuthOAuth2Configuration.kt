@@ -23,6 +23,7 @@
 
 package com.microsoft.identity.common.internal.providers.microsoft.microsoftsts
 
+import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.requests.NativeAuthGrantType
 import com.microsoft.identity.common.java.logging.Logger
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration
 import com.microsoft.identity.common.java.util.UrlUtil
@@ -33,7 +34,8 @@ import java.net.URL
 class NativeAuthOAuth2Configuration(
     private val authorityUrl: URL,
     val clientId: String,
-    val challengeTypes: String = "oob password redirect" // TODO hardcoded for now
+    val challengeType: String = "oob password redirect", // TODO hardcoded for now
+    val grantType: String = NativeAuthGrantType.PASSWORDLESS_OTP.jsonValue // TODO hardcoded for now
 ) : MicrosoftStsOAuth2Configuration() {
 
     private val TAG = NativeAuthOAuth2Configuration::class.java.simpleName
@@ -41,6 +43,11 @@ class NativeAuthOAuth2Configuration(
     companion object {
         private const val SIGNUP_START_ENDPOINT_SUFFIX = "/signup/start"
         private const val SIGNUP_CHALLENGE_ENDPOINT_SUFFIX = "/signup/challenge"
+        private const val SSPR_START_ENDPOINT_SUFFIX = "/resetpassword/start"
+        private const val SSPR_CHALLENGE_ENDPOINT_SUFFIX = "/resetpassword/challenge"
+        private const val SSPR_CONTINUE_ENDPOINT_SUFFIX = "/resetpassword/continue"
+        private const val SSPR_SUBMIT_ENDPOINT_SUFFIX = "/resetpassword/submit"
+        private const val SSPR_COMPLETE_ENDPOINT_SUFFIX = "/resetpassword/poll_completion"
     }
 
     override fun getAuthorityUrl(): URL {
@@ -69,6 +76,66 @@ class NativeAuthOAuth2Configuration(
         return getEndpointUrlFromRootAndTenantAndSuffix(
             root = getAuthorityUrl(),
             endpointSuffix = SIGNUP_CHALLENGE_ENDPOINT_SUFFIX
+        )
+    }
+
+    /**
+     * Get the endpoint to be used for making a self service password reset (start) request.
+     *
+     * @return URL the sspr start endpoint
+     */
+    fun getSsprStartEndpoint(): URL {
+        return getEndpointUrlFromRootAndTenantAndSuffix(
+            root = getAuthorityUrl(),
+            endpointSuffix = SSPR_START_ENDPOINT_SUFFIX
+        )
+    }
+
+    /**
+     * Get the endpoint to be used for making a self service password reset (challenge) request.
+     *
+     * @return URL the sspr challenge endpoint
+     */
+    fun getSsprChallengeEndpoint(): URL {
+        return getEndpointUrlFromRootAndTenantAndSuffix(
+            root = getAuthorityUrl(),
+            endpointSuffix = SSPR_CHALLENGE_ENDPOINT_SUFFIX
+        )
+    }
+
+    /**
+     * Get the endpoint to be used for making a self service password reset (continue) request.
+     *
+     * @return URL the sspr continue endpoint
+     */
+    fun getSsprContinueEndpoint(): URL {
+        return getEndpointUrlFromRootAndTenantAndSuffix(
+            root = getAuthorityUrl(),
+            endpointSuffix = SSPR_CONTINUE_ENDPOINT_SUFFIX
+        )
+    }
+
+    /**
+     * Get the endpoint to be used for making a self service password reset (submit) request.
+     *
+     * @return URL the sspr submit endpoint
+     */
+    fun getSsprSubmitEndpoint(): URL {
+        return getEndpointUrlFromRootAndTenantAndSuffix(
+            root = getAuthorityUrl(),
+            endpointSuffix = SSPR_SUBMIT_ENDPOINT_SUFFIX
+        )
+    }
+
+    /**
+     * Get the endpoint to be used for making a self service password reset (poll completion) request.
+     *
+     * @return URL the sspr poll completion endpoint
+     */
+    fun getSsprPollCompletionEndpoint(): URL {
+        return getEndpointUrlFromRootAndTenantAndSuffix(
+            root = getAuthorityUrl(),
+            endpointSuffix = SSPR_COMPLETE_ENDPOINT_SUFFIX
         )
     }
 

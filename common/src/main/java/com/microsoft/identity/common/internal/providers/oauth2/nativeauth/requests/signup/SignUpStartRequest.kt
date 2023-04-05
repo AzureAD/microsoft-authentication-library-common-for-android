@@ -20,14 +20,14 @@ data class SignUpStartRequest @VisibleForTesting private constructor(
             password: String? = null,
             attributes: UserAttributes? = null,
             clientId: String,
-            challengeTypes: String, // TODO hardcoded for now, but will be made part of SDK config & initialisation ticket
+            challengeType: String, // TODO hardcoded for now, but will be made part of SDK config & initialisation ticket
             requestUrl: String,
             headers: Map<String, String?>
         ): SignUpStartRequest {
             // Check for empty Strings and empty Maps
             ArgUtils.validateNonNullArg(username, "username")
             ArgUtils.validateNonNullArg(clientId, "clientId")
-            ArgUtils.validateNonNullArg(challengeTypes, "challengeTypes")
+            ArgUtils.validateNonNullArg(challengeType, "challengeTypes")
             ArgUtils.validateNonNullArg(requestUrl, "requestUrl")
             ArgUtils.validateNonNullArg(headers, "headers")
 
@@ -36,11 +36,11 @@ data class SignUpStartRequest @VisibleForTesting private constructor(
                     username = username,
                     password = password,
                     attributes = attributes?.toJsonString(),
-                    challengeTypes = challengeTypes,
+                    challengeType = challengeType,
                     clientId = clientId
                 ),
                 requestUrl = URL(requestUrl),
-                headers = headers,
+                headers = headers
             )
         }
     }
@@ -50,6 +50,6 @@ data class SignUpStartRequest @VisibleForTesting private constructor(
         val password: String?,
         val attributes: String?,
         @SerializedName("client_id") override val clientId: String,
-        @SerializedName("challenge_type") val challengeTypes: String,
+        @SerializedName("challenge_type") val challengeType: String
     ) : NativeAuthRequestParameters()
 }

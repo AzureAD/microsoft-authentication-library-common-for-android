@@ -233,7 +233,9 @@ class NativeAuthAccountCredentialAdapter : BaseNativeAuthCredentialAdapter<
         val type = CredentialType.AccessToken.name
         return if (TokenRequest.TokenType.POP.equals(tokenType, ignoreCase = true)) {
             CredentialType.AccessToken_With_AuthScheme.name
-        } else type
+        } else {
+            type
+        }
     }
 
     private fun getCachedAt(): Long {

@@ -55,5 +55,5 @@ class MockApi private constructor(
 data class Request(
     @SerializedName("correlationId") val correlationId: String,
     @SerializedName("endpoint") val endpoint: String,
-    @SerializedName("responseList") val responseList: List<String>,
+    @SerializedName("responseList") val responseList: List<String>
 )

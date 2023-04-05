@@ -1,17 +1,17 @@
 package com.microsoft.identity.common.internal.providers.microsoft.nativeauth.integration
 
 import android.os.Build
-import com.microsoft.identity.common.internal.commands.parameters.SignUpChallengeCommandParameters
 import com.microsoft.identity.common.internal.commands.parameters.SignUpStartCommandParameters
 import com.microsoft.identity.common.internal.commands.parameters.UserAttributes
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.NativeAuthOAuth2Configuration
 import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.MockApiEndpointType
 import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.MockApiResponseType
-import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.MockApiUtils
+import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.MockApiUtils.Companion.configureMockApi
 import com.microsoft.identity.common.internal.providers.oauth2.NativeAuthOAuth2Strategy
 import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.NativeAuthRequestProvider
 import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.NativeAuthResponseHandler
 import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.interactors.SignUpInteractor
+import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.interactors.SsprInteractor
 import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signup.exceptions.ErrorCodes
 import com.microsoft.identity.common.java.logging.DiagnosticContext
 import com.microsoft.identity.common.java.net.UrlConnectionHttpClient
@@ -33,19 +33,18 @@ import org.robolectric.annotation.Config
 import java.net.URL
 import java.util.UUID
 
-@RunWith(
-    RobolectricTestRunner::class
-)
-@PowerMockIgnore("javax.net.ssl.*")
-@PrepareForTest(DiagnosticContext::class)
-@Config(sdk = [Build.VERSION_CODES.O_MR1])
-
 /**
  * These are integration tests using real API responses instead of mocked API responses. This class
  * covers all sign up endpoints.
  * These tests run on the mock API, see: https://native-ux-mock-api.azurewebsites.net/
  */
 
+@RunWith(
+    RobolectricTestRunner::class
+)
+@PowerMockIgnore("javax.net.ssl.*")
+@PrepareForTest(DiagnosticContext::class)
+@Config(sdk = [Build.VERSION_CODES.O_MR1])
 class SignUpOAuth2StrategyTest {
     private val email = "user@email.com"
     private val password = "verySafePassword"
@@ -68,16 +67,19 @@ class SignUpOAuth2StrategyTest {
         whenever(mockConfig.tokenEndpoint).thenReturn(tokenEndpoint)
         whenever(mockConfig.getSignUpStartEndpoint()).thenReturn(signUpStartRequestUrl)
         whenever(mockConfig.getSignUpChallengeEndpoint()).thenReturn(signUpChallengeRequestUrl)
-        whenever(mockConfig.challengeTypes).thenReturn(challengeTypes)
+        whenever(mockConfig.challengeType).thenReturn(challengeTypes)
 
         nativeAuthOAuth2Strategy = NativeAuthOAuth2Strategy(
             config = mockConfig,
             strategyParameters = mockStrategyParams,
             signUpInteractor = SignUpInteractor(
                 httpClient = UrlConnectionHttpClient.getDefaultInstance(),
-                nativeAuthRequestProvider = NativeAuthRequestProvider(
-                    mockConfig
-                ),
+                nativeAuthRequestProvider = NativeAuthRequestProvider(mockConfig),
+                nativeAuthResponseHandler = NativeAuthResponseHandler()
+            ),
+            ssprInteractor = SsprInteractor(
+                httpClient = UrlConnectionHttpClient.getDefaultInstance(),
+                nativeAuthRequestProvider = NativeAuthRequestProvider(mockConfig),
                 nativeAuthResponseHandler = NativeAuthResponseHandler()
             )
         )
@@ -135,39 +137,10 @@ class SignUpOAuth2StrategyTest {
             responseType = MockApiResponseType.CHALLENGE_TYPE_OOB
         )
 
-        val mockSignUpChallengeCommandParameters = mockk<SignUpChallengeCommandParameters>()
-
         val signupChallengeResult = nativeAuthOAuth2Strategy.performSignUpChallenge(
-            signUpToken = "1234",
-            mockSignUpChallengeCommandParameters
+            signUpToken = "1234"
         )
         assertTrue(signupChallengeResult.success)
         assertEquals(signupChallengeResult.successResponse!!.challengeType, "oob")
-    }
-
-    /**
-     * The mock API can be configured to return certain responses based on the correlation ID.
-     * This method sets the correlation ID header (through mocking DiagnosticContext) of the signup
-     * requests, and configures the mock API to return the desired response.
-     * Note: MockApiUtils.configureMockApiResponse() will fail if the mock API configuration endpoint
-     * didn't return a success state.
-     *
-     * @param correlationId The correlation ID to set in the request header of the sign up request,
-     * and used to set the mock API response.
-     * @param responseType The type of response to return from the mock API.
-     */
-    private fun configureMockApi(
-        endpointType: MockApiEndpointType,
-        correlationId: String,
-        responseType: MockApiResponseType
-    ) {
-        MockApiUtils.configureMockApiResponse(
-            endpointType = endpointType,
-            responseType = responseType,
-            correlationId = correlationId
-        )
-        MockApiUtils.setCorrelationIdHeader(
-            correlationId = correlationId
-        )
     }
 }

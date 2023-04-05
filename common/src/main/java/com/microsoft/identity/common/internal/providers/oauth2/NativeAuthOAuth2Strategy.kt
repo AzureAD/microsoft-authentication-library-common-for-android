@@ -23,13 +23,21 @@
 
 package com.microsoft.identity.common.internal.providers.oauth2
 
-import com.microsoft.identity.common.internal.commands.parameters.SignUpChallengeCommandParameters
 import com.microsoft.identity.common.internal.commands.parameters.SignUpStartCommandParameters
+import com.microsoft.identity.common.internal.commands.parameters.SsprContinueCommandParameters
+import com.microsoft.identity.common.internal.commands.parameters.SsprStartCommandParameters
+import com.microsoft.identity.common.internal.commands.parameters.SsprSubmitCommandParameters
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.NativeAuthOAuth2Configuration
 import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.BaseNativeAuthOAuth2Strategy
 import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.interactors.SignUpInteractor
+import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.interactors.SsprInteractor
 import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signup.SignUpChallengeResult
 import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signup.SignUpStartResult
+import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.sspr.challenge.SsprChallengeResult
+import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.sspr.cont.SsprContinueResult
+import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.sspr.pollcompletion.SsprPollCompletionResult
+import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.sspr.start.SsprStartResult
+import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.sspr.submit.SsprSubmitResult
 import com.microsoft.identity.common.java.exception.ServiceException
 import com.microsoft.identity.common.java.logging.Logger
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.ClientInfo
@@ -47,7 +55,8 @@ import com.microsoft.identity.common.java.providers.oauth2.TokenResult
 class NativeAuthOAuth2Strategy(
     private val strategyParameters: OAuth2StrategyParameters,
     private val config: NativeAuthOAuth2Configuration,
-    private val signUpInteractor: SignUpInteractor
+    private val signUpInteractor: SignUpInteractor,
+    private val ssprInteractor: SsprInteractor
 ) :
     BaseNativeAuthOAuth2Strategy<MicrosoftStsAccessToken,
         MicrosoftStsAccount,
@@ -73,12 +82,52 @@ class NativeAuthOAuth2Strategy(
     }
 
     fun performSignUpChallenge(
-        signUpToken: String,
-        commandParameters: SignUpChallengeCommandParameters
+        signUpToken: String
     ): SignUpChallengeResult {
         return signUpInteractor.performSignUpChallenge(
-            signUpToken = signUpToken,
+            signUpToken = signUpToken
+        )
+    }
+
+    fun performSsprStart(
+        commandParameters: SsprStartCommandParameters
+    ): SsprStartResult {
+        return ssprInteractor.performSsprStart(commandParameters)
+    }
+
+    fun performSsprChallenge(
+        passwordResetToken: String
+    ): SsprChallengeResult {
+        return ssprInteractor.performSsprChallenge(
+            passwordResetToken = passwordResetToken
+        )
+    }
+
+    fun performSsprContinue(
+        passwordResetToken: String,
+        commandParameters: SsprContinueCommandParameters
+    ): SsprContinueResult {
+        return ssprInteractor.performSsprContinue(
+            passwordResetToken = passwordResetToken,
             commandParameters = commandParameters
+        )
+    }
+
+    fun performSsprSubmit(
+        passwordSubmitToken: String,
+        commandParameters: SsprSubmitCommandParameters
+    ): SsprSubmitResult {
+        return ssprInteractor.performSsprSubmit(
+            passwordSubmitToken = passwordSubmitToken,
+            commandParameters = commandParameters
+        )
+    }
+
+    fun performSsprPollCompletion(
+        passwordResetToken: String
+    ): SsprPollCompletionResult {
+        return ssprInteractor.performSsprPollCompletion(
+            passwordResetToken = passwordResetToken
         )
     }
 

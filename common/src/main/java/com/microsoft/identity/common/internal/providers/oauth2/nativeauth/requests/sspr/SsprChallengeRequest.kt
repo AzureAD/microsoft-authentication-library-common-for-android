@@ -1,4 +1,4 @@
-package com.microsoft.identity.common.internal.providers.oauth2.nativeauth.requests.signup
+package com.microsoft.identity.common.internal.providers.oauth2.nativeauth.requests.sspr
 
 import androidx.annotation.VisibleForTesting
 import com.google.gson.annotations.SerializedName
@@ -6,42 +6,42 @@ import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.reques
 import com.microsoft.identity.common.internal.util.ArgUtils
 import java.net.URL
 
-data class SignUpChallengeRequest @VisibleForTesting private constructor(
+class SsprChallengeRequest @VisibleForTesting private constructor(
     override var requestUrl: URL,
     override var headers: Map<String, String?>,
-    override val parameters: NativeAuthRequestSignUpStartParameters
+    override val parameters: NativeAuthRequestParameters
 ) : NativeAuthRequest() {
 
     companion object {
         fun create(
-            signUpToken: String,
             clientId: String,
-            challengeType: String, // TODO hardcoded for now, but will be made part of SDK config & initialisation ticket
+            passwordResetToken: String,
+            challengeType: String?,
             requestUrl: String,
             headers: Map<String, String?>
-        ): SignUpChallengeRequest {
+        ): SsprChallengeRequest {
             // Check for empty Strings and empty Maps
-            ArgUtils.validateNonNullArg(signUpToken, "signUpToken")
             ArgUtils.validateNonNullArg(clientId, "clientId")
+            ArgUtils.validateNonNullArg(passwordResetToken, "passwordResetToken")
             ArgUtils.validateNonNullArg(challengeType, "challengeType")
             ArgUtils.validateNonNullArg(requestUrl, "requestUrl")
             ArgUtils.validateNonNullArg(headers, "headers")
 
-            return SignUpChallengeRequest(
-                parameters = NativeAuthRequestSignUpStartParameters(
-                    signUpToken = signUpToken,
-                    challengeType = challengeType,
-                    clientId = clientId
-                ),
+            return SsprChallengeRequest(
                 requestUrl = URL(requestUrl),
-                headers = headers
+                headers = headers,
+                parameters = NativeAuthSsprChallengeRequestBody(
+                    clientId = clientId,
+                    passwordResetToken = passwordResetToken,
+                    challengeType = challengeType
+                )
             )
         }
     }
 
-    data class NativeAuthRequestSignUpStartParameters(
-        @SerializedName("signup_token") val signUpToken: String,
+    data class NativeAuthSsprChallengeRequestBody(
         @SerializedName("client_id") override val clientId: String,
-        @SerializedName("challenge_type") val challengeType: String
+        @SerializedName("password_reset_token") val passwordResetToken: String,
+        @SerializedName("challenge_type") val challengeType: String?
     ) : NativeAuthRequestParameters()
 }
