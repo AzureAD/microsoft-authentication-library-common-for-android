@@ -33,7 +33,7 @@ import com.microsoft.identity.client.ui.automation.installer.IAppInstaller;
  */
 public class BrokerLTW extends AbstractTestBroker {
     private static final String TAG = BrokerLTW.class.getSimpleName();
-    public final static String BROKER_LTW_APP_PACKAGE_NAME = "TODO";
+    public final static String BROKER_LTW_APP_PACKAGE_NAME = "LTW PACKAGE NAME HERE";
     public final static String BROKER_LTW_APP_NAME = "LTW App";
     public final static String BROKER_LTW_APK = "LTW.apk";
     public final static String OLD_BROKER_LTW_APK = "OldLTW.apk";

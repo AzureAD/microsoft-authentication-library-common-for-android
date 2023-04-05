@@ -24,7 +24,9 @@ package com.microsoft.identity.client.ui.automation.rules;
 
 import androidx.annotation.NonNull;
 
+import com.microsoft.identity.client.ui.automation.BuildConfig;
 import com.microsoft.identity.client.ui.automation.app.App;
+import com.microsoft.identity.client.ui.automation.broker.BrokerLTW;
 import com.microsoft.identity.client.ui.automation.broker.ITestBroker;
 import com.microsoft.identity.client.ui.automation.logging.Logger;
 
@@ -52,6 +54,13 @@ public class InstallBrokerTestRule implements TestRule {
             public void evaluate() throws Throwable {
                 Logger.i(TAG, "Applying rule....");
                 Logger.i(TAG, "Installing broker: " + ((App) broker).getAppName());
+
+                if (BuildConfig.PRE_INSTALL_LTW) {
+                    final BrokerLTW brokerLTW = new BrokerLTW();
+                    // Commenting this out until LTW is supported (need package name and an apk)
+                    // brokerLTW.install();
+                }
+
                 broker.install();
                 base.evaluate();
             }
