@@ -24,6 +24,9 @@
 package com.microsoft.identity.common.java.util;
 
 
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightManager;
+
 import javax.annotation.Nullable;
 
 import lombok.NonNull;
@@ -49,7 +52,8 @@ public class BrokerProtocolVersionUtil {
     public static boolean canSupportMsaAccountsInBroker(@Nullable String negotiatedBrokerProtocol) {
         return isProvidedBrokerProtocolLargerOrEqualThanRequiredBrokerProtocol(
                 negotiatedBrokerProtocol,
-                MSAL_TO_BROKER_PROTOCOL_BROKER_MSA_SUPPORT_MINIMUM_VERSION);
+                MSAL_TO_BROKER_PROTOCOL_BROKER_MSA_SUPPORT_MINIMUM_VERSION)
+                && CommonFlightManager.isFlightEnabled(CommonFlight.SUPPORT_MSA_ACCOUNTS_IN_BROKER);
     }
 
     /**
