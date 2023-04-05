@@ -40,5 +40,6 @@ public enum SpanName {
     UploadBrokerLogs,
     InitializePowerLift,
     MSAL_PerformIpcStrategy,
-    DeviceRegistrationApi
+    DeviceRegistrationApi,
+    WorkplaceJoinApi
 }

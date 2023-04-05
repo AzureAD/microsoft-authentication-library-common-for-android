@@ -127,6 +127,24 @@ public class MsalOAuth2TokenCache
             MicrosoftStsTokenResponse,
             MicrosoftAccount,
             MicrosoftRefreshToken> create(@NonNull final IPlatformComponents components) {
+        return create(components, false);
+    }
+
+    /**
+     * Factory method for creating an instance of MsalOAuth2TokenCache
+     * <p>
+     * NOTE: Currently this is configured for AAD v2 as the only IDP
+     *
+     * @param components The platform components
+     * @param useInMemoryCache Opt-in to caching layer that holds account and credential objects in memory
+     * @return An instance of the MsalOAuth2TokenCache.
+     */
+    public static MsalOAuth2TokenCache<
+            MicrosoftStsOAuth2Strategy,
+            MicrosoftStsAuthorizationRequest,
+            MicrosoftStsTokenResponse,
+            MicrosoftAccount,
+            MicrosoftRefreshToken> create(@NonNull final IPlatformComponents components, boolean useInMemoryCache) {
         final String methodName = ":create";
 
         Logger.verbose(
@@ -142,11 +160,19 @@ public class MsalOAuth2TokenCache
                         components.getStorageEncryptionManager(),
                         String.class
                 );
-        final IAccountCredentialCache accountCredentialCache =
-                new SharedPreferencesAccountCredentialCache(
-                        cacheKeyValueDelegate,
-                        sharedPreferencesFileManager
-                );
+        final IAccountCredentialCache accountCredentialCache;
+        if (useInMemoryCache) {
+            accountCredentialCache = new SharedPreferencesAccountCredentialCacheWithMemoryCache(
+                    cacheKeyValueDelegate,
+                    sharedPreferencesFileManager
+            );
+        } else {
+            accountCredentialCache = new SharedPreferencesAccountCredentialCache(
+                    cacheKeyValueDelegate,
+                    sharedPreferencesFileManager
+            );
+        }
+
         final MicrosoftStsAccountCredentialAdapter accountCredentialAdapter =
                 new MicrosoftStsAccountCredentialAdapter();
 
