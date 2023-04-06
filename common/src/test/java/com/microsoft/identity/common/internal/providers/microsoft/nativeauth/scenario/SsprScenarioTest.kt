@@ -25,6 +25,7 @@ import org.junit.Test
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
 import java.net.URL
+import java.util.UUID
 
 class SsprScenarioTest {
     private val username = "user@email.com"
