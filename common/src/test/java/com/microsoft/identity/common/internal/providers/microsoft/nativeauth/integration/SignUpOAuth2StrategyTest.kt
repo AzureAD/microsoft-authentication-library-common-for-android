@@ -52,6 +52,11 @@ class SignUpOAuth2StrategyTest {
     private val clientId = "079af063-4ea7-4dcd-91ff-2b24f54621ea"
     private val signUpStartRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/signup/start")
     private val signUpChallengeRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/signup/challenge")
+    private val ssprStartRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/resetpassword/start")
+    private val ssprChallengeRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/resetpassword/challenge")
+    private val ssprContinueRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/resetpassword/continue")
+    private val ssprSubmitRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/resetpassword/submit")
+    private val ssprPollCompletionRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/resetpassword/poll_completion")
     private val tokenEndpoint = URL("https://contoso.com/1234/token")
     private val challengeTypes = "oob password redirect"
     private val userAttributes = UserAttributes.customAttribute("city", "Dublin").build()
@@ -67,6 +72,11 @@ class SignUpOAuth2StrategyTest {
         whenever(mockConfig.tokenEndpoint).thenReturn(tokenEndpoint)
         whenever(mockConfig.getSignUpStartEndpoint()).thenReturn(signUpStartRequestUrl)
         whenever(mockConfig.getSignUpChallengeEndpoint()).thenReturn(signUpChallengeRequestUrl)
+        whenever(mockConfig.getSsprStartEndpoint()).thenReturn(ssprStartRequestUrl)
+        whenever(mockConfig.getSsprChallengeEndpoint()).thenReturn(ssprChallengeRequestUrl)
+        whenever(mockConfig.getSsprContinueEndpoint()).thenReturn(ssprContinueRequestUrl)
+        whenever(mockConfig.getSsprSubmitEndpoint()).thenReturn(ssprSubmitRequestUrl)
+        whenever(mockConfig.getSsprPollCompletionEndpoint()).thenReturn(ssprPollCompletionRequestUrl)
         whenever(mockConfig.challengeType).thenReturn(challengeTypes)
 
         nativeAuthOAuth2Strategy = NativeAuthOAuth2Strategy(
