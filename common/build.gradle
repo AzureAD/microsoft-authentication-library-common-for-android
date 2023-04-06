@@ -5,7 +5,7 @@ plugins {
     id 'checkstyle'
     id 'maven-publish'
     id 'kotlin-android'
-    id 'org.jlleitschuh.gradle.ktlint'
+    id 'org.jlleitschuh.gradle.ktlint' version "11.1.0"
 }
 
 apply from: '../versioning/version_tasks.gradle'
