@@ -59,6 +59,7 @@ import java.util.regex.Pattern;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
+import static com.microsoft.identity.common.java.exception.ClientException.BROKER_VERIFICATION_FAILED_ERROR;
 import static com.microsoft.identity.common.java.exception.ErrorStrings.BROKER_APP_VERIFICATION_FAILED;
 
 /**
@@ -168,7 +169,7 @@ public final class PackageUtils {
             }
         }
 
-        throw new ClientException(BROKER_APP_VERIFICATION_FAILED, "SignatureHashes: " + hashListStringBuilder.toString());
+        throw new ClientException(BROKER_VERIFICATION_FAILED_ERROR, BROKER_APP_VERIFICATION_FAILED + "SignatureHashes: " + hashListStringBuilder.toString());
     }
 
     /**
