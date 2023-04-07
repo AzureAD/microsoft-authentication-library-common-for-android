@@ -273,7 +273,7 @@ public final class ErrorStrings {
     /**
      * App package name is not found in the package manager.
      */
-    public static final String APP_PACKAGE_NAME_NOT_FOUND = "App package name is not found in the package manager";
+    public static final String APP_PACKAGE_NAME_NOT_FOUND = "App package name is not found in the package manager.";
 
     /**
      * Signature could not be verified.
