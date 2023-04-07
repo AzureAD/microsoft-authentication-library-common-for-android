@@ -34,8 +34,8 @@ project(':LabApiUtilities').projectDir = new File('LabApiUtilities')
 include ':catalog'
 project(':catalog').projectDir = new File('catalog')
 
-vstsUsername = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME") : settings.ext.find('vstsUsername')
-vstsPassword = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") : settings.ext.find('vstsMavenAccessToken')
+def vstsUsername = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME") : settings.ext.find('vstsUsername')
+def vstsPassword = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") : settings.ext.find('vstsMavenAccessToken')
 
 dependencyResolutionManagement {
     repositories {
