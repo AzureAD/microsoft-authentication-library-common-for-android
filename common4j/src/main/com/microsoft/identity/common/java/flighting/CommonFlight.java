@@ -37,11 +37,7 @@ public enum CommonFlight implements IFlightConfig {
      * Flight to control whether to expose the CCS (CachedCredService) request ID in TokenResponse.
      * This flight is default-on 
      */
-    EXPOSE_CCS_REQUEST_ID_IN_TOKENRESPONSE("ExposeCcsRequestIdInTokenResponse", true),
-    /**
-     * Flight to control whether to support MSA accounts in Broker or not.
-     */
-    SUPPORT_MSA_ACCOUNTS_IN_BROKER("SupportMsaAccountsInBroker", false);
+    EXPOSE_CCS_REQUEST_ID_IN_TOKENRESPONSE("ExposeCcsRequestIdInTokenResponse", true);
 
     private String key;
     private Object defaultValue;
