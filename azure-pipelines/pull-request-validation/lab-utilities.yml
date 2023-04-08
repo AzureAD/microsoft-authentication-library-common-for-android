@@ -22,6 +22,8 @@ jobs:
         submodules: recursive
         persistCredentials: True
       - template: ../templates/steps/automation-cert.yml
+        parameters:
+          envVstsMvnAt: ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN
       - task: Gradle@1
         name: Gradle1
         displayName: Assembles the outputs of this project.
