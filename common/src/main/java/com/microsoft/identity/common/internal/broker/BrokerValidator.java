@@ -144,10 +144,7 @@ public class BrokerValidator {
      * @return a Set of {@link BrokerData}
      */
     public Set<BrokerData> getValidBrokers() {
-        final Set<BrokerData> validBrokers = sShouldTrustDebugBrokers
-                ? BrokerData.getAllBrokers()
-                : BrokerData.getProdBrokers();
-
+        final Set<BrokerData> validBrokers = BrokerData.getAllBrokers();
         return validBrokers;
     }
 
