@@ -20,3 +20,26 @@ project(':labapi').projectDir = new File('../labapi')
 
 include(':LabApiUtilities')
 project(':LabApiUtilities').projectDir = new File('../LabApiUtilities')
+
+def vstsUsername = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME") : settings.ext.find('vstsUsername')
+def vstsPassword = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") : settings.ext.find('vstsMavenAccessToken')
+
+dependencyResolutionManagement {
+    repositories {
+        mavenLocal()
+        maven {
+            name "vsts-maven-adal-android"
+            url "https://identitydivision.pkgs.visualstudio.com/_packaging/AndroidADAL/maven/v1"
+            credentials {
+                username vstsUsername
+                password vstsPassword
+            }
+        }
+    }
+
+    versionCatalogs {
+        libs {
+            from("com.microsoft.identity:catalog:1.0.0-alpha01")
+        }
+    }
+}
