@@ -152,8 +152,8 @@ class NativeAuthOAuth2Configuration(
             Logger.errorPII(
                 TAG + methodName,
                 e.message +
-                        " Unable to create URL from provided root and suffix." +
-                        " root = $root suffix = $endpointSuffix",
+                    " Unable to create URL from provided root and suffix." +
+                    " root = $root suffix = $endpointSuffix",
                 e
             )
             throw e
@@ -166,10 +166,10 @@ class NativeAuthOAuth2Configuration(
             Logger.errorPII(
                 TAG + methodName,
                 (
-                        e.message +
-                                " Unable to create URL from provided root, tenant and suffix." +
-                                " root = $root suffix = $endpointSuffix"
-                        ),
+                    e.message +
+                        " Unable to create URL from provided root, tenant and suffix." +
+                        " root = $root suffix = $endpointSuffix"
+                    ),
                 e
             )
             throw e
