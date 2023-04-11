@@ -114,7 +114,7 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
             throws ClientException {
         final String methodName = ":encrypt";
 
-        Logger.verbose(TAG + methodName, "Starting encryption");
+        Logger.info(TAG + methodName, "Starting encryption");
 
         final String errCode;
         final Exception exception;
@@ -128,7 +128,7 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
             final SecretKey encryptionKey = keyLoader.getKey();
             final SecretKey encryptionHMACKey = KeyUtil.getHMacKey(encryptionKey);
             final byte[] keyIdentifier = keyLoader.getKeyTypeIdentifier().getBytes(ENCODING_UTF8);
-
+            Logger.info(TAG + methodName, "encryptionKey "+encryptionKey + " encryptionHMACKey "+ encryptionHMACKey + " keyIdentifier "+ keyIdentifier);
             // IV: Initialization vector that is needed to start CBC
             final byte[] iv = mGenerator.generate();
             final IvParameterSpec ivSpec = new IvParameterSpec(iv);
@@ -159,7 +159,7 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
             System.arraycopy(macDigest, 0, blobVerAndEncryptedDataAndIVAndMacDigest, keyIdentifier.length
                     + encrypted.length + iv.length, macDigest.length);
 
-            Logger.verbose(TAG + methodName, "Finished encryption");
+            Logger.info(TAG + methodName, "Finished encryption");
             return prefixWithEncodeVersion(blobVerAndEncryptedDataAndIVAndMacDigest);
         } catch (final NoSuchAlgorithmException e) {
             errCode = NO_SUCH_ALGORITHM;
@@ -205,7 +205,9 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
 
         final ClientException exceptionToThrowIfAllFails = new ClientException(ErrorStrings.DECRYPTION_FAILED,
                 "Tried all decryption keys and decryption still fails.");
-
+        for (final AbstractSecretKeyLoader keyLoader : keysForDecryption) {
+            Logger.info(TAG + methodName, "decrypt key available :" + keyLoader.getAlias() + " "+keyLoader.getKeyTypeIdentifier() + " " + keyLoader.getKey());
+        }
         for (final AbstractSecretKeyLoader keyLoader : keysForDecryption) {
             if (keyLoader == null){
                 throw new IllegalStateException("KeyLoader must not be null.");
@@ -213,11 +215,11 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
             
             try {
                 final byte[] result = decryptWithSecretKey(dataBytes, keyLoader);
-                Logger.verbose(TAG + methodName, "Finished decryption with key:" + keyLoader.getAlias());
+                Logger.info(TAG + methodName, "Finished decryption with key:" + keyLoader.getAlias() + " "+keyLoader.getKeyTypeIdentifier() + " " + keyLoader.getKey());
                 return result;
             } catch (final ClientException e) {
                 Logger.warn(TAG + methodName, "Failed to decrypt with key:" + keyLoader.getAlias() +
-                        " thumbprint : " + KeyUtil.getKeyThumbPrint(keyLoader));
+                        " thumbprint : " + KeyUtil.getKeyThumbPrint(keyLoader) + " " + e);
                 handleDecryptionFailure(keyLoader.getAlias(), e);
                 exceptionToThrowIfAllFails.addSuppressedException(e);
             }
@@ -274,9 +276,11 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
         final String errCode;
         final Exception exception;
         try {
+            Logger.info(TAG,"starting decryptWithSecretKey" );
             final SecretKey secretKey = keyLoader.getKey();
+            Logger.info(TAG,"secretKey " + secretKey);
             final SecretKey hmacKey = KeyUtil.getHMacKey(secretKey);
-
+            Logger.info(TAG,"hmacKey " + hmacKey);
             // byte input array: [keyVersion][encryptedData][IV][macDigest]
             final int ivIndex = encryptedBlobWithoutEncodeVersion.length - IV_LENGTH - MAC_DIGEST_LENGTH;
             final int macDigestIndex = encryptedBlobWithoutEncodeVersion.length - MAC_DIGEST_LENGTH;
@@ -337,6 +341,7 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
             exception = e;
         }
 
+        Logger.error(TAG, exception.getMessage(), exception);
         throw new ClientException(errCode, exception.getMessage(), exception);
     }
 
