@@ -22,6 +22,8 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.result;
 
+import static android.accounts.AccountManager.KEY_AUTHTOKEN;
+
 import android.accounts.AccountManager;
 import android.net.Uri;
 import android.os.Bundle;
@@ -121,6 +123,16 @@ public class AdalBrokerResultAdapter implements IBrokerResultAdapter {
         resultBundle.putString(
                 RT_AGE,
                 authenticationResult.getRefreshTokenAge()
+        );
+
+        // ADAL Acquire token silently with Broker relies on this key (KEY_AUTHTOKEN) 
+        // to get the AT (see BrokerProxy.getResultFromBrokerResponse() L:548).
+        // Broker was using Authenticator.getAuthToken() to get the AT, and the KEY_AUTHTOKEN key to store it.
+        // After #2200 broker does not use Authenticator.getAuthToken() for ATS with broker,
+        // in order to be compatible with ADAL we need to keep sending the AT on KEY_AUTHTOKEN.
+        resultBundle.putString(
+                KEY_AUTHTOKEN,
+                authenticationResult.getAccessToken()
         );
 
         return resultBundle;

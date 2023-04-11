@@ -64,11 +64,11 @@ public class BrokerAuthenticatorUpdatedVersionImpl extends BrokerMicrosoftAuthen
             );
         }
         else {
-            performDeviceRegistrationHelper(
+            performDeviceRegistrationHelperWithButtonText(
                     username,
                     password,
                     "workPlaceTextField",
-                    "workPlaceRegisterButton",
+                    "REGISTER DEVICE",
                     isFederatedUser,
                     AUTHENTICATOR_IS_REGISTER_EXPECTED
             );
@@ -110,11 +110,11 @@ public class BrokerAuthenticatorUpdatedVersionImpl extends BrokerMicrosoftAuthen
     public void performSharedDeviceRegistration(@NonNull final String username,
                                                 @NonNull final String password) {
         Logger.i(TAG, "Performing Shared Device Registration for the given account..");
-        performDeviceRegistrationHelper(
+        performDeviceRegistrationHelperWithButtonText(
                 username,
                 password,
                 "sharedWorkPlaceTextField",
-                "sharedWorkPlaceRegisterButton",
+                "REGISTER AS SHARED DEVICE",
                 false,
                 AUTHENTICATOR_IS_REGISTER_EXPECTED_SHARED
         );
@@ -140,11 +140,11 @@ public class BrokerAuthenticatorUpdatedVersionImpl extends BrokerMicrosoftAuthen
     public void performSharedDeviceRegistrationDontValidate(@NonNull final String username,
                                                 @NonNull final String password) {
         Logger.i(TAG, "Performing Shared Device Registration for the given account without validating we are in shared device mode.");
-        performDeviceRegistrationHelper(
+        performDeviceRegistrationHelperWithButtonText(
                 username,
                 password,
                 "sharedWorkPlaceTextField",
-                "sharedWorkPlaceRegisterButton",
+                "REGISTER AS SHARED DEVICE",
                 false,
                 AUTHENTICATOR_IS_REGISTER_EXPECTED_SHARED
         );
