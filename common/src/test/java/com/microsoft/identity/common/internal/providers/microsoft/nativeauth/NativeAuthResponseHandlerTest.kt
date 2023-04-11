@@ -2,16 +2,21 @@ package com.microsoft.identity.common.internal.providers.microsoft.nativeauth
 
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.NativeAuthOAuth2Configuration
 import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.NativeAuthResponseHandler
+import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.interactors.InnerError
 import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.NativeAuthBindingMethod
 import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.NativeAuthChallengeType
 import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.NativeAuthPollCompletionStatus
+import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signin.SignInChallengeResult
+import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signin.SignInInitiateErrorResponse
+import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signin.SignInInitiateResult
+import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signin.SignInInitiateSuccessResponse
+import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signin.exceptions.ErrorCodes
 import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signup.Attribute
 import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signup.SignUpChallengeResponse
 import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signup.SignUpChallengeResult
 import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signup.SignUpStartErrorResponse
 import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signup.SignUpStartResponse
 import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signup.SignUpStartResult
-import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signup.exceptions.ErrorCodes
 import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.sspr.challenge.SsprChallengeResponse
 import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.sspr.challenge.SsprChallengeResult
 import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.sspr.cont.SsprContinueResponse
@@ -668,6 +673,143 @@ class NativeAuthResponseHandlerTest {
 
         nativeAuthResponseHandler.validateApiResult(
             apiResult = ssprPollCompletionResult
+        )
+    }
+
+    @Test(expected = ClientException::class)
+    fun testValidateSignInInitiateResultWithSuccessAndMissingObject() {
+        val signInInitiateResult = mock<SignInInitiateResult>()
+        whenever(signInInitiateResult.success).thenReturn(true)
+        whenever(signInInitiateResult.successResponse).thenReturn(null)
+
+        nativeAuthResponseHandler.validateApiResult(
+            apiResult = signInInitiateResult,
+        )
+    }
+
+    @Test(expected = ClientException::class)
+    fun testValidateSignInInitiateResultWithSuccessAndMissingCredentialTokenAndChallengeType() {
+        val signInInitiateResult = mock<SignInInitiateResult>()
+        whenever(signInInitiateResult.success).thenReturn(true)
+        val signInInitiateSuccessResponse = SignInInitiateSuccessResponse(
+            credentialToken = null,
+            challengeType = null
+        )
+        whenever(signInInitiateResult.successResponse).thenReturn(signInInitiateSuccessResponse)
+
+        nativeAuthResponseHandler.validateApiResult(
+            apiResult = signInInitiateResult,
+        )
+    }
+
+    @Test(expected = ClientException::class)
+    fun testValidateSignInInitiateResultWithSuccessAndHaveBothCredentialTokenAndChallengeType() {
+        val signInInitiateResult = mock<SignInInitiateResult>()
+        whenever(signInInitiateResult.success).thenReturn(true)
+        val signInInitiateSuccessResponse = SignInInitiateSuccessResponse(
+            credentialToken = "1234",
+            challengeType = "oob"
+        )
+        whenever(signInInitiateResult.successResponse).thenReturn(signInInitiateSuccessResponse)
+
+        nativeAuthResponseHandler.validateApiResult(
+            apiResult = signInInitiateResult,
+        )
+    }
+
+    @Test
+    fun testValidateSignInInitiateResultWithSuccessAndNoMissingObject() {
+        val signInInitiateResult = mock<SignInInitiateResult>()
+        whenever(signInInitiateResult.success).thenReturn(true)
+        val signInInitiateSuccessResponse = mock<SignInInitiateSuccessResponse>()
+        whenever(signInInitiateSuccessResponse.credentialToken).thenReturn("1234")
+        whenever(signInInitiateResult.successResponse).thenReturn(signInInitiateSuccessResponse)
+
+        nativeAuthResponseHandler.validateApiResult(
+            apiResult = signInInitiateResult,
+        )
+    }
+
+    @Test
+    fun testValidateSignInInitiateResultWithSuccessAndNoMissingObjectWithRedirect() {
+        val signInInitiateResult = mock<SignInInitiateResult>()
+        whenever(signInInitiateResult.success).thenReturn(true)
+        val signInInitiateSuccessResponse = mock<SignInInitiateSuccessResponse>()
+        whenever(signInInitiateSuccessResponse.challengeType).thenReturn("redirect")
+        whenever(signInInitiateResult.successResponse).thenReturn(signInInitiateSuccessResponse)
+
+        nativeAuthResponseHandler.validateApiResult(
+            apiResult = signInInitiateResult,
+        )
+    }
+
+    @Test(expected = ClientException::class)
+    fun testValidateSignInInitiateResultWithErrorAndMissingObject() {
+        val signInInitiateResult = mock<SignInInitiateResult>()
+        whenever(signInInitiateResult.success).thenReturn(false)
+        whenever(signInInitiateResult.errorResponse).thenReturn(null)
+
+        nativeAuthResponseHandler.validateApiResult(
+            apiResult = signInInitiateResult,
+        )
+    }
+
+    @Test(expected = ClientException::class)
+    fun testValidateSignInInitiateResultWithErrorAndMissingErrorCode() {
+        val signInInitiateResult = mock<SignInInitiateResult>()
+        whenever(signInInitiateResult.success).thenReturn(false)
+        val signInInitiateErrorResponse = SignInInitiateErrorResponse(
+            statusCode = 400,
+            errorCode = null,
+            errorDescription = "error description",
+            errorUri = requestUrl.toString(),
+            innerErrors = listOf(
+                InnerError(
+                    innerError = "errorCode1",
+                    errorDescription = "detailed description1"
+                )
+            )
+        )
+
+        whenever(signInInitiateResult.errorResponse).thenReturn(signInInitiateErrorResponse)
+
+        nativeAuthResponseHandler.validateApiResult(
+            apiResult = signInInitiateResult,
+        )
+    }
+
+    @Test(expected = ClientException::class)
+    fun testValidateSignInInitiateResultWithErrorAndEmptyErrorCode() {
+        val signInInitiateResult = mock<SignInInitiateResult>()
+        whenever(signInInitiateResult.success).thenReturn(false)
+        val signInInitiateErrorResponse = SignInInitiateErrorResponse(
+            statusCode = 400,
+            errorCode = "",
+            errorDescription = "error description",
+            errorUri = requestUrl.toString(),
+            innerErrors = listOf(
+                InnerError(
+                    innerError = "errorCode1",
+                    errorDescription = "detailed description1"
+                )
+            )
+        )
+
+        whenever(signInInitiateResult.errorResponse).thenReturn(signInInitiateErrorResponse)
+
+        nativeAuthResponseHandler.validateApiResult(
+            apiResult = signInInitiateResult,
+        )
+    }
+
+    @Test(expected = ClientException::class)
+    fun testValidateSignInChallengeResultWithSuccessAndMissingObject() {
+        val signInChallengeResult = mock<SignInChallengeResult>()
+        whenever(signInChallengeResult.success).thenReturn(true)
+        whenever(signInChallengeResult.successResponse).thenReturn(null)
+
+        nativeAuthResponseHandler.validateApiResult(
+            apiResult = signInChallengeResult,
         )
     }
 }

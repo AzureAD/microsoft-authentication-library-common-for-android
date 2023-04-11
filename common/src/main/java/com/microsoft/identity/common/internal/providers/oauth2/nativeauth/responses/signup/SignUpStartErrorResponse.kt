@@ -1,7 +1,7 @@
 package com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signup
 
 import com.google.gson.annotations.SerializedName
-import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signup.exceptions.ErrorCodes
+import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signin.exceptions.ErrorCodes
 import com.microsoft.identity.common.java.exception.ClientException
 
 data class SignUpStartErrorResponse(

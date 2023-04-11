@@ -11,6 +11,7 @@ import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.uti
 import com.microsoft.identity.common.internal.providers.oauth2.NativeAuthOAuth2Strategy
 import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.NativeAuthRequestProvider
 import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.NativeAuthResponseHandler
+import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.interactors.SignInInteractor
 import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.interactors.SignUpInteractor
 import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.interactors.SsprInteractor
 import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.requests.NativeAuthGrantType
@@ -34,6 +35,9 @@ class SsprScenarioTest {
     private val clientId = "079af063-4ea7-4dcd-91ff-2b24f54621ea"
     private val signUpStartRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/signup/start")
     private val signUpChallengeRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/signup/challenge")
+    private val signInInitiateRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/oauth/v2.0/initiate")
+    private val signInChallengeRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/oauth/v2.0/challenge")
+    private val signInTokenRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/oauth/v2.0/token")
     private val ssprStartRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/resetpassword/start")
     private val ssprChallengeRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/resetpassword/challenge")
     private val ssprContinueRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/resetpassword/continue")
@@ -57,6 +61,9 @@ class SsprScenarioTest {
         whenever(mockConfig.tokenEndpoint).thenReturn(tokenEndpoint)
         whenever(mockConfig.getSignUpStartEndpoint()).thenReturn(signUpStartRequestUrl)
         whenever(mockConfig.getSignUpChallengeEndpoint()).thenReturn(signUpChallengeRequestUrl)
+        whenever(mockConfig.getSignInInitiateEndpoint()).thenReturn(signInInitiateRequestUrl)
+        whenever(mockConfig.getSignInChallengeEndpoint()).thenReturn(signInChallengeRequestUrl)
+        whenever(mockConfig.getSignInTokenEndpoint()).thenReturn(signInTokenRequestUrl)
         whenever(mockConfig.getSsprStartEndpoint()).thenReturn(ssprStartRequestUrl)
         whenever(mockConfig.getSsprChallengeEndpoint()).thenReturn(ssprChallengeRequestUrl)
         whenever(mockConfig.getSsprContinueEndpoint()).thenReturn(ssprContinueRequestUrl)
@@ -71,6 +78,13 @@ class SsprScenarioTest {
             signUpInteractor = SignUpInteractor(
                 httpClient = UrlConnectionHttpClient.getDefaultInstance(),
                 nativeAuthRequestProvider = NativeAuthRequestProvider(mockConfig),
+                nativeAuthResponseHandler = NativeAuthResponseHandler()
+            ),
+            signInInteractor = SignInInteractor(
+                httpClient = UrlConnectionHttpClient.getDefaultInstance(),
+                nativeAuthRequestProvider = NativeAuthRequestProvider(
+                    mockConfig
+                ),
                 nativeAuthResponseHandler = NativeAuthResponseHandler()
             ),
             ssprInteractor = SsprInteractor(

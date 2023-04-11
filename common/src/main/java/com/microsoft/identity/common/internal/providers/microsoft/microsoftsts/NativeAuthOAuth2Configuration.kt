@@ -48,6 +48,9 @@ class NativeAuthOAuth2Configuration(
         private const val SSPR_CONTINUE_ENDPOINT_SUFFIX = "/resetpassword/continue"
         private const val SSPR_SUBMIT_ENDPOINT_SUFFIX = "/resetpassword/submit"
         private const val SSPR_COMPLETE_ENDPOINT_SUFFIX = "/resetpassword/poll_completion"
+        private const val SIGN_IN_INITIATE_ENDPOINT_SUFFIX = "/oauth/v2.0/initiate"
+        private const val SIGN_IN_CHALLENGE_ENDPOINT_SUFFIX = "/oauth/v2.0/challenge"
+        private const val SIGN_IN_TOKEN_ENDPOINT_SUFFIX = "/oauth/v2.0/token"
     }
 
     override fun getAuthorityUrl(): URL {
@@ -136,6 +139,42 @@ class NativeAuthOAuth2Configuration(
         return getEndpointUrlFromRootAndTenantAndSuffix(
             root = getAuthorityUrl(),
             endpointSuffix = SSPR_COMPLETE_ENDPOINT_SUFFIX
+        )
+    }
+
+    /**
+     * Get the endpoint to be used for making a signin/initiate request.
+     *
+     * @return URL the endpoint
+     */
+    fun getSignInInitiateEndpoint(): URL {
+        return getEndpointUrlFromRootAndTenantAndSuffix(
+            root = getAuthorityUrl(),
+            endpointSuffix = SIGN_IN_INITIATE_ENDPOINT_SUFFIX
+        )
+    }
+
+    /**
+     * Get the endpoint to be used for making a signin/challenge request.
+     *
+     * @return URL the endpoint
+     */
+    fun getSignInChallengeEndpoint(): URL {
+        return getEndpointUrlFromRootAndTenantAndSuffix(
+            root = getAuthorityUrl(),
+            endpointSuffix = SIGN_IN_CHALLENGE_ENDPOINT_SUFFIX
+        )
+    }
+
+    /**
+     * Get the endpoint to be used for making a signin/token request.
+     *
+     * @return URL the endpoint
+     */
+    fun getSignInTokenEndpoint(): URL {
+        return getEndpointUrlFromRootAndTenantAndSuffix(
+            root = getAuthorityUrl(),
+            endpointSuffix = SIGN_IN_TOKEN_ENDPOINT_SUFFIX
         )
     }
 

@@ -1,5 +1,14 @@
 package com.microsoft.identity.common.internal.providers.oauth2.nativeauth
 
+import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signin.SignInChallengeErrorResponse
+import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signin.SignInChallengeResult
+import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signin.SignInChallengeSuccessResponse
+import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signin.SignInInitiateErrorResponse
+import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signin.SignInInitiateResult
+import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signin.SignInInitiateSuccessResponse
+import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signin.SignInTokenErrorResponse
+import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signin.SignInTokenResult
+import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signin.SignInTokenSuccessResponse
 import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signup.SignUpChallengeErrorResponse
 import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signup.SignUpChallengeResponse
 import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signup.SignUpChallengeResult
@@ -43,7 +52,6 @@ class NativeAuthResponseHandler {
         )
 
         val result = if (response.statusCode >= HttpURLConnection.HTTP_BAD_REQUEST) {
-            // An error occurred
             val errorResponse = ObjectMapper.deserializeJsonStringToObject(
                 getBodyFromUnsuccessfulResponse(response.body),
                 SignUpStartErrorResponse::class.java
@@ -85,7 +93,6 @@ class NativeAuthResponseHandler {
         )
 
         val result = if (response.statusCode >= HttpURLConnection.HTTP_BAD_REQUEST) {
-            // An error occurred
             val errorResponse = ObjectMapper.deserializeJsonStringToObject(
                 getBodyFromUnsuccessfulResponse(response.body),
                 SignUpChallengeErrorResponse::class.java
@@ -262,6 +269,108 @@ class NativeAuthResponseHandler {
 
         return result
     }
+
+    //region /oauth/v2.0/initiate
+    @Throws(ClientException::class)
+    internal fun getSignInInitiateResultFromHttpResponse(
+        response: HttpResponse
+    ): SignInInitiateResult {
+        val methodName = ":getSignInInitiateResultFromHttpResponse"
+        Logger.verbose(
+            TAG + methodName,
+            "Getting SignInInitiateResult from HttpResponse..."
+        )
+
+        val result = if (response.statusCode >= HttpURLConnection.HTTP_BAD_REQUEST) {
+            val errorResponse = ObjectMapper.deserializeJsonStringToObject(
+                getBodyFromUnsuccessfulResponse(response.body),
+                SignInInitiateErrorResponse::class.java
+            )
+            errorResponse.statusCode = response.statusCode
+            SignInInitiateResult.createError(errorResponse)
+        } else {
+            val successResponse = ObjectMapper.deserializeJsonStringToObject(
+                getBodyFromSuccessfulResponse(response.body),
+                SignInInitiateSuccessResponse::class.java
+            )
+            SignInInitiateResult.createSuccess(successResponse)
+        }
+        ResultUtil.logResult(TAG, result)
+
+        // TODO: error handling (error code matching, etc.), JSON to object deserialization
+
+        // TODO manage headers for telemetry
+        return result
+    }
+    //endregion
+
+    //region /oauth/v2.0/challenge
+    @Throws(ClientException::class)
+    internal fun getSignInChallengeResultFromHttpResponse(
+        response: HttpResponse
+    ): SignInChallengeResult {
+        val methodName = ":getSignInChallengeResultFromHttpResponse"
+        Logger.verbose(
+            TAG + methodName,
+            "Getting SignInChallengeResult from HttpResponse..."
+        )
+
+        val result = if (response.statusCode >= HttpURLConnection.HTTP_BAD_REQUEST) {
+            val errorResponse = ObjectMapper.deserializeJsonStringToObject(
+                getBodyFromUnsuccessfulResponse(response.body),
+                SignInChallengeErrorResponse::class.java
+            )
+            errorResponse.statusCode = response.statusCode
+            SignInChallengeResult.createError(errorResponse)
+        } else {
+            val successResponse = ObjectMapper.deserializeJsonStringToObject(
+                getBodyFromSuccessfulResponse(response.body),
+                SignInChallengeSuccessResponse::class.java
+            )
+            SignInChallengeResult.createSuccess(successResponse)
+        }
+        ResultUtil.logResult(TAG, result)
+
+        // TODO: error handling (error code matching, etc.), JSON to object deserialization
+        // TODO manage headers for telemetry
+
+        return result
+    }
+    //endregion
+
+    //region /oauth/v2.0/token
+    @Throws(ClientException::class)
+    internal fun getSignInTokenResultFromHttpResponse(
+        response: HttpResponse
+    ): SignInTokenResult {
+        val methodName = ":getSignInTokenResultFromHttpResponse"
+        Logger.verbose(
+            TAG + methodName,
+            "Getting SignInTokenResult from HttpResponse..."
+        )
+
+        val result = if (response.statusCode >= HttpURLConnection.HTTP_BAD_REQUEST) {
+            val errorResponse = ObjectMapper.deserializeJsonStringToObject(
+                getBodyFromUnsuccessfulResponse(response.body),
+                SignInTokenErrorResponse::class.java
+            )
+            errorResponse.statusCode = response.statusCode
+            SignInTokenResult.createError(errorResponse)
+        } else {
+            val successResponse = ObjectMapper.deserializeJsonStringToObject(
+                getBodyFromSuccessfulResponse(response.body),
+                SignInTokenSuccessResponse::class.java
+            )
+            SignInTokenResult.createSuccess(successResponse)
+        }
+        ResultUtil.logResult(TAG, result)
+
+        // TODO: error handling (error code matching, etc.), JSON to object deserialization
+        // TODO manage headers for telemetry
+
+        return result
+    }
+    //endregion
 
     /**
      * Generic function that validates the API result. Will throw an exception if the validation
