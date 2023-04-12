@@ -1,3 +1,7 @@
+V.NEXT
+----------
+- [PATCH] Fix Error Type thrown for NO_ACCOUNT_FOUND (#2006)
+
 V.11.0.0
 ----------
 - [MINOR] Add CommandDispatcher methods to stop and reset silent request executor. (#2000)
