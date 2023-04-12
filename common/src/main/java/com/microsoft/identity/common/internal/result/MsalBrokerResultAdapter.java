@@ -100,6 +100,17 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
 
         final AccessTokenRecord accessTokenRecord = authenticationResult.getAccessTokenRecord();
 
+        final long expiresOn = Long.parseLong(accessTokenRecord.getExpiresOn());
+
+        // eSTS doesn't return Extended Expires On for MSA accounts (ext_expires_on is an optional
+        // field). So using same value here as expires on since we need to send something back to
+        // MSAL. It seems we have historically passed this optional field from broker to MSAL,
+        // however it seems MSAL just ignores ext_expires_on when creating its own version of
+        // Authentication Result.
+        final long extendedExpiresOn = accessTokenRecord.getExtendedExpiresOn() == null
+                ? expiresOn
+                : Long.parseLong(accessTokenRecord.getExtendedExpiresOn());
+
         final BrokerResult brokerResult = new BrokerResult.Builder()
                 .tenantProfileRecords(authenticationResult.getCacheRecordWithTenantProfileData())
                 .accessToken(authenticationResult.getAccessToken())
@@ -116,8 +127,8 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                 .authority(accessTokenRecord.getAuthority())
                 .environment(accessTokenRecord.getEnvironment())
                 .tenantId(authenticationResult.getTenantId())
-                .expiresOn(Long.parseLong(accessTokenRecord.getExpiresOn()))
-                .extendedExpiresOn(Long.parseLong(accessTokenRecord.getExtendedExpiresOn()))
+                .expiresOn(expiresOn)
+                .extendedExpiresOn(extendedExpiresOn)
                 .cachedAt(Long.parseLong(accessTokenRecord.getCachedAt()))
                 .speRing(authenticationResult.getSpeRing())
                 .refreshTokenAge(authenticationResult.getRefreshTokenAge())
@@ -616,7 +627,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
 
     @NonNull
     public Bundle bundleFromAccounts(@NonNull final List<ICacheRecord> cacheRecords,
-                              @Nullable final String negotiatedProtocolVersion) {
+                                     @Nullable final String negotiatedProtocolVersion) {
         final String methodTag = TAG + ":bundleFromAccounts";
         final Bundle resultBundle = new Bundle();
 
