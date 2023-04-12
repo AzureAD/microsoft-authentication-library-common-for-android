@@ -1,15 +1,18 @@
 package com.microsoft.identity.common.internal.providers.oauth2.nativeauth
 
 import com.microsoft.identity.common.internal.commands.parameters.SignInCommandParameters
+import com.microsoft.identity.common.internal.commands.parameters.SignUpContinueCommandParameters
 import com.microsoft.identity.common.internal.commands.parameters.SignUpStartCommandParameters
 import com.microsoft.identity.common.internal.commands.parameters.SsprContinueCommandParameters
 import com.microsoft.identity.common.internal.commands.parameters.SsprStartCommandParameters
 import com.microsoft.identity.common.internal.commands.parameters.SsprSubmitCommandParameters
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.NativeAuthOAuth2Configuration
+import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.requests.NativeAuthGrantType
 import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.requests.signin.SignInChallengeRequest
 import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.requests.signin.SignInInitiateRequest
 import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.requests.signin.SignInTokenRequest
 import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.requests.signup.SignUpChallengeRequest
+import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.requests.signup.SignUpContinueRequest
 import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.requests.signup.SignUpStartRequest
 import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.requests.sspr.SsprChallengeRequest
 import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.requests.sspr.SsprContinueRequest
@@ -25,8 +28,9 @@ import java.util.TreeMap
 class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuration) {
     private val TAG = NativeAuthRequestProvider::class.java.simpleName
 
-    private val signupStartEndpoint = config.getSignUpStartEndpoint().toString()
-    private val signupChallengeEndpoint = config.getSignUpChallengeEndpoint().toString()
+    private val signUpStartEndpoint = config.getSignUpStartEndpoint().toString()
+    private val signUpChallengeEndpoint = config.getSignUpChallengeEndpoint().toString()
+    private val signUpContinueEndpoint = config.getSignUpContinueEndpoint().toString()
     private val signInInitiateEndpoint = config.getSignInInitiateEndpoint().toString()
     private val signInChallengeEndpoint = config.getSignInChallengeEndpoint().toString()
     private val signInTokenEndpoint = config.getSignInTokenEndpoint().toString()
@@ -37,7 +41,6 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
     private val ssprPollCompletionEndpoint = config.getSsprPollCompletionEndpoint().toString()
     private val GRANT_TYPE_PASSWORD = "password"
     private val GRANT_TYPE_OOB = "oob"
-    private val GRANT_TYPE_REDIRECT = "redirect"
 
     //region /signup/start
     fun createSignUpStartRequest(
@@ -55,13 +58,13 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
             attributes = commandParameters.userAttributes,
             challengeType = config.challengeType,
             clientId = config.clientId,
-            requestUrl = signupStartEndpoint,
+            requestUrl = signUpStartEndpoint,
             headers = getRequestHeaders()
         )
     }
     //endregion
 
-    //region signup - challenge
+    //region /signup/challenge
     fun createSignUpChallengeRequest(
         signUpToken: String
     ): SignUpChallengeRequest {
@@ -75,7 +78,7 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
             signUpToken = signUpToken,
             clientId = config.clientId,
             challengeType = config.challengeType,
-            requestUrl = signupChallengeEndpoint,
+            requestUrl = signUpChallengeEndpoint,
             headers = getRequestHeaders()
         )
     }
@@ -155,7 +158,34 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
     }
     //endregion
 
-    //region sspr - start
+    //region /signup/continue
+    fun createSignUpContinueRequest(
+        signUpToken: String,
+        commandParameters: SignUpContinueCommandParameters
+    ): SignUpContinueRequest {
+        var grantType = ""
+        if (!commandParameters.password.isNullOrBlank()) {
+            grantType = NativeAuthGrantType.PASSWORD.jsonValue
+        } else if (!commandParameters.oob.isNullOrEmpty()) {
+            grantType = NativeAuthGrantType.PASSWORDLESS_OTP.jsonValue
+        } else if (commandParameters.userAttributes != null) {
+            grantType = NativeAuthGrantType.ATTRIBUTES.jsonValue
+        }
+
+        return SignUpContinueRequest.create(
+            password = commandParameters.password,
+            attributes = commandParameters.userAttributes,
+            oob = commandParameters.oob,
+            clientId = config.clientId,
+            signUpToken = signUpToken,
+            grantType = grantType,
+            requestUrl = signUpContinueEndpoint,
+            headers = getRequestHeaders()
+        )
+    }
+    //endregion
+
+    //region /resetpassword/start
     fun createSsprStartRequest(
         commandParameters: SsprStartCommandParameters
     ): SsprStartRequest {
@@ -167,7 +197,9 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
             headers = getRequestHeaders()
         )
     }
+    //endregion
 
+    //region /resetpassword/challenge
     fun createSsprChallengeRequest(
         passwordResetToken: String
     ): SsprChallengeRequest {
@@ -179,21 +211,30 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
             headers = getRequestHeaders()
         )
     }
+    //endregion
 
+    //region /resetpassword/continue
     fun createSsprContinueRequest(
         passwordResetToken: String,
         commandParameters: SsprContinueCommandParameters
     ): SsprContinueRequest {
+        var grantType = ""
+        if (commandParameters.oobCode.isNotBlank()) {
+            grantType = NativeAuthGrantType.PASSWORDLESS_OTP.jsonValue
+        }
+
         return SsprContinueRequest.create(
             clientId = config.clientId,
-            grantType = config.grantType,
+            grantType = grantType,
             passwordResetToken = passwordResetToken,
             oob = commandParameters.oobCode,
             requestUrl = ssprContinueEndpoint,
             headers = getRequestHeaders()
         )
     }
+    //endregion
 
+    //region /resetpassword/submit
     fun createSsprSubmitRequest(
         passwordSubmitToken: String,
         commandParameters: SsprSubmitCommandParameters
@@ -206,7 +247,9 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
             headers = getRequestHeaders()
         )
     }
+    //endregion
 
+    //region /resetpassword/pollcompletion
     fun createSsprPollCompletionRequest(
         passwordResetToken: String
     ): SsprPollCompletionRequest {

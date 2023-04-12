@@ -59,6 +59,7 @@ class SsprOAuth2StrategyTest {
     private val clientId = "079af063-4ea7-4dcd-91ff-2b24f54621ea"
     private val signUpStartRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/signup/start")
     private val signUpChallengeRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/signup/challenge")
+    private val signUpContinueRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/signup/continue")
     private val signInInitiateRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/oauth/v2.0/initiate")
     private val signInChallengeRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/oauth/v2.0/challenge")
     private val signInTokenRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/oauth/v2.0/token")
@@ -70,8 +71,6 @@ class SsprOAuth2StrategyTest {
     private val tokenEndpoint = URL("https://contoso.com/1234/token")
     private val challengeType = "oob redirect"
     private val userAttributes = UserAttributes.customAttribute("city", "Dublin").build()
-    private val challengeTargetKey = "user1"
-    private val grantType = "password"
     private val oobCode = "123456"
 
     private val mockConfig = mock<NativeAuthOAuth2Configuration>()
@@ -85,6 +84,7 @@ class SsprOAuth2StrategyTest {
         whenever(mockConfig.tokenEndpoint).thenReturn(tokenEndpoint)
         whenever(mockConfig.getSignUpStartEndpoint()).thenReturn(signUpStartRequestUrl)
         whenever(mockConfig.getSignUpChallengeEndpoint()).thenReturn(signUpChallengeRequestUrl)
+        whenever(mockConfig.getSignUpContinueEndpoint()).thenReturn(signUpContinueRequestUrl)
         whenever(mockConfig.getSignInInitiateEndpoint()).thenReturn(signInInitiateRequestUrl)
         whenever(mockConfig.getSignInChallengeEndpoint()).thenReturn(signInChallengeRequestUrl)
         whenever(mockConfig.getSignInTokenEndpoint()).thenReturn(signInTokenRequestUrl)
@@ -94,21 +94,18 @@ class SsprOAuth2StrategyTest {
         whenever(mockConfig.getSsprSubmitEndpoint()).thenReturn(ssprSubmitRequestUrl)
         whenever(mockConfig.getSsprPollCompletionEndpoint()).thenReturn(ssprPollCompletionRequestUrl)
         whenever(mockConfig.challengeType).thenReturn(challengeType)
-        whenever(mockConfig.grantType).thenReturn(grantType)
 
         nativeAuthOAuth2Strategy = NativeAuthOAuth2Strategy(
             config = mockConfig,
             strategyParameters = mockStrategyParams,
-            signUpInteractor = SignUpInteractor(
+            signInInteractor = SignInInteractor(
                 httpClient = UrlConnectionHttpClient.getDefaultInstance(),
                 nativeAuthRequestProvider = NativeAuthRequestProvider(mockConfig),
                 nativeAuthResponseHandler = NativeAuthResponseHandler()
             ),
-            signInInteractor = SignInInteractor(
+            signUpInteractor = SignUpInteractor(
                 httpClient = UrlConnectionHttpClient.getDefaultInstance(),
-                nativeAuthRequestProvider = NativeAuthRequestProvider(
-                    mockConfig
-                ),
+                nativeAuthRequestProvider = NativeAuthRequestProvider(mockConfig),
                 nativeAuthResponseHandler = NativeAuthResponseHandler()
             ),
             ssprInteractor = SsprInteractor(

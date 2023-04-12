@@ -11,7 +11,7 @@ data class SignInChallengeErrorResponse(
     @SerializedName("error") private val errorCode: String?,
     @SerializedName("error_description") private val errorDescription: String?,
     @SerializedName("error_uri") val errorUri: String?,
-    @SerializedName("inner_errors") val innerErrors: List<InnerError>?,
+    @SerializedName("inner_errors") val innerErrors: List<InnerError>?
 ) : IApiErrorResponse {
     private val TAG = SignInChallengeErrorResponse::class.java.simpleName
 

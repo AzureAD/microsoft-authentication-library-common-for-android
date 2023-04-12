@@ -1,6 +1,7 @@
 package com.microsoft.identity.common.internal.providers.microsoft.nativeauth
 
 import com.microsoft.identity.common.internal.commands.parameters.SignInCommandParameters
+import com.microsoft.identity.common.internal.commands.parameters.SignUpContinueCommandParameters
 import com.microsoft.identity.common.internal.commands.parameters.SignUpStartCommandParameters
 import com.microsoft.identity.common.internal.commands.parameters.SsprContinueCommandParameters
 import com.microsoft.identity.common.internal.commands.parameters.SsprStartCommandParameters
@@ -8,6 +9,7 @@ import com.microsoft.identity.common.internal.commands.parameters.SsprSubmitComm
 import com.microsoft.identity.common.internal.commands.parameters.UserAttributes
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.NativeAuthOAuth2Configuration
 import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.NativeAuthRequestProvider
+import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.requests.NativeAuthGrantType
 import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.interfaces.PlatformComponents
 import io.mockk.every
@@ -24,6 +26,7 @@ class NativeAuthRequestHandlerTest {
     private val tenant = "samtoso.onmicrosoft.com"
     private val signUpStartRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/signup/start")
     private val signUpChallengeRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/signup/challenge")
+    private val signUpContinueRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/signup/continue")
     private val signInInitiateRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/oauth/v2.0/initiate")
     private val signInChallengeRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/oauth/v2.0/challenge")
     private val signInTokenRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/oauth/v2.0/token")
@@ -35,16 +38,16 @@ class NativeAuthRequestHandlerTest {
     private val tokenEndpoint = URL("https://contoso.com/1234/token")
     private val challengeType = "oob redirect"
     private val userAttributes = UserAttributes.customAttribute("city", "Dublin").build()
-    private val challengeTargetKey = "user1"
-    private val grantType = "password"
     private val oobGrantType = "oob"
     private val oobCode = "123456"
     private val emptyString = ""
     private val credentialToken = "uY29tL2F1dGhlbnRpY"
+    private val grantType = NativeAuthGrantType.PASSWORDLESS_OTP.jsonValue
 
     private val mockConfig = mockk<NativeAuthOAuth2Configuration> {
         every { getSignUpStartEndpoint() } returns signUpStartRequestUrl
         every { getSignUpChallengeEndpoint() } returns signUpChallengeRequestUrl
+        every { getSignUpContinueEndpoint() } returns signUpContinueRequestUrl
         every { getSignInInitiateEndpoint() } returns signInInitiateRequestUrl
         every { getSignInChallengeEndpoint() } returns signInChallengeRequestUrl
         every { getSignInTokenEndpoint() } returns signInTokenRequestUrl
@@ -55,7 +58,6 @@ class NativeAuthRequestHandlerTest {
         every { getSsprPollCompletionEndpoint() } returns ssprPollCompletionRequestUrl
         every { challengeType } returns this@NativeAuthRequestHandlerTest.challengeType
         every { clientId } returns this@NativeAuthRequestHandlerTest.clientId
-        every { grantType } returns this@NativeAuthRequestHandlerTest.grantType
     }
 
     private val nativeAuthRequestProvider =
@@ -252,8 +254,6 @@ class NativeAuthRequestHandlerTest {
 
     @Test(expected = ClientException::class)
     fun testSignInTokenWithEmptyGrantTypeShouldThrowException() {
-        every { mockConfig.grantType } returns emptyString
-
         val commandParameters = SignInCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .username(username)
@@ -306,6 +306,55 @@ class NativeAuthRequestHandlerTest {
         assertEquals(clientId, result.parameters.clientId)
         assertEquals(oobGrantType, result.parameters.grantType)
         assertEquals(signInTokenRequestUrl, result.requestUrl)
+    }
+
+    @Test(expected = ClientException::class)
+    fun testSignUpContinueWithEmptySignUpTokenThrowException() {
+        val commandParameters = SignUpContinueCommandParameters.builder()
+            .platformComponents(mock<PlatformComponents>())
+            .oob(oobCode)
+            .build()
+
+        nativeAuthRequestProvider.createSignUpContinueRequest(
+            signUpToken = emptyString,
+            commandParameters = commandParameters
+        )
+    }
+
+    @Test(expected = ClientException::class)
+    fun testSignUpContinueWithEmptyClientIdShouldThrowException() {
+        every { mockConfig.clientId } returns emptyString
+
+        val commandParameters = SignUpContinueCommandParameters.builder()
+            .platformComponents(mock<PlatformComponents>())
+            .oob(oobCode)
+            .build()
+
+        nativeAuthRequestProvider.createSignUpContinueRequest(
+            signUpToken = "1234",
+            commandParameters = commandParameters
+        )
+    }
+
+    // signup continue tests
+    @Test
+    fun testSignUpContinueSuccess() {
+        val commandParameters = SignUpContinueCommandParameters.builder()
+            .platformComponents(mock<PlatformComponents>())
+            .oob(oobCode)
+            .userAttributes(UserAttributes.customAttribute("city", "Dublin").build())
+            .build()
+
+        val result = nativeAuthRequestProvider.createSignUpContinueRequest(
+            signUpToken = "1234",
+            commandParameters = commandParameters
+        )
+
+        assertEquals(oobCode, result.parameters.oob)
+        assertEquals(clientId, result.parameters.clientId)
+        assertEquals(grantType, result.parameters.grantType)
+        assertEquals(signUpContinueRequestUrl, result.requestUrl)
+        assertEquals("{\"city\":\"Dublin\"}", result.parameters.attributes.toString())
     }
 
     // sspr start tests

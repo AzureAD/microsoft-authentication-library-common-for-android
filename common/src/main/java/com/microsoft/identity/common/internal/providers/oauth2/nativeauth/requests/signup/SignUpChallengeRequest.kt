@@ -16,14 +16,14 @@ data class SignUpChallengeRequest @VisibleForTesting private constructor(
         fun create(
             signUpToken: String,
             clientId: String,
-            challengeType: String, // TODO hardcoded for now, but will be made part of SDK config & initialisation ticket
+            challengeType: String,
             requestUrl: String,
             headers: Map<String, String?>
         ): SignUpChallengeRequest {
             // Check for empty Strings and empty Maps
             ArgUtils.validateNonNullArg(signUpToken, "signUpToken")
             ArgUtils.validateNonNullArg(clientId, "clientId")
-            ArgUtils.validateNonNullArg(challengeType, "challengeType")
+            ArgUtils.validateNonNullArg(challengeType, "challengeTypes")
             ArgUtils.validateNonNullArg(requestUrl, "requestUrl")
             ArgUtils.validateNonNullArg(headers, "headers")
 

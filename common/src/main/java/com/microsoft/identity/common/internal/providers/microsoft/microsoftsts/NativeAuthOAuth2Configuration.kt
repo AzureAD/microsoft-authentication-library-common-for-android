@@ -23,7 +23,6 @@
 
 package com.microsoft.identity.common.internal.providers.microsoft.microsoftsts
 
-import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.requests.NativeAuthGrantType
 import com.microsoft.identity.common.java.logging.Logger
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration
 import com.microsoft.identity.common.java.util.UrlUtil
@@ -34,8 +33,7 @@ import java.net.URL
 class NativeAuthOAuth2Configuration(
     private val authorityUrl: URL,
     val clientId: String,
-    val challengeType: String = "oob password redirect", // TODO hardcoded for now
-    val grantType: String = NativeAuthGrantType.PASSWORDLESS_OTP.jsonValue // TODO hardcoded for now
+    val challengeType: String = "oob password redirect" // TODO hardcoded for now
 ) : MicrosoftStsOAuth2Configuration() {
 
     private val TAG = NativeAuthOAuth2Configuration::class.java.simpleName
@@ -43,6 +41,7 @@ class NativeAuthOAuth2Configuration(
     companion object {
         private const val SIGNUP_START_ENDPOINT_SUFFIX = "/signup/start"
         private const val SIGNUP_CHALLENGE_ENDPOINT_SUFFIX = "/signup/challenge"
+        private const val SIGNUP_CONTINUE_ENDPOINT_SUFFIX = "/signup/continue"
         private const val SSPR_START_ENDPOINT_SUFFIX = "/resetpassword/start"
         private const val SSPR_CHALLENGE_ENDPOINT_SUFFIX = "/resetpassword/challenge"
         private const val SSPR_CONTINUE_ENDPOINT_SUFFIX = "/resetpassword/continue"
@@ -79,6 +78,18 @@ class NativeAuthOAuth2Configuration(
         return getEndpointUrlFromRootAndTenantAndSuffix(
             root = getAuthorityUrl(),
             endpointSuffix = SIGNUP_CHALLENGE_ENDPOINT_SUFFIX
+        )
+    }
+
+    /**
+     * Get the endpoint to be used for making a signup/continue request.
+     *
+     * @return URL the endpoint
+     */
+    fun getSignUpContinueEndpoint(): URL {
+        return getEndpointUrlFromRootAndTenantAndSuffix(
+            root = getAuthorityUrl(),
+            endpointSuffix = SIGNUP_CONTINUE_ENDPOINT_SUFFIX
         )
     }
 

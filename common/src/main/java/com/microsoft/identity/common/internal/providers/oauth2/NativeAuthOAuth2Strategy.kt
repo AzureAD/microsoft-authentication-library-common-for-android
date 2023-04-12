@@ -24,6 +24,7 @@
 package com.microsoft.identity.common.internal.providers.oauth2
 
 import com.microsoft.identity.common.internal.commands.parameters.SignInCommandParameters
+import com.microsoft.identity.common.internal.commands.parameters.SignUpContinueCommandParameters
 import com.microsoft.identity.common.internal.commands.parameters.SignUpStartCommandParameters
 import com.microsoft.identity.common.internal.commands.parameters.SsprContinueCommandParameters
 import com.microsoft.identity.common.internal.commands.parameters.SsprStartCommandParameters
@@ -36,8 +37,9 @@ import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.intera
 import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signin.SignInChallengeResult
 import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signin.SignInInitiateResult
 import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signin.SignInTokenResult
-import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signup.SignUpChallengeResult
-import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signup.SignUpStartResult
+import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signup.challenge.SignUpChallengeResult
+import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signup.cont.SignUpContinueResult
+import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signup.start.SignUpStartResult
 import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.sspr.challenge.SsprChallengeResult
 import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.sspr.cont.SsprContinueResult
 import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.sspr.pollcompletion.SsprPollCompletionResult
@@ -60,8 +62,8 @@ import com.microsoft.identity.common.java.providers.oauth2.TokenResult
 class NativeAuthOAuth2Strategy(
     private val strategyParameters: OAuth2StrategyParameters,
     private val config: NativeAuthOAuth2Configuration,
-    private val signUpInteractor: SignUpInteractor,
     private val signInInteractor: SignInInteractor,
+    private val signUpInteractor: SignUpInteractor,
     private val ssprInteractor: SsprInteractor
 ) :
     BaseNativeAuthOAuth2Strategy<MicrosoftStsAccessToken,
@@ -115,7 +117,9 @@ class NativeAuthOAuth2Strategy(
         signInCommandParameters: SignInCommandParameters
     ): SignInTokenResult {
         return signInInteractor.performGetToken(
-            signInSlt, credentialToken, signInCommandParameters
+            signInSlt,
+            credentialToken,
+            signInCommandParameters
         )
     }
 
@@ -139,6 +143,16 @@ class NativeAuthOAuth2Strategy(
     ): SsprContinueResult {
         return ssprInteractor.performSsprContinue(
             passwordResetToken = passwordResetToken,
+            commandParameters = commandParameters
+        )
+    }
+
+    fun performSignUpContinue(
+        signUpToken: String,
+        commandParameters: SignUpContinueCommandParameters
+    ): SignUpContinueResult {
+        return signUpInteractor.performSignUpContinue(
+            signUpToken = signUpToken,
             commandParameters = commandParameters
         )
     }

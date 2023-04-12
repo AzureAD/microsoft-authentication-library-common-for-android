@@ -20,9 +20,6 @@ data class SsprStartErrorResponse(
         if (error.isNullOrBlank()) {
             throw ClientException("SsprStartErrorResponse.error can't be null in error state")
         }
-        if (getErrorDescription().isNullOrBlank()) {
-            throw ClientException("SsprStartErrorResponse.errorDescription can't be null in error state")
-        }
     }
 
     override fun validateOptionalFields() {}

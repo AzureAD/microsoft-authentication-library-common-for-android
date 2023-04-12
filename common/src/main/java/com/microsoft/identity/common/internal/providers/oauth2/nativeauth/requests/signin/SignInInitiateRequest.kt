@@ -34,7 +34,7 @@ data class SignInInitiateRequest @VisibleForTesting private constructor(
                     clientId = clientId
                 ),
                 requestUrl = URL(requestUrl),
-                headers = headers,
+                headers = headers
             )
         }
     }

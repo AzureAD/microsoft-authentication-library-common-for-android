@@ -56,7 +56,7 @@ data class SignInTokenRequest @VisibleForTesting private constructor(
                     signInSlt = signInSlt
                 ),
                 requestUrl = URL(requestUrl),
-                headers = headers,
+                headers = headers
             )
         }
     }

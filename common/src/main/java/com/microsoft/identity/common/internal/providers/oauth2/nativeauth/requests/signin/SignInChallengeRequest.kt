@@ -30,10 +30,10 @@ data class SignInChallengeRequest @VisibleForTesting private constructor(
                 parameters = NativeAuthRequestSignInChallengeParameters(
                     clientId = clientId,
                     credentialToken = credentialToken,
-                    challengeType = challengeType,
+                    challengeType = challengeType
                 ),
                 requestUrl = URL(requestUrl),
-                headers = headers,
+                headers = headers
             )
         }
     }

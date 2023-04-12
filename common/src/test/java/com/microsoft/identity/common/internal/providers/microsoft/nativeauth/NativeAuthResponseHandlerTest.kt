@@ -1,22 +1,27 @@
 package com.microsoft.identity.common.internal.providers.microsoft.nativeauth
 
+import com.microsoft.identity.common.internal.commands.parameters.UserAttributes
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.NativeAuthOAuth2Configuration
 import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.NativeAuthResponseHandler
 import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.interactors.InnerError
 import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.NativeAuthBindingMethod
 import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.NativeAuthChallengeType
+import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.NativeAuthDisplayType
 import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.NativeAuthPollCompletionStatus
 import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signin.SignInChallengeResult
 import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signin.SignInInitiateErrorResponse
 import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signin.SignInInitiateResult
 import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signin.SignInInitiateSuccessResponse
-import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signin.exceptions.ErrorCodes
 import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signup.Attribute
-import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signup.SignUpChallengeResponse
-import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signup.SignUpChallengeResult
-import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signup.SignUpStartErrorResponse
-import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signup.SignUpStartResponse
-import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signup.SignUpStartResult
+import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signup.SignUpContinueErrorCodes
+import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signup.SignUpStartErrorCodes
+import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signup.challenge.SignUpChallengeResponse
+import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signup.challenge.SignUpChallengeResult
+import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signup.cont.SignUpContinueErrorResponse
+import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signup.cont.SignUpContinueResult
+import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signup.start.SignUpStartErrorResponse
+import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signup.start.SignUpStartResponse
+import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signup.start.SignUpStartResult
 import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.sspr.challenge.SsprChallengeResponse
 import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.sspr.challenge.SsprChallengeResult
 import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.sspr.cont.SsprContinueResponse
@@ -36,12 +41,11 @@ import org.mockito.kotlin.whenever
 import java.net.URL
 
 class NativeAuthResponseHandlerTest {
-    private val username = "user@email.com"
-    private val password = "verySafePassword"
     private val clientId = "1234"
     private val requestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/signup/start")
     private val challengeType = "oob password redirect"
     private val emptyString = ""
+    private val userAttributes = UserAttributes.customAttribute("city", "Dublin").build()
 
     private val mockConfig = mockk<NativeAuthOAuth2Configuration> {
         every { getSignUpStartEndpoint() } returns requestUrl
@@ -108,9 +112,9 @@ class NativeAuthResponseHandlerTest {
             statusCode = 200,
             errorCode = null,
             errorDescription = "error description",
-            verifyAttributes = listOf(Attribute("username")),
+            unverifiedAttributes = listOf(Attribute("username")),
             invalidAttributes = "invalid attributes",
-            challengeType = "oob",
+            challengeType = NativeAuthChallengeType.OOB,
             signupToken = "1234"
         )
 
@@ -127,51 +131,11 @@ class NativeAuthResponseHandlerTest {
         whenever(signUpStartResult.success).thenReturn(false)
         val signUpResultErrorResponse = SignUpStartErrorResponse(
             statusCode = 200,
-            errorCode = "",
+            errorCode = null,
             errorDescription = "error description",
-            verifyAttributes = listOf(Attribute("username")),
+            unverifiedAttributes = listOf(Attribute("username")),
             invalidAttributes = "invalid attributes",
-            challengeType = "oob",
-            signupToken = "1234"
-        )
-        whenever(signUpStartResult.errorResponse).thenReturn(signUpResultErrorResponse)
-
-        nativeAuthResponseHandler.validateApiResult(
-            apiResult = signUpStartResult
-        )
-    }
-
-    @Test(expected = ClientException::class)
-    fun testValidateSignUpStartResultWithErrorAndMissingErrorDescription() {
-        val signUpStartResult = mock<SignUpStartResult>()
-        whenever(signUpStartResult.success).thenReturn(false)
-        val signUpResultErrorResponse = SignUpStartErrorResponse(
-            statusCode = 200,
-            errorCode = "invalid_request",
-            errorDescription = null,
-            verifyAttributes = listOf(Attribute("username")),
-            invalidAttributes = "invalid attributes",
-            challengeType = "oob",
-            signupToken = "1234"
-        )
-        whenever(signUpStartResult.errorResponse).thenReturn(signUpResultErrorResponse)
-
-        nativeAuthResponseHandler.validateApiResult(
-            apiResult = signUpStartResult
-        )
-    }
-
-    @Test(expected = ClientException::class)
-    fun testValidateSignUpStartResultWithErrorAndEmptyErrorDescription() {
-        val signUpStartResult = mock<SignUpStartResult>()
-        whenever(signUpStartResult.success).thenReturn(false)
-        val signUpResultErrorResponse = SignUpStartErrorResponse(
-            statusCode = 200,
-            errorCode = "invalid_request",
-            errorDescription = "",
-            verifyAttributes = listOf(Attribute("username")),
-            invalidAttributes = "invalid attributes",
-            challengeType = "oob",
+            challengeType = NativeAuthChallengeType.OOB,
             signupToken = "1234"
         )
         whenever(signUpStartResult.errorResponse).thenReturn(signUpResultErrorResponse)
@@ -187,11 +151,11 @@ class NativeAuthResponseHandlerTest {
         whenever(signUpStartResult.success).thenReturn(false)
         val signUpResultErrorResponse = SignUpStartErrorResponse(
             statusCode = 200,
-            errorCode = ErrorCodes.VERIFICATION_REQUIRED,
+            errorCode = SignUpStartErrorCodes.VERIFICATION_REQUIRED,
             errorDescription = null,
-            verifyAttributes = null,
+            unverifiedAttributes = null,
             invalidAttributes = "invalid attributes",
-            challengeType = "oob",
+            challengeType = NativeAuthChallengeType.OOB,
             signupToken = "1234"
         )
         whenever(signUpStartResult.errorResponse).thenReturn(signUpResultErrorResponse)
@@ -207,11 +171,11 @@ class NativeAuthResponseHandlerTest {
         whenever(signUpStartResult.success).thenReturn(false)
         val signUpResultErrorResponse = SignUpStartErrorResponse(
             statusCode = 200,
-            errorCode = ErrorCodes.VERIFICATION_REQUIRED,
+            errorCode = SignUpStartErrorCodes.VERIFICATION_REQUIRED,
             errorDescription = null,
-            verifyAttributes = listOf(Attribute("username")),
+            unverifiedAttributes = listOf(Attribute("username")),
             invalidAttributes = "invalid attributes",
-            challengeType = "oob",
+            challengeType = NativeAuthChallengeType.OOB,
             signupToken = null
         )
 
@@ -228,11 +192,11 @@ class NativeAuthResponseHandlerTest {
         whenever(signUpStartResult.success).thenReturn(false)
         val signUpResultErrorResponse = SignUpStartErrorResponse(
             statusCode = 200,
-            errorCode = ErrorCodes.VALIDATION_FAILED,
+            errorCode = SignUpStartErrorCodes.VALIDATION_FAILED,
             errorDescription = null,
-            verifyAttributes = listOf(Attribute("username")),
+            unverifiedAttributes = listOf(Attribute("username")),
             invalidAttributes = null,
-            challengeType = "oob",
+            challengeType = NativeAuthChallengeType.OOB,
             signupToken = null
         )
 
@@ -255,25 +219,6 @@ class NativeAuthResponseHandlerTest {
     }
 
     @Test(expected = ClientException::class)
-    fun testValidateSignUpChallengeResultWithSuccessAndMissingSignupToken() {
-        val signUpChallengeResult = mock<SignUpChallengeResult>()
-        whenever(signUpChallengeResult.success).thenReturn(true)
-        val signUpChallengeResponse = SignUpChallengeResponse(
-            signupToken = null,
-            challengeType = "oob",
-            codeLength = 6,
-            bindingMethod = "prompt",
-            interval = "300",
-            displayName = "...r@microsoft.com"
-        )
-        whenever(signUpChallengeResult.successResponse).thenReturn(signUpChallengeResponse)
-
-        nativeAuthResponseHandler.validateApiResult(
-            apiResult = signUpChallengeResult
-        )
-    }
-
-    @Test(expected = ClientException::class)
     fun testValidateSignUpChallengeResultWithSuccessAndMissingChallengeType() {
         val signUpChallengeResult = mock<SignUpChallengeResult>()
         whenever(signUpChallengeResult.success).thenReturn(true)
@@ -281,9 +226,10 @@ class NativeAuthResponseHandlerTest {
             signupToken = "1234",
             challengeType = null,
             codeLength = 6,
-            bindingMethod = "prompt",
+            bindingMethod = NativeAuthBindingMethod.PROMPT,
             interval = "300",
-            displayName = "...r@microsoft.com"
+            displayName = "...r@microsoft.com",
+            displayType = NativeAuthDisplayType.EMAIL
         )
         whenever(signUpChallengeResult.successResponse).thenReturn(signUpChallengeResponse)
 
@@ -298,11 +244,12 @@ class NativeAuthResponseHandlerTest {
         whenever(signUpChallengeResult.success).thenReturn(true)
         val signUpChallengeResponse = SignUpChallengeResponse(
             signupToken = "1234",
-            challengeType = "oob",
+            challengeType = NativeAuthChallengeType.OOB,
             codeLength = null,
-            bindingMethod = "prompt",
+            bindingMethod = NativeAuthBindingMethod.PROMPT,
             interval = "300",
-            displayName = "...r@microsoft.com"
+            displayName = "...r@microsoft.com",
+            displayType = NativeAuthDisplayType.EMAIL
         )
         whenever(signUpChallengeResult.successResponse).thenReturn(signUpChallengeResponse)
 
@@ -317,11 +264,12 @@ class NativeAuthResponseHandlerTest {
         whenever(signUpChallengeResult.success).thenReturn(true)
         val signUpChallengeResponse = SignUpChallengeResponse(
             signupToken = "1234",
-            challengeType = "oob",
+            challengeType = NativeAuthChallengeType.OOB,
             codeLength = 6,
             bindingMethod = null,
             interval = "300",
-            displayName = "...r@microsoft.com"
+            displayName = "...r@microsoft.com",
+            displayType = NativeAuthDisplayType.EMAIL
         )
         whenever(signUpChallengeResult.successResponse).thenReturn(signUpChallengeResponse)
 
@@ -336,11 +284,12 @@ class NativeAuthResponseHandlerTest {
         whenever(signUpChallengeResult.success).thenReturn(true)
         val signUpChallengeResponse = SignUpChallengeResponse(
             signupToken = "1234",
-            challengeType = "oob",
+            challengeType = NativeAuthChallengeType.OOB,
             codeLength = 6,
-            bindingMethod = "prompt",
+            bindingMethod = NativeAuthBindingMethod.PROMPT,
             interval = null,
-            displayName = "...r@microsoft.com"
+            displayName = "...r@microsoft.com",
+            displayType = NativeAuthDisplayType.EMAIL
         )
         whenever(signUpChallengeResult.successResponse).thenReturn(signUpChallengeResponse)
 
@@ -355,11 +304,12 @@ class NativeAuthResponseHandlerTest {
         whenever(signUpChallengeResult.success).thenReturn(true)
         val signUpChallengeResponse = SignUpChallengeResponse(
             signupToken = "1234",
-            challengeType = "oob",
+            challengeType = NativeAuthChallengeType.OOB,
             codeLength = 6,
-            bindingMethod = "prompt",
+            bindingMethod = NativeAuthBindingMethod.PROMPT,
             interval = "300",
-            displayName = null
+            displayName = null,
+            displayType = NativeAuthDisplayType.EMAIL
         )
         whenever(signUpChallengeResult.successResponse).thenReturn(signUpChallengeResponse)
 
@@ -389,6 +339,26 @@ class NativeAuthResponseHandlerTest {
 
         nativeAuthResponseHandler.validateApiResult(
             apiResult = signUpChallengeResult
+        )
+    }
+
+    @Test
+    fun testValidateSignUpContinueResultWithAttributedRequiredErrorAndAttribtues() {
+        val signUpContinueResult = mock<SignUpContinueResult>()
+        whenever(signUpContinueResult.success).thenReturn(false)
+        val signUpContinueErrorResponse = SignUpContinueErrorResponse(
+            errorCode = SignUpContinueErrorCodes.ATTRIBUTES_REQUIRED,
+            statusCode = 400,
+            errorDescription = null,
+            signupToken = null,
+            verifyAttributes = null,
+            invalidAttributes = userAttributes.toString(),
+            requiredAttributes = null
+        )
+        whenever(signUpContinueResult.errorResponse).thenReturn(signUpContinueErrorResponse)
+
+        nativeAuthResponseHandler.validateApiResult(
+            apiResult = signUpContinueResult
         )
     }
 
@@ -519,22 +489,6 @@ class NativeAuthResponseHandlerTest {
             apiResult = ssprContinueResult
         )
     }
-
-    // Because I comment the validation part in response
-//    @Test(expected = ClientException::class)
-//    fun testValidateSsprContinueResultWithSuccessAndMissingPasswordResetToken() {
-//        val ssprContinueResult = mock<SsprContinueResult>()
-//        whenever(ssprContinueResult.success).thenReturn(true)
-//
-//        val ssprResultSuccessResponse = SsprContinueResponse(
-//            passwordSubmitToken = emptyString
-//        )
-//        whenever(ssprContinueResult.successResponse).thenReturn(ssprResultSuccessResponse)
-//
-//        nativeAuthResponseHandler.validateApiResult(
-//            apiResult =  ssprContinueResult
-//        )
-//    }
 
     @Test
     fun testValidateSsprContinueResultSuccessReturnToken() {
@@ -683,7 +637,7 @@ class NativeAuthResponseHandlerTest {
         whenever(signInInitiateResult.successResponse).thenReturn(null)
 
         nativeAuthResponseHandler.validateApiResult(
-            apiResult = signInInitiateResult,
+            apiResult = signInInitiateResult
         )
     }
 
@@ -698,7 +652,7 @@ class NativeAuthResponseHandlerTest {
         whenever(signInInitiateResult.successResponse).thenReturn(signInInitiateSuccessResponse)
 
         nativeAuthResponseHandler.validateApiResult(
-            apiResult = signInInitiateResult,
+            apiResult = signInInitiateResult
         )
     }
 
@@ -713,7 +667,7 @@ class NativeAuthResponseHandlerTest {
         whenever(signInInitiateResult.successResponse).thenReturn(signInInitiateSuccessResponse)
 
         nativeAuthResponseHandler.validateApiResult(
-            apiResult = signInInitiateResult,
+            apiResult = signInInitiateResult
         )
     }
 
@@ -726,7 +680,7 @@ class NativeAuthResponseHandlerTest {
         whenever(signInInitiateResult.successResponse).thenReturn(signInInitiateSuccessResponse)
 
         nativeAuthResponseHandler.validateApiResult(
-            apiResult = signInInitiateResult,
+            apiResult = signInInitiateResult
         )
     }
 
@@ -739,7 +693,7 @@ class NativeAuthResponseHandlerTest {
         whenever(signInInitiateResult.successResponse).thenReturn(signInInitiateSuccessResponse)
 
         nativeAuthResponseHandler.validateApiResult(
-            apiResult = signInInitiateResult,
+            apiResult = signInInitiateResult
         )
     }
 
@@ -750,7 +704,7 @@ class NativeAuthResponseHandlerTest {
         whenever(signInInitiateResult.errorResponse).thenReturn(null)
 
         nativeAuthResponseHandler.validateApiResult(
-            apiResult = signInInitiateResult,
+            apiResult = signInInitiateResult
         )
     }
 
@@ -774,7 +728,7 @@ class NativeAuthResponseHandlerTest {
         whenever(signInInitiateResult.errorResponse).thenReturn(signInInitiateErrorResponse)
 
         nativeAuthResponseHandler.validateApiResult(
-            apiResult = signInInitiateResult,
+            apiResult = signInInitiateResult
         )
     }
 
@@ -798,7 +752,7 @@ class NativeAuthResponseHandlerTest {
         whenever(signInInitiateResult.errorResponse).thenReturn(signInInitiateErrorResponse)
 
         nativeAuthResponseHandler.validateApiResult(
-            apiResult = signInInitiateResult,
+            apiResult = signInInitiateResult
         )
     }
 
@@ -809,7 +763,7 @@ class NativeAuthResponseHandlerTest {
         whenever(signInChallengeResult.successResponse).thenReturn(null)
 
         nativeAuthResponseHandler.validateApiResult(
-            apiResult = signInChallengeResult,
+            apiResult = signInChallengeResult
         )
     }
 }

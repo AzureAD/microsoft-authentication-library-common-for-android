@@ -1,12 +1,15 @@
 package com.microsoft.identity.common.internal.providers.oauth2.nativeauth.interactors
 
+import com.microsoft.identity.common.internal.commands.parameters.SignUpContinueCommandParameters
 import com.microsoft.identity.common.internal.commands.parameters.SignUpStartCommandParameters
 import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.NativeAuthRequestProvider
 import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.NativeAuthResponseHandler
 import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.requests.signup.SignUpChallengeRequest
+import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.requests.signup.SignUpContinueRequest
 import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.requests.signup.SignUpStartRequest
-import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signup.SignUpChallengeResult
-import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signup.SignUpStartResult
+import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signup.challenge.SignUpChallengeResult
+import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signup.cont.SignUpContinueResult
+import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signup.start.SignUpStartResult
 import com.microsoft.identity.common.internal.util.getEncodedRequest
 import com.microsoft.identity.common.java.net.UrlConnectionHttpClient
 import com.microsoft.identity.common.java.util.ObjectMapper
@@ -79,6 +82,46 @@ class SignUpInteractor(
             encodedRequest.toByteArray(charset(ObjectMapper.ENCODING_SCHEME))
         )
         val result = nativeAuthResponseHandler.getSignUpChallengeResultFromHttpResponse(
+            response = response
+        )
+        nativeAuthResponseHandler.validateApiResult(result)
+        return result
+    }
+    //endregion
+
+    //region /signup/continue
+    fun performSignUpContinue(
+        signUpToken: String,
+        commandParameters: SignUpContinueCommandParameters
+    ): SignUpContinueResult {
+        val request = createSignUpContinueRequest(
+            signUpToken = signUpToken,
+            commandParameters = commandParameters
+        )
+        return performSignUpContinue(request)
+    }
+
+    private fun createSignUpContinueRequest(
+        signUpToken: String,
+        commandParameters: SignUpContinueCommandParameters
+    ): SignUpContinueRequest {
+        return nativeAuthRequestProvider.createSignUpContinueRequest(
+            signUpToken = signUpToken,
+            commandParameters = commandParameters
+        )
+    }
+
+    private fun performSignUpContinue(request: SignUpContinueRequest): SignUpContinueResult {
+        val encodedRequest: String = request.parameters.getEncodedRequest()
+        val headers = request.headers
+        val requestUrl = request.requestUrl
+
+        val response = httpClient.post(
+            requestUrl,
+            headers,
+            encodedRequest.toByteArray(charset(ObjectMapper.ENCODING_SCHEME))
+        )
+        val result = nativeAuthResponseHandler.getSignUpContinueResultFromHttpResponse(
             response = response
         )
         nativeAuthResponseHandler.validateApiResult(result)

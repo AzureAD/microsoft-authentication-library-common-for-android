@@ -8,36 +8,44 @@ import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.reques
 import com.microsoft.identity.common.internal.util.ArgUtils
 import java.net.URL
 
-data class SignUpStartRequest @VisibleForTesting private constructor(
+data class SignUpContinueRequest @VisibleForTesting private constructor(
     override var requestUrl: URL,
     override var headers: Map<String, String?>,
-    override val parameters: NativeAuthRequestSignUpStartParameters
+    override val parameters: NativeAuthRequestSignUpContinueParameters
 ) : NativeAuthRequest() {
 
     companion object {
         fun create(
-            username: String,
             password: String? = null,
             attributes: UserAttributes? = null,
+            oob: String? = null,
             clientId: String,
-            challengeType: String, // TODO hardcoded for now, but will be made part of SDK config & initialisation ticket
+            signUpToken: String,
+            grantType: String,
             requestUrl: String,
             headers: Map<String, String?>
-        ): SignUpStartRequest {
+        ): SignUpContinueRequest {
             // Check for empty Strings and empty Maps
-            ArgUtils.validateNonNullArg(username, "username")
             ArgUtils.validateNonNullArg(clientId, "clientId")
-            ArgUtils.validateNonNullArg(challengeType, "challengeType")
+            ArgUtils.validateNonNullArg(signUpToken, "signUpToken")
+            ArgUtils.validateNonNullArg(grantType, "grantType")
             ArgUtils.validateNonNullArg(requestUrl, "requestUrl")
             ArgUtils.validateNonNullArg(headers, "headers")
+            if (grantType == "oob") {
+                ArgUtils.validateNonNullArg(oob, "oob")
+            }
+            if (grantType == "password") {
+                ArgUtils.validateNonNullArg(password, "password")
+            }
 
-            return SignUpStartRequest(
-                parameters = NativeAuthRequestSignUpStartParameters(
-                    username = username,
+            return SignUpContinueRequest(
+                parameters = NativeAuthRequestSignUpContinueParameters(
                     password = password,
                     attributes = attributes?.toJsonString(),
-                    challengeType = challengeType,
-                    clientId = clientId
+                    oob = oob,
+                    clientId = clientId,
+                    signUpToken = signUpToken,
+                    grantType = grantType
                 ),
                 requestUrl = URL(requestUrl),
                 headers = headers
@@ -45,11 +53,12 @@ data class SignUpStartRequest @VisibleForTesting private constructor(
         }
     }
 
-    data class NativeAuthRequestSignUpStartParameters(
-        val username: String,
+    data class NativeAuthRequestSignUpContinueParameters(
         val password: String?,
         val attributes: String?,
+        val oob: String?,
         @SerializedName("client_id") override val clientId: String,
-        @SerializedName("challenge_type") val challengeType: String
+        @SerializedName("signup_token") val signUpToken: String,
+        @SerializedName("grant_type") val grantType: String
     ) : NativeAuthRequestParameters()
 }

@@ -12,7 +12,7 @@ data class SignInTokenErrorResponse(
     @SerializedName("error_description") private val errorDescription: String?,
     @SerializedName("error_uri") val errorUri: String?,
     @SerializedName("inner_errors") val innerErrors: List<InnerError>?,
-    @SerializedName("credential_token ") val credentialToken: String?,
+    @SerializedName("credential_token ") val credentialToken: String?
 ) : IApiErrorResponse {
     private val TAG = SignInTokenErrorResponse::class.java.simpleName
 

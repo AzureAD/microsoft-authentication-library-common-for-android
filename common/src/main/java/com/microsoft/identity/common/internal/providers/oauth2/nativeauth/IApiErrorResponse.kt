@@ -4,4 +4,4 @@ import com.microsoft.identity.common.java.providers.oauth2.IErrorResponse
 
 interface IApiErrorResponse :
     IErrorResponse,
-    com.microsoft.identity.common.internal.providers.oauth2.nativeauth.IValidApiResponse
+    IValidApiResponse

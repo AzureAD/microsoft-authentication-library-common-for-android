@@ -54,7 +54,7 @@ class SignInInteractor(
 
     //region /oauth/v2.0/challenge
     fun performSignInChallenge(
-        credentialToken: String,
+        credentialToken: String
     ): SignInChallengeResult {
         val request = createSignInChallengeRequest(credentialToken)
         return performSignInChallenge(request)
@@ -64,7 +64,7 @@ class SignInInteractor(
         credentialToken: String
     ): SignInChallengeRequest {
         return nativeAuthRequestProvider.createSignInChallengeRequest(
-            credentialToken = credentialToken,
+            credentialToken = credentialToken
         )
     }
 

@@ -12,7 +12,7 @@ class SignInTokenSuccessResponse(
     @SerializedName("ext_expires_in") val extExpiresIn: Long?,
     @SerializedName("access_token") val accessToken: String?,
     @SerializedName("refresh_token") val refreshToken: String?,
-    @SerializedName("id_token") val idToken: String?,
+    @SerializedName("id_token") val idToken: String?
 ) : ISuccessResponse, IApiSuccessResponse {
     private val TAG = SignInTokenSuccessResponse::class.java.simpleName
 

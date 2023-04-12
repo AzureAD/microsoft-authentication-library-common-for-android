@@ -44,13 +44,17 @@ class MockApiUtils {
          * and used to set the mock API response.
          * @param responseType The type of response to return from the mock API.
          */
-        fun configureMockApi(endpointType: MockApiEndpointType, correlationId: String, responseType: MockApiResponseType) {
-            configureMockApiResponse(
+        fun configureMockApi(
+            endpointType: MockApiEndpointType,
+            correlationId: String,
+            responseType: MockApiResponseType
+        ) {
+            MockApiUtils.configureMockApiResponse(
                 endpointType = endpointType,
                 responseType = responseType,
                 correlationId = correlationId
             )
-            setCorrelationIdHeader(
+            MockApiUtils.setCorrelationIdHeader(
                 correlationId = correlationId
             )
         }

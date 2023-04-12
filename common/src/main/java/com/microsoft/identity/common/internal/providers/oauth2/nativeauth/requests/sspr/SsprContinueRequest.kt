@@ -25,9 +25,12 @@ class SsprContinueRequest @VisibleForTesting private constructor(
             ArgUtils.validateNonNullArg(clientId, "clientId")
             ArgUtils.validateNonNullArg(grantType, "grantType")
             ArgUtils.validateNonNullArg(passwordResetToken, "passwordResetToken")
-            ArgUtils.validateNonNullArg(oob, "oob")
             ArgUtils.validateNonNullArg(requestUrl, "requestUrl")
             ArgUtils.validateNonNullArg(headers, "headers")
+
+            if (grantType == "oob") {
+                ArgUtils.validateNonNullArg(oob, "oob")
+            }
 
             return SsprContinueRequest(
                 requestUrl = URL(requestUrl),

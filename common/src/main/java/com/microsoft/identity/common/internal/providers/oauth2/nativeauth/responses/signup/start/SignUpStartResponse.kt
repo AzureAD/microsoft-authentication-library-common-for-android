@@ -1,11 +1,11 @@
-package com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signup
+package com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signup.start
 
 import com.google.gson.annotations.SerializedName
 import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.providers.oauth2.ISuccessResponse
 
 class SignUpStartResponse(
-    @SerializedName("signup_token")val signupToken: String?
+    @SerializedName("signup_token") val signupToken: String?
 ) : ISuccessResponse,
     com.microsoft.identity.common.internal.providers.oauth2.nativeauth.IApiSuccessResponse {
     @Transient
@@ -20,12 +20,10 @@ class SignUpStartResponse(
     }
 
     override fun validateRequiredFields() {
-        if (signupToken == null || signupToken.isEmpty()) {
-            throw ClientException("SignUpStartResponse.signupToken can't be null or empty in success state")
+        if (signupToken.isNullOrBlank()) {
+            throw ClientException("SignUpStartSuccessResponse.signupToken can't be null or empty in success state")
         }
     }
 
-    override fun validateOptionalFields() {
-        // No optional fields
-    }
+    override fun validateOptionalFields() {}
 }

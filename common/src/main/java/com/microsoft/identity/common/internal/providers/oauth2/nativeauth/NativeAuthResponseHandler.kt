@@ -9,12 +9,15 @@ import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.respon
 import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signin.SignInTokenErrorResponse
 import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signin.SignInTokenResult
 import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signin.SignInTokenSuccessResponse
-import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signup.SignUpChallengeErrorResponse
-import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signup.SignUpChallengeResponse
-import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signup.SignUpChallengeResult
-import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signup.SignUpStartErrorResponse
-import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signup.SignUpStartResponse
-import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signup.SignUpStartResult
+import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signup.challenge.SignUpChallengeErrorResponse
+import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signup.challenge.SignUpChallengeResponse
+import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signup.challenge.SignUpChallengeResult
+import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signup.cont.SignUpContinueErrorResponse
+import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signup.cont.SignUpContinueResponse
+import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signup.cont.SignUpContinueResult
+import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signup.start.SignUpStartErrorResponse
+import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signup.start.SignUpStartResponse
+import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.signup.start.SignUpStartResult
 import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.sspr.challenge.SsprChallengeErrorResponse
 import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.sspr.challenge.SsprChallengeResponse
 import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.responses.sspr.challenge.SsprChallengeResult
@@ -57,13 +60,6 @@ class NativeAuthResponseHandler {
                 SignUpStartErrorResponse::class.java
             )
             errorResponse.statusCode = response.statusCode
-            // TODO
-//            if (null != response.headers) {
-//                errorResponse.setResponseHeadersJson(
-//                    HeaderSerializationUtil.toJson(response.headers)
-//                )
-//            }
-//            errorResponse.setResponseBody(response.body)
             SignUpStartResult.createError(errorResponse)
         } else {
             val successResponse = ObjectMapper.deserializeJsonStringToObject(
@@ -73,8 +69,6 @@ class NativeAuthResponseHandler {
             SignUpStartResult.createSuccess(successResponse)
         }
         ResultUtil.logResult(TAG, result)
-
-        // TODO: error handling (error code matching, etc.), JSON to object deserialisation
 
         // TODO manage headers for telemetry
         return result
@@ -98,13 +92,6 @@ class NativeAuthResponseHandler {
                 SignUpChallengeErrorResponse::class.java
             )
             errorResponse.statusCode = response.statusCode
-            // TODO
-//            if (null != response.headers) {
-//                errorResponse.setResponseHeadersJson(
-//                    HeaderSerializationUtil.toJson(response.headers)
-//                )
-//            }
-//            errorResponse.setResponseBody(response.body)
             SignUpChallengeResult.createError(errorResponse)
         } else {
             val successResponse = ObjectMapper.deserializeJsonStringToObject(
@@ -115,13 +102,46 @@ class NativeAuthResponseHandler {
         }
         ResultUtil.logResult(TAG, result)
 
-        // TODO: error handling (error code matching, etc.), JSON to object deserialisation
+        // TODO manage headers for telemetry
+
+        return result
+    }
+    //endregion
+
+    //region /signup/continue
+    @Throws(ClientException::class)
+    internal fun getSignUpContinueResultFromHttpResponse(
+        response: HttpResponse
+    ): SignUpContinueResult {
+        val methodName = ":getSignUpContinueResultFromHttpResponse"
+        Logger.verbose(
+            TAG + methodName,
+            "Getting SignUpContinueResult from HttpResponse..."
+        )
+
+        val result = if (response.statusCode >= HttpURLConnection.HTTP_BAD_REQUEST) {
+            // An error occurred
+            val errorResponse = ObjectMapper.deserializeJsonStringToObject(
+                getBodyFromUnsuccessfulResponse(response.body),
+                SignUpContinueErrorResponse::class.java
+            )
+            errorResponse.statusCode = response.statusCode
+            SignUpContinueResult.createError(errorResponse)
+        } else {
+            val successResponse = ObjectMapper.deserializeJsonStringToObject(
+                getBodyFromSuccessfulResponse(response.body),
+                SignUpContinueResponse::class.java
+            )
+            SignUpContinueResult.createSuccess(successResponse)
+        }
+        ResultUtil.logResult(TAG, result)
+
         // TODO manage headers for telemetry
 
         return result
     }
 
-    //region resetpassword/start
+    //region /resetpassword/start
     @Throws(ClientException::class)
     internal fun getSsprStartResultFromHttpResponse(
         response: HttpResponse
@@ -150,7 +170,7 @@ class NativeAuthResponseHandler {
         return result
     }
 
-    //region resetpassword/challenge
+    //region /resetpassword/challenge
     @Throws(ClientException::class)
     internal fun getSsprChallengeResultFromHttpResponse(
         response: HttpResponse
@@ -180,7 +200,7 @@ class NativeAuthResponseHandler {
         return result
     }
 
-    //region resetpassword/continue
+    //region /resetpassword/continue
     @Throws(ClientException::class)
     internal fun getSsprContinueResultFromHttpResponse(
         response: HttpResponse
@@ -210,7 +230,7 @@ class NativeAuthResponseHandler {
         return result
     }
 
-    //region resetpassword/submit
+    //region /resetpassword/submit
     @Throws(ClientException::class)
     internal fun getSsprSubmitResultFromHttpResponse(
         response: HttpResponse
@@ -240,7 +260,7 @@ class NativeAuthResponseHandler {
         return result
     }
 
-    //region resetpassword/poll_completion
+    //region /resetpassword/poll_completion
     @Throws(ClientException::class)
     internal fun getSsprPollCompletionResultFromHttpResponse(
         response: HttpResponse

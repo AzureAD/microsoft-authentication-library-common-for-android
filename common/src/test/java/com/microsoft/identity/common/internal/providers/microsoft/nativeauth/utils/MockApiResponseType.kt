@@ -30,6 +30,7 @@ enum class MockApiResponseType(val stringValue: String) {
     ATTRIBUTES_REQUIRED("AttributesRequired"),
     VERIFICATION_REQUIRED("VerificationRequired"),
     VALIDATION_FAILED("ValidationFailed"),
+    SIGNUP_CONTINUE_SUCCESS("SignUpContinueSuccess"),
     SSPR_START_SUCCESS("SSPRStartSuccess"),
     SSPR_CONTINUE_SUCCESS("SSPRContinueSuccess"),
     SSPR_SUBMIT_SUCCESS("SSPRSubmitSuccess"),
