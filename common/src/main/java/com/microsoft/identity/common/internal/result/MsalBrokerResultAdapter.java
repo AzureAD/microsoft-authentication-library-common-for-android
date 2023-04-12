@@ -394,6 +394,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         if (OAuth2ErrorCode.INTERACTION_REQUIRED.equalsIgnoreCase(errorCode) ||
                 OAuth2ErrorCode.INVALID_GRANT.equalsIgnoreCase(errorCode) ||
                 ErrorStrings.INVALID_BROKER_REFRESH_TOKEN.equalsIgnoreCase(errorCode) ||
+                ErrorStrings.NO_ACCOUNT_FOUND.equalsIgnoreCase(errorCode) ||
                 ErrorStrings.NO_TOKENS_FOUND.equalsIgnoreCase(errorCode)) {
 
             Logger.warn(methodTag, "Received a UIRequired exception from Broker : " + errorCode);
