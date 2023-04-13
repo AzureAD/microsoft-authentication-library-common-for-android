@@ -86,6 +86,12 @@ public class AuthorityDeserializer implements JsonDeserializer<Authority> {
                             "Type: ADFS"
                     );
                     return context.deserialize(authorityObject, ActiveDirectoryFederationServicesAuthority.class);
+                case "CIAM":
+                    Logger.verbose(
+                            TAG + methodName,
+                            "Type: CIAM"
+                    );
+                    return context.deserialize(authorityObject, CIAMAuthority.class);
                 default:
                     Logger.verbose(
                             TAG + methodName,

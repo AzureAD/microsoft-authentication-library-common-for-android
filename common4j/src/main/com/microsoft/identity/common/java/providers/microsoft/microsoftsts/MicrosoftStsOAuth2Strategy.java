@@ -46,6 +46,8 @@ import com.microsoft.identity.common.java.dto.IAccountRecord;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.exception.ServiceException;
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightManager;
 import com.microsoft.identity.common.java.logging.DiagnosticContext;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.net.HttpClient;
@@ -66,6 +68,8 @@ import com.microsoft.identity.common.java.providers.oauth2.IAuthorizationStrateg
 import com.microsoft.identity.common.java.providers.oauth2.IDToken;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters;
+import com.microsoft.identity.common.java.providers.oauth2.OpenIdProviderConfiguration;
+import com.microsoft.identity.common.java.providers.oauth2.OpenIdProviderConfigurationClient;
 import com.microsoft.identity.common.java.providers.oauth2.TokenErrorResponse;
 import com.microsoft.identity.common.java.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
@@ -82,6 +86,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -89,7 +94,6 @@ import java.util.UUID;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import io.opentelemetry.api.trace.Span;
 import lombok.NonNull;
 
 // Suppressing rawtype warnings due to the generic type AuthorizationStrategy, AuthorizationResult, AuthorizationResultFactory and MicrosoftAuthorizationRequest
@@ -121,6 +125,7 @@ public class MicrosoftStsOAuth2Strategy
     private static final String RESOURCE_DEFAULT_SCOPE = "/.default";
 
     private final HttpClient httpClient = UrlConnectionHttpClient.getDefaultInstance();
+    private OpenIdProviderConfiguration mOpenIdProviderConfiguration;
 
     /**
      * Constructor of MicrosoftStsOAuth2Strategy.
@@ -133,6 +138,9 @@ public class MicrosoftStsOAuth2Strategy
                                       @NonNull final OAuth2StrategyParameters parameters) throws ClientException {
         super(config, parameters);
         setTokenEndpoint(config.getTokenEndpoint().toString());
+        if (parameters.isUsingOpenIdConfiguration()){
+            loadOpenIdProviderConfiguration();
+        }
     }
 
     /**
@@ -307,11 +315,11 @@ public class MicrosoftStsOAuth2Strategy
             builder.setSlice(mConfig.getSlice());
         }
 
-
         builder.setLibraryName(DiagnosticContext.INSTANCE.getRequestContext().get(PRODUCT));
         builder.setLibraryVersion(Device.getProductVersion());
         builder.setFlightParameters(mConfig.getFlightParameters());
         builder.setMultipleCloudAware(mConfig.getMultipleCloudsSupported());
+        builder.setOpenIdProviderConfiguration(mOpenIdProviderConfiguration);
 
         return builder;
     }
@@ -619,10 +627,23 @@ public class MicrosoftStsOAuth2Strategy
                     tokenResponse.setCliTelemSubErrorCode(cliTelemInfo.getServerSubErrorCode());
                 }
             }
-
-            SpanExtension.current().setAttribute(
-                    AttributeName.ccs_request_id.name(),
-                    response.getHeaderValue(XMS_CCS_REQUEST_ID, 0));
+            final String ccsRequestId = response.getHeaderValue(XMS_CCS_REQUEST_ID, 0);
+            if (null != ccsRequestId){
+                if (CommonFlightManager.isFlightEnabled(CommonFlight.EXPOSE_CCS_REQUEST_ID_IN_TOKENRESPONSE)){
+                    if (null != tokenResponse){
+                        final Map<String, String> mapWithAdditionalEntry = new HashMap<String, String>();
+                        mapWithAdditionalEntry.put(XMS_CCS_REQUEST_ID, ccsRequestId);
+                        if (null != tokenResponse.getExtraParameters()){
+                            for (final Map.Entry<String, String> entry : tokenResponse.getExtraParameters()){
+                                mapWithAdditionalEntry.put(entry.getKey(), entry.getValue());
+                            }
+                        }
+                        tokenResponse.setExtraParameters(mapWithAdditionalEntry.entrySet());
+                    }
+                }
+                SpanExtension.current().setAttribute(
+                        AttributeName.ccs_request_id.name(), ccsRequestId);
+            }
         }
 
         return result;
@@ -808,5 +829,44 @@ public class MicrosoftStsOAuth2Strategy
         }
 
         return deviceKid.equals(atKid);
+    }
+
+    /**
+     * Using this method to load the {@link OpenIdProviderConfiguration}
+     * This will cause the strategy to fetch the authorization endpoint from OpenId Configuration rather
+     * than generating one with the default authorization endpoint
+     */
+    private void loadOpenIdProviderConfiguration() {
+        try {
+            final OpenIdProviderConfigurationClient client =
+                    new OpenIdProviderConfigurationClient();
+            mOpenIdProviderConfiguration = client.loadOpenIdProviderConfigurationFromAuthority(mConfig.getAuthorityUrl().toString());
+        } catch (ServiceException e) {
+            Logger.error(
+                    TAG,
+                    "There was a problem with loading the openIdConfiguration",
+                    e
+            );
+        }
+    }
+
+    /**
+     * Using this method to load the {@link OpenIdProviderConfiguration} with extra parameters
+     * This will cause the strategy to fetch the authorization endpoint from OpenId Configuration rather
+     * than generating one with the default authorization endpoint
+     */
+    @SuppressFBWarnings
+    private void loadOpenIdProviderConfiguration(@NonNull final String extraParams) {
+        try {
+            final OpenIdProviderConfigurationClient client =
+                    new OpenIdProviderConfigurationClient();
+            mOpenIdProviderConfiguration = client.loadOpenIdProviderConfigurationFromAuthorityWithExtraParams(mConfig.getAuthorityUrl().toString(), extraParams);
+        } catch (ServiceException e) {
+            Logger.error(
+                    TAG,
+                    "There was a problem with loading the openIdConfiguration",
+                    e
+            );
+        }
     }
 }

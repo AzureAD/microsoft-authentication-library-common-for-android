@@ -22,23 +22,23 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.authorities;
 
-import lombok.NonNull;
+import static com.microsoft.identity.common.java.authorities.AllAccounts.ALL_ACCOUNTS_TENANT_ID;
 
 import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ServiceException;
+import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
 import com.microsoft.identity.common.java.providers.oauth2.OpenIdProviderConfiguration;
 import com.microsoft.identity.common.java.providers.oauth2.OpenIdProviderConfigurationClient;
-import com.microsoft.identity.common.java.util.StringUtil;
-import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.util.CommonURIBuilder;
+import com.microsoft.identity.common.java.util.StringUtil;
 
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Locale;
 
-import static com.microsoft.identity.common.java.authorities.AllAccounts.ALL_ACCOUNTS_TENANT_ID;
+import lombok.NonNull;
 
 public abstract class AzureActiveDirectoryAudience {
 
@@ -54,9 +54,9 @@ public abstract class AzureActiveDirectoryAudience {
     public static final String MSA_MEGA_TENANT_ID = "9188040d-6c67-4c5b-b112-36a304b66dad";
 
     public String getCloudUrl() {
-        if(mCloudUrl == null){
+        if (mCloudUrl == null) {
             return AzureActiveDirectory.getDefaultCloudUrl();
-        }else {
+        } else {
             return mCloudUrl;
         }
     }
@@ -71,9 +71,8 @@ public abstract class AzureActiveDirectoryAudience {
 
 
     /**
-     *
      * Must be called on a worker thread.
-     *
+     * <p>
      * Method which queries the {@link OpenIdProviderConfiguration}
      * to get tenant UUID for the authority with tenant alias.
      *
@@ -132,6 +131,7 @@ public abstract class AzureActiveDirectoryAudience {
     /**
      * Util method which returns true if the tenant alias is "common" ,
      * "organizations" or "consumers" indicating that it's the user's home tenant
+     *
      * @param tenantId
      * @return
      */
@@ -141,7 +141,7 @@ public abstract class AzureActiveDirectoryAudience {
                 || tenantId.equalsIgnoreCase(ORGANIZATIONS);
     }
 
-    private static OpenIdProviderConfiguration  loadOpenIdProviderConfigurationMetadata(
+    private static OpenIdProviderConfiguration loadOpenIdProviderConfigurationMetadata(
             @NonNull final String requestAuthority) throws ServiceException, ClientException {
         final String methodName = ":loadOpenIdProviderConfigurationMetadata";
 
@@ -150,14 +150,9 @@ public abstract class AzureActiveDirectoryAudience {
                 "Loading OpenId Provider Metadata..."
         );
 
-        try {
-            final OpenIdProviderConfigurationClient client =
-                    new OpenIdProviderConfigurationClient(requestAuthority);
-            return client.loadOpenIdProviderConfiguration();
-        } catch (final URISyntaxException e) {
-            throw new ClientException(ClientException.MALFORMED_URL,
-                    "Failed to construct OpenIdProviderConfigurationClient", e);
-        }
+        final OpenIdProviderConfigurationClient client =
+                new OpenIdProviderConfigurationClient();
+        return client.loadOpenIdProviderConfigurationFromAuthority(requestAuthority);
     }
 
     public void setTenantId(String tenantId) {
