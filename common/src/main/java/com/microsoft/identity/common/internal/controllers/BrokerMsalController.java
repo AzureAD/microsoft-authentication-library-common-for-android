@@ -24,8 +24,9 @@ package com.microsoft.identity.common.internal.controllers;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CLIENT_ADVERTISED_MAXIMUM_BP_VERSION_KEY;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CLIENT_CONFIGURED_MINIMUM_BP_VERSION_KEY;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CLIENT_MAX_PROTOCOL_VERSION;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.MSAL_TO_BROKER_PROTOCOL_NAME;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.MSAL_TO_BROKER_PROTOCOL_VERSION_CODE;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.LATEST_MSAL_TO_BROKER_PROTOCOL_VERSION_CODE;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_ACQUIRE_TOKEN_SILENT;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_GENERATE_SHR;
@@ -208,7 +209,7 @@ public class BrokerMsalController extends BaseController {
                  final @Nullable String minRequestedVersion) throws BaseException {
 
         final String cachedProtocolVersion = mHelloCache.tryGetNegotiatedProtocolVersion(
-                minRequestedVersion, MSAL_TO_BROKER_PROTOCOL_VERSION_CODE);
+                minRequestedVersion, CLIENT_MAX_PROTOCOL_VERSION);
 
         if (!StringUtil.isEmpty(cachedProtocolVersion)) {
             return cachedProtocolVersion;
@@ -217,7 +218,7 @@ public class BrokerMsalController extends BaseController {
         final Bundle bundle = new Bundle();
         bundle.putString(
                 CLIENT_ADVERTISED_MAXIMUM_BP_VERSION_KEY,
-                MSAL_TO_BROKER_PROTOCOL_VERSION_CODE
+                CLIENT_MAX_PROTOCOL_VERSION
         );
 
         if (!StringUtil.isEmpty(minRequestedVersion)) {
@@ -239,7 +240,7 @@ public class BrokerMsalController extends BaseController {
 
         mHelloCache.saveNegotiatedProtocolVersion(
                 minRequestedVersion,
-                MSAL_TO_BROKER_PROTOCOL_VERSION_CODE,
+                CLIENT_MAX_PROTOCOL_VERSION,
                 negotiatedProtocolVersion);
 
         return negotiatedProtocolVersion;
