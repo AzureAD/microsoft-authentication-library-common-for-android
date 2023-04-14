@@ -69,7 +69,6 @@ public class OnDeviceCertBasedAuthChallengeHandler extends AbstractCertBasedAuth
     @Override
     public Void processChallenge(ClientCertRequest request) {
         final String methodTag = TAG + ":processChallenge";
-
         KeyChain.choosePrivateKeyAlias(mActivity, new KeyChainAliasCallback() {
                     @Override
                     public void alias(String alias) {

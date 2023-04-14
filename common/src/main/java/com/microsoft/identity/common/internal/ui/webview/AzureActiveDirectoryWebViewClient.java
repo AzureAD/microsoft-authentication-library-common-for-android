@@ -80,7 +80,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     public static final String ERROR = "error";
     public static final String ERROR_SUBCODE = "error_subcode";
     public static final String ERROR_DESCRIPTION = "error_description";
-    private static final String ACCEPTABLE_ISSUER = "CN=MS-Organization-Access";
+    private static final String DEVICE_CERT_ISSUER = "CN=MS-Organization-Access";
     private final String mRedirectUrl;
     private final CertBasedAuthFactory mCertBasedAuthFactory;
     private AbstractCertBasedAuthChallengeHandler mCertBasedAuthChallengeHandler;
@@ -463,16 +463,16 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     public void onReceivedClientCertRequest(@NonNull final WebView view,
                                             @NonNull final ClientCertRequest clientCertRequest) {
         final String methodTag = TAG + ":onReceivedClientCertRequest";
+        // When server sends null or empty issuers, we'll continue with CBA.
+        // In the case where ADFS sends a clientTLS device auth request, we don't handle that in CBA.
+        // This type of request will have a particular issuer, so if that issuer is found, we will
+        //  immediately cancel the ClientCertRequest.
         final Principal[] acceptableCertIssuers = clientCertRequest.getPrincipals();
-
-        // When ADFS server sends null or empty issuers, we'll continue with cert prompt.
         if (acceptableCertIssuers != null) {
             for (final Principal issuer : acceptableCertIssuers) {
-                if (issuer.getName().contains(ACCEPTABLE_ISSUER)) {
-                    //Checking if received acceptable issuers contain "CN=MS-Organization-Access"
-                    final String message = "Cancelling the TLS request, not respond to TLS challenge triggered by device authentication.";
+                if (issuer.getName().contains(DEVICE_CERT_ISSUER)) {
+                    final String message = "Cancelling the TLS request, not responding to TLS challenge triggered by device authentication.";
                     Logger.info(methodTag, message);
-                    //mTelemetryHelper.setResultFailure(message);
                     clientCertRequest.cancel();
                     return;
                 }
