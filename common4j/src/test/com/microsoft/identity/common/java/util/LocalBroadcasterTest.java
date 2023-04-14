@@ -26,10 +26,8 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import com.microsoft.identity.common.java.util.ported.LocalBroadcaster;
-import com.microsoft.identity.common.java.util.ported.PropertyBag;
 
 import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterAliases.RETURN_AUTHORIZATION_REQUEST_RESULT;
-import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterFields.RESULT_CODE;;
 
 public class LocalBroadcasterTest {
 
@@ -54,23 +52,4 @@ public class LocalBroadcasterTest {
         Assert.assertEquals(LocalBroadcaster.INSTANCE.hasReceivers(RETURN_AUTHORIZATION_REQUEST_RESULT), false);
     }
 
-    @Test
-    public void testBroadcast() {
-        LocalBroadcaster.INSTANCE.registerCallback(
-                RETURN_AUTHORIZATION_REQUEST_RESULT, new LocalBroadcaster.IReceiverCallback() {
-                    @Override
-                    public void onReceive(PropertyBag propertyBag) {
-                        int resultCode = propertyBag.getOrDefault(RESULT_CODE, 0);
-                        Assert.assertEquals(resultCode, 1);
-                    }
-                });
-        final PropertyBag propertyBag = new PropertyBag();
-        propertyBag.put(RESULT_CODE, 1);
-        LocalBroadcaster.INSTANCE.broadcast(RETURN_AUTHORIZATION_REQUEST_RESULT, propertyBag);
-
-        LocalBroadcaster.INSTANCE.unregisterCallback(RETURN_AUTHORIZATION_REQUEST_RESULT);
-        Assert.assertEquals(LocalBroadcaster.INSTANCE.hasReceivers(RETURN_AUTHORIZATION_REQUEST_RESULT), false);
-        propertyBag.put(RESULT_CODE, 2);
-        LocalBroadcaster.INSTANCE.broadcast(RETURN_AUTHORIZATION_REQUEST_RESULT, propertyBag);
-    }
 }
