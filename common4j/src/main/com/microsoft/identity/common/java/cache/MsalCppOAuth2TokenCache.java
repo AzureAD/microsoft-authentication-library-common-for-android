@@ -85,9 +85,7 @@ public class MsalCppOAuth2TokenCache
     }
 
     /**
-     * Factory method for creating an instance of MsalCppOAuth2TokenCache
-     * <p>
-     * NOTE: Currently this is configured for AAD v2 as the only IDP
+     * Factory method for creating an instance of MsalCppOAuth2TokenCache.
      *
      * @param platformComponents The Application Context
      * @return An instance of the MsalCppOAuth2TokenCache.
@@ -95,7 +93,20 @@ public class MsalCppOAuth2TokenCache
     // Suppressing unchecked warning as the return type requiring generic parameter which is not provided
     @SuppressWarnings(WarningType.unchecked_warning)
     public static MsalCppOAuth2TokenCache create(@NonNull final IPlatformComponents platformComponents) {
-        final MsalOAuth2TokenCache msalOAuth2TokenCache = MsalOAuth2TokenCache.create(platformComponents);
+        return create(platformComponents, false);
+    }
+
+    /**
+     * Factory method for creating an instance of MsalCppOAuth2TokenCache.
+     *
+     * @param platformComponents The Application Context
+     * @param useInMemoryCache Opt-in to caching layer that holds account and credential objects in memory
+     * @return An instance of the MsalCppOAuth2TokenCache.
+     */
+    // Suppressing unchecked warning as the return type requiring generic parameter which is not provided
+    @SuppressWarnings(WarningType.unchecked_warning)
+    public static MsalCppOAuth2TokenCache create(@NonNull final IPlatformComponents platformComponents, boolean useInMemoryCache) {
+        final MsalOAuth2TokenCache msalOAuth2TokenCache = MsalOAuth2TokenCache.create(platformComponents, useInMemoryCache);
 
         // Suppressing unchecked warnings due to the generic types not provided while creating object of MsalCppOAuth2TokenCache
         @SuppressWarnings(WarningType.unchecked_warning)

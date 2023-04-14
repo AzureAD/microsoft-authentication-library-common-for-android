@@ -101,7 +101,7 @@ public class OpenIdProviderConfigurationClient {
                     .setHost(WELL_KNOWN_CONFIG_HOST)
                     .setPathSegments(tenantIdentifier)
                     .build().toString();
-            return loadOpenIdProviderConfigurationInternal(tenantedAuthorityUrl);
+            return loadOpenIdProviderConfigurationInternal(tenantedAuthorityUrl, null);
         } catch (final URISyntaxException e) {
             throw new ServiceException(
                     OPENID_PROVIDER_CONFIGURATION_FAILED_TO_LOAD,
@@ -118,7 +118,7 @@ public class OpenIdProviderConfigurationClient {
      */
     public synchronized OpenIdProviderConfiguration loadOpenIdProviderConfigurationFromAuthority(@NonNull final String authorityUrl)
             throws ServiceException {
-        return loadOpenIdProviderConfigurationInternal(authorityUrl);
+        return loadOpenIdProviderConfigurationInternal(authorityUrl, null);
     }
 
     /**
@@ -126,12 +126,28 @@ public class OpenIdProviderConfigurationClient {
      *
      * @return OpenIdProviderConfiguration
      */
-    private synchronized OpenIdProviderConfiguration loadOpenIdProviderConfigurationInternal(@NonNull final String tenantedAuthorityString)
+    public synchronized OpenIdProviderConfiguration loadOpenIdProviderConfigurationFromAuthorityWithExtraParams(@NonNull final String authorityUrl, @NonNull final String extraParams)
+            throws ServiceException {
+        return loadOpenIdProviderConfigurationInternal(authorityUrl, extraParams);
+    }
+
+    /**
+     * Get OpenID provider configuration.
+     *
+     * @return OpenIdProviderConfiguration
+     */
+    private synchronized OpenIdProviderConfiguration loadOpenIdProviderConfigurationInternal(@NonNull final String tenantedAuthorityString, final String extraParams)
             throws ServiceException {
         final String methodName = ":loadOpenIdProviderConfiguration";
 
         try {
-            final URI configUrl = new URI(sanitize(tenantedAuthorityString) + WELL_KNOWN_CONFIG_PATH);
+            final String uriString;
+            if (extraParams != null) {
+                uriString = sanitize(tenantedAuthorityString) + WELL_KNOWN_CONFIG_PATH + extraParams;
+            } else {
+                uriString = sanitize(tenantedAuthorityString) + WELL_KNOWN_CONFIG_PATH;
+            }
+            final URI configUrl = new URI(uriString);
 
             // Check first for a cached copy...
             final OpenIdProviderConfiguration cacheResult = sConfigCache.get(configUrl);
