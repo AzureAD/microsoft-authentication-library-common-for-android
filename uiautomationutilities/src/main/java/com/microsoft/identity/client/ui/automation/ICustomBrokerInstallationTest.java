@@ -22,45 +22,89 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation;
 
+import com.microsoft.identity.client.ui.automation.broker.BrokerCompanyPortal;
+import com.microsoft.identity.client.ui.automation.broker.BrokerHost;
+import com.microsoft.identity.client.ui.automation.broker.BrokerLTW;
+import com.microsoft.identity.client.ui.automation.broker.BrokerMicrosoftAuthenticator;
+
 /**
- * An interface to facilitate testing a very specific broker installation order with support for
- * old and current version of the broker.
+ * An interface to facilitate testing a very specific app installation order with support for
+ * old and current version of the app.
  */
 public interface ICustomBrokerInstallationTest {
 
     /**
      * Install old/legacy BrokerHost
      */
-    void installOldBrokerHost();
+    default BrokerHost installOldBrokerHost(){
+        final BrokerHost brokerHost = new BrokerHost(BrokerHost.OLD_BROKER_HOST_APK,
+                BrokerHost.BROKER_HOST_APK);
+        brokerHost.install();
+        return brokerHost;
+    }
     /**
      * Install updated BrokerHost
      */
-    void installBrokerHost();
+    default BrokerHost installBrokerHost(){
+        final BrokerHost brokerHost = new BrokerHost();
+        brokerHost.install();
+        return brokerHost;
+    }
 
     /**
      * Install old/legacy Authenticator
      */
-    void installOldAuthenticator();
+    default BrokerMicrosoftAuthenticator installOldAuthenticator(){
+        final BrokerMicrosoftAuthenticator authenticator = new BrokerMicrosoftAuthenticator(BrokerMicrosoftAuthenticator.OLD_AUTHENTICATOR_APK,
+                BrokerMicrosoftAuthenticator.AUTHENTICATOR_APK);
+        authenticator.install();
+        return authenticator;
+    }
     /**
      * Install updated Authenticator
      */
-    void installAuthenticator();
+    default BrokerMicrosoftAuthenticator installAuthenticator(){
+        final BrokerMicrosoftAuthenticator authenticator = new BrokerMicrosoftAuthenticator();
+        authenticator.install();
+        return authenticator;
+    }
 
     /**
      * Install old/legacy Company Portal
      */
-    void installOldCompanyPortal();
+    default BrokerCompanyPortal installOldCompanyPortal(){
+        final BrokerCompanyPortal companyPortal = new BrokerCompanyPortal(BrokerCompanyPortal.OLD_COMPANY_PORTAL_APK,
+                BrokerCompanyPortal.COMPANY_PORTAL_APK);
+        companyPortal.install();
+        return companyPortal;
+    }
     /**
      * Install updated Company Portal
      */
-    void installCompanyPortal();
+    default BrokerCompanyPortal installCompanyPortal(){
+        final BrokerCompanyPortal companyPortal = new BrokerCompanyPortal();
+        companyPortal.install();
+        return companyPortal;
+    }
 
     /**
      * Install old/legacy LTW
      */
-    void installOldLtw();
+    default BrokerLTW installOldLtw(){
+        final BrokerLTW ltw = new BrokerLTW(BrokerLTW.OLD_BROKER_LTW_APK,
+                BrokerLTW.BROKER_LTW_APK);
+        ltw.install();
+        return ltw;
+    }
     /**
      * Install updated LTW
      */
-    void installLtw();
+    default BrokerLTW installLtw(){
+        final BrokerLTW ltw = new BrokerLTW();
+        ltw.install();
+        return ltw;
+    }
+
+    // TODO: LTW folks, expand this to include msaltestapp, adaltestapp, oneuathtestapp
+    
 }

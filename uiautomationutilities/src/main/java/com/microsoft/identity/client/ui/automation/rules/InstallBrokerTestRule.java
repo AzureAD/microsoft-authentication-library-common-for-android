@@ -58,7 +58,7 @@ public class InstallBrokerTestRule implements TestRule {
                 if (BuildConfig.PRE_INSTALL_LTW) {
                     final BrokerLTW brokerLTW = new BrokerLTW();
                     // Commenting this out until LTW is supported (need package name and an apk)
-                    // brokerLTW.install();
+                     brokerLTW.install();
                 }
 
                 broker.install();
