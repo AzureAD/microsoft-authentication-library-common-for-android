@@ -56,6 +56,7 @@ import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.net.URISyntaxException;
+import java.security.Principal;
 import java.util.Locale;
 import java.util.Map;
 
@@ -79,6 +80,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     public static final String ERROR = "error";
     public static final String ERROR_SUBCODE = "error_subcode";
     public static final String ERROR_DESCRIPTION = "error_description";
+    private static final String ACCEPTABLE_ISSUER = "CN=MS-Organization-Access";
     private final String mRedirectUrl;
     private final CertBasedAuthFactory mCertBasedAuthFactory;
     private AbstractCertBasedAuthChallengeHandler mCertBasedAuthChallengeHandler;
@@ -460,6 +462,23 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     @Override
     public void onReceivedClientCertRequest(@NonNull final WebView view,
                                             @NonNull final ClientCertRequest clientCertRequest) {
+        final String methodTag = TAG + ":onReceivedClientCertRequest";
+        final Principal[] acceptableCertIssuers = clientCertRequest.getPrincipals();
+
+        // When ADFS server sends null or empty issuers, we'll continue with cert prompt.
+        if (acceptableCertIssuers != null) {
+            for (final Principal issuer : acceptableCertIssuers) {
+                if (issuer.getName().contains(ACCEPTABLE_ISSUER)) {
+                    //Checking if received acceptable issuers contain "CN=MS-Organization-Access"
+                    final String message = "Cancelling the TLS request, not respond to TLS challenge triggered by device authentication.";
+                    Logger.info(methodTag, message);
+                    //mTelemetryHelper.setResultFailure(message);
+                    clientCertRequest.cancel();
+                    return;
+                }
+            }
+        }
+
         if (mCertBasedAuthChallengeHandler != null) {
             mCertBasedAuthChallengeHandler.cleanUp();
         }

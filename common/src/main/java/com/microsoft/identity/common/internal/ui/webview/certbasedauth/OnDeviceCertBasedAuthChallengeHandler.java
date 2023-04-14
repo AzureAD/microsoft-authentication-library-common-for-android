@@ -35,7 +35,6 @@ import androidx.annotation.RequiresApi;
 import com.microsoft.identity.common.java.opentelemetry.ICertBasedAuthTelemetryHelper;
 import com.microsoft.identity.common.logging.Logger;
 
-import java.security.Principal;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 
@@ -45,7 +44,6 @@ import java.security.cert.X509Certificate;
  */
 public class OnDeviceCertBasedAuthChallengeHandler extends AbstractCertBasedAuthChallengeHandler {
     private static final String TAG = OnDeviceCertBasedAuthChallengeHandler.class.getSimpleName();
-    private static final String ACCEPTABLE_ISSUER = "CN=MS-Organization-Access";
     private final Activity mActivity;
 
     /**
@@ -71,21 +69,6 @@ public class OnDeviceCertBasedAuthChallengeHandler extends AbstractCertBasedAuth
     @Override
     public Void processChallenge(ClientCertRequest request) {
         final String methodTag = TAG + ":processChallenge";
-        final Principal[] acceptableCertIssuers = request.getPrincipals();
-
-        // When ADFS server sends null or empty issuers, we'll continue with cert prompt.
-        if (acceptableCertIssuers != null) {
-            for (final Principal issuer : acceptableCertIssuers) {
-                if (issuer.getName().contains(ACCEPTABLE_ISSUER)) {
-                    //Checking if received acceptable issuers contain "CN=MS-Organization-Access"
-                    final String message = "Cancelling the TLS request, not respond to TLS challenge triggered by device authentication.";
-                    Logger.info(methodTag, message);
-                    mTelemetryHelper.setResultFailure(message);
-                    request.cancel();
-                    return null;
-                }
-            }
-        }
 
         KeyChain.choosePrivateKeyAlias(mActivity, new KeyChainAliasCallback() {
                     @Override
