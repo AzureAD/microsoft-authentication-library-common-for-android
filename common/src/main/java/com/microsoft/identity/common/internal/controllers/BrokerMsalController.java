@@ -26,7 +26,6 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CLIENT_CONFIGURED_MINIMUM_BP_VERSION_KEY;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CLIENT_MAX_PROTOCOL_VERSION;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.MSAL_TO_BROKER_PROTOCOL_NAME;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.LATEST_MSAL_TO_BROKER_PROTOCOL_VERSION_CODE;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_ACQUIRE_TOKEN_SILENT;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_GENERATE_SHR;
@@ -52,9 +51,9 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
-import com.microsoft.identity.common.components.AndroidPlatformComponentsFactory;
 import com.microsoft.identity.common.PropertyBagUtil;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
+import com.microsoft.identity.common.components.AndroidPlatformComponentsFactory;
 import com.microsoft.identity.common.internal.broker.BrokerActivity;
 import com.microsoft.identity.common.internal.broker.BrokerResult;
 import com.microsoft.identity.common.internal.broker.BrokerValidator;
@@ -132,6 +131,22 @@ public class BrokerMsalController extends BaseController {
     private final Context mApplicationContext;
 
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+    public BrokerMsalController(@NonNull final Context applicationContext,
+                                @NonNull final IPlatformComponents components,
+                                @NonNull final String activeBrokerPackageName,
+                                @NonNull final List<IIpcStrategy> ipcStrategies) {
+        mComponents = components;
+        mApplicationContext = applicationContext;
+        mActiveBrokerPackageName = activeBrokerPackageName;
+        if (StringUtil.isEmpty(mActiveBrokerPackageName)) {
+            throw new IllegalStateException("Active Broker not found. This class should not be initialized.");
+        }
+
+        mBrokerOperationExecutor = new BrokerOperationExecutor(ipcStrategies);
+        mHelloCache = getHelloCache();
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     public BrokerMsalController(@NonNull final Context applicationContext, @NonNull final IPlatformComponents components) {
         mComponents = components;
         mApplicationContext = applicationContext;
@@ -207,9 +222,24 @@ public class BrokerMsalController extends BaseController {
     public @NonNull
     String hello(final @NonNull IIpcStrategy strategy,
                  final @Nullable String minRequestedVersion) throws BaseException {
+        return hello(strategy, minRequestedVersion, CLIENT_MAX_PROTOCOL_VERSION);
+    }
+
+    /**
+     * MSAL-Broker handshake operation.
+     *
+     * @param strategy            an {@link IIpcStrategy}
+     * @param minRequestedVersion the minimum allowed broker protocol version, may be null.
+     * @return a protocol version negotiated by MSAL and Broker.
+     */
+    @VisibleForTesting
+    public @NonNull
+    String hello(final @NonNull IIpcStrategy strategy,
+                 final @Nullable String minRequestedVersion,
+                 final @NonNull String clientMaxProtocolVersion) throws BaseException {
 
         final String cachedProtocolVersion = mHelloCache.tryGetNegotiatedProtocolVersion(
-                minRequestedVersion, CLIENT_MAX_PROTOCOL_VERSION);
+                minRequestedVersion, clientMaxProtocolVersion);
 
         if (!StringUtil.isEmpty(cachedProtocolVersion)) {
             return cachedProtocolVersion;
@@ -218,7 +248,7 @@ public class BrokerMsalController extends BaseController {
         final Bundle bundle = new Bundle();
         bundle.putString(
                 CLIENT_ADVERTISED_MAXIMUM_BP_VERSION_KEY,
-                CLIENT_MAX_PROTOCOL_VERSION
+                clientMaxProtocolVersion
         );
 
         if (!StringUtil.isEmpty(minRequestedVersion)) {
@@ -240,7 +270,7 @@ public class BrokerMsalController extends BaseController {
 
         mHelloCache.saveNegotiatedProtocolVersion(
                 minRequestedVersion,
-                CLIENT_MAX_PROTOCOL_VERSION,
+                clientMaxProtocolVersion,
                 negotiatedProtocolVersion);
 
         return negotiatedProtocolVersion;
@@ -968,16 +998,17 @@ public class BrokerMsalController extends BaseController {
 
     /**
      * Verifies if the token parameters are supported by the required broker protocol version
+     *
      * @param parameters Token Parameters for verify
      * @throws ClientException if the token parameters are not supported
      */
     private void verifyTokenParametersAreSupported(@NonNull final TokenCommandParameters parameters) throws ClientException {
         final String requiredProtocolVersion = parameters.getRequiredBrokerProtocolVersion();
         if (parameters.getAuthenticationScheme() instanceof PopAuthenticationSchemeWithClientKeyInternal
-                && !BrokerProtocolVersionUtil.canSupportPopAuthenticationSchemeWithClientKey(requiredProtocolVersion)){
+                && !BrokerProtocolVersionUtil.canSupportPopAuthenticationSchemeWithClientKey(requiredProtocolVersion)) {
             throw new ClientException(ClientException.AUTH_SCHEME_NOT_SUPPORTED,
                     "The min broker protocol version for PopAuthenticationSchemeWithClientKey should be equal or more than 11.0."
-            + " Current required version is set to: " + parameters.getRequiredBrokerProtocolVersion());
+                            + " Current required version is set to: " + parameters.getRequiredBrokerProtocolVersion());
         }
     }
 }
