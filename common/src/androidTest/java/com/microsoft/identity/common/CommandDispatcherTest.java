@@ -387,6 +387,8 @@ public class CommandDispatcherTest {
             // Should be rejected to get scheduled
             Assert.assertTrue(e instanceof RejectedExecutionException);
         }
+        // Restart the silentRequestExecutor again
+        CommandDispatcher.resetSilentRequestExecutor();
     }
 
     @Test

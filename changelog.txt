@@ -1,3 +1,7 @@
+V.NEXT
+----------
+- [PATCH] Fix Error Type thrown for NO_ACCOUNT_FOUND (#2006)
+
 V.11.0.0
 ----------
 - [MINOR] Add CommandDispatcher methods to stop and reset silent request executor. (#2000)
@@ -11,6 +15,7 @@ V.11.0.0
 - [MAJOR] Some improvements to Open Id Provider Configuration Client (#1990)
 - [PATCH] Revert 'Write back read successes to cache and stop extra lookups in getAll (#1927)' (#1997)
 - [MINOR] Optional support for in-memory cache of all credentials and accountrecords (#1929)
+- [MINOR] Changes to support MSA accounts in Broker (#2003)
 
 V.10.1.1
 ----------
