@@ -136,19 +136,17 @@ public final class PackageUtils {
      * @throws CertificateEncodingException if a certificate was corrupt.
      * @throws ClientException if no valid hash was found in the list.
      */
-    public static final String verifySignatureHash(final @NonNull List<X509Certificate> certs,
+    public static String verifySignatureHash(final @NonNull List<X509Certificate> certs,
                                              final @NonNull Iterator<String> validHashes)
             throws NoSuchAlgorithmException,
             CertificateEncodingException, ClientException {
-        Log.i("verifySignatureHash: ", "Starting signature hash verification (SHA-1)");
-        long startTime = System.nanoTime();
         final StringBuilder hashListStringBuilder = new StringBuilder();
 
         for (final X509Certificate x509Certificate : certs) {
-            getSignatureHash(x509Certificate,"SHA");
+/*            getSignatureHash(x509Certificate,"SHA");
             getSignatureHash(x509Certificate,"SHA-256");
-            getSignatureHash(x509Certificate,"SHA-512");
-            final MessageDigest messageDigest = MessageDigest.getInstance("SHA");
+            getSignatureHash(x509Certificate,"SHA-512");*/
+            final MessageDigest messageDigest = MessageDigest.getInstance("SHA-512");
             messageDigest.update(x509Certificate.getEncoded());
 
             // Check the hash for signer cert is the same as what we hardcoded.
@@ -169,9 +167,6 @@ public final class PackageUtils {
                     hash = convertToBase64(hash);
                 }
                 if (!TextUtils.isEmpty(hash) && hash.equals(signatureHash)) {
-                    long estimatedTime = System.nanoTime() - startTime;
-                    Log.i("verifySignatureHash: ", "End of signature hash verification (SHA-1)");
-                    Log.i("verifySignatureHash: ", "estimated time: " + estimatedTime + "ns");
                     return signatureHash;
                 }
             }

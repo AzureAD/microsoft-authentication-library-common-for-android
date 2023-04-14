@@ -33,13 +33,13 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_DEBUG_SIGNATURE;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_DEBUG_SIGNATURE_SHA512;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_RELEASE_SIGNATURE;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_RELEASE_SIGNATURE_SHA512;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_HOST_APP_PACKAGE_NAME;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_HOST_APP_SIGNATURE;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_HOST_APP_SIGNATURE_SHA512;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_APP_RELEASE_SIGNATURE;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_APP_RELEASE_SIGNATURE_SHA512;
 
 import lombok.ToString;
 
@@ -51,22 +51,22 @@ public class BrokerData {
 
     public static final BrokerData MICROSOFT_AUTHENTICATOR_DEBUG = new BrokerData(
             AZURE_AUTHENTICATOR_APP_PACKAGE_NAME,
-            AZURE_AUTHENTICATOR_APP_DEBUG_SIGNATURE
+            AZURE_AUTHENTICATOR_APP_DEBUG_SIGNATURE_SHA512
     );
 
     public static final BrokerData MICROSOFT_AUTHENTICATOR_PROD = new BrokerData(
             AZURE_AUTHENTICATOR_APP_PACKAGE_NAME,
-            AZURE_AUTHENTICATOR_APP_RELEASE_SIGNATURE
+            AZURE_AUTHENTICATOR_APP_RELEASE_SIGNATURE_SHA512
     );
 
     public static final BrokerData COMPANY_PORTAL = new BrokerData(
             COMPANY_PORTAL_APP_PACKAGE_NAME,
-            COMPANY_PORTAL_APP_RELEASE_SIGNATURE
+            COMPANY_PORTAL_APP_RELEASE_SIGNATURE_SHA512
     );
 
     public static final BrokerData BROKER_HOST = new BrokerData(
             BROKER_HOST_APP_PACKAGE_NAME,
-            BROKER_HOST_APP_SIGNATURE
+            BROKER_HOST_APP_SIGNATURE_SHA512
     );
 
     private static final Set<BrokerData> DEBUG_BROKERS = Collections.unmodifiableSet(new HashSet<BrokerData>() {{

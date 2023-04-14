@@ -1030,22 +1030,28 @@ public final class AuthenticationConstants {
         public static final String COMPANY_PORTAL_APP_RELEASE_SIGNATURE_SHA512 = "jPpMoaNvcxSLMX4yG4C3Gf86rtTqh33SqpuRKg4WOP+MnnpA52zZgvKLW76U4Cqqf68iaBk9W7k/jhciiSAtgQ==";
 
         /**
-         * Signature info for Azure authenticator app that installs authenticator
+         * Signature info for Azure authenticator release app that installs authenticator
          * component. Generated with SHA-1.
          */
         public static final String AZURE_AUTHENTICATOR_APP_RELEASE_SIGNATURE = "ho040S3ffZkmxqtQrSwpTVOn9r0=";
 
         /**
-         * Signature info for Azure authenticator app that installs authenticator
+         * Signature info for Azure authenticator release app that installs authenticator
          * component. Generated with SHA-512.
          */
         public static final String AZURE_AUTHENTICATOR_APP_RELEASE_SIGNATURE_SHA512 = "Gu8CuaYmSV5CHWd6dz3tGPXIE+YTalCVIXi5lEBXpvUgsMKoHbU9Rqou3WNRNU1tsz8pvEADTCCJ5f02fbw9qw==";
 
         /**
-         * Signature info for Azure authenticator app that installs authenticator
+         * Signature info for Azure authenticator debug app that installs authenticator
          * component. Generated with SHA-1.
          */
         public static final String AZURE_AUTHENTICATOR_APP_DEBUG_SIGNATURE = "N1jdcbbnKDr0LaFZlqdhXgm2luE=";
+
+        /**
+         * Signature info for Azure authenticator debug app that installs authenticator
+         * component. Generated with SHA-512.
+         */
+        public static final String AZURE_AUTHENTICATOR_APP_DEBUG_SIGNATURE_SHA512 = "pdAtoxfsEwbpQsIaua5Uobl5AQEjqt40aPXI7UY1lIW0NTmg0G4jHQ5T5mujSjjU06q4mEHs5hb6z/Mr0PNlmQ==";
 
         /**
          * Signature info for Broker Host app that installs authenticator
