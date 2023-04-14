@@ -34,7 +34,7 @@ import com.microsoft.identity.client.ui.automation.broker.BrokerMicrosoftAuthent
 public interface ICustomBrokerInstallationTest {
 
     /**
-     * Install old/legacy BrokerHost
+     * Install old/legacy BrokerHost.
      */
     default BrokerHost installOldBrokerHost(){
         final BrokerHost brokerHost = new BrokerHost(BrokerHost.OLD_BROKER_HOST_APK,
@@ -43,7 +43,7 @@ public interface ICustomBrokerInstallationTest {
         return brokerHost;
     }
     /**
-     * Install updated BrokerHost
+     * Install updated BrokerHost.
      */
     default BrokerHost installBrokerHost(){
         final BrokerHost brokerHost = new BrokerHost();
@@ -52,7 +52,7 @@ public interface ICustomBrokerInstallationTest {
     }
 
     /**
-     * Install old/legacy Authenticator
+     * Install old/legacy Authenticator.
      */
     default BrokerMicrosoftAuthenticator installOldAuthenticator(){
         final BrokerMicrosoftAuthenticator authenticator = new BrokerMicrosoftAuthenticator(BrokerMicrosoftAuthenticator.OLD_AUTHENTICATOR_APK,
@@ -61,7 +61,7 @@ public interface ICustomBrokerInstallationTest {
         return authenticator;
     }
     /**
-     * Install updated Authenticator
+     * Install updated Authenticator.
      */
     default BrokerMicrosoftAuthenticator installAuthenticator(){
         final BrokerMicrosoftAuthenticator authenticator = new BrokerMicrosoftAuthenticator();
@@ -70,7 +70,7 @@ public interface ICustomBrokerInstallationTest {
     }
 
     /**
-     * Install old/legacy Company Portal
+     * Install old/legacy Company Portal.
      */
     default BrokerCompanyPortal installOldCompanyPortal(){
         final BrokerCompanyPortal companyPortal = new BrokerCompanyPortal(BrokerCompanyPortal.OLD_COMPANY_PORTAL_APK,
@@ -79,7 +79,7 @@ public interface ICustomBrokerInstallationTest {
         return companyPortal;
     }
     /**
-     * Install updated Company Portal
+     * Install updated Company Portal.
      */
     default BrokerCompanyPortal installCompanyPortal(){
         final BrokerCompanyPortal companyPortal = new BrokerCompanyPortal();
@@ -88,7 +88,7 @@ public interface ICustomBrokerInstallationTest {
     }
 
     /**
-     * Install old/legacy LTW
+     * Install old/legacy LTW.
      */
     default BrokerLTW installOldLtw(){
         final BrokerLTW ltw = new BrokerLTW(BrokerLTW.OLD_BROKER_LTW_APK,
@@ -97,7 +97,7 @@ public interface ICustomBrokerInstallationTest {
         return ltw;
     }
     /**
-     * Install updated LTW
+     * Install updated LTW.
      */
     default BrokerLTW installLtw(){
         final BrokerLTW ltw = new BrokerLTW();
