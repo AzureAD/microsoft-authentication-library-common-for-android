@@ -62,7 +62,7 @@ version = getAppVersionName()
 
 task sourcesJar(type: Jar) {
     from sourceSets.main.java.srcDirs
-    classifier = 'sources'
+    archiveClassifier.set('sources')
     destinationDirectory = reporting.file("$project.buildDir/outputs/jars")
 }
 
@@ -84,7 +84,7 @@ task generateJavadoc(type: Javadoc) {
 // Task to generate javadoc.jar
 task javadocJar(type: Jar, dependsOn: generateJavadoc) {
     from javadoc.destinationDir
-    classifier 'javadoc'
+    archiveClassifier.set('javadoc')
     destinationDirectory = reporting.file("$project.buildDir/outputs/jars")
 }
 

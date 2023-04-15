@@ -39,6 +39,7 @@ if (project.hasProperty("distCommon4jVersion") && project.distCommon4jVersion !=
 boolean newBrokerDiscoveryEnabledFlag = project.hasProperty("newBrokerDiscoveryEnabledFlag")
 
 android {
+    namespace "com.microsoft.identity.common"
 
     compileSdkVersion rootProject.ext.compileSdkVersion
 
@@ -217,7 +218,7 @@ android.libraryVariants.all { variant ->
 // Create tasks to generate javadoc jar
 android.libraryVariants.all { variant ->
     task("${variant.name}JavadocJar", type: Jar, dependsOn: "${variant.name}Javadoc") {
-        classifier = 'javadoc'
+        archiveClassifier.set('javadoc')
         from tasks["${variant.name}Javadoc"].destinationDir
     }
 }
@@ -225,7 +226,7 @@ android.libraryVariants.all { variant ->
 
 task sourcesJar(type: Jar) {
     from android.sourceSets.main.java.srcDirs
-    classifier = 'sources'
+    archiveClassifier.set('sources')
     destinationDirectory = reporting.file("$project.buildDir/outputs/jar/")
 }
 
@@ -261,8 +262,8 @@ task pmd(type: Pmd) {
     source = fileTree('src/main/java')
 
     reports {
-        xml.enabled = false
-        html.enabled = true
+       // xml.enabled = false
+       // html.enabled = true
     }
 }
 
