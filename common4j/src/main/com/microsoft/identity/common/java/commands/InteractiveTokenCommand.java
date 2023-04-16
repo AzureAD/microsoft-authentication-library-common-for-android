@@ -67,7 +67,6 @@ public class InteractiveTokenCommand extends TokenCommand {
         final Span span = OTelUtility.createSpanFromParent(
                 SpanName.AcquireTokenInteractive.name(), getParameters().getSpanContext()
         );
-        span.setAttribute(AttributeName.application_name.name(), getParameters().getApplicationName());
         span.setAttribute(AttributeName.public_api_id.name(), getPublicApiId());
 
         try (final Scope scope = span.makeCurrent()) {
