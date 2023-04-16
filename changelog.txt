@@ -3,6 +3,7 @@ V.NEXT
 - [PATCH] Fix Error Type thrown for NO_ACCOUNT_FOUND (#2006)
 - [PATCH] Pulling device cert issuer check to beginning of OnReceivedClientCertRequest (#2010)
 - [MINOR] Add method to clear receiver concurrentHashMap in LocalBroadcaster (#1993)
+- [MINOR] Remove (dupe) application name from telemetry (#2011)
 
 V.11.0.0
 ----------
