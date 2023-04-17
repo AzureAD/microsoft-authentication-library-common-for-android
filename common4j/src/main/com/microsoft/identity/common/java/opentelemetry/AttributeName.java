@@ -124,5 +124,15 @@ public enum AttributeName {
     /**
      * The message accompanying an Exception.
      */
-    error_message;
+    error_message,
+
+    /**
+     * Name of the storage operation.
+     */
+    storage_operation_name,
+
+    /**
+     * Name of the storage being used..
+     */
+    storage_name
 }
