@@ -36,18 +36,19 @@ import java.util.concurrent.TimeUnit;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+/**
+ * An abstract representation of a Broker Host App. This class contains all the common
+ * functionality that can be used to interact with a Broker Host App during UI Test.
+ */
 abstract class AbstractBrokerHost {
     public final static String BROKER_HOST_APP_PACKAGE_NAME = "com.microsoft.identity.testuserapp";
     public final static String BROKER_HOST_APP_NAME = "Broker Host App";
     private final static long APP_LAUNCH_TIMEOUT = TimeUnit.SECONDS.toMillis(5);
+    // Resource id's
     private final static String HEADER_RESOURCE_ID = CommonUtils.getResourceId(BROKER_HOST_APP_PACKAGE_NAME, "text_header");
-
-    // Shared items
     protected final static String USERNAME_EDIT_TEXT = "edit_text_username";
-    // Dialog box resources id
     protected final static String DIALOG_BOX_RESOURCE_ID = "android:id/message";
     protected final static String DIALOG_BOX_OK_BUTTON_RESOURCE_ID = "android:id/button1";
-
 
     @AllArgsConstructor
     protected enum BrokerHostNavigationMenuItem {
@@ -62,6 +63,11 @@ abstract class AbstractBrokerHost {
         private final String title;
     }
 
+    /**
+     * This method clicks on the button with the given resource id
+     *
+     * @param resourceIdButton the resource id of the button to be clicked
+     */
     public void clickButton(@NonNull final String resourceIdButton) {
         final String resourceId = CommonUtils.getResourceId(
                 BROKER_HOST_APP_PACKAGE_NAME,
@@ -70,6 +76,12 @@ abstract class AbstractBrokerHost {
         UiAutomatorUtils.handleButtonClick(resourceId);
     }
 
+    /**
+     * This method fills the text box with the given resource id with the given text
+     *
+     * @param resourceEditText the resource id of the text box
+     * @param text             the text to be write in the text box
+     */
     public void fillTextBox(@NonNull final String resourceEditText, @NonNull final String text) {
         final String resourceId = CommonUtils.getResourceId(
                 BROKER_HOST_APP_PACKAGE_NAME,
@@ -78,6 +90,12 @@ abstract class AbstractBrokerHost {
         UiAutomatorUtils.handleInput(resourceId, text);
     }
 
+    /**
+     * This method reads the text from the text box with the given resource id
+     *
+     * @param resourceEditText the resource id of the text box
+     * @return the text from the text box
+     */
     public String readTextBox(@NonNull final String resourceEditText) {
         final String resourceId = CommonUtils.getResourceId(
                 BROKER_HOST_APP_PACKAGE_NAME,
@@ -91,7 +109,11 @@ abstract class AbstractBrokerHost {
         }
     }
 
-    //This method dismisses the dialog box and get the text from it
+    /**
+     * This method dismisses the dialog box and returns the text from the dialog box
+     *
+     * @return the text from the dialog box
+     */
     static public String dismissDialogBoxAndGetText() {
         // Look for the dialog box
         final UiObject dialogBox = UiAutomatorUtils.obtainUiObjectWithResourceId(
@@ -118,9 +140,11 @@ abstract class AbstractBrokerHost {
         }
     }
 
-
-    //this method validates the actual text contains the expected text
-        //AssertMessageDialogContainsText
+    /**
+     * This method dismisses the dialog box and asserts that the text from the dialog box contains the given text
+     *
+     * @param expectedText the text that is expected to be contained in the dialog box
+     */
     static protected void dismissDialogBoxAndAssertContainsText(@NonNull final String expectedText) {
         Assert.assertTrue(
                 "Could not find the string '" + expectedText + "' in the msg displayed in the dialog",
@@ -128,8 +152,16 @@ abstract class AbstractBrokerHost {
         );
     }
 
+    /**
+     * This method launches the broker host app to a specified fragment.
+     */
     public abstract void launch();
 
+    /**
+     * This method launches the broker host app to the provided fragment.
+     *
+     * @param navigationMenuItem the navigation menu item to be clicked
+     */
     static protected void launch(@NonNull final BrokerHostNavigationMenuItem navigationMenuItem) {
         final UiObject appHeader = UiAutomatorUtils.obtainUiObjectWithExactText(
                 BROKER_HOST_APP_NAME,
@@ -161,5 +193,4 @@ abstract class AbstractBrokerHost {
             throw new AssertionError(e);
         }
     }
-
 }

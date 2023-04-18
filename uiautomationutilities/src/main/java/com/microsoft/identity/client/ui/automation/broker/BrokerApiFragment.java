@@ -30,15 +30,23 @@ import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * A representation of the Broker API Fragment that handles the interactions with UI.
+ */
 public class BrokerApiFragment extends AbstractBrokerHost {
     // Resource Id for the buttons
-    public final static String GET_ACCOUNTS_BUTTON_ID = "button_get_accounts";
-    public final static String REMOVE_ACCOUNTS_BUTTON_ID = "button_remove_account";
-    public final static String GET_SSO_TOKEN_BUTTON_ID = "button_get_sso_token";
+    private final static String GET_ACCOUNTS_BUTTON_ID = "button_get_accounts";
+    private final static String REMOVE_ACCOUNTS_BUTTON_ID = "button_remove_account";
+    private final static String GET_SSO_TOKEN_BUTTON_ID = "button_get_sso_token";
     // Resource Id for the edit text
-    public final static String SSO_TOKEN_EDIT_TEXT_ID = "edit_sso_token";
-    public final static String NONCE_EDIT_TEXT_ID = "edit_text_nonce";
+    private final static String SSO_TOKEN_EDIT_TEXT_ID = "edit_sso_token";
+    private final static String NONCE_EDIT_TEXT_ID = "edit_text_nonce";
 
+    /**
+     * Gets a list of broker accounts that are currently present in the device.
+     *
+     * @return a list of accounts
+     */
     public List<String> getAccounts() {
         List<String> accounts = new ArrayList<>();
         clickButton(GET_ACCOUNTS_BUTTON_ID);
@@ -54,18 +62,32 @@ public class BrokerApiFragment extends AbstractBrokerHost {
         return accounts;
     }
 
+    /**
+     * Removes the account with the given username.
+     *
+     * @param username the username of the account to remove
+     */
     public void removeAccounts(@NonNull final String username) {
         fillTextBox(USERNAME_EDIT_TEXT, username);
         clickButton(REMOVE_ACCOUNTS_BUTTON_ID);
         dismissDialogBoxAndGetText();
     }
 
+    /**
+     * Acquires a SSO token for the given nonce.
+     *
+     * @param nonce the nonce to use for the SSO token
+     * @return the SSO token
+     */
     public String acquireSsoToken(@NonNull final String nonce) {
         fillTextBox(NONCE_EDIT_TEXT_ID, nonce);
         clickButton(GET_SSO_TOKEN_BUTTON_ID);
         return readTextBox(SSO_TOKEN_EDIT_TEXT_ID);
     }
 
+    /**
+     * Launches the Broker API Fragment.
+     */
     @Override
     public void launch() {
         launch(BrokerHostNavigationMenuItem.BROKER_API);

@@ -24,6 +24,9 @@ package com.microsoft.identity.client.ui.automation.broker;
 
 import androidx.annotation.NonNull;
 
+/**
+ * A representation of the broker flights fragment that handles all interactions with the UI.
+ */
 public class BrokerFlightsFragment extends AbstractBrokerHost {
     // Resource Id for the buttons
     private static final String OVERVIEW_LOCAL_FLIGHTS_BUTTON_ID = "button_overwrite_flights";
@@ -35,23 +38,39 @@ public class BrokerFlightsFragment extends AbstractBrokerHost {
     private static final String VALUE_FLIGHT_EDIT_TEXT_ID = "edit_text_flight_value";
     private static final String FLIGHTS_EDIT_TEXT_ID = "edit_text_flights";
 
+    /**
+     * Set a local flight.
+     * @param key  the key of the flight
+     * @param value the value of the flight
+     */
     public void setLocalFlight(@NonNull final String key, @NonNull final String value) {
         fillTextBox(KEY_FLIGHT_EDIT_TEXT_ID, key);
         fillTextBox(VALUE_FLIGHT_EDIT_TEXT_ID, value);
         clickButton(SET_LOCAL_FLIGHT_BUTTON_ID);
     }
 
+    /**
+     * Overwrite the local flights with the given flights.
+     * @param flights the flights to overwrite the local flights with
+     */
     public void overWriteLocalFlights(@NonNull final String flights) {
         fillTextBox(FLIGHTS_EDIT_TEXT_ID, flights);
         clickButton(OVERVIEW_LOCAL_FLIGHTS_BUTTON_ID);
         dismissDialogBoxAndAssertContainsText("Flight set in broker host.");
     }
 
+    /**
+     * Get the local flights.
+     * @return the local flights
+     */
     public String getFlights() {
         clickButton(GET_FLIGHTS_BUTTON_ID);
         return readTextBox(FLIGHTS_EDIT_TEXT_ID);
     }
 
+    /**
+     * Launch the flights fragment.
+     */
     @Override
     public void launch() {
         launch(BrokerHostNavigationMenuItem.FLIGHTS_API);
