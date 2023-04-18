@@ -133,6 +133,10 @@ public class OnDeviceCertBasedAuthChallengeHandler extends AbstractCertBasedAuth
             return null;
         }
         for (int i = 0; i < keyTypes.length; i++) {
+            //"ECDSA" isn't a constant in KeyProperties, so it should be getting mapped to "EC" via Chromium.
+            //But for some reason, Chromium's WebView bridge implementation adds "ECDSA" to the request key types String array, despite mapping it to "EC" in the web browser class.
+            //https://source.chromium.org/chromium/chromium/src/+/main:android_webview/browser/aw_contents_client_bridge.cc;l=184;bpv=1
+            //To mitigate this, we're going to map it to "EC" ourselves.
             if (keyTypes[i].equals(ECDSA_CONSTANT)) {
                 keyTypes[i] = KeyProperties.KEY_ALGORITHM_EC;
                 break;
