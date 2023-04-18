@@ -45,7 +45,7 @@ abstract class AbstractBrokerHost {
     public final static String BROKER_HOST_APP_NAME = "Broker Host App";
     private final static long APP_LAUNCH_TIMEOUT = TimeUnit.SECONDS.toMillis(5);
     // Resource id's
-    private final static String HEADER_RESOURCE_ID = CommonUtils.getResourceId(BROKER_HOST_APP_PACKAGE_NAME, "text_header");
+    private final static String HEADER_RESOURCE_ID = "text_header";
     protected final static String USERNAME_EDIT_TEXT = "edit_text_username";
     protected final static String DIALOG_BOX_RESOURCE_ID = "android:id/message";
     protected final static String DIALOG_BOX_OK_BUTTON_RESOURCE_ID = "android:id/button1";
@@ -174,7 +174,7 @@ abstract class AbstractBrokerHost {
         }
         try {
             final UiObject header = UiAutomatorUtils.obtainUiObjectWithResourceId(
-                    HEADER_RESOURCE_ID,
+                    CommonUtils.getResourceId(BROKER_HOST_APP_PACKAGE_NAME, HEADER_RESOURCE_ID),
                     APP_LAUNCH_TIMEOUT
             );
             if (header.exists() && navigationMenuItem.getTitle().equalsIgnoreCase(header.getText())) {
