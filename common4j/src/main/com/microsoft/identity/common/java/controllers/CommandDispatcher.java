@@ -62,6 +62,7 @@ import com.microsoft.identity.common.java.logging.DiagnosticContext;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.logging.RequestContext;
 import com.microsoft.identity.common.java.marker.CodeMarkerManager;
+import com.microsoft.identity.common.java.opentelemetry.OtelContextExtension;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.java.request.SdkType;
 import com.microsoft.identity.common.java.result.AcquireTokenResult;
@@ -98,7 +99,7 @@ public class CommandDispatcher {
     private static final int SILENT_REQUEST_THREAD_POOL_SIZE = 5;
     private static final int DCF_REQUEST_THREAD_POOL_SIZE = 5;
     private static ExecutorService sInteractiveExecutor = Executors.newSingleThreadExecutor();
-    private static final ExecutorService sSilentExecutor = Executors.newFixedThreadPool(SILENT_REQUEST_THREAD_POOL_SIZE);
+    private static ExecutorService sSilentExecutor = Executors.newFixedThreadPool(SILENT_REQUEST_THREAD_POOL_SIZE);
     private static final ExecutorService sDCFExecutor = Executors.newFixedThreadPool(DCF_REQUEST_THREAD_POOL_SIZE);
     private static final Object sLock = new Object();
     private static InteractiveTokenCommand sCommand = null;
@@ -329,7 +330,7 @@ public class CommandDispatcher {
                 finalFuture.whenComplete(getCommandResultConsumer(command));
             }
 
-            commandExecutor.execute(new Runnable() {
+            commandExecutor.execute(OtelContextExtension.wrap(new Runnable() {
                 @Override
                 public void run() {
                     codeMarkerManager.markCode(isDeviceCodeFlowRequest ? ACQUIRE_TOKEN_DCF_EXECUTOR_START : ACQUIRE_TOKEN_SILENT_EXECUTOR_START);
@@ -385,7 +386,7 @@ public class CommandDispatcher {
                     }
                     codeMarkerManager.markCode(isDeviceCodeFlowRequest ? ACQUIRE_TOKEN_DCF_FUTURE_OBJECT_CREATION_END : ACQUIRE_TOKEN_SILENT_FUTURE_OBJECT_CREATION_END);
                 }
-            });
+            }));
             return finalFuture;
         }
     }
@@ -416,7 +417,7 @@ public class CommandDispatcher {
         synchronized (mapAccessLock) {
             final FinalizableResultFuture<CommandResult> finalFuture = new FinalizableResultFuture<>();
             finalFuture.whenComplete(getCommandResultConsumer(command));
-            sSilentExecutor.execute(new Runnable() {
+            sSilentExecutor.execute(OtelContextExtension.wrap(new Runnable() {
                 @Override
                 public void run() {
 
@@ -442,7 +443,7 @@ public class CommandDispatcher {
                     }
 
                 }
-            });
+            }));
             return finalFuture;
         }
     }
@@ -723,7 +724,7 @@ public class CommandDispatcher {
                     }
                 }
 
-                sInteractiveExecutor.execute(new Runnable() {
+                sInteractiveExecutor.execute(OtelContextExtension.wrap(new Runnable() {
                     @Override
                     public void run() {
                         final CommandParameters commandParameters = command.getParameters();
@@ -773,7 +774,7 @@ public class CommandDispatcher {
                             DiagnosticContext.INSTANCE.clear();
                         }
                     }
-                });
+                }));
             }
         }
 
@@ -835,6 +836,36 @@ public class CommandDispatcher {
                     || command instanceof DeviceCodeFlowAuthResultCommand
                     || command instanceof DeviceCodeFlowTokenResultCommand);
         }
-
+        
+    /***
+     * Stops the SilentRequestsExecutor.
+     * Waits 1 Sec for existing silent requests to finish, before terminating them.
+     * WARN!! No new silent requests will be processed after this until the executor is reset
+     * This is expected to be called when in Shared Device Mode when global signout is performed.
+     */
+    public static void stopSilentRequestExecutor() {
+        final String methodTag = TAG + ":stopSilentRequestExecutor";
+        Logger.info(methodTag, "shutting down..");
+        sSilentExecutor.shutdown();
+        try {
+            if (!sSilentExecutor.awaitTermination(1000, TimeUnit.MILLISECONDS)) {
+                Logger.warn(methodTag, "terminating now");
+                sSilentExecutor.shutdownNow();
+            }
+        } catch (final InterruptedException e) {
+            Logger.warn(methodTag, "terminating again");
+            sSilentExecutor.shutdownNow();
+        }
+    }
+    /***
+     * Resets the SilentRequestsExecutor.
+     * This creates a new Executor for the silent request.
+     * This is expected to be called after global signout is performed in Shared Device mode.
+     * This should be called if previously the Executor was stopped using 'stopSilentRequestExecutor'
+     */
+    public static void resetSilentRequestExecutor() {
+        Logger.info(TAG + ":resetSilentRequestExecutor", "Resetting silent Executor");
+        sSilentExecutor = Executors.newFixedThreadPool(SILENT_REQUEST_THREAD_POOL_SIZE);
+    }
 }
 

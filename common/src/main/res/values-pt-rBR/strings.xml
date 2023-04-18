@@ -36,7 +36,7 @@
     <string name="smartcard_general_error_dialog_message">Erro. Tente mais tarde.</string>
 
     <string name="user_choice_dialog_title">Como você deseja começar?</string>
-    <string name="user_choice_dialog_on_device_name">Certificado em seu dispositivo</string>
+    <string name="user_choice_dialog_on_device_name">Certificado neste dispositivo</string>
     <string name="user_choice_dialog_smartcard_name">Cartão inteligente físico</string>
     <string name="user_choice_dialog_positive_button">Continuar</string>
     <string name="user_choice_dialog_negative_button">Cancelar</string>
@@ -55,4 +55,7 @@
     <string name="smartcard_nfc_reminder_dialog_title">Ativar o NFC nas configurações do dispositivo</string>
     <string name="smartcard_nfc_reminder_dialog_message">Para entrar com NFC, ative o NFC nas configurações do dispositivo. Em seguida, entre novamente.</string>
     <string name="smartcard_nfc_reminder_dialog_positive_button">Entendi</string>
+
+    <string name="smartcard_removal_prompt_dialog_title">Agora você pode remover seu cartão inteligente</string>
+    <string name="smartcard_removal_prompt_dialog_positive_button">Entendi</string>
 </resources>

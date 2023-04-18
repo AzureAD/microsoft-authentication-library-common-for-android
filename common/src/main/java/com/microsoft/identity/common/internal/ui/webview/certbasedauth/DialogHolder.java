@@ -60,7 +60,7 @@ public class DialogHolder implements IDialogHolder {
      */
     public synchronized void showCertPickerDialog(@NonNull final List<ICertDetails> certList,
                                                   @NonNull final SmartcardCertPickerDialog.PositiveButtonListener positiveButtonListener,
-                                                  @NonNull final SmartcardCertPickerDialog.CancelCbaCallback cancelCbaCallback) {
+                                                  @NonNull final ICancelCbaCallback cancelCbaCallback) {
         final SmartcardCertPickerDialog certPickerDialog = new SmartcardCertPickerDialog(
                 certList,
                 positiveButtonListener,
@@ -75,7 +75,7 @@ public class DialogHolder implements IDialogHolder {
      * @param cancelCbaCallback      A Callback that holds code to be run when CBA is being cancelled.
      */
     public synchronized void showPinDialog(@NonNull final SmartcardPinDialog.PositiveButtonListener positiveButtonListener,
-                                           @NonNull final SmartcardPinDialog.CancelCbaCallback cancelCbaCallback) {
+                                           @NonNull final ICancelCbaCallback cancelCbaCallback) {
         final SmartcardPinDialog pinDialog = new SmartcardPinDialog(
                 positiveButtonListener,
                 cancelCbaCallback,
@@ -94,9 +94,9 @@ public class DialogHolder implements IDialogHolder {
         showDialog(new SmartcardErrorDialog(
                 titleStringResourceId,
                 messageStringResourceId,
-                new SmartcardErrorDialog.DismissCallback() {
+                new IDismissCallback() {
                     @Override
-                    public void onClick() {
+                    public void onDismiss() {
                         //Call dismissDialog
                         dismissDialog();
                     }
@@ -111,7 +111,7 @@ public class DialogHolder implements IDialogHolder {
      * @param cancelCbaCallback A Callback that holds code to be run when CBA is being cancelled.
      */
     public synchronized void showUserChoiceDialog(@NonNull final UserChoiceDialog.PositiveButtonListener positiveButtonListener,
-                                                  @NonNull final UserChoiceDialog.CancelCbaCallback cancelCbaCallback) {
+                                                  @NonNull final ICancelCbaCallback cancelCbaCallback) {
         showDialog(new UserChoiceDialog(
                 positiveButtonListener,
                  cancelCbaCallback,
@@ -124,7 +124,7 @@ public class DialogHolder implements IDialogHolder {
      * either by plugging in (USB) or holding to back of phone (NFC).
      * @param cancelCbaCallback A Callback that holds code to be run when CBA is being cancelled.
      */
-    public synchronized void showSmartcardPromptDialog(@NonNull final SmartcardPromptDialog.CancelCbaCallback cancelCbaCallback) {
+    public synchronized void showSmartcardPromptDialog(@NonNull final ICancelCbaCallback cancelCbaCallback) {
         showDialog(new SmartcardPromptDialog(
                 cancelCbaCallback,
                 mActivity
@@ -142,7 +142,7 @@ public class DialogHolder implements IDialogHolder {
      * Builds and shows a SmartcardDialog that prompts the user to connect their smartcard by holding it to the back of their phone.
      * @param cancelCbaCallback A Callback that holds code to be run when CBA is being cancelled.
      */
-    public synchronized void showSmartcardNfcPromptDialog(@NonNull final SmartcardNfcPromptDialog.CancelCbaCallback cancelCbaCallback) {
+    public synchronized void showSmartcardNfcPromptDialog(@NonNull final ICancelCbaCallback cancelCbaCallback) {
         showDialog(new SmartcardNfcPromptDialog(
                 cancelCbaCallback,
                 mActivity));
@@ -152,11 +152,28 @@ public class DialogHolder implements IDialogHolder {
      * Builds and shows a SmartcardDialog that notifies user that NFC is not on for their device.
      * @param dismissCallback a callback that holds logic to be run upon dismissal of the dialog.
      */
-    public synchronized void showSmartcardNfcReminderDialog(@NonNull final SmartcardNfcReminderDialog.DismissCallback dismissCallback) {
+    public synchronized void showSmartcardNfcReminderDialog(@NonNull final IDismissCallback dismissCallback) {
         showDialog(new SmartcardNfcReminderDialog(
                 dismissCallback,
                 mActivity
         ));
+    }
+
+    /**
+     * Builds and shows a SmartcardDialog that prompts the user to remove their smartcard from the device.
+     * @param dismissCallback a callback that holds logic to be run upon dismissal of the dialog.
+     */
+    @Override
+    public synchronized void showSmartcardRemovalPromptDialog(@Nullable final IDismissCallback dismissCallback) {
+        showDialog(new SmartcardRemovalPromptDialog(new IDismissCallback() {
+            @Override
+            public void onDismiss() {
+                dismissDialog();
+                if (dismissCallback != null) {
+                    dismissCallback.onDismiss();
+                }
+            }
+        }, mActivity));
     }
 
     /**
@@ -192,12 +209,22 @@ public class DialogHolder implements IDialogHolder {
     }
 
     /**
-     * Runs the onCancelCbaCallback code for the current dialog.
-     * Used when YubiKey is unexpectedly disconnected from device.
+     * Informs if a {@link SmartcardRemovalPromptDialog} is currently showing.
+     *
+     * @return True if the current dialog showing is an instance of SmartcardRemovalPromptDialog. False otherwise.
      */
-    public synchronized void onCancelCba() {
+    @Override
+    public synchronized boolean isSmartcardRemovalPromptDialogShowing() {
+        return mCurrentDialog instanceof SmartcardRemovalPromptDialog;
+    }
+
+    /**
+     * Used when smartcard is unexpectedly disconnected via USB from device.
+     */
+    @Override
+    public synchronized void onUnexpectedUnplug() {
         if (mCurrentDialog != null) {
-            mCurrentDialog.onCancelCba();
+            mCurrentDialog.onUnexpectedUnplug();
         }
     }
 

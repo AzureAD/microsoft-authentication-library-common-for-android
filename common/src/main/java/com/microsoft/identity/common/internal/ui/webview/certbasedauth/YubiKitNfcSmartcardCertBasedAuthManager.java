@@ -72,6 +72,8 @@ public class YubiKitNfcSmartcardCertBasedAuthManager extends AbstractNfcSmartcar
      */
     @Override
     boolean startDiscovery(@NonNull final Activity activity) {
+        final String methodTag = TAG + ":startDiscovery";
+        Logger.info(methodTag, "Starting YubiKey discovery for NFC");
         try {
             mNfcYubiKitManager.enable(
                     activity,
@@ -79,6 +81,7 @@ public class YubiKitNfcSmartcardCertBasedAuthManager extends AbstractNfcSmartcar
                     new Callback<NfcYubiKeyDevice>() {
                         @Override
                         public void invoke(@NonNull NfcYubiKeyDevice value) {
+                            Logger.info(methodTag, "A YubiKey device was connected via NFC.");
                             mNfcDevice = value;
                             final byte[] tagId = mNfcDevice.getTag().getId();
                             isDeviceChanged = (mTagId != null && !Arrays.equals(mTagId, tagId));
@@ -92,7 +95,7 @@ public class YubiKitNfcSmartcardCertBasedAuthManager extends AbstractNfcSmartcar
         } catch (@NonNull final NfcNotAvailable e) {
             //User will not be blocked from seeing the regular smartcard prompt,
             // but appropriate reminder dialog should be shown.
-            Logger.info(TAG, "Device has NFC functionality turned off.");
+            Logger.info(methodTag, "Device has NFC functionality turned off.");
             return true;
         }
     }
@@ -103,19 +106,12 @@ public class YubiKitNfcSmartcardCertBasedAuthManager extends AbstractNfcSmartcar
      */
     @Override
     void stopDiscovery(@NonNull Activity activity) {
+        final String methodTag = TAG + ":stopDiscovery";
+        Logger.info(methodTag, "Stopping YubiKey discovery for NFC");
         synchronized (sDeviceLock) {
-            if (isDeviceConnected()) {
-                mNfcDevice.remove(new Runnable() {
-                    @Override
-                    public void run() {
-                        mNfcDevice = null;
-                        mNfcYubiKitManager.disable(activity);
-                    }
-                });
-                return;
-            }
+            mNfcDevice = null;
+            mNfcYubiKitManager.disable(activity);
         }
-        mNfcYubiKitManager.disable(activity);
     }
 
     /**
@@ -211,5 +207,27 @@ public class YubiKitNfcSmartcardCertBasedAuthManager extends AbstractNfcSmartcar
                 }
             }
         };
+    }
+
+    /**
+     * Disconnects a connected smartcard.
+     *
+     * @param callback logic to be called after smartcard is removed.
+     */
+    @Override
+    void disconnect(@NonNull final IDisconnectionCallback callback) {
+        final String methodTag = TAG + ":disconnect";
+        synchronized (sDeviceLock) {
+            if (mNfcDevice != null) {
+                mNfcDevice.remove(new Runnable() {
+                    @Override
+                    public void run() {
+                        Logger.info(methodTag, "YubiKey connected via NFC has been disconnected");
+                        mNfcDevice = null;
+                        callback.onClosedConnection();
+                    }
+                });
+            }
+        }
     }
 }

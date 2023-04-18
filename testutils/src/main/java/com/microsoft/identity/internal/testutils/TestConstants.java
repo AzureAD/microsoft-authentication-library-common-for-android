@@ -28,6 +28,9 @@ public class TestConstants {
         private static final String CONFIG_FILE_PATH_PREFIX = "src/test/res/raw/";
         public static final String B2C_GLOBAL_DOMAIN_CONFIG_FILE_PATH = CONFIG_FILE_PATH_PREFIX + "b2c_global_domain_test_config.json";
         public static final String B2C_CUSTOM_DOMAIN_CONFIG_FILE_PATH = CONFIG_FILE_PATH_PREFIX + "b2c_custom_domain_test_config.json";
+        public static final String CIAM_TENANT_DOMAIN_CONFIG_FILE_PATH = CONFIG_FILE_PATH_PREFIX + "ciam_tenant_domain_test_config.json";
+        public static final String CIAM_TENANT_GUID_CONFIG_FILE_PATH = CONFIG_FILE_PATH_PREFIX + "ciam_tenant_guid_test_config.json";
+        public static final String CIAM_NO_PATH_CONFIG_FILE_PATH = CONFIG_FILE_PATH_PREFIX + "ciam_no_path_test_config.json";
         public static final String MULTIPLE_ACCOUNT_MODE_AAD_CONFIG_FILE_PATH = CONFIG_FILE_PATH_PREFIX + "multiple_account_aad_test_config.json";
         public static final String SINGLE_ACCOUNT_MODE_AAD_CONFIG_FILE_PATH = CONFIG_FILE_PATH_PREFIX + "single_account_aad_test_config.json";
         public static final String MULTIPLE_ACCOUNT_MODE_AAD_MOONCAKE_CONFIG_FILE_PATH = CONFIG_FILE_PATH_PREFIX + "msal_mooncake_config.json";
@@ -44,6 +47,7 @@ public class TestConstants {
         public static final String[] OFFICE_USER_READ_SCOPE = {"https://outlook.office.com/user.read"};
         public static final String[] B2C_READ_SCOPE = {"https://msidlabb2c.onmicrosoft.com/msidlabb2capi/read"};
         public static final String[] B2C_USER_IMPERSONATION_SCOPE = {"https://msidlabb2c.onmicrosoft.com/msidlabb2capi/user_impersonation"};
+        public static final String[] SUBSTRATE_USER_READ_SCOPE= {"https://substrate.office.com/profile//User.Read"};
     }
 
     public static class Authorities {

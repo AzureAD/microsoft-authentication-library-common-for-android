@@ -30,9 +30,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 
 import com.microsoft.identity.common.R;
-import com.microsoft.identity.common.java.exception.BaseException;
+import com.microsoft.identity.common.internal.ui.webview.ISendResultCallback;
 import com.microsoft.identity.common.java.opentelemetry.ICertBasedAuthTelemetryHelper;
-import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.security.PrivateKey;
@@ -44,7 +43,7 @@ import java.util.List;
  * Abstract class which handles a received ClientCertRequest by prompting the user to choose from certificates
  *  stored on a smartcard device.
  */
-public abstract class AbstractSmartcardCertBasedAuthChallengeHandler<T extends AbstractSmartcardCertBasedAuthManager<?>> implements ICertBasedAuthChallengeHandler {
+public abstract class AbstractSmartcardCertBasedAuthChallengeHandler<T extends AbstractSmartcardCertBasedAuthManager> extends AbstractCertBasedAuthChallengeHandler {
     protected static final String MAX_ATTEMPTS_MESSAGE = "User has reached the maximum failed attempts allowed.";
     protected static final String NO_PIV_CERTS_FOUND_MESSAGE = "No PIV certificates found on smartcard device.";
     protected static final String USER_CANCEL_MESSAGE = "User canceled smartcard CBA flow.";
@@ -52,8 +51,6 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandler<T extends A
     protected final Activity mActivity;
     protected final T mCbaManager;
     protected final IDialogHolder mDialogHolder;
-    protected final ICertBasedAuthTelemetryHelper mTelemetryHelper;
-    protected boolean mIsSmartcardCertBasedAuthProceeding;
 
     /**
      * Creates new instance of AbstractSmartcardCertBasedAuthChallengeHandler.
@@ -70,7 +67,7 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandler<T extends A
                                                           @NonNull final String tag) {
         TAG = tag;
         mActivity = activity;
-        mIsSmartcardCertBasedAuthProceeding = false;
+        mIsCertBasedAuthProceeding = false;
         mCbaManager = smartcardCertBasedAuthManager;
         mDialogHolder = dialogHolder;
         mTelemetryHelper = telemetryHelper;
@@ -92,57 +89,78 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandler<T extends A
         mCbaManager.requestDeviceSession(new AbstractSmartcardCertBasedAuthManager.ISessionCallback() {
             @Override
             public void onGetSession(@NonNull final ISmartcardSession session) throws Exception {
-                if (session.getPinAttemptsRemaining() == 0) {
-                    promptTooManyFailedPinAttempts(methodTag);
-                    request.cancel();
-                    onPausedSmartcardDiscovery();
-                    return;
-                }
-                //Create List that contains cert details only pertinent to the cert picker.
+                final int pinAttemptsRemaining = session.getPinAttemptsRemaining();
                 final List<ICertDetails> certList = session.getCertDetailsList();
-                //If no certs were found, cancel flow.
-                if (certList.isEmpty()) {
-                    Logger.info(methodTag,  NO_PIV_CERTS_FOUND_MESSAGE);
-                    mTelemetryHelper.setResultFailure(NO_PIV_CERTS_FOUND_MESSAGE);
-                    mDialogHolder.showErrorDialog(
-                            R.string.smartcard_no_cert_dialog_title,
-                            R.string.smartcard_no_cert_dialog_message);
-                    request.cancel();
-                    onPausedSmartcardDiscovery();
-                    return;
-                }
-
-                //Build and show Smartcard cert picker, which also handles the rest of the smartcard CBA flow.
-                mDialogHolder.showCertPickerDialog(
-                        certList,
-                        getSmartcardCertPickerDialogPositiveButtonListener(request),
-                        new SmartcardCertPickerDialog.CancelCbaCallback() {
-                            @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-                            @Override
-                            public void onCancel() {
-                                mDialogHolder.dismissDialog();
-                                mTelemetryHelper.setResultFailure(USER_CANCEL_MESSAGE);
-                                request.cancel();
-                            }
-                        });
-
-                onPausedSmartcardDiscovery();
+                //We have the necessary data, so we pause for any necessary smartcard disconnections before proceeding with the rest of CBA.
+                //For NFC, we close the connection and prompt the user to remove their smartcard (connection is not meant to be constant. They'll be asked to tap again for the PIN).
+                //For USB, no disconnection is happening here, since the connection is supposed to be constant. Just the callback is invoked.
+                prepForNextUserInteraction(new IDisconnectionCallback() {
+                    @Override
+                    public void onClosedConnection() {
+                        if (pinAttemptsRemaining == 0) {
+                            promptTooManyFailedPinAttempts(methodTag);
+                            request.cancel();
+                            return;
+                        }
+                        if (certList.isEmpty()) {
+                            Logger.info(methodTag, NO_PIV_CERTS_FOUND_MESSAGE);
+                            mTelemetryHelper.setResultFailure(NO_PIV_CERTS_FOUND_MESSAGE);
+                            mDialogHolder.showErrorDialog(
+                                    R.string.smartcard_no_cert_dialog_title,
+                                    R.string.smartcard_no_cert_dialog_message);
+                            request.cancel();
+                            return;
+                        }
+                        //No errors found, so we can continue with showing the cert picker.
+                        //The button listener/callback will handle the rest of the CBA flow.
+                        mDialogHolder.showCertPickerDialog(
+                                certList,
+                                getSmartcardCertPickerDialogPositiveButtonListener(request),
+                                getGeneralCancelCbaCallback(request)
+                        );
+                    }
+                });
             }
 
             @Override
             public void onException(@NonNull final Exception e) {
-                indicateGeneralException(methodTag, e);
                 request.cancel();
+                prepForNextUserInteraction(new IDisconnectionCallback() {
+                    @Override
+                    public void onClosedConnection() {
+                        indicateGeneralException(methodTag, e);
+                    }
+                });
             }
         });
         return null;
     }
 
     /**
-     * Pauses smartcard discovery, if the particular authentication method isn't meant to have
-     *  discovery active throughout the entire flow.
+     * To be called when user interaction is needed, or to prepare for any user interaction.
+     * When a connection is no longer actively being used, the dialog flow should pause
+     * so the user can remove their smartcard before flow can continue.
+     * @param nextInteractionCallback the next logic to be run.
      */
-    protected abstract void onPausedSmartcardDiscovery();
+    protected abstract void prepForNextUserInteraction(@NonNull final IDisconnectionCallback nextInteractionCallback);
+
+    /**
+     * Returns a callback that dismisses the current dialog, sends telemetry, and cancels the ClientCertRequest.
+     * @param request {@link ClientCertRequest}
+     * @return {@link ICancelCbaCallback}
+     */
+    @NonNull
+    protected ICancelCbaCallback getGeneralCancelCbaCallback(@NonNull final ClientCertRequest request) {
+        return new ICancelCbaCallback() {
+            @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+            @Override
+            public void onCancel() {
+                mDialogHolder.dismissDialog();
+                mTelemetryHelper.setResultFailure(USER_CANCEL_MESSAGE);
+                request.cancel();
+            }
+        };
+    }
 
     /**
      * Helper method to log and show an error dialog with messages indicating that
@@ -158,12 +176,19 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandler<T extends A
     }
 
     /**
+     * Helper method to log and show a disconnection error.
+     * @param methodName calling method name.
+     */
+    protected abstract void indicateDisconnectionError(@NonNull final String methodName);
+
+    /**
      * Helper method to log, show general error dialog, and emit telemetry for when
      *  an unexpected exception is thrown.
      * @param methodTag tag from calling method.
      * @param e Exception thrown.
      */
-    protected void indicateGeneralException(@NonNull final String methodTag, @NonNull final Exception e) {
+    protected void indicateGeneralException(@NonNull final String methodTag,
+                                            @NonNull final Exception e) {
         Logger.error(methodTag, e.getMessage(), e);
         mTelemetryHelper.setResultFailure(e);
         //Show general error dialog.
@@ -185,15 +210,8 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandler<T extends A
                 //Need to prompt user for pin and verify pin. The positive button listener will handle the rest of the CBA flow.
                 mDialogHolder.showPinDialog(
                         getSmartcardPinDialogPositiveButtonListener(certDetails, request),
-                        new SmartcardPinDialog.CancelCbaCallback() {
-                            @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-                            @Override
-                            public void onCancel() {
-                                mDialogHolder.dismissDialog();
-                                mTelemetryHelper.setResultFailure(USER_CANCEL_MESSAGE);
-                                request.cancel();
-                            }
-                        });
+                        getGeneralCancelCbaCallback(request)
+                );
             }
         };
     }
@@ -204,7 +222,8 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandler<T extends A
      * @param request ClientCertRequest received from AzureActiveDirectoryWebViewClient.onReceivedClientCertRequest.
      * @return A PositiveButtonListener to be set for a SmartcardPinDialog.
      */
-    protected abstract SmartcardPinDialog.PositiveButtonListener getSmartcardPinDialogPositiveButtonListener(@NonNull final ICertDetails certDetails, @NonNull final ClientCertRequest request);
+    protected abstract SmartcardPinDialog.PositiveButtonListener getSmartcardPinDialogPositiveButtonListener(@NonNull final ICertDetails certDetails,
+                                                                                                             @NonNull final ClientCertRequest request);
 
     /**
      * Checks to see if PIN for smartcard is correct.
@@ -228,13 +247,17 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandler<T extends A
             return;
         }
         final int attemptsRemaining = session.getPinAttemptsRemaining();
-        onPausedSmartcardDiscovery();
-        if (attemptsRemaining == 0) {
-            promptTooManyFailedPinAttempts(methodTag);
-            request.cancel();
-            return;
-        }
-        setPinDialogForIncorrectAttempt(certDetails, request);
+        prepForNextUserInteraction(new IDisconnectionCallback() {
+            @Override
+            public void onClosedConnection() {
+                if (attemptsRemaining == 0) {
+                    promptTooManyFailedPinAttempts(methodTag);
+                    request.cancel();
+                    return;
+                }
+                setPinDialogForIncorrectAttempt(certDetails, request);
+            }
+        });
     }
 
     /**
@@ -266,7 +289,7 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandler<T extends A
         final X509Certificate[] chain = new X509Certificate[]{certDetails.getCertificate()};
         //Clear current dialog.
         mDialogHolder.dismissDialog();
-        mIsSmartcardCertBasedAuthProceeding = true;
+        mIsCertBasedAuthProceeding = true;
         request.proceed(privateKey, chain);
     }
 
@@ -279,37 +302,23 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandler<T extends A
     }
 
     /**
-     * Emit telemetry for results from certificate based authentication (CBA) if CBA occurred.
-     * @param response a RawAuthorizationResult object received upon a challenge response received.
+     * If a smartcard is currently connected, prompt user to remove the smartcard before
+     *  proceeding with results.
+     * @param callback {@link ISendResultCallback}
      */
-    @Override
-    public void emitTelemetryForCertBasedAuthResults(@NonNull final RawAuthorizationResult response) {
-        if (!mIsSmartcardCertBasedAuthProceeding) {
-            return;
-        }
-        final RawAuthorizationResult.ResultCode resultCode = response.getResultCode();
-        if (resultCode == RawAuthorizationResult.ResultCode.NON_OAUTH_ERROR
-                || resultCode == RawAuthorizationResult.ResultCode.SDK_CANCELLED
-                || resultCode == RawAuthorizationResult.ResultCode.CANCELLED) {
-            final BaseException exception = response.getException();
-            if (exception != null) {
-                mTelemetryHelper.setResultFailure(exception);
-                return;
-            }
-            //Putting result code as message.
-            mTelemetryHelper.setResultFailure(resultCode.toString());
-            return;
-        }
-        mTelemetryHelper.setResultSuccess();
-    }
+    public abstract void promptSmartcardRemovalForResult(@NonNull final ISendResultCallback callback);
 
     /**
-     * Clean up logic to run when ICertBasedAuthChallengeHandler is no longer going to be used.
+     * Clean-up logic to run when AbstractSmartcardCertBasedAuthChallengeHandler is no longer going to be used.
      */
     @Override
     public void cleanUp() {
         mDialogHolder.dismissDialog();
-        //Reset IConnectionCallback local variable of mCbaManager.
-        mCbaManager.clearConnectionCallback();
+        clearAllManagerCallbacks();
     }
+
+    /**
+     * Clears appropriate connection and disconnection callbacks.
+     */
+    protected abstract void clearAllManagerCallbacks();
 }

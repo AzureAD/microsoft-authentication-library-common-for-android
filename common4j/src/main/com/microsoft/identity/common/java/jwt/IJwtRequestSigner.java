@@ -20,15 +20,24 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java.broker;
+package com.microsoft.identity.common.java.jwt;
+
+import com.microsoft.identity.common.java.exception.ClientException;
+
+import java.security.cert.CertificateEncodingException;
 
 import lombok.NonNull;
 
-public interface IBrokerAccount {
-
+/**
+ * Interface for signing JWT for broker token requests
+ * given JWT payload.
+ */
+public interface IJwtRequestSigner {
     /**
-     * Get account's (unique) username.
-     * */
-    @NonNull
-    String getUsername();
+     * Generate signed JWT given payload.
+     * Payload is provided as {@link JwtRequestBody}
+     * @param jwtRequestBody JWT payload
+     * @return Return signed JWT string (encodedJwtHeader.encodedJwtBody.Signature(encodedJwtHeader, encodedJwtBody))
+     */
+    @NonNull String getSignedJwt(@NonNull final JwtRequestBody jwtRequestBody) throws ClientException, CertificateEncodingException;
 }

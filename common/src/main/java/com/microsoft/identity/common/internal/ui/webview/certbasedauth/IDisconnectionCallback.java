@@ -22,27 +22,12 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.ui.webview.certbasedauth;
 
-import android.webkit.ClientCertRequest;
-
-import androidx.annotation.NonNull;
-
-import com.microsoft.identity.common.internal.ui.webview.challengehandlers.IChallengeHandler;
-import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
-
 /**
- * ChallengeHandler extended interface specifically for certificate based authentication (CBA)
- *  implementations.
+ * Callback methods to be run upon initial disconnection of a smartcard device.
  */
-public interface ICertBasedAuthChallengeHandler extends IChallengeHandler<ClientCertRequest, Void> {
-    
+public interface IDisconnectionCallback {
     /**
-     * Emit telemetry for results from certificate based authentication (CBA) if CBA occurred.
-     * @param response a RawAuthorizationResult object received upon a challenge response received.
+     * Logic to be run upon disconnection of a smartcard device.
      */
-    void emitTelemetryForCertBasedAuthResults(@NonNull final RawAuthorizationResult response);
-
-    /**
-     * Clean up logic to run when ICertBasedAuthChallengeHandler is no longer going to be used.
-     */
-    void cleanUp();
+    void onClosedConnection();
 }

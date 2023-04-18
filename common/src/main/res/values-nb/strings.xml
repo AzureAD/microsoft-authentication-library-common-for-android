@@ -36,7 +36,7 @@
     <string name="smartcard_general_error_dialog_message">Det har oppstått en uventet feil. Prøv på nytt senere.</string>
 
     <string name="user_choice_dialog_title">Hvordan vil du logge på?</string>
-    <string name="user_choice_dialog_on_device_name">Sertifikat på enheten</string>
+    <string name="user_choice_dialog_on_device_name">Sertifikat på denne enheten</string>
     <string name="user_choice_dialog_smartcard_name">Fysisk smartkort</string>
     <string name="user_choice_dialog_positive_button">Fortsett</string>
     <string name="user_choice_dialog_negative_button">Avbryt</string>
@@ -55,4 +55,7 @@
     <string name="smartcard_nfc_reminder_dialog_title">Aktiver NFC i enhetsinnstillinger</string>
     <string name="smartcard_nfc_reminder_dialog_message">Hvis du vil logge på med NFC, må du aktivere NFC i enhetsinnstillingene. Logg deretter på igjen.</string>
     <string name="smartcard_nfc_reminder_dialog_positive_button">Jeg forstår</string>
+
+    <string name="smartcard_removal_prompt_dialog_title">Du kan nå fjerne smartkortet</string>
+    <string name="smartcard_removal_prompt_dialog_positive_button">Jeg forstår</string>
 </resources>

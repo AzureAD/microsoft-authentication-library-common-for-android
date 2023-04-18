@@ -193,4 +193,11 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
         }
         UiAutomatorUtils.handleButtonClickForObjectWithText("Call +X XXXXXXXX21");
     }
+
+    @Override
+    public void handleHowWouldYouLikeToSignIn() {
+        // Looks like we sometimes see this UI prompt asking "How would like to sign in?"
+        // We press button1, which is "Ok" to confirm the default selection of using device certificate.
+        UiAutomatorUtils.handleButtonClick("android:id/button1");
+    }
 }

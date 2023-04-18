@@ -24,10 +24,13 @@ package com.microsoft.identity.common.internal.ui.webview.certbasedauth;
 
 import android.app.Activity;
 import android.content.Context;
+import android.hardware.usb.UsbDevice;
+import android.hardware.usb.UsbManager;
 import android.os.Build;
 import android.webkit.ClientCertRequest;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
 import com.microsoft.identity.common.java.opentelemetry.ICertBasedAuthTelemetryHelper;
@@ -44,11 +47,14 @@ import com.yubico.yubikit.piv.PivSession;
 import java.io.IOException;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.concurrent.Callable;
 
 public class YubiKitUsbSmartcardCertBasedAuthManager extends AbstractUsbSmartcardCertBasedAuthManager {
     private static final String TAG = YubiKitUsbSmartcardCertBasedAuthManager.class.getSimpleName();
     private static final String DEVICE_ERROR_MESSAGE = "No USB device is currently connected.";
+    public final static int YUBICO_VENDOR_ID = 0x1050;
 
     private final UsbYubiKeyManager mUsbYubiKeyManager;
     private UsbYubiKeyDevice mUsbDevice;
@@ -57,7 +63,18 @@ public class YubiKitUsbSmartcardCertBasedAuthManager extends AbstractUsbSmartcar
     private static final Object sDeviceLock = new Object();
 
     public YubiKitUsbSmartcardCertBasedAuthManager(@NonNull final Context context) {
+        //This constructor will only be called after checking if the USB_SERVICE is not null,
+        // so no NPE should be thrown here.
         mUsbYubiKeyManager = new UsbYubiKeyManager(context.getApplicationContext());
+        final UsbManager usbManager = (UsbManager) context.getSystemService(Context.USB_SERVICE);
+        final Collection<UsbDevice> usbDevices = usbManager.getDeviceList().values();
+        for (final UsbDevice device : usbDevices) {
+            if (device.getVendorId() == YUBICO_VENDOR_ID) {
+                Logger.verbose(TAG, "A YubiKey device is plugged-in upon manager start-up.");
+                mUsbDeviceInitiallyPluggedIn = true;
+                return;
+            }
+        }
     }
 
     /**
@@ -67,10 +84,12 @@ public class YubiKitUsbSmartcardCertBasedAuthManager extends AbstractUsbSmartcar
      */
     @Override
     boolean startDiscovery(@NonNull final Activity activity) {
+        final String methodTag = TAG + ":startDiscovery";
+        Logger.info(methodTag, "Starting YubiKey discovery for USB");
         mUsbYubiKeyManager.enable(new UsbConfiguration(), new Callback<UsbYubiKeyDevice>() {
             @Override
             public void invoke(@NonNull UsbYubiKeyDevice device) {
-                Logger.verbose(TAG, "A YubiKey device was connected via usb.");
+                Logger.info(methodTag, "A YubiKey device was connected via USB.");
                 synchronized (sDeviceLock) {
                     mUsbDevice = device;
                     if (mConnectionCallback != null) {
@@ -80,13 +99,13 @@ public class YubiKitUsbSmartcardCertBasedAuthManager extends AbstractUsbSmartcar
                     mUsbDevice.setOnClosed(new Runnable() {
                         @Override
                         public void run() {
-                            Logger.verbose(TAG, "A YubiKey device was disconnected via usb.");
+                            Logger.info(methodTag, "A YubiKey device was disconnected via USB.");
                             synchronized (sDeviceLock) {
                                 mUsbDevice = null;
                             }
                             YubiKeyPivProviderManager.removePivProvider();
-                            if (mConnectionCallback != null) {
-                                mConnectionCallback.onClosedConnection();
+                            if (mDisconnectionCallback != null) {
+                                mDisconnectionCallback.onClosedConnection();
                             }
                         }
 
@@ -103,6 +122,8 @@ public class YubiKitUsbSmartcardCertBasedAuthManager extends AbstractUsbSmartcar
      */
     @Override
     void stopDiscovery(@NonNull final Activity activity) {
+        final String methodTag = TAG + ":stopDiscovery";
+        Logger.info(methodTag, "Stopping YubiKey discovery for USB");
         //Usb discovery is meant to be on for the duration of the authentication WebView being active.
         //Therefore, discovery for Usb should only be stopped upon the WebView being terminated.
         //Note that this differs from the Nfc implementation, where Nfc discovery is only turned on

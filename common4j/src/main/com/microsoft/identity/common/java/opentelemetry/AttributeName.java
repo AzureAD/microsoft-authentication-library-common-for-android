@@ -71,7 +71,7 @@ public enum AttributeName {
 
     /**
      * Indicates if PivProvider (part of YubiKit) was already present in the
-     *  Security static list prior to adding a new PivProvider.
+     * Security static list prior to adding a new PivProvider.
      */
     cert_based_auth_existing_piv_provider_present,
 
@@ -118,5 +118,16 @@ public enum AttributeName {
     /**
      * Indicates if token was return from token cache
      */
-    is_serviced_from_cache;
+    is_serviced_from_cache,
+
+    /**
+     * The correlation id being used for the request. This can used to correlate the data with the
+     * server side.
+     */
+    correlation_id,
+
+    /**
+     * The message accompanying an Exception.
+     */
+    error_message;
 }

@@ -40,6 +40,7 @@ public class ArgumentException extends BaseException {
     public final static String GET_ACCOUNTS_OPERATION_NAME = "getAllAccounts";
     public final static String REMOVE_ACCOUNT_OPERATION_NAME = "removeAccount";
     public final static String GENERATE_SHR_OPERATION_NAME = "generateShr";
+    public final static String LINUX_BROKER_VERSION_NAME = "linuxBrokerVersion";
     public final static String ACQUIRE_PRT_SSO_COOKIE_OPERATION_NAME = "acquirePrtSsoCookie";
 
     public final static String SCOPE_ARGUMENT_NAME = "scopes";

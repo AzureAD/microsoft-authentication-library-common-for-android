@@ -40,6 +40,8 @@ public enum SpanName {
     UploadBrokerLogs,
     InitializePowerLift,
     MSAL_PerformIpcStrategy,
+    DeviceRegistrationApi,
+    WorkplaceJoinApi,
     AcquireTokenDcf,
     AcquireTokenDcfAuthRequest,
     AcquireTokenDcfFetchToken

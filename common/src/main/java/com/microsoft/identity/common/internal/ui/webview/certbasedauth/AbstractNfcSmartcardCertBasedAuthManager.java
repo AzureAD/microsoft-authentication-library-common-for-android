@@ -22,16 +22,24 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.ui.webview.certbasedauth;
 
+import androidx.annotation.NonNull;
+
 import lombok.Getter;
 
 /**
  * An abstract smartcard CertBasedAuth manager specifically for NFC.
  */
-public abstract class AbstractNfcSmartcardCertBasedAuthManager extends AbstractSmartcardCertBasedAuthManager<IConnectionCallback> {
+public abstract class AbstractNfcSmartcardCertBasedAuthManager extends AbstractSmartcardCertBasedAuthManager {
 
     /* boolean based on the most recently connected smartcard device
     being the same as the previously connected smartcard device.
     true if most recently connected smartcard device is the same as the previous.
     false otherwise (including if no previous smartcard device exists). */
     @Getter protected boolean isDeviceChanged;
+
+    /**
+     * Disconnects a connected smartcard.
+     * @param callback logic to be called after smartcard is removed.
+     */
+    abstract void disconnect(@NonNull final IDisconnectionCallback callback);
 }

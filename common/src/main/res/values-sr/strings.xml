@@ -36,7 +36,7 @@
     <string name="smartcard_general_error_dialog_message">Дошло је до неочекиване грешке. Покушајте поново касније.</string>
 
     <string name="user_choice_dialog_title">Како желите да се пријавите?</string>
-    <string name="user_choice_dialog_on_device_name">Цертификат на уређају</string>
+    <string name="user_choice_dialog_on_device_name">Цертификат на овом уређају</string>
     <string name="user_choice_dialog_smartcard_name">Физичка паметна картица</string>
     <string name="user_choice_dialog_positive_button">Настави</string>
     <string name="user_choice_dialog_negative_button">Откажи</string>
@@ -55,4 +55,7 @@
     <string name="smartcard_nfc_reminder_dialog_title">Укључите NFC у поставкама уређаја</string>
     <string name="smartcard_nfc_reminder_dialog_message">Да бисте се пријавили помоћу NFC-а, укључите NFC у поставкама уређаја. Затим се поново пријавите.</string>
     <string name="smartcard_nfc_reminder_dialog_positive_button">Разумем</string>
+
+    <string name="smartcard_removal_prompt_dialog_title">Сада можете уклонити паметну картицу</string>
+    <string name="smartcard_removal_prompt_dialog_positive_button">Разумем</string>
 </resources>

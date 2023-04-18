@@ -104,6 +104,12 @@ public class AndroidBrokerAccountTest {
     @Test(expected = ClassCastException.class)
     public void testCannotCastBrokerAccountToAndroidBrokerAccountWhenNotPossible() {
         final IBrokerAccount brokerAccount = new IBrokerAccount() {
+            @NonNull
+            @Override
+            public String getType() {
+                return ACCOUNT_TYPE;
+            }
+
             @Override
             public @NonNull String getUsername() {
                 return TEST_ACCOUNT_NAME;

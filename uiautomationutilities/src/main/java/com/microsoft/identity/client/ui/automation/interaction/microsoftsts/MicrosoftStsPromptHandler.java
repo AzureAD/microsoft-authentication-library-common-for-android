@@ -62,6 +62,9 @@ public class MicrosoftStsPromptHandler extends AbstractPromptHandler {
     public void handlePrompt(@NonNull final String username, @NonNull final String password) {
         final boolean loginHintProvided = !TextUtils.isEmpty(parameters.getLoginHint());
 
+        final IMicrosoftStsLoginComponentHandler aadLoginComponentHandler =
+                (IMicrosoftStsLoginComponentHandler) loginComponentHandler;
+
         // if login hint was not provided, then we need to handle either account picker or email
         // field. If it was provided, then we expect to go straight to password field.
         if (!loginHintProvided) {
@@ -76,12 +79,13 @@ public class MicrosoftStsPromptHandler extends AbstractPromptHandler {
             loginComponentHandler.handleEmailField(username);
         }
 
+        if (parameters.isHowWouldYouLikeToSignInExpected()) {
+            aadLoginComponentHandler.handleHowWouldYouLikeToSignIn();
+        }
+
         if (parameters.isPasswordPageExpected() || parameters.getPrompt() == PromptParameter.LOGIN || !parameters.isSessionExpected()) {
             loginComponentHandler.handlePasswordField(password);
         }
-
-        final IMicrosoftStsLoginComponentHandler aadLoginComponentHandler =
-                (IMicrosoftStsLoginComponentHandler) loginComponentHandler;
 
         if (parameters.isVerifyYourIdentityPageExpected()) {
             aadLoginComponentHandler.handleVerifyYourIdentity();
