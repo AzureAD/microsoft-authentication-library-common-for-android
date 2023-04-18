@@ -29,12 +29,10 @@ import android.security.KeyPairGeneratorSpec;
 
 import androidx.annotation.RequiresApi;
 
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.util.AndroidKeyStoreUtil;
 import com.microsoft.identity.common.java.crypto.key.AES256KeyLoader;
 import com.microsoft.identity.common.java.crypto.key.KeyUtil;
 import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.java.telemetry.ITelemetryCallback;
 import com.microsoft.identity.common.java.util.CachedData;
 import com.microsoft.identity.common.java.util.FileUtil;
 import com.microsoft.identity.common.logging.Logger;
@@ -87,21 +85,25 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
     private static final String WRAP_KEY_ALGORITHM = "RSA";
 
     /**
-     * Indicate that token item is encrypted with the key persisted in AndroidKeyStore.
+     * Indicate that token item is encrypted with the key loaded in this class.
      */
-    public static final String KEY_IDENTIFIER = "A001";
+    public static final String WRAPPED_KEY_KEY_IDENTIFIER = "A001";
 
-    /**
-     * Name of the file contains the symmetric key used for encryption/decryption.
-     */
-    /* package */ static final String KEY_FILE_PATH = "adalks";
-
+    // Exposed for testing only.
     /* package */ static final int KEY_FILE_SIZE = 1024;
 
     private final Context mContext;
-    private final ITelemetryCallback mTelemetryCallback;
 
+    /**
+     * Name of the key itself. Must be unique.
+     */
     private final String mAlias;
+
+    /**
+     * Name of the file contains the wrapped symmetric key used for encryption/decryption.
+     * Must be unique.
+     */
+    private final String mFilePath;
 
     private final CachedData<SecretKey> mKeyCache = new CachedData<SecretKey>() {
         @Override
@@ -124,15 +126,16 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
      * Default constructor
      *
      * @param alias             Alias(name) of this key
+     * @param alias             Path to the file for storing the wrapped key.
      * @param context           Android's {@link Context}
      * @param telemetryCallback a callback object for emitting telemetry events to Broker.
      */
     public AndroidWrappedKeyLoader(@NonNull final String alias,
-                                   @NonNull final Context context,
-                                   @Nullable final ITelemetryCallback telemetryCallback) {
+                                   @NonNull final String filePath,
+                                   @NonNull final Context context) {
         mAlias = alias;
+        mFilePath = filePath;
         mContext = context;
-        mTelemetryCallback = telemetryCallback;
     }
 
     @Override
@@ -144,7 +147,7 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
     @Override
     @NonNull
     public String getKeyTypeIdentifier() {
-        return KEY_IDENTIFIER;
+        return WRAPPED_KEY_KEY_IDENTIFIER;
     }
 
     /**
@@ -170,16 +173,12 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
     }
 
     @Override
+    @NonNull
     protected SecretKey generateRandomKey() throws ClientException {
         final String methodTag = TAG + ":generateRandomKey";
 
         final SecretKey key = super.generateRandomKey();
         saveSecretKeyToStorage(key);
-
-        logEvent(methodTag,
-                AuthenticationConstants.TelemetryEvents.KEY_CREATED,
-                false,
-                "New key is generated.");
 
         Logger.info(methodTag, "New key is generated with thumbprint: " +
                 KeyUtil.getKeyThumbPrint(key));
@@ -196,7 +195,7 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
     /* package */ SecretKey readSecretKeyFromStorage() throws ClientException {
         final String methodTag = TAG + ":readSecretKeyFromStorage";
         try {
-            final KeyPair keyPair = readKeyStoreKeyPair();
+            final KeyPair keyPair = AndroidKeyStoreUtil.readKey(mAlias);
             if (keyPair == null) {
                 Logger.info(methodTag, "key does not exist in keystore");
                 deleteSecretKeyFromStorage();
@@ -251,10 +250,12 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
          * application using a shared linux user id... and avoid these applications from
          * stomping/overwriting one another's keypair.
          */
-        KeyPair keyPair = readKeyStoreKeyPair();
+        KeyPair keyPair = AndroidKeyStoreUtil.readKey(mAlias);
         if(keyPair == null){
             Logger.info(methodTag, "No existing keypair. Generating a new one.");
-            keyPair = generateKeyStoreKeyPair();
+            keyPair = AndroidKeyStoreUtil.generateKeyPair(
+                    WRAP_KEY_ALGORITHM,
+                    getSpecForKeyStoreKey(mContext, mAlias));
         }
 
         final byte[] keyWrapped = AndroidKeyStoreUtil.wrap(unencryptedKey, keyPair, WRAP_ALGORITHM);
@@ -264,58 +265,11 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
     /**
      * Wipe all the data associated from this key.
      */
-    private void deleteSecretKeyFromStorage() throws ClientException {
+    // VisibleForTesting
+    public void deleteSecretKeyFromStorage() throws ClientException {
         AndroidKeyStoreUtil.deleteKey(mAlias);
         FileUtil.deleteFile(getKeyFile());
         mKeyCache.clear();
-    }
-
-
-    /**
-     * Generate the key in {@link KeyStore}.
-     *
-     * @return KeyPair. Null if there isn't any.
-     */
-    @NonNull
-    private synchronized KeyPair generateKeyStoreKeyPair()
-            throws ClientException {
-        final String methodTag = TAG + ":generateKeyStoreKeyPair";
-        try {
-            logFlowStart(methodTag, AuthenticationConstants.TelemetryEvents.KEYSTORE_WRITE_START);
-            final KeyPair keyPair = AndroidKeyStoreUtil.generateKeyPair(
-                    WRAP_KEY_ALGORITHM,
-                    getSpecForKeyStoreKey(mContext, mAlias));
-            logFlowSuccess(methodTag, AuthenticationConstants.TelemetryEvents.KEYSTORE_WRITE_END, "");
-            return keyPair;
-        } catch (final ClientException e) {
-            logFlowError(methodTag, AuthenticationConstants.TelemetryEvents.KEYSTORE_WRITE_END, e.toString(), e);
-            throw e;
-        }
-    }
-
-    /**
-     * Read KeyPair from {@link KeyStore}..
-     *
-     * @return KeyPair. Null if there isn't any.
-     */
-    @Nullable
-    private synchronized KeyPair readKeyStoreKeyPair()
-            throws ClientException {
-        final String methodTag = TAG + ":readKeyStoreKeyPair";
-        try {
-            logFlowStart(methodTag, AuthenticationConstants.TelemetryEvents.KEYSTORE_READ_START);
-
-            final KeyPair keyPair = AndroidKeyStoreUtil.readKey(mAlias);
-            if (keyPair == null) {
-                logFlowSuccess(methodTag, AuthenticationConstants.TelemetryEvents.KEYSTORE_READ_END, "KeyStore is empty.");
-            }
-
-            logFlowSuccess(methodTag, AuthenticationConstants.TelemetryEvents.KEYSTORE_READ_END, "KeyStore KeyPair is loaded.");
-            return keyPair;
-        } catch (final ClientException e) {
-            logFlowError(methodTag, AuthenticationConstants.TelemetryEvents.KEYSTORE_READ_END, e.toString(), e);
-            throw e;
-        }
     }
 
     /**
@@ -325,7 +279,6 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
      * @param context an Android {@link Context} object.
      * @return a {@link AlgorithmParameterSpec} for the keystore key (that we'll use to wrap the secret key).
      */
-    @SuppressWarnings("deprecation")
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     private static AlgorithmParameterSpec getSpecForKeyStoreKey(@NonNull final Context context,
                                                                 @NonNull final String alias) {
@@ -354,48 +307,6 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
     private File getKeyFile() {
         return new File(
                 mContext.getDir(mContext.getPackageName(), Context.MODE_PRIVATE),
-                AndroidWrappedKeyLoader.KEY_FILE_PATH);
-    }
-
-
-    /**
-     * Since Common isn't wired to telemetry yet at the point of implementation (July 18, 2019)
-     * We use these functions to pass telemetry events to the calling ad-accounts.
-     */
-    private void logEvent(@NonNull final String methodTag,
-                          @NonNull final String operationName,
-                          final boolean isFailed,
-                          @NonNull final String reason) {
-        Logger.verbose(methodTag, operationName + ": " + reason);
-        if (mTelemetryCallback != null) {
-            mTelemetryCallback.logEvent(operationName, isFailed, reason);
-        }
-    }
-
-    private void logFlowStart(@NonNull final String methodTag,
-                              @NonNull final String operationName) {
-        Logger.verbose(methodTag, operationName + " started.");
-        if (mTelemetryCallback != null) {
-            mTelemetryCallback.logEvent(operationName, false, "");
-        }
-    }
-
-    private void logFlowSuccess(@NonNull final String methodTag,
-                                @NonNull final String operationName,
-                                @NonNull final String reason) {
-        Logger.verbose(methodTag, operationName + " successfully finished: " + reason);
-        if (mTelemetryCallback != null) {
-            mTelemetryCallback.logEvent(operationName, false, reason);
-        }
-    }
-
-    private void logFlowError(@NonNull final String methodTag,
-                              @NonNull final String operationName,
-                              @NonNull final String reason,
-                              @Nullable Exception e) {
-        Logger.error(methodTag, operationName + " failed: " + reason, e);
-        if (mTelemetryCallback != null) {
-            mTelemetryCallback.logEvent(operationName, true, reason);
-        }
+                mFilePath);
     }
 }
