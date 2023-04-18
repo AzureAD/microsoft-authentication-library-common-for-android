@@ -105,7 +105,7 @@ public class OnDeviceCertBasedAuthChallengeHandler extends AbstractCertBasedAuth
                         request.cancel();
                     }
                 },
-                getMappedKeyTypes(request.getKeyTypes()),
+                mapKeyTypes(request.getKeyTypes()),
                 request.getPrincipals(),
                 request.getHost(),
                 request.getPort(),
@@ -128,7 +128,7 @@ public class OnDeviceCertBasedAuthChallengeHandler extends AbstractCertBasedAuth
      */
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Nullable
-    public String[] getMappedKeyTypes(@Nullable final String[] keyTypes) {
+    public String[] mapKeyTypes(@Nullable final String[] keyTypes) {
         if (keyTypes == null) {
             return null;
         }
