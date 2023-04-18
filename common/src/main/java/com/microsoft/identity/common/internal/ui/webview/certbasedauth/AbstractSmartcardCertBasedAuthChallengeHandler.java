@@ -287,6 +287,7 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandler<T extends A
         final PrivateKey privateKey = session.getKeyForAuth(certDetails, pin);
         //Cert chain only needs the cert to be used for authentication.
         final X509Certificate[] chain = new X509Certificate[]{certDetails.getCertificate()};
+        mTelemetryHelper.setPublicKeyAlgoType(chain[0].getPublicKey().getAlgorithm());
         //Clear current dialog.
         mDialogHolder.dismissDialog();
         mIsCertBasedAuthProceeding = true;

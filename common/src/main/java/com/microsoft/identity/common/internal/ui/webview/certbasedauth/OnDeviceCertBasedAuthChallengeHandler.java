@@ -28,6 +28,7 @@ import android.security.KeyChain;
 import android.security.KeyChainAliasCallback;
 import android.security.KeyChainException;
 import android.security.keystore.KeyProperties;
+import android.util.Log;
 import android.webkit.ClientCertRequest;
 
 import androidx.annotation.NonNull;
@@ -86,6 +87,10 @@ public class OnDeviceCertBasedAuthChallengeHandler extends AbstractCertBasedAuth
                         try {
                             final X509Certificate[] certChain = KeyChain.getCertificateChain(
                                     mActivity.getApplicationContext(), alias);
+                            if (certChain.length > 0) {
+                                //From my testing, the first cert (if there are more than one) is the selected one.
+                                mTelemetryHelper.setPublicKeyAlgoType(certChain[0].getPublicKey().getAlgorithm());
+                            }
                             final PrivateKey privateKey = KeyChain.getPrivateKey(
                                     mActivity, alias);
 
