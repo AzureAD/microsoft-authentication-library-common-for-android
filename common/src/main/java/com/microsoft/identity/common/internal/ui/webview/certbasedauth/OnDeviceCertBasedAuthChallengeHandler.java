@@ -28,7 +28,6 @@ import android.security.KeyChain;
 import android.security.KeyChainAliasCallback;
 import android.security.KeyChainException;
 import android.security.keystore.KeyProperties;
-import android.util.Log;
 import android.webkit.ClientCertRequest;
 
 import androidx.annotation.NonNull;
