@@ -55,6 +55,11 @@ public class InstallBrokerTestRule implements TestRule {
                 Logger.i(TAG, "Applying rule....");
                 Logger.i(TAG, "Installing broker: " + ((App) broker).getAppName());
 
+                // This checks if the "-PpreInstallLtw" command line option was passed.
+                // If yes, pre install LTW whenever a broker test case is ran before the designated broker.
+                // If not, only install the specified broker.
+                // When running this as part of the pipeline, this option should be passed when building
+                // the automation apps, probably should be set based on a parameter or variable.
                 if (BuildConfig.PRE_INSTALL_LTW) {
                     final BrokerLTW brokerLTW = new BrokerLTW();
                     // Commenting this out until LTW is supported (need package name and an apk)
