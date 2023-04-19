@@ -177,7 +177,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 processInvalidRedirectUri(view, url);
             } else if (isBlankPageRequest(formattedURL)) {
                 Logger.info(methodTag,"It is an blank page request");
-            } else if (isUriSSLProtected(formattedURL)) {
+            } else if (!isUriSSLProtected(formattedURL)) {
                 Logger.info(methodTag,"Check for SSL protection");
                 processSSLProtectionCheck(view, url);
             } else {
@@ -195,7 +195,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     }
 
     private boolean isUriSSLProtected(@NonNull final String url) {
-        return !(url.startsWith(AuthenticationConstants.Broker.REDIRECT_SSL_PREFIX));
+        return url.startsWith(AuthenticationConstants.Broker.REDIRECT_SSL_PREFIX);
     }
 
     private boolean isBlankPageRequest(@NonNull final String url) {
