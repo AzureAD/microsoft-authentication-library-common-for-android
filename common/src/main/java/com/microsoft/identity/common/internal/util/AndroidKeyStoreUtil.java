@@ -255,7 +255,7 @@ public class AndroidKeyStoreUtil {
     /**
      * See: https://issuetracker.google.com/issues/37095309
      */
-    private static synchronized void applyKeyStoreLocaleWorkarounds(@NonNull final Locale currentLocale) {
+    public static synchronized void applyKeyStoreLocaleWorkarounds(@NonNull final Locale currentLocale) {
         if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.M
                 && DateUtilities.isLocaleCalendarNonGregorian(currentLocale)) {
             Locale.setDefault(Locale.ENGLISH);
