@@ -230,6 +230,7 @@ public class BrokerMsalController extends BaseController {
      *
      * @param strategy            an {@link IIpcStrategy}
      * @param minRequestedVersion the minimum allowed broker protocol version, may be null.
+     * @param clientMaxProtocolVersion the maximum broker protocol version known by client.
      * @return a protocol version negotiated by MSAL and Broker.
      */
     @VisibleForTesting
