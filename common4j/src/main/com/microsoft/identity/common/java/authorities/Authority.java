@@ -35,6 +35,7 @@ import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.util.CommonURIBuilder;
 
 import java.io.IOException;
+import java.lang.annotation.Native;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -55,6 +56,7 @@ public abstract class Authority {
     private static final String B2C_PATH_SEGMENT = "tfp";
     public static final String B2C = "B2C";
     public static final String CIAM = "CIAM";
+    public static final String AAD_NA = "AAD_NA";
 
     @SerializedName("default")
     protected boolean mIsDefault = false;
@@ -154,6 +156,8 @@ public abstract class Authority {
                 authority = new AzureActiveDirectoryB2CAuthority(authorityUrl);
             } else if (CIAM.equalsIgnoreCase(authorityTypeStr)) {
                 authority = new CIAMAuthority(authorityUrl);
+            } else if (AAD_NA.equalsIgnoreCase(authorityTypeStr) && configuredAuthority instanceof NativeAuthCIAMAuthority) {
+                authority = new NativeAuthCIAMAuthority(authorityUrl, ((NativeAuthCIAMAuthority) configuredAuthority).getClientId());
             } else {
                 authority = createAadAuthority(authorityCommonUriBuilder, pathSegments);
             }

@@ -414,6 +414,12 @@ public final class ErrorStrings {
     public static final String SINGLE_ACCOUNT_PCA_INIT_FAIL_UNKNOWN_REASON_ERROR_MESSAGE = "A single account public client application could not be created for unknown reasons.";
 
     /**
+     * A Native Auth public client application could not be created for unknown reasons.
+     */
+    public static final String NATIVE_AUTH_PCA_INIT_FAIL_UNKNOWN_REASON_ERROR_CODE = "native_auth_pca_init_fail_unknown_reason";
+    public static final String NATIVE_AUTH_PCA_INIT_FAIL_UNKNOWN_REASON_ERROR_MESSAGE = "A native auth public client application could not be created for unknown reasons.";
+
+    /**
      * Some or all requested scopes where declined by the server. Developer should decide whether to continue
      * authentication with the granted scopes or end the authentication process.
      */

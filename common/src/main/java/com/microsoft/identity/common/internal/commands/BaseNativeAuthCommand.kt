@@ -22,10 +22,10 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.commands
 
-import com.microsoft.identity.common.internal.commands.parameters.BaseNativeAuthCommandParameters
 import com.microsoft.identity.common.internal.controllers.BaseNativeAuthController
 import com.microsoft.identity.common.java.commands.BaseCommand
 import com.microsoft.identity.common.java.commands.CommandCallback
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.BaseNativeAuthCommandParameters
 import lombok.EqualsAndHashCode
 
 /**

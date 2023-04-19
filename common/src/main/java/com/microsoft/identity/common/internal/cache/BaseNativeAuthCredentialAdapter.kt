@@ -23,19 +23,18 @@
 
 package com.microsoft.identity.common.internal.cache
 
-import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.BaseNativeAuthOAuth2Strategy
 import com.microsoft.identity.common.java.BaseAccount
 import com.microsoft.identity.common.java.cache.IAccountCredentialAdapter
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse
+import com.microsoft.identity.common.java.providers.nativeauth.NativeAuthOAuth2Strategy
 import com.microsoft.identity.common.java.providers.oauth2.RefreshToken
 
 abstract class BaseNativeAuthCredentialAdapter<
-    GenericOAuth2Strategy : BaseNativeAuthOAuth2Strategy<*, *, *, *, *>,
     GenericAccount : BaseAccount,
     GenericRefreshToken : RefreshToken> :
     IAccountCredentialAdapter<
-        GenericOAuth2Strategy,
+        NativeAuthOAuth2Strategy,
         MicrosoftStsAuthorizationRequest,
         MicrosoftStsTokenResponse,
         GenericAccount,

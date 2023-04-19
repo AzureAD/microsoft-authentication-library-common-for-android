@@ -1,17 +1,17 @@
 package com.microsoft.identity.common.internal.providers.microsoft.nativeauth
 
-import com.microsoft.identity.common.internal.commands.parameters.SignInCommandParameters
-import com.microsoft.identity.common.internal.commands.parameters.SignUpContinueCommandParameters
-import com.microsoft.identity.common.internal.commands.parameters.SignUpStartCommandParameters
-import com.microsoft.identity.common.internal.commands.parameters.SsprContinueCommandParameters
-import com.microsoft.identity.common.internal.commands.parameters.SsprStartCommandParameters
-import com.microsoft.identity.common.internal.commands.parameters.SsprSubmitCommandParameters
-import com.microsoft.identity.common.internal.commands.parameters.UserAttributes
-import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.NativeAuthOAuth2Configuration
-import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.NativeAuthRequestProvider
-import com.microsoft.identity.common.internal.providers.oauth2.nativeauth.requests.NativeAuthGrantType
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpContinueCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpStartCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SsprContinueCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SsprStartCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SsprSubmitCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.UserAttributes
 import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.interfaces.PlatformComponents
+import com.microsoft.identity.common.java.providers.nativeauth.NativeAuthOAuth2Configuration
+import com.microsoft.identity.common.java.providers.nativeauth.NativeAuthRequestProvider
+import com.microsoft.identity.common.java.providers.nativeauth.requests.NativeAuthGrantType
 import io.mockk.every
 import io.mockk.mockk
 import junit.framework.Assert.assertEquals
