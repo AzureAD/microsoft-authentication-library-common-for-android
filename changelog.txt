@@ -1,6 +1,7 @@
 V.NEXT
 ----------
 - [PATCH] Fix Error Type thrown for NO_ACCOUNT_FOUND (#2006)
+- [MINOR] Separate constants for max client and broker protocol versions (#2008)
 - [PATCH] Pulling device cert issuer check to beginning of OnReceivedClientCertRequest (#2010)
 - [MINOR] Add method to clear receiver concurrentHashMap in LocalBroadcaster (#1993)
 - [MINOR] Separate constants for max client and broker protocol versions (#2008)
