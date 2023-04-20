@@ -121,12 +121,6 @@ public enum AttributeName {
     is_serviced_from_cache,
 
     /**
-     * The correlation id being used for the request. This can used to correlate the data with the
-     * server side.
-     */
-    correlation_id,
-
-    /**
      * The message accompanying an Exception.
      */
     error_message;
