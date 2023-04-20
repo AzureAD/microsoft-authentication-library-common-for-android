@@ -44,7 +44,7 @@ jobs:
         displayName: Assemble Release
         inputs:
           gradleWrapperFile: 'gradlew'
-          tasks: clean ktlintCheck clean common:assembleLocal
+          tasks: clean ktlintCheck clean common:assembleLocal common4j:assemble
           publishJUnitResults: false
           testResultsFiles: '**/build/test-results/TEST-*.xml'
           jdkVersion: $(BuildParameters.jdkVersion)
@@ -54,6 +54,12 @@ jobs:
         displayName: Run Unit tests
         inputs:
           tasks: common:testLocalDebugUnitTest -Plabtest -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}} --tests *com.microsoft.identity.common.internal.providers.microsoft.nativeauth*
+          javaHomeSelection: $(BuildParameters.javaHomeSelection)
+          jdkVersion: 1.11
+      - task: Gradle@2
+        displayName: Run Unit tests in common4j
+        inputs:
+          tasks: common4j:test -Psugar=true -Plabtest -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}} --tests *com.microsoft.identity.common.java.providers.nativeauth*
           javaHomeSelection: $(BuildParameters.javaHomeSelection)
           jdkVersion: 1.11
 

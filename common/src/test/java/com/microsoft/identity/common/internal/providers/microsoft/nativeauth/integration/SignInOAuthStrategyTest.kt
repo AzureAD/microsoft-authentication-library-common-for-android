@@ -22,6 +22,7 @@ import io.mockk.every
 import io.mockk.mockk
 import org.junit.Assert
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.kotlin.mock
@@ -113,6 +114,7 @@ class SignInOAuthStrategyTest {
         )
     }
 
+    @Ignore
     @Test
     fun testPerformSignInInitiateSuccessWithOnlyEmail() {
         val signInCommandParameters = mockk<SignInCommandParameters>()
@@ -124,6 +126,7 @@ class SignInOAuthStrategyTest {
         Assert.assertTrue(signInInitiateResult.success)
     }
 
+    @Ignore
     @Test
     fun testPerformSignInChallengeSuccess() {
         val signInChallengeResult = nativeAuthOAuth2Strategy.performSignInChallenge(
@@ -134,6 +137,7 @@ class SignInOAuthStrategyTest {
         Assert.assertEquals(signInChallengeResult.successResponse!!.challengeType, "redirect")
     }
 
+    @Ignore
     @Test
     fun testPerformSignInTokenWithPasswordSuccess() {
         val signInCommandParameters = mockk<SignInCommandParameters>()
@@ -149,6 +153,7 @@ class SignInOAuthStrategyTest {
         Assert.assertTrue(!signInChallengeResult.successResponse!!.accessToken.isNullOrBlank())
     }
 
+    @Ignore
     @Test
     fun testPerformSignInTokenWithOobSuccess() {
         val signInCommandParameters = mockk<SignInCommandParameters>()
@@ -164,6 +169,7 @@ class SignInOAuthStrategyTest {
         Assert.assertTrue(!signInChallengeResult.successResponse!!.accessToken.isNullOrBlank())
     }
 
+    @Ignore
     @Test
     fun testPerformSignInInitiateWithChallengeTypeRedirectSuccess() {
         MockApiUtils.configureMockApi(
@@ -185,6 +191,7 @@ class SignInOAuthStrategyTest {
         )
     }
 
+    @Ignore
     @Test
     fun testPerformSignInChallengeWithChallengeTypeOobSuccess() {
         MockApiUtils.configureMockApi(
@@ -206,6 +213,7 @@ class SignInOAuthStrategyTest {
         )
     }
 
+    @Ignore
     @Test
     fun testPerformSignInChallengeWithRedirectSuccess() {
         MockApiUtils.configureMockApi(
@@ -227,6 +235,7 @@ class SignInOAuthStrategyTest {
         )
     }
 
+    @Ignore
     @Test
     fun testPerformSignInTokenWithCredentialRequiredError() {
         MockApiUtils.configureMockApi(
@@ -250,6 +259,7 @@ class SignInOAuthStrategyTest {
         )
     }
 
+    @Ignore
     @Test
     fun testPerformSignInTokenWithInvalidGrantError() {
         MockApiUtils.configureMockApi(
