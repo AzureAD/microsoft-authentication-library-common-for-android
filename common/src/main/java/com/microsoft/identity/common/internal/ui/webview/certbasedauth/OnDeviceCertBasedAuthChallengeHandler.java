@@ -132,7 +132,7 @@ public class OnDeviceCertBasedAuthChallengeHandler extends AbstractCertBasedAuth
      */
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Nullable
-    public String[] mapKeyTypes(@Nullable final String[] keyTypes) {
+    static public String[] mapKeyTypes(@Nullable final String[] keyTypes) {
         if (keyTypes == null) {
             return null;
         }
