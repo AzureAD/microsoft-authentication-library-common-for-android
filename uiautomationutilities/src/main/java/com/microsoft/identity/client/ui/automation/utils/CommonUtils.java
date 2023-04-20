@@ -35,6 +35,7 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.microsoft.identity.client.ui.automation.broker.BrokerCompanyPortal;
 import com.microsoft.identity.client.ui.automation.broker.BrokerHost;
+import com.microsoft.identity.client.ui.automation.broker.BrokerLTW;
 import com.microsoft.identity.client.ui.automation.broker.BrokerMicrosoftAuthenticator;
 import com.microsoft.identity.client.ui.automation.broker.ITestBroker;
 import com.microsoft.identity.client.ui.automation.logging.Logger;
@@ -152,7 +153,8 @@ public class CommonUtils {
                 new ITestBroker[]{
                         new BrokerCompanyPortal(),
                         new BrokerMicrosoftAuthenticator(),
-                        new BrokerHost()
+                        new BrokerHost(),
+                        new BrokerLTW()
                 }
         );
     }
