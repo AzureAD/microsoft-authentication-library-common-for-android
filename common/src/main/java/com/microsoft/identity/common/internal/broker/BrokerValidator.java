@@ -157,7 +157,6 @@ public class BrokerValidator {
      * @return an iterator of access to valid broker signatures.
      */
     public Iterator<String> getValidBrokerSignatures() {
-        //TODO: this is only used for verifying brokers, so return the SHA-512 hashes
         final Iterator<BrokerData> itr = getValidBrokers().iterator();
         return new Iterator<String>() {
             @Override
