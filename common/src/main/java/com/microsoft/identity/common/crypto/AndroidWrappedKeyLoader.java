@@ -125,10 +125,9 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
     /**
      * Default constructor
      *
-     * @param alias             Alias(name) of this key
-     * @param alias             Path to the file for storing the wrapped key.
+     * @param alias             Alias(name) of the wrapping key.
+     * @param filePath          Path to the file for storing the wrapped key.
      * @param context           Android's {@link Context}
-     * @param telemetryCallback a callback object for emitting telemetry events to Broker.
      */
     public AndroidWrappedKeyLoader(@NonNull final String alias,
                                    @NonNull final String filePath,

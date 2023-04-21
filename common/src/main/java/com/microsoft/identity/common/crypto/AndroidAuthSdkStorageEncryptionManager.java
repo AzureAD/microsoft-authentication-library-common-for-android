@@ -47,12 +47,12 @@ public class AndroidAuthSdkStorageEncryptionManager extends StorageEncryptionMan
     /**
      * Alias persisting the keypair in AndroidKeyStore.
      */
-    public static final String KEY_STORE_ALIAS = "AdalKey";
+    public static final String WRAPPING_KEY_ALIAS = "AdalKey";
 
     /**
      * Name of the file contains the symmetric key used for encryption/decryption.
      */
-    public static final String KEY_FILE_NAME = "adalks";
+    public static final String WRAPPED_KEY_FILE_NAME = "adalks";
 
     private final PredefinedKeyLoader mPredefinedKeyLoader;
     private final AndroidWrappedKeyLoader mKeyStoreKeyLoader;
@@ -66,8 +66,8 @@ public class AndroidAuthSdkStorageEncryptionManager extends StorageEncryptionMan
         }
 
         mKeyStoreKeyLoader = new AndroidWrappedKeyLoader(
-                KEY_STORE_ALIAS,
-                KEY_FILE_NAME,
+                WRAPPING_KEY_ALIAS,
+                WRAPPED_KEY_FILE_NAME,
                 context);
     }
 
