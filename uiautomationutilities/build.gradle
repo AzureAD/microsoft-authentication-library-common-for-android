@@ -40,6 +40,8 @@ android {
 
     boolean usePreInstalledApks = project.hasProperty("preferPreInstalledApks")
 
+    boolean preInstallLtw = project.hasProperty("preInstallLtw")
+
     def final appSourcePlayStore = "PlayStore"
     def final appSourceLocalApk = "LocalApk"
 
@@ -102,7 +104,7 @@ android {
         buildConfigField("String", "UPDATE_SOURCE_PLAY_STORE", "\"$appSourcePlayStore\"")
         buildConfigField("String", "UPDATE_SOURCE_LOCAL_APK", "\"$appSourceLocalApk\"")
         buildConfigField("boolean", "PREFER_PRE_INSTALLED_APKS", "$usePreInstalledApks")
-
+        buildConfigField("boolean", "PRE_INSTALL_LTW", "$preInstallLtw")
 
         // Specifies a sorted list of flavors that the plugin should try to use from
         // a given dimension. The following tells the plugin that, when encountering
