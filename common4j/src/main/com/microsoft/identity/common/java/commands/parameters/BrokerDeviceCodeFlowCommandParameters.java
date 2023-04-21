@@ -54,6 +54,7 @@ public class BrokerDeviceCodeFlowCommandParameters extends DeviceCodeFlowCommand
     private final String homeAccountId;
     private final String localAccountId;
     private final int sleepTimeBeforePrtAcquisition;
+    private final int callerUid;
 
     @Override
     public void validate() throws ArgumentException {

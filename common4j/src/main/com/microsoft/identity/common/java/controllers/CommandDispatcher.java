@@ -179,12 +179,12 @@ public class CommandDispatcher {
     }
 
     /**
-     * submitSilentAndReturnAuthorizationResult - Run the Device Code Flow command using a DCF thread pool
+     * submitDcfAuthResultSilent - Run the Device Code Flow command using a DCF thread pool
      * @param command   {@link DeviceCodeFlowAuthResultCommand}
      * @return {@link AuthorizationResult}
      * @throws BaseException
      */
-    public static AuthorizationResult submitSilentAndReturnAuthorizationResult(@NonNull final DeviceCodeFlowAuthResultCommand command)
+    public static AuthorizationResult submitDcfAuthResultSilent(@NonNull final DeviceCodeFlowAuthResultCommand command)
             throws BaseException {
         final CommandResult commandResult;
         try {
@@ -206,12 +206,12 @@ public class CommandDispatcher {
     }
 
     /**
-     * submitSilentAndReturnAuthenticationResult - Run the Device Code Flow command using a DCF thread pool
+     * submitDcfTokenResultSilent - Run the Device Code Flow command using a DCF thread pool
      * @param command   {@link DeviceCodeFlowTokenResultCommand}
      * @return {@link ILocalAuthenticationResult}
      * @throws BaseException
      */
-    public static ILocalAuthenticationResult submitSilentAndReturnAuthenticationResult(@NonNull final DeviceCodeFlowTokenResultCommand command)
+    public static ILocalAuthenticationResult submitDcfTokenResultSilent(@NonNull final DeviceCodeFlowTokenResultCommand command)
             throws BaseException {
         final CommandResult commandResult;
         try {

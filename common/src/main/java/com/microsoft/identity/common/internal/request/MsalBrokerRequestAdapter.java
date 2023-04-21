@@ -298,10 +298,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                                                      @NonNull final DeviceCodeFlowCommandParameters parameters,
                                                      @NonNull final AuthorizationResult authorizationResult,
                                                      @Nullable final String negotiatedBrokerProtocolVersion) {
-        final MsalBrokerRequestAdapter msalBrokerRequestAdapter = new MsalBrokerRequestAdapter();
-
-        final BrokerRequest brokerRequest = msalBrokerRequestAdapter.
-                brokerRequestFromDeviceCodeFlowCommandParameters(parameters);
+        final BrokerRequest brokerRequest = this.brokerRequestFromDeviceCodeFlowCommandParameters(parameters);
 
         final Bundle requestBundle = getRequestBundleFromBrokerRequest(
                 brokerRequest,
@@ -314,7 +311,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 context.getApplicationInfo().uid
         );
 
-        MicrosoftStsAuthorizationResult microsoftStsAuthorizationResult= (MicrosoftStsAuthorizationResult) authorizationResult;
+        final MicrosoftStsAuthorizationResult microsoftStsAuthorizationResult= (MicrosoftStsAuthorizationResult) authorizationResult;
         requestBundle.putString(AuthenticationConstants.Broker.BROKER_DCF_AUTH_RESULT, ObjectMapper.serializeObjectToJsonString(microsoftStsAuthorizationResult));
 
         return requestBundle;
@@ -331,10 +328,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
     public Bundle getRequestBundleForAcquireTokenSilent(@NonNull final Context context,
                                                         @NonNull final SilentTokenCommandParameters parameters,
                                                         @Nullable final String negotiatedBrokerProtocolVersion) {
-        final MsalBrokerRequestAdapter msalBrokerRequestAdapter = new MsalBrokerRequestAdapter();
-
-        final BrokerRequest brokerRequest = msalBrokerRequestAdapter.
-                brokerRequestFromSilentOperationParameters(parameters);
+        final BrokerRequest brokerRequest = this.brokerRequestFromSilentOperationParameters(parameters);
 
         final Bundle requestBundle = getRequestBundleFromBrokerRequest(
                 brokerRequest,
