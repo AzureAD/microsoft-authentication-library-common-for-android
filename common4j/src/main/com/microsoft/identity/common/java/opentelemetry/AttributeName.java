@@ -106,11 +106,6 @@ public enum AttributeName {
     controller_name,
 
     /**
-     * The name of the application making the request.
-     */
-    application_name,
-
-    /**
      * Indicates if token was return from token cache
      */
     is_serviced_from_cache,
