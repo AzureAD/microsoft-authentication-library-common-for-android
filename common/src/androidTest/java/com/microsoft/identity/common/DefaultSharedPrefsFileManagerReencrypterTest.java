@@ -30,6 +30,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
 import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
+import com.microsoft.identity.common.components.AndroidPlatformComponentsFactory;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.java.util.TaskCompletedCallback;
 import com.microsoft.identity.common.migration.DefaultMultiTypeNameValueStorageReencrypter;
@@ -120,7 +121,7 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
     @Before
     public void setUp() {
         mContext = InstrumentationRegistry.getTargetContext();
-        mTestCacheFile = AndroidPlatformComponents.createFromContext(mContext).getNameValueStore(TEST_CACHE_FILENAME, String.class);
+        mTestCacheFile = AndroidPlatformComponentsFactory.createFromContext(mContext).getNameValueStore(TEST_CACHE_FILENAME, String.class);
         mFileManagerReencrypter = new DefaultMultiTypeNameValueStorageReencrypter();
         try {
             final byte[] mockKey = generateLegacyFormatKey("abcdedfdfd");

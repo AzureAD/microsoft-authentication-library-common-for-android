@@ -56,6 +56,7 @@ import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.net.URISyntaxException;
+import java.security.Principal;
 import java.util.Locale;
 import java.util.Map;
 
@@ -79,6 +80,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     public static final String ERROR = "error";
     public static final String ERROR_SUBCODE = "error_subcode";
     public static final String ERROR_DESCRIPTION = "error_description";
+    private static final String DEVICE_CERT_ISSUER = "CN=MS-Organization-Access";
     private final String mRedirectUrl;
     private final CertBasedAuthFactory mCertBasedAuthFactory;
     private AbstractCertBasedAuthChallengeHandler mCertBasedAuthChallengeHandler;
@@ -175,7 +177,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 processInvalidRedirectUri(view, url);
             } else if (isBlankPageRequest(formattedURL)) {
                 Logger.info(methodTag,"It is an blank page request");
-            } else if (isUriSSLProtected(formattedURL)) {
+            } else if (!isUriSSLProtected(formattedURL)) {
                 Logger.info(methodTag,"Check for SSL protection");
                 processSSLProtectionCheck(view, url);
             } else {
@@ -193,7 +195,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     }
 
     private boolean isUriSSLProtected(@NonNull final String url) {
-        return !(url.startsWith(AuthenticationConstants.Broker.REDIRECT_SSL_PREFIX));
+        return url.startsWith(AuthenticationConstants.Broker.REDIRECT_SSL_PREFIX);
     }
 
     private boolean isBlankPageRequest(@NonNull final String url) {
@@ -460,6 +462,23 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     @Override
     public void onReceivedClientCertRequest(@NonNull final WebView view,
                                             @NonNull final ClientCertRequest clientCertRequest) {
+        final String methodTag = TAG + ":onReceivedClientCertRequest";
+        // When server sends null or empty issuers, we'll continue with CBA.
+        // In the case where ADFS sends a clientTLS device auth request, we don't handle that in CBA.
+        // This type of request will have a particular issuer, so if that issuer is found, we will
+        //  immediately cancel the ClientCertRequest.
+        final Principal[] acceptableCertIssuers = clientCertRequest.getPrincipals();
+        if (acceptableCertIssuers != null) {
+            for (final Principal issuer : acceptableCertIssuers) {
+                if (issuer.getName().contains(DEVICE_CERT_ISSUER)) {
+                    final String message = "Cancelling the TLS request, not responding to TLS challenge triggered by device authentication.";
+                    Logger.info(methodTag, message);
+                    clientCertRequest.cancel();
+                    return;
+                }
+            }
+        }
+
         if (mCertBasedAuthChallengeHandler != null) {
             mCertBasedAuthChallengeHandler.cleanUp();
         }

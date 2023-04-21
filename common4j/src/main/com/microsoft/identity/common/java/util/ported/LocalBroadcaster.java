@@ -83,6 +83,13 @@ public enum LocalBroadcaster {
     }
 
     /**
+     * Clears the receivers associated with this instance.
+     */
+    public void clearReceivers() {
+        mReceivers.clear();
+    }
+
+    /**
      * Resets the broadcast executor service.
      */
     public static void resetBroadcast() {
