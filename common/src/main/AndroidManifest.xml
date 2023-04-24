@@ -34,6 +34,7 @@
     <!--https://developer.android.com/training/basics/intents/package-visibility-use-cases-->
     <queries>
         <package android:name="com.azure.authenticator" />
+        <package android:name="com.microsoft.appmanager" />
         <package android:name="com.microsoft.identity.testuserapp" />
         <package android:name="com.microsoft.windowsintune.companyportal" />
         <!-- Required for API Level 30 to make sure we can detect browsers

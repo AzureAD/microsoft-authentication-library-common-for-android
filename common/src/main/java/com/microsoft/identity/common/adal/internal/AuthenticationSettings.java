@@ -155,8 +155,8 @@ public enum AuthenticationSettings {
             throw new IllegalArgumentException("The passed in secret key map is null.");
         }
 
-        if (secretKeys.size() != 2) {
-            throw new IllegalArgumentException("Expect two keys are passed in.");
+        if (secretKeys.size() != 3) {
+            throw new IllegalArgumentException("Expect three keys are passed in.");
         }
 
         for (Map.Entry<String, byte[]> entry : secretKeys.entrySet()) {

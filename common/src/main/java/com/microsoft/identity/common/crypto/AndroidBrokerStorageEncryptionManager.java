@@ -45,6 +45,7 @@ import lombok.NonNull;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_HOST_APP_PACKAGE_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.LTW_APP_PACKAGE_NAME;
 
 /**
  * Key Encryption Manager for Broker.
@@ -65,11 +66,13 @@ public class AndroidBrokerStorageEncryptionManager extends StorageEncryptionMana
 
     protected final String LEGACY_AUTHENTICATOR_APP_KEY_ALIAS = "LEGACY_AUTHENTICATOR_APP_KEY";
     protected final String LEGACY_COMPANY_PORTAL_KEY_ALIAS = "LEGACY_COMPANY_PORTAL_KEY";
+    protected final String LINK_TO_WINDOWS_KEY_ALIAS = "LINK_TO_WINDOWS_KEY";
 
     private final Context mContext;
     private final ITelemetryCallback mTelemetryCallback;
     private final PredefinedKeyLoader mLegacyAuthAppKeyLoader;
     private final PredefinedKeyLoader mLegacyCPKeyLoader;
+    private final PredefinedKeyLoader mLTWKeyLoader;
     private final AndroidWrappedKeyLoader mKeyStoreKeyLoader;
 
     public AndroidBrokerStorageEncryptionManager(@NonNull final Context context,
@@ -82,6 +85,9 @@ public class AndroidBrokerStorageEncryptionManager extends StorageEncryptionMana
 
         mLegacyCPKeyLoader = new PredefinedKeyLoader(LEGACY_COMPANY_PORTAL_KEY_ALIAS,
                 AuthenticationSettings.INSTANCE.getBrokerSecretKeys().get(COMPANY_PORTAL_APP_PACKAGE_NAME));
+
+        mLTWKeyLoader = new PredefinedKeyLoader(LINK_TO_WINDOWS_KEY_ALIAS,
+                AuthenticationSettings.INSTANCE.getBrokerSecretKeys().get(LTW_APP_PACKAGE_NAME));
 
         mKeyStoreKeyLoader = new AndroidWrappedKeyLoader(KEY_STORE_ALIAS, context, telemetryCallback);
     }
@@ -100,6 +106,10 @@ public class AndroidBrokerStorageEncryptionManager extends StorageEncryptionMana
         final String packageName = getPackageName();
         if (AZURE_AUTHENTICATOR_APP_PACKAGE_NAME.equalsIgnoreCase(packageName)) {
             return mLegacyAuthAppKeyLoader;
+        }
+
+        if (LTW_APP_PACKAGE_NAME.equalsIgnoreCase(packageName)) {
+            return mLTWKeyLoader;
         }
 
         if (COMPANY_PORTAL_APP_PACKAGE_NAME.equalsIgnoreCase(packageName) ||
@@ -122,8 +132,15 @@ public class AndroidBrokerStorageEncryptionManager extends StorageEncryptionMana
                     BROKER_HOST_APP_PACKAGE_NAME.equalsIgnoreCase(packageName)) {
                 keyLoaders.add(mLegacyCPKeyLoader);
                 keyLoaders.add(mLegacyAuthAppKeyLoader);
+                keyLoaders.add(mLTWKeyLoader);
                 return keyLoaders;
             } else if (AZURE_AUTHENTICATOR_APP_PACKAGE_NAME.equalsIgnoreCase(packageName)) {
+                keyLoaders.add(mLegacyAuthAppKeyLoader);
+                keyLoaders.add(mLegacyCPKeyLoader);
+                keyLoaders.add(mLTWKeyLoader);
+                return keyLoaders;
+            } else if (LTW_APP_PACKAGE_NAME.equalsIgnoreCase(packageName)) {
+                keyLoaders.add(mLTWKeyLoader);
                 keyLoaders.add(mLegacyAuthAppKeyLoader);
                 keyLoaders.add(mLegacyCPKeyLoader);
                 return keyLoaders;
