@@ -168,7 +168,7 @@ public final class PackageUtils {
             }
         }
 
-        throw new ClientException(BROKER_APP_VERIFICATION_FAILED, "SignatureHashes: " + hashListStringBuilder.toString());
+        throw new ClientException(BROKER_VERIFICATION_FAILED_ERROR, BROKER_APP_VERIFICATION_FAILED + "SignatureHashes: " + hashListStringBuilder.toString());
     }
 
     /**
