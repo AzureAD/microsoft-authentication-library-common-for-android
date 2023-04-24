@@ -44,4 +44,7 @@ class TestCertBasedAuthTelemetryHelper implements ICertBasedAuthTelemetryHelper 
 
     @Override
     public void setUserChoice(CertBasedAuthChoice choice) {}
+
+    @Override
+    public void setPublicKeyAlgoType(String type) {}
 }
