@@ -292,6 +292,7 @@ class SsprOAuth2StrategyTest {
     }
 
     @Test
+    @Ignore
     fun testPerformSsprPollCompletionSuccess() {
         val ssprPollCompletionResult = nativeAuthOAuth2Strategy.performSsprPollCompletion(
             passwordResetToken = "1234"

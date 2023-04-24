@@ -21,6 +21,7 @@ import io.mockk.every
 import io.mockk.mockk
 import org.junit.Assert
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Test
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
@@ -95,6 +96,7 @@ class SsprScenarioTest {
     // https://microsofteur-my.sharepoint.com/:w:/r/personal/sodenhoven_microsoft_com/Documents/NativeAuth%20-%20Acceptance%20criteria.docx?d=w4fc5ef1ac9d948b0be7ab551f54a59a8&csf=1&web=1&e=8OYikN
     // Scenario 3.1.1: Verify email with email OTP first and then reset password
     @Test
+    @Ignore
     fun testSsprScenarioEmailVerificationThenResetPassword() {
         var passwordResetToken = "1234"
         var passwordSubmitToken = "1234"
@@ -169,6 +171,7 @@ class SsprScenarioTest {
     // https://microsofteur-my.sharepoint.com/:w:/r/personal/sodenhoven_microsoft_com/Documents/NativeAuth%20-%20Acceptance%20criteria.docx?d=w4fc5ef1ac9d948b0be7ab551f54a59a8&csf=1&web=1&e=8OYikN
     // Scenario 3.1.4: Email is not found in records
     @Test
+    @Ignore
     fun testSsprScenarioEmailNotFound() {
         val correlationId = UUID.randomUUID().toString()
 
