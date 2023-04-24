@@ -70,7 +70,24 @@ public class PackageHelper {
     public String getCurrentSignatureForPackage(final String packageName) {
         final String methodTag = TAG + ":getCurrentSignatureForPackage";
         try {
-            return getCurrentSignatureForPackage(getPackageInfo(mPackageManager, packageName));
+            return getCurrentSignatureForPackage(getPackageInfo(mPackageManager, packageName), false);
+        } catch (NameNotFoundException e) {
+            Logger.error(methodTag, "Calling App's package does not exist in PackageManager. ", "", e);
+        }
+        return null;
+    }
+
+    /**
+     * Reads first signature in the list for given package name.
+     *
+     * @param packageName name of the package for which signature should be returned
+     * @return signature for package
+     */
+    public String getCurrentSignatureForPackage(final String packageName,
+                                                final boolean useSha512) {
+        final String methodTag = TAG + ":getCurrentSignatureForPackage";
+        try {
+            return getCurrentSignatureForPackage(getPackageInfo(mPackageManager, packageName), useSha512);
         } catch (NameNotFoundException e) {
             Logger.error(methodTag, "Calling App's package does not exist in PackageManager. ", "", e);
         }
@@ -83,13 +100,15 @@ public class PackageHelper {
      * @param packageInfo package for which signature should be returned
      * @return signature for package
      */
-    public static String getCurrentSignatureForPackage(final PackageInfo packageInfo) {
+    public static String getCurrentSignatureForPackage(final PackageInfo packageInfo,
+                                                       final boolean useSha512) {
         final String methodTag = TAG + ":getCurrentSignatureForPackage";
         try {
             final Signature[] signatures = getSignatures(packageInfo);
             if (signatures != null && signatures.length > 0) {
                 final Signature signature = signatures[0];
-                MessageDigest md = MessageDigest.getInstance("SHA");
+                final String algoType = useSha512 ? "SHA-512" : "SHA";
+                MessageDigest md = MessageDigest.getInstance(algoType);
                 md.update(signature.toByteArray());
                 return Base64.encodeToString(md.digest(), Base64.NO_WRAP);
             }
