@@ -109,8 +109,7 @@ public class PackageHelper {
             final Signature[] signatures = getSignatures(packageInfo);
             if (signatures != null && signatures.length > 0) {
                 final Signature signature = signatures[0];
-                final String algoType = useSha512 ? "SHA-512" : "SHA";
-                MessageDigest md = MessageDigest.getInstance(algoType);
+                MessageDigest md = MessageDigest.getInstance(useSha512 ? "SHA-512" : "SHA");
                 md.update(signature.toByteArray());
                 return Base64.encodeToString(md.digest(), Base64.NO_WRAP);
             }
