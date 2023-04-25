@@ -22,6 +22,7 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.broker;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.microsoft.identity.client.ui.automation.app.IApp;
@@ -127,13 +128,13 @@ public interface ITestBroker extends IApp {
      * Overwrite the whole flight information.
      * @param flightsJson the json representation of the flight key and value pairs {"key1":"value"}.
      */
-    void overwriteFlights(@Nullable final String flightsJson);
+    void overwriteFlights(@NonNull final String flightsJson);
 
     /**
      * Set flight informations.
      * @param flightsJson the json representation of the flight key and value pairs {"key1":"value"}.
      */
-    void setFlights(@Nullable final String flightsJson);
+    void setFlights(@NonNull final String key, @NonNull final String value);
 
     /**
      * The flight information set for this broker app.
