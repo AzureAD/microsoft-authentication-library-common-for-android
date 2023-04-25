@@ -26,6 +26,7 @@ import androidx.annotation.NonNull;
 import androidx.test.uiautomator.UiObject;
 
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
+import com.microsoft.identity.common.java.util.ThreadUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,6 +35,7 @@ import java.util.List;
  * A representation of the Broker API Fragment that handles the interactions with UI.
  */
 public class BrokerApiFragment extends AbstractBrokerHost {
+    private static final String TAG = BrokerApiFragment.class.getSimpleName();
     // Resource Id for the buttons
     private final static String GET_ACCOUNTS_BUTTON_ID = "button_get_accounts";
     private final static String REMOVE_ACCOUNTS_BUTTON_ID = "button_remove_account";
@@ -56,7 +58,7 @@ public class BrokerApiFragment extends AbstractBrokerHost {
             if (accountName != null && !accountName.contains("No accounts")) {
                 accounts.add(accountName);
             }
-            delay(2);
+            ThreadUtils.sleepSafely(2000, TAG, "Waiting for the dialog box to disappear");
             dialogBox = UiAutomatorUtils.obtainUiObjectWithResourceId(DIALOG_BOX_RESOURCE_ID);
         } while (dialogBox.exists());
         return accounts;

@@ -28,6 +28,7 @@ import androidx.test.uiautomator.UiObjectNotFoundException;
 
 import com.microsoft.identity.client.ui.automation.utils.CommonUtils;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
+import com.microsoft.identity.common.java.util.ThreadUtils;
 
 import org.junit.Assert;
 
@@ -41,6 +42,8 @@ import lombok.Getter;
  * functionality that can be used to interact with a Broker Host App during UI Test.
  */
 abstract class AbstractBrokerHost {
+    private static final String TAG = AbstractBrokerHost.class.getSimpleName();
+
     public final static String BROKER_HOST_APP_PACKAGE_NAME = "com.microsoft.identity.testuserapp";
     public final static String BROKER_HOST_APP_NAME = "Broker Host App";
     private final static long APP_LAUNCH_TIMEOUT = TimeUnit.SECONDS.toMillis(5);
@@ -68,7 +71,7 @@ abstract class AbstractBrokerHost {
      *
      * @param resourceIdButton the resource id of the button to be clicked
      */
-    public void clickButton(@NonNull final String resourceIdButton) {
+    static public void clickButton(@NonNull final String resourceIdButton) {
         final String resourceId = CommonUtils.getResourceId(
                 BROKER_HOST_APP_PACKAGE_NAME,
                 resourceIdButton
@@ -82,7 +85,7 @@ abstract class AbstractBrokerHost {
      * @param resourceEditText the resource id of the text box
      * @param text             the text to be write in the text box
      */
-    public void fillTextBox(@NonNull final String resourceEditText, @NonNull final String text) {
+    static public void fillTextBox(@NonNull final String resourceEditText, @NonNull final String text) {
         final String resourceId = CommonUtils.getResourceId(
                 BROKER_HOST_APP_PACKAGE_NAME,
                 resourceEditText
@@ -96,7 +99,7 @@ abstract class AbstractBrokerHost {
      * @param resourceEditText the resource id of the text box
      * @return the text from the text box
      */
-    public String readTextBox(@NonNull final String resourceEditText) {
+    static public String readTextBox(@NonNull final String resourceEditText) {
         final String resourceId = CommonUtils.getResourceId(
                 BROKER_HOST_APP_PACKAGE_NAME,
                 resourceEditText
@@ -132,14 +135,6 @@ abstract class AbstractBrokerHost {
         }
     }
 
-    static public void delay(final long delayInSeconds) {
-        try {
-            Thread.sleep(TimeUnit.SECONDS.toMillis(delayInSeconds));
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
-
     /**
      * This method dismisses the dialog box and asserts that the text from the dialog box contains the given text
      *
@@ -170,7 +165,7 @@ abstract class AbstractBrokerHost {
         // If the app is not launched, launch it
         if (!appHeader.exists()) {
             CommonUtils.launchApp(BROKER_HOST_APP_PACKAGE_NAME);
-            AbstractBrokerHost.delay(1);
+            ThreadUtils.sleepSafely(1000, TAG, "Waiting for app to launch");
         }
         try {
             final UiObject header = UiAutomatorUtils.obtainUiObjectWithResourceId(

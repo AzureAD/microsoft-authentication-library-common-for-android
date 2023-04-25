@@ -201,6 +201,7 @@ dependencies {
     implementation "androidx.test:core:$rootProject.ext.androidxTestCoreVersion"
     implementation(project(":LabApiUtilities"))
     implementation "com.google.code.gson:gson:$rootProject.ext.gsonVersion"
+    implementation project(path: ':common4j')
     compileOnly "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
     annotationProcessor "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
     androidTestImplementation "androidx.test:runner:$rootProject.ext.androidxTestRunnerVersion"

@@ -37,6 +37,7 @@ import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.AadP
 import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.AdfsPromptHandler;
 import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.MicrosoftStsPromptHandler;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
+import com.microsoft.identity.common.java.util.ThreadUtils;
 
 import org.junit.Assert;
 
@@ -44,6 +45,8 @@ import org.junit.Assert;
  * A representation of the single wpj api fragment that handles all the interactions with the UI.
  */
 public class SingleWpjApiFragment extends AbstractBrokerHost {
+    private static final String TAG = SingleWpjApiFragment.class.getSimpleName();
+
     private final static String CERT_INSTALLER_PACKAGE_NAME = "com.android.certinstaller";
     // Resource Id for the buttons
     public final static String GET_WPJ_ACCOUNT_BUTTON_ID = "button_get_wpj_upn";
@@ -155,7 +158,7 @@ public class SingleWpjApiFragment extends AbstractBrokerHost {
         final AadPromptHandler aadPromptHandler = new AadPromptHandler(promptHandlerParameters);
         aadPromptHandler.handlePrompt(username, password);
         dismissDialogBoxAndAssertContainsText("SUCCESSFUL");
-        delay(2);
+        ThreadUtils.sleepSafely(2000, TAG, "Sleeping for 2 seconds to allow the device registration to complete.");
     }
 
 /**
@@ -183,7 +186,7 @@ public class SingleWpjApiFragment extends AbstractBrokerHost {
         final IPromptHandler promptHandler = getPromptHandler(isFederatedUser, promptHandlerParameters);
         promptHandler.handlePrompt(username, password);
         dismissDialogBoxAndAssertContainsText("SUCCESSFUL");
-        delay(2);
+        ThreadUtils.sleepSafely(2000, TAG, "Sleeping for 2 seconds to allow the device registration to complete.");
     }
 
     /**
