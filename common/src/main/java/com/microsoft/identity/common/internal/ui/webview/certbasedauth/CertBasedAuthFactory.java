@@ -88,6 +88,7 @@ public class CertBasedAuthFactory {
         final ICertBasedAuthTelemetryHelper telemetryHelper = new CertBasedAuthTelemetryHelper();
         telemetryHelper.setUserChoice(CertBasedAuthChoice.NON_APPLICABLE);
         telemetryHelper.setCertBasedAuthChallengeHandler(NON_APPLICABLE);
+        telemetryHelper.setPublicKeyAlgoType(NON_APPLICABLE);
 
         if (mUsbSmartcardCertBasedAuthManager != null
             && mUsbSmartcardCertBasedAuthManager.isDeviceConnected()) {
