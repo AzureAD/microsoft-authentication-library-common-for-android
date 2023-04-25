@@ -5,6 +5,7 @@ V.NEXT
 - [PATCH] Pulling device cert issuer check to beginning of OnReceivedClientCertRequest (#2010)
 - [MINOR] Add method to clear receiver concurrentHashMap in LocalBroadcaster (#1993)
 - [PATCH] Mapping ECDSA to EC in ClientCertRequest's keyTypes array (#2015)
+- [MINOR] Updating different smartcards error message; updated string res files (#2021)
 
 V.11.0.0
 ----------
