@@ -709,7 +709,7 @@ public class MsalOAuth2TokenCache
 
     @Override
     public ICacheRecord load(@NonNull final String clientId,
-                             @NonNull final String applicationIdentifier,
+                             @Nullable final String applicationIdentifier,
                              @Nullable final String mamEnrollmentIdentifier,
                              @Nullable final String target,
                              @NonNull final AccountRecord account,

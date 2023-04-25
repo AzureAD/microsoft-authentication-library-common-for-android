@@ -27,9 +27,11 @@ import android.os.Build;
 import android.security.KeyChain;
 import android.security.KeyChainAliasCallback;
 import android.security.KeyChainException;
+import android.security.keystore.KeyProperties;
 import android.webkit.ClientCertRequest;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
 import com.microsoft.identity.common.java.opentelemetry.ICertBasedAuthTelemetryHelper;
@@ -44,6 +46,7 @@ import java.security.cert.X509Certificate;
  */
 public class OnDeviceCertBasedAuthChallengeHandler extends AbstractCertBasedAuthChallengeHandler {
     private static final String TAG = OnDeviceCertBasedAuthChallengeHandler.class.getSimpleName();
+    private static final String ECDSA_CONSTANT = "ECDSA";
     private final Activity mActivity;
 
     /**
@@ -65,7 +68,7 @@ public class OnDeviceCertBasedAuthChallengeHandler extends AbstractCertBasedAuth
      * @param request ClientCertRequest received from AzureActiveDirectoryWebViewClient.onReceivedClientCertRequest.
      * @return null
      */
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     public Void processChallenge(ClientCertRequest request) {
         final String methodTag = TAG + ":processChallenge";
@@ -83,6 +86,10 @@ public class OnDeviceCertBasedAuthChallengeHandler extends AbstractCertBasedAuth
                         try {
                             final X509Certificate[] certChain = KeyChain.getCertificateChain(
                                     mActivity.getApplicationContext(), alias);
+                            if (certChain.length > 0) {
+                                //From my testing, the first cert (if there are more than one) is the selected one.
+                                mTelemetryHelper.setPublicKeyAlgoType(certChain[0].getPublicKey().getAlgorithm());
+                            }
                             final PrivateKey privateKey = KeyChain.getPrivateKey(
                                     mActivity, alias);
 
@@ -102,7 +109,7 @@ public class OnDeviceCertBasedAuthChallengeHandler extends AbstractCertBasedAuth
                         request.cancel();
                     }
                 },
-                request.getKeyTypes(),
+                mapKeyTypes(request.getKeyTypes()),
                 request.getPrincipals(),
                 request.getHost(),
                 request.getPort(),
@@ -116,5 +123,29 @@ public class OnDeviceCertBasedAuthChallengeHandler extends AbstractCertBasedAuth
     @Override
     public void cleanUp() {
         //Nothing needed at the moment.
+    }
+
+    /**
+     * Map instances of key types without a literal reference in {@link KeyProperties} to corresponding constants in KeyProperties.
+     * @param keyTypes array of key types.
+     * @return array of mapped key types.
+     */
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    @Nullable
+    static public String[] mapKeyTypes(@Nullable final String[] keyTypes) {
+        if (keyTypes == null) {
+            return null;
+        }
+        for (int i = 0; i < keyTypes.length; i++) {
+            //"ECDSA" isn't a constant in KeyProperties, so it should be getting mapped to "EC" via Chromium.
+            //But for some reason, Chromium's WebView bridge implementation adds "ECDSA" to the request key types String array, despite mapping it to "EC" in the web browser class.
+            //https://source.chromium.org/chromium/chromium/src/+/main:android_webview/browser/aw_contents_client_bridge.cc;l=184;bpv=1
+            //To mitigate this, we're going to map it to "EC" ourselves.
+            if (keyTypes[i].equals(ECDSA_CONSTANT)) {
+                keyTypes[i] = KeyProperties.KEY_ALGORITHM_EC;
+                break;
+            }
+        }
+        return keyTypes;
     }
 }

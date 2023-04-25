@@ -117,4 +117,14 @@ public class CertBasedAuthTelemetryHelper implements ICertBasedAuthTelemetryHelp
                         "N/A");
         }
     }
+
+    /**
+     * Sets attribute that indicates the selected certificate's public key algorithm type.
+     * @param type algorithm name as a string.
+     */
+    @Override
+    public void setPublicKeyAlgoType(@NonNull final String type) {
+        mSpan.setAttribute(AttributeName.cert_based_auth_public_key_algo_type.name(),
+                type);
+    }
 }
