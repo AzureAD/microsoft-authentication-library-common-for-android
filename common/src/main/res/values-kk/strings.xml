@@ -32,6 +32,10 @@
     <string name="smartcard_no_cert_dialog_title">Жарамды сертификаттар табылмады.</string>
     <string name="smartcard_no_cert_dialog_message">Сертификат смарт карта құрылғысында дұрыс дайындалғанын тексеріңіз.</string>
 
+    <string name="smartcard_nfc_diff_connected_title">Бір уақытта тек бір смарт картаны пайдалануға болады</string>
+    <string name="smartcard_nfc_diff_connected_message">Бастапқыда кіру үшін пайдаланған смарт картаны пайдаланыңыз.</string>
+    <string name="smartcard_nfc_diff_connected_positive_button">Түсінікті</string>
+
     <string name="smartcard_general_error_dialog_title">Әрекетті кейінірек қайталаңыз</string>
     <string name="smartcard_general_error_dialog_message">Күтпеген қате пайда болды. Кейінірек қайталап көріңіз.</string>
 

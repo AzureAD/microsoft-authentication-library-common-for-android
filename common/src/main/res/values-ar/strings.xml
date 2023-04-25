@@ -32,6 +32,10 @@
     <string name="smartcard_no_cert_dialog_title">ما من شهادات قابلة للتطبيق موجودة.</string>
     <string name="smartcard_no_cert_dialog_message">تأكيد أن شهادتك مزودة بالخدمة بشكل صحيح على جهاز البطاقة الذكية.</string>
 
+    <string name="smartcard_nfc_diff_connected_title">يمكنك استخدام بطاقة ذكية واحدة فقط في كل مرة</string>
+    <string name="smartcard_nfc_diff_connected_message">استخدم البطاقة الذكية التي سجلت الدخول باستخدامها في الأصل.</string>
+    <string name="smartcard_nfc_diff_connected_positive_button">حسناً</string>
+
     <string name="smartcard_general_error_dialog_title">حاول مجدداً لاحقاً</string>
     <string name="smartcard_general_error_dialog_message">حدث خطأ غير متوقع. الرجاء إعادة المحاولة لاحقًا.</string>
 
@@ -57,5 +61,5 @@
     <string name="smartcard_nfc_reminder_dialog_positive_button">فهمت</string>
 
     <string name="smartcard_removal_prompt_dialog_title">يمكنك الآن إزالة بطاقتك الذكية</string>
-    <string name="smartcard_removal_prompt_dialog_positive_button">فهمت</string>
+    <string name="smartcard_removal_prompt_dialog_positive_button">حسناً</string>
 </resources>

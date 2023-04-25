@@ -32,6 +32,10 @@
     <string name="smartcard_no_cert_dialog_title">Δεν βρέθηκαν ισχύοντα πιστοποιητικά.</string>
     <string name="smartcard_no_cert_dialog_message">Επιβεβαιώστε ότι το πιστοποιητικό σας έχει εκχωρηθεί σωστά στη συσκευή έξυπνης κάρτας σας.</string>
 
+    <string name="smartcard_nfc_diff_connected_title">Μπορείτε να χρησιμοποιήσετε μόνο μία έξυπνη κάρτα κάθε φορά</string>
+    <string name="smartcard_nfc_diff_connected_message">Χρησιμοποιήστε την έξυπνη κάρτα με την οποία πραγματοποιήσατε είσοδο αρχικά.</string>
+    <string name="smartcard_nfc_diff_connected_positive_button">Το κατάλαβα</string>
+
     <string name="smartcard_general_error_dialog_title">Δοκιμάστε ξανά αργότερα</string>
     <string name="smartcard_general_error_dialog_message">Δυστυχώς, παρουσιάστηκε ένα απρόσμενο σφάλμα. Δοκιμάστε ξανά αργότερα.</string>
 

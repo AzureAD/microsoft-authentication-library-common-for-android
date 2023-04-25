@@ -32,6 +32,10 @@
     <string name="smartcard_no_cert_dialog_title">Tiada sijil yang berkenaan ditemui.</string>
     <string name="smartcard_no_cert_dialog_message">Sila sahkan bahawa sijil anda telah diperuntukkan dengan betul pada peranti kad pintar anda.</string>
 
+    <string name="smartcard_nfc_diff_connected_title">Anda hanya boleh menggunakan satu kad pintar pada satu masa</string>
+    <string name="smartcard_nfc_diff_connected_message">Gunakan kad pintar yang anda telah daftar masuk pada asalnya.</string>
+    <string name="smartcard_nfc_diff_connected_positive_button">Faham</string>
+
     <string name="smartcard_general_error_dialog_title">Cuba lagi kemudian</string>
     <string name="smartcard_general_error_dialog_message">Ralat tidak dijangka telah berlaku. Sila cuba semula sebentar lagi.</string>
 

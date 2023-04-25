@@ -32,6 +32,10 @@
     <string name="smartcard_no_cert_dialog_title">Finner ingen gyldige sertifikater.</string>
     <string name="smartcard_no_cert_dialog_message">Bekreft at sertifikatet er riktig klargjort på smartkortenheten.</string>
 
+    <string name="smartcard_nfc_diff_connected_title">Du kan bare bruke ett smartkort om gangen</string>
+    <string name="smartcard_nfc_diff_connected_message">Bruk smartkortet du opprinnelig logget på med.</string>
+    <string name="smartcard_nfc_diff_connected_positive_button">Jeg forstår</string>
+
     <string name="smartcard_general_error_dialog_title">Prøv på nytt senere</string>
     <string name="smartcard_general_error_dialog_message">Det har oppstått en uventet feil. Prøv på nytt senere.</string>
 

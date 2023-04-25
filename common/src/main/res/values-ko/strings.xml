@@ -32,6 +32,10 @@
     <string name="smartcard_no_cert_dialog_title">해당 인증서를 찾을 수 없습니다.</string>
     <string name="smartcard_no_cert_dialog_message">인증서가 스마트 카드 장치에 올바르게 프로비전되었는지 확인하세요.</string>
 
+    <string name="smartcard_nfc_diff_connected_title">스마트 카드는 한 번에 하나만 사용할 수 있습니다.</string>
+    <string name="smartcard_nfc_diff_connected_message">원래 로그인 시 시용했던 스마트 카드를 사용합니다.</string>
+    <string name="smartcard_nfc_diff_connected_positive_button">확인</string>
+
     <string name="smartcard_general_error_dialog_title">나중에 다시 시도</string>
     <string name="smartcard_general_error_dialog_message">예기치 않은 오류가 발생했습니다. 나중에 다시 시도하세요.</string>
 
