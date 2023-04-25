@@ -109,8 +109,7 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
     }
 
     @Override
-    @NonNull
-    public byte[] encrypt(@NonNull final byte[] plaintext)
+    public byte[] encrypt(final byte[] plaintext)
             throws ClientException {
         final String methodName = ":encrypt";
 
@@ -121,9 +120,6 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
         try {
             // load key for encryption if not loaded
             final AbstractSecretKeyLoader keyLoader = getKeyLoaderForEncryption();
-            if (keyLoader == null){
-                throw new IllegalStateException("KeyLoader must not be null.");
-            }
 
             final SecretKey encryptionKey = keyLoader.getKey();
             final SecretKey encryptionHMACKey = KeyUtil.getHMacKey(encryptionKey);
@@ -199,7 +195,7 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
         }
 
         final List<AbstractSecretKeyLoader> keysForDecryption = getKeyLoaderForDecryption(cipherText);
-        if (keysForDecryption == null || keysForDecryption.size() == 0) {
+        if (keysForDecryption.size() == 0) {
             throw new IllegalStateException("KeyLoader list must not be null or empty.");
         }
 
@@ -218,7 +214,6 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
             } catch (final ClientException e) {
                 Logger.warn(TAG + methodName, "Failed to decrypt with key:" + keyLoader.getAlias() +
                         " thumbprint : " + KeyUtil.getKeyThumbPrint(keyLoader));
-                handleDecryptionFailure(keyLoader.getAlias(), e);
                 exceptionToThrowIfAllFails.addSuppressedException(e);
             }
         }
@@ -267,8 +262,7 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
      *                                          [KeyIdentifier][encryptedData][iv][MACDigest].
      * @param keyLoader                         a {@link AbstractSecretKeyLoader} to load the decryption key from.
      */
-    @NonNull
-    private byte[] decryptWithSecretKey(@NonNull final byte[] encryptedBlobWithoutEncodeVersion,
+    private byte[] decryptWithSecretKey(final byte[] encryptedBlobWithoutEncodeVersion,
                                         @NonNull final AbstractSecretKeyLoader keyLoader)
             throws ClientException {
         final String errCode;
@@ -341,24 +335,13 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
     }
 
     /**
-     * A function which is triggered every time a decryption failed.
-     *
-     * @param keyAlias  Alias of the key (from {@link AbstractSecretKeyLoader#getAlias()}
-     * @param exception the root cause of the failure.
-     */
-    protected void handleDecryptionFailure(@NonNull final String keyAlias,
-                                           @NonNull final Exception exception) {
-        // Do nothing by default.
-    }
-
-    /**
      * Returns true if the given cipherText was encrypted by the owner of the identifier.
      *
      * @param cipherText    the cipherText to be verified against.
      * @param keyIdentifier identifier to verify.
      */
     protected static boolean isEncryptedByThisKeyIdentifier(
-            @NonNull final byte[] cipherText,
+            final byte[] cipherText,
             @NonNull final String keyIdentifier) {
         final String methodName = ":isEncryptedByThisKeyIdentifier";
 
@@ -385,24 +368,16 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
      *
      * @param cipherText    the cipherText to be verified against.
      */
-    protected static String getKeyIdentifierFromCipherText(
-            @NonNull final byte[] cipherText) {
+    protected static String getKeyIdentifierFromCipherText(final byte[] cipherText) {
         final String methodName = ":getKeyIdentifierFromCipherText";
 
-        final byte[] bytes;
-        final int keyIdentifierLength = PredefinedKeyLoader.USER_PROVIDED_KEY_IDENTIFIER.length();
-
         try {
-            bytes = stripEncodeVersionFromCipherText(cipherText);
-
-            final String keyIdentifier = new String(
-                    bytes,
+            return new String(
+                    stripEncodeVersionFromCipherText(cipherText),
                     0,
-                    keyIdentifierLength,
+                    PredefinedKeyLoader.USER_PROVIDED_KEY_IDENTIFIER.length(),
                     ENCODING_UTF8
             );
-
-            return keyIdentifier;
         } catch (final Exception e) {
             Logger.verbose(TAG + methodName, e.getMessage());
             return "EXCEPTION OCCURRED GETTING KEY IDENTIFIER";
@@ -428,7 +403,7 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
      * Base64 (URL unsafe) encode the encrypted data,
      * and prefix it with{@link StorageEncryptionManager#ENCODE_VERSION}.
      */
-    private byte[] prefixWithEncodeVersion(@NonNull final byte[] encryptedData) {
+    private byte[] prefixWithEncodeVersion(final byte[] encryptedData) {
         final String encryptedText = Base64.encodeToString(encryptedData, Base64.NO_WRAP);
         final String result = getEncodeVersionLengthPrefix() + ENCODE_VERSION + encryptedText;
         return result.getBytes(ENCODING_UTF8);
@@ -440,8 +415,7 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
      *
      * @throws ClientException if the cipherText doesn't have the expected format.
      */
-    @NonNull
-    private static byte[] stripEncodeVersionFromCipherText(@NonNull final byte[] cipherText)
+    private static byte[] stripEncodeVersionFromCipherText(final byte[] cipherText)
             throws ClientException {
         if (cipherText.length < 1) {
             throw new IllegalArgumentException("Input blob is null or length < 1");
@@ -536,5 +510,5 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
      * @return a prioritized list of SecretKey (earlier keys is more likely to be the correct one).
      **/
     @NonNull
-    abstract public List<AbstractSecretKeyLoader> getKeyLoaderForDecryption(@NonNull final byte[] cipherText) throws ClientException;
+    abstract public List<AbstractSecretKeyLoader> getKeyLoaderForDecryption(final byte[] cipherText) throws ClientException;
 }

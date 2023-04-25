@@ -1,5 +1,6 @@
 V.NEXT
 ----------
+- [MAJOR] Move Broker encryption logic to broker code. Some more refactoring. (#2016)
 - [PATCH] Fix Error Type thrown for NO_ACCOUNT_FOUND (#2006)
 - [MINOR] Separate constants for max client and broker protocol versions (#2008)
 - [PATCH] Pulling device cert issuer check to beginning of OnReceivedClientCertRequest (#2010)
