@@ -54,22 +54,21 @@ public class SharedPreferencesFileManagerTests extends AndroidSecretKeyEnabledHe
     private static final String sTEST_SHARED_PREFS_NAME = "com.microsoft.test.preferences";
     private static final String sTEST_KEY = "test_key";
     private static final String sTEST_VALUE = "test_value";
-    private static final IKeyAccessor sTEST_ENCRYPTION_MANAGER = new AndroidAuthSdkStorageEncryptionManager(ApplicationProvider.getApplicationContext(), null);
+    private static final IKeyAccessor sTEST_ENCRYPTION_MANAGER =
+            new AndroidAuthSdkStorageEncryptionManager(ApplicationProvider.getApplicationContext());
 
     private SharedPreferencesFileManager mSharedPreferencesFileManager;
 
     @Parameterized.Parameters
     public static Iterable<SharedPreferencesFileManager> testParams() {
-        return Arrays.asList(new SharedPreferencesFileManager[]{
+        return Arrays.asList(SharedPreferencesFileManager.getSharedPreferences(
+                ApplicationProvider.getApplicationContext(),
+                sTEST_SHARED_PREFS_NAME,
+                null),
                 SharedPreferencesFileManager.getSharedPreferences(
                         ApplicationProvider.getApplicationContext(),
                         sTEST_SHARED_PREFS_NAME,
-                        null),
-                SharedPreferencesFileManager.getSharedPreferences(
-                        ApplicationProvider.getApplicationContext(),
-                        sTEST_SHARED_PREFS_NAME,
-                        sTEST_ENCRYPTION_MANAGER)
-        });
+                        sTEST_ENCRYPTION_MANAGER));
     }
 
     public SharedPreferencesFileManagerTests(final SharedPreferencesFileManager sharedPreferencesFileManager) {
@@ -122,7 +121,7 @@ public class SharedPreferencesFileManagerTests extends AndroidSecretKeyEnabledHe
         IKeyAccessor keyAccessor = mkeyAccessor;
         IKeyAccessor newKeyAccessor;
         if (keyAccessor == null) {
-            newKeyAccessor = new AndroidAuthSdkStorageEncryptionManager(ApplicationProvider.getApplicationContext(), null);
+            newKeyAccessor = new AndroidAuthSdkStorageEncryptionManager(ApplicationProvider.getApplicationContext());
         } else {
             newKeyAccessor = null;
         }
