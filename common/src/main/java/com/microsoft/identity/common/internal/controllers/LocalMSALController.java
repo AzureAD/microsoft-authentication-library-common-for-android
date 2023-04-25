@@ -224,8 +224,6 @@ public class LocalMSALController extends BaseController {
                 .getPlatformUtil()
                 .throwIfNetworkNotAvailable(parameters.isPowerOptCheckEnabled());
 
-        parameters.getPlatformComponents().getAuthorizationStrategyFactory();
-
         mAuthorizationStrategy = parameters.getPlatformComponents().getAuthorizationStrategyFactory().getAuthorizationStrategy(parameters);
         mAuthorizationRequest = getAuthorizationRequest(strategy, parameters);
 
@@ -235,9 +233,7 @@ public class LocalMSALController extends BaseController {
                 mAuthorizationStrategy
         );
 
-        final AuthorizationResult result = future.get();
-
-        return result;
+        return future.get();
     }
 
     @Override

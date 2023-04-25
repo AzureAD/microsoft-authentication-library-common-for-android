@@ -406,6 +406,18 @@ public class UiAutomatorUtils {
     }
 
     /**
+     * Obtain an instance of the UiObject for the given text.
+     *
+     * @param text the text of the element to obtain
+     * @return the UiObject associated to the supplied text
+     */
+    public static UiObject obtainUiObjectWithExactText(@NonNull final String text, long timeout) {
+        Logger.i(TAG, "Obtain an instance of the UiObject for the given text:" + text);
+        return obtainUiObjectWithUiSelector(new UiSelector().text(text),
+                timeout);
+    }
+
+    /**
      * Obtain an instance of the UiObject for the given class and index.
      *
      * @param clazz the class of the element to obtain
