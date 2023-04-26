@@ -113,7 +113,7 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
         @Override
         public String decrypt(@NonNull final String input) throws Exception {
             try {
-                // This is a workaround for some really clunky global state management
+                AuthenticationSettings.INSTANCE.setSecretKey(mMockLegacyKey);
                 final IKeyAccessorStringAdapter encryptionManager =
                         new KeyAccessorStringAdapter(
                                 new AndroidAuthSdkStorageEncryptionManager(mContext));
