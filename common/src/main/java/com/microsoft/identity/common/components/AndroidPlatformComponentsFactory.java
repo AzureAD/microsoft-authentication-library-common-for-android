@@ -119,7 +119,6 @@ public class AndroidPlatformComponentsFactory {
                                     @NonNull final Context context,
                                     @Nullable final Activity activity,
                                     @Nullable final Fragment fragment) {
-        builder.storageEncryptionManager(new AndroidAuthSdkStorageEncryptionManager(context));
         fillBuilderWithBasicImplementations(builder, context, activity, fragment);
     }
 
@@ -136,7 +135,8 @@ public class AndroidPlatformComponentsFactory {
         builder.clockSkewManager(new AndroidClockSkewManager(context))
                 .broadcaster(new AndroidBroadcaster(context))
                 .popManagerLoader(new AndroidPopManagerSupplier(context))
-                .storageLoader(new AndroidStorageSupplier(context))
+                .storageSupplier(new AndroidEncryptedStorageSupplier(context,
+                        new AndroidAuthSdkStorageEncryptionManager(context)))
                 .platformUtil(new AndroidPlatformUtil(context, activity))
                 .httpClientWrapper(new DefaultHttpClientWrapper());
 

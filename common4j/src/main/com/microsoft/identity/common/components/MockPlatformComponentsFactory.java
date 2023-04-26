@@ -69,11 +69,10 @@ public class MockPlatformComponentsFactory {
     @SuppressWarnings(WarningType.rawtype_warning)
     public static PlatformComponents.PlatformComponentsBuilder getNonFunctionalBuilder(){
         final PlatformComponents.PlatformComponentsBuilder builder = PlatformComponents.builder();
-        builder.storageEncryptionManager(NONFUNCTIONAL_ENCRYPTION_MANAGER)
-                .clockSkewManager(NONFUNCTIONAL_CLOCK_SKEW_MANAGER)
+        builder.clockSkewManager(NONFUNCTIONAL_CLOCK_SKEW_MANAGER)
                 .broadcaster(NONFUNCTIONAL_BROADCASTER)
                 .popManagerLoader(NONFUNCTIONAL_POP_MANAGER_LOADER)
-                .storageLoader(new InMemoryStorageSupplier())
+                .storageSupplier(new InMemoryStorageSupplier())
                 .authorizationStrategyFactory(NON_FUNCTIONAL_AUTH_STRATEGY_FACTORY)
                 .stateGenerator(NON_FUNCTIONAL_STATE_GENERATOR)
                 .platformUtil(NON_FUNCTIONAL_PLATFORM_UTIL)

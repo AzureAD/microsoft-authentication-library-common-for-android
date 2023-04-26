@@ -155,9 +155,8 @@ public class MsalOAuth2TokenCache
         // Init the new-schema cache
         final ICacheKeyValueDelegate cacheKeyValueDelegate = new CacheKeyValueDelegate();
         final INameValueStorage<String> sharedPreferencesFileManager =
-                components.getEncryptedNameValueStore(
+                components.getStorageSupplier().getNameValueStore(
                         SharedPreferencesAccountCredentialCache.DEFAULT_ACCOUNT_CREDENTIAL_SHARED_PREFERENCES,
-                        components.getStorageEncryptionManager(),
                         String.class
                 );
         final IAccountCredentialCache accountCredentialCache;
