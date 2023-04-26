@@ -119,7 +119,7 @@ public class AndroidPlatformComponentsFactory {
                                     @NonNull final Context context,
                                     @Nullable final Activity activity,
                                     @Nullable final Fragment fragment) {
-        builder.storageEncryptionManager(new AndroidAuthSdkStorageEncryptionManager(context, null));
+        builder.storageEncryptionManager(new AndroidAuthSdkStorageEncryptionManager(context));
         fillBuilderWithBasicImplementations(builder, context, activity, fragment);
     }
 
