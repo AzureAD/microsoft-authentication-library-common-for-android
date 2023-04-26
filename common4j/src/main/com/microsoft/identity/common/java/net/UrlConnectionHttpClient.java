@@ -24,6 +24,8 @@ package com.microsoft.identity.common.java.net;
 
 import com.microsoft.identity.common.java.AuthenticationConstants;
 import com.microsoft.identity.common.java.logging.Logger;
+import com.microsoft.identity.common.java.opentelemetry.AttributeName;
+import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
 import com.microsoft.identity.common.java.telemetry.Telemetry;
 import com.microsoft.identity.common.java.telemetry.events.HttpEndEvent;
 import com.microsoft.identity.common.java.telemetry.events.HttpStartEvent;
@@ -56,11 +58,14 @@ import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 
+import io.opentelemetry.api.trace.Span;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.NonNull;
 
 import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.CLIENT_REQUEST_ID;
+import static com.microsoft.identity.common.java.net.HttpConstants.HeaderField.CONTENT_TYPE;
+import static com.microsoft.identity.common.java.net.HttpConstants.HeaderField.XMS_CCS_REQUEST_ID;
 
 /**
  * A client object for handling HTTP requests and responses.  This class accepts a RetryPolicy that
@@ -358,6 +363,24 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
                     responseBody,
                     urlConnection.getHeaderFields()
             );
+
+            final Span span = SpanExtension.current();
+
+            span.setAttribute(
+                    AttributeName.response_content_type.name(),
+                    response.getHeaders().get(CONTENT_TYPE).get(0)
+            );
+            span.setAttribute(
+                    AttributeName.response_body_length.name(),
+                    responseBody.length()
+            );
+            span.setAttribute(
+                    AttributeName.http_status_code.name(),
+                    response.getStatusCode()
+            );
+            span.setAttribute(
+                    com.microsoft.identity.common.java.opentelemetry.AttributeName.ccs_request_id.name(),
+                    response.getHeaderValue(XMS_CCS_REQUEST_ID, 0));
         } finally {
             completionCallback.accept(response);
             safeCloseStream(responseStream);

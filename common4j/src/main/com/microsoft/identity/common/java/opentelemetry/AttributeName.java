@@ -124,5 +124,30 @@ public enum AttributeName {
     /**
      * The message accompanying an Exception.
      */
-    error_message;
+    error_message,
+
+    /**
+     * The content type of the response returned by eSTS for the request.
+     */
+    response_content_type,
+    /**
+     * The http status code of the operation.
+     */
+    http_status_code,
+
+    /**
+     * Indicates if PRT is present in the response returned by eSTS as part of requesting a PRT.
+     */
+    prt_response_rt_present,
+
+    /**
+     * Indicates if ID Token is present in the response returned by eSTS as part of requesting a PRT.
+     */
+    prt_response_id_present,
+
+    /**
+     * Indicates if Session Key JWT is present in the response returned by eSTS as part of
+     * requesting a PRT.
+     */
+    prt_response_session_key_jwe_present;
 }
