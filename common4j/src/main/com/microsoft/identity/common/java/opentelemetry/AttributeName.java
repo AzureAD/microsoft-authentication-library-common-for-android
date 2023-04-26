@@ -133,21 +133,5 @@ public enum AttributeName {
     /**
      * The http status code of the operation.
      */
-    http_status_code,
-
-    /**
-     * Indicates if PRT is present in the response returned by eSTS as part of requesting a PRT.
-     */
-    prt_response_rt_present,
-
-    /**
-     * Indicates if ID Token is present in the response returned by eSTS as part of requesting a PRT.
-     */
-    prt_response_id_present,
-
-    /**
-     * Indicates if Session Key JWT is present in the response returned by eSTS as part of
-     * requesting a PRT.
-     */
-    prt_response_session_key_jwe_present;
+    http_status_code;
 }
