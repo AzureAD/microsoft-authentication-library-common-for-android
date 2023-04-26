@@ -35,6 +35,7 @@ import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.opentelemetry.OTelUtility;
+import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
 import com.microsoft.identity.common.java.opentelemetry.SpanName;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenResponse;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
@@ -133,7 +134,7 @@ public class FociQueryUtilities {
         //       https://identitydivision.visualstudio.com/Engineering/_workitems/edit/1222002
         if (ObjectUtils.equals(clientId, "87749df4-7ccf-48f8-aa87-704bad0e0e16")) {
             final Span span = OTelUtility.createSpan(SpanName.SetScopeForDMAgentForFoci.name());
-            try (final Scope scope = span.makeCurrent()) {
+            try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
                 scopes = "https://devicemgmt.teams.microsoft.com/.default " + BaseController.getDelimitedDefaultScopeString();
                 Logger.info(TAG + methodName,
                         "Teams agent client ID - making a test request with teams agent resource.");
