@@ -32,6 +32,10 @@
     <string name="smartcard_no_cert_dialog_title">Ez dago ziurtagiri aplikagarririk.</string>
     <string name="smartcard_no_cert_dialog_message">Berretsi ziurtagiria behar bezala hornitu dela txartel adimendunaren gailuan.</string>
 
+    <string name="smartcard_nfc_diff_connected_title">Txartel adimendun bat bakarrik erabil dezakezu aldiko</string>
+    <string name="smartcard_nfc_diff_connected_message">Erabili hasiera batean saioa hasteko erabili zenuen txartel adimenduna.</string>
+    <string name="smartcard_nfc_diff_connected_positive_button">Ados</string>
+
     <string name="smartcard_general_error_dialog_title">Saiatu berriro geroago</string>
     <string name="smartcard_general_error_dialog_message">Ustekabeko errore bat gertatu da. Saiatu berriro geroago.</string>
 

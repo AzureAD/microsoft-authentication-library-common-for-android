@@ -32,6 +32,10 @@
     <string name="smartcard_no_cert_dialog_title">找不到适用的证书。</string>
     <string name="smartcard_no_cert_dialog_message">请确认你的证书已正确预配到智能卡设备上。</string>
 
+    <string name="smartcard_nfc_diff_connected_title">一次只能使用一张智能卡</string>
+    <string name="smartcard_nfc_diff_connected_message">使用最初登录所用的智能卡。</string>
+    <string name="smartcard_nfc_diff_connected_positive_button">知道了</string>
+
     <string name="smartcard_general_error_dialog_title">请稍后重试</string>
     <string name="smartcard_general_error_dialog_message">发生意外错误。请稍后再试。</string>
 

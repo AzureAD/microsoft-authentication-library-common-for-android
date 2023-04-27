@@ -32,6 +32,10 @@
     <string name="smartcard_no_cert_dialog_title">Tinkamų sertifikatų nerasta.</string>
     <string name="smartcard_no_cert_dialog_message">Patvirtinkite, kad jūsų sertifikatas tinkamai parengtas intelektualiosios kortelės įrenginyje.</string>
 
+    <string name="smartcard_nfc_diff_connected_title">Vienu metu galite naudoti tik vieną intelektualiąją kortelę</string>
+    <string name="smartcard_nfc_diff_connected_message">Naudokite intelektualiąją kortelę, su kuria iš pradžių prisijungėte.</string>
+    <string name="smartcard_nfc_diff_connected_positive_button">Supratau</string>
+
     <string name="smartcard_general_error_dialog_title">Bandykite dar kartą vėliau</string>
     <string name="smartcard_general_error_dialog_message">Įvyko nenumatyta klaida. Bandykite dar kartą vėliau.</string>
 

@@ -32,6 +32,10 @@
     <string name="smartcard_no_cert_dialog_title">Tidak ditemukan sertifikat yang berlaku.</string>
     <string name="smartcard_no_cert_dialog_message">Konfirmasikan bahwa sertifikat Anda telah disediakan dengan benar ke perangkat kartu pintar.</string>
 
+    <string name="smartcard_nfc_diff_connected_title">Anda hanya dapat menggunakan satu kartu pintar dalam satu waktu</string>
+    <string name="smartcard_nfc_diff_connected_message">Gunakan kartu pintar yang awalnya Anda gunakan untuk masuk.</string>
+    <string name="smartcard_nfc_diff_connected_positive_button">Mengerti</string>
+
     <string name="smartcard_general_error_dialog_title">Coba lagi nanti</string>
     <string name="smartcard_general_error_dialog_message">Terjadi kesalahan yang tidak terduga. Coba lagi nanti.</string>
 
