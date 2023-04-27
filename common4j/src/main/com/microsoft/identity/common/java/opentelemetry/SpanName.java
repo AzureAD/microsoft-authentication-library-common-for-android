@@ -43,6 +43,5 @@ public enum SpanName {
     DeviceRegistrationApi,
     WorkplaceJoinApi,
     AcquirePrtInteractively,
-    PrtUpgrade,
-    SelectBrokerController
+    PrtUpgrade;
 }
