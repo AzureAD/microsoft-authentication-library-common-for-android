@@ -102,7 +102,7 @@ public class StorageHelper implements IStorageHelper {
     private static final String TAG = "StorageHelper";
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     public static final AtomicReference<String> LAST_KNOWN_THUMBPRINT = new AtomicReference<>("");
-    private static final AtomicBoolean FIRST_TIME = new AtomicBoolean(false);
+    public static final AtomicBoolean FIRST_TIME = new AtomicBoolean(false);
 
     /**
      * A flag to turn on/off keystore encryption on Broker apps.

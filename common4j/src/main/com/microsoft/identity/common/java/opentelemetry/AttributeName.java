@@ -81,6 +81,11 @@ public enum AttributeName {
     cert_based_auth_user_choice,
 
     /**
+     * Indicates the public key algorithm type of the selected certificate.
+     */
+    cert_based_auth_public_key_algo_type,
+
+    /**
      * The type of the error. Generally the class name of an exception.
      */
     error_type,

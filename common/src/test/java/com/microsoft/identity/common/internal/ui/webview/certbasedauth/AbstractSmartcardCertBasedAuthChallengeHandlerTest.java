@@ -254,7 +254,22 @@ public abstract class AbstractSmartcardCertBasedAuthChallengeHandlerTest extends
 
             @Override
             public PublicKey getPublicKey() {
-                return null;
+                return new PublicKey() {
+                    @Override
+                    public String getAlgorithm() {
+                        return "N/A";
+                    }
+
+                    @Override
+                    public String getFormat() {
+                        return null;
+                    }
+
+                    @Override
+                    public byte[] getEncoded() {
+                        return new byte[0];
+                    }
+                };
             }
 
             @Override

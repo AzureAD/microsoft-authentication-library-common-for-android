@@ -195,12 +195,12 @@ public abstract class AbstractTestBroker extends App implements ITestBroker {
     }
 
     @Override
-    public void overwriteFlights(@Nullable final String flightsJson) {
+    public void overwriteFlights(@NonNull final String flightsJson) {
         // Default implementation, Do nothing.
     }
 
     @Override
-    public void setFlights(@Nullable final String flightsJson) {
+    public void setFlights(@NonNull final String flightKey, @NonNull final String flightValue) {
         // Default implementation, Do nothing.
     }
 
