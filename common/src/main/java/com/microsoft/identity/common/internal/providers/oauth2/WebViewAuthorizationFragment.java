@@ -145,27 +145,30 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         mAADWebViewClient = new AzureActiveDirectoryWebViewClient(
                 activity,
                 new AuthorizationCompletionCallback(),
-                url -> {
-                    final String[] javascriptToExecute = new String[1];
-                    mProgressBar.setVisibility(View.INVISIBLE);
-                    try {
-                        javascriptToExecute[0] = String.format("window.expectedUrl = '%s';%n%s",
-                                URLEncoder.encode(url, "UTF-8"),
-                                mPostPageLoadedJavascript);
-                    } catch (final UnsupportedEncodingException e) {
-                        // Encode url component failed, fallback.
-                        Logger.warn(methodTag, "Inject expectedUrl failed.");
-                    }
-                    // Inject the javascript string from testing. This should only be evaluated if we haven't sent
-                    // an auth result already.
-                    if (!mAuthResultSent && !StringExtensions.isNullOrBlank(javascriptToExecute[0])) {
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                            mWebView.evaluateJavascript(javascriptToExecute[0], null);
-                        } else {
-                            // On earlier versions of Android, javascript has to be loaded with a custom scheme.
-                            // In these cases, Android will helpfully unescape any octects it finds. Unfortunately,
-                            // our javascript may contain the '%' character, so we escape it again, to undo that.
-                            mWebView.loadUrl("javascript:" + javascriptToExecute[0].replace("%", "%25"));
+                new OnPageLoadedCallback() {
+                    @Override
+                    public void onPageLoaded(final String url) {
+                        final String[] javascriptToExecute = new String[1];
+                        mProgressBar.setVisibility(View.INVISIBLE);
+                        try {
+                            javascriptToExecute[0] = String.format("window.expectedUrl = '%s';%n%s",
+                                    URLEncoder.encode(url, "UTF-8"),
+                                    mPostPageLoadedJavascript);
+                        } catch (final UnsupportedEncodingException e) {
+                            // Encode url component failed, fallback.
+                            Logger.warn(methodTag, "Inject expectedUrl failed.");
+                        }
+                        // Inject the javascript string from testing. This should only be evaluated if we haven't sent
+                        // an auth result already.
+                        if (!mAuthResultSent && !StringExtensions.isNullOrBlank(javascriptToExecute[0])) {
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                                mWebView.evaluateJavascript(javascriptToExecute[0], null);
+                            } else {
+                                // On earlier versions of Android, javascript has to be loaded with a custom scheme.
+                                // In these cases, Android will helpfully unescape any octects it finds. Unfortunately,
+                                // our javascript may contain the '%' character, so we escape it again, to undo that.
+                                mWebView.loadUrl("javascript:" + javascriptToExecute[0].replace("%", "%25"));
+                            }
                         }
                     }
                 },
