@@ -9,6 +9,7 @@ V.NEXT
 - [PATCH] Mapping ECDSA to EC in ClientCertRequest's keyTypes array (#2015)
 - [PATCH] Fix NPE in OTEL code (#2018)
 - [MINOR] Updating different smartcards error message; updated string res files (#2021)
+- [PATCH] Moving ClearCertPref call to clean up method (#2025)
 
 V.11.0.0
 ----------
