@@ -41,5 +41,8 @@ public enum SpanName {
     InitializePowerLift,
     MSAL_PerformIpcStrategy,
     DeviceRegistrationApi,
-    WorkplaceJoinApi
+    WorkplaceJoinApi,
+    AcquirePrtInteractively,
+    PrtUpgrade,
+    SelectBrokerController
 }
