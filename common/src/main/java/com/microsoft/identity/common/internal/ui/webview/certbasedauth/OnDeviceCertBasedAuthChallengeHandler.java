@@ -129,7 +129,8 @@ public class OnDeviceCertBasedAuthChallengeHandler extends AbstractCertBasedAuth
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             WebView.clearClientCertPreferences(null);
         } else {
-            Logger.warn(methodTag, "Client Cert Preferences cache not cleared due to SDK version < 21 (LOLLIPOP)");
+            Logger.warn(methodTag, "Client Cert Preferences cache not cleared due to SDK version < 21 (LOLLIPOP). " +
+                    "Subsequent CBA attempts will fail due to the cached action, so the user must restart the app before attempting to login with CBA again.");
         }
     }
 
