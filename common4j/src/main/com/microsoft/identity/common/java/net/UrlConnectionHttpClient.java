@@ -366,10 +366,18 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
 
             final Span span = SpanExtension.current();
 
-            span.setAttribute(
-                    AttributeName.response_content_type.name(),
-                    response.getHeaders().get(CONTENT_TYPE).get(0)
-            );
+            if (response.getHeaders() != null && response.getHeaders().size() > 0) {
+                span.setAttribute(
+                        AttributeName.response_content_type.name(),
+                        response.getHeaders().get(CONTENT_TYPE).get(0)
+                );
+
+                span.setAttribute(
+                        com.microsoft.identity.common.java.opentelemetry.AttributeName.ccs_request_id.name(),
+                        response.getHeaderValue(XMS_CCS_REQUEST_ID, 0)
+                );
+            }
+
             span.setAttribute(
                     AttributeName.response_body_length.name(),
                     responseBody.length()
@@ -378,9 +386,7 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
                     AttributeName.http_status_code.name(),
                     response.getStatusCode()
             );
-            span.setAttribute(
-                    com.microsoft.identity.common.java.opentelemetry.AttributeName.ccs_request_id.name(),
-                    response.getHeaderValue(XMS_CCS_REQUEST_ID, 0));
+
         } finally {
             completionCallback.accept(response);
             safeCloseStream(responseStream);
