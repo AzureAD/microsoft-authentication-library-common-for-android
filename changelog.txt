@@ -1,11 +1,13 @@
 V.NEXT
 ----------
+- [PATCH] Update version for org.json:json to 20230227 (#2022)
 - [MAJOR] Move Broker encryption logic to broker code. Some more refactoring. (#2016)
 - [PATCH] Fix Error Type thrown for NO_ACCOUNT_FOUND (#2006)
 - [MINOR] Separate constants for max client and broker protocol versions (#2008)
 - [PATCH] Pulling device cert issuer check to beginning of OnReceivedClientCertRequest (#2010)
 - [MINOR] Add method to clear receiver concurrentHashMap in LocalBroadcaster (#1993)
 - [PATCH] Mapping ECDSA to EC in ClientCertRequest's keyTypes array (#2015)
+- [PATCH] Fix NPE in OTEL code (#2018)
 - [MINOR] Updating different smartcards error message; updated string res files (#2021)
 
 V.11.0.0
