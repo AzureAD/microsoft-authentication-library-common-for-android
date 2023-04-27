@@ -32,6 +32,10 @@
     <string name="smartcard_no_cert_dialog_title">Nenašly se žádné použitelné certifikáty.</string>
     <string name="smartcard_no_cert_dialog_message">Ověřte, že se váš certifikát správně zřídil na zařízení s čipovou kartou.</string>
 
+    <string name="smartcard_nfc_diff_connected_title">Nemůžete používat víc čipových karet souběžně.</string>
+    <string name="smartcard_nfc_diff_connected_message">Použijte čipovou kartu, pomocí které jste se původně přihlásili.</string>
+    <string name="smartcard_nfc_diff_connected_positive_button">Rozumím</string>
+
     <string name="smartcard_general_error_dialog_title">Zkuste to znovu později</string>
     <string name="smartcard_general_error_dialog_message">Je nám líto, ale objevila se nečekaná chyba. Zkuste to prosím znovu později.</string>
 

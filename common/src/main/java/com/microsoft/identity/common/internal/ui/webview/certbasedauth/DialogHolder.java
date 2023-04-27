@@ -29,6 +29,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
+import com.microsoft.identity.common.R;
+
 import net.jcip.annotations.ThreadSafe;
 
 import java.util.List;
@@ -94,6 +96,30 @@ public class DialogHolder implements IDialogHolder {
         showDialog(new SmartcardErrorDialog(
                 titleStringResourceId,
                 messageStringResourceId,
+                R.string.smartcard_error_dialog_positive_button, //Default dismiss text.
+                new IDismissCallback() {
+                    @Override
+                    public void onDismiss() {
+                        //Call dismissDialog
+                        dismissDialog();
+                    }
+                },
+                mActivity));
+    }
+
+    /**
+     * Builds and shows dialog informing the user of an expected or unexpected error.
+     * @param titleStringResourceId String resource id of the title text.
+     * @param messageStringResourceId String resource id of the message text.
+     * @param dismissButtonStringResourceId String resource id of the dismiss/positive button text.
+     */
+    public synchronized void showErrorDialog(final int titleStringResourceId,
+                                             final int messageStringResourceId,
+                                             final int dismissButtonStringResourceId) {
+        showDialog(new SmartcardErrorDialog(
+                titleStringResourceId,
+                messageStringResourceId,
+                dismissButtonStringResourceId,
                 new IDismissCallback() {
                     @Override
                     public void onDismiss() {

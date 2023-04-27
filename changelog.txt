@@ -8,6 +8,7 @@ V.NEXT
 - [MINOR] Add method to clear receiver concurrentHashMap in LocalBroadcaster (#1993)
 - [PATCH] Mapping ECDSA to EC in ClientCertRequest's keyTypes array (#2015)
 - [PATCH] Fix NPE in OTEL code (#2018)
+- [MINOR] Updating different smartcards error message; updated string res files (#2021)
 
 V.11.0.0
 ----------

@@ -32,6 +32,10 @@
     <string name="smartcard_no_cert_dialog_title">Uygulanabilir sertifika bulunamadı.</string>
     <string name="smartcard_no_cert_dialog_message">Sertifikanızın akıllı kart cihazınıza doğru şekilde sağlandığını onaylayın.</string>
 
+    <string name="smartcard_nfc_diff_connected_title">Aynı anda yalnızca bir akıllı kart kullanabilirsiniz</string>
+    <string name="smartcard_nfc_diff_connected_message">İlk olarak oturum açtığınız akıllı kartı kullanın.</string>
+    <string name="smartcard_nfc_diff_connected_positive_button">Anladım</string>
+
     <string name="smartcard_general_error_dialog_title">Daha sonra tekrar deneyin</string>
     <string name="smartcard_general_error_dialog_message">Beklenmeyen bir hata oluştu. Lütfen daha sonra yeniden deneyin.</string>
 

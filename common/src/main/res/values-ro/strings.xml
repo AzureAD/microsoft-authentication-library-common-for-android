@@ -32,6 +32,10 @@
     <string name="smartcard_no_cert_dialog_title">Nu s-au găsit certificate aplicabile.</string>
     <string name="smartcard_no_cert_dialog_message">Confirmați că s-a asigurat corect accesul certificatului pe dispozitivul smart card.</string>
 
+    <string name="smartcard_nfc_diff_connected_title">Puteți utiliza un singur smart card odată</string>
+    <string name="smartcard_nfc_diff_connected_message">Utilizați smart card-ul cu care v-ați conectat inițial.</string>
+    <string name="smartcard_nfc_diff_connected_positive_button">Am înțeles</string>
+
     <string name="smartcard_general_error_dialog_title">Încercați din nou mai târziu</string>
     <string name="smartcard_general_error_dialog_message">A apărut o eroare neașteptată. Încercați din nou mai târziu.</string>
 
