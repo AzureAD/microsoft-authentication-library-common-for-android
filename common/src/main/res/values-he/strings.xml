@@ -32,6 +32,10 @@
     <string name="smartcard_no_cert_dialog_title">לא נמצאו אישורים ישימים.</string>
     <string name="smartcard_no_cert_dialog_message">ודא שהאישור שלך הוקצה כראוי להתקן הכרטיס החכם שלך.</string>
 
+    <string name="smartcard_nfc_diff_connected_title">ניתן להשתמש בכרטיס חכם אחד בלבד בכל פעם</string>
+    <string name="smartcard_nfc_diff_connected_message">השתמש בכרטיס החכם שאיתו נכנסת במקור.</string>
+    <string name="smartcard_nfc_diff_connected_positive_button">הבנתי</string>
+
     <string name="smartcard_general_error_dialog_title">נסה שוב מאוחר יותר</string>
     <string name="smartcard_general_error_dialog_message">‏‏אירעה שגיאה בלתי צפויה. נסה שוב מאוחר יותר.</string>
 

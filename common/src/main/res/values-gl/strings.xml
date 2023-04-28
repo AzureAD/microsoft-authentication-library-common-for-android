@@ -32,6 +32,10 @@
     <string name="smartcard_no_cert_dialog_title">Non se atoparon certificados aplicables.</string>
     <string name="smartcard_no_cert_dialog_message">Confirme que o certificado se forneceu correctamente no dispositivo de cartón intelixente.</string>
 
+    <string name="smartcard_nfc_diff_connected_title">Só pode usar un cartón intelixente á vez</string>
+    <string name="smartcard_nfc_diff_connected_message">Use o cartón intelixente co que iniciou sesión orixinalmente.</string>
+    <string name="smartcard_nfc_diff_connected_positive_button">Entendido</string>
+
     <string name="smartcard_general_error_dialog_title">Tentar de novo máis tarde</string>
     <string name="smartcard_general_error_dialog_message">Ocorreu un erro inesperado. Ténteo novamente máis tarde.</string>
 

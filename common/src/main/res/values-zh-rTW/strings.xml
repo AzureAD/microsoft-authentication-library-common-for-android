@@ -32,6 +32,10 @@
     <string name="smartcard_no_cert_dialog_title">找不到適用的憑證。</string>
     <string name="smartcard_no_cert_dialog_message">確認您的憑證已正確佈建至您的智慧卡裝置。</string>
 
+    <string name="smartcard_nfc_diff_connected_title">您一次只能使用一張智慧卡</string>
+    <string name="smartcard_nfc_diff_connected_message">使用您原本用來登入的智慧卡。</string>
+    <string name="smartcard_nfc_diff_connected_positive_button">了解</string>
+
     <string name="smartcard_general_error_dialog_title">請稍後再試</string>
     <string name="smartcard_general_error_dialog_message">發生意外錯誤。請稍後再試一次。</string>
 

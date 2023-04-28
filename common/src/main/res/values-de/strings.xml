@@ -32,6 +32,10 @@
     <string name="smartcard_no_cert_dialog_title">Keine zutreffenden Zertifikate gefunden.</string>
     <string name="smartcard_no_cert_dialog_message">Bestätigen Sie, dass Ihr Zertifikat korrekt auf Ihrem Smartcard-Gerät bereitgestellt wurde.</string>
 
+    <string name="smartcard_nfc_diff_connected_title">Sie können jeweils nur eine Smartcard verwenden.</string>
+    <string name="smartcard_nfc_diff_connected_message">Verwenden Sie die Smartcard, mit der Sie sich ursprünglich angemeldet haben.</string>
+    <string name="smartcard_nfc_diff_connected_positive_button">Verstanden</string>
+
     <string name="smartcard_general_error_dialog_title">Später noch mal versuchen</string>
     <string name="smartcard_general_error_dialog_message">Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es später noch einmal.</string>
 
@@ -57,5 +61,5 @@
     <string name="smartcard_nfc_reminder_dialog_positive_button">OK</string>
 
     <string name="smartcard_removal_prompt_dialog_title">Sie können jetzt Ihre Smartcard entfernen.</string>
-    <string name="smartcard_removal_prompt_dialog_positive_button">OK</string>
+    <string name="smartcard_removal_prompt_dialog_positive_button">Verstanden</string>
 </resources>

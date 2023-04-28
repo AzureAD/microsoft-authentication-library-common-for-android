@@ -32,6 +32,10 @@
     <string name="smartcard_no_cert_dialog_title">Не са намерени приложими сертификати.</string>
     <string name="smartcard_no_cert_dialog_message">Потвърдете, че вашият сертификат е бил правилно осигурен на устройството ви със смарт карта.</string>
 
+    <string name="smartcard_nfc_diff_connected_title">Можете да използвате само една смарт карта в даден момент</string>
+    <string name="smartcard_nfc_diff_connected_message">Използвайте смарт картата, с която първоначално сте влезли.</string>
+    <string name="smartcard_nfc_diff_connected_positive_button">Разбрах</string>
+
     <string name="smartcard_general_error_dialog_title">Опитайте отново по-късно</string>
     <string name="smartcard_general_error_dialog_message">Възникна неочаквана грешка. Опитайте отново по-късно.</string>
 
@@ -57,5 +61,5 @@
     <string name="smartcard_nfc_reminder_dialog_positive_button">Разбрах</string>
 
     <string name="smartcard_removal_prompt_dialog_title">Сега можете да извадите вашата смарт карта</string>
-    \<string name="smartcard_removal_prompt_dialog_positive_button">Разбрах</string>
+    <string name="smartcard_removal_prompt_dialog_positive_button">Разбрах</string>
 </resources>

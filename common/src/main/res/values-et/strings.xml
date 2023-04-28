@@ -32,6 +32,10 @@
     <string name="smartcard_no_cert_dialog_title">Kehtivaid serte ei leitud.</string>
     <string name="smartcard_no_cert_dialog_message">Veenduge, et teie sert oleks kiipkaardiseadmes õigesti ette valmistatud.</string>
 
+    <string name="smartcard_nfc_diff_connected_title">Korraga saate kasutada ainult ühte kiipkaarti</string>
+    <string name="smartcard_nfc_diff_connected_message">Kasutage kiipkaarti, millega algselt sisse logisite.</string>
+    <string name="smartcard_nfc_diff_connected_positive_button">Sain aru</string>
+
     <string name="smartcard_general_error_dialog_title">Proovige hiljem uuesti</string>
     <string name="smartcard_general_error_dialog_message">Ilmnes ootamatu tõrge. Proovige hiljem uuesti.</string>
 
