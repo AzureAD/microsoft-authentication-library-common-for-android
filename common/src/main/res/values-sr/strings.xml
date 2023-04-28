@@ -32,6 +32,10 @@
     <string name="smartcard_no_cert_dialog_title">Нису пронађени важећи цертификати.</string>
     <string name="smartcard_no_cert_dialog_message">Потврдите да је цертификат исправно обезбеђен на уређају паметне картице.</string>
 
+    <string name="smartcard_nfc_diff_connected_title">Можете да користите само једну по једну паметну картицу</string>
+    <string name="smartcard_nfc_diff_connected_message">Користите паметну картицу помоћу које сте се првобитно пријавили.</string>
+    <string name="smartcard_nfc_diff_connected_positive_button">Разумем</string>
+
     <string name="smartcard_general_error_dialog_title">Покушајте поново касније</string>
     <string name="smartcard_general_error_dialog_message">Дошло је до неочекиване грешке. Покушајте поново касније.</string>
 

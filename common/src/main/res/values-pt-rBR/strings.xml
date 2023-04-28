@@ -32,6 +32,10 @@
     <string name="smartcard_no_cert_dialog_title">Nenhum certificado aplicável encontrado.</string>
     <string name="smartcard_no_cert_dialog_message">Confirme se o seu certificado foi provisionado corretamente em seu dispositivo de cartão inteligente.</string>
 
+    <string name="smartcard_nfc_diff_connected_title">Você só pode usar um cartão inteligente por vez</string>
+    <string name="smartcard_nfc_diff_connected_message">Use o cartão inteligente com o qual você entrou originalmente.</string>
+    <string name="smartcard_nfc_diff_connected_positive_button">Entendi</string>
+
     <string name="smartcard_general_error_dialog_title">Tentar novamente mais tarde</string>
     <string name="smartcard_general_error_dialog_message">Erro. Tente mais tarde.</string>
 

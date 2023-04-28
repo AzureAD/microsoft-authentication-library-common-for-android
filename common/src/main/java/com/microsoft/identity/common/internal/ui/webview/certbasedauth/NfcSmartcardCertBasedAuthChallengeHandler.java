@@ -138,14 +138,13 @@ public class NfcSmartcardCertBasedAuthChallengeHandler extends AbstractSmartcard
                             prepForNextUserInteraction(new IDisconnectionCallback() {
                                 @Override
                                 public void onClosedConnection() {
-                                    //In a future version, an error dialog with a custom message could be shown here instead of a general error.
                                     final String errorMessage = "Device connected via NFC is different from initially connected device.";
                                     Logger.info(methodTag, errorMessage);
                                     mTelemetryHelper.setResultFailure(errorMessage);
-                                    //Show general error dialog.
                                     mDialogHolder.showErrorDialog(
-                                            R.string.smartcard_general_error_dialog_title,
-                                            R.string.smartcard_general_error_dialog_message);
+                                            R.string.smartcard_nfc_diff_connected_title,
+                                            R.string.smartcard_nfc_diff_connected_message,
+                                            R.string.smartcard_nfc_diff_connected_positive_button);
                                 }
                             });
                             return;

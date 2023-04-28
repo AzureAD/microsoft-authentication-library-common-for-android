@@ -174,20 +174,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 },
                 mRedirectUri);
         setUpWebView(view, mAADWebViewClient);
-        //For CBA, we need to clear the certificate choice cache here so that
-        // the user will be able to login with multiple accounts with CBA
-        //addressing on-device CBA bug: https://identitydivision.visualstudio.com/Engineering/_workitems/edit/1776683
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            WebView.clearClientCertPreferences(new Runnable() {
-                @Override
-                public void run() {
-                    launchWebView();
-                }
-            });
-        } else {
-            Logger.warn(methodTag, "Client Cert Preferences cache not cleared due to SDK version < 21 (LOLLIPOP)");
-            launchWebView();
-        }
+        launchWebView();
         return view;
     }
 
