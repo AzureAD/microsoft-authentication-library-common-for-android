@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common;
 
+import com.microsoft.identity.common.java.AuthenticationConstants;
 import com.microsoft.identity.common.java.authorities.Authority;
 import com.microsoft.identity.common.java.cache.MicrosoftStsAccountCredentialAdapter;
 import com.microsoft.identity.common.java.commands.parameters.TokenCommandParameters;
@@ -59,6 +60,7 @@ import java.security.SecureRandom;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.HashSet;
 import java.util.Set;
 
 import cz.msebera.android.httpclient.extras.Base64;
@@ -260,7 +262,8 @@ public class MicrosoftStsAccountCredentialAdapterTest {
         assertEquals(MOCK_AUTHORITY, accessTokenRecord.getAuthority());
         assertEquals(MOCK_ENVIRONMENT, accessTokenRecord.getEnvironment());
         assertNotNull(accessTokenRecord.getExtendedExpiresOn());
-        assertEquals(MOCK_UID + "." + MOCK_UTID, accessTokenRecord.getHomeAccountId());;
+        assertEquals(MOCK_UID + "." + MOCK_UTID, accessTokenRecord.getHomeAccountId());
+        assertEquals(MOCK_SCOPE, accessTokenRecord.getTarget());
     }
 
     @Test
@@ -274,6 +277,7 @@ public class MicrosoftStsAccountCredentialAdapterTest {
         assertEquals(MOCK_REFRESH_TOKEN, refreshTokenRecord.getSecret());
         assertEquals(MOCK_CLIENT_ID, refreshTokenRecord.getClientId());
         assertEquals(CredentialType.RefreshToken.name(), refreshTokenRecord.getCredentialType());
+        assertEquals(MOCK_SCOPE, refreshTokenRecord.getTarget());
     }
 
     @Test
