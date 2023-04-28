@@ -1,7 +1,11 @@
 V.NEXT
 ----------
+<<<<<<< Updated upstream
 - [PATCH] Update version for org.json:json to 20230227 (#2022)
 - [MAJOR] Move Broker encryption logic to broker code. Some more refactoring. (#2016)
+=======
+- [PATCH] make getCurrentActiveBrokerPackageName case insensitive and trims the authenticator type (#2026)
+>>>>>>> Stashed changes
 - [PATCH] Fix Error Type thrown for NO_ACCOUNT_FOUND (#2006)
 - [MINOR] Separate constants for max client and broker protocol versions (#2008)
 - [PATCH] Pulling device cert issuer check to beginning of OnReceivedClientCertRequest (#2010)
