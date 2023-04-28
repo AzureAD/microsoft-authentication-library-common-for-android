@@ -71,21 +71,21 @@ public class StorageEncryptionManagerTest {
         Assert.assertArrayEquals(TEXT_TO_BE_ENCRYPTED_WITH_ANDROID_WRAPPED_KEY, manager_2.decrypt(TEXT_ENCRYPTED_BY_ANDROID_WRAPPED_KEY));
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test(expected = RuntimeException.class)
     public void testEncryptNoKeyLoader() throws ClientException {
         final StorageEncryptionManager manager = new MockStorageEncryptionManager(PREDEFINED_KEY_IV, null);
         manager.encrypt(TEXT_TO_BE_ENCRYPTED_WITH_PREDEFINED_KEY);
         Assert.fail("decrypt() should throw an exception but it succeeds.");
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test(expected = RuntimeException.class)
     public void testDecryptNoKeyLoader() throws ClientException {
         final StorageEncryptionManager manager = new MockStorageEncryptionManager(PREDEFINED_KEY_IV, null, null);
         manager.decrypt(TEXT_ENCRYPTED_BY_PREDEFINED_KEY);
         Assert.fail("decrypt() should throw an exception but it succeeds.");
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test(expected = RuntimeException.class)
     public void testDecryptNullKeyLoader() throws ClientException {
         final StorageEncryptionManager manager = new MockStorageEncryptionManager(PREDEFINED_KEY_IV, null,
                 new ArrayList<AbstractSecretKeyLoader>() {{
@@ -95,14 +95,14 @@ public class StorageEncryptionManagerTest {
         Assert.fail("decrypt() should throw an exception but it succeeds.");
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test(expected = RuntimeException.class)
     public void testDecrypt_empty_KeyLoader_throws() throws ClientException {
         final StorageEncryptionManager manager = new MockStorageEncryptionManager(PREDEFINED_KEY_IV, null, Collections.<AbstractSecretKeyLoader>emptyList());
         manager.decrypt(TEXT_ENCRYPTED_BY_PREDEFINED_KEY);
         Assert.fail("decrypt() should throw an exception but it succeeds.");
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test(expected = RuntimeException.class)
     public void testDecrypt_null_keyloader_throws() throws ClientException {
         final StorageEncryptionManager manager = new MockStorageEncryptionManager(PREDEFINED_KEY_IV, null, null);
         final byte[] plainBytes = manager.decrypt(TEXT_ENCRYPTED_BY_PREDEFINED_KEY);

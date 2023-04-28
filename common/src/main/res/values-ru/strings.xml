@@ -32,6 +32,10 @@
     <string name="smartcard_no_cert_dialog_title">Нет применимых сертификатов.</string>
     <string name="smartcard_no_cert_dialog_message">Убедитесь, что сертификат правильно подготовлен на устройстве со смарт-картой.</string>
 
+    <string name="smartcard_nfc_diff_connected_title">Одновременно можно использовать только одну смарт-карту</string>
+    <string name="smartcard_nfc_diff_connected_message">Используйте смарт-карту, с помощью который вы вошли в систему изначально.</string>
+    <string name="smartcard_nfc_diff_connected_positive_button">Понятно</string>
+
     <string name="smartcard_general_error_dialog_title">Повторите попытку позже</string>
     <string name="smartcard_general_error_dialog_message">Произошла непредвиденная ошибка. Повторите попытку позже.</string>
 

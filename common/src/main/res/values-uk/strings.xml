@@ -32,6 +32,10 @@
     <string name="smartcard_no_cert_dialog_title">Застосовні сертифікати не знайдено.</string>
     <string name="smartcard_no_cert_dialog_message">Переконайтеся, що сертифікат належним чином підготовлено на пристрої читання смарт-карток.</string>
 
+    <string name="smartcard_nfc_diff_connected_title">Одночасно можна використовувати лише одну смарт-картку</string>
+    <string name="smartcard_nfc_diff_connected_message">Скористайтеся смарт-карткою, за допомогою якої ви вперше ввійшли в систему.</string>
+    <string name="smartcard_nfc_diff_connected_positive_button">Зрозуміло</string>
+
     <string name="smartcard_general_error_dialog_title">Спробуйте знову пізніше</string>
     <string name="smartcard_general_error_dialog_message">Сталася неочікувана помилка. Спробуйте ще раз пізніше.</string>
 

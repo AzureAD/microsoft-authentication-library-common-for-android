@@ -32,6 +32,10 @@
     <string name="smartcard_no_cert_dialog_title">Không tìm thấy chứng chỉ có thể áp dụng.</string>
     <string name="smartcard_no_cert_dialog_message">Xác nhận rằng chứng chỉ của bạn đã được cung cấp chính xác trên thiết bị thẻ thông minh.</string>
 
+    <string name="smartcard_nfc_diff_connected_title">Bạn chỉ có thể sử dụng một thẻ thông minh mỗi lần</string>
+    <string name="smartcard_nfc_diff_connected_message">Sử dụng thẻ thông minh mà bạn đã đăng nhập ban đầu.</string>
+    <string name="smartcard_nfc_diff_connected_positive_button">Đã hiểu</string>
+
     <string name="smartcard_general_error_dialog_title">Thử lại sau</string>
     <string name="smartcard_general_error_dialog_message">Đã xảy ra lỗi bất ngờ. Xin thử lại sau.</string>
 
