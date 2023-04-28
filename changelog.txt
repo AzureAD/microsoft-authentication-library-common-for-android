@@ -11,6 +11,7 @@ V.NEXT
 - [PATCH] Fix NPE in OTEL code (#2018)
 - [MINOR] Updating different smartcards error message; updated string res files (#2021)
 - [PATCH] Moving ClearCertPref call to clean up method (#2025)
+- [PATCH] Fix target in token records to fix cache keys (#2027)
 
 V.11.0.0
 ----------
