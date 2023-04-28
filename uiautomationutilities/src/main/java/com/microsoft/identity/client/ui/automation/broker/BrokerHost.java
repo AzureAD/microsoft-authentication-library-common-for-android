@@ -56,6 +56,7 @@ public class BrokerHost extends AbstractTestBroker {
     public final BrokerFlightsFragment brokerFlightsFragment;
     public final BrokerApiFragment brokerApiFragment;
     public final SingleWpjApiFragment singleWpjApiFragment;
+    public final MultipleWpjApiFragment multipleWpjApiFragment;
 
     public BrokerHost() {
         this(BROKER_HOST_APK, BROKER_HOST_APK);
@@ -78,6 +79,7 @@ public class BrokerHost extends AbstractTestBroker {
         brokerFlightsFragment = new BrokerFlightsFragment();
         brokerApiFragment = new BrokerApiFragment();
         singleWpjApiFragment = new SingleWpjApiFragment();
+        multipleWpjApiFragment = new MultipleWpjApiFragment();
     }
 
     @Override
@@ -273,6 +275,42 @@ public class BrokerHost extends AbstractTestBroker {
 
         // Doesn't look like the page with the device code is readable to the UI automation,
         // this is a sufficient stopping point
+    }
+
+    public void performDeviceRegistrationMultiple(String username, String password) {
+        Logger.i(TAG, "Performing Device Registration for the given account..");
+        multipleWpjApiFragment.launch();
+        multipleWpjApiFragment.performDeviceRegistration(username, password,this);
+    }
+
+    public void installCertificateMultiple(@NonNull final String tenantId) {
+        Logger.i(TAG, "Installing Certificate..");
+        multipleWpjApiFragment.launch();
+        multipleWpjApiFragment.installCertificate(tenantId);
+    }
+
+    public List<Map<String, String>> getAllRecords() {
+        Logger.i(TAG, "Get All Records..");
+        multipleWpjApiFragment.launch();
+        return multipleWpjApiFragment.getAllRecords();
+    }
+
+    public Map<String, String> getRecordByTenantId(@NonNull final String tenantId) {
+        Logger.i(TAG, "Get records by tenant id..");
+        multipleWpjApiFragment.launch();
+        return multipleWpjApiFragment.getRecordByTenantId(tenantId);
+    }
+
+    public Map<String, String> getRecordByUpn(@NonNull final String upn) {
+        Logger.i(TAG, "Get records by upn..");
+        multipleWpjApiFragment.launch();
+        return multipleWpjApiFragment.getRecordByUpn(upn);
+    }
+
+    public void unregisterDeviceMultiple(@NonNull final String identifier) {
+        Logger.i(TAG, "Unregister Device..");
+        multipleWpjApiFragment.launch();
+        multipleWpjApiFragment.unregister(identifier);
     }
 
 }

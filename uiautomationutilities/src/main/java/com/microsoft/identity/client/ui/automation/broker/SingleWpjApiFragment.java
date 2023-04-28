@@ -47,7 +47,6 @@ import org.junit.Assert;
 public class SingleWpjApiFragment extends AbstractBrokerHost {
     private static final String TAG = SingleWpjApiFragment.class.getSimpleName();
 
-    private final static String CERT_INSTALLER_PACKAGE_NAME = "com.android.certinstaller";
     // Resource Id for the buttons
     public final static String GET_WPJ_ACCOUNT_BUTTON_ID = "button_get_wpj_upn";
     private final static String LEAVE_BUTTON_ID = "button_leave";
