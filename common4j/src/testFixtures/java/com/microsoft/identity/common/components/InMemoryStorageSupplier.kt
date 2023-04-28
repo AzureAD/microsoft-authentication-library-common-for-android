@@ -55,9 +55,9 @@ class InMemoryStorageSupplier : IStorageSupplier {
     }
 
     override fun getFileStore(storeName: String): IMultiTypeNameValueStorage {
-        val ret = mFileStores[storeName]
-        if (ret != null) {
-            return ret
+        val existingStorage = mFileStores[storeName]
+        if (existingStorage != null) {
+            return existingStorage
         }
 
         val fileStore = MapBackedPreferencesManager()
