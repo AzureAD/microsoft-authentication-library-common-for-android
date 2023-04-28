@@ -29,6 +29,10 @@ import com.microsoft.identity.common.java.interfaces.IStorageSupplier
 import com.microsoft.identity.common.java.util.ported.InMemoryStorage
 import java.util.concurrent.ConcurrentHashMap
 
+/**
+ * Storage provided by this class are stored in-memory.
+ * Used in tests only.
+ */
 class InMemoryStorageSupplier : IStorageSupplier {
 
     private val mNameValueStores: MutableMap<String, INameValueStorage<Any>> =
@@ -40,9 +44,9 @@ class InMemoryStorageSupplier : IStorageSupplier {
 
     @Suppress("UNCHECKED_CAST")
     override fun <T> getNameValueStore(storeName: String, clazz: Class<T>): INameValueStorage<T> {
-        val ret = mNameValueStores[storeName]
-        if (ret != null) {
-            return ret as INameValueStorage<T>
+        val existingStorage = mNameValueStores[storeName]
+        if (existingStorage != null) {
+            return existingStorage as INameValueStorage<T>
         }
 
         val nameValueStore = InMemoryStorage<Any>()

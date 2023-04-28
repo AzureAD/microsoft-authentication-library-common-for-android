@@ -107,19 +107,8 @@ public class AndroidPlatformComponentsFactory {
         initializeGlobalStates(context);
 
         final PlatformComponents.PlatformComponentsBuilder builder = PlatformComponents.builder();
-        fillBuilder(builder, context, activity, fragment);
-        return builder.build();
-    }
-
-    /**
-     * Fill {@link PlatformComponents.PlatformComponentsBuilder} with Android implementations.
-     */
-    @SuppressWarnings(WarningType.rawtype_warning)
-    private static void fillBuilder(@NonNull final PlatformComponents.PlatformComponentsBuilder builder,
-                                    @NonNull final Context context,
-                                    @Nullable final Activity activity,
-                                    @Nullable final Fragment fragment) {
         fillBuilderWithBasicImplementations(builder, context, activity, fragment);
+        return builder.build();
     }
 
     /**
