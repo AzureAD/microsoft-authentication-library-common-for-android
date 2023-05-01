@@ -48,9 +48,6 @@ import lombok.experimental.SuperBuilder;
 public class PlatformComponents implements IPlatformComponents {
 
     @NonNull
-    private final IKeyAccessor mStorageEncryptionManager;
-
-    @NonNull
     private final IClockSkewManager mClockSkewManager;
 
     @NonNull
@@ -60,7 +57,7 @@ public class PlatformComponents implements IPlatformComponents {
     private final IPopManagerSupplier mPopManagerLoader;
 
     @NonNull
-    private final IStorageSupplier mStorageLoader;
+    private final IStorageSupplier mStorageSupplier;
 
     @SuppressWarnings(WarningType.rawtype_warning)
     @Nullable
@@ -75,7 +72,7 @@ public class PlatformComponents implements IPlatformComponents {
     @NonNull
     private final IHttpClientWrapper mHttpClientWrapper;
 
-    // TODO: Remove these methods and have the caller invoke IPopManagerSupplier and IStorageSupplier directly.
+    // TODO: Remove these methods and have the caller invoke IPopManagerSupplier directly.
     // Keeping this for now to minimize the PR size.
 
     /**
@@ -98,71 +95,5 @@ public class PlatformComponents implements IPlatformComponents {
     @NonNull
     public IDevicePopManager getDevicePopManager(@Nullable final String alias) throws ClientException {
         return mPopManagerLoader.getDevicePopManager(alias);
-    }
-
-    /**
-     * Retrieve a name-value store with a given identifier.
-     *
-     * @param storeName The name of a new KeyValue store.
-     * @param clazz     The class of values in the name value store.
-     * @return a INameValueStorage instance based around data stored with the same storeName.
-     */
-    @Override
-    @NonNull
-    public <T> INameValueStorage<T> getNameValueStore(@NonNull final String storeName,
-                                                      @NonNull final Class<T> clazz) {
-        return mStorageLoader.getNameValueStore(storeName, clazz);
-    }
-
-    /**
-     * Retrieve a name-value store with a given identifier.
-     *
-     * @param storeName The name of a new KeyValue store. May not be null.
-     * @param helper    The key manager for the encryption.  May be null.
-     * @param clazz     The class of values in the name value store. May not be null.
-     * @return a INameValueStorage instance based around data stored with the same storeName.
-     */
-    @Override
-    @NonNull
-    public <T> INameValueStorage<T> getEncryptedNameValueStore(@NonNull final String storeName,
-                                                               @Nullable final IKeyAccessor helper,
-                                                               @NonNull final Class<T> clazz) {
-        return mStorageLoader.getEncryptedNameValueStore(storeName, helper, clazz);
-    }
-
-    /**
-     * Get a generic encrypted IMultiTypeNameValueStorage with a given identifier.
-     *
-     * @param storeName The name of a new KeyValue store. May not be null.
-     * @param helper    The key manager for the encryption.  May not be null.
-     */
-    @Override
-    @NonNull
-    public IMultiTypeNameValueStorage getEncryptedFileStore(@NonNull final String storeName,
-                                                            @NonNull final IKeyAccessor helper) {
-        return mStorageLoader.getEncryptedFileStore(storeName, helper);
-    }
-
-    /**
-     * Get a generic IMultiTypeNameValueStorage with a given identifier.
-     *
-     * @param storeName The name of a new KeyValue store. May not be null.
-     */
-    @Override
-    @NonNull
-    public IMultiTypeNameValueStorage getFileStore(@NonNull final String storeName) {
-        return mStorageLoader.getFileStore(storeName);
-    }
-
-    /**
-     * Retrieve a multi-process safe name-value store with a given identifier.
-     *
-     * @param storeName The name of a new KeyValue store. May not be null.
-     * @return a INameValueStorage instance based around data stored with the same storeName.
-     */
-    @Override
-    @NonNull
-    public INameValueStorage<String> getMultiProcessStringStore(@NonNull final String storeName) {
-        return mStorageLoader.getMultiProcessStringStore(storeName);
     }
 }

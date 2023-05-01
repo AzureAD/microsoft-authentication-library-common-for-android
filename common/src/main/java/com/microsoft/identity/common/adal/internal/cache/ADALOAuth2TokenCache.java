@@ -118,9 +118,8 @@ public class ADALOAuth2TokenCache
 
         final IPlatformComponents components = getComponents();
         mISharedPreferencesFileManager =
-                components.getEncryptedNameValueStore(
+                components.getStorageSupplier().getNameValueStore(
                         fileName,
-                        components.getStorageEncryptionManager(),
                         String.class
                 );
     }

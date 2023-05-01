@@ -40,7 +40,6 @@ import com.microsoft.identity.common.java.dto.IdTokenRecord;
 import com.microsoft.identity.common.java.dto.PrimaryRefreshTokenRecord;
 import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
-import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings;
 import com.microsoft.identity.common.shadows.ShadowAndroidSdkStorageEncryptionManager;
 
 import org.junit.After;
@@ -101,10 +100,11 @@ public class SharedPreferencesAccountCredentialCacheTest {
     public void setUp() throws Exception {
         final Context testContext = ApplicationProvider.getApplicationContext();
         mDelegate = new CacheKeyValueDelegate();
-        mSharedPreferencesFileManager = AndroidPlatformComponentsFactory.createFromContext(testContext).getEncryptedNameValueStore(
-                sAccountCredentialSharedPreferences,
-                AndroidPlatformComponentsFactory.createFromContext(testContext).getStorageEncryptionManager(), // Use encrypted storage for tests...
-                String.class
+        mSharedPreferencesFileManager = AndroidPlatformComponentsFactory.createFromContext(testContext)
+                .getStorageSupplier()
+                .getNameValueStore(
+                    sAccountCredentialSharedPreferences,
+                    String.class
         );
         mSharedPreferencesAccountCredentialCache = new SharedPreferencesAccountCredentialCache(
                 mDelegate,

@@ -37,20 +37,13 @@ import lombok.NonNull;
 
 /**
  * A platform agnostic implementation of {@link IPerSeparatorMultiTypeNameValueStorage} where the
- * separator is of type {@link String}. The internal storage mechanism here could be backed by
- * anything as determined by the {@link IPlatformComponents#getFileStore(String)} or even be an
- * encrypted variant as determined by {@link IPlatformComponents#getEncryptedFileStore(String, IKeyAccessor)}.
+ * separator is of type {@link String}.
  */
 @AllArgsConstructor
 public class StringSeparatedMultiTypeNameValueStorage extends AbstractPerSeparatorMultiTypeNameValueStorage<String> {
 
     @NonNull
     private final IPlatformComponents mPlatformComponents;
-
-    /**
-     * Indicates if the contents of this storage should be encrypted or not.
-     */
-    private final boolean mShouldEncrypt;
 
     private static final int MAX_ITEM_COUNT = 25;
 
@@ -74,18 +67,9 @@ public class StringSeparatedMultiTypeNameValueStorage extends AbstractPerSeparat
     protected synchronized IMultiTypeNameValueStorage getStoreForSeparator(@NonNull final String separator) {
         return sStringSeparatedStorageCache.computeIfAbsent(
                 separator,
-                key -> {
-                    if (mShouldEncrypt) {
-                        return mPlatformComponents.getEncryptedFileStore(
-                                separator,
-                                mPlatformComponents.getStorageEncryptionManager()
-                        );
-                    } else {
-                        return mPlatformComponents.getFileStore(
-                                separator
-                        );
-                    }
-                }
+                key -> mPlatformComponents.getStorageSupplier().getFileStore(
+                        separator
+                )
         );
     }
 }
