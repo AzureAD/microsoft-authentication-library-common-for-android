@@ -22,16 +22,25 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal;
 
+import static com.microsoft.identity.common.java.exception.ClientException.BROKER_VERIFICATION_FAILED_ERROR;
+import static com.microsoft.identity.common.java.exception.ClientException.NOT_VALID_BROKER_FOUND;
+import static org.robolectric.Shadows.shadowOf;
+
+import android.accounts.AccountManager;
+
 import androidx.test.core.app.ApplicationProvider;
 
 import com.microsoft.identity.common.internal.broker.BrokerData;
 import com.microsoft.identity.common.internal.broker.BrokerValidator;
+import com.microsoft.identity.common.java.exception.ClientException;
 
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
+import org.robolectric.annotation.Config;
+import org.robolectric.shadows.ShadowAccountManager;
 
 import java.util.Set;
 
@@ -39,6 +48,7 @@ import java.util.Set;
  * Unit Tests for {@link BrokerValidator}.
  */
 @RunWith(RobolectricTestRunner.class)
+@Config(shadows = {ShadowAccountManager.class})
 public class BrokerValidatorTests {
 
     private BrokerValidator mBrokerValidator;
@@ -68,4 +78,47 @@ public class BrokerValidatorTests {
         Assert.assertTrue(brokerData.contains(BrokerData.MICROSOFT_AUTHENTICATOR_PROD));
     }
 
+    @Test
+    public void testGetCurrentActiveBrokerExactMatch() {
+        final AccountManager accountManager = AccountManager.get(ApplicationProvider.getApplicationContext());
+        shadowOf(accountManager).addAuthenticator("com.microsoft.workaccount");
+        final ClientException exception = Assert.assertThrows(
+                ClientException.class,
+                () -> mBrokerValidator.getCurrentActiveBrokerPackageName()
+        );
+        // Means we have a match but we couldn't verify the signature.
+        Assert.assertEquals(BROKER_VERIFICATION_FAILED_ERROR, exception.getErrorCode());
+    }
+
+    @Test
+    public void testGetCurrentActiveBrokerDirtyString() {
+        final AccountManager accountManager = AccountManager.get(ApplicationProvider.getApplicationContext());
+        shadowOf(accountManager).addAuthenticator("  COM.MICROSOFT.WORKACCOUNT  ");
+        final ClientException exception = Assert.assertThrows(
+                ClientException.class,
+                () -> mBrokerValidator.getCurrentActiveBrokerPackageName()
+        );
+        // Means we have a match but we couldn't verify the signature.
+        Assert.assertEquals(BROKER_VERIFICATION_FAILED_ERROR, exception.getErrorCode());
+    }
+
+    @Test
+    public void testGetCurrentActiveBrokerNoMatch() {
+        final AccountManager accountManager = AccountManager.get(ApplicationProvider.getApplicationContext());
+        shadowOf(accountManager).addAuthenticator("com.hello.world");
+        final ClientException exception = Assert.assertThrows(
+                ClientException.class,
+                () -> mBrokerValidator.getCurrentActiveBrokerPackageName()
+        );
+        Assert.assertEquals(NOT_VALID_BROKER_FOUND, exception.getErrorCode());
+    }
+
+    @Test
+    public void testGetCurrentActiveBrokerNoBrokeRegistered() {
+        final ClientException exception = Assert.assertThrows(
+                ClientException.class,
+                () -> mBrokerValidator.getCurrentActiveBrokerPackageName()
+        );
+        Assert.assertEquals(NOT_VALID_BROKER_FOUND, exception.getErrorCode());
+    }
 }
