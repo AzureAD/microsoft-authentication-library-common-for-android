@@ -87,7 +87,7 @@ public class CopyFileRule implements TestRule {
                 Logger.i(TAG, "Applying rule....");
                 Logger.i(TAG, "Copying into /data/local/tmp...");
 
-                for (String apkFileName: mApkFileNames){
+                for (final String apkFileName: mApkFileNames){
                     AdbShellUtils.copyFile(mSourceFolder + apkFileName, mDestFolder);
                 }
 
