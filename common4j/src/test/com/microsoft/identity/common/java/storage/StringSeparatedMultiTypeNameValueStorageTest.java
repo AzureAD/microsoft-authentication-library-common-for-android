@@ -51,7 +51,7 @@ public class StringSeparatedMultiTypeNameValueStorageTest {
         final IPlatformComponents components = MockPlatformComponentsFactory.getNonFunctionalBuilder()
                 .build();
         mStringSeparatedMultiTypeNameValueStorage = new StringSeparatedMultiTypeNameValueStorage(
-                components, false
+                components
         );
 
         // clean state

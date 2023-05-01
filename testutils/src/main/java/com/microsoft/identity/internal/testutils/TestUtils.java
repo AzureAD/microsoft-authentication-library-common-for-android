@@ -73,7 +73,7 @@ public class TestUtils {
     public static IMultiTypeNameValueStorage getSharedPreferences(final String sharedPrefName) {
         final IPlatformComponents components = AndroidPlatformComponentsFactory.createFromContext(ApplicationProvider.getApplicationContext());
 
-        return components.getFileStore(sharedPrefName);
+        return components.getStorageSupplier().getFileStore(sharedPrefName);
     }
 
     /**
@@ -84,10 +84,8 @@ public class TestUtils {
      */
     public static IMultiTypeNameValueStorage getEncryptedSharedPreferences(final String sharedPrefName) {
         final IPlatformComponents components = AndroidPlatformComponentsFactory.createFromContext(ApplicationProvider.getApplicationContext());
-        final IMultiTypeNameValueStorage barePreferences = components.getEncryptedFileStore(
-                sharedPrefName,
-                components.
-                        getStorageEncryptionManager());
+        final IMultiTypeNameValueStorage barePreferences = components.getStorageSupplier()
+                .getFileStore(sharedPrefName);
         return barePreferences;
     }
 

@@ -80,7 +80,7 @@ public class HelloCache {
                       final @NonNull String protocolName,
                       final @NonNull String targetAppPackageName,
                       final @NonNull IPlatformComponents components) {
-        mFileManager = components.getNameValueStore(SHARED_PREFERENCE_NAME, String.class);
+        mFileManager = components.getStorageSupplier().getNameValueStore(SHARED_PREFERENCE_NAME, String.class);
         mContext = context;
         mProtocolName = protocolName;
         mTargetAppPackageName = targetAppPackageName;

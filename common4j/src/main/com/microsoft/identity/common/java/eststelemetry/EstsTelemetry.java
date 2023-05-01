@@ -126,11 +126,12 @@ public class EstsTelemetry {
     public synchronized void setUp(@NonNull final IPlatformComponents platformComponents) {
         if (this.mLastRequestTelemetryCache == null) {
             this.mLastRequestTelemetryCache = new LastRequestTelemetryCache(
-                    platformComponents.getNameValueStore(LAST_REQUEST_TELEMETRY_STORAGE_FILE, String.class));
+                    platformComponents.getStorageSupplier().getNameValueStore(
+                            LAST_REQUEST_TELEMETRY_STORAGE_FILE, String.class));
         }
 
         if (mSupplementalTelemetryDataCache == null) {
-            mSupplementalTelemetryDataCache = platformComponents.getNameValueStore(
+            mSupplementalTelemetryDataCache = platformComponents.getStorageSupplier().getNameValueStore(
                     SUPPLEMENTAL_TELEMETRY_DATA_CACHE_FILE_NAME, String.class
             );
         }
