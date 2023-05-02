@@ -237,7 +237,7 @@ public class BrokerHost extends AbstractTestBroker {
      * Confirm that the calling app is not verified
      */
     public void confirmCallingAppNotVerified() {
-        AbstractBrokerHost.dismissDialogBoxAndAssertContainsText("Calling App is not verified");
+        AbstractBrokerHost.dismissDialogBoxAndAssertContainsText("Calling app could not be verified");
     }
 
     /**
