@@ -1,5 +1,6 @@
 V.NEXT
 ----------
+- [MINOR] Add active broker cache (#2030)
 - [MAJOR] Consolidate IStorageSupplier logic (#2024)
 - [MINOR] make getCurrentActiveBrokerPackageName case insensitive and trims the authenticator type (#2026)
 - [PATCH] Update version for org.json:json to 20230227 (#2022)
