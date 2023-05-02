@@ -33,6 +33,7 @@ import androidx.test.uiautomator.UiSelector;
 import com.google.gson.Gson;
 import com.microsoft.identity.client.ui.automation.constants.DeviceAdmin;
 import com.microsoft.identity.client.ui.automation.installer.LocalApkInstaller;
+import com.microsoft.identity.client.ui.automation.interaction.PromptHandlerParameters;
 import com.microsoft.identity.client.ui.automation.logging.Logger;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
@@ -43,6 +44,7 @@ import android.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
 public class BrokerHost extends AbstractTestBroker {
     private final static String TAG = BrokerHost.class.getSimpleName();
     // tenant id where lab api and key vault api is registered
@@ -85,14 +87,26 @@ public class BrokerHost extends AbstractTestBroker {
     @Override
     public void performDeviceRegistration(@NonNull final String username,
                                           @NonNull final String password) {
-        performDeviceRegistration(username, password, false);
+        singleWpjApiFragment.launch();
+        singleWpjApiFragment.performDeviceRegistration(username, password, false, this, null);
+        final String joinedUpn = singleWpjApiFragment.getWpjAccount();
+        Assert.assertTrue("Assert that the joined account is the expected account", username.equalsIgnoreCase(joinedUpn));
+    }
+
+    public void performDeviceRegistration(@NonNull final String username,
+                                          @NonNull final String password,
+                                          @NonNull final PromptHandlerParameters promptHandlerParameters) {
+        singleWpjApiFragment.launch();
+        singleWpjApiFragment.performDeviceRegistration(username, password, false, this, promptHandlerParameters);
+        final String joinedUpn = singleWpjApiFragment.getWpjAccount();
+        Assert.assertTrue("Assert that the joined account is the expected account", username.equalsIgnoreCase(joinedUpn));
     }
 
     @Override
     public void performDeviceRegistration(String username, String password, boolean isFederatedUser) {
         Logger.i(TAG, "Performing Device Registration for the given account..");
         singleWpjApiFragment.launch();
-        singleWpjApiFragment.performDeviceRegistration(username, password, isFederatedUser,this);
+        singleWpjApiFragment.performDeviceRegistration(username, password, isFederatedUser, this, null);
         final String joinedUpn = singleWpjApiFragment.getWpjAccount();
         Assert.assertTrue("Assert that the joined account is the expected account", username.equalsIgnoreCase(joinedUpn));
     }
@@ -280,7 +294,7 @@ public class BrokerHost extends AbstractTestBroker {
     public void performDeviceRegistrationMultiple(String username, String password) {
         Logger.i(TAG, "Performing Device Registration for the given account..");
         multipleWpjApiFragment.launch();
-        multipleWpjApiFragment.performDeviceRegistration(username, password,this);
+        multipleWpjApiFragment.performDeviceRegistration(username, password, this);
     }
 
     public void installCertificateMultiple(@NonNull final String tenantId) {
@@ -313,4 +327,15 @@ public class BrokerHost extends AbstractTestBroker {
         multipleWpjApiFragment.unregister(identifier);
     }
 
+    public void enableMultipleWpj() {
+        Logger.i(TAG, "Enable Multiple Account..");
+        brokerFlightsFragment.launch();
+        brokerFlightsFragment.setLocalFlight("EnableMultipleWorkplaceJoinGA", "true");
+    }
+
+    public void disableMultipleWpj() {
+        Logger.i(TAG, "Enable Multiple Account..");
+        brokerFlightsFragment.launch();
+        brokerFlightsFragment.setLocalFlight("EnableMultipleWorkplaceJoinGA", "false");
+    }
 }

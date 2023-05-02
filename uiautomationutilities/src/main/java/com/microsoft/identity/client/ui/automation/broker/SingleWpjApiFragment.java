@@ -25,6 +25,7 @@ package com.microsoft.identity.client.ui.automation.broker;
 import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.UiDevice;
 import androidx.test.uiautomator.UiObject;
@@ -168,19 +169,27 @@ public class SingleWpjApiFragment extends AbstractBrokerHost {
      * @param isFederatedUser      true if the user is a federated user, false otherwise.
      * @param testBroker           the broker that is expected to be used during an interactive token request.
      */
-    public void performDeviceRegistration(String username, String password, boolean isFederatedUser, @NonNull final ITestBroker testBroker) {
+    public void performDeviceRegistration(String username, String password,
+                                          boolean isFederatedUser,
+                                          @NonNull final ITestBroker testBroker,
+                                          @Nullable final PromptHandlerParameters customPromptHandlerParameters) {
         fillTextBox(USERNAME_EDIT_TEXT, username);
         clickButton(JOIN_BUTTON_ID);
 
-        final PromptHandlerParameters promptHandlerParameters = PromptHandlerParameters.builder()
-                .prompt(PromptParameter.LOGIN)
-                .broker(testBroker)
-                .consentPageExpected(false)
-                .expectingBrokerAccountChooserActivity(false)
-                .expectingLoginPageAccountPicker(false)
-                .sessionExpected(false)
-                .loginHint(username)
-                .build();
+        final PromptHandlerParameters promptHandlerParameters;
+        if (customPromptHandlerParameters == null) {
+            promptHandlerParameters = PromptHandlerParameters.builder()
+                    .prompt(PromptParameter.LOGIN)
+                    .broker(testBroker)
+                    .consentPageExpected(false)
+                    .expectingBrokerAccountChooserActivity(false)
+                    .expectingLoginPageAccountPicker(false)
+                    .sessionExpected(false)
+                    .loginHint(username)
+                    .build();
+        } else {
+            promptHandlerParameters = customPromptHandlerParameters;
+        }
 
         final IPromptHandler promptHandler = getPromptHandler(isFederatedUser, promptHandlerParameters);
         promptHandler.handlePrompt(username, password);

@@ -24,6 +24,8 @@ package com.microsoft.identity.client.ui.automation.broker;
 
 import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT;
 
+import android.widget.TextView;
+
 import androidx.annotation.NonNull;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.UiDevice;
@@ -167,7 +169,7 @@ public class MultipleWpjApiFragment extends AbstractBrokerHost {
      */
     static public void selectDeviceRegistrationRecord(@NonNull final String text) {
         final UiObject deviceRegistrationRecordItem
-                = UiAutomatorUtils.obtainUiObjectWithText(text);
+                = UiAutomatorUtils.obtainUiObjectWithTextAndClassType(text, TextView.class);
         try {
             deviceRegistrationRecordItem.click();
         } catch (UiObjectNotFoundException e) {
