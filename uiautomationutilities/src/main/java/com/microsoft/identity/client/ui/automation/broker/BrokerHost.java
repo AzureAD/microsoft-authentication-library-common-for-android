@@ -332,13 +332,13 @@ public class BrokerHost extends AbstractTestBroker {
     }
 
     public void enableMultipleWpj() {
-        Logger.i(TAG, "Enable Multiple Account..");
+        Logger.i(TAG, "Enable Multiple WPJ..");
         brokerFlightsFragment.launch();
         brokerFlightsFragment.setLocalFlight(FLIGHT_FOR_WORKPLACE_JOIN_CONTROLLER, "true");
     }
 
     public void disableMultipleWpj() {
-        Logger.i(TAG, "Enable Multiple Account..");
+        Logger.i(TAG, "Disable Multiple WPJ..");
         brokerFlightsFragment.launch();
         brokerFlightsFragment.setLocalFlight(FLIGHT_FOR_WORKPLACE_JOIN_CONTROLLER, "false");
     }
