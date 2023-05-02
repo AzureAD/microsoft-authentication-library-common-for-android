@@ -128,5 +128,10 @@ public enum AttributeName {
     /**
      * The message accompanying an Exception.
      */
-    error_message;
+    error_message,
+
+    /**
+     * Indicates if device id claims were requested
+     */
+    is_device_id_claims_requested
 }

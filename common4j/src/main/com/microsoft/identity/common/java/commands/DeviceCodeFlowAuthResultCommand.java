@@ -47,6 +47,8 @@ import lombok.NonNull;
 public class DeviceCodeFlowAuthResultCommand extends BaseCommand<AuthorizationResult> {
     private static final String TAG = DeviceCodeFlowAuthResultCommand.class.getSimpleName();
 
+    private static final String DEVICE_ID_CLAIM = "deviceid";
+
     public DeviceCodeFlowAuthResultCommand(@NonNull DeviceCodeFlowCommandParameters parameters,
                                  @NonNull BaseController controller,
                                  @SuppressWarnings(WarningType.rawtype_warning) @NonNull CommandCallback callback,
@@ -76,6 +78,9 @@ public class DeviceCodeFlowAuthResultCommand extends BaseCommand<AuthorizationRe
 
             // Fetch the parameters
             final DeviceCodeFlowCommandParameters commandParameters = (DeviceCodeFlowCommandParameters) getParameters();
+
+            boolean isDeviceIdClaimsRequested =  (commandParameters.getClaimsRequestJson() != null && commandParameters.getClaimsRequestJson().contains(DEVICE_ID_CLAIM))? true: false;
+            span.setAttribute(AttributeName.is_device_id_claims_requested.name(), isDeviceIdClaimsRequested);
 
             // Call deviceCodeFlowAuthRequest to get authorization result (Part 1 of DCF)
             @SuppressWarnings(WarningType.rawtype_warning) final AuthorizationResult authorizationResult = controller.deviceCodeFlowAuthRequest(commandParameters);

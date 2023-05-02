@@ -515,9 +515,9 @@ public class AuthenticationConstants {
         public static final long BROKER_TASK_DEFAULT_TIMEOUT_MILLISECONDS = TimeUnit.SECONDS.toMillis(30);
 
         /**
-         * Timeout for DCF token request - set to 14 minutes since DCF token expiry time is 15 minutes and we're taking 1 minute as buffer
+         * Timeout for DCF token request
          */
-        public static final long DCF_TOKEN_REQUEST_TIMEOUT_MILLISECONDS = TimeUnit.MINUTES.toMillis(14);
+        public static final long DCF_TOKEN_REQUEST_TIMEOUT_MILLISECONDS = TimeUnit.MINUTES.toMillis(15);
 
         /**
          * String of challenge response header.

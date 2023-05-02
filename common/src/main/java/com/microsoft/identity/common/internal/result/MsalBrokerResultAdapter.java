@@ -65,6 +65,9 @@ import com.microsoft.identity.common.java.exception.ServiceException;
 import com.microsoft.identity.common.java.exception.UiRequiredException;
 import com.microsoft.identity.common.java.exception.UnsupportedBrokerException;
 import com.microsoft.identity.common.java.exception.UserCancelException;
+import com.microsoft.identity.common.java.opentelemetry.AttributeName;
+import com.microsoft.identity.common.java.opentelemetry.OTelUtility;
+import com.microsoft.identity.common.java.opentelemetry.SpanName;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResult;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.java.request.SdkType;
@@ -82,6 +85,10 @@ import org.json.JSONException;
 
 import java.io.IOException;
 import java.util.List;
+
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.context.Scope;
 
 /**
  * For Broker: constructs result bundle.
@@ -622,9 +629,9 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
      */
     @NonNull
     public AuthorizationResult getDeviceCodeFlowAuthResultFromResultBundle(@NonNull final Bundle resultBundle) throws BaseException, ClientException {
-        String serializedDCFAuthResult = resultBundle.getString(AuthenticationConstants.Broker.BROKER_DCF_AUTH_RESULT);
+        final String serializedDCFAuthResult = resultBundle.getString(AuthenticationConstants.Broker.BROKER_DCF_AUTH_RESULT);
         if (serializedDCFAuthResult != null) {
-            AuthorizationResult authorizationResult = ObjectMapper.deserializeJsonStringToObject(serializedDCFAuthResult, MicrosoftStsAuthorizationResult.class);
+            final AuthorizationResult authorizationResult = ObjectMapper.deserializeJsonStringToObject(serializedDCFAuthResult, MicrosoftStsAuthorizationResult.class);
             return authorizationResult;
         }
 
@@ -645,24 +652,41 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
      * @throws BaseException
      * @throws ClientException
      */
-    @NonNull
     public AcquireTokenResult getDeviceCodeFlowTokenResultFromResultBundle(@NonNull final Bundle resultBundle) throws BaseException, ClientException {
-        // DCF not supported - thrown when BrokerFlight.ENABLE_DCF_IN_BROKER is false
+
         BrokerResult brokerResult = brokerResultFromBundle(resultBundle);
-        if (brokerResult.getErrorCode() != null && brokerResult.getErrorCode().equals(ErrorStrings.DEVICE_CODE_FLOW_NOT_SUPPORTED)) {
-            Logger.error(TAG, "acquireDeviceCodeFlowToken() not supported in BrokerMsalController", new ClientException(ErrorStrings.DEVICE_CODE_FLOW_NOT_SUPPORTED, "deviceCodeFlowAuthRequest() not supported in BrokerMsalController"));
-            throw new ClientException(ErrorStrings.DEVICE_CODE_FLOW_NOT_SUPPORTED, "acquireDeviceCodeFlowToken() not supported in BrokerMsalController");
-        }
+        final Span span = OTelUtility.createSpan(SpanName.AcquireTokenDcfFetchToken.name());
 
-        if (resultBundle.getBoolean(AuthenticationConstants.Broker.BROKER_REQUEST_V2_SUCCESS)) {
-            final AcquireTokenResult acquireTokenResult = new AcquireTokenResult();
-            acquireTokenResult.setLocalAuthenticationResult(authenticationResultFromBundle(resultBundle));
-            return acquireTokenResult;
-        } else if (brokerResult.getErrorCode().equals(ErrorStrings.DEVICE_CODE_FLOW_AUTHORIZATION_PENDING_ERROR_CODE)) {
-            return null;
-        }
+        span.setAttribute(AttributeName.correlation_id.name(), brokerResult.getCorrelationId());
+        span.setAttribute(AttributeName.public_api_id.name(), brokerResult.getClientId());
 
-        throw getBaseExceptionFromBundle(resultBundle);
+        try (final Scope scope = span.makeCurrent()) {
+            // DCF not supported - thrown when BrokerFlight.ENABLE_DCF_IN_BROKER is false
+            if (brokerResult.getErrorCode() != null && brokerResult.getErrorCode().equals(ErrorStrings.DEVICE_CODE_FLOW_NOT_SUPPORTED)) {
+                span.setStatus(StatusCode.ERROR, "acquireDeviceCodeFlowToken() not supported in BrokerMsalController");
+                Logger.error(TAG, "acquireDeviceCodeFlowToken() not supported in BrokerMsalController", new ClientException(ErrorStrings.DEVICE_CODE_FLOW_NOT_SUPPORTED, "deviceCodeFlowAuthRequest() not supported in BrokerMsalController"));
+                throw new ClientException(ErrorStrings.DEVICE_CODE_FLOW_NOT_SUPPORTED, "acquireDeviceCodeFlowToken() not supported in BrokerMsalController");
+            }
+
+            if (resultBundle.getBoolean(AuthenticationConstants.Broker.BROKER_REQUEST_V2_SUCCESS)) {
+                final AcquireTokenResult acquireTokenResult = new AcquireTokenResult();
+                acquireTokenResult.setLocalAuthenticationResult(authenticationResultFromBundle(resultBundle));
+                span.setStatus(StatusCode.OK);
+                return acquireTokenResult;
+            } else if (brokerResult.getErrorCode().equals(ErrorStrings.DEVICE_CODE_FLOW_AUTHORIZATION_PENDING_ERROR_CODE)) {
+                span.setStatus(StatusCode.OK, "authorization_pending response");
+                return null;
+            }
+
+            throw getBaseExceptionFromBundle(resultBundle);
+
+        } catch (final Throwable throwable) {
+            span.setStatus(StatusCode.ERROR);
+            span.recordException(throwable);
+            throw throwable;
+        } finally {
+            span.end();
+        }
     }
 
     public @NonNull
