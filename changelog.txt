@@ -1,4 +1,4 @@
-V.NEXT
+V.12.0.0
 ----------
 - [MINOR] make getCurrentActiveBrokerPackageName case insensitive and trims the authenticator type (#2026)
 - [PATCH] Update version for org.json:json to 20230227 (#2022)
