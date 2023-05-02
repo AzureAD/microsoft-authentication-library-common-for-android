@@ -1609,11 +1609,9 @@ public class BrokerOAuth2TokenCache
         }
 
         final INameValueStorage<String> sharedPreferencesFileManager =
-                components.getEncryptedNameValueStore(
+                components.getStorageSupplier().getEncryptedNameValueStore(
                         SharedPreferencesAccountCredentialCache
                                 .getBrokerUidSequesteredFilename(uid),
-                        components.
-                                getStorageEncryptionManager(),
                         String.class
                 );
 
@@ -1628,9 +1626,8 @@ public class BrokerOAuth2TokenCache
         );
 
         final INameValueStorage<String> sharedPreferencesFileManager =
-                components.getEncryptedNameValueStore(
+                components.getStorageSupplier().getEncryptedNameValueStore(
                         SharedPreferencesAccountCredentialCache.BROKER_FOCI_ACCOUNT_CREDENTIAL_SHARED_PREFERENCES,
-                        components.getStorageEncryptionManager(),
                         String.class
                 );
 
