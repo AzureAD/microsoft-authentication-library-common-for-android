@@ -66,6 +66,13 @@ class TestDialogHolder implements IDialogHolder {
     }
 
     @Override
+    public void showErrorDialog(final int titleStringResourceId,
+                                final int messageStringResourceId,
+                                final int dismissButtonStringResourceId) {
+        mCurrentDialog = TestDialog.error;
+    }
+
+    @Override
     public void showUserChoiceDialog(@NonNull final UserChoiceDialog.PositiveButtonListener positiveButtonListener,
                                      @NonNull final ICancelCbaCallback cancelCbaCallback) {
         mCurrentDialog = TestDialog.user_choice;

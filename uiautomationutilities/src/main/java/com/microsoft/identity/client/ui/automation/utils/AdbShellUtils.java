@@ -95,8 +95,9 @@ public class AdbShellUtils {
 
         installCmdBuilder.append(packageName);
         final String result = executeShellCommand(installCmdBuilder.toString());
+        final String result2 = executeShellCommand("ls /data/local/tmp");
         Assert.assertNotNull(result);
-        Assert.assertEquals("Package Installation failed for package " + packageName, "Success", result.trim());
+        Assert.assertEquals(result2, "Success", result.trim());
     }
 
     /**

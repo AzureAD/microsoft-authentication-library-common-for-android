@@ -32,6 +32,10 @@
     <string name="smartcard_no_cert_dialog_title">Nije pronađen nijedan važeći certifikat.</string>
     <string name="smartcard_no_cert_dialog_message">Potvrdite da je certifikat ispravno obezbeđen na uređaju pametne kartice.</string>
 
+    <string name="smartcard_nfc_diff_connected_title">Možete da koristite samo jednu po jednu pametnu karticu</string>
+    <string name="smartcard_nfc_diff_connected_message">Koristite pametnu karticu pomoću koje ste se prvobitno prijavili.</string>
+    <string name="smartcard_nfc_diff_connected_positive_button">Razumem</string>
+
     <string name="smartcard_general_error_dialog_title">Pokušajte ponovo kasnije</string>
     <string name="smartcard_general_error_dialog_message">Došlo je do neočekivane greške. Pokušajte ponovo kasnije.</string>
 

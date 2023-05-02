@@ -32,6 +32,10 @@
     <string name="smartcard_no_cert_dialog_title">Er zijn geen toepasselijke certificaten gevonden.</string>
     <string name="smartcard_no_cert_dialog_message">Controleer of uw certificaat correct is ingericht op uw smartcardapparaat.</string>
 
+    <string name="smartcard_nfc_diff_connected_title">U kunt slechts één smartcard tegelijk gebruiken</string>
+    <string name="smartcard_nfc_diff_connected_message">Gebruik de smartcard waarmee u zich oorspronkelijk hebt aangemeld.</string>
+    <string name="smartcard_nfc_diff_connected_positive_button">Begrepen</string>
+
     <string name="smartcard_general_error_dialog_title">Probeer het later opnieuw</string>
     <string name="smartcard_general_error_dialog_message">Er is een onverwachte fout opgetreden. Probeer het later opnieuw.</string>
 
@@ -57,5 +61,5 @@
     <string name="smartcard_nfc_reminder_dialog_positive_button">OK</string>
 
     <string name="smartcard_removal_prompt_dialog_title">U kunt nu uw smartcard verwijderen</string>
-    <string name="smartcard_removal_prompt_dialog_positive_button">OK</string>
+    <string name="smartcard_removal_prompt_dialog_positive_button">Begrepen</string>
 </resources>

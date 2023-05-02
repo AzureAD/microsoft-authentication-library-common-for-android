@@ -32,6 +32,10 @@
     <string name="smartcard_no_cert_dialog_title">Der blev ikke fundet nogen relevante certifikater.</string>
     <string name="smartcard_no_cert_dialog_message">Bekræft, at dit certifikat er blevet klargjort korrekt på din chipkortenhed.</string>
 
+    <string name="smartcard_nfc_diff_connected_title">Du kan kun bruge ét chipkort ad gangen</string>
+    <string name="smartcard_nfc_diff_connected_message">Brug det chipkort, du oprindeligt loggede på med.</string>
+    <string name="smartcard_nfc_diff_connected_positive_button">Forstået</string>
+
     <string name="smartcard_general_error_dialog_title">Prøv igen senere</string>
     <string name="smartcard_general_error_dialog_message">Der opstod en uventet fejl. Prøv igen senere.</string>
 
