@@ -43,9 +43,9 @@ import org.junit.Assert;
 public class OutlookApp extends App implements IFirstPartyApp {
 
     private final static String TAG = OutlookApp.class.getSimpleName();
-    private static final String OUTLOOK_PACKAGE_NAME = "com.microsoft.office.outlook";
-    private static final String OUTLOOK_APP_NAME = "Microsoft Outlook";
-    private static final String OUTLOOK_APK = "Outlook.apk";
+    public static final String OUTLOOK_PACKAGE_NAME = "com.microsoft.office.outlook";
+    public static final String OUTLOOK_APP_NAME = "Microsoft Outlook";
+    public static final String OUTLOOK_APK = "Outlook.apk";
 
     public OutlookApp() {
         super(OUTLOOK_PACKAGE_NAME, OUTLOOK_APP_NAME, new PlayStore());

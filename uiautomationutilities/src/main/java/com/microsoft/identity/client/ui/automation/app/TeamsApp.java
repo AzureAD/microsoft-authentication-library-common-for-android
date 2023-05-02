@@ -42,9 +42,9 @@ import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 public class TeamsApp extends App implements IFirstPartyApp {
 
     private final static String TAG = TeamsApp.class.getSimpleName();
-    private static final String TEAMS_PACKAGE_NAME = "com.microsoft.teams";
-    private static final String TEAMS_APP_NAME = "Microsoft Teams";
-    private static final String TEAMS_APK = "Teams.apk";
+    public static final String TEAMS_PACKAGE_NAME = "com.microsoft.teams";
+    public static final String TEAMS_APP_NAME = "Microsoft Teams";
+    public static final String TEAMS_APK = "Teams.apk";
 
     public TeamsApp() {
         super(TEAMS_PACKAGE_NAME, TEAMS_APP_NAME, new PlayStore());

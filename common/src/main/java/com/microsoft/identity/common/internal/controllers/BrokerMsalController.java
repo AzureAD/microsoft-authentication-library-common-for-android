@@ -151,10 +151,6 @@ public class BrokerMsalController extends BaseController {
         mComponents = components;
         mApplicationContext = applicationContext;
         mActiveBrokerPackageName = getActiveBrokerPackageName();
-        if (StringUtil.isEmpty(mActiveBrokerPackageName)) {
-            throw new IllegalStateException("Active Broker not found. This class should not be initialized.");
-        }
-
         mBrokerOperationExecutor = new BrokerOperationExecutor(getIpcStrategies(mApplicationContext, mActiveBrokerPackageName));
         mHelloCache = getHelloCache();
     }
@@ -163,10 +159,6 @@ public class BrokerMsalController extends BaseController {
         mComponents = AndroidPlatformComponentsFactory.createFromContext(applicationContext);
         mApplicationContext = applicationContext;
         mActiveBrokerPackageName = getActiveBrokerPackageName();
-        if (TextUtils.isEmpty(mActiveBrokerPackageName)) {
-            throw new IllegalStateException("Active Broker not found. This class should not be initialized.");
-        }
-
         mBrokerOperationExecutor = new BrokerOperationExecutor(getIpcStrategies(mApplicationContext, mActiveBrokerPackageName));
         mHelloCache = getHelloCache();
     }
@@ -178,8 +170,12 @@ public class BrokerMsalController extends BaseController {
     }
 
     @VisibleForTesting
-    public String getActiveBrokerPackageName() {
-        return new BrokerValidator(mApplicationContext).getCurrentActiveBrokerPackageName();
+    public String getActiveBrokerPackageName() throws IllegalStateException{
+        try {
+            return new BrokerValidator(mApplicationContext).getCurrentActiveBrokerPackageName();
+        } catch (final ClientException e) {
+            throw new IllegalStateException("Active Broker not found. This class should not be initialized.", e);
+        }
     }
 
     /**

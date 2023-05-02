@@ -1,5 +1,6 @@
 V.NEXT
 ----------
+- [MINOR] make getCurrentActiveBrokerPackageName case insensitive and trims the authenticator type (#2026)
 - [PATCH] Update version for org.json:json to 20230227 (#2022)
 - [MAJOR] Move Broker encryption logic to broker code. Some more refactoring. (#2016)
 - [PATCH] Fix Error Type thrown for NO_ACCOUNT_FOUND (#2006)
