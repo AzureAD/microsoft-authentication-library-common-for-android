@@ -84,6 +84,7 @@ public class BrokerApiFragment extends AbstractBrokerHost {
     public String acquireSsoToken(@NonNull final String nonce) {
         fillTextBox(NONCE_EDIT_TEXT_ID, nonce);
         clickButton(GET_SSO_TOKEN_BUTTON_ID);
+        ThreadUtils.sleepSafely(2000, "acquireSsoToken", "Sleep failed");
         return readTextBox(SSO_TOKEN_EDIT_TEXT_ID);
     }
 
