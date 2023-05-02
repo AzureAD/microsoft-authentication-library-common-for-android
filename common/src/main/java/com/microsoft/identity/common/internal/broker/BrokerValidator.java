@@ -28,7 +28,6 @@ import static com.microsoft.identity.common.java.exception.ClientException.BROKE
 import static com.microsoft.identity.common.java.exception.ClientException.NOT_VALID_BROKER_FOUND;
 import static com.microsoft.identity.common.java.exception.ClientException.NO_SUCH_ALGORITHM;
 import static com.microsoft.identity.common.java.exception.ErrorStrings.APP_PACKAGE_NAME_NOT_FOUND;
-import static com.microsoft.identity.common.java.exception.ErrorStrings.BROKER_VERIFICATION_FAILED;
 
 import android.accounts.AccountManager;
 import android.accounts.AuthenticatorDescription;
@@ -145,8 +144,8 @@ public class BrokerValidator {
      */
     public Set<BrokerData> getValidBrokers() {
         final Set<BrokerData> validBrokers = sShouldTrustDebugBrokers
-                ? BrokerData.getAllBrokers()
-                : BrokerData.getProdBrokers();
+                ? BrokerData.Companion.getAllBrokers()
+                : BrokerData.Companion.getProdBrokers();
 
         return validBrokers;
     }
@@ -171,7 +170,7 @@ public class BrokerValidator {
 
             @Override
             public String next() {
-                return itr.next().signatureHash;
+                return itr.next().getSignatureHash();
             }
         };
     }
@@ -186,7 +185,7 @@ public class BrokerValidator {
         final Set<BrokerData> validBrokers = getValidBrokers();
 
         for (final BrokerData brokerData : validBrokers) {
-            if (brokerData.packageName.equals(packageName) && verifySignature(packageName)) {
+            if (brokerData.getPackageName().equals(packageName) && verifySignature(packageName)) {
                 return true;
             }
         }
@@ -255,8 +254,8 @@ public class BrokerValidator {
         if (packageName.equals(AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME)) {
             final PackageHelper info = new PackageHelper(context.getPackageManager());
             final String signatureDigest = info.getCurrentSignatureForPackage(packageName);
-            if (BrokerData.MICROSOFT_AUTHENTICATOR_PROD.signatureHash.equals(signatureDigest)
-                    || BrokerData.MICROSOFT_AUTHENTICATOR_DEBUG.signatureHash.equals(signatureDigest)) {
+            if (BrokerData.Companion.getProdMicrosoftAuthenticator().getSignatureHash().equals(signatureDigest)
+                    || BrokerData.Companion.getDebugMicrosoftAuthenticator().getSignatureHash().equals(signatureDigest)) {
                 // If the caller is the Authenticator, check if the redirect uri matches with either
                 // the one generated with package name and signature or broker redirect uri.
                 isValidBrokerRedirect |= StringUtil.equalsIgnoreCase(redirectUri, AuthenticationConstants.Broker.BROKER_REDIRECT_URI);
