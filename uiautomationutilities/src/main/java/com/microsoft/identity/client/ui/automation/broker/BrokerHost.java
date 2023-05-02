@@ -50,6 +50,8 @@ public class BrokerHost extends AbstractTestBroker {
     private final static String TAG = BrokerHost.class.getSimpleName();
     // tenant id where lab api and key vault api is registered
     private final static String LAB_API_TENANT_ID = "72f988bf-86f1-41af-91ab-2d7cd011db47";
+    // flight to enable/disable the multiple wpj feature
+    private final static String FLIGHT_FOR_WORKPLACE_JOIN_CONTROLLER = "ENABLE_MULTIPLE_WORKPLACE_JOIN_PP";
     // name for broker host APKs
     public final static String BROKER_HOST_APK = "BrokerHost.apk";
     public final static String OLD_BROKER_HOST_APK = "OldBrokerHost.apk";
@@ -332,12 +334,12 @@ public class BrokerHost extends AbstractTestBroker {
     public void enableMultipleWpj() {
         Logger.i(TAG, "Enable Multiple Account..");
         brokerFlightsFragment.launch();
-        brokerFlightsFragment.setLocalFlight("EnableMultipleWorkplaceJoinGA", "true");
+        brokerFlightsFragment.setLocalFlight(FLIGHT_FOR_WORKPLACE_JOIN_CONTROLLER, "true");
     }
 
     public void disableMultipleWpj() {
         Logger.i(TAG, "Enable Multiple Account..");
         brokerFlightsFragment.launch();
-        brokerFlightsFragment.setLocalFlight("EnableMultipleWorkplaceJoinGA", "false");
+        brokerFlightsFragment.setLocalFlight(FLIGHT_FOR_WORKPLACE_JOIN_CONTROLLER, "false");
     }
 }
