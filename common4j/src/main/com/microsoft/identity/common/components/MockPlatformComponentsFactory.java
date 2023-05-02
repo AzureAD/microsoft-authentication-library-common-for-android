@@ -23,13 +23,17 @@
 package com.microsoft.identity.common.components;
 
 import com.microsoft.identity.common.java.WarningType;
+import com.microsoft.identity.common.java.cache.IMultiTypeNameValueStorage;
+import com.microsoft.identity.common.java.cache.MapBackedPreferencesManager;
 import com.microsoft.identity.common.java.commands.ICommand;
 import com.microsoft.identity.common.java.crypto.CryptoSuite;
 import com.microsoft.identity.common.java.crypto.IDevicePopManager;
 import com.microsoft.identity.common.java.crypto.IKeyAccessor;
 import com.microsoft.identity.common.java.crypto.SecureHardwareState;
 import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.java.interfaces.IPopManagerSupplier;
+import com.microsoft.identity.common.java.interfaces.IStorageSupplier;
 import com.microsoft.identity.common.java.interfaces.PlatformComponents;
 import com.microsoft.identity.common.java.net.DefaultHttpClientWrapper;
 import com.microsoft.identity.common.java.providers.oauth2.IStateGenerator;
@@ -38,10 +42,13 @@ import com.microsoft.identity.common.java.ui.BrowserDescriptor;
 import com.microsoft.identity.common.java.util.IBroadcaster;
 import com.microsoft.identity.common.java.util.IClockSkewManager;
 import com.microsoft.identity.common.java.util.IPlatformUtil;
+import com.microsoft.identity.common.java.util.ported.InMemoryStorage;
 
 import java.security.cert.Certificate;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.net.ssl.KeyManagerFactory;
 
@@ -62,16 +69,59 @@ public class MockPlatformComponentsFactory {
     @SuppressWarnings(WarningType.rawtype_warning)
     public static PlatformComponents.PlatformComponentsBuilder getNonFunctionalBuilder(){
         final PlatformComponents.PlatformComponentsBuilder builder = PlatformComponents.builder();
-        builder.clockSkewManager(NONFUNCTIONAL_CLOCK_SKEW_MANAGER)
+        builder.storageEncryptionManager(NONFUNCTIONAL_ENCRYPTION_MANAGER)
+                .clockSkewManager(NONFUNCTIONAL_CLOCK_SKEW_MANAGER)
                 .broadcaster(NONFUNCTIONAL_BROADCASTER)
                 .popManagerLoader(NONFUNCTIONAL_POP_MANAGER_LOADER)
-                .storageSupplier(new InMemoryStorageSupplier())
+                .storageLoader(new InMemoryStorageSupplier())
                 .authorizationStrategyFactory(NON_FUNCTIONAL_AUTH_STRATEGY_FACTORY)
                 .stateGenerator(NON_FUNCTIONAL_STATE_GENERATOR)
                 .platformUtil(NON_FUNCTIONAL_PLATFORM_UTIL)
                 .httpClientWrapper(new DefaultHttpClientWrapper());
         return builder;
     }
+
+    private static final IKeyAccessor NONFUNCTIONAL_ENCRYPTION_MANAGER = new IKeyAccessor() {
+        @Override
+        public byte[] encrypt(byte[] plaintext) throws ClientException {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public byte[] decrypt(byte[] ciphertext) throws ClientException {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public byte[] sign(byte[] text) throws ClientException {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public boolean verify(byte[] text, byte[] signature) throws ClientException {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public byte[] getThumbprint() throws ClientException {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Certificate[] getCertificateChain() throws ClientException {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public SecureHardwareState getSecureHardwareState() throws ClientException {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public IKeyAccessor generateDerivedKey(byte[] label, byte[] ctx, CryptoSuite suite) throws ClientException {
+            throw new UnsupportedOperationException();
+        }
+    };
 
     private static final IClockSkewManager NONFUNCTIONAL_CLOCK_SKEW_MANAGER = new IClockSkewManager() {
         @Override
