@@ -32,6 +32,10 @@
     <string name="smartcard_no_cert_dialog_title">Ustreznih potrdil ni bilo mogoče najti.</string>
     <string name="smartcard_no_cert_dialog_message">Preverite, ali je bilo potrdilo pravilno nastavljeno in omogočeno v napravi s pametno kartico.</string>
 
+    <string name="smartcard_nfc_diff_connected_title">Hkrati lahko uporabljate le eno pametno kartico</string>
+    <string name="smartcard_nfc_diff_connected_message">Uporabite pametno kartico, s katero ste se prvotno vpisali.</string>
+    <string name="smartcard_nfc_diff_connected_positive_button">Razumem</string>
+
     <string name="smartcard_general_error_dialog_title">Poskusite znova pozneje</string>
     <string name="smartcard_general_error_dialog_message">Prišlo je do nepričakovane napake. Poskusite znova pozneje.</string>
 

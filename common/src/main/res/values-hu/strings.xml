@@ -32,6 +32,10 @@
     <string name="smartcard_no_cert_dialog_title">Nem találhatók alkalmazható tanúsítványok.</string>
     <string name="smartcard_no_cert_dialog_message">Győződjön meg arról, hogy a tanúsítvány megfelelően lett kiépítve az intelligenskártya-eszközön.</string>
 
+    <string name="smartcard_nfc_diff_connected_title">Egyszerre csak egy intelligens kártyát használhat</string>
+    <string name="smartcard_nfc_diff_connected_message">Használja azt az intelligens kártyát, amellyel eredetileg bejelentkezett.</string>
+    <string name="smartcard_nfc_diff_connected_positive_button">Rendben</string>
+
     <string name="smartcard_general_error_dialog_title">Próbálkozzon újra később</string>
     <string name="smartcard_general_error_dialog_message">Váratlan hiba történt. Később próbálja meg újból.</string>
 
@@ -57,5 +61,5 @@
     <string name="smartcard_nfc_reminder_dialog_positive_button">Értem</string>
 
     <string name="smartcard_removal_prompt_dialog_title">Most már eltávolíthatja az intelligens kártyát</string>
-    <string name="smartcard_removal_prompt_dialog_positive_button">Értem</string>
+    <string name="smartcard_removal_prompt_dialog_positive_button">Rendben</string>
 </resources>

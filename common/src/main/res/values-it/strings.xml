@@ -32,6 +32,10 @@
     <string name="smartcard_no_cert_dialog_title">Non sono stati trovati certificati applicabili.</string>
     <string name="smartcard_no_cert_dialog_message">Verificare che il provisioning del certificato sia stato eseguito correttamente nel dispositivo smart card.</string>
 
+    <string name="smartcard_nfc_diff_connected_title">È possibile usare una sola smart card alla volta</string>
+    <string name="smartcard_nfc_diff_connected_message">Usare la smart card con cui è stato eseguito l\'accesso originale.</string>
+    <string name="smartcard_nfc_diff_connected_positive_button">Chiudi</string>
+
     <string name="smartcard_general_error_dialog_title">Riprova più tardi</string>
     <string name="smartcard_general_error_dialog_message">Si è verificato un errore imprevisto. Riprova più tardi.</string>
 

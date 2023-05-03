@@ -32,6 +32,10 @@
     <string name="smartcard_no_cert_dialog_title">No s\'ha trobat cap certificat aplicable.</string>
     <string name="smartcard_no_cert_dialog_message">Confirmeu que el certificat s\'ha proveït correctament al vostre dispositiu de targeta intel·ligent.</string>
 
+    <string name="smartcard_nfc_diff_connected_title">Només podeu utilitzar una targeta intel·ligent alhora</string>
+    <string name="smartcard_nfc_diff_connected_message">Utilitzeu la targeta intel·ligent amb la qual vau iniciar la sessió originalment.</string>
+    <string name="smartcard_nfc_diff_connected_positive_button">Entesos</string>
+
     <string name="smartcard_general_error_dialog_title">Torneu-ho a provar més tard.</string>
     <string name="smartcard_general_error_dialog_message">S\'ha produït un error inesperat. Torneu-ho a provar més tard.</string>
 

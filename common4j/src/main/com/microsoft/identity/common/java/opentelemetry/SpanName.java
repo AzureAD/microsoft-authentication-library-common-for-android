@@ -42,7 +42,9 @@ public enum SpanName {
     MSAL_PerformIpcStrategy,
     DeviceRegistrationApi,
     WorkplaceJoinApi,
+    AcquirePrtInteractively,
+    PrtUpgrade,
     AcquireTokenDcf,
     AcquireTokenDcfAuthRequest,
-    AcquireTokenDcfFetchToken
+    AcquireTokenDcfFetchToken;
 }

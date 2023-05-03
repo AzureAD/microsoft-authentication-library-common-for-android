@@ -1015,14 +1015,6 @@ public abstract class BaseController {
         return true;
     }
 
-    protected boolean isMsaAccount(final MicrosoftTokenResponse microsoftTokenResponse) {
-        final String tenantId = SchemaUtil.getTenantId(
-                microsoftTokenResponse.getClientInfo(),
-                microsoftTokenResponse.getIdToken()
-        );
-        return AzureActiveDirectoryAudience.MSA_MEGA_TENANT_ID.equalsIgnoreCase(tenantId);
-    }
-
     public ICacheRecord finalizeCacheRecordForResult(@NonNull final ICacheRecord cacheRecord,
                                                      @NonNull final AbstractAuthenticationScheme scheme) throws ClientException {
         if (scheme instanceof ITokenAuthenticationSchemeInternal &&

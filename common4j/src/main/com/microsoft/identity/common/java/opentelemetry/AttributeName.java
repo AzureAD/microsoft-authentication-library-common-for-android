@@ -133,5 +133,14 @@ public enum AttributeName {
     /**
      * Indicates if device id claims were requested
      */
-    is_device_id_claims_requested
+    is_device_id_claims_requested,
+
+    /**
+     * The content type of the response returned by eSTS for the request.
+     */
+    response_content_type,
+    /**
+     * The http status code of the operation.
+     */
+    http_status_code;
 }

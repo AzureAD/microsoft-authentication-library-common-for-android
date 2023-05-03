@@ -213,40 +213,10 @@ public class BrokerValidator {
      * <p>
      * In such case, this method will return null.
      *
-     * @return PackageName of the broker, or null if it cannot be obtained.
-     */
-    @Nullable
-    public String getCurrentActiveBrokerPackageName() {
-        final String methodTag = TAG + ":getCurrentActiveBrokerPackageName";
-        try {
-            final AuthenticatorDescription[] authenticators = AccountManager.get(mContext).getAuthenticatorTypes();
-            for (AuthenticatorDescription authenticator : authenticators) {
-                if (authenticator.type.equals(BROKER_ACCOUNT_TYPE)) {
-                    return authenticator.packageName;
-                }
-            }
-        } catch (Exception e) {
-            Logger.warn(methodTag, "Failed to query Active Broker package name" + e.getMessage());
-            return null;
-        }
-        return null;
-    }
-
-    /**
-     * Determines which app is the broker based on having the work account registration in Account Manager.
-     * <p>
-     * Known issue: When we're in an AccountManager callback (Especially on older Android devices, i.e. Android 10)
-     * Android For Work throws a SecurityException when we're calling AccountManager.getAuthenticatorTypes()
-     * i.e. E.g. Company Portal main process can call this freely, broker process can call this freely, but once running in AccountManager,
-     * on the work profile (user != 0), apparently sometimes it tries to get accounts from user 0 (personal profile) and fails.
-     * <p>
-     * In such case, this method will return null.
-     *
      * @return PackageName of the broker
      */
     @NonNull
-    // TODO: Consolidate getCurrentActiveBrokerPackageName and getValidActiveBrokerPackageName into one.
-    public String getValidActiveBrokerPackageName() throws ClientException {
+    public String getCurrentActiveBrokerPackageName() throws ClientException {
         final String methodTag = TAG + ":getValidActiveBrokerPackageName";
 
         final AuthenticatorDescription[] authenticators;
@@ -260,10 +230,10 @@ public class BrokerValidator {
 
         final int numberOfAuthenticators = authenticators.length;
         Logger.info(methodTag, numberOfAuthenticators + " Authenticators registered.");
-        for (final AuthenticatorDescription authenticator : authenticators) {
+        for (AuthenticatorDescription authenticator : authenticators) {
             // TODO: remove or change to verbose once we're confident this is working.
             Logger.info(methodTag, "Authenticator: " + authenticator.packageName + ",  type: " + authenticator.type );
-            if (BROKER_ACCOUNT_TYPE.equals(authenticator.type)) {
+            if (BROKER_ACCOUNT_TYPE.equalsIgnoreCase(authenticator.type.trim())) {
                 Logger.info(methodTag, "Verify: " + authenticator.packageName);
                 verifySignatureAndThrow(authenticator.packageName);
                 return authenticator.packageName;

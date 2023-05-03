@@ -30,6 +30,7 @@ import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.opentelemetry.AttributeName;
 import com.microsoft.identity.common.java.opentelemetry.OTelUtility;
+import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
 import com.microsoft.identity.common.java.opentelemetry.SpanName;
 import com.microsoft.identity.common.java.result.AcquireTokenResult;
 import com.microsoft.identity.common.java.util.ported.PropertyBag;
@@ -70,7 +71,7 @@ public class InteractiveTokenCommand extends TokenCommand {
         span.setAttribute(AttributeName.application_name.name(), getParameters().getApplicationName());
         span.setAttribute(AttributeName.public_api_id.name(), getPublicApiId());
 
-        try (final Scope scope = span.makeCurrent()) {
+        try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
             if (getParameters() instanceof InteractiveTokenCommandParameters) {
                 Logger.info(
                         TAG + methodName,

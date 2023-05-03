@@ -32,6 +32,10 @@
     <string name="smartcard_no_cert_dialog_title">Nav atrasts neviens lietojams sertifikāts.</string>
     <string name="smartcard_no_cert_dialog_message">Pārliecinieties, vai jūsu sertifikāts ir pareizi nodrošināts viedkartes ierīcē.</string>
 
+    <string name="smartcard_nfc_diff_connected_title">Vienlaikus varat izmantot tikai vienu viedkarti</string>
+    <string name="smartcard_nfc_diff_connected_message">Izmantojiet viedkarti, ar kuru sākotnēji pierakstījāties.</string>
+    <string name="smartcard_nfc_diff_connected_positive_button">Sapratu</string>
+
     <string name="smartcard_general_error_dialog_title">Vēlāk mēģiniet vēlreiz</string>
     <string name="smartcard_general_error_dialog_message">Radās neparedzēta kļūda. Vēlāk mēģiniet vēlreiz.</string>
 

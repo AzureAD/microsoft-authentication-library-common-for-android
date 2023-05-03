@@ -32,6 +32,10 @@
     <string name="smartcard_no_cert_dialog_title">No se encontraron certificados aplicables.</string>
     <string name="smartcard_no_cert_dialog_message">Confirme que el certificado se ha aprovisionado correctamente en el dispositivo de tarjeta inteligente.</string>
 
+    <string name="smartcard_nfc_diff_connected_title">Solo se puede usar una tarjeta inteligente a la vez</string>
+    <string name="smartcard_nfc_diff_connected_message">Usa la tarjeta inteligente con la que iniciaste sesión originalmente.</string>
+    <string name="smartcard_nfc_diff_connected_positive_button">Entendido</string>
+
     <string name="smartcard_general_error_dialog_title">Volver a intentarlo más tarde</string>
     <string name="smartcard_general_error_dialog_message">Ha ocurrido un error inesperado. Inténtalo de nuevo más tarde.</string>
 
