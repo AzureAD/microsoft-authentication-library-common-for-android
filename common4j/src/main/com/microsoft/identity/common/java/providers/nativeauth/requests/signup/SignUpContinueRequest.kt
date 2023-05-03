@@ -2,8 +2,6 @@ package com.microsoft.identity.common.java.providers.nativeauth.requests.signup
 
 import com.google.gson.annotations.SerializedName
 import com.microsoft.identity.common.java.providers.nativeauth.requests.NativeAuthRequest
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.UserAttributes
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.toJsonString
 import com.microsoft.identity.common.java.util.ArgUtils
 import java.net.URL
 
@@ -16,7 +14,7 @@ data class SignUpContinueRequest private constructor(
     companion object {
         fun create(
                 password: String? = null,
-                attributes: UserAttributes? = null,
+                attributes: Map<String, String>? = null,
                 oob: String? = null,
                 clientId: String,
                 signUpToken: String,
@@ -40,7 +38,7 @@ data class SignUpContinueRequest private constructor(
             return SignUpContinueRequest(
                 parameters = NativeAuthRequestSignUpContinueParameters(
                     password = password,
-                    attributes = attributes?.toJsonString(),
+//                    attributes = attributes?.toJsonString(), // TODO
                     oob = oob,
                     clientId = clientId,
                     signUpToken = signUpToken,
@@ -54,7 +52,7 @@ data class SignUpContinueRequest private constructor(
 
     data class NativeAuthRequestSignUpContinueParameters(
         val password: String?,
-        val attributes: String?,
+        val attributes: String? = null,
         val oob: String?,
         @SerializedName("client_id") override val clientId: String,
         @SerializedName("signup_token") val signUpToken: String,

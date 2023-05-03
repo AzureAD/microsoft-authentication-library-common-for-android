@@ -28,7 +28,6 @@ import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.experimental.Accessors;
 
 /**

@@ -33,7 +33,7 @@ import java.net.URL
 class NativeAuthOAuth2Configuration(
     private val authorityUrl: URL,
     val clientId: String,
-    val challengeType: String = "oob password redirect" // TODO hardcoded for now
+    val challengeType: String = "oob password redirect", // TODO hardcoded for now
 ) : MicrosoftStsOAuth2Configuration() {
 
     private val TAG = NativeAuthOAuth2Configuration::class.java.simpleName
@@ -51,9 +51,9 @@ class NativeAuthOAuth2Configuration(
         private const val SSPR_CONTINUE_ENDPOINT_SUFFIX = "/resetpassword/continue"
         private const val SSPR_SUBMIT_ENDPOINT_SUFFIX = "/resetpassword/submit"
         private const val SSPR_COMPLETE_ENDPOINT_SUFFIX = "/resetpassword/poll_completion"
-        private const val SIGN_IN_INITIATE_ENDPOINT_SUFFIX = "/oauth/v2.0/initiate"
-        private const val SIGN_IN_CHALLENGE_ENDPOINT_SUFFIX = "/oauth/v2.0/challenge"
-        private const val SIGN_IN_TOKEN_ENDPOINT_SUFFIX = "/oauth/v2.0/token"
+        private const val SIGN_IN_INITIATE_ENDPOINT_SUFFIX = "/oauth2/v2.0/initiate"
+        private const val SIGN_IN_CHALLENGE_ENDPOINT_SUFFIX = "/oauth2/v2.0/challenge"
+        private const val SIGN_IN_TOKEN_ENDPOINT_SUFFIX = "/oauth2/v2.0/token"
     }
 
     override fun getAuthorityUrl(): URL {
@@ -61,7 +61,7 @@ class NativeAuthOAuth2Configuration(
             return authorityUrl
         } else {
             // TODO return real authorityUrl once we move away from using mock APIs
-            return URL("https://devexclientauthsdkmockapi.azure-api.net/v1.0/lumonconvergedps.onmicrosoft.com")
+            return URL("https://native-ux-mock-api.azurewebsites.net/lumonconvergedps.onmicrosoft.com")
         }
     }
 

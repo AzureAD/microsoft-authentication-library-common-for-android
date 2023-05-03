@@ -2,19 +2,19 @@ package com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.c
 
 import com.google.gson.annotations.SerializedName
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SsprChallengeCommandParameters
+import com.microsoft.identity.common.java.exception.ClientException
+import com.microsoft.identity.common.java.logging.Logger
 import com.microsoft.identity.common.java.providers.nativeauth.IApiSuccessResponse
 import com.microsoft.identity.common.java.providers.nativeauth.responses.NativeAuthBindingMethod
 import com.microsoft.identity.common.java.providers.nativeauth.responses.NativeAuthChallengeType
 import com.microsoft.identity.common.java.providers.nativeauth.responses.NativeAuthDisplayType
-import com.microsoft.identity.common.java.exception.ClientException
-import com.microsoft.identity.common.java.logging.Logger
 import com.microsoft.identity.common.java.providers.oauth2.ISuccessResponse
 
 class SsprChallengeResponse(
     @SerializedName("password_reset_token")val passwordResetToken: String?,
     @SerializedName("display_name") val displayName: String?,
     @SerializedName("display_type") val displayType: NativeAuthDisplayType?,
-    @SerializedName("code_length") val codeLength: String?,
+    @SerializedName("code_length") val codeLength: Int?,
     @SerializedName("challenge_type") val challengeType: NativeAuthChallengeType?,
     @SerializedName("binding_method") val bindingMethod: NativeAuthBindingMethod?
 ) : ISuccessResponse, IApiSuccessResponse {

@@ -4,8 +4,10 @@ import android.os.Build
 import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.MockApiEndpointType
 import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.MockApiResponseType
 import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.MockApiUtils
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInCommandParameters
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.UserAttributes
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartWithPasswordCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitCodeCommandParameters
+import com.microsoft.identity.common.java.interfaces.PlatformComponents
 import com.microsoft.identity.common.java.logging.DiagnosticContext
 import com.microsoft.identity.common.java.net.UrlConnectionHttpClient
 import com.microsoft.identity.common.java.providers.nativeauth.NativeAuthOAuth2Configuration
@@ -15,14 +17,14 @@ import com.microsoft.identity.common.java.providers.nativeauth.NativeAuthRespons
 import com.microsoft.identity.common.java.providers.nativeauth.interactors.SignInInteractor
 import com.microsoft.identity.common.java.providers.nativeauth.interactors.SignUpInteractor
 import com.microsoft.identity.common.java.providers.nativeauth.interactors.SsprInteractor
-import com.microsoft.identity.common.java.providers.nativeauth.responses.NativeAuthChallengeType
-import com.microsoft.identity.common.java.providers.nativeauth.responses.signin.exceptions.ErrorCodes
+import com.microsoft.identity.common.java.providers.nativeauth.responses.signin.SignInChallengeApiResult
+import com.microsoft.identity.common.java.providers.nativeauth.responses.signin.SignInInitiateApiResult
+import com.microsoft.identity.common.java.providers.nativeauth.responses.signin.SignInTokenApiResult
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.Assert
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.kotlin.mock
@@ -52,17 +54,17 @@ class SignInOAuthStrategyTest {
     private val signUpStartRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/signup/start")
     private val signUpChallengeRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/signup/challenge")
     private val signUpContinueRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/signup/continue")
-    private val signInInitiateRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/oauth/v2.0/initiate")
-    private val signInChallengeRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/oauth/v2.0/challenge")
-    private val signInTokenRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/oauth/v2.0/token")
+    private val signInInitiateRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/oauth2/v2.0/initiate")
+    private val signInChallengeRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/oauth2/v2.0/challenge")
+    private val signInTokenRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/oauth2/v2.0/token")
     private val ssprStartRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/resetpassword/start")
     private val ssprChallengeRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/resetpassword/challenge")
     private val ssprContinueRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/resetpassword/continue")
     private val ssprSubmitRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/resetpassword/submit")
     private val ssprPollCompletionRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/resetpassword/poll_completion")
     private val tokenEndpoint = URL("https://contoso.com/1234/token")
-    private val challengeType = "password"
-    private val userAttributes = UserAttributes.customAttribute("city", "Dublin").build()
+    private val challengeType = "oob password redirect"
+    private val userAttributes = mapOf(Pair("city", "Dublin"))
     private val credentialToken = "uY29tL2F1dGhlbnRpY"
     private val grantType = "oob"
     private val oob = "1234"
@@ -114,62 +116,83 @@ class SignInOAuthStrategyTest {
         )
     }
 
-    @Ignore
     @Test
-    fun testPerformSignInInitiateSuccessWithOnlyEmail() {
-        val signInCommandParameters = mockk<SignInCommandParameters>()
-        every { signInCommandParameters.getUsername() } returns username
+    fun testPerformSignInInitiateSuccess() {
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpointType.SignInInitiate,
+            correlationId = UUID.randomUUID().toString(),
+            responseType = MockApiResponseType.INITIATE_SUCCESS
+        )
+
+        val parameters = SignInStartCommandParameters.builder()
+            .platformComponents(mock<PlatformComponents>())
+            .username(username)
+            .build()
 
         val signInInitiateResult = nativeAuthOAuth2Strategy.performSignInInitiate(
-            signInCommandParameters
+            parameters
         )
-        Assert.assertTrue(signInInitiateResult.success)
+
+        Assert.assertTrue(signInInitiateResult is SignInInitiateApiResult.Success)
     }
 
-    @Ignore
     @Test
     fun testPerformSignInChallengeSuccess() {
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpointType.SignInChallenge,
+            correlationId = UUID.randomUUID().toString(),
+            responseType = MockApiResponseType.CHALLENGE_TYPE_REDIRECT
+        )
+
         val signInChallengeResult = nativeAuthOAuth2Strategy.performSignInChallenge(
             credentialToken = "1234"
         )
 
-        Assert.assertTrue(signInChallengeResult.success)
-        Assert.assertEquals(signInChallengeResult.successResponse!!.challengeType, "redirect")
+        Assert.assertTrue(signInChallengeResult is SignInChallengeApiResult.Redirect)
     }
 
-    @Ignore
     @Test
     fun testPerformSignInTokenWithPasswordSuccess() {
-        val signInCommandParameters = mockk<SignInCommandParameters>()
-        every { signInCommandParameters.getUsername() } returns username
-        every { signInCommandParameters.getPassword() } returns password
-
-        val signInChallengeResult = nativeAuthOAuth2Strategy.performGetToken(
-            credentialToken = "1234",
-            signInCommandParameters = signInCommandParameters
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpointType.SignInToken,
+            correlationId = UUID.randomUUID().toString(),
+            responseType = MockApiResponseType.TOKEN_SUCCESS
         )
 
-        Assert.assertTrue(signInChallengeResult.success)
-        Assert.assertTrue(!signInChallengeResult.successResponse!!.accessToken.isNullOrBlank())
+        val parameters = SignInStartWithPasswordCommandParameters.builder()
+            .platformComponents(mock<PlatformComponents>())
+            .username(username)
+            .password(password)
+            .build()
+
+        val signInChallengeResult = nativeAuthOAuth2Strategy.performROPCTokenRequest(
+            parameters = parameters
+        )
+
+        Assert.assertTrue(signInChallengeResult is SignInTokenApiResult.Success)
+        Assert.assertTrue((signInChallengeResult as SignInTokenApiResult.Success).tokenResponse.accessToken.isNotEmpty())
     }
 
-    @Ignore
     @Test
     fun testPerformSignInTokenWithOobSuccess() {
-        val signInCommandParameters = mockk<SignInCommandParameters>()
-        every { signInCommandParameters.getUsername() } returns username
-        every { signInCommandParameters.getOob() } returns oob
-
-        val signInChallengeResult = nativeAuthOAuth2Strategy.performGetToken(
-            credentialToken = "1234",
-            signInCommandParameters = signInCommandParameters
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpointType.SignInToken,
+            correlationId = UUID.randomUUID().toString(),
+            responseType = MockApiResponseType.TOKEN_SUCCESS
         )
 
-        Assert.assertTrue(signInChallengeResult.success)
-        Assert.assertTrue(!signInChallengeResult.successResponse!!.accessToken.isNullOrBlank())
+        val parameters = mockk<SignInSubmitCodeCommandParameters>()
+        every { parameters.getCode() } returns oob
+        every { parameters.getCredentialToken() } returns credentialToken
+
+        val signInChallengeResult = nativeAuthOAuth2Strategy.performOOBTokenRequest(
+            parameters = parameters
+        )
+
+        Assert.assertTrue(signInChallengeResult is SignInTokenApiResult.Success)
+        Assert.assertTrue((signInChallengeResult as SignInTokenApiResult.Success).tokenResponse.accessToken.isNotEmpty())
     }
 
-    @Ignore
     @Test
     fun testPerformSignInInitiateWithChallengeTypeRedirectSuccess() {
         MockApiUtils.configureMockApi(
@@ -178,20 +201,17 @@ class SignInOAuthStrategyTest {
             responseType = MockApiResponseType.CHALLENGE_TYPE_REDIRECT
         )
 
-        val signInCommandParameters = mockk<SignInCommandParameters>()
-        every { signInCommandParameters.getUsername() } returns username
+        val parameters = SignInStartCommandParameters.builder()
+            .platformComponents(mock<PlatformComponents>())
+            .username(username)
+            .build()
 
         val signInInitiateResult = nativeAuthOAuth2Strategy.performSignInInitiate(
-            signInCommandParameters
+            parameters = parameters
         )
-        Assert.assertTrue(signInInitiateResult.success)
-        Assert.assertEquals(
-            signInInitiateResult.successResponse!!.challengeType,
-            NativeAuthChallengeType.REDIRECT.toString().lowercase()
-        )
+        Assert.assertEquals(signInInitiateResult, SignInInitiateApiResult.Redirect)
     }
 
-    @Ignore
     @Test
     fun testPerformSignInChallengeWithChallengeTypeOobSuccess() {
         MockApiUtils.configureMockApi(
@@ -199,21 +219,13 @@ class SignInOAuthStrategyTest {
             correlationId = UUID.randomUUID().toString(),
             responseType = MockApiResponseType.CHALLENGE_TYPE_OOB
         )
-
-        val signInCommandParameters = mockk<SignInCommandParameters>()
-        every { signInCommandParameters.getUsername() } returns username
-
         val signInChallengeResult = nativeAuthOAuth2Strategy.performSignInChallenge(
             credentialToken = credentialToken
         )
-        Assert.assertTrue(signInChallengeResult.success)
-        Assert.assertEquals(
-            signInChallengeResult.successResponse!!.challengeType,
-            NativeAuthChallengeType.OOB.toString().lowercase()
-        )
+
+        Assert.assertTrue(signInChallengeResult is SignInChallengeApiResult.OOBRequired)
     }
 
-    @Ignore
     @Test
     fun testPerformSignInChallengeWithRedirectSuccess() {
         MockApiUtils.configureMockApi(
@@ -221,21 +233,12 @@ class SignInOAuthStrategyTest {
             correlationId = UUID.randomUUID().toString(),
             responseType = MockApiResponseType.CHALLENGE_TYPE_REDIRECT
         )
-
-        val signInCommandParameters = mockk<SignInCommandParameters>()
-        every { signInCommandParameters.getUsername() } returns username
-
         val signInChallengeResult = nativeAuthOAuth2Strategy.performSignInChallenge(
             credentialToken = credentialToken
         )
-        Assert.assertTrue(signInChallengeResult.success)
-        Assert.assertEquals(
-            signInChallengeResult.successResponse!!.challengeType,
-            NativeAuthChallengeType.REDIRECT.toString().lowercase()
-        )
+        Assert.assertEquals(SignInChallengeApiResult.Redirect, signInChallengeResult)
     }
 
-    @Ignore
     @Test
     fun testPerformSignInTokenWithCredentialRequiredError() {
         MockApiUtils.configureMockApi(
@@ -244,22 +247,19 @@ class SignInOAuthStrategyTest {
             responseType = MockApiResponseType.CREDENTIAL_REQUIRED
         )
 
-        val signInCommandParameters = mockk<SignInCommandParameters>()
-        every { signInCommandParameters.getUsername() } returns username
-        every { signInCommandParameters.getPassword() } returns password
+        val parameters = SignInStartWithPasswordCommandParameters.builder()
+            .platformComponents(mock<PlatformComponents>())
+            .username(username)
+            .password(password)
+            .build()
 
-        val signInChallengeResult = nativeAuthOAuth2Strategy.performGetToken(
-            credentialToken = credentialToken,
-            signInCommandParameters = signInCommandParameters
+        val result = nativeAuthOAuth2Strategy.performROPCTokenRequest(
+            parameters = parameters
         )
-        Assert.assertFalse(signInChallengeResult.success)
-        Assert.assertEquals(
-            signInChallengeResult.errorResponse!!.error,
-            ErrorCodes.CREDENTIAL_REQUIRED
-        )
+
+        Assert.assertTrue(result is SignInTokenApiResult.CredentialRequired)
     }
 
-    @Ignore
     @Test
     fun testPerformSignInTokenWithInvalidGrantError() {
         MockApiUtils.configureMockApi(
@@ -268,18 +268,15 @@ class SignInOAuthStrategyTest {
             responseType = MockApiResponseType.INVALID_GRANT
         )
 
-        val signInCommandParameters = mockk<SignInCommandParameters>()
-        every { signInCommandParameters.getUsername() } returns username
-        every { signInCommandParameters.getPassword() } returns password
+        val parameters = SignInStartWithPasswordCommandParameters.builder()
+            .platformComponents(mock<PlatformComponents>())
+            .username(username)
+            .password(password)
+            .build()
 
-        val signInChallengeResult = nativeAuthOAuth2Strategy.performGetToken(
-            credentialToken = credentialToken,
-            signInCommandParameters = signInCommandParameters
+        val result = nativeAuthOAuth2Strategy.performROPCTokenRequest(
+            parameters = parameters
         )
-        Assert.assertFalse(signInChallengeResult.success)
-        Assert.assertEquals(
-            signInChallengeResult.errorResponse!!.error,
-            ErrorCodes.INVALID_GRANT
-        )
+        Assert.assertTrue(result is SignInTokenApiResult.UnknownError)
     }
 }

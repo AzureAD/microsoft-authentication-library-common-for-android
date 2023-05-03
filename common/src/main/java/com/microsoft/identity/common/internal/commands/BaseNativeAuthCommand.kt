@@ -35,7 +35,7 @@ import lombok.EqualsAndHashCode
 abstract class BaseNativeAuthCommand<T>(
     parameters: BaseNativeAuthCommandParameters,
     controller: BaseNativeAuthController,
-    callback: CommandCallback<*, *>,
+    callback: CommandCallback<T, *>,
     publicApiId: String
 ) : BaseCommand<T>(parameters, controller, callback, publicApiId) {
 

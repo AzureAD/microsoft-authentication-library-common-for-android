@@ -23,7 +23,6 @@
 package com.microsoft.identity.common.internal.controllers
 
 import com.microsoft.identity.common.java.authorities.Authority
-import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme
 import com.microsoft.identity.common.java.cache.ICacheRecord
 import com.microsoft.identity.common.java.commands.parameters.CommandParameters
 import com.microsoft.identity.common.java.commands.parameters.DeviceCodeFlowCommandParameters
@@ -45,7 +44,6 @@ import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult
 import com.microsoft.identity.common.java.providers.oauth2.IAuthorizationStrategy
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2TokenCache
-import com.microsoft.identity.common.java.providers.oauth2.TokenResponse
 import com.microsoft.identity.common.java.providers.oauth2.TokenResult
 import com.microsoft.identity.common.java.request.SdkType
 import com.microsoft.identity.common.java.result.AcquireTokenResult
@@ -225,18 +223,6 @@ abstract class BaseNativeAuthController : BaseController() {
     @Throws(Exception::class)
     @Deprecated(
         level = DeprecationLevel.HIDDEN,
-        message = "finalizeCacheRecordForResult() not supported in NativeAuthController"
-    )
-    override fun finalizeCacheRecordForResult(
-        cacheRecord: ICacheRecord,
-        scheme: AbstractAuthenticationScheme
-    ): ICacheRecord {
-        throw ClientException("finalizeCacheRecordForResult() not supported in NativeAuthController")
-    }
-
-    @Throws(Exception::class)
-    @Deprecated(
-        level = DeprecationLevel.HIDDEN,
         message = "getAuthorizationRequest() not supported in NativeAuthController"
     )
     override fun getAuthorizationRequest(
@@ -300,20 +286,6 @@ abstract class BaseNativeAuthController : BaseController() {
     @Throws(Exception::class)
     @Deprecated(
         level = DeprecationLevel.HIDDEN,
-        message = "saveTokens() not supported in NativeAuthController"
-    )
-    override fun saveTokens(
-        strategy: OAuth2Strategy<*, *, out AuthorizationRequest<*>, out AuthorizationRequest.Builder<*>, out IAuthorizationStrategy<*, *>, *, *, *, *, *, *, *, out AuthorizationResult<*, *>>,
-        request: AuthorizationRequest<*>,
-        tokenResponse: TokenResponse,
-        tokenCache: OAuth2TokenCache<out OAuth2Strategy<*, *, *, *, *, *, *, *, *, *, *, *, *>, out AuthorizationRequest<*>, *>
-    ): MutableList<ICacheRecord> {
-        throw ClientException("saveTokens() not supported in NativeAuthController")
-    }
-
-    @Throws(Exception::class)
-    @Deprecated(
-        level = DeprecationLevel.HIDDEN,
         message = "refreshTokenIsNull() not supported in NativeAuthController"
     )
     override fun refreshTokenIsNull(cacheRecord: ICacheRecord): Boolean {
@@ -336,15 +308,6 @@ abstract class BaseNativeAuthController : BaseController() {
     )
     override fun idTokenIsNull(cacheRecord: ICacheRecord, sdkType: SdkType): Boolean {
         throw ClientException("idTokenIsNull() not supported in NativeAuthController")
-    }
-
-    @Throws(Exception::class)
-    @Deprecated(
-        level = DeprecationLevel.HIDDEN,
-        message = "addDefaultScopes() not supported in NativeAuthController"
-    )
-    override fun addDefaultScopes(commandParameters: TokenCommandParameters): MutableSet<String> {
-        throw ClientException("addDefaultScopes() not supported in NativeAuthController")
     }
 
     @Throws(Exception::class)

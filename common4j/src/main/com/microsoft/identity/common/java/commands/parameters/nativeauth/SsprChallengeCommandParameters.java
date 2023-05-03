@@ -10,4 +10,5 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder(toBuilder = true)
 public class SsprChallengeCommandParameters extends BaseNativeAuthCommandParameters {
     private static final String TAG = SsprChallengeCommandParameters.class.getSimpleName();
+
 }

@@ -1,8 +1,8 @@
 package com.microsoft.identity.common.java.providers.nativeauth.responses.signup.cont
 
 import com.google.gson.annotations.SerializedName
-import com.microsoft.identity.common.java.providers.nativeauth.IApiSuccessResponse
 import com.microsoft.identity.common.java.logging.Logger
+import com.microsoft.identity.common.java.providers.nativeauth.IApiSuccessResponse
 import com.microsoft.identity.common.java.providers.oauth2.ISuccessResponse
 
 class SignUpContinueResponse(

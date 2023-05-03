@@ -6,7 +6,6 @@ import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.uti
 import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.MockApiUtils.Companion.configureMockApi
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpContinueCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpStartCommandParameters
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.UserAttributes
 import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.logging.DiagnosticContext
 import com.microsoft.identity.common.java.net.UrlConnectionHttpClient
@@ -66,8 +65,8 @@ class SignUpOAuth2StrategyTest {
     private val ssprSubmitRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/resetpassword/submit")
     private val ssprPollCompletionRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/resetpassword/poll_completion")
     private val tokenEndpoint = URL("https://contoso.com/1234/token")
-    private val challengeType = "oob redirect"
-    private val userAttributes = UserAttributes.customAttribute("city", "Dublin").build()
+    private val challengeTypes = "oob password redirect"
+    private val userAttributes = mapOf(Pair("city", "Dublin"))
     private val oobCode = "123456"
 
     private val mockConfig = mock<NativeAuthOAuth2Configuration>()
@@ -90,7 +89,7 @@ class SignUpOAuth2StrategyTest {
         whenever(mockConfig.getSsprContinueEndpoint()).thenReturn(ssprContinueRequestUrl)
         whenever(mockConfig.getSsprSubmitEndpoint()).thenReturn(ssprSubmitRequestUrl)
         whenever(mockConfig.getSsprPollCompletionEndpoint()).thenReturn(ssprPollCompletionRequestUrl)
-        whenever(mockConfig.challengeType).thenReturn(challengeType)
+        whenever(mockConfig.challengeType).thenReturn(challengeTypes)
 
         nativeAuthOAuth2Strategy = NativeAuthOAuth2Strategy(
             config = mockConfig,
@@ -145,7 +144,7 @@ class SignUpOAuth2StrategyTest {
         assertTrue(signupResult.success)
     }
 
-    @Test()
+    @Test
     fun testPerformSignUpStartVerificationRequiredError() {
         configureMockApi(
             endpointType = MockApiEndpointType.SignUpStart,

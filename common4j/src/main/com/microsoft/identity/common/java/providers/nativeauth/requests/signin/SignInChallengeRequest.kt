@@ -23,6 +23,7 @@ data class SignInChallengeRequest private constructor(
             ArgUtils.validateNonNullArg(clientId, "clientId")
             ArgUtils.validateNonNullArg(credentialToken, "credentialToken")
             ArgUtils.validateNonNullArg(requestUrl, "requestUrl")
+            ArgUtils.validateNonNullArg(challengeType, "challengeType")
             ArgUtils.validateNonNullArg(headers, "headers")
 
             return SignInChallengeRequest(

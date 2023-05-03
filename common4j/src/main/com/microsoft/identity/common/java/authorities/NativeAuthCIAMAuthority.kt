@@ -23,11 +23,11 @@
 
 package com.microsoft.identity.common.java.authorities
 
+import com.microsoft.identity.common.java.exception.ClientException
+import com.microsoft.identity.common.java.logging.Logger
 import com.microsoft.identity.common.java.providers.nativeauth.NativeAuthOAuth2Configuration
 import com.microsoft.identity.common.java.providers.nativeauth.NativeAuthOAuth2Strategy
 import com.microsoft.identity.common.java.providers.nativeauth.NativeAuthOAuth2StrategyFactory
-import com.microsoft.identity.common.java.exception.ClientException
-import com.microsoft.identity.common.java.logging.Logger
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters
 
 // TODO risk: this Authority class is not composable through Authority.getAuthorityFromAuthorityUrl()

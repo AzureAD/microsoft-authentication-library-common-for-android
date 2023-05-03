@@ -23,13 +23,26 @@
 
 package com.microsoft.identity.common.java.providers.nativeauth
 
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.*
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartWithPasswordCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitCodeCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpContinueCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpStartCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SsprContinueCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SsprStartCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SsprSubmitCommandParameters
+import com.microsoft.identity.common.java.exception.ServiceException
+import com.microsoft.identity.common.java.logging.Logger
+import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.ClientInfo
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAccount
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse
 import com.microsoft.identity.common.java.providers.nativeauth.interactors.SignInInteractor
 import com.microsoft.identity.common.java.providers.nativeauth.interactors.SignUpInteractor
 import com.microsoft.identity.common.java.providers.nativeauth.interactors.SsprInteractor
-import com.microsoft.identity.common.java.providers.nativeauth.responses.signin.SignInChallengeResult
-import com.microsoft.identity.common.java.providers.nativeauth.responses.signin.SignInInitiateResult
-import com.microsoft.identity.common.java.providers.nativeauth.responses.signin.SignInTokenResult
+import com.microsoft.identity.common.java.providers.nativeauth.responses.signin.SignInChallengeApiResult
+import com.microsoft.identity.common.java.providers.nativeauth.responses.signin.SignInInitiateApiResult
+import com.microsoft.identity.common.java.providers.nativeauth.responses.signin.SignInTokenApiResult
 import com.microsoft.identity.common.java.providers.nativeauth.responses.signup.challenge.SignUpChallengeResult
 import com.microsoft.identity.common.java.providers.nativeauth.responses.signup.cont.SignUpContinueResult
 import com.microsoft.identity.common.java.providers.nativeauth.responses.signup.start.SignUpStartResult
@@ -38,12 +51,6 @@ import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.co
 import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.pollcompletion.SsprPollCompletionResult
 import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.start.SsprStartResult
 import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.submit.SsprSubmitResult
-import com.microsoft.identity.common.java.exception.ServiceException
-import com.microsoft.identity.common.java.logging.Logger
-import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.ClientInfo
-import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAccount
-import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy
-import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse
 import com.microsoft.identity.common.java.providers.oauth2.IDToken
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters
 
@@ -71,9 +78,9 @@ class NativeAuthOAuth2Strategy(
     }
 
     fun performSignUpStart(
-        commandParameters: SignUpStartCommandParameters
+        parameters: SignUpStartCommandParameters
     ): SignUpStartResult {
-        return signUpInteractor.performSignUpStart(commandParameters)
+        return signUpInteractor.performSignUpStart(parameters)
     }
 
     fun performSignUpChallenge(
@@ -85,28 +92,32 @@ class NativeAuthOAuth2Strategy(
     }
 
     fun performSignInInitiate(
-        commandParameters: SignInCommandParameters
-    ): SignInInitiateResult {
-        return signInInteractor.performSignInInitiate(commandParameters)
+        parameters: SignInStartCommandParameters
+    ): SignInInitiateApiResult {
+        return signInInteractor.performSignInInitiate(parameters)
     }
 
     fun performSignInChallenge(
-        credentialToken: String
-    ): SignInChallengeResult {
+        credentialToken: String,
+    ): SignInChallengeApiResult {
         return signInInteractor.performSignInChallenge(
-            credentialToken = credentialToken
+            credentialToken = credentialToken,
         )
     }
 
-    fun performGetToken(
-        signInSlt: String? = null,
-        credentialToken: String? = null,
-        signInCommandParameters: SignInCommandParameters
-    ): SignInTokenResult {
-        return signInInteractor.performGetToken(
-            signInSlt,
-            credentialToken,
-            signInCommandParameters
+    fun performROPCTokenRequest(
+        parameters: SignInStartWithPasswordCommandParameters
+    ): SignInTokenApiResult {
+        return signInInteractor.performROPCTokenRequest(
+            parameters = parameters
+        )
+    }
+
+    fun performOOBTokenRequest(
+        parameters: SignInSubmitCodeCommandParameters
+    ): SignInTokenApiResult {
+        return signInInteractor.performOOBTokenRequest(
+            parameters = parameters
         )
     }
 

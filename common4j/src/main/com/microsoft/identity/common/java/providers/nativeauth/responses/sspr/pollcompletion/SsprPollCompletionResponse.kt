@@ -1,9 +1,9 @@
 package com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.pollcompletion
 
 import com.google.gson.annotations.SerializedName
+import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.providers.nativeauth.IApiSuccessResponse
 import com.microsoft.identity.common.java.providers.nativeauth.responses.NativeAuthPollCompletionStatus
-import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.providers.oauth2.ISuccessResponse
 
 class SsprPollCompletionResponse(

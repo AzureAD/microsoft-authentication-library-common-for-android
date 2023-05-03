@@ -1,12 +1,12 @@
 package com.microsoft.identity.common.java.providers.nativeauth.responses.signup.challenge
 
 import com.google.gson.annotations.SerializedName
+import com.microsoft.identity.common.java.exception.ClientException
+import com.microsoft.identity.common.java.logging.Logger
 import com.microsoft.identity.common.java.providers.nativeauth.IApiSuccessResponse
 import com.microsoft.identity.common.java.providers.nativeauth.responses.NativeAuthBindingMethod
 import com.microsoft.identity.common.java.providers.nativeauth.responses.NativeAuthChallengeType
 import com.microsoft.identity.common.java.providers.nativeauth.responses.NativeAuthDisplayType
-import com.microsoft.identity.common.java.exception.ClientException
-import com.microsoft.identity.common.java.logging.Logger
 import com.microsoft.identity.common.java.providers.oauth2.ISuccessResponse
 
 class SignUpChallengeResponse(

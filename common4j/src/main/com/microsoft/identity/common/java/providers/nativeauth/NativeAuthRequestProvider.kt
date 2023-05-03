@@ -1,6 +1,17 @@
 package com.microsoft.identity.common.java.providers.nativeauth
 
-
+import com.microsoft.identity.common.java.AuthenticationConstants
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartWithPasswordCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitCodeCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpContinueCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpStartCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SsprContinueCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SsprStartCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SsprSubmitCommandParameters
+import com.microsoft.identity.common.java.logging.DiagnosticContext
+import com.microsoft.identity.common.java.logging.Logger
+import com.microsoft.identity.common.java.net.HttpConstants
 import com.microsoft.identity.common.java.providers.nativeauth.requests.NativeAuthGrantType
 import com.microsoft.identity.common.java.providers.nativeauth.requests.signin.SignInChallengeRequest
 import com.microsoft.identity.common.java.providers.nativeauth.requests.signin.SignInInitiateRequest
@@ -13,11 +24,6 @@ import com.microsoft.identity.common.java.providers.nativeauth.requests.sspr.Ssp
 import com.microsoft.identity.common.java.providers.nativeauth.requests.sspr.SsprPollCompletionRequest
 import com.microsoft.identity.common.java.providers.nativeauth.requests.sspr.SsprStartRequest
 import com.microsoft.identity.common.java.providers.nativeauth.requests.sspr.SsprSubmitRequest
-import com.microsoft.identity.common.java.AuthenticationConstants
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.*
-import com.microsoft.identity.common.java.logging.DiagnosticContext
-import com.microsoft.identity.common.java.logging.Logger
-import com.microsoft.identity.common.java.net.HttpConstants
 import java.util.TreeMap
 
 class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuration) {
@@ -34,8 +40,6 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
     private val ssprContinueEndpoint = config.getSsprContinueEndpoint().toString()
     private val ssprSubmitEndpoint = config.getSsprSubmitEndpoint().toString()
     private val ssprPollCompletionEndpoint = config.getSsprPollCompletionEndpoint().toString()
-    private val GRANT_TYPE_PASSWORD = "password"
-    private val GRANT_TYPE_OOB = "oob"
 
     //region /signup/start
     fun createSignUpStartRequest(
@@ -81,7 +85,7 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
 
     //region /oauth/v2.0/initiate
     fun createSignInInitiateRequest(
-        commandParameters: SignInCommandParameters
+        parameters: SignInStartCommandParameters
     ): SignInInitiateRequest {
         val methodName = ":createSignInInitiateRequest"
         Logger.verbose(
@@ -90,7 +94,7 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
         )
 
         return SignInInitiateRequest.create(
-            username = commandParameters.username,
+            username = parameters.username,
             clientId = config.clientId,
             challengeType = config.challengeType,
             requestUrl = signInInitiateEndpoint,
@@ -120,32 +124,38 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
     //endregion
 
     //region /oauth/v2.0/token
-    fun createTokenRequest(
-        signInSlt: String? = null,
-        credentialToken: String? = null,
-        signInCommandParameters: SignInCommandParameters
+    fun createROPCTokenRequest(
+        parameters: SignInStartWithPasswordCommandParameters
     ): SignInTokenRequest {
-        val methodName = ":createSignInChallengeRequest"
+        val methodName = ":createROPCTokenRequest"
         Logger.verbose(
             TAG + methodName,
-            "Creating SignInChallengeRequest..."
+            "Creating ROPC token request..."
         )
-
-        var grantType = ""
-        if (!signInCommandParameters.password.isNullOrEmpty()) {
-            grantType = GRANT_TYPE_PASSWORD
-        } else if (!signInCommandParameters.oob.isNullOrEmpty()) {
-            grantType = GRANT_TYPE_OOB
-        }
-
-        return SignInTokenRequest.create(
-            username = signInCommandParameters.username,
-            password = signInCommandParameters.password,
-            oob = signInCommandParameters.oob,
+        return SignInTokenRequest.createROPCTokenRequest(
+            username = parameters.username,
+            password = parameters.password,
+            scopes = parameters.scopes,
             clientId = config.clientId,
-            credentialToken = credentialToken,
-            grantType = grantType,
-            signInSlt = signInSlt,
+            challengeType = config.challengeType,
+            requestUrl = signInTokenEndpoint,
+            headers = getRequestHeaders()
+        )
+    }
+
+    fun createOOBTokenRequest(
+        parameters: SignInSubmitCodeCommandParameters
+    ): SignInTokenRequest {
+        val methodName = ":createOOBTokenRequest"
+        Logger.verbose(
+            TAG + methodName,
+            "Creating OOB token request..."
+        )
+        return SignInTokenRequest.createOOBTokenRequest(
+            oob = parameters.code,
+            scopes = parameters.scopes,
+            credentialToken = parameters.credentialToken,
+            clientId = config.clientId,
             challengeType = config.challengeType,
             requestUrl = signInTokenEndpoint,
             headers = getRequestHeaders()
@@ -259,10 +269,11 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
 
     //region helpers
     private fun getRequestHeaders(): Map<String, String?> {
-        // TODO why a treemap, why sorted headers?
         val headers: MutableMap<String, String?> = TreeMap()
         headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID] =
             DiagnosticContext.INSTANCE.requestContext[DiagnosticContext.CORRELATION_ID]
+        // TODO remove this
+//        headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID] = "12345abcd"
         headers[HttpConstants.HeaderField.CONTENT_TYPE] = "application/x-www-form-urlencoded"
         return headers
     }

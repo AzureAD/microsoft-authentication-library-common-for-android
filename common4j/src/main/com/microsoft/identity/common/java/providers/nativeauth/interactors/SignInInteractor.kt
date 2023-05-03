@@ -1,16 +1,18 @@
 package com.microsoft.identity.common.java.providers.nativeauth.interactors
 
+import com.microsoft.identity.common.internal.util.getEncodedRequest
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartWithPasswordCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitCodeCommandParameters
+import com.microsoft.identity.common.java.net.UrlConnectionHttpClient
 import com.microsoft.identity.common.java.providers.nativeauth.NativeAuthRequestProvider
 import com.microsoft.identity.common.java.providers.nativeauth.NativeAuthResponseHandler
 import com.microsoft.identity.common.java.providers.nativeauth.requests.signin.SignInChallengeRequest
 import com.microsoft.identity.common.java.providers.nativeauth.requests.signin.SignInInitiateRequest
 import com.microsoft.identity.common.java.providers.nativeauth.requests.signin.SignInTokenRequest
-import com.microsoft.identity.common.java.providers.nativeauth.responses.signin.SignInChallengeResult
-import com.microsoft.identity.common.java.providers.nativeauth.responses.signin.SignInInitiateResult
-import com.microsoft.identity.common.java.providers.nativeauth.responses.signin.SignInTokenResult
-import com.microsoft.identity.common.internal.util.getEncodedRequest
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInCommandParameters
-import com.microsoft.identity.common.java.net.UrlConnectionHttpClient
+import com.microsoft.identity.common.java.providers.nativeauth.responses.signin.SignInChallengeApiResult
+import com.microsoft.identity.common.java.providers.nativeauth.responses.signin.SignInInitiateApiResult
+import com.microsoft.identity.common.java.providers.nativeauth.responses.signin.SignInTokenApiResult
 import com.microsoft.identity.common.java.util.ObjectMapper
 
 class SignInInteractor(
@@ -20,21 +22,15 @@ class SignInInteractor(
 ) {
     //region /oauth/v2.0/initiate
     fun performSignInInitiate(
-        commandParameters: SignInCommandParameters
-    ): SignInInitiateResult {
-        val request = createSignInInitiateRequest(commandParameters)
+        parameters: SignInStartCommandParameters
+    ): SignInInitiateApiResult {
+        val request = nativeAuthRequestProvider.createSignInInitiateRequest(
+            parameters = parameters
+        )
         return performSignInInitiate(request)
     }
 
-    private fun createSignInInitiateRequest(
-        commandParameters: SignInCommandParameters
-    ): SignInInitiateRequest {
-        return nativeAuthRequestProvider.createSignInInitiateRequest(
-            commandParameters = commandParameters
-        )
-    }
-
-    private fun performSignInInitiate(request: SignInInitiateRequest): SignInInitiateResult {
+    private fun performSignInInitiate(request: SignInInitiateRequest): SignInInitiateApiResult {
         val encodedRequest: String = request.parameters.getEncodedRequest()
         val headers = request.headers
         val requestUrl = request.requestUrl
@@ -44,31 +40,24 @@ class SignInInteractor(
             headers,
             encodedRequest.toByteArray(charset(ObjectMapper.ENCODING_SCHEME))
         )
-        val result = nativeAuthResponseHandler.getSignInInitiateResultFromHttpResponse(
+        val rawApiResponse = nativeAuthResponseHandler.getSignInInitiateResultFromHttpResponse(
             response = response
         )
-        nativeAuthResponseHandler.validateApiResult(result)
-        return result
+        return rawApiResponse.toResult()
     }
     //endregion
 
     //region /oauth/v2.0/challenge
     fun performSignInChallenge(
-        credentialToken: String
-    ): SignInChallengeResult {
-        val request = createSignInChallengeRequest(credentialToken)
+        credentialToken: String,
+    ): SignInChallengeApiResult {
+        val request = nativeAuthRequestProvider.createSignInChallengeRequest(
+            credentialToken = credentialToken
+        )
         return performSignInChallenge(request)
     }
 
-    private fun createSignInChallengeRequest(
-        credentialToken: String
-    ): SignInChallengeRequest {
-        return nativeAuthRequestProvider.createSignInChallengeRequest(
-            credentialToken = credentialToken
-        )
-    }
-
-    private fun performSignInChallenge(request: SignInChallengeRequest): SignInChallengeResult {
+    private fun performSignInChallenge(request: SignInChallengeRequest): SignInChallengeApiResult {
         val encodedRequest: String = request.parameters.getEncodedRequest()
         val headers = request.headers
         val requestUrl = request.requestUrl
@@ -81,34 +70,30 @@ class SignInInteractor(
         val result = nativeAuthResponseHandler.getSignInChallengeResultFromHttpResponse(
             response = response
         )
-        nativeAuthResponseHandler.validateApiResult(result)
-        return result
+        return result.toResult()
     }
     //endregion
 
     //region /oauth/v2.0/token
-    fun performGetToken(
-        signInSlt: String? = null,
-        credentialToken: String? = null,
-        signInCommandParameters: SignInCommandParameters
-    ): SignInTokenResult {
-        val request = createSignInTokenRequest(signInSlt, credentialToken, signInCommandParameters)
+    fun performROPCTokenRequest(
+        parameters: SignInStartWithPasswordCommandParameters
+    ): SignInTokenApiResult {
+        val request = nativeAuthRequestProvider.createROPCTokenRequest(
+            parameters = parameters
+        )
         return performGetToken(request)
     }
 
-    private fun createSignInTokenRequest(
-        signInSlt: String? = null,
-        credentialToken: String? = null,
-        signInCommandParameters: SignInCommandParameters
-    ): SignInTokenRequest {
-        return nativeAuthRequestProvider.createTokenRequest(
-            signInSlt = signInSlt,
-            credentialToken = credentialToken,
-            signInCommandParameters = signInCommandParameters
+    fun performOOBTokenRequest(
+        parameters: SignInSubmitCodeCommandParameters
+    ): SignInTokenApiResult {
+        val request = nativeAuthRequestProvider.createOOBTokenRequest(
+            parameters = parameters
         )
+        return performGetToken(request)
     }
 
-    private fun performGetToken(request: SignInTokenRequest): SignInTokenResult {
+    private fun performGetToken(request: SignInTokenRequest): SignInTokenApiResult {
         val encodedRequest: String = request.parameters.getEncodedRequest()
         val headers = request.headers
         val requestUrl = request.requestUrl
@@ -121,8 +106,7 @@ class SignInInteractor(
         val result = nativeAuthResponseHandler.getSignInTokenResultFromHttpResponse(
             response = response
         )
-        nativeAuthResponseHandler.validateApiResult(result)
-        return result
+        return result.toResult()
     }
     //endregion
 }

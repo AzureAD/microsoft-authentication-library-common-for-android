@@ -5,7 +5,6 @@ import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.uti
 import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.MockApiUtils.Companion.configureMockApi
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpContinueCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpStartCommandParameters
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.UserAttributes
 import com.microsoft.identity.common.java.net.UrlConnectionHttpClient
 import com.microsoft.identity.common.java.providers.nativeauth.NativeAuthOAuth2Configuration
 import com.microsoft.identity.common.java.providers.nativeauth.NativeAuthOAuth2Strategy
@@ -21,7 +20,6 @@ import io.mockk.every
 import io.mockk.mockk
 import org.junit.Assert
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
@@ -47,7 +45,6 @@ class SignUpScenarioTest {
     private val ssprPollCompletionRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/resetpassword/poll_completion")
     private val tokenEndpoint = URL("https://contoso.com/1234/token")
     private val challengeType = "oob redirect"
-    private val userAttributes = UserAttributes.customAttribute("city", "Dublin").build()
     private val oobCode = "123456"
 
     private val mockConfig = mock<NativeAuthOAuth2Configuration>()
@@ -144,7 +141,6 @@ class SignUpScenarioTest {
     // Acceptance criteria for Native Authentication:
     // https://microsofteur-my.sharepoint.com/:w:/r/personal/sodenhoven_microsoft_com/Documents/NativeAuth%20-%20Acceptance%20criteria.docx?d=w4fc5ef1ac9d948b0be7ab551f54a59a8&csf=1&web=1&e=8OYikN
     // Scenario 1.1.7: Verify email address using email OTP and then set password
-    @Ignore
     @Test
     fun testSignUpScenarioEmailVerificationFirstThenPassword() {
         var signUpToken = "1234"
@@ -178,7 +174,7 @@ class SignUpScenarioTest {
             signUpToken = signUpToken
         )
         Assert.assertTrue(signupChallengeResult.success)
-        Assert.assertEquals(signupChallengeResult.successResponse!!.challengeType, "oob")
+        Assert.assertEquals(signupChallengeResult.successResponse!!.challengeType, NativeAuthChallengeType.OOB)
         signUpToken = signupChallengeResult.successResponse!!.signupToken.toString()
 
         configureMockApi(

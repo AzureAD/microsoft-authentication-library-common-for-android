@@ -2,8 +2,6 @@ package com.microsoft.identity.common.java.providers.nativeauth.requests.signup
 
 import com.google.gson.annotations.SerializedName
 import com.microsoft.identity.common.java.providers.nativeauth.requests.NativeAuthRequest
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.UserAttributes
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.toJsonString
 import com.microsoft.identity.common.java.util.ArgUtils
 import java.net.URL
 
@@ -17,7 +15,7 @@ data class SignUpStartRequest private constructor(
         fun create(
                 username: String,
                 password: String? = null,
-                attributes: UserAttributes? = null,
+                attributes: Map<String, String>? = null,
                 clientId: String,
                 challengeType: String, // TODO hardcoded for now, but will be made part of SDK config & initialisation ticket
                 requestUrl: String,
@@ -34,7 +32,7 @@ data class SignUpStartRequest private constructor(
                 parameters = NativeAuthRequestSignUpStartParameters(
                     username = username,
                     password = password,
-                    attributes = attributes?.toJsonString(),
+//                    attributes = attributes?.toJsonString(), // TODO
                     challengeType = challengeType,
                     clientId = clientId
                 ),
@@ -47,7 +45,7 @@ data class SignUpStartRequest private constructor(
     data class NativeAuthRequestSignUpStartParameters(
         val username: String,
         val password: String?,
-        val attributes: String?,
+        val attributes: String? = null,
         @SerializedName("client_id") override val clientId: String,
         @SerializedName("challenge_type") val challengeType: String
     ) : NativeAuthRequestParameters()

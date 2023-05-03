@@ -36,5 +36,6 @@ enum class MockApiResponseType(val stringValue: String) {
     SSPR_SUBMIT_SUCCESS("SSPRSubmitSuccess"),
     SSPR_POLL_SUCCESS("SSPRPollSuccess"),
     SSPR_POLL_IN_PROGRESS("SSPRPollInProgress"),
-    SSPR_POLL_FAILED("SSPRPollFailed")
+    SSPR_POLL_FAILED("SSPRPollFailed"),
+    EXPLICITLY_USER_NOT_FOUND("ExplicityUserNotFound")
 }

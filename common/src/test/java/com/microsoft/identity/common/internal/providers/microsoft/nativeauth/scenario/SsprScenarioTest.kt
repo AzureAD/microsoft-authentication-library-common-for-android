@@ -6,7 +6,6 @@ import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.uti
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SsprContinueCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SsprStartCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SsprSubmitCommandParameters
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.UserAttributes
 import com.microsoft.identity.common.java.net.UrlConnectionHttpClient
 import com.microsoft.identity.common.java.providers.nativeauth.NativeAuthOAuth2Configuration
 import com.microsoft.identity.common.java.providers.nativeauth.NativeAuthOAuth2Strategy
@@ -46,7 +45,6 @@ class SsprScenarioTest {
     private val ssprPollCompletionRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/resetpassword/poll_completion")
     private val tokenEndpoint = URL("https://contoso.com/1234/token")
     private val challengeType = "oob redirect"
-    private val userAttributes = UserAttributes.customAttribute("city", "Dublin").build()
     private val oobCode = "123456"
 
     private val mockConfig = mock<NativeAuthOAuth2Configuration>()

@@ -1,8 +1,8 @@
 package com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.challenge
 
 import com.google.gson.annotations.SerializedName
-import com.microsoft.identity.common.java.providers.nativeauth.IApiErrorResponse
 import com.microsoft.identity.common.java.exception.ClientException
+import com.microsoft.identity.common.java.providers.nativeauth.IApiErrorResponse
 
 data class SsprChallengeErrorResponse(
     var statusCode: Int,

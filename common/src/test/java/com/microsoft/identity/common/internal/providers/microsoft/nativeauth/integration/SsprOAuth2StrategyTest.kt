@@ -7,7 +7,6 @@ import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.uti
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SsprContinueCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SsprStartCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SsprSubmitCommandParameters
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.UserAttributes
 import com.microsoft.identity.common.java.logging.DiagnosticContext
 import com.microsoft.identity.common.java.net.UrlConnectionHttpClient
 import com.microsoft.identity.common.java.providers.nativeauth.NativeAuthOAuth2Configuration
@@ -70,7 +69,6 @@ class SsprOAuth2StrategyTest {
     private val ssprPollCompletionRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/resetpassword/poll_completion")
     private val tokenEndpoint = URL("https://contoso.com/1234/token")
     private val challengeType = "oob redirect"
-    private val userAttributes = UserAttributes.customAttribute("city", "Dublin").build()
     private val oobCode = "123456"
 
     private val mockConfig = mock<NativeAuthOAuth2Configuration>()
@@ -189,13 +187,12 @@ class SsprOAuth2StrategyTest {
      * Expected :[invalid_grant]
      * Actual   :[user_not_found]
      */
-    @Ignore
     @Test
     fun testPerformSsprStartUserNotFoundError() {
         configureMockApi(
             endpointType = MockApiEndpointType.SSPRStart,
             correlationId = UUID.randomUUID().toString(),
-            responseType = MockApiResponseType.USER_NOT_FOUND
+            responseType = MockApiResponseType.EXPLICITLY_USER_NOT_FOUND
         )
 
         val mockSsprStartCommandParameters = mockk<SsprStartCommandParameters>()
@@ -205,7 +202,7 @@ class SsprOAuth2StrategyTest {
             mockSsprStartCommandParameters
         )
         assertFalse(ssprStartResult.success)
-        assertEquals(ssprStartResult.errorResponse!!.error, SsprStartErrorCodes.USER_NOT_FOUND)
+        assertEquals(SsprStartErrorCodes.USER_NOT_FOUND, ssprStartResult.errorResponse!!.error)
     }
 
     /**

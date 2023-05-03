@@ -8,12 +8,9 @@ import lombok.experimental.SuperBuilder;
 @Getter
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder(toBuilder = true)
-public class SignInCommandParameters extends BaseNativeAuthCommandParameters {
-    private static final String TAG = SignInCommandParameters.class.getSimpleName();
+public class SignInStartWithPasswordCommandParameters extends BaseSignInStartCommandParameters {
+    private static final String TAG = SignInStartWithPasswordCommandParameters.class.getSimpleName();
 
     @NonNull
-    public final String username;
     public final String password;
-    public final String oob;
-    public final String scope;
 }

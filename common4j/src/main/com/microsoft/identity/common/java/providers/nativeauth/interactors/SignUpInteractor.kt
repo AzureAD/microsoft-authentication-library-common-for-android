@@ -1,5 +1,9 @@
 package com.microsoft.identity.common.java.providers.nativeauth.interactors
 
+import com.microsoft.identity.common.internal.util.getEncodedRequest
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpContinueCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpStartCommandParameters
+import com.microsoft.identity.common.java.net.UrlConnectionHttpClient
 import com.microsoft.identity.common.java.providers.nativeauth.NativeAuthRequestProvider
 import com.microsoft.identity.common.java.providers.nativeauth.NativeAuthResponseHandler
 import com.microsoft.identity.common.java.providers.nativeauth.requests.signup.SignUpChallengeRequest
@@ -8,10 +12,6 @@ import com.microsoft.identity.common.java.providers.nativeauth.requests.signup.S
 import com.microsoft.identity.common.java.providers.nativeauth.responses.signup.challenge.SignUpChallengeResult
 import com.microsoft.identity.common.java.providers.nativeauth.responses.signup.cont.SignUpContinueResult
 import com.microsoft.identity.common.java.providers.nativeauth.responses.signup.start.SignUpStartResult
-import com.microsoft.identity.common.internal.util.getEncodedRequest
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpContinueCommandParameters
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpStartCommandParameters
-import com.microsoft.identity.common.java.net.UrlConnectionHttpClient
 import com.microsoft.identity.common.java.util.ObjectMapper
 
 class SignUpInteractor(
@@ -67,7 +67,7 @@ class SignUpInteractor(
         signUpToken: String
     ): SignUpChallengeRequest {
         return nativeAuthRequestProvider.createSignUpChallengeRequest(
-            signUpToken = signUpToken
+            signUpToken = signUpToken,
         )
     }
 

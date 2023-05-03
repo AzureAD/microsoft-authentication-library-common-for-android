@@ -133,7 +133,14 @@ public final class PublicApiId {
     public static final String BROKER_REFRESH_ON = "1202";
     //endregion
 
-
-
     public static final String PCA_GET_DEVICE_MODE = "1200";
+
+    //region NativeAuthPublicClientApplication
+    //==============================================================================================
+    public static final String NATIVE_AUTH_SIGN_IN_WITH_EMAIL = "210";
+    public static final String NATIVE_AUTH_SIGN_IN_WITH_EMAIL_PASSWORD = "211";
+    public static final String NATIVE_AUTH_SIGN_IN_SUBMIT_CODE = "212";
+    public static final String NATIVE_AUTH_SIGN_IN_RESEND_CODE = "213";
+    public static final String NATIVE_AUTH_GET_ACCOUNT = "215";
+    //endregion
 }

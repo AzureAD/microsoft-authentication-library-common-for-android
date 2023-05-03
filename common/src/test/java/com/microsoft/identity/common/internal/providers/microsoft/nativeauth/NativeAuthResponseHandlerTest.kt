@@ -1,15 +1,18 @@
-package com.microsoft.identity.common.java.providers.nativeauth
+package com.microsoft.identity.common.internal.providers.microsoft.nativeauth
 
 import com.microsoft.identity.common.java.exception.ClientException
-import com.microsoft.identity.common.java.providers.nativeauth.interactors.InnerError
+import com.microsoft.identity.common.java.providers.nativeauth.NativeAuthOAuth2Configuration
+import com.microsoft.identity.common.java.providers.nativeauth.NativeAuthResponseHandler
 import com.microsoft.identity.common.java.providers.nativeauth.responses.NativeAuthBindingMethod
 import com.microsoft.identity.common.java.providers.nativeauth.responses.NativeAuthChallengeType
 import com.microsoft.identity.common.java.providers.nativeauth.responses.NativeAuthDisplayType
 import com.microsoft.identity.common.java.providers.nativeauth.responses.NativeAuthPollCompletionStatus
-import com.microsoft.identity.common.java.providers.nativeauth.responses.signin.SignInChallengeResult
-import com.microsoft.identity.common.java.providers.nativeauth.responses.signin.SignInInitiateErrorResponse
-import com.microsoft.identity.common.java.providers.nativeauth.responses.signin.SignInInitiateResult
-import com.microsoft.identity.common.java.providers.nativeauth.responses.signin.SignInInitiateSuccessResponse
+import com.microsoft.identity.common.java.providers.nativeauth.responses.signin.SignInChallengeApiResponse
+import com.microsoft.identity.common.java.providers.nativeauth.responses.signin.SignInChallengeApiResult
+import com.microsoft.identity.common.java.providers.nativeauth.responses.signin.SignInInitiateApiResponse
+import com.microsoft.identity.common.java.providers.nativeauth.responses.signin.SignInInitiateApiResult
+import com.microsoft.identity.common.java.providers.nativeauth.responses.signin.SignInTokenApiResponse
+import com.microsoft.identity.common.java.providers.nativeauth.responses.signin.SignInTokenApiResult
 import com.microsoft.identity.common.java.providers.nativeauth.responses.signup.Attribute
 import com.microsoft.identity.common.java.providers.nativeauth.responses.signup.SignUpContinueErrorCodes
 import com.microsoft.identity.common.java.providers.nativeauth.responses.signup.SignUpStartErrorCodes
@@ -30,9 +33,10 @@ import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.st
 import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.start.SsprStartResult
 import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.submit.SsprSubmitResponse
 import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.submit.SsprSubmitResult
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.UserAttributes
 import io.mockk.every
 import io.mockk.mockk
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
@@ -43,7 +47,11 @@ class NativeAuthResponseHandlerTest {
     private val requestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/signup/start")
     private val challengeType = "oob password redirect"
     private val emptyString = ""
-    private val userAttributes = UserAttributes.customAttribute("city", "Dublin").build()
+    private val userAttributes = mapOf(Pair("city", "Dublin"))
+    private val credentialToken = "uY29tL2F1dGhlbnRpY"
+    private val error = "invalid_grant"
+    private val errorCode = "41093"
+    private val errorDescription = "User not found"
 
     private val mockConfig = mockk<NativeAuthOAuth2Configuration> {
         every { getSignUpStartEndpoint() } returns requestUrl
@@ -628,140 +636,604 @@ class NativeAuthResponseHandlerTest {
         )
     }
 
-    @Test(expected = ClientException::class)
-    fun testValidateSignInInitiateResultWithSuccessAndMissingObject() {
-        val signInInitiateResult = mock<SignInInitiateResult>()
-        whenever(signInInitiateResult.success).thenReturn(true)
-        whenever(signInInitiateResult.successResponse).thenReturn(null)
-
-        nativeAuthResponseHandler.validateApiResult(
-            apiResult = signInInitiateResult
-        )
-    }
-
-    @Test(expected = ClientException::class)
-    fun testValidateSignInInitiateResultWithSuccessAndMissingCredentialTokenAndChallengeType() {
-        val signInInitiateResult = mock<SignInInitiateResult>()
-        whenever(signInInitiateResult.success).thenReturn(true)
-        val signInInitiateSuccessResponse = SignInInitiateSuccessResponse(
+    @Test
+    fun testSignInInitiateApiResponseWithRedirectChallenge() {
+        val signInInitiateApiResponse = SignInInitiateApiResponse(
+            statusCode = 200,
+            challengeType = "redirect",
             credentialToken = null,
-            challengeType = null
+            error = null,
+            errorCodes = null,
+            errorDescription = null,
+            errorUri = null,
+            innerErrors = null,
         )
-        whenever(signInInitiateResult.successResponse).thenReturn(signInInitiateSuccessResponse)
 
-        nativeAuthResponseHandler.validateApiResult(
-            apiResult = signInInitiateResult
-        )
-    }
-
-    @Test(expected = ClientException::class)
-    fun testValidateSignInInitiateResultWithSuccessAndHaveBothCredentialTokenAndChallengeType() {
-        val signInInitiateResult = mock<SignInInitiateResult>()
-        whenever(signInInitiateResult.success).thenReturn(true)
-        val signInInitiateSuccessResponse = SignInInitiateSuccessResponse(
-            credentialToken = "1234",
-            challengeType = "oob"
-        )
-        whenever(signInInitiateResult.successResponse).thenReturn(signInInitiateSuccessResponse)
-
-        nativeAuthResponseHandler.validateApiResult(
-            apiResult = signInInitiateResult
-        )
+        val apiResult = signInInitiateApiResponse.toResult()
+        assertEquals(SignInInitiateApiResult.Redirect, apiResult)
     }
 
     @Test
-    fun testValidateSignInInitiateResultWithSuccessAndNoMissingObject() {
-        val signInInitiateResult = mock<SignInInitiateResult>()
-        whenever(signInInitiateResult.success).thenReturn(true)
-        val signInInitiateSuccessResponse = mock<SignInInitiateSuccessResponse>()
-        whenever(signInInitiateSuccessResponse.credentialToken).thenReturn("1234")
-        whenever(signInInitiateResult.successResponse).thenReturn(signInInitiateSuccessResponse)
-
-        nativeAuthResponseHandler.validateApiResult(
-            apiResult = signInInitiateResult
+    fun testSignInInitiateApiResponseWithSuccess() {
+        val signInInitiateApiResponse = SignInInitiateApiResponse(
+            statusCode = 200,
+            challengeType = null,
+            credentialToken = credentialToken,
+            error = null,
+            errorCodes = null,
+            errorDescription = null,
+            errorUri = null,
+            innerErrors = null,
         )
+
+        val apiResult = signInInitiateApiResponse.toResult()
+        assertTrue(apiResult is SignInInitiateApiResult.Success)
+        assertEquals(credentialToken, (apiResult as SignInInitiateApiResult.Success).credentialToken)
+    }
+
+    @Test(expected = ClientException::class)
+    fun testSignInInitiateApiResponseWithMissingCredentialToken() {
+        val signInInitiateApiResponse = SignInInitiateApiResponse(
+            statusCode = 200,
+            challengeType = null,
+            credentialToken = null,
+            error = null,
+            errorDescription = null,
+            errorUri = null,
+            errorCodes = null,
+            innerErrors = null,
+        )
+
+        val apiResult = signInInitiateApiResponse.toResult()
+    }
+
+    @Test(expected = ClientException::class)
+    fun testSignInInitiateApiResponseInvalidGrantWithMissingErrorCodes() {
+        val error = "invalid_grant"
+        val errorDescription = "This user is not found"
+        val errorCodes = listOf(50034)
+
+        val signInInitiateApiResponse = SignInInitiateApiResponse(
+            statusCode = 200,
+            challengeType = null,
+            credentialToken = null,
+            error = error,
+            errorCodes = errorCodes,
+            errorDescription = errorDescription,
+            errorUri = null,
+            innerErrors = null,
+        )
+
+        val apiResult = signInInitiateApiResponse.toResult()
+        assertTrue(apiResult is SignInInitiateApiResult.UserNotFound)
+        assertEquals(error, (apiResult as SignInInitiateApiResult.UserNotFound).error)
+        assertEquals(errorDescription, (apiResult as SignInInitiateApiResult.UserNotFound).errorDescription)
     }
 
     @Test
-    fun testValidateSignInInitiateResultWithSuccessAndNoMissingObjectWithRedirect() {
-        val signInInitiateResult = mock<SignInInitiateResult>()
-        whenever(signInInitiateResult.success).thenReturn(true)
-        val signInInitiateSuccessResponse = mock<SignInInitiateSuccessResponse>()
-        whenever(signInInitiateSuccessResponse.challengeType).thenReturn("redirect")
-        whenever(signInInitiateResult.successResponse).thenReturn(signInInitiateSuccessResponse)
-
-        nativeAuthResponseHandler.validateApiResult(
-            apiResult = signInInitiateResult
-        )
-    }
-
-    @Test(expected = ClientException::class)
-    fun testValidateSignInInitiateResultWithErrorAndMissingObject() {
-        val signInInitiateResult = mock<SignInInitiateResult>()
-        whenever(signInInitiateResult.success).thenReturn(false)
-        whenever(signInInitiateResult.errorResponse).thenReturn(null)
-
-        nativeAuthResponseHandler.validateApiResult(
-            apiResult = signInInitiateResult
-        )
-    }
-
-    @Test(expected = ClientException::class)
-    fun testValidateSignInInitiateResultWithErrorAndMissingErrorCode() {
-        val signInInitiateResult = mock<SignInInitiateResult>()
-        whenever(signInInitiateResult.success).thenReturn(false)
-        val signInInitiateErrorResponse = SignInInitiateErrorResponse(
+    fun testSignInInitiateApiResponseWithUnknownError() {
+        val error = "unknown_error"
+        val errorDescription = "An unknown error happened"
+        val signInInitiateApiResponse = SignInInitiateApiResponse(
             statusCode = 400,
-            errorCode = null,
-            errorDescription = "error description",
-            errorUri = requestUrl.toString(),
-            innerErrors = listOf(
-                InnerError(
-                    innerError = "errorCode1",
-                    errorDescription = "detailed description1"
-                )
-            )
+            challengeType = null,
+            credentialToken = null,
+            error = error,
+            errorCodes = listOf(1234),
+            errorDescription = errorDescription,
+            errorUri = null,
+            innerErrors = null,
         )
 
-        whenever(signInInitiateResult.errorResponse).thenReturn(signInInitiateErrorResponse)
-
-        nativeAuthResponseHandler.validateApiResult(
-            apiResult = signInInitiateResult
-        )
+        val apiResult = signInInitiateApiResponse.toResult()
+        assertTrue(apiResult is SignInInitiateApiResult.UnknownError)
+        assertEquals(error, (apiResult as SignInInitiateApiResult.UnknownError).error)
+        assertEquals(errorDescription, (apiResult as SignInInitiateApiResult.UnknownError).errorDescription)
     }
 
-    @Test(expected = ClientException::class)
-    fun testValidateSignInInitiateResultWithErrorAndEmptyErrorCode() {
-        val signInInitiateResult = mock<SignInInitiateResult>()
-        whenever(signInInitiateResult.success).thenReturn(false)
-        val signInInitiateErrorResponse = SignInInitiateErrorResponse(
+    @Test
+    fun testSignInChallengeApiResponseChallengeTypeInvalidGrant() {
+        val error = "invalid_grant"
+        val errorDescription = "Tenant misconfiguration"
+        val signInInitiateApiResponse = SignInChallengeApiResponse(
             statusCode = 400,
-            errorCode = "",
-            errorDescription = "error description",
-            errorUri = requestUrl.toString(),
-            innerErrors = listOf(
-                InnerError(
-                    innerError = "errorCode1",
-                    errorDescription = "detailed description1"
-                )
-            )
+            challengeType = "oob",
+            credentialToken = credentialToken,
+            error = error,
+            errorCodes = null,
+            errorDescription = errorDescription,
+            errorUri = null,
+            innerErrors = null,
+            bindingMethod = "prompt",
+            challengeTargetLabel = null,
+            challengeChannel = null,
+            codeLength = null,
+            interval = null
         )
 
-        whenever(signInInitiateResult.errorResponse).thenReturn(signInInitiateErrorResponse)
+        val apiResult = signInInitiateApiResponse.toResult()
+        assertTrue(apiResult is SignInChallengeApiResult.UnknownError)
+        assertEquals(error, (apiResult as SignInChallengeApiResult.UnknownError).error)
+        assertEquals(errorDescription, (apiResult as SignInChallengeApiResult.UnknownError).errorDescription)
+    }
 
-        nativeAuthResponseHandler.validateApiResult(
-            apiResult = signInInitiateResult
+    @Test
+    fun testSignInChallengeApiResponseChallengeTypeOobSuccess() {
+        val challengeTargetLabel = "user@contoso.com"
+        val challengeChannel = "email"
+        val codeLength = 6
+
+        val signInInitiateApiResponse = SignInChallengeApiResponse(
+            statusCode = 200,
+            challengeType = "oob",
+            credentialToken = credentialToken,
+            error = null,
+            errorCodes = null,
+            errorDescription = null,
+            errorUri = null,
+            innerErrors = null,
+            bindingMethod = "prompt",
+            challengeTargetLabel = challengeTargetLabel,
+            challengeChannel = challengeChannel,
+            codeLength = codeLength,
+            interval = null
         )
+
+        val apiResult = signInInitiateApiResponse.toResult()
+        assertTrue(apiResult is SignInChallengeApiResult.OOBRequired)
+        assertEquals(credentialToken, (apiResult as SignInChallengeApiResult.OOBRequired).credentialToken)
+        assertEquals(challengeTargetLabel, (apiResult as SignInChallengeApiResult.OOBRequired).challengeTargetLabel)
     }
 
     @Test(expected = ClientException::class)
-    fun testValidateSignInChallengeResultWithSuccessAndMissingObject() {
-        val signInChallengeResult = mock<SignInChallengeResult>()
-        whenever(signInChallengeResult.success).thenReturn(true)
-        whenever(signInChallengeResult.successResponse).thenReturn(null)
+    fun testSignInChallengeApiResponseChallengeTypeOobMissingCodeLength() {
+        val challengeTargetLabel = "user@contoso.com"
+        val challengeChannel = "email"
+        val codeLength = null
 
-        nativeAuthResponseHandler.validateApiResult(
-            apiResult = signInChallengeResult
+        val signInInitiateApiResponse = SignInChallengeApiResponse(
+            statusCode = 200,
+            challengeType = "oob",
+            credentialToken = credentialToken,
+            error = null,
+            errorCodes = null,
+            errorDescription = null,
+            errorUri = null,
+            innerErrors = null,
+            bindingMethod = "prompt",
+            challengeTargetLabel = null,
+            challengeChannel = challengeChannel,
+            codeLength = codeLength,
+            interval = null
         )
+
+        val apiResult = signInInitiateApiResponse.toResult()
+    }
+
+    @Test(expected = ClientException::class)
+    fun testSignInChallengeApiResponseChallengeTypeOobMissingChallengeChannel() {
+        val challengeTargetLabel = "user@contoso.com"
+        val challengeChannel = null
+        val codeLength = 6
+
+        val signInInitiateApiResponse = SignInChallengeApiResponse(
+            statusCode = 200,
+            challengeType = "oob",
+            credentialToken = credentialToken,
+            error = null,
+            errorCodes = null,
+            errorDescription = null,
+            errorUri = null,
+            innerErrors = null,
+            bindingMethod = "prompt",
+            challengeTargetLabel = null,
+            challengeChannel = challengeChannel,
+            codeLength = codeLength,
+            interval = null
+        )
+
+        val apiResult = signInInitiateApiResponse.toResult()
+    }
+
+    @Test(expected = ClientException::class)
+    fun testSignInChallengeApiResponseChallengeTypeOobMissingChallengeTargetLabel() {
+        val challengeTargetLabel = null
+        val challengeChannel = "email"
+        val codeLength = 6
+
+        val signInInitiateApiResponse = SignInChallengeApiResponse(
+            statusCode = 200,
+            challengeType = "oob",
+            credentialToken = credentialToken,
+            error = null,
+            errorCodes = null,
+            errorDescription = null,
+            errorUri = null,
+            innerErrors = null,
+            bindingMethod = "prompt",
+            challengeTargetLabel = challengeTargetLabel,
+            challengeChannel = challengeChannel,
+            codeLength = codeLength,
+            interval = null
+        )
+
+        val apiResult = signInInitiateApiResponse.toResult()
+    }
+
+    @Test(expected = ClientException::class)
+    fun testSignInChallengeApiResponseChallengeTypePasswordWithMissingCredentialToken() {
+        val signInInitiateApiResponse = SignInChallengeApiResponse(
+            statusCode = 200,
+            challengeType = "password",
+            credentialToken = null,
+            error = null,
+            errorCodes = null,
+            errorDescription = null,
+            errorUri = null,
+            innerErrors = null,
+            bindingMethod = null,
+            challengeTargetLabel = null,
+            challengeChannel = null,
+            codeLength = null,
+            interval = null
+        )
+
+        val apiResult = signInInitiateApiResponse.toResult()
+    }
+
+    @Test
+    fun testSignInChallengeApiResponseChallengeTypePassword() {
+        val signInInitiateApiResponse = SignInChallengeApiResponse(
+            statusCode = 200,
+            challengeType = "password",
+            credentialToken = credentialToken,
+            error = null,
+            errorCodes = null,
+            errorDescription = null,
+            errorUri = null,
+            innerErrors = null,
+            bindingMethod = null,
+            challengeTargetLabel = null,
+            challengeChannel = null,
+            codeLength = null,
+            interval = null
+        )
+
+        val apiResult = signInInitiateApiResponse.toResult()
+        assertTrue(apiResult is SignInChallengeApiResult.PasswordRequired)
+        assertEquals(credentialToken, (apiResult as SignInChallengeApiResult.PasswordRequired).credentialToken)
+    }
+
+    @Test
+    fun testSignInChallengeApiResponseWithUnknownError() {
+        val error = "unknown_error"
+        val errorDescription = "An unknown error happened"
+        val signInInitiateApiResponse = SignInChallengeApiResponse(
+            statusCode = 400,
+            challengeType = null,
+            credentialToken = null,
+            error = error,
+            errorCodes = listOf(1234),
+            errorDescription = errorDescription,
+            errorUri = null,
+            innerErrors = null,
+            bindingMethod = null,
+            challengeTargetLabel = null,
+            challengeChannel = null,
+            codeLength = null,
+            interval = null
+        )
+
+        val apiResult = signInInitiateApiResponse.toResult()
+        assertTrue(apiResult is SignInChallengeApiResult.UnknownError)
+        assertEquals(error, (apiResult as SignInChallengeApiResult.UnknownError).error)
+        assertEquals(errorDescription, (apiResult as SignInChallengeApiResult.UnknownError).errorDescription)
+    }
+
+    @Test
+    fun testSignInTokenApiResponseInvalidGrantMissingErrorCodes() {
+        val error = "invalid_grant"
+        val errorDescription = "Tenant misconfiguration"
+        val signInInitiateApiResponse = SignInTokenApiResponse(
+            statusCode = 400,
+            credentialToken = null,
+            error = error,
+            errorCodes = null,
+            errorDescription = errorDescription,
+            errorUri = null,
+            innerErrors = null,
+            tokenType = null,
+            scope = null,
+            expiresIn = null,
+            extExpiresIn = null,
+            accessToken = null,
+            refreshToken = null,
+            idToken = null
+        )
+
+        val apiResult = signInInitiateApiResponse.toResult()
+        assertTrue(apiResult is SignInTokenApiResult.UnknownError)
+        assertEquals(error, (apiResult as SignInTokenApiResult.UnknownError).error)
+        assertEquals(errorDescription, (apiResult as SignInTokenApiResult.UnknownError).errorDescription)
+    }
+
+    @Test
+    fun testSignInTokenApiResponseUserDoesNotExist() {
+        val error = "invalid_grant"
+        val errorCode = 50034
+        val errorDescription = "User does not exist"
+        val signInInitiateApiResponse = SignInTokenApiResponse(
+            statusCode = 400,
+            credentialToken = null,
+            error = error,
+            errorCodes = listOf(errorCode),
+            errorDescription = errorDescription,
+            errorUri = null,
+            innerErrors = null,
+            tokenType = null,
+            scope = null,
+            expiresIn = null,
+            extExpiresIn = null,
+            accessToken = null,
+            refreshToken = null,
+            idToken = null
+        )
+
+        val apiResult = signInInitiateApiResponse.toResult()
+        assertTrue(apiResult is SignInTokenApiResult.UserNotFound)
+        assertEquals(error, (apiResult as SignInTokenApiResult.UserNotFound).error)
+        assertEquals(errorDescription, (apiResult as SignInTokenApiResult.UserNotFound).errorDescription)
+    }
+
+    @Test
+    fun testSignInTokenApiResponsePasswordIncorrect() {
+        val error = "invalid_grant"
+        val errorCode = 50126
+        val errorDescription = "Incorrect password"
+        val signInInitiateApiResponse = SignInTokenApiResponse(
+            statusCode = 400,
+            credentialToken = null,
+            error = error,
+            errorCodes = listOf(errorCode),
+            errorDescription = errorDescription,
+            errorUri = null,
+            innerErrors = null,
+            tokenType = null,
+            scope = null,
+            expiresIn = null,
+            extExpiresIn = null,
+            accessToken = null,
+            refreshToken = null,
+            idToken = null
+        )
+
+        val apiResult = signInInitiateApiResponse.toResult()
+        assertTrue(apiResult is SignInTokenApiResult.PasswordIncorrect)
+        assertEquals(error, (apiResult as SignInTokenApiResult.PasswordIncorrect).error)
+        assertEquals(errorDescription, (apiResult as SignInTokenApiResult.PasswordIncorrect).errorDescription)
+    }
+
+    @Test
+    fun testSignInTokenApiResponseOtpCodeIncorrect() {
+        val error = "invalid_grant"
+        val errorCode = 50181
+        val errorDescription = "Incorrect OTP code"
+        val signInInitiateApiResponse = SignInTokenApiResponse(
+            statusCode = 400,
+            credentialToken = null,
+            error = error,
+            errorCodes = listOf(errorCode),
+            errorDescription = errorDescription,
+            errorUri = null,
+            innerErrors = null,
+            tokenType = null,
+            scope = null,
+            expiresIn = null,
+            extExpiresIn = null,
+            accessToken = null,
+            refreshToken = null,
+            idToken = null
+        )
+
+        val apiResult = signInInitiateApiResponse.toResult()
+        assertTrue(apiResult is SignInTokenApiResult.CodeIncorrect)
+        assertEquals(error, (apiResult as SignInTokenApiResult.CodeIncorrect).error)
+        assertEquals(errorDescription, (apiResult as SignInTokenApiResult.CodeIncorrect).errorDescription)
+    }
+
+    @Test
+    fun testSignInTokenApiResponseMultipleErrorCodes() {
+        val error = "invalid_grant"
+        val errorCode = 50181
+        val errorDescription = "Incorrect OTP code"
+        val signInInitiateApiResponse = SignInTokenApiResponse(
+            statusCode = 400,
+            credentialToken = null,
+            error = error,
+            errorCodes = listOf(0, errorCode),
+            errorDescription = errorDescription,
+            errorUri = null,
+            innerErrors = null,
+            tokenType = null,
+            scope = null,
+            expiresIn = null,
+            extExpiresIn = null,
+            accessToken = null,
+            refreshToken = null,
+            idToken = null
+        )
+
+        val apiResult = signInInitiateApiResponse.toResult()
+        assertTrue(apiResult is SignInTokenApiResult.UnknownError)
+        assertEquals(error, (apiResult as SignInTokenApiResult.UnknownError).error)
+        assertEquals(errorDescription, (apiResult as SignInTokenApiResult.UnknownError).errorDescription)
+    }
+
+    @Test
+    fun testSignInTokenApiResponseCredentialRequiredSuccess() {
+        val error = "credential_required"
+        val errorDescription = "Credential is required by the API"
+        val signInInitiateApiResponse = SignInTokenApiResponse(
+            statusCode = 400,
+            credentialToken = credentialToken,
+            error = error,
+            errorCodes = listOf(1234),
+            errorDescription = errorDescription,
+            errorUri = null,
+            innerErrors = null,
+            tokenType = null,
+            scope = null,
+            expiresIn = null,
+            extExpiresIn = null,
+            accessToken = null,
+            refreshToken = null,
+            idToken = null
+        )
+
+        val apiResult = signInInitiateApiResponse.toResult()
+        assertTrue(apiResult is SignInTokenApiResult.CredentialRequired)
+        assertEquals(credentialToken, (apiResult as SignInTokenApiResult.CredentialRequired).credentialToken)
+    }
+
+    @Test(expected = ClientException::class)
+    fun testSignInTokenApiResponseCredentialRequiredMissingCredentialToken() {
+        val error = "credential_required"
+        val errorDescription = "Credential is required by the API"
+        val signInInitiateApiResponse = SignInTokenApiResponse(
+            statusCode = 400,
+            credentialToken = null,
+            error = error,
+            errorCodes = listOf(1234),
+            errorDescription = errorDescription,
+            errorUri = null,
+            innerErrors = null,
+            tokenType = null,
+            scope = null,
+            expiresIn = null,
+            extExpiresIn = null,
+            accessToken = null,
+            refreshToken = null,
+            idToken = null
+        )
+
+        val apiResult = signInInitiateApiResponse.toResult()
+        assertTrue(apiResult is SignInTokenApiResult.CredentialRequired)
+    }
+
+    @Test
+    fun testSignInTokenApiResponseSuccess() {
+        val signInInitiateApiResponse = SignInTokenApiResponse(
+            statusCode = 200,
+            credentialToken = null,
+            error = null,
+            errorCodes = null,
+            errorDescription = null,
+            errorUri = null,
+            innerErrors = null,
+            tokenType = "Bearer",
+            scope = "openid profile",
+            expiresIn = 3600,
+            extExpiresIn = 3600,
+            accessToken = "1234",
+            refreshToken = "5678",
+            idToken = "9012"
+        )
+
+        val apiResult = signInInitiateApiResponse.toResult()
+        assertTrue(apiResult is SignInTokenApiResult.Success)
+        // TODO token validation
+    }
+
+    @Test(expected = ClientException::class)
+    fun testSignInTokenApiResponseMissingAccessToken() {
+        val signInInitiateApiResponse = SignInTokenApiResponse(
+            statusCode = 200,
+            credentialToken = null,
+            error = null,
+            errorCodes = null,
+            errorDescription = null,
+            errorUri = null,
+            innerErrors = null,
+            tokenType = "Bearer",
+            scope = "openid profile",
+            expiresIn = 3600,
+            extExpiresIn = 3600,
+            accessToken = null,
+            refreshToken = "5678",
+            idToken = "9012"
+        )
+
+        val apiResult = signInInitiateApiResponse.toResult()
+    }
+
+    @Test(expected = ClientException::class)
+    fun testSignInTokenApiResponseMissingRefreshToken() {
+        val signInInitiateApiResponse = SignInTokenApiResponse(
+            statusCode = 200,
+            credentialToken = null,
+            error = null,
+            errorCodes = null,
+            errorDescription = null,
+            errorUri = null,
+            innerErrors = null,
+            tokenType = "Bearer",
+            scope = "openid profile",
+            expiresIn = 3600,
+            extExpiresIn = 3600,
+            accessToken = "1234",
+            refreshToken = null,
+            idToken = "9012"
+        )
+
+        val apiResult = signInInitiateApiResponse.toResult()
+    }
+
+    @Test(expected = ClientException::class)
+    fun testSignInTokenApiResponseMissingIdToken() {
+        val signInInitiateApiResponse = SignInTokenApiResponse(
+            statusCode = 200,
+            credentialToken = null,
+            error = null,
+            errorCodes = null,
+            errorDescription = null,
+            errorUri = null,
+            innerErrors = null,
+            tokenType = "Bearer",
+            scope = "openid profile",
+            expiresIn = 3600,
+            extExpiresIn = 3600,
+            accessToken = "1234",
+            refreshToken = "5678",
+            idToken = null
+        )
+
+        val apiResult = signInInitiateApiResponse.toResult()
+    }
+
+    @Test
+    fun testSignInTokenApiResponseWithUnknownError() {
+        val error = "unknown_error"
+        val errorDescription = "An unknown error happened"
+        val signInInitiateApiResponse = SignInTokenApiResponse(
+            statusCode = 400,
+            credentialToken = null,
+            error = error,
+            errorCodes = listOf(1234),
+            errorDescription = errorDescription,
+            errorUri = null,
+            innerErrors = null,
+            tokenType = null,
+            scope = null,
+            expiresIn = null,
+            extExpiresIn = null,
+            accessToken = null,
+            refreshToken = null,
+            idToken = null
+        )
+
+        val apiResult = signInInitiateApiResponse.toResult()
+        assertTrue(apiResult is SignInTokenApiResult.UnknownError)
+        assertEquals(error, (apiResult as SignInTokenApiResult.UnknownError).error)
+        assertEquals(errorDescription, (apiResult as SignInTokenApiResult.UnknownError).errorDescription)
     }
 }

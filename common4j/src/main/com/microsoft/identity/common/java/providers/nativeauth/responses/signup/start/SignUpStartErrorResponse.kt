@@ -1,11 +1,11 @@
 package com.microsoft.identity.common.java.providers.nativeauth.responses.signup.start
 
 import com.google.gson.annotations.SerializedName
+import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.providers.nativeauth.IApiErrorResponse
 import com.microsoft.identity.common.java.providers.nativeauth.responses.NativeAuthChallengeType
 import com.microsoft.identity.common.java.providers.nativeauth.responses.signup.Attribute
 import com.microsoft.identity.common.java.providers.nativeauth.responses.signup.SignUpStartErrorCodes
-import com.microsoft.identity.common.java.exception.ClientException
 
 data class SignUpStartErrorResponse(
     var statusCode: Int,

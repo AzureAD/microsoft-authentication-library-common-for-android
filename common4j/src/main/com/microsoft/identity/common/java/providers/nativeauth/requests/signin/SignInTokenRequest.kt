@@ -1,8 +1,10 @@
 package com.microsoft.identity.common.java.providers.nativeauth.requests.signin
 
 import com.google.gson.annotations.SerializedName
+import com.microsoft.identity.common.java.providers.nativeauth.NativeAuthConstants
 import com.microsoft.identity.common.java.providers.nativeauth.requests.NativeAuthRequest
 import com.microsoft.identity.common.java.util.ArgUtils
+import com.microsoft.identity.common.java.util.StringUtil
 import java.net.URL
 
 data class SignInTokenRequest private constructor(
@@ -12,47 +14,92 @@ data class SignInTokenRequest private constructor(
 ) : NativeAuthRequest() {
 
     companion object {
-        fun create(
+        fun createROPCTokenRequest(
             username: String,
+            password: String,
             clientId: String,
-            grantType: String,
-            password: String? = null,
-            oob: String? = null,
-            scope: String? = null,
-            signInSlt: String? = null,
-            credentialToken: String? = null,
+            scopes: List<String>? = null,
             challengeType: String? = null,
             requestUrl: String,
             headers: Map<String, String?>
         ): SignInTokenRequest {
             // Check for empty Strings and empty Maps
-            ArgUtils.validateNonNullArg(clientId, "clientId")
             ArgUtils.validateNonNullArg(username, "username")
-            ArgUtils.validateNonNullArg(grantType, "grantType")
+            ArgUtils.validateNonNullArg(password, "password")
+            ArgUtils.validateNonNullArg(clientId, "clientId")
+            ArgUtils.validateNonNullArg(challengeType, "challengeType")
             ArgUtils.validateNonNullArg(requestUrl, "requestUrl")
             ArgUtils.validateNonNullArg(headers, "headers")
 
-            if (username.isEmpty() || password.isNullOrEmpty()) {
-                ArgUtils.validateNonNullArg(credentialToken, "credentialToken")
-            }
-            if (grantType == "oob") {
-                ArgUtils.validateNonNullArg(oob, "oob")
-            }
-            if (grantType == "password") {
-                ArgUtils.validateNonNullArg(password, "password")
-            }
+            return SignInTokenRequest(
+                parameters = NativeAuthRequestSignInTokenParameters(
+                    username = username,
+                    password = password,
+                    clientId = clientId,
+                    grantType = NativeAuthConstants.GrantType.PASSWORD,
+                    challengeType = challengeType,
+                    scope = if (scopes != null) StringUtil.join(" ", scopes) else null
+                ),
+                requestUrl = URL(requestUrl),
+                headers = headers,
+            )
+        }
+
+        fun createOOBTokenRequest(
+            oob: String,
+            credentialToken: String,
+            clientId: String,
+            scopes: List<String>? = null,
+            challengeType: String? = null,
+            requestUrl: String,
+            headers: Map<String, String?>
+        ): SignInTokenRequest {
+            // Check for empty Strings and empty Maps
+            ArgUtils.validateNonNullArg(oob, "oob")
+            ArgUtils.validateNonNullArg(credentialToken, "credentialToken")
+            ArgUtils.validateNonNullArg(clientId, "clientId")
+            ArgUtils.validateNonNullArg(challengeType, "challengeType")
+            ArgUtils.validateNonNullArg(requestUrl, "requestUrl")
+            ArgUtils.validateNonNullArg(headers, "headers")
+
 
             return SignInTokenRequest(
                 parameters = NativeAuthRequestSignInTokenParameters(
-                    clientId = clientId,
-                    username = username,
-                    grantType = grantType,
-                    credentialToken = credentialToken,
-                    challengeType = challengeType,
-                    scope = scope,
-                    password = password,
                     oob = oob,
-                    signInSlt = signInSlt
+                    credentialToken = credentialToken,
+                    clientId = clientId,
+                    grantType = NativeAuthConstants.GrantType.OOB,
+                    challengeType = challengeType,
+                    scope  = if (scopes != null) StringUtil.join(" ", scopes) else null
+                ),
+                requestUrl = URL(requestUrl),
+                headers = headers,
+            )
+        }
+
+        fun createSltTokenRequest(
+            signInSlt: String,
+            clientId: String,
+            scope: String? = null,
+            challengeType: String? = null,
+            requestUrl: String,
+            headers: Map<String, String?>
+        ): SignInTokenRequest {
+            // Check for empty Strings and empty Maps
+            ArgUtils.validateNonNullArg(signInSlt, "signInSlt")
+            ArgUtils.validateNonNullArg(clientId, "clientId")
+            ArgUtils.validateNonNullArg(challengeType, "challengeType")
+            ArgUtils.validateNonNullArg(requestUrl, "requestUrl")
+            ArgUtils.validateNonNullArg(headers, "headers")
+
+
+            return SignInTokenRequest(
+                parameters = NativeAuthRequestSignInTokenParameters(
+                    signInSlt = signInSlt,
+                    clientId = clientId,
+                    grantType = NativeAuthConstants.GrantType.OOB,
+                    challengeType = challengeType,
+                    scope = scope
                 ),
                 requestUrl = URL(requestUrl),
                 headers = headers
@@ -61,13 +108,13 @@ data class SignInTokenRequest private constructor(
     }
 
     data class NativeAuthRequestSignInTokenParameters(
-        val username: String,
-        val password: String?,
-        val oob: String?,
+        val username: String? = null,
+        val password: String? = null,
+        val oob: String? = null,
         @SerializedName("client_id") override val clientId: String,
         @SerializedName("grant_type") val grantType: String,
-        @SerializedName("credential_token") val credentialToken: String?,
-        @SerializedName("signin_slt") val signInSlt: String?,
+        @SerializedName("credential_token") val credentialToken: String? = null,
+        @SerializedName("signin_slt") val signInSlt: String? = null,
         @SerializedName("scope") val scope: String?,
         @SerializedName("challenge_type") val challengeType: String?
     ) : NativeAuthRequestParameters()

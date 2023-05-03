@@ -1,5 +1,10 @@
 package com.microsoft.identity.common.java.providers.nativeauth.interactors
 
+import com.microsoft.identity.common.internal.util.getEncodedRequest
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SsprContinueCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SsprStartCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SsprSubmitCommandParameters
+import com.microsoft.identity.common.java.net.UrlConnectionHttpClient
 import com.microsoft.identity.common.java.providers.nativeauth.NativeAuthRequestProvider
 import com.microsoft.identity.common.java.providers.nativeauth.NativeAuthResponseHandler
 import com.microsoft.identity.common.java.providers.nativeauth.requests.sspr.SsprChallengeRequest
@@ -12,11 +17,6 @@ import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.co
 import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.pollcompletion.SsprPollCompletionResult
 import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.start.SsprStartResult
 import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.submit.SsprSubmitResult
-import com.microsoft.identity.common.internal.util.getEncodedRequest
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.SsprContinueCommandParameters
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.SsprStartCommandParameters
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.SsprSubmitCommandParameters
-import com.microsoft.identity.common.java.net.UrlConnectionHttpClient
 import com.microsoft.identity.common.java.util.ObjectMapper
 
 class SsprInteractor(
