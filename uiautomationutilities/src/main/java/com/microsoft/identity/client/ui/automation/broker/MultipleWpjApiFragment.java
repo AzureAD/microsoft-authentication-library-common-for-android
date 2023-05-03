@@ -90,7 +90,7 @@ public class MultipleWpjApiFragment extends AbstractBrokerHost {
     public void installCertificate(@NonNull final String tenantId) {
         selectDeviceRegistrationRecord(tenantId);
         clickButton(INSTALL_CERTIFICATE_BUTTON_ID);
-        ThreadUtils.sleepSafely(5000, "Sleep failed", "Interrupted");
+        ThreadUtils.sleepSafely(3000, "Sleep failed", "Interrupted");
         final UiDevice device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
         final UiObject certInstaller = device.findObject(new UiSelector().packageName(CERT_INSTALLER_PACKAGE_NAME));
         certInstaller.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
@@ -99,6 +99,9 @@ public class MultipleWpjApiFragment extends AbstractBrokerHost {
                 certInstaller.exists()
         );
         UiAutomatorUtils.handleButtonClick(DIALOG_BOX_OK_BUTTON_RESOURCE_ID);
+        ThreadUtils.sleepSafely(1000, "Sleep failed", "Interrupted");
+        UiAutomatorUtils.handleButtonClick(DIALOG_BOX_OK_BUTTON_RESOURCE_ID);
+        dismissDialogBoxAndAssertContainsText("true");
     }
 
     public List<Map<String, String>> getAllRecords() {
