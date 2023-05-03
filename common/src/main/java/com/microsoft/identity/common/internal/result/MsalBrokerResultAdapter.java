@@ -99,6 +99,8 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
     private static final String TAG = MsalBrokerResultAdapter.class.getSimpleName();
     public static final Gson GSON = new Gson();
 
+    private static final String DCF_NOT_SUPPORTED_ERROR = "deviceCodeFlowAuthRequest() not supported in BrokerMsalController";
+
     @NonNull
     @Override
     public Bundle bundleFromAuthenticationResult(@NonNull final ILocalAuthenticationResult authenticationResult,
@@ -638,8 +640,8 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         // DCF not supported - thrown when BrokerFlight.ENABLE_DCF_IN_BROKER is false
         BrokerResult brokerResult = brokerResultFromBundle(resultBundle);
         if (brokerResult.getErrorCode() != null && brokerResult.getErrorCode().equals(ErrorStrings.DEVICE_CODE_FLOW_NOT_SUPPORTED)) {
-            Logger.error(TAG, "deviceCodeFlowAuthRequest() not supported in BrokerMsalController", new ClientException(ErrorStrings.DEVICE_CODE_FLOW_NOT_SUPPORTED, "deviceCodeFlowAuthRequest() not supported in BrokerMsalController"));
-            throw new ClientException(ErrorStrings.DEVICE_CODE_FLOW_NOT_SUPPORTED, "deviceCodeFlowAuthRequest() not supported in BrokerMsalController");
+            Logger.error(TAG, DCF_NOT_SUPPORTED_ERROR, new ClientException(ErrorStrings.DEVICE_CODE_FLOW_NOT_SUPPORTED, DCF_NOT_SUPPORTED_ERROR));
+            throw new ClientException(ErrorStrings.DEVICE_CODE_FLOW_NOT_SUPPORTED, DCF_NOT_SUPPORTED_ERROR);
         }
 
         throw getBaseExceptionFromBundle(resultBundle);
@@ -664,7 +666,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
             // DCF not supported - thrown when BrokerFlight.ENABLE_DCF_IN_BROKER is false
             if (brokerResult.getErrorCode() != null && brokerResult.getErrorCode().equals(ErrorStrings.DEVICE_CODE_FLOW_NOT_SUPPORTED)) {
                 span.setStatus(StatusCode.ERROR, "acquireDeviceCodeFlowToken() not supported in BrokerMsalController");
-                Logger.error(TAG, "acquireDeviceCodeFlowToken() not supported in BrokerMsalController", new ClientException(ErrorStrings.DEVICE_CODE_FLOW_NOT_SUPPORTED, "deviceCodeFlowAuthRequest() not supported in BrokerMsalController"));
+                Logger.error(TAG, "acquireDeviceCodeFlowToken() not supported in BrokerMsalController", new ClientException(ErrorStrings.DEVICE_CODE_FLOW_NOT_SUPPORTED, DCF_NOT_SUPPORTED_ERROR));
                 throw new ClientException(ErrorStrings.DEVICE_CODE_FLOW_NOT_SUPPORTED, "acquireDeviceCodeFlowToken() not supported in BrokerMsalController");
             }
 
