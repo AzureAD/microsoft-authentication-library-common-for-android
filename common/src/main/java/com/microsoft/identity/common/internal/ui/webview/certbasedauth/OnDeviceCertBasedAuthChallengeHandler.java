@@ -29,7 +29,6 @@ import android.security.KeyChainAliasCallback;
 import android.security.KeyChainException;
 import android.security.keystore.KeyProperties;
 import android.webkit.ClientCertRequest;
-import android.webkit.WebView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -123,15 +122,7 @@ public class OnDeviceCertBasedAuthChallengeHandler extends AbstractCertBasedAuth
      */
     @Override
     public void cleanUp() {
-        final String methodTag = TAG + ":cleanUp";
-        //For on-device CBA, we need to clear the certificate choice cache here so that
-        // the user will be able to login with multiple accounts with CBA
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            WebView.clearClientCertPreferences(null);
-        } else {
-            Logger.warn(methodTag, "Client Cert Preferences cache not cleared due to SDK version < 21 (LOLLIPOP). " +
-                    "Subsequent CBA attempts will fail due to the cached action, so the user must restart the app before attempting to login with CBA again.");
-        }
+        //Nothing needed here
     }
 
     /**
