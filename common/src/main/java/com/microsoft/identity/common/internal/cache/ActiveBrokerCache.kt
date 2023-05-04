@@ -78,7 +78,7 @@ class ActiveBrokerCache
         fun getBrokerMetadataStoreOnBrokerSide(storageSupplier: IStorageSupplier)
             : IActiveBrokerCache {
             return ActiveBrokerCache(
-                storage = storageSupplier.getNameValueStore(
+                storage = storageSupplier.getEncryptedNameValueStore(
                     BROKER_METADATA_CACHE_STORE_ON_BROKER_SIDE_STORAGE_NAME, String::class.java),
                 lock = sBrokerSideLock
             )
@@ -93,7 +93,7 @@ class ActiveBrokerCache
         fun getBrokerMetadataStoreOnSdkSide(storageSupplier: IStorageSupplier)
                 : IActiveBrokerCache {
             return ActiveBrokerCache(
-                storage = storageSupplier.getNameValueStore(
+                storage = storageSupplier.getEncryptedNameValueStore(
                     BROKER_METADATA_CACHE_STORE_ON_SDK_SIDE_STORAGE_NAME, String::class.java),
                 lock = sSdkSideLock
             )
