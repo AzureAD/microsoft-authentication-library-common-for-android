@@ -19,7 +19,7 @@ import static com.microsoft.identity.common.exception.BrokerCommunicationExcepti
 /**
  * A strategy for communicating with the targeted broker via Bound Service.
  */
-public class BoundServiceStrategy<T extends IInterface> implements IIpcStrategy {
+public class BoundServiceStrategy<T extends IInterface> extends AbstractIpcStrategy {
     private static final String TAG = BoundServiceStrategy.class.getSimpleName();
 
     private final BoundServiceClient<T> mClient;
@@ -29,8 +29,8 @@ public class BoundServiceStrategy<T extends IInterface> implements IIpcStrategy 
     }
 
     @Override
-    public @Nullable
-    Bundle communicateToBroker(final @NonNull BrokerOperationBundle brokerOperationBundle)
+    @Nullable
+    public Bundle communicateToBrokerInternal(final @NonNull BrokerOperationBundle brokerOperationBundle)
             throws BrokerCommunicationException {
         final String methodTag = TAG + ":communicateToBroker";
         final String operationName = brokerOperationBundle.getOperation().name();
@@ -52,5 +52,10 @@ public class BoundServiceStrategy<T extends IInterface> implements IIpcStrategy 
     @Override
     public Type getType() {
         return Type.BOUND_SERVICE;
+    }
+
+    @Override
+    public boolean isSupportedByTargetedApp(@NonNull final String targetedBrokerPackageName) {
+        return mClient.isBoundServiceSupported(targetedBrokerPackageName);
     }
 }

@@ -47,7 +47,7 @@ import java.util.List;
 /**
  * A strategy for communicating with the targeted broker via Content Provider.
  */
-public class ContentProviderStrategy implements IIpcStrategy {
+public class ContentProviderStrategy extends AbstractIpcStrategy {
 
     private static final String TAG = ContentProviderStrategy.class.getName();
     private final Context mContext;
@@ -58,7 +58,7 @@ public class ContentProviderStrategy implements IIpcStrategy {
 
     @Override
     @Nullable
-    public Bundle communicateToBroker(final @NonNull BrokerOperationBundle brokerOperationBundle)
+    public Bundle communicateToBrokerInternal(final @NonNull BrokerOperationBundle brokerOperationBundle)
             throws BrokerCommunicationException {
         final String methodTag = TAG + ":communicateToBroker";
         final String operationName = brokerOperationBundle.getOperation().name();
@@ -140,7 +140,8 @@ public class ContentProviderStrategy implements IIpcStrategy {
     /**
      * Returns true if the target package name supports this content provider strategy.
      */
-    public boolean isBrokerContentProviderAvailable(final @NonNull String targetedBrokerPackageName) {
+    @Override
+    public boolean isSupportedByTargetedApp(final @NonNull String targetedBrokerPackageName) {
         final String methodTag = TAG + ":isBrokerContentProviderAvailable";
         final String contentProviderAuthority = getContentProviderAuthority(targetedBrokerPackageName);
 

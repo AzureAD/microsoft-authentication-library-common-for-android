@@ -196,7 +196,7 @@ public class BrokerMsalController extends BaseController {
         sb.append("Broker Strategies added : ");
 
         final ContentProviderStrategy contentProviderStrategy = new ContentProviderStrategy(applicationContext);
-        if (contentProviderStrategy.isBrokerContentProviderAvailable(activeBrokerPackageName)) {
+        if (contentProviderStrategy.isSupportedByTargetedApp(activeBrokerPackageName)) {
             sb.append("ContentProviderStrategy, ");
             strategies.add(contentProviderStrategy);
         }
