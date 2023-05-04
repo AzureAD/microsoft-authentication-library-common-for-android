@@ -63,10 +63,10 @@ public class BrokerValidatorTests {
         BrokerValidator.setShouldTrustDebugBrokers(true);
         final Set<BrokerData> brokerData = mBrokerValidator.getValidBrokers();
         Assert.assertEquals(4, brokerData.size());
-        Assert.assertTrue(brokerData.contains(BrokerData.BROKER_HOST));
-        Assert.assertTrue(brokerData.contains(BrokerData.COMPANY_PORTAL));
-        Assert.assertTrue(brokerData.contains(BrokerData.MICROSOFT_AUTHENTICATOR_DEBUG));
-        Assert.assertTrue(brokerData.contains(BrokerData.MICROSOFT_AUTHENTICATOR_PROD));
+        Assert.assertTrue(brokerData.contains(BrokerData.getDebugBrokerHost()));
+        Assert.assertTrue(brokerData.contains(BrokerData.getProdCompanyPortal()));
+        Assert.assertTrue(brokerData.contains(BrokerData.getDebugMicrosoftAuthenticator()));
+        Assert.assertTrue(brokerData.contains(BrokerData.getProdMicrosoftAuthenticator()));
     }
 
     @Test
@@ -74,8 +74,8 @@ public class BrokerValidatorTests {
         BrokerValidator.setShouldTrustDebugBrokers(false);
         final Set<BrokerData> brokerData = mBrokerValidator.getValidBrokers();
         Assert.assertEquals(2, brokerData.size());
-        Assert.assertTrue(brokerData.contains(BrokerData.COMPANY_PORTAL));
-        Assert.assertTrue(brokerData.contains(BrokerData.MICROSOFT_AUTHENTICATOR_PROD));
+        Assert.assertTrue(brokerData.contains(BrokerData.getProdCompanyPortal()));
+        Assert.assertTrue(brokerData.contains(BrokerData.getProdMicrosoftAuthenticator()));
     }
 
     @Test
