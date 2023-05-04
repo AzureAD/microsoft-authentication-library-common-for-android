@@ -116,20 +116,24 @@ public enum AttributeName {
     application_name,
 
     /**
+     * The correlation id sent from client app
+     */
+    correlation_id,
+
+    /**
      * Indicates if token was return from token cache
      */
     is_serviced_from_cache,
 
     /**
-     * The correlation id being used for the request. This can used to correlate the data with the
-     * server side.
-     */
-    correlation_id,
-
-    /**
      * The message accompanying an Exception.
      */
     error_message,
+
+    /**
+     * Indicates if device id claims were requested
+     */
+    is_device_id_claims_requested,
 
     /**
      * The content type of the response returned by eSTS for the request.

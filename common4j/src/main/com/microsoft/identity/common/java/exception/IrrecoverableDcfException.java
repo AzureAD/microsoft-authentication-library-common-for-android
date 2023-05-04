@@ -1,4 +1,3 @@
-package com.microsoft.identity.common.java.opentelemetry;
 // Copyright (c) Microsoft Corporation.
 // All rights reserved.
 //
@@ -21,30 +20,11 @@ package com.microsoft.identity.common.java.opentelemetry;
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
+package com.microsoft.identity.common.java.exception;
 
-public enum SpanName {
-    AcquirePrtUsingBrt,
-    RefreshPrt,
-    AcquireAtUsingPrt,
-    AcquireTokenInteractive,
-    AcquireTokenSilent,
-    CryptoFactoryEvent,
-    SetScopeForDMAgentForFoci,
-    GetAccounts,
-    RemoveAccount,
-    WorkplaceJoin,
-    DoDiscovery,
-    WorkplaceLeave,
-    DeviceState,
-    CertBasedAuth,
-    UploadBrokerLogs,
-    InitializePowerLift,
-    MSAL_PerformIpcStrategy,
-    DeviceRegistrationApi,
-    WorkplaceJoinApi,
-    AcquirePrtInteractively,
-    PrtUpgrade,
-    AcquireTokenDcf,
-    AcquireTokenDcfAuthRequest,
-    AcquireTokenDcfFetchToken;
+public class IrrecoverableDcfException extends BaseException {
+
+    public IrrecoverableDcfException(final String errorCode, final String errorMessage, final Throwable throwable) {
+        super(errorCode, errorMessage, throwable);
+    }
 }
