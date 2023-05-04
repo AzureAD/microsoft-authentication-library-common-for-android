@@ -619,7 +619,7 @@ public final class AuthenticationConstants {
          * used by the broker, however, broker may choose to override this value and use a higher
          * value during handshake based on a flight.
          */
-        public static final String DEFAULT_MAX_BROKER_PROTOCOL_VERSION = "12.0";
+        public static final String DEFAULT_MAX_BROKER_PROTOCOL_VERSION = "13.0";
 
         /**
          * A client id for requesting the SSO token.
