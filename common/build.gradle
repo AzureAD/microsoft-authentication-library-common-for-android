@@ -142,6 +142,8 @@ dependencies {
     testImplementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.kotlinVersion}"
     androidTestImplementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.kotlinVersion}"
 
+    implementation "androidx.datastore:datastore-preferences:1.0.0"
+
     implementation(group: 'com.microsoft.device.display', name: 'display-mask', version: '0.3.0')
 
     implementation "cz.msebera.android:httpclient:$rootProject.ext.mseberaApacheHttpClientVersion"
