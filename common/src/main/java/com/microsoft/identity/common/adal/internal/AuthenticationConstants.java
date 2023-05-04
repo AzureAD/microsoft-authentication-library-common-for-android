@@ -92,8 +92,7 @@ public final class AuthenticationConstants {
     public static final String TWO_POINT_ZERO = "2.0";
     public static final String THREE_POINT_ZERO = "3.0";
     public static final String FOUR_POINT_ZERO = "4.0";
-    public static final String FIVE_POINT_ZERO = "5.0";
-    public static final String EIGHT_POINT_ZERO = "8.0";
+
 
 
     /**
@@ -1438,7 +1437,7 @@ public final class AuthenticationConstants {
         private static final String BROKER_VERSION_1 = ONE_POINT_ZERO;
         private static final String BROKER_VERSION_3 = THREE_POINT_ZERO;
         private static final String BROKER_VERSION_4 = FOUR_POINT_ZERO;
-        private static final String BROKER_VERSION_5 = FIVE_POINT_ZERO;
+
 
         /**
          * Tie the API paths and codes into a single object structure to stop us from having to keep
@@ -1469,8 +1468,8 @@ public final class AuthenticationConstants {
             UNKNOWN(null, null, null),
             DEVICE_REGISTRATION_PROTOCOLS(DEVICE_REGISTRATION_PROTOCOLS_PATH, null, null),
             BROKER_UPLOAD_LOGS(BROKER_API_UPLOAD_LOGS, BROKER_VERSION_4, null),
-            FETCH_DCF_AUTH_RESULT(MSAL_FETCH_DCF_AUTH_RESULT_PATH, BROKER_VERSION_5, null),
-            ACQUIRE_TOKEN_DCF(MSAL_ACQUIRE_TOKEN_DCF_PATH, BROKER_VERSION_5, null)
+            FETCH_DCF_AUTH_RESULT(MSAL_FETCH_DCF_AUTH_RESULT_PATH, null, null),
+            ACQUIRE_TOKEN_DCF(MSAL_ACQUIRE_TOKEN_DCF_PATH, null, null)
             ;
             /**
              * The content provider path that the API exists behind.
