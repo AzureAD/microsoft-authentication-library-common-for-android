@@ -28,14 +28,20 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import lombok.Builder;
+import lombok.RequiredArgsConstructor;
 import lombok.experimental.Accessors;
 
+@Builder
+@RequiredArgsConstructor
 @Accessors(prefix = "m")
 /**
  * A SharedPreferencesFileManager backed by a HashMap.  This is mainly for testing purposes,
  * where it doesn't make sense to instantiate shared preferences files.
  */
 public class MapBackedPreferencesManager implements IMultiTypeNameValueStorage {
+
+    private final String mName;
 
     private final Map<String, String> mBackingStore = new HashMap<>();
 

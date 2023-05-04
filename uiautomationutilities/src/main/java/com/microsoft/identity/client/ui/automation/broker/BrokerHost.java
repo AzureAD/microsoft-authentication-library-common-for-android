@@ -35,6 +35,7 @@ import com.microsoft.identity.client.ui.automation.constants.DeviceAdmin;
 import com.microsoft.identity.client.ui.automation.installer.LocalApkInstaller;
 import com.microsoft.identity.client.ui.automation.logging.Logger;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
+import com.microsoft.identity.common.java.util.StringUtil;
 
 import org.junit.Assert;
 
@@ -209,6 +210,7 @@ public class BrokerHost extends AbstractTestBroker {
      */
     public void decodeSSOTokenAndVerifyNonce(@NonNull final String ssoToken,
                                              @NonNull final String nonce) {
+        Assert.assertFalse("Passed an empty or null token", StringUtil.isNullOrEmpty(ssoToken));
         String token = new String(Base64.decode(ssoToken.split("\\.")[1], Base64.NO_WRAP));
         final Map<Object, Object> map = new Gson().fromJson(token, Map.class);
         StringBuilder sb = new StringBuilder();
@@ -235,7 +237,7 @@ public class BrokerHost extends AbstractTestBroker {
      * Confirm that the calling app is not verified
      */
     public void confirmCallingAppNotVerified() {
-        AbstractBrokerHost.dismissDialogBoxAndAssertContainsText("Calling App is not verified");
+        AbstractBrokerHost.dismissDialogBoxAndAssertContainsText("Calling app could not be verified");
     }
 
     /**

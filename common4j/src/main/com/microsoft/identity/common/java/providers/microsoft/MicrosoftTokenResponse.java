@@ -24,8 +24,10 @@ package com.microsoft.identity.common.java.providers.microsoft;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+import com.microsoft.identity.common.java.authorities.AzureActiveDirectoryAudience;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.java.util.CopyUtil;
+import com.microsoft.identity.common.java.util.SchemaUtil;
 
 import java.util.Date;
 
@@ -334,6 +336,29 @@ public class MicrosoftTokenResponse extends TokenResponse {
      */
     public void setCloudInstanceHostName(final String cloudInstanceHostName) {
         mCloudInstanceHostName = cloudInstanceHostName;
+    }
+
+    /**
+     * Returns the tenant id for which this token response is issued.
+     *
+     * @return the String representing the tenant id
+     */
+    public String getTenantId() {
+        return SchemaUtil.getTenantId(
+                getClientInfo(),
+                getIdToken()
+        );
+    }
+
+    /**
+     * Indicates if an account is an AAD or MSA account.
+     *
+     * @return a boolean indicating if the account used is an MSA account
+     */
+    public boolean isMsaAccount() {
+        return AzureActiveDirectoryAudience.MSA_MEGA_TENANT_ID.equalsIgnoreCase(
+                getTenantId()
+        );
     }
 
     //CHECKSTYLE:OFF

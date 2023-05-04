@@ -85,8 +85,8 @@ public class AndroidWrappedKeyLoaderTest {
         // Read
         final KeyPair keyPairReadFromKeyStore = AndroidKeyStoreUtil.readKey(MOCK_KEY_ALIAS);
 
-        Assert.assertArrayEquals(generatedKeyPair.getPrivate().getEncoded(), keyPairReadFromKeyStore.getPrivate().getEncoded());
-        Assert.assertArrayEquals(generatedKeyPair.getPublic().getEncoded(), keyPairReadFromKeyStore.getPublic().getEncoded());
+        Assert.assertEquals(generatedKeyPair.getPrivate(), keyPairReadFromKeyStore.getPrivate());
+        Assert.assertEquals(generatedKeyPair.getPublic(), keyPairReadFromKeyStore.getPublic());
 
         // Delete
         AndroidKeyStoreUtil.deleteKey(MOCK_KEY_ALIAS);

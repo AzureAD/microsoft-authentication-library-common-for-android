@@ -1,7 +1,6 @@
 V.NEXT
 ----------
 - [MINOR] Add active broker cache (#2030)
-- [MAJOR] Consolidate IStorageSupplier logic (#2024)
 - [MINOR] make getCurrentActiveBrokerPackageName case insensitive and trims the authenticator type (#2026)
 - [PATCH] Update version for org.json:json to 20230227 (#2022)
 - [MAJOR] Move Broker encryption logic to broker code. Some more refactoring. (#2016)
@@ -11,6 +10,7 @@ V.NEXT
 - [MINOR] Add method to clear receiver concurrentHashMap in LocalBroadcaster (#1993)
 - [PATCH] Mapping ECDSA to EC in ClientCertRequest's keyTypes array (#2015)
 - [PATCH] Fix NPE in OTEL code (#2018)
+- [MINOR] Instrument PRTv3 flows (#2023)
 - [MINOR] Updating different smartcards error message; updated string res files (#2021)
 - [PATCH] Moving ClearCertPref call to clean up method (#2025)
 - [PATCH] Fix target in token records to fix cache keys (#2027)

@@ -44,9 +44,9 @@ import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 public class BrowserEdge extends App implements IBrowser {
 
     private final static String TAG = BrowserEdge.class.getSimpleName();
-    private static final String EDGE_PACKAGE_NAME = "com.microsoft.emmx";
-    private static final String EDGE_APP_NAME = "Microsoft Edge";
-    private static final String EDGE_APK = "Edge.apk";
+    public static final String EDGE_PACKAGE_NAME = "com.microsoft.emmx";
+    public static final String EDGE_APP_NAME = "Microsoft Edge";
+    public static final String EDGE_APK = "Edge.apk";
     private boolean shouldHandleAutoFill = true;
 
     public BrowserEdge() {
