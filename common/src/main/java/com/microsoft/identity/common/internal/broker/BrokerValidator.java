@@ -143,11 +143,9 @@ public class BrokerValidator {
      * @return a Set of {@link BrokerData}
      */
     public Set<BrokerData> getValidBrokers() {
-        final Set<BrokerData> validBrokers = sShouldTrustDebugBrokers
-                ? BrokerData.Companion.getAllBrokers()
-                : BrokerData.Companion.getProdBrokers();
-
-        return validBrokers;
+        return sShouldTrustDebugBrokers
+                ? BrokerData.getAllBrokers()
+                : BrokerData.getProdBrokers();
     }
 
     /**
@@ -254,8 +252,8 @@ public class BrokerValidator {
         if (packageName.equals(AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME)) {
             final PackageHelper info = new PackageHelper(context.getPackageManager());
             final String signatureDigest = info.getCurrentSignatureForPackage(packageName);
-            if (BrokerData.Companion.getProdMicrosoftAuthenticator().getSignatureHash().equals(signatureDigest)
-                    || BrokerData.Companion.getDebugMicrosoftAuthenticator().getSignatureHash().equals(signatureDigest)) {
+            if (BrokerData.getProdMicrosoftAuthenticator().getSignatureHash().equals(signatureDigest)
+                    || BrokerData.getDebugMicrosoftAuthenticator().getSignatureHash().equals(signatureDigest)) {
                 // If the caller is the Authenticator, check if the redirect uri matches with either
                 // the one generated with package name and signature or broker redirect uri.
                 isValidBrokerRedirect |= StringUtil.equalsIgnoreCase(redirectUri, AuthenticationConstants.Broker.BROKER_REDIRECT_URI);

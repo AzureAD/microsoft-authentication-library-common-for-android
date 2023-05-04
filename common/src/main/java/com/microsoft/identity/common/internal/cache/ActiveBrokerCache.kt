@@ -30,6 +30,9 @@ import java.util.concurrent.locks.ReentrantReadWriteLock
 import kotlin.concurrent.read
 import kotlin.concurrent.write
 
+/**
+ * A cache for storing the active broker as known by the caller.
+ **/
 @ThreadSafe
 class ActiveBrokerCache
     internal constructor(private val storage: INameValueStorage<String>,
@@ -123,7 +126,7 @@ class ActiveBrokerCache
         lock.write {
             storage.put(ACTIVE_BROKER_CACHE_PACKAGE_NAME_KEY, brokerData.packageName)
             storage.put(ACTIVE_BROKER_CACHE_SIGHASH_KEY, brokerData.signatureHash)
-            inMemoryCachedValue = BrokerData(brokerData.packageName, brokerData.signatureHash)
+            inMemoryCachedValue = brokerData.copy()
         }
     }
 
