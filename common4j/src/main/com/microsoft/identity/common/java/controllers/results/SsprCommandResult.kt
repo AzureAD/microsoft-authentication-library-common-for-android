@@ -20,23 +20,21 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.java.commands.parameters.nativeauth;
+package com.microsoft.identity.common.java.controllers.results
 
-import java.util.Map;
+sealed interface SsprStartCommandResult
+data class SsprEmailVerificationRequired(val passwordResetToken: String, val codeLength: Int, val challengeTargetLabel: String): SsprStartCommandResult,
+    SsprResendCodeCommandResult
+data class EmailNotVerified(val errorCode: String, val errorDescription: String): SsprStartCommandResult
+data class PasswordNotSet(val errorCode: String, val errorDescription: String): SsprStartCommandResult
 
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.experimental.SuperBuilder;
+// Add interfaces for oob commands if we are keeping them separate from other flows
+sealed interface SsprSubmitCodeCommandResult
+data class PasswordRequired(val passwordSubmitToken: String): SsprSubmitCodeCommandResult
 
-@Getter
-@EqualsAndHashCode(callSuper = true)
-@SuperBuilder(toBuilder = true)
-public class SignUpContinueCommandParameters extends BaseNativeAuthCommandParameters {
-	private static final String TAG = SignUpContinueCommandParameters.class.getSimpleName();
+sealed interface SsprResendCodeCommandResult
 
-	public final String password;
-	public final String oob;
-	// TODO @EqualsAndHashCode.Exclude?
-	public final Map<String, String> userAttributes;
-}
-
+sealed interface SsprSubmitNewPasswordCommandResult
+data class PasswordNotAccepted(val errorCode: String, val errorDescription: String): SsprSubmitNewPasswordCommandResult
+data class PasswordResetFailed(val errorCode: String, val errorDescription: String): SsprSubmitNewPasswordCommandResult
+object SsprComplete: SsprSubmitNewPasswordCommandResult

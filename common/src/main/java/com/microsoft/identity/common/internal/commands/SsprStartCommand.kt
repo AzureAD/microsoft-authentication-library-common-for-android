@@ -20,23 +20,26 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.java.commands.parameters.nativeauth;
+package com.microsoft.identity.common.internal.commands
 
-import java.util.Map;
+import com.microsoft.identity.common.internal.controllers.NativeAuthController
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SsprStartCommandParameters
+import com.microsoft.identity.common.java.controllers.results.SsprStartCommandResult
 
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.experimental.SuperBuilder;
-
-@Getter
-@EqualsAndHashCode(callSuper = true)
-@SuperBuilder(toBuilder = true)
-public class SignUpContinueCommandParameters extends BaseNativeAuthCommandParameters {
-	private static final String TAG = SignUpContinueCommandParameters.class.getSimpleName();
-
-	public final String password;
-	public final String oob;
-	// TODO @EqualsAndHashCode.Exclude?
-	public final Map<String, String> userAttributes;
+class SsprStartCommand(
+    private val parameters: SsprStartCommandParameters,
+    private val controller: NativeAuthController,
+    callback: BaseNativeAuthCommandCallback<SsprStartCommandResult>,
+    publicApiId: String
+) : BaseNativeAuthCommand<SsprStartCommandResult>(
+    parameters,
+    controller,
+    callback,
+    publicApiId
+) {
+    override fun execute(): SsprStartCommandResult {
+        return controller.ssprStart(
+            parameters = parameters
+        )
+    }
 }
-

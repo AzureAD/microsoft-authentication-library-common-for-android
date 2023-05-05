@@ -1,3 +1,25 @@
+//  Copyright (c) Microsoft Corporation.
+//  All rights reserved.
+//
+//  This code is licensed under the MIT License.
+//
+//  Permission is hereby granted, free of charge, to any person obtaining a copy
+//  of this software and associated documentation files(the "Software"), to deal
+//  in the Software without restriction, including without limitation the rights
+//  to use, copy, modify, merge, publish, distribute, sublicense, and / or sell
+//  copies of the Software, and to permit persons to whom the Software is
+//  furnished to do so, subject to the following conditions :
+//
+//  The above copyright notice and this permission notice shall be included in
+//  all copies or substantial portions of the Software.
+//
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+//  THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft.nativeauth
 
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartCommandParameters
@@ -5,9 +27,9 @@ import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInS
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpContinueCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpStartCommandParameters
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.SsprContinueCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SsprStartCommandParameters
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.SsprSubmitCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SsprSubmitCodeCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SsprSubmitNewPasswordCommandParameters
 import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.interfaces.PlatformComponents
 import com.microsoft.identity.common.java.providers.nativeauth.NativeAuthOAuth2Configuration
@@ -391,7 +413,7 @@ class NativeAuthRequestHandlerTest {
             .build()
 
         nativeAuthRequestProvider.createSsprStartRequest(
-            commandParameters = commandParameters
+            parameters = commandParameters
         )
     }
 
@@ -405,7 +427,7 @@ class NativeAuthRequestHandlerTest {
             .build()
 
         nativeAuthRequestProvider.createSsprStartRequest(
-            commandParameters = commandParameters
+            parameters = commandParameters
         )
     }
 
@@ -419,7 +441,7 @@ class NativeAuthRequestHandlerTest {
             .build()
 
         nativeAuthRequestProvider.createSsprStartRequest(
-            commandParameters = commandParameters
+            parameters = commandParameters
         )
     }
 
@@ -431,7 +453,7 @@ class NativeAuthRequestHandlerTest {
             .build()
 
         val result = nativeAuthRequestProvider.createSsprStartRequest(
-            commandParameters = commandParameters
+            parameters = commandParameters
         )
     }
 
@@ -464,53 +486,53 @@ class NativeAuthRequestHandlerTest {
     fun testSsprContinueWithEmptyClientIdShouldThrowException() {
         every { mockConfig.clientId } returns emptyString
 
-        val commandParameters = SsprContinueCommandParameters.builder()
+        val commandParameters = SsprSubmitCodeCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
-            .oobCode("123456")
+            .code("123456")
+            .passwordResetToken("123456")
             .build()
 
         nativeAuthRequestProvider.createSsprContinueRequest(
-            passwordResetToken = "123456",
-            commandParameters = commandParameters
+            parameters = commandParameters
         )
     }
 
     @Test(expected = ClientException::class)
     fun testSsprContinueWithEmptyPasswordResetTokenShouldThrowException() {
-        val commandParameters = SsprContinueCommandParameters.builder()
+        val commandParameters = SsprSubmitCodeCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
-            .oobCode("123456")
+            .code("123456")
+            .passwordResetToken("")
             .build()
 
         nativeAuthRequestProvider.createSsprContinueRequest(
-            passwordResetToken = emptyString,
-            commandParameters = commandParameters
+            parameters = commandParameters
         )
     }
 
-    @Test(expected = ClientException::class)
-    fun testSsprContinueWithEmptyOobCodeShouldThrowException() {
-        val commandParameters = SsprContinueCommandParameters.builder()
+    @Test
+    fun testSsprContinueWithEmptyOobCodeShouldNotThrowException() {
+        val commandParameters = SsprSubmitCodeCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
-            .oobCode(emptyString)
+            .code(emptyString)
+            .passwordResetToken("123456")
             .build()
 
         nativeAuthRequestProvider.createSsprContinueRequest(
-            passwordResetToken = "123456",
-            commandParameters = commandParameters
+            parameters = commandParameters
         )
     }
 
     @Test
     fun testSsprContinueSucces() {
-        val commandParameters = SsprContinueCommandParameters.builder()
+        val commandParameters = SsprSubmitCodeCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
-            .oobCode("123456")
+            .code("123456")
+            .passwordResetToken("123456")
             .build()
 
         nativeAuthRequestProvider.createSsprContinueRequest(
-            passwordResetToken = "123456",
-            commandParameters = commandParameters
+            parameters = commandParameters
         )
     }
 
@@ -519,52 +541,52 @@ class NativeAuthRequestHandlerTest {
     fun testSsprSubmitWithEmptyClientIdShouldThrowException() {
         every { mockConfig.clientId } returns emptyString
 
-        val commandParameters = SsprSubmitCommandParameters.builder()
+        val commandParameters = SsprSubmitNewPasswordCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
+            .passwordSubmitToken("123456")
             .newPassword(password)
             .build()
 
         nativeAuthRequestProvider.createSsprSubmitRequest(
-            passwordSubmitToken = "123456",
             commandParameters = commandParameters
         )
     }
 
     @Test(expected = ClientException::class)
     fun testSsprSubmitWithEmptyPasswordShouldThrowException() {
-        val commandParameters = SsprSubmitCommandParameters.builder()
+        val commandParameters = SsprSubmitNewPasswordCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
+            .passwordSubmitToken("123456")
             .newPassword(emptyString)
             .build()
 
         nativeAuthRequestProvider.createSsprSubmitRequest(
-            passwordSubmitToken = "123456",
             commandParameters = commandParameters
         )
     }
 
     @Test(expected = ClientException::class)
     fun testSsprSubmitWithEmptyPasswordSubmitTokenShouldThrowException() {
-        val commandParameters = SsprSubmitCommandParameters.builder()
+        val commandParameters = SsprSubmitNewPasswordCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
+            .passwordSubmitToken(emptyString)
             .newPassword(password)
             .build()
 
         nativeAuthRequestProvider.createSsprSubmitRequest(
-            passwordSubmitToken = emptyString,
             commandParameters = commandParameters
         )
     }
 
     @Test
     fun testSsprSubmitSuccess() {
-        val commandParameters = SsprSubmitCommandParameters.builder()
+        val commandParameters = SsprSubmitNewPasswordCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
+            .passwordSubmitToken("123456")
             .newPassword(password)
             .build()
 
         nativeAuthRequestProvider.createSsprSubmitRequest(
-            passwordSubmitToken = "123456",
             commandParameters = commandParameters
         )
     }

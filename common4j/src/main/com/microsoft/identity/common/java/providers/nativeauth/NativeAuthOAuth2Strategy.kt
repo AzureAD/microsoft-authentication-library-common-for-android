@@ -28,9 +28,9 @@ import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInS
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpContinueCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpStartCommandParameters
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.SsprContinueCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SsprStartCommandParameters
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.SsprSubmitCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SsprSubmitCodeCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SsprSubmitNewPasswordCommandParameters
 import com.microsoft.identity.common.java.exception.ServiceException
 import com.microsoft.identity.common.java.logging.Logger
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.ClientInfo
@@ -46,11 +46,11 @@ import com.microsoft.identity.common.java.providers.nativeauth.responses.signin.
 import com.microsoft.identity.common.java.providers.nativeauth.responses.signup.challenge.SignUpChallengeResult
 import com.microsoft.identity.common.java.providers.nativeauth.responses.signup.cont.SignUpContinueResult
 import com.microsoft.identity.common.java.providers.nativeauth.responses.signup.start.SignUpStartResult
-import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.challenge.SsprChallengeResult
-import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.cont.SsprContinueResult
-import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.pollcompletion.SsprPollCompletionResult
-import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.start.SsprStartResult
-import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.submit.SsprSubmitResult
+import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.SsprChallengeApiResult
+import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.SsprContinueApiResult
+import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.SsprPollCompletionApiResult
+import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.SsprStartApiResult
+import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.SsprSubmitApiResult
 import com.microsoft.identity.common.java.providers.oauth2.IDToken
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters
 
@@ -91,6 +91,16 @@ class NativeAuthOAuth2Strategy(
         )
     }
 
+    fun performSignUpContinue(
+        signUpToken: String,
+        commandParameters: SignUpContinueCommandParameters
+    ): SignUpContinueResult {
+        return signUpInteractor.performSignUpContinue(
+            signUpToken = signUpToken,
+            commandParameters = commandParameters
+        )
+    }
+
     fun performSignInInitiate(
         parameters: SignInStartCommandParameters
     ): SignInInitiateApiResult {
@@ -122,52 +132,40 @@ class NativeAuthOAuth2Strategy(
     }
 
     fun performSsprStart(
-        commandParameters: SsprStartCommandParameters
-    ): SsprStartResult {
-        return ssprInteractor.performSsprStart(commandParameters)
+        parameters: SsprStartCommandParameters
+    ): SsprStartApiResult {
+        return ssprInteractor.performSsprStart(
+            parameters = parameters
+        )
     }
 
     fun performSsprChallenge(
         passwordResetToken: String
-    ): SsprChallengeResult {
+    ): SsprChallengeApiResult {
         return ssprInteractor.performSsprChallenge(
             passwordResetToken = passwordResetToken
         )
     }
 
     fun performSsprContinue(
-        passwordResetToken: String,
-        commandParameters: SsprContinueCommandParameters
-    ): SsprContinueResult {
+        parameters: SsprSubmitCodeCommandParameters
+    ): SsprContinueApiResult {
         return ssprInteractor.performSsprContinue(
-            passwordResetToken = passwordResetToken,
-            commandParameters = commandParameters
-        )
-    }
-
-    fun performSignUpContinue(
-        signUpToken: String,
-        commandParameters: SignUpContinueCommandParameters
-    ): SignUpContinueResult {
-        return signUpInteractor.performSignUpContinue(
-            signUpToken = signUpToken,
-            commandParameters = commandParameters
+            parameters = parameters
         )
     }
 
     fun performSsprSubmit(
-        passwordSubmitToken: String,
-        commandParameters: SsprSubmitCommandParameters
-    ): SsprSubmitResult {
+        parameters: SsprSubmitNewPasswordCommandParameters
+    ): SsprSubmitApiResult {
         return ssprInteractor.performSsprSubmit(
-            passwordSubmitToken = passwordSubmitToken,
-            commandParameters = commandParameters
+            commandParameters = parameters
         )
     }
 
     fun performSsprPollCompletion(
         passwordResetToken: String
-    ): SsprPollCompletionResult {
+    ): SsprPollCompletionApiResult {
         return ssprInteractor.performSsprPollCompletion(
             passwordResetToken = passwordResetToken
         )

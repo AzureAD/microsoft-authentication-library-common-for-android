@@ -1,3 +1,25 @@
+//  Copyright (c) Microsoft Corporation.
+//  All rights reserved.
+//
+//  This code is licensed under the MIT License.
+//
+//  Permission is hereby granted, free of charge, to any person obtaining a copy
+//  of this software and associated documentation files(the "Software"), to deal
+//  in the Software without restriction, including without limitation the rights
+//  to use, copy, modify, merge, publish, distribute, sublicense, and / or sell
+//  copies of the Software, and to permit persons to whom the Software is
+//  furnished to do so, subject to the following conditions :
+//
+//  The above copyright notice and this permission notice shall be included in
+//  all copies or substantial portions of the Software.
+//
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+//  THE SOFTWARE.
 package com.microsoft.identity.common.java.util
 
 fun String?.isRedirect(): Boolean {
@@ -18,6 +40,38 @@ fun String?.isCredentialRequired(): Boolean {
 
 fun String?.isInvalidGrant(): Boolean {
     return this.contentEquals(other = "invalid_grant", ignoreCase = true)
+}
+
+fun String?.isPasswordTooWeak(): Boolean {
+    return this.contentEquals(other = "password_too_weak", ignoreCase = true)
+}
+
+fun String?.isPasswordTooShort(): Boolean {
+    return this.contentEquals(other = "password_too_short", ignoreCase = true)
+}
+
+fun String?.isPasswordTooLong(): Boolean {
+    return this.contentEquals(other = "password_too_long", ignoreCase = true)
+}
+
+fun String?.isPasswordRecentlyUsed(): Boolean {
+    return this.contentEquals(other = "password_recently_used", ignoreCase = true)
+}
+
+fun String?.isPasswordBanned(): Boolean {
+    return this.contentEquals(other = "password_banned", ignoreCase = true)
+}
+
+fun String?.isPollInProgress(): Boolean {
+    return this.contentEquals(other = "in_progress", ignoreCase = true)
+}
+
+fun String?.isPollSucceeded(): Boolean {
+    return this.contentEquals(other = "succeeded", ignoreCase = true)
+}
+
+fun String?.isExplicitUserNotFound(): Boolean {
+    return this.contentEquals(other = "user_not_found", ignoreCase = true)
 }
 
 fun Int?.isUserAccountDoesNotExist(): Boolean {

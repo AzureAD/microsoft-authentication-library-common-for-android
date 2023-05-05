@@ -20,23 +20,22 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.java.commands.parameters.nativeauth;
+package com.microsoft.identity.common.java.controllers.results
 
-import java.util.Map;
+import com.microsoft.identity.common.java.result.ILocalAuthenticationResult
 
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.experimental.SuperBuilder;
+data class Complete(val authenticationResult: ILocalAuthenticationResult): SignInStartCommandResult,
+    SignInSubmitCodeCommandResult
+object InvalidAuthenticationType : SignInStartCommandResult
 
-@Getter
-@EqualsAndHashCode(callSuper = true)
-@SuperBuilder(toBuilder = true)
-public class SignUpContinueCommandParameters extends BaseNativeAuthCommandParameters {
-	private static final String TAG = SignUpContinueCommandParameters.class.getSimpleName();
+sealed interface SignInStartCommandResult
+data class EmailVerificationRequired(val credentialToken: String, val codeLength: Int, val displayName: String): SignInStartCommandResult,
+    SignInResendCodeCommandResult
+data class UserNotFound(val errorCode: String, val errorDescription: String): SignInStartCommandResult, SsprStartCommandResult
+data class PasswordIncorrect(val errorCode: String, val errorDescription: String): SignInStartCommandResult
 
-	public final String password;
-	public final String oob;
-	// TODO @EqualsAndHashCode.Exclude?
-	public final Map<String, String> userAttributes;
-}
+sealed interface SignInSubmitCodeCommandResult
+data class IncorrectCode(val errorCode: String, val errorDescription: String):
+    SignInSubmitCodeCommandResult, SsprSubmitCodeCommandResult
 
+sealed interface SignInResendCodeCommandResult

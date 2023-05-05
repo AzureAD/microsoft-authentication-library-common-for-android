@@ -20,23 +20,12 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.java.commands.parameters.nativeauth;
+package com.microsoft.identity.common.java.providers.nativeauth.responses.sspr
 
-import java.util.Map;
-
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.experimental.SuperBuilder;
-
-@Getter
-@EqualsAndHashCode(callSuper = true)
-@SuperBuilder(toBuilder = true)
-public class SignUpContinueCommandParameters extends BaseNativeAuthCommandParameters {
-	private static final String TAG = SignUpContinueCommandParameters.class.getSimpleName();
-
-	public final String password;
-	public final String oob;
-	// TODO @EqualsAndHashCode.Exclude?
-	public final Map<String, String> userAttributes;
+sealed interface SsprContinueApiResult {
+    object Redirect : SsprContinueApiResult
+    data class PasswordRequired(val passwordSubmitToken: String, val expiresIn: Int?) : SsprContinueApiResult
+    data class OOBIncorrect(val errorCode: String, val errorDescription: String) : SsprContinueApiResult
+    data class UnknownError(val errorCode: String?, val errorDescription: String?) :
+        SsprContinueApiResult
 }
-

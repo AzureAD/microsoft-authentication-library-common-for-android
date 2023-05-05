@@ -1,14 +1,29 @@
+//  Copyright (c) Microsoft Corporation.
+//  All rights reserved.
+//
+//  This code is licensed under the MIT License.
+//
+//  Permission is hereby granted, free of charge, to any person obtaining a copy
+//  of this software and associated documentation files(the "Software"), to deal
+//  in the Software without restriction, including without limitation the rights
+//  to use, copy, modify, merge, publish, distribute, sublicense, and / or sell
+//  copies of the Software, and to permit persons to whom the Software is
+//  furnished to do so, subject to the following conditions :
+//
+//  The above copyright notice and this permission notice shall be included in
+//  all copies or substantial portions of the Software.
+//
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+//  THE SOFTWARE.
 package com.microsoft.identity.common.java.providers.nativeauth
 
 import com.microsoft.identity.common.java.AuthenticationConstants
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartCommandParameters
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartWithPasswordCommandParameters
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitCodeCommandParameters
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpContinueCommandParameters
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpStartCommandParameters
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.SsprContinueCommandParameters
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.SsprStartCommandParameters
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.SsprSubmitCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.*
 import com.microsoft.identity.common.java.logging.DiagnosticContext
 import com.microsoft.identity.common.java.logging.Logger
 import com.microsoft.identity.common.java.net.HttpConstants
@@ -192,11 +207,11 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
 
     //region /resetpassword/start
     fun createSsprStartRequest(
-        commandParameters: SsprStartCommandParameters
+        parameters: SsprStartCommandParameters
     ): SsprStartRequest {
         return SsprStartRequest.create(
             clientId = config.clientId,
-            username = commandParameters.username,
+            username = parameters.username,
             challengeType = config.challengeType,
             requestUrl = ssprStartEndpoint,
             headers = getRequestHeaders()
@@ -220,19 +235,12 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
 
     //region /resetpassword/continue
     fun createSsprContinueRequest(
-        passwordResetToken: String,
-        commandParameters: SsprContinueCommandParameters
+        parameters: SsprSubmitCodeCommandParameters
     ): SsprContinueRequest {
-        var grantType = ""
-        if (commandParameters.oobCode.isNotBlank()) {
-            grantType = NativeAuthGrantType.PASSWORDLESS_OTP.jsonValue
-        }
-
         return SsprContinueRequest.create(
             clientId = config.clientId,
-            grantType = grantType,
-            passwordResetToken = passwordResetToken,
-            oob = commandParameters.oobCode,
+            passwordResetToken = parameters.passwordResetToken,
+            oob = parameters.code,
             requestUrl = ssprContinueEndpoint,
             headers = getRequestHeaders()
         )
@@ -241,12 +249,11 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
 
     //region /resetpassword/submit
     fun createSsprSubmitRequest(
-        passwordSubmitToken: String,
-        commandParameters: SsprSubmitCommandParameters
+        commandParameters: SsprSubmitNewPasswordCommandParameters
     ): SsprSubmitRequest {
         return SsprSubmitRequest.create(
             clientId = config.clientId,
-            passwordSubmitToken = passwordSubmitToken,
+            passwordSubmitToken = commandParameters.passwordSubmitToken,
             newPassword = commandParameters.newPassword,
             requestUrl = ssprSubmitEndpoint,
             headers = getRequestHeaders()

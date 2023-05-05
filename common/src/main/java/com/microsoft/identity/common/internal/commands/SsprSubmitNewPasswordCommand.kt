@@ -23,22 +23,30 @@
 package com.microsoft.identity.common.internal.commands
 
 import com.microsoft.identity.common.internal.controllers.NativeAuthController
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.BaseSignInStartCommandParameters
-import com.microsoft.identity.common.java.controllers.results.SignInStartCommandResult
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SsprSubmitNewPasswordCommandParameters
+import com.microsoft.identity.common.java.controllers.results.SsprSubmitNewPasswordCommandResult
 
-class SignInStartCommand(
-    private val parameters: BaseSignInStartCommandParameters,
+class SsprSubmitNewPasswordCommand(
+    private val parameters: SsprSubmitNewPasswordCommandParameters,
     private val controller: NativeAuthController,
-    callback: BaseNativeAuthCommandCallback<SignInStartCommandResult>,
+    callback: BaseNativeAuthCommandCallback<SsprSubmitNewPasswordCommandResult>,
     publicApiId: String
-) : BaseNativeAuthCommand<SignInStartCommandResult>(
+) : BaseNativeAuthCommand<SsprSubmitNewPasswordCommandResult>(
     parameters,
     controller,
     callback,
     publicApiId
 ) {
-    override fun execute(): SignInStartCommandResult {
-        return controller.signInStart(
+
+    companion object {
+        const val DEFAULT_POLL_COMPLETION_INTERVAL_IN_MILISECONDS = 5000
+        const val POLL_COMPLETION_TIMEOUT_IN_MILISECONDS = 300000 // 5 minutes
+        const val POLL_COMPLETION_TIMEOUT_ERROR_CODE = "timeout"
+        const val POLL_COMPLETION_TIMEOUT_ERROR_DESCRIPTION = "Command timed out while polling for password reset result."
+    }
+
+    override fun execute(): SsprSubmitNewPasswordCommandResult {
+        return controller.ssprSubmitNewPassword(
             parameters = parameters
         )
     }

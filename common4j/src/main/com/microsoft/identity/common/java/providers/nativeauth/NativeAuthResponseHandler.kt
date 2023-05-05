@@ -1,3 +1,25 @@
+//  Copyright (c) Microsoft Corporation.
+//  All rights reserved.
+//
+//  This code is licensed under the MIT License.
+//
+//  Permission is hereby granted, free of charge, to any person obtaining a copy
+//  of this software and associated documentation files(the "Software"), to deal
+//  in the Software without restriction, including without limitation the rights
+//  to use, copy, modify, merge, publish, distribute, sublicense, and / or sell
+//  copies of the Software, and to permit persons to whom the Software is
+//  furnished to do so, subject to the following conditions :
+//
+//  The above copyright notice and this permission notice shall be included in
+//  all copies or substantial portions of the Software.
+//
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+//  THE SOFTWARE.
 package com.microsoft.identity.common.java.providers.nativeauth
 
 import com.microsoft.identity.common.java.exception.ClientException
@@ -15,21 +37,11 @@ import com.microsoft.identity.common.java.providers.nativeauth.responses.signup.
 import com.microsoft.identity.common.java.providers.nativeauth.responses.signup.start.SignUpStartErrorResponse
 import com.microsoft.identity.common.java.providers.nativeauth.responses.signup.start.SignUpStartResponse
 import com.microsoft.identity.common.java.providers.nativeauth.responses.signup.start.SignUpStartResult
-import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.challenge.SsprChallengeErrorResponse
-import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.challenge.SsprChallengeResponse
-import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.challenge.SsprChallengeResult
-import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.cont.SsprContinueErrorResponse
-import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.cont.SsprContinueResponse
-import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.cont.SsprContinueResult
-import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.pollcompletion.SsprPollCompletionErrorResponse
-import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.pollcompletion.SsprPollCompletionResponse
-import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.pollcompletion.SsprPollCompletionResult
-import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.start.SsprStartErrorResponse
-import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.start.SsprStartResponse
-import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.start.SsprStartResult
-import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.submit.SsprSubmitErrorResponse
-import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.submit.SsprSubmitResponse
-import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.submit.SsprSubmitResult
+import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.SsprChallengeApiResponse
+import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.SsprContinueApiResponse
+import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.SsprPollCompletionApiResponse
+import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.SsprStartApiResponse
+import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.SsprSubmitApiResponse
 import com.microsoft.identity.common.java.util.ApiResultUtil
 import com.microsoft.identity.common.java.util.ObjectMapper
 import com.microsoft.identity.common.java.util.ResultUtil
@@ -212,151 +224,117 @@ class NativeAuthResponseHandler {
 
     //region /resetpassword/start
     @Throws(ClientException::class)
-    internal fun getSsprStartResultFromHttpResponse(
+    internal fun getSsprStartApiResponseFromHttpResponse(
         response: HttpResponse
-    ): SsprStartResult {
-        val methodName = ":getSsprStartResultFromHttpResponse"
+    ): SsprStartApiResponse {
+        val methodName = ":getSsprStartApiResponseFromHttpResponse"
         Logger.verbose(
             TAG + methodName,
-            "Creating SsprStartResult from HttpResponse..."
+            "Creating SsprStartApiResponse from HttpResponse..."
         )
 
-        val result = if (response.statusCode >= HttpURLConnection.HTTP_BAD_REQUEST) {
-            val errorResponse = ObjectMapper.deserializeJsonStringToObject(
-                getBodyFromUnsuccessfulResponse(response.body),
-                SsprStartErrorResponse::class.java
-            )
-            errorResponse.statusCode = response.statusCode
-            SsprStartResult.createError(errorResponse)
-        } else {
-            val successResponse = ObjectMapper.deserializeJsonStringToObject(
-                getBodyFromSuccessfulResponse(response.body),
-                SsprStartResponse::class.java
-            )
-            SsprStartResult.createSuccess(successResponse)
-        }
-        ResultUtil.logResult(TAG, result)
-        return result
+        val apiResponse = ObjectMapper.deserializeJsonStringToObject(
+            response.body,
+            SsprStartApiResponse::class.java
+        )
+        apiResponse.statusCode = response.statusCode
+
+        ApiResultUtil.logResponse(TAG, apiResponse)
+
+        // TODO manage headers for telemetry
+        return apiResponse
     }
 
     //region /resetpassword/challenge
     @Throws(ClientException::class)
-    internal fun getSsprChallengeResultFromHttpResponse(
+    internal fun getSsprChallengeApiResponseFromHttpResponse(
         response: HttpResponse
-    ): SsprChallengeResult {
-        val methodName = ":getSsprChallengeResultFromHttpResponse"
+    ): SsprChallengeApiResponse {
+        val methodName = ":getSsprChallengeApiResponseFromHttpResponse"
         Logger.verbose(
             TAG + methodName,
-            "Creating SsprChallengeResult from HttpResponse..."
+            "Creating SsprChallengeApiResponse from HttpResponse..."
         )
 
-        val result = if (response.statusCode >= HttpURLConnection.HTTP_BAD_REQUEST) {
-            val errorResponse = ObjectMapper.deserializeJsonStringToObject(
-                getBodyFromUnsuccessfulResponse(response.body),
-                SsprChallengeErrorResponse::class.java
-            )
-            errorResponse.statusCode = response.statusCode
-            SsprChallengeResult.createError(errorResponse)
-        } else {
-            val successResponse = ObjectMapper.deserializeJsonStringToObject(
-                getBodyFromSuccessfulResponse(response.body),
-                SsprChallengeResponse::class.java
-            )
-            SsprChallengeResult.createSuccess(successResponse)
-        }
-        ResultUtil.logResult(TAG, result)
+        val apiResponse = ObjectMapper.deserializeJsonStringToObject(
+            response.body,
+            SsprChallengeApiResponse::class.java
+        )
+        apiResponse.statusCode = response.statusCode
 
-        return result
+        ApiResultUtil.logResponse(TAG, apiResponse)
+
+        // TODO manage headers for telemetry
+        return apiResponse
     }
 
     //region /resetpassword/continue
     @Throws(ClientException::class)
-    internal fun getSsprContinueResultFromHttpResponse(
+    internal fun getSsprContinueApiResponseFromHttpResponse(
         response: HttpResponse
-    ): SsprContinueResult {
-        val methodName = ":getSsprContinueResultFromHttpResponse"
+    ): SsprContinueApiResponse {
+        val methodName = ":getSsprContinueApiResponseFromHttpResponse"
         Logger.verbose(
             TAG + methodName,
-            "Creating SsprContinueResult from HttpResponse..."
+            "Creating SsprContinueApiResponse from HttpResponse..."
         )
 
-        val result = if (response.statusCode >= HttpURLConnection.HTTP_BAD_REQUEST) {
-            val errorResponse = ObjectMapper.deserializeJsonStringToObject(
-                getBodyFromUnsuccessfulResponse(response.body),
-                SsprContinueErrorResponse::class.java
-            )
-            errorResponse.statusCode = response.statusCode
-            SsprContinueResult.createError(errorResponse)
-        } else {
-            val successResponse = ObjectMapper.deserializeJsonStringToObject(
-                getBodyFromSuccessfulResponse(response.body),
-                SsprContinueResponse::class.java
-            )
-            SsprContinueResult.createSuccess(successResponse)
-        }
-        ResultUtil.logResult(TAG, result)
+        val apiResponse = ObjectMapper.deserializeJsonStringToObject(
+            response.body,
+            SsprContinueApiResponse::class.java
+        )
+        apiResponse.statusCode = response.statusCode
 
-        return result
+        ApiResultUtil.logResponse(TAG, apiResponse)
+
+        // TODO manage headers for telemetry
+        return apiResponse
     }
 
     //region /resetpassword/submit
     @Throws(ClientException::class)
-    internal fun getSsprSubmitResultFromHttpResponse(
+    internal fun getSsprSubmitApiResponseFromHttpResponse(
         response: HttpResponse
-    ): SsprSubmitResult {
-        val methodName = ":getSsprSubmitResultFromHttpResponse"
+    ): SsprSubmitApiResponse {
+        val methodName = ":getSsprSubmitApiResponseFromHttpResponse"
         Logger.verbose(
             TAG + methodName,
-            "Creating SsprSubmitResult from HttpResponse..."
+            "Creating SsprSubmitApiResponse from HttpResponse..."
         )
 
-        val result = if (response.statusCode >= HttpURLConnection.HTTP_BAD_REQUEST) {
-            val errorResponse = ObjectMapper.deserializeJsonStringToObject(
-                getBodyFromUnsuccessfulResponse(response.body),
-                SsprSubmitErrorResponse::class.java
-            )
-            errorResponse.statusCode = response.statusCode
-            SsprSubmitResult.createError(errorResponse)
-        } else {
-            val successResponse = ObjectMapper.deserializeJsonStringToObject(
-                getBodyFromSuccessfulResponse(response.body),
-                SsprSubmitResponse::class.java
-            )
-            SsprSubmitResult.createSuccess(successResponse)
-        }
-        ResultUtil.logResult(TAG, result)
+        val apiResponse = ObjectMapper.deserializeJsonStringToObject(
+            response.body,
+            SsprSubmitApiResponse::class.java
+        )
+        apiResponse.statusCode = response.statusCode
 
-        return result
+        ApiResultUtil.logResponse(TAG, apiResponse)
+
+        // TODO manage headers for telemetry
+        return apiResponse
     }
 
     //region /resetpassword/poll_completion
     @Throws(ClientException::class)
-    internal fun getSsprPollCompletionResultFromHttpResponse(
+    internal fun getSsprPollCompletionApiResponseFromHttpResponse(
         response: HttpResponse
-    ): SsprPollCompletionResult {
-        val methodName = ":getSsprPollCompletionResultFromHttpResponse"
+    ): SsprPollCompletionApiResponse {
+        val methodName = ":getSsprPollCompletionApiResponseFromHttpResponse"
         Logger.verbose(
             TAG + methodName,
-            "Creating SsprPollCompletionResult from HttpResponse..."
+            "Creating SsprPollCompletionApiResponse from HttpResponse..."
         )
 
-        val result = if (response.statusCode >= HttpURLConnection.HTTP_BAD_REQUEST) {
-            val errorResponse = ObjectMapper.deserializeJsonStringToObject(
-                getBodyFromUnsuccessfulResponse(response.body),
-                SsprPollCompletionErrorResponse::class.java
-            )
-            errorResponse.statusCode = response.statusCode
-            SsprPollCompletionResult.createError(errorResponse)
-        } else {
-            val successResponse = ObjectMapper.deserializeJsonStringToObject(
-                getBodyFromSuccessfulResponse(response.body),
-                SsprPollCompletionResponse::class.java
-            )
-            SsprPollCompletionResult.createSuccess(successResponse)
-        }
-        ResultUtil.logResult(TAG, result)
+        val apiResponse = ObjectMapper.deserializeJsonStringToObject(
+            response.body,
+            SsprPollCompletionApiResponse::class.java
+        )
+        apiResponse.statusCode = response.statusCode
 
-        return result
+        ApiResultUtil.logResponse(TAG, apiResponse)
+
+        // TODO manage headers for telemetry
+        return apiResponse
     }
 
     /**
@@ -364,7 +342,7 @@ class NativeAuthResponseHandler {
      * of required API response fields fails. Will log a warning if the validation of optional
      * API response fields fails.
      */
-    fun validateApiResult(apiResult: IApiResult) {
+     fun validateApiResult(apiResult: IApiResult) {
         val methodName = ":validateApiResult"
         Logger.verbose(
             TAG + methodName,

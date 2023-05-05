@@ -1,3 +1,25 @@
+//  Copyright (c) Microsoft Corporation.
+//  All rights reserved.
+//
+//  This code is licensed under the MIT License.
+//
+//  Permission is hereby granted, free of charge, to any person obtaining a copy
+//  of this software and associated documentation files(the "Software"), to deal
+//  in the Software without restriction, including without limitation the rights
+//  to use, copy, modify, merge, publish, distribute, sublicense, and / or sell
+//  copies of the Software, and to permit persons to whom the Software is
+//  furnished to do so, subject to the following conditions :
+//
+//  The above copyright notice and this permission notice shall be included in
+//  all copies or substantial portions of the Software.
+//
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+//  THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft.nativeauth
 
 import com.microsoft.identity.common.java.exception.ClientException
@@ -6,7 +28,6 @@ import com.microsoft.identity.common.java.providers.nativeauth.NativeAuthRespons
 import com.microsoft.identity.common.java.providers.nativeauth.responses.NativeAuthBindingMethod
 import com.microsoft.identity.common.java.providers.nativeauth.responses.NativeAuthChallengeType
 import com.microsoft.identity.common.java.providers.nativeauth.responses.NativeAuthDisplayType
-import com.microsoft.identity.common.java.providers.nativeauth.responses.NativeAuthPollCompletionStatus
 import com.microsoft.identity.common.java.providers.nativeauth.responses.signin.SignInChallengeApiResponse
 import com.microsoft.identity.common.java.providers.nativeauth.responses.signin.SignInChallengeApiResult
 import com.microsoft.identity.common.java.providers.nativeauth.responses.signin.SignInInitiateApiResponse
@@ -23,19 +44,20 @@ import com.microsoft.identity.common.java.providers.nativeauth.responses.signup.
 import com.microsoft.identity.common.java.providers.nativeauth.responses.signup.start.SignUpStartErrorResponse
 import com.microsoft.identity.common.java.providers.nativeauth.responses.signup.start.SignUpStartResponse
 import com.microsoft.identity.common.java.providers.nativeauth.responses.signup.start.SignUpStartResult
-import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.challenge.SsprChallengeResponse
-import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.challenge.SsprChallengeResult
-import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.cont.SsprContinueResponse
-import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.cont.SsprContinueResult
-import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.pollcompletion.SsprPollCompletionResponse
-import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.pollcompletion.SsprPollCompletionResult
-import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.start.SsprStartResponse
-import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.start.SsprStartResult
-import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.submit.SsprSubmitResponse
-import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.submit.SsprSubmitResult
+import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.SsprChallengeApiResponse
+import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.SsprChallengeApiResult
+import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.SsprContinueApiResponse
+import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.SsprContinueApiResult
+import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.SsprPollCompletionApiResponse
+import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.SsprPollCompletionApiResult
+import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.SsprStartApiResponse
+import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.SsprStartApiResult
+import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.SsprSubmitApiResponse
+import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.SsprSubmitApiResult
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.mockito.kotlin.mock
@@ -370,274 +392,670 @@ class NativeAuthResponseHandlerTest {
 
     // validate SsprStartResult
     @Test
-    fun testValidateSsprStartResultWithSuccessReturnChallengeType() {
-        val ssprStartResult = mock<SsprStartResult>()
-        whenever(ssprStartResult.success).thenReturn(true)
-
-        val ssprStartResponse = SsprStartResponse(
-            challengeType = NativeAuthChallengeType.REDIRECT,
-            passwordResetToken = null
+    fun testValidateSsprStartResultWithSuccessRedirectChallengeType() {
+        val ssprStartApiResponse = SsprStartApiResponse(
+            statusCode = 200,
+            passwordResetToken = null,
+            challengeType = "redirect",
+            error = null,
+            errorDescription = null,
+            errorUri = null,
+            errorCodes = null,
+            innerErrors = null,
         )
-        whenever(ssprStartResult.successResponse).thenReturn(ssprStartResponse)
 
-        nativeAuthResponseHandler.validateApiResult(
-            apiResult = ssprStartResult
-        )
+        val apiResult = ssprStartApiResponse.toResult()
+        assertTrue(apiResult is SsprStartApiResult.Redirect)
     }
 
     @Test
     fun testValidateSsprStartResultWithSuccessReturnPasswordResetToken() {
-        val ssprStartResult = mock<SsprStartResult>()
-        whenever(ssprStartResult.success).thenReturn(true)
-
-        val ssprStartResponse = SsprStartResponse(
-            passwordResetToken = "123456",
-            challengeType = null
+        val ssprStartApiResponse = SsprStartApiResponse(
+            statusCode = 200,
+            passwordResetToken = "1234",
+            challengeType = null,
+            error = null,
+            errorDescription = null,
+            errorUri = null,
+            errorCodes = null,
+            innerErrors = null,
         )
-        whenever(ssprStartResult.successResponse).thenReturn(ssprStartResponse)
 
-        nativeAuthResponseHandler.validateApiResult(
-            apiResult = ssprStartResult
-        )
+        val apiResult = ssprStartApiResponse.toResult()
+        assertTrue(apiResult is SsprStartApiResult.Success)
+        assertNotNull((apiResult as SsprStartApiResult.Success).passwordResetToken)
     }
 
     @Test(expected = ClientException::class)
-    fun testValidateSsprStartResultWithSuccessAndMissingObject() {
-        val ssprStartResult = mock<SsprStartResult>()
-        whenever(ssprStartResult.success).thenReturn(true)
-        whenever(ssprStartResult.successResponse).thenReturn(null)
-
-        nativeAuthResponseHandler.validateApiResult(
-            apiResult = ssprStartResult
+    fun testValidateSsprStartResultWithSuccessNoRedirectButMissingToken() {
+        val ssprStartApiResponse = SsprStartApiResponse(
+            statusCode = 200,
+            passwordResetToken = null,
+            challengeType = null,
+            error = null,
+            errorDescription = null,
+            errorUri = null,
+            errorCodes = null,
+            innerErrors = null,
         )
+
+        ssprStartApiResponse.toResult()
+    }
+
+    @Test
+    fun testValidateSsprStartResultUserNotFound() {
+        val ssprStartApiResponse = SsprStartApiResponse(
+            statusCode = 400,
+            passwordResetToken = null,
+            challengeType = null,
+            error = "invalid_grant",
+            errorDescription = null,
+            errorUri = null,
+            errorCodes = listOf(50034),
+            innerErrors = null,
+        )
+
+        val apiResult = ssprStartApiResponse.toResult()
+        assertTrue(apiResult is SsprStartApiResult.UserNotFound)
+    }
+
+    @Test(expected = ClientException::class)
+    fun testValidateSsprStartResultInvalidGrantWithNoCodes() {
+        val ssprStartApiResponse = SsprStartApiResponse(
+            statusCode = 400,
+            passwordResetToken = null,
+            challengeType = null,
+            error = "invalid_grant",
+            errorDescription = null,
+            errorUri = null,
+            errorCodes = null,
+            innerErrors = null,
+        )
+
+        ssprStartApiResponse.toResult()
+    }
+
+    @Test
+    fun testValidateSsprStartResultUnknownError() {
+        val ssprStartApiResponse = SsprStartApiResponse(
+            statusCode = 400,
+            passwordResetToken = null,
+            challengeType = null,
+            error = null,
+            errorDescription = ":(",
+            errorUri = null,
+            errorCodes = null,
+            innerErrors = null,
+        )
+
+        val apiResult = ssprStartApiResponse.toResult()
+        assertTrue(apiResult is SsprStartApiResult.UnknownError)
+        assertNotNull((apiResult as SsprStartApiResult.UnknownError).errorDescription)
     }
 
     // validate SsprChallengeResult
-    @Test(expected = ClientException::class)
-    fun testValidateSsprChallengeResultWithSuccessAndMissingObject() {
-        val ssprChallengeResult = mock<SsprChallengeResult>()
-        whenever(ssprChallengeResult.success).thenReturn(true)
-        whenever(ssprChallengeResult.successResponse).thenReturn(null)
-
-        nativeAuthResponseHandler.validateApiResult(
-            apiResult = ssprChallengeResult
-        )
-    }
-
-    @Test(expected = ClientException::class)
-    fun testValidateSsprChallengeResultWithSuccessAndMissingPasswordResetToken() {
-        val ssprChallengeResult = mock<SsprChallengeResult>()
-        whenever(ssprChallengeResult.success).thenReturn(true)
-
-        val ssprResultSuccessResponse = SsprChallengeResponse(
-            passwordResetToken = emptyString,
-            challengeType = NativeAuthChallengeType.OOB,
-            bindingMethod = NativeAuthBindingMethod.PROMPT,
-            displayName = null,
-            displayType = null,
-            codeLength = null
-        )
-        whenever(ssprChallengeResult.successResponse).thenReturn(ssprResultSuccessResponse)
-
-        nativeAuthResponseHandler.validateApiResult(
-            apiResult = ssprChallengeResult
-        )
-    }
-
-    @Test(expected = ClientException::class)
-    fun testValidateSsprChallengeResultWithSuccessAndMissingChallengeType() {
-        val ssprChallengeResult = mock<SsprChallengeResult>()
-        whenever(ssprChallengeResult.success).thenReturn(true)
-
-        val ssprResultSuccessResponse = SsprChallengeResponse(
+    @Test
+    fun testValidateSsprChallengeResultSuccessWithOobChallenge() {
+        val ssprChallengeApiResponse = SsprChallengeApiResponse(
+            statusCode = 200,
             passwordResetToken = "1234",
-            challengeType = NativeAuthChallengeType.UNKNOWN,
-            bindingMethod = NativeAuthBindingMethod.PROMPT,
-            displayName = null,
-            displayType = null,
-            codeLength = null
+            challengeType = "oob",
+            bindingMethod = null,
+            challengeTargetLabel = "label",
+            challengeChannel = "channel",
+            codeLength = 4,
+            interval = null,
+            error = null,
+            errorDescription = null,
+            errorUri = null,
+            errorCodes = null,
+            innerErrors = null,
         )
-        whenever(ssprChallengeResult.successResponse).thenReturn(ssprResultSuccessResponse)
 
-        nativeAuthResponseHandler.validateApiResult(
-            apiResult = ssprChallengeResult
+        val apiResult = ssprChallengeApiResponse.toResult()
+        assertTrue(apiResult is SsprChallengeApiResult.OOBRequired)
+        assertNotNull((apiResult as SsprChallengeApiResult.OOBRequired).passwordResetToken)
+        assertNotNull((apiResult as SsprChallengeApiResult.OOBRequired).challengeTargetLabel)
+        assertNotNull((apiResult as SsprChallengeApiResult.OOBRequired).codeLength)
+    }
+
+    @Test
+    fun testValidateSsprChallengeResultSuccessWithRedirectChallenge() {
+        val ssprChallengeApiResponse = SsprChallengeApiResponse(
+            statusCode = 200,
+            passwordResetToken = "1234",
+            challengeType = "redirect",
+            bindingMethod = null,
+            challengeTargetLabel = "label",
+            challengeChannel = "channel",
+            codeLength = 4,
+            interval = null,
+            error = null,
+            errorDescription = null,
+            errorUri = null,
+            errorCodes = null,
+            innerErrors = null,
         )
+
+        val apiResult = ssprChallengeApiResponse.toResult()
+        assertTrue(apiResult is SsprChallengeApiResult.Redirect)
+    }
+
+    @Test
+    fun testValidateSsprChallengeResultSuccessWithPasswordChallenge() {
+        val ssprChallengeApiResponse = SsprChallengeApiResponse(
+            statusCode = 200,
+            passwordResetToken = "1234",
+            challengeType = "password",
+            bindingMethod = null,
+            challengeTargetLabel = "label",
+            challengeChannel = "channel",
+            codeLength = 4,
+            interval = null,
+            error = null,
+            errorDescription = null,
+            errorUri = null,
+            errorCodes = null,
+            innerErrors = null,
+        )
+
+        val apiResult = ssprChallengeApiResponse.toResult()
+        assertTrue(apiResult is SsprChallengeApiResult.UnknownError)
     }
 
     @Test(expected = ClientException::class)
-    fun testValidateSsprChallengeResultWithSuccessAndMissingBindingMethod() {
-        val ssprChallengeResult = mock<SsprChallengeResult>()
-        whenever(ssprChallengeResult.success).thenReturn(true)
+    fun testValidateSsprChallengeResultSuccessAndMissingPasswordResetToken() {
+        val ssprChallengeApiResponse = SsprChallengeApiResponse(
+            statusCode = 200,
+            passwordResetToken = null,
+            challengeType = "oob",
+            bindingMethod = null,
+            challengeTargetLabel = "label",
+            challengeChannel = "channel",
+            codeLength = 4,
+            interval = null,
+            error = null,
+            errorDescription = null,
+            errorUri = null,
+            errorCodes = null,
+            innerErrors = null,
+        )
 
-        val ssprResultSuccessResponse = SsprChallengeResponse(
+        ssprChallengeApiResponse.toResult()
+    }
+
+    @Test(expected = ClientException::class)
+    fun testValidateSsprChallengeResultSuccessAndMissingChallengeTargetLabel() {
+        val ssprChallengeApiResponse = SsprChallengeApiResponse(
+            statusCode = 200,
             passwordResetToken = "1234",
-            challengeType = NativeAuthChallengeType.OOB,
-            bindingMethod = NativeAuthBindingMethod.UNKNOWN,
+            challengeType = "oob",
+            bindingMethod = null,
+            challengeTargetLabel = null,
+            challengeChannel = "channel",
+            codeLength = 4,
+            interval = null,
+            error = null,
+            errorDescription = null,
+            errorUri = null,
+            errorCodes = null,
+            innerErrors = null,
+        )
+
+        ssprChallengeApiResponse.toResult()
+    }
+
+    @Test(expected = ClientException::class)
+    fun testValidateSsprChallengeResultSuccessAndMissingChallengeChannel() {
+        val ssprChallengeApiResponse = SsprChallengeApiResponse(
+            statusCode = 200,
+            passwordResetToken = "1234",
+            challengeType = "oob",
+            bindingMethod = null,
+            challengeTargetLabel = "label",
+            challengeChannel = null,
+            codeLength = 4,
+            interval = null,
+            error = null,
+            errorDescription = null,
+            errorUri = null,
+            errorCodes = null,
+            innerErrors = null,
+        )
+
+        ssprChallengeApiResponse.toResult()
+    }
+
+    @Test
+    fun testValidateSsprChallengeResultSuccessAndMissingChallengeType() {
+        val ssprChallengeApiResponse = SsprChallengeApiResponse(
+            statusCode = 200,
+            passwordResetToken = "1234",
+            challengeType = null,
+            bindingMethod = null,
+            challengeTargetLabel = "label",
+            challengeChannel = "channel",
+            codeLength = 4,
+            interval = null,
+            error = null,
+            errorDescription = null,
+            errorUri = null,
+            errorCodes = null,
+            innerErrors = null,
+        )
+
+        val apiResult = ssprChallengeApiResponse.toResult()
+        assertTrue(apiResult is SsprChallengeApiResult.UnknownError)
+    }
+
+    @Test(expected = ClientException::class)
+    fun testValidateSsprChallengeResultSuccessAndMissingCodeLength() {
+        val ssprChallengeApiResponse = SsprChallengeApiResponse(
+            statusCode = 200,
+            passwordResetToken = "1234",
+            challengeType = "oob",
+            bindingMethod = null,
+            challengeTargetLabel = "label",
+            challengeChannel = "channel",
             codeLength = null,
-            displayName = null,
-            displayType = null
+            interval = null,
+            error = null,
+            errorDescription = null,
+            errorUri = null,
+            errorCodes = null,
+            innerErrors = null,
         )
-        whenever(ssprChallengeResult.successResponse).thenReturn(ssprResultSuccessResponse)
 
-        nativeAuthResponseHandler.validateApiResult(
-            apiResult = ssprChallengeResult
+        ssprChallengeApiResponse.toResult()
+    }
+
+    @Test
+    fun testValidateSsprChallengeResultInvalidGrant() {
+        val ssprChallengeApiResponse = SsprChallengeApiResponse(
+            statusCode = 400,
+            passwordResetToken = null,
+            challengeType = null,
+            bindingMethod = null,
+            challengeTargetLabel = null,
+            challengeChannel = null,
+            codeLength = null,
+            interval = null,
+            error = "invalid_grant",
+            errorDescription = null,
+            errorUri = null,
+            errorCodes = null,
+            innerErrors = null,
         )
+
+        val apiResult = ssprChallengeApiResponse.toResult()
+        assertTrue(apiResult is SsprChallengeApiResult.UnknownError)
     }
 
     // validate SsprContinueResult
+    @Test
+    fun testValidateSsprContinueResultWithSuccessWithSubmitToken() {
+        val ssprContinueApiResponse = SsprContinueApiResponse(
+            statusCode = 200,
+            passwordResetToken = null,
+            passwordSubmitToken = "1234",
+            challengeType = null,
+            expiresIn = 400,
+            error = null,
+            errorDescription = null,
+            errorUri = null,
+            errorCodes = null,
+            innerErrors = null,
+        )
+
+        val apiResult = ssprContinueApiResponse.toResult()
+        assertTrue(apiResult is SsprContinueApiResult.PasswordRequired)
+        assertNotNull((apiResult as SsprContinueApiResult.PasswordRequired).passwordSubmitToken)
+        assertNotNull((apiResult as SsprContinueApiResult.PasswordRequired).expiresIn)
+    }
+
+    @Test
+    fun testValidateSsprContinueResultSuccessNullExpiresIn() {
+        val ssprContinueApiResponse = SsprContinueApiResponse(
+            statusCode = 200,
+            passwordResetToken = null,
+            passwordSubmitToken = "1234",
+            challengeType = null,
+            expiresIn = null,
+            error = null,
+            errorDescription = null,
+            errorUri = null,
+            errorCodes = null,
+            innerErrors = null,
+        )
+
+        val apiResult = ssprContinueApiResponse.toResult()
+        assertTrue(apiResult is SsprContinueApiResult.PasswordRequired)
+        assertNotNull((apiResult as SsprContinueApiResult.PasswordRequired).passwordSubmitToken)
+    }
+
     @Test(expected = ClientException::class)
-    fun testValidateSsprContinueResultWithSuccessAndMissingObject() {
-        val ssprContinueResult = mock<SsprContinueResult>()
-        whenever(ssprContinueResult.success).thenReturn(true)
-        whenever(ssprContinueResult.successResponse).thenReturn(null)
-
-        nativeAuthResponseHandler.validateApiResult(
-            apiResult = ssprContinueResult
+    fun testValidateSsprContinueResultSuccessNullSubmitToken() {
+        val ssprContinueApiResponse = SsprContinueApiResponse(
+            statusCode = 200,
+            passwordResetToken = null,
+            passwordSubmitToken = null,
+            challengeType = null,
+            expiresIn = 400,
+            error = null,
+            errorDescription = null,
+            errorUri = null,
+            errorCodes = null,
+            innerErrors = null,
         )
+
+        ssprContinueApiResponse.toResult()
     }
 
     @Test
-    fun testValidateSsprContinueResultSuccessReturnToken() {
-        val ssprContinueResult = mock<SsprContinueResult>()
-        whenever(ssprContinueResult.success).thenReturn(true)
-
-        val ssprResultSuccessResponse = SsprContinueResponse(
-            passwordSubmitToken = "1234",
-            expiresIn = 600,
-            error = null
+    fun testValidateSsprContinueResultSuccessRedirect() {
+        val ssprContinueApiResponse = SsprContinueApiResponse(
+            statusCode = 200,
+            passwordResetToken = null,
+            passwordSubmitToken = null,
+            challengeType = "redirect",
+            expiresIn = null,
+            error = null,
+            errorDescription = null,
+            errorUri = null,
+            errorCodes = null,
+            innerErrors = null,
         )
-        whenever(ssprContinueResult.successResponse).thenReturn(ssprResultSuccessResponse)
 
-        nativeAuthResponseHandler.validateApiResult(
-            apiResult = ssprContinueResult
-        )
+        val apiResult = ssprContinueApiResponse.toResult()
+        assertTrue(apiResult is SsprContinueApiResult.Redirect)
     }
 
     @Test
-    fun testValidateSsprContinueResultSuccessReturn() {
-        val ssprContinueResult = mock<SsprContinueResult>()
-        whenever(ssprContinueResult.success).thenReturn(true)
-
-        val ssprResultSuccessResponse = SsprContinueResponse(
-            passwordSubmitToken = "1234",
-            error = "verification_required",
-            expiresIn = 600
+    fun testValidateSsprContinueResultOOBIncorrect() {
+        val ssprContinueApiResponse = SsprContinueApiResponse(
+            statusCode = 400,
+            passwordResetToken = null,
+            passwordSubmitToken = null,
+            challengeType = null,
+            expiresIn = null,
+            error = "invalid_grant",
+            errorDescription = null,
+            errorUri = null,
+            errorCodes = listOf(50181),
+            innerErrors = null,
         )
-        whenever(ssprContinueResult.successResponse).thenReturn(ssprResultSuccessResponse)
 
-        nativeAuthResponseHandler.validateApiResult(
-            apiResult = ssprContinueResult
+        val apiResult = ssprContinueApiResponse.toResult()
+        assertTrue(apiResult is SsprContinueApiResult.OOBIncorrect)
+    }
+
+    @Test
+    fun testValidateSsprContinueResultNoErrorCodes() {
+        val ssprContinueApiResponse = SsprContinueApiResponse(
+            statusCode = 400,
+            passwordResetToken = null,
+            passwordSubmitToken = null,
+            challengeType = null,
+            expiresIn = null,
+            error = "invalid_grant",
+            errorDescription = null,
+            errorUri = null,
+            errorCodes = null,
+            innerErrors = null,
         )
+
+        val apiResult = ssprContinueApiResponse.toResult()
+        assertTrue(apiResult is SsprContinueApiResult.UnknownError)
+    }
+
+    @Test
+    fun testValidateSsprContinueResultNoErrorName() {
+        val ssprContinueApiResponse = SsprContinueApiResponse(
+            statusCode = 400,
+            passwordResetToken = null,
+            passwordSubmitToken = null,
+            challengeType = null,
+            expiresIn = null,
+            error = null,
+            errorDescription = ":(",
+            errorUri = null,
+            errorCodes = null,
+            innerErrors = null,
+        )
+
+        val apiResult = ssprContinueApiResponse.toResult()
+        assertTrue(apiResult is SsprContinueApiResult.UnknownError)
     }
 
     // validate SsprSubmitResult
-    @Test(expected = ClientException::class)
-    fun testValidateSsprSubmitResultWithSuccessAndMissingObject() {
-        val ssprSubmitResult = mock<SsprSubmitResult>()
-        whenever(ssprSubmitResult.success).thenReturn(true)
-        whenever(ssprSubmitResult.successResponse).thenReturn(null)
-
-        nativeAuthResponseHandler.validateApiResult(
-            apiResult = ssprSubmitResult
+    @Test
+    fun testValidateSsprSubmitResultSuccessStartPolling() {
+        val ssprSubmitApiResponse = SsprSubmitApiResponse(
+            statusCode = 200,
+            passwordResetToken = "1234",
+            pollInterval = 5,
+            error = null,
+            errorDescription = null,
+            errorUri = null,
+            errorCodes = null,
+            innerErrors = null,
         )
+
+        val apiResult = ssprSubmitApiResponse.toResult()
+        assertTrue(apiResult is SsprSubmitApiResult.SubmitSuccess)
+        assertNotNull((apiResult as SsprSubmitApiResult.SubmitSuccess).passwordResetToken)
+        assertNotNull((apiResult as SsprSubmitApiResult.SubmitSuccess).pollInterval)
     }
 
     @Test(expected = ClientException::class)
     fun testValidateSsprSubmitResultWithSuccessAndMissingPasswordResetToken() {
-        val ssprSubmitResult = mock<SsprSubmitResult>()
-        whenever(ssprSubmitResult.success).thenReturn(true)
-
-        val ssprResultSuccessResponse = SsprSubmitResponse(
-            passwordResetToken = "",
-            pollInterval = 2
+        val ssprSubmitApiResponse = SsprSubmitApiResponse(
+            statusCode = 200,
+            passwordResetToken = null,
+            pollInterval = 5,
+            error = null,
+            errorDescription = null,
+            errorUri = null,
+            errorCodes = null,
+            innerErrors = null,
         )
-        whenever(ssprSubmitResult.successResponse).thenReturn(ssprResultSuccessResponse)
 
-        nativeAuthResponseHandler.validateApiResult(
-            apiResult = ssprSubmitResult
-        )
-    }
-
-    @Test(expected = ClientException::class)
-    fun testValidateSsprSubmitResultWithSuccessAndMissingPollInterval() {
-        val ssprSubmitResult = mock<SsprSubmitResult>()
-        whenever(ssprSubmitResult.success).thenReturn(true)
-
-        val ssprResultSuccessResponse = SsprSubmitResponse(
-            passwordResetToken = "1234",
-            pollInterval = 0
-        )
-        whenever(ssprSubmitResult.successResponse).thenReturn(ssprResultSuccessResponse)
-
-        nativeAuthResponseHandler.validateApiResult(
-            apiResult = ssprSubmitResult
-        )
+        ssprSubmitApiResponse.toResult()
     }
 
     @Test
-    fun testValidateSsprSubmitResultSuccess() {
-        val ssprSubmitResult = mock<SsprSubmitResult>()
-        whenever(ssprSubmitResult.success).thenReturn(true)
-
-        val ssprResultSuccessResponse = SsprSubmitResponse(
+    fun testValidateSsprSubmitResultWithSuccessAndMissingPollInterval() {
+        val ssprSubmitApiResponse = SsprSubmitApiResponse(
+            statusCode = 200,
             passwordResetToken = "1234",
-            pollInterval = 2
+            pollInterval = null,
+            error = null,
+            errorDescription = null,
+            errorUri = null,
+            errorCodes = null,
+            innerErrors = null,
         )
-        whenever(ssprSubmitResult.successResponse).thenReturn(ssprResultSuccessResponse)
 
-        nativeAuthResponseHandler.validateApiResult(
-            apiResult = ssprSubmitResult
+        val apiResult = ssprSubmitApiResponse.toResult()
+        assertTrue(apiResult is SsprSubmitApiResult.SubmitSuccess)
+        assertNotNull((apiResult as SsprSubmitApiResult.SubmitSuccess).passwordResetToken)
+    }
+
+    @Test
+    fun testValidateSsprSubmitResultPasswordTooWeak() {
+        val ssprSubmitApiResponse = SsprSubmitApiResponse(
+            statusCode = 400,
+            passwordResetToken = null,
+            pollInterval = null,
+            error = "password_too_weak",
+            errorDescription = null,
+            errorUri = null,
+            errorCodes = null,
+            innerErrors = null,
         )
+
+        val apiResult = ssprSubmitApiResponse.toResult()
+        assertTrue(apiResult is SsprSubmitApiResult.PasswordInvalid)
+    }
+
+    @Test
+    fun testValidateSsprSubmitResultPasswordTooLong() {
+        val ssprSubmitApiResponse = SsprSubmitApiResponse(
+            statusCode = 400,
+            passwordResetToken = null,
+            pollInterval = null,
+            error = "password_too_long",
+            errorDescription = null,
+            errorUri = null,
+            errorCodes = null,
+            innerErrors = null,
+        )
+
+        val apiResult = ssprSubmitApiResponse.toResult()
+        assertTrue(apiResult is SsprSubmitApiResult.PasswordInvalid)
+    }
+
+    @Test
+    fun testValidateSsprSubmitResultPasswordTooShort() {
+        val ssprSubmitApiResponse = SsprSubmitApiResponse(
+            statusCode = 400,
+            passwordResetToken = null,
+            pollInterval = null,
+            error = "password_too_short",
+            errorDescription = null,
+            errorUri = null,
+            errorCodes = null,
+            innerErrors = null,
+        )
+
+        val apiResult = ssprSubmitApiResponse.toResult()
+        assertTrue(apiResult is SsprSubmitApiResult.PasswordInvalid)
+    }
+
+    @Test
+    fun testValidateSsprSubmitResultPasswordBanned() {
+        val ssprSubmitApiResponse = SsprSubmitApiResponse(
+            statusCode = 400,
+            passwordResetToken = null,
+            pollInterval = null,
+            error = "password_banned",
+            errorDescription = null,
+            errorUri = null,
+            errorCodes = null,
+            innerErrors = null,
+        )
+
+        val apiResult = ssprSubmitApiResponse.toResult()
+        assertTrue(apiResult is SsprSubmitApiResult.PasswordInvalid)
+    }
+
+    @Test
+    fun testValidateSsprSubmitResultPasswordRecentlyUsed() {
+        val ssprSubmitApiResponse = SsprSubmitApiResponse(
+            statusCode = 400,
+            passwordResetToken = null,
+            pollInterval = null,
+            error = "password_recently_used",
+            errorDescription = null,
+            errorUri = null,
+            errorCodes = null,
+            innerErrors = null,
+        )
+
+        val apiResult = ssprSubmitApiResponse.toResult()
+        assertTrue(apiResult is SsprSubmitApiResult.PasswordInvalid)
+    }
+
+    @Test
+    fun testValidateSsprSubmitResultUnknownError() {
+        val ssprSubmitApiResponse = SsprSubmitApiResponse(
+            statusCode = 400,
+            passwordResetToken = null,
+            pollInterval = null,
+            error = "invalid_grant",
+            errorDescription = ":(",
+            errorUri = null,
+            errorCodes = null,
+            innerErrors = null,
+        )
+
+        val apiResult = ssprSubmitApiResponse.toResult()
+        assertTrue(apiResult is SsprSubmitApiResult.UnknownError)
+        assertNotNull((apiResult as SsprSubmitApiResult.UnknownError).errorCode)
+        assertNotNull((apiResult as SsprSubmitApiResult.UnknownError).errorDescription)
     }
 
     // validate SsprPollCompletionResult
     @Test
     fun testValidateSsprPollCompletionResultSucceeded() {
-        val ssprPollCompletionResult = mock<SsprPollCompletionResult>()
-        whenever(ssprPollCompletionResult.success).thenReturn(true)
-
-        val ssprResultSuccessResponse = SsprPollCompletionResponse(
-            status = NativeAuthPollCompletionStatus.SUCCEEDED
+        val ssprPollCompletionApiResponse = SsprPollCompletionApiResponse(
+            statusCode = 200,
+            status = "succeeded",
+            signinSlt = null,
+            error = null,
+            errorDescription = null,
+            errorUri = null,
+            errorCodes = null,
+            innerErrors = null,
         )
-        whenever(ssprPollCompletionResult.successResponse).thenReturn(ssprResultSuccessResponse)
 
-        nativeAuthResponseHandler.validateApiResult(
-            apiResult = ssprPollCompletionResult
-        )
+        val apiResult = ssprPollCompletionApiResponse.toResult()
+        assertTrue(apiResult is SsprPollCompletionApiResult.PollingSucceeded)
     }
 
     @Test
     fun testValidateSsprPollCompletionResultInProgress() {
-        val ssprPollCompletionResult = mock<SsprPollCompletionResult>()
-        whenever(ssprPollCompletionResult.success).thenReturn(true)
-
-        val ssprResultSuccessResponse = SsprPollCompletionResponse(
-            status = NativeAuthPollCompletionStatus.IN_PROGRESS
+        val ssprPollCompletionApiResponse = SsprPollCompletionApiResponse(
+            statusCode = 200,
+            status = "in_progress",
+            signinSlt = null,
+            error = null,
+            errorDescription = null,
+            errorUri = null,
+            errorCodes = null,
+            innerErrors = null,
         )
-        whenever(ssprPollCompletionResult.successResponse).thenReturn(ssprResultSuccessResponse)
 
-        nativeAuthResponseHandler.validateApiResult(
-            apiResult = ssprPollCompletionResult
-        )
-    }
-
-    @Test(expected = ClientException::class)
-    fun testValidateSsprPollCompletionResultWithSuccessAndMissingStatus() {
-        val ssprPollCompletionResult = mock<SsprPollCompletionResult>()
-        whenever(ssprPollCompletionResult.success).thenReturn(true)
-
-        val ssprResultSuccessResponse = SsprPollCompletionResponse(
-            status = NativeAuthPollCompletionStatus.UNKNOWN
-        )
-        whenever(ssprPollCompletionResult.successResponse).thenReturn(ssprResultSuccessResponse)
-
-        nativeAuthResponseHandler.validateApiResult(
-            apiResult = ssprPollCompletionResult
-        )
+        val apiResult = ssprPollCompletionApiResponse.toResult()
+        assertTrue(apiResult is SsprPollCompletionApiResult.InProgress)
     }
 
     @Test
-    fun testSignInInitiateApiResponseWithRedirectChallenge() {
+    fun testValidateSsprPollCompletionResultPollingFailed() {
+        val ssprPollCompletionApiResponse = SsprPollCompletionApiResponse(
+            statusCode = 200,
+            status = "failed",
+            signinSlt = null,
+            error = null,
+            errorDescription = null,
+            errorUri = null,
+            errorCodes = null,
+            innerErrors = null,
+        )
+
+        val apiResult = ssprPollCompletionApiResponse.toResult()
+        assertTrue(apiResult is SsprPollCompletionApiResult.PollingFailed)
+    }
+
+    @Test
+    fun testValidateSsprPollCompletionResultWithSuccessAndMissingStatus() {
+        val ssprPollCompletionApiResponse = SsprPollCompletionApiResponse(
+            statusCode = 200,
+            status = null,
+            signinSlt = null,
+            error = null,
+            errorDescription = null,
+            errorUri = null,
+            errorCodes = null,
+            innerErrors = null,
+        )
+
+        val apiResult = ssprPollCompletionApiResponse.toResult()
+        assertTrue(apiResult is SsprPollCompletionApiResult.PollingFailed)
+    }
+
+    @Test
+    fun testSignInInitiateResultWithRedirectChallenge() {
         val signInInitiateApiResponse = SignInInitiateApiResponse(
             statusCode = 200,
             challengeType = "redirect",

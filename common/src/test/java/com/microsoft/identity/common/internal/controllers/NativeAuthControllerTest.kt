@@ -1,3 +1,25 @@
+//  Copyright (c) Microsoft Corporation.
+//  All rights reserved.
+//
+//  This code is licensed under the MIT License.
+//
+//  Permission is hereby granted, free of charge, to any person obtaining a copy
+//  of this software and associated documentation files(the "Software"), to deal
+//  in the Software without restriction, including without limitation the rights
+//  to use, copy, modify, merge, publish, distribute, sublicense, and / or sell
+//  copies of the Software, and to permit persons to whom the Software is
+//  furnished to do so, subject to the following conditions :
+//
+//  The above copyright notice and this permission notice shall be included in
+//  all copies or substantial portions of the Software.
+//
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+//  THE SOFTWARE.
 package com.microsoft.identity.common.internal.controllers
 
 import android.content.Context
@@ -14,15 +36,25 @@ import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInR
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartWithPasswordCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitCodeCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SsprResendCodeCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SsprStartCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SsprSubmitCodeCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SsprSubmitNewPasswordCommandParameters
 import com.microsoft.identity.common.java.controllers.results.Complete
 import com.microsoft.identity.common.java.controllers.results.EmailVerificationRequired
 import com.microsoft.identity.common.java.controllers.results.IncorrectCode
 import com.microsoft.identity.common.java.controllers.results.PasswordIncorrect
+import com.microsoft.identity.common.java.controllers.results.PasswordRequired
+import com.microsoft.identity.common.java.controllers.results.PasswordResetFailed
+import com.microsoft.identity.common.java.controllers.results.Redirect
+import com.microsoft.identity.common.java.controllers.results.SsprComplete
+import com.microsoft.identity.common.java.controllers.results.SsprEmailVerificationRequired
 import com.microsoft.identity.common.java.controllers.results.UserNotFound
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents
 import com.microsoft.identity.common.java.request.SdkType
 import com.microsoft.identity.common.java.util.BrokerProtocolVersionUtil
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -35,8 +67,11 @@ import java.util.UUID
 class NativeAuthControllerTest {
     private val code = "12345"
     private val credentialToken = "sk490fj8a83n*@f-1"
+    private val passwordResetToken = "sk490fj8a83n*@f-2"
+    private val passwordSubmitToken = "sk490fj8a83n*@f-3"
     private val username = "user@email.com"
     private val password = "verySafePassword"
+    private val newPassword = "newPassword"
     private val clientId = "079af063-4ea7-4dcd-91ff-2b24f54621ea"
     private val authorityUrl = "https://msidlabciam1.ciamlogin.com/msidlabciam1.onmicrosoft.com"
 
@@ -53,6 +88,7 @@ class NativeAuthControllerTest {
         )
     }
 
+    // region Sign In
     @Test
     fun testSignInStartWithRopcSuccess() {
         MockApiUtils.configureMockApi(
@@ -188,6 +224,135 @@ class NativeAuthControllerTest {
         val result = controller.signInResendCode(parameters)
         assert(result is EmailVerificationRequired)
     }
+    //endregion
+
+    // region Sspr
+    @Test
+    fun testSsprStartSsprEmailVerificationRequired() {
+        val correlationId = UUID.randomUUID().toString()
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpointType.SSPRStart,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.SSPR_START_SUCCESS
+        )
+
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpointType.SSPRChallenge,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.CHALLENGE_TYPE_OOB
+        )
+
+        val parameters = createSsprStartCommandParameters()
+        val result = controller.ssprStart(parameters)
+        assert(result is SsprEmailVerificationRequired)
+    }
+
+    @Test
+    fun testSsprStartSsprRedirect() {
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpointType.SSPRStart,
+            correlationId = UUID.randomUUID().toString(),
+            responseType = MockApiResponseType.CHALLENGE_TYPE_REDIRECT
+        )
+
+        val parameters = createSsprStartCommandParameters()
+        val result = controller.ssprStart(parameters)
+        assert(result is Redirect)
+    }
+
+    @Test
+    @Ignore("TODO remove ignore when sspr start user not found implemented in mock api")
+    fun testSsprStartUserNotFound() {
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpointType.SSPRStart,
+            correlationId = UUID.randomUUID().toString(),
+            responseType = MockApiResponseType.USER_NOT_FOUND
+        )
+
+        val parameters = createSsprStartCommandParameters()
+        val result = controller.ssprStart(parameters)
+        assert(result is UserNotFound)
+    }
+
+    @Test
+    fun testSsprSubmitCodeWithSuccess() {
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpointType.SSPRContinue,
+            correlationId = UUID.randomUUID().toString(),
+            responseType = MockApiResponseType.SSPR_CONTINUE_SUCCESS
+        )
+
+        val parameters = createSsprSubmitCodeCommandParameters()
+        val result = controller.ssprSubmitCode(parameters)
+        assert(result is PasswordRequired)
+    }
+
+    @Test
+    fun testSsprSubmitCodeWithInvalidCode() {
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpointType.SSPRContinue,
+            correlationId = UUID.randomUUID().toString(),
+            responseType = MockApiResponseType.INVALID_OOB_VALUE
+        )
+
+        val parameters = createSsprSubmitCodeCommandParameters()
+        val result = controller.ssprSubmitCode(parameters)
+        assert(result is IncorrectCode)
+    }
+
+    @Test
+    fun testSsprResendCode() {
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpointType.SSPRChallenge,
+            correlationId = UUID.randomUUID().toString(),
+            responseType = MockApiResponseType.CHALLENGE_TYPE_OOB
+        )
+
+        val parameters = createSsprResendCodeCommandParameters()
+        val result = controller.ssprResendCode(parameters)
+        assert(result is SsprEmailVerificationRequired)
+    }
+
+    @Test
+    fun testSsprSubmitNewPasswordSuccess() {
+        val correlationId = UUID.randomUUID().toString()
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpointType.SSPRSubmit,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.SSPR_SUBMIT_SUCCESS
+        )
+
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpointType.SSPRPoll,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.SSPR_POLL_SUCCESS
+        )
+
+        val parameters = createSsprSubmitNewPasswordCommandParameters()
+        val result = controller.ssprSubmitNewPassword(parameters)
+        assert(result is SsprComplete)
+    }
+
+    @Test
+    fun testSsprSubmitNewPasswordFailed() {
+        val correlationId = UUID.randomUUID().toString()
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpointType.SSPRSubmit,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.SSPR_SUBMIT_SUCCESS
+        )
+
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpointType.SSPRPoll,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.SSPR_POLL_FAILED
+        )
+
+        val parameters = createSsprSubmitNewPasswordCommandParameters()
+        val result = controller.ssprSubmitNewPassword(parameters)
+        assert(result is PasswordResetFailed)
+    }
+    // endregion
 
     private fun createSignInStartWithPasswordCommandParameters(): SignInStartWithPasswordCommandParameters {
         val authenticationScheme = AuthenticationSchemeFactory.createScheme(
@@ -250,6 +415,56 @@ class NativeAuthControllerTest {
             .authority(NativeAuthCIAMAuthority.getAuthorityFromAuthorityUrl(authorityUrl, clientId))
             .clientId(clientId)
             .credentialToken(credentialToken)
+            .platformComponents(platformComponents)
+            .oAuth2TokenCache(createCache())
+            .sdkType(SdkType.MSAL)
+            .requiredBrokerProtocolVersion(BrokerProtocolVersionUtil.MSAL_TO_BROKER_PROTOCOL_COMPRESSION_CHANGES_MINIMUM_VERSION)
+            .build()
+    }
+
+    private fun createSsprStartCommandParameters(): SsprStartCommandParameters {
+        return SsprStartCommandParameters.builder()
+            .username(username)
+            .authority(NativeAuthCIAMAuthority.getAuthorityFromAuthorityUrl(authorityUrl, clientId))
+            .clientId(clientId)
+            .platformComponents(platformComponents)
+            .oAuth2TokenCache(createCache())
+            .sdkType(SdkType.MSAL)
+            .requiredBrokerProtocolVersion(BrokerProtocolVersionUtil.MSAL_TO_BROKER_PROTOCOL_COMPRESSION_CHANGES_MINIMUM_VERSION)
+            .build()
+    }
+
+    private fun createSsprSubmitCodeCommandParameters(): SsprSubmitCodeCommandParameters {
+        return SsprSubmitCodeCommandParameters.builder()
+            .code(code)
+            .passwordResetToken(passwordResetToken)
+            .authority(NativeAuthCIAMAuthority.getAuthorityFromAuthorityUrl(authorityUrl, clientId))
+            .clientId(clientId)
+            .platformComponents(platformComponents)
+            .oAuth2TokenCache(createCache())
+            .sdkType(SdkType.MSAL)
+            .requiredBrokerProtocolVersion(BrokerProtocolVersionUtil.MSAL_TO_BROKER_PROTOCOL_COMPRESSION_CHANGES_MINIMUM_VERSION)
+            .build()
+    }
+
+    private fun createSsprResendCodeCommandParameters(): SsprResendCodeCommandParameters {
+        return SsprResendCodeCommandParameters.builder()
+            .authority(NativeAuthCIAMAuthority.getAuthorityFromAuthorityUrl(authorityUrl, clientId))
+            .clientId(clientId)
+            .passwordResetToken(passwordResetToken)
+            .platformComponents(platformComponents)
+            .oAuth2TokenCache(createCache())
+            .sdkType(SdkType.MSAL)
+            .requiredBrokerProtocolVersion(BrokerProtocolVersionUtil.MSAL_TO_BROKER_PROTOCOL_COMPRESSION_CHANGES_MINIMUM_VERSION)
+            .build()
+    }
+
+    private fun createSsprSubmitNewPasswordCommandParameters(): SsprSubmitNewPasswordCommandParameters {
+        return SsprSubmitNewPasswordCommandParameters.builder()
+            .newPassword(newPassword)
+            .passwordSubmitToken(passwordSubmitToken)
+            .authority(NativeAuthCIAMAuthority.getAuthorityFromAuthorityUrl(authorityUrl, clientId))
+            .clientId(clientId)
             .platformComponents(platformComponents)
             .oAuth2TokenCache(createCache())
             .sdkType(SdkType.MSAL)

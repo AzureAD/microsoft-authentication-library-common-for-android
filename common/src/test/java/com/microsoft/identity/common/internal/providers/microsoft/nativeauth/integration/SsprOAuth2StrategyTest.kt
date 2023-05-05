@@ -1,12 +1,34 @@
+//  Copyright (c) Microsoft Corporation.
+//  All rights reserved.
+//
+//  This code is licensed under the MIT License.
+//
+//  Permission is hereby granted, free of charge, to any person obtaining a copy
+//  of this software and associated documentation files(the "Software"), to deal
+//  in the Software without restriction, including without limitation the rights
+//  to use, copy, modify, merge, publish, distribute, sublicense, and / or sell
+//  copies of the Software, and to permit persons to whom the Software is
+//  furnished to do so, subject to the following conditions :
+//
+//  The above copyright notice and this permission notice shall be included in
+//  all copies or substantial portions of the Software.
+//
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+//  THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft.nativeauth.integration
 
 import android.os.Build
 import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.MockApiEndpointType
 import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.MockApiResponseType
 import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.MockApiUtils.Companion.configureMockApi
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.SsprContinueCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SsprStartCommandParameters
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.SsprSubmitCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SsprSubmitCodeCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SsprSubmitNewPasswordCommandParameters
 import com.microsoft.identity.common.java.logging.DiagnosticContext
 import com.microsoft.identity.common.java.net.UrlConnectionHttpClient
 import com.microsoft.identity.common.java.providers.nativeauth.NativeAuthOAuth2Configuration
@@ -16,10 +38,11 @@ import com.microsoft.identity.common.java.providers.nativeauth.NativeAuthRespons
 import com.microsoft.identity.common.java.providers.nativeauth.interactors.SignInInteractor
 import com.microsoft.identity.common.java.providers.nativeauth.interactors.SignUpInteractor
 import com.microsoft.identity.common.java.providers.nativeauth.interactors.SsprInteractor
-import com.microsoft.identity.common.java.providers.nativeauth.responses.NativeAuthChallengeType
-import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.challenge.SsprChallengeErrorCodes
-import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.start.SsprStartErrorCodes
-import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.submit.SsprSubmitErrorCodes
+import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.SsprChallengeApiResult
+import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.SsprContinueApiResult
+import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.SsprPollCompletionApiResult
+import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.SsprStartApiResult
+import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.SsprSubmitApiResult
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters
 import io.mockk.every
 import io.mockk.mockk
@@ -125,7 +148,7 @@ class SsprOAuth2StrategyTest {
         val ssprStartResult = nativeAuthOAuth2Strategy.performSsprStart(
             mockSsprStartCommandParameters
         )
-        assertTrue(ssprStartResult.success)
+        assertTrue(ssprStartResult is SsprStartApiResult.Success)
     }
 
     @Test
@@ -139,11 +162,12 @@ class SsprOAuth2StrategyTest {
         val mockSsprStartCommandParameters = mockk<SsprStartCommandParameters>()
         every { mockSsprStartCommandParameters.getUsername() } returns username
 
-        val ssprResult = nativeAuthOAuth2Strategy.performSsprStart(
+        val ssprStartResult = nativeAuthOAuth2Strategy.performSsprStart(
             mockSsprStartCommandParameters
         )
-        assertFalse(ssprResult.success)
-        assertEquals(ssprResult.errorResponse!!.error, SsprStartErrorCodes.INVALID_CLIENT)
+        assertFalse(ssprStartResult is SsprStartApiResult.Success)
+        assertTrue(ssprStartResult is SsprStartApiResult.UnknownError)
+        assertEquals((ssprStartResult as SsprStartApiResult.UnknownError).errorCode, "invalid_client")
     }
 
     @Test
@@ -160,8 +184,9 @@ class SsprOAuth2StrategyTest {
         val ssprStartResult = nativeAuthOAuth2Strategy.performSsprStart(
             mockSsprStartCommandParameters
         )
-        assertFalse(ssprStartResult.success)
-        assertEquals(ssprStartResult.errorResponse!!.error, SsprStartErrorCodes.UNSUPPORTED_CHALLENGE_TYPE)
+        assertFalse(ssprStartResult is SsprStartApiResult.Success)
+        assertTrue(ssprStartResult is SsprStartApiResult.UnknownError)
+        assertEquals((ssprStartResult as SsprStartApiResult.UnknownError).errorCode, "unsupported_challenge_type")
     }
 
     @Test
@@ -178,8 +203,7 @@ class SsprOAuth2StrategyTest {
         val ssprStartResult = nativeAuthOAuth2Strategy.performSsprStart(
             mockSsprStartCommandParameters
         )
-        assertTrue(ssprStartResult.success)
-        assertEquals(ssprStartResult.successResponse!!.challengeType, NativeAuthChallengeType.REDIRECT)
+        assertTrue(ssprStartResult is SsprStartApiResult.Redirect)
     }
 
     /**
@@ -188,11 +212,12 @@ class SsprOAuth2StrategyTest {
      * Actual   :[user_not_found]
      */
     @Test
+    @Ignore("TODO remove ignore when sspr start user not found implemented in mock api")
     fun testPerformSsprStartUserNotFoundError() {
         configureMockApi(
             endpointType = MockApiEndpointType.SSPRStart,
             correlationId = UUID.randomUUID().toString(),
-            responseType = MockApiResponseType.EXPLICITLY_USER_NOT_FOUND
+            responseType = MockApiResponseType.USER_NOT_FOUND
         )
 
         val mockSsprStartCommandParameters = mockk<SsprStartCommandParameters>()
@@ -201,8 +226,9 @@ class SsprOAuth2StrategyTest {
         val ssprStartResult = nativeAuthOAuth2Strategy.performSsprStart(
             mockSsprStartCommandParameters
         )
-        assertFalse(ssprStartResult.success)
-        assertEquals(SsprStartErrorCodes.USER_NOT_FOUND, ssprStartResult.errorResponse!!.error)
+        assertFalse(ssprStartResult is SsprStartApiResult.Success)
+        assertTrue(ssprStartResult is SsprStartApiResult.UnknownError)
+        assertEquals((ssprStartResult as SsprStartApiResult.UnknownError).errorCode, "user_not_found")
     }
 
     /**
@@ -219,8 +245,7 @@ class SsprOAuth2StrategyTest {
         val ssprChallengeResult = nativeAuthOAuth2Strategy.performSsprChallenge(
             passwordResetToken = "1234"
         )
-        assertTrue(ssprChallengeResult.success)
-        assertEquals(ssprChallengeResult.successResponse!!.challengeType, NativeAuthChallengeType.OOB)
+        assertTrue(ssprChallengeResult is SsprChallengeApiResult.OOBRequired)
     }
 
     @Test
@@ -235,8 +260,9 @@ class SsprOAuth2StrategyTest {
             passwordResetToken = "1234"
         )
 
-        assertFalse(ssprChallengeResult.success)
-        assertEquals(ssprChallengeResult.errorResponse!!.error, SsprChallengeErrorCodes.EXPIRED_TOKEN)
+        assertFalse(ssprChallengeResult is SsprChallengeApiResult.OOBRequired)
+        assertTrue(ssprChallengeResult is SsprChallengeApiResult.UnknownError)
+        assertEquals((ssprChallengeResult as SsprChallengeApiResult.UnknownError).errorCode, "expired_token")
     }
 
     @Test
@@ -247,26 +273,27 @@ class SsprOAuth2StrategyTest {
             responseType = MockApiResponseType.SSPR_CONTINUE_SUCCESS
         )
 
-        val mockSsprContinueCommandParameters = mockk<SsprContinueCommandParameters>()
-        every { mockSsprContinueCommandParameters.getOobCode() } returns oobCode
+        val mockSsprSubmitCodeCommandParameters = mockk<SsprSubmitCodeCommandParameters>()
+        every { mockSsprSubmitCodeCommandParameters.getPasswordResetToken() } returns "1234"
+        every { mockSsprSubmitCodeCommandParameters.getCode() } returns oobCode
 
-        val ssprContinueResult = nativeAuthOAuth2Strategy.performSsprContinue(
-            passwordResetToken = "1234",
-            mockSsprContinueCommandParameters
+        val ssprContinueApiResult = nativeAuthOAuth2Strategy.performSsprContinue(
+            mockSsprSubmitCodeCommandParameters
         )
-        assertTrue(ssprContinueResult.success)
+
+        assertTrue(ssprContinueApiResult is SsprContinueApiResult.PasswordRequired)
     }
 
     @Test
     fun testPerformSsprSubmitSuccess() {
-        val mockSsprSubmitCommandParameters = mockk<SsprSubmitCommandParameters>()
+        val mockSsprSubmitCommandParameters = mockk<SsprSubmitNewPasswordCommandParameters>()
+        every { mockSsprSubmitCommandParameters.getPasswordSubmitToken() } returns "1234"
         every { mockSsprSubmitCommandParameters.getNewPassword() } returns password
 
         val ssprSubmitResult = nativeAuthOAuth2Strategy.performSsprSubmit(
-            passwordSubmitToken = "1234",
             mockSsprSubmitCommandParameters
         )
-        assertTrue(ssprSubmitResult.success)
+        assertTrue(ssprSubmitResult is SsprSubmitApiResult.SubmitSuccess)
     }
 
     @Test
@@ -277,23 +304,103 @@ class SsprOAuth2StrategyTest {
             responseType = MockApiResponseType.PASSWORD_TOO_WEAK
         )
 
-        val mockSsprSubmitCommandParameters = mockk<SsprSubmitCommandParameters>()
+        val mockSsprSubmitCommandParameters = mockk<SsprSubmitNewPasswordCommandParameters>()
+        every { mockSsprSubmitCommandParameters.getPasswordSubmitToken() } returns "1234"
         every { mockSsprSubmitCommandParameters.getNewPassword() } returns password
 
         val ssprSubmitResult = nativeAuthOAuth2Strategy.performSsprSubmit(
-            passwordSubmitToken = "1234",
             mockSsprSubmitCommandParameters
         )
-        assertFalse(ssprSubmitResult.success)
-        assertEquals(ssprSubmitResult.errorResponse!!.error, SsprSubmitErrorCodes.PASSWORD_TOO_WEAK)
+        assertFalse(ssprSubmitResult is SsprSubmitApiResult.SubmitSuccess)
+        assertTrue(ssprSubmitResult is SsprSubmitApiResult.PasswordInvalid)
+        assertEquals((ssprSubmitResult as SsprSubmitApiResult.PasswordInvalid).errorCode, "password_too_weak")
     }
 
     @Test
-    @Ignore
+    fun testPerformSsprSubmitPasswordTooShortError() {
+        configureMockApi(
+            endpointType = MockApiEndpointType.SSPRSubmit,
+            correlationId = UUID.randomUUID().toString(),
+            responseType = MockApiResponseType.PASSWORD_TOO_SHORT
+        )
+
+        val mockSsprSubmitCommandParameters = mockk<SsprSubmitNewPasswordCommandParameters>()
+        every { mockSsprSubmitCommandParameters.getPasswordSubmitToken() } returns "1234"
+        every { mockSsprSubmitCommandParameters.getNewPassword() } returns password
+
+        val ssprSubmitResult = nativeAuthOAuth2Strategy.performSsprSubmit(
+            mockSsprSubmitCommandParameters
+        )
+        assertFalse(ssprSubmitResult is SsprSubmitApiResult.SubmitSuccess)
+        assertTrue(ssprSubmitResult is SsprSubmitApiResult.PasswordInvalid)
+        assertEquals((ssprSubmitResult as SsprSubmitApiResult.PasswordInvalid).errorCode, "password_too_short")
+    }
+
+    @Test
+    fun testPerformSsprSubmitPasswordTooLongError() {
+        configureMockApi(
+            endpointType = MockApiEndpointType.SSPRSubmit,
+            correlationId = UUID.randomUUID().toString(),
+            responseType = MockApiResponseType.PASSWORD_TOO_LONG
+        )
+
+        val mockSsprSubmitCommandParameters = mockk<SsprSubmitNewPasswordCommandParameters>()
+        every { mockSsprSubmitCommandParameters.getPasswordSubmitToken() } returns "1234"
+        every { mockSsprSubmitCommandParameters.getNewPassword() } returns password
+
+        val ssprSubmitResult = nativeAuthOAuth2Strategy.performSsprSubmit(
+            mockSsprSubmitCommandParameters
+        )
+        assertFalse(ssprSubmitResult is SsprSubmitApiResult.SubmitSuccess)
+        assertTrue(ssprSubmitResult is SsprSubmitApiResult.PasswordInvalid)
+        assertEquals((ssprSubmitResult as SsprSubmitApiResult.PasswordInvalid).errorCode, "password_too_long")
+    }
+
+    @Test
+    fun testPerformSsprSubmitPasswordRecentlyUsedError() {
+        configureMockApi(
+            endpointType = MockApiEndpointType.SSPRSubmit,
+            correlationId = UUID.randomUUID().toString(),
+            responseType = MockApiResponseType.PASSWORD_RECENTLY_USED
+        )
+
+        val mockSsprSubmitCommandParameters = mockk<SsprSubmitNewPasswordCommandParameters>()
+        every { mockSsprSubmitCommandParameters.getPasswordSubmitToken() } returns "1234"
+        every { mockSsprSubmitCommandParameters.getNewPassword() } returns password
+
+        val ssprSubmitResult = nativeAuthOAuth2Strategy.performSsprSubmit(
+            mockSsprSubmitCommandParameters
+        )
+        assertFalse(ssprSubmitResult is SsprSubmitApiResult.SubmitSuccess)
+        assertTrue(ssprSubmitResult is SsprSubmitApiResult.PasswordInvalid)
+        assertEquals((ssprSubmitResult as SsprSubmitApiResult.PasswordInvalid).errorCode, "password_recently_used")
+    }
+
+    @Test
+    fun testPerformSsprSubmitPasswordBannedError() {
+        configureMockApi(
+            endpointType = MockApiEndpointType.SSPRSubmit,
+            correlationId = UUID.randomUUID().toString(),
+            responseType = MockApiResponseType.PASSWORD_BANNED
+        )
+
+        val mockSsprSubmitCommandParameters = mockk<SsprSubmitNewPasswordCommandParameters>()
+        every { mockSsprSubmitCommandParameters.getPasswordSubmitToken() } returns "1234"
+        every { mockSsprSubmitCommandParameters.getNewPassword() } returns password
+
+        val ssprSubmitResult = nativeAuthOAuth2Strategy.performSsprSubmit(
+            mockSsprSubmitCommandParameters
+        )
+        assertFalse(ssprSubmitResult is SsprSubmitApiResult.SubmitSuccess)
+        assertTrue(ssprSubmitResult is SsprSubmitApiResult.PasswordInvalid)
+        assertEquals((ssprSubmitResult as SsprSubmitApiResult.PasswordInvalid).errorCode, "password_banned")
+    }
+
+    @Test
     fun testPerformSsprPollCompletionSuccess() {
         val ssprPollCompletionResult = nativeAuthOAuth2Strategy.performSsprPollCompletion(
             passwordResetToken = "1234"
         )
-        assertTrue(ssprPollCompletionResult.success)
+        assertTrue(ssprPollCompletionResult is SsprPollCompletionApiResult.PollingSucceeded)
     }
 }
