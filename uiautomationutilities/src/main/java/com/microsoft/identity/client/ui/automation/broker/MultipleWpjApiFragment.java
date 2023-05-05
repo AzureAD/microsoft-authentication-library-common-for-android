@@ -43,7 +43,6 @@ import com.microsoft.identity.common.java.util.ThreadUtils;
 import org.junit.Assert;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -55,6 +54,10 @@ public class MultipleWpjApiFragment extends AbstractBrokerHost {
     private static final String GET_RECORD_BY_TENANT_BUTTON_ID = "button_mwpj_get_record_by_tenant";
     private static final String GET_RECORD_BY_UPN_BUTTON_ID = "button_mwpj_get_record_by_upn";
     private static final String UNREGISTER_BUTTON_ID = "button_mwpj_leave";
+    private static final String GET_DEVICE_STATE_BUTTON_ID = "button_mwpj_get_state";
+    private static final String GET_DEVICE_TOKEN_BUTTON_ID = "button_mwpj_get_device_token";
+    private static final String GET_BLOB_BUTTON_ID = "button_mwpj_get_blob";
+
 
     /**
      * This method launches the broker host app to a specified fragment.
@@ -67,7 +70,7 @@ public class MultipleWpjApiFragment extends AbstractBrokerHost {
     /**
      * Perform a device registration.
      */
-    void performDeviceRegistration(@NonNull final String username, @NonNull final String password, @NonNull final ITestBroker testBroker) {
+    String performDeviceRegistration(@NonNull final String username, @NonNull final String password, @NonNull final ITestBroker testBroker) {
         fillTextBox(USERNAME_EDIT_TEXT, username);
         clickButton(DEVICE_REGISTRATION_BUTTON_ID);
         final PromptHandlerParameters promptHandlerParameters = PromptHandlerParameters.builder()
@@ -81,14 +84,14 @@ public class MultipleWpjApiFragment extends AbstractBrokerHost {
                 .build();
         final AadPromptHandler aadPromptHandler = new AadPromptHandler(promptHandlerParameters);
         aadPromptHandler.handlePrompt(username, password);
-        dismissDialogBoxAndAssertContainsText("SUCCESS");
+        return dismissDialogBoxAndGetText();
     }
 
     /**
      * Install the certificate on the device.
      */
-    public void installCertificate(@NonNull final String tenantId) {
-        selectDeviceRegistrationRecord(tenantId);
+    public void installCertificate(@NonNull final String identifier) {
+        selectDeviceRegistrationRecord(identifier);
         clickButton(INSTALL_CERTIFICATE_BUTTON_ID);
         ThreadUtils.sleepSafely(3000, "Sleep failed", "Interrupted");
         final UiDevice device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
@@ -123,10 +126,9 @@ public class MultipleWpjApiFragment extends AbstractBrokerHost {
 
     public Map<String, String> recordStringToMap(@NonNull final String recordRaw) {
         final String[] recordProperties = recordRaw.split(System.lineSeparator());
-        Assert.assertEquals(
-                "Device registration record should have 4 lines",
-                4,
-                recordProperties.length
+        Assert.assertTrue(
+                "Device registration record should have 4 or 5 lines",
+                recordProperties.length == 4 || recordProperties.length == 5
         );
         Assert.assertTrue(
                 "Record should have a valid tenant id." + recordProperties[0],
@@ -144,6 +146,7 @@ public class MultipleWpjApiFragment extends AbstractBrokerHost {
                 "Record should have a shared status tag." + recordProperties[3],
                 recordProperties[3].trim().startsWith("isShared:")
         );
+        // The 5th line is the Account name of the device registration record, which is optional.
         final Map<String, String> deviceRegistrationRecord = new HashMap<>();
         deviceRegistrationRecord.put("TenantId", recordProperties[0].replace("TenantId:", "").trim());
         deviceRegistrationRecord.put("Upn", recordProperties[1].replace("Upn:", "").trim());
@@ -186,4 +189,21 @@ public class MultipleWpjApiFragment extends AbstractBrokerHost {
         dismissDialogBoxAndAssertContainsText("Removed");
     }
 
+    public String getDeviceState(@NonNull final String identifier) {
+        selectDeviceRegistrationRecord(identifier);
+        clickButton(GET_DEVICE_STATE_BUTTON_ID);
+        return dismissDialogBoxAndGetText();
+    }
+
+    public String getDeviceToken(@NonNull final String identifier) {
+        selectDeviceRegistrationRecord(identifier);
+        clickButton(GET_DEVICE_TOKEN_BUTTON_ID);
+        return dismissDialogBoxAndGetText();
+    }
+
+    public String getBlob(@NonNull final String tenantId) {
+        fillTextBox(TENANT_EDIT_TEXT, tenantId);
+        clickButton(GET_BLOB_BUTTON_ID);
+        return dismissDialogBoxAndGetText();
+    }
 }

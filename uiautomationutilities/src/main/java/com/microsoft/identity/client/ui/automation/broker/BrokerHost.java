@@ -37,6 +37,7 @@ import com.microsoft.identity.client.ui.automation.interaction.PromptHandlerPara
 import com.microsoft.identity.client.ui.automation.logging.Logger;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 import com.microsoft.identity.common.java.util.StringUtil;
+import com.microsoft.identity.common.java.util.ThreadUtils;
 
 import org.junit.Assert;
 
@@ -295,10 +296,18 @@ public class BrokerHost extends AbstractTestBroker {
         // this is a sufficient stopping point
     }
 
+    public String performDeviceRegistrationMultipleDontValidate(String username, String password) {
+        Logger.i(TAG, "Performing Device Registration for the given account..");
+        multipleWpjApiFragment.launch();
+        return multipleWpjApiFragment.performDeviceRegistration(username, password, this);
+    }
+
+
     public void performDeviceRegistrationMultiple(String username, String password) {
         Logger.i(TAG, "Performing Device Registration for the given account..");
         multipleWpjApiFragment.launch();
-        multipleWpjApiFragment.performDeviceRegistration(username, password, this);
+        final String successMessage = multipleWpjApiFragment.performDeviceRegistration(username, password, this);
+        Assert.assertTrue( successMessage.contains("SUCCESS"));
     }
 
     public void installCertificateMultiple(@NonNull final String tenantId) {
@@ -334,12 +343,40 @@ public class BrokerHost extends AbstractTestBroker {
     public void enableMultipleWpj() {
         Logger.i(TAG, "Enable Multiple WPJ..");
         brokerFlightsFragment.launch();
+        brokerFlightsFragment.selectLocalProvider();
         brokerFlightsFragment.setLocalFlight(FLIGHT_FOR_WORKPLACE_JOIN_CONTROLLER, "true");
+        ThreadUtils.sleepSafely(500, TAG, "Wait before force stop.");
+        forceStop();
+        ThreadUtils.sleepSafely(500, "TAG", "Wait before launch.");
+        launch();
     }
 
     public void disableMultipleWpj() {
         Logger.i(TAG, "Disable Multiple WPJ..");
         brokerFlightsFragment.launch();
+        brokerFlightsFragment.selectLocalProvider();
         brokerFlightsFragment.setLocalFlight(FLIGHT_FOR_WORKPLACE_JOIN_CONTROLLER, "false");
+        ThreadUtils.sleepSafely(500, TAG, "Wait before force stop.");
+        forceStop();
+        ThreadUtils.sleepSafely(500, TAG, "Wait before launch.");
+        launch();
+    }
+
+    public String getDeviceStateMultiple(@NonNull final String identifier) {
+        Logger.i(TAG, "Get Device State..");
+        multipleWpjApiFragment.launch();
+        return multipleWpjApiFragment.getDeviceState(identifier);
+    }
+
+    public String getBlobMultiple(@NonNull final String tenantId) {
+        Logger.i(TAG, "Get Blob..");
+        multipleWpjApiFragment.launch();
+        return multipleWpjApiFragment.getBlob(tenantId);
+    }
+
+    public String getDeviceTokenMultiple(@NonNull final String identifier) {
+        Logger.i(TAG, "Get Blob..");
+        multipleWpjApiFragment.launch();
+        return multipleWpjApiFragment.getDeviceToken(identifier);
     }
 }
