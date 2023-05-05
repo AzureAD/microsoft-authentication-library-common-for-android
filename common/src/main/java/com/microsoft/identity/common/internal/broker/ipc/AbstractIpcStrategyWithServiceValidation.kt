@@ -33,9 +33,10 @@ import com.microsoft.identity.common.logging.Logger
  * @param shouldBypassSupportValidation if set to true, will bypass [isSupportedByTargetedApp]
  *        expose for testing only.
  **/
-abstract class AbstractIpcStrategy(private val shouldBypassSupportValidation: Boolean = false): IIpcStrategy {
+abstract class AbstractIpcStrategyWithServiceValidation(
+    private val shouldBypassSupportValidation: Boolean = false): IIpcStrategy {
     companion object {
-        val TAG = AbstractIpcStrategy::class.simpleName
+        val TAG = AbstractIpcStrategyWithServiceValidation::class.simpleName
     }
 
     /**
@@ -46,7 +47,7 @@ abstract class AbstractIpcStrategy(private val shouldBypassSupportValidation: Bo
      * @return a response bundle (returned from the active broker).
      */
     @Throws(BrokerCommunicationException::class)
-    abstract fun communicateToBrokerInternal(bundle: BrokerOperationBundle): Bundle?
+    abstract fun communicateToBrokerAfterValidation(bundle: BrokerOperationBundle): Bundle?
 
     /**
      * Returns true if the target package name supports this strategy.
@@ -64,7 +65,7 @@ abstract class AbstractIpcStrategy(private val shouldBypassSupportValidation: Bo
             )
         }
 
-        return communicateToBrokerInternal(bundle)
+        return communicateToBrokerAfterValidation(bundle)
     }
 
 }

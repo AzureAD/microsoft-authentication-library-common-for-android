@@ -1,6 +1,5 @@
 package com.microsoft.identity.common.internal.broker.ipc;
 
-import android.content.Context;
 import android.os.Bundle;
 import android.os.IInterface;
 import android.os.RemoteException;
@@ -21,7 +20,7 @@ import static com.microsoft.identity.common.exception.BrokerCommunicationExcepti
 /**
  * A strategy for communicating with the targeted broker via Bound Service.
  */
-public class BoundServiceStrategy<T extends IInterface> extends AbstractIpcStrategy {
+public class BoundServiceStrategy<T extends IInterface> extends AbstractIpcStrategyWithServiceValidation {
     private static final String TAG = BoundServiceStrategy.class.getSimpleName();
 
     private final BoundServiceClient<T> mClient;
@@ -40,7 +39,7 @@ public class BoundServiceStrategy<T extends IInterface> extends AbstractIpcStrat
 
     @Override
     @Nullable
-    public Bundle communicateToBrokerInternal(final @NonNull BrokerOperationBundle brokerOperationBundle)
+    public Bundle communicateToBrokerAfterValidation(final @NonNull BrokerOperationBundle brokerOperationBundle)
             throws BrokerCommunicationException {
         final String methodTag = TAG + ":communicateToBroker";
         final String operationName = brokerOperationBundle.getOperation().name();

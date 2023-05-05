@@ -48,7 +48,7 @@ import java.util.List;
 /**
  * A strategy for communicating with the targeted broker via Content Provider.
  */
-public class ContentProviderStrategy extends AbstractIpcStrategy {
+public class ContentProviderStrategy extends AbstractIpcStrategyWithServiceValidation {
 
     private static final String TAG = ContentProviderStrategy.class.getName();
     private final Context mContext;
@@ -67,7 +67,7 @@ public class ContentProviderStrategy extends AbstractIpcStrategy {
 
     @Override
     @Nullable
-    public Bundle communicateToBrokerInternal(final @NonNull BrokerOperationBundle brokerOperationBundle)
+    public Bundle communicateToBrokerAfterValidation(final @NonNull BrokerOperationBundle brokerOperationBundle)
             throws BrokerCommunicationException {
         final String methodTag = TAG + ":communicateToBroker";
         final String operationName = brokerOperationBundle.getOperation().name();
