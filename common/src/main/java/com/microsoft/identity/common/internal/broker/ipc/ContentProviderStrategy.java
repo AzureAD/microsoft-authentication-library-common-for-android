@@ -37,6 +37,7 @@ import android.util.Base64;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 
 import com.microsoft.identity.common.exception.BrokerCommunicationException;
 import com.microsoft.identity.common.internal.util.ParcelableUtil;
@@ -53,6 +54,14 @@ public class ContentProviderStrategy extends AbstractIpcStrategy {
     private final Context mContext;
 
     public ContentProviderStrategy(final Context context) {
+        super(false);
+        mContext = context;
+    }
+
+    @VisibleForTesting
+    protected ContentProviderStrategy(final Context context,
+                                      final boolean shouldBypassSupportValidation) {
+        super(shouldBypassSupportValidation);
         mContext = context;
     }
 

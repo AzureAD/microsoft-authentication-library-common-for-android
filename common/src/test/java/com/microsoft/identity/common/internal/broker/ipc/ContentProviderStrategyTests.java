@@ -20,14 +20,13 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.internal.ipc;
+package com.microsoft.identity.common.internal.broker.ipc;
 
 import android.os.Build;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.microsoft.identity.common.internal.broker.ipc.ContentProviderStrategy;
-import com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy;
+import com.microsoft.identity.common.internal.ipc.IpcStrategyTests;
 import com.microsoft.identity.common.internal.ipc.mock.ShadowContentResolverConnectionFailed;
 import com.microsoft.identity.common.internal.ipc.mock.ShadowContentResolverWithSuccessResult;
 
@@ -49,8 +48,9 @@ import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationB
 @RunWith(RobolectricTestRunner.class)
 @Config(sdk = {Build.VERSION_CODES.N}, shadows = {ShadowContentResolverWithSuccessResult.class})
 public class ContentProviderStrategyTests extends IpcStrategyTests {
-    @Override IIpcStrategy getStrategy() {
-        return new ContentProviderStrategy(ApplicationProvider.getApplicationContext());
+    @Override
+    protected IIpcStrategy getStrategy() {
+        return new ContentProviderStrategy(ApplicationProvider.getApplicationContext(), true);
     }
 
     @Test

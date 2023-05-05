@@ -1,11 +1,13 @@
 package com.microsoft.identity.common.internal.broker.ipc;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.os.IInterface;
 import android.os.RemoteException;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 
 import com.microsoft.identity.common.exception.BrokerCommunicationException;
 import com.microsoft.identity.common.internal.broker.BoundServiceClient;
@@ -25,6 +27,14 @@ public class BoundServiceStrategy<T extends IInterface> extends AbstractIpcStrat
     private final BoundServiceClient<T> mClient;
 
     public BoundServiceStrategy(final @NonNull BoundServiceClient<T> boundServiceClient) {
+        super(false);
+        mClient = boundServiceClient;
+    }
+
+    @VisibleForTesting
+    protected BoundServiceStrategy(final @NonNull BoundServiceClient<T> boundServiceClient,
+                                   final boolean shouldBypassSupportValidation) {
+        super(shouldBypassSupportValidation);
         mClient = boundServiceClient;
     }
 

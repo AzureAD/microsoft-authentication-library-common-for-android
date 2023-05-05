@@ -29,8 +29,11 @@ import com.microsoft.identity.common.logging.Logger
 /**
  * Abstract class for [IIpcStrategy] classes,
  * will verify the state of the service before making an actual request.
+ *
+ * @param shouldBypassSupportValidation if set to true, will bypass [isSupportedByTargetedApp]
+ *        expose for testing only.
  **/
-abstract class AbstractIpcStrategy : IIpcStrategy {
+abstract class AbstractIpcStrategy(private val shouldBypassSupportValidation: Boolean = false): IIpcStrategy {
     companion object {
         val TAG = AbstractIpcStrategy::class.simpleName
     }
@@ -52,7 +55,7 @@ abstract class AbstractIpcStrategy : IIpcStrategy {
 
     override fun communicateToBroker(bundle: BrokerOperationBundle): Bundle? {
         val methodTag = "$TAG:communicateToBroker"
-        if (!isSupportedByTargetedApp(bundle.targetBrokerAppPackageName)) {
+        if (!shouldBypassSupportValidation && !isSupportedByTargetedApp(bundle.targetBrokerAppPackageName)) {
             val message = "Operation $type is not supported on ${bundle.targetBrokerAppPackageName}"
             Logger.info(methodTag, message)
             throw BrokerCommunicationException(

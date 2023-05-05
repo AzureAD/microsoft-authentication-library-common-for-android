@@ -20,7 +20,7 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.internal.ipc;
+package com.microsoft.identity.common.internal.broker.ipc;
 
 import android.os.Build;
 
@@ -29,6 +29,7 @@ import androidx.test.core.app.ApplicationProvider;
 import com.microsoft.identity.common.internal.broker.MicrosoftAuthClient;
 import com.microsoft.identity.common.internal.broker.ipc.BoundServiceStrategy;
 import com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy;
+import com.microsoft.identity.common.internal.ipc.IpcStrategyTests;
 import com.microsoft.identity.common.internal.ipc.mock.ShadowBoundServiceClientConnectionFailed;
 import com.microsoft.identity.common.internal.ipc.mock.ShadowBoundServiceClientWithLegacyBroker;
 import com.microsoft.identity.common.internal.ipc.mock.ShadowBoundServiceClientWithCurrentBroker;
@@ -52,8 +53,11 @@ import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationB
 @RunWith(RobolectricTestRunner.class)
 @Config(sdk = {Build.VERSION_CODES.N}, shadows = {ShadowBoundServiceClientWithSuccessResult.class})
 public class AccountManagerBoundServiceTests extends IpcStrategyTests {
-    @Override IIpcStrategy getStrategy() {
-        return new BoundServiceStrategy<>(new MicrosoftAuthClient(ApplicationProvider.getApplicationContext()));
+    @Override
+    protected IIpcStrategy getStrategy() {
+        return new BoundServiceStrategy<>(
+                new MicrosoftAuthClient(ApplicationProvider.getApplicationContext()),
+                true);
     }
 
     @Test
