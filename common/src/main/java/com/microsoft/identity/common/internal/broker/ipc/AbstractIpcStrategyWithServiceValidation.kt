@@ -47,7 +47,7 @@ abstract class AbstractIpcStrategyWithServiceValidation(
      * @return a response bundle (returned from the active broker).
      */
     @Throws(BrokerCommunicationException::class)
-    abstract fun communicateToBrokerAfterValidation(bundle: BrokerOperationBundle): Bundle?
+    protected abstract fun communicateToBrokerAfterValidation(bundle: BrokerOperationBundle): Bundle?
 
     /**
      * Returns true if the target package name supports this strategy.

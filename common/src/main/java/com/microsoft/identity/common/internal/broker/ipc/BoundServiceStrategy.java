@@ -39,7 +39,7 @@ public class BoundServiceStrategy<T extends IInterface> extends AbstractIpcStrat
 
     @Override
     @Nullable
-    public Bundle communicateToBrokerAfterValidation(final @NonNull BrokerOperationBundle brokerOperationBundle)
+    protected Bundle communicateToBrokerAfterValidation(final @NonNull BrokerOperationBundle brokerOperationBundle)
             throws BrokerCommunicationException {
         final String methodTag = TAG + ":communicateToBroker";
         final String operationName = brokerOperationBundle.getOperation().name();
