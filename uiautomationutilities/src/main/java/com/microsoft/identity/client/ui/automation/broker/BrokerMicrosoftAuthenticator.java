@@ -49,6 +49,7 @@ import com.microsoft.identity.client.ui.automation.interaction.PromptParameter;
 import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.AadPromptHandler;
 import com.microsoft.identity.client.ui.automation.logging.Logger;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
+import com.microsoft.identity.common.java.util.ThreadUtils;
 
 import org.junit.Assert;
 
@@ -110,6 +111,7 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
     @Override
     public void launch() {
         super.launch();
+        ThreadUtils.sleepSafely(1500, "Sleeping Safely", "Sleep Interrupted");
         handleAppLock();
     }
 
