@@ -20,22 +20,33 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.internal.commands;
+package com.microsoft.identity.common.internal.cache
 
-import androidx.annotation.NonNull;
+import com.microsoft.identity.common.internal.broker.BrokerData
+import net.jcip.annotations.ThreadSafe
 
-import com.microsoft.identity.common.java.commands.CommandCallback;
-
-import java.util.Date;
 
 /**
- * Extension of the CommandCallback class to allow Device Code Flow to display the user_code,
- * verification_uri, and message midway through the protocol. This is done through the
- * getUserCode() method shown below
+ * An interface for accessing cached [BrokerData].
+ * This interface must be thread-safe.
  */
-public interface DeviceCodeFlowCommandCallback<T, U> extends CommandCallback<T, U> {
-    void onUserCodeReceived(@NonNull String vUri,
-                            @NonNull String userCode,
-                            @NonNull String message,
-                            @NonNull final Date sessionExpirationDate);
+@ThreadSafe
+interface IActiveBrokerCache {
+
+    /**
+     * Gets the active broker from the cache.
+     */
+    fun getCachedActiveBroker(): BrokerData?
+
+    /**
+     * Persists the active broker to the cache.
+     *
+     * @param brokerData the active [BrokerData] to persist.
+     */
+    fun setCachedActiveBroker(brokerData: BrokerData)
+
+    /**
+     * Clears the active broker from the cache.
+     */
+    fun clearCachedActiveBroker()
 }

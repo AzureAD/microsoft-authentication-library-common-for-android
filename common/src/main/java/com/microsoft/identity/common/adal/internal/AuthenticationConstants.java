@@ -94,6 +94,7 @@ public final class AuthenticationConstants {
     public static final String FOUR_POINT_ZERO = "4.0";
 
 
+
     /**
      * Holding all the constant value involved in the webview.
      */
@@ -1157,6 +1158,11 @@ public final class AuthenticationConstants {
         public static final String CALLER_INFO_PACKAGE = "caller.info.package";
 
         /**
+         * String to return Broker DCF Auth Result.
+         */
+        public static final String BROKER_DCF_AUTH_RESULT = "broker_dcf_auth_result";
+
+        /**
          * String to send Msal V2 Request params.
          */
         public static final String BROKER_REQUEST_V2 = "broker_request_v2";
@@ -1392,6 +1398,10 @@ public final class AuthenticationConstants {
 
         public static final String ACQUIRE_TOKEN_SILENT = "ACQUIRE_TOKEN_SILENT";
 
+        public static final String FETCH_DCF_AUTH_RESULT = "FETCH_DCF_AUTH_RESULT";
+
+        public static final String ACQUIRE_TOKEN_DCF = "ACQUIRE_TOKEN_DCF";
+
         public static final String GET_INTENT_FOR_INTERACTIVE_REQUEST = "GET_INTENT_FOR_INTERACTIVE_REQUEST";
 
         public static final String REMOVE_ACCOUNT = "REMOVE_ACCOUNT";
@@ -1428,6 +1438,7 @@ public final class AuthenticationConstants {
         private static final String BROKER_VERSION_3 = THREE_POINT_ZERO;
         private static final String BROKER_VERSION_4 = FOUR_POINT_ZERO;
 
+
         /**
          * Tie the API paths and codes into a single object structure to stop us from having to keep
          * them in sync.  This is designed to pull all the parts of the API definition into a single
@@ -1456,7 +1467,9 @@ public final class AuthenticationConstants {
             GET_SSO_TOKEN(GET_SSO_TOKEN_PATH, null, VERSION_7),
             UNKNOWN(null, null, null),
             DEVICE_REGISTRATION_PROTOCOLS(DEVICE_REGISTRATION_PROTOCOLS_PATH, null, null),
-            BROKER_UPLOAD_LOGS(BROKER_API_UPLOAD_LOGS, BROKER_VERSION_4, null)
+            BROKER_UPLOAD_LOGS(BROKER_API_UPLOAD_LOGS, BROKER_VERSION_4, null),
+            FETCH_DCF_AUTH_RESULT(MSAL_FETCH_DCF_AUTH_RESULT_PATH, null, null),
+            ACQUIRE_TOKEN_DCF(MSAL_ACQUIRE_TOKEN_DCF_PATH, null, null)
             ;
             /**
              * The content provider path that the API exists behind.
@@ -1486,6 +1499,16 @@ public final class AuthenticationConstants {
          * URI Path constant for MSAL-to-Broker acquireTokenSilent request using ContentProvider.
          */
         public static final String MSAL_ACQUIRE_TOKEN_SILENT_PATH = "/acquireTokenSilent";
+
+        /**
+         * URI Path constant for MSAL-to-Broker fetchDCFAuthResult request using ContentProvider.
+         */
+        public static final String MSAL_FETCH_DCF_AUTH_RESULT_PATH = "/fetchDCFAuthResult";
+
+        /**
+         * URI Path constant for MSAL-to-Broker acquireTokenDCF request using ContentProvider.
+         */
+        public static final String MSAL_ACQUIRE_TOKEN_DCF_PATH = "/acquireTokenDCF";
 
         /**
          * URI Path constant for MSAL-to-Broker getAccounts request using ContentProvider.
