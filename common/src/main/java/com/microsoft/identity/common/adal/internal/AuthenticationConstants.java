@@ -1470,7 +1470,7 @@ public final class AuthenticationConstants {
             BROKER_UPLOAD_LOGS(BROKER_API_UPLOAD_LOGS, BROKER_VERSION_4, null),
             FETCH_DCF_AUTH_RESULT(MSAL_FETCH_DCF_AUTH_RESULT_PATH, null, null),
             ACQUIRE_TOKEN_DCF(MSAL_ACQUIRE_TOKEN_DCF_PATH, null, null),
-            BROKER_DISCOVERY_METADATA_RETRIEVAL(BROKER_DISCOVERY_METADATA_RETRIEVAL_PATH, null, null);
+            BROKER_DISCOVERY_METADATA_RETRIEVAL(RETRIEVE_BROKER_DISCOVERY_METADATA_PATH, null, null);
 
             /**
              * The content provider path that the API exists behind.
