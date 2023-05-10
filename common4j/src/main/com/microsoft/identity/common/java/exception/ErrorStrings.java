@@ -454,6 +454,12 @@ public final class ErrorStrings {
 
     /**
      * Device Code Flow only.
+     * Device Code Flow (DCF) is not supported in broker exception
+     */
+    public static final String DEVICE_CODE_FLOW_NOT_SUPPORTED = "dcf_not_supported";
+
+    /**
+     * Device Code Flow only.
      * Authorization has not been completed yet.
      */
     public final static String DEVICE_CODE_FLOW_AUTHORIZATION_PENDING_ERROR_CODE = "authorization_pending";

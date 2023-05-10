@@ -75,7 +75,9 @@ public class BrokerOperationBundle {
         BROKER_SET_FLIGHTS(API.BROKER_SET_FLIGHTS, null),
         MSAL_SSO_TOKEN(API.GET_SSO_TOKEN, null),
         DEVICE_REGISTRATION_OPERATIONS(API.DEVICE_REGISTRATION_PROTOCOLS, null),
-        BROKER_API_UPLOAD_LOGS(API.BROKER_UPLOAD_LOGS, null);
+        BROKER_API_UPLOAD_LOGS(API.BROKER_UPLOAD_LOGS, null),
+        MSAL_FETCH_DCF_AUTH_RESULT(API.FETCH_DCF_AUTH_RESULT, null),
+        MSAL_ACQUIRE_TOKEN_DCF(API.ACQUIRE_TOKEN_DCF, null);
         final API mContentApi;
         final String mAccountManagerOperation;
         Operation(API contentApi, String accountManagerOperation) {
