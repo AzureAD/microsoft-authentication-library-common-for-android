@@ -1576,7 +1576,7 @@ public final class AuthenticationConstants {
         /**
          * ContentProvider path for retrieving Broker Discovery Metadata.
          */
-        public static final String BROKER_DISCOVERY_METADATA_RETRIEVAL_PATH = "/brokerElection/brokerDiscoveryMetadataRetrieval";
+        public static final String RETRIEVE_BROKER_DISCOVERY_METADATA_PATH = "/brokerElection/brokerDiscoveryMetadataRetrieval";
 
         /**
          * Broker api path constant for adding flight information.
