@@ -91,7 +91,7 @@ public abstract class NameValueStorageFileManagerSimpleCacheImpl<T> implements I
 
         Logger.verbose(TAG + "::ctor", "Init");
         mComponents = components;
-        mStorage = components.getNameValueStore(name, String.class);
+        mStorage = components.getStorageSupplier().getUnencryptedNameValueStore(name, String.class);
         mKeySingleEntry = singleKey;
         mForceReinsertionOfDuplicates = forceReinsertionOfDuplicates;
     }
