@@ -47,7 +47,6 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -196,7 +195,7 @@ public class BrokerMsalController extends BaseController {
         sb.append("Broker Strategies added : ");
 
         final ContentProviderStrategy contentProviderStrategy = new ContentProviderStrategy(applicationContext);
-        if (contentProviderStrategy.isSupportedByTargetedApp(activeBrokerPackageName)) {
+        if (contentProviderStrategy.isSupportedByTargetedBroker(activeBrokerPackageName)) {
             sb.append("ContentProviderStrategy, ");
             strategies.add(contentProviderStrategy);
         }

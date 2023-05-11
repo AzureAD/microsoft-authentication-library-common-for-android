@@ -64,7 +64,7 @@ public class BoundServiceStrategy<T extends IInterface> extends AbstractIpcStrat
     }
 
     @Override
-    public boolean isSupportedByTargetedApp(@NonNull final String targetedBrokerPackageName) {
+    public boolean isSupportedByTargetedBroker(@NonNull final String targetedBrokerPackageName) {
         return mClient.isBoundServiceSupported(targetedBrokerPackageName);
     }
 }

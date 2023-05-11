@@ -150,8 +150,8 @@ public class ContentProviderStrategy extends AbstractIpcStrategyWithServiceValid
      * Returns true if the target package name supports this content provider strategy.
      */
     @Override
-    public boolean isSupportedByTargetedApp(final @NonNull String targetedBrokerPackageName) {
-        final String methodTag = TAG + ":isBrokerContentProviderAvailable";
+    public boolean isSupportedByTargetedBroker(final @NonNull String targetedBrokerPackageName) {
+        final String methodTag = TAG + ":isSupportedByTargetedBroker";
         final String contentProviderAuthority = getContentProviderAuthority(targetedBrokerPackageName);
 
         final List<ProviderInfo> providers = mContext.getPackageManager()
