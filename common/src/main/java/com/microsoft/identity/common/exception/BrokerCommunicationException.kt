@@ -54,9 +54,13 @@ class BrokerCommunicationException(
     }
 
     override val message: String
+        // BaseException would try to emit telemetry event in its constructor.
+        // At that point... variables here are not yet initialized..
         get() = String.format(
             "[%s] [%s] :%s",
-            category.toString() ?: "", strategyType.toString() ?: "", super.message
+            category?.toString(),
+            strategyType?.toString(),
+            super.message
         )
 
     override fun isCacheable(): Boolean {
