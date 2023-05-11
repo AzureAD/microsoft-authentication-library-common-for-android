@@ -43,9 +43,9 @@ class AndroidStorageSupplier(private val context: Context,
                                           storageEncryptionManager: StorageEncryptionManager?): INameValueStorage<T> {
             val mgr: IMultiTypeNameValueStorage =
                 SharedPreferencesFileManager.getSharedPreferences(context, storeName, storageEncryptionManager)
-            if (Long::class.java.isAssignableFrom(clazz)) {
+            if (Long::class.java.isAssignableFrom(clazz)|| java.lang.Long::class.java.isAssignableFrom(clazz)) {
                 return (SharedPreferenceLongStorage(mgr) as INameValueStorage<T>)
-            } else if (String::class.java.isAssignableFrom(clazz)) {
+            } else if (String::class.java.isAssignableFrom(clazz)|| java.lang.String::class.java.isAssignableFrom(clazz)) {
                 return (SharedPrefStringNameValueStorage(mgr) as INameValueStorage<T>)
             }
 
