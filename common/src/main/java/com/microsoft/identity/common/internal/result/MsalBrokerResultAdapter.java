@@ -77,6 +77,7 @@ import com.microsoft.identity.common.java.result.ILocalAuthenticationResult;
 import com.microsoft.identity.common.java.result.LocalAuthenticationResult;
 import com.microsoft.identity.common.java.util.BrokerProtocolVersionUtil;
 import com.microsoft.identity.common.java.util.HeaderSerializationUtil;
+import com.microsoft.identity.common.java.util.SchemaUtil;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.util.ObjectMapper;
 import com.microsoft.identity.common.logging.Logger;
@@ -148,6 +149,10 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                 .servicedFromCache(authenticationResult.isServicedFromCache())
                 .build();
 
+        Logger.info(methodTag, authenticationResult.getCorrelationId(), "idToken in broker result: " + brokerResult.getIdToken());
+        if (!StringUtil.isNullOrEmpty(brokerResult.getIdToken())) {
+            Logger.info(methodTag, authenticationResult.getCorrelationId(), "deviceid in idToken in broker result: " + SchemaUtil.getDeviceIdFromIdToken(brokerResult.getIdToken()));
+        }
         final Bundle resultBundle = bundleFromBrokerResult(brokerResult, negotiatedBrokerProtocolVersion);
         resultBundle.putBoolean(AuthenticationConstants.Broker.BROKER_REQUEST_V2_SUCCESS, true);
 

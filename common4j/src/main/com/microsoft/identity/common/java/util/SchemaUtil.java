@@ -281,4 +281,23 @@ public final class SchemaUtil {
             return MISSING_FROM_THE_TOKEN_RESPONSE;
         }
     }
+
+    /**
+     * Utility function to retrieve deviceid from IdToken.
+     *
+     * @param rawIdToken Raw IdToken
+     * @return email extracted from IdToken Claims
+     */
+    @Nullable
+    public static String getDeviceIdFromIdToken(@NonNull final String rawIdToken) {
+        final String methodTag = TAG + ":getDeviceIdFromIdToken";
+        try {
+            final IDToken idToken = new IDToken(rawIdToken);
+            return idToken.getStringClaim("deviceid");
+        } catch (final ServiceException | IllegalArgumentException e) {
+            Logger.error(methodTag,
+                    "Failed to create ID Token from raw id token", e);
+            return null;
+        }
+    }
 }
