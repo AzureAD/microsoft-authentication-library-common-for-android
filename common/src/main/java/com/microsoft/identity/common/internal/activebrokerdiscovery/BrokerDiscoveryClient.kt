@@ -134,7 +134,8 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
         ipcStrategy = ContentProviderStrategy(context),
         cache = ActiveBrokerCache.getBrokerMetadataStoreOnSdkSide(components.storageSupplier),
         isPackageInstalled = { brokerData ->
-            PackageHelper.isPackageInstalledAndEnabled(context, brokerData.packageName)
+            PackageHelper(context.packageManager).
+                isPackageInstalledAndEnabled(context, brokerData.packageName)
         })
 
     override fun getActiveBroker(shouldSkipCache: Boolean): BrokerData? {
