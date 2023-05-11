@@ -1,5 +1,6 @@
 V.NEXT
 ----------
+- [MINOR] Add BrokerDiscoveryClient + Tests (#2039)
 - [MAJOR] Consolidate IStorageSupplier logic (#2033)
 - [MINOR] Add active broker cache (#2030)
 - [MINOR] make getCurrentActiveBrokerPackageName case insensitive and trims the authenticator type (#2026)
