@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.ui.webview.certbasedauth;
 
 import android.app.Activity;
 import android.os.Build;
+import android.webkit.WebView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -33,18 +34,20 @@ import androidx.annotation.VisibleForTesting;
 import com.microsoft.identity.common.java.opentelemetry.CertBasedAuthChoice;
 import com.microsoft.identity.common.java.opentelemetry.CertBasedAuthTelemetryHelper;
 import com.microsoft.identity.common.java.opentelemetry.ICertBasedAuthTelemetryHelper;
+import com.microsoft.identity.common.logging.Logger;
 
 /**
  * Instantiates handlers for certificate based authentication.
  */
 public class CertBasedAuthFactory {
-
+    private static final String TAG = CertBasedAuthFactory.class.getSimpleName();
     private static final String USER_CANCEL_MESSAGE = "User canceled smartcard CBA flow.";
     private static final String NON_APPLICABLE = "N/A";
     private final Activity mActivity;
     private final AbstractUsbSmartcardCertBasedAuthManager mUsbSmartcardCertBasedAuthManager;
     private final AbstractNfcSmartcardCertBasedAuthManager mNfcSmartcardCertBasedAuthManager;
     private final IDialogHolder mDialogHolder;
+    private boolean wasCertBasedAuthInitiated;
 
     /**
      * Creates an instance of CertBasedAuthFactory.
@@ -56,6 +59,7 @@ public class CertBasedAuthFactory {
         mUsbSmartcardCertBasedAuthManager = SmartcardCertBasedAuthManagerFactory.createUsbSmartcardCertBasedAuthManager(mActivity.getApplicationContext());
         mNfcSmartcardCertBasedAuthManager = SmartcardCertBasedAuthManagerFactory.createNfcSmartcardCertBasedAuthManager(mActivity.getApplicationContext());
         mDialogHolder = new DialogHolder(mActivity);
+        wasCertBasedAuthInitiated = false;
         if (mUsbSmartcardCertBasedAuthManager != null) {
             //Connection and disconnection callbacks for discovery are set in the SmartcardCertBasedAuthChallengeHandlers.
             mUsbSmartcardCertBasedAuthManager.startDiscovery(activity);
@@ -78,6 +82,7 @@ public class CertBasedAuthFactory {
         mUsbSmartcardCertBasedAuthManager = usbManager;
         mNfcSmartcardCertBasedAuthManager = nfcManager;
         mDialogHolder = dialogHolder;
+        wasCertBasedAuthInitiated = false;
     }
 
     /**
@@ -89,9 +94,10 @@ public class CertBasedAuthFactory {
         telemetryHelper.setUserChoice(CertBasedAuthChoice.NON_APPLICABLE);
         telemetryHelper.setCertBasedAuthChallengeHandler(NON_APPLICABLE);
         telemetryHelper.setPublicKeyAlgoType(NON_APPLICABLE);
+        wasCertBasedAuthInitiated = true;
 
         if (mUsbSmartcardCertBasedAuthManager != null
-            && mUsbSmartcardCertBasedAuthManager.isDeviceConnected()) {
+                && mUsbSmartcardCertBasedAuthManager.isDeviceConnected()) {
             telemetryHelper.setUserChoice(CertBasedAuthChoice.SMARTCARD_CHOICE);
             callback.onReceived(new UsbSmartcardCertBasedAuthChallengeHandler(
                     mActivity,
@@ -170,7 +176,7 @@ public class CertBasedAuthFactory {
                 public void onDismiss() {
                     //If smartcard is already plugged in, go straight to cert picker.
                     if (mUsbSmartcardCertBasedAuthManager != null
-                    && mUsbSmartcardCertBasedAuthManager.isDeviceConnected()) {
+                            && mUsbSmartcardCertBasedAuthManager.isDeviceConnected()) {
                         callback.onReceived(new UsbSmartcardCertBasedAuthChallengeHandler(
                                 mActivity,
                                 mUsbSmartcardCertBasedAuthManager,
@@ -255,11 +261,23 @@ public class CertBasedAuthFactory {
      * Cleanup to be done when host activity is being destroyed.
      */
     public void onDestroy() {
+        final String methodTag = TAG + ":onDestroy";
+
         if (mUsbSmartcardCertBasedAuthManager != null) {
             mUsbSmartcardCertBasedAuthManager.onDestroy(mActivity);
         }
         if (mNfcSmartcardCertBasedAuthManager != null) {
             mNfcSmartcardCertBasedAuthManager.onDestroy(mActivity);
+        }
+        if (wasCertBasedAuthInitiated) {
+            //For CBA, we need to clear the certificate choice cache here so that
+            // the user will be able to login with multiple accounts with CBA
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                WebView.clearClientCertPreferences(null);
+            } else {
+                Logger.warn(methodTag, "Client Cert Preferences cache not cleared due to SDK version < 21 (LOLLIPOP). " +
+                        "Subsequent CBA attempts will fail due to the cached action, so the user must restart the app before attempting to login with CBA again.");
+            }
         }
     }
 
