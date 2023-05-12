@@ -23,7 +23,6 @@
 package com.microsoft.identity.common.java.interfaces;
 
 import com.microsoft.identity.common.java.WarningType;
-import com.microsoft.identity.common.java.crypto.IKeyAccessor;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.providers.oauth2.IStateGenerator;
 import com.microsoft.identity.common.java.strategies.IAuthorizationStrategyFactory;
@@ -40,13 +39,7 @@ import lombok.NonNull;
  * TODO: make getPopManagerLoader() and getStorageLoader() part of this interface.
  *       will do that in a separate PR to minimize PR size.
  */
-public interface IPlatformComponents extends IPopManagerSupplier, IStorageSupplier {
-
-    /**
-     * Get an encryption manager for storage layer.
-     */
-    @NonNull
-    IKeyAccessor getStorageEncryptionManager();
+public interface IPlatformComponents extends IPopManagerSupplier {
 
     /**
      * Gets clock skew manager.
@@ -90,4 +83,7 @@ public interface IPlatformComponents extends IPopManagerSupplier, IStorageSuppli
      * */
     @NonNull
     IHttpClientWrapper getHttpClientWrapper();
+
+    @NonNull
+    IStorageSupplier getStorageSupplier();
 }
