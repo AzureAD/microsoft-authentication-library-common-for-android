@@ -1,5 +1,6 @@
 V.NEXT
 ----------
+- [MAJOR] Consolidate IStorageSupplier logic (#2033)
 - [MINOR] Add active broker cache (#2030)
 - [MAJOR] Added support for DeviceCodeFlow with device id claims
 
