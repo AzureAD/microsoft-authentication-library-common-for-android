@@ -323,7 +323,6 @@ class BrokerDiscoveryClientTests {
                         }
                         lock.unlock()
 
-
                         if (bundle.targetBrokerAppPackageName == prodMicrosoftAuthenticator.packageName ||
                             bundle.targetBrokerAppPackageName == prodCompanyPortal.packageName) {
                             val returnBundle = Bundle()

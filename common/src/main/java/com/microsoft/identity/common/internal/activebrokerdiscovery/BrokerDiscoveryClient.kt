@@ -195,5 +195,4 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
             lock.unlock()
         }
     }
-
 }
