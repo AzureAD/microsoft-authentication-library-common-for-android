@@ -45,7 +45,7 @@ import static com.microsoft.identity.common.exception.BrokerCommunicationExcepti
  */
 public abstract class IpcStrategyTests {
 
-    abstract IIpcStrategy getStrategy();
+    protected abstract IIpcStrategy getStrategy();
 
     @Test
     public abstract void testMsalHello();
