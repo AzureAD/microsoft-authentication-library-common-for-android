@@ -28,10 +28,13 @@ import com.microsoft.identity.common.internal.broker.BrokerData.Companion.prodCo
 import com.microsoft.identity.common.internal.broker.BrokerData.Companion.prodMicrosoftAuthenticator
 import com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle
 import com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import java.util.concurrent.locks.ReentrantLock
 
 @RunWith(RobolectricTestRunner::class)
 class BrokerDiscoveryClientTests {
@@ -289,5 +292,86 @@ class BrokerDiscoveryClientTests {
 
         Assert.assertEquals(prodCompanyPortal, client.getActiveBroker(shouldSkipCache = true))
         Assert.assertEquals(prodCompanyPortal, cache.getCachedActiveBroker())
+    }
+
+    /**
+     * Create 3 clients. Try to make concurrent request.
+     * Only 1 IPC call should be made.
+     **/
+    @Test
+    fun testRaceCondition(){
+        val cache = InMemoryActiveBrokerCache()
+        val lock = ReentrantLock()
+        var count = 0
+
+        fun getClient(): IBrokerDiscoveryClient {
+            return BrokerDiscoveryClient(
+                brokerCandidates = setOf(
+                    prodMicrosoftAuthenticator, prodCompanyPortal
+                ),
+                getActiveBrokerFromAccountManager = {
+                    throw IllegalStateException()
+                },
+                ipcStrategy = object : IIpcStrategy {
+                    override fun communicateToBroker(bundle: BrokerOperationBundle): Bundle {
+                        lock.lock()
+                        count++
+                        if (count == 2) {
+                            // Throw an exception if this is being invoked twice.
+                            // The value should be read from cache.
+                            throw IllegalStateException()
+                        }
+                        lock.unlock()
+
+
+                        if (bundle.targetBrokerAppPackageName == prodMicrosoftAuthenticator.packageName ||
+                            bundle.targetBrokerAppPackageName == prodCompanyPortal.packageName) {
+                            val returnBundle = Bundle()
+                            returnBundle.putString(
+                                BrokerDiscoveryClient.ACTIVE_BROKER_PACKAGE_NAME_BUNDLE_KEY,
+                                prodCompanyPortal.packageName
+                            )
+                            returnBundle.putString(
+                                BrokerDiscoveryClient.ACTIVE_BROKER_SIGNATURE_HASH_BUNDLE_KEY,
+                                prodCompanyPortal.signatureHash
+                            )
+                            return returnBundle
+                        }
+
+                        throw IllegalStateException()
+                    }
+                    override fun getType(): IIpcStrategy.Type {
+                        return IIpcStrategy.Type.CONTENT_PROVIDER
+                    }
+                },
+                cache = cache,
+                isPackageInstalled =  {
+                    it == prodMicrosoftAuthenticator || it == prodCompanyPortal
+                },
+                lock = lock
+            )
+        }
+
+        val client1 = getClient()
+        val client2 = getClient()
+        val client3 = getClient()
+
+        runBlocking {
+            launch {
+                Assert.assertEquals(prodCompanyPortal, client1.getActiveBroker(shouldSkipCache = true))
+                Assert.assertEquals(prodCompanyPortal, client2.getActiveBroker(shouldSkipCache = true))
+                Assert.assertEquals(prodCompanyPortal, client3.getActiveBroker(shouldSkipCache = true))
+            }
+            launch {
+                Assert.assertEquals(prodCompanyPortal, client2.getActiveBroker(shouldSkipCache = true))
+                Assert.assertEquals(prodCompanyPortal, client1.getActiveBroker(shouldSkipCache = true))
+                Assert.assertEquals(prodCompanyPortal, client3.getActiveBroker(shouldSkipCache = true))
+            }
+            launch {
+                Assert.assertEquals(prodCompanyPortal, client3.getActiveBroker(shouldSkipCache = true))
+                Assert.assertEquals(prodCompanyPortal, client1.getActiveBroker(shouldSkipCache = true))
+                Assert.assertEquals(prodCompanyPortal, client2.getActiveBroker(shouldSkipCache = true))
+            }
+        }
     }
 }
