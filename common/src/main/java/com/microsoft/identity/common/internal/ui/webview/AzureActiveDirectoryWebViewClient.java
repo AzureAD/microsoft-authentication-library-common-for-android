@@ -262,15 +262,14 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         if (url.contains(AuthenticationConstants.Broker.BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER)) {
             Logger.info(methodTag, "This is a device CA request.");
             final PackageHelper packageHelper = new PackageHelper(getActivity().getPackageManager());
-            final Context applicationContext = getActivity().getApplicationContext();
 
             // If CP is installed, redirect to CP.
             // TODO: Until we get a signal from eSTS that CP is the MDM app, we cannot assume that.
             //       CP is currently working on this.
             //       Until that comes, we'll only handle this in ipphone.
-            if (packageHelper.isPackageInstalledAndEnabled(applicationContext, IPPHONE_APP_PACKAGE_NAME) &&
+            if (packageHelper.isPackageInstalledAndEnabled(IPPHONE_APP_PACKAGE_NAME) &&
                     IPPHONE_APP_SIGNATURE.equals(packageHelper.getCurrentSignatureForPackage(IPPHONE_APP_PACKAGE_NAME)) &&
-                    packageHelper.isPackageInstalledAndEnabled(applicationContext, COMPANY_PORTAL_APP_PACKAGE_NAME)) {
+                    packageHelper.isPackageInstalledAndEnabled(COMPANY_PORTAL_APP_PACKAGE_NAME)) {
                 try {
                     launchCompanyPortal();
                     return;

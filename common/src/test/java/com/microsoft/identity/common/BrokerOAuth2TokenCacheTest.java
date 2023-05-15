@@ -75,7 +75,6 @@ import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.Micro
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2TokenCache;
-import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings;
 import com.microsoft.identity.common.shadows.ShadowAndroidSdkStorageEncryptionManager;
 
 import org.junit.After;
@@ -297,16 +296,14 @@ public class BrokerOAuth2TokenCacheTest {
 
     private INameValueStorage<String> getAppUidFileManager(final IPlatformComponents components,
                                                            final int appUid) {
-        return components.getEncryptedNameValueStore(
+        return components.getStorageSupplier().getEncryptedNameValueStore(
                 getBrokerUidSequesteredFilename(appUid),
-                components.getStorageEncryptionManager(),
                 String.class);
     }
 
     private INameValueStorage<String> getFociFileManager(final IPlatformComponents components) {
-        return components.getEncryptedNameValueStore(
+        return components.getStorageSupplier().getEncryptedNameValueStore(
                 BROKER_FOCI_ACCOUNT_CREDENTIAL_SHARED_PREFERENCES,
-                components.getStorageEncryptionManager(),
                 String.class
         );
     }
