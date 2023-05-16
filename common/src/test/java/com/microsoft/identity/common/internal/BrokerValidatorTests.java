@@ -30,6 +30,7 @@ import android.accounts.AccountManager;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.microsoft.identity.common.internal.broker.BrokerData;
 import com.microsoft.identity.common.internal.broker.BrokerValidator;
 import com.microsoft.identity.common.java.exception.ClientException;
 
