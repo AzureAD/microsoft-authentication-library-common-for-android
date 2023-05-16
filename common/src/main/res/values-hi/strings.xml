@@ -32,6 +32,10 @@
     <string name="smartcard_no_cert_dialog_title">कोई लागू होने लायक प्रमाण पत्र नहीं मिले.</string>
     <string name="smartcard_no_cert_dialog_message">पुष्टि करें कि आपके प्रमाणपत्र का आपके स्मार्टकार्ड डिवाइस पर सही तरीके से प्रावधान किया गया है.</string>
 
+    <string name="smartcard_nfc_diff_connected_title">आप एक समय में केवल एक स्मार्ट कार्ड का उपयोग कर सकते हैं</string>
+    <string name="smartcard_nfc_diff_connected_message">उस स्मार्ट कार्ड का उपयोग करें, जिससे आपने मूल रूप से साइन इन किया था.</string>
+    <string name="smartcard_nfc_diff_connected_positive_button">समझ गया</string>
+
     <string name="smartcard_general_error_dialog_title">बाद में फिर से कोशिश करें</string>
     <string name="smartcard_general_error_dialog_message">एक अनपेक्षित त्रुटि हुई है. कृपया बाद में पुनः प्रयास करें.</string>
 

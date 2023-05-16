@@ -32,6 +32,10 @@
     <string name="smartcard_no_cert_dialog_title">Aucun certificat applicable trouvé.</string>
     <string name="smartcard_no_cert_dialog_message">Vérifiez que votre certificat a été correctement configuré sur votre périphérique de carte à puce.</string>
 
+    <string name="smartcard_nfc_diff_connected_title">Vous ne pouvez utiliser qu’une seule carte à puce à la fois</string>
+    <string name="smartcard_nfc_diff_connected_message">Utilisez la carte à puce avec laquelle vous vous êtes connecté à l’origine.</string>
+    <string name="smartcard_nfc_diff_connected_positive_button">OK</string>
+
     <string name="smartcard_general_error_dialog_title">Réessayez ultérieurement</string>
     <string name="smartcard_general_error_dialog_message">Une erreur inattendue s’est produite. Réessayez plus tard.</string>
 

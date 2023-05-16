@@ -65,6 +65,11 @@ import com.microsoft.identity.common.java.exception.ServiceException;
 import com.microsoft.identity.common.java.exception.UiRequiredException;
 import com.microsoft.identity.common.java.exception.UnsupportedBrokerException;
 import com.microsoft.identity.common.java.exception.UserCancelException;
+import com.microsoft.identity.common.java.opentelemetry.AttributeName;
+import com.microsoft.identity.common.java.opentelemetry.OTelUtility;
+import com.microsoft.identity.common.java.opentelemetry.SpanName;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResult;
+import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.java.request.SdkType;
 import com.microsoft.identity.common.java.result.AcquireTokenResult;
 import com.microsoft.identity.common.java.result.GenerateShrResult;
@@ -73,12 +78,17 @@ import com.microsoft.identity.common.java.result.LocalAuthenticationResult;
 import com.microsoft.identity.common.java.util.BrokerProtocolVersionUtil;
 import com.microsoft.identity.common.java.util.HeaderSerializationUtil;
 import com.microsoft.identity.common.java.util.StringUtil;
+import com.microsoft.identity.common.java.util.ObjectMapper;
 import com.microsoft.identity.common.logging.Logger;
 
 import org.json.JSONException;
 
 import java.io.IOException;
 import java.util.List;
+
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.context.Scope;
 
 /**
  * For Broker: constructs result bundle.
@@ -88,6 +98,8 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
 
     private static final String TAG = MsalBrokerResultAdapter.class.getSimpleName();
     public static final Gson GSON = new Gson();
+
+    private static final String DCF_NOT_SUPPORTED_ERROR = "deviceCodeFlowAuthRequest() not supported in BrokerMsalController";
 
     @NonNull
     @Override
@@ -610,8 +622,77 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         return resultBundle;
     }
 
+    /**
+     * Get authorizationResult from resultBundle for Device Code Flow
+     * @param resultBundle The bundle to interpret
+     * @return authorizationResult {@link AuthorizationResult}
+     * @throws BaseException
+     * @throws ClientException
+     */
     @NonNull
-    public AcquireTokenResult getAcquireTokenResultFromResultBundle(@NonNull final Bundle resultBundle) throws BaseException {
+    public AuthorizationResult getDeviceCodeFlowAuthResultFromResultBundle(@NonNull final Bundle resultBundle) throws BaseException, ClientException {
+        final String serializedDCFAuthResult = resultBundle.getString(AuthenticationConstants.Broker.BROKER_DCF_AUTH_RESULT);
+        if (serializedDCFAuthResult != null) {
+            final AuthorizationResult authorizationResult = ObjectMapper.deserializeJsonStringToObject(serializedDCFAuthResult, MicrosoftStsAuthorizationResult.class);
+            return authorizationResult;
+        }
+
+        // DCF not supported - thrown when BrokerFlight.ENABLE_DCF_IN_BROKER is false
+        BrokerResult brokerResult = brokerResultFromBundle(resultBundle);
+        if (brokerResult.getErrorCode() != null && brokerResult.getErrorCode().equals(ErrorStrings.DEVICE_CODE_FLOW_NOT_SUPPORTED)) {
+            Logger.error(TAG, DCF_NOT_SUPPORTED_ERROR, new ClientException(ErrorStrings.DEVICE_CODE_FLOW_NOT_SUPPORTED, DCF_NOT_SUPPORTED_ERROR));
+            throw new ClientException(ErrorStrings.DEVICE_CODE_FLOW_NOT_SUPPORTED, DCF_NOT_SUPPORTED_ERROR);
+        }
+
+        throw getBaseExceptionFromBundle(resultBundle);
+    }
+
+    /**
+     * Get acquireTokenResult from resultBundle for Device Code Flow
+     * @param resultBundle The bundle to interpret
+     * @return acquireTokenResult {@link AcquireTokenResult}
+     * @throws BaseException
+     * @throws ClientException
+     */
+    public AcquireTokenResult getDeviceCodeFlowTokenResultFromResultBundle(@NonNull final Bundle resultBundle) throws BaseException, ClientException {
+
+        BrokerResult brokerResult = brokerResultFromBundle(resultBundle);
+        final Span span = OTelUtility.createSpan(SpanName.AcquireTokenDcfFetchToken.name());
+
+        span.setAttribute(AttributeName.correlation_id.name(), brokerResult.getCorrelationId());
+        span.setAttribute(AttributeName.public_api_id.name(), brokerResult.getClientId());
+
+        try (final Scope scope = span.makeCurrent()) {
+            // DCF not supported - thrown when BrokerFlight.ENABLE_DCF_IN_BROKER is false
+            if (brokerResult.getErrorCode() != null && brokerResult.getErrorCode().equals(ErrorStrings.DEVICE_CODE_FLOW_NOT_SUPPORTED)) {
+                span.setStatus(StatusCode.ERROR, "acquireDeviceCodeFlowToken() not supported in BrokerMsalController");
+                Logger.error(TAG, "acquireDeviceCodeFlowToken() not supported in BrokerMsalController", new ClientException(ErrorStrings.DEVICE_CODE_FLOW_NOT_SUPPORTED, DCF_NOT_SUPPORTED_ERROR));
+                throw new ClientException(ErrorStrings.DEVICE_CODE_FLOW_NOT_SUPPORTED, "acquireDeviceCodeFlowToken() not supported in BrokerMsalController");
+            }
+
+            if (resultBundle.getBoolean(AuthenticationConstants.Broker.BROKER_REQUEST_V2_SUCCESS)) {
+                final AcquireTokenResult acquireTokenResult = new AcquireTokenResult();
+                acquireTokenResult.setLocalAuthenticationResult(authenticationResultFromBundle(resultBundle));
+                span.setStatus(StatusCode.OK);
+                return acquireTokenResult;
+            } else if (brokerResult.getErrorCode().equals(ErrorStrings.DEVICE_CODE_FLOW_AUTHORIZATION_PENDING_ERROR_CODE)) {
+                span.setStatus(StatusCode.OK, "authorization_pending response");
+                return null;
+            }
+
+            throw getBaseExceptionFromBundle(resultBundle);
+
+        } catch (final Throwable throwable) {
+            span.setStatus(StatusCode.ERROR);
+            span.recordException(throwable);
+            throw throwable;
+        } finally {
+            span.end();
+        }
+    }
+
+    public @NonNull
+    AcquireTokenResult getAcquireTokenResultFromResultBundle(@NonNull final Bundle resultBundle) throws BaseException {
         final MsalBrokerResultAdapter resultAdapter = new MsalBrokerResultAdapter();
         if (resultBundle.getBoolean(AuthenticationConstants.Broker.BROKER_REQUEST_V2_SUCCESS)) {
             final AcquireTokenResult acquireTokenResult = new AcquireTokenResult();

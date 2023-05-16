@@ -34,6 +34,9 @@ public interface IIpcStrategy {
     /**
      * Communicates with the target broker.
      *
+     * NOTE: If the operation is not supported, a {@link BrokerCommunicationException}
+     * {@link BrokerCommunicationException.Category#OPERATION_NOT_SUPPORTED_ON_SERVER_SIDE} will be thrown.
+     *
      * @param bundle a {@link BrokerOperationBundle} object.
      * @return a response bundle (returned from the active broker).
      */

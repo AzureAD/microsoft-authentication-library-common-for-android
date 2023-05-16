@@ -64,7 +64,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.NonNull;
@@ -155,9 +157,8 @@ public class MsalOAuth2TokenCache
         // Init the new-schema cache
         final ICacheKeyValueDelegate cacheKeyValueDelegate = new CacheKeyValueDelegate();
         final INameValueStorage<String> sharedPreferencesFileManager =
-                components.getEncryptedNameValueStore(
+                components.getStorageSupplier().getEncryptedNameValueStore(
                         SharedPreferencesAccountCredentialCache.DEFAULT_ACCOUNT_CREDENTIAL_SHARED_PREFERENCES,
-                        components.getStorageEncryptionManager(),
                         String.class
                 );
         final IAccountCredentialCache accountCredentialCache;
@@ -1769,16 +1770,20 @@ public class MsalOAuth2TokenCache
         return result;
     }
 
+    /**
+     * Normalizes scope values (converts to lower case)
+     * and returns as set.
+     */
     private Set<String> scopesAsSet(final AccessTokenRecord token) {
-        final Set<String> scopeSet = new HashSet<>();
         final String scopeString = token.getTarget();
-
         if (!StringUtil.isNullOrEmpty(scopeString)) {
             final String[] scopeArray = scopeString.split("\\s+");
-            scopeSet.addAll(Arrays.asList(scopeArray));
+            return Arrays.stream(scopeArray)
+                    .map(s -> s.toLowerCase(Locale.US))
+                    .collect(Collectors.toSet());
         }
 
-        return scopeSet;
+        return new HashSet<>();
     }
 
     private static boolean isSchemaCompliant(final Class<?> clazz, final String[][] params) {

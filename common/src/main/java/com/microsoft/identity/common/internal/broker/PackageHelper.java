@@ -50,7 +50,7 @@ import java.security.NoSuchAlgorithmException;
 public class PackageHelper {
     private static final String TAG = "CallerInfo";
 
-    private PackageManager mPackageManager;
+    private final PackageManager mPackageManager;
 
     /**
      * Creates helper to check caller info.
@@ -59,6 +59,15 @@ public class PackageHelper {
      */
     public PackageHelper(final PackageManager packageManager) {
         mPackageManager = packageManager;
+    }
+
+    /**
+     * Creates helper to check caller info.
+     *
+     * @param context The android Context
+     */
+    public PackageHelper(final Context context) {
+        mPackageManager = context.getPackageManager();
     }
 
     /**
@@ -145,12 +154,11 @@ public class PackageHelper {
      * @param packageName the package name to look up.
      * @return true if the package is installed and enabled. Otherwise, returns false.
      */
-    public boolean isPackageInstalledAndEnabled(final Context context, final String packageName) {
+    public boolean isPackageInstalledAndEnabled(final String packageName) {
         final String methodTag = TAG + ":isPackageInstalledAndEnabled";
         boolean enabled = false;
-        PackageManager pm = context.getPackageManager();
         try {
-            ApplicationInfo applicationInfo = pm.getApplicationInfo(packageName, 0);
+            ApplicationInfo applicationInfo = mPackageManager.getApplicationInfo(packageName, 0);
             if (applicationInfo != null) {
                 enabled = applicationInfo.enabled;
             }

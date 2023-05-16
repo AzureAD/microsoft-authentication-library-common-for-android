@@ -20,22 +20,19 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.internal.commands;
+package com.microsoft.identity.common.internal.activebrokerdiscovery
 
-import androidx.annotation.NonNull;
+import com.microsoft.identity.common.internal.broker.BrokerData
 
-import com.microsoft.identity.common.java.commands.CommandCallback;
+interface IBrokerDiscoveryClient {
 
-import java.util.Date;
-
-/**
- * Extension of the CommandCallback class to allow Device Code Flow to display the user_code,
- * verification_uri, and message midway through the protocol. This is done through the
- * getUserCode() method shown below
- */
-public interface DeviceCodeFlowCommandCallback<T, U> extends CommandCallback<T, U> {
-    void onUserCodeReceived(@NonNull String vUri,
-                            @NonNull String userCode,
-                            @NonNull String message,
-                            @NonNull final Date sessionExpirationDate);
+    /**
+     * Performs a discovery to figure out which broker app the SDK (MSAL/OneAuth)
+     * has to send its request to.
+     *
+     * @param shouldSkipCache If true, this will skip cached value (if any)
+     *                        and always query the broker for the result.
+     * @return BrokerData package name and signature hash of the targeted app.
+     * **/
+    fun getActiveBroker(shouldSkipCache: Boolean = false) : BrokerData?
 }

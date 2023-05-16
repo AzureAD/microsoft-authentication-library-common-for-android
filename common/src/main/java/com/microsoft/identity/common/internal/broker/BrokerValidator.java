@@ -28,7 +28,6 @@ import static com.microsoft.identity.common.java.exception.ClientException.BROKE
 import static com.microsoft.identity.common.java.exception.ClientException.NOT_VALID_BROKER_FOUND;
 import static com.microsoft.identity.common.java.exception.ClientException.NO_SUCH_ALGORITHM;
 import static com.microsoft.identity.common.java.exception.ErrorStrings.APP_PACKAGE_NAME_NOT_FOUND;
-import static com.microsoft.identity.common.java.exception.ErrorStrings.BROKER_VERIFICATION_FAILED;
 
 import android.accounts.AccountManager;
 import android.accounts.AuthenticatorDescription;
@@ -144,11 +143,9 @@ public class BrokerValidator {
      * @return a Set of {@link BrokerData}
      */
     public Set<BrokerData> getValidBrokers() {
-        final Set<BrokerData> validBrokers = sShouldTrustDebugBrokers
+        return sShouldTrustDebugBrokers
                 ? BrokerData.getAllBrokers()
                 : BrokerData.getProdBrokers();
-
-        return validBrokers;
     }
 
     /**
@@ -171,7 +168,7 @@ public class BrokerValidator {
 
             @Override
             public String next() {
-                return itr.next().signatureHash;
+                return itr.next().getSignatureHash();
             }
         };
     }
@@ -186,7 +183,7 @@ public class BrokerValidator {
         final Set<BrokerData> validBrokers = getValidBrokers();
 
         for (final BrokerData brokerData : validBrokers) {
-            if (brokerData.packageName.equals(packageName) && verifySignature(packageName)) {
+            if (brokerData.getPackageName().equals(packageName) && verifySignature(packageName)) {
                 return true;
             }
         }
@@ -213,40 +210,10 @@ public class BrokerValidator {
      * <p>
      * In such case, this method will return null.
      *
-     * @return PackageName of the broker, or null if it cannot be obtained.
-     */
-    @Nullable
-    public String getCurrentActiveBrokerPackageName() {
-        final String methodTag = TAG + ":getCurrentActiveBrokerPackageName";
-        try {
-            final AuthenticatorDescription[] authenticators = AccountManager.get(mContext).getAuthenticatorTypes();
-            for (AuthenticatorDescription authenticator : authenticators) {
-                if (authenticator.type.equals(BROKER_ACCOUNT_TYPE)) {
-                    return authenticator.packageName;
-                }
-            }
-        } catch (Exception e) {
-            Logger.warn(methodTag, "Failed to query Active Broker package name" + e.getMessage());
-            return null;
-        }
-        return null;
-    }
-
-    /**
-     * Determines which app is the broker based on having the work account registration in Account Manager.
-     * <p>
-     * Known issue: When we're in an AccountManager callback (Especially on older Android devices, i.e. Android 10)
-     * Android For Work throws a SecurityException when we're calling AccountManager.getAuthenticatorTypes()
-     * i.e. E.g. Company Portal main process can call this freely, broker process can call this freely, but once running in AccountManager,
-     * on the work profile (user != 0), apparently sometimes it tries to get accounts from user 0 (personal profile) and fails.
-     * <p>
-     * In such case, this method will return null.
-     *
      * @return PackageName of the broker
      */
     @NonNull
-    // TODO: Consolidate getCurrentActiveBrokerPackageName and getValidActiveBrokerPackageName into one.
-    public String getValidActiveBrokerPackageName() throws ClientException {
+    public String getCurrentActiveBrokerPackageName() throws ClientException {
         final String methodTag = TAG + ":getValidActiveBrokerPackageName";
 
         final AuthenticatorDescription[] authenticators;
@@ -260,10 +227,10 @@ public class BrokerValidator {
 
         final int numberOfAuthenticators = authenticators.length;
         Logger.info(methodTag, numberOfAuthenticators + " Authenticators registered.");
-        for (final AuthenticatorDescription authenticator : authenticators) {
+        for (AuthenticatorDescription authenticator : authenticators) {
             // TODO: remove or change to verbose once we're confident this is working.
             Logger.info(methodTag, "Authenticator: " + authenticator.packageName + ",  type: " + authenticator.type );
-            if (BROKER_ACCOUNT_TYPE.equals(authenticator.type)) {
+            if (BROKER_ACCOUNT_TYPE.equalsIgnoreCase(authenticator.type.trim())) {
                 Logger.info(methodTag, "Verify: " + authenticator.packageName);
                 verifySignatureAndThrow(authenticator.packageName);
                 return authenticator.packageName;
@@ -286,8 +253,8 @@ public class BrokerValidator {
             final PackageHelper info = new PackageHelper(context.getPackageManager());
             //For merely verifying that the app is AuthApp, use a 512 hash.
             final String signatureDigest = info.getCurrentSignatureForPackage(packageName, true);
-            if (BrokerData.MICROSOFT_AUTHENTICATOR_PROD.signatureHash.equals(signatureDigest)
-                    || BrokerData.MICROSOFT_AUTHENTICATOR_DEBUG.signatureHash.equals(signatureDigest)) {
+            if (BrokerData.getProdMicrosoftAuthenticator().getSignatureHash().equals(signatureDigest)
+                    || BrokerData.getDebugMicrosoftAuthenticator().getSignatureHash().equals(signatureDigest)) {
                 // If the caller is the Authenticator, check if the redirect uri matches with either
                 // the one generated with package name and signature or broker redirect uri.
                 isValidBrokerRedirect |= StringUtil.equalsIgnoreCase(redirectUri, AuthenticationConstants.Broker.BROKER_REDIRECT_URI);

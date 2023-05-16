@@ -55,7 +55,7 @@ public class ProcessUtil {
         final Set<BrokerData> validBrokers = brokerValidator.getValidBrokers();
 
         for (final BrokerData brokerData : validBrokers) {
-            final String authProcess = brokerData.packageName + ":auth";
+            final String authProcess = brokerData.getPackageName() + ":auth";
             if (authProcess.equalsIgnoreCase(processName)) {
                 return true;
             }

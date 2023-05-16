@@ -361,7 +361,12 @@ public class MicrosoftStsAccountCredentialAdapter
         accessTokenRecord.setApplicationIdentifier(parameters.getApplicationIdentifier());
         accessTokenRecord.setSecret(tokenResponse.getAccessToken());
         accessTokenRecord.setAccessTokenType(tokenResponse.getTokenType());
-        accessTokenRecord.setTarget(StringUtil.join(" ", parameters.getScopes()));
+        accessTokenRecord.setTarget(
+                this.getTarget(
+                        StringUtil.join(" ", parameters.getScopes()),
+                        tokenResponse.getScope()
+                )
+        );
         setCredentialEnvironment(accessTokenRecord, parameters.getAuthority(), tokenResponse, methodTag);
 
         if (tokenResponse.getExpiresIn() != null) {
@@ -400,7 +405,12 @@ public class MicrosoftStsAccountCredentialAdapter
 
         // Optional
         refreshToken.setFamilyId(tokenResponse.getFamilyId());
-        refreshToken.setTarget(StringUtil.join(" ", parameters.getScopes()));
+        refreshToken.setTarget(
+                this.getTarget(
+                        StringUtil.join(" ", parameters.getScopes()),
+                        tokenResponse.getScope()
+                )
+        );
         refreshToken.setCachedAt(
                 String.valueOf(TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()))
         );

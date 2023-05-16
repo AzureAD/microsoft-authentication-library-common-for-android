@@ -37,22 +37,26 @@ public class SmartcardErrorDialog extends SmartcardDialog {
 
     private final int mTitleStringResourceId;
     private final int mMessageStringResourceId;
+    private final int mDismissButtonStringResourceId;
     private final IDismissCallback mDismissCallback;
 
     /**
      * Create new instance of SmartcardErrorDialog.
      * @param titleStringResourceId String resource id for text to be displayed as the title in dialog.
      * @param messageStringResourceId String resource id for text to be displayed as the message in dialog.
+     * @param dismissButtonStringResourceId String resource id for text to be displayed in the dismiss/positive button.
      * @param dismissCallback Implemented callback for when dialog is to be dismissed (positive button click or back button).
      * @param activity Host activity.
      */
     public SmartcardErrorDialog(final int titleStringResourceId,
                                 final int messageStringResourceId,
+                                final int dismissButtonStringResourceId,
                                 @NonNull final IDismissCallback dismissCallback,
                                 @NonNull final Activity activity) {
         super(activity);
         mTitleStringResourceId = titleStringResourceId;
         mMessageStringResourceId = messageStringResourceId;
+        mDismissButtonStringResourceId = dismissButtonStringResourceId;
         mDismissCallback = dismissCallback;
         createDialog();
     }
@@ -71,7 +75,7 @@ public class SmartcardErrorDialog extends SmartcardDialog {
                         //Sets subtext of the title.
                         .setMessage(mMessageStringResourceId)
                         //In most cases, will set local dialog variable to null.
-                        .setPositiveButton(R.string.smartcard_error_dialog_positive_button, new DialogInterface.OnClickListener() {
+                        .setPositiveButton(mDismissButtonStringResourceId, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
                                 mDismissCallback.onDismiss();

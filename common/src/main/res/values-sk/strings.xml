@@ -32,6 +32,10 @@
     <string name="smartcard_no_cert_dialog_title">Nenašli sa žiadne použiteľné certifikáty.</string>
     <string name="smartcard_no_cert_dialog_message">Potvrďte, že certifikát bol správne poskytnutý v zariadení s inteligentnou kartou.</string>
 
+    <string name="smartcard_nfc_diff_connected_title">Naraz môžete používať len jednu inteligentnú kartu</string>
+    <string name="smartcard_nfc_diff_connected_message">Použite inteligentnú kartu, pomocou ktorej ste sa pôvodne prihlásili</string>
+    <string name="smartcard_nfc_diff_connected_positive_button">Rozumiem</string>
+
     <string name="smartcard_general_error_dialog_title">Skúste to znova neskôr</string>
     <string name="smartcard_general_error_dialog_message">Vyskytla sa neočakávaná chyba. Skúste to znova neskôr.</string>
 

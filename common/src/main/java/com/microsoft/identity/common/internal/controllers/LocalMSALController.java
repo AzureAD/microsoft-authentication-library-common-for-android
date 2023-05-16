@@ -591,7 +591,7 @@ public class LocalMSALController extends BaseController {
             // Call method defined in oAuth2Strategy to request authorization
             authorizationResult = oAuth2Strategy.getDeviceCode((MicrosoftStsAuthorizationRequest) mAuthorizationRequest);
 
-            validateServiceResult(authorizationResult);
+            validateDeviceCodeFlowServiceResult(authorizationResult);
 
         } catch (Exception error) {
             Telemetry.emit(
@@ -696,7 +696,7 @@ public class LocalMSALController extends BaseController {
             }
 
             // Validate request success, may throw MsalServiceException
-            validateServiceResult(tokenResult);
+            validateDeviceCodeFlowServiceResult(tokenResult);
 
             // Assign token result
             acquireTokenResult.setTokenResult(tokenResult);
@@ -788,51 +788,5 @@ public class LocalMSALController extends BaseController {
      */
     private boolean authorizationPending(@NonNull final String errorCode) {
         return errorCode.equals(ErrorStrings.DEVICE_CODE_FLOW_AUTHORIZATION_PENDING_ERROR_CODE);
-    }
-
-    /**
-     * Helper method to check if a result object is valid (was a success). If not, an exception will be generated and thrown.
-     * This method is called in both parts of the DCF protocol.
-     *
-     * @param result result object to be checked
-     * @throws ServiceException MsalServiceException object reflecting error code returned by the result
-     */
-    private void validateServiceResult(@NonNull final IResult result) throws ServiceException {
-        // If result was unsuccessful, create an exception
-        if (!result.getSuccess()) {
-            // Create ServiceException object
-            // Based on error code, fetch the error message
-            final String errorCode = result.getErrorResponse().getError();
-            final String errorMessage;
-
-            // Check response code against pre-defined error codes
-            switch (errorCode) {
-                case ErrorStrings.DEVICE_CODE_FLOW_AUTHORIZATION_DECLINED_ERROR_CODE:
-                    errorMessage = ErrorStrings.DEVICE_CODE_FLOW_AUTHORIZATION_DECLINED_ERROR_MESSAGE;
-                    break;
-                case ErrorStrings.DEVICE_CODE_FLOW_EXPIRED_TOKEN_ERROR_CODE:
-                    errorMessage = ErrorStrings.DEVICE_CODE_FLOW_EXPIRED_TOKEN_ERROR_MESSAGE;
-                    break;
-                case ErrorStrings.DEVICE_CODE_FLOW_BAD_VERIFICATION_ERROR_CODE:
-                    errorMessage = ErrorStrings.DEVICE_CODE_FLOW_BAD_VERIFICATION_ERROR_MESSAGE;
-                    break;
-                case OAuth2ErrorCode.INVALID_GRANT:
-                    errorMessage = ErrorStrings.DEVICE_CODE_FLOW_INVALID_GRANT_ERROR_MESSAGE;
-                    break;
-                case ErrorStrings.INVALID_SCOPE:
-                    errorMessage = ErrorStrings.DEVICE_CODE_FLOW_INVALID_SCOPE_ERROR_MESSAGE;
-                    break;
-                default:
-                    errorMessage = ErrorStrings.DEVICE_CODE_FLOW_DEFAULT_ERROR_MESSAGE;
-            }
-
-            // Create a ServiceException object and throw it
-            throw new ServiceException(
-                    errorCode,
-                    errorMessage,
-                    ServiceException.DEFAULT_STATUS_CODE,
-                    null
-            );
-        }
     }
 }
