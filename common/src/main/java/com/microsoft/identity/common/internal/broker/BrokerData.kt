@@ -23,16 +23,18 @@
 package com.microsoft.identity.common.internal.broker
 
 import android.content.Context
+import com.microsoft.identity.common.BuildConfig
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants
-import com.microsoft.identity.common.java.exception.ClientException
-import lombok.ToString
+import com.microsoft.identity.common.internal.activebrokerdiscovery.AccountManagerBrokerDiscoveryUtil
+import com.microsoft.identity.common.internal.util.PackageUtils
+import com.microsoft.identity.common.java.logging.Logger
+import java.security.cert.X509Certificate
 import java.util.*
 
 /**
  * Represents Package Name and Signature Hash (hash of the app's signing certificate)
  * of a broker app.
  */
-@ToString
 data class BrokerData(val packageName : String,
                       val signatureHash : String) {
 
@@ -52,7 +54,58 @@ data class BrokerData(val packageName : String,
         return result
     }
 
+    override fun toString(): String {
+        return "$packageName::$signatureHash"
+    }
+
     companion object {
+        val TAG = BrokerData::class.simpleName
+
+        /**
+         * Determines if the debug brokers should be trusted or not.
+         * This should only be set to true only during testing.
+         */
+        val sShouldTrustDebugBrokers = BuildConfig.DEBUG
+
+        /**
+         * Returns the list of known broker apps (which SDK should make requests to).
+         * see [sShouldTrustDebugBrokers] for more info regarding testing.
+         **/
+        fun getKnownBrokerApps() : Set<BrokerData> {
+            return if (sShouldTrustDebugBrokers) allBrokers else prodBrokers
+        }
+
+        /**
+         * Validate that the installed counterpart of the given [BrokerData] is signed by known keys.
+         * @return true if the validation succeeds. False otherwise.
+         **/
+        fun isSignedByKnownKeys(brokerData: BrokerData, context: Context): Boolean {
+            val methodTag = "$TAG:isSignedByKnownKeys"
+            return try {
+                // Read all the certificates associated with the package name. In higher version of
+                // android sdk, package manager will only returned the cert that is used to sign the
+                // APK. Even a cert is claimed to be issued by another certificates, sdk will return
+                // the signing cert. However, for the lower version of android, it will return all the
+                // certs in the chain. We need to verify that the cert chain is correctly chained up.
+                val certs: List<X509Certificate> =
+                    PackageUtils.readCertDataForApp(brokerData.packageName, context)
+
+                // Verify the cert list contains the cert we trust.
+                PackageUtils.verifySignatureHash(certs, setOf(brokerData.signatureHash).iterator())
+
+                // Perform the certificate chain validation. If there is only one cert returned,
+                // no need to perform certificate chain validation.
+                if (certs.size > 1) {
+                    PackageUtils.verifyCertificateChain(certs)
+                }
+
+                true
+            } catch (t: Throwable) {
+                Logger.error(methodTag, "Failed to validate broker app $this", t)
+                return false
+            }
+        }
+
         @JvmStatic
         val debugMicrosoftAuthenticator = BrokerData(
             AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME,

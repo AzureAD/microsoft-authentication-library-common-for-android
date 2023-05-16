@@ -86,8 +86,7 @@ public final class PackageUtils {
      * @throws GeneralSecurityException if there was a problem with accessing apis.
      */
     @SuppressLint("PackageManagerGetSignatures")
-    @SuppressWarnings("deprecation")
-    public static final List<X509Certificate> readCertDataForApp(final String packageName,
+    public static List<X509Certificate> readCertDataForApp(final String packageName,
                                                            final Context context)
             throws PackageManager.NameNotFoundException, ClientException, IOException,
             GeneralSecurityException {
@@ -195,7 +194,7 @@ public final class PackageUtils {
      * @throws GeneralSecurityException if we aren't allowed to access certificates.
      * @throws ClientException if any number other than 1 self signed certificate is found.
      */
-    public static final void verifyCertificateChain(final List<X509Certificate> certificates)
+    public static void verifyCertificateChain(final List<X509Certificate> certificates)
             throws GeneralSecurityException, ClientException {
         // create certificate chain, find the self signed cert first and chain all the way back
         // to the signer cert. Also perform certificate signing validation when chaining them back.
