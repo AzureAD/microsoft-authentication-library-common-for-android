@@ -57,6 +57,7 @@ import com.microsoft.identity.common.internal.broker.BrokerActivity;
 import com.microsoft.identity.common.internal.broker.BrokerResult;
 import com.microsoft.identity.common.internal.broker.BrokerValidator;
 import com.microsoft.identity.common.internal.broker.MicrosoftAuthClient;
+import com.microsoft.identity.common.internal.broker.ipc.AccountManagerAddAccountStrategy;
 import com.microsoft.identity.common.internal.broker.ipc.BoundServiceStrategy;
 import com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle;
 import com.microsoft.identity.common.internal.broker.ipc.ContentProviderStrategy;
@@ -69,6 +70,7 @@ import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings;
 import com.microsoft.identity.common.internal.telemetry.events.ApiEndEvent;
 import com.microsoft.identity.common.internal.telemetry.events.ApiStartEvent;
+import com.microsoft.identity.common.internal.util.AccountManagerUtil;
 import com.microsoft.identity.common.internal.util.StringUtil;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.authorities.AzureActiveDirectoryAudience;
@@ -187,6 +189,11 @@ public class BrokerMsalController extends BaseController {
         if (client.isBoundServiceSupported(activeBrokerPackageName)) {
             sb.append("BoundServiceStrategy, ");
             strategies.add(new BoundServiceStrategy<>(client));
+        }
+
+        if (AccountManagerUtil.canUseAccountManagerOperation(applicationContext)) {
+            sb.append("AccountManagerStrategy.");
+            strategies.add(new AccountManagerAddAccountStrategy(applicationContext));
         }
 
         Logger.info(methodTag, sb.toString());
