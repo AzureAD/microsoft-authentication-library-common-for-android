@@ -1,5 +1,6 @@
 V.NEXT
 ----------
+- [PATCH] Revert "Getting rid of account manager strategy in MSAL/OneAuth (#1988)" (#2041)
 - [MINOR] Add BrokerDiscoveryClient + Tests (#2039)
 - [MAJOR] Consolidate IStorageSupplier logic (#2033)
 - [MINOR] Add active broker cache (#2030)
