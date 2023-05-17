@@ -1,6 +1,6 @@
 V.11.0.1
 =======
-- [PATCH] Revert "Getting rid of account manager strategy in MSAL/OneAuth (#1988)" (#2041)
+- [PATCH] Revert "Getting rid of account manager strategy in MSAL/OneAuth (#1988)" (#2041/#2042)
 
 V.11.0.0
 ----------
