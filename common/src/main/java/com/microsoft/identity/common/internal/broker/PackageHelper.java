@@ -23,6 +23,9 @@
 
 package com.microsoft.identity.common.internal.broker;
 
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.IPPHONE_APP_PACKAGE_NAME;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.IPPHONE_APP_SIGNATURE;
+
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
@@ -218,5 +221,19 @@ public class PackageHelper {
 
     public static Signature[] getSignatures(@NonNull Context context) throws PackageManager.NameNotFoundException {
         return getSignatures(getPackageInfo(context.getPackageManager(), context.getPackageName()));
+    }
+
+    /**
+     * Validate if provided package name is a valid teams app package
+     * @return true if context is from Teams app, false otherwise
+     */
+    public boolean verifyIfValidTeamsPackage(final String packageName) {
+        if (packageName.equals(IPPHONE_APP_PACKAGE_NAME) &&
+                isPackageInstalledAndEnabled(IPPHONE_APP_PACKAGE_NAME) &&
+                IPPHONE_APP_SIGNATURE.equals(getCurrentSignatureForPackage(IPPHONE_APP_PACKAGE_NAME))) {
+            return true;
+        }
+
+        return false;
     }
 }
