@@ -145,10 +145,10 @@ public final class PackageUtils {
             messageDigest.update(x509Certificate.getEncoded());
 
             // Check the hash for signer cert is the same as what we hardcoded.
-            final String signatureHash = Base64.encodeToString(messageDigest.digest(), Base64.NO_WRAP);
+            final String sha512SignatureHash = Base64.encodeToString(messageDigest.digest(), Base64.NO_WRAP);
 
             //Collecting output for logging
-            hashListStringBuilder.append(signatureHash);
+            hashListStringBuilder.append(sha512SignatureHash);
             hashListStringBuilder.append(',');
 
             while (validHashes.hasNext()) {
@@ -161,8 +161,8 @@ public final class PackageUtils {
                 if (HEX_PATTERN.matcher(hash).matches()) {
                     hash = convertToBase64(hash);
                 }
-                if (!TextUtils.isEmpty(hash) && hash.equals(signatureHash)) {
-                    return signatureHash;
+                if (!TextUtils.isEmpty(hash) && hash.equals(sha512SignatureHash)) {
+                    return sha512SignatureHash;
                 }
             }
         }
