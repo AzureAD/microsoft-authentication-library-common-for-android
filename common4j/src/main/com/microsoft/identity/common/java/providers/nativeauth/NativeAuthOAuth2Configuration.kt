@@ -33,14 +33,14 @@ import java.net.URL
 class NativeAuthOAuth2Configuration(
     private val authorityUrl: URL,
     val clientId: String,
-    val challengeType: String = "oob password redirect", // TODO hardcoded for now
+    val challengeType: String,
+    // Need this to decide whether or not to return mock api authority or actual authority supplied in configuration
+    // Turn this on if you plan to use web auth and/or open id configuration
+    // TODO remove this post-mock API
+    val useRealAuthority: Boolean = false
 ) : MicrosoftStsOAuth2Configuration() {
 
     private val TAG = NativeAuthOAuth2Configuration::class.java.simpleName
-
-    // Need this to decide whether or not to return mock api authority or actual authority supplied in configuration
-    // Turn this on if you plan to use web auth and/or open id configuration
-    private val RETURN_REAL_AUTHORITY = false
 
     companion object {
         private const val SIGNUP_START_ENDPOINT_SUFFIX = "/signup/start"
@@ -57,11 +57,11 @@ class NativeAuthOAuth2Configuration(
     }
 
     override fun getAuthorityUrl(): URL {
-        if (RETURN_REAL_AUTHORITY) {
-            return authorityUrl
+        return if (useRealAuthority) {
+            authorityUrl
         } else {
             // TODO return real authorityUrl once we move away from using mock APIs
-            return URL("https://native-ux-mock-api.azurewebsites.net/lumonconvergedps.onmicrosoft.com")
+            URL("https://native-ux-mock-api.azurewebsites.net/lumonconvergedps.onmicrosoft.com")
         }
     }
 

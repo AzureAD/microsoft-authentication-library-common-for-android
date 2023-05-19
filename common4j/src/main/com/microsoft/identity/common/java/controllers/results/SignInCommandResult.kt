@@ -25,17 +25,24 @@ package com.microsoft.identity.common.java.controllers.results
 import com.microsoft.identity.common.java.result.ILocalAuthenticationResult
 
 data class Complete(val authenticationResult: ILocalAuthenticationResult): SignInStartCommandResult,
-    SignInSubmitCodeCommandResult
+    SignInSubmitCodeCommandResult, SignInSubmitPasswordCommandResult
 object InvalidAuthenticationType : SignInStartCommandResult
 
 sealed interface SignInStartCommandResult
-data class EmailVerificationRequired(val credentialToken: String, val codeLength: Int, val displayName: String): SignInStartCommandResult,
-    SignInResendCodeCommandResult
-data class UserNotFound(val errorCode: String, val errorDescription: String): SignInStartCommandResult, SsprStartCommandResult
-data class PasswordIncorrect(val errorCode: String, val errorDescription: String): SignInStartCommandResult
+data class SignInPasswordRequired(val credentialToken: String): SignInStartCommandResult
+data class CodeRequired(
+    val credentialToken: String,
+    val challengeTargetLabel: String,
+    val challengeChannel: String,
+    val codeLength: Int
+): SignInStartCommandResult, SignInResendCodeCommandResult, SignInSubmitPasswordCommandResult
+data class SignInUserNotFound(val errorCode: String, val errorDescription: String): SignInStartCommandResult
+data class PasswordIncorrect(val errorCode: String, val errorDescription: String): SignInStartCommandResult, SignInSubmitPasswordCommandResult
 
 sealed interface SignInSubmitCodeCommandResult
 data class IncorrectCode(val errorCode: String, val errorDescription: String):
-    SignInSubmitCodeCommandResult, SsprSubmitCodeCommandResult
+    SignInSubmitCodeCommandResult
 
 sealed interface SignInResendCodeCommandResult
+
+sealed interface SignInSubmitPasswordCommandResult

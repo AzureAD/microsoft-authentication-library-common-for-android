@@ -77,7 +77,8 @@ class SsprChallengeApiResponse(
                 return SsprChallengeApiResult.OOBRequired(
                     passwordResetToken = passwordResetToken,
                     challengeTargetLabel = challengeTargetLabel,
-                    codeLength = codeLength
+                    codeLength = codeLength,
+                    challengeChannel = challengeChannel
                 )
             } else {
                 return SsprChallengeApiResult.UnknownError(error, errorDescription)

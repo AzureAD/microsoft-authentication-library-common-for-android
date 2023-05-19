@@ -4,7 +4,6 @@ import com.google.gson.annotations.SerializedName
 import com.microsoft.identity.common.java.providers.nativeauth.NativeAuthConstants
 import com.microsoft.identity.common.java.providers.nativeauth.requests.NativeAuthRequest
 import com.microsoft.identity.common.java.util.ArgUtils
-import com.microsoft.identity.common.java.util.StringUtil
 import java.net.URL
 
 data class SignInTokenRequest private constructor(
@@ -38,7 +37,7 @@ data class SignInTokenRequest private constructor(
                     clientId = clientId,
                     grantType = NativeAuthConstants.GrantType.PASSWORD,
                     challengeType = challengeType,
-                    scope = if (scopes != null) StringUtil.join(" ", scopes) else null
+                    scope = scopes?.joinToString(" ")
                 ),
                 requestUrl = URL(requestUrl),
                 headers = headers,
@@ -70,7 +69,39 @@ data class SignInTokenRequest private constructor(
                     clientId = clientId,
                     grantType = NativeAuthConstants.GrantType.OOB,
                     challengeType = challengeType,
-                    scope  = if (scopes != null) StringUtil.join(" ", scopes) else null
+                    scope = scopes?.joinToString(" ")
+                ),
+                requestUrl = URL(requestUrl),
+                headers = headers,
+            )
+        }
+
+        fun createPasswordTokenRequest(
+            password: String,
+            credentialToken: String,
+            clientId: String,
+            scopes: List<String>? = null,
+            challengeType: String? = null,
+            requestUrl: String,
+            headers: Map<String, String?>
+        ): SignInTokenRequest {
+            // Check for empty Strings and empty Maps
+            ArgUtils.validateNonNullArg(password, "password")
+            ArgUtils.validateNonNullArg(credentialToken, "credentialToken")
+            ArgUtils.validateNonNullArg(clientId, "clientId")
+            ArgUtils.validateNonNullArg(challengeType, "challengeType")
+            ArgUtils.validateNonNullArg(requestUrl, "requestUrl")
+            ArgUtils.validateNonNullArg(headers, "headers")
+
+
+            return SignInTokenRequest(
+                parameters = NativeAuthRequestSignInTokenParameters(
+                    password = password,
+                    credentialToken = credentialToken,
+                    clientId = clientId,
+                    grantType = NativeAuthConstants.GrantType.PASSWORD,
+                    challengeType = challengeType,
+                    scope = scopes?.joinToString(" ")
                 ),
                 requestUrl = URL(requestUrl),
                 headers = headers,

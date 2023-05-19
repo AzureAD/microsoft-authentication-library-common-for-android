@@ -29,14 +29,13 @@ import com.microsoft.identity.common.java.controllers.results.SignInStartCommand
 class SignInStartCommand(
     private val parameters: BaseSignInStartCommandParameters,
     private val controller: NativeAuthController,
-    callback: BaseNativeAuthCommandCallback<SignInStartCommandResult>,
     publicApiId: String
 ) : BaseNativeAuthCommand<SignInStartCommandResult>(
     parameters,
     controller,
-    callback,
     publicApiId
 ) {
+
     override fun execute(): SignInStartCommandResult {
         return controller.signInStart(
             parameters = parameters

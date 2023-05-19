@@ -217,7 +217,7 @@ class SsprOAuth2StrategyTest {
         configureMockApi(
             endpointType = MockApiEndpointType.SSPRStart,
             correlationId = UUID.randomUUID().toString(),
-            responseType = MockApiResponseType.USER_NOT_FOUND
+            responseType = MockApiResponseType.EXPLICITLY_USER_NOT_FOUND
         )
 
         val mockSsprStartCommandParameters = mockk<SsprStartCommandParameters>()

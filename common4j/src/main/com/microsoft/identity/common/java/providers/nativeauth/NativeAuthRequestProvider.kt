@@ -23,7 +23,15 @@
 package com.microsoft.identity.common.java.providers.nativeauth
 
 import com.microsoft.identity.common.java.AuthenticationConstants
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.*
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartWithPasswordCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitCodeCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitPasswordCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpContinueCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpStartCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SsprStartCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SsprSubmitCodeCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SsprSubmitNewPasswordCommandParameters
 import com.microsoft.identity.common.java.logging.DiagnosticContext
 import com.microsoft.identity.common.java.logging.Logger
 import com.microsoft.identity.common.java.net.HttpConstants
@@ -168,6 +176,25 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
         )
         return SignInTokenRequest.createOOBTokenRequest(
             oob = parameters.code,
+            scopes = parameters.scopes,
+            credentialToken = parameters.credentialToken,
+            clientId = config.clientId,
+            challengeType = config.challengeType,
+            requestUrl = signInTokenEndpoint,
+            headers = getRequestHeaders()
+        )
+    }
+
+    fun createPasswordTokenRequest(
+        parameters: SignInSubmitPasswordCommandParameters
+    ): SignInTokenRequest {
+        val methodName = ":createOobTokenRequest"
+        Logger.verbose(
+            TAG + methodName,
+            "Creating OOB token request..."
+        )
+        return SignInTokenRequest.createPasswordTokenRequest(
+            password = parameters.password,
             scopes = parameters.scopes,
             credentialToken = parameters.credentialToken,
             clientId = config.clientId,

@@ -27,6 +27,10 @@ import com.microsoft.identity.common.java.authorities.NativeAuthCIAMAuthority;
 import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.java.exception.ArgumentException;
 
+import java.util.List;
+
+import javax.annotation.Nullable;
+
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.experimental.SuperBuilder;
@@ -39,6 +43,10 @@ public class BaseNativeAuthCommandParameters extends CommandParameters {
 
     @Expose()
     public final NativeAuthCIAMAuthority authority;
+
+    @Expose()
+    @Nullable
+    public final List<String> challengeType;
 
     public void validate() throws ArgumentException {
         // TODO

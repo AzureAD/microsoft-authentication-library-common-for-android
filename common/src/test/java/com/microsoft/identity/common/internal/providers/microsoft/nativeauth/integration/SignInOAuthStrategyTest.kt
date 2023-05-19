@@ -29,6 +29,7 @@ import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.uti
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartWithPasswordCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitCodeCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitPasswordCommandParameters
 import com.microsoft.identity.common.java.interfaces.PlatformComponents
 import com.microsoft.identity.common.java.logging.DiagnosticContext
 import com.microsoft.identity.common.java.net.UrlConnectionHttpClient
@@ -216,6 +217,25 @@ class SignInOAuthStrategyTest {
     }
 
     @Test
+    fun testPerformOobTokenWithInvalidOob() {
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpointType.SignInToken,
+            correlationId = UUID.randomUUID().toString(),
+            responseType = MockApiResponseType.INVALID_OOB_VALUE
+        )
+
+        val parameters = mockk<SignInSubmitCodeCommandParameters>()
+        every { parameters.getCode() } returns oob
+        every { parameters.getCredentialToken() } returns credentialToken
+
+        val signInChallengeResult = nativeAuthOAuth2Strategy.performOOBTokenRequest(
+            parameters = parameters
+        )
+
+        Assert.assertTrue(signInChallengeResult is SignInTokenApiResult.CodeIncorrect)
+    }
+
+    @Test
     fun testPerformSignInInitiateWithChallengeTypeRedirectSuccess() {
         MockApiUtils.configureMockApi(
             endpointType = MockApiEndpointType.SignInInitiate,
@@ -249,6 +269,20 @@ class SignInOAuthStrategyTest {
     }
 
     @Test
+    fun testPerformSignInChallengeWithChallengeTypePasswordSuccess() {
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpointType.SignInChallenge,
+            correlationId = UUID.randomUUID().toString(),
+            responseType = MockApiResponseType.CHALLENGE_TYPE_PASSWORD
+        )
+        val signInChallengeResult = nativeAuthOAuth2Strategy.performSignInChallenge(
+            credentialToken = credentialToken
+        )
+
+        Assert.assertTrue(signInChallengeResult is SignInChallengeApiResult.PasswordRequired)
+    }
+
+    @Test
     fun testPerformSignInChallengeWithRedirectSuccess() {
         MockApiUtils.configureMockApi(
             endpointType = MockApiEndpointType.SignInChallenge,
@@ -262,7 +296,88 @@ class SignInOAuthStrategyTest {
     }
 
     @Test
-    fun testPerformSignInTokenWithCredentialRequiredError() {
+    fun testPerformSignInRopcWithCredentialRequiredError() {
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpointType.SignInToken,
+            correlationId = UUID.randomUUID().toString(),
+            responseType = MockApiResponseType.CREDENTIAL_REQUIRED
+        )
+
+        val parameters = SignInStartWithPasswordCommandParameters.builder()
+            .platformComponents(mock<PlatformComponents>())
+            .username(username)
+            .password(password)
+            .build()
+
+        val result = nativeAuthOAuth2Strategy.performROPCTokenRequest(
+            parameters = parameters
+        )
+
+        Assert.assertTrue(result is SignInTokenApiResult.CredentialRequired)
+    }
+
+    @Test
+    fun testPerformSignInRopcWithInvalidGrantError() {
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpointType.SignInToken,
+            correlationId = UUID.randomUUID().toString(),
+            responseType = MockApiResponseType.INVALID_GRANT
+        )
+
+        val parameters = SignInStartWithPasswordCommandParameters.builder()
+            .platformComponents(mock<PlatformComponents>())
+            .username(username)
+            .password(password)
+            .build()
+
+        val result = nativeAuthOAuth2Strategy.performROPCTokenRequest(
+            parameters = parameters
+        )
+        Assert.assertTrue(result is SignInTokenApiResult.UnknownError)
+    }
+
+    @Test
+    fun testPerformPasswordTokenRequestSuccess() {
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpointType.SignInToken,
+            correlationId = UUID.randomUUID().toString(),
+            responseType = MockApiResponseType.TOKEN_SUCCESS
+        )
+
+        val parameters = SignInSubmitPasswordCommandParameters.builder()
+            .platformComponents(mock<PlatformComponents>())
+            .password(password)
+            .credentialToken(credentialToken)
+            .build()
+
+        val result = nativeAuthOAuth2Strategy.performPasswordTokenRequest(
+            parameters = parameters
+        )
+        Assert.assertTrue(result is SignInTokenApiResult.Success)
+    }
+
+    @Test
+    fun testPerformPasswordTokenRequestIncorrectPassword() {
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpointType.SignInToken,
+            correlationId = UUID.randomUUID().toString(),
+            responseType = MockApiResponseType.INVALID_PASSWORD
+        )
+
+        val parameters = SignInSubmitPasswordCommandParameters.builder()
+            .platformComponents(mock<PlatformComponents>())
+            .password(password)
+            .credentialToken(credentialToken)
+            .build()
+
+        val result = nativeAuthOAuth2Strategy.performPasswordTokenRequest(
+            parameters = parameters
+        )
+        Assert.assertTrue(result is SignInTokenApiResult.PasswordIncorrect)
+    }
+
+    @Test
+    fun testPerformPasswordTokenRequestCredentialRequired() {
         MockApiUtils.configureMockApi(
             endpointType = MockApiEndpointType.SignInToken,
             correlationId = UUID.randomUUID().toString(),
@@ -300,5 +415,25 @@ class SignInOAuthStrategyTest {
             parameters = parameters
         )
         Assert.assertTrue(result is SignInTokenApiResult.UnknownError)
+    }
+
+    @Test
+    fun testPerformPasswordTokenRequestUserNotFound() {
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpointType.SignInToken,
+            correlationId = UUID.randomUUID().toString(),
+            responseType = MockApiResponseType.USER_NOT_FOUND
+        )
+
+        val parameters = SignInSubmitPasswordCommandParameters.builder()
+            .platformComponents(mock<PlatformComponents>())
+            .password(password)
+            .credentialToken(credentialToken)
+            .build()
+
+        val result = nativeAuthOAuth2Strategy.performPasswordTokenRequest(
+            parameters = parameters
+        )
+        Assert.assertTrue(result is SignInTokenApiResult.UserNotFound)
     }
 }

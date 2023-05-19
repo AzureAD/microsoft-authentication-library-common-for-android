@@ -24,8 +24,11 @@ package com.microsoft.identity.common.java.providers.nativeauth.responses.sspr
 
 sealed interface SsprChallengeApiResult {
     object Redirect : SsprChallengeApiResult
-    data class OOBRequired(val passwordResetToken: String, val challengeTargetLabel: String, val codeLength: Int) :
-        SsprChallengeApiResult
+    data class OOBRequired(
+        val passwordResetToken: String,
+        val challengeTargetLabel: String,
+        val challengeChannel: String,
+        val codeLength: Int) : SsprChallengeApiResult
     data class UnknownError(val errorCode: String?, val errorDescription: String?) :
         SsprChallengeApiResult
 }

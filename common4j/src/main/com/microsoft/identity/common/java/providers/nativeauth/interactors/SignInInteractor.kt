@@ -4,6 +4,7 @@ import com.microsoft.identity.common.internal.util.getEncodedRequest
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartWithPasswordCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitCodeCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitPasswordCommandParameters
 import com.microsoft.identity.common.java.net.UrlConnectionHttpClient
 import com.microsoft.identity.common.java.providers.nativeauth.NativeAuthRequestProvider
 import com.microsoft.identity.common.java.providers.nativeauth.NativeAuthResponseHandler
@@ -88,6 +89,15 @@ class SignInInteractor(
         parameters: SignInSubmitCodeCommandParameters
     ): SignInTokenApiResult {
         val request = nativeAuthRequestProvider.createOOBTokenRequest(
+            parameters = parameters
+        )
+        return performGetToken(request)
+    }
+
+    fun performPasswordTokenRequest(
+        parameters: SignInSubmitPasswordCommandParameters
+    ): SignInTokenApiResult {
+        val request = nativeAuthRequestProvider.createPasswordTokenRequest(
             parameters = parameters
         )
         return performGetToken(request)

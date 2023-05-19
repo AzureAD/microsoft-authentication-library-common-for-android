@@ -66,8 +66,17 @@ public class UrlUtil {
         final CommonURIBuilder builder = new CommonURIBuilder(urlToAppend.toString());
         final List<String> pathSegments = builder.getPathSegments();
 
-        final List<String> combinedPathSegments = new ArrayList<>(pathSegments);
+        final List<String> combinedPathSegments = new ArrayList<>();
 
+        // TODO check this with MSAL team
+        // Add all non-empty path segments from the base URL
+        for (final String path : pathSegments) {
+            if (!StringUtil.isNullOrEmpty(path)) {
+                combinedPathSegments.add(path);
+            }
+        }
+
+        // Add all non-empty path segments from the path to append
         for (final String path : pathSegmentsToAppend) {
             if (!StringUtil.isNullOrEmpty(path)) {
                 combinedPathSegments.add(path);

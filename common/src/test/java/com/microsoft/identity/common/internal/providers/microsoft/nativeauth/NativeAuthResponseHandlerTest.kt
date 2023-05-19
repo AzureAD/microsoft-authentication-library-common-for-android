@@ -20,10 +20,10 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
+
 package com.microsoft.identity.common.internal.providers.microsoft.nativeauth
 
 import com.microsoft.identity.common.java.exception.ClientException
-import com.microsoft.identity.common.java.providers.nativeauth.NativeAuthOAuth2Configuration
 import com.microsoft.identity.common.java.providers.nativeauth.NativeAuthResponseHandler
 import com.microsoft.identity.common.java.providers.nativeauth.responses.NativeAuthBindingMethod
 import com.microsoft.identity.common.java.providers.nativeauth.responses.NativeAuthChallengeType
@@ -54,8 +54,6 @@ import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.Ss
 import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.SsprStartApiResult
 import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.SsprSubmitApiResponse
 import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.SsprSubmitApiResult
-import io.mockk.every
-import io.mockk.mockk
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
@@ -68,18 +66,8 @@ class NativeAuthResponseHandlerTest {
     private val clientId = "1234"
     private val requestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/signup/start")
     private val challengeType = "oob password redirect"
-    private val emptyString = ""
     private val userAttributes = mapOf(Pair("city", "Dublin"))
     private val credentialToken = "uY29tL2F1dGhlbnRpY"
-    private val error = "invalid_grant"
-    private val errorCode = "41093"
-    private val errorDescription = "User not found"
-
-    private val mockConfig = mockk<NativeAuthOAuth2Configuration> {
-        every { getSignUpStartEndpoint() } returns requestUrl
-        every { challengeType } returns this@NativeAuthResponseHandlerTest.challengeType
-        every { clientId } returns this@NativeAuthResponseHandlerTest.clientId
-    }
 
     private val nativeAuthResponseHandler = NativeAuthResponseHandler()
 
@@ -1055,7 +1043,7 @@ class NativeAuthResponseHandlerTest {
     }
 
     @Test
-    fun testSignInInitiateResultWithRedirectChallenge() {
+    fun testSignInInitiateApiResponseWithRedirectChallenge() {
         val signInInitiateApiResponse = SignInInitiateApiResponse(
             statusCode = 200,
             challengeType = "redirect",
@@ -1193,6 +1181,34 @@ class NativeAuthResponseHandlerTest {
             bindingMethod = "prompt",
             challengeTargetLabel = challengeTargetLabel,
             challengeChannel = challengeChannel,
+            codeLength = codeLength,
+            interval = null
+        )
+
+        val apiResult = signInInitiateApiResponse.toResult()
+        assertTrue(apiResult is SignInChallengeApiResult.OOBRequired)
+        assertEquals(credentialToken, (apiResult as SignInChallengeApiResult.OOBRequired).credentialToken)
+        assertEquals(challengeTargetLabel, (apiResult as SignInChallengeApiResult.OOBRequired).challengeTargetLabel)
+    }
+
+    @Test
+    fun testSignInChallengeApiResponseChallengeTypeOobChannelText() {
+        val challengeTargetLabel = "user@contoso.com"
+        val challengeChannel = "email"
+        val codeLength = 6
+
+        val signInInitiateApiResponse = SignInChallengeApiResponse(
+            statusCode = 200,
+            challengeType = "oob",
+            credentialToken = credentialToken,
+            error = null,
+            errorCodes = null,
+            errorDescription = null,
+            errorUri = null,
+            innerErrors = null,
+            bindingMethod = "prompt",
+            challengeTargetLabel = challengeTargetLabel,
+            challengeChannel = "SMS",
             codeLength = codeLength,
             interval = null
         )

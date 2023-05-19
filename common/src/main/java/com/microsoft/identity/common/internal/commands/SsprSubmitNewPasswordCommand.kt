@@ -29,12 +29,10 @@ import com.microsoft.identity.common.java.controllers.results.SsprSubmitNewPassw
 class SsprSubmitNewPasswordCommand(
     private val parameters: SsprSubmitNewPasswordCommandParameters,
     private val controller: NativeAuthController,
-    callback: BaseNativeAuthCommandCallback<SsprSubmitNewPasswordCommandResult>,
     publicApiId: String
 ) : BaseNativeAuthCommand<SsprSubmitNewPasswordCommandResult>(
     parameters,
     controller,
-    callback,
     publicApiId
 ) {
 

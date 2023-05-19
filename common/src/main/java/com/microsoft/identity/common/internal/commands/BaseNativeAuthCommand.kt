@@ -26,6 +26,8 @@ import com.microsoft.identity.common.internal.controllers.BaseNativeAuthControll
 import com.microsoft.identity.common.java.commands.BaseCommand
 import com.microsoft.identity.common.java.commands.CommandCallback
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.BaseNativeAuthCommandParameters
+import com.microsoft.identity.common.java.exception.BaseException
+import com.microsoft.identity.common.java.exception.ClientException
 import lombok.EqualsAndHashCode
 
 /**
@@ -35,9 +37,29 @@ import lombok.EqualsAndHashCode
 abstract class BaseNativeAuthCommand<T>(
     parameters: BaseNativeAuthCommandParameters,
     controller: BaseNativeAuthController,
-    callback: CommandCallback<T, *>,
     publicApiId: String
-) : BaseCommand<T>(parameters, controller, callback, publicApiId) {
+) : BaseCommand<T>(
+    parameters,
+    controller,
+    object : CommandCallback<T, BaseException> {
+        override fun onCancel() {
+            onError(ClientException("onCancel not supported in native authentication flows"))
+        }
+
+        override fun onTaskCompleted(t: T) {
+            // Do nothing. This class should be used in combination with CommandDispatcher.submitSilentReturningFuture
+            // meaning the task result will be a future, and handled at call site.
+        }
+
+        override fun onError(error: BaseException) {
+            throw IllegalStateException(
+                "error while processing callback",
+                error
+            )
+        }
+    },
+    publicApiId
+) {
 
     // TODO update this once telemetry is done
     override fun willReachTokenEndpoint(): Boolean {

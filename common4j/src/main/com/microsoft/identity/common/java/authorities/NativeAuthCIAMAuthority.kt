@@ -32,7 +32,7 @@ import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParamet
 
 // TODO risk: this Authority class is not composable through Authority.getAuthorityFromAuthorityUrl()
 //  which is the method that's used throughout the project to create Authorities.
-class NativeAuthCIAMAuthority(
+class NativeAuthCIAMAuthority (
     private val authorityUrl: String,
     val clientId: String
 ) : CIAMAuthority(authorityUrl) {
@@ -62,6 +62,7 @@ class NativeAuthCIAMAuthority(
         }
     }
 
+
     // TODO audience, slice, flight parameters, multiple clouds supported,
     // isAuthorityHostValidationEnabled (AzureActiveDirectoryOAuth2Configuration). Consider extending
     // AzureActiveDirectoryAuthority
@@ -70,7 +71,7 @@ class NativeAuthCIAMAuthority(
         mAuthorityUrlString = authorityUrl
     }
 
-    private fun createNativeAuthOAuth2Configuration(): NativeAuthOAuth2Configuration {
+    private fun createNativeAuthOAuth2Configuration(challengeTypes: List<String>?): NativeAuthOAuth2Configuration {
         val methodName = ":createOAuth2Configuration"
         Logger.verbose(
             TAG + methodName,
@@ -78,13 +79,23 @@ class NativeAuthCIAMAuthority(
         )
         return NativeAuthOAuth2Configuration(
             authorityUrl = this.authorityURL,
-            clientId = this.clientId
+            clientId = this.clientId,
+            challengeType = getChallengeTypesWithDefault(challengeTypes)
         )
+    }
+
+    /**
+     * TODO add documentation (learn.microsoft.com) that explains challengeTypes
+     * "redirect" is added by the SDK as a default challenge type, as the server always expects
+     * this. The list is then converted in a whitespace separated string (e.g. "oob password redirect")
+     */
+    private fun getChallengeTypesWithDefault(challengeTypes: List<String>?): String {
+        return (challengeTypes?.plus(listOf("redirect")) ?: listOf("redirect")).joinToString(" ")
     }
 
     @Throws(ClientException::class)
     override fun createOAuth2Strategy(parameters: OAuth2StrategyParameters): NativeAuthOAuth2Strategy {
-        val config = createNativeAuthOAuth2Configuration()
+        val config = createNativeAuthOAuth2Configuration(parameters.challengeType)
 
         // CIAM Authorities fetch endpoints from open id configuration, communicate that to
         // strategy through parameters

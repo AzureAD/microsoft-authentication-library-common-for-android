@@ -29,12 +29,10 @@ import com.microsoft.identity.common.java.controllers.results.SsprResendCodeComm
 class SsprResendCodeCommand(
     private val parameters: SsprResendCodeCommandParameters,
     private val controller: NativeAuthController,
-    callback: BaseNativeAuthCommandCallback<SsprResendCodeCommandResult>,
     publicApiId: String
 ) : BaseNativeAuthCommand<SsprResendCodeCommandResult>(
     parameters,
     controller,
-    callback,
     publicApiId
 ) {
     override fun execute(): SsprResendCodeCommandResult {

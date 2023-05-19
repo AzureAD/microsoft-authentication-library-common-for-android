@@ -36,20 +36,24 @@ import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInR
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartWithPasswordCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitCodeCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitPasswordCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SsprResendCodeCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SsprStartCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SsprSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SsprSubmitNewPasswordCommandParameters
+import com.microsoft.identity.common.java.controllers.results.CodeRequired
 import com.microsoft.identity.common.java.controllers.results.Complete
-import com.microsoft.identity.common.java.controllers.results.EmailVerificationRequired
 import com.microsoft.identity.common.java.controllers.results.IncorrectCode
 import com.microsoft.identity.common.java.controllers.results.PasswordIncorrect
-import com.microsoft.identity.common.java.controllers.results.PasswordRequired
 import com.microsoft.identity.common.java.controllers.results.PasswordResetFailed
 import com.microsoft.identity.common.java.controllers.results.Redirect
+import com.microsoft.identity.common.java.controllers.results.SignInPasswordRequired
+import com.microsoft.identity.common.java.controllers.results.SignInUserNotFound
+import com.microsoft.identity.common.java.controllers.results.SsprCodeRequired
 import com.microsoft.identity.common.java.controllers.results.SsprComplete
-import com.microsoft.identity.common.java.controllers.results.SsprEmailVerificationRequired
-import com.microsoft.identity.common.java.controllers.results.UserNotFound
+import com.microsoft.identity.common.java.controllers.results.SsprIncorrectCode
+import com.microsoft.identity.common.java.controllers.results.SsprPasswordRequired
+import com.microsoft.identity.common.java.controllers.results.SsprUserNotFound
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents
 import com.microsoft.identity.common.java.request.SdkType
 import com.microsoft.identity.common.java.util.BrokerProtocolVersionUtil
@@ -67,10 +71,10 @@ import java.util.UUID
 class NativeAuthControllerTest {
     private val code = "12345"
     private val credentialToken = "sk490fj8a83n*@f-1"
-    private val passwordResetToken = "sk490fj8a83n*@f-2"
-    private val passwordSubmitToken = "sk490fj8a83n*@f-3"
     private val username = "user@email.com"
     private val password = "verySafePassword"
+    private val passwordResetToken = "sk490fj8a83n*@f-2"
+    private val passwordSubmitToken = "sk490fj8a83n*@f-3"
     private val newPassword = "newPassword"
     private val clientId = "079af063-4ea7-4dcd-91ff-2b24f54621ea"
     private val authorityUrl = "https://msidlabciam1.ciamlogin.com/msidlabciam1.onmicrosoft.com"
@@ -103,7 +107,7 @@ class NativeAuthControllerTest {
     }
 
     @Test
-    fun testSignInStartWithRopcEmailVerificationRequired() {
+    fun testSignInStartWithRopcCodeRequired() {
         val correlationId = UUID.randomUUID().toString()
         MockApiUtils.configureMockApi(
             endpointType = MockApiEndpointType.SignInToken,
@@ -119,7 +123,7 @@ class NativeAuthControllerTest {
 
         val parameters = createSignInStartWithPasswordCommandParameters()
         val result = controller.signInStart(parameters)
-        assert(result is EmailVerificationRequired)
+        assert(result is CodeRequired)
     }
 
     @Test
@@ -147,7 +151,7 @@ class NativeAuthControllerTest {
 
         val parameters = createSignInStartWithPasswordCommandParameters()
         val result = controller.signInStart(parameters)
-        assert(result is UserNotFound)
+        assert(result is SignInUserNotFound)
     }
 
     @Test
@@ -161,11 +165,11 @@ class NativeAuthControllerTest {
 
         val parameters = createSignInStartCommandParameters()
         val result = controller.signInStart(parameters)
-        assert(result is UserNotFound)
+        assert(result is SignInUserNotFound)
     }
 
     @Test
-    fun testSignInStartWithEmailEmailVerificationRequired() {
+    fun testSignInStartWithEmailCodeRequired() {
         val correlationId = UUID.randomUUID().toString()
         MockApiUtils.configureMockApi(
             endpointType = MockApiEndpointType.SignInInitiate,
@@ -180,7 +184,7 @@ class NativeAuthControllerTest {
 
         val parameters = createSignInStartCommandParameters()
         val result = controller.signInStart(parameters)
-        assert(result is EmailVerificationRequired)
+        assert(result is CodeRequired)
     }
 
     @Test
@@ -222,7 +226,53 @@ class NativeAuthControllerTest {
 
         val parameters = createSignInResendCodeCommandParameters()
         val result = controller.signInResendCode(parameters)
-        assert(result is EmailVerificationRequired)
+        assert(result is CodeRequired)
+    }
+
+    fun testSignInSubmitPasswordWithPasswordInvalid() {
+        val correlationId = UUID.randomUUID().toString()
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpointType.SignInToken,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.INVALID_PASSWORD
+        )
+
+        val parameters = createSignInSubmitPasswordCommandParameters()
+        val result = controller.signInSubmitPassword(parameters)
+        assert(result is PasswordIncorrect)
+    }
+
+    @Test
+    fun testSignInSubmitPasswordWithSuccess() {
+        val correlationId = UUID.randomUUID().toString()
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpointType.SignInToken,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.TOKEN_SUCCESS
+        )
+
+        val parameters = createSignInSubmitPasswordCommandParameters()
+        val result = controller.signInSubmitPassword(parameters)
+        assert(result is Complete)
+    }
+
+    @Test
+    fun testSignInStartWithEmailPasswordRequired() {
+        val correlationId = UUID.randomUUID().toString()
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpointType.SignInInitiate,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.INITIATE_SUCCESS
+        )
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpointType.SignInChallenge,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.CHALLENGE_TYPE_PASSWORD
+        )
+
+        val parameters = createSignInStartCommandParameters()
+        val result = controller.signInStart(parameters)
+        assert(result is SignInPasswordRequired)
     }
     //endregion
 
@@ -244,7 +294,7 @@ class NativeAuthControllerTest {
 
         val parameters = createSsprStartCommandParameters()
         val result = controller.ssprStart(parameters)
-        assert(result is SsprEmailVerificationRequired)
+        assert(result is SsprCodeRequired)
     }
 
     @Test
@@ -271,7 +321,7 @@ class NativeAuthControllerTest {
 
         val parameters = createSsprStartCommandParameters()
         val result = controller.ssprStart(parameters)
-        assert(result is UserNotFound)
+        assert(result is SsprUserNotFound)
     }
 
     @Test
@@ -284,7 +334,7 @@ class NativeAuthControllerTest {
 
         val parameters = createSsprSubmitCodeCommandParameters()
         val result = controller.ssprSubmitCode(parameters)
-        assert(result is PasswordRequired)
+        assert(result is SsprPasswordRequired)
     }
 
     @Test
@@ -297,7 +347,7 @@ class NativeAuthControllerTest {
 
         val parameters = createSsprSubmitCodeCommandParameters()
         val result = controller.ssprSubmitCode(parameters)
-        assert(result is IncorrectCode)
+        assert(result is SsprIncorrectCode)
     }
 
     @Test
@@ -310,7 +360,7 @@ class NativeAuthControllerTest {
 
         val parameters = createSsprResendCodeCommandParameters()
         val result = controller.ssprResendCode(parameters)
-        assert(result is SsprEmailVerificationRequired)
+        assert(result is SsprCodeRequired)
     }
 
     @Test
@@ -412,6 +462,25 @@ class NativeAuthControllerTest {
 
     private fun createSignInResendCodeCommandParameters(): SignInResendCodeCommandParameters {
         return SignInResendCodeCommandParameters.builder()
+            .authority(NativeAuthCIAMAuthority.getAuthorityFromAuthorityUrl(authorityUrl, clientId))
+            .clientId(clientId)
+            .credentialToken(credentialToken)
+            .platformComponents(platformComponents)
+            .oAuth2TokenCache(createCache())
+            .sdkType(SdkType.MSAL)
+            .requiredBrokerProtocolVersion(BrokerProtocolVersionUtil.MSAL_TO_BROKER_PROTOCOL_COMPRESSION_CHANGES_MINIMUM_VERSION)
+            .build()
+    }
+
+    private fun createSignInSubmitPasswordCommandParameters(): SignInSubmitPasswordCommandParameters {
+        val authenticationScheme = AuthenticationSchemeFactory.createScheme(
+            AndroidPlatformComponents.createFromContext(context),
+            null
+        )
+
+        return SignInSubmitPasswordCommandParameters.builder()
+            .password(password)
+            .authenticationScheme(authenticationScheme)
             .authority(NativeAuthCIAMAuthority.getAuthorityFromAuthorityUrl(authorityUrl, clientId))
             .clientId(clientId)
             .credentialToken(credentialToken)

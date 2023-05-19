@@ -27,34 +27,39 @@ import com.microsoft.identity.common.internal.util.CommandUtil
 import com.microsoft.identity.common.java.AuthenticationConstants
 import com.microsoft.identity.common.java.cache.ICacheRecord
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.BaseSignInStartCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.BaseSignInTokenCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInResendCodeCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartWithPasswordCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitCodeCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitPasswordCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SsprResendCodeCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SsprStartCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SsprSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SsprSubmitNewPasswordCommandParameters
+import com.microsoft.identity.common.java.controllers.results.CodeRequired
 import com.microsoft.identity.common.java.controllers.results.Complete
-import com.microsoft.identity.common.java.controllers.results.EmailVerificationRequired
 import com.microsoft.identity.common.java.controllers.results.IncorrectCode
-import com.microsoft.identity.common.java.controllers.results.InvalidAuthenticationType
 import com.microsoft.identity.common.java.controllers.results.PasswordIncorrect
 import com.microsoft.identity.common.java.controllers.results.PasswordNotAccepted
-import com.microsoft.identity.common.java.controllers.results.PasswordRequired
 import com.microsoft.identity.common.java.controllers.results.PasswordResetFailed
 import com.microsoft.identity.common.java.controllers.results.Redirect
+import com.microsoft.identity.common.java.controllers.results.SignInPasswordRequired
 import com.microsoft.identity.common.java.controllers.results.SignInResendCodeCommandResult
 import com.microsoft.identity.common.java.controllers.results.SignInStartCommandResult
 import com.microsoft.identity.common.java.controllers.results.SignInSubmitCodeCommandResult
+import com.microsoft.identity.common.java.controllers.results.SignInSubmitPasswordCommandResult
+import com.microsoft.identity.common.java.controllers.results.SignInUserNotFound
+import com.microsoft.identity.common.java.controllers.results.SsprCodeRequired
 import com.microsoft.identity.common.java.controllers.results.SsprComplete
-import com.microsoft.identity.common.java.controllers.results.SsprEmailVerificationRequired
+import com.microsoft.identity.common.java.controllers.results.SsprIncorrectCode
+import com.microsoft.identity.common.java.controllers.results.SsprPasswordRequired
 import com.microsoft.identity.common.java.controllers.results.SsprResendCodeCommandResult
 import com.microsoft.identity.common.java.controllers.results.SsprStartCommandResult
 import com.microsoft.identity.common.java.controllers.results.SsprSubmitCodeCommandResult
 import com.microsoft.identity.common.java.controllers.results.SsprSubmitNewPasswordCommandResult
+import com.microsoft.identity.common.java.controllers.results.SsprUserNotFound
 import com.microsoft.identity.common.java.controllers.results.UnknownError
-import com.microsoft.identity.common.java.controllers.results.UserNotFound
 import com.microsoft.identity.common.java.logging.Logger
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy
@@ -95,6 +100,7 @@ class NativeAuthController : BaseNativeAuthController() {
         try {
             val strategyParameters = OAuth2StrategyParameters.builder()
                 .platformComponents(parameters.platformComponents)
+                .challengeType(parameters.challengeType)
                 .build()
 
             val oAuth2Strategy = parameters
@@ -140,59 +146,37 @@ class NativeAuthController : BaseNativeAuthController() {
             oAuth2Strategy = oAuth2Strategy,
             parameters = parametersWithScopes
         )
-        when (tokenApiResult) {
+        return when (tokenApiResult) {
             is SignInTokenApiResult.CredentialRequired -> {
-                val challengeApiResult = performSignInChallengeCall(
+                performSignInChallengeCall(
                     oAuth2Strategy = oAuth2Strategy,
                     credentialToken = tokenApiResult.credentialToken
-                )
-                return processSignInChallengeApiResult(challengeApiResult)
+                ).toSignInStartCommandResult()
             }
             SignInTokenApiResult.Redirect -> {
-                return Redirect
+                Redirect
             }
             is SignInTokenApiResult.Success -> {
-                val records: List<ICacheRecord> = saveTokens(
-                    oAuth2Strategy as MicrosoftStsOAuth2Strategy,
-                    createAuthorizationRequest(
-                        strategy = oAuth2Strategy,
-                        scopes = parametersWithScopes.scopes,
-                        clientId = parametersWithScopes.clientId
-                    ),
-                    tokenApiResult.tokenResponse,
-                    parametersWithScopes.oAuth2TokenCache
-                )
-
-                // The first element in the returned list is the item we *just* saved, the rest of
-                // the elements are necessary to construct the full IAccount + TenantProfile
-                val newestRecord = records[0]
-
-                return Complete(
-                    authenticationResult = LocalAuthenticationResult(
-                        finalizeCacheRecordForResult(
-                            newestRecord,
-                            parametersWithScopes.authenticationScheme
-                        ),
-                        records,
-                        SdkType.MSAL,
-                        false
-                    )
+                saveAndReturnTokens(
+                    oAuth2Strategy = oAuth2Strategy,
+                    parametersWithScopes = parametersWithScopes,
+                    tokenApiResult = tokenApiResult
                 )
             }
             is SignInTokenApiResult.UnknownError -> {
-                return UnknownError(
+                UnknownError(
                     errorCode = tokenApiResult.error,
                     errorDescription = tokenApiResult.errorDescription
                 )
             }
             is SignInTokenApiResult.PasswordIncorrect -> {
-                return PasswordIncorrect(
+                PasswordIncorrect(
                     errorCode = tokenApiResult.error,
                     errorDescription = tokenApiResult.errorDescription
                 )
             }
             is SignInTokenApiResult.UserNotFound -> {
-                return UserNotFound(
+                SignInUserNotFound(
                     errorCode = tokenApiResult.error,
                     errorDescription = tokenApiResult.errorDescription
                 )
@@ -203,7 +187,7 @@ class NativeAuthController : BaseNativeAuthController() {
                     TAG,
                     "Unexpected API result: $tokenApiResult",
                 )
-                return UnknownError(
+                UnknownError(
                     errorCode = "unexpected_api_result",
                     errorDescription = "API returned unexpected result: $tokenApiResult"
                 )
@@ -232,25 +216,24 @@ class NativeAuthController : BaseNativeAuthController() {
             oAuth2Strategy = oAuth2Strategy,
             parameters = parametersWithScopes
         )
-        when (initiateApiResult) {
+        return when (initiateApiResult) {
             SignInInitiateApiResult.Redirect -> {
-                return Redirect
+                Redirect
             }
             is SignInInitiateApiResult.Success -> {
-                val challengeApiResult = performSignInChallengeCall(
+                performSignInChallengeCall(
                     oAuth2Strategy = oAuth2Strategy,
                     credentialToken = initiateApiResult.credentialToken
-                )
-                return processSignInChallengeApiResult(challengeApiResult)
+                ).toSignInStartCommandResult()
             }
             is SignInInitiateApiResult.UnknownError -> {
-                return UnknownError(
+                UnknownError(
                     errorCode = initiateApiResult.error,
                     errorDescription = initiateApiResult.errorDescription
                 )
             }
             is SignInInitiateApiResult.UserNotFound -> {
-                return UserNotFound(
+                SignInUserNotFound(
                     errorCode = initiateApiResult.error,
                     errorDescription = initiateApiResult.errorDescription
                 )
@@ -291,41 +274,20 @@ class NativeAuthController : BaseNativeAuthController() {
                     Redirect
                 }
                 is SignInTokenApiResult.Success -> {
-                    val records: List<ICacheRecord> = saveTokens(
-                        oAuth2Strategy as MicrosoftStsOAuth2Strategy,
-                        createAuthorizationRequest(
-                            strategy = oAuth2Strategy,
-                            scopes = parametersWithScopes.scopes,
-                            clientId = parametersWithScopes.clientId
-                        ),
-                        tokenApiResult.tokenResponse,
-                        parametersWithScopes.oAuth2TokenCache
-                    )
-
-                    // The first element in the returned list is the item we *just* saved, the rest of
-                    // the elements are necessary to construct the full IAccount + TenantProfile
-                    val newestRecord = records[0]
-
-                    return Complete(
-                        authenticationResult = LocalAuthenticationResult(
-                            finalizeCacheRecordForResult(
-                                newestRecord,
-                                parametersWithScopes.authenticationScheme
-                            ),
-                            records,
-                            SdkType.MSAL,
-                            false
-                        )
+                    saveAndReturnTokens(
+                        oAuth2Strategy = oAuth2Strategy,
+                        parametersWithScopes = parametersWithScopes,
+                        tokenApiResult = tokenApiResult
                     )
                 }
                 is SignInTokenApiResult.CodeIncorrect -> {
-                    return IncorrectCode(
+                    IncorrectCode(
                         errorCode = tokenApiResult.error,
                         errorDescription = tokenApiResult.errorDescription
                     )
                 }
                 is SignInTokenApiResult.UnknownError -> {
-                    return UnknownError(
+                    UnknownError(
                         errorCode = tokenApiResult.error,
                         errorDescription = tokenApiResult.errorDescription
                     )
@@ -337,7 +299,7 @@ class NativeAuthController : BaseNativeAuthController() {
                         TAG,
                         "Unexpected API result: $tokenApiResult",
                     )
-                    return UnknownError(
+                    UnknownError(
                         errorCode = "unexpected_api_result",
                         errorDescription = "API returned unexpected result: $tokenApiResult"
                     )
@@ -346,7 +308,7 @@ class NativeAuthController : BaseNativeAuthController() {
         } catch (e: Exception) {
             Logger.error(
                 methodTag,
-                "Error occurred while performing sign-in start",
+                "Error occurred while performing sign-in submit code",
                 e
             )
             throw e
@@ -363,6 +325,7 @@ class NativeAuthController : BaseNativeAuthController() {
         try {
             val strategyParameters = OAuth2StrategyParameters.builder()
                 .platformComponents(parameters.platformComponents)
+                .challengeType(parameters.challengeType)
                 .build()
 
             val oAuth2Strategy = parameters
@@ -375,17 +338,22 @@ class NativeAuthController : BaseNativeAuthController() {
             )
             return when (result) {
                 is SignInChallengeApiResult.OOBRequired -> {
-                    EmailVerificationRequired(
+                    CodeRequired(
                         credentialToken = result.credentialToken,
                         codeLength = result.codeLength,
-                        displayName = result.challengeTargetLabel
+                        challengeTargetLabel = result.challengeTargetLabel,
+                        challengeChannel = result.challengeChannel,
                     )
                 }
                 is SignInChallengeApiResult.PasswordRequired -> {
                     // TODO add correlation ID https://identitydivision.visualstudio.com/Engineering/_workitems/edit/2503124
+                    Logger.warn(
+                        TAG,
+                        "Unexpected API result: $result",
+                    )
                     UnknownError(
-                        errorCode = "unexpected_password_required",
-                        errorDescription = "API returned unexpected result: password required"
+                        errorCode = "unexpected_api_result",
+                        errorDescription = "API returned unexpected result: $result"
                     )
                 }
                 SignInChallengeApiResult.Redirect -> {
@@ -401,7 +369,86 @@ class NativeAuthController : BaseNativeAuthController() {
         } catch (e: Exception) {
             Logger.error(
                 methodTag,
-                "Error occurred while performing sign-in start",
+                "Error occurred while performing sign-in resend code",
+                e
+            )
+            throw e
+        }
+    }
+
+    fun signInSubmitPassword(parameters: SignInSubmitPasswordCommandParameters): SignInSubmitPasswordCommandResult {
+        val methodTag = "$TAG:signInSubmitPassword"
+
+        Logger.verbose(
+            methodTag,
+            "Performing sign-in submit password..."
+        )
+        try {
+            val strategyParameters = OAuth2StrategyParameters.builder()
+                .platformComponents(parameters.platformComponents)
+                .challengeType(parameters.challengeType)
+                .build()
+
+            val oAuth2Strategy = parameters
+                .authority
+                .createOAuth2Strategy(strategyParameters)
+
+            val mergedScopes = addDefaultScopes(parameters.scopes)
+            val parametersWithScopes = CommandUtil.createSignInSubmitPasswordCommandParametersWithScopes(
+                parameters,
+                mergedScopes
+            )
+
+            val result = performPasswordTokenCall(
+                oAuth2Strategy = oAuth2Strategy,
+                parameters = parametersWithScopes
+            )
+            return when (result) {
+                is SignInTokenApiResult.PasswordIncorrect -> {
+                    PasswordIncorrect(
+                        errorCode = result.error,
+                        errorDescription = result.errorDescription
+                    )
+                }
+                is SignInTokenApiResult.Success -> {
+                    saveAndReturnTokens(
+                        oAuth2Strategy = oAuth2Strategy,
+                        parametersWithScopes = parametersWithScopes,
+                        tokenApiResult = result
+                    )
+                }
+                SignInTokenApiResult.Redirect -> {
+                    Redirect
+                }
+                is SignInTokenApiResult.UnknownError -> {
+                    UnknownError(
+                        errorCode = result.error,
+                        errorDescription = result.errorDescription
+                    )
+                }
+                is SignInTokenApiResult.CredentialRequired -> {
+                    performSignInChallengeCall(
+                        oAuth2Strategy = oAuth2Strategy,
+                        credentialToken = result.credentialToken
+                    ).toSignInSubmitPasswordCommandResult()
+                }
+
+                is SignInTokenApiResult.CodeIncorrect, is SignInTokenApiResult.UserNotFound -> {
+                    // TODO add correlation ID
+                    Logger.warn(
+                        TAG,
+                        "Unexpected API result: $result",
+                    )
+                    return UnknownError(
+                        errorCode = "unexpected_api_result",
+                        errorDescription = "API returned unexpected result: $result"
+                    )
+                }
+            }
+        } catch (e: Exception) {
+            com.microsoft.identity.common.logging.Logger.error(
+                methodTag,
+                "Error occurred while performing sign-in submit password",
                 e
             )
             throw e
@@ -419,6 +466,7 @@ class NativeAuthController : BaseNativeAuthController() {
         try {
             val strategyParameters = OAuth2StrategyParameters.builder()
                 .platformComponents(parameters.platformComponents)
+                .challengeType(parameters.challengeType)
                 .build()
 
             val oAuth2Strategy = parameters
@@ -435,14 +483,13 @@ class NativeAuthController : BaseNativeAuthController() {
                     Redirect
                 }
                 is SsprStartApiResult.Success -> {
-                    val challengeApiResult = performSsprChallengeCall(
+                    performSsprChallengeCall(
                         oAuth2Strategy = oAuth2Strategy,
                         passwordResetToken = startApiResult.passwordResetToken
-                    )
-                    return processSsprChallengeApiResult(challengeApiResult)
+                    ).toSsprStartCommandResult()
                 }
                 is SsprStartApiResult.UserNotFound -> {
-                    UserNotFound(
+                    SsprUserNotFound(
                         errorCode = startApiResult.errorCode,
                         errorDescription = startApiResult.errorDescription
                     )
@@ -465,8 +512,6 @@ class NativeAuthController : BaseNativeAuthController() {
     }
 
     fun ssprSubmitCode(parameters: SsprSubmitCodeCommandParameters): SsprSubmitCodeCommandResult {
-        // Calls /Continue with grant_type=oob, and oob=code
-
         val methodTag = "$TAG:ssprSubmitCode"
 
         Logger.verbose(
@@ -492,10 +537,10 @@ class NativeAuthController : BaseNativeAuthController() {
                     Redirect
                 }
                 is SsprContinueApiResult.PasswordRequired -> {
-                    PasswordRequired(passwordSubmitToken = continueApiResult.passwordSubmitToken)
+                    SsprPasswordRequired(passwordSubmitToken = continueApiResult.passwordSubmitToken)
                 }
                 is SsprContinueApiResult.OOBIncorrect -> {
-                    IncorrectCode(
+                    SsprIncorrectCode(
                         errorCode = continueApiResult.errorCode,
                         errorDescription = continueApiResult.errorDescription
                     )
@@ -540,10 +585,11 @@ class NativeAuthController : BaseNativeAuthController() {
 
             return when (ssprChallengeApiResult) {
                 is SsprChallengeApiResult.OOBRequired -> {
-                    SsprEmailVerificationRequired(
+                    SsprCodeRequired(
                         passwordResetToken = ssprChallengeApiResult.passwordResetToken,
                         codeLength = ssprChallengeApiResult.codeLength,
-                        challengeTargetLabel = ssprChallengeApiResult.challengeTargetLabel
+                        challengeTargetLabel = ssprChallengeApiResult.challengeTargetLabel,
+                        challengeChannel = ssprChallengeApiResult.challengeChannel
                     )
                 }
                 SsprChallengeApiResult.Redirect -> {
@@ -730,6 +776,15 @@ class NativeAuthController : BaseNativeAuthController() {
         )
     }
 
+    private fun performPasswordTokenCall(
+        oAuth2Strategy: NativeAuthOAuth2Strategy,
+        parameters: SignInSubmitPasswordCommandParameters
+    ): SignInTokenApiResult {
+        return oAuth2Strategy.performPasswordTokenRequest(
+            parameters = parameters
+        )
+    }
+
     private fun performSignInInitiateCall(
         oAuth2Strategy: NativeAuthOAuth2Strategy,
         parameters: SignInStartCommandParameters,
@@ -744,30 +799,6 @@ class NativeAuthController : BaseNativeAuthController() {
         credentialToken: String
     ): SignInChallengeApiResult {
         return oAuth2Strategy.performSignInChallenge(credentialToken = credentialToken)
-    }
-
-    private fun processSignInChallengeApiResult(signInChallengeApiResult: SignInChallengeApiResult): SignInStartCommandResult {
-        return when (signInChallengeApiResult) {
-            is SignInChallengeApiResult.OOBRequired -> {
-                EmailVerificationRequired(
-                    credentialToken = signInChallengeApiResult.credentialToken,
-                    codeLength = signInChallengeApiResult.codeLength,
-                    displayName = signInChallengeApiResult.challengeTargetLabel
-                )
-            }
-            is SignInChallengeApiResult.PasswordRequired -> {
-                InvalidAuthenticationType
-            }
-            SignInChallengeApiResult.Redirect -> {
-                Redirect
-            }
-            is SignInChallengeApiResult.UnknownError -> {
-                UnknownError(
-                    errorCode = signInChallengeApiResult.error,
-                    errorDescription = signInChallengeApiResult.errorDescription
-                )
-            }
-        }
     }
 
     private fun performSsprStartCall(
@@ -786,27 +817,6 @@ class NativeAuthController : BaseNativeAuthController() {
         return oAuth2Strategy.performSsprChallenge(
             passwordResetToken = passwordResetToken
         )
-    }
-
-    private fun processSsprChallengeApiResult(ssprChallengeApiResult: SsprChallengeApiResult): SsprStartCommandResult {
-        return when (ssprChallengeApiResult) {
-            is SsprChallengeApiResult.OOBRequired -> {
-                SsprEmailVerificationRequired(
-                    passwordResetToken = ssprChallengeApiResult.passwordResetToken,
-                    codeLength = ssprChallengeApiResult.codeLength,
-                    challengeTargetLabel = ssprChallengeApiResult.challengeTargetLabel
-                )
-            }
-            SsprChallengeApiResult.Redirect -> {
-                Redirect
-            }
-            is SsprChallengeApiResult.UnknownError -> {
-                UnknownError(
-                    errorCode = ssprChallengeApiResult.errorCode,
-                    errorDescription = ssprChallengeApiResult.errorDescription
-                )
-            }
-        }
     }
 
     private fun performSsprContinueCall(
@@ -836,6 +846,39 @@ class NativeAuthController : BaseNativeAuthController() {
         )
     }
 
+    private fun saveAndReturnTokens(
+        oAuth2Strategy: NativeAuthOAuth2Strategy,
+        parametersWithScopes: BaseSignInTokenCommandParameters,
+        tokenApiResult: SignInTokenApiResult.Success
+    ): Complete {
+        val records: List<ICacheRecord> = saveTokens(
+            oAuth2Strategy as MicrosoftStsOAuth2Strategy,
+            createAuthorizationRequest(
+                strategy = oAuth2Strategy,
+                scopes = parametersWithScopes.scopes,
+                clientId = parametersWithScopes.clientId
+            ),
+            tokenApiResult.tokenResponse,
+            parametersWithScopes.oAuth2TokenCache
+        )
+
+        // The first element in the returned list is the item we *just* saved, the rest of
+        // the elements are necessary to construct the full IAccount + TenantProfile
+        val newestRecord = records[0]
+
+        return Complete(
+            authenticationResult = LocalAuthenticationResult(
+                finalizeCacheRecordForResult(
+                    newestRecord,
+                    parametersWithScopes.authenticationScheme
+                ),
+                records,
+                SdkType.MSAL,
+                false
+            )
+        )
+    }
+
     private fun createAuthorizationRequest(
         strategy: NativeAuthOAuth2Strategy,
         scopes: List<String>,
@@ -854,5 +897,87 @@ class NativeAuthController : BaseNativeAuthController() {
         // sanitize empty and null scopes
         requestScopes.removeAll(listOf("", null))
         return requestScopes.toList()
+    }
+
+    private fun SignInChallengeApiResult.toSignInStartCommandResult(): SignInStartCommandResult {
+        return when (this) {
+            is SignInChallengeApiResult.OOBRequired -> {
+                CodeRequired(
+                    credentialToken = this.credentialToken,
+                    codeLength = this.codeLength,
+                    challengeTargetLabel = this.challengeTargetLabel,
+                    challengeChannel = this.challengeChannel
+                )
+            }
+            is SignInChallengeApiResult.PasswordRequired -> {
+                SignInPasswordRequired(
+                    credentialToken = this.credentialToken
+                )
+            }
+            SignInChallengeApiResult.Redirect -> {
+                Redirect
+            }
+            is SignInChallengeApiResult.UnknownError -> {
+                UnknownError(
+                    errorCode = this.error,
+                    errorDescription = this.errorDescription
+                )
+            }
+        }
+    }
+
+    private fun SignInChallengeApiResult.toSignInSubmitPasswordCommandResult(): SignInSubmitPasswordCommandResult {
+        return when (this) {
+            is SignInChallengeApiResult.OOBRequired -> {
+                CodeRequired(
+                    credentialToken = this.credentialToken,
+                    codeLength = this.codeLength,
+                    challengeTargetLabel = this.challengeTargetLabel,
+                    challengeChannel = this.challengeChannel
+                )
+            }
+            SignInChallengeApiResult.Redirect -> {
+                Redirect
+            }
+            is SignInChallengeApiResult.PasswordRequired -> {
+                // TODO add correlation ID
+                Logger.warn(
+                    TAG,
+                    "Unexpected API result: $this",
+                )
+                UnknownError(
+                    errorCode = "unexpected_api_result",
+                    errorDescription = "API returned unexpected result: $this"
+                )
+            }
+            is SignInChallengeApiResult.UnknownError -> {
+                UnknownError(
+                    errorCode = this.error,
+                    errorDescription = this.errorDescription
+                )
+            }
+        }
+    }
+
+    private fun SsprChallengeApiResult.toSsprStartCommandResult(): SsprStartCommandResult {
+        return when (this) {
+            is SsprChallengeApiResult.OOBRequired -> {
+                SsprCodeRequired(
+                    passwordResetToken = this.passwordResetToken,
+                    codeLength = this.codeLength,
+                    challengeTargetLabel = this.challengeTargetLabel,
+                    challengeChannel = this.challengeChannel
+                )
+            }
+            SsprChallengeApiResult.Redirect -> {
+                Redirect
+            }
+            is SsprChallengeApiResult.UnknownError -> {
+                UnknownError(
+                    errorCode = this.errorCode,
+                    errorDescription = this.errorDescription
+                )
+            }
+        }
     }
 }

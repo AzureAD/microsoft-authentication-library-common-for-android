@@ -29,12 +29,10 @@ import com.microsoft.identity.common.java.controllers.results.SignInSubmitCodeCo
 class SignInSubmitCodeCommand(
     private val parameters: SignInSubmitCodeCommandParameters,
     private val controller: NativeAuthController,
-    callback: BaseNativeAuthCommandCallback<SignInSubmitCodeCommandResult>,
     publicApiId: String
 ) : BaseNativeAuthCommand<SignInSubmitCodeCommandResult>(
     parameters,
     controller,
-    callback,
     publicApiId
 ) {
     override fun execute(): SignInSubmitCodeCommandResult {

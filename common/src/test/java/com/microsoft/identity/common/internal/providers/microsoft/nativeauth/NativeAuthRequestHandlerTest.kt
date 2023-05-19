@@ -25,6 +25,7 @@ package com.microsoft.identity.common.internal.providers.microsoft.nativeauth
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartWithPasswordCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitCodeCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitPasswordCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpContinueCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpStartCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SsprStartCommandParameters
@@ -131,7 +132,7 @@ class NativeAuthRequestHandlerTest {
     }
 
     @Test
-    @Ignore // TODO should be fixed as part of sign up business logic
+    @Ignore // TODO fix this test with sign up PR
     fun testSignUpStartSuccess() {
         val commandParameters = SignUpStartCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
@@ -273,7 +274,7 @@ class NativeAuthRequestHandlerTest {
     }
 
     @Test(expected = ClientException::class)
-    fun testSignInTokenWithEmptyClientIdShouldThrowException() {
+    fun testRopcTokenRequestWithEmptyClientIdShouldThrowException() {
         every { mockConfig.clientId } returns emptyString
 
         val commandParameters = SignInStartWithPasswordCommandParameters.builder()
@@ -342,7 +343,7 @@ class NativeAuthRequestHandlerTest {
     }
 
     @Test(expected = ClientException::class)
-    fun testSignInTokenWithEmptyOobShouldThrowException() {
+    fun testSignInTokenWithEmptyOOBShouldThrowException() {
         val commandParameters = SignInSubmitCodeCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .code(emptyString)
@@ -350,6 +351,45 @@ class NativeAuthRequestHandlerTest {
             .build()
 
         nativeAuthRequestProvider.createOOBTokenRequest(
+            parameters = commandParameters
+        )
+    }
+
+    @Test(expected = ClientException::class)
+    fun testPasswordTokenRequestWithEmptyPasswordShouldThrowException() {
+        val commandParameters = SignInSubmitPasswordCommandParameters.builder()
+            .platformComponents(mock<PlatformComponents>())
+            .password(emptyString)
+            .credentialToken(credentialToken)
+            .build()
+
+        nativeAuthRequestProvider.createPasswordTokenRequest(
+            parameters = commandParameters
+        )
+    }
+
+    @Test(expected = ClientException::class)
+    fun testPasswordTokenRequestWithEmptyCredentialTokenShouldThrowException() {
+        val commandParameters = SignInSubmitPasswordCommandParameters.builder()
+            .platformComponents(mock<PlatformComponents>())
+            .password(password)
+            .credentialToken(emptyString)
+            .build()
+
+        nativeAuthRequestProvider.createPasswordTokenRequest(
+            parameters = commandParameters
+        )
+    }
+
+    @Test
+    fun testPasswordTokenRequestSuccess() {
+        val commandParameters = SignInSubmitPasswordCommandParameters.builder()
+            .platformComponents(mock<PlatformComponents>())
+            .password(password)
+            .credentialToken(credentialToken)
+            .build()
+
+        nativeAuthRequestProvider.createPasswordTokenRequest(
             parameters = commandParameters
         )
     }
@@ -384,7 +424,7 @@ class NativeAuthRequestHandlerTest {
 
     // signup continue tests
     @Test
-    @Ignore // TODO fix with sign up busiiness logic
+    @Ignore // TODO fix this test with sign up PR
     fun testSignUpContinueSuccess() {
         val commandParameters = SignUpContinueCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())

@@ -55,7 +55,8 @@ data class SignInChallengeApiResponse(
                 SignInChallengeApiResult.OOBRequired(
                     credentialToken = credentialToken,
                     challengeTargetLabel = challengeTargetLabel,
-                    codeLength = codeLength
+                    codeLength = codeLength,
+                    challengeChannel = challengeChannel
                 )
             }
             else if (challengeType.isPassword()) {

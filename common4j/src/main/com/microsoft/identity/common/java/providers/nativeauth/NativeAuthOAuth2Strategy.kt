@@ -26,6 +26,7 @@ package com.microsoft.identity.common.java.providers.nativeauth
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartWithPasswordCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitCodeCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitPasswordCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpContinueCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpStartCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SsprStartCommandParameters
@@ -127,6 +128,14 @@ class NativeAuthOAuth2Strategy(
         parameters: SignInSubmitCodeCommandParameters
     ): SignInTokenApiResult {
         return signInInteractor.performOOBTokenRequest(
+            parameters = parameters
+        )
+    }
+
+    fun performPasswordTokenRequest(
+        parameters: SignInSubmitPasswordCommandParameters
+    ): SignInTokenApiResult {
+        return signInInteractor.performPasswordTokenRequest(
             parameters = parameters
         )
     }
