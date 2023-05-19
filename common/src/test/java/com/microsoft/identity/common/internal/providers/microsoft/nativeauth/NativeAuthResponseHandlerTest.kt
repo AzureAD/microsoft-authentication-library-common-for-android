@@ -54,8 +54,8 @@ import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.Ss
 import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.SsprStartApiResult
 import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.SsprSubmitApiResponse
 import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.SsprSubmitApiResult
+import org.junit.Assert
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.mockito.kotlin.mock
@@ -411,7 +411,7 @@ class NativeAuthResponseHandlerTest {
 
         val apiResult = ssprStartApiResponse.toResult()
         assertTrue(apiResult is SsprStartApiResult.Success)
-        assertNotNull((apiResult as SsprStartApiResult.Success).passwordResetToken)
+        Assert.assertNotNull((apiResult as SsprStartApiResult.Success).passwordResetToken)
     }
 
     @Test(expected = ClientException::class)
@@ -478,7 +478,7 @@ class NativeAuthResponseHandlerTest {
 
         val apiResult = ssprStartApiResponse.toResult()
         assertTrue(apiResult is SsprStartApiResult.UnknownError)
-        assertNotNull((apiResult as SsprStartApiResult.UnknownError).errorDescription)
+        Assert.assertNotNull((apiResult as SsprStartApiResult.UnknownError).errorDescription)
     }
 
     // validate SsprChallengeResult
@@ -502,9 +502,9 @@ class NativeAuthResponseHandlerTest {
 
         val apiResult = ssprChallengeApiResponse.toResult()
         assertTrue(apiResult is SsprChallengeApiResult.OOBRequired)
-        assertNotNull((apiResult as SsprChallengeApiResult.OOBRequired).passwordResetToken)
-        assertNotNull((apiResult as SsprChallengeApiResult.OOBRequired).challengeTargetLabel)
-        assertNotNull((apiResult as SsprChallengeApiResult.OOBRequired).codeLength)
+        Assert.assertNotNull((apiResult as SsprChallengeApiResult.OOBRequired).passwordResetToken)
+        Assert.assertNotNull((apiResult as SsprChallengeApiResult.OOBRequired).challengeTargetLabel)
+        Assert.assertNotNull((apiResult as SsprChallengeApiResult.OOBRequired).codeLength)
     }
 
     @Test
@@ -697,8 +697,8 @@ class NativeAuthResponseHandlerTest {
 
         val apiResult = ssprContinueApiResponse.toResult()
         assertTrue(apiResult is SsprContinueApiResult.PasswordRequired)
-        assertNotNull((apiResult as SsprContinueApiResult.PasswordRequired).passwordSubmitToken)
-        assertNotNull((apiResult as SsprContinueApiResult.PasswordRequired).expiresIn)
+        Assert.assertNotNull((apiResult as SsprContinueApiResult.PasswordRequired).passwordSubmitToken)
+        Assert.assertNotNull((apiResult as SsprContinueApiResult.PasswordRequired).expiresIn)
     }
 
     @Test
@@ -718,7 +718,7 @@ class NativeAuthResponseHandlerTest {
 
         val apiResult = ssprContinueApiResponse.toResult()
         assertTrue(apiResult is SsprContinueApiResult.PasswordRequired)
-        assertNotNull((apiResult as SsprContinueApiResult.PasswordRequired).passwordSubmitToken)
+        Assert.assertNotNull((apiResult as SsprContinueApiResult.PasswordRequired).passwordSubmitToken)
     }
 
     @Test(expected = ClientException::class)
@@ -831,8 +831,8 @@ class NativeAuthResponseHandlerTest {
 
         val apiResult = ssprSubmitApiResponse.toResult()
         assertTrue(apiResult is SsprSubmitApiResult.SubmitSuccess)
-        assertNotNull((apiResult as SsprSubmitApiResult.SubmitSuccess).passwordResetToken)
-        assertNotNull((apiResult as SsprSubmitApiResult.SubmitSuccess).pollInterval)
+        Assert.assertNotNull((apiResult as SsprSubmitApiResult.SubmitSuccess).passwordResetToken)
+        Assert.assertNotNull((apiResult as SsprSubmitApiResult.SubmitSuccess).pollInterval)
     }
 
     @Test(expected = ClientException::class)
@@ -866,7 +866,7 @@ class NativeAuthResponseHandlerTest {
 
         val apiResult = ssprSubmitApiResponse.toResult()
         assertTrue(apiResult is SsprSubmitApiResult.SubmitSuccess)
-        assertNotNull((apiResult as SsprSubmitApiResult.SubmitSuccess).passwordResetToken)
+        Assert.assertNotNull((apiResult as SsprSubmitApiResult.SubmitSuccess).passwordResetToken)
     }
 
     @Test
@@ -969,8 +969,8 @@ class NativeAuthResponseHandlerTest {
 
         val apiResult = ssprSubmitApiResponse.toResult()
         assertTrue(apiResult is SsprSubmitApiResult.UnknownError)
-        assertNotNull((apiResult as SsprSubmitApiResult.UnknownError).errorCode)
-        assertNotNull((apiResult as SsprSubmitApiResult.UnknownError).errorDescription)
+        Assert.assertNotNull((apiResult as SsprSubmitApiResult.UnknownError).errorCode)
+        Assert.assertNotNull((apiResult as SsprSubmitApiResult.UnknownError).errorDescription)
     }
 
     // validate SsprPollCompletionResult

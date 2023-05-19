@@ -8,9 +8,7 @@ name: $(date:yyyyMMdd)$(rev:.r)
 trigger:
   branches:
     include:
-      - dev
-      - ciam-master
-      - release/*
+      - '*'
   batch: True
 
 variables:

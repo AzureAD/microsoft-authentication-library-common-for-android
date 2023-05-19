@@ -32,12 +32,7 @@ import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpS
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SsprStartCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SsprSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SsprSubmitNewPasswordCommandParameters
-import com.microsoft.identity.common.java.exception.ServiceException
-import com.microsoft.identity.common.java.logging.Logger
-import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.ClientInfo
-import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAccount
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy
-import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse
 import com.microsoft.identity.common.java.providers.nativeauth.interactors.SignInInteractor
 import com.microsoft.identity.common.java.providers.nativeauth.interactors.SignUpInteractor
 import com.microsoft.identity.common.java.providers.nativeauth.interactors.SsprInteractor
@@ -52,7 +47,6 @@ import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.Ss
 import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.SsprPollCompletionApiResult
 import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.SsprStartApiResult
 import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.SsprSubmitApiResult
-import com.microsoft.identity.common.java.providers.oauth2.IDToken
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters
 
 /**
@@ -68,8 +62,10 @@ class NativeAuthOAuth2Strategy(
     MicrosoftStsOAuth2Strategy(config, strategyParameters) {
     private val TAG = NativeAuthOAuth2Strategy::class.java.simpleName
 
+    // Hardcoding so that the environment parameter from the mock API token response matches
+    // with the environment retrieved from the (authority) endpoints.
     // TODO fix after mock APIs
-    fun getIssuerCacheIdentifierFromAuthority(): String {
+    override fun getIssuerCacheIdentifierFromTokenEndpoint(): String {
         return "login.windows.net"
     }
 
@@ -178,38 +174,5 @@ class NativeAuthOAuth2Strategy(
         return ssprInteractor.performSsprPollCompletion(
             passwordResetToken = passwordResetToken
         )
-    }
-
-    override fun createAccount(response: MicrosoftStsTokenResponse): MicrosoftStsAccount {
-        val methodName = ":createAccount"
-        Logger.verbose(
-            TAG + methodName,
-            "Creating account from TokenResponse..."
-        )
-        lateinit var idToken: IDToken
-        lateinit var clientInfo: ClientInfo
-
-        try {
-            idToken = IDToken(response.idToken)
-            clientInfo = ClientInfo(response.clientInfo)
-        } catch (ccse: ServiceException) {
-            Logger.error(
-                TAG + methodName,
-                "Failed to construct IDToken or ClientInfo",
-                null
-            )
-            Logger.errorPII(
-                TAG + methodName,
-                "Failed with Exception",
-                ccse
-            )
-            throw RuntimeException()
-        }
-
-        val account = MicrosoftStsAccount(idToken, clientInfo)
-
-        account.environment = getIssuerCacheIdentifierFromAuthority()
-
-        return account
     }
 }

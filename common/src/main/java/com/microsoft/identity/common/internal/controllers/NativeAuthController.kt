@@ -446,7 +446,7 @@ class NativeAuthController : BaseNativeAuthController() {
                 }
             }
         } catch (e: Exception) {
-            com.microsoft.identity.common.logging.Logger.error(
+            Logger.error(
                 methodTag,
                 "Error occurred while performing sign-in submit password",
                 e
