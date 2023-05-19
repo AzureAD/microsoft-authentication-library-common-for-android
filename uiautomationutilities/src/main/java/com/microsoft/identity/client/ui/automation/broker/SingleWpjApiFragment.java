@@ -25,7 +25,6 @@ package com.microsoft.identity.client.ui.automation.broker;
 import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.UiDevice;
 import androidx.test.uiautomator.UiObject;
@@ -33,12 +32,7 @@ import androidx.test.uiautomator.UiSelector;
 
 import com.microsoft.identity.client.ui.automation.interaction.IPromptHandler;
 import com.microsoft.identity.client.ui.automation.interaction.PromptHandlerParameters;
-import com.microsoft.identity.client.ui.automation.interaction.PromptParameter;
-import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.AadPromptHandler;
-import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.AdfsPromptHandler;
-import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.MicrosoftStsPromptHandler;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
-import com.microsoft.identity.common.java.util.ThreadUtils;
 
 import org.junit.Assert;
 
@@ -135,90 +129,37 @@ public class SingleWpjApiFragment extends AbstractBrokerHost {
     }
 
     /**
-     * Perform a shared device registration.
-     *
-     * @param username the username to be used for the join operation.
-     * @param password the password to be used for the join operation.
-     * @param testBroker the broker that is expected to be used during an interactive token request.
-     */
-    public void performSharedDeviceRegistration(String username, String password, @NonNull final ITestBroker testBroker) {
-        fillTextBox(USERNAME_EDIT_TEXT, username);
-        clickButton(JOIN_SHARED_DEVICE_BUTTON_ID);
-
-        final PromptHandlerParameters promptHandlerParameters = PromptHandlerParameters.builder()
-                .prompt(PromptParameter.LOGIN)
-                .broker(testBroker)
-                .consentPageExpected(false)
-                .expectingBrokerAccountChooserActivity(false)
-                .expectingLoginPageAccountPicker(false)
-                .sessionExpected(false)
-                .loginHint(username)
-                .build();
-
-        final AadPromptHandler aadPromptHandler = new AadPromptHandler(promptHandlerParameters);
-        aadPromptHandler.handlePrompt(username, password);
-        dismissDialogBoxAndAssertContainsText("SUCCESSFUL");
-        ThreadUtils.sleepSafely(2000, TAG, "Sleeping for 2 seconds to allow the device registration to complete.");
-    }
-
-/**
-     * Perform a device registration.
-     *
-     * @param username             the username to be used for the join operation.
-     * @param password             the password to be used for the join operation.
-     * @param isFederatedUser      true if the user is a federated user, false otherwise.
-     * @param testBroker           the broker that is expected to be used during an interactive token request.
-     */
-    public void performDeviceRegistration(String username, String password,
-                                          boolean isFederatedUser,
-                                          @NonNull final ITestBroker testBroker,
-                                          @Nullable final PromptHandlerParameters customPromptHandlerParameters) {
-        fillTextBox(USERNAME_EDIT_TEXT, username);
-        clickButton(JOIN_BUTTON_ID);
-
-        final PromptHandlerParameters promptHandlerParameters;
-        if (customPromptHandlerParameters == null) {
-            promptHandlerParameters = PromptHandlerParameters.builder()
-                    .prompt(PromptParameter.LOGIN)
-                    .broker(testBroker)
-                    .consentPageExpected(false)
-                    .expectingBrokerAccountChooserActivity(false)
-                    .expectingLoginPageAccountPicker(false)
-                    .sessionExpected(false)
-                    .loginHint(username)
-                    .build();
-        } else {
-            promptHandlerParameters = customPromptHandlerParameters;
-        }
-
-        final IPromptHandler promptHandler = getPromptHandler(isFederatedUser, promptHandlerParameters);
-        promptHandler.handlePrompt(username, password);
-        dismissDialogBoxAndAssertContainsText("SUCCESSFUL");
-        ThreadUtils.sleepSafely(2000, TAG, "Sleeping for 2 seconds to allow the device registration to complete.");
-    }
-
-    /**
-     * Get the prompt handler based on the user type.
-     *
-     * @param isFederatedUser true if the user is a federated user, false otherwise.
-     * @param promptHandlerParameters the prompt handler parameters.
-     * @return the prompt handler.
-     */
-    private MicrosoftStsPromptHandler getPromptHandler(final boolean isFederatedUser, @NonNull final PromptHandlerParameters promptHandlerParameters) {
-        if (isFederatedUser) {
-            // handle ADFS login page
-            return new AdfsPromptHandler(promptHandlerParameters);
-        } else {
-            // handle AAD login page
-            return new AadPromptHandler(promptHandlerParameters);
-        }
-    }
-
-    /**
      * Launch the single wpj api fragment.
      */
     @Override
     public void launch() {
         launch(BrokerHostNavigationMenuItem.SINGLE_WPJ_API);
+    }
+
+    /**
+     * Performs a device registration
+     *
+     * @param username                the username to be used for device registration
+     * @param password                the password to be used for device registration
+     * @param promptHandlerParameters the prompt handler parameters
+     */
+    public String performDeviceRegistration(@NonNull String username,
+                                          @NonNull String password,
+                                          final boolean isFederatedUser,
+                                          final boolean isSharedDevice,
+                                          @NonNull final PromptHandlerParameters promptHandlerParameters) {
+        fillTextBox(USERNAME_EDIT_TEXT, username);
+
+        if (isSharedDevice) {
+            clickButton(JOIN_SHARED_DEVICE_BUTTON_ID);
+            clickButton(JOIN_SHARED_DEVICE_BUTTON_ID);
+        } else {
+            clickButton(JOIN_BUTTON_ID);
+        }
+
+        final IPromptHandler promptHandler = getPromptHandler(isFederatedUser, promptHandlerParameters);
+        promptHandler.handlePrompt(username, password);
+
+        return dismissDialogBoxAndGetText();
     }
 }

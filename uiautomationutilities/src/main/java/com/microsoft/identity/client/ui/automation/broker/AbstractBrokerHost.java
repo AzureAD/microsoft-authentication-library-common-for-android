@@ -26,6 +26,10 @@ import androidx.annotation.NonNull;
 import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObjectNotFoundException;
 
+import com.microsoft.identity.client.ui.automation.interaction.PromptHandlerParameters;
+import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.AadPromptHandler;
+import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.AdfsPromptHandler;
+import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.MicrosoftStsPromptHandler;
 import com.microsoft.identity.client.ui.automation.utils.CommonUtils;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 import com.microsoft.identity.common.java.util.ThreadUtils;
@@ -141,7 +145,7 @@ abstract class AbstractBrokerHost {
      *
      * @param expectedText the text that is expected to be contained in the dialog box
      */
-    static protected void dismissDialogBoxAndAssertContainsText(@NonNull final String expectedText) {
+    static public void dismissDialogBoxAndAssertContainsText(@NonNull final String expectedText) {
         Assert.assertTrue(
                 "Could not find the string '" + expectedText + "' in the msg displayed in the dialog",
                 dismissDialogBoxAndGetText().contains(expectedText)
@@ -187,6 +191,25 @@ abstract class AbstractBrokerHost {
             menuItem.click();
         } catch (final UiObjectNotFoundException e) {
             throw new AssertionError(e);
+        }
+    }
+
+    /**
+     * Get the prompt handler based on the user type.
+     *
+     * @param isFederatedUser         true if the user is a federated user, false otherwise.
+     * @param promptHandlerParameters the prompt handler parameters.
+     * @return the prompt handler.
+     */
+    public MicrosoftStsPromptHandler getPromptHandler(
+            final boolean isFederatedUser,
+            @lombok.NonNull final PromptHandlerParameters promptHandlerParameters) {
+        if (isFederatedUser) {
+            // handle ADFS login page
+            return new AdfsPromptHandler(promptHandlerParameters);
+        } else {
+            // handle AAD login page
+            return new AadPromptHandler(promptHandlerParameters);
         }
     }
 }

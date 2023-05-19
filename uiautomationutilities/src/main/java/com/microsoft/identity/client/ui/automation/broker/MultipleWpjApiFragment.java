@@ -33,9 +33,9 @@ import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObjectNotFoundException;
 import androidx.test.uiautomator.UiSelector;
 
+import com.microsoft.identity.client.ui.automation.interaction.IPromptHandler;
 import com.microsoft.identity.client.ui.automation.interaction.PromptHandlerParameters;
 import com.microsoft.identity.client.ui.automation.interaction.PromptParameter;
-import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.AadPromptHandler;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.util.ThreadUtils;
@@ -49,6 +49,7 @@ import java.util.Map;
 
 public class MultipleWpjApiFragment extends AbstractBrokerHost {
     private static final String DEVICE_REGISTRATION_BUTTON_ID = "button_device_registration";
+    private static final String SHARED_DEVICE_REGISTRATION_BUTTON_ID = "button_device_registration_shared";
     private static final String GET_ALL_RECORDS_BUTTON_ID = "button_mwpj_get_records";
     private static final String INSTALL_CERTIFICATE_BUTTON_ID = "button_mwpj_install_cert";
     private static final String GET_RECORD_BY_TENANT_BUTTON_ID = "button_mwpj_get_record_by_tenant";
@@ -57,6 +58,13 @@ public class MultipleWpjApiFragment extends AbstractBrokerHost {
     private static final String GET_DEVICE_STATE_BUTTON_ID = "button_mwpj_get_state";
     private static final String GET_DEVICE_TOKEN_BUTTON_ID = "button_mwpj_get_device_token";
     private static final String GET_BLOB_BUTTON_ID = "button_mwpj_get_blob";
+
+    private final BrokerHost brokerHost;
+
+    public MultipleWpjApiFragment(@NonNull final BrokerHost brokerHost) {
+        super();
+        this.brokerHost = brokerHost;
+    }
 
 
     /**
@@ -68,29 +76,10 @@ public class MultipleWpjApiFragment extends AbstractBrokerHost {
     }
 
     /**
-     * Perform a device registration.
-     */
-    String performDeviceRegistration(@NonNull final String username, @NonNull final String password, @NonNull final ITestBroker testBroker) {
-        fillTextBox(USERNAME_EDIT_TEXT, username);
-        clickButton(DEVICE_REGISTRATION_BUTTON_ID);
-        final PromptHandlerParameters promptHandlerParameters = PromptHandlerParameters.builder()
-                .prompt(PromptParameter.LOGIN)
-                .broker(testBroker)
-                .consentPageExpected(false)
-                .expectingBrokerAccountChooserActivity(false)
-                .expectingLoginPageAccountPicker(false)
-                .sessionExpected(false)
-                .loginHint(username)
-                .build();
-        final AadPromptHandler aadPromptHandler = new AadPromptHandler(promptHandlerParameters);
-        aadPromptHandler.handlePrompt(username, password);
-        return dismissDialogBoxAndGetText();
-    }
-
-    /**
      * Install the certificate on the device.
      */
     public void installCertificate(@NonNull final String identifier) {
+        launch();
         selectDeviceRegistrationRecord(identifier);
         clickButton(INSTALL_CERTIFICATE_BUTTON_ID);
         ThreadUtils.sleepSafely(3000, "Sleep failed", "Interrupted");
@@ -108,6 +97,7 @@ public class MultipleWpjApiFragment extends AbstractBrokerHost {
     }
 
     public List<Map<String, String>> getAllRecords() {
+        launch();
         final List<Map<String, String>> records = new ArrayList<>();
         clickButton(GET_ALL_RECORDS_BUTTON_ID);
         final String dialogBoxText = dismissDialogBoxAndGetText();
@@ -124,7 +114,7 @@ public class MultipleWpjApiFragment extends AbstractBrokerHost {
         return records;
     }
 
-    public Map<String, String> recordStringToMap(@NonNull final String recordRaw) {
+    private Map<String, String> recordStringToMap(@NonNull final String recordRaw) {
         final String[] recordProperties = recordRaw.split(System.lineSeparator());
         Assert.assertTrue(
                 "Device registration record should have 4 or 5 lines",
@@ -157,12 +147,14 @@ public class MultipleWpjApiFragment extends AbstractBrokerHost {
 
 
     public Map<String, String> getRecordByTenantId(@NonNull final String tenantId) {
+        launch();
         fillTextBox(TENANT_EDIT_TEXT, tenantId);
         clickButton(GET_RECORD_BY_TENANT_BUTTON_ID);
         return recordStringToMap(dismissDialogBoxAndGetText());
     }
 
     public Map<String, String> getRecordByUpn(@NonNull final String upn) {
+        launch();
         fillTextBox(USERNAME_EDIT_TEXT, upn);
         clickButton(GET_RECORD_BY_UPN_BUTTON_ID);
         return recordStringToMap(dismissDialogBoxAndGetText());
@@ -173,7 +165,7 @@ public class MultipleWpjApiFragment extends AbstractBrokerHost {
      *
      * @param text the text of the button to be clicked
      */
-    static public void selectDeviceRegistrationRecord(@NonNull final String text) {
+    static private void selectDeviceRegistrationRecord(@NonNull final String text) {
         final UiObject deviceRegistrationRecordItem
                 = UiAutomatorUtils.obtainUiObjectWithTextAndClassType(text, TextView.class);
         try {
@@ -184,26 +176,119 @@ public class MultipleWpjApiFragment extends AbstractBrokerHost {
     }
 
     public void unregister(@NonNull final String identifier) {
+        launch();
         selectDeviceRegistrationRecord(identifier);
         clickButton(UNREGISTER_BUTTON_ID);
         dismissDialogBoxAndAssertContainsText("Removed");
     }
 
     public String getDeviceState(@NonNull final String identifier) {
+        launch();
         selectDeviceRegistrationRecord(identifier);
         clickButton(GET_DEVICE_STATE_BUTTON_ID);
         return dismissDialogBoxAndGetText();
     }
 
     public String getDeviceToken(@NonNull final String identifier) {
+        launch();
         selectDeviceRegistrationRecord(identifier);
         clickButton(GET_DEVICE_TOKEN_BUTTON_ID);
         return dismissDialogBoxAndGetText();
     }
 
     public String getBlob(@NonNull final String tenantId) {
+        launch();
         fillTextBox(TENANT_EDIT_TEXT, tenantId);
         clickButton(GET_BLOB_BUTTON_ID);
         return dismissDialogBoxAndGetText();
     }
+
+    /**
+     * Performs a device registration
+     *
+     * @param username the username to be used for device registration
+     * @param password the password to be used for device registration
+     */
+    public String performDeviceRegistrationDontValidate(String username, String password) {
+        return performDeviceRegistrationInternal(
+                username,
+                password,
+                false,
+                false
+        );
+    }
+
+    /**
+     * Performs a device registration
+     *
+     * @param username the username to be used for device registration
+     * @param password the password to be used for device registration
+     */
+    public void performDeviceRegistration(String username, String password) {
+        performDeviceRegistrationInternal(
+                username,
+                password,
+                false,
+                true
+        );
+    }
+
+    /**
+     * Performs a device registration
+     *
+     * @param username the username to be used for device registration
+     * @param password the password to be used for device registration
+     */
+    public void performSharedDeviceRegistration(String username, String password) {
+        performDeviceRegistrationInternal(
+                username,
+                password,
+                true,
+                true
+        );
+    }
+
+
+    /**
+     * Performs a device registration
+     *
+     * @param username                      the username to be used for device registration
+     * @param password                      the password to be used for device registration
+     * @param isSharedDevice                true if the device is a shared device
+     */
+    private String performDeviceRegistrationInternal(@NonNull final String username,
+                                                     @NonNull final String password,
+                                                     final boolean isSharedDevice,
+                                                     final boolean shouldValidate) {
+        launch();
+        fillTextBox(USERNAME_EDIT_TEXT, username);
+
+        if (isSharedDevice) {
+            clickButton(SHARED_DEVICE_REGISTRATION_BUTTON_ID);
+        } else {
+            clickButton(DEVICE_REGISTRATION_BUTTON_ID);
+        }
+
+        final PromptHandlerParameters promptHandlerParameters = PromptHandlerParameters.builder()
+                .prompt(PromptParameter.LOGIN)
+                .broker(brokerHost)
+                .consentPageExpected(false)
+                .expectingBrokerAccountChooserActivity(false)
+                .expectingLoginPageAccountPicker(false)
+                .sessionExpected(false)
+                .loginHint(username)
+                .build();
+
+
+        final IPromptHandler promptHandler = getPromptHandler(false, promptHandlerParameters);
+        promptHandler.handlePrompt(username, password);
+
+        if (shouldValidate) {
+            dismissDialogBoxAndAssertContainsText("SUCCESS");
+        } else {
+            return dismissDialogBoxAndGetText();
+        }
+        return null;
+    }
+
 }
