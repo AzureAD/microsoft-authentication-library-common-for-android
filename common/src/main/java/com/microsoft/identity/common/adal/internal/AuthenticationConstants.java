@@ -1073,6 +1073,11 @@ public final class AuthenticationConstants {
         public static final String IPPHONE_APP_SIGNATURE = "fcg80qvoM1YMKJZibjBwQcDfOno=";
 
         /**
+         * Teams IP Phones (Sakurai devices) debug signature to unblock any teams local debug development .
+         */
+        public static final String IPPHONE_APP_DEBUG_SIGNATURE = "VCpKgbYCXucoq1mZ4BZPsh5taNE=";
+
+        /**
          * The value for pkeyauth redirect.
          */
         public static final String PKEYAUTH_REDIRECT = "urn:http-auth:PKeyAuth";
