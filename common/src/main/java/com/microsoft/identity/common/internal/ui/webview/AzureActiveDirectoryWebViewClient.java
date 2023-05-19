@@ -25,7 +25,6 @@ package com.microsoft.identity.common.internal.ui.webview;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.ComponentName;
-import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
@@ -268,7 +267,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             //       CP is currently working on this.
             //       Until that comes, we'll only handle this in ipphone.
             if (packageHelper.isPackageInstalledAndEnabled(IPPHONE_APP_PACKAGE_NAME) &&
-                    IPPHONE_APP_SIGNATURE.equals(packageHelper.getCurrentSignatureForPackage(IPPHONE_APP_PACKAGE_NAME)) &&
+                    IPPHONE_APP_SIGNATURE.equals(packageHelper.getSha1SignatureForPackage(IPPHONE_APP_PACKAGE_NAME)) &&
                     packageHelper.isPackageInstalledAndEnabled(COMPANY_PORTAL_APP_PACKAGE_NAME)) {
                 try {
                     launchCompanyPortal();

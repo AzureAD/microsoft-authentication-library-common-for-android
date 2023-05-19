@@ -23,7 +23,6 @@
 
 package com.microsoft.identity.common.internal.broker;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
@@ -71,13 +70,13 @@ public class PackageHelper {
     }
 
     /**
-     * Reads first signature in the list for given package name.
+     * Reads first signature in the list for given package name and hashes with SHA-1.
      *
      * @param packageName name of the package for which signature should be returned
-     * @return signature for package
+     * @return SHA-1 signature hash for package
      */
-    public String getCurrentSignatureForPackage(final String packageName) {
-        final String methodTag = TAG + ":getCurrentSignatureForPackage";
+    public String getSha1SignatureForPackage(final String packageName) {
+        final String methodTag = TAG + ":getSha1SignatureForPackage";
         try {
             return getCurrentSignatureForPackage(getPackageInfo(mPackageManager, packageName), false);
         } catch (NameNotFoundException e) {
@@ -87,17 +86,15 @@ public class PackageHelper {
     }
 
     /**
-     * Reads first signature in the list for given package name.
+     * Reads first signature in the list for given package name and hashes with SHA-512.
      *
      * @param packageName name of the package for which signature should be returned
-     * @param useSha512 if true, uses SHA-512 to generate signature hash (should be used for verification purposes); if false, uses default SHA (redirect URI purposes)
-     * @return signature for package
+     * @return SHA-512 signature hash for package
      */
-    public String getCurrentSignatureForPackage(final String packageName,
-                                                final boolean useSha512) {
-        final String methodTag = TAG + ":getCurrentSignatureForPackage";
+    public String getSha512SignatureForPackage(final String packageName) {
+        final String methodTag = TAG + ":getSha512SignatureForPackage";
         try {
-            return getCurrentSignatureForPackage(getPackageInfo(mPackageManager, packageName), useSha512);
+            return getCurrentSignatureForPackage(getPackageInfo(mPackageManager, packageName), true);
         } catch (NameNotFoundException e) {
             Logger.error(methodTag, "Calling App's package does not exist in PackageManager. ", "", e);
         }
@@ -105,13 +102,13 @@ public class PackageHelper {
     }
 
     /**
-     * Reads first signature in the list for given package name.
+     * Reads first signature in the list for given package name.v
      *
      * @param packageInfo package for which signature should be returned
      * @param useSha512 if true, uses SHA-512 to generate signature hash (should be used for verification purposes); if false, uses default SHA (redirect URI purposes)
      * @return signature for package
      */
-    public static String getCurrentSignatureForPackage(final PackageInfo packageInfo,
+    private static String getCurrentSignatureForPackage(final PackageInfo packageInfo,
                                                        final boolean useSha512) {
         final String methodTag = TAG + ":getCurrentSignatureForPackage";
         try {
