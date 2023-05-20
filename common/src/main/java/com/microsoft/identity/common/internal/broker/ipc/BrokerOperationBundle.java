@@ -42,15 +42,7 @@ import static com.microsoft.identity.common.exception.BrokerCommunicationExcepti
 import static com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy.Type.ACCOUNT_MANAGER_ADD_ACCOUNT;
 import static com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy.Type.CONTENT_PROVIDER;
 
-/**
- * An object that acts as a bridge between business logic and communication layer.
- * - Business logic will provide a request bundle, and specify which operation it wants to perform.
- * - Communication layer will determine how to communicate to the targeted service via the provided operation,
- * and pass the request bundle to the service accordingly.
- * <p>
- * Generally, the targeted service is the active broker.
- */
-@AllArgsConstructor
+
 public class BrokerOperationBundle {
     private static final String TAG = BrokerOperationBundle.class.getName();
 
@@ -78,7 +70,9 @@ public class BrokerOperationBundle {
         BROKER_API_UPLOAD_LOGS(API.BROKER_UPLOAD_LOGS, null),
         MSAL_FETCH_DCF_AUTH_RESULT(API.FETCH_DCF_AUTH_RESULT, null),
         MSAL_ACQUIRE_TOKEN_DCF(API.ACQUIRE_TOKEN_DCF, null),
-        BROKER_DISCOVERY_METADATA_RETRIEVAL(API.BROKER_DISCOVERY_METADATA_RETRIEVAL, null);
+        BROKER_DISCOVERY_METADATA_RETRIEVAL(API.BROKER_DISCOVERY_METADATA_RETRIEVAL, null),
+        BROKER_DISCOVERY_FROM_SDK(API.BROKER_DISCOVERY_FROM_SDK, null);
+      
         final API mContentApi;
         final String mAccountManagerOperation;
         Operation(API contentApi, String accountManagerOperation) {
@@ -95,6 +89,48 @@ public class BrokerOperationBundle {
 
     @Getter
     @Nullable final public Bundle bundle;
+
+    public BrokerOperationBundle(@NonNull final Operation operation,
+                                 @NonNull final String targetBrokerAppPackageName,
+                                 @Nullable final Bundle bundle) {
+        this.operation = operation;
+        this.targetBrokerAppPackageName = targetBrokerAppPackageName;
+        this.bundle = bundle;
+    }
+
+
+    /**
+     * Packs the response bundle with the account manager key.
+     */
+    public Bundle getAccountManagerBundle()
+            throws BrokerCommunicationException {
+        Bundle requestBundle = bundle;
+        if (requestBundle == null) {
+            requestBundle = new Bundle();
+        }
+
+        requestBundle.putString(
+                AuthenticationConstants.Broker.BROKER_ACCOUNT_MANAGER_OPERATION_KEY,
+                getAccountManagerAddAccountOperationKey());
+
+        return requestBundle;
+    }
+
+    private String getAccountManagerAddAccountOperationKey() throws BrokerCommunicationException{
+        final String methodTag = TAG + ":getAccountManagerAddAccountOperationKey";
+
+        String accountManagerKey = operation.getAccountManagerOperation();
+        if (accountManagerKey == null) {
+            final String errorMessage = "Operation " + operation.name() + " is not supported by AccountManager addAccount().";
+            Logger.warn(methodTag, errorMessage);
+            throw new BrokerCommunicationException(
+                    OPERATION_NOT_SUPPORTED_ON_CLIENT_SIDE,
+                    ACCOUNT_MANAGER_ADD_ACCOUNT,
+                    errorMessage,
+                    null);
+        }
+        return accountManagerKey;
+    }
 
     public String getContentProviderPath() throws BrokerCommunicationException {
         final String methodTag = TAG + ":getContentProviderUriPath";
