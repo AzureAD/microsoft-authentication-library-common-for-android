@@ -261,6 +261,10 @@ public class BrokerHost extends AbstractTestBroker {
         return ssoToken;
     }
 
+    public String dismissDialog() {
+        return AbstractBrokerHost.dismissDialogBoxAndGetText();
+    }
+
     public void enableMultipleWpj() {
         Logger.i(TAG, "Enable Multiple WPJ..");
         brokerFlightsFragment.launch();
