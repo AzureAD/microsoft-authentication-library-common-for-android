@@ -1054,6 +1054,20 @@ public final class AuthenticationConstants {
          */
         public static final String BROKER_HOST_APP_SIGNATURE = "1wIqXSqBj7w+h11ZifsnqwgyKrY=";
 
+        /**
+         * Package name of the Link To Windows app.
+         */
+        public static final String LTW_APP_PACKAGE_NAME = "com.microsoft.appmanager";
+
+        /**
+         * SHA512 signature hash of the Link To Windows app, signed by the production keystore key.
+         */
+        public static final String LTW_APP_SHA512_RELEASE_SIGNATURE = "WhUdh04ZkQLmNb//lKmohyqDdPMWXHcI0O3AvoLMtgF/smnED4r+Vguvgj6d4QG77Jl3avUKt6LeqF2TJPZVzg==";
+
+        /**
+         * SHA512 signature hash of the Link To Windows app, signed by a debug keystore key.
+         */
+        public static final String LTW_APP_SHA512_DEBUG_SIGNATURE = "x28mHDILP8IZRH6EfjD4zC1bcpgk8euKS91klxoddu8+e34xEgy3Q9XTa3ySY7C7EXX4o/EJpDV8MqmEfIf7LA==";
 
         /**
          * Teams IP Phones (Sakurai devices) is supported by Intune, but does not have a back button nor browser.
