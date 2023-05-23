@@ -1471,8 +1471,9 @@ public final class AuthenticationConstants {
             FETCH_DCF_AUTH_RESULT(MSAL_FETCH_DCF_AUTH_RESULT_PATH, null, null),
             ACQUIRE_TOKEN_DCF(MSAL_ACQUIRE_TOKEN_DCF_PATH, null, null),
             BROKER_DISCOVERY_METADATA_RETRIEVAL(RETRIEVE_BROKER_DISCOVERY_METADATA_PATH, null, null),
-            BROKER_DISCOVERY_FROM_SDK(BROKER_DISCOVERY_FROM_SDK_PATH, null, null);
-          
+            BROKER_DISCOVERY_FROM_SDK(BROKER_DISCOVERY_FROM_SDK_PATH, null, null),
+            BROKER_DISCOVERY_SET_ACTIVE_BROKER(BROKER_DISCOVERY_SET_ACTIVE_BROKER_PATH, null, null);
+
             /**
              * The content provider path that the API exists behind.
              */
@@ -1583,6 +1584,12 @@ public final class AuthenticationConstants {
          * ContentProvider path for triggering Broker Discovery on Broker side.
          */
         public static final String BROKER_DISCOVERY_FROM_SDK_PATH = "/brokerElection/brokerDiscoveryFromSdk";
+
+        /**
+         * ContentProvider path for setting active Broker.
+         * Can only be invoked by known broker apps only.
+         */
+        public static final String BROKER_DISCOVERY_SET_ACTIVE_BROKER_PATH = "/brokerElection/setActiveBroker";
 
         /**
          * Broker api path constant for adding flight information.
