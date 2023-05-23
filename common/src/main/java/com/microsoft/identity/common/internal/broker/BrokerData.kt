@@ -130,6 +130,19 @@ data class BrokerData(val packageName : String,
             AuthenticationConstants.Broker.BROKER_HOST_APP_SIGNATURE
         )
 
+        // TODO: Adding a placeholder to unblock development, will be updated in a separate PR.
+        @JvmStatic
+        val prodLTW = BrokerData(
+            "[PROD_LTW_PLACEHOLDER_PACKAGE_NAME]",
+            "[PROD_LTW_PLACEHOLDER_SHA512_SIGNATURE]"
+        )
+
+        @JvmStatic
+        val debugLTW = BrokerData(
+            "[DEBUG_LTW_PLACEHOLDER_PACKAGE_NAME]",
+            "[DEBUG_LTW_PLACEHOLDER_SHA512_SIGNATURE]"
+        )
+
         @JvmStatic
         val debugBrokers: Set<BrokerData> =
             Collections.unmodifiableSet(object : HashSet<BrokerData>() {
