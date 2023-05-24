@@ -24,10 +24,13 @@ package com.microsoft.identity.common.internal.activebrokerdiscovery
 
 import android.os.Bundle
 import com.microsoft.identity.common.exception.BrokerCommunicationException
+import com.microsoft.identity.common.internal.activebrokerdiscovery.BrokerDiscoveryClient.Companion.ONLY_SUPPORTS_ACCOUNT_MANAGER_ERROR_CODE
 import com.microsoft.identity.common.internal.broker.BrokerData.Companion.prodCompanyPortal
 import com.microsoft.identity.common.internal.broker.BrokerData.Companion.prodMicrosoftAuthenticator
+import com.microsoft.identity.common.internal.broker.ipc.AbstractIpcStrategyWithServiceValidation
 import com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle
 import com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy
+import com.microsoft.identity.common.java.exception.ClientException
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert
@@ -122,11 +125,13 @@ class BrokerDiscoveryClientTests {
     }
 
     /**
-     * The brokers returns an error.
-     * Account Manager is used instead.
+     * If we get an ONLY_SUPPORTS_ACCOUNT_MANAGER_ERROR_CODE error.
+     * AccountManager shall be used (but not cached).
      **/
     @Test
-    fun testQuery_ErrorReturned(){
+    fun testQuery_V0ProtocolErrorReturned(){
+        var invoked = 0
+        val cache = InMemoryActiveBrokerCache()
         val client = BrokerDiscoveryClient(
             brokerCandidates = setOf(
                 prodMicrosoftAuthenticator, prodCompanyPortal
@@ -136,20 +141,62 @@ class BrokerDiscoveryClientTests {
             },
             ipcStrategy = object : IIpcStrategy {
                 override fun communicateToBroker(bundle: BrokerOperationBundle): Bundle {
-                    throw UnsupportedOperationException()
+                    invoked++
+                    throw ClientException(ONLY_SUPPORTS_ACCOUNT_MANAGER_ERROR_CODE)
                 }
                 override fun getType(): IIpcStrategy.Type {
                     return IIpcStrategy.Type.CONTENT_PROVIDER
                 }
             },
-            cache = InMemoryActiveBrokerCache(),
+            cache = cache,
+            isPackageInstalled =  {
+                it == prodMicrosoftAuthenticator || it == prodCompanyPortal
+            }
+        )
+        Assert.assertEquals(prodCompanyPortal, client.getActiveBroker())
+        Assert.assertNull(cache.getCachedActiveBroker())
+
+        // only 1 ipc should be invoked.
+        Assert.assertEquals(1, invoked)
+    }
+
+    /**
+     * If we ping the broker that doesn't support the new broker election logic,
+     * an error shall be returned. AccountManager shall be used (but not cached).
+     **/
+    @Test
+    fun testQuery_UnsupportedBrokerErrorReturned(){
+        val cache = InMemoryActiveBrokerCache()
+        val client = BrokerDiscoveryClient(
+            brokerCandidates = setOf(
+                prodMicrosoftAuthenticator, prodCompanyPortal
+            ),
+            getActiveBrokerFromAccountManager = {
+                return@BrokerDiscoveryClient prodMicrosoftAuthenticator
+            },
+            ipcStrategy = object : AbstractIpcStrategyWithServiceValidation() {
+                override fun communicateToBrokerAfterValidation(bundle: BrokerOperationBundle): Bundle? {
+                    throw IllegalStateException()
+                }
+
+                override fun isSupportedByTargetedBroker(targetedBrokerPackageName: String): Boolean {
+                    return false
+                }
+
+                override fun getType(): IIpcStrategy.Type {
+                    return IIpcStrategy.Type.CONTENT_PROVIDER
+                }
+            },
+            cache = cache,
             isPackageInstalled =  {
                 it == prodMicrosoftAuthenticator || it == prodCompanyPortal
             }
         )
 
-        Assert.assertEquals(prodCompanyPortal, client.getActiveBroker())
+        Assert.assertEquals(prodMicrosoftAuthenticator, client.getActiveBroker())
+        Assert.assertNull(cache.getCachedActiveBroker())
     }
+
 
     /**
      * No Broker is installed.

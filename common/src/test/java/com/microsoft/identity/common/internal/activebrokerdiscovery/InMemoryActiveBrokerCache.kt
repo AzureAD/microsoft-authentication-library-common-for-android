@@ -30,7 +30,7 @@ import com.microsoft.identity.common.internal.cache.IActiveBrokerCache
  **/
 class InMemoryActiveBrokerCache: IActiveBrokerCache {
 
-    var activeBroker: BrokerData? = null
+    private var activeBroker: BrokerData? = null
 
     @Synchronized
     override fun getCachedActiveBroker(): BrokerData? {

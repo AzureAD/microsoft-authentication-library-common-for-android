@@ -32,6 +32,7 @@ import com.microsoft.identity.common.internal.broker.ipc.ContentProviderStrategy
 import com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy
 import com.microsoft.identity.common.internal.cache.ActiveBrokerCache
 import com.microsoft.identity.common.internal.cache.IActiveBrokerCache
+import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents
 import com.microsoft.identity.common.java.logging.Logger
 import java.util.concurrent.locks.Lock
@@ -71,6 +72,11 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
         const val ERROR_BUNDLE_KEY = "ERROR_BUNDLE_KEY"
 
         /**
+         * Error code to be returned when the broker determines that only account manager can be used.
+         **/
+        const val ONLY_SUPPORTS_ACCOUNT_MANAGER_ERROR_CODE = "ONLY_SUPPORTS_ACCOUNT_MANAGER_ERROR_CODE"
+
+        /**
          * Per-process lock of this class.
          * This is to prevent the IPC mechanism from being unnecessarily triggered due to race condition.
          **/
@@ -104,6 +110,10 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
                     if (t is BrokerCommunicationException &&
                         BrokerCommunicationException.Category.OPERATION_NOT_SUPPORTED_ON_SERVER_SIDE == t.category) {
                         Logger.info(methodTag, "Tried broker discovery on ${candidate}. It doesn't support the operation")
+                    } else if (t is ClientException && t.errorCode == ONLY_SUPPORTS_ACCOUNT_MANAGER_ERROR_CODE) {
+                        Logger.info(methodTag, "Tried broker discovery on ${candidate}. " +
+                                "Only account manager is supported. No need to try next candidates.")
+                        return null
                     } else {
                         Logger.error(methodTag, "Tried broker discovery on ${candidate}, get an error", t)
                     }
@@ -170,27 +180,24 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
                 }
             }
 
-            var brokerData = queryFromBroker(
+            val brokerData = queryFromBroker(
                 brokerCandidates = brokerCandidates,
                 ipcStrategy = ipcStrategy,
                 isPackageInstalled = isPackageInstalled
             )
 
-            if (brokerData == null) {
-                brokerData = getActiveBrokerFromAccountManager()
-                Logger.info(
-                    methodTag, "Tried getting active broker from account manager, " +
-                            "get ${brokerData?.packageName}."
-                )
+            if (brokerData != null){
+                cache.setCachedActiveBroker(brokerData)
+                return brokerData
             }
 
-            if (brokerData == null) {
-                Logger.info(methodTag, "Broker not found.")
-                return null
-            }
+            val accountManagerResult = getActiveBrokerFromAccountManager()
+            Logger.info(
+                methodTag, "Tried getting active broker from account manager, " +
+                        "get ${accountManagerResult?.packageName}."
+            )
 
-            cache.setCachedActiveBroker(brokerData)
-            return brokerData
+            return accountManagerResult
         } finally {
             lock.unlock()
         }
