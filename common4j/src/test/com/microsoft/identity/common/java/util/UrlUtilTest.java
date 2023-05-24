@@ -36,6 +36,30 @@ import java.util.Map;
 public class UrlUtilTest {
 
     @Test
+    public void testPathWithTrailingSlashes() {
+        Assert.assertEquals(
+                "https://www.test.com/path/another/path",
+                UrlUtil.removeTrailingSlash("https://www.test.com/path/another/path//")
+        );
+    }
+
+    @Test
+    public void testPathWithTrailingSlash() {
+        Assert.assertEquals(
+                "https://www.test.com/path/another/path",
+                UrlUtil.removeTrailingSlash("https://www.test.com/path/another/path/")
+        );
+    }
+
+    @Test
+    public void testPathWithNoTrailingSlash() {
+        Assert.assertEquals(
+                "https://www.test.com/path/another/path",
+                UrlUtil.removeTrailingSlash("https://www.test.com/path/another/path")
+        );
+    }
+
+    @Test
     public void testAppendEmptyPathUrl() throws MalformedURLException, URISyntaxException {
         Assert.assertEquals(new URL("https://www.test.com"),
                 UrlUtil.appendPathToURL(new URL("https://www.test.com"), null));
