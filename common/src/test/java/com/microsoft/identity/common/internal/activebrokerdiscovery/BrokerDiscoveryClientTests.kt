@@ -360,14 +360,20 @@ class BrokerDiscoveryClientTests {
         runBlocking {
             launch {
                 Assert.assertEquals(prodCompanyPortal, client1.getActiveBroker())
+                Assert.assertEquals(prodCompanyPortal, client2.getActiveBroker())
+                Assert.assertEquals(prodCompanyPortal, client3.getActiveBroker())
                 countDownLatch.countDown()
             }
             launch {
                 Assert.assertEquals(prodCompanyPortal, client2.getActiveBroker())
+                Assert.assertEquals(prodCompanyPortal, client3.getActiveBroker())
+                Assert.assertEquals(prodCompanyPortal, client1.getActiveBroker())
                 countDownLatch.countDown()
             }
             launch {
                 Assert.assertEquals(prodCompanyPortal, client3.getActiveBroker())
+                Assert.assertEquals(prodCompanyPortal, client1.getActiveBroker())
+                Assert.assertEquals(prodCompanyPortal, client2.getActiveBroker())
                 countDownLatch.countDown()
             }
         }
@@ -393,14 +399,20 @@ class BrokerDiscoveryClientTests {
 
         Thread().run {
             Assert.assertEquals(prodCompanyPortal, client1.getActiveBroker())
+            Assert.assertEquals(prodCompanyPortal, client2.getActiveBroker())
+            Assert.assertEquals(prodCompanyPortal, client3.getActiveBroker())
             countDownLatch.countDown()
         }
         Thread().run {
             Assert.assertEquals(prodCompanyPortal, client2.getActiveBroker())
+            Assert.assertEquals(prodCompanyPortal, client3.getActiveBroker())
+            Assert.assertEquals(prodCompanyPortal, client1.getActiveBroker())
             countDownLatch.countDown()
         }
         Thread().run {
             Assert.assertEquals(prodCompanyPortal, client3.getActiveBroker())
+            Assert.assertEquals(prodCompanyPortal, client1.getActiveBroker())
+            Assert.assertEquals(prodCompanyPortal, client2.getActiveBroker())
             countDownLatch.countDown()
         }
 
