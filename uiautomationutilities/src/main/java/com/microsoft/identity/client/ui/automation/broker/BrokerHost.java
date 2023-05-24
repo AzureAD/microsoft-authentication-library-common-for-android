@@ -27,8 +27,12 @@ import androidx.annotation.Nullable;
 
 import com.microsoft.identity.client.ui.automation.constants.DeviceAdmin;
 import com.microsoft.identity.client.ui.automation.installer.LocalApkInstaller;
+import com.microsoft.identity.client.ui.automation.interaction.IPromptHandler;
 import com.microsoft.identity.client.ui.automation.interaction.PromptHandlerParameters;
+import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.AadPromptHandler;
 import com.microsoft.identity.client.ui.automation.logging.Logger;
+import com.microsoft.identity.client.ui.automation.utils.CommonUtils;
+import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 import com.microsoft.identity.common.java.util.ThreadUtils;
 
 import org.junit.Assert;
@@ -213,15 +217,23 @@ public class BrokerHost extends AbstractTestBroker {
 
     public void performDeviceRegistrationLegacyApp(@NonNull final String username,
                                           @NonNull final String password) {
-        singleWpjApiFragment.performDeviceRegistration(
-                username,
-                password,
-                false,
-                false,
-                getDefaultBrokerPromptHandlerParameters(username)
+        final String inputResourceId = CommonUtils.getResourceId(
+                AbstractBrokerHost.BROKER_HOST_APP_PACKAGE_NAME,
+                "editTextUsername"
         );
-        final String joinedUpn = singleWpjApiFragment.getWpjAccount();
-        Assert.assertTrue("Assert that the joined account is the expected account", username.equalsIgnoreCase(joinedUpn));
+        UiAutomatorUtils.handleInput(inputResourceId, username);
+
+        final String buttonResourceId = CommonUtils.getResourceId(
+                AbstractBrokerHost.BROKER_HOST_APP_PACKAGE_NAME,
+                "buttonJoin"
+        );
+        UiAutomatorUtils.handleButtonClick(buttonResourceId);
+
+        final IPromptHandler promptHandler = new AadPromptHandler(getDefaultBrokerPromptHandlerParameters(username));
+        promptHandler.handlePrompt(username, password);
+
+        final String dialogMessage = AbstractBrokerHost.dismissDialogBoxAndGetText();
+        Assert.assertTrue("Assert that the joined account is the expected account", dialogMessage.contains("SUCCESS"));
     }
 
 

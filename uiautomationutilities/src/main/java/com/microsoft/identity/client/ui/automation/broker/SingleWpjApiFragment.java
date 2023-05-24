@@ -152,7 +152,6 @@ public class SingleWpjApiFragment extends AbstractBrokerHost {
 
         if (isSharedDevice) {
             clickButton(JOIN_SHARED_DEVICE_BUTTON_ID);
-            clickButton(JOIN_SHARED_DEVICE_BUTTON_ID);
         } else {
             clickButton(JOIN_BUTTON_ID);
         }
