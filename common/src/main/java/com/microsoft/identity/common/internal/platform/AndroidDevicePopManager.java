@@ -82,6 +82,13 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
     public static final String STRONG_BOX_UNAVAILABLE_EXCEPTION = "StrongBoxUnavailableException";
 
     /**
+     * Seeing this on android 14, we think it's being caused by the new IAR requirement
+     *
+     // https://android.googlesource.com/platform/compatibility/cdd/+/e2fee2f/9_security-model/9_11_keys-and-credentials.md
+     */
+    public static final String NEGATIVE_THOUSAND_INTERNAL_ERROR = "internal Keystore code: -1000";
+
+    /**
      * Error message from underlying KeyStore that an attestation certificate could not be
      * generated, typically due to lack of API support via {@link KeyGenParameterSpec.Builder#setAttestationChallenge(byte[])}.
      */
@@ -204,8 +211,14 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
                         trySetAttestationChallenge = false;
 
                         continue;
+                    } else if (tryStrongBox && Build.VERSION.RELEASE_OR_CODENAME.equals("UpsideDownCake") && isNegativeInternalError(e.getCause())) {
+                        // Android 14 specific error where strong box is failing, most likely because of IAR requirement in android 14
+                        // https://android.googlesource.com/platform/compatibility/cdd/+/e2fee2f/9_security-model/9_11_keys-and-credentials.md
+                        // Had to check code name, as android 14 device in beta seems to still show 33 as SDK int
+                        Logger.error(TAG, "Android 14 Internal Key store error with strongbox. Skipping strongbox", e);
+                        tryStrongBox = false;
+                        continue;
                     }
-
                     // We were unsuccessful, cleanup after ourselves and throw...
                     clearAsymmetricKey();
                     throw e;
@@ -245,6 +258,16 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
         }
 
         return isStrongBoxException;
+    }
+
+    private static boolean isNegativeInternalError(@androidx.annotation.NonNull final Throwable t) {
+        final boolean isNegativeInternalError = t.getMessage().contains(NEGATIVE_THOUSAND_INTERNAL_ERROR);
+
+        if (isNegativeInternalError) {
+            Logger.error(TAG, "StrongBox not supported. internal Keystore code: -1000", t);
+        }
+
+        return isNegativeInternalError;
     }
 
     /**
