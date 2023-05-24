@@ -131,6 +131,18 @@ data class BrokerData(val packageName : String,
         )
 
         @JvmStatic
+        val prodLTW = BrokerData(
+            AuthenticationConstants.Broker.LTW_APP_PACKAGE_NAME,
+            AuthenticationConstants.Broker.LTW_APP_SHA512_RELEASE_SIGNATURE
+        )
+
+        @JvmStatic
+        val debugLTW = BrokerData(
+            AuthenticationConstants.Broker.LTW_APP_PACKAGE_NAME,
+            AuthenticationConstants.Broker.LTW_APP_SHA512_DEBUG_SIGNATURE
+        )
+
+        @JvmStatic
         val debugBrokers: Set<BrokerData> =
             Collections.unmodifiableSet(object : HashSet<BrokerData>() {
                 init {
