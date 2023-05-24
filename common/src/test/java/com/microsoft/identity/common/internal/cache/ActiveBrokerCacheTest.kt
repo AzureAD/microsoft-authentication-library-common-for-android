@@ -28,9 +28,9 @@ import com.microsoft.identity.common.components.InMemoryStorageSupplier
 import com.microsoft.identity.common.java.interfaces.INameValueStorage
 import com.microsoft.identity.common.java.util.ported.InMemoryStorage
 import com.microsoft.identity.common.java.util.ported.Predicate
+import kotlinx.coroutines.sync.Mutex
 import org.junit.Assert
 import org.junit.Test
-import java.util.concurrent.locks.ReentrantReadWriteLock
 
 class ActiveBrokerCacheTest {
 
@@ -65,7 +65,7 @@ class ActiveBrokerCacheTest {
      **/
     @Test
     fun testReadWriteAcrossInstances(){
-        val lock = ReentrantReadWriteLock()
+        val lock = Mutex()
         val storage = InMemoryStorage<String>()
 
         val cache1 = ActiveBrokerCache(storage, lock)
@@ -123,7 +123,7 @@ class ActiveBrokerCacheTest {
             }
         }
 
-        val cache = ActiveBrokerCache(writeOnlyStorage, ReentrantReadWriteLock())
+        val cache = ActiveBrokerCache(writeOnlyStorage, Mutex())
         val mockData = BrokerData(MOCK_PACKAGE_NAME, MOCK_HASH)
         cache.setCachedActiveBroker(mockData)
 
@@ -172,7 +172,7 @@ class ActiveBrokerCacheTest {
             }
         }
 
-        val cache = ActiveBrokerCache(readOnlyStorage, ReentrantReadWriteLock())
+        val cache = ActiveBrokerCache(readOnlyStorage, Mutex())
         Assert.assertEquals(BrokerData(MOCK_PACKAGE_NAME, MOCK_HASH), cache.getCachedActiveBroker())
         Assert.assertEquals(BrokerData(MOCK_PACKAGE_NAME, MOCK_HASH), cache.inMemoryCachedValue)
     }
@@ -222,7 +222,7 @@ class ActiveBrokerCacheTest {
             }
         }
 
-        val cache = ActiveBrokerCache(readOnlyStorage, ReentrantReadWriteLock())
+        val cache = ActiveBrokerCache(readOnlyStorage, Mutex())
         val mockData = BrokerData(MOCK_PACKAGE_NAME, MOCK_HASH)
         cache.setCachedActiveBroker(mockData)
 
@@ -265,7 +265,7 @@ class ActiveBrokerCacheTest {
             }
         }
 
-        val cache = ActiveBrokerCache(clearOnlyStorage, ReentrantReadWriteLock())
+        val cache = ActiveBrokerCache(clearOnlyStorage, Mutex())
         cache.inMemoryCachedValue = BrokerData(MOCK_PACKAGE_NAME, MOCK_HASH)
 
         cache.clearCachedActiveBroker()
@@ -275,7 +275,7 @@ class ActiveBrokerCacheTest {
 
     @Test
     fun testE2EWriteReadClear(){
-        val cache = ActiveBrokerCache(InMemoryStorage(), ReentrantReadWriteLock())
+        val cache = ActiveBrokerCache(InMemoryStorage(), Mutex())
         Assert.assertNull(cache.getCachedActiveBroker())
 
         val mockData = BrokerData(MOCK_PACKAGE_NAME, MOCK_HASH)
