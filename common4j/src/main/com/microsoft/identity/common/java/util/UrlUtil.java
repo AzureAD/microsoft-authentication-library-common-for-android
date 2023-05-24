@@ -230,4 +230,9 @@ public class UrlUtil {
             throw new RuntimeException(e);
         }
     }
+
+    public static String removeTrailingSlash(@NonNull final String urlString) {
+        final String uri = urlString.replaceFirst("/*$", "");
+        return uri;
+    }
 }
