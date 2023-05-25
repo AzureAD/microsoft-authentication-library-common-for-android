@@ -339,7 +339,7 @@ class BrokerDiscoveryClientTests {
 
     /**
      * Create 3 clients. Try to make requests from multiple coroutines (same thread).
-     * Only 1 IPC call should be made. Value should be read from cache.
+     * Only 1 IPC call should be made. The rest should read from cache.
      **/
     @Test
     fun testRaceCondition_MultiCoroutines(){
@@ -381,7 +381,7 @@ class BrokerDiscoveryClientTests {
 
     /**
      * Create 3 clients. Try to make requests from multiple threads.
-     * Only 1 IPC call should be made. Value should be read from cache.
+     * Only 1 IPC call should be made. The rest should read from cache.
      **/
     @Test
     fun testRaceCondition_MultiThread(){
