@@ -6,6 +6,7 @@ V.NEXT
 - [MINOR] Add active broker cache (#2030)
 - [MAJOR] Added support for DeviceCodeFlow with device id claims
 - [MINOR] Replacing SHA-1 used in broker validation with SHA-512 (#2019)
+- [MINOR] Removing thumbprint check from PKeyAuth challenge (#2045)
 
 V.12.0.0
 ----------
