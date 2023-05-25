@@ -51,13 +51,6 @@ public interface IDeviceCertificate {
     X509Certificate getX509();
 
     /**
-     * Gets thumbPrint for certificate.
-     *
-     * @return thumbPrint for certificate.
-     */
-    String getThumbPrint();
-
-    /**
      * Signs a piece of data with the (private key associated to the) certificate.
      *
      * @param algorithm         algorithm for signing the data.

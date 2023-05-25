@@ -109,25 +109,25 @@ data class BrokerData(val packageName : String,
         @JvmStatic
         val debugMicrosoftAuthenticator = BrokerData(
             AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME,
-            AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_DEBUG_SIGNATURE
+            AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_DEBUG_SIGNATURE_SHA512
         )
 
         @JvmStatic
         val prodMicrosoftAuthenticator = BrokerData(
             AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME,
-            AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_RELEASE_SIGNATURE
+            AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_RELEASE_SIGNATURE_SHA512
         )
 
         @JvmStatic
         val prodCompanyPortal = BrokerData(
             AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME,
-            AuthenticationConstants.Broker.COMPANY_PORTAL_APP_RELEASE_SIGNATURE
+            AuthenticationConstants.Broker.COMPANY_PORTAL_APP_RELEASE_SIGNATURE_SHA512
         )
 
         @JvmStatic
         val debugBrokerHost = BrokerData(
             AuthenticationConstants.Broker.BROKER_HOST_APP_PACKAGE_NAME,
-            AuthenticationConstants.Broker.BROKER_HOST_APP_SIGNATURE
+            AuthenticationConstants.Broker.BROKER_HOST_APP_SIGNATURE_SHA512
         )
 
         @JvmStatic
