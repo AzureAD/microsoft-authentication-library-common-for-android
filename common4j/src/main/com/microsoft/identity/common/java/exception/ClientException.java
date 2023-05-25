@@ -387,6 +387,12 @@ public class ClientException extends BaseException {
      * The android version used does not support the operation.
      */
     public static final String UNSUPPORTED_ANDROID_API_VERSION = "unsupported_android_api_version";
+    
+    /**
+     * Error code to be returned when the broker determines that only account manager can be used
+     * in the Broker Discovery process.
+     **/
+    public static final String ONLY_SUPPORTS_ACCOUNT_MANAGER_ERROR_CODE = "ONLY_SUPPORTS_ACCOUNT_MANAGER_ERROR_CODE";
 
     /**
      * Constructor of ClientException.

@@ -72,11 +72,6 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
         const val ERROR_BUNDLE_KEY = "ERROR_BUNDLE_KEY"
 
         /**
-         * Error code to be returned when the broker determines that only account manager can be used.
-         **/
-        const val ONLY_SUPPORTS_ACCOUNT_MANAGER_ERROR_CODE = "ONLY_SUPPORTS_ACCOUNT_MANAGER_ERROR_CODE"
-
-        /**
          * Per-process Thread-safe, coroutine-safe Mutex of this class.
          * This is to prevent the IPC mechanism from being unnecessarily triggered due to race condition.
          *
