@@ -24,13 +24,13 @@ package com.microsoft.identity.common.internal.activebrokerdiscovery
 
 import android.os.Bundle
 import com.microsoft.identity.common.exception.BrokerCommunicationException
-import com.microsoft.identity.common.internal.activebrokerdiscovery.BrokerDiscoveryClient.Companion.ONLY_SUPPORTS_ACCOUNT_MANAGER_ERROR_CODE
 import com.microsoft.identity.common.internal.broker.BrokerData.Companion.prodCompanyPortal
 import com.microsoft.identity.common.internal.broker.BrokerData.Companion.prodMicrosoftAuthenticator
 import com.microsoft.identity.common.internal.broker.ipc.AbstractIpcStrategyWithServiceValidation
 import com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle
 import com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy
 import com.microsoft.identity.common.java.exception.ClientException
+import com.microsoft.identity.common.java.exception.ClientException.ONLY_SUPPORTS_ACCOUNT_MANAGER_ERROR_CODE
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert
@@ -39,8 +39,6 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.atomic.AtomicInteger
-import java.util.concurrent.locks.ReentrantLock
 
 @RunWith(RobolectricTestRunner::class)
 class BrokerDiscoveryClientTests {
