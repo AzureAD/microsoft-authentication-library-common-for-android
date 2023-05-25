@@ -36,6 +36,7 @@ import com.microsoft.identity.common.java.interfaces.IPlatformComponents
 import com.microsoft.identity.common.java.logging.Logger
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 
 /**
@@ -167,8 +168,7 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
         val methodTag = "$TAG:getActiveBroker"
 
         return runBlocking {
-            classLevelLock.lock()
-            try {
+            classLevelLock.withLock {
                 if (!shouldSkipCache) {
                     val cachedData = cache.getCachedActiveBroker()
                     cachedData?.let {
@@ -203,8 +203,6 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
                 )
 
                 return@runBlocking accountManagerResult
-            } finally {
-                classLevelLock.unlock()
             }
         }
     }

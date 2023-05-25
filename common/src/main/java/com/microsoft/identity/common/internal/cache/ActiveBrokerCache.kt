@@ -27,6 +27,7 @@ import com.microsoft.identity.common.java.interfaces.INameValueStorage
 import com.microsoft.identity.common.java.interfaces.IStorageSupplier
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import net.jcip.annotations.ThreadSafe
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import kotlin.concurrent.read
@@ -115,8 +116,7 @@ class ActiveBrokerCache
 
     override fun getCachedActiveBroker(): BrokerData? {
         return runBlocking {
-            lock.lock()
-            try {
+            lock.withLock {
                 if (inMemoryCachedValue != null) {
                     return@runBlocking inMemoryCachedValue
                 }
@@ -129,34 +129,26 @@ class ActiveBrokerCache
 
                 inMemoryCachedValue = BrokerData(packageName, signatureHash)
                 return@runBlocking inMemoryCachedValue
-            } finally {
-                lock.unlock()
             }
         }
     }
 
     override fun setCachedActiveBroker(brokerData: BrokerData) {
         return runBlocking {
-            lock.lock()
-            try {
+            lock.withLock {
                 storage.put(ACTIVE_BROKER_CACHE_PACKAGE_NAME_KEY, brokerData.packageName)
                 storage.put(ACTIVE_BROKER_CACHE_SIGHASH_KEY, brokerData.signatureHash)
                 inMemoryCachedValue = brokerData.copy()
-            } finally {
-                lock.unlock()
             }
         }
     }
 
     override fun clearCachedActiveBroker() {
         return runBlocking {
-            lock.lock()
-            try {
+            lock.withLock {
                 storage.remove(ACTIVE_BROKER_CACHE_PACKAGE_NAME_KEY)
                 storage.remove(ACTIVE_BROKER_CACHE_SIGHASH_KEY)
                 inMemoryCachedValue = null
-            } finally {
-                lock.unlock()
             }
         }
     }
