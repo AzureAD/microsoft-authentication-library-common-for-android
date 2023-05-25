@@ -71,6 +71,9 @@ class ActiveBrokerCache
 
         /**
          * The Mutex for all [ActiveBrokerCache] instances used by the SDK code.
+         * (As of May 24, 2023... Kotlin has yet to officially support ReadWriteMutex.
+         *  I don't think it's worth implementing our own (for now).
+         *  If we eventually are seeing a perf hit, sure...)
          **/
         private val sSdkSideLock = Mutex()
 
