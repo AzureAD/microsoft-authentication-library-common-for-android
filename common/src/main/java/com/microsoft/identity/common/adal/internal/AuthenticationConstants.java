@@ -1077,6 +1077,7 @@ public final class AuthenticationConstants {
          * component.Generated with SHA-512.
          */
         public static final String BROKER_HOST_APP_SIGNATURE_SHA512 = "xxAk8S05zu0Nkce+X2J6IKJ2e7YE4F9ZorZj0YnYUQ2vw8vLc8VGGOqJdTnVySbbcy9VY8UDbOfeOETSErYllw==";
+
         /**
          * Package name of the Link To Windows app.
          */

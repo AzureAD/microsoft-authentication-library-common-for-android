@@ -102,7 +102,7 @@ public class PackageHelper {
     }
 
     /**
-     * Reads first signature in the list for given package name.v
+     * Reads first signature in the list for given package name.
      *
      * @param packageInfo package for which signature should be returned
      * @param useSha512 if true, uses SHA-512 to generate signature hash (should be used for verification purposes); if false, uses default SHA (redirect URI purposes)
