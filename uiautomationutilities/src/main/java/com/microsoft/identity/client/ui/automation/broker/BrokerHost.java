@@ -41,6 +41,19 @@ import java.util.List;
 
 import lombok.Getter;
 
+/**
+ * A model for interacting with the BrokerHost app during UI Test.
+ * <p>
+ * By default all the {@link ITestBroker} operations are performed using the {@link SingleWpjApiFragment} class.
+ * if you want to perform specif broker host operations, you need to call the corresponding fragment class
+ * and then call the corresponding method.
+ * <p>
+ * Legacy WPJ operations are contained in the {@link SingleWpjApiFragment} class.
+ * Multiple WPJ operations are contained in the {@link MultipleWpjApiFragment} class.
+ * Broker API operations are contained in the {@link BrokerApiFragment} class.
+ * Broker Flights operations are contained in the {@link BrokerFlightsFragment} class.
+ *
+ */
 public class BrokerHost extends AbstractTestBroker {
     private final static String TAG = BrokerHost.class.getSimpleName();
 
