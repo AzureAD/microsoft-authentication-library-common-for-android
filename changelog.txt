@@ -6,6 +6,7 @@ V.NEXT
 - [MAJOR] Consolidate IStorageSupplier logic (#2033)
 - [MINOR] Add active broker cache (#2030)
 - [MAJOR] Added support for DeviceCodeFlow with device id claims
+- [MINOR] Replacing SHA-1 used in broker validation with SHA-512 (#2019)
 
 V.12.0.0
 ----------

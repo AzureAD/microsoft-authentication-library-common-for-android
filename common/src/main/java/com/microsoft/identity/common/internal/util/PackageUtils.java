@@ -134,22 +134,21 @@ public final class PackageUtils {
      * @throws CertificateEncodingException if a certificate was corrupt.
      * @throws ClientException if no valid hash was found in the list.
      */
-    public static final String verifySignatureHash(final @NonNull List<X509Certificate> certs,
+    public static String verifySignatureHash(final @NonNull List<X509Certificate> certs,
                                              final @NonNull Iterator<String> validHashes)
             throws NoSuchAlgorithmException,
             CertificateEncodingException, ClientException {
-
         final StringBuilder hashListStringBuilder = new StringBuilder();
 
         for (final X509Certificate x509Certificate : certs) {
-            final MessageDigest messageDigest = MessageDigest.getInstance("SHA");
+            final MessageDigest messageDigest = MessageDigest.getInstance("SHA-512");
             messageDigest.update(x509Certificate.getEncoded());
 
             // Check the hash for signer cert is the same as what we hardcoded.
-            final String signatureHash = Base64.encodeToString(messageDigest.digest(), Base64.NO_WRAP);
+            final String sha512SignatureHash = Base64.encodeToString(messageDigest.digest(), Base64.NO_WRAP);
 
             //Collecting output for logging
-            hashListStringBuilder.append(signatureHash);
+            hashListStringBuilder.append(sha512SignatureHash);
             hashListStringBuilder.append(',');
 
             while (validHashes.hasNext()) {
@@ -162,8 +161,8 @@ public final class PackageUtils {
                 if (HEX_PATTERN.matcher(hash).matches()) {
                     hash = convertToBase64(hash);
                 }
-                if (!TextUtils.isEmpty(hash) && hash.equals(signatureHash)) {
-                    return signatureHash;
+                if (!TextUtils.isEmpty(hash) && hash.equals(sha512SignatureHash)) {
+                    return sha512SignatureHash;
                 }
             }
         }

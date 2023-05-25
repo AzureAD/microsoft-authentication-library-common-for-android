@@ -251,7 +251,8 @@ public class BrokerValidator {
         boolean isValidBrokerRedirect = StringUtil.equalsIgnoreCase(redirectUri, expectedBrokerRedirectUri);
         if (packageName.equals(AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME)) {
             final PackageHelper info = new PackageHelper(context.getPackageManager());
-            final String signatureDigest = info.getCurrentSignatureForPackage(packageName);
+            //For merely verifying that the app is AuthApp, use a 512 hash.
+            final String signatureDigest = info.getSha512SignatureForPackage(packageName);
             if (BrokerData.getProdMicrosoftAuthenticator().getSignatureHash().equals(signatureDigest)
                     || BrokerData.getDebugMicrosoftAuthenticator().getSignatureHash().equals(signatureDigest)) {
                 // If the caller is the Authenticator, check if the redirect uri matches with either
@@ -284,7 +285,7 @@ public class BrokerValidator {
      */
     public static String getBrokerRedirectUri(final Context context, final String packageName) {
         final PackageHelper info = new PackageHelper(context.getPackageManager());
-        final String signatureDigest = info.getCurrentSignatureForPackage(packageName);
+        final String signatureDigest = info.getSha1SignatureForPackage(packageName);
         return PackageHelper.getBrokerRedirectUrl(packageName,
                 signatureDigest);
     }
