@@ -249,7 +249,7 @@ public class PackageHelper {
 
         if (packageName.equals(IPPHONE_APP_PACKAGE_NAME) &&
                 isPackageInstalledAndEnabled(IPPHONE_APP_PACKAGE_NAME)) {
-            final String currentSignatureForTeamsApp = getCurrentSignatureForPackage(IPPHONE_APP_PACKAGE_NAME);
+            final String currentSignatureForTeamsApp = getSha1SignatureForPackage(IPPHONE_APP_PACKAGE_NAME);
             if (IPPHONE_APP_SIGNATURE.equals(currentSignatureForTeamsApp) ||
                     IPPHONE_APP_DEBUG_SIGNATURE.equals(currentSignatureForTeamsApp)) {
                 return true;
