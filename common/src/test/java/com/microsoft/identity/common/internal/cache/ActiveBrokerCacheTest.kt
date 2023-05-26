@@ -31,6 +31,7 @@ import com.microsoft.identity.common.java.util.ported.Predicate
 import kotlinx.coroutines.sync.Mutex
 import org.junit.Assert
 import org.junit.Test
+import java.util.concurrent.TimeUnit
 
 class ActiveBrokerCacheTest {
 
@@ -46,7 +47,7 @@ class ActiveBrokerCacheTest {
         val storageSupplier = getStorageSupplier()
 
         val brokerCache = ActiveBrokerCache.getBrokerMetadataStoreOnBrokerSide(storageSupplier)
-        val sdkCache = ActiveBrokerCache.getBrokerMetadataStoreOnSdkSide(storageSupplier)
+        val sdkCache = ClientActiveBrokerCache.getBrokerMetadataStoreOnSdkSide(storageSupplier)
 
         Assert.assertNull(brokerCache.getCachedActiveBroker())
         Assert.assertNull(sdkCache.getCachedActiveBroker())
@@ -287,6 +288,22 @@ class ActiveBrokerCacheTest {
         cache.clearCachedActiveBroker()
         Assert.assertNull(cache.getCachedActiveBroker())
         Assert.assertNull(cache.inMemoryCachedValue)
+    }
+
+    @Test
+    fun testSetSkipToAccountManager(){
+        val cache = ClientActiveBrokerCache(InMemoryStorage(), Mutex())
+        Assert.assertNull(cache.getCachedActiveBroker())
+        Assert.assertFalse(cache.shouldUseAccountManager())
+
+        cache.setShouldUseAccountManagerForTheNextMilliseconds(
+            TimeUnit.SECONDS.toMillis(2)
+        )
+        Assert.assertTrue(cache.shouldUseAccountManager())
+
+        Thread.sleep(TimeUnit.SECONDS.toMillis(2))
+
+        Assert.assertFalse(cache.shouldUseAccountManager())
     }
 
     private fun getStorageSupplier() : IStorageSupplier {

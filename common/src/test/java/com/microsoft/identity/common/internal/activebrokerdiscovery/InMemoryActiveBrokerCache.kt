@@ -24,13 +24,16 @@ package com.microsoft.identity.common.internal.activebrokerdiscovery
 
 import com.microsoft.identity.common.internal.broker.BrokerData
 import com.microsoft.identity.common.internal.cache.IActiveBrokerCache
+import com.microsoft.identity.common.internal.cache.IClientActiveBrokerCache
+import java.time.Instant
 
 /**
  * An [IActiveBrokerCache] which stores values in-memory.
  **/
-class InMemoryActiveBrokerCache: IActiveBrokerCache {
+class InMemoryActiveBrokerCache: IClientActiveBrokerCache {
 
     private var activeBroker: BrokerData? = null
+    private var shouldUseAccountManagerUntil: Long? = null
 
     @Synchronized
     override fun getCachedActiveBroker(): BrokerData? {
@@ -45,5 +48,18 @@ class InMemoryActiveBrokerCache: IActiveBrokerCache {
     @Synchronized
     override fun clearCachedActiveBroker() {
         activeBroker = null
+    }
+
+    @Synchronized
+    override fun shouldUseAccountManager(): Boolean {
+        shouldUseAccountManagerUntil?.let {
+            return Instant.now().toEpochMilli() < it
+        }
+        return false
+    }
+
+    @Synchronized
+    override fun setShouldUseAccountManagerForTheNextMilliseconds(time: Long) {
+        shouldUseAccountManagerUntil = Instant.now().toEpochMilli() + time
     }
 }

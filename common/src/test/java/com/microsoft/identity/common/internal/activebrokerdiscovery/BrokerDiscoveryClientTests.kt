@@ -153,6 +153,7 @@ class BrokerDiscoveryClientTests {
             }
         )
         Assert.assertEquals(prodCompanyPortal, client.getActiveBroker())
+        Assert.assertTrue(cache.shouldUseAccountManager())
         Assert.assertNull(cache.getCachedActiveBroker())
     }
 
@@ -190,6 +191,7 @@ class BrokerDiscoveryClientTests {
         )
 
         Assert.assertEquals(prodMicrosoftAuthenticator, client.getActiveBroker())
+        Assert.assertTrue(cache.shouldUseAccountManager())
         Assert.assertNull(cache.getCachedActiveBroker())
     }
 

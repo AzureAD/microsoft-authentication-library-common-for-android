@@ -37,7 +37,7 @@ import kotlin.concurrent.write
  * A cache for storing the active broker as known by the caller.
  **/
 @ThreadSafe
-class ActiveBrokerCache
+open class ActiveBrokerCache
     internal constructor(private val storage: INameValueStorage<String>,
                          private val lock: Mutex) : IActiveBrokerCache {
 
@@ -58,25 +58,12 @@ class ActiveBrokerCache
         private const val BROKER_METADATA_CACHE_STORE_ON_BROKER_SIDE_STORAGE_NAME = "BROKER_METADATA_CACHE_STORE_ON_BROKER_SIDE"
 
         /**
-         * File name of [ActiveBrokerCache] used by the SDK code.
-         **/
-        private const val BROKER_METADATA_CACHE_STORE_ON_SDK_SIDE_STORAGE_NAME = "BROKER_METADATA_CACHE_STORE_ON_SDK_SIDE"
-
-        /**
          * The Mutex for all [ActiveBrokerCache] instances used by the broker code.
          * (As of May 24, 2023... Kotlin has yet to officially support ReadWriteMutex.
          *  I don't think it's worth implementing our own (for now).
          *  If we eventually are seeing a perf hit, sure...)
          **/
         private val sBrokerSideLock = Mutex()
-
-        /**
-         * The Mutex for all [ActiveBrokerCache] instances used by the SDK code.
-         * (As of May 24, 2023... Kotlin has yet to officially support ReadWriteMutex.
-         *  I don't think it's worth implementing our own (for now).
-         *  If we eventually are seeing a perf hit, sure...)
-         **/
-        private val sSdkSideLock = Mutex()
 
         /**
          * If the caller is the broker, invoke this function.
@@ -90,21 +77,6 @@ class ActiveBrokerCache
                 storage = storageSupplier.getEncryptedNameValueStore(
                     BROKER_METADATA_CACHE_STORE_ON_BROKER_SIDE_STORAGE_NAME, String::class.java),
                 lock = sBrokerSideLock
-            )
-        }
-
-        /**
-         * If the caller is an SDK, invoke this function.
-         *
-         * @param storageSupplier an [IStorageSupplier] component.
-         * @return a thread-safe [IActiveBrokerCache].
-         */
-        fun getBrokerMetadataStoreOnSdkSide(storageSupplier: IStorageSupplier)
-                : IActiveBrokerCache {
-            return ActiveBrokerCache(
-                storage = storageSupplier.getEncryptedNameValueStore(
-                    BROKER_METADATA_CACHE_STORE_ON_SDK_SIDE_STORAGE_NAME, String::class.java),
-                lock = sSdkSideLock
             )
         }
     }
