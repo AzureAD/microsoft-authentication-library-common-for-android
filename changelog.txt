@@ -5,7 +5,7 @@ V.NEXT
 - [MINOR] Add BrokerDiscoveryClient + Tests (#2039)
 - [MAJOR] Consolidate IStorageSupplier logic (#2033)
 - [MINOR] Add active broker cache (#2030)
-- [MAJOR] Added support for DeviceCodeFlow with device id claims
+- [MAJOR] Added support for DeviceCodeFlow with device id claims. New API is only available in version 13 or higher (#2044)
 - [MINOR] Replacing SHA-1 used in broker validation with SHA-512 (#2019)
 - [MINOR] Removing thumbprint check from PKeyAuth challenge (#2045)
 
