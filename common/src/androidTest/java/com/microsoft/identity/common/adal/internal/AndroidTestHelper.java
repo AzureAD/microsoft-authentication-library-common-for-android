@@ -76,7 +76,7 @@ public class AndroidTestHelper {
         final Context context = InstrumentationRegistry.getInstrumentation().getContext();
         for (final Signature signature : PackageHelper.getSignatures(context)) {
             mTestSignature = signature.toByteArray();
-            MessageDigest md = MessageDigest.getInstance("SHA");
+            MessageDigest md = MessageDigest.getInstance("SHA-512");
             md.update(mTestSignature);
             mTestTag = Base64.encodeToString(md.digest(), Base64.DEFAULT).trim();
             break;

@@ -1032,28 +1032,66 @@ public final class AuthenticationConstants {
 
         /**
          * Signature info for Intune Company portal app that installs authenticator
-         * component.
+         * component. Generated with SHA-1.
          */
         public static final String COMPANY_PORTAL_APP_RELEASE_SIGNATURE = "1L4Z9FJCgn5c0VLhyAxC5O9LdlE=";
 
         /**
-         * Signature info for Azure authenticator app that installs authenticator
-         * component.
+         * Signature info for Intune Company portal app that installs authenticator
+         * component. Generated with SHA-512.
+         */
+        public static final String COMPANY_PORTAL_APP_RELEASE_SIGNATURE_SHA512 = "jPpMoaNvcxSLMX4yG4C3Gf86rtTqh33SqpuRKg4WOP+MnnpA52zZgvKLW76U4Cqqf68iaBk9W7k/jhciiSAtgQ==";
+
+        /**
+         * Signature info for Azure authenticator release app that installs authenticator
+         * component. Generated with SHA-1.
          */
         public static final String AZURE_AUTHENTICATOR_APP_RELEASE_SIGNATURE = "ho040S3ffZkmxqtQrSwpTVOn9r0=";
 
         /**
-         * Signature info for Azure authenticator app that installs authenticator
-         * component.
+         * Signature info for Azure authenticator release app that installs authenticator
+         * component. Generated with SHA-512.
+         */
+        public static final String AZURE_AUTHENTICATOR_APP_RELEASE_SIGNATURE_SHA512 = "Gu8CuaYmSV5CHWd6dz3tGPXIE+YTalCVIXi5lEBXpvUgsMKoHbU9Rqou3WNRNU1tsz8pvEADTCCJ5f02fbw9qw==";
+
+        /**
+         * Signature info for Azure authenticator debug app that installs authenticator
+         * component. Generated with SHA-1.
          */
         public static final String AZURE_AUTHENTICATOR_APP_DEBUG_SIGNATURE = "N1jdcbbnKDr0LaFZlqdhXgm2luE=";
 
         /**
+         * Signature info for Azure authenticator debug app that installs authenticator
+         * component. Generated with SHA-512.
+         */
+        public static final String AZURE_AUTHENTICATOR_APP_DEBUG_SIGNATURE_SHA512 = "pdAtoxfsEwbpQsIaua5Uobl5AQEjqt40aPXI7UY1lIW0NTmg0G4jHQ5T5mujSjjU06q4mEHs5hb6z/Mr0PNlmQ==";
+
+        /**
          * Signature info for Broker Host app that installs authenticator
-         * component.
+         * component.Generated with SHA-1.
          */
         public static final String BROKER_HOST_APP_SIGNATURE = "1wIqXSqBj7w+h11ZifsnqwgyKrY=";
 
+        /**
+         * Signature info for Broker Host app that installs authenticator
+         * component.Generated with SHA-512.
+         */
+        public static final String BROKER_HOST_APP_SIGNATURE_SHA512 = "xxAk8S05zu0Nkce+X2J6IKJ2e7YE4F9ZorZj0YnYUQ2vw8vLc8VGGOqJdTnVySbbcy9VY8UDbOfeOETSErYllw==";
+
+        /**
+         * Package name of the Link To Windows app.
+         */
+        public static final String LTW_APP_PACKAGE_NAME = "com.microsoft.appmanager";
+
+        /**
+         * SHA512 signature hash of the Link To Windows app, signed by the production keystore key.
+         */
+        public static final String LTW_APP_SHA512_RELEASE_SIGNATURE = "WhUdh04ZkQLmNb//lKmohyqDdPMWXHcI0O3AvoLMtgF/smnED4r+Vguvgj6d4QG77Jl3avUKt6LeqF2TJPZVzg==";
+
+        /**
+         * SHA512 signature hash of the Link To Windows app, signed by a debug keystore key.
+         */
+        public static final String LTW_APP_SHA512_DEBUG_SIGNATURE = "x28mHDILP8IZRH6EfjD4zC1bcpgk8euKS91klxoddu8+e34xEgy3Q9XTa3ySY7C7EXX4o/EJpDV8MqmEfIf7LA==";
 
         /**
          * Teams IP Phones (Sakurai devices) is supported by Intune, but does not have a back button nor browser.
@@ -1475,7 +1513,9 @@ public final class AuthenticationConstants {
             BROKER_UPLOAD_LOGS(BROKER_API_UPLOAD_LOGS, BROKER_VERSION_4, null),
             FETCH_DCF_AUTH_RESULT(MSAL_FETCH_DCF_AUTH_RESULT_PATH, null, null),
             ACQUIRE_TOKEN_DCF(MSAL_ACQUIRE_TOKEN_DCF_PATH, null, null),
-            BROKER_DISCOVERY_METADATA_RETRIEVAL(RETRIEVE_BROKER_DISCOVERY_METADATA_PATH, null, null);
+            BROKER_DISCOVERY_METADATA_RETRIEVAL(RETRIEVE_BROKER_DISCOVERY_METADATA_PATH, null, null),
+            BROKER_DISCOVERY_FROM_SDK(BROKER_DISCOVERY_FROM_SDK_PATH, null, null),
+            BROKER_DISCOVERY_SET_ACTIVE_BROKER(BROKER_DISCOVERY_SET_ACTIVE_BROKER_PATH, null, null);
 
             /**
              * The content provider path that the API exists behind.
@@ -1582,6 +1622,17 @@ public final class AuthenticationConstants {
          * ContentProvider path for retrieving Broker Discovery Metadata.
          */
         public static final String RETRIEVE_BROKER_DISCOVERY_METADATA_PATH = "/brokerElection/brokerDiscoveryMetadataRetrieval";
+
+        /**
+         * ContentProvider path for triggering Broker Discovery on Broker side.
+         */
+        public static final String BROKER_DISCOVERY_FROM_SDK_PATH = "/brokerElection/brokerDiscoveryFromSdk";
+
+        /**
+         * ContentProvider path for setting active Broker.
+         * Can only be invoked by known broker apps only.
+         */
+        public static final String BROKER_DISCOVERY_SET_ACTIVE_BROKER_PATH = "/brokerElection/setActiveBroker";
 
         /**
          * Broker api path constant for adding flight information.
