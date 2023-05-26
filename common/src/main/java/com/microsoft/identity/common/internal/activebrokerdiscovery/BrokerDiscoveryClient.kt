@@ -206,7 +206,8 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
                     isPackageInstalled = isPackageInstalled,
                     shouldStopQueryForAWhile = {
                         Logger.info(
-                            methodTag,"Will skip broker discovery for the next 60 minutes."
+                            methodTag,"Will skip broker discovery via IPC and fall back to AccountManager " +
+                                    "for the next 60 minutes."
                         )
                         cache.setShouldUseAccountManagerForTheNextMilliseconds(TimeUnit.MINUTES.toMillis(60))
                     }
