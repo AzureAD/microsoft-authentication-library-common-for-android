@@ -249,6 +249,16 @@ public class BrokerHost extends AbstractTestBroker {
         Assert.assertTrue("Assert that the joined account is the expected account", dialogMessage.contains("SUCCESS"));
     }
 
+    public String obtainDeviceIdLegacyApp() {
+        final String buttonGetDeviceId = CommonUtils.getResourceId(
+                AbstractBrokerHost.BROKER_HOST_APP_PACKAGE_NAME,
+                "buttonDeviceId"
+        );
+        UiAutomatorUtils.handleButtonClick(buttonGetDeviceId);
+        final String dialogMessage = AbstractBrokerHost.dismissDialogBoxAndGetText();
+        return dialogMessage.replace("DeviceId:", "");
+    }
+
 
     public void wpjLeave() {
         singleWpjApiFragment.launch();
