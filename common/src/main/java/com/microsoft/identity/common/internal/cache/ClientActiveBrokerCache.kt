@@ -24,7 +24,6 @@ package com.microsoft.identity.common.internal.cache
 
 import com.microsoft.identity.common.java.interfaces.INameValueStorage
 import com.microsoft.identity.common.java.interfaces.IStorageSupplier
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.time.Instant
@@ -84,8 +83,7 @@ internal constructor(private val storage: INameValueStorage<String>,
      **/
     var cachedTimeStamp: Long? = null
 
-    override fun shouldUseAccountManager(): Boolean {
-        return runBlocking {
+    override suspend fun shouldUseAccountManager(): Boolean {
             lock.withLock {
                 if (cachedTimeStamp == null){
                     storage.get(SHOULD_USE_ACCOUNT_MANAGER_UNTIL_EPOCH_MILLISECONDS_KEY)?.let { rawValue ->
@@ -96,22 +94,21 @@ internal constructor(private val storage: INameValueStorage<String>,
                 }
 
                 if (isNotExpired(cachedTimeStamp)){
-                    return@runBlocking true
+                    return true
                 }
 
                 cachedTimeStamp = null
-                return@runBlocking false
+                return false
             }
-        }
+
     }
 
-    override fun setShouldUseAccountManagerForTheNextMilliseconds(timeInMillis: Long) {
-        return runBlocking {
+    override suspend fun setShouldUseAccountManagerForTheNextMilliseconds(timeInMillis: Long) {
             lock.withLock {
                 val timeStamp = Instant.now().toEpochMilli() + timeInMillis
                 storage.put(SHOULD_USE_ACCOUNT_MANAGER_UNTIL_EPOCH_MILLISECONDS_KEY, timeStamp.toString())
                 cachedTimeStamp = timeStamp
             }
-        }
+
     }
 }

@@ -34,12 +34,12 @@ interface IClientActiveBrokerCache: IActiveBrokerCache {
     /**
      * Returns true if [BrokerDiscoveryClient] should still use AccountManager.
      **/
-    fun shouldUseAccountManager(): Boolean
+    suspend fun shouldUseAccountManager(): Boolean
 
     /**
      * Set the time span when [BrokerDiscoveryClient] should just rely on AccountManager.
      *
      * @param timeInMillis Time in milliseconds (from now)
      **/
-    fun setShouldUseAccountManagerForTheNextMilliseconds(timeInMillis: Long)
+    suspend fun setShouldUseAccountManagerForTheNextMilliseconds(timeInMillis: Long)
 }

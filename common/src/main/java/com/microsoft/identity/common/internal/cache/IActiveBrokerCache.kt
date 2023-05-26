@@ -36,17 +36,17 @@ interface IActiveBrokerCache {
     /**
      * Gets the active broker from the cache.
      */
-    fun getCachedActiveBroker(): BrokerData?
+    suspend fun getCachedActiveBroker(): BrokerData?
 
     /**
      * Persists the active broker to the cache.
      *
      * @param brokerData the active [BrokerData] to persist.
      */
-    fun setCachedActiveBroker(brokerData: BrokerData)
+    suspend fun setCachedActiveBroker(brokerData: BrokerData)
 
     /**
      * Clears the active broker from the cache.
      */
-    fun clearCachedActiveBroker()
+    suspend fun clearCachedActiveBroker()
 }

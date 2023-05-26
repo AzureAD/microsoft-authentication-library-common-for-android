@@ -25,21 +25,17 @@ package com.microsoft.identity.common.internal.cache
 import com.microsoft.identity.common.internal.broker.BrokerData
 import com.microsoft.identity.common.java.interfaces.INameValueStorage
 import com.microsoft.identity.common.java.interfaces.IStorageSupplier
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import net.jcip.annotations.ThreadSafe
-import java.util.concurrent.locks.ReentrantReadWriteLock
-import kotlin.concurrent.read
-import kotlin.concurrent.write
 
 /**
  * A cache for storing the active broker as known by the caller.
  **/
 @ThreadSafe
 open class ActiveBrokerCache
-    internal constructor(private val storage: INameValueStorage<String>,
-                         private val lock: Mutex) : IActiveBrokerCache {
+internal constructor(private val storage: INameValueStorage<String>,
+                     private val lock: Mutex) : IActiveBrokerCache {
 
     companion object {
         /**
@@ -72,11 +68,11 @@ open class ActiveBrokerCache
          * @return a thread-safe [IActiveBrokerCache].
          * */
         fun getBrokerMetadataStoreOnBrokerSide(storageSupplier: IStorageSupplier)
-            : IActiveBrokerCache {
+                : IActiveBrokerCache {
             return ActiveBrokerCache(
-                storage = storageSupplier.getEncryptedNameValueStore(
-                    BROKER_METADATA_CACHE_STORE_ON_BROKER_SIDE_STORAGE_NAME, String::class.java),
-                lock = sBrokerSideLock
+                    storage = storageSupplier.getEncryptedNameValueStore(
+                            BROKER_METADATA_CACHE_STORE_ON_BROKER_SIDE_STORAGE_NAME, String::class.java),
+                    lock = sBrokerSideLock
             )
         }
     }
@@ -86,42 +82,40 @@ open class ActiveBrokerCache
      */
     internal var inMemoryCachedValue: BrokerData? = null
 
-    override fun getCachedActiveBroker(): BrokerData? {
-        return runBlocking {
-            lock.withLock {
-                if (inMemoryCachedValue != null) {
-                    return@runBlocking inMemoryCachedValue
-                }
+    override suspend fun getCachedActiveBroker(): BrokerData? {
 
-                val packageName = storage.get(ACTIVE_BROKER_CACHE_PACKAGE_NAME_KEY)
-                val signatureHash = storage.get(ACTIVE_BROKER_CACHE_SIGHASH_KEY)
-
-                if (packageName.isNullOrEmpty() || signatureHash.isNullOrEmpty())
-                    return@runBlocking null
-
-                inMemoryCachedValue = BrokerData(packageName, signatureHash)
-                return@runBlocking inMemoryCachedValue
+        lock.withLock {
+            if (inMemoryCachedValue != null) {
+                return inMemoryCachedValue
             }
+
+            val packageName = storage.get(ACTIVE_BROKER_CACHE_PACKAGE_NAME_KEY)
+            val signatureHash = storage.get(ACTIVE_BROKER_CACHE_SIGHASH_KEY)
+
+            if (packageName.isNullOrEmpty() || signatureHash.isNullOrEmpty())
+                return null
+
+            inMemoryCachedValue = BrokerData(packageName, signatureHash)
+            return inMemoryCachedValue
         }
+
     }
 
-    override fun setCachedActiveBroker(brokerData: BrokerData) {
-        return runBlocking {
-            lock.withLock {
-                storage.put(ACTIVE_BROKER_CACHE_PACKAGE_NAME_KEY, brokerData.packageName)
-                storage.put(ACTIVE_BROKER_CACHE_SIGHASH_KEY, brokerData.signatureHash)
-                inMemoryCachedValue = brokerData.copy()
-            }
+    override suspend fun setCachedActiveBroker(brokerData: BrokerData) {
+        lock.withLock {
+            storage.put(ACTIVE_BROKER_CACHE_PACKAGE_NAME_KEY, brokerData.packageName)
+            storage.put(ACTIVE_BROKER_CACHE_SIGHASH_KEY, brokerData.signatureHash)
+            inMemoryCachedValue = brokerData.copy()
         }
+
     }
 
-    override fun clearCachedActiveBroker() {
-        return runBlocking {
-            lock.withLock {
-                storage.remove(ACTIVE_BROKER_CACHE_PACKAGE_NAME_KEY)
-                storage.remove(ACTIVE_BROKER_CACHE_SIGHASH_KEY)
-                inMemoryCachedValue = null
-            }
+    override suspend fun clearCachedActiveBroker() {
+        lock.withLock {
+            storage.remove(ACTIVE_BROKER_CACHE_PACKAGE_NAME_KEY)
+            storage.remove(ACTIVE_BROKER_CACHE_SIGHASH_KEY)
+            inMemoryCachedValue = null
         }
+
     }
 }

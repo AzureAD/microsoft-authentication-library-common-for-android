@@ -153,8 +153,10 @@ class BrokerDiscoveryClientTests {
             }
         )
         Assert.assertEquals(prodCompanyPortal, client.getActiveBroker())
+        runBlocking {
         Assert.assertTrue(cache.shouldUseAccountManager())
         Assert.assertNull(cache.getCachedActiveBroker())
+        }
     }
 
     /**
@@ -191,8 +193,10 @@ class BrokerDiscoveryClientTests {
         )
 
         Assert.assertEquals(prodMicrosoftAuthenticator, client.getActiveBroker())
+        runBlocking {
         Assert.assertTrue(cache.shouldUseAccountManager())
         Assert.assertNull(cache.getCachedActiveBroker())
+        }
     }
 
 
@@ -231,7 +235,9 @@ class BrokerDiscoveryClientTests {
     @Test
     fun testCache() {
         val cache = InMemoryActiveBrokerCache()
+        runBlocking {
         cache.setCachedActiveBroker(prodMicrosoftAuthenticator)
+        }
 
         val client = BrokerDiscoveryClient(
             brokerCandidates = setOf(
@@ -263,7 +269,9 @@ class BrokerDiscoveryClientTests {
     @Test
     fun testCache_AppUninstalled() {
         val cache = InMemoryActiveBrokerCache()
+        runBlocking {
         cache.setCachedActiveBroker(prodMicrosoftAuthenticator)
+        }
 
         val client = BrokerDiscoveryClient(
             brokerCandidates = setOf(
@@ -287,7 +295,9 @@ class BrokerDiscoveryClientTests {
         )
 
         Assert.assertNull(client.getActiveBroker())
+        runBlocking {
         Assert.assertNull(cache.getCachedActiveBroker())
+        }
     }
 
     /**
@@ -298,8 +308,9 @@ class BrokerDiscoveryClientTests {
     @Test
     fun testSkipCache() {
         val cache = InMemoryActiveBrokerCache()
+        runBlocking {
         cache.setCachedActiveBroker(prodMicrosoftAuthenticator)
-
+        }
         val client = BrokerDiscoveryClient(
             brokerCandidates = setOf(
                 prodMicrosoftAuthenticator, prodCompanyPortal
@@ -336,7 +347,9 @@ class BrokerDiscoveryClientTests {
         )
 
         Assert.assertEquals(prodCompanyPortal, client.getActiveBroker(shouldSkipCache = true))
+        runBlocking {
         Assert.assertEquals(prodCompanyPortal, cache.getCachedActiveBroker())
+        }
     }
 
     /**

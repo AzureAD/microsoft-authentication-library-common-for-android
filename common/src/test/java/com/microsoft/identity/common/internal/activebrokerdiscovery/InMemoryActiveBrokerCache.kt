@@ -37,27 +37,27 @@ class InMemoryActiveBrokerCache: IClientActiveBrokerCache {
     private var shouldUseAccountManagerUntil: Long? = null
 
     @Synchronized
-    override fun getCachedActiveBroker(): BrokerData? {
+    override suspend fun getCachedActiveBroker(): BrokerData? {
         return activeBroker
     }
 
     @Synchronized
-    override fun setCachedActiveBroker(brokerData: BrokerData) {
+    override suspend fun setCachedActiveBroker(brokerData: BrokerData) {
         activeBroker = brokerData
     }
 
     @Synchronized
-    override fun clearCachedActiveBroker() {
+    override suspend fun clearCachedActiveBroker() {
         activeBroker = null
     }
 
     @Synchronized
-    override fun shouldUseAccountManager(): Boolean {
+    override suspend fun shouldUseAccountManager(): Boolean {
         return isNotExpired(shouldUseAccountManagerUntil)
     }
 
     @Synchronized
-    override fun setShouldUseAccountManagerForTheNextMilliseconds(time: Long) {
+    override suspend fun setShouldUseAccountManagerForTheNextMilliseconds(time: Long) {
         shouldUseAccountManagerUntil = Instant.now().toEpochMilli() + time
     }
 }
