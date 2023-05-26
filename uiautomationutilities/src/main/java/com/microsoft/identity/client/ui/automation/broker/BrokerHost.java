@@ -24,30 +24,41 @@ package com.microsoft.identity.client.ui.automation.broker;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.test.platform.app.InstrumentationRegistry;
-import androidx.test.uiautomator.UiDevice;
-import androidx.test.uiautomator.UiObject;
-import androidx.test.uiautomator.UiObjectNotFoundException;
-import androidx.test.uiautomator.UiSelector;
 
-import com.google.gson.Gson;
 import com.microsoft.identity.client.ui.automation.constants.DeviceAdmin;
 import com.microsoft.identity.client.ui.automation.installer.LocalApkInstaller;
+import com.microsoft.identity.client.ui.automation.interaction.IPromptHandler;
+import com.microsoft.identity.client.ui.automation.interaction.PromptHandlerParameters;
+import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.AadPromptHandler;
 import com.microsoft.identity.client.ui.automation.logging.Logger;
+import com.microsoft.identity.client.ui.automation.utils.CommonUtils;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
-import com.microsoft.identity.common.java.util.StringUtil;
+import com.microsoft.identity.common.java.util.ThreadUtils;
 
 import org.junit.Assert;
 
-import android.util.Base64;
-
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
+
+import lombok.Getter;
+
+/**
+ * A model for interacting with the BrokerHost app during UI Test.
+ * <p>
+ * By default all the {@link ITestBroker} operations are performed using the {@link SingleWpjApiFragment} class.
+ * if you want to perform specif broker host operations, you need to call the corresponding fragment class
+ * and then call the corresponding method.
+ * <p>
+ * Legacy WPJ operations are contained in the {@link SingleWpjApiFragment} class.
+ * Multiple WPJ operations are contained in the {@link MultipleWpjApiFragment} class.
+ * Broker API operations are contained in the {@link BrokerApiFragment} class.
+ * Broker Flights operations are contained in the {@link BrokerFlightsFragment} class.
+ *
+ */
 public class BrokerHost extends AbstractTestBroker {
     private final static String TAG = BrokerHost.class.getSimpleName();
-    // tenant id where lab api and key vault api is registered
-    private final static String LAB_API_TENANT_ID = "72f988bf-86f1-41af-91ab-2d7cd011db47";
+
+    // flight to enable/disable the multiple wpj feature
+    private final static String FLIGHT_FOR_WORKPLACE_JOIN_CONTROLLER = "ENABLE_MULTIPLE_WORKPLACE_JOIN_PP";
     // name for broker host APKs
     public final static String BROKER_HOST_APK = "BrokerHost.apk";
     public final static String OLD_BROKER_HOST_APK = "OldBrokerHost.apk";
@@ -56,7 +67,12 @@ public class BrokerHost extends AbstractTestBroker {
     // Fragments for BrokerHost
     public final BrokerFlightsFragment brokerFlightsFragment;
     public final BrokerApiFragment brokerApiFragment;
+    @Getter
     public final SingleWpjApiFragment singleWpjApiFragment;
+    // If you're writing test specifically for MWPJ, use this fragment
+    // the default behavior for brokerHost app is to use the SingleWpjApiFragment
+    @Getter
+    public final MultipleWpjApiFragment multipleWpjApiFragment;
 
     public BrokerHost() {
         this(BROKER_HOST_APK, BROKER_HOST_APK);
@@ -79,19 +95,36 @@ public class BrokerHost extends AbstractTestBroker {
         brokerFlightsFragment = new BrokerFlightsFragment();
         brokerApiFragment = new BrokerApiFragment();
         singleWpjApiFragment = new SingleWpjApiFragment();
+        multipleWpjApiFragment = new MultipleWpjApiFragment(this);
     }
 
     @Override
     public void performDeviceRegistration(@NonNull final String username,
                                           @NonNull final String password) {
-        performDeviceRegistration(username, password, false);
+        singleWpjApiFragment.launch();
+        singleWpjApiFragment.performDeviceRegistration(
+                username,
+                password,
+                false,
+                false,
+                getDefaultBrokerPromptHandlerParameters(username)
+        );
+        final String joinedUpn = singleWpjApiFragment.getWpjAccount();
+        Assert.assertTrue("Assert that the joined account is the expected account", username.equalsIgnoreCase(joinedUpn));
     }
 
     @Override
-    public void performDeviceRegistration(String username, String password, boolean isFederatedUser) {
-        Logger.i(TAG, "Performing Device Registration for the given account..");
+    public void performDeviceRegistration(@NonNull String username,
+                                          @NonNull String password,
+                                          boolean isFederatedUser) {
         singleWpjApiFragment.launch();
-        singleWpjApiFragment.performDeviceRegistration(username, password, isFederatedUser,this);
+        singleWpjApiFragment.performDeviceRegistration(
+                username,
+                password,
+                isFederatedUser,
+                false,
+                getDefaultBrokerPromptHandlerParameters(username)
+        );
         final String joinedUpn = singleWpjApiFragment.getWpjAccount();
         Assert.assertTrue("Assert that the joined account is the expected account", username.equalsIgnoreCase(joinedUpn));
     }
@@ -100,7 +133,13 @@ public class BrokerHost extends AbstractTestBroker {
     public void performSharedDeviceRegistration(String username, String password) {
         Logger.i(TAG, "Performing Shared Device Registration for the given account..");
         singleWpjApiFragment.launch();
-        singleWpjApiFragment.performSharedDeviceRegistration(username, password, this);
+        singleWpjApiFragment.performDeviceRegistration(
+                username,
+                password,
+                false,
+                true,
+                getDefaultBrokerPromptHandlerParameters(username)
+        );
         final String joinedUpn = singleWpjApiFragment.getWpjAccount();
         Assert.assertTrue("Assert that the joined account is the expected account", username.equalsIgnoreCase(joinedUpn));
     }
@@ -153,11 +192,6 @@ public class BrokerHost extends AbstractTestBroker {
         return singleWpjApiFragment.getDeviceState();
     }
 
-    public void wpjLeave() {
-        singleWpjApiFragment.launch();
-        singleWpjApiFragment.wpjLeave();
-    }
-
     @Override
     public void overwriteFlights(@NonNull final String flightsJson) {
         Logger.i(TAG, "Overwrite Flights..");
@@ -177,6 +211,63 @@ public class BrokerHost extends AbstractTestBroker {
         Logger.i(TAG, "Get Flights..");
         brokerFlightsFragment.launch();
         return brokerFlightsFragment.getFlights();
+    }
+
+    public void performDeviceRegistration(@NonNull final String username,
+                                          @NonNull final String password,
+                                          @NonNull final PromptHandlerParameters promptHandlerParameters) {
+        singleWpjApiFragment.launch();
+        singleWpjApiFragment.performDeviceRegistration(
+                username,
+                password,
+                false,
+                false,
+                promptHandlerParameters
+        );
+        final String joinedUpn = singleWpjApiFragment.getWpjAccount();
+        Assert.assertTrue("Assert that the joined account is the expected account", username.equalsIgnoreCase(joinedUpn));
+    }
+
+    public void performDeviceRegistrationLegacyApp(@NonNull final String username,
+                                          @NonNull final String password) {
+        final String inputResourceId = CommonUtils.getResourceId(
+                AbstractBrokerHost.BROKER_HOST_APP_PACKAGE_NAME,
+                "editTextUsername"
+        );
+        UiAutomatorUtils.handleInput(inputResourceId, username);
+
+        final String buttonResourceId = CommonUtils.getResourceId(
+                AbstractBrokerHost.BROKER_HOST_APP_PACKAGE_NAME,
+                "buttonJoin"
+        );
+        UiAutomatorUtils.handleButtonClick(buttonResourceId);
+
+        final IPromptHandler promptHandler = new AadPromptHandler(getDefaultBrokerPromptHandlerParameters(username));
+        promptHandler.handlePrompt(username, password);
+
+        final String dialogMessage = AbstractBrokerHost.dismissDialogBoxAndGetText();
+        Assert.assertTrue("Assert that the joined account is the expected account", dialogMessage.contains("SUCCESS"));
+    }
+
+    public String obtainDeviceIdLegacyApp() {
+        final String buttonGetDeviceId = CommonUtils.getResourceId(
+                AbstractBrokerHost.BROKER_HOST_APP_PACKAGE_NAME,
+                "buttonDeviceId"
+        );
+        UiAutomatorUtils.handleButtonClick(buttonGetDeviceId);
+        final String dialogMessage = AbstractBrokerHost.dismissDialogBoxAndGetText();
+        return dialogMessage.replace("DeviceId:", "");
+    }
+
+
+    public void wpjLeave() {
+        singleWpjApiFragment.launch();
+        singleWpjApiFragment.wpjLeave();
+    }
+
+    public void clickJoinTenant(@NonNull final String tenantId) {
+        singleWpjApiFragment.launch();
+        singleWpjApiFragment.clickJoinTenant(tenantId);
     }
 
     /**
@@ -205,76 +296,29 @@ public class BrokerHost extends AbstractTestBroker {
         return ssoToken;
     }
 
-    /**
-     * Decode SSO token and verify the expected nonce
-     */
-    public void decodeSSOTokenAndVerifyNonce(@NonNull final String ssoToken,
-                                             @NonNull final String nonce) {
-        Assert.assertFalse("Passed an empty or null token", StringUtil.isNullOrEmpty(ssoToken));
-        String token = new String(Base64.decode(ssoToken.split("\\.")[1], Base64.NO_WRAP));
-        final Map<Object, Object> map = new Gson().fromJson(token, Map.class);
-        StringBuilder sb = new StringBuilder();
-        final Set<Map.Entry<Object, Object>> set = map.entrySet();
-        for (Map.Entry<Object, Object> e : set) {
-            sb.append(e.getKey()).append(" => ")
-                    .append(e.getValue())
-                    .append('\n');
-        }
-        final String decodedToken = sb.toString();
-        if (decodedToken.contains("request_nonce")) {
-            final String[] str = decodedToken.split("request_nonce => ");
-            if (str.length > 1) {
-                Assert.assertEquals(str[1].trim(), nonce);
-            } else {
-                Assert.fail("decoded token does not contain correct nonce");
-            }
-        } else {
-            Assert.fail("decoded token does not contain correct nonce");
-        }
+    public String dismissDialog() {
+        return AbstractBrokerHost.dismissDialogBoxAndGetText();
     }
 
-    /**
-     * Confirm that the calling app is not verified
-     */
-    public void confirmCallingAppNotVerified() {
-        AbstractBrokerHost.dismissDialogBoxAndAssertContainsText("Calling app could not be verified");
+    public void enableMultipleWpj() {
+        Logger.i(TAG, "Enable Multiple WPJ..");
+        brokerFlightsFragment.launch();
+        brokerFlightsFragment.selectLocalProvider();
+        brokerFlightsFragment.setLocalFlight(FLIGHT_FOR_WORKPLACE_JOIN_CONTROLLER, "true");
+        ThreadUtils.sleepSafely(500, TAG, "Wait before force stop.");
+        forceStop();
+        ThreadUtils.sleepSafely(500, "TAG", "Wait before launch.");
+        launch();
     }
 
-    /**
-     * Check if the Device Code Flow option shows up in sign in flow.
-     *
-     * @param tenantId tenant ID to use in Join Tenant
-     */
-    public void checkForDcfOption(@Nullable final String tenantId) {
-        final String tenantIdToUse;
-
-        // If no tenant ID is specified, default to microsoft tenant
-        if (tenantId == null) {
-            tenantIdToUse = LAB_API_TENANT_ID;
-        } else {
-            tenantIdToUse = tenantId;
-        }
-
-        singleWpjApiFragment.launch();
-        singleWpjApiFragment.clickJoinTenant(tenantIdToUse);
-
-        // Apparently, there are two UI objects with exact text "Sign-in options", one is a button the other is a view
-        // Have to specify the search to button class
-        final UiDevice device =
-                UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
-
-        final UiObject optionsObject = device.findObject(new UiSelector()
-                .text("Sign-in options").className("android.widget.Button"));
-
-        try {
-            optionsObject.click();
-        } catch (UiObjectNotFoundException e) {
-            throw new AssertionError(e);
-        }
-        UiAutomatorUtils.handleButtonClickForObjectWithText("Sign in from another device");
-
-        // Doesn't look like the page with the device code is readable to the UI automation,
-        // this is a sufficient stopping point
+    public void disableMultipleWpj() {
+        Logger.i(TAG, "Disable Multiple WPJ..");
+        brokerFlightsFragment.launch();
+        brokerFlightsFragment.selectLocalProvider();
+        brokerFlightsFragment.setLocalFlight(FLIGHT_FOR_WORKPLACE_JOIN_CONTROLLER, "false");
+        ThreadUtils.sleepSafely(500, TAG, "Wait before force stop.");
+        forceStop();
+        ThreadUtils.sleepSafely(500, TAG, "Wait before launch.");
+        launch();
     }
-
 }
