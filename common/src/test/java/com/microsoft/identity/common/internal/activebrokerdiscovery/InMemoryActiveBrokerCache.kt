@@ -23,7 +23,7 @@
 package com.microsoft.identity.common.internal.activebrokerdiscovery
 
 import com.microsoft.identity.common.internal.broker.BrokerData
-import com.microsoft.identity.common.internal.cache.ClientActiveBrokerCache.Companion.isExpired
+import com.microsoft.identity.common.internal.cache.ClientActiveBrokerCache.Companion.isNotExpired
 import com.microsoft.identity.common.internal.cache.IActiveBrokerCache
 import com.microsoft.identity.common.internal.cache.IClientActiveBrokerCache
 import java.time.Instant
@@ -53,7 +53,7 @@ class InMemoryActiveBrokerCache: IClientActiveBrokerCache {
 
     @Synchronized
     override fun shouldUseAccountManager(): Boolean {
-        return isExpired(shouldUseAccountManagerUntil)
+        return isNotExpired(shouldUseAccountManagerUntil)
     }
 
     @Synchronized
