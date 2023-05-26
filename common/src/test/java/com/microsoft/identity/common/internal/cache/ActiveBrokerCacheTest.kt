@@ -28,9 +28,10 @@ import com.microsoft.identity.common.components.InMemoryStorageSupplier
 import com.microsoft.identity.common.java.interfaces.INameValueStorage
 import com.microsoft.identity.common.java.util.ported.InMemoryStorage
 import com.microsoft.identity.common.java.util.ported.Predicate
+import kotlinx.coroutines.sync.Mutex
 import org.junit.Assert
 import org.junit.Test
-import java.util.concurrent.locks.ReentrantReadWriteLock
+import java.util.concurrent.TimeUnit
 
 class ActiveBrokerCacheTest {
 
@@ -46,7 +47,7 @@ class ActiveBrokerCacheTest {
         val storageSupplier = getStorageSupplier()
 
         val brokerCache = ActiveBrokerCache.getBrokerMetadataStoreOnBrokerSide(storageSupplier)
-        val sdkCache = ActiveBrokerCache.getBrokerMetadataStoreOnSdkSide(storageSupplier)
+        val sdkCache = ClientActiveBrokerCache.getBrokerMetadataStoreOnSdkSide(storageSupplier)
 
         Assert.assertNull(brokerCache.getCachedActiveBroker())
         Assert.assertNull(sdkCache.getCachedActiveBroker())
@@ -65,7 +66,7 @@ class ActiveBrokerCacheTest {
      **/
     @Test
     fun testReadWriteAcrossInstances(){
-        val lock = ReentrantReadWriteLock()
+        val lock = Mutex()
         val storage = InMemoryStorage<String>()
 
         val cache1 = ActiveBrokerCache(storage, lock)
@@ -123,7 +124,7 @@ class ActiveBrokerCacheTest {
             }
         }
 
-        val cache = ActiveBrokerCache(writeOnlyStorage, ReentrantReadWriteLock())
+        val cache = ActiveBrokerCache(writeOnlyStorage, Mutex())
         val mockData = BrokerData(MOCK_PACKAGE_NAME, MOCK_HASH)
         cache.setCachedActiveBroker(mockData)
 
@@ -172,7 +173,7 @@ class ActiveBrokerCacheTest {
             }
         }
 
-        val cache = ActiveBrokerCache(readOnlyStorage, ReentrantReadWriteLock())
+        val cache = ActiveBrokerCache(readOnlyStorage, Mutex())
         Assert.assertEquals(BrokerData(MOCK_PACKAGE_NAME, MOCK_HASH), cache.getCachedActiveBroker())
         Assert.assertEquals(BrokerData(MOCK_PACKAGE_NAME, MOCK_HASH), cache.inMemoryCachedValue)
     }
@@ -222,7 +223,7 @@ class ActiveBrokerCacheTest {
             }
         }
 
-        val cache = ActiveBrokerCache(readOnlyStorage, ReentrantReadWriteLock())
+        val cache = ActiveBrokerCache(readOnlyStorage, Mutex())
         val mockData = BrokerData(MOCK_PACKAGE_NAME, MOCK_HASH)
         cache.setCachedActiveBroker(mockData)
 
@@ -265,7 +266,7 @@ class ActiveBrokerCacheTest {
             }
         }
 
-        val cache = ActiveBrokerCache(clearOnlyStorage, ReentrantReadWriteLock())
+        val cache = ActiveBrokerCache(clearOnlyStorage, Mutex())
         cache.inMemoryCachedValue = BrokerData(MOCK_PACKAGE_NAME, MOCK_HASH)
 
         cache.clearCachedActiveBroker()
@@ -275,7 +276,7 @@ class ActiveBrokerCacheTest {
 
     @Test
     fun testE2EWriteReadClear(){
-        val cache = ActiveBrokerCache(InMemoryStorage(), ReentrantReadWriteLock())
+        val cache = ActiveBrokerCache(InMemoryStorage(), Mutex())
         Assert.assertNull(cache.getCachedActiveBroker())
 
         val mockData = BrokerData(MOCK_PACKAGE_NAME, MOCK_HASH)
@@ -287,6 +288,26 @@ class ActiveBrokerCacheTest {
         cache.clearCachedActiveBroker()
         Assert.assertNull(cache.getCachedActiveBroker())
         Assert.assertNull(cache.inMemoryCachedValue)
+    }
+
+    @Test
+    fun testSetSkipToAccountManager(){
+        val cache = ClientActiveBrokerCache(InMemoryStorage(), Mutex())
+        Assert.assertNull(cache.getCachedActiveBroker())
+
+        Assert.assertFalse(cache.shouldUseAccountManager())
+        Assert.assertNull(cache.cachedTimeStamp)
+
+        cache.setShouldUseAccountManagerForTheNextMilliseconds(
+            TimeUnit.SECONDS.toMillis(2)
+        )
+        Assert.assertTrue(cache.shouldUseAccountManager())
+        Assert.assertNotNull(cache.cachedTimeStamp)
+
+        Thread.sleep(TimeUnit.SECONDS.toMillis(2))
+
+        Assert.assertFalse(cache.shouldUseAccountManager())
+        Assert.assertNull(cache.cachedTimeStamp)
     }
 
     private fun getStorageSupplier() : IStorageSupplier {
