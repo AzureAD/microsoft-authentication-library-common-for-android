@@ -83,10 +83,10 @@ internal constructor(private val storage: INameValueStorage<String>,
         }
     }
 
-    override fun setShouldUseAccountManagerForTheNextMilliseconds(time: Long) {
+    override fun setShouldUseAccountManagerForTheNextMilliseconds(timeInMillis: Long) {
         return runBlocking {
             lock.withLock {
-                val timeStamp = Instant.now().toEpochMilli() + time
+                val timeStamp = Instant.now().toEpochMilli() + timeInMillis
                 storage.put(SHOULD_USE_ACCOUNT_MANAGER_UNTIL_EPOCH_MILLISECONDS_KEY, timeStamp.toString())
                 cachedTimeStamp = timeStamp
             }
