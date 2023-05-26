@@ -2,7 +2,7 @@ V.NEXT
 ----------
 - [MAJOR] Consolidate IStorageSupplier logic (#2033)
 - [MINOR] Add active broker cache (#2030)
-- [MAJOR] Added support for DeviceCodeFlow with device id claims
+- [MAJOR] Added support for DeviceCodeFlow with device id claims. New API is only available in version 13 or heigher
 
 V.12.0.0
 ----------
