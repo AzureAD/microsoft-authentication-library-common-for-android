@@ -74,10 +74,10 @@ internal constructor(private val storage: INameValueStorage<String>,
                 }
 
                 if (isNotExpired(cachedTimeStamp)){
-                    cachedTimeStamp = null
                     return@runBlocking true
                 }
 
+                cachedTimeStamp = null
                 return@runBlocking false
             }
         }
