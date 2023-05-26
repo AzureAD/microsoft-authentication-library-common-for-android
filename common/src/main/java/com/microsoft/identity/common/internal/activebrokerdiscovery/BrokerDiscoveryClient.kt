@@ -185,7 +185,6 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
                     if(cache.shouldUseAccountManager()) {
                         return@runBlocking getActiveBrokerFromAccountManager()
                     }
-
                     cache.getCachedActiveBroker()?.let {
                         if (isPackageInstalled(it)) {
                             Logger.info(methodTag, "Returning cached broker: $it")

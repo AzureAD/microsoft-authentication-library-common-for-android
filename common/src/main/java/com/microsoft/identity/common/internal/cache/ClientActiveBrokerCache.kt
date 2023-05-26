@@ -40,6 +40,14 @@ internal constructor(private val storage: INameValueStorage<String>,
             )
         }
 
+
+        /**
+         * Returns true if the time has passed the given expiry date.
+         */
+        private fun isExpired(expiryDate: Long): Boolean{
+            return Instant.now().toEpochMilli() < expiryDate
+        }
+
         /**
          * Key for storing time which the client discovery should use AccountManager.
          **/
@@ -47,14 +55,29 @@ internal constructor(private val storage: INameValueStorage<String>,
             "SHOULD_USE_ACCOUNT_MANAGER_UNTIL_EPOCH_MILLISECONDS_KEY"
     }
 
+    /**
+     * Cached value of [SHOULD_USE_ACCOUNT_MANAGER_UNTIL_EPOCH_MILLISECONDS_KEY]
+     **/
+    var cachedTimeStamp: Long? = null
+
     override fun shouldUseAccountManager(): Boolean {
         return runBlocking {
             lock.withLock {
-                storage.get(SHOULD_USE_ACCOUNT_MANAGER_UNTIL_EPOCH_MILLISECONDS_KEY)?.let { rawValue ->
-                    rawValue.toLongOrNull()?.let { expiryDate ->
-                        return@runBlocking Instant.now().toEpochMilli() < expiryDate
+                if (cachedTimeStamp == null){
+                    storage.get(SHOULD_USE_ACCOUNT_MANAGER_UNTIL_EPOCH_MILLISECONDS_KEY)?.let { rawValue ->
+                        rawValue.toLongOrNull()?.let { expiryDate ->
+                            cachedTimeStamp = expiryDate
+                        }
                     }
                 }
+
+                cachedTimeStamp?.let {
+                    if (isExpired(it)){
+                        cachedTimeStamp = null
+                        return@runBlocking true
+                    }
+                }
+
                 return@runBlocking false
             }
         }
@@ -63,8 +86,9 @@ internal constructor(private val storage: INameValueStorage<String>,
     override fun setShouldUseAccountManagerForTheNextMilliseconds(time: Long) {
         return runBlocking {
             lock.withLock {
-                storage.put(SHOULD_USE_ACCOUNT_MANAGER_UNTIL_EPOCH_MILLISECONDS_KEY,
-                    (Instant.now().toEpochMilli() + time).toString())
+                val timeStamp = Instant.now().toEpochMilli() + time
+                storage.put(SHOULD_USE_ACCOUNT_MANAGER_UNTIL_EPOCH_MILLISECONDS_KEY, timeStamp.toString())
+                cachedTimeStamp = timeStamp
             }
         }
     }
