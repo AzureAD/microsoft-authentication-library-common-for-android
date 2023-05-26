@@ -40,11 +40,13 @@ internal constructor(private val storage: INameValueStorage<String>,
             )
         }
 
-
         /**
          * Returns true if the time has passed the given expiry date.
          */
-        private fun isExpired(expiryDate: Long): Boolean{
+        fun isExpired(expiryDate: Long?): Boolean{
+            if (expiryDate == null) {
+                return false
+            }
             return Instant.now().toEpochMilli() < expiryDate
         }
 
@@ -71,11 +73,9 @@ internal constructor(private val storage: INameValueStorage<String>,
                     }
                 }
 
-                cachedTimeStamp?.let {
-                    if (isExpired(it)){
-                        cachedTimeStamp = null
-                        return@runBlocking true
-                    }
+                if (isExpired(cachedTimeStamp)){
+                    cachedTimeStamp = null
+                    return@runBlocking true
                 }
 
                 return@runBlocking false
