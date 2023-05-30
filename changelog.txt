@@ -8,6 +8,7 @@ V.NEXT
 - [MAJOR] Added support for DeviceCodeFlow with device id claims. New API is only available in version 13 or higher (#2044)
 - [MINOR] Replacing SHA-1 used in broker validation with SHA-512 (#2019)
 - [MINOR] Removing thumbprint check from PKeyAuth challenge (#2045)
+- [MINOR] Add android 14 check for skipping strong box isolation in pop token (#2053)
 
 V.12.0.0
 ----------
