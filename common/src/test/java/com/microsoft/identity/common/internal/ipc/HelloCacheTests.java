@@ -185,16 +185,14 @@ public class HelloCacheTests {
 
         class MockController extends BrokerMsalController {
             public MockController(Context applicationContext) {
-                super(applicationContext);
+                super(applicationContext,
+                        AndroidPlatformComponentsFactory.createFromContext(applicationContext),
+                        brokerAppName);
             }
 
             @Override
             public HelloCache getHelloCache() {
                 return HelloCacheTests.this.getHelloCache(protocolA);
-            }
-
-            @Override public String getActiveBrokerPackageName() {
-                return brokerAppName;
             }
         }
 

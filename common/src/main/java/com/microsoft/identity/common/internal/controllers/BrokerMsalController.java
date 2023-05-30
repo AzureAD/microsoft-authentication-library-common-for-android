@@ -28,8 +28,8 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.MSAL_TO_BROKER_PROTOCOL_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_ACQUIRE_TOKEN_DCF;
-import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_FETCH_DCF_AUTH_RESULT;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_ACQUIRE_TOKEN_SILENT;
+import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_FETCH_DCF_AUTH_RESULT;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_GENERATE_SHR;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_GET_ACCOUNTS;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_GET_CURRENT_ACCOUNT_IN_SHARED_DEVICE;
@@ -54,10 +54,8 @@ import androidx.annotation.VisibleForTesting;
 
 import com.microsoft.identity.common.PropertyBagUtil;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
-import com.microsoft.identity.common.components.AndroidPlatformComponentsFactory;
 import com.microsoft.identity.common.internal.broker.BrokerActivity;
 import com.microsoft.identity.common.internal.broker.BrokerResult;
-import com.microsoft.identity.common.internal.broker.BrokerValidator;
 import com.microsoft.identity.common.internal.broker.MicrosoftAuthClient;
 import com.microsoft.identity.common.internal.broker.ipc.AccountManagerAddAccountStrategy;
 import com.microsoft.identity.common.internal.broker.ipc.BoundServiceStrategy;
@@ -133,10 +131,8 @@ public class BrokerMsalController extends BaseController {
     private final BrokerOperationExecutor mBrokerOperationExecutor;
     private final HelloCache mHelloCache;
     private final IPlatformComponents mComponents;
-
     private final Context mApplicationContext;
 
-    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     public BrokerMsalController(@NonNull final Context applicationContext,
                                 @NonNull final IPlatformComponents components,
                                 @NonNull final String activeBrokerPackageName,
@@ -144,29 +140,17 @@ public class BrokerMsalController extends BaseController {
         mComponents = components;
         mApplicationContext = applicationContext;
         mActiveBrokerPackageName = activeBrokerPackageName;
-        if (StringUtil.isEmpty(mActiveBrokerPackageName)) {
-            throw new IllegalStateException("Active Broker not found. This class should not be initialized.");
-        }
-
         mBrokerOperationExecutor = new BrokerOperationExecutor(ipcStrategies);
         mHelloCache = getHelloCache();
     }
 
-    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
-    public BrokerMsalController(@NonNull final Context applicationContext, @NonNull final IPlatformComponents components) {
-        mComponents = components;
-        mApplicationContext = applicationContext;
-        mActiveBrokerPackageName = getActiveBrokerPackageName();
-        mBrokerOperationExecutor = new BrokerOperationExecutor(getIpcStrategies(mApplicationContext, mActiveBrokerPackageName));
-        mHelloCache = getHelloCache();
-    }
-
-    public BrokerMsalController(@NonNull final Context applicationContext) {
-        mComponents = AndroidPlatformComponentsFactory.createFromContext(applicationContext);
-        mApplicationContext = applicationContext;
-        mActiveBrokerPackageName = getActiveBrokerPackageName();
-        mBrokerOperationExecutor = new BrokerOperationExecutor(getIpcStrategies(mApplicationContext, mActiveBrokerPackageName));
-        mHelloCache = getHelloCache();
+    public BrokerMsalController(@NonNull final Context applicationContext,
+                                @NonNull final IPlatformComponents components,
+                                @NonNull final String activeBrokerPackageName) {
+        this(applicationContext,
+                components,
+                activeBrokerPackageName,
+                getIpcStrategies(applicationContext, activeBrokerPackageName));
     }
 
     @VisibleForTesting
@@ -175,25 +159,16 @@ public class BrokerMsalController extends BaseController {
                 mComponents);
     }
 
-    @VisibleForTesting
-    public String getActiveBrokerPackageName() throws IllegalStateException{
-        try {
-            return new BrokerValidator(mApplicationContext).getCurrentActiveBrokerPackageName();
-        } catch (final ClientException e) {
-            throw new IllegalStateException("Active Broker not found. This class should not be initialized.", e);
-        }
-    }
-
     /**
      * Gets a list of communication strategies.
      * Order of objects in the list will reflects the order of strategies that will be used.
      */
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     @NonNull
-    protected List<IIpcStrategy> getIpcStrategies(final Context applicationContext, final String activeBrokerPackageName) {
+    static List<IIpcStrategy> getIpcStrategies(final Context applicationContext,
+                                               final String activeBrokerPackageName) {
         final String methodTag = TAG + ":getIpcStrategies";
         final List<IIpcStrategy> strategies = new ArrayList<>();
-        final StringBuilder sb = new StringBuilder(100);
+        final StringBuilder sb = new StringBuilder();
         sb.append("Broker Strategies added : ");
 
         final ContentProviderStrategy contentProviderStrategy = new ContentProviderStrategy(applicationContext);
