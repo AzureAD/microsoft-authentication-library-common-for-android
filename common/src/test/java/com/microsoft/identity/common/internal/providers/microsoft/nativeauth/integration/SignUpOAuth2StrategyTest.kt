@@ -26,26 +26,25 @@ import android.os.Build
 import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.MockApiEndpointType
 import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.MockApiResponseType
 import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.MockApiUtils.Companion.configureMockApi
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpContinueCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpStartCommandParameters
-import com.microsoft.identity.common.java.exception.ClientException
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpSubmitCodeCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpSubmitPasswordCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpSubmitUserAttributesCommandParameters
+import com.microsoft.identity.common.java.interfaces.PlatformComponents
 import com.microsoft.identity.common.java.logging.DiagnosticContext
 import com.microsoft.identity.common.java.net.UrlConnectionHttpClient
 import com.microsoft.identity.common.java.providers.nativeauth.NativeAuthOAuth2Configuration
 import com.microsoft.identity.common.java.providers.nativeauth.NativeAuthOAuth2Strategy
 import com.microsoft.identity.common.java.providers.nativeauth.NativeAuthRequestProvider
 import com.microsoft.identity.common.java.providers.nativeauth.NativeAuthResponseHandler
+import com.microsoft.identity.common.java.providers.nativeauth.interactors.ResetPasswordInteractor
 import com.microsoft.identity.common.java.providers.nativeauth.interactors.SignInInteractor
 import com.microsoft.identity.common.java.providers.nativeauth.interactors.SignUpInteractor
-import com.microsoft.identity.common.java.providers.nativeauth.interactors.SsprInteractor
-import com.microsoft.identity.common.java.providers.nativeauth.responses.NativeAuthChallengeType
-import com.microsoft.identity.common.java.providers.nativeauth.responses.signup.SignUpStartErrorCodes
+import com.microsoft.identity.common.java.providers.nativeauth.responses.signup.SignUpChallengeApiResult
+import com.microsoft.identity.common.java.providers.nativeauth.responses.signup.SignUpContinueApiResult
+import com.microsoft.identity.common.java.providers.nativeauth.responses.signup.SignUpStartApiResult
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters
-import io.mockk.every
-import io.mockk.mockk
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
+import junit.framework.TestCase.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -71,25 +70,37 @@ import java.util.UUID
 @PrepareForTest(DiagnosticContext::class)
 @Config(sdk = [Build.VERSION_CODES.O_MR1])
 class SignUpOAuth2StrategyTest {
-    private val email = "user@email.com"
+    private val username = "user@email.com"
     private val password = "verySafePassword"
     private val tenant = "samtoso.onmicrosoft.com"
     private val clientId = "079af063-4ea7-4dcd-91ff-2b24f54621ea"
-    private val signUpStartRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/signup/start")
-    private val signUpChallengeRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/signup/challenge")
-    private val signUpContinueRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/signup/continue")
-    private val signInInitiateRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/oauth/v2.0/initiate")
-    private val signInChallengeRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/oauth/v2.0/challenge")
-    private val signInTokenRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/oauth/v2.0/token")
-    private val ssprStartRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/resetpassword/start")
-    private val ssprChallengeRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/resetpassword/challenge")
-    private val ssprContinueRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/resetpassword/continue")
-    private val ssprSubmitRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/resetpassword/submit")
-    private val ssprPollCompletionRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/resetpassword/poll_completion")
+    private val signUpStartRequestUrl =
+        URL("https://native-ux-mock-api.azurewebsites.net/1234/signup/start")
+    private val signUpChallengeRequestUrl =
+        URL("https://native-ux-mock-api.azurewebsites.net/1234/signup/challenge")
+    private val signUpContinueRequestUrl =
+        URL("https://native-ux-mock-api.azurewebsites.net/1234/signup/continue")
+    private val signInInitiateRequestUrl =
+        URL("https://native-ux-mock-api.azurewebsites.net/1234/oauth/v2.0/initiate")
+    private val signInChallengeRequestUrl =
+        URL("https://native-ux-mock-api.azurewebsites.net/1234/oauth/v2.0/challenge")
+    private val signInTokenRequestUrl =
+        URL("https://native-ux-mock-api.azurewebsites.net/1234/oauth/v2.0/token")
+    private val ssprStartRequestUrl =
+        URL("https://native-ux-mock-api.azurewebsites.net/1234/resetpassword/start")
+    private val ssprChallengeRequestUrl =
+        URL("https://native-ux-mock-api.azurewebsites.net/1234/resetpassword/challenge")
+    private val ssprContinueRequestUrl =
+        URL("https://native-ux-mock-api.azurewebsites.net/1234/resetpassword/continue")
+    private val ssprSubmitRequestUrl =
+        URL("https://native-ux-mock-api.azurewebsites.net/1234/resetpassword/submit")
+    private val ssprPollCompletionRequestUrl =
+        URL("https://native-ux-mock-api.azurewebsites.net/1234/resetpassword/poll_completion")
     private val tokenEndpoint = URL("https://contoso.com/1234/token")
     private val challengeTypes = "oob password redirect"
-    private val userAttributes = mapOf(Pair("city", "Dublin"))
+    private val userAttributes = mapOf("city" to "Dublin")
     private val oobCode = "123456"
+    private val signUpToken = "iFQ"
 
     private val mockConfig = mock<NativeAuthOAuth2Configuration>()
     private val mockStrategyParams = mock<OAuth2StrategyParameters>()
@@ -106,11 +117,11 @@ class SignUpOAuth2StrategyTest {
         whenever(mockConfig.getSignInInitiateEndpoint()).thenReturn(signInInitiateRequestUrl)
         whenever(mockConfig.getSignInChallengeEndpoint()).thenReturn(signInChallengeRequestUrl)
         whenever(mockConfig.getSignInTokenEndpoint()).thenReturn(signInTokenRequestUrl)
-        whenever(mockConfig.getSsprStartEndpoint()).thenReturn(ssprStartRequestUrl)
-        whenever(mockConfig.getSsprChallengeEndpoint()).thenReturn(ssprChallengeRequestUrl)
-        whenever(mockConfig.getSsprContinueEndpoint()).thenReturn(ssprContinueRequestUrl)
-        whenever(mockConfig.getSsprSubmitEndpoint()).thenReturn(ssprSubmitRequestUrl)
-        whenever(mockConfig.getSsprPollCompletionEndpoint()).thenReturn(ssprPollCompletionRequestUrl)
+        whenever(mockConfig.getResetPasswordStartEndpoint()).thenReturn(ssprStartRequestUrl)
+        whenever(mockConfig.getResetPasswordChallengeEndpoint()).thenReturn(ssprChallengeRequestUrl)
+        whenever(mockConfig.getResetPasswordContinueEndpoint()).thenReturn(ssprContinueRequestUrl)
+        whenever(mockConfig.getResetPasswordSubmitEndpoint()).thenReturn(ssprSubmitRequestUrl)
+        whenever(mockConfig.getResetPasswordPollCompletionEndpoint()).thenReturn(ssprPollCompletionRequestUrl)
         whenever(mockConfig.challengeType).thenReturn(challengeTypes)
 
         nativeAuthOAuth2Strategy = NativeAuthOAuth2Strategy(
@@ -130,7 +141,7 @@ class SignUpOAuth2StrategyTest {
                 ),
                 nativeAuthResponseHandler = NativeAuthResponseHandler()
             ),
-            ssprInteractor = SsprInteractor(
+            resetPasswordInteractor = ResetPasswordInteractor(
                 httpClient = UrlConnectionHttpClient.getDefaultInstance(),
                 nativeAuthRequestProvider = NativeAuthRequestProvider(
                     mockConfig
@@ -141,98 +152,286 @@ class SignUpOAuth2StrategyTest {
     }
 
     @Test
-    fun testPerformSignUpStartSuccessWithOnlyEmail() {
-        val mockSignUpStartCommandParameters = mockk<SignUpStartCommandParameters>()
-        every { mockSignUpStartCommandParameters.getEmail() } returns email
-        every { mockSignUpStartCommandParameters.getPassword() } returns null
-        every { mockSignUpStartCommandParameters.getUserAttributes() } returns null
-
-        val signupResult = nativeAuthOAuth2Strategy.performSignUpStart(
-            mockSignUpStartCommandParameters
-        )
-        assertTrue(signupResult.success)
-    }
-
-    @Test
-    fun testPerformSignUpStartSuccessWithEmailAndPassword() {
-        val mockSignUpStartCommandParameters = mockk<SignUpStartCommandParameters>()
-        every { mockSignUpStartCommandParameters.getEmail() } returns email
-        every { mockSignUpStartCommandParameters.getPassword() } returns password
-        every { mockSignUpStartCommandParameters.getUserAttributes() } returns null
-
-        val signupResult = nativeAuthOAuth2Strategy.performSignUpStart(
-            mockSignUpStartCommandParameters
-        )
-        assertTrue(signupResult.success)
-    }
-
-    @Test
-    fun testPerformSignUpStartVerificationRequiredError() {
+    fun testPerformSignUpStartSuccessWithVerificationRequired() {
         configureMockApi(
             endpointType = MockApiEndpointType.SignUpStart,
             correlationId = UUID.randomUUID().toString(),
             responseType = MockApiResponseType.VERIFICATION_REQUIRED
         )
 
-        val mockSignUpStartCommandParameters = mockk<SignUpStartCommandParameters>()
-        every { mockSignUpStartCommandParameters.getEmail() } returns email
+        val signUpStartCommandParameters = SignUpStartCommandParameters.builder()
+            .platformComponents(mock<PlatformComponents>())
+            .username(username)
+            .clientId(clientId)
+            .build()
 
         val signupResult = nativeAuthOAuth2Strategy.performSignUpStart(
-            mockSignUpStartCommandParameters
+            signUpStartCommandParameters
         )
-        assertFalse(signupResult.success)
-        assertEquals(signupResult.errorResponse!!.error, SignUpStartErrorCodes.VERIFICATION_REQUIRED.toString())
+        assertTrue(signupResult is SignUpStartApiResult.VerificationRequired)
     }
 
     @Test
-    fun testPerformSignUpChallengeSuccess() {
+    fun testPerformSignUpStartSuccessWithRedirect() {
+        configureMockApi(
+            endpointType = MockApiEndpointType.SignUpStart,
+            correlationId = UUID.randomUUID().toString(),
+            responseType = MockApiResponseType.CHALLENGE_TYPE_REDIRECT
+        )
+
+        val signUpStartCommandParameters = SignUpStartCommandParameters.builder()
+            .platformComponents(mock<PlatformComponents>())
+            .username(username)
+            .clientId(clientId)
+            .build()
+
+        val signupResult = nativeAuthOAuth2Strategy.performSignUpStart(
+            signUpStartCommandParameters
+        )
+        assertTrue(signupResult is SignUpStartApiResult.Redirect)
+    }
+
+    @Test
+    fun testPerformSignUpStartWithInvalidPassword() {
+        configureMockApi(
+            endpointType = MockApiEndpointType.SignUpStart,
+            correlationId = UUID.randomUUID().toString(),
+            responseType = MockApiResponseType.PASSWORD_TOO_LONG
+        )
+
+        val signUpStartCommandParameters = SignUpStartCommandParameters.builder()
+            .platformComponents(mock<PlatformComponents>())
+            .username(username)
+            .clientId(clientId)
+            .build()
+
+        val signupResult = nativeAuthOAuth2Strategy.performSignUpStart(
+            signUpStartCommandParameters
+        )
+        assertTrue(signupResult is SignUpStartApiResult.InvalidPassword)
+    }
+
+    @Test
+    fun testPerformSignUpStartSuccessWithUnsupportedChallengeType() {
+        configureMockApi(
+            endpointType = MockApiEndpointType.SignUpStart,
+            correlationId = UUID.randomUUID().toString(),
+            responseType = MockApiResponseType.VERIFICATION_REQUIRED
+        )
+
         configureMockApi(
             endpointType = MockApiEndpointType.SignUpChallenge,
             correlationId = UUID.randomUUID().toString(),
-            responseType = MockApiResponseType.CHALLENGE_TYPE_OOB
+            responseType = MockApiResponseType.UNSUPPORTED_CHALLENGE_TYPE
         )
 
-        val signupChallengeResult = nativeAuthOAuth2Strategy.performSignUpChallenge(
-            signUpToken = "1234"
+        val signUpStartCommandParameters = SignUpStartCommandParameters.builder()
+            .platformComponents(mock<PlatformComponents>())
+            .username(username)
+            .clientId(clientId)
+            .build()
+
+        val signupResult = nativeAuthOAuth2Strategy.performSignUpStart(
+            signUpStartCommandParameters
         )
-        assertTrue(signupChallengeResult.success)
-        assertEquals(signupChallengeResult.successResponse!!.challengeType, NativeAuthChallengeType.OOB)
+        assertTrue(signupResult is SignUpStartApiResult.UnknownError)
     }
 
     @Test
-    fun testPerformSignUpContinueSuccess() {
+    fun testPerformSignUpWithSubmitPasswordSuccess() {
         configureMockApi(
             endpointType = MockApiEndpointType.SignUpContinue,
             correlationId = UUID.randomUUID().toString(),
             responseType = MockApiResponseType.SIGNUP_CONTINUE_SUCCESS
         )
 
-        val mockSignUpContinueCommandParameters = mockk<SignUpContinueCommandParameters>()
-        every { mockSignUpContinueCommandParameters.getOob() } returns oobCode
+        val signUpSubmitPasswordCommandParameters = SignUpSubmitPasswordCommandParameters.builder()
+            .platformComponents(mock<PlatformComponents>())
+            .password(password)
+            .signupToken(signUpToken)
+            .build()
 
-        val signupContinueResult = nativeAuthOAuth2Strategy.performSignUpContinue(
-            signUpToken = "1234",
-            mockSignUpContinueCommandParameters
+        val signupResult = nativeAuthOAuth2Strategy.performSignUpContinue(
+            signUpToken = signUpToken,
+            signUpSubmitPasswordCommandParameters
         )
-        assertTrue(signupContinueResult.success)
+        assertTrue(signupResult is SignUpContinueApiResult.Success)
     }
 
-    @Test(expected = ClientException::class)
-    fun testPerformSignUpContinueErrorWithUnknownErrorCode() {
+    @Test
+    fun testPerformSignUpWithSubmitCodeSuccess() {
         configureMockApi(
             endpointType = MockApiEndpointType.SignUpContinue,
             correlationId = UUID.randomUUID().toString(),
-            responseType = MockApiResponseType.INVALID_CLIENT
+            responseType = MockApiResponseType.SIGNUP_CONTINUE_SUCCESS
         )
 
-        val mockSignUpContinueCommandParameters = mockk<SignUpContinueCommandParameters>()
-        every { mockSignUpContinueCommandParameters.getOob() } returns oobCode
+        val signUpSubmitCodeCommandParameters = SignUpSubmitCodeCommandParameters.builder()
+            .platformComponents(mock<PlatformComponents>())
+            .code(oobCode)
+            .signupToken(signUpToken)
+            .build()
 
-        val signupContinueResult = nativeAuthOAuth2Strategy.performSignUpContinue(
-            signUpToken = "1234",
-            mockSignUpContinueCommandParameters
+        val signupResult = nativeAuthOAuth2Strategy.performSignUpContinue(
+            signUpToken = signUpToken,
+            signUpSubmitCodeCommandParameters
         )
-        assertFalse(signupContinueResult.success)
-        assertEquals(signupContinueResult.errorResponse!!.error, null)
+        assertTrue(signupResult is SignUpContinueApiResult.Success)
+    }
+
+    @Test
+    fun testPerformSignUpWithSubmitUserAttributesSuccess() {
+        configureMockApi(
+            endpointType = MockApiEndpointType.SignUpContinue,
+            correlationId = UUID.randomUUID().toString(),
+            responseType = MockApiResponseType.SIGNUP_CONTINUE_SUCCESS
+        )
+
+        val signUpSubmitUserAttributesCommandParameters =
+            SignUpSubmitUserAttributesCommandParameters.builder()
+                .platformComponents(mock<PlatformComponents>())
+                .userAttributes(userAttributes)
+                .signupToken(signUpToken)
+                .build()
+
+        val signupResult = nativeAuthOAuth2Strategy.performSignUpContinue(
+            signUpToken = signUpToken,
+            signUpSubmitUserAttributesCommandParameters
+        )
+        assertTrue(signupResult is SignUpContinueApiResult.Success)
+    }
+
+    @Test
+    fun testPerformSignUpWithSubmitPasswordAttributesRequired() {
+        configureMockApi(
+            endpointType = MockApiEndpointType.SignUpContinue,
+            correlationId = UUID.randomUUID().toString(),
+            responseType = MockApiResponseType.ATTRIBUTES_REQUIRED
+        )
+
+        val signUpSubmitPasswordCommandParameters = SignUpSubmitPasswordCommandParameters.builder()
+            .platformComponents(mock<PlatformComponents>())
+            .password(password)
+            .signupToken(signUpToken)
+            .build()
+
+        val signupResult = nativeAuthOAuth2Strategy.performSignUpContinue(
+            signUpToken = signUpToken,
+            signUpSubmitPasswordCommandParameters
+        )
+        assertTrue(signupResult is SignUpContinueApiResult.AttributesRequired)
+    }
+
+    @Test
+    fun testPerformSignUpChallengeSuccessOOBRequired() {
+        configureMockApi(
+            endpointType = MockApiEndpointType.SignUpChallenge,
+            correlationId = UUID.randomUUID().toString(),
+            responseType = MockApiResponseType.CHALLENGE_TYPE_OOB
+        )
+
+        val signupResult = nativeAuthOAuth2Strategy.performSignUpChallenge(
+            signUpToken = signUpToken,
+        )
+        assertTrue(signupResult is SignUpChallengeApiResult.OOBRequired)
+    }
+
+    @Test
+    fun testPerformSignUpChallengeSuccessPasswordRequired() {
+        configureMockApi(
+            endpointType = MockApiEndpointType.SignUpChallenge,
+            correlationId = UUID.randomUUID().toString(),
+            responseType = MockApiResponseType.CHALLENGE_TYPE_PASSWORD
+        )
+
+        val signupResult = nativeAuthOAuth2Strategy.performSignUpChallenge(
+            signUpToken = signUpToken,
+        )
+        assertTrue(signupResult is SignUpChallengeApiResult.PasswordRequired)
+    }
+
+    @Test
+    fun testPerformSignUpChallengeWithInvalidOOB() {
+        configureMockApi(
+            endpointType = MockApiEndpointType.SignUpContinue,
+            correlationId = UUID.randomUUID().toString(),
+            responseType = MockApiResponseType.EXPLICIT_INVALID_OOB_VALUE
+        )
+
+        val signUpSubmitCodeCommandParameters = SignUpSubmitCodeCommandParameters.builder()
+            .platformComponents(mock<PlatformComponents>())
+            .code(oobCode)
+            .signupToken(signUpToken)
+            .build()
+
+        val signupResult = nativeAuthOAuth2Strategy.performSignUpContinue(
+            signUpToken = signUpToken,
+            signUpSubmitCodeCommandParameters
+        )
+        assertTrue(signupResult is SignUpContinueApiResult.InvalidOOBValue)
+    }
+
+    @Test
+    fun testPerformSignUpWithSubmitPasswordInvalidPassword() {
+        configureMockApi(
+            endpointType = MockApiEndpointType.SignUpContinue,
+            correlationId = UUID.randomUUID().toString(),
+            responseType = MockApiResponseType.PASSWORD_TOO_WEAK
+        )
+
+        val signUpSubmitPasswordCommandParameters = SignUpSubmitPasswordCommandParameters.builder()
+            .platformComponents(mock<PlatformComponents>())
+            .password(password)
+            .signupToken(signUpToken)
+            .build()
+
+        val signupResult = nativeAuthOAuth2Strategy.performSignUpContinue(
+            signUpToken = signUpToken,
+            signUpSubmitPasswordCommandParameters
+        )
+        assertTrue(signupResult is SignUpContinueApiResult.InvalidPassword)
+    }
+
+    @Test
+    fun testPerformSignUpWithSubmitAttributesWithInvalidAttributes() {
+        configureMockApi(
+            endpointType = MockApiEndpointType.SignUpContinue,
+            correlationId = UUID.randomUUID().toString(),
+            responseType = MockApiResponseType.ATTRIBUTE_VALIDATION_FAILED
+        )
+
+        val signUpSubmitUserAttributesCommandParameters =
+            SignUpSubmitUserAttributesCommandParameters.builder()
+                .platformComponents(mock<PlatformComponents>())
+                .userAttributes(userAttributes)
+                .signupToken(signUpToken)
+                .build()
+
+        val signupResult = nativeAuthOAuth2Strategy.performSignUpContinue(
+            signUpToken = signUpToken,
+            signUpSubmitUserAttributesCommandParameters
+        )
+        assertTrue(signupResult is SignUpContinueApiResult.InvalidAttributes)
+    }
+
+    @Test
+    fun testPerformSignUpStartWithAttributesWithInvalidAttributes() {
+        configureMockApi(
+            endpointType = MockApiEndpointType.SignUpStart,
+            correlationId = UUID.randomUUID().toString(),
+            responseType = MockApiResponseType.ATTRIBUTE_VALIDATION_FAILED
+        )
+
+        val signUpSubmitUserAttributesCommandParameters = SignUpStartCommandParameters.builder()
+            .platformComponents(mock<PlatformComponents>())
+            .username(username)
+            .clientId(clientId)
+            .userAttributes(userAttributes)
+            .build()
+
+        val signupResult = nativeAuthOAuth2Strategy.performSignUpStart(
+            signUpSubmitUserAttributesCommandParameters
+        )
+        assertTrue(signupResult is SignUpStartApiResult.InvalidAttributes)
     }
 }

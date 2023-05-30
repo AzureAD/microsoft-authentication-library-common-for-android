@@ -32,33 +32,29 @@ import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.uti
 import com.microsoft.identity.common.java.authorities.NativeAuthCIAMAuthority
 import com.microsoft.identity.common.java.authscheme.AuthenticationSchemeFactory
 import com.microsoft.identity.common.java.cache.MsalOAuth2TokenCache
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.ResetPasswordResendCodeCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.ResetPasswordStartCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.ResetPasswordSubmitCodeCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.ResetPasswordSubmitNewPasswordCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInResendCodeCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartWithPasswordCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitPasswordCommandParameters
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.SsprResendCodeCommandParameters
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.SsprStartCommandParameters
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.SsprSubmitCodeCommandParameters
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.SsprSubmitNewPasswordCommandParameters
-import com.microsoft.identity.common.java.controllers.results.CodeRequired
-import com.microsoft.identity.common.java.controllers.results.Complete
-import com.microsoft.identity.common.java.controllers.results.IncorrectCode
-import com.microsoft.identity.common.java.controllers.results.PasswordIncorrect
-import com.microsoft.identity.common.java.controllers.results.PasswordResetFailed
-import com.microsoft.identity.common.java.controllers.results.Redirect
-import com.microsoft.identity.common.java.controllers.results.SignInPasswordRequired
-import com.microsoft.identity.common.java.controllers.results.SignInUserNotFound
-import com.microsoft.identity.common.java.controllers.results.SsprCodeRequired
-import com.microsoft.identity.common.java.controllers.results.SsprComplete
-import com.microsoft.identity.common.java.controllers.results.SsprIncorrectCode
-import com.microsoft.identity.common.java.controllers.results.SsprPasswordRequired
-import com.microsoft.identity.common.java.controllers.results.SsprUserNotFound
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpResendCodeCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpStartCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpStartWithPasswordCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpSubmitCodeCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpSubmitPasswordCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpSubmitUserAttributesCommandParameters
+import com.microsoft.identity.common.java.controllers.results.CommandResult
+import com.microsoft.identity.common.java.controllers.results.ResetPasswordCommandResult
+import com.microsoft.identity.common.java.controllers.results.SignInCommandResult
+import com.microsoft.identity.common.java.controllers.results.SignUpCommandResult
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents
 import com.microsoft.identity.common.java.request.SdkType
 import com.microsoft.identity.common.java.util.BrokerProtocolVersionUtil
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -72,12 +68,15 @@ class NativeAuthControllerTest {
     private val code = "12345"
     private val credentialToken = "sk490fj8a83n*@f-1"
     private val username = "user@email.com"
+    private val displayName = "email"
     private val password = "verySafePassword"
     private val passwordResetToken = "sk490fj8a83n*@f-2"
     private val passwordSubmitToken = "sk490fj8a83n*@f-3"
     private val newPassword = "newPassword"
     private val clientId = "079af063-4ea7-4dcd-91ff-2b24f54621ea"
     private val authorityUrl = "https://msidlabciam1.ciamlogin.com/msidlabciam1.onmicrosoft.com"
+    private val signUpToken = "ifQ"
+    private val userAttributes = mapOf("city" to "dublin")
 
     private lateinit var platformComponents: IPlatformComponents
     private lateinit var context: Context
@@ -103,7 +102,7 @@ class NativeAuthControllerTest {
 
         val parameters = createSignInStartWithPasswordCommandParameters()
         val result = controller.signInStart(parameters)
-        assert(result is Complete)
+        assert(result is SignInCommandResult.Complete)
     }
 
     @Test
@@ -123,7 +122,7 @@ class NativeAuthControllerTest {
 
         val parameters = createSignInStartWithPasswordCommandParameters()
         val result = controller.signInStart(parameters)
-        assert(result is CodeRequired)
+        assert(result is SignInCommandResult.CodeRequired)
     }
 
     @Test
@@ -132,12 +131,12 @@ class NativeAuthControllerTest {
         MockApiUtils.configureMockApi(
             endpointType = MockApiEndpointType.SignInToken,
             correlationId = correlationId,
-            responseType = MockApiResponseType.INVALID_PASSWORD
+            responseType = MockApiResponseType.SIGNIN_INVALID_PASSWORD
         )
 
         val parameters = createSignInStartWithPasswordCommandParameters()
         val result = controller.signInStart(parameters)
-        assert(result is PasswordIncorrect)
+        assert(result is SignInCommandResult.PasswordIncorrect)
     }
 
     @Test
@@ -151,7 +150,7 @@ class NativeAuthControllerTest {
 
         val parameters = createSignInStartWithPasswordCommandParameters()
         val result = controller.signInStart(parameters)
-        assert(result is SignInUserNotFound)
+        assert(result is SignInCommandResult.UserNotFound)
     }
 
     @Test
@@ -165,7 +164,7 @@ class NativeAuthControllerTest {
 
         val parameters = createSignInStartCommandParameters()
         val result = controller.signInStart(parameters)
-        assert(result is SignInUserNotFound)
+        assert(result is SignInCommandResult.UserNotFound)
     }
 
     @Test
@@ -184,7 +183,7 @@ class NativeAuthControllerTest {
 
         val parameters = createSignInStartCommandParameters()
         val result = controller.signInStart(parameters)
-        assert(result is CodeRequired)
+        assert(result is SignInCommandResult.CodeRequired)
     }
 
     @Test
@@ -198,7 +197,7 @@ class NativeAuthControllerTest {
 
         val parameters = createSignInSubmitCodeCommandParameters()
         val result = controller.signInSubmitCode(parameters)
-        assert(result is Complete)
+        assert(result is SignInCommandResult.Complete)
     }
 
     @Test
@@ -212,7 +211,7 @@ class NativeAuthControllerTest {
 
         val parameters = createSignInSubmitCodeCommandParameters()
         val result = controller.signInSubmitCode(parameters)
-        assert(result is IncorrectCode)
+        assert(result is SignInCommandResult.IncorrectCode)
     }
 
     @Test
@@ -226,7 +225,7 @@ class NativeAuthControllerTest {
 
         val parameters = createSignInResendCodeCommandParameters()
         val result = controller.signInResendCode(parameters)
-        assert(result is CodeRequired)
+        assert(result is SignInCommandResult.CodeRequired)
     }
 
     fun testSignInSubmitPasswordWithPasswordInvalid() {
@@ -234,12 +233,12 @@ class NativeAuthControllerTest {
         MockApiUtils.configureMockApi(
             endpointType = MockApiEndpointType.SignInToken,
             correlationId = correlationId,
-            responseType = MockApiResponseType.INVALID_PASSWORD
+            responseType = MockApiResponseType.SIGNIN_INVALID_PASSWORD
         )
 
         val parameters = createSignInSubmitPasswordCommandParameters()
         val result = controller.signInSubmitPassword(parameters)
-        assert(result is PasswordIncorrect)
+        assert(result is SignInCommandResult.PasswordIncorrect)
     }
 
     @Test
@@ -253,7 +252,7 @@ class NativeAuthControllerTest {
 
         val parameters = createSignInSubmitPasswordCommandParameters()
         val result = controller.signInSubmitPassword(parameters)
-        assert(result is Complete)
+        assert(result is SignInCommandResult.Complete)
     }
 
     @Test
@@ -272,7 +271,7 @@ class NativeAuthControllerTest {
 
         val parameters = createSignInStartCommandParameters()
         val result = controller.signInStart(parameters)
-        assert(result is SignInPasswordRequired)
+        assert(result is SignInCommandResult.PasswordRequired)
     }
     //endregion
 
@@ -293,8 +292,8 @@ class NativeAuthControllerTest {
         )
 
         val parameters = createSsprStartCommandParameters()
-        val result = controller.ssprStart(parameters)
-        assert(result is SsprCodeRequired)
+        val result = controller.resetPasswordStart(parameters)
+        assert(result is ResetPasswordCommandResult.CodeRequired)
     }
 
     @Test
@@ -306,22 +305,21 @@ class NativeAuthControllerTest {
         )
 
         val parameters = createSsprStartCommandParameters()
-        val result = controller.ssprStart(parameters)
-        assert(result is Redirect)
+        val result = controller.resetPasswordStart(parameters)
+        assert(result is CommandResult.Redirect)
     }
 
     @Test
-    @Ignore("TODO remove ignore when sspr start user not found implemented in mock api")
     fun testSsprStartUserNotFound() {
         MockApiUtils.configureMockApi(
             endpointType = MockApiEndpointType.SSPRStart,
             correlationId = UUID.randomUUID().toString(),
-            responseType = MockApiResponseType.USER_NOT_FOUND
+            responseType = MockApiResponseType.EXPLICIT_USER_NOT_FOUND
         )
 
         val parameters = createSsprStartCommandParameters()
-        val result = controller.ssprStart(parameters)
-        assert(result is SsprUserNotFound)
+        val result = controller.resetPasswordStart(parameters)
+        assert(result is ResetPasswordCommandResult.UserNotFound)
     }
 
     @Test
@@ -333,8 +331,8 @@ class NativeAuthControllerTest {
         )
 
         val parameters = createSsprSubmitCodeCommandParameters()
-        val result = controller.ssprSubmitCode(parameters)
-        assert(result is SsprPasswordRequired)
+        val result = controller.resetPasswordSubmitCode(parameters)
+        assert(result is ResetPasswordCommandResult.PasswordRequired)
     }
 
     @Test
@@ -342,12 +340,12 @@ class NativeAuthControllerTest {
         MockApiUtils.configureMockApi(
             endpointType = MockApiEndpointType.SSPRContinue,
             correlationId = UUID.randomUUID().toString(),
-            responseType = MockApiResponseType.INVALID_OOB_VALUE
+            responseType = MockApiResponseType.EXPLICIT_INVALID_OOB_VALUE
         )
 
         val parameters = createSsprSubmitCodeCommandParameters()
-        val result = controller.ssprSubmitCode(parameters)
-        assert(result is SsprIncorrectCode)
+        val result = controller.resetPasswordSubmitCode(parameters)
+        assert(result is ResetPasswordCommandResult.IncorrectCode)
     }
 
     @Test
@@ -359,8 +357,8 @@ class NativeAuthControllerTest {
         )
 
         val parameters = createSsprResendCodeCommandParameters()
-        val result = controller.ssprResendCode(parameters)
-        assert(result is SsprCodeRequired)
+        val result = controller.resetPasswordResendCode(parameters)
+        assert(result is ResetPasswordCommandResult.CodeRequired)
     }
 
     @Test
@@ -379,8 +377,8 @@ class NativeAuthControllerTest {
         )
 
         val parameters = createSsprSubmitNewPasswordCommandParameters()
-        val result = controller.ssprSubmitNewPassword(parameters)
-        assert(result is SsprComplete)
+        val result = controller.resetPasswordSubmitNewPassword(parameters)
+        assert(result is ResetPasswordCommandResult.Complete)
     }
 
     @Test
@@ -399,8 +397,356 @@ class NativeAuthControllerTest {
         )
 
         val parameters = createSsprSubmitNewPasswordCommandParameters()
-        val result = controller.ssprSubmitNewPassword(parameters)
-        assert(result is PasswordResetFailed)
+        val result = controller.resetPasswordSubmitNewPassword(parameters)
+        assert(result is ResetPasswordCommandResult.PasswordResetFailed)
+    }
+    // endregion
+
+    // region signup
+    @Test
+    fun testSignUpStartWithPasswordRequired() {
+        val correlationId = UUID.randomUUID().toString()
+
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpointType.SignUpStart,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.VERIFICATION_REQUIRED
+        )
+
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpointType.SignUpChallenge,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.CHALLENGE_TYPE_PASSWORD
+        )
+
+        val parameters = createSignUpStartWithPasswordCommandParameters()
+        val result = controller.signUpStart(parameters)
+        assert(result is SignUpCommandResult.PasswordRequired)
+    }
+
+    @Test
+    fun testSignUpStartWithInvalidPassword() {
+        val correlationId = UUID.randomUUID().toString()
+
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpointType.SignUpStart,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.PASSWORD_TOO_LONG
+        )
+
+        val parameters = createSignUpStartWithPasswordCommandParameters()
+        val result = controller.signUpStart(parameters)
+        assert(result is SignUpCommandResult.InvalidPassword)
+    }
+
+    @Test
+    fun testSignUpStartWithUsernameAlreadyExists() {
+        val correlationId = UUID.randomUUID().toString()
+
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpointType.SignUpStart,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.USER_ALREADY_EXISTS
+        )
+
+        val parameters = createSignUpStartCommandParameters()
+        val result = controller.signUpStart(parameters)
+        assert(result is SignUpCommandResult.UsernameAlreadyExists)
+    }
+
+    @Test
+    fun testSignUpStartWithPasswordTooWeak() {
+        val correlationId = UUID.randomUUID().toString()
+
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpointType.SignUpStart,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.PASSWORD_TOO_WEAK
+        )
+
+        val parameters = createSignUpStartWithPasswordCommandParameters(passwordValue = "Test@123")
+        val result = controller.signUpStart(parameters)
+        assert(result is SignUpCommandResult.InvalidPassword)
+    }
+
+    @Test
+    fun testSignUpStartWithPasswordTooShort() {
+        val correlationId = UUID.randomUUID().toString()
+
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpointType.SignUpStart,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.PASSWORD_TOO_SHORT
+        )
+
+        val parameters =
+            createSignUpStartWithPasswordCommandParameters(passwordValue = "123")
+        val result = controller.signUpStart(parameters)
+        assert(result is SignUpCommandResult.InvalidPassword)
+    }
+
+    @Test
+    fun testSignUpStartWithPasswordBanned() {
+        val correlationId = UUID.randomUUID().toString()
+
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpointType.SignUpStart,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.PASSWORD_BANNED
+        )
+
+        val parameters =
+            createSignUpStartWithPasswordCommandParameters(passwordValue = "Abc@123")
+        val result = controller.signUpStart(parameters)
+        assert(result is SignUpCommandResult.InvalidPassword)
+    }
+
+    @Test
+    fun testSignUpStartWithPasswordTooLong() {
+        val correlationId = UUID.randomUUID().toString()
+
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpointType.SignUpStart,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.PASSWORD_TOO_LONG
+        )
+
+        val parameters =
+            createSignUpStartWithPasswordCommandParameters(passwordValue = "079af063-4ea7-4dcd-91ff-2b24f54621ea-079af063-4ea7-4dcd-91ff-2b24f54621ea-079af063-4ea7-4dcd-91ff-2b24f54621ea")
+        val result = controller.signUpStart(parameters)
+        assert(result is SignUpCommandResult.InvalidPassword)
+    }
+
+    @Test
+    fun testSignUpStartWithPasswordRecentlyUsed() {
+        val correlationId = UUID.randomUUID().toString()
+
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpointType.SignUpStart,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.PASSWORD_RECENTLY_USED
+        )
+
+        val parameters =
+            createSignUpStartWithPasswordCommandParameters(passwordValue = password)
+        val result = controller.signUpStart(parameters)
+        assert(result is SignUpCommandResult.InvalidPassword)
+    }
+
+    @Test
+    fun testSignUpStartWithPasswordAuthenticationNotSupported() {
+        val correlationId = UUID.randomUUID().toString()
+
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpointType.SignUpStart,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.AUTH_NOT_SUPPORTED
+        )
+
+        val parameters = createSignUpStartWithPasswordCommandParameters()
+        val result = controller.signUpStart(parameters)
+        assert(result is SignUpCommandResult.AuthNotSupported)
+    }
+
+    @Test
+    fun testSignUpStartAuthenticationNotSupported() {
+        val correlationId = UUID.randomUUID().toString()
+
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpointType.SignUpStart,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.AUTH_NOT_SUPPORTED
+        )
+
+        val parameters = createSignUpStartCommandParameters()
+        val result = controller.signUpStart(parameters)
+        assert(result is SignUpCommandResult.AuthNotSupported)
+    }
+
+    @Test
+    fun testSignUpSubmitCodeSuccess() {
+        val correlationId = UUID.randomUUID().toString()
+
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpointType.SignUpContinue,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.SIGNUP_CONTINUE_SUCCESS
+        )
+
+        val parameters = createSignUpSubmitCodeCommandParameters()
+        val result = controller.signUpSubmitCode(parameters)
+        assert(result is SignUpCommandResult.Complete)
+    }
+
+    @Test
+    fun testSignUpSubmitPasswordSuccess() {
+        val correlationId = UUID.randomUUID().toString()
+
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpointType.SignUpContinue,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.SIGNUP_CONTINUE_SUCCESS
+        )
+
+        val parameters = createSignUpSubmitPasswordCommandParameters()
+        val result = controller.signUpSubmitPassword(parameters)
+        assert(result is SignUpCommandResult.Complete)
+    }
+
+    @Test
+    fun testSignUpSubmitPasswordInvalidPassword() {
+        val correlationId = UUID.randomUUID().toString()
+
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpointType.SignUpContinue,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.PASSWORD_TOO_WEAK
+        )
+
+        val parameters = createSignUpSubmitPasswordCommandParameters()
+        val result = controller.signUpSubmitPassword(parameters)
+        assert(result is SignUpCommandResult.InvalidPassword)
+    }
+
+    @Test
+    fun testSignUpSubmitUserAttributeSuccess() {
+        val correlationId = UUID.randomUUID().toString()
+
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpointType.SignUpContinue,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.SIGNUP_CONTINUE_SUCCESS
+        )
+
+        val parameters = createSignUpSubmitUserAttributesCommandParameters()
+        val result = controller.signUpSubmitUserAttributes(parameters)
+        assert(result is SignUpCommandResult.Complete)
+    }
+
+    @Test
+    fun testSignUpContinueAttributesRequired() {
+        val correlationId = UUID.randomUUID().toString()
+
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpointType.SignUpContinue,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.ATTRIBUTES_REQUIRED
+        )
+
+        val parameters = createSignUpSubmitPasswordCommandParameters()
+        val result = controller.signUpSubmitPassword(parameters)
+        assert(result is SignUpCommandResult.AttributesRequired)
+    }
+
+    @Test
+    fun testSignUpStartRedirect() {
+        val correlationId = UUID.randomUUID().toString()
+
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpointType.SignUpStart,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.CHALLENGE_TYPE_REDIRECT
+        )
+
+        val parameters = createSignUpStartCommandParameters()
+        val result = controller.signUpStart(parameters)
+        assert(result is CommandResult.Redirect)
+    }
+
+    @Test
+    fun testSignUpStartWithPasswordRedirect() {
+        val correlationId = UUID.randomUUID().toString()
+
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpointType.SignUpStart,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.CHALLENGE_TYPE_REDIRECT
+        )
+
+        val parameters = createSignUpStartWithPasswordCommandParameters()
+        val result = controller.signUpStart(parameters)
+        assert(result is CommandResult.Redirect)
+    }
+
+    @Test
+    fun testSignUpChallengeRedirect() {
+        val correlationId = UUID.randomUUID().toString()
+
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpointType.SignUpStart,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.VERIFICATION_REQUIRED
+        )
+
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpointType.SignUpChallenge,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.CHALLENGE_TYPE_REDIRECT
+        )
+
+        val parameters = createSignUpStartWithPasswordCommandParameters()
+        val result = controller.signUpStart(parameters)
+        assert(result is CommandResult.Redirect)
+    }
+
+    @Test
+    fun testSignUpAdditionalAttributesRequired() {
+        val correlationId = UUID.randomUUID().toString()
+
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpointType.SignUpContinue,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.ATTRIBUTES_REQUIRED
+        )
+
+        val parameters = createSignUpSubmitUserAttributesCommandParameters()
+        val result = controller.signUpSubmitUserAttributes(parameters)
+        assert(result is SignUpCommandResult.AttributesRequired)
+    }
+
+    @Test
+    fun testSignUpInvalidOOB() {
+        val correlationId = UUID.randomUUID().toString()
+
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpointType.SignUpContinue,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.EXPLICIT_INVALID_OOB_VALUE
+        )
+
+        val parameters = createSignUpSubmitCodeCommandParameters()
+        val result = controller.signUpSubmitCode(parameters)
+        assert(result is SignUpCommandResult.InvalidCode)
+    }
+
+    @Test
+    fun testSignUpInvalidUserAttributes() {
+        val correlationId = UUID.randomUUID().toString()
+
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpointType.SignUpContinue,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.ATTRIBUTE_VALIDATION_FAILED
+        )
+
+        val parameters = createSignUpSubmitUserAttributesCommandParameters()
+        val result = controller.signUpSubmitUserAttributes(parameters)
+        assert(result is SignUpCommandResult.InvalidAttributes)
+    }
+
+    @Test
+    fun testSignUpStartWithInvalidUserAttributes() {
+        val correlationId = UUID.randomUUID().toString()
+
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpointType.SignUpStart,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.ATTRIBUTE_VALIDATION_FAILED
+        )
+
+        val parameters = createSignUpStartCommandParameters()
+        val result = controller.signUpStart(parameters)
+        assert(result is SignUpCommandResult.InvalidAttributes)
     }
     // endregion
 
@@ -491,8 +837,8 @@ class NativeAuthControllerTest {
             .build()
     }
 
-    private fun createSsprStartCommandParameters(): SsprStartCommandParameters {
-        return SsprStartCommandParameters.builder()
+    private fun createSsprStartCommandParameters(): ResetPasswordStartCommandParameters {
+        return ResetPasswordStartCommandParameters.builder()
             .username(username)
             .authority(NativeAuthCIAMAuthority.getAuthorityFromAuthorityUrl(authorityUrl, clientId))
             .clientId(clientId)
@@ -503,8 +849,8 @@ class NativeAuthControllerTest {
             .build()
     }
 
-    private fun createSsprSubmitCodeCommandParameters(): SsprSubmitCodeCommandParameters {
-        return SsprSubmitCodeCommandParameters.builder()
+    private fun createSsprSubmitCodeCommandParameters(): ResetPasswordSubmitCodeCommandParameters {
+        return ResetPasswordSubmitCodeCommandParameters.builder()
             .code(code)
             .passwordResetToken(passwordResetToken)
             .authority(NativeAuthCIAMAuthority.getAuthorityFromAuthorityUrl(authorityUrl, clientId))
@@ -516,8 +862,8 @@ class NativeAuthControllerTest {
             .build()
     }
 
-    private fun createSsprResendCodeCommandParameters(): SsprResendCodeCommandParameters {
-        return SsprResendCodeCommandParameters.builder()
+    private fun createSsprResendCodeCommandParameters(): ResetPasswordResendCodeCommandParameters {
+        return ResetPasswordResendCodeCommandParameters.builder()
             .authority(NativeAuthCIAMAuthority.getAuthorityFromAuthorityUrl(authorityUrl, clientId))
             .clientId(clientId)
             .passwordResetToken(passwordResetToken)
@@ -528,8 +874,8 @@ class NativeAuthControllerTest {
             .build()
     }
 
-    private fun createSsprSubmitNewPasswordCommandParameters(): SsprSubmitNewPasswordCommandParameters {
-        return SsprSubmitNewPasswordCommandParameters.builder()
+    private fun createSsprSubmitNewPasswordCommandParameters(): ResetPasswordSubmitNewPasswordCommandParameters {
+        return ResetPasswordSubmitNewPasswordCommandParameters.builder()
             .newPassword(newPassword)
             .passwordSubmitToken(passwordSubmitToken)
             .authority(NativeAuthCIAMAuthority.getAuthorityFromAuthorityUrl(authorityUrl, clientId))
@@ -543,5 +889,100 @@ class NativeAuthControllerTest {
 
     private fun createCache(): MsalOAuth2TokenCache<*, *, *, *, *> {
         return MsalOAuth2TokenCache.create(platformComponents)
+    }
+
+    private fun createSignUpStartWithPasswordCommandParameters(): SignUpStartWithPasswordCommandParameters {
+        return SignUpStartWithPasswordCommandParameters.builder()
+            .username(username)
+            .password(password)
+            .authority(NativeAuthCIAMAuthority.getAuthorityFromAuthorityUrl(authorityUrl, clientId))
+            .clientId(clientId)
+            .platformComponents(platformComponents)
+            .oAuth2TokenCache(createCache())
+            .sdkType(SdkType.MSAL)
+            .requiredBrokerProtocolVersion(BrokerProtocolVersionUtil.MSAL_TO_BROKER_PROTOCOL_COMPRESSION_CHANGES_MINIMUM_VERSION)
+            .build()
+    }
+
+    private fun createSignUpStartWithPasswordCommandParameters(passwordValue: String?): SignUpStartWithPasswordCommandParameters {
+        return SignUpStartWithPasswordCommandParameters.builder()
+            .username(username)
+            .password(
+                if (passwordValue.isNullOrBlank()) {
+                    password
+                } else {
+                    passwordValue
+                }
+            )
+            .authority(NativeAuthCIAMAuthority.getAuthorityFromAuthorityUrl(authorityUrl, clientId))
+            .clientId(clientId)
+            .platformComponents(platformComponents)
+            .oAuth2TokenCache(createCache())
+            .sdkType(SdkType.MSAL)
+            .requiredBrokerProtocolVersion(BrokerProtocolVersionUtil.MSAL_TO_BROKER_PROTOCOL_COMPRESSION_CHANGES_MINIMUM_VERSION)
+            .build()
+    }
+
+    private fun createSignUpStartCommandParameters(): SignUpStartCommandParameters {
+        return SignUpStartCommandParameters.builder()
+            .username(username)
+            .authority(NativeAuthCIAMAuthority.getAuthorityFromAuthorityUrl(authorityUrl, clientId))
+            .clientId(clientId)
+            .platformComponents(platformComponents)
+            .oAuth2TokenCache(createCache())
+            .sdkType(SdkType.MSAL)
+            .requiredBrokerProtocolVersion(BrokerProtocolVersionUtil.MSAL_TO_BROKER_PROTOCOL_COMPRESSION_CHANGES_MINIMUM_VERSION)
+            .build()
+    }
+
+    private fun createSignUpResendCodeCommandParameters(): SignUpResendCodeCommandParameters {
+        return SignUpResendCodeCommandParameters.builder()
+            .authority(NativeAuthCIAMAuthority.getAuthorityFromAuthorityUrl(authorityUrl, clientId))
+            .signupToken(signUpToken)
+            .clientId(clientId)
+            .platformComponents(platformComponents)
+            .oAuth2TokenCache(createCache())
+            .sdkType(SdkType.MSAL)
+            .requiredBrokerProtocolVersion(BrokerProtocolVersionUtil.MSAL_TO_BROKER_PROTOCOL_COMPRESSION_CHANGES_MINIMUM_VERSION)
+            .build()
+    }
+
+    private fun createSignUpSubmitCodeCommandParameters(): SignUpSubmitCodeCommandParameters {
+        return SignUpSubmitCodeCommandParameters.builder()
+            .signupToken(signUpToken)
+            .code(code)
+            .authority(NativeAuthCIAMAuthority.getAuthorityFromAuthorityUrl(authorityUrl, clientId))
+            .clientId(clientId)
+            .platformComponents(platformComponents)
+            .oAuth2TokenCache(createCache())
+            .sdkType(SdkType.MSAL)
+            .requiredBrokerProtocolVersion(BrokerProtocolVersionUtil.MSAL_TO_BROKER_PROTOCOL_COMPRESSION_CHANGES_MINIMUM_VERSION)
+            .build()
+    }
+
+    private fun createSignUpSubmitPasswordCommandParameters(): SignUpSubmitPasswordCommandParameters {
+        return SignUpSubmitPasswordCommandParameters.builder()
+            .signupToken(signUpToken)
+            .password(password)
+            .authority(NativeAuthCIAMAuthority.getAuthorityFromAuthorityUrl(authorityUrl, clientId))
+            .clientId(clientId)
+            .platformComponents(platformComponents)
+            .oAuth2TokenCache(createCache())
+            .sdkType(SdkType.MSAL)
+            .requiredBrokerProtocolVersion(BrokerProtocolVersionUtil.MSAL_TO_BROKER_PROTOCOL_COMPRESSION_CHANGES_MINIMUM_VERSION)
+            .build()
+    }
+
+    private fun createSignUpSubmitUserAttributesCommandParameters(): SignUpSubmitUserAttributesCommandParameters {
+        return SignUpSubmitUserAttributesCommandParameters.builder()
+            .signupToken(signUpToken)
+            .userAttributes(userAttributes)
+            .authority(NativeAuthCIAMAuthority.getAuthorityFromAuthorityUrl(authorityUrl, clientId))
+            .clientId(clientId)
+            .platformComponents(platformComponents)
+            .oAuth2TokenCache(createCache())
+            .sdkType(SdkType.MSAL)
+            .requiredBrokerProtocolVersion(BrokerProtocolVersionUtil.MSAL_TO_BROKER_PROTOCOL_COMPRESSION_CHANGES_MINIMUM_VERSION)
+            .build()
     }
 }

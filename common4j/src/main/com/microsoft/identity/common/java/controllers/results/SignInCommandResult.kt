@@ -24,25 +24,45 @@ package com.microsoft.identity.common.java.controllers.results
 
 import com.microsoft.identity.common.java.result.ILocalAuthenticationResult
 
-data class Complete(val authenticationResult: ILocalAuthenticationResult): SignInStartCommandResult,
-    SignInSubmitCodeCommandResult, SignInSubmitPasswordCommandResult
-object InvalidAuthenticationType : SignInStartCommandResult
-
 sealed interface SignInStartCommandResult
-data class SignInPasswordRequired(val credentialToken: String): SignInStartCommandResult
-data class CodeRequired(
-    val credentialToken: String,
-    val challengeTargetLabel: String,
-    val challengeChannel: String,
-    val codeLength: Int
-): SignInStartCommandResult, SignInResendCodeCommandResult, SignInSubmitPasswordCommandResult
-data class SignInUserNotFound(val errorCode: String, val errorDescription: String): SignInStartCommandResult
-data class PasswordIncorrect(val errorCode: String, val errorDescription: String): SignInStartCommandResult, SignInSubmitPasswordCommandResult
-
 sealed interface SignInSubmitCodeCommandResult
-data class IncorrectCode(val errorCode: String, val errorDescription: String):
-    SignInSubmitCodeCommandResult
-
 sealed interface SignInResendCodeCommandResult
-
 sealed interface SignInSubmitPasswordCommandResult
+
+interface SignInCommandResult {
+    data class Complete(val authenticationResult: ILocalAuthenticationResult)
+        :
+        SignInStartCommandResult, SignInSubmitCodeCommandResult, SignInSubmitPasswordCommandResult
+
+    object InvalidAuthenticationType
+        :
+        SignInStartCommandResult
+
+    data class PasswordRequired(val credentialToken: String)
+        :
+        SignInStartCommandResult
+
+    data class CodeRequired(
+        val credentialToken: String,
+        val challengeTargetLabel: String,
+        val challengeChannel: String,
+        val codeLength: Int
+    )
+        :
+        SignInStartCommandResult, SignInResendCodeCommandResult, SignInSubmitPasswordCommandResult
+
+    data class UserNotFound(val errorCode: String, val errorDescription: String)
+        :
+        SignInStartCommandResult
+
+    data class PasswordIncorrect(val errorCode: String, val errorDescription: String)
+        :
+        SignInStartCommandResult, SignInSubmitPasswordCommandResult
+
+    data class IncorrectCode(val errorCode: String, val errorDescription: String)
+        :
+        SignInSubmitCodeCommandResult
+
+
+
+}

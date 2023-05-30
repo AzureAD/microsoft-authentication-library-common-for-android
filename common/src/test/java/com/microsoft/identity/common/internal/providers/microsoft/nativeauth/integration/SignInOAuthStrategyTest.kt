@@ -37,9 +37,9 @@ import com.microsoft.identity.common.java.providers.nativeauth.NativeAuthOAuth2C
 import com.microsoft.identity.common.java.providers.nativeauth.NativeAuthOAuth2Strategy
 import com.microsoft.identity.common.java.providers.nativeauth.NativeAuthRequestProvider
 import com.microsoft.identity.common.java.providers.nativeauth.NativeAuthResponseHandler
+import com.microsoft.identity.common.java.providers.nativeauth.interactors.ResetPasswordInteractor
 import com.microsoft.identity.common.java.providers.nativeauth.interactors.SignInInteractor
 import com.microsoft.identity.common.java.providers.nativeauth.interactors.SignUpInteractor
-import com.microsoft.identity.common.java.providers.nativeauth.interactors.SsprInteractor
 import com.microsoft.identity.common.java.providers.nativeauth.responses.signin.SignInChallengeApiResult
 import com.microsoft.identity.common.java.providers.nativeauth.responses.signin.SignInInitiateApiResult
 import com.microsoft.identity.common.java.providers.nativeauth.responses.signin.SignInTokenApiResult
@@ -107,11 +107,11 @@ class SignInOAuthStrategyTest {
         whenever(mockConfig.getSignInInitiateEndpoint()).thenReturn(signInInitiateRequestUrl)
         whenever(mockConfig.getSignInChallengeEndpoint()).thenReturn(signInChallengeRequestUrl)
         whenever(mockConfig.getSignInTokenEndpoint()).thenReturn(signInTokenRequestUrl)
-        whenever(mockConfig.getSsprStartEndpoint()).thenReturn(ssprStartRequestUrl)
-        whenever(mockConfig.getSsprChallengeEndpoint()).thenReturn(ssprChallengeRequestUrl)
-        whenever(mockConfig.getSsprContinueEndpoint()).thenReturn(ssprContinueRequestUrl)
-        whenever(mockConfig.getSsprSubmitEndpoint()).thenReturn(ssprSubmitRequestUrl)
-        whenever(mockConfig.getSsprPollCompletionEndpoint()).thenReturn(ssprPollCompletionRequestUrl)
+        whenever(mockConfig.getResetPasswordStartEndpoint()).thenReturn(ssprStartRequestUrl)
+        whenever(mockConfig.getResetPasswordChallengeEndpoint()).thenReturn(ssprChallengeRequestUrl)
+        whenever(mockConfig.getResetPasswordContinueEndpoint()).thenReturn(ssprContinueRequestUrl)
+        whenever(mockConfig.getResetPasswordSubmitEndpoint()).thenReturn(ssprSubmitRequestUrl)
+        whenever(mockConfig.getResetPasswordPollCompletionEndpoint()).thenReturn(ssprPollCompletionRequestUrl)
         whenever(mockConfig.challengeType).thenReturn(challengeType)
 
         nativeAuthOAuth2Strategy = NativeAuthOAuth2Strategy(
@@ -131,7 +131,7 @@ class SignInOAuthStrategyTest {
                 ),
                 nativeAuthResponseHandler = NativeAuthResponseHandler()
             ),
-            ssprInteractor = SsprInteractor(
+            resetPasswordInteractor = ResetPasswordInteractor(
                 httpClient = UrlConnectionHttpClient.getDefaultInstance(),
                 nativeAuthRequestProvider = NativeAuthRequestProvider(mockConfig),
                 nativeAuthResponseHandler = NativeAuthResponseHandler()
@@ -361,7 +361,7 @@ class SignInOAuthStrategyTest {
         MockApiUtils.configureMockApi(
             endpointType = MockApiEndpointType.SignInToken,
             correlationId = UUID.randomUUID().toString(),
-            responseType = MockApiResponseType.INVALID_PASSWORD
+            responseType = MockApiResponseType.SIGNIN_INVALID_PASSWORD
         )
 
         val parameters = SignInSubmitPasswordCommandParameters.builder()

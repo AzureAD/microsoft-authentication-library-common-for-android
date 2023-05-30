@@ -23,7 +23,6 @@
 package com.microsoft.identity.common.java.commands.parameters.nativeauth;
 
 import java.util.Map;
-
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.experimental.SuperBuilder;

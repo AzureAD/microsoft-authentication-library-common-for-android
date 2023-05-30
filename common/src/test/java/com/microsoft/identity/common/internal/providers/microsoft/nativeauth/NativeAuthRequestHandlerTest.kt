@@ -22,24 +22,28 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft.nativeauth
 
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.ResetPasswordStartCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.ResetPasswordSubmitCodeCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.ResetPasswordSubmitNewPasswordCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartWithPasswordCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitPasswordCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpContinueCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpStartCommandParameters
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.SsprStartCommandParameters
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.SsprSubmitCodeCommandParameters
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.SsprSubmitNewPasswordCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpStartWithPasswordCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpSubmitCodeCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpSubmitPasswordCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpSubmitUserAttributesCommandParameters
 import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.interfaces.PlatformComponents
 import com.microsoft.identity.common.java.providers.nativeauth.NativeAuthOAuth2Configuration
 import com.microsoft.identity.common.java.providers.nativeauth.NativeAuthRequestProvider
 import com.microsoft.identity.common.java.providers.nativeauth.requests.NativeAuthGrantType
+import com.microsoft.identity.common.java.providers.nativeauth.requests.NativeAuthRequest.Companion.toJsonString
 import io.mockk.every
 import io.mockk.mockk
-import junit.framework.Assert.assertEquals
-import org.junit.Ignore
+import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.mockito.kotlin.mock
 import java.net.URL
@@ -62,12 +66,17 @@ class NativeAuthRequestHandlerTest {
     private val ssprPollCompletionRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/resetpassword/poll_completion")
     private val tokenEndpoint = URL("https://contoso.com/1234/token")
     private val challengeType = "oob redirect"
-    private val userAttributes = mapOf(Pair("city", "Dublin"))
+    private val userAttributes = mapOf("city" to "Dublin")
+    private val emptyUserAttributes = emptyMap<String, String>()
     private val oobGrantType = "oob"
+    private val passwordGrantType = "password"
     private val oobCode = "123456"
+    private val passwordResetToken = "123456"
+    private val passwordSubmitToken = "123456"
     private val emptyString = ""
     private val credentialToken = "uY29tL2F1dGhlbnRpY"
     private val grantType = NativeAuthGrantType.PASSWORDLESS_OTP.jsonValue
+    private val signupToken = "ifQ"
 
     private val mockConfig = mockk<NativeAuthOAuth2Configuration> {
         every { getSignUpStartEndpoint() } returns signUpStartRequestUrl
@@ -76,11 +85,11 @@ class NativeAuthRequestHandlerTest {
         every { getSignInInitiateEndpoint() } returns signInInitiateRequestUrl
         every { getSignInChallengeEndpoint() } returns signInChallengeRequestUrl
         every { getSignInTokenEndpoint() } returns signInTokenRequestUrl
-        every { getSsprStartEndpoint() } returns ssprStartRequestUrl
-        every { getSsprChallengeEndpoint() } returns ssprChallengeRequestUrl
-        every { getSsprContinueEndpoint() } returns ssprContinueRequestUrl
-        every { getSsprSubmitEndpoint() } returns ssprSubmitRequestUrl
-        every { getSsprPollCompletionEndpoint() } returns ssprPollCompletionRequestUrl
+        every { getResetPasswordStartEndpoint() } returns ssprStartRequestUrl
+        every { getResetPasswordChallengeEndpoint() } returns ssprChallengeRequestUrl
+        every { getResetPasswordContinueEndpoint() } returns ssprContinueRequestUrl
+        every { getResetPasswordSubmitEndpoint() } returns ssprSubmitRequestUrl
+        every { getResetPasswordPollCompletionEndpoint() } returns ssprPollCompletionRequestUrl
         every { challengeType } returns this@NativeAuthRequestHandlerTest.challengeType
         every { clientId } returns this@NativeAuthRequestHandlerTest.clientId
     }
@@ -95,10 +104,25 @@ class NativeAuthRequestHandlerTest {
     fun testSignUpStartWithEmptyUsernameShouldThrowException() {
         val commandParameters = SignUpStartCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
-            .email(emptyString)
+            .username(emptyString)
+            .clientId(clientId)
             .build()
 
         nativeAuthRequestProvider.createSignUpStartRequest(
+            commandParameters = commandParameters
+        )
+    }
+
+    @Test(expected = ClientException::class)
+    fun testSignUpStartWithEmptyPasswordShouldThrowException() {
+        val commandParameters = SignUpStartWithPasswordCommandParameters.builder()
+            .platformComponents(mock<PlatformComponents>())
+            .username(username)
+            .password(emptyString)
+            .clientId(clientId)
+            .build()
+
+        nativeAuthRequestProvider.createSignUpWithPasswordStartRequest(
             commandParameters = commandParameters
         )
     }
@@ -109,7 +133,8 @@ class NativeAuthRequestHandlerTest {
 
         val commandParameters = SignUpStartCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
-            .email(username)
+            .username(username)
+            .clientId(emptyString)
             .build()
 
         nativeAuthRequestProvider.createSignUpStartRequest(
@@ -123,7 +148,8 @@ class NativeAuthRequestHandlerTest {
 
         val commandParameters = SignUpStartCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
-            .email(username)
+            .username(username)
+            .clientId(clientId)
             .build()
 
         nativeAuthRequestProvider.createSignUpStartRequest(
@@ -132,11 +158,11 @@ class NativeAuthRequestHandlerTest {
     }
 
     @Test
-    @Ignore // TODO fix this test with sign up PR
     fun testSignUpStartSuccess() {
         val commandParameters = SignUpStartCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
-            .email(username)
+            .username(username)
+            .clientId(clientId)
             .userAttributes(userAttributes)
             .build()
 
@@ -148,10 +174,150 @@ class NativeAuthRequestHandlerTest {
         assertEquals(clientId, result.parameters.clientId)
         assertEquals(challengeType, result.parameters.challengeType)
         assertEquals(signUpStartRequestUrl, result.requestUrl)
-        assertEquals("{\"city\":\"Dublin\"}", result.parameters.attributes.toString())
+        assertEquals(userAttributes.toJsonString(userAttributes), result.parameters.attributes)
+    }
+
+    @Test
+    fun testSignUpStartWithPasswordSuccess() {
+        val commandParameters = SignUpStartWithPasswordCommandParameters.builder()
+            .platformComponents(mock<PlatformComponents>())
+            .username(username)
+            .password(password)
+            .clientId(clientId)
+            .userAttributes(userAttributes)
+            .build()
+
+        val result = nativeAuthRequestProvider.createSignUpWithPasswordStartRequest(
+            commandParameters = commandParameters
+        )
+
+        assertEquals(username, result.parameters.username)
+        assertEquals(clientId, result.parameters.clientId)
+        assertEquals(challengeType, result.parameters.challengeType)
+        assertEquals(signUpStartRequestUrl, result.requestUrl)
+        assertEquals(userAttributes.toJsonString(userAttributes), result.parameters.attributes)
+    }
+
+    @Test
+    fun testSignUpSubmitCodeSuccess() {
+        val commandParameters = SignUpSubmitCodeCommandParameters.builder()
+            .platformComponents(mock<PlatformComponents>())
+            .signupToken(signupToken)
+            .code(oobCode)
+            .clientId(clientId)
+            .build()
+
+        val result = nativeAuthRequestProvider.createSignUpSubmitCodeRequest(
+            signUpToken = signupToken,
+            commandParameters = commandParameters
+        )
+
+        assertEquals(oobCode, result.parameters.oob)
+        assertEquals(signupToken, result.parameters.signUpToken)
+        assertEquals(oobGrantType, result.parameters.grantType)
+        assertEquals(signUpContinueRequestUrl, result.requestUrl)
+    }
+
+    @Test
+    fun testSignUpSubmitPasswordSuccess() {
+        val commandParameters = SignUpSubmitPasswordCommandParameters.builder()
+            .platformComponents(mock<PlatformComponents>())
+            .signupToken(signupToken)
+            .password(password)
+            .clientId(clientId)
+            .build()
+
+        val result = nativeAuthRequestProvider.createSignUpSubmitPasswordRequest(
+            signUpToken = signupToken,
+            commandParameters = commandParameters
+        )
+
+        assertEquals(password, result.parameters.password)
+        assertEquals(signupToken, result.parameters.signUpToken)
+        assertEquals(passwordGrantType, result.parameters.grantType)
+        assertEquals(signUpContinueRequestUrl, result.requestUrl)
+    }
+
+    @Test
+    fun testSignUpSubmitUserAttributesSuccess() {
+        val commandParameters = SignUpSubmitUserAttributesCommandParameters.builder()
+            .platformComponents(mock<PlatformComponents>())
+            .signupToken(signupToken)
+            .userAttributes(userAttributes)
+            .clientId(clientId)
+            .build()
+
+        val result = nativeAuthRequestProvider.createSignUpSubmitUserAttributesRequest(
+            signUpToken = signupToken,
+            commandParameters = commandParameters
+        )
+
+        assertEquals(userAttributes.toJsonString(userAttributes), result.parameters.attributes)
+        assertEquals(signupToken, result.parameters.signUpToken)
+        assertEquals(signUpContinueRequestUrl, result.requestUrl)
+    }
+
+    @Test(expected = ClientException::class)
+    fun testSignUpSubmitEmptyUserAttributesShouldThrowExceptionSuccess() {
+        val commandParameters = SignUpSubmitUserAttributesCommandParameters.builder()
+            .platformComponents(mock<PlatformComponents>())
+            .signupToken(signupToken)
+            .userAttributes(emptyUserAttributes)
+            .clientId(clientId)
+            .build()
+
+        nativeAuthRequestProvider.createSignUpSubmitUserAttributesRequest(
+            signUpToken = signupToken,
+            commandParameters = commandParameters
+        )
+    }
+
+    @Test(expected = ClientException::class)
+    fun testSignUpSubmitEmptyPasswordShouldThrowExceptionSuccess() {
+        val commandParameters = SignUpSubmitPasswordCommandParameters.builder()
+            .platformComponents(mock<PlatformComponents>())
+            .signupToken(signupToken)
+            .password(emptyString)
+            .clientId(clientId)
+            .build()
+
+        nativeAuthRequestProvider.createSignUpSubmitPasswordRequest(
+            signUpToken = signupToken,
+            commandParameters = commandParameters
+        )
+    }
+
+    @Test(expected = ClientException::class)
+    fun testSignUpSubmitEmptyCodedShouldThrowExceptionSuccess() {
+        val commandParameters = SignUpSubmitCodeCommandParameters.builder()
+            .platformComponents(mock<PlatformComponents>())
+            .signupToken(signupToken)
+            .code(emptyString)
+            .clientId(clientId)
+            .build()
+
+        nativeAuthRequestProvider.createSignUpSubmitCodeRequest(
+            signUpToken = signupToken,
+            commandParameters = commandParameters
+        )
     }
 
     // signup challenge tests
+    @Test
+    fun testSignUpChallengeSuccess() {
+        nativeAuthRequestProvider.createSignUpChallengeRequest(
+            signUpToken = signupToken
+        )
+
+        val result = nativeAuthRequestProvider.createSignUpChallengeRequest(
+            signUpToken = signupToken
+        )
+
+        assertEquals(challengeType, result.parameters.challengeType)
+        assertEquals(signupToken, result.parameters.signUpToken)
+        assertEquals(signUpChallengeRequestUrl, result.requestUrl)
+    }
+
     @Test(expected = ClientException::class)
     fun testSignUpChallengeWithEmptySignUpTokenShouldThrowException() {
         nativeAuthRequestProvider.createSignUpChallengeRequest(
@@ -162,20 +328,18 @@ class NativeAuthRequestHandlerTest {
     @Test(expected = ClientException::class)
     fun testSignUpChallengeWithEmptyClientIdShouldThrowException() {
         every { mockConfig.clientId } returns emptyString
-        every { mockConfig.challengeType } returns "oob redirect password"
 
         nativeAuthRequestProvider.createSignUpChallengeRequest(
-            signUpToken = "1234"
+            signUpToken = signupToken
         )
     }
 
     @Test(expected = ClientException::class)
     fun testSignUpChallengeWithEmptyChallengeTypesShouldThrowException() {
-        every { mockConfig.clientId } returns "1234"
         every { mockConfig.challengeType } returns emptyString
 
         nativeAuthRequestProvider.createSignUpChallengeRequest(
-            signUpToken = "1234"
+            signUpToken = signupToken
         )
     }
 
@@ -424,7 +588,6 @@ class NativeAuthRequestHandlerTest {
 
     // signup continue tests
     @Test
-    @Ignore // TODO fix this test with sign up PR
     fun testSignUpContinueSuccess() {
         val commandParameters = SignUpContinueCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
@@ -441,217 +604,217 @@ class NativeAuthRequestHandlerTest {
         assertEquals(clientId, result.parameters.clientId)
         assertEquals(grantType, result.parameters.grantType)
         assertEquals(signUpContinueRequestUrl, result.requestUrl)
-        assertEquals("{\"city\":\"Dublin\"}", result.parameters.attributes.toString())
+        assertEquals(userAttributes.toJsonString(userAttributes), result.parameters.attributes)
     }
 
     // sspr start tests
     @Test(expected = ClientException::class)
-    fun testSsprStartWithEmptyUsernameShouldThrowException() {
-        val commandParameters = SsprStartCommandParameters.builder()
+    fun testResetPasswordStartWithEmptyUsernameShouldThrowException() {
+        val commandParameters = ResetPasswordStartCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .username(emptyString)
             .build()
 
-        nativeAuthRequestProvider.createSsprStartRequest(
+        nativeAuthRequestProvider.createResetPasswordStartRequest(
             parameters = commandParameters
         )
     }
 
     @Test(expected = ClientException::class)
-    fun testSsprStartWithEmptyClientIdShouldThrowException() {
+    fun testResetPasswordStartWithEmptyClientIdShouldThrowException() {
         every { mockConfig.clientId } returns emptyString
 
-        val commandParameters = SsprStartCommandParameters.builder()
+        val commandParameters = ResetPasswordStartCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .username(username)
             .build()
 
-        nativeAuthRequestProvider.createSsprStartRequest(
+        nativeAuthRequestProvider.createResetPasswordStartRequest(
             parameters = commandParameters
         )
     }
 
     @Test(expected = ClientException::class)
-    fun testSsprStartWithEmptyChallengeTypeShouldThrowException() {
+    fun testResetPasswordStartWithEmptyChallengeTypeShouldThrowException() {
         every { mockConfig.challengeType } returns emptyString
 
-        val commandParameters = SsprStartCommandParameters.builder()
+        val commandParameters = ResetPasswordStartCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .username(username)
             .build()
 
-        nativeAuthRequestProvider.createSsprStartRequest(
+        nativeAuthRequestProvider.createResetPasswordStartRequest(
             parameters = commandParameters
         )
     }
 
     @Test
-    fun testSsprStartSuccess() {
-        val commandParameters = SsprStartCommandParameters.builder()
+    fun testResetPasswordStartSuccess() {
+        val commandParameters = ResetPasswordStartCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .username(username)
             .build()
 
-        val result = nativeAuthRequestProvider.createSsprStartRequest(
+        nativeAuthRequestProvider.createResetPasswordStartRequest(
             parameters = commandParameters
         )
     }
 
-    // sspr challenge tests
+    // ResetPassword challenge tests
     @Test(expected = ClientException::class)
-    fun testSsprChallengeWithEmptyClientIdShouldThrowException() {
+    fun testResetPasswordChallengeWithEmptyClientIdShouldThrowException() {
         every { mockConfig.clientId } returns emptyString
 
-        nativeAuthRequestProvider.createSsprChallengeRequest(
-            passwordResetToken = "123456"
+        nativeAuthRequestProvider.createResetPasswordChallengeRequest(
+            passwordResetToken = passwordResetToken
         )
     }
 
     @Test(expected = ClientException::class)
-    fun testSsprChallengeWithEmptyPasswordResetTokenShouldThrowException() {
-        nativeAuthRequestProvider.createSsprChallengeRequest(
+    fun testResetPasswordChallengeWithEmptyPasswordResetTokenShouldThrowException() {
+        nativeAuthRequestProvider.createResetPasswordChallengeRequest(
             passwordResetToken = emptyString
         )
     }
 
     @Test
-    fun testSsprChallengeSuccess() {
-        nativeAuthRequestProvider.createSsprChallengeRequest(
-            passwordResetToken = "123456"
+    fun testResetPasswordChallengeSuccess() {
+        nativeAuthRequestProvider.createResetPasswordChallengeRequest(
+            passwordResetToken = passwordResetToken
         )
     }
 
-    // sspr continue tests
+    // ResetPassword continue tests
     @Test(expected = ClientException::class)
-    fun testSsprContinueWithEmptyClientIdShouldThrowException() {
+    fun testResetPasswordContinueWithEmptyClientIdShouldThrowException() {
         every { mockConfig.clientId } returns emptyString
 
-        val commandParameters = SsprSubmitCodeCommandParameters.builder()
+        val commandParameters = ResetPasswordSubmitCodeCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
-            .code("123456")
-            .passwordResetToken("123456")
+            .code(oobCode)
+            .passwordResetToken(passwordResetToken)
             .build()
 
-        nativeAuthRequestProvider.createSsprContinueRequest(
+        nativeAuthRequestProvider.createResetPasswordContinueRequest(
             parameters = commandParameters
         )
     }
 
     @Test(expected = ClientException::class)
-    fun testSsprContinueWithEmptyPasswordResetTokenShouldThrowException() {
-        val commandParameters = SsprSubmitCodeCommandParameters.builder()
+    fun testResetPasswordContinueWithEmptyPasswordResetTokenShouldThrowException() {
+        val commandParameters = ResetPasswordSubmitCodeCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
-            .code("123456")
-            .passwordResetToken("")
+            .code(oobCode)
+            .passwordResetToken(emptyString)
             .build()
 
-        nativeAuthRequestProvider.createSsprContinueRequest(
+        nativeAuthRequestProvider.createResetPasswordContinueRequest(
             parameters = commandParameters
         )
     }
 
     @Test
-    fun testSsprContinueWithEmptyOobCodeShouldNotThrowException() {
-        val commandParameters = SsprSubmitCodeCommandParameters.builder()
+    fun testResetPasswordContinueWithEmptyOobCodeShouldNotThrowException() {
+        val commandParameters = ResetPasswordSubmitCodeCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .code(emptyString)
-            .passwordResetToken("123456")
+            .passwordResetToken(passwordResetToken)
             .build()
 
-        nativeAuthRequestProvider.createSsprContinueRequest(
+        nativeAuthRequestProvider.createResetPasswordContinueRequest(
             parameters = commandParameters
         )
     }
 
     @Test
-    fun testSsprContinueSucces() {
-        val commandParameters = SsprSubmitCodeCommandParameters.builder()
+    fun testResetPasswordContinueSucces() {
+        val commandParameters = ResetPasswordSubmitCodeCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
-            .code("123456")
-            .passwordResetToken("123456")
+            .code(oobCode)
+            .passwordResetToken(passwordResetToken)
             .build()
 
-        nativeAuthRequestProvider.createSsprContinueRequest(
+        nativeAuthRequestProvider.createResetPasswordContinueRequest(
             parameters = commandParameters
         )
     }
 
-    // sspr submit tests
+    // ResetPassword submit tests
     @Test(expected = ClientException::class)
-    fun testSsprSubmitWithEmptyClientIdShouldThrowException() {
+    fun testResetPasswordSubmitWithEmptyClientIdShouldThrowException() {
         every { mockConfig.clientId } returns emptyString
 
-        val commandParameters = SsprSubmitNewPasswordCommandParameters.builder()
+        val commandParameters = ResetPasswordSubmitNewPasswordCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
-            .passwordSubmitToken("123456")
+            .passwordSubmitToken(passwordSubmitToken)
             .newPassword(password)
             .build()
 
-        nativeAuthRequestProvider.createSsprSubmitRequest(
+        nativeAuthRequestProvider.createResetPasswordSubmitRequest(
             commandParameters = commandParameters
         )
     }
 
     @Test(expected = ClientException::class)
-    fun testSsprSubmitWithEmptyPasswordShouldThrowException() {
-        val commandParameters = SsprSubmitNewPasswordCommandParameters.builder()
+    fun testResetPasswordSubmitWithEmptyPasswordShouldThrowException() {
+        val commandParameters = ResetPasswordSubmitNewPasswordCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
-            .passwordSubmitToken("123456")
+            .passwordSubmitToken(passwordSubmitToken)
             .newPassword(emptyString)
             .build()
 
-        nativeAuthRequestProvider.createSsprSubmitRequest(
+        nativeAuthRequestProvider.createResetPasswordSubmitRequest(
             commandParameters = commandParameters
         )
     }
 
     @Test(expected = ClientException::class)
-    fun testSsprSubmitWithEmptyPasswordSubmitTokenShouldThrowException() {
-        val commandParameters = SsprSubmitNewPasswordCommandParameters.builder()
+    fun testResetPasswordSubmitWithEmptyPasswordSubmitTokenShouldThrowException() {
+        val commandParameters = ResetPasswordSubmitNewPasswordCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .passwordSubmitToken(emptyString)
             .newPassword(password)
             .build()
 
-        nativeAuthRequestProvider.createSsprSubmitRequest(
+        nativeAuthRequestProvider.createResetPasswordSubmitRequest(
             commandParameters = commandParameters
         )
     }
 
     @Test
-    fun testSsprSubmitSuccess() {
-        val commandParameters = SsprSubmitNewPasswordCommandParameters.builder()
+    fun testResetPasswordSubmitSuccess() {
+        val commandParameters = ResetPasswordSubmitNewPasswordCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
-            .passwordSubmitToken("123456")
+            .passwordSubmitToken(passwordSubmitToken)
             .newPassword(password)
             .build()
 
-        nativeAuthRequestProvider.createSsprSubmitRequest(
+        nativeAuthRequestProvider.createResetPasswordSubmitRequest(
             commandParameters = commandParameters
         )
     }
 
-    // sspr completion poll tests
+    // ResetPassword completion poll tests
     @Test(expected = ClientException::class)
-    fun testSsprPollCompletionWithEmptyClientIdShouldThrowException() {
+    fun testResetPasswordPollCompletionWithEmptyClientIdShouldThrowException() {
         every { mockConfig.clientId } returns emptyString
 
-        nativeAuthRequestProvider.createSsprPollCompletionRequest(
-            passwordResetToken = "123456"
+        nativeAuthRequestProvider.createResetPasswordPollCompletionRequest(
+            passwordResetToken = passwordResetToken
         )
     }
 
     @Test(expected = ClientException::class)
-    fun testSsprPollCompletionWithEmptyPasswordSubmitTokenShouldThrowException() {
-        nativeAuthRequestProvider.createSsprPollCompletionRequest(
+    fun testResetPasswordPollCompletionWithEmptyPasswordSubmitTokenShouldThrowException() {
+        nativeAuthRequestProvider.createResetPasswordPollCompletionRequest(
             passwordResetToken = emptyString
         )
     }
 
     @Test
-    fun testSsprPollCompletionSuccess() {
-        nativeAuthRequestProvider.createSsprPollCompletionRequest(
-            passwordResetToken = "123456"
+    fun testResetPasswordPollCompletionSuccess() {
+        nativeAuthRequestProvider.createResetPasswordPollCompletionRequest(
+            passwordResetToken = passwordResetToken
         )
     }
 }

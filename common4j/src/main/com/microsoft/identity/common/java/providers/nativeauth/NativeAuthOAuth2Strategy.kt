@@ -23,30 +23,32 @@
 
 package com.microsoft.identity.common.java.providers.nativeauth
 
+import androidx.annotation.VisibleForTesting
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.BaseNativeAuthCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.ResetPasswordStartCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.ResetPasswordSubmitCodeCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.ResetPasswordSubmitNewPasswordCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartWithPasswordCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitPasswordCommandParameters
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpContinueCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpStartCommandParameters
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.SsprStartCommandParameters
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.SsprSubmitCodeCommandParameters
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.SsprSubmitNewPasswordCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpStartWithPasswordCommandParameters
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy
+import com.microsoft.identity.common.java.providers.nativeauth.interactors.ResetPasswordInteractor
 import com.microsoft.identity.common.java.providers.nativeauth.interactors.SignInInteractor
 import com.microsoft.identity.common.java.providers.nativeauth.interactors.SignUpInteractor
-import com.microsoft.identity.common.java.providers.nativeauth.interactors.SsprInteractor
+import com.microsoft.identity.common.java.providers.nativeauth.responses.resetpassword.ResetPasswordChallengeApiResult
+import com.microsoft.identity.common.java.providers.nativeauth.responses.resetpassword.ResetPasswordContinueApiResult
+import com.microsoft.identity.common.java.providers.nativeauth.responses.resetpassword.ResetPasswordPollCompletionApiResult
+import com.microsoft.identity.common.java.providers.nativeauth.responses.resetpassword.ResetPasswordStartApiResult
+import com.microsoft.identity.common.java.providers.nativeauth.responses.resetpassword.ResetPasswordSubmitApiResult
 import com.microsoft.identity.common.java.providers.nativeauth.responses.signin.SignInChallengeApiResult
 import com.microsoft.identity.common.java.providers.nativeauth.responses.signin.SignInInitiateApiResult
 import com.microsoft.identity.common.java.providers.nativeauth.responses.signin.SignInTokenApiResult
-import com.microsoft.identity.common.java.providers.nativeauth.responses.signup.challenge.SignUpChallengeResult
-import com.microsoft.identity.common.java.providers.nativeauth.responses.signup.cont.SignUpContinueResult
-import com.microsoft.identity.common.java.providers.nativeauth.responses.signup.start.SignUpStartResult
-import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.SsprChallengeApiResult
-import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.SsprContinueApiResult
-import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.SsprPollCompletionApiResult
-import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.SsprStartApiResult
-import com.microsoft.identity.common.java.providers.nativeauth.responses.sspr.SsprSubmitApiResult
+import com.microsoft.identity.common.java.providers.nativeauth.responses.signup.SignUpChallengeApiResult
+import com.microsoft.identity.common.java.providers.nativeauth.responses.signup.SignUpContinueApiResult
+import com.microsoft.identity.common.java.providers.nativeauth.responses.signup.SignUpStartApiResult
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters
 
 /**
@@ -54,10 +56,11 @@ import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParamet
  */
 class NativeAuthOAuth2Strategy(
     private val strategyParameters: OAuth2StrategyParameters,
-    private val config: NativeAuthOAuth2Configuration,
+    @get:VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    val config: NativeAuthOAuth2Configuration,
     private val signInInteractor: SignInInteractor,
     private val signUpInteractor: SignUpInteractor,
-    private val ssprInteractor: SsprInteractor
+    private val resetPasswordInteractor: ResetPasswordInteractor
 ) :
     MicrosoftStsOAuth2Strategy(config, strategyParameters) {
     private val TAG = NativeAuthOAuth2Strategy::class.java.simpleName
@@ -71,18 +74,24 @@ class NativeAuthOAuth2Strategy(
 
     // TODO unit tests & compare with getAuthorityFromTokenEndpoint()
     fun getAuthority(): String {
-        return config.getAuthorityUrl().toString()
+        return config.authorityUrl.toString()
     }
 
     fun performSignUpStart(
-        parameters: SignUpStartCommandParameters
-    ): SignUpStartResult {
-        return signUpInteractor.performSignUpStart(parameters)
+        commandParameters: SignUpStartCommandParameters
+    ): SignUpStartApiResult {
+        return signUpInteractor.performSignUpStart(commandParameters)
+    }
+
+    fun performSignUpStartWithPassword(
+        commandParameters: SignUpStartWithPasswordCommandParameters
+    ): SignUpStartApiResult {
+        return signUpInteractor.performSignUpStartWithPassword(commandParameters)
     }
 
     fun performSignUpChallenge(
         signUpToken: String
-    ): SignUpChallengeResult {
+    ): SignUpChallengeApiResult {
         return signUpInteractor.performSignUpChallenge(
             signUpToken = signUpToken
         )
@@ -90,8 +99,8 @@ class NativeAuthOAuth2Strategy(
 
     fun performSignUpContinue(
         signUpToken: String,
-        commandParameters: SignUpContinueCommandParameters
-    ): SignUpContinueResult {
+        commandParameters: BaseNativeAuthCommandParameters
+    ): SignUpContinueApiResult {
         return signUpInteractor.performSignUpContinue(
             signUpToken = signUpToken,
             commandParameters = commandParameters
@@ -136,42 +145,42 @@ class NativeAuthOAuth2Strategy(
         )
     }
 
-    fun performSsprStart(
-        parameters: SsprStartCommandParameters
-    ): SsprStartApiResult {
-        return ssprInteractor.performSsprStart(
+    fun performResetPasswordStart(
+        parameters: ResetPasswordStartCommandParameters
+    ): ResetPasswordStartApiResult {
+        return resetPasswordInteractor.performResetPasswordStart(
             parameters = parameters
         )
     }
 
-    fun performSsprChallenge(
+    fun performResetPasswordChallenge(
         passwordResetToken: String
-    ): SsprChallengeApiResult {
-        return ssprInteractor.performSsprChallenge(
+    ): ResetPasswordChallengeApiResult {
+        return resetPasswordInteractor.performResetPasswordChallenge(
             passwordResetToken = passwordResetToken
         )
     }
 
-    fun performSsprContinue(
-        parameters: SsprSubmitCodeCommandParameters
-    ): SsprContinueApiResult {
-        return ssprInteractor.performSsprContinue(
+    fun performResetPasswordContinue(
+        parameters: ResetPasswordSubmitCodeCommandParameters
+    ): ResetPasswordContinueApiResult {
+        return resetPasswordInteractor.performResetPasswordContinue(
             parameters = parameters
         )
     }
 
-    fun performSsprSubmit(
-        parameters: SsprSubmitNewPasswordCommandParameters
-    ): SsprSubmitApiResult {
-        return ssprInteractor.performSsprSubmit(
+    fun performResetPasswordSubmit(
+        parameters: ResetPasswordSubmitNewPasswordCommandParameters
+    ): ResetPasswordSubmitApiResult {
+        return resetPasswordInteractor.performResetPasswordSubmit(
             commandParameters = parameters
         )
     }
 
-    fun performSsprPollCompletion(
+    fun performResetPasswordPollCompletion(
         passwordResetToken: String
-    ): SsprPollCompletionApiResult {
-        return ssprInteractor.performSsprPollCompletion(
+    ): ResetPasswordPollCompletionApiResult {
+        return resetPasswordInteractor.performResetPasswordPollCompletion(
             passwordResetToken = passwordResetToken
         )
     }

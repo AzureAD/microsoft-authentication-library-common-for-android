@@ -46,11 +46,11 @@ class NativeAuthOAuth2Configuration(
         private const val SIGNUP_START_ENDPOINT_SUFFIX = "/signup/start"
         private const val SIGNUP_CHALLENGE_ENDPOINT_SUFFIX = "/signup/challenge"
         private const val SIGNUP_CONTINUE_ENDPOINT_SUFFIX = "/signup/continue"
-        private const val SSPR_START_ENDPOINT_SUFFIX = "/resetpassword/start"
-        private const val SSPR_CHALLENGE_ENDPOINT_SUFFIX = "/resetpassword/challenge"
-        private const val SSPR_CONTINUE_ENDPOINT_SUFFIX = "/resetpassword/continue"
-        private const val SSPR_SUBMIT_ENDPOINT_SUFFIX = "/resetpassword/submit"
-        private const val SSPR_COMPLETE_ENDPOINT_SUFFIX = "/resetpassword/poll_completion"
+        private const val RESET_PASSWORD_START_ENDPOINT_SUFFIX = "/resetpassword/start"
+        private const val RESET_PASSWORD_CHALLENGE_ENDPOINT_SUFFIX = "/resetpassword/challenge"
+        private const val RESET_PASSWORD_CONTINUE_ENDPOINT_SUFFIX = "/resetpassword/continue"
+        private const val RESET_PASSWORD_SUBMIT_ENDPOINT_SUFFIX = "/resetpassword/submit"
+        private const val RESET_PASSWORD_COMPLETE_ENDPOINT_SUFFIX = "/resetpassword/poll_completion"
         private const val SIGN_IN_INITIATE_ENDPOINT_SUFFIX = "/oauth2/v2.0/initiate"
         private const val SIGN_IN_CHALLENGE_ENDPOINT_SUFFIX = "/oauth2/v2.0/challenge"
         private const val SIGN_IN_TOKEN_ENDPOINT_SUFFIX = "/oauth2/v2.0/token"
@@ -104,60 +104,60 @@ class NativeAuthOAuth2Configuration(
     /**
      * Get the endpoint to be used for making a self service password reset (start) request.
      *
-     * @return URL the sspr start endpoint
+     * @return URL the reset password start endpoint
      */
-    fun getSsprStartEndpoint(): URL {
+    fun getResetPasswordStartEndpoint(): URL {
         return getEndpointUrlFromRootAndTenantAndSuffix(
             root = getAuthorityUrl(),
-            endpointSuffix = SSPR_START_ENDPOINT_SUFFIX
+            endpointSuffix = RESET_PASSWORD_START_ENDPOINT_SUFFIX
         )
     }
 
     /**
      * Get the endpoint to be used for making a self service password reset (challenge) request.
      *
-     * @return URL the sspr challenge endpoint
+     * @return URL the reset password challenge endpoint
      */
-    fun getSsprChallengeEndpoint(): URL {
+    fun getResetPasswordChallengeEndpoint(): URL {
         return getEndpointUrlFromRootAndTenantAndSuffix(
             root = getAuthorityUrl(),
-            endpointSuffix = SSPR_CHALLENGE_ENDPOINT_SUFFIX
+            endpointSuffix = RESET_PASSWORD_CHALLENGE_ENDPOINT_SUFFIX
         )
     }
 
     /**
      * Get the endpoint to be used for making a self service password reset (continue) request.
      *
-     * @return URL the sspr continue endpoint
+     * @return URL the reset password continue endpoint
      */
-    fun getSsprContinueEndpoint(): URL {
+    fun getResetPasswordContinueEndpoint(): URL {
         return getEndpointUrlFromRootAndTenantAndSuffix(
             root = getAuthorityUrl(),
-            endpointSuffix = SSPR_CONTINUE_ENDPOINT_SUFFIX
+            endpointSuffix = RESET_PASSWORD_CONTINUE_ENDPOINT_SUFFIX
         )
     }
 
     /**
      * Get the endpoint to be used for making a self service password reset (submit) request.
      *
-     * @return URL the sspr submit endpoint
+     * @return URL the reset password submit endpoint
      */
-    fun getSsprSubmitEndpoint(): URL {
+    fun getResetPasswordSubmitEndpoint(): URL {
         return getEndpointUrlFromRootAndTenantAndSuffix(
             root = getAuthorityUrl(),
-            endpointSuffix = SSPR_SUBMIT_ENDPOINT_SUFFIX
+            endpointSuffix = RESET_PASSWORD_SUBMIT_ENDPOINT_SUFFIX
         )
     }
 
     /**
      * Get the endpoint to be used for making a self service password reset (poll completion) request.
      *
-     * @return URL the sspr poll completion endpoint
+     * @return URL the reset password poll completion endpoint
      */
-    fun getSsprPollCompletionEndpoint(): URL {
+    fun getResetPasswordPollCompletionEndpoint(): URL {
         return getEndpointUrlFromRootAndTenantAndSuffix(
             root = getAuthorityUrl(),
-            endpointSuffix = SSPR_COMPLETE_ENDPOINT_SUFFIX
+            endpointSuffix = RESET_PASSWORD_COMPLETE_ENDPOINT_SUFFIX
         )
     }
 

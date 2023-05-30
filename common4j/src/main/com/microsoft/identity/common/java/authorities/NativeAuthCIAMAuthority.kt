@@ -90,12 +90,12 @@ class NativeAuthCIAMAuthority (
      * this. The list is then converted in a whitespace separated string (e.g. "oob password redirect")
      */
     private fun getChallengeTypesWithDefault(challengeTypes: List<String>?): String {
-        return (challengeTypes?.plus(listOf("redirect")) ?: listOf("redirect")).joinToString(" ")
+        return (challengeTypes ?: emptyList()).plus(listOf("redirect")).distinct().joinToString(" ")
     }
 
     @Throws(ClientException::class)
     override fun createOAuth2Strategy(parameters: OAuth2StrategyParameters): NativeAuthOAuth2Strategy {
-        val config = createNativeAuthOAuth2Configuration(parameters.challengeType)
+        val config = createNativeAuthOAuth2Configuration(parameters.mChallengeTypes)
 
         // CIAM Authorities fetch endpoints from open id configuration, communicate that to
         // strategy through parameters

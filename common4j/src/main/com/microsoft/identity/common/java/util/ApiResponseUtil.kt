@@ -46,18 +46,22 @@ fun String?.isPasswordTooWeak(): Boolean {
     return this.contentEquals(other = "password_too_weak", ignoreCase = true)
 }
 
+// TODO replace with error code matching
 fun String?.isPasswordTooShort(): Boolean {
     return this.contentEquals(other = "password_too_short", ignoreCase = true)
 }
 
+// TODO replace with error code matching
 fun String?.isPasswordTooLong(): Boolean {
     return this.contentEquals(other = "password_too_long", ignoreCase = true)
 }
 
+// TODO replace with error code matching
 fun String?.isPasswordRecentlyUsed(): Boolean {
     return this.contentEquals(other = "password_recently_used", ignoreCase = true)
 }
 
+// TODO replace with error code matching
 fun String?.isPasswordBanned(): Boolean {
     return this.contentEquals(other = "password_banned", ignoreCase = true)
 }
@@ -84,4 +88,36 @@ fun Int?.isPasswordIncorrect(): Boolean {
 
 fun Int?.isOtpCodeIncorrect(): Boolean {
     return this == 50181
+}
+
+fun String?.isVerificationRequired(): Boolean {
+    return this.contentEquals(other = "verification_required", ignoreCase = true)
+}
+
+fun String?.isAttributeValidationFailed(): Boolean {
+    return this.contentEquals(other = "attribute_validation_failed", ignoreCase = true)
+}
+
+fun String?.isAttributesRequired(): Boolean {
+    return this.contentEquals(other = "attributes_required", ignoreCase = true)
+}
+
+fun String?.isAuthenticationRequired(): Boolean {
+    return this.contentEquals(other = "authentication_required", ignoreCase = true)
+}
+
+fun String?.isInvalidRequest(): Boolean {
+    return this.contentEquals(other = "invalid_request", ignoreCase = true)
+}
+
+fun String?.isUserAlreadyExists(): Boolean {
+    return this.contentEquals(other = "user_already_exists", ignoreCase = true)
+}
+
+fun String?.isAuthNotSupported(): Boolean {
+    return this.contentEquals(other = "auth_not_supported", ignoreCase = true)
+}
+
+fun String?.isInvalidOOBValue(): Boolean {
+    return this.contentEquals(other = "invalid_oob_value", ignoreCase = true)
 }

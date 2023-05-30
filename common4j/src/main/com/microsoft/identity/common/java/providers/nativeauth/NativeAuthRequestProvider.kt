@@ -23,30 +23,35 @@
 package com.microsoft.identity.common.java.providers.nativeauth
 
 import com.microsoft.identity.common.java.AuthenticationConstants
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.ResetPasswordStartCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.ResetPasswordSubmitCodeCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.ResetPasswordSubmitNewPasswordCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartWithPasswordCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitPasswordCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpContinueCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpStartCommandParameters
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.SsprStartCommandParameters
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.SsprSubmitCodeCommandParameters
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.SsprSubmitNewPasswordCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpStartWithPasswordCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpSubmitCodeCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpSubmitPasswordCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpSubmitUserAttributesCommandParameters
+import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.logging.DiagnosticContext
 import com.microsoft.identity.common.java.logging.Logger
 import com.microsoft.identity.common.java.net.HttpConstants
 import com.microsoft.identity.common.java.providers.nativeauth.requests.NativeAuthGrantType
+import com.microsoft.identity.common.java.providers.nativeauth.requests.resetpassword.ResetPasswordChallengeRequest
+import com.microsoft.identity.common.java.providers.nativeauth.requests.resetpassword.ResetPasswordContinueRequest
+import com.microsoft.identity.common.java.providers.nativeauth.requests.resetpassword.ResetPasswordPollCompletionRequest
+import com.microsoft.identity.common.java.providers.nativeauth.requests.resetpassword.ResetPasswordStartRequest
+import com.microsoft.identity.common.java.providers.nativeauth.requests.resetpassword.ResetPasswordSubmitRequest
 import com.microsoft.identity.common.java.providers.nativeauth.requests.signin.SignInChallengeRequest
 import com.microsoft.identity.common.java.providers.nativeauth.requests.signin.SignInInitiateRequest
 import com.microsoft.identity.common.java.providers.nativeauth.requests.signin.SignInTokenRequest
 import com.microsoft.identity.common.java.providers.nativeauth.requests.signup.SignUpChallengeRequest
 import com.microsoft.identity.common.java.providers.nativeauth.requests.signup.SignUpContinueRequest
 import com.microsoft.identity.common.java.providers.nativeauth.requests.signup.SignUpStartRequest
-import com.microsoft.identity.common.java.providers.nativeauth.requests.sspr.SsprChallengeRequest
-import com.microsoft.identity.common.java.providers.nativeauth.requests.sspr.SsprContinueRequest
-import com.microsoft.identity.common.java.providers.nativeauth.requests.sspr.SsprPollCompletionRequest
-import com.microsoft.identity.common.java.providers.nativeauth.requests.sspr.SsprStartRequest
-import com.microsoft.identity.common.java.providers.nativeauth.requests.sspr.SsprSubmitRequest
 import java.util.TreeMap
 
 class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuration) {
@@ -58,11 +63,11 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
     private val signInInitiateEndpoint = config.getSignInInitiateEndpoint().toString()
     private val signInChallengeEndpoint = config.getSignInChallengeEndpoint().toString()
     private val signInTokenEndpoint = config.getSignInTokenEndpoint().toString()
-    private val ssprStartEndpoint = config.getSsprStartEndpoint().toString()
-    private val ssprChallengeEndpoint = config.getSsprChallengeEndpoint().toString()
-    private val ssprContinueEndpoint = config.getSsprContinueEndpoint().toString()
-    private val ssprSubmitEndpoint = config.getSsprSubmitEndpoint().toString()
-    private val ssprPollCompletionEndpoint = config.getSsprPollCompletionEndpoint().toString()
+    private val resetPasswordStartEndpoint = config.getResetPasswordStartEndpoint().toString()
+    private val resetPasswordChallengeEndpoint = config.getResetPasswordChallengeEndpoint().toString()
+    private val resetPasswordContinueEndpoint = config.getResetPasswordContinueEndpoint().toString()
+    private val resetPasswordSubmitEndpoint = config.getResetPasswordSubmitEndpoint().toString()
+    private val resetPasswordPollCompletionEndpoint = config.getResetPasswordPollCompletionEndpoint().toString()
 
     //region /signup/start
     fun createSignUpStartRequest(
@@ -75,7 +80,29 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
         )
 
         return SignUpStartRequest.create(
-            username = commandParameters.email,
+            username = commandParameters.username,
+            attributes = commandParameters.userAttributes,
+            challengeType = config.challengeType,
+            clientId = config.clientId,
+            requestUrl = signUpStartEndpoint,
+            headers = getRequestHeaders()
+        )
+    }
+
+    fun createSignUpWithPasswordStartRequest(
+        commandParameters: SignUpStartWithPasswordCommandParameters
+    ): SignUpStartRequest {
+        val methodName = ":createSignUpStartRequest"
+        Logger.verbose(
+            TAG + methodName,
+            "Creating SignUpStartRequest..."
+        )
+
+        if (commandParameters.password.isBlank())
+            throw ClientException("$TAG password can't be empty or consists solely of whitespace characters")
+
+        return SignUpStartRequest.create(
+            username = commandParameters.username,
             password = commandParameters.password,
             attributes = commandParameters.userAttributes,
             challengeType = config.challengeType,
@@ -230,72 +257,129 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
             headers = getRequestHeaders()
         )
     }
+
+    fun createSignUpSubmitCodeRequest(
+        signUpToken: String,
+        commandParameters: SignUpSubmitCodeCommandParameters
+    ): SignUpContinueRequest {
+        var grantType = ""
+        if (commandParameters.code.isNotBlank()) {
+            grantType = NativeAuthGrantType.PASSWORDLESS_OTP.jsonValue
+        }
+
+        return SignUpContinueRequest.create(
+            oob = commandParameters.code,
+            clientId = config.clientId,
+            signUpToken = signUpToken,
+            grantType = grantType,
+            requestUrl = signUpContinueEndpoint,
+            headers = getRequestHeaders()
+        )
+    }
+
+    fun createSignUpSubmitPasswordRequest(
+        signUpToken: String,
+        commandParameters: SignUpSubmitPasswordCommandParameters
+    ): SignUpContinueRequest {
+        var grantType = ""
+        if (commandParameters.password.isNotBlank()) {
+            grantType = NativeAuthGrantType.PASSWORD.jsonValue
+        }
+
+        return SignUpContinueRequest.create(
+            password = commandParameters.password,
+            clientId = config.clientId,
+            signUpToken = signUpToken,
+            grantType = grantType,
+            requestUrl = signUpContinueEndpoint,
+            headers = getRequestHeaders()
+        )
+    }
+
+    fun createSignUpSubmitUserAttributesRequest(
+        signUpToken: String,
+        commandParameters: SignUpSubmitUserAttributesCommandParameters
+    ): SignUpContinueRequest {
+        var grantType = ""
+        if (commandParameters.userAttributes.isNotEmpty()) {
+            grantType = NativeAuthGrantType.ATTRIBUTES.jsonValue
+        }
+
+        return SignUpContinueRequest.create(
+            attributes = commandParameters.userAttributes,
+            clientId = config.clientId,
+            signUpToken = signUpToken,
+            grantType = grantType,
+            requestUrl = signUpContinueEndpoint,
+            headers = getRequestHeaders()
+        )
+    }
     //endregion
 
     //region /resetpassword/start
-    fun createSsprStartRequest(
-        parameters: SsprStartCommandParameters
-    ): SsprStartRequest {
-        return SsprStartRequest.create(
+    fun createResetPasswordStartRequest(
+        parameters: ResetPasswordStartCommandParameters
+    ): ResetPasswordStartRequest {
+        return ResetPasswordStartRequest.create(
             clientId = config.clientId,
             username = parameters.username,
             challengeType = config.challengeType,
-            requestUrl = ssprStartEndpoint,
+            requestUrl = resetPasswordStartEndpoint,
             headers = getRequestHeaders()
         )
     }
     //endregion
 
     //region /resetpassword/challenge
-    fun createSsprChallengeRequest(
+    fun createResetPasswordChallengeRequest(
         passwordResetToken: String
-    ): SsprChallengeRequest {
-        return SsprChallengeRequest.create(
+    ): ResetPasswordChallengeRequest {
+        return ResetPasswordChallengeRequest.create(
             clientId = config.clientId,
             passwordResetToken = passwordResetToken,
             challengeType = config.challengeType,
-            requestUrl = ssprChallengeEndpoint,
+            requestUrl = resetPasswordChallengeEndpoint,
             headers = getRequestHeaders()
         )
     }
     //endregion
 
     //region /resetpassword/continue
-    fun createSsprContinueRequest(
-        parameters: SsprSubmitCodeCommandParameters
-    ): SsprContinueRequest {
-        return SsprContinueRequest.create(
+    fun createResetPasswordContinueRequest(
+        parameters: ResetPasswordSubmitCodeCommandParameters
+    ): ResetPasswordContinueRequest {
+        return ResetPasswordContinueRequest.create(
             clientId = config.clientId,
             passwordResetToken = parameters.passwordResetToken,
             oob = parameters.code,
-            requestUrl = ssprContinueEndpoint,
+            requestUrl = resetPasswordContinueEndpoint,
             headers = getRequestHeaders()
         )
     }
     //endregion
 
     //region /resetpassword/submit
-    fun createSsprSubmitRequest(
-        commandParameters: SsprSubmitNewPasswordCommandParameters
-    ): SsprSubmitRequest {
-        return SsprSubmitRequest.create(
+    fun createResetPasswordSubmitRequest(
+        commandParameters: ResetPasswordSubmitNewPasswordCommandParameters
+    ): ResetPasswordSubmitRequest {
+        return ResetPasswordSubmitRequest.create(
             clientId = config.clientId,
             passwordSubmitToken = commandParameters.passwordSubmitToken,
             newPassword = commandParameters.newPassword,
-            requestUrl = ssprSubmitEndpoint,
+            requestUrl = resetPasswordSubmitEndpoint,
             headers = getRequestHeaders()
         )
     }
     //endregion
 
     //region /resetpassword/pollcompletion
-    fun createSsprPollCompletionRequest(
+    fun createResetPasswordPollCompletionRequest(
         passwordResetToken: String
-    ): SsprPollCompletionRequest {
-        return SsprPollCompletionRequest.create(
+    ): ResetPasswordPollCompletionRequest {
+        return ResetPasswordPollCompletionRequest.create(
             clientId = config.clientId,
             passwordResetToken = passwordResetToken,
-            requestUrl = ssprPollCompletionEndpoint,
+            requestUrl = resetPasswordPollCompletionEndpoint,
             headers = getRequestHeaders()
         )
     }
