@@ -23,7 +23,10 @@
 
 package com.microsoft.identity.common.internal.broker;
 
-import android.annotation.SuppressLint;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.IPPHONE_APP_DEBUG_SIGNATURE;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.IPPHONE_APP_PACKAGE_NAME;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.IPPHONE_APP_SIGNATURE;
+
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
@@ -71,15 +74,31 @@ public class PackageHelper {
     }
 
     /**
-     * Reads first signature in the list for given package name.
+     * Reads first signature in the list for given package name and hashes with SHA-1.
      *
      * @param packageName name of the package for which signature should be returned
-     * @return signature for package
+     * @return SHA-1 signature hash for package
      */
-    public String getCurrentSignatureForPackage(final String packageName) {
-        final String methodTag = TAG + ":getCurrentSignatureForPackage";
+    public String getSha1SignatureForPackage(final String packageName) {
+        final String methodTag = TAG + ":getSha1SignatureForPackage";
         try {
-            return getCurrentSignatureForPackage(getPackageInfo(mPackageManager, packageName));
+            return getCurrentSignatureForPackage(getPackageInfo(mPackageManager, packageName), false);
+        } catch (NameNotFoundException e) {
+            Logger.error(methodTag, "Calling App's package does not exist in PackageManager. ", "", e);
+        }
+        return null;
+    }
+
+    /**
+     * Reads first signature in the list for given package name and hashes with SHA-512.
+     *
+     * @param packageName name of the package for which signature should be returned
+     * @return SHA-512 signature hash for package
+     */
+    public String getSha512SignatureForPackage(final String packageName) {
+        final String methodTag = TAG + ":getSha512SignatureForPackage";
+        try {
+            return getCurrentSignatureForPackage(getPackageInfo(mPackageManager, packageName), true);
         } catch (NameNotFoundException e) {
             Logger.error(methodTag, "Calling App's package does not exist in PackageManager. ", "", e);
         }
@@ -90,15 +109,17 @@ public class PackageHelper {
      * Reads first signature in the list for given package name.
      *
      * @param packageInfo package for which signature should be returned
+     * @param useSha512 if true, uses SHA-512 to generate signature hash (should be used for verification purposes); if false, uses default SHA (redirect URI purposes)
      * @return signature for package
      */
-    public static String getCurrentSignatureForPackage(final PackageInfo packageInfo) {
+    private static String getCurrentSignatureForPackage(final PackageInfo packageInfo,
+                                                       final boolean useSha512) {
         final String methodTag = TAG + ":getCurrentSignatureForPackage";
         try {
             final Signature[] signatures = getSignatures(packageInfo);
             if (signatures != null && signatures.length > 0) {
                 final Signature signature = signatures[0];
-                MessageDigest md = MessageDigest.getInstance("SHA");
+                MessageDigest md = MessageDigest.getInstance(useSha512 ? "SHA-512" : "SHA");
                 md.update(signature.toByteArray());
                 return Base64.encodeToString(md.digest(), Base64.NO_WRAP);
             }
@@ -218,5 +239,23 @@ public class PackageHelper {
 
     public static Signature[] getSignatures(@NonNull Context context) throws PackageManager.NameNotFoundException {
         return getSignatures(getPackageInfo(context.getPackageManager(), context.getPackageName()));
+    }
+
+    /**
+     * Validate if provided package name is a valid teams app package
+     * @return true if context is from Teams app, false otherwise
+     */
+    public boolean verifyIfValidTeamsPackage(final String packageName) {
+
+        if (packageName.equals(IPPHONE_APP_PACKAGE_NAME) &&
+                isPackageInstalledAndEnabled(IPPHONE_APP_PACKAGE_NAME)) {
+            final String currentSignatureForTeamsApp = getSha1SignatureForPackage(IPPHONE_APP_PACKAGE_NAME);
+            if (IPPHONE_APP_SIGNATURE.equals(currentSignatureForTeamsApp) ||
+                    IPPHONE_APP_DEBUG_SIGNATURE.equals(currentSignatureForTeamsApp)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

@@ -25,6 +25,9 @@ package com.microsoft.identity.common.internal.cache
 import com.microsoft.identity.common.internal.broker.BrokerData
 import com.microsoft.identity.common.java.interfaces.INameValueStorage
 import com.microsoft.identity.common.java.interfaces.IStorageSupplier
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import net.jcip.annotations.ThreadSafe
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import kotlin.concurrent.read
@@ -34,9 +37,9 @@ import kotlin.concurrent.write
  * A cache for storing the active broker as known by the caller.
  **/
 @ThreadSafe
-class ActiveBrokerCache
+open class ActiveBrokerCache
     internal constructor(private val storage: INameValueStorage<String>,
-                         private val lock: ReentrantReadWriteLock) : IActiveBrokerCache {
+                         private val lock: Mutex) : IActiveBrokerCache {
 
     companion object {
         /**
@@ -55,19 +58,12 @@ class ActiveBrokerCache
         private const val BROKER_METADATA_CACHE_STORE_ON_BROKER_SIDE_STORAGE_NAME = "BROKER_METADATA_CACHE_STORE_ON_BROKER_SIDE"
 
         /**
-         * File name of [ActiveBrokerCache] used by the SDK code.
+         * The Mutex for all [ActiveBrokerCache] instances used by the broker code.
+         * (As of May 24, 2023... Kotlin has yet to officially support ReadWriteMutex.
+         *  I don't think it's worth implementing our own (for now).
+         *  If we eventually are seeing a perf hit, sure...)
          **/
-        private const val BROKER_METADATA_CACHE_STORE_ON_SDK_SIDE_STORAGE_NAME = "BROKER_METADATA_CACHE_STORE_ON_SDK_SIDE"
-
-        /**
-         * The Lock for all [ActiveBrokerCache] instances used by the broker code.
-         **/
-        private val sBrokerSideLock = ReentrantReadWriteLock()
-
-        /**
-         * The Lock for all [ActiveBrokerCache] instances used by the SDK code.
-         **/
-        private val sSdkSideLock = ReentrantReadWriteLock()
+        private val sBrokerSideLock = Mutex()
 
         /**
          * If the caller is the broker, invoke this function.
@@ -83,21 +79,6 @@ class ActiveBrokerCache
                 lock = sBrokerSideLock
             )
         }
-
-        /**
-         * If the caller is an SDK, invoke this function.
-         *
-         * @param storageSupplier an [IStorageSupplier] component.
-         * @return a thread-safe [IActiveBrokerCache].
-         */
-        fun getBrokerMetadataStoreOnSdkSide(storageSupplier: IStorageSupplier)
-                : IActiveBrokerCache {
-            return ActiveBrokerCache(
-                storage = storageSupplier.getEncryptedNameValueStore(
-                    BROKER_METADATA_CACHE_STORE_ON_SDK_SIDE_STORAGE_NAME, String::class.java),
-                lock = sSdkSideLock
-            )
-        }
     }
 
     /**
@@ -106,35 +87,41 @@ class ActiveBrokerCache
     internal var inMemoryCachedValue: BrokerData? = null
 
     override fun getCachedActiveBroker(): BrokerData? {
-        lock.read {
-            if (inMemoryCachedValue != null) {
-                return inMemoryCachedValue
+        return runBlocking {
+            lock.withLock {
+                if (inMemoryCachedValue != null) {
+                    return@runBlocking inMemoryCachedValue
+                }
+
+                val packageName = storage.get(ACTIVE_BROKER_CACHE_PACKAGE_NAME_KEY)
+                val signatureHash = storage.get(ACTIVE_BROKER_CACHE_SIGHASH_KEY)
+
+                if (packageName.isNullOrEmpty() || signatureHash.isNullOrEmpty())
+                    return@runBlocking null
+
+                inMemoryCachedValue = BrokerData(packageName, signatureHash)
+                return@runBlocking inMemoryCachedValue
             }
-
-            val packageName = storage.get(ACTIVE_BROKER_CACHE_PACKAGE_NAME_KEY)
-            val signatureHash = storage.get(ACTIVE_BROKER_CACHE_SIGHASH_KEY)
-
-            if (packageName.isNullOrEmpty() || signatureHash.isNullOrEmpty())
-                return null
-
-            inMemoryCachedValue = BrokerData(packageName, signatureHash)
-            return inMemoryCachedValue
         }
     }
 
     override fun setCachedActiveBroker(brokerData: BrokerData) {
-        lock.write {
-            storage.put(ACTIVE_BROKER_CACHE_PACKAGE_NAME_KEY, brokerData.packageName)
-            storage.put(ACTIVE_BROKER_CACHE_SIGHASH_KEY, brokerData.signatureHash)
-            inMemoryCachedValue = brokerData.copy()
+        return runBlocking {
+            lock.withLock {
+                storage.put(ACTIVE_BROKER_CACHE_PACKAGE_NAME_KEY, brokerData.packageName)
+                storage.put(ACTIVE_BROKER_CACHE_SIGHASH_KEY, brokerData.signatureHash)
+                inMemoryCachedValue = brokerData.copy()
+            }
         }
     }
 
     override fun clearCachedActiveBroker() {
-        lock.write {
-            storage.remove(ACTIVE_BROKER_CACHE_PACKAGE_NAME_KEY)
-            storage.remove(ACTIVE_BROKER_CACHE_SIGHASH_KEY)
-            inMemoryCachedValue = null
+        return runBlocking {
+            lock.withLock {
+                storage.remove(ACTIVE_BROKER_CACHE_PACKAGE_NAME_KEY)
+                storage.remove(ACTIVE_BROKER_CACHE_SIGHASH_KEY)
+                inMemoryCachedValue = null
+            }
         }
     }
 }
