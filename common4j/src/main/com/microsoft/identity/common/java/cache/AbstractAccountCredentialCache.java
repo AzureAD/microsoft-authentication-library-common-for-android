@@ -199,7 +199,14 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
             if (mustMatchOnApplicationIdentifier) {
                 if (credential instanceof AccessTokenRecord) {
                     final AccessTokenRecord accessToken = (AccessTokenRecord) credential;
-                    matches = matches && StringUtil.equalsIgnoreCaseTrimBoth(applicationIdentifier, accessToken.getApplicationIdentifier());
+                    //Check here for an application identifier with a SHA-1 hash.
+                    final String tokenAppIdentifier = accessToken.getApplicationIdentifier();
+                    final String[] appIdentifierArr = tokenAppIdentifier.split("/", 2);
+                    if (appIdentifierArr.length > 1
+                            && appIdentifierArr[1].length() == 28) {
+                        removeCredential(accessToken);
+                    }
+                    matches = matches && StringUtil.equalsIgnoreCaseTrimBoth(applicationIdentifier, tokenAppIdentifier);
                 } else {
                     Logger.verbose(TAG, "Query specified applicationIdentifier match, but credential type does not have application identifier");
                 }
