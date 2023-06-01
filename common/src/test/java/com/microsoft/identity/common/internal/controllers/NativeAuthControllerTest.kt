@@ -32,6 +32,7 @@ import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.uti
 import com.microsoft.identity.common.java.authorities.NativeAuthCIAMAuthority
 import com.microsoft.identity.common.java.authscheme.AuthenticationSchemeFactory
 import com.microsoft.identity.common.java.cache.MsalOAuth2TokenCache
+import com.microsoft.identity.common.java.commands.parameters.RemoveAccountCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.ResetPasswordResendCodeCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.ResetPasswordStartCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.ResetPasswordSubmitCodeCommandParameters
@@ -51,6 +52,7 @@ import com.microsoft.identity.common.java.controllers.results.CommandResult
 import com.microsoft.identity.common.java.controllers.results.ResetPasswordCommandResult
 import com.microsoft.identity.common.java.controllers.results.SignInCommandResult
 import com.microsoft.identity.common.java.controllers.results.SignUpCommandResult
+import com.microsoft.identity.common.java.dto.AccountRecord
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents
 import com.microsoft.identity.common.java.request.SdkType
 import com.microsoft.identity.common.java.util.BrokerProtocolVersionUtil
@@ -82,6 +84,7 @@ class NativeAuthControllerTest {
     private lateinit var context: Context
 
     private val controller = NativeAuthController()
+    private val localController = LocalMSALController()
 
     @Before
     fun setup() {
@@ -274,6 +277,44 @@ class NativeAuthControllerTest {
         assert(result is SignInCommandResult.PasswordRequired)
     }
     //endregion
+
+    // region Sign out
+    @Test
+    fun testSignOutSuccess() {
+        val correlationId = UUID.randomUUID().toString()
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpointType.SignInInitiate,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.INITIATE_SUCCESS
+        )
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpointType.SignInChallenge,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.CHALLENGE_TYPE_OOB
+        )
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpointType.SignInToken,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.TOKEN_SUCCESS
+        )
+
+        val signInParameters = createSignInSubmitPasswordCommandParameters()
+        val signInResult = controller.signInSubmitPassword(signInParameters) as SignInCommandResult.Complete
+
+        val account = signInResult.authenticationResult.accountRecord as AccountRecord
+        val parameters = createRemoveAccountCommandParameters(account)
+        val result = localController.removeCurrentAccount(parameters)
+        assert(result)
+    }
+
+    @Test
+    fun testSignOutFailedWithEmptyAccountRecord() {
+        val account = AccountRecord()
+        val parameters = createRemoveAccountCommandParameters(account)
+        val result = localController.removeCurrentAccount(parameters)
+        assert(!result)
+    }
+    // endregion
 
     // region Sspr
     @Test
@@ -884,6 +925,16 @@ class NativeAuthControllerTest {
             .oAuth2TokenCache(createCache())
             .sdkType(SdkType.MSAL)
             .requiredBrokerProtocolVersion(BrokerProtocolVersionUtil.MSAL_TO_BROKER_PROTOCOL_COMPRESSION_CHANGES_MINIMUM_VERSION)
+            .build()
+    }
+
+    private fun createRemoveAccountCommandParameters(account: AccountRecord): RemoveAccountCommandParameters {
+        return RemoveAccountCommandParameters.builder()
+            .account(account)
+            .clientId(clientId)
+            .platformComponents(platformComponents)
+            .oAuth2TokenCache(createCache())
+            .sdkType(SdkType.MSAL)
             .build()
     }
 

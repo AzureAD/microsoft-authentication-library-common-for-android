@@ -52,8 +52,8 @@ class NativeAuthCIAMAuthority (
             } else if (authority is CIAMAuthority && authority !is NativeAuthCIAMAuthority) {
                 // Authority returned was a base CIAM authority
                 NativeAuthCIAMAuthority(
-                        authorityUrl = authority.authorityUri.toString(),
-                        clientId = clientId
+                    authorityUrl = authority.authorityUri.toString(),
+                    clientId = clientId
                 )
             } else {
                 // Authority is already a NativeAuthCIAMAuthority

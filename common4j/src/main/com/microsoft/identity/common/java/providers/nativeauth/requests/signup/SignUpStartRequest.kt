@@ -24,9 +24,7 @@ package com.microsoft.identity.common.java.providers.nativeauth.requests.signup
 
 import com.google.gson.annotations.SerializedName
 import com.microsoft.identity.common.java.providers.nativeauth.requests.NativeAuthRequest
-import com.microsoft.identity.common.java.providers.nativeauth.requests.NativeAuthRequest.Companion.toJsonString
 import com.microsoft.identity.common.java.util.ArgUtils
-import org.json.JSONObject
 import java.net.URL
 
 data class SignUpStartRequest private constructor(
@@ -37,13 +35,13 @@ data class SignUpStartRequest private constructor(
 
     companion object {
         fun create(
-                username: String,
-                password: String? = null,
-                attributes: Map<String, String>? = null,
-                clientId: String,
-                challengeType: String, // TODO hardcoded for now, but will be made part of SDK config & initialisation ticket
-                requestUrl: String,
-                headers: Map<String, String?>
+            username: String,
+            password: String? = null,
+            attributes: Map<String, String>? = null,
+            clientId: String,
+            challengeType: String, // TODO hardcoded for now, but will be made part of SDK config & initialisation ticket
+            requestUrl: String,
+            headers: Map<String, String?>
         ): SignUpStartRequest {
             // Check for empty Strings and empty Maps
             ArgUtils.validateNonNullArg(username, "username")
