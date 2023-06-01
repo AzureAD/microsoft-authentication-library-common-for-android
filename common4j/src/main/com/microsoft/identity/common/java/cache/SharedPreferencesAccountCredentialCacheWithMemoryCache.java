@@ -95,6 +95,7 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
             } finally {
                 mLoaded = true;
                 mCacheLock.notifyAll();
+                clearSha1ApplicationIdentifierAccessTokens();
             }
         }
     }

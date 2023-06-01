@@ -100,6 +100,7 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
         Logger.verbose(TAG, "Init: " + TAG);
         mSharedPreferencesFileManager = sharedPreferencesFileManager;
         mCacheValueDelegate = accountCacheValueDelegate;
+        clearSha1ApplicationIdentifierAccessTokens();
     }
 
     @Override

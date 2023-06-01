@@ -199,14 +199,7 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
             if (mustMatchOnApplicationIdentifier) {
                 if (credential instanceof AccessTokenRecord) {
                     final AccessTokenRecord accessToken = (AccessTokenRecord) credential;
-                    //Check here for an application identifier with a SHA-1 hash.
-                    final String tokenAppIdentifier = accessToken.getApplicationIdentifier();
-                    final String[] appIdentifierArr = tokenAppIdentifier.split("/", 2);
-                    if (appIdentifierArr.length > 1
-                            && appIdentifierArr[1].length() == 28) {
-                        removeCredential(accessToken);
-                    }
-                    matches = matches && StringUtil.equalsIgnoreCaseTrimBoth(applicationIdentifier, tokenAppIdentifier);
+                    matches = matches && StringUtil.equalsIgnoreCaseTrimBoth(applicationIdentifier, accessToken.getApplicationIdentifier());
                 } else {
                     Logger.verbose(TAG, "Query specified applicationIdentifier match, but credential type does not have application identifier");
                 }
@@ -281,6 +274,35 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
         }
 
         return matchingCredentials;
+    }
+
+    /**
+     * The application identifier field for access token records previously included a SHA-1 signing certificate hash.
+     * This method clears such tokens, as the application identifier should now contain a SHA-512 signing certificate hash.
+     */
+    public void clearSha1ApplicationIdentifierAccessTokens() {
+        final String methodTag = TAG + ":clearSha1ApplicationIdentifierAccessTokens";
+        for (final Credential credential : getCredentials()) {
+            if (credential instanceof AccessTokenRecord) {
+                final AccessTokenRecord accessToken = (AccessTokenRecord) credential;
+                final String tokenAppIdentifier = accessToken.getApplicationIdentifier();
+                if (tokenAppIdentifier != null
+                        && applicationIdentifierContainsSha1(tokenAppIdentifier)) {
+                    removeCredential(accessToken);
+                    Logger.info(methodTag, "Removed old access token with app identifier containing SHA-1. A new access token should be re-acquired with a SHA-512 app identifier.");
+                }
+            }
+        }
+    }
+
+    /**
+     * Can tell if an application identifier string (<package name>/<signing certificate hash>) contains a SHA-1 hash.
+     * @param applicationIdentifier application identifier field string
+     * @return true if contains SHA-1 hash; false otherwise.
+     */
+    static boolean applicationIdentifierContainsSha1(@NonNull final String applicationIdentifier) {
+        final String[] appIdentifierArr = applicationIdentifier.split("/", 2);
+        return (appIdentifierArr.length > 1 && appIdentifierArr[1].length() == 28);
     }
 
     /**
