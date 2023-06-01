@@ -168,7 +168,7 @@ public class BrokerMsalController extends BaseController {
                                                final String activeBrokerPackageName) {
         final String methodTag = TAG + ":getIpcStrategies";
         final List<IIpcStrategy> strategies = new ArrayList<>();
-        final StringBuilder sb = new StringBuilder();
+        final StringBuilder sb = new StringBuilder(100);
         sb.append("Broker Strategies added : ");
 
         final ContentProviderStrategy contentProviderStrategy = new ContentProviderStrategy(applicationContext);
