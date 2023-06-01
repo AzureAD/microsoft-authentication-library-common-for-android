@@ -29,6 +29,9 @@ import com.microsoft.identity.common.internal.broker.BrokerValidator
 import com.microsoft.identity.common.java.AuthenticationConstants.Broker.BROKER_ACCOUNT_TYPE
 import com.microsoft.identity.common.logging.Logger
 
+/**
+ * An [IBrokerDiscoveryClient] which is based on AccountManager.
+ **/
 class LegacyBrokerDiscoveryClient(val context: Context): IBrokerDiscoveryClient {
 
     companion object {
