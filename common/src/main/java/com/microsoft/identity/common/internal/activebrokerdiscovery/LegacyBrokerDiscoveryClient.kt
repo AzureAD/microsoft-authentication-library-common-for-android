@@ -87,5 +87,4 @@ class LegacyBrokerDiscoveryClient(val context: Context): IBrokerDiscoveryClient 
             null
         }
     }
-
 }

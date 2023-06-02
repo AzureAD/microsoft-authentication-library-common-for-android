@@ -39,6 +39,9 @@ class BrokerDiscoveryClientFactory {
         @Volatile
         private var instance: IBrokerDiscoveryClient? = null
 
+        /**
+         * Coroutine-level lock.
+         **/
         private val lock = Mutex()
 
         /**
@@ -47,6 +50,7 @@ class BrokerDiscoveryClientFactory {
          **/
         @JvmStatic
         fun setNewBrokerDiscoveryEnabled(isEnabled: Boolean){
+            // If the flag changes, wipe the existing singleton.
             if (isEnabled != IS_NEW_DISCOVERY_ENABLED) {
                 instance = null
                 IS_NEW_DISCOVERY_ENABLED = isEnabled
@@ -76,4 +80,3 @@ class BrokerDiscoveryClientFactory {
         }
     }
 }
-
