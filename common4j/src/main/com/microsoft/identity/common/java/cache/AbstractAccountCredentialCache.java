@@ -49,6 +49,7 @@ import lombok.NonNull;
 public abstract class AbstractAccountCredentialCache implements IAccountCredentialCache {
 
     private static final String TAG = AbstractAccountCredentialCache.class.getSimpleName();
+    public static final String SHA1_APPLICATION_IDENTIFIER_ACCESS_TOKEN_CLEARED = "sha1-cleared";
     private static final String NEW_LINE = "\n";
 
     @Nullable
@@ -278,21 +279,22 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
 
     /**
      * The application identifier field for access token records previously included a SHA-1 signing certificate hash.
-     * This method clears such tokens, as the application identifier should now contain a SHA-512 signing certificate hash.
+     * This method identifies such tokens, as the application identifier should now contain a SHA-512 signing certificate hash.
+     * @param credential token record.
+     * @return true if an access token containing a SHA-1 app identifier hash; false otherwise.
      */
-    public void clearSha1ApplicationIdentifierAccessTokens() {
-        final String methodTag = TAG + ":clearSha1ApplicationIdentifierAccessTokens";
-        for (final Credential credential : getCredentials()) {
-            if (credential instanceof AccessTokenRecord) {
-                final AccessTokenRecord accessToken = (AccessTokenRecord) credential;
-                final String tokenAppIdentifier = accessToken.getApplicationIdentifier();
-                if (tokenAppIdentifier != null
-                        && applicationIdentifierContainsSha1(tokenAppIdentifier)) {
-                    removeCredential(accessToken);
-                    Logger.info(methodTag, "Removed old access token with app identifier containing SHA-1. A new access token should be re-acquired with a SHA-512 app identifier.");
-                }
+    public static boolean isSha1ApplicationIdentifierAccessToken(@NonNull final Credential credential) {
+        final String methodTag = TAG + ":isSha1ApplicationIdentifierAccessToken";
+        if (credential instanceof AccessTokenRecord) {
+            final AccessTokenRecord accessToken = (AccessTokenRecord) credential;
+            final String tokenAppIdentifier = accessToken.getApplicationIdentifier();
+            if (tokenAppIdentifier != null
+                    && applicationIdentifierContainsSha1(tokenAppIdentifier)) {
+                Logger.info(methodTag, "Identified old access token with app identifier containing SHA-1. This token shall be removed, and a new access token should be re-acquired with a SHA-512 app identifier.");
+                return true;
             }
         }
+        return false;
     }
 
     /**

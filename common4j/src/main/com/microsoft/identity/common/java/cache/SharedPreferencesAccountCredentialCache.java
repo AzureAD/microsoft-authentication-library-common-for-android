@@ -100,7 +100,14 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
         Logger.verbose(TAG, "Init: " + TAG);
         mSharedPreferencesFileManager = sharedPreferencesFileManager;
         mCacheValueDelegate = accountCacheValueDelegate;
-        clearSha1ApplicationIdentifierAccessTokens();
+        if (mSharedPreferencesFileManager.get(SHA1_APPLICATION_IDENTIFIER_ACCESS_TOKEN_CLEARED) == null) {
+            for (final Credential credential : getCredentials()) {
+                if (isSha1ApplicationIdentifierAccessToken(credential)) {
+                    removeCredential(credential);
+                }
+            }
+            mSharedPreferencesFileManager.put(SHA1_APPLICATION_IDENTIFIER_ACCESS_TOKEN_CLEARED, String.valueOf(true));
+        }
     }
 
     @Override
@@ -671,5 +678,4 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
         Logger.verbose(methodTag, "isCredential? [" + isCredential + "]");
         return isCredential;
     }
-
 }

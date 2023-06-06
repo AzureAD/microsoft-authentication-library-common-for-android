@@ -63,6 +63,8 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
     private final Object mCacheLock = new Object();
     private boolean mLoaded = false;
 
+    private boolean mSha1Cleared = false;
+
     private Map<String, AccountRecord> mCachedAccountRecordsWithKeys = new HashMap<>();
     private Map<String, Credential> mCachedCredentialsWithKeys = new HashMap<>();
 
@@ -86,6 +88,7 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
 
         synchronized (mCacheLock) {
             try {
+                mSha1Cleared = loadSha1ClearedFlag();
                 mCachedAccountRecordsWithKeys = loadAccountsWithKeys();
                 Logger.info(methodTag, "Loaded " + mCachedAccountRecordsWithKeys.size() + " AccountRecords");
                 mCachedCredentialsWithKeys = loadCredentialsWithKeys();
@@ -94,8 +97,11 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
                 Logger.error(methodTag, "Failed to load initial accounts or credentials from SharedPreferences", t);
             } finally {
                 mLoaded = true;
+                if (!mSha1Cleared) {
+                    saveSha1ClearedFlag();
+                    mSha1Cleared = true;
+                }
                 mCacheLock.notifyAll();
-                clearSha1ApplicationIdentifierAccessTokens();
             }
         }
     }
@@ -333,6 +339,10 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
                 // Remove the entry and return null...
                 Logger.warn(methodTag, "The returned Credential was uninitialized. Removing...");
                 mSharedPreferencesFileManager.remove(cacheKey);
+            } else if (AccessTokenRecord.class == clazz
+                    && !mSha1Cleared
+                    && isSha1ApplicationIdentifierAccessToken(credential)) {
+                    mSharedPreferencesFileManager.remove(cacheKey);
             }
             else {
                 credentials.put(cacheKey, credential);
@@ -737,4 +747,11 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
         return isCredential;
     }
 
+    private boolean loadSha1ClearedFlag() {
+        return mSharedPreferencesFileManager.get(SHA1_APPLICATION_IDENTIFIER_ACCESS_TOKEN_CLEARED) != null;
+    }
+
+    private void saveSha1ClearedFlag() {
+        mSharedPreferencesFileManager.put(SHA1_APPLICATION_IDENTIFIER_ACCESS_TOKEN_CLEARED, String.valueOf(true));
+    }
 }

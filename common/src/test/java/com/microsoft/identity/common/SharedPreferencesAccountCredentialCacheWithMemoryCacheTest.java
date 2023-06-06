@@ -2521,6 +2521,9 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCacheTest {
         //Mimics the scenario where the cache has access tokens with a SHA-1 app identifier,
         // and then the user updates their app to a version where access tokens should now have a SHA-512 app identifier.
 
+        //Must clear initial sha1ClearedFlag first, in order to mock an older version.
+        mSharedPreferencesAccountCredentialCache.clearAll();
+
         // Save an Account into the cache
         final AccountRecord account = new AccountRecord();
         account.setHomeAccountId(HOME_ACCOUNT_ID);
@@ -2587,34 +2590,6 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCacheTest {
                 mDelegate,
                 mSharedPreferencesFileManager
         );
-        assertEquals(2, mSharedPreferencesAccountCredentialCache.getCredentials().size());
-    }
-
-    @Test
-    public void testClearSha1ApplicationIdentifierAccessTokens() {
-        mSharedPreferencesAccountCredentialCache.clearSha1ApplicationIdentifierAccessTokens();
-        assertEquals(0, mSharedPreferencesAccountCredentialCache.getCredentials().size());
-
-        for (int i = 0; i < 3; i++) {
-            final AccessTokenRecord accessToken = new AccessTokenRecord();
-            accessToken.setCredentialType(CredentialType.AccessToken.name());
-
-            switch (i) {
-                case 0:
-                    accessToken.setApplicationIdentifier(APPLICATION_IDENTIFIER_SHA512);
-                    break;
-                case 1:
-                    accessToken.setApplicationIdentifier(null);
-                    break;
-                case 2:
-                    accessToken.setApplicationIdentifier(APPLICATION_IDENTIFIER_SHA1);
-                    break;
-            }
-            mSharedPreferencesAccountCredentialCache.saveCredential(accessToken);
-        }
-        assertEquals(3, mSharedPreferencesAccountCredentialCache.getCredentials().size());
-
-        mSharedPreferencesAccountCredentialCache.clearSha1ApplicationIdentifierAccessTokens();
         assertEquals(2, mSharedPreferencesAccountCredentialCache.getCredentials().size());
     }
 }
