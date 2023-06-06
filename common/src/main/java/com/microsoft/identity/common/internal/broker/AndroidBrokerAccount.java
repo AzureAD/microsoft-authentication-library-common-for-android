@@ -28,6 +28,7 @@ import android.os.Build;
 
 import androidx.annotation.Nullable;
 
+import com.microsoft.identity.common.BuildConfig;
 import com.microsoft.identity.common.java.broker.IBrokerAccount;
 import com.microsoft.identity.common.logging.Logger;
 
@@ -42,6 +43,8 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_HOST_APP_PACKAGE_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.MOCK_AUTH_APP_PACKAGE_NAME;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.MOCK_CP_PACKAGE_NAME;
 
 @Getter
 @Accessors(prefix = "m")
@@ -123,6 +126,17 @@ public class AndroidBrokerAccount implements IBrokerAccount {
                     BROKER_HOST_APP_PACKAGE_NAME,
                     AccountManager.VISIBILITY_VISIBLE
             );
+            accountManager.setAccountVisibility(
+                    account,
+                    MOCK_AUTH_APP_PACKAGE_NAME,
+                    AccountManager.VISIBILITY_VISIBLE
+            );
+            accountManager.setAccountVisibility(
+                    account,
+                    MOCK_CP_PACKAGE_NAME,
+                    AccountManager.VISIBILITY_VISIBLE
+            );
+
         }
 
         return adapt(account);

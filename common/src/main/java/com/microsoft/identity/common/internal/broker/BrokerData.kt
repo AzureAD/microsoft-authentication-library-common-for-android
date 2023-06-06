@@ -131,6 +131,24 @@ data class BrokerData(val packageName : String,
         )
 
         @JvmStatic
+        val debugMockCp = BrokerData(
+            AuthenticationConstants.Broker.MOCK_CP_PACKAGE_NAME,
+            AuthenticationConstants.Broker.BROKER_HOST_APP_SIGNATURE_SHA512
+        )
+
+        @JvmStatic
+        val debugMockAuthApp = BrokerData(
+            AuthenticationConstants.Broker.MOCK_AUTH_APP_PACKAGE_NAME,
+            AuthenticationConstants.Broker.BROKER_HOST_APP_SIGNATURE_SHA512
+        )
+
+        @JvmStatic
+        val debugMockLtw = BrokerData(
+            AuthenticationConstants.Broker.MOCK_LTW_PACKAGE_NAME,
+            AuthenticationConstants.Broker.BROKER_HOST_APP_SIGNATURE_SHA512
+        )
+
+        @JvmStatic
         val prodLTW = BrokerData(
             AuthenticationConstants.Broker.LTW_APP_PACKAGE_NAME,
             AuthenticationConstants.Broker.LTW_APP_SHA512_RELEASE_SIGNATURE
@@ -147,7 +165,11 @@ data class BrokerData(val packageName : String,
             Collections.unmodifiableSet(object : HashSet<BrokerData>() {
                 init {
                     add(debugMicrosoftAuthenticator)
+                    add(debugLTW)
                     add(debugBrokerHost)
+                    add(debugMockCp)
+                    add(debugMockAuthApp)
+                    add(debugMockLtw)
                 }
             })
 

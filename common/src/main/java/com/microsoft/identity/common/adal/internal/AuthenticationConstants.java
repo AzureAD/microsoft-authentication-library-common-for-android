@@ -1016,6 +1016,13 @@ public final class AuthenticationConstants {
         public static final String BROKER_HOST_APP_PACKAGE_NAME = "com.microsoft.identity.testuserapp";
 
         /**
+         * Mock AuthApp,CP,Broker package name (for testing broker election logic).
+         */
+        public static final String MOCK_AUTH_APP_PACKAGE_NAME = "com.microsoft.mockauthapp";
+        public static final String MOCK_CP_PACKAGE_NAME = "com.microsoft.mockcp";
+        public static final String MOCK_LTW_PACKAGE_NAME = "com.microsoft.mockltw";
+
+        /**
          * Intune app package name.
          */
         public static final String INTUNE_APP_PACKAGE_NAME = "com.microsoft.intune";
