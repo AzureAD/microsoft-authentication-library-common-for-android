@@ -63,6 +63,8 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
     private final Object mCacheLock = new Object();
     private boolean mLoaded = false;
 
+    private boolean mSha1Cleared = false;
+
     private Map<String, AccountRecord> mCachedAccountRecordsWithKeys = new HashMap<>();
     private Map<String, Credential> mCachedCredentialsWithKeys = new HashMap<>();
 
@@ -86,6 +88,7 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
 
         synchronized (mCacheLock) {
             try {
+                mSha1Cleared = loadSha1ClearedFlag();
                 mCachedAccountRecordsWithKeys = loadAccountsWithKeys();
                 Logger.info(methodTag, "Loaded " + mCachedAccountRecordsWithKeys.size() + " AccountRecords");
                 mCachedCredentialsWithKeys = loadCredentialsWithKeys();
@@ -94,8 +97,11 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
                 Logger.error(methodTag, "Failed to load initial accounts or credentials from SharedPreferences", t);
             } finally {
                 mLoaded = true;
+                if (!mSha1Cleared) {
+                    saveSha1ClearedFlag();
+                    mSha1Cleared = true;
+                }
                 mCacheLock.notifyAll();
-                clearSha1ApplicationIdentifierAccessTokens();
             }
         }
     }
@@ -333,6 +339,14 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
                 // Remove the entry and return null...
                 Logger.warn(methodTag, "The returned Credential was uninitialized. Removing...");
                 mSharedPreferencesFileManager.remove(cacheKey);
+            } else if (AccessTokenRecord.class == clazz && !mSha1Cleared) {
+                final AccessTokenRecord accessToken = (AccessTokenRecord) credential;
+                final String tokenAppIdentifier = accessToken.getApplicationIdentifier();
+                if (tokenAppIdentifier != null
+                        && applicationIdentifierContainsSha1(tokenAppIdentifier)) {
+                    mSharedPreferencesFileManager.remove(cacheKey);
+                    Logger.info(methodTag, "Removed old access token with app identifier containing SHA-1. A new access token should be re-acquired with a SHA-512 app identifier.");
+                }
             }
             else {
                 credentials.put(cacheKey, credential);
@@ -737,4 +751,11 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
         return isCredential;
     }
 
+    private boolean loadSha1ClearedFlag() {
+        return mSharedPreferencesFileManager.get(SHA1_APPLICATION_IDENTIFIER_ACCESS_TOKEN_CLEARED) != null;
+    }
+
+    private void saveSha1ClearedFlag() {
+        mSharedPreferencesFileManager.put(SHA1_APPLICATION_IDENTIFIER_ACCESS_TOKEN_CLEARED, String.valueOf(true));
+    }
 }

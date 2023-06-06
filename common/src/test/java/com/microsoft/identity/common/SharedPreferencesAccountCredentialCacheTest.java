@@ -2381,6 +2381,9 @@ public class SharedPreferencesAccountCredentialCacheTest {
         //Mimics the scenario where the cache has access tokens with a SHA-1 app identifier,
         // and then the user updates their app to a version where access tokens should now have a SHA-512 app identifier.
 
+        //Must clear initial sha1ClearedFlag first, in order to mock an older version.
+        mSharedPreferencesAccountCredentialCache.clearAll();
+
         // Save an Account into the cache
         final AccountRecord account = new AccountRecord();
         account.setHomeAccountId(HOME_ACCOUNT_ID);

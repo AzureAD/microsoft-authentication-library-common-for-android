@@ -49,6 +49,7 @@ import lombok.NonNull;
 public abstract class AbstractAccountCredentialCache implements IAccountCredentialCache {
 
     private static final String TAG = AbstractAccountCredentialCache.class.getSimpleName();
+    public static final String SHA1_APPLICATION_IDENTIFIER_ACCESS_TOKEN_CLEARED = "sha1-cleared";
     private static final String NEW_LINE = "\n";
 
     @Nullable
@@ -274,25 +275,6 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
         }
 
         return matchingCredentials;
-    }
-
-    /**
-     * The application identifier field for access token records previously included a SHA-1 signing certificate hash.
-     * This method clears such tokens, as the application identifier should now contain a SHA-512 signing certificate hash.
-     */
-    public void clearSha1ApplicationIdentifierAccessTokens() {
-        final String methodTag = TAG + ":clearSha1ApplicationIdentifierAccessTokens";
-        for (final Credential credential : getCredentials()) {
-            if (credential instanceof AccessTokenRecord) {
-                final AccessTokenRecord accessToken = (AccessTokenRecord) credential;
-                final String tokenAppIdentifier = accessToken.getApplicationIdentifier();
-                if (tokenAppIdentifier != null
-                        && applicationIdentifierContainsSha1(tokenAppIdentifier)) {
-                    removeCredential(accessToken);
-                    Logger.info(methodTag, "Removed old access token with app identifier containing SHA-1. A new access token should be re-acquired with a SHA-512 app identifier.");
-                }
-            }
-        }
     }
 
     /**
