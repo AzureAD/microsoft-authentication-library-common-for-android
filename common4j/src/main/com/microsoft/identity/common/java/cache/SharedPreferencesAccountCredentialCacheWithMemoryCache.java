@@ -339,14 +339,10 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
                 // Remove the entry and return null...
                 Logger.warn(methodTag, "The returned Credential was uninitialized. Removing...");
                 mSharedPreferencesFileManager.remove(cacheKey);
-            } else if (AccessTokenRecord.class == clazz && !mSha1Cleared) {
-                final AccessTokenRecord accessToken = (AccessTokenRecord) credential;
-                final String tokenAppIdentifier = accessToken.getApplicationIdentifier();
-                if (tokenAppIdentifier != null
-                        && applicationIdentifierContainsSha1(tokenAppIdentifier)) {
+            } else if (AccessTokenRecord.class == clazz
+                    && !mSha1Cleared
+                    && isSha1ApplicationIdentifierAccessToken(credential)) {
                     mSharedPreferencesFileManager.remove(cacheKey);
-                    Logger.info(methodTag, "Removed old access token with app identifier containing SHA-1. A new access token should be re-acquired with a SHA-512 app identifier.");
-                }
             }
             else {
                 credentials.put(cacheKey, credential);

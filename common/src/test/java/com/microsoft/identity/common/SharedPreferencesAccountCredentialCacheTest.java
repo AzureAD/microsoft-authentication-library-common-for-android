@@ -30,6 +30,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonPrimitive;
 import com.microsoft.identity.common.components.AndroidPlatformComponentsFactory;
 import com.microsoft.identity.common.java.authscheme.BearerAuthenticationSchemeInternal;
+import com.microsoft.identity.common.java.cache.AbstractAccountCredentialCache;
 import com.microsoft.identity.common.java.cache.CacheKeyValueDelegate;
 import com.microsoft.identity.common.java.cache.SharedPreferencesAccountCredentialCache;
 import com.microsoft.identity.common.java.dto.AccessTokenRecord;
@@ -56,6 +57,7 @@ import java.util.Map;
 
 import static com.microsoft.identity.common.java.cache.CacheKeyValueDelegate.CACHE_VALUE_SEPARATOR;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -2454,9 +2456,6 @@ public class SharedPreferencesAccountCredentialCacheTest {
 
     @Test
     public void testClearSha1ApplicationIdentifierAccessTokens() {
-        mSharedPreferencesAccountCredentialCache.clearSha1ApplicationIdentifierAccessTokens();
-        assertEquals(0, mSharedPreferencesAccountCredentialCache.getCredentials().size());
-
         for (int i = 0; i < 3; i++) {
             final AccessTokenRecord accessToken = new AccessTokenRecord();
             accessToken.setCredentialType(CredentialType.AccessToken.name());
@@ -2464,19 +2463,17 @@ public class SharedPreferencesAccountCredentialCacheTest {
             switch (i) {
                 case 0:
                     accessToken.setApplicationIdentifier(APPLICATION_IDENTIFIER_SHA512);
+                    assertFalse(AbstractAccountCredentialCache.isSha1ApplicationIdentifierAccessToken(accessToken));
                     break;
                 case 1:
                     accessToken.setApplicationIdentifier(null);
+                    assertFalse(AbstractAccountCredentialCache.isSha1ApplicationIdentifierAccessToken(accessToken));
                     break;
                 case 2:
                     accessToken.setApplicationIdentifier(APPLICATION_IDENTIFIER);
+                    assertTrue(AbstractAccountCredentialCache.isSha1ApplicationIdentifierAccessToken(accessToken));
                     break;
             }
-            mSharedPreferencesAccountCredentialCache.saveCredential(accessToken);
         }
-        assertEquals(3, mSharedPreferencesAccountCredentialCache.getCredentials().size());
-
-        mSharedPreferencesAccountCredentialCache.clearSha1ApplicationIdentifierAccessTokens();
-        assertEquals(2, mSharedPreferencesAccountCredentialCache.getCredentials().size());
     }
 }

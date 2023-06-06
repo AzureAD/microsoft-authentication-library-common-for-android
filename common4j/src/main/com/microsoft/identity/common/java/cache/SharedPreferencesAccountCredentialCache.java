@@ -101,7 +101,11 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
         mSharedPreferencesFileManager = sharedPreferencesFileManager;
         mCacheValueDelegate = accountCacheValueDelegate;
         if (mSharedPreferencesFileManager.get(SHA1_APPLICATION_IDENTIFIER_ACCESS_TOKEN_CLEARED) == null) {
-            clearSha1ApplicationIdentifierAccessTokens();
+            for (final Credential credential : getCredentials()) {
+                if (isSha1ApplicationIdentifierAccessToken(credential)) {
+                    removeCredential(credential);
+                }
+            }
             mSharedPreferencesFileManager.put(SHA1_APPLICATION_IDENTIFIER_ACCESS_TOKEN_CLEARED, String.valueOf(true));
         }
     }
@@ -673,24 +677,5 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
         boolean isCredential = null != getCredentialTypeForCredentialCacheKey(cacheKey);
         Logger.verbose(methodTag, "isCredential? [" + isCredential + "]");
         return isCredential;
-    }
-
-    /**
-     * The application identifier field for access token records previously included a SHA-1 signing certificate hash.
-     * This method clears such tokens, as the application identifier should now contain a SHA-512 signing certificate hash.
-     */
-    public void clearSha1ApplicationIdentifierAccessTokens() {
-        final String methodTag = TAG + ":clearSha1ApplicationIdentifierAccessTokens";
-        for (final Credential credential : getCredentials()) {
-            if (credential instanceof AccessTokenRecord) {
-                final AccessTokenRecord accessToken = (AccessTokenRecord) credential;
-                final String tokenAppIdentifier = accessToken.getApplicationIdentifier();
-                if (tokenAppIdentifier != null
-                        && applicationIdentifierContainsSha1(tokenAppIdentifier)) {
-                    removeCredential(accessToken);
-                    Logger.info(methodTag, "Removed old access token with app identifier containing SHA-1. A new access token should be re-acquired with a SHA-512 app identifier.");
-                }
-            }
-        }
     }
 }
