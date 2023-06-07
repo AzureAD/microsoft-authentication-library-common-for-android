@@ -121,22 +121,6 @@ public class AndroidBrokerAccount implements IBrokerAccount {
                     COMPANY_PORTAL_APP_PACKAGE_NAME,
                     AccountManager.VISIBILITY_VISIBLE
             );
-            accountManager.setAccountVisibility(
-                    account,
-                    BROKER_HOST_APP_PACKAGE_NAME,
-                    AccountManager.VISIBILITY_VISIBLE
-            );
-            accountManager.setAccountVisibility(
-                    account,
-                    MOCK_AUTH_APP_PACKAGE_NAME,
-                    AccountManager.VISIBILITY_VISIBLE
-            );
-            accountManager.setAccountVisibility(
-                    account,
-                    MOCK_CP_PACKAGE_NAME,
-                    AccountManager.VISIBILITY_VISIBLE
-            );
-
         }
 
         return adapt(account);
