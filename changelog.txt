@@ -1,5 +1,6 @@
 V.NEXT
 ----------
+- [MINOR] Send client id as part of request bundle for getSsoToken Api (#2064)
 - [PATCH] Wire new Broker Discovery Client into MSAL - still disabled by default (#2057)
 - [PATCH] Stop caching account manager values. Make BrokerDiscoveryClient coroutine-safe (#2050)
 - [PATCH] Revert "Getting rid of account manager strategy in MSAL/OneAuth (#1988)" (#2041)
@@ -10,6 +11,7 @@ V.NEXT
 - [MINOR] Replacing SHA-1 used in broker validation with SHA-512 (#2019)
 - [MINOR] Removing thumbprint check from PKeyAuth challenge (#2045)
 - [MINOR] Add android 14 check for skipping strong box isolation in pop token (#2053)
+- [PATCH] Fix min broker protocol version value for MSA accounts in broker (#2062)
 
 V.12.0.0
 ----------
