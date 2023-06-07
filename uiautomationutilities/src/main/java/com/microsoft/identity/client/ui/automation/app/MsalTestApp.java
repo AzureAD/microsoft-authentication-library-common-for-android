@@ -16,7 +16,6 @@ import java.util.List;
 /**
  * A model for interacting with the Msal Test App for MSAL Android during UI Test.
  */
-
 public class MsalTestApp extends App{
 
     private final static String TAG = MsalTestApp.class.getSimpleName();
