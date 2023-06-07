@@ -170,4 +170,33 @@ public class BrokerProtocolVersionUtilTest {
                 BrokerProtocolVersionUtil.canSendPKeyAuthHeaderToTheTokenEndpoint(null)
         );
     }
+
+    @Test
+    public void testcanSupportMsaAccountsInBroker_NegotiatedEqualToRequired(){
+        Assert.assertTrue(
+                BrokerProtocolVersionUtil.canSupportMsaAccountsInBroker("14.0")
+        );
+    }
+
+    @Test
+    public void testcanSupportMsaAccountsInBroker_NegotiatedLargerThanRequired(){
+        Assert.assertTrue(
+                BrokerProtocolVersionUtil.canSupportMsaAccountsInBroker("15.0")
+        );
+    }
+
+    @Test
+    public void testcanSupportMsaAccountsInBroker_NegotiatedSmallerThanRequired(){
+        Assert.assertFalse(
+                BrokerProtocolVersionUtil.canSupportMsaAccountsInBroker("13.0")
+        );
+    }
+
+    @Test
+    public void testcanSupportMsaAccountsInBroker_NegotiatedNull(){
+        Assert.assertFalse(
+                BrokerProtocolVersionUtil.canSupportMsaAccountsInBroker(null)
+        );
+    }
+
 }
