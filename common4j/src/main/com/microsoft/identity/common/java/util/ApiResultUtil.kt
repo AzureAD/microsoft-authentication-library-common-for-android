@@ -22,6 +22,7 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.util
 
+import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.logging.Logger
 import com.microsoft.identity.common.java.providers.nativeauth.IApiResponse
 import java.net.HttpURLConnection
@@ -39,15 +40,9 @@ object ApiResultUtil {
     ) {
         val TAG = tag + ":" + response.javaClass.simpleName
         if (response.statusCode >= HttpURLConnection.HTTP_BAD_REQUEST) {
-            Logger.info(
-                TAG,
-                "Success Result"
-            )
+            LogSession.log(tag = TAG, logLevel = Logger.LogLevel.INFO, message = "Success Result")
         } else {
-            Logger.warn(
-                TAG,
-                "Failure Result"
-            )
+            LogSession.log(tag = TAG, logLevel = Logger.LogLevel.WARN, message = "Failure Result")
         }
         logExposedFieldsOfObject(TAG, response)
     }
@@ -57,6 +52,10 @@ object ApiResultUtil {
         `object`: Any
     ) {
         val TAG = tag + ":" + `object`.javaClass.simpleName
-        Logger.warn(TAG, ObjectMapper.serializeExposedFieldsOfObjectToJsonString(`object`))
+        LogSession.log(
+            tag = TAG,
+            logLevel = Logger.LogLevel.WARN,
+            message = ObjectMapper.serializeExposedFieldsOfObjectToJsonString(`object`)
+        )
     }
 }

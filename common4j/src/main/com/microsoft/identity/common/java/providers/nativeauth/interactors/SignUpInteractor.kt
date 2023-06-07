@@ -4,6 +4,7 @@ import com.microsoft.identity.common.internal.util.getEncodedRequest
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.BaseNativeAuthCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpContinueCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpStartCommandParameters
+import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpStartWithPasswordCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpSubmitUserAttributesCommandParameters
@@ -24,10 +25,14 @@ class SignUpInteractor(
     private val nativeAuthRequestProvider: NativeAuthRequestProvider,
     private val nativeAuthResponseHandler: NativeAuthResponseHandler
 ) {
+    private val TAG:String = SignUpInteractor::class.java.simpleName
+
     //region /signup/start
     fun performSignUpStart(
         commandParameters: SignUpStartCommandParameters
     ): SignUpStartApiResult {
+        LogSession.logMethodCall(tag = TAG)
+
         val request = nativeAuthRequestProvider.createSignUpStartRequest(
             commandParameters = commandParameters
         )
@@ -37,6 +42,7 @@ class SignUpInteractor(
     fun performSignUpStartWithPassword(
         commandParameters: SignUpStartWithPasswordCommandParameters
     ): SignUpStartApiResult {
+        LogSession.logMethodCall(tag = TAG)
         val request = nativeAuthRequestProvider.createSignUpWithPasswordStartRequest(
             commandParameters = commandParameters
         )
@@ -44,6 +50,8 @@ class SignUpInteractor(
     }
 
     private fun performSignUpStart(request: SignUpStartRequest): SignUpStartApiResult {
+        LogSession.logMethodCall(tag = TAG)
+
         val encodedRequest: String = request.parameters.getEncodedRequest()
         val headers = request.headers
         val requestUrl = request.requestUrl
@@ -64,6 +72,8 @@ class SignUpInteractor(
     fun performSignUpChallenge(
         signUpToken: String
     ): SignUpChallengeApiResult {
+        LogSession.logMethodCall(tag = TAG)
+
         val request = nativeAuthRequestProvider.createSignUpChallengeRequest(
             signUpToken = signUpToken
         )
@@ -71,6 +81,8 @@ class SignUpInteractor(
     }
 
     private fun performSignUpChallenge(request: SignUpChallengeRequest): SignUpChallengeApiResult {
+        LogSession.logMethodCall(tag = TAG)
+
         val encodedRequest: String = request.parameters.getEncodedRequest()
         val headers = request.headers
         val requestUrl = request.requestUrl
@@ -92,6 +104,8 @@ class SignUpInteractor(
         signUpToken: String,
         commandParameters: BaseNativeAuthCommandParameters
     ): SignUpContinueApiResult {
+        LogSession.logMethodCall(tag = TAG)
+
         val request = when (commandParameters) {
             is SignUpSubmitCodeCommandParameters -> {
                 nativeAuthRequestProvider.createSignUpSubmitCodeRequest(

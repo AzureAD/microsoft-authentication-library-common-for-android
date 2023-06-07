@@ -120,17 +120,23 @@ class ResetPasswordOAuth2StrategyTest {
             strategyParameters = mockStrategyParams,
             signInInteractor = SignInInteractor(
                 httpClient = UrlConnectionHttpClient.getDefaultInstance(),
-                nativeAuthRequestProvider = NativeAuthRequestProvider(mockConfig),
+                nativeAuthRequestProvider = NativeAuthRequestProvider(
+                    mockConfig
+                ),
                 nativeAuthResponseHandler = NativeAuthResponseHandler()
             ),
             signUpInteractor = SignUpInteractor(
                 httpClient = UrlConnectionHttpClient.getDefaultInstance(),
-                nativeAuthRequestProvider = NativeAuthRequestProvider(mockConfig),
+                nativeAuthRequestProvider = NativeAuthRequestProvider(
+                    mockConfig
+                ),
                 nativeAuthResponseHandler = NativeAuthResponseHandler()
             ),
             resetPasswordInteractor = ResetPasswordInteractor(
                 httpClient = UrlConnectionHttpClient.getDefaultInstance(),
-                nativeAuthRequestProvider = NativeAuthRequestProvider(mockConfig),
+                nativeAuthRequestProvider = NativeAuthRequestProvider(
+                    mockConfig
+                ),
                 nativeAuthResponseHandler = NativeAuthResponseHandler()
             )
         )

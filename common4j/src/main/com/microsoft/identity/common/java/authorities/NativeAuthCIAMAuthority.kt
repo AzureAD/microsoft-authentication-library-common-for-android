@@ -24,6 +24,7 @@
 package com.microsoft.identity.common.java.authorities
 
 import com.microsoft.identity.common.java.exception.ClientException
+import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.logging.Logger
 import com.microsoft.identity.common.java.providers.nativeauth.NativeAuthOAuth2Configuration
 import com.microsoft.identity.common.java.providers.nativeauth.NativeAuthOAuth2Strategy
@@ -72,11 +73,7 @@ class NativeAuthCIAMAuthority (
     }
 
     private fun createNativeAuthOAuth2Configuration(challengeTypes: List<String>?): NativeAuthOAuth2Configuration {
-        val methodName = ":createOAuth2Configuration"
-        Logger.verbose(
-            TAG + methodName,
-            "Creating OAuth2Configuration"
-        )
+       LogSession.logMethodCall(tag = TAG)
         return NativeAuthOAuth2Configuration(
             authorityUrl = this.authorityURL,
             clientId = this.clientId,
@@ -90,6 +87,8 @@ class NativeAuthCIAMAuthority (
      * this. The list is then converted in a whitespace separated string (e.g. "oob password redirect")
      */
     private fun getChallengeTypesWithDefault(challengeTypes: List<String>?): String {
+        LogSession.logMethodCall(tag = TAG)
+        LogSession.log(tag = TAG, logLevel = Logger.LogLevel.INFO, message = "Challenge Types passed = $challengeTypes")
         return (challengeTypes ?: emptyList()).plus(listOf("redirect")).distinct().joinToString(" ")
     }
 
@@ -103,7 +102,7 @@ class NativeAuthCIAMAuthority (
 
         return NativeAuthOAuth2StrategyFactory.createStrategy(
             config = config,
-            strategyParameters = parameters
+            strategyParameters = parameters,
         )
     }
 }

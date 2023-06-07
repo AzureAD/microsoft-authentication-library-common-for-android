@@ -23,6 +23,7 @@
 
 package com.microsoft.identity.common.java.providers.nativeauth
 
+import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.logging.Logger
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration
 import com.microsoft.identity.common.java.util.UrlUtil
@@ -71,6 +72,7 @@ class NativeAuthOAuth2Configuration(
      * @return URL the endpoint
      */
     fun getSignUpStartEndpoint(): URL {
+        LogSession.logMethodCall(tag = TAG)
         return getEndpointUrlFromRootAndTenantAndSuffix(
             root = getAuthorityUrl(),
             endpointSuffix = SIGNUP_START_ENDPOINT_SUFFIX
@@ -83,6 +85,7 @@ class NativeAuthOAuth2Configuration(
      * @return URL the endpoint
      */
     fun getSignUpChallengeEndpoint(): URL {
+        LogSession.logMethodCall(tag = TAG)
         return getEndpointUrlFromRootAndTenantAndSuffix(
             root = getAuthorityUrl(),
             endpointSuffix = SIGNUP_CHALLENGE_ENDPOINT_SUFFIX
@@ -95,6 +98,7 @@ class NativeAuthOAuth2Configuration(
      * @return URL the endpoint
      */
     fun getSignUpContinueEndpoint(): URL {
+        LogSession.logMethodCall(tag = TAG)
         return getEndpointUrlFromRootAndTenantAndSuffix(
             root = getAuthorityUrl(),
             endpointSuffix = SIGNUP_CONTINUE_ENDPOINT_SUFFIX
@@ -107,6 +111,7 @@ class NativeAuthOAuth2Configuration(
      * @return URL the reset password start endpoint
      */
     fun getResetPasswordStartEndpoint(): URL {
+        LogSession.logMethodCall(tag = TAG)
         return getEndpointUrlFromRootAndTenantAndSuffix(
             root = getAuthorityUrl(),
             endpointSuffix = RESET_PASSWORD_START_ENDPOINT_SUFFIX
@@ -119,6 +124,7 @@ class NativeAuthOAuth2Configuration(
      * @return URL the reset password challenge endpoint
      */
     fun getResetPasswordChallengeEndpoint(): URL {
+        LogSession.logMethodCall(tag = TAG)
         return getEndpointUrlFromRootAndTenantAndSuffix(
             root = getAuthorityUrl(),
             endpointSuffix = RESET_PASSWORD_CHALLENGE_ENDPOINT_SUFFIX
@@ -131,6 +137,7 @@ class NativeAuthOAuth2Configuration(
      * @return URL the reset password continue endpoint
      */
     fun getResetPasswordContinueEndpoint(): URL {
+        LogSession.logMethodCall(tag = TAG)
         return getEndpointUrlFromRootAndTenantAndSuffix(
             root = getAuthorityUrl(),
             endpointSuffix = RESET_PASSWORD_CONTINUE_ENDPOINT_SUFFIX
@@ -143,6 +150,7 @@ class NativeAuthOAuth2Configuration(
      * @return URL the reset password submit endpoint
      */
     fun getResetPasswordSubmitEndpoint(): URL {
+        LogSession.logMethodCall(tag = TAG)
         return getEndpointUrlFromRootAndTenantAndSuffix(
             root = getAuthorityUrl(),
             endpointSuffix = RESET_PASSWORD_SUBMIT_ENDPOINT_SUFFIX
@@ -155,6 +163,7 @@ class NativeAuthOAuth2Configuration(
      * @return URL the reset password poll completion endpoint
      */
     fun getResetPasswordPollCompletionEndpoint(): URL {
+        LogSession.logMethodCall(tag = TAG)
         return getEndpointUrlFromRootAndTenantAndSuffix(
             root = getAuthorityUrl(),
             endpointSuffix = RESET_PASSWORD_COMPLETE_ENDPOINT_SUFFIX
@@ -167,6 +176,7 @@ class NativeAuthOAuth2Configuration(
      * @return URL the endpoint
      */
     fun getSignInInitiateEndpoint(): URL {
+        LogSession.logMethodCall(tag = TAG)
         return getEndpointUrlFromRootAndTenantAndSuffix(
             root = getAuthorityUrl(),
             endpointSuffix = SIGN_IN_INITIATE_ENDPOINT_SUFFIX
@@ -179,6 +189,7 @@ class NativeAuthOAuth2Configuration(
      * @return URL the endpoint
      */
     fun getSignInChallengeEndpoint(): URL {
+        LogSession.logMethodCall(tag = TAG)
         return getEndpointUrlFromRootAndTenantAndSuffix(
             root = getAuthorityUrl(),
             endpointSuffix = SIGN_IN_CHALLENGE_ENDPOINT_SUFFIX
@@ -191,6 +202,7 @@ class NativeAuthOAuth2Configuration(
      * @return URL the endpoint
      */
     fun getSignInTokenEndpoint(): URL {
+        LogSession.logMethodCall(tag = TAG)
         return getEndpointUrlFromRootAndTenantAndSuffix(
             root = getAuthorityUrl(),
             endpointSuffix = SIGN_IN_TOKEN_ENDPOINT_SUFFIX
@@ -198,38 +210,14 @@ class NativeAuthOAuth2Configuration(
     }
 
     private fun getEndpointUrlFromRootAndTenantAndSuffix(root: URL, endpointSuffix: String): URL {
-        val methodName = ":getEndpointUrlFromRootAndClientIdAndSuffix"
+        LogSession.logMethodCall(tag = TAG)
         return try {
             UrlUtil.appendPathToURL(root, endpointSuffix)
         } catch (e: URISyntaxException) {
-            Logger.error(
-                TAG + methodName,
-                "Unable to create URL from provided root and suffix.",
-                null
-            )
-            Logger.errorPII(
-                TAG + methodName,
-                e.message +
-                    " Unable to create URL from provided root and suffix." +
-                    " root = $root suffix = $endpointSuffix",
-                e
-            )
+            LogSession.logException(tag = TAG, throwable = e)
             throw e
         } catch (e: MalformedURLException) {
-            Logger.error(
-                TAG + methodName,
-                "Unable to create URL from provided root and suffix.",
-                null
-            )
-            Logger.errorPII(
-                TAG + methodName,
-                (
-                    e.message +
-                        " Unable to create URL from provided root, tenant and suffix." +
-                        " root = $root suffix = $endpointSuffix"
-                    ),
-                e
-            )
+            LogSession.logException(tag = TAG, throwable = e)
             throw e
         }
     }

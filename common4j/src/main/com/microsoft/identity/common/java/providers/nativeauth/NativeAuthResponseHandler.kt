@@ -23,7 +23,8 @@
 package com.microsoft.identity.common.java.providers.nativeauth
 
 import com.microsoft.identity.common.java.exception.ClientException
-import com.microsoft.identity.common.java.logging.Logger
+import com.microsoft.identity.common.java.logging.LogSession
+import com.microsoft.identity.common.java.logging.Logger.LogLevel
 import com.microsoft.identity.common.java.net.HttpResponse
 import com.microsoft.identity.common.java.providers.nativeauth.responses.resetpassword.ResetPasswordChallengeApiResponse
 import com.microsoft.identity.common.java.providers.nativeauth.responses.resetpassword.ResetPasswordContinueApiResponse
@@ -47,11 +48,7 @@ class NativeAuthResponseHandler {
     internal fun getSignUpStartResultFromHttpResponse(
         response: HttpResponse
     ): SignUpStartApiResponse {
-        val methodName = ":getSignUpStartResponseFromHttpResponse"
-        Logger.verbose(
-            TAG + methodName,
-            "Creating SignUpStartRequest from HttpResponse..."
-        )
+        LogSession.logMethodCall(tag = TAG)
 
         val result = ObjectMapper.deserializeJsonStringToObject(
             response.body,
@@ -71,11 +68,7 @@ class NativeAuthResponseHandler {
     internal fun getSignUpChallengeResultFromHttpResponse(
         response: HttpResponse
     ): SignUpChallengeApiResponse {
-        val methodName = ":getSignUpChallengeResultFromHttpResponse"
-        Logger.verbose(
-            TAG + methodName,
-            "Creating SignUpChallengeResult from HttpResponse..."
-        )
+        LogSession.logMethodCall(tag = TAG)
 
         val result = ObjectMapper.deserializeJsonStringToObject(
             response.body,
@@ -95,11 +88,7 @@ class NativeAuthResponseHandler {
     internal fun getSignUpContinueResultFromHttpResponse(
         response: HttpResponse
     ): SignUpContinueApiResponse {
-        val methodName = ":getSignUpContinueResultFromHttpResponse"
-        Logger.verbose(
-            TAG + methodName,
-            "Getting SignUpContinueResult from HttpResponse..."
-        )
+        LogSession.logMethodCall(tag = TAG)
 
         val result = ObjectMapper.deserializeJsonStringToObject(
             response.body,
@@ -118,11 +107,7 @@ class NativeAuthResponseHandler {
     internal fun getSignInInitiateResultFromHttpResponse(
         response: HttpResponse
     ): SignInInitiateApiResponse {
-        val methodName = ":getSignInInitiateResultFromHttpResponse"
-        Logger.verbose(
-            TAG + methodName,
-            "Creating SignInInitiateResult from HttpResponse..."
-        )
+        LogSession.logMethodCall(tag = TAG)
 
         val result = ObjectMapper.deserializeJsonStringToObject(
             response.body,
@@ -142,11 +127,7 @@ class NativeAuthResponseHandler {
     internal fun getSignInChallengeResultFromHttpResponse(
         response: HttpResponse
     ): SignInChallengeApiResponse {
-        val methodName = ":getSignInChallengeResultFromHttpResponse"
-        Logger.verbose(
-            TAG + methodName,
-            "Creating SignInChallengeResult from HttpResponse..."
-        )
+        LogSession.logMethodCall(tag = TAG)
 
         val result = ObjectMapper.deserializeJsonStringToObject(
             response.body,
@@ -167,11 +148,7 @@ class NativeAuthResponseHandler {
     internal fun getSignInTokenResultFromHttpResponse(
         response: HttpResponse
     ): SignInTokenApiResponse {
-        val methodName = ":getSignInTokenResultFromHttpResponse"
-        Logger.verbose(
-            TAG + methodName,
-            "Creating SignInTokenResult from HttpResponse..."
-        )
+        LogSession.logMethodCall(tag = TAG)
 
         val result = ObjectMapper.deserializeJsonStringToObject(
             response.body,
@@ -192,11 +169,7 @@ class NativeAuthResponseHandler {
     internal fun getResetPasswordStartApiResponseFromHttpResponse(
         response: HttpResponse
     ): ResetPasswordStartApiResponse {
-        val methodName = ":getResetPasswordStartApiResponseFromHttpResponse"
-        Logger.verbose(
-            TAG + methodName,
-            "Creating ResetPasswordStartApiResponse from HttpResponse..."
-        )
+        LogSession.logMethodCall(tag = TAG)
 
         val apiResponse = ObjectMapper.deserializeJsonStringToObject(
             response.body,
@@ -215,11 +188,7 @@ class NativeAuthResponseHandler {
     internal fun getResetPasswordChallengeApiResponseFromHttpResponse(
         response: HttpResponse
     ): ResetPasswordChallengeApiResponse {
-        val methodName = ":getResetPasswordChallengeApiResponseFromHttpResponse"
-        Logger.verbose(
-            TAG + methodName,
-            "Creating ResetPasswordChallengeApiResponse from HttpResponse..."
-        )
+        LogSession.logMethodCall(tag = TAG)
 
         val apiResponse = ObjectMapper.deserializeJsonStringToObject(
             response.body,
@@ -238,11 +207,7 @@ class NativeAuthResponseHandler {
     internal fun getResetPasswordContinueApiResponseFromHttpResponse(
         response: HttpResponse
     ): ResetPasswordContinueApiResponse {
-        val methodName = ":getResetPasswordContinueApiResponseFromHttpResponse"
-        Logger.verbose(
-            TAG + methodName,
-            "Creating ResetPasswordContinueApiResponse from HttpResponse..."
-        )
+        LogSession.logMethodCall(tag = TAG)
 
         val apiResponse = ObjectMapper.deserializeJsonStringToObject(
             response.body,
@@ -261,11 +226,7 @@ class NativeAuthResponseHandler {
     internal fun getResetPasswordSubmitApiResponseFromHttpResponse(
         response: HttpResponse
     ): ResetPasswordSubmitApiResponse {
-        val methodName = ":getResetPasswordSubmitApiResponseFromHttpResponse"
-        Logger.verbose(
-            TAG + methodName,
-            "Creating ResetPasswordSubmitApiResponse from HttpResponse..."
-        )
+        LogSession.logMethodCall(tag = TAG)
 
         val apiResponse = ObjectMapper.deserializeJsonStringToObject(
             response.body,
@@ -284,11 +245,7 @@ class NativeAuthResponseHandler {
     internal fun getResetPasswordPollCompletionApiResponseFromHttpResponse(
         response: HttpResponse
     ): ResetPasswordPollCompletionApiResponse {
-        val methodName = ":getResetPasswordPollCompletionApiResponseFromHttpResponse"
-        Logger.verbose(
-            TAG + methodName,
-            "Creating ResetPasswordPollCompletionApiResponse from HttpResponse..."
-        )
+        LogSession.logMethodCall(tag = TAG)
 
         val apiResponse = ObjectMapper.deserializeJsonStringToObject(
             response.body,
@@ -307,12 +264,8 @@ class NativeAuthResponseHandler {
      * of required API response fields fails. Will log a warning if the validation of optional
      * API response fields fails.
      */
-     fun validateApiResult(apiResult: IApiResult) {
-        val methodName = ":validateApiResult"
-        Logger.verbose(
-            TAG + methodName,
-            "Validating API result..."
-        )
+    fun validateApiResult(apiResult: IApiResult) {
+        LogSession.logMethodCall(tag = TAG)
         if (apiResult.success) {
             validateSuccessfulResponse(
                 apiResult.successResponse
@@ -327,12 +280,17 @@ class NativeAuthResponseHandler {
     private fun validateSuccessfulResponse(successResponse: IApiSuccessResponse?) {
         try {
             if (successResponse == null) {
+                LogSession.log(
+                    tag = TAG,
+                    logLevel = LogLevel.ERROR,
+                    message = "SuccessResponse can't be null in success state"
+                )
                 throw ClientException("SuccessResponse can't be null in success state")
             }
             successResponse.validateRequiredFields()
             successResponse.validateOptionalFields()
         } catch (e: ClientException) {
-            Logger.error(TAG, e.message, e)
+            LogSession.logException(tag = TAG, throwable = e)
             throw e
         }
     }
@@ -340,6 +298,11 @@ class NativeAuthResponseHandler {
     private fun validateUnsuccessfulResponse(errorResponse: IApiErrorResponse?) {
 //        try {
         if (errorResponse == null) {
+            LogSession.log(
+                tag = TAG,
+                logLevel = LogLevel.ERROR,
+                message = "ErrorResponse can't be null in error state"
+            )
             throw ClientException("ErrorResponse can't be null in error state")
         }
         errorResponse.validateRequiredFields()

@@ -34,6 +34,7 @@ import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInS
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitPasswordCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpStartCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpStartWithPasswordCommandParameters
+import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy
 import com.microsoft.identity.common.java.providers.nativeauth.interactors.ResetPasswordInteractor
 import com.microsoft.identity.common.java.providers.nativeauth.interactors.SignInInteractor
@@ -80,18 +81,21 @@ class NativeAuthOAuth2Strategy(
     fun performSignUpStart(
         commandParameters: SignUpStartCommandParameters
     ): SignUpStartApiResult {
+        LogSession.logMethodCall(tag = TAG)
         return signUpInteractor.performSignUpStart(commandParameters)
     }
 
     fun performSignUpStartWithPassword(
         commandParameters: SignUpStartWithPasswordCommandParameters
     ): SignUpStartApiResult {
+        LogSession.logMethodCall(tag = TAG)
         return signUpInteractor.performSignUpStartWithPassword(commandParameters)
     }
 
     fun performSignUpChallenge(
         signUpToken: String
     ): SignUpChallengeApiResult {
+        LogSession.logMethodCall(tag = TAG)
         return signUpInteractor.performSignUpChallenge(
             signUpToken = signUpToken
         )
@@ -101,6 +105,7 @@ class NativeAuthOAuth2Strategy(
         signUpToken: String,
         commandParameters: BaseNativeAuthCommandParameters
     ): SignUpContinueApiResult {
+        LogSession.logMethodCall(tag = TAG)
         return signUpInteractor.performSignUpContinue(
             signUpToken = signUpToken,
             commandParameters = commandParameters
@@ -110,12 +115,14 @@ class NativeAuthOAuth2Strategy(
     fun performSignInInitiate(
         parameters: SignInStartCommandParameters
     ): SignInInitiateApiResult {
+        LogSession.logMethodCall(tag = TAG)
         return signInInteractor.performSignInInitiate(parameters)
     }
 
     fun performSignInChallenge(
         credentialToken: String,
     ): SignInChallengeApiResult {
+        LogSession.logMethodCall(tag = TAG)
         return signInInteractor.performSignInChallenge(
             credentialToken = credentialToken,
         )
@@ -124,6 +131,7 @@ class NativeAuthOAuth2Strategy(
     fun performROPCTokenRequest(
         parameters: SignInStartWithPasswordCommandParameters
     ): SignInTokenApiResult {
+        LogSession.logMethodCall(tag = TAG)
         return signInInteractor.performROPCTokenRequest(
             parameters = parameters
         )
@@ -132,6 +140,7 @@ class NativeAuthOAuth2Strategy(
     fun performOOBTokenRequest(
         parameters: SignInSubmitCodeCommandParameters
     ): SignInTokenApiResult {
+        LogSession.logMethodCall(tag = TAG)
         return signInInteractor.performOOBTokenRequest(
             parameters = parameters
         )
@@ -140,6 +149,7 @@ class NativeAuthOAuth2Strategy(
     fun performPasswordTokenRequest(
         parameters: SignInSubmitPasswordCommandParameters
     ): SignInTokenApiResult {
+        LogSession.logMethodCall(tag = TAG)
         return signInInteractor.performPasswordTokenRequest(
             parameters = parameters
         )
@@ -148,6 +158,7 @@ class NativeAuthOAuth2Strategy(
     fun performResetPasswordStart(
         parameters: ResetPasswordStartCommandParameters
     ): ResetPasswordStartApiResult {
+        LogSession.logMethodCall(tag = TAG)
         return resetPasswordInteractor.performResetPasswordStart(
             parameters = parameters
         )
@@ -156,6 +167,7 @@ class NativeAuthOAuth2Strategy(
     fun performResetPasswordChallenge(
         passwordResetToken: String
     ): ResetPasswordChallengeApiResult {
+        LogSession.logMethodCall(tag = TAG)
         return resetPasswordInteractor.performResetPasswordChallenge(
             passwordResetToken = passwordResetToken
         )
@@ -164,6 +176,7 @@ class NativeAuthOAuth2Strategy(
     fun performResetPasswordContinue(
         parameters: ResetPasswordSubmitCodeCommandParameters
     ): ResetPasswordContinueApiResult {
+        LogSession.logMethodCall(tag = TAG)
         return resetPasswordInteractor.performResetPasswordContinue(
             parameters = parameters
         )
@@ -172,6 +185,7 @@ class NativeAuthOAuth2Strategy(
     fun performResetPasswordSubmit(
         parameters: ResetPasswordSubmitNewPasswordCommandParameters
     ): ResetPasswordSubmitApiResult {
+        LogSession.logMethodCall(tag = TAG)
         return resetPasswordInteractor.performResetPasswordSubmit(
             commandParameters = parameters
         )
@@ -180,6 +194,7 @@ class NativeAuthOAuth2Strategy(
     fun performResetPasswordPollCompletion(
         passwordResetToken: String
     ): ResetPasswordPollCompletionApiResult {
+        LogSession.logMethodCall(tag = TAG)
         return resetPasswordInteractor.performResetPasswordPollCompletion(
             passwordResetToken = passwordResetToken
         )

@@ -26,6 +26,7 @@ import com.microsoft.identity.common.internal.util.getEncodedRequest
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.ResetPasswordStartCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.ResetPasswordSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.ResetPasswordSubmitNewPasswordCommandParameters
+import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.net.UrlConnectionHttpClient
 import com.microsoft.identity.common.java.providers.nativeauth.NativeAuthRequestProvider
 import com.microsoft.identity.common.java.providers.nativeauth.NativeAuthResponseHandler
@@ -46,15 +47,20 @@ class ResetPasswordInteractor(
     private val nativeAuthRequestProvider: NativeAuthRequestProvider,
     private val nativeAuthResponseHandler: NativeAuthResponseHandler
 ) {
+    private val TAG:String = ResetPasswordInteractor::class.java.simpleName
     //region /resetpassword/start
     fun performResetPasswordStart(
         parameters: ResetPasswordStartCommandParameters
     ): ResetPasswordStartApiResult {
+        LogSession.logMethodCall(tag = TAG)
+
         val request = nativeAuthRequestProvider.createResetPasswordStartRequest(parameters = parameters)
         return performResetPasswordStart(request)
     }
 
     private fun performResetPasswordStart(request: ResetPasswordStartRequest): ResetPasswordStartApiResult {
+        LogSession.logMethodCall(tag = TAG)
+
         val encodedRequest: String = request.parameters.getEncodedRequest()
         val headers = request.headers
         val requestUrl = request.requestUrl
@@ -75,6 +81,8 @@ class ResetPasswordInteractor(
     fun performResetPasswordChallenge(
         passwordResetToken: String
     ): ResetPasswordChallengeApiResult {
+        LogSession.logMethodCall(tag = TAG)
+
         val request = nativeAuthRequestProvider.createResetPasswordChallengeRequest(
             passwordResetToken = passwordResetToken
         )
@@ -82,6 +90,8 @@ class ResetPasswordInteractor(
     }
 
     private fun performResetPasswordChallenge(request: ResetPasswordChallengeRequest): ResetPasswordChallengeApiResult {
+        LogSession.logMethodCall(tag = TAG)
+
         val encodedRequest: String = request.parameters.getEncodedRequest()
         val headers = request.headers
         val requestUrl = request.requestUrl
@@ -102,6 +112,8 @@ class ResetPasswordInteractor(
     fun performResetPasswordContinue(
         parameters: ResetPasswordSubmitCodeCommandParameters
     ): ResetPasswordContinueApiResult {
+        LogSession.logMethodCall(tag = TAG)
+
         val request = nativeAuthRequestProvider.createResetPasswordContinueRequest(
             parameters = parameters
         )
@@ -109,6 +121,8 @@ class ResetPasswordInteractor(
     }
 
     private fun performResetPasswordContinue(request: ResetPasswordContinueRequest): ResetPasswordContinueApiResult {
+        LogSession.logMethodCall(tag = TAG)
+
         val encodedRequest: String = request.parameters.getEncodedRequest()
         val headers = request.headers
         val requestUrl = request.requestUrl
@@ -129,6 +143,8 @@ class ResetPasswordInteractor(
     fun performResetPasswordSubmit(
         commandParameters: ResetPasswordSubmitNewPasswordCommandParameters
     ): ResetPasswordSubmitApiResult {
+        LogSession.logMethodCall(tag = TAG)
+
         val request = nativeAuthRequestProvider.createResetPasswordSubmitRequest(
             commandParameters = commandParameters
         )
@@ -136,6 +152,8 @@ class ResetPasswordInteractor(
     }
 
     private fun performResetPasswordSubmit(request: ResetPasswordSubmitRequest): ResetPasswordSubmitApiResult {
+        LogSession.logMethodCall(tag = TAG)
+
         val encodedRequest: String = request.parameters.getEncodedRequest()
         val headers = request.headers
         val requestUrl = request.requestUrl
@@ -156,6 +174,8 @@ class ResetPasswordInteractor(
     fun performResetPasswordPollCompletion(
         passwordResetToken: String
     ): ResetPasswordPollCompletionApiResult {
+        LogSession.logMethodCall(tag = TAG)
+
         val request = nativeAuthRequestProvider.createResetPasswordPollCompletionRequest(
             passwordResetToken = passwordResetToken
         )
@@ -163,6 +183,8 @@ class ResetPasswordInteractor(
     }
 
     private fun performResetPasswordPollCompletion(request: ResetPasswordPollCompletionRequest): ResetPasswordPollCompletionApiResult {
+        LogSession.logMethodCall(tag = TAG)
+
         val encodedRequest: String = request.parameters.getEncodedRequest()
         val headers = request.headers
         val requestUrl = request.requestUrl

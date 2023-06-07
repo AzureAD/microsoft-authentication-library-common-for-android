@@ -23,6 +23,7 @@
 
 package com.microsoft.identity.common.java.providers.nativeauth
 
+import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.net.UrlConnectionHttpClient
 import com.microsoft.identity.common.java.providers.nativeauth.interactors.ResetPasswordInteractor
 import com.microsoft.identity.common.java.providers.nativeauth.interactors.SignInInteractor
@@ -38,7 +39,7 @@ class NativeAuthOAuth2StrategyFactory {
     companion object {
         fun createStrategy(
             config: NativeAuthOAuth2Configuration,
-            strategyParameters: OAuth2StrategyParameters
+            strategyParameters: OAuth2StrategyParameters,
         ): NativeAuthOAuth2Strategy {
             return NativeAuthOAuth2Strategy(
                 strategyParameters = strategyParameters,

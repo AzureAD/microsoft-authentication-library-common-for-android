@@ -5,6 +5,7 @@ import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInS
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartWithPasswordCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitPasswordCommandParameters
+import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.net.UrlConnectionHttpClient
 import com.microsoft.identity.common.java.providers.nativeauth.NativeAuthRequestProvider
 import com.microsoft.identity.common.java.providers.nativeauth.NativeAuthResponseHandler
@@ -21,10 +22,12 @@ class SignInInteractor(
     private val nativeAuthRequestProvider: NativeAuthRequestProvider,
     private val nativeAuthResponseHandler: NativeAuthResponseHandler
 ) {
+    private val TAG:String = SignInInteractor::class.java.simpleName
     //region /oauth/v2.0/initiate
     fun performSignInInitiate(
         parameters: SignInStartCommandParameters
     ): SignInInitiateApiResult {
+        LogSession.logMethodCall(tag = TAG)
         val request = nativeAuthRequestProvider.createSignInInitiateRequest(
             parameters = parameters
         )
@@ -32,6 +35,7 @@ class SignInInteractor(
     }
 
     private fun performSignInInitiate(request: SignInInitiateRequest): SignInInitiateApiResult {
+        LogSession.logMethodCall(tag = TAG)
         val encodedRequest: String = request.parameters.getEncodedRequest()
         val headers = request.headers
         val requestUrl = request.requestUrl
@@ -52,6 +56,7 @@ class SignInInteractor(
     fun performSignInChallenge(
         credentialToken: String,
     ): SignInChallengeApiResult {
+        LogSession.logMethodCall(tag = TAG)
         val request = nativeAuthRequestProvider.createSignInChallengeRequest(
             credentialToken = credentialToken
         )
@@ -59,6 +64,7 @@ class SignInInteractor(
     }
 
     private fun performSignInChallenge(request: SignInChallengeRequest): SignInChallengeApiResult {
+        LogSession.logMethodCall(tag = TAG)
         val encodedRequest: String = request.parameters.getEncodedRequest()
         val headers = request.headers
         val requestUrl = request.requestUrl
@@ -79,6 +85,7 @@ class SignInInteractor(
     fun performROPCTokenRequest(
         parameters: SignInStartWithPasswordCommandParameters
     ): SignInTokenApiResult {
+        LogSession.logMethodCall(tag = TAG)
         val request = nativeAuthRequestProvider.createROPCTokenRequest(
             parameters = parameters
         )
@@ -88,6 +95,7 @@ class SignInInteractor(
     fun performOOBTokenRequest(
         parameters: SignInSubmitCodeCommandParameters
     ): SignInTokenApiResult {
+        LogSession.logMethodCall(tag = TAG)
         val request = nativeAuthRequestProvider.createOOBTokenRequest(
             parameters = parameters
         )
@@ -97,6 +105,7 @@ class SignInInteractor(
     fun performPasswordTokenRequest(
         parameters: SignInSubmitPasswordCommandParameters
     ): SignInTokenApiResult {
+        LogSession.logMethodCall(tag = TAG)
         val request = nativeAuthRequestProvider.createPasswordTokenRequest(
             parameters = parameters
         )
@@ -104,6 +113,7 @@ class SignInInteractor(
     }
 
     private fun performGetToken(request: SignInTokenRequest): SignInTokenApiResult {
+        LogSession.logMethodCall(tag = TAG)
         val encodedRequest: String = request.parameters.getEncodedRequest()
         val headers = request.headers
         val requestUrl = request.requestUrl
