@@ -10,6 +10,7 @@ V.NEXT
 - [MINOR] Replacing SHA-1 used in broker validation with SHA-512 (#2019)
 - [MINOR] Removing thumbprint check from PKeyAuth challenge (#2045)
 - [MINOR] Add android 14 check for skipping strong box isolation in pop token (#2053)
+- [MINOR] Move ATS span start/end to MicrosoftAuthServiceOperation (#2068)
 
 V.12.0.0
 ----------
