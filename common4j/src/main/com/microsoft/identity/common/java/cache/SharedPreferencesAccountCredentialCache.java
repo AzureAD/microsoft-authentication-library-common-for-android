@@ -100,14 +100,7 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
         Logger.verbose(TAG, "Init: " + TAG);
         mSharedPreferencesFileManager = sharedPreferencesFileManager;
         mCacheValueDelegate = accountCacheValueDelegate;
-        if (mSharedPreferencesFileManager.get(SHA1_APPLICATION_IDENTIFIER_ACCESS_TOKEN_CLEARED) == null) {
-            for (final Credential credential : getCredentials()) {
-                if (isSha1ApplicationIdentifierAccessToken(credential)) {
-                    removeCredential(credential);
-                }
-            }
-            mSharedPreferencesFileManager.put(SHA1_APPLICATION_IDENTIFIER_ACCESS_TOKEN_CLEARED, String.valueOf(true));
-        }
+        removeSha1ApplicationIdentifierAccessTokensIfNeeded();
     }
 
     @Override
@@ -677,5 +670,22 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
         boolean isCredential = null != getCredentialTypeForCredentialCacheKey(cacheKey);
         Logger.verbose(methodTag, "isCredential? [" + isCredential + "]");
         return isCredential;
+    }
+
+    /**
+     * Tells if access tokens with SHA-1 app identifiers have been cleared yet.
+     * @return true if cleared; false otherwise.
+     */
+    @Override
+    protected boolean isSha1Cleared() {
+        return mSharedPreferencesFileManager.get(SHA1_APPLICATION_IDENTIFIER_ACCESS_TOKEN_CLEARED) != null;
+    }
+
+    /**
+     * Saves the flag indicating that access tokens with SHA-1 app identifiers have been cleared.
+     */
+    @Override
+    protected void saveSha1ClearedFlag() {
+        mSharedPreferencesFileManager.put(SHA1_APPLICATION_IDENTIFIER_ACCESS_TOKEN_CLEARED, String.valueOf(true));
     }
 }
