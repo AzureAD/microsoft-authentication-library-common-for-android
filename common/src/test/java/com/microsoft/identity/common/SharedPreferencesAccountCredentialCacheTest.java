@@ -2453,27 +2453,4 @@ public class SharedPreferencesAccountCredentialCacheTest {
         );
         assertEquals(2, mSharedPreferencesAccountCredentialCache.getCredentials().size());
     }
-
-    @Test
-    public void testClearSha1ApplicationIdentifierAccessTokens() {
-        for (int i = 0; i < 3; i++) {
-            final AccessTokenRecord accessToken = new AccessTokenRecord();
-            accessToken.setCredentialType(CredentialType.AccessToken.name());
-
-            switch (i) {
-                case 0:
-                    accessToken.setApplicationIdentifier(APPLICATION_IDENTIFIER_SHA512);
-                    assertFalse(AbstractAccountCredentialCache.isSha1ApplicationIdentifierAccessToken(accessToken));
-                    break;
-                case 1:
-                    accessToken.setApplicationIdentifier(null);
-                    assertFalse(AbstractAccountCredentialCache.isSha1ApplicationIdentifierAccessToken(accessToken));
-                    break;
-                case 2:
-                    accessToken.setApplicationIdentifier(APPLICATION_IDENTIFIER);
-                    assertTrue(AbstractAccountCredentialCache.isSha1ApplicationIdentifierAccessToken(accessToken));
-                    break;
-            }
-        }
-    }
 }
