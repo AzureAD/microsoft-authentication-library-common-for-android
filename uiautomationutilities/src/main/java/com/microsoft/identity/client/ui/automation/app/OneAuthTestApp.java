@@ -22,6 +22,9 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.app;
 
+import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT;
+
+import android.text.TextUtils;
 import android.widget.Button;
 import android.widget.EditText;
 
@@ -44,6 +47,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 // https://identitydivision.visualstudio.com/Engineering/_workitems/edit/2516682
+
 /**
  * Infrastructure for testing OneAuthTest app
  */
@@ -98,6 +102,12 @@ public class OneAuthTestApp extends App implements IFirstPartyApp {
     public String acquireTokenSilent() {
         // Click Get Access token button
         UiAutomatorUtils.handleButtonClick("com.microsoft.oneauth.testapp:id/get_access_token_button");
+        try {
+            // Add a delay so that token can be retrived successfully
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
         return getTokeSecret();
     }
 
@@ -120,6 +130,10 @@ public class OneAuthTestApp extends App implements IFirstPartyApp {
         Logger.i(TAG, "Handle AAD Login page prompt..");
         // handle prompt in AAD login page
         new AadPromptHandler(promptHandlerParameters).handlePrompt(username, password);
+    }
+
+    public void handleBackButton() {
+        UiAutomatorUtils.pressBack();
     }
 
     @Override
@@ -147,8 +161,11 @@ public class OneAuthTestApp extends App implements IFirstPartyApp {
         final UiObject resultUIObject = UiAutomatorUtils.obtainUiObjectWithResourceId("com.microsoft.oneauth.testapp:id/txtGeneralInfo");
         final UiObject accountIdObject = UiAutomatorUtils.obtainUiObjectWithResourceId("com.microsoft.oneauth.testapp:id/txtAccountId");
         try {
+            resultUIObject.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
+            accountIdObject.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
             Assert.assertTrue(resultUIObject.getText().contains("Result: Success"));
-            Assert.assertNotNull(accountIdObject);
+            Assert.assertFalse(TextUtils.isEmpty(resultUIObject.getText()));
+            Assert.assertFalse(TextUtils.isEmpty(accountIdObject.getText()));
         } catch (UiObjectNotFoundException e) {
             throw new RuntimeException(e);
         }
