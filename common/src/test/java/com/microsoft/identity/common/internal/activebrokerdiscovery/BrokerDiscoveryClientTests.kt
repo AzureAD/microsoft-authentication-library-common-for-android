@@ -296,6 +296,38 @@ class BrokerDiscoveryClientTests {
         Assert.assertNull(client.getActiveBroker())
         Assert.assertNull(cache.getCachedActiveBroker())
     }
+
+    /**
+     * There is no a cached active broker, but the installed app is a malicious app (signed by unknown key)
+     **/
+    @Test
+    fun test_ReplacedByMaliciousApp() {
+        val cache = InMemoryActiveBrokerCache()
+
+        val client = BrokerDiscoveryClient(
+            brokerCandidates = setOf(
+                prodMicrosoftAuthenticator, prodCompanyPortal
+            ),
+            getActiveBrokerFromAccountManager = {
+                return@BrokerDiscoveryClient null
+            },
+            ipcStrategy = object : IIpcStrategy {
+                override fun communicateToBroker(bundle: BrokerOperationBundle): Bundle {
+                    throw IllegalStateException()
+                }
+                override fun getType(): IIpcStrategy.Type {
+                    return IIpcStrategy.Type.CONTENT_PROVIDER
+                }
+            },
+            cache = InMemoryActiveBrokerCache(),
+            isPackageInstalled =  { it == prodMicrosoftAuthenticator },
+            isValidBroker = { false }
+        )
+
+        Assert.assertNull(client.getActiveBroker())
+        Assert.assertNull(cache.getCachedActiveBroker())
+    }
+
     /**
      * There is already a cached active broker, but the installed app is a malicious app (signed by unknown key)
      **/

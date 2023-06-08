@@ -96,10 +96,11 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
         internal suspend fun queryFromBroker(brokerCandidates: Set<BrokerData>,
                                              ipcStrategy: IIpcStrategy,
                                              isPackageInstalled: (BrokerData) -> Boolean,
+                                             isValidBroker: (BrokerData) -> Boolean,
                                              shouldStopQueryForAWhile: () -> Unit
         ): BrokerData? {
             return coroutineScope {
-                val installedCandidates = brokerCandidates.filter(isPackageInstalled)
+                val installedCandidates = brokerCandidates.filter(isPackageInstalled).filter(isValidBroker)
                 val deferredResults = installedCandidates.map { candidate ->
                     async(dispatcher) {
                         return@async makeRequest(candidate, ipcStrategy, shouldStopQueryForAWhile)
@@ -182,7 +183,7 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
             val isHashMatch = installedHash == brokerData.signatureHash
             if (!isHashMatch) {
                 Logger.warn(methodTag, "Hash does not match for app ${brokerData.packageName}. " +
-                        "Expected: ${brokerData.signatureHash} but get: $installedHash")
+                        "Expected: ${brokerData.signatureHash} but got: $installedHash")
             }
             isHashMatch
         })
@@ -227,7 +228,8 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
             val brokerData = queryFromBroker(
                 brokerCandidates = brokerCandidates,
                 ipcStrategy = ipcStrategy,
-                isPackageInstalled = isPackageInstalled
+                isPackageInstalled = isPackageInstalled,
+                isValidBroker = isValidBroker
             ) {
                 Logger.info(
                     methodTag,
@@ -255,5 +257,4 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
             return accountManagerResult
         }
     }
-
 }
