@@ -205,6 +205,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         requestBundle.putString(AuthenticationConstants.Broker.ACCOUNT_NAME, parameters.getAccountName());
         requestBundle.putString(AuthenticationConstants.Broker.ACCOUNT_HOME_ACCOUNT_ID, parameters.getHomeAccountId());
         requestBundle.putString(AuthenticationConstants.Broker.ACCOUNT_LOCAL_ACCOUNT_ID, parameters.getLocalAccountId());
+        requestBundle.putString(AuthenticationConstants.Broker.SSO_TOKEN_CLIENT_ID, parameters.getClientId());
         if (parameters.getRequestAuthority() != null) {
             requestBundle.putString(REQUEST_AUTHORITY, parameters.getRequestAuthority());
         }
