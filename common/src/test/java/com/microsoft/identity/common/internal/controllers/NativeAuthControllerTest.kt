@@ -109,26 +109,6 @@ class NativeAuthControllerTest {
     }
 
     @Test
-    fun testSignInStartWithRopcCodeRequired() {
-        val correlationId = UUID.randomUUID().toString()
-        MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SignInToken,
-            correlationId = correlationId,
-            responseType = MockApiResponseType.CREDENTIAL_REQUIRED
-        )
-
-        MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SignInChallenge,
-            correlationId = correlationId,
-            responseType = MockApiResponseType.CHALLENGE_TYPE_OOB
-        )
-
-        val parameters = createSignInStartWithPasswordCommandParameters()
-        val result = controller.signInStart(parameters)
-        assert(result is SignInCommandResult.CodeRequired)
-    }
-
-    @Test
     fun testSignInStartWithRopcPasswordIncorrect() {
         val correlationId = UUID.randomUUID().toString()
         MockApiUtils.configureMockApi(

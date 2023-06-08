@@ -25,12 +25,12 @@ data class SignInInitiateApiResponse(
     fun toResult(): SignInInitiateApiResult {
         return if (statusCode >= HttpURLConnection.HTTP_BAD_REQUEST) {
             if (error.isInvalidGrant()) {
-                if (errorCodes.isNullOrEmpty()) {
+                return if (errorCodes.isNullOrEmpty()) {
                     throw ClientException("error_codes is null or empty")
                 } else if (errorCodes[0].isUserAccountDoesNotExist()) {
-                    return SignInInitiateApiResult.UserNotFound(error = error.orEmpty(), errorDescription = errorDescription.orEmpty())
+                    SignInInitiateApiResult.UserNotFound(error = error.orEmpty(), errorDescription = errorDescription.orEmpty())
                 } else {
-                    return SignInInitiateApiResult.UnknownError(error, errorDescription)
+                    SignInInitiateApiResult.UnknownError(error, errorDescription)
                 }
             }
             // TODO log the API response, in a PII-safe way

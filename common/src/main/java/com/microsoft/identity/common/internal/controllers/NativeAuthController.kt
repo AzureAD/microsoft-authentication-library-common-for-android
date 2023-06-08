@@ -144,13 +144,6 @@ class NativeAuthController : BaseNativeAuthController() {
             parameters = parametersWithScopes
         )
         return when (tokenApiResult) {
-            is SignInTokenApiResult.CredentialRequired -> {
-                performSignInChallengeCall(
-                    oAuth2Strategy = oAuth2Strategy,
-                    credentialToken = tokenApiResult.credentialToken
-                ).toSignInStartCommandResult()
-            }
-
             SignInTokenApiResult.Redirect -> {
                 CommandResult.Redirect
             }
@@ -188,9 +181,8 @@ class NativeAuthController : BaseNativeAuthController() {
                     errorDescription = tokenApiResult.errorDescription
                 )
             }
-
-            is SignInTokenApiResult.CodeIncorrect -> {
-                // TODO add correlation ID https://identitydivision.visualstudio.com/Engineering/_workitems/edit/2503124
+            is SignInTokenApiResult.CodeIncorrect,
+            is SignInTokenApiResult.CredentialRequired -> {
                 LogSession.log(
                     tag = TAG,
                     logLevel = Logger.LogLevel.WARN,
@@ -980,15 +972,6 @@ class NativeAuthController : BaseNativeAuthController() {
     private fun SignInChallengeApiResult.toSignInSubmitPasswordCommandResult(): SignInSubmitPasswordCommandResult {
         LogSession.logMethodCall(tag = TAG)
         return when (this) {
-            is SignInChallengeApiResult.OOBRequired -> {
-                SignInCommandResult.CodeRequired(
-                    credentialToken = this.credentialToken,
-                    codeLength = this.codeLength,
-                    challengeTargetLabel = this.challengeTargetLabel,
-                    challengeChannel = this.challengeChannel
-                )
-            }
-
             SignInChallengeApiResult.Redirect -> {
                 CommandResult.Redirect
             }
@@ -1015,6 +998,18 @@ class NativeAuthController : BaseNativeAuthController() {
                 CommandResult.UnknownError(
                     errorCode = this.error,
                     errorDescription = this.errorDescription
+                )
+            }
+
+            is SignInChallengeApiResult.OOBRequired -> {
+                LogSession.log(
+                    tag = TAG,
+                    logLevel = Logger.LogLevel.WARN,
+                    message = "Unexpected result: $this"
+                )
+                CommandResult.UnknownError(
+                    errorCode = "unexpected_api_result",
+                    errorDescription = "API returned unexpected result: $this"
                 )
             }
         }
