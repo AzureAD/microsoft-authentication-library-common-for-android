@@ -28,14 +28,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-import java.util.AbstractMap;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import cz.msebera.android.httpclient.NameValuePair;
-
 @RunWith(JUnit4.class)
 public class BrokerProtocolVersionUtilTest {
 
@@ -168,6 +160,34 @@ public class BrokerProtocolVersionUtilTest {
     public void testCanSendPKeyAuthHeaderToTheTokenEndpoint_NegotiatedNull(){
         Assert.assertFalse(
                 BrokerProtocolVersionUtil.canSendPKeyAuthHeaderToTheTokenEndpoint(null)
+        );
+    }
+
+    @Test
+    public void testcanSupportMsaAccountsInBroker_NegotiatedEqualToRequired(){
+        Assert.assertTrue(
+                BrokerProtocolVersionUtil.canSupportMsaAccountsInBroker("14.0")
+        );
+    }
+
+    @Test
+    public void testcanSupportMsaAccountsInBroker_NegotiatedLargerThanRequired(){
+        Assert.assertTrue(
+                BrokerProtocolVersionUtil.canSupportMsaAccountsInBroker("15.0")
+        );
+    }
+
+    @Test
+    public void testcanSupportMsaAccountsInBroker_NegotiatedSmallerThanRequired(){
+        Assert.assertFalse(
+                BrokerProtocolVersionUtil.canSupportMsaAccountsInBroker("13.0")
+        );
+    }
+
+    @Test
+    public void testcanSupportMsaAccountsInBroker_NegotiatedNull(){
+        Assert.assertFalse(
+                BrokerProtocolVersionUtil.canSupportMsaAccountsInBroker(null)
         );
     }
 }
