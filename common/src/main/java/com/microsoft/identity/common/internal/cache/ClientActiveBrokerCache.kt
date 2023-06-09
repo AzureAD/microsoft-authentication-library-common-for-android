@@ -27,7 +27,7 @@ import com.microsoft.identity.common.java.interfaces.IStorageSupplier
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import java.time.Instant
+import java.util.*
 
 class ClientActiveBrokerCache
 internal constructor(private val storage: INameValueStorage<String>,
@@ -69,7 +69,7 @@ internal constructor(private val storage: INameValueStorage<String>,
             if (expiryDate == null) {
                 return false
             }
-            return Instant.now().toEpochMilli() < expiryDate
+            return Calendar.getInstance().timeInMillis < expiryDate
         }
 
         /**
@@ -108,7 +108,7 @@ internal constructor(private val storage: INameValueStorage<String>,
     override fun setShouldUseAccountManagerForTheNextMilliseconds(timeInMillis: Long) {
         return runBlocking {
             lock.withLock {
-                val timeStamp = Instant.now().toEpochMilli() + timeInMillis
+                val timeStamp = Calendar.getInstance().timeInMillis + timeInMillis
                 storage.put(SHOULD_USE_ACCOUNT_MANAGER_UNTIL_EPOCH_MILLISECONDS_KEY, timeStamp.toString())
                 cachedTimeStamp = timeStamp
             }

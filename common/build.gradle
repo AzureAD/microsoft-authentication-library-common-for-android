@@ -337,7 +337,7 @@ afterEvaluate {
 
 tasks.whenTaskAdded { task ->
     if (task.name.contains("assemble")) {
-        task.dependsOn 'pmd'
+        task.dependsOn 'lint','pmd'
     }
 
     if (task.name == 'assembleDebug' || task.name == 'assembleRelease') {
