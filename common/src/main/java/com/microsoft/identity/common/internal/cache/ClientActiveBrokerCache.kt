@@ -69,7 +69,7 @@ internal constructor(private val storage: INameValueStorage<String>,
             if (expiryDate == null) {
                 return false
             }
-            return Calendar.getInstance().timeInMillis < expiryDate
+            return System.currentTimeMillis() < expiryDate
         }
 
         /**
@@ -108,7 +108,7 @@ internal constructor(private val storage: INameValueStorage<String>,
     override fun setShouldUseAccountManagerForTheNextMilliseconds(timeInMillis: Long) {
         return runBlocking {
             lock.withLock {
-                val timeStamp = Calendar.getInstance().timeInMillis + timeInMillis
+                val timeStamp = System.currentTimeMillis() + timeInMillis
                 storage.put(SHOULD_USE_ACCOUNT_MANAGER_UNTIL_EPOCH_MILLISECONDS_KEY, timeStamp.toString())
                 cachedTimeStamp = timeStamp
             }
