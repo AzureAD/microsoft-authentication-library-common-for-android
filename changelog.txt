@@ -1,4 +1,4 @@
-V.NEXT
+V.13.0.1
 ----------
 - [PATCH] Stop caching account manager values. Make BrokerDiscoveryClient coroutine-safe (#2050)
 - [PATCH] Revert "Getting rid of account manager strategy in MSAL/OneAuth (#1988)" (#2041)
