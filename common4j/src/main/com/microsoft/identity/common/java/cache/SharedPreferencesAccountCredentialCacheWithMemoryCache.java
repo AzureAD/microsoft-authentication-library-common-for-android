@@ -55,9 +55,6 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
 
     private static final String TAG = SharedPreferencesAccountCredentialCacheWithMemoryCache.class.getSimpleName();
 
-    // SharedPreferences used to store Accounts and Credentials
-    private final INameValueStorage<String> mSharedPreferencesFileManager;
-
     private final ICacheKeyValueDelegate mCacheValueDelegate;
 
     private final Object mCacheLock = new Object();
@@ -74,8 +71,8 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
     public SharedPreferencesAccountCredentialCacheWithMemoryCache(
             @NonNull final ICacheKeyValueDelegate accountCacheValueDelegate,
             @NonNull final INameValueStorage<String> sharedPreferencesFileManager) {
+        super(sharedPreferencesFileManager);
         Logger.verbose(TAG, "Init: " + TAG);
-        mSharedPreferencesFileManager = sharedPreferencesFileManager;
         mCacheValueDelegate = accountCacheValueDelegate;
         new Thread(() -> load()).start();
     }
@@ -89,16 +86,12 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
                 Logger.info(methodTag, "Loaded " + mCachedAccountRecordsWithKeys.size() + " AccountRecords");
                 mCachedCredentialsWithKeys = loadCredentialsWithKeys();
                 Logger.info(methodTag, "Loaded " + mCachedCredentialsWithKeys.size() + " Credentials");
-                mLoaded = true;
-                mCacheLock.notifyAll();
-                removeSha1ApplicationIdentifierAccessTokensIfNeeded();
+                new Thread(() -> removeSha1ApplicationIdentifierAccessTokensIfNeeded()).start();
             } catch (final Throwable t) {
                 Logger.error(methodTag, "Failed to load initial accounts or credentials from SharedPreferences", t);
             } finally {
-                if (!mLoaded) {
-                    mLoaded = true;
-                    mCacheLock.notifyAll();
-                }
+                mLoaded = true;
+                mCacheLock.notifyAll();
             }
         }
     }
@@ -738,28 +731,5 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
         boolean isCredential = null != getCredentialTypeForCredentialCacheKey(cacheKey);
         Logger.verbose(methodTag, "isCredential? [" + isCredential + "]");
         return isCredential;
-    }
-
-    /**
-     * Tells if access tokens with SHA-1 app identifiers have been cleared yet.
-     * @return true if cleared; false otherwise.
-     */
-    @Override
-    protected boolean isSha1Cleared() {
-        synchronized (mCacheLock) {
-            waitForInitialLoad();
-            return mSharedPreferencesFileManager.get(SHA1_APPLICATION_IDENTIFIER_ACCESS_TOKEN_CLEARED) != null;
-        }
-    }
-
-    /**
-     * Saves the flag indicating that access tokens with SHA-1 app identifiers have been cleared.
-     */
-    @Override
-    protected void saveSha1ClearedFlag() {
-        synchronized (mCacheLock) {
-            waitForInitialLoad();
-            mSharedPreferencesFileManager.put(SHA1_APPLICATION_IDENTIFIER_ACCESS_TOKEN_CLEARED, String.valueOf(true));
-        }
     }
 }

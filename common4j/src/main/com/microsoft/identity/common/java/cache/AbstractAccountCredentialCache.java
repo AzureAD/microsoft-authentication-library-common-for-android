@@ -33,6 +33,7 @@ import com.microsoft.identity.common.java.dto.CredentialType;
 import com.microsoft.identity.common.java.dto.IdTokenRecord;
 import com.microsoft.identity.common.java.dto.PrimaryRefreshTokenRecord;
 import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
+import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.java.util.StringUtil;
@@ -51,6 +52,17 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
     private static final String TAG = AbstractAccountCredentialCache.class.getSimpleName();
     public static final String SHA1_APPLICATION_IDENTIFIER_ACCESS_TOKEN_CLEARED = "sha1-cleared";
     private static final String NEW_LINE = "\n";
+
+    // SharedPreferences used to store Accounts and Credentials
+    protected final INameValueStorage<String> mSharedPreferencesFileManager;
+
+    /**
+     * Constructor of AbstractAccountCredentialCache.
+     * @param sharedPreferencesFileManager INameValueStorage
+     */
+    protected AbstractAccountCredentialCache(@NonNull final INameValueStorage<String> sharedPreferencesFileManager) {
+        mSharedPreferencesFileManager = sharedPreferencesFileManager;
+    }
 
     @Nullable
     protected Class<? extends Credential> getTargetClassForCredentialType(@Nullable final String cacheKey,
@@ -281,7 +293,7 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
      * The application identifier field for access token records previously included a SHA-1 signing certificate hash.
      * This method first checks if it has been run before, and if not, removes such tokens, as application identifiers should now contain SHA-512 signing certificate hashes.
      */
-    protected void removeSha1ApplicationIdentifierAccessTokensIfNeeded() {
+    public void removeSha1ApplicationIdentifierAccessTokensIfNeeded() {
         if (!isSha1Cleared()) {
             for (final Credential credential : getCredentials()) {
                 if (credential instanceof AccessTokenRecord) {
@@ -312,12 +324,16 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
      * Tells if access tokens with SHA-1 app identifiers have been cleared yet.
      * @return true if cleared; false otherwise.
      */
-    abstract protected boolean isSha1Cleared();
+    protected boolean isSha1Cleared() {
+        return mSharedPreferencesFileManager.get(SHA1_APPLICATION_IDENTIFIER_ACCESS_TOKEN_CLEARED) != null;
+    }
 
     /**
      * Saves the flag indicating that access tokens with SHA-1 app identifiers have been cleared.
      */
-    abstract protected void saveSha1ClearedFlag();
+    protected void saveSha1ClearedFlag() {
+        mSharedPreferencesFileManager.put(SHA1_APPLICATION_IDENTIFIER_ACCESS_TOKEN_CLEARED, String.valueOf(true));
+    }
 
     /**
      * Examines the intersections of the provided targets (scopes).

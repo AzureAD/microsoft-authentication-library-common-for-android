@@ -82,10 +82,6 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
     public static final String DESERIALIZATION_FAILED = "Deserialization failed. Skipping ";
     public static final String ACCOUNT_RECORD_DESERIALIZATION_FAILED = DESERIALIZATION_FAILED + AccountRecord.class.getSimpleName();
     public static final String CREDENTIAL_DESERIALIZATION_FAILED = DESERIALIZATION_FAILED + Credential.class.getSimpleName();
-
-    // SharedPreferences used to store Accounts and Credentials
-    private final INameValueStorage<String> mSharedPreferencesFileManager;
-
     private final ICacheKeyValueDelegate mCacheValueDelegate;
 
     /**
@@ -97,10 +93,10 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
     public SharedPreferencesAccountCredentialCache(
             @NonNull final ICacheKeyValueDelegate accountCacheValueDelegate,
             @NonNull final INameValueStorage<String> sharedPreferencesFileManager) {
+        super(sharedPreferencesFileManager);
         Logger.verbose(TAG, "Init: " + TAG);
-        mSharedPreferencesFileManager = sharedPreferencesFileManager;
         mCacheValueDelegate = accountCacheValueDelegate;
-        removeSha1ApplicationIdentifierAccessTokensIfNeeded();
+        new Thread(this::removeSha1ApplicationIdentifierAccessTokensIfNeeded).start();
     }
 
     @Override
@@ -670,22 +666,5 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
         boolean isCredential = null != getCredentialTypeForCredentialCacheKey(cacheKey);
         Logger.verbose(methodTag, "isCredential? [" + isCredential + "]");
         return isCredential;
-    }
-
-    /**
-     * Tells if access tokens with SHA-1 app identifiers have been cleared yet.
-     * @return true if cleared; false otherwise.
-     */
-    @Override
-    protected boolean isSha1Cleared() {
-        return mSharedPreferencesFileManager.get(SHA1_APPLICATION_IDENTIFIER_ACCESS_TOKEN_CLEARED) != null;
-    }
-
-    /**
-     * Saves the flag indicating that access tokens with SHA-1 app identifiers have been cleared.
-     */
-    @Override
-    protected void saveSha1ClearedFlag() {
-        mSharedPreferencesFileManager.put(SHA1_APPLICATION_IDENTIFIER_ACCESS_TOKEN_CLEARED, String.valueOf(true));
     }
 }
