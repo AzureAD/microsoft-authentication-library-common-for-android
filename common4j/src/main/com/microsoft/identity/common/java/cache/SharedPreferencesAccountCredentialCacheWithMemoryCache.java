@@ -86,7 +86,7 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
                 Logger.info(methodTag, "Loaded " + mCachedAccountRecordsWithKeys.size() + " AccountRecords");
                 mCachedCredentialsWithKeys = loadCredentialsWithKeys();
                 Logger.info(methodTag, "Loaded " + mCachedCredentialsWithKeys.size() + " Credentials");
-                new Thread(() -> removeSha1ApplicationIdentifierAccessTokensIfNeeded());
+                new Thread(() -> removeSha1ApplicationIdentifierAccessTokensIfNeeded()).start();
             } catch (final Throwable t) {
                 Logger.error(methodTag, "Failed to load initial accounts or credentials from SharedPreferences", t);
             } finally {
