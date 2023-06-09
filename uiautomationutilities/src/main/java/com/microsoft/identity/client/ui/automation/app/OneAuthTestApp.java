@@ -171,16 +171,17 @@ public class OneAuthTestApp extends App implements IFirstPartyApp {
         }
     }
 
+    /**
+     * Returns string list of all accounts available
+     */
     public void getAllAccounts() {
         List<String> accountsList = new ArrayList<>();
         UiAutomatorUtils.handleButtonClick("com.microsoft.oneauth.testapp:id/get_all_accounts_button");
         final UiObject resultUIObject = UiAutomatorUtils.obtainUiObjectWithResourceId("com.microsoft.oneauth.testapp:id/all_accounts_list");
         try {
             int size = resultUIObject.getChildCount();
-            final UiSelector textView = new UiSelector()
-                    .className("android.widget.TextView");
             for (int i = 0; i < size; i++) {
-                UiObject object = resultUIObject.getChild(textView);
+                UiObject object = resultUIObject.getChild(new UiSelector().clickable(true).index(i));
                 accountsList.add(object.getText());
             }
         } catch (UiObjectNotFoundException e) {
