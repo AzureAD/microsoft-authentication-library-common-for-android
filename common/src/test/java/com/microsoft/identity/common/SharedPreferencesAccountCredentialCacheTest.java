@@ -55,6 +55,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import static com.microsoft.identity.common.java.cache.AbstractAccountCredentialCache.SHA1_APPLICATION_IDENTIFIER_ACCESS_TOKEN_CLEARED;
 import static com.microsoft.identity.common.java.cache.CacheKeyValueDelegate.CACHE_VALUE_SEPARATOR;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -2379,12 +2380,9 @@ public class SharedPreferencesAccountCredentialCacheTest {
     }
 
     @Test
-    public void testSha1ToSha512AppIdentifierUpdate() {
+    public void removeSha1ApplicationIdentifierAccessTokensIfNeeded() {
         //Mimics the scenario where the cache has access tokens with a SHA-1 app identifier,
         // and then the user updates their app to a version where access tokens should now have a SHA-512 app identifier.
-
-        //Must clear initial sha1ClearedFlag first, in order to mock an older version.
-        mSharedPreferencesAccountCredentialCache.clearAll();
 
         // Save an Account into the cache
         final AccountRecord account = new AccountRecord();
@@ -2423,12 +2421,10 @@ public class SharedPreferencesAccountCredentialCacheTest {
 
         // Verify getCredentials() returns two matching elements
         assertEquals(2, mSharedPreferencesAccountCredentialCache.getCredentials().size());
-
-        //Recreate cache to set off SHA-1 access token removal
-        mSharedPreferencesAccountCredentialCache = new SharedPreferencesAccountCredentialCache(
-                mDelegate,
-                mSharedPreferencesFileManager
-        );
+        //Remove the flag entry, as initialization of the cache calls removeSha1ApplicationIdentifierAccessTokensIfNeeded on a different thread.
+        //Thread should have run by now... but if not, it's harmless, as it should only take out SHA1 identifier access tokens.
+        mSharedPreferencesFileManager.remove(SHA1_APPLICATION_IDENTIFIER_ACCESS_TOKEN_CLEARED);
+        mSharedPreferencesAccountCredentialCache.removeSha1ApplicationIdentifierAccessTokensIfNeeded();
         assertEquals(1, mSharedPreferencesAccountCredentialCache.getCredentials().size());
 
         // Now Save an AccessToken with SHA-512 application identifier into the cache
@@ -2446,11 +2442,8 @@ public class SharedPreferencesAccountCredentialCacheTest {
         accessToken2.setSecret(SECRET);
         mSharedPreferencesAccountCredentialCache.saveCredential(accessToken2);
 
-        //Recreate cache and make sure cache didn't remove the SHA-512 token
-        mSharedPreferencesAccountCredentialCache = new SharedPreferencesAccountCredentialCache(
-                mDelegate,
-                mSharedPreferencesFileManager
-        );
+        mSharedPreferencesFileManager.remove(SHA1_APPLICATION_IDENTIFIER_ACCESS_TOKEN_CLEARED);
+        mSharedPreferencesAccountCredentialCache.removeSha1ApplicationIdentifierAccessTokensIfNeeded();
         assertEquals(2, mSharedPreferencesAccountCredentialCache.getCredentials().size());
     }
 }
