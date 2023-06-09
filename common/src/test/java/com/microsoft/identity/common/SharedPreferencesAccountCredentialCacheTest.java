@@ -30,7 +30,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonPrimitive;
 import com.microsoft.identity.common.components.AndroidPlatformComponentsFactory;
 import com.microsoft.identity.common.java.authscheme.BearerAuthenticationSchemeInternal;
-import com.microsoft.identity.common.java.cache.AbstractAccountCredentialCache;
 import com.microsoft.identity.common.java.cache.CacheKeyValueDelegate;
 import com.microsoft.identity.common.java.cache.SharedPreferencesAccountCredentialCache;
 import com.microsoft.identity.common.java.dto.AccessTokenRecord;
@@ -58,7 +57,6 @@ import java.util.Map;
 import static com.microsoft.identity.common.java.cache.AbstractAccountCredentialCache.SHA1_APPLICATION_IDENTIFIER_ACCESS_TOKEN_CLEARED;
 import static com.microsoft.identity.common.java.cache.CacheKeyValueDelegate.CACHE_VALUE_SEPARATOR;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -2421,6 +2419,7 @@ public class SharedPreferencesAccountCredentialCacheTest {
 
         // Verify getCredentials() returns two matching elements
         assertEquals(2, mSharedPreferencesAccountCredentialCache.getCredentials().size());
+
         //Remove the flag entry, as initialization of the cache calls removeSha1ApplicationIdentifierAccessTokensIfNeeded on a different thread.
         //Thread should have run by now... but if not, it's harmless, as it should only take out SHA1 identifier access tokens.
         mSharedPreferencesFileManager.remove(SHA1_APPLICATION_IDENTIFIER_ACCESS_TOKEN_CLEARED);
