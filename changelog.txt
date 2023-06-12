@@ -2,6 +2,9 @@ V.NEXT
 ----------
 - [MINOR] Send client id as part of request bundle for getSsoToken Api (#2064)
 - [PATCH] Wire new Broker Discovery Client into MSAL - still disabled by default (#2057)
+
+V.13.0.1
+----------
 - [PATCH] Stop caching account manager values. Make BrokerDiscoveryClient coroutine-safe (#2050)
 - [PATCH] Revert "Getting rid of account manager strategy in MSAL/OneAuth (#1988)" (#2041)
 - [MINOR] Add BrokerDiscoveryClient + Tests (#2039)

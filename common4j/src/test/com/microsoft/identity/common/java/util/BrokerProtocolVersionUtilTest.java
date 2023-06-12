@@ -28,14 +28,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-import java.util.AbstractMap;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import cz.msebera.android.httpclient.NameValuePair;
-
 @RunWith(JUnit4.class)
 public class BrokerProtocolVersionUtilTest {
 
@@ -198,5 +190,4 @@ public class BrokerProtocolVersionUtilTest {
                 BrokerProtocolVersionUtil.canSupportMsaAccountsInBroker(null)
         );
     }
-
 }
