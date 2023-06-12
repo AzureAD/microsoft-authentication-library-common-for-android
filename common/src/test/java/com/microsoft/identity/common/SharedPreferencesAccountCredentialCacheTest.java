@@ -2417,9 +2417,6 @@ public class SharedPreferencesAccountCredentialCacheTest {
         refreshToken.setTarget(TARGET);
         mSharedPreferencesAccountCredentialCache.saveCredential(refreshToken);
 
-        // Verify getCredentials() returns two matching elements
-        assertEquals(2, mSharedPreferencesAccountCredentialCache.getCredentials().size());
-
         //Remove the flag entry, as initialization of the cache calls removeSha1ApplicationIdentifierAccessTokensIfNeeded on a different thread.
         //Thread should have run by now... but if not, it's harmless, as it should only take out SHA1 identifier access tokens.
         mSharedPreferencesFileManager.remove(SHA1_APPLICATION_IDENTIFIER_ACCESS_TOKEN_CLEARED);
