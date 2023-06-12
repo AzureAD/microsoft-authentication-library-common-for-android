@@ -432,7 +432,7 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
             @Nullable final String target,
             @Nullable final String authScheme,
             @Nullable final String requestedClaims,
-            @Nullable final List<Credential> inputCredentials) {
+            @NonNull final List<Credential> inputCredentials) {
         final String methodTag = TAG + ":getCredentialsFilteredBy";
         Logger.verbose(methodTag, "getCredentialsFilteredBy()");
 
@@ -494,7 +494,7 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
 
     @Override
     public List<Credential> getCredentialsFilteredBy(
-            @Nullable List<Credential> inputCredentials,
+            @NonNull List<Credential> inputCredentials,
             @Nullable final String homeAccountId,
             @Nullable final String environment,
             @Nullable final CredentialType credentialType,
