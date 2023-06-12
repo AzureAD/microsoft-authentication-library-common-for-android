@@ -294,6 +294,7 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
      * This method first checks if it has been run before, and if not, removes such tokens, as application identifiers should now contain SHA-512 signing certificate hashes.
      */
     public void removeSha1ApplicationIdentifierAccessTokensIfNeeded() {
+        final String methodTag = TAG + ":removeSha1ApplicationIdentifierAccessTokensIfNeeded";
         if (!isSha1Cleared()) {
             for (final Credential credential : getCredentials()) {
                 if (credential instanceof AccessTokenRecord) {
@@ -301,7 +302,7 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
                     final String tokenAppIdentifier = accessToken.getApplicationIdentifier();
                     if (tokenAppIdentifier != null
                             && applicationIdentifierContainsSha1(tokenAppIdentifier)) {
-                        Logger.info(TAG, "Identified old access token with app identifier containing SHA-1. This token shall be removed, and a new access token should be re-acquired with a SHA-512 app identifier.");
+                        Logger.info(methodTag, "Identified old access token with app identifier containing SHA-1. This token shall be removed, and a new access token should be re-acquired with a SHA-512 app identifier.");
                         removeCredential(credential);
                     }
                 }
