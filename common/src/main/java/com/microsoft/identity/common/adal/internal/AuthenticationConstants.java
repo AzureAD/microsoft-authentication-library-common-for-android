@@ -1016,6 +1016,36 @@ public final class AuthenticationConstants {
         public static final String BROKER_HOST_APP_PACKAGE_NAME = "com.microsoft.identity.testuserapp";
 
         /**
+         * Mock AuthApp package name.
+         */
+        public static final String MOCK_AUTH_APP_PACKAGE_NAME = "com.microsoft.mockauthapp";
+
+        /**
+         * Mock AuthApp SHA512 signature hash.
+         */
+        public static final String MOCK_AUTH_APP_SIGNATURE_SHA512 = "QhjKSYYD31K7+C4q4Mpd08crE0LN/3GgnKVVuej4JWckUTc0Wp/i//LWLQnANaWiAjdESJJrjavu0cE6hkQihQ==";
+
+        /**
+         * Mock CP package name.
+         */
+        public static final String MOCK_CP_PACKAGE_NAME = "com.microsoft.mockcp";
+
+        /**
+         * Mock CP SHA512 signature hash.
+         */
+        public static final String MOCK_CP_SIGNATURE_SHA512 = "EZ2RCcsmf869Ec41PgHHnFdI0MgmVsADFFy8AtcfEKsjD1YAPtKxCMZVdT+y+K1IWRnPk4Lf2PUAcL5N49OqAA==";
+
+        /**
+         * Mock LTW package name.
+         */
+        public static final String MOCK_LTW_PACKAGE_NAME = "com.microsoft.mockltw";
+
+        /**
+         * Mock LTW SHA512 signature hash.
+         */
+        public static final String MOCK_LTW_SIGNATURE_SHA512 = "felxzv/rpqa69dOADXVVKnawk5x8snBW2k/kDxzQLVkbcdzAvrGm8gcBRItzUGIQTupHCTWksN6WBGbn+b0KIA==";
+
+        /**
          * Intune app package name.
          */
         public static final String INTUNE_APP_PACKAGE_NAME = "com.microsoft.intune";

@@ -61,6 +61,7 @@ public class BrokerMsalControllerTest {
         final String anAccountName = "anAccountName";
         final String aHomeAccountId = "aHomeAccountId";
         final String aLocalAccountId = "aLocalAccountId";
+        final String aClientId = "aClientId";
         final String aCorrelationId = "aCorrelationId";
         final String accountAuthority = "https://login.microsoft.com/anAuthority";
         final String ssoUrl = "https://a.url.that.we.need/that/has/a/path?one_useless_param&sso_nonce=aNonceToUse&anotherUselessParam=foo";
@@ -104,6 +105,7 @@ public class BrokerMsalControllerTest {
                 .platformComponents(components)
                 .correlationId(aCorrelationId)
                 .accountName(anAccountName)
+                .clientId(aClientId)
                 .requestAuthority(accountAuthority)
                 .ssoUrl(ssoUrl)
                 .build();
