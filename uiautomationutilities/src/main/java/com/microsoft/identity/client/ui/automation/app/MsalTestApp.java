@@ -61,16 +61,20 @@ public class MsalTestApp extends App{
     // click on button acquire token interactive
     public String acquireToken(@NonNull final String username,
                                         @NonNull final String password,
-                                        @NonNull final PromptHandlerParameters promptHandlerParameters) throws UiObjectNotFoundException {
-        UiAutomatorUtils.handleInput("com.msft.identity.client.sample.local:id/loginHint", username);
+                                        final PromptHandlerParameters promptHandlerParameters) throws UiObjectNotFoundException {
+        if (promptHandlerParameters != null) {
+            UiAutomatorUtils.handleInput("com.msft.identity.client.sample.local:id/loginHint", username);
+        }
 
         UiObject acquireTokenButton = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/btn_acquiretoken");
         scrollToElement(acquireTokenButton);
         acquireTokenButton.click();
 
         // handle prompt
-        final MicrosoftStsPromptHandler microsoftStsPromptHandler = new MicrosoftStsPromptHandler((MicrosoftStsPromptHandlerParameters) promptHandlerParameters);
-        microsoftStsPromptHandler.handlePrompt(username, password);
+        if (promptHandlerParameters != null) {
+            final MicrosoftStsPromptHandler microsoftStsPromptHandler = new MicrosoftStsPromptHandler((MicrosoftStsPromptHandlerParameters) promptHandlerParameters);
+            microsoftStsPromptHandler.handlePrompt(username, password);
+        }
 
         // get token and return
         final UiObject result = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/txt_result");
