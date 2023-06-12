@@ -68,12 +68,7 @@ public class OneAuthTestApp extends App implements IFirstPartyApp {
 
     @Override
     protected void initialiseAppImpl() {
-
-    }
-
-    public void clickSignIn() {
-        Logger.i(TAG, "Clicking Sign In Button..");
-        UiAutomatorUtils.handleButtonClick("com.microsoft.oneauth.testapp:id/sign_in_button");
+        // nothing needed here
     }
 
     @Override
@@ -82,20 +77,25 @@ public class OneAuthTestApp extends App implements IFirstPartyApp {
     }
 
     @Override
-    public void addFirstAccount(@NonNull String username, @NonNull String password, @NonNull FirstPartyAppPromptHandlerParameters promptHandlerParameters) {
+    public void addFirstAccount(@NonNull final String username,
+                                @NonNull final String password,
+                                @NonNull final FirstPartyAppPromptHandlerParameters promptHandlerParameters) {
         Logger.i(TAG, "Adding First Account..");
-        clickSignIn();
-
         // sign in with supplied username/password
         signIn(username, password, promptHandlerParameters);
+    }
+
+    @Override
+    public void addAnotherAccount(@NonNull final String username,
+                                  @NonNull final String password,
+                                  @NonNull final FirstPartyAppPromptHandlerParameters promptHandlerParameters) {
+        // nothing needed here
     }
 
     public String acquireTokenInteractive(@NonNull final String username,
                                           @NonNull final String password,
                                           @NonNull final FirstPartyAppPromptHandlerParameters promptHandlerParameters) {
-        clickSignIn();
         signIn(username, password, promptHandlerParameters);
-
         return getTokeSecret();
     }
 
@@ -103,10 +103,10 @@ public class OneAuthTestApp extends App implements IFirstPartyApp {
         // Click Get Access token button
         UiAutomatorUtils.handleButtonClick("com.microsoft.oneauth.testapp:id/get_access_token_button");
         try {
-            // Add a delay so that token can be retrived successfully
+            // Add a delay so that UI is updated with the token successfully
             Thread.sleep(2000);
         } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+            e.printStackTrace();
         }
         return getTokeSecret();
     }
@@ -114,8 +114,9 @@ public class OneAuthTestApp extends App implements IFirstPartyApp {
     private void signIn(@NonNull final String username,
                         @NonNull final String password,
                         @NonNull final FirstPartyAppPromptHandlerParameters promptHandlerParameters) {
-        Logger.i(TAG, "Adding username and password on login screen..");
+        UiAutomatorUtils.handleButtonClick("com.microsoft.oneauth.testapp:id/sign_in_button");
 
+        Logger.i(TAG, "Adding username and password on login screen..");
         try {
             final UiObject emailField = UiAutomatorUtils.obtainUiObjectWithTextAndClassType(
                     "", EditText.class);
@@ -124,7 +125,7 @@ public class OneAuthTestApp extends App implements IFirstPartyApp {
                     "Next", Button.class);
             nextBtn.click();
         } catch (UiObjectNotFoundException e) {
-            throw new RuntimeException(e);
+            throw new AssertionError("Could not click on object with txt Next");
         }
 
         Logger.i(TAG, "Handle AAD Login page prompt..");
@@ -137,17 +138,12 @@ public class OneAuthTestApp extends App implements IFirstPartyApp {
     }
 
     @Override
-    public void addAnotherAccount(String username, String password, FirstPartyAppPromptHandlerParameters promptHandlerParameters) {
-
-    }
-
-    @Override
     public void onAccountAdded() {
-
+        // nothing needed here
     }
 
     @Override
-    public void confirmAccount(@NonNull String username) {
+    public void confirmAccount(@NonNull final String username) {
         // Make sure we are seeing the output text view
         final UiObject resultUIObject = UiAutomatorUtils.obtainUiObjectWithResourceId("com.microsoft.oneauth.testapp:id/txtGeneralInfo");
         try {
@@ -158,11 +154,13 @@ public class OneAuthTestApp extends App implements IFirstPartyApp {
     }
 
     public void assertSuccess() {
-        final UiObject resultUIObject = UiAutomatorUtils.obtainUiObjectWithResourceId("com.microsoft.oneauth.testapp:id/txtGeneralInfo");
-        final UiObject accountIdObject = UiAutomatorUtils.obtainUiObjectWithResourceId("com.microsoft.oneauth.testapp:id/txtAccountId");
         try {
+            final UiObject resultUIObject = UiAutomatorUtils.obtainUiObjectWithResourceId("com.microsoft.oneauth.testapp:id/txtGeneralInfo");
             resultUIObject.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
+
+            final UiObject accountIdObject = UiAutomatorUtils.obtainUiObjectWithResourceId("com.microsoft.oneauth.testapp:id/txtAccountId");
             accountIdObject.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
+
             Assert.assertTrue(resultUIObject.getText().contains("Result: Success"));
             Assert.assertFalse(TextUtils.isEmpty(resultUIObject.getText()));
             Assert.assertFalse(TextUtils.isEmpty(accountIdObject.getText()));
@@ -174,7 +172,7 @@ public class OneAuthTestApp extends App implements IFirstPartyApp {
     /**
      * Returns string list of all accounts available
      */
-    public void getAllAccounts() {
+    public List<String> getAllAccounts() {
         List<String> accountsList = new ArrayList<>();
         UiAutomatorUtils.handleButtonClick("com.microsoft.oneauth.testapp:id/get_all_accounts_button");
         final UiObject resultUIObject = UiAutomatorUtils.obtainUiObjectWithResourceId("com.microsoft.oneauth.testapp:id/all_accounts_list");
@@ -187,6 +185,7 @@ public class OneAuthTestApp extends App implements IFirstPartyApp {
         } catch (UiObjectNotFoundException e) {
             throw new RuntimeException(e);
         }
+        return accountsList;
     }
 
     public String getTokeSecret() {
