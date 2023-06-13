@@ -40,6 +40,7 @@ import com.microsoft.identity.common.internal.cache.HelloCache;
 import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.internal.controllers.BrokerMsalController;
 import com.microsoft.identity.common.internal.util.StringUtil;
+import com.microsoft.identity.common.java.exception.ErrorStrings;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -49,6 +50,8 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY;
+
+import lombok.SneakyThrows;
 
 @RunWith(RobolectricTestRunner.class)
 @Config(sdk = {Build.VERSION_CODES.N})
@@ -211,16 +214,67 @@ public class HelloCacheTests {
         }
     }
 
+    @SneakyThrows
+    @Test
+    public void testReadWrite_Expiry() {
+        final HelloCache cacheWrite = getHelloCache(protocolA, appVersion, 1000);
+        final HelloCache cacheRead = getHelloCache(protocolA, appVersion, 1000);
+
+        final String minimumVer = "1.0";
+        final String maximumVer = "2.5";
+        final String negotiatedVer = "2.0";
+
+        cacheWrite.saveNegotiatedProtocolVersion(minimumVer, maximumVer, negotiatedVer);
+        Assert.assertEquals(cacheRead.tryGetNegotiatedProtocolVersion(minimumVer, maximumVer), negotiatedVer);
+        Thread.sleep(2000);
+        Assert.assertNull(cacheRead.tryGetNegotiatedProtocolVersion(minimumVer, maximumVer));
+    }
+
+    @Test
+    public void testReadWrite_UnsupportedNegotiatedVersion() {
+        final HelloCache cacheWrite = getHelloCache(protocolA);
+        final HelloCache cacheRead = getHelloCache(protocolA);
+
+        final String minimumVer = "1.0";
+        final String maximumVer = "2.5";
+        final String negotiatedVer = ErrorStrings.UNSUPPORTED_BROKER_VERSION_ERROR_CODE;
+
+        cacheWrite.saveNegotiatedProtocolVersion(minimumVer, maximumVer, negotiatedVer);
+        Assert.assertEquals(cacheRead.tryGetNegotiatedProtocolVersion(minimumVer, maximumVer), negotiatedVer);
+    }
+
+    @SneakyThrows
+    @Test
+    public void testReadWrite_UnsupportedNegotiatedVersion_Expiry() {
+        final HelloCache cacheWrite = getHelloCache(protocolA, appVersion, 1000);
+        final HelloCache cacheRead = getHelloCache(protocolA, appVersion,1000);
+
+        final String minimumVer = "1.0";
+        final String maximumVer = "2.5";
+        final String negotiatedVer = ErrorStrings.UNSUPPORTED_BROKER_VERSION_ERROR_CODE;
+
+        cacheWrite.saveNegotiatedProtocolVersion(minimumVer, maximumVer, negotiatedVer);
+        Assert.assertEquals(cacheRead.tryGetNegotiatedProtocolVersion(minimumVer, maximumVer), negotiatedVer);
+        Thread.sleep(2000);
+        Assert.assertNull(cacheRead.tryGetNegotiatedProtocolVersion(minimumVer, maximumVer));
+    }
+
     private HelloCache getHelloCache(@NonNull final String protocol) {
         return getHelloCache(protocol, appVersion);
     }
 
     private HelloCache getHelloCache(@NonNull final String protocol,
                                      @Nullable final String appVersionCode) {
+        return this.getHelloCache(protocol, appVersionCode, 4);
+    }
+
+    private HelloCache getHelloCache(@NonNull final String protocol,
+                                     @Nullable final String appVersionCode,
+                                     final long timeoutInMs) {
 
         class HelloCacheMock extends HelloCache {
             public HelloCacheMock(@NonNull Context context, @NonNull String protocolName, @NonNull String targetAppPackageName) {
-                super(context, protocolName, targetAppPackageName, AndroidPlatformComponentsFactory.createFromContext(context));
+                super(context, protocolName, targetAppPackageName, AndroidPlatformComponentsFactory.createFromContext(context), timeoutInMs);
             }
 
             @NonNull @Override public String getVersionCode() throws PackageManager.NameNotFoundException {

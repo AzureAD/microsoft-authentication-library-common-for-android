@@ -28,13 +28,21 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Build;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
+import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
+import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.logging.Logger;
+
+import java.util.concurrent.TimeUnit;
+
+import edu.umd.cs.findbugs.annotations.Nullable;
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.Accessors;
 
 /**
  * Persisted cache for the IPC hello() protocol.
@@ -45,6 +53,7 @@ import com.microsoft.identity.common.logging.Logger;
  * 1. IPC operation is invoked for the very first time.
  * 2. Client bumps up protocol version.
  * 3. The targeted app is updated, uninstalled, reinstalled.
+ * 4. Cache entry is expired.
  */
 public class HelloCache {
     private static final String TAG = HelloCache.class.getSimpleName();
@@ -55,7 +64,9 @@ public class HelloCache {
     private final Context mContext;
     private final String mProtocolName;
     private final String mTargetAppPackageName;
+    private final long mTimeOutInMs;
     private static boolean sIsEnabled = true;
+    private static final long sTimeoutInMs = TimeUnit.HOURS.toMillis(4);
 
     /**
      * If set to false, Hello cache will be disabled.
@@ -70,7 +81,6 @@ public class HelloCache {
     }
 
     /**
-     * Default constructor.
      *  @param context              application context.
      * @param protocolName         name of the protocol that invokes hello().
      * @param targetAppPackageName package name of the app that this client will hello() with.
@@ -80,10 +90,27 @@ public class HelloCache {
                       final @NonNull String protocolName,
                       final @NonNull String targetAppPackageName,
                       final @NonNull IPlatformComponents components) {
+        this(context, protocolName, targetAppPackageName, components, sTimeoutInMs);
+    }
+
+    /**
+     *  @param context              application context.
+     * @param protocolName         name of the protocol that invokes hello().
+     * @param targetAppPackageName package name of the app that this client will hello() with.
+     * @param components           Platform components.
+     * @param timeoutInMs         Cache entry timeout.
+     */
+    public HelloCache(final @NonNull Context context,
+                      final @NonNull String protocolName,
+                      final @NonNull String targetAppPackageName,
+                      final @NonNull IPlatformComponents components,
+                      final long timeoutInMs
+    ) {
         mFileManager = components.getStorageSupplier().getUnencryptedNameValueStore(SHARED_PREFERENCE_NAME, String.class);
         mContext = context;
         mProtocolName = protocolName;
         mTargetAppPackageName = targetAppPackageName;
+        mTimeOutInMs = timeoutInMs;
     }
 
     /**
@@ -109,7 +136,26 @@ public class HelloCache {
             return null;
         }
 
-        return mFileManager.get(key);
+        final String negotiationValue = mFileManager.get(key);
+        if (StringUtil.isNullOrEmpty(negotiationValue)) {
+            return negotiationValue;
+        }
+
+        final HelloCacheValue cacheValue = HelloCacheValue.deserialize(negotiationValue);
+        if (cacheValue == null) {
+            Logger.info(methodTag, "Legacy or invalid cache value.");
+            mFileManager.remove(key);
+            return null;
+        }
+
+        // check if expired. Delete entry and return null.
+        if (System.currentTimeMillis() - cacheValue.getTimeStamp() > mTimeOutInMs) {
+            Logger.info(methodTag, "Cache entry is expired.");
+            mFileManager.remove(key);
+            return null;
+        }
+
+        return cacheValue.getNegotiatedValue();
     }
 
     /**
@@ -123,6 +169,44 @@ public class HelloCache {
                                               final @NonNull String clientMaximumProtocolVersion,
                                               final @NonNull String negotiatedProtocolVersion) {
         final String methodTag = TAG + ":saveNegotiatedProtocolVersion";
+        this.saveNegotiatedValue(clientMinimumProtocolVersion, clientMaximumProtocolVersion, negotiatedProtocolVersion, methodTag);
+    }
+
+
+    /**
+     * Store the given negotiated protocol version into the cache.
+     *
+     * @param clientMinimumProtocolVersion minimum version of the protocol that the client supports.
+     * @param clientMaximumProtocolVersion maximum version of the protocol that to be advertised by the client.
+     */
+    public void saveHandShakeError(
+            final @Nullable String clientMinimumProtocolVersion,
+            final @NonNull String clientMaximumProtocolVersion
+    ) {
+        final String methodTag = TAG + ":saveHandShakeError";
+        this.saveNegotiatedValue(
+                clientMinimumProtocolVersion,
+                clientMaximumProtocolVersion,
+                ErrorStrings.UNSUPPORTED_BROKER_VERSION_ERROR_CODE,
+                methodTag
+        );
+    }
+
+
+    /**
+     * Store the given negotiated protocol version into the cache.
+     *
+     * @param clientMinimumProtocolVersion minimum version of the protocol that the client supports.
+     * @param clientMaximumProtocolVersion maximum version of the protocol that to be advertised by the client.
+     * @param negotiationValue    the negotiated protocol version as returned from hello().
+     */
+    private void saveNegotiatedValue(
+            @Nullable final String clientMinimumProtocolVersion,
+            @NonNull final String clientMaximumProtocolVersion,
+            @NonNull final String negotiationValue,
+            @NonNull final String callerMethodTag
+    ) {
+        final String methodTag = TAG + callerMethodTag + ":saveNegotiatedProtocolVersion";
 
         if (!sIsEnabled) {
             Logger.infoPII(methodTag, "hello cache is not enabled.");
@@ -137,8 +221,10 @@ public class HelloCache {
             return;
         }
 
-        mFileManager.put(key, negotiatedProtocolVersion);
+        HelloCacheValue value = new HelloCacheValue(negotiationValue, System.currentTimeMillis());
+        mFileManager.put(key, value.serialize());
     }
+
 
     /**
      * Generates {@link SharedPreferencesFileManager}'s s cache key for the negotiated protocol version.
@@ -166,6 +252,48 @@ public class HelloCache {
             return String.valueOf(packageInfo.getLongVersionCode());
         } else {
             return String.valueOf(packageInfo.versionCode);
+        }
+    }
+
+    @RequiredArgsConstructor
+    @Accessors(prefix = "m")
+    @Getter
+    private static class HelloCacheValue {
+        private static final String TAG = HelloCacheValue.class.getSimpleName();
+        /**
+         * Stores either negotiated protocol value or handshake error.
+         */
+        private final String mNegotiatedValue;
+        /**
+         * Time stamp of entry.
+         */
+        private final long mTimeStamp;
+
+        @NonNull
+        String serialize() {
+            return String.format("%s,%d", mNegotiatedValue, mTimeStamp);
+        }
+
+        /**
+         * Reads raw entry from cache into HelloCacheValue object.
+         * @param value cache entry read from file expected to be in format <negotiated protocol version>,<timestamp>
+         * @return null if value is not valid.
+         */
+        @Nullable
+        static HelloCacheValue deserialize(@NonNull final String value) {
+            final String methodTag = TAG + ":deserialize";
+            final String[] values = value.split(",");
+            if (values.length <= 1) {
+                Logger.warn(methodTag, "Legacy or Invalid cache entry. " + value);
+                return null;
+            }
+            try {
+                final long timeStamp = Long.parseLong(values[1]);
+                return new HelloCacheValue(values[0], timeStamp);
+            } catch (final NumberFormatException e) {
+                Logger.error(methodTag, "Invalid cache entry. " + value, e);
+                return null;
+            }
         }
     }
 }

@@ -46,11 +46,11 @@ android {
     def final appSourceLocalApk = "LocalApk"
 
     // defaults to LocalApkFile - the file must be pushed to the device before tests
-    def brokerInstallationSource = appSourcePlayStore
+    def brokerInstallationSource = appSourceLocalApk
 
-    def brokerUpdationSource = appSourcePlayStore
+    def brokerUpdationSource = appSourceLocalApk
 
-    def wordAppInstallationSource = appSourcePlayStore
+    def wordAppInstallationSource = appSourceLocalApk
 
     if (project.hasProperty("brokerSource")) {
         if (brokerSource.equalsIgnoreCase(appSourcePlayStore)) {

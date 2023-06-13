@@ -92,6 +92,7 @@ import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.exception.ServiceException;
+import com.microsoft.identity.common.java.exception.UnsupportedBrokerException;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftRefreshToken;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.ClientInfo;
@@ -156,7 +157,7 @@ public class BrokerMsalController extends BaseController {
     @VisibleForTesting
     public HelloCache getHelloCache() {
         return new HelloCache(mApplicationContext, MSAL_TO_BROKER_PROTOCOL_NAME, mActiveBrokerPackageName,
-                mComponents);
+                mComponents, 4);
     }
 
     /**
@@ -220,11 +221,15 @@ public class BrokerMsalController extends BaseController {
     String hello(final @NonNull IIpcStrategy strategy,
                  final @Nullable String minRequestedVersion,
                  final @NonNull String clientMaxProtocolVersion) throws BaseException {
-
+        final String methodTag = TAG + ":hello";
         final String cachedProtocolVersion = mHelloCache.tryGetNegotiatedProtocolVersion(
                 minRequestedVersion, clientMaxProtocolVersion);
 
         if (!StringUtil.isEmpty(cachedProtocolVersion)) {
+            if (cachedProtocolVersion.equals(ErrorStrings.UNSUPPORTED_BROKER_VERSION_ERROR_CODE)) {
+                Logger.info(methodTag, "Handshake error from cache. Throwing exception");
+                throw new UnsupportedBrokerException(mActiveBrokerPackageName);
+            }
             return cachedProtocolVersion;
         }
 
@@ -246,17 +251,25 @@ public class BrokerMsalController extends BaseController {
                 mActiveBrokerPackageName,
                 bundle);
 
-        final String negotiatedProtocolVersion = mResultAdapter.verifyHelloFromResultBundle(
-                mActiveBrokerPackageName,
-                strategy.communicateToBroker(helloBundle)
-        );
+        try {
+            final String negotiatedProtocolVersion = mResultAdapter.verifyHelloFromResultBundle(
+                    mActiveBrokerPackageName,
+                    strategy.communicateToBroker(helloBundle)
+            );
 
-        mHelloCache.saveNegotiatedProtocolVersion(
-                minRequestedVersion,
-                clientMaxProtocolVersion,
-                negotiatedProtocolVersion);
+            mHelloCache.saveNegotiatedProtocolVersion(
+                    minRequestedVersion,
+                    clientMaxProtocolVersion,
+                    negotiatedProtocolVersion);
 
-        return negotiatedProtocolVersion;
+            return negotiatedProtocolVersion;
+        } catch (final UnsupportedBrokerException unsupportedBrokerException) {
+            mHelloCache.saveHandShakeError(
+                    minRequestedVersion,
+                    clientMaxProtocolVersion
+            );
+            throw unsupportedBrokerException;
+        }
     }
 
     /**
