@@ -106,6 +106,15 @@ data class BrokerData(val packageName : String,
             }
         }
 
+        /**
+         * Returns true if the owner of the [Context] is a broker app
+         * which relies on AccountManager as a broker discovery mechanism.
+         * */
+        @JvmStatic
+        fun isAccountManagerSupported(context: Context): Boolean {
+            return accountManagerBrokers.contains(context.packageName)
+        }
+
         @JvmStatic
         val debugMicrosoftAuthenticator = BrokerData(
             AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME,
@@ -159,6 +168,18 @@ data class BrokerData(val packageName : String,
             AuthenticationConstants.Broker.LTW_APP_PACKAGE_NAME,
             AuthenticationConstants.Broker.LTW_APP_SHA512_DEBUG_SIGNATURE
         )
+
+        @JvmStatic
+        val accountManagerBrokers: Set<String> =
+            Collections.unmodifiableSet(object : HashSet<String>() {
+                init {
+                    add(AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME)
+                    add(AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME)
+                    add(AuthenticationConstants.Broker.BROKER_HOST_APP_PACKAGE_NAME)
+                    add(AuthenticationConstants.Broker.MOCK_AUTH_APP_PACKAGE_NAME)
+                    add(AuthenticationConstants.Broker.MOCK_CP_PACKAGE_NAME)
+                }
+            })
 
         @JvmStatic
         val debugBrokers: Set<BrokerData> =
