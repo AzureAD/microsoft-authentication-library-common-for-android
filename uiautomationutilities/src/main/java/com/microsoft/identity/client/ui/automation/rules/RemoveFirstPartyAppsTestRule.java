@@ -24,6 +24,7 @@ package com.microsoft.identity.client.ui.automation.rules;
 
 import android.util.Log;
 
+import com.microsoft.identity.client.ui.automation.app.MsalTestApp;
 import com.microsoft.identity.client.ui.automation.app.OutlookApp;
 import com.microsoft.identity.client.ui.automation.app.TeamsApp;
 import com.microsoft.identity.client.ui.automation.app.WordApp;
@@ -51,6 +52,7 @@ public class RemoveFirstPartyAppsTestRule implements TestRule {
                 new TeamsApp().uninstall();
                 new WordApp().uninstall();
                 new BrowserEdge().uninstall();
+                new MsalTestApp().uninstall();
 
                 base.evaluate();
             }
