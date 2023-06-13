@@ -30,6 +30,7 @@ import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInS
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartUsingPasswordCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitPasswordCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInWithSLTCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpContinueCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpStartCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpStartUsingPasswordCommandParameters
@@ -181,6 +182,21 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
             oob = parameters.code,
             scopes = parameters.scopes,
             credentialToken = parameters.credentialToken,
+            clientId = config.clientId,
+            challengeType = config.challengeType,
+            requestUrl = signInTokenEndpoint,
+            headers = getRequestHeaders()
+        )
+    }
+
+    fun createSLTTokenRequest(
+        parameters: SignInWithSLTCommandParameters
+    ): SignInTokenRequest {
+        LogSession.logMethodCall(tag = TAG)
+
+        return SignInTokenRequest.createSltTokenRequest(
+            signInSlt = parameters.signInSLT,
+            scopes = parameters.scopes,
             clientId = config.clientId,
             challengeType = config.challengeType,
             requestUrl = signInTokenEndpoint,

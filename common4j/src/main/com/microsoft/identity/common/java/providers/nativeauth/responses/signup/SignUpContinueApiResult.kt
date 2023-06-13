@@ -24,7 +24,12 @@ package com.microsoft.identity.common.java.providers.nativeauth.responses.signup
 
 sealed interface SignUpContinueApiResult {
     object Redirect : SignUpContinueApiResult
-    object Success : SignUpContinueApiResult
+
+    data class Success(
+        val signInSLT: String?,
+        val expiresIn: Int?
+    ) : SignUpContinueApiResult
+
     data class AttributesRequired(
         val signupToken: String,
         val error: String,
@@ -54,8 +59,7 @@ sealed interface SignUpContinueApiResult {
         val error: String,
         val errorDescription: String,
         val details: List<Map<String, String>>?
-    ) :
-        SignUpContinueApiResult
+    ) : SignUpContinueApiResult
 
     data class InvalidPassword(
         val error: String,

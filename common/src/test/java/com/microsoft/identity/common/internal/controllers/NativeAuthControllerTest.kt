@@ -42,6 +42,7 @@ import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInS
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartUsingPasswordCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitPasswordCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInWithSLTCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpResendCodeCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpStartCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpStartUsingPasswordCommandParameters
@@ -74,6 +75,7 @@ class NativeAuthControllerTest {
     private val password = "verySafePassword"
     private val passwordResetToken = "sk490fj8a83n*@f-2"
     private val passwordSubmitToken = "sk490fj8a83n*@f-3"
+    private val signInSLT = "1234"
     private val newPassword = "newPassword"
     private val clientId = "079af063-4ea7-4dcd-91ff-2b24f54621ea"
     private val authorityUrl = "https://msidlabciam1.ciamlogin.com/msidlabciam1.onmicrosoft.com"
@@ -255,6 +257,125 @@ class NativeAuthControllerTest {
         val parameters = createSignInStartCommandParameters()
         val result = controller.signInStart(parameters)
         assert(result is SignInCommandResult.PasswordRequired)
+    }
+
+    @Test
+    fun testSignInWithSLTSuccess() {
+        val correlationId = UUID.randomUUID().toString()
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpointType.SignInToken,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.TOKEN_SUCCESS
+        )
+
+        val parameters = createSignInWithSLTCommandParameters()
+        val result = controller.signInWithSLT(parameters)
+        assert(result is SignInCommandResult.Complete)
+    }
+
+    @Test
+    fun testSignInWithSLTChallengeRedirect() {
+        val correlationId = UUID.randomUUID().toString()
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpointType.SignInToken,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.CREDENTIAL_REQUIRED
+        )
+
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpointType.SignInChallenge,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.CHALLENGE_TYPE_REDIRECT
+        )
+
+        val parameters = createSignInWithSLTCommandParameters()
+        val result = controller.signInWithSLT(parameters)
+        assert(result is CommandResult.UnknownError)
+    }
+
+    @Test
+    fun testSignInWithSLTChallengeCodeRequired() {
+        val correlationId = UUID.randomUUID().toString()
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpointType.SignInToken,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.CREDENTIAL_REQUIRED
+        )
+
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpointType.SignInChallenge,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.CHALLENGE_TYPE_OOB
+        )
+
+        val parameters = createSignInWithSLTCommandParameters()
+        val result = controller.signInWithSLT(parameters)
+        assert(result is CommandResult.UnknownError)
+    }
+
+    @Test
+    fun testSignInWithSLTChallengePasswordRequired() {
+        val correlationId = UUID.randomUUID().toString()
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpointType.SignInToken,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.CREDENTIAL_REQUIRED
+        )
+
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpointType.SignInChallenge,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.CHALLENGE_TYPE_PASSWORD
+        )
+
+        val parameters = createSignInWithSLTCommandParameters()
+        val result = controller.signInWithSLT(parameters)
+        assert(result is CommandResult.UnknownError)
+    }
+
+    @Test
+    fun testSignInWithSLTCodeIncorrect() {
+        val correlationId = UUID.randomUUID().toString()
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpointType.SignInToken,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.INVALID_OOB_VALUE
+        )
+
+        val parameters = createSignInWithSLTCommandParameters()
+        val result = controller.signInWithSLT(parameters)
+        assert(result is CommandResult.UnknownError)
+        assert((result as CommandResult.UnknownError).errorCode == "unexpected_api_result")
+    }
+
+    @Test
+    fun testSignInWithSLTUserNotFound() {
+        val correlationId = UUID.randomUUID().toString()
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpointType.SignInToken,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.USER_NOT_FOUND
+        )
+
+        val parameters = createSignInWithSLTCommandParameters()
+        val result = controller.signInWithSLT(parameters)
+        assert(result is CommandResult.UnknownError)
+        assert((result as CommandResult.UnknownError).errorCode == "unexpected_api_result")
+    }
+
+    @Test
+    fun testSignInWithSLTPasswordIncorrect() {
+        val correlationId = UUID.randomUUID().toString()
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpointType.SignInToken,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.SIGNIN_INVALID_PASSWORD
+        )
+
+        val parameters = createSignInWithSLTCommandParameters()
+        val result = controller.signInWithSLT(parameters)
+        assert(result is CommandResult.UnknownError)
+        assert((result as CommandResult.UnknownError).errorCode == "unexpected_api_result")
     }
     //endregion
 
@@ -805,6 +926,24 @@ class NativeAuthControllerTest {
             .oAuth2TokenCache(createCache())
             .sdkType(SdkType.MSAL)
             .requiredBrokerProtocolVersion(BrokerProtocolVersionUtil.MSAL_TO_BROKER_PROTOCOL_COMPRESSION_CHANGES_MINIMUM_VERSION)
+            .build()
+    }
+
+    private fun createSignInWithSLTCommandParameters(): SignInWithSLTCommandParameters {
+        val authenticationScheme = AuthenticationSchemeFactory.createScheme(
+            AndroidPlatformComponents.createFromContext(context),
+            null
+        )
+
+        return SignInWithSLTCommandParameters.builder()
+            .authenticationScheme(authenticationScheme)
+            .authority(NativeAuthCIAMAuthority.getAuthorityFromAuthorityUrl(authorityUrl, clientId))
+            .clientId(clientId)
+            .platformComponents(platformComponents)
+            .oAuth2TokenCache(createCache())
+            .sdkType(SdkType.MSAL)
+            .requiredBrokerProtocolVersion(BrokerProtocolVersionUtil.MSAL_TO_BROKER_PROTOCOL_COMPRESSION_CHANGES_MINIMUM_VERSION)
+            .signInSLT(signInSLT)
             .build()
     }
 

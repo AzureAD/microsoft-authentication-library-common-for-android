@@ -33,11 +33,12 @@ interface SignUpCommandResult {
         val errorCode: String,
         val errorDescription: String,
         val details: List<Map<String, String>>?
-    ) :
-        SignUpStartCommandResult
+    ) : SignUpStartCommandResult
 
-    object Complete :
-        SignUpStartCommandResult,
+    data class Complete (
+        val signInSLT: String?,
+        val expiresIn: Int?
+    ) : SignUpStartCommandResult,
         SignUpSubmitCodeCommandResult, SignUpSubmitPasswordCommandResult,
         SignUpSubmitUserAttributesCommandResult
 
@@ -59,30 +60,26 @@ interface SignUpCommandResult {
         val errorCode: String,
         val errorDescription: String,
         val requiredAttributes: List<Map<String, String>>
-    ) :
-        SignUpStartCommandResult, SignUpSubmitPasswordCommandResult,
+    ) : SignUpStartCommandResult, SignUpSubmitPasswordCommandResult,
         SignUpSubmitUserAttributesCommandResult,
         SignUpSubmitCodeCommandResult
 
     data class InvalidPassword(
         val errorCode: String,
         val errorDescription: String
-    ) :
-        SignUpStartCommandResult, SignUpSubmitPasswordCommandResult
+    ) : SignUpStartCommandResult, SignUpSubmitPasswordCommandResult
 
     data class InvalidCode(
         val errorCode: String,
         val errorDescription: String,
         val details: List<Map<String, String>>?
-    ) :
-        SignUpSubmitCodeCommandResult
+    ) : SignUpSubmitCodeCommandResult
 
     data class InvalidAttributes(
         val errorCode: String,
         val errorDescription: String,
         val invalidAttributes: List<Map<String, String>>
-    ) :
-        SignUpStartCommandResult,
+    ) : SignUpStartCommandResult,
         SignUpSubmitUserAttributesCommandResult
 
     data class AuthNotSupported(

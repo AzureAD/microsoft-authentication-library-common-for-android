@@ -111,7 +111,7 @@ data class SignInTokenRequest private constructor(
         fun createSltTokenRequest(
             signInSlt: String,
             clientId: String,
-            scope: String? = null,
+            scopes: List<String>? = null,
             challengeType: String? = null,
             requestUrl: String,
             headers: Map<String, String?>
@@ -128,9 +128,9 @@ data class SignInTokenRequest private constructor(
                 parameters = NativeAuthRequestSignInTokenParameters(
                     signInSlt = signInSlt,
                     clientId = clientId,
-                    grantType = NativeAuthConstants.GrantType.OOB,
+                    grantType = NativeAuthConstants.GrantType.SLT,
                     challengeType = challengeType,
-                    scope = scope
+                    scope = scopes?.joinToString(" ")
                 ),
                 requestUrl = URL(requestUrl),
                 headers = headers

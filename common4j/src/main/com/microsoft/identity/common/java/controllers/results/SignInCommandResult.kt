@@ -25,20 +25,21 @@ package com.microsoft.identity.common.java.controllers.results
 import com.microsoft.identity.common.java.result.ILocalAuthenticationResult
 
 sealed interface SignInStartCommandResult
+sealed interface SignInWithSLTCommandResult
 sealed interface SignInSubmitCodeCommandResult
 sealed interface SignInResendCodeCommandResult
 sealed interface SignInSubmitPasswordCommandResult
 
 interface SignInCommandResult {
     data class Complete(val authenticationResult: ILocalAuthenticationResult) :
-        SignInStartCommandResult, SignInSubmitCodeCommandResult, SignInSubmitPasswordCommandResult
+        SignInStartCommandResult, SignInWithSLTCommandResult, SignInSubmitCodeCommandResult, SignInSubmitPasswordCommandResult
 
     object InvalidAuthenticationType
         :
         SignInStartCommandResult
 
     data class PasswordRequired(val credentialToken: String) :
-        SignInStartCommandResult
+        SignInStartCommandResult, SignInWithSLTCommandResult
 
     data class CodeRequired(
         val credentialToken: String,
@@ -46,7 +47,7 @@ interface SignInCommandResult {
         val challengeChannel: String,
         val codeLength: Int
     ) :
-        SignInStartCommandResult, SignInResendCodeCommandResult, SignInSubmitPasswordCommandResult
+        SignInStartCommandResult, SignInWithSLTCommandResult, SignInResendCodeCommandResult, SignInSubmitPasswordCommandResult
 
     data class UserNotFound(val errorCode: String, val errorDescription: String) :
         SignInStartCommandResult

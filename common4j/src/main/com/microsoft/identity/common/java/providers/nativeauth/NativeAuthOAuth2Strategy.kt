@@ -31,6 +31,7 @@ import com.microsoft.identity.common.java.commands.parameters.nativeauth.ResetPa
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartUsingPasswordCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitCodeCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInWithSLTCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitPasswordCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpStartCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpStartUsingPasswordCommandParameters
@@ -133,6 +134,15 @@ class NativeAuthOAuth2Strategy(
     ): SignInTokenApiResult {
         LogSession.logMethodCall(tag = TAG)
         return signInInteractor.performROPCTokenRequest(
+            parameters = parameters
+        )
+    }
+
+    fun performSLTTokenRequest(
+        parameters: SignInWithSLTCommandParameters
+    ): SignInTokenApiResult {
+        LogSession.logMethodCall(tag = TAG)
+        return signInInteractor.performSLTTokenRequest(
             parameters = parameters
         )
     }

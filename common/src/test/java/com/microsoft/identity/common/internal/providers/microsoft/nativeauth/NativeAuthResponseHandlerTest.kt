@@ -120,6 +120,8 @@ class NativeAuthResponseHandlerTest {
     private val tokenType = "Bearer"
     private val scope = "openid profile"
     private val refreshToken = "5678"
+    private val signInSLT = "12345"
+    private val expiresIn = 500
     private val idToken = "9012"
     private val accessToken = "1234"
     private val attributeValidationFailedErrorCode = "attribute_validation_failed"
@@ -375,6 +377,26 @@ class NativeAuthResponseHandlerTest {
             signupToken = null,
             error = null,
             errorCodes = null,
+            signInSLT = signInSLT,
+            errorDescription = null,
+            unverifiedAttributes = null,
+            invalidAttributes = null,
+            expiresIn = expiresIn,
+            requiredAttributes = null,
+            details = null
+        )
+        val apiResult = signUpContinueApiResponse.toResult()
+        assertTrue(apiResult is SignUpContinueApiResult.Success)
+        assertEquals((apiResult as SignUpContinueApiResult.Success).signInSLT, signInSLT)
+    }
+
+    fun testSignUpContinueApiResponseNoSLT() {
+        val signUpContinueApiResponse = SignUpContinueApiResponse(
+            statusCode = successStatusCode,
+            signupToken = null,
+            error = null,
+            errorCodes = null,
+            signInSLT = null,
             errorDescription = null,
             unverifiedAttributes = null,
             invalidAttributes = null,
@@ -384,6 +406,7 @@ class NativeAuthResponseHandlerTest {
         )
         val apiResult = signUpContinueApiResponse.toResult()
         assertTrue(apiResult is SignUpContinueApiResult.Success)
+        assertEquals((apiResult as SignUpContinueApiResult.Success).signInSLT, null)
     }
 
     @Test(expected = ClientException::class)
@@ -393,6 +416,7 @@ class NativeAuthResponseHandlerTest {
             signupToken = null,
             error = null,
             errorCodes = null,
+            signInSLT = null,
             errorDescription = null,
             unverifiedAttributes = null,
             invalidAttributes = null,
@@ -410,6 +434,7 @@ class NativeAuthResponseHandlerTest {
             signupToken = signupToken,
             error = nullString,
             errorCodes = null,
+            signInSLT = null,
             errorDescription = nullString,
             unverifiedAttributes = null,
             invalidAttributes = null,
@@ -428,6 +453,7 @@ class NativeAuthResponseHandlerTest {
             signupToken = signupToken,
             error = attributesRequiredError,
             errorCodes = null,
+            signInSLT = null,
             errorDescription = userAttributesRequiredErrorDescription,
             unverifiedAttributes = null,
             invalidAttributes = null,
@@ -446,6 +472,7 @@ class NativeAuthResponseHandlerTest {
             statusCode = errorStatusCode,
             signupToken = signupToken,
             error = credentialRequiredError,
+            signInSLT = null,
             errorCodes = null,
             errorDescription = credentialRequiredErrorDescription,
             unverifiedAttributes = null,

@@ -40,7 +40,8 @@ import java.net.HttpURLConnection
 
 data class SignUpContinueApiResponse(
     @Expose override var statusCode: Int,
-    @Expose @SerializedName("expires_in") val expiresIn: Long?,
+    @Expose @SerializedName("signin_slt") val signInSLT: String?,
+    @Expose @SerializedName("expires_in") val expiresIn: Int?,
     @Expose @SerializedName("error") val error: String?,
     @Expose @SerializedName("error_codes") val errorCodes: List<Int>?,
     @Expose @SerializedName("error_description") val errorDescription: String?,
@@ -107,7 +108,10 @@ data class SignUpContinueApiResponse(
                 )
             }
         } else {
-            return SignUpContinueApiResult.Success
+            SignUpContinueApiResult.Success(
+                signInSLT = signInSLT,
+                expiresIn = expiresIn
+            )
         }
     }
 }

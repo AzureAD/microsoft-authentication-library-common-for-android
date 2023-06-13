@@ -39,6 +39,7 @@ import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInS
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartUsingPasswordCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitPasswordCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInWithSLTCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpResendCodeCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpStartCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpStartUsingPasswordCommandParameters
@@ -56,6 +57,7 @@ import com.microsoft.identity.common.java.controllers.results.SignInResendCodeCo
 import com.microsoft.identity.common.java.controllers.results.SignInStartCommandResult
 import com.microsoft.identity.common.java.controllers.results.SignInSubmitCodeCommandResult
 import com.microsoft.identity.common.java.controllers.results.SignInSubmitPasswordCommandResult
+import com.microsoft.identity.common.java.controllers.results.SignInWithSLTCommandResult
 import com.microsoft.identity.common.java.controllers.results.SignUpCommandResult
 import com.microsoft.identity.common.java.controllers.results.SignUpResendCodeCommandResult
 import com.microsoft.identity.common.java.controllers.results.SignUpStartCommandResult
@@ -119,7 +121,6 @@ class NativeAuthController : BaseNativeAuthController() {
             } else {
                 signInStartNonROPC(parameters as SignInStartCommandParameters, oAuth2Strategy)
             }
-            // TODO add case for use of signInSLT
         } catch (e: Exception) {
             LogSession.logException(tag = TAG, throwable = e)
             throw e
@@ -144,10 +145,6 @@ class NativeAuthController : BaseNativeAuthController() {
             parameters = parametersWithScopes
         )
         return when (tokenApiResult) {
-            SignInTokenApiResult.Redirect -> {
-                CommandResult.Redirect
-            }
-
             is SignInTokenApiResult.Success -> {
                 saveAndReturnTokens(
                     oAuth2Strategy = oAuth2Strategy,
@@ -198,7 +195,7 @@ class NativeAuthController : BaseNativeAuthController() {
 
     private fun signInStartNonROPC(
         parameters: SignInStartCommandParameters,
-        oAuth2Strategy: NativeAuthOAuth2Strategy,
+        oAuth2Strategy: NativeAuthOAuth2Strategy
     ): SignInStartCommandResult {
         LogSession.logMethodCall(tag = TAG)
 
@@ -245,6 +242,62 @@ class NativeAuthController : BaseNativeAuthController() {
         }
     }
 
+    fun signInWithSLT(parameters: SignInWithSLTCommandParameters): SignInWithSLTCommandResult {
+        LogSession.logMethodCall(tag = TAG)
+
+        try {
+            val strategyParameters = OAuth2StrategyParameters.builder()
+                .platformComponents(parameters.platformComponents)
+                .build()
+
+            val oAuth2Strategy = parameters
+                .authority
+                .createOAuth2Strategy(strategyParameters)
+
+            val mergedScopes = addDefaultScopes(parameters.scopes)
+            val parametersWithScopes = CommandUtil.createSignInWithSLTCommandParametersWithScopes(
+                parameters,
+                mergedScopes
+            )
+
+            val tokenApiResult = performSLTTokenRequest(
+                oAuth2Strategy = oAuth2Strategy,
+                parameters = parametersWithScopes
+            )
+
+            when (tokenApiResult) {
+                is SignInTokenApiResult.Success -> {
+                    return saveAndReturnTokens(
+                        oAuth2Strategy = oAuth2Strategy,
+                        parametersWithScopes = parametersWithScopes,
+                        tokenApiResult = tokenApiResult
+                    )
+                }
+                is SignInTokenApiResult.UnknownError -> {
+                    return CommandResult.UnknownError(
+                        errorCode = tokenApiResult.error,
+                        errorDescription = tokenApiResult.errorDescription
+                    )
+                }
+                is SignInTokenApiResult.CredentialRequired, is SignInTokenApiResult.CodeIncorrect, is SignInTokenApiResult.UserNotFound, is SignInTokenApiResult.PasswordIncorrect -> {
+                    // This shouldn't be possible in SLT, throw unknown error
+                    LogSession.log(
+                        tag = TAG,
+                        logLevel = Logger.LogLevel.WARN,
+                        message = "Unexpected result: $tokenApiResult"
+                    )
+                    return CommandResult.UnknownError(
+                        errorCode = "unexpected_api_result",
+                        errorDescription = "API returned unexpected result: $tokenApiResult"
+                    )
+                }
+            }
+        } catch (e: Exception) {
+            LogSession.logException(tag = TAG, throwable = e)
+            throw e
+        }
+    }
+
     fun signInSubmitCode(parameters: SignInSubmitCodeCommandParameters): SignInSubmitCodeCommandResult {
         LogSession.logMethodCall(tag = TAG)
 
@@ -271,10 +324,6 @@ class NativeAuthController : BaseNativeAuthController() {
                 parameters = parametersWithScopes
             )
             return when (tokenApiResult) {
-                SignInTokenApiResult.Redirect -> {
-                    CommandResult.Redirect
-                }
-
                 is SignInTokenApiResult.Success -> {
                     saveAndReturnTokens(
                         oAuth2Strategy = oAuth2Strategy,
@@ -423,11 +472,6 @@ class NativeAuthController : BaseNativeAuthController() {
                         tokenApiResult = result
                     )
                 }
-
-                SignInTokenApiResult.Redirect -> {
-                    CommandResult.Redirect
-                }
-
                 is SignInTokenApiResult.UnknownError -> {
                     LogSession.log(
                         tag = TAG,
@@ -789,6 +833,16 @@ class NativeAuthController : BaseNativeAuthController() {
         )
     }
 
+    private fun performSLTTokenRequest(
+        oAuth2Strategy: NativeAuthOAuth2Strategy,
+        parameters: SignInWithSLTCommandParameters
+    ): SignInTokenApiResult {
+        LogSession.logMethodCall(tag = TAG)
+        return oAuth2Strategy.performSLTTokenRequest(
+            parameters = parameters
+        )
+    }
+
     private fun performOOBTokenRequest(
         oAuth2Strategy: NativeAuthOAuth2Strategy,
         parameters: SignInSubmitCodeCommandParameters
@@ -1000,7 +1054,6 @@ class NativeAuthController : BaseNativeAuthController() {
                     errorDescription = this.errorDescription
                 )
             }
-
             is SignInChallengeApiResult.OOBRequired -> {
                 LogSession.log(
                     tag = TAG,
@@ -1321,7 +1374,10 @@ class NativeAuthController : BaseNativeAuthController() {
     ): SignUpSubmitCodeCommandResult {
         return when (this) {
             is SignUpContinueApiResult.Success -> {
-                SignUpCommandResult.Complete
+                SignUpCommandResult.Complete(
+                    signInSLT = this.signInSLT,
+                    expiresIn = this.expiresIn
+                )
             }
 
             is SignUpContinueApiResult.AttributesRequired -> {
@@ -1386,7 +1442,10 @@ class NativeAuthController : BaseNativeAuthController() {
     ): SignUpSubmitUserAttributesCommandResult {
         return when (this) {
             is SignUpContinueApiResult.Success -> {
-                SignUpCommandResult.Complete
+                SignUpCommandResult.Complete(
+                    signInSLT = this.signInSLT,
+                    expiresIn = this.expiresIn
+                )
             }
 
             is SignUpContinueApiResult.AttributesRequired -> {
@@ -1451,7 +1510,10 @@ class NativeAuthController : BaseNativeAuthController() {
     ): SignUpSubmitPasswordCommandResult {
         return when (this) {
             is SignUpContinueApiResult.Success -> {
-                SignUpCommandResult.Complete
+                SignUpCommandResult.Complete(
+                    signInSLT = this.signInSLT,
+                    expiresIn = this.expiresIn
+                )
             }
 
             is SignUpContinueApiResult.AttributesRequired -> {

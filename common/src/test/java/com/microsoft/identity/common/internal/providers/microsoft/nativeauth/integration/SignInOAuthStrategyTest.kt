@@ -30,6 +30,7 @@ import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInS
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartUsingPasswordCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitPasswordCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInWithSLTCommandParameters
 import com.microsoft.identity.common.java.interfaces.PlatformComponents
 import com.microsoft.identity.common.java.logging.DiagnosticContext
 import com.microsoft.identity.common.java.net.UrlConnectionHttpClient
@@ -91,6 +92,7 @@ class SignInOAuthStrategyTest {
     private val credentialToken = "uY29tL2F1dGhlbnRpY"
     private val grantType = "oob"
     private val oob = "1234"
+    private val signInSLT = "12345"
 
     private val mockConfig = mock<NativeAuthOAuth2Configuration>()
     private val mockStrategyParams = mock<OAuth2StrategyParameters>()
@@ -432,6 +434,66 @@ class SignInOAuthStrategyTest {
             .build()
 
         val result = nativeAuthOAuth2Strategy.performPasswordTokenRequest(
+            parameters = parameters
+        )
+        Assert.assertTrue(result is SignInTokenApiResult.UserNotFound)
+    }
+
+    @Test
+    fun testPerformSLTTokenRequest() {
+        val correlationId = UUID.randomUUID().toString()
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpointType.SignInToken,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.TOKEN_SUCCESS
+        )
+
+        val parameters = SignInWithSLTCommandParameters.builder()
+            .platformComponents(mock<PlatformComponents>())
+            .signInSLT(signInSLT)
+            .build()
+
+        val result = nativeAuthOAuth2Strategy.performSLTTokenRequest(
+            parameters = parameters
+        )
+        Assert.assertTrue(result is SignInTokenApiResult.Success)
+    }
+
+    @Test
+    fun testPerformSLTTokenRequestCredentialRequired() {
+        val correlationId = UUID.randomUUID().toString()
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpointType.SignInToken,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.CREDENTIAL_REQUIRED
+        )
+
+        val parameters = SignInWithSLTCommandParameters.builder()
+            .platformComponents(mock<PlatformComponents>())
+            .signInSLT(signInSLT)
+            .build()
+
+        val result = nativeAuthOAuth2Strategy.performSLTTokenRequest(
+            parameters = parameters
+        )
+        Assert.assertTrue(result is SignInTokenApiResult.CredentialRequired)
+    }
+
+    @Test
+    fun testPerformSLTTokenRequestUserNotFound() {
+        val correlationId = UUID.randomUUID().toString()
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpointType.SignInToken,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.USER_NOT_FOUND
+        )
+
+        val parameters = SignInWithSLTCommandParameters.builder()
+            .platformComponents(mock<PlatformComponents>())
+            .signInSLT(signInSLT)
+            .build()
+
+        val result = nativeAuthOAuth2Strategy.performSLTTokenRequest(
             parameters = parameters
         )
         Assert.assertTrue(result is SignInTokenApiResult.UserNotFound)

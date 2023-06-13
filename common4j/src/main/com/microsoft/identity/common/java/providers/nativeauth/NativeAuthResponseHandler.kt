@@ -24,7 +24,6 @@ package com.microsoft.identity.common.java.providers.nativeauth
 
 import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.logging.LogSession
-import com.microsoft.identity.common.java.logging.Logger.LogLevel
 import com.microsoft.identity.common.java.net.HttpResponse
 import com.microsoft.identity.common.java.providers.nativeauth.responses.resetpassword.ResetPasswordChallengeApiResponse
 import com.microsoft.identity.common.java.providers.nativeauth.responses.resetpassword.ResetPasswordContinueApiResponse
@@ -58,7 +57,6 @@ class NativeAuthResponseHandler {
 
         ApiResultUtil.logResponse(TAG, result)
 
-        // TODO manage headers for telemetry
         return result
     }
     //endregion
@@ -78,7 +76,6 @@ class NativeAuthResponseHandler {
 
         ApiResultUtil.logResponse(TAG, result)
 
-        // TODO manage headers for telemetry
         return result
     }
     //endregion
@@ -98,7 +95,6 @@ class NativeAuthResponseHandler {
 
         ApiResultUtil.logResponse(TAG, result)
 
-        // TODO manage headers for telemetry
         return result
     }
 
@@ -117,7 +113,6 @@ class NativeAuthResponseHandler {
 
         ApiResultUtil.logResponse(TAG, result)
 
-        // TODO manage headers for telemetry
         return result
     }
     //endregion
@@ -136,8 +131,6 @@ class NativeAuthResponseHandler {
         result.statusCode = response.statusCode
 
         ApiResultUtil.logResponse(TAG, result)
-
-        // TODO manage headers for telemetry
 
         return result
     }
@@ -158,8 +151,6 @@ class NativeAuthResponseHandler {
 
         ApiResultUtil.logResponse(TAG, result)
 
-        // TODO manage headers for telemetry
-
         return result
     }
     //endregion
@@ -179,7 +170,6 @@ class NativeAuthResponseHandler {
 
         ApiResultUtil.logResponse(TAG, apiResponse)
 
-        // TODO manage headers for telemetry
         return apiResponse
     }
 
@@ -198,7 +188,6 @@ class NativeAuthResponseHandler {
 
         ApiResultUtil.logResponse(TAG, apiResponse)
 
-        // TODO manage headers for telemetry
         return apiResponse
     }
 
@@ -216,8 +205,6 @@ class NativeAuthResponseHandler {
         apiResponse.statusCode = response.statusCode
 
         ApiResultUtil.logResponse(TAG, apiResponse)
-
-        // TODO manage headers for telemetry
         return apiResponse
     }
 
@@ -236,7 +223,6 @@ class NativeAuthResponseHandler {
 
         ApiResultUtil.logResponse(TAG, apiResponse)
 
-        // TODO manage headers for telemetry
         return apiResponse
     }
 
@@ -255,72 +241,6 @@ class NativeAuthResponseHandler {
 
         ApiResultUtil.logResponse(TAG, apiResponse)
 
-        // TODO manage headers for telemetry
         return apiResponse
-    }
-
-    /**
-     * Generic function that validates the API result. Will throw an exception if the validation
-     * of required API response fields fails. Will log a warning if the validation of optional
-     * API response fields fails.
-     */
-    fun validateApiResult(apiResult: IApiResult) {
-        LogSession.logMethodCall(tag = TAG)
-        if (apiResult.success) {
-            validateSuccessfulResponse(
-                apiResult.successResponse
-            )
-        } else {
-            validateUnsuccessfulResponse(
-                apiResult.errorResponse
-            )
-        }
-    }
-
-    private fun validateSuccessfulResponse(successResponse: IApiSuccessResponse?) {
-        try {
-            if (successResponse == null) {
-                LogSession.log(
-                    tag = TAG,
-                    logLevel = LogLevel.ERROR,
-                    message = "SuccessResponse can't be null in success state"
-                )
-                throw ClientException("SuccessResponse can't be null in success state")
-            }
-            successResponse.validateRequiredFields()
-            successResponse.validateOptionalFields()
-        } catch (e: ClientException) {
-            LogSession.logException(tag = TAG, throwable = e)
-            throw e
-        }
-    }
-
-    private fun validateUnsuccessfulResponse(errorResponse: IApiErrorResponse?) {
-//        try {
-        if (errorResponse == null) {
-            LogSession.log(
-                tag = TAG,
-                logLevel = LogLevel.ERROR,
-                message = "ErrorResponse can't be null in error state"
-            )
-            throw ClientException("ErrorResponse can't be null in error state")
-        }
-        errorResponse.validateRequiredFields()
-        errorResponse.validateOptionalFields()
-//        } catch (e: ClientException) {
-//            Logger.error(TAG, e.message, e)
-//            throw e
-//        }
-    }
-
-    @Throws(ClientException::class)
-    private fun getBodyFromSuccessfulResponse(responseBody: String): String {
-        return responseBody
-    }
-
-    @Throws(ClientException::class)
-    private fun getBodyFromUnsuccessfulResponse(responseBody: String): String {
-        val EMPTY_JSON_OBJECT = "{}"
-        return responseBody.ifEmpty { EMPTY_JSON_OBJECT }
     }
 }

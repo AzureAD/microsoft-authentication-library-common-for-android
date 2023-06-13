@@ -29,6 +29,7 @@ import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInS
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartUsingPasswordCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitPasswordCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInWithSLTCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpContinueCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpStartCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpStartUsingPasswordCommandParameters
@@ -73,6 +74,7 @@ class NativeAuthRequestHandlerTest {
     private val oobCode = "123456"
     private val passwordResetToken = "123456"
     private val passwordSubmitToken = "123456"
+    private val signInSLT = "1234"
     private val emptyString = ""
     private val credentialToken = "uY29tL2F1dGhlbnRpY"
     private val grantType = NativeAuthGrantType.PASSWORDLESS_OTP.jsonValue
@@ -489,6 +491,30 @@ class NativeAuthRequestHandlerTest {
             .build()
 
         nativeAuthRequestProvider.createROPCTokenRequest(
+            parameters = commandParameters
+        )
+    }
+
+    @Test
+    fun testSignInTokenWithSLTSuccess() {
+        val commandParameters = SignInWithSLTCommandParameters.builder()
+            .platformComponents(mock<PlatformComponents>())
+            .signInSLT(signInSLT)
+            .build()
+
+        nativeAuthRequestProvider.createSLTTokenRequest(
+            parameters = commandParameters
+        )
+    }
+
+    @Test(expected = ClientException::class)
+    fun testSignInTokenWithEmptySLTShouldThrowException() {
+        val commandParameters = SignInWithSLTCommandParameters.builder()
+            .platformComponents(mock<PlatformComponents>())
+            .signInSLT(emptyString)
+            .build()
+
+        nativeAuthRequestProvider.createSLTTokenRequest(
             parameters = commandParameters
         )
     }
