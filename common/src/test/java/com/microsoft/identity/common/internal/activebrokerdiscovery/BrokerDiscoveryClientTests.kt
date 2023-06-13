@@ -84,7 +84,8 @@ class BrokerDiscoveryClientTests {
             cache = InMemoryActiveBrokerCache(),
             isPackageInstalled =  {
                 it == prodMicrosoftAuthenticator || it == prodCompanyPortal
-            }
+            },
+            isValidBroker = { true }
         )
 
         Assert.assertEquals(prodMicrosoftAuthenticator, client.getActiveBroker())
@@ -119,7 +120,8 @@ class BrokerDiscoveryClientTests {
             cache = InMemoryActiveBrokerCache(),
             isPackageInstalled =  {
                 it == prodMicrosoftAuthenticator || it == prodCompanyPortal
-            }
+            },
+            isValidBroker = { true }
         )
 
         Assert.assertEquals(prodCompanyPortal, client.getActiveBroker())
@@ -150,7 +152,8 @@ class BrokerDiscoveryClientTests {
             cache = cache,
             isPackageInstalled =  {
                 it == prodMicrosoftAuthenticator || it == prodCompanyPortal
-            }
+            },
+            isValidBroker = { true }
         )
         Assert.assertEquals(prodCompanyPortal, client.getActiveBroker())
         Assert.assertTrue(cache.shouldUseAccountManager())
@@ -187,7 +190,8 @@ class BrokerDiscoveryClientTests {
             cache = cache,
             isPackageInstalled =  {
                 it == prodMicrosoftAuthenticator || it == prodCompanyPortal
-            }
+            },
+            isValidBroker = { true }
         )
 
         Assert.assertEquals(prodMicrosoftAuthenticator, client.getActiveBroker())
@@ -219,7 +223,8 @@ class BrokerDiscoveryClientTests {
             cache = InMemoryActiveBrokerCache(),
             isPackageInstalled =  {
                 return@BrokerDiscoveryClient false
-            }
+            },
+            isValidBroker = { true }
         )
 
         Assert.assertNull(client.getActiveBroker())
@@ -251,7 +256,8 @@ class BrokerDiscoveryClientTests {
             cache = cache,
             isPackageInstalled =  {
                 it == prodMicrosoftAuthenticator || it == prodCompanyPortal
-            }
+            },
+            isValidBroker = { true }
         )
 
         Assert.assertEquals(prodMicrosoftAuthenticator, client.getActiveBroker())
@@ -283,7 +289,71 @@ class BrokerDiscoveryClientTests {
             cache = cache,
             isPackageInstalled =  {
                 return@BrokerDiscoveryClient false
-            }
+            },
+            isValidBroker = { true }
+        )
+
+        Assert.assertNull(client.getActiveBroker())
+        Assert.assertNull(cache.getCachedActiveBroker())
+    }
+
+    /**
+     * There is no a cached active broker, but the installed app is a malicious app (signed by unknown key)
+     **/
+    @Test
+    fun test_ReplacedByMaliciousApp() {
+        val cache = InMemoryActiveBrokerCache()
+
+        val client = BrokerDiscoveryClient(
+            brokerCandidates = setOf(
+                prodMicrosoftAuthenticator, prodCompanyPortal
+            ),
+            getActiveBrokerFromAccountManager = {
+                return@BrokerDiscoveryClient null
+            },
+            ipcStrategy = object : IIpcStrategy {
+                override fun communicateToBroker(bundle: BrokerOperationBundle): Bundle {
+                    throw IllegalStateException()
+                }
+                override fun getType(): IIpcStrategy.Type {
+                    return IIpcStrategy.Type.CONTENT_PROVIDER
+                }
+            },
+            cache = InMemoryActiveBrokerCache(),
+            isPackageInstalled =  { it == prodMicrosoftAuthenticator },
+            isValidBroker = { false }
+        )
+
+        Assert.assertNull(client.getActiveBroker())
+        Assert.assertNull(cache.getCachedActiveBroker())
+    }
+
+    /**
+     * There is already a cached active broker, but the installed app is a malicious app (signed by unknown key)
+     **/
+    @Test
+    fun testCache_ReplacedByMaliciousApp() {
+        val cache = InMemoryActiveBrokerCache()
+        cache.setCachedActiveBroker(prodMicrosoftAuthenticator)
+
+        val client = BrokerDiscoveryClient(
+            brokerCandidates = setOf(
+                prodMicrosoftAuthenticator, prodCompanyPortal
+            ),
+            getActiveBrokerFromAccountManager = {
+                return@BrokerDiscoveryClient null
+            },
+            ipcStrategy = object : IIpcStrategy {
+                override fun communicateToBroker(bundle: BrokerOperationBundle): Bundle {
+                    throw IllegalStateException()
+                }
+                override fun getType(): IIpcStrategy.Type {
+                    return IIpcStrategy.Type.CONTENT_PROVIDER
+                }
+            },
+            cache = cache,
+            isPackageInstalled =  { it == prodMicrosoftAuthenticator },
+            isValidBroker = { false }
         )
 
         Assert.assertNull(client.getActiveBroker())
@@ -332,7 +402,8 @@ class BrokerDiscoveryClientTests {
             cache = cache,
             isPackageInstalled =  {
                 it == prodMicrosoftAuthenticator || it == prodCompanyPortal
-            }
+            },
+            isValidBroker = { true }
         )
 
         Assert.assertEquals(prodCompanyPortal, client.getActiveBroker(shouldSkipCache = true))
@@ -468,7 +539,8 @@ class BrokerDiscoveryClientTests {
             cache = cache,
             isPackageInstalled =  {
                 it == prodMicrosoftAuthenticator || it == prodCompanyPortal
-            }
+            },
+            isValidBroker = { true }
         )
     }
 }

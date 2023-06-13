@@ -279,5 +279,4 @@ public interface IAccountCredentialCache {
      * Clear the contents of the cache.
      */
     void clearAll();
-
 }

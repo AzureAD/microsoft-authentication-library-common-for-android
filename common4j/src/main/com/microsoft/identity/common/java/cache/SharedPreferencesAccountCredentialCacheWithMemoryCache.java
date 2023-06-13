@@ -55,14 +55,10 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
 
     private static final String TAG = SharedPreferencesAccountCredentialCacheWithMemoryCache.class.getSimpleName();
 
-    // SharedPreferences used to store Accounts and Credentials
-    private final INameValueStorage<String> mSharedPreferencesFileManager;
-
     private final ICacheKeyValueDelegate mCacheValueDelegate;
 
     private final Object mCacheLock = new Object();
     private boolean mLoaded = false;
-
     private Map<String, AccountRecord> mCachedAccountRecordsWithKeys = new HashMap<>();
     private Map<String, Credential> mCachedCredentialsWithKeys = new HashMap<>();
 
@@ -75,12 +71,21 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
     public SharedPreferencesAccountCredentialCacheWithMemoryCache(
             @NonNull final ICacheKeyValueDelegate accountCacheValueDelegate,
             @NonNull final INameValueStorage<String> sharedPreferencesFileManager) {
+        super(sharedPreferencesFileManager);
         Logger.verbose(TAG, "Init: " + TAG);
-        mSharedPreferencesFileManager = sharedPreferencesFileManager;
         mCacheValueDelegate = accountCacheValueDelegate;
-        new Thread(() -> load()).start();
+        new Thread(() -> initialize()).start();
     }
 
+    private void initialize() {
+        final String methodTag = TAG + ":initialize";
+        try {
+            load();
+            removeSha1ApplicationIdentifierAccessTokensIfNeeded();
+        } catch (final Throwable t) {
+            Logger.error(methodTag, "Failed to load initial accounts/credentials or remove SHA-1 app identifier tokens from SharedPreferences", t);
+        }
+    }
     private void load() {
         final String methodTag = TAG + ":load";
 
@@ -90,8 +95,6 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
                 Logger.info(methodTag, "Loaded " + mCachedAccountRecordsWithKeys.size() + " AccountRecords");
                 mCachedCredentialsWithKeys = loadCredentialsWithKeys();
                 Logger.info(methodTag, "Loaded " + mCachedCredentialsWithKeys.size() + " Credentials");
-            } catch (final Throwable t) {
-                Logger.error(methodTag, "Failed to load initial accounts or credentials from SharedPreferences", t);
             } finally {
                 mLoaded = true;
                 mCacheLock.notifyAll();
@@ -486,7 +489,7 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
             @Nullable final String target,
             @Nullable final String authScheme,
             @Nullable final String requestedClaims,
-            @Nullable final List<Credential> inputCredentials) {
+            @NonNull final List<Credential> inputCredentials) {
         final String methodTag = TAG + ":getCredentialsFilteredBy";
         Logger.verbose(methodTag, "getCredentialsFilteredBy()");
 
@@ -548,7 +551,7 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
 
     @Override
     public List<Credential> getCredentialsFilteredBy(
-            @Nullable List<Credential> inputCredentials,
+            @NonNull List<Credential> inputCredentials,
             @Nullable final String homeAccountId,
             @Nullable final String environment,
             @Nullable final CredentialType credentialType,
@@ -735,5 +738,4 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
         Logger.verbose(methodTag, "isCredential? [" + isCredential + "]");
         return isCredential;
     }
-
 }

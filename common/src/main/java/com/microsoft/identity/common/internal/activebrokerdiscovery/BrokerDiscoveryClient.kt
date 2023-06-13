@@ -57,13 +57,14 @@ import java.util.concurrent.TimeUnit
  * @param ipcStrategy                       An [IIpcStrategy] to aggregate data with.
  * @param cache                             A local cache for storing active broker discovery results.
  * @param isPackageInstalled                a function to determine if any given broker app is installed.
- * @param lock                              a lock for preventing race condition of the operations in this class.
+ * @param isValidBroker                     a function to determine if the installed broker app contains a matching signature hash.
  **/
 class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
                             private val getActiveBrokerFromAccountManager: () -> BrokerData?,
                             private val ipcStrategy: IIpcStrategy,
                             private val cache: IClientActiveBrokerCache,
-                            private val isPackageInstalled: (BrokerData) -> Boolean) : IBrokerDiscoveryClient {
+                            private val isPackageInstalled: (BrokerData) -> Boolean,
+                            private val isValidBroker: (BrokerData) -> Boolean) : IBrokerDiscoveryClient {
 
     companion object {
         val TAG = BrokerDiscoveryClient::class.simpleName
@@ -95,10 +96,11 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
         internal suspend fun queryFromBroker(brokerCandidates: Set<BrokerData>,
                                              ipcStrategy: IIpcStrategy,
                                              isPackageInstalled: (BrokerData) -> Boolean,
+                                             isValidBroker: (BrokerData) -> Boolean,
                                              shouldStopQueryForAWhile: () -> Unit
         ): BrokerData? {
             return coroutineScope {
-                val installedCandidates = brokerCandidates.filter(isPackageInstalled)
+                val installedCandidates = brokerCandidates.filter(isPackageInstalled).filter(isValidBroker)
                 val deferredResults = installedCandidates.map { candidate ->
                     async(dispatcher) {
                         return@async makeRequest(candidate, ipcStrategy, shouldStopQueryForAWhile)
@@ -174,6 +176,16 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
         isPackageInstalled = { brokerData ->
             PackageHelper(context).
                 isPackageInstalledAndEnabled(brokerData.packageName)
+        },
+        isValidBroker = { brokerData ->
+            val methodTag = "$TAG:isValidBroker"
+            val installedHash = PackageHelper(context).getSha512SignatureForPackage(brokerData.packageName)
+            val isHashMatch = installedHash == brokerData.signatureHash
+            if (!isHashMatch) {
+                Logger.warn(methodTag, "Hash does not match for app ${brokerData.packageName}. " +
+                        "Expected: ${brokerData.signatureHash} but got: $installedHash")
+            }
+            isHashMatch
         })
 
     override fun getActiveBroker(shouldSkipCache: Boolean): BrokerData? {
@@ -184,30 +196,40 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
 
     private suspend fun getActiveBrokerAsync(shouldSkipCache:Boolean): BrokerData?{
         val methodTag = "$TAG:getActiveBrokerAsync"
-
         classLevelLock.withLock {
             if (!shouldSkipCache) {
                 if (cache.shouldUseAccountManager()) {
                     return getActiveBrokerFromAccountManager()
                 }
                 cache.getCachedActiveBroker()?.let {
-                    if (isPackageInstalled(it)) {
-                        Logger.info(methodTag, "Returning cached broker: $it")
-                        return it
-                    } else {
+                    if (!isPackageInstalled(it)) {
                         Logger.info(
                             methodTag,
                             "There is a cached broker: $it, but the app is no longer installed."
                         )
                         cache.clearCachedActiveBroker()
+                        return@let
                     }
+
+                    if (!isValidBroker(it)) {
+                        Logger.info(
+                            methodTag,
+                            "Clearing cache as the installed app does not have a matching signature hash."
+                        )
+                        cache.clearCachedActiveBroker()
+                        return@let
+                    }
+
+                    Logger.info(methodTag, "Returning cached broker: $it")
+                    return it
                 }
             }
 
             val brokerData = queryFromBroker(
                 brokerCandidates = brokerCandidates,
                 ipcStrategy = ipcStrategy,
-                isPackageInstalled = isPackageInstalled
+                isPackageInstalled = isPackageInstalled,
+                isValidBroker = isValidBroker
             ) {
                 Logger.info(
                     methodTag,
