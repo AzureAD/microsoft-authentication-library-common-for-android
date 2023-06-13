@@ -1,7 +1,7 @@
 package com.microsoft.identity.common.internal.util;
 
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartCommandParameters;
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartWithPasswordCommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartUsingPasswordCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitCodeCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitPasswordCommandParameters;
 
@@ -12,8 +12,8 @@ import java.util.List;
  * fully compatible with Kotlin).
  */
 public class CommandUtil {
-	public static SignInStartWithPasswordCommandParameters createSignInStartWithPasswordCommandParametersWithScopes(
-			SignInStartWithPasswordCommandParameters parameters,
+	public static SignInStartUsingPasswordCommandParameters createSignInStartUsingPasswordCommandParametersWithScopes(
+			SignInStartUsingPasswordCommandParameters parameters,
 		    List<String> defaultScopes
 	) {
 		return parameters.toBuilder()

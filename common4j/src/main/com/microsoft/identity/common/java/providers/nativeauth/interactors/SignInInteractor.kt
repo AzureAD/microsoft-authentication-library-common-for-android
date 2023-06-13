@@ -2,7 +2,7 @@ package com.microsoft.identity.common.java.providers.nativeauth.interactors
 
 import com.microsoft.identity.common.internal.util.getEncodedRequest
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartCommandParameters
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartWithPasswordCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartUsingPasswordCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitPasswordCommandParameters
 import com.microsoft.identity.common.java.logging.LogSession
@@ -83,7 +83,7 @@ class SignInInteractor(
 
     //region /oauth/v2.0/token
     fun performROPCTokenRequest(
-        parameters: SignInStartWithPasswordCommandParameters
+        parameters: SignInStartUsingPasswordCommandParameters
     ): SignInTokenApiResult {
         LogSession.logMethodCall(tag = TAG)
         val request = nativeAuthRequestProvider.createROPCTokenRequest(

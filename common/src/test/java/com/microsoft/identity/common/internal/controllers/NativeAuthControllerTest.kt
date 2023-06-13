@@ -39,12 +39,12 @@ import com.microsoft.identity.common.java.commands.parameters.nativeauth.ResetPa
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.ResetPasswordSubmitNewPasswordCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInResendCodeCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartCommandParameters
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartWithPasswordCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartUsingPasswordCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitPasswordCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpResendCodeCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpStartCommandParameters
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpStartWithPasswordCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpStartUsingPasswordCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpSubmitPasswordCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpSubmitUserAttributesCommandParameters
@@ -771,13 +771,13 @@ class NativeAuthControllerTest {
     }
     // endregion
 
-    private fun createSignInStartWithPasswordCommandParameters(): SignInStartWithPasswordCommandParameters {
+    private fun createSignInStartWithPasswordCommandParameters(): SignInStartUsingPasswordCommandParameters {
         val authenticationScheme = AuthenticationSchemeFactory.createScheme(
             AndroidPlatformComponents.createFromContext(context),
             null
         )
 
-        return SignInStartWithPasswordCommandParameters.builder()
+        return SignInStartUsingPasswordCommandParameters.builder()
             .username(username)
             .password(password)
             .authenticationScheme(authenticationScheme)
@@ -922,8 +922,8 @@ class NativeAuthControllerTest {
         return MsalOAuth2TokenCache.create(platformComponents)
     }
 
-    private fun createSignUpStartWithPasswordCommandParameters(): SignUpStartWithPasswordCommandParameters {
-        return SignUpStartWithPasswordCommandParameters.builder()
+    private fun createSignUpStartWithPasswordCommandParameters(): SignUpStartUsingPasswordCommandParameters {
+        return SignUpStartUsingPasswordCommandParameters.builder()
             .username(username)
             .password(password)
             .authority(NativeAuthCIAMAuthority.getAuthorityFromAuthorityUrl(authorityUrl, clientId))
@@ -935,8 +935,8 @@ class NativeAuthControllerTest {
             .build()
     }
 
-    private fun createSignUpStartWithPasswordCommandParameters(passwordValue: String?): SignUpStartWithPasswordCommandParameters {
-        return SignUpStartWithPasswordCommandParameters.builder()
+    private fun createSignUpStartWithPasswordCommandParameters(passwordValue: String?): SignUpStartUsingPasswordCommandParameters {
+        return SignUpStartUsingPasswordCommandParameters.builder()
             .username(username)
             .password(
                 if (passwordValue.isNullOrBlank()) {

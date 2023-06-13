@@ -27,12 +27,12 @@ import com.microsoft.identity.common.java.commands.parameters.nativeauth.ResetPa
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.ResetPasswordSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.ResetPasswordSubmitNewPasswordCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartCommandParameters
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartWithPasswordCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartUsingPasswordCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitPasswordCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpContinueCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpStartCommandParameters
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpStartWithPasswordCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpStartUsingPasswordCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpSubmitPasswordCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpSubmitUserAttributesCommandParameters
@@ -87,8 +87,8 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
         )
     }
 
-    fun createSignUpWithPasswordStartRequest(
-        commandParameters: SignUpStartWithPasswordCommandParameters
+    fun createSignUpUsingPasswordStartRequest(
+        commandParameters: SignUpStartUsingPasswordCommandParameters
     ): SignUpStartRequest {
         LogSession.logMethodCall(tag = TAG)
 
@@ -157,7 +157,7 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
 
     //region /oauth/v2.0/token
     fun createROPCTokenRequest(
-        parameters: SignInStartWithPasswordCommandParameters
+        parameters: SignInStartUsingPasswordCommandParameters
     ): SignInTokenRequest {
         LogSession.logMethodCall(tag = TAG)
 

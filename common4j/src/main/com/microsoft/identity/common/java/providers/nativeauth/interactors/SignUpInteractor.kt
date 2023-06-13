@@ -4,10 +4,10 @@ import com.microsoft.identity.common.internal.util.getEncodedRequest
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.BaseNativeAuthCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpContinueCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpStartCommandParameters
-import com.microsoft.identity.common.java.logging.LogSession
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpStartWithPasswordCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpStartUsingPasswordCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpSubmitUserAttributesCommandParameters
+import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.net.UrlConnectionHttpClient
 import com.microsoft.identity.common.java.providers.nativeauth.NativeAuthRequestProvider
 import com.microsoft.identity.common.java.providers.nativeauth.NativeAuthResponseHandler
@@ -39,11 +39,11 @@ class SignUpInteractor(
         return performSignUpStart(request)
     }
 
-    fun performSignUpStartWithPassword(
-        commandParameters: SignUpStartWithPasswordCommandParameters
+    fun performSignUpStartUsingPassword(
+        commandParameters: SignUpStartUsingPasswordCommandParameters
     ): SignUpStartApiResult {
         LogSession.logMethodCall(tag = TAG)
-        val request = nativeAuthRequestProvider.createSignUpWithPasswordStartRequest(
+        val request = nativeAuthRequestProvider.createSignUpUsingPasswordStartRequest(
             commandParameters = commandParameters
         )
         return performSignUpStart(request)

@@ -27,7 +27,7 @@ import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.uti
 import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.MockApiResponseType
 import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.MockApiUtils
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartCommandParameters
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartWithPasswordCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartUsingPasswordCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitPasswordCommandParameters
 import com.microsoft.identity.common.java.interfaces.PlatformComponents
@@ -182,7 +182,7 @@ class SignInOAuthStrategyTest {
             responseType = MockApiResponseType.TOKEN_SUCCESS
         )
 
-        val parameters = SignInStartWithPasswordCommandParameters.builder()
+        val parameters = SignInStartUsingPasswordCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .username(username)
             .password(password)
@@ -303,7 +303,7 @@ class SignInOAuthStrategyTest {
             responseType = MockApiResponseType.CREDENTIAL_REQUIRED
         )
 
-        val parameters = SignInStartWithPasswordCommandParameters.builder()
+        val parameters = SignInStartUsingPasswordCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .username(username)
             .password(password)
@@ -324,7 +324,7 @@ class SignInOAuthStrategyTest {
             responseType = MockApiResponseType.INVALID_GRANT
         )
 
-        val parameters = SignInStartWithPasswordCommandParameters.builder()
+        val parameters = SignInStartUsingPasswordCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .username(username)
             .password(password)
@@ -384,7 +384,7 @@ class SignInOAuthStrategyTest {
             responseType = MockApiResponseType.CREDENTIAL_REQUIRED
         )
 
-        val parameters = SignInStartWithPasswordCommandParameters.builder()
+        val parameters = SignInStartUsingPasswordCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .username(username)
             .password(password)
@@ -405,7 +405,7 @@ class SignInOAuthStrategyTest {
             responseType = MockApiResponseType.INVALID_GRANT
         )
 
-        val parameters = SignInStartWithPasswordCommandParameters.builder()
+        val parameters = SignInStartUsingPasswordCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .username(username)
             .password(password)

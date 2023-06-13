@@ -28,7 +28,7 @@ import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.uti
 import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.MockApiUtils.Companion.configureMockApi
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpContinueCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpStartCommandParameters
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpStartWithPasswordCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpStartUsingPasswordCommandParameters
 import com.microsoft.identity.common.java.interfaces.PlatformComponents
 import com.microsoft.identity.common.java.net.UrlConnectionHttpClient
 import com.microsoft.identity.common.java.providers.nativeauth.NativeAuthOAuth2Configuration
@@ -136,14 +136,14 @@ class SignUpScenarioTest {
             responseType = MockApiResponseType.VERIFICATION_REQUIRED
         )
 
-        val mockSignUpStartCommandParameters = SignUpStartWithPasswordCommandParameters.builder()
+        val mockSignUpStartCommandParameters = SignUpStartUsingPasswordCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .username(username)
             .clientId(clientId)
             .password(password)
             .build()
 
-        val signupStartResult = nativeAuthOAuth2Strategy.performSignUpStartWithPassword(
+        val signupStartResult = nativeAuthOAuth2Strategy.performSignUpStartUsingPassword(
             mockSignUpStartCommandParameters
         )
         assertTrue(signupStartResult is SignUpStartApiResult.VerificationRequired)

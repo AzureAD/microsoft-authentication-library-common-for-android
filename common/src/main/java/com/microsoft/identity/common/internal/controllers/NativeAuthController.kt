@@ -36,12 +36,12 @@ import com.microsoft.identity.common.java.commands.parameters.nativeauth.ResetPa
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.ResetPasswordSubmitNewPasswordCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInResendCodeCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartCommandParameters
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartWithPasswordCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartUsingPasswordCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitPasswordCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpResendCodeCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpStartCommandParameters
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpStartWithPasswordCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpStartUsingPasswordCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpSubmitPasswordCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpSubmitUserAttributesCommandParameters
@@ -109,11 +109,11 @@ class NativeAuthController : BaseNativeAuthController() {
                 .authority
                 .createOAuth2Strategy(strategyParameters)
 
-            val isROPCCall = parameters is SignInStartWithPasswordCommandParameters
+            val isROPCCall = parameters is SignInStartUsingPasswordCommandParameters
 
             return if (isROPCCall) {
                 signInStartROPC(
-                    parameters as SignInStartWithPasswordCommandParameters,
+                    parameters as SignInStartUsingPasswordCommandParameters,
                     oAuth2Strategy
                 )
             } else {
@@ -127,14 +127,14 @@ class NativeAuthController : BaseNativeAuthController() {
     }
 
     private fun signInStartROPC(
-        parameters: SignInStartWithPasswordCommandParameters,
+        parameters: SignInStartUsingPasswordCommandParameters,
         oAuth2Strategy: NativeAuthOAuth2Strategy,
     ): SignInStartCommandResult {
         LogSession.logMethodCall(tag = TAG)
 
         val mergedScopes = addDefaultScopes(parameters.scopes)
         val parametersWithScopes =
-            CommandUtil.createSignInStartWithPasswordCommandParametersWithScopes(
+            CommandUtil.createSignInStartUsingPasswordCommandParametersWithScopes(
                 parameters,
                 mergedScopes
             )
@@ -781,7 +781,7 @@ class NativeAuthController : BaseNativeAuthController() {
 
     private fun performROPCTokenRequest(
         oAuth2Strategy: NativeAuthOAuth2Strategy,
-        parameters: SignInStartWithPasswordCommandParameters
+        parameters: SignInStartUsingPasswordCommandParameters
     ): SignInTokenApiResult {
         LogSession.logMethodCall(tag = TAG)
         return oAuth2Strategy.performROPCTokenRequest(
@@ -1056,12 +1056,12 @@ class NativeAuthController : BaseNativeAuthController() {
                 .authority
                 .createOAuth2Strategy(strategyParameters)
 
-            val isWithPassword = parameters is SignUpStartWithPasswordCommandParameters
+            val isWithPassword = parameters is SignUpStartUsingPasswordCommandParameters
 
             val signUpStartApiResult = if (isWithPassword) {
-                performSignUpStartWithPasswordRequest(
+                performSignUpStartUsingPasswordRequest(
                     oAuth2Strategy = oAuth2Strategy,
-                    parameters = (parameters as SignUpStartWithPasswordCommandParameters)
+                    parameters = (parameters as SignUpStartUsingPasswordCommandParameters)
                 )
             } else {
                 performSignUpStartRequest(
@@ -1254,11 +1254,11 @@ class NativeAuthController : BaseNativeAuthController() {
         )
     }
 
-    private fun performSignUpStartWithPasswordRequest(
+    private fun performSignUpStartUsingPasswordRequest(
         oAuth2Strategy: NativeAuthOAuth2Strategy,
-        parameters: SignUpStartWithPasswordCommandParameters
+        parameters: SignUpStartUsingPasswordCommandParameters
     ): SignUpStartApiResult {
-        return oAuth2Strategy.performSignUpStartWithPassword(
+        return oAuth2Strategy.performSignUpStartUsingPassword(
             commandParameters = parameters
         )
     }

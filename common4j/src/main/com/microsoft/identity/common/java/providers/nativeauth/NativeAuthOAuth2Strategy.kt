@@ -29,11 +29,11 @@ import com.microsoft.identity.common.java.commands.parameters.nativeauth.ResetPa
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.ResetPasswordSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.ResetPasswordSubmitNewPasswordCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartCommandParameters
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartWithPasswordCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartUsingPasswordCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitPasswordCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpStartCommandParameters
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpStartWithPasswordCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpStartUsingPasswordCommandParameters
 import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy
 import com.microsoft.identity.common.java.providers.nativeauth.interactors.ResetPasswordInteractor
@@ -85,11 +85,11 @@ class NativeAuthOAuth2Strategy(
         return signUpInteractor.performSignUpStart(commandParameters)
     }
 
-    fun performSignUpStartWithPassword(
-        commandParameters: SignUpStartWithPasswordCommandParameters
+    fun performSignUpStartUsingPassword(
+        commandParameters: SignUpStartUsingPasswordCommandParameters
     ): SignUpStartApiResult {
         LogSession.logMethodCall(tag = TAG)
-        return signUpInteractor.performSignUpStartWithPassword(commandParameters)
+        return signUpInteractor.performSignUpStartUsingPassword(commandParameters)
     }
 
     fun performSignUpChallenge(
@@ -129,7 +129,7 @@ class NativeAuthOAuth2Strategy(
     }
 
     fun performROPCTokenRequest(
-        parameters: SignInStartWithPasswordCommandParameters
+        parameters: SignInStartUsingPasswordCommandParameters
     ): SignInTokenApiResult {
         LogSession.logMethodCall(tag = TAG)
         return signInInteractor.performROPCTokenRequest(
