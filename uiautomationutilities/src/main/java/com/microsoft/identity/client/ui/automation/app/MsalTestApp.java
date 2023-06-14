@@ -52,16 +52,21 @@ public class MsalTestApp extends App{
         localApkFileName = MSAL_TEST_APP_APK;
     }
 
-    public MsalTestApp(boolean updateApk) {
+    public MsalTestApp(final boolean installOldApk) {
         super(MSAL_TEST_APP_PACKAGE_NAME, MSAL_TEST_APP_NAME, new LocalApkInstaller());
-        localApkFileName = MSAL_TEST_APP_APK;
-        localUpdateApkFileName = OLD_MSAL_TEST_APP_APK;
+        if (installOldApk) {
+            localApkFileName = OLD_MSAL_TEST_APP_APK;
+        } else {
+            localApkFileName = MSAL_TEST_APP_APK;
+        }
+        localUpdateApkFileName = MSAL_TEST_APP_APK;
     }
 
     // click on button acquire token interactive
     public String acquireToken(@NonNull final String username,
                                         @NonNull final String password,
                                         final PromptHandlerParameters promptHandlerParameters) throws UiObjectNotFoundException {
+        // handle loginHint input if needed
         if (promptHandlerParameters != null) {
             UiAutomatorUtils.handleInput("com.msft.identity.client.sample.local:id/loginHint", username);
         }
@@ -70,7 +75,7 @@ public class MsalTestApp extends App{
         scrollToElement(acquireTokenButton);
         acquireTokenButton.click();
 
-        // handle prompt
+        // handle prompt if needed
         if (promptHandlerParameters != null) {
             final MicrosoftStsPromptHandler microsoftStsPromptHandler = new MicrosoftStsPromptHandler((MicrosoftStsPromptHandlerParameters) promptHandlerParameters);
             microsoftStsPromptHandler.handlePrompt(username, password);
