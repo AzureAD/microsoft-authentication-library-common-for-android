@@ -36,6 +36,9 @@
         <package android:name="com.azure.authenticator" />
         <package android:name="com.microsoft.identity.testuserapp" />
         <package android:name="com.microsoft.windowsintune.companyportal" />
+        <package android:name="com.microsoft.mockauthapp" />
+        <package android:name="com.microsoft.mockcp" />
+        <package android:name="com.microsoft.mockltw" />
         <!-- Required for API Level 30 to make sure we can detect browsers
         (that don't support custom tabs) -->
         <intent>

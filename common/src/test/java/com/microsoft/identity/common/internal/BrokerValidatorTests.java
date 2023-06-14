@@ -62,11 +62,15 @@ public class BrokerValidatorTests {
     public void testGetValidBrokersInDebugMode() {
         BrokerValidator.setShouldTrustDebugBrokers(true);
         final Set<BrokerData> brokerData = mBrokerValidator.getValidBrokers();
-        Assert.assertEquals(4, brokerData.size());
+        Assert.assertEquals(8, brokerData.size());
         Assert.assertTrue(brokerData.contains(BrokerData.getDebugBrokerHost()));
         Assert.assertTrue(brokerData.contains(BrokerData.getProdCompanyPortal()));
         Assert.assertTrue(brokerData.contains(BrokerData.getDebugMicrosoftAuthenticator()));
         Assert.assertTrue(brokerData.contains(BrokerData.getProdMicrosoftAuthenticator()));
+        Assert.assertTrue(brokerData.contains(BrokerData.getDebugLTW()));
+        Assert.assertTrue(brokerData.contains(BrokerData.getDebugMockLtw()));
+        Assert.assertTrue(brokerData.contains(BrokerData.getDebugMockCp()));
+        Assert.assertTrue(brokerData.contains(BrokerData.getDebugMockAuthApp()));
     }
 
     @Test
