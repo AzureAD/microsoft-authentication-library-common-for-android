@@ -1,3 +1,7 @@
+V.13.0.2
+----------
+- [MINOR] Fix issue for MSA only where headers are not propagated on web requests with different domain redirects on newer versions of WebView (88+) (#2072)
+
 V.13.0.1
 ----------
 - [PATCH] Stop caching account manager values. Make BrokerDiscoveryClient coroutine-safe (#2050)
