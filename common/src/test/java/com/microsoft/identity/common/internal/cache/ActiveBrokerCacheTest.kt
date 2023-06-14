@@ -329,8 +329,7 @@ class ActiveBrokerCacheTest {
         Assert.assertFalse(cache.shouldUseAccountManager())
         Assert.assertNull(cache.cachedTimeStamp)
     }
-
-
+    
     private fun getStorageSupplier() : IStorageSupplier {
         return InMemoryStorageSupplier()
     }
