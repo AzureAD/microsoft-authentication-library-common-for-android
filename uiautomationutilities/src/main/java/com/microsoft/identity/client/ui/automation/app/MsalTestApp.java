@@ -52,10 +52,10 @@ public class MsalTestApp extends App{
         localApkFileName = MSAL_TEST_APP_APK;
     }
 
-    public MsalTestApp(@NonNull final String msalTestAppApk, @NonNull final String updateMsalTestAppApk) {
+    public MsalTestApp(boolean updateApk) {
         super(MSAL_TEST_APP_PACKAGE_NAME, MSAL_TEST_APP_NAME, new LocalApkInstaller());
-        localApkFileName = msalTestAppApk;
-        localUpdateApkFileName = updateMsalTestAppApk;
+        localApkFileName = MSAL_TEST_APP_APK;
+        localUpdateApkFileName = OLD_MSAL_TEST_APP_APK;
     }
 
     // click on button acquire token interactive
