@@ -156,8 +156,13 @@ public class BrokerMsalController extends BaseController {
 
     @VisibleForTesting
     public HelloCache getHelloCache() {
-        return new HelloCache(mApplicationContext, MSAL_TO_BROKER_PROTOCOL_NAME, mActiveBrokerPackageName,
-                mComponents, HANDSHAKE_TIMEOUT);
+        return new HelloCache(
+                mApplicationContext,
+                MSAL_TO_BROKER_PROTOCOL_NAME,
+                mActiveBrokerPackageName,
+                mComponents,
+                HANDSHAKE_TIMEOUT
+        );
     }
 
     /**
