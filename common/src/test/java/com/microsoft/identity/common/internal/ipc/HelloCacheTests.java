@@ -22,6 +22,10 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.ipc;
 
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.HELLO_ERROR_CODE;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.HELLO_ERROR_MESSAGE;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY;
+
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Build;
@@ -32,15 +36,16 @@ import androidx.annotation.Nullable;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.microsoft.identity.common.components.AndroidPlatformComponentsFactory;
-import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.exception.BrokerCommunicationException;
 import com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle;
 import com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy;
 import com.microsoft.identity.common.internal.cache.HelloCache;
-import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.internal.controllers.BrokerMsalController;
 import com.microsoft.identity.common.internal.util.StringUtil;
+import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
+import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
+import com.microsoft.identity.common.java.exception.UnsupportedBrokerException;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -49,7 +54,7 @@ import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY;
+import java.util.concurrent.TimeUnit;
 
 import lombok.SneakyThrows;
 
@@ -79,7 +84,9 @@ public class HelloCacheTests {
         final String negotiatedVer = "2.0";
 
         cacheWrite.saveNegotiatedProtocolVersion(minimumVer, maximumVer, negotiatedVer);
-        Assert.assertEquals(cacheRead.tryGetNegotiatedProtocolVersion(minimumVer, maximumVer), negotiatedVer);
+        final HelloCache.HelloCacheResult result = cacheRead.tryGetNegotiatedProtocolVersion(minimumVer, maximumVer);
+        Assert.assertNotNull(result);
+        Assert.assertEquals(result.getNegotiatedProtocolVersion(), negotiatedVer);
     }
 
     @Test
@@ -128,10 +135,14 @@ public class HelloCacheTests {
         cacheProtocolA.saveNegotiatedProtocolVersion(minimumVerProtocolA, maximumVerProtocolA, negotiatedVerProtocolA);
         cacheProtocolB.saveNegotiatedProtocolVersion(minimumVerProtocolB, maximumVerProtocolB, negotiatedVerProtocolB);
 
-        Assert.assertEquals(cacheProtocolA.tryGetNegotiatedProtocolVersion(minimumVerProtocolA, maximumVerProtocolA), negotiatedVerProtocolA);
+        final HelloCache.HelloCacheResult resultA = cacheProtocolA.tryGetNegotiatedProtocolVersion(minimumVerProtocolA, maximumVerProtocolA);
+        Assert.assertNotNull(resultA);
+        Assert.assertEquals(resultA.getNegotiatedProtocolVersion(), negotiatedVerProtocolA);
         Assert.assertNull(cacheProtocolA.tryGetNegotiatedProtocolVersion(minimumVerProtocolB, maximumVerProtocolB));
 
-        Assert.assertEquals(cacheProtocolB.tryGetNegotiatedProtocolVersion(minimumVerProtocolB, maximumVerProtocolB), negotiatedVerProtocolB);
+        final HelloCache.HelloCacheResult resultB = cacheProtocolB.tryGetNegotiatedProtocolVersion(minimumVerProtocolB, maximumVerProtocolB);
+        Assert.assertNotNull(resultB);
+        Assert.assertEquals(resultB.getNegotiatedProtocolVersion(), negotiatedVerProtocolB);
         Assert.assertNull(cacheProtocolB.tryGetNegotiatedProtocolVersion(minimumVerProtocolA, maximumVerProtocolA));
     }
 
@@ -217,46 +228,111 @@ public class HelloCacheTests {
     @SneakyThrows
     @Test
     public void testReadWrite_Expiry() {
-        final HelloCache cacheWrite = getHelloCache(protocolA, appVersion, 1000);
-        final HelloCache cacheRead = getHelloCache(protocolA, appVersion, 1000);
+        final HelloCache cacheWrite = getHelloCache(protocolA, appVersion, TimeUnit.SECONDS.toMillis(1));
+        final HelloCache cacheRead = getHelloCache(protocolA, appVersion, TimeUnit.SECONDS.toMillis(1));
 
         final String minimumVer = "1.0";
         final String maximumVer = "2.5";
         final String negotiatedVer = "2.0";
 
         cacheWrite.saveNegotiatedProtocolVersion(minimumVer, maximumVer, negotiatedVer);
-        Assert.assertEquals(cacheRead.tryGetNegotiatedProtocolVersion(minimumVer, maximumVer), negotiatedVer);
-        Thread.sleep(2000);
+        final HelloCache.HelloCacheResult result = cacheRead.tryGetNegotiatedProtocolVersion(minimumVer, maximumVer);
+        Assert.assertNotNull(result);
+        Assert.assertEquals(result.getNegotiatedProtocolVersion(), negotiatedVer);
+        Thread.sleep(TimeUnit.SECONDS.toMillis(2));
         Assert.assertNull(cacheRead.tryGetNegotiatedProtocolVersion(minimumVer, maximumVer));
     }
 
     @Test
-    public void testReadWrite_UnsupportedNegotiatedVersion() {
+    public void testReadWrite_HandshakeError() {
         final HelloCache cacheWrite = getHelloCache(protocolA);
         final HelloCache cacheRead = getHelloCache(protocolA);
 
         final String minimumVer = "1.0";
         final String maximumVer = "2.5";
-        final String negotiatedVer = ErrorStrings.UNSUPPORTED_BROKER_VERSION_ERROR_CODE;
 
-        cacheWrite.saveNegotiatedProtocolVersion(minimumVer, maximumVer, negotiatedVer);
-        Assert.assertEquals(cacheRead.tryGetNegotiatedProtocolVersion(minimumVer, maximumVer), negotiatedVer);
+        cacheWrite.saveHandShakeError(minimumVer, maximumVer);
+        final HelloCache.HelloCacheResult result = cacheRead.tryGetNegotiatedProtocolVersion(minimumVer, maximumVer);
+        Assert.assertNotNull(result);
+        Assert.assertTrue(result.isHandShakeError());
     }
 
     @SneakyThrows
     @Test
-    public void testReadWrite_UnsupportedNegotiatedVersion_Expiry() {
-        final HelloCache cacheWrite = getHelloCache(protocolA, appVersion, 1000);
-        final HelloCache cacheRead = getHelloCache(protocolA, appVersion,1000);
+    public void testReadWrite_HandshakeError_Expiry() {
+        final HelloCache cacheWrite = getHelloCache(protocolA, appVersion, TimeUnit.SECONDS.toMillis(1));
+        final HelloCache cacheRead = getHelloCache(protocolA, appVersion, TimeUnit.SECONDS.toMillis(1));
 
         final String minimumVer = "1.0";
         final String maximumVer = "2.5";
-        final String negotiatedVer = ErrorStrings.UNSUPPORTED_BROKER_VERSION_ERROR_CODE;
+        final String negotiatedVer = "handshake_error";
 
         cacheWrite.saveNegotiatedProtocolVersion(minimumVer, maximumVer, negotiatedVer);
-        Assert.assertEquals(cacheRead.tryGetNegotiatedProtocolVersion(minimumVer, maximumVer), negotiatedVer);
-        Thread.sleep(2000);
+        final HelloCache.HelloCacheResult result = cacheRead.tryGetNegotiatedProtocolVersion(minimumVer, maximumVer);
+        Assert.assertNotNull(result);
+        Assert.assertTrue(result.isHandShakeError());
+        Thread.sleep(TimeUnit.SECONDS.toMillis(2));
+        // cache entry expired
         Assert.assertNull(cacheRead.tryGetNegotiatedProtocolVersion(minimumVer, maximumVer));
+    }
+
+    @Test
+    public void testHelloShouldOnlyTriggerOnce_AfterHandShakeError() {
+        final String minimumVer = "1.0";
+
+        class MockStrategy implements IIpcStrategy {
+            int triggered = 0;
+
+            @Nullable @Override public Bundle communicateToBroker(@NonNull BrokerOperationBundle bundle) throws BrokerCommunicationException {
+                triggered += 1;
+                if (triggered == 2) {
+                    Assert.fail("Should never be triggered");
+                }
+
+                final Bundle resultBundle = new Bundle();
+                resultBundle.putString(HELLO_ERROR_CODE, ErrorStrings.UNSUPPORTED_BROKER_VERSION_ERROR_CODE);
+                resultBundle.putString(HELLO_ERROR_MESSAGE, ErrorStrings.UNSUPPORTED_BROKER_VERSION_ERROR_MESSAGE);
+                return resultBundle;
+            }
+
+            @Override public Type getType() {
+                return Type.CONTENT_PROVIDER;
+            }
+        }
+
+        class MockController extends BrokerMsalController {
+            public MockController(Context applicationContext) {
+                super(applicationContext,
+                        AndroidPlatformComponentsFactory.createFromContext(applicationContext),
+                        brokerAppName);
+            }
+
+            @Override
+            public HelloCache getHelloCache() {
+                return HelloCacheTests.this.getHelloCache(protocolA);
+            }
+        }
+
+        final MockController controller = new MockController(ApplicationProvider.getApplicationContext());
+        final MockStrategy strategy = new MockStrategy();
+        final CommandParameters parameters = CommandParameters.builder()
+                .platformComponents(AndroidPlatformComponentsFactory.createFromContext(ApplicationProvider.getApplicationContext()))
+                .requiredBrokerProtocolVersion(minimumVer).build();
+
+        try {
+            final String negotiatedProtocolVersion = controller.hello(strategy, parameters.getRequiredBrokerProtocolVersion());
+            Assert.fail("hello should have failed");
+        } catch (final BaseException e) {
+            Assert.assertTrue(e instanceof UnsupportedBrokerException);
+        }
+
+        try {
+            // This time error is thrown from cache
+            final String negotiatedProtocolVersion = controller.hello(strategy, parameters.getRequiredBrokerProtocolVersion());
+            Assert.fail("hello should have failed");
+        } catch (final BaseException e) {
+            Assert.assertTrue(e instanceof UnsupportedBrokerException);
+        }
     }
 
     private HelloCache getHelloCache(@NonNull final String protocol) {
@@ -265,7 +341,7 @@ public class HelloCacheTests {
 
     private HelloCache getHelloCache(@NonNull final String protocol,
                                      @Nullable final String appVersionCode) {
-        return this.getHelloCache(protocol, appVersionCode, 4);
+        return this.getHelloCache(protocol, appVersionCode, TimeUnit.HOURS.toMillis(4));
     }
 
     private HelloCache getHelloCache(@NonNull final String protocol,

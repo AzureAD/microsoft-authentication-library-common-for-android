@@ -227,15 +227,20 @@ public class BrokerMsalController extends BaseController {
                  final @Nullable String minRequestedVersion,
                  final @NonNull String clientMaxProtocolVersion) throws BaseException {
         final String methodTag = TAG + ":hello";
-        final String cachedProtocolVersion = mHelloCache.tryGetNegotiatedProtocolVersion(
+        final HelloCache.HelloCacheResult result = mHelloCache.tryGetNegotiatedProtocolVersion(
                 minRequestedVersion, clientMaxProtocolVersion);
 
-        if (!StringUtil.isEmpty(cachedProtocolVersion)) {
-            if (cachedProtocolVersion.equals(ErrorStrings.UNSUPPORTED_BROKER_VERSION_ERROR_CODE)) {
+        if (result != null) {
+            if (result.isHandShakeError()) {
                 Logger.info(methodTag, "Handshake error from cache. Throwing exception");
                 throw new UnsupportedBrokerException(mActiveBrokerPackageName);
             }
-            return cachedProtocolVersion;
+            final String cachedProtocolVersion = result.getNegotiatedProtocolVersion();
+            if (!StringUtil.isEmpty(cachedProtocolVersion)){
+                return cachedProtocolVersion;
+            } else {
+                Logger.warn(methodTag, "Unexpected: cachedProtocolVersion is empty. Continue with hello protocol IPC.");
+            }
         }
 
         final Bundle bundle = new Bundle();
@@ -268,12 +273,12 @@ public class BrokerMsalController extends BaseController {
                     negotiatedProtocolVersion);
 
             return negotiatedProtocolVersion;
-        } catch (final UnsupportedBrokerException unsupportedBrokerException) {
+        } catch (final UnsupportedBrokerException e) {
             mHelloCache.saveHandShakeError(
                     minRequestedVersion,
                     clientMaxProtocolVersion
             );
-            throw unsupportedBrokerException;
+            throw e;
         }
     }
 

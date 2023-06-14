@@ -30,9 +30,8 @@ import android.os.Build;
 
 import androidx.annotation.VisibleForTesting;
 
-import com.microsoft.identity.common.java.exception.ErrorStrings;
-import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
+import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.logging.Logger;
 
@@ -59,7 +58,7 @@ public class HelloCache {
     private static final String TAG = HelloCache.class.getSimpleName();
 
     private static final String SHARED_PREFERENCE_NAME = "com.microsoft.common.ipc.hello.cache";
-
+    private static final String HANDSHAKE_ERROR = "handshake_error";
     private final INameValueStorage<String> mFileManager;
     private final Context mContext;
     private final String mProtocolName;
@@ -77,6 +76,29 @@ public class HelloCache {
     public static void setIsEnabled(final boolean value) {
         synchronized (HelloCache.class) {
             sIsEnabled = value;
+        }
+    }
+
+    /**
+     * Holds result of querying cache result.
+     */
+    @RequiredArgsConstructor
+    public static class HelloCacheResult {
+        /**
+         * If the result is handshake failure.
+         */
+        private final boolean mIsHandShakeError;
+        /**
+         * Negotiated protocol version value.
+         */
+        private final String mNegotiatedProtocolVersion;
+
+        public boolean isHandShakeError() {
+            return mIsHandShakeError;
+        }
+
+        public String getNegotiatedProtocolVersion() {
+            return mNegotiatedProtocolVersion;
         }
     }
 
@@ -114,12 +136,16 @@ public class HelloCache {
     }
 
     /**
-     * Gets the cached negotiated protocol version. Returns null if there is none.
+     * Gets the cached negotiated protocol version.
+     * Returns null
+     * - if there is none.
+     * - if there's error retrieving the value.
+     * - if entry cache entry is expired (entry itself is cleared).
      *
      * @param clientMinimumProtocolVersion minimum version of the protocol that the client supports.
      * @param clientMaximumProtocolVersion maximum version of the protocol that to be advertised by the client.
      */
-    public @Nullable String tryGetNegotiatedProtocolVersion(final @Nullable String clientMinimumProtocolVersion,
+    public @Nullable HelloCacheResult tryGetNegotiatedProtocolVersion(final @Nullable String clientMinimumProtocolVersion,
                                                             final @NonNull String clientMaximumProtocolVersion) {
         final String methodTag = TAG + ":tryGetNegotiatedProtocolVersion";
 
@@ -138,7 +164,7 @@ public class HelloCache {
 
         final String negotiationValue = mFileManager.get(key);
         if (StringUtil.isNullOrEmpty(negotiationValue)) {
-            return negotiationValue;
+            return null;
         }
 
         final HelloCacheValue cacheValue = HelloCacheValue.deserialize(negotiationValue);
@@ -155,7 +181,11 @@ public class HelloCache {
             return null;
         }
 
-        return cacheValue.getNegotiatedValue();
+        if (HANDSHAKE_ERROR.equals(cacheValue.getNegotiatedValue())) {
+            return new HelloCacheResult(true, null);
+        } else {
+            return new HelloCacheResult(false, cacheValue.getNegotiatedValue());
+        }
     }
 
     /**
@@ -187,7 +217,7 @@ public class HelloCache {
         this.saveNegotiatedValue(
                 clientMinimumProtocolVersion,
                 clientMaximumProtocolVersion,
-                ErrorStrings.UNSUPPORTED_BROKER_VERSION_ERROR_CODE,
+                HANDSHAKE_ERROR,
                 methodTag
         );
     }
@@ -255,11 +285,16 @@ public class HelloCache {
         }
     }
 
+    /**
+     * Internal helper class to store and retrieve cache value in safe manner.
+     */
     @RequiredArgsConstructor
     @Accessors(prefix = "m")
     @Getter
     private static class HelloCacheValue {
         private static final String TAG = HelloCacheValue.class.getSimpleName();
+
+        private static final String SEPARATOR = ",";
         /**
          * Stores either negotiated protocol value or handshake error.
          */
@@ -271,7 +306,7 @@ public class HelloCache {
 
         @NonNull
         String serialize() {
-            return String.format("%s,%d", mNegotiatedValue, mTimeStamp);
+            return String.format("%s%s%d", mNegotiatedValue, SEPARATOR, mTimeStamp);
         }
 
         /**
@@ -282,7 +317,7 @@ public class HelloCache {
         @Nullable
         static HelloCacheValue deserialize(@NonNull final String value) {
             final String methodTag = TAG + ":deserialize";
-            final String[] values = value.split(",");
+            final String[] values = value.split(SEPARATOR);
             if (values.length <= 1) {
                 Logger.warn(methodTag, "Legacy or Invalid cache entry. " + value);
                 return null;
