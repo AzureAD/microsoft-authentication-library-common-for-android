@@ -149,9 +149,10 @@ public class OneAuthTestApp extends App implements IFirstPartyApp {
         try {
             Assert.assertTrue(resultUIObject.getText().contains("Result: Success"));
         } catch (UiObjectNotFoundException e) {
-            throw new RuntimeException(e);
+            throw new AssertionError("Could not click on object with txt general info text");
         }
     }
+
 
     public void assertSuccess() {
         try {
@@ -165,7 +166,7 @@ public class OneAuthTestApp extends App implements IFirstPartyApp {
             Assert.assertFalse(TextUtils.isEmpty(resultUIObject.getText()));
             Assert.assertFalse(TextUtils.isEmpty(accountIdObject.getText()));
         } catch (UiObjectNotFoundException e) {
-            throw new RuntimeException(e);
+            throw new AssertionError("Could not click on object general text and account id");
         }
     }
 
@@ -183,7 +184,7 @@ public class OneAuthTestApp extends App implements IFirstPartyApp {
                 accountsList.add(object.getText());
             }
         } catch (UiObjectNotFoundException e) {
-            throw new RuntimeException(e);
+            throw new AssertionError("Could not click on object showing list of accounts");
         }
         return accountsList;
     }
@@ -193,7 +194,7 @@ public class OneAuthTestApp extends App implements IFirstPartyApp {
         try {
             return resultUIObject.getText();
         } catch (UiObjectNotFoundException e) {
-            throw new RuntimeException(e);
+            throw new AssertionError("Could not click on object with token secret");
         }
     }
 }
