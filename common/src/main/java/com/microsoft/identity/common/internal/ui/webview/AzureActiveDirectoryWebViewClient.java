@@ -258,7 +258,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         // Old Chromium versions <88 did this behavior by default, but it was removed in more recent versions.
         // For now, reproduce this only for MSA, and consider adding more trusted ESTS endpoints in the future.
         final boolean urlIsTrustedToReceiveHeaders =  url.startsWith("https://login.live.com/");
-        boolean originalRequestHasHeaders = mRequestHeaders != null && !mRequestHeaders.isEmpty();
+        final boolean originalRequestHasHeaders = mRequestHeaders != null && !mRequestHeaders.isEmpty();
         return urlIsTrustedToReceiveHeaders && originalRequestHasHeaders;
     }
 
