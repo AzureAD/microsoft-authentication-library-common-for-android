@@ -310,6 +310,27 @@ class ActiveBrokerCacheTest {
         Assert.assertNull(cache.cachedTimeStamp)
     }
 
+    @Test
+    fun testSetSkipToAccountManager_ClearValue(){
+        val cache = ClientActiveBrokerCache(InMemoryStorage(), Mutex())
+        Assert.assertNull(cache.getCachedActiveBroker())
+
+        Assert.assertFalse(cache.shouldUseAccountManager())
+        Assert.assertNull(cache.cachedTimeStamp)
+
+        cache.setShouldUseAccountManagerForTheNextMilliseconds(
+            TimeUnit.SECONDS.toMillis(2)
+        )
+        Assert.assertTrue(cache.shouldUseAccountManager())
+        Assert.assertNotNull(cache.cachedTimeStamp)
+
+        cache.clearCachedActiveBroker()
+
+        Assert.assertFalse(cache.shouldUseAccountManager())
+        Assert.assertNull(cache.cachedTimeStamp)
+    }
+
+
     private fun getStorageSupplier() : IStorageSupplier {
         return InMemoryStorageSupplier()
     }
