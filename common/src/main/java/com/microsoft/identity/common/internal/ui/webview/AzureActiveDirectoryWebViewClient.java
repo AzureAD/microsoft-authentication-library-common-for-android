@@ -56,6 +56,7 @@ import com.microsoft.identity.common.logging.Logger;
 
 import java.net.URISyntaxException;
 import java.security.Principal;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
@@ -83,6 +84,8 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private final String mRedirectUrl;
     private final CertBasedAuthFactory mCertBasedAuthFactory;
     private AbstractCertBasedAuthChallengeHandler mCertBasedAuthChallengeHandler;
+
+    private HashMap<String, String> mRequestHeaders;
 
     public AzureActiveDirectoryWebViewClient(@NonNull final Activity activity,
                                              @NonNull final IAuthorizationCompletionCallback completionCallback,
@@ -125,6 +128,10 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     public boolean shouldOverrideUrlLoading(final WebView view, final WebResourceRequest request) {
         final Uri requestUrl = request.getUrl();
         return handleUrl(view, requestUrl.toString());
+    }
+
+    public void setRequestHeaders(final HashMap<String, String> requestHeaders) {
+        mRequestHeaders = requestHeaders;
     }
 
     /**
@@ -179,9 +186,12 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             } else if (!isUriSSLProtected(formattedURL)) {
                 Logger.info(methodTag,"Check for SSL protection");
                 processSSLProtectionCheck(view, url);
+            } else if (isHeaderForwardingRequiredUri(url)) {
+                processHeaderForwardingRequiredUri(view, url);
             } else {
                 Logger.info(methodTag,"This maybe a valid URI, but no special handling for this mentioned URI, hence deferring to WebView for loading.");
                 processInvalidUrl(url);
+
                 return false;
             }
         } catch (final ClientException exception) {
@@ -239,6 +249,17 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
     private boolean isWebCpUrl(@NonNull final String url) {
         return url.startsWith(AuthenticationConstants.Broker.BROWSER_EXT_WEB_CP);
+    }
+
+    private boolean isHeaderForwardingRequiredUri(@NonNull final String url) {
+        // MSAL makes MSA requests first to login.microsoftonline.com, and then gets redirected to login.live.com.
+        // This drops all the headers, which can have credentials useful for SSO and correlationIds useful for
+        // investigations.
+        // Old Chromium versions <88 did this behavior by default, but it was removed in more recent versions.
+        // For now, reproduce this only for MSA, and consider adding more trusted ESTS endpoints in the future.
+        final boolean urlIsTrustedToReceiveHeaders =  url.startsWith("https://login.live.com/");
+        final boolean originalRequestHasHeaders = mRequestHeaders != null && !mRequestHeaders.isEmpty();
+        return urlIsTrustedToReceiveHeaders && originalRequestHasHeaders;
     }
 
     // This function is only called when the client received a redirect that starts with the apps
@@ -432,6 +453,15 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
         Logger.infoPII(methodTag,"We are declining to override loading and redirect to invalid URL: '"
                 + removeQueryParametersOrRedact(url) + "' the user's url pattern is '" + mRedirectUrl + "'");
+    }
+
+    private void processHeaderForwardingRequiredUri(@NonNull final WebView view, @NonNull final String url) {
+        final String methodTag = TAG + ":processHeaderForwardingRequiredUri";
+
+        Logger.infoPII(methodTag,"We are loading this new URL: '"
+                + removeQueryParametersOrRedact(url) + "' with original requestHeaders appended.");
+
+        view.loadUrl(url, mRequestHeaders);
     }
 
     private String removeQueryParametersOrRedact(@NonNull final String url) {
