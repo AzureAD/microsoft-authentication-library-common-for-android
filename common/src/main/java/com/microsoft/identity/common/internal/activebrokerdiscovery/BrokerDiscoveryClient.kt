@@ -236,6 +236,7 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
                     "Will skip broker discovery via IPC and fall back to AccountManager " +
                             "for the next 60 minutes."
                 )
+                cache.clearCachedActiveBroker()
                 cache.setShouldUseAccountManagerForTheNextMilliseconds(
                     TimeUnit.MINUTES.toMillis(
                         60
