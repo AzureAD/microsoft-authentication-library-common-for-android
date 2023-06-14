@@ -123,7 +123,7 @@ public class BrokerMsalController extends BaseController {
 
     private static final String TAG = BrokerMsalController.class.getSimpleName();
     private static final long WAIT_BETWEEN_DCF_POLLING_MILLISECONDS = TimeUnit.SECONDS.toMillis(5);
-
+    private static final long HANDSHAKE_TIMEOUT = TimeUnit.HOURS.toMillis(4);
     protected final MsalBrokerRequestAdapter mRequestAdapter = new MsalBrokerRequestAdapter();
     protected final MsalBrokerResultAdapter mResultAdapter = new MsalBrokerResultAdapter();
 
@@ -157,7 +157,7 @@ public class BrokerMsalController extends BaseController {
     @VisibleForTesting
     public HelloCache getHelloCache() {
         return new HelloCache(mApplicationContext, MSAL_TO_BROKER_PROTOCOL_NAME, mActiveBrokerPackageName,
-                mComponents, 4);
+                mComponents, HANDSHAKE_TIMEOUT);
     }
 
     /**
