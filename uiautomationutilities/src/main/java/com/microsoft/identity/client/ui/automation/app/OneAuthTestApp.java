@@ -56,14 +56,25 @@ public class OneAuthTestApp extends App implements IFirstPartyApp {
     public final static String ONEAUTH_TESTAPP_PACKAGE_NAME = "com.microsoft.oneauth.testapp";
     public final static String ONEAUTH_TESTAPP_NAME = "OneAuth Testapp";
     public final static String ONEAUTH_TESTAPP_APK = "OneAuth.apk";
+    public final static String OLD_ONEAUTH_TESTAPP_APK = "OldOneAuth.apk";
 
     public OneAuthTestApp() {
         super(ONEAUTH_TESTAPP_PACKAGE_NAME, ONEAUTH_TESTAPP_NAME, new LocalApkInstaller());
     }
 
-    public OneAuthTestApp(@NonNull final IAppInstaller appInstaller) {
+    /**
+     * @param appInstaller  Installer used for apk installation
+     * @param installOldApk true, if need to install old version of app. False otherwise.
+     */
+    public OneAuthTestApp(@NonNull final IAppInstaller appInstaller,
+                          final boolean installOldApk) {
         super(ONEAUTH_TESTAPP_PACKAGE_NAME, ONEAUTH_TESTAPP_NAME, appInstaller);
-        localApkFileName = ONEAUTH_TESTAPP_APK;
+        if (installOldApk) {
+            localApkFileName = OLD_ONEAUTH_TESTAPP_APK;
+        } else {
+            localApkFileName = OLD_ONEAUTH_TESTAPP_APK;
+        }
+        localUpdateApkFileName = ONEAUTH_TESTAPP_APK;
     }
 
     @Override

@@ -68,7 +68,8 @@ public class CopyFileRule implements TestRule {
             BrowserEdge.EDGE_APK,
             BrokerLTW.BROKER_LTW_APK,
             BrokerLTW.OLD_BROKER_LTW_APK,
-            OneAuthTestApp.ONEAUTH_TESTAPP_APK
+            OneAuthTestApp.ONEAUTH_TESTAPP_APK,
+            OneAuthTestApp.OLD_ONEAUTH_TESTAPP_APK
     };
 
     public CopyFileRule() {
