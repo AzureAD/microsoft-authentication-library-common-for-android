@@ -53,9 +53,9 @@ import java.util.List;
  */
 public class OneAuthTestApp extends App implements IFirstPartyApp {
     private final static String TAG = "OneAuthTestApp";
-    private final static String ONEAUTH_TESTAPP_PACKAGE_NAME = "com.microsoft.oneauth.testapp";
-    private final static String ONEAUTH_TESTAPP_NAME = "OneAuth Testapp";
-    private final static String ONEAUTH_TESTAPP_APK = "OneAuth.apk";
+    public final static String ONEAUTH_TESTAPP_PACKAGE_NAME = "com.microsoft.oneauth.testapp";
+    public final static String ONEAUTH_TESTAPP_NAME = "OneAuth Testapp";
+    public final static String ONEAUTH_TESTAPP_APK = "OneAuth.apk";
 
     public OneAuthTestApp() {
         super(ONEAUTH_TESTAPP_PACKAGE_NAME, ONEAUTH_TESTAPP_NAME, new LocalApkInstaller());
@@ -96,7 +96,7 @@ public class OneAuthTestApp extends App implements IFirstPartyApp {
                                           @NonNull final String password,
                                           @NonNull final FirstPartyAppPromptHandlerParameters promptHandlerParameters) {
         signIn(username, password, promptHandlerParameters);
-        return getTokeSecret();
+        return getTokenSecret();
     }
 
     public String acquireTokenSilent() {
@@ -105,10 +105,10 @@ public class OneAuthTestApp extends App implements IFirstPartyApp {
         try {
             // Add a delay so that UI is updated with the token successfully
             Thread.sleep(2000);
-        } catch (InterruptedException e) {
+        } catch (final InterruptedException e) {
             e.printStackTrace();
         }
-        return getTokeSecret();
+        return getTokenSecret();
     }
 
     private void signIn(@NonNull final String username,
@@ -124,7 +124,7 @@ public class OneAuthTestApp extends App implements IFirstPartyApp {
             final UiObject nextBtn = UiAutomatorUtils.obtainUiObjectWithTextAndClassType(
                     "Next", Button.class);
             nextBtn.click();
-        } catch (UiObjectNotFoundException e) {
+        } catch (final UiObjectNotFoundException e) {
             throw new AssertionError("Could not click on object with txt Next");
         }
 
@@ -148,7 +148,7 @@ public class OneAuthTestApp extends App implements IFirstPartyApp {
         final UiObject resultUIObject = UiAutomatorUtils.obtainUiObjectWithResourceId("com.microsoft.oneauth.testapp:id/txtGeneralInfo");
         try {
             Assert.assertTrue(resultUIObject.getText().contains("Result: Success"));
-        } catch (UiObjectNotFoundException e) {
+        } catch (final UiObjectNotFoundException e) {
             throw new AssertionError("Could not click on object with txt general info text");
         }
     }
@@ -165,7 +165,7 @@ public class OneAuthTestApp extends App implements IFirstPartyApp {
             Assert.assertTrue(resultUIObject.getText().contains("Result: Success"));
             Assert.assertFalse(TextUtils.isEmpty(resultUIObject.getText()));
             Assert.assertFalse(TextUtils.isEmpty(accountIdObject.getText()));
-        } catch (UiObjectNotFoundException e) {
+        } catch (final UiObjectNotFoundException e) {
             throw new AssertionError("Could not click on object general text and account id");
         }
     }
@@ -174,27 +174,27 @@ public class OneAuthTestApp extends App implements IFirstPartyApp {
      * Returns string list of all accounts available
      */
     public List<String> getAllAccounts() {
-        List<String> accountsList = new ArrayList<>();
+        final List<String> accountsList = new ArrayList<>();
         UiAutomatorUtils.handleButtonClick("com.microsoft.oneauth.testapp:id/get_all_accounts_button");
         final UiObject resultUIObject = UiAutomatorUtils.obtainUiObjectWithResourceId("com.microsoft.oneauth.testapp:id/all_accounts_list");
         try {
-            int size = resultUIObject.getChildCount();
-            for (int i = 0; i < size; i++) {
+            int childCount = resultUIObject.getChildCount();
+            for (int i = 0; i < childCount; i++) {
                 UiObject object = resultUIObject.getChild(new UiSelector().clickable(true).index(i));
                 accountsList.add(object.getText());
             }
-        } catch (UiObjectNotFoundException e) {
-            throw new AssertionError("Could not click on object showing list of accounts");
+        } catch (final UiObjectNotFoundException e) {
+            throw new AssertionError("Could not find object showing list of accounts");
         }
         return accountsList;
     }
 
-    public String getTokeSecret() {
+    public String getTokenSecret() {
         final UiObject resultUIObject = UiAutomatorUtils.obtainUiObjectWithResourceId("com.microsoft.oneauth.testapp:id/txtSecret");
         try {
             return resultUIObject.getText();
-        } catch (UiObjectNotFoundException e) {
-            throw new AssertionError("Could not click on object with token secret");
+        } catch (final UiObjectNotFoundException e) {
+            throw new AssertionError(e);
         }
     }
 }
