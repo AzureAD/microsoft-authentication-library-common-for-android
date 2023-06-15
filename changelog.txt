@@ -2,6 +2,10 @@ V.12.0.2
 ----------
 - [MINOR] Fix issue for MSA only where headers are not propagated on web requests with different domain redirects on newer versions of WebView (88+) (#2072)
 
+V.12.0.1
+=======
+- [PATCH] Revert "Getting rid of account manager strategy in MSAL/OneAuth (#1988)" (#2041/#2042)
+
 V.12.0.0
 ----------
 - [MINOR] make getCurrentActiveBrokerPackageName case insensitive and trims the authenticator type (#2026)
