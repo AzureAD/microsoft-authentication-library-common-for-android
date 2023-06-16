@@ -227,22 +227,20 @@ public class BrokerMsalController extends BaseController {
                  final @Nullable String minRequestedVersion,
                  final @NonNull String clientMaxProtocolVersion) throws BaseException {
         final String methodTag = TAG + ":hello";
-        final HelloCache.HelloCacheResult result = mHelloCache.tryGetNegotiatedProtocolVersion(
-                minRequestedVersion, clientMaxProtocolVersion);
 
-        if (result != null) {
-            if (result.isHandShakeError()) {
-                Logger.info(methodTag, "Handshake error from cache. Throwing exception");
-                throw new UnsupportedBrokerException(mActiveBrokerPackageName);
-            }
-            final String cachedProtocolVersion = result.getNegotiatedProtocolVersion();
-            if (!StringUtil.isEmpty(cachedProtocolVersion)){
-                return cachedProtocolVersion;
-            } else {
-                Logger.warn(methodTag, "Unexpected: cachedProtocolVersion is empty. Continue with hello protocol IPC.");
-            }
+        final String cachedProtocolVersion = tryGetNegotiatedProtocolVersionFromHelloCache(
+                minRequestedVersion,
+                clientMaxProtocolVersion
+        );
+
+        if (cachedProtocolVersion != null) {
+            return cachedProtocolVersion;
         }
 
+        Logger.info(methodTag,
+                String.format("Calling broker for to establish negotiated protocol version for: MinRequestVersion=%s, ClientMaxProtocolVersion=%s, ActiveBroker=%s",
+                        minRequestedVersion, clientMaxProtocolVersion, mActiveBrokerPackageName)
+        );
         final Bundle bundle = new Bundle();
         bundle.putString(
                 CLIENT_ADVERTISED_MAXIMUM_BP_VERSION_KEY,
@@ -279,6 +277,35 @@ public class BrokerMsalController extends BaseController {
                     clientMaxProtocolVersion
             );
             throw e;
+        }
+    }
+
+    /**
+     * Tries reading negotiated protocol version from hello cache and returns it.
+     * @throws UnsupportedBrokerException when there's handshake error present in hello cache.
+     */
+    private String tryGetNegotiatedProtocolVersionFromHelloCache(
+            final @Nullable String minRequestedVersion,
+            final @NonNull String clientMaxProtocolVersion
+    ) throws UnsupportedBrokerException {
+        final String methodTag = TAG + ":tryGetNegotiatedProtocolVersionFromHelloCache";
+        final HelloCache.HelloCacheResult helloCacheResult = mHelloCache.getHelloCacheResult(
+                minRequestedVersion, clientMaxProtocolVersion);
+        if (helloCacheResult == null) {
+            Logger.info(methodTag, "No valid entry found in cache");
+            return null;
+        }
+
+        if (helloCacheResult.isHandShakeError()) {
+            Logger.info(methodTag, "Handshake error from cache.");
+            throw new UnsupportedBrokerException(mActiveBrokerPackageName);
+        }
+        final String cachedProtocolVersion = helloCacheResult.getNegotiatedProtocolVersion();
+        if (!StringUtil.isEmpty(cachedProtocolVersion)){
+            return cachedProtocolVersion;
+        } else {
+            Logger.warn(methodTag, "Unexpected: cachedProtocolVersion is empty. Continue with hello IPC protocol.");
+            return null;
         }
     }
 
