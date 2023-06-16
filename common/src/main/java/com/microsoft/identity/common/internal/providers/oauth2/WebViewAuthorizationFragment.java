@@ -239,6 +239,8 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
             public void run() {
                 Logger.info(methodTag, "Launching embedded WebView for acquiring auth code.");
                 Logger.infoPII(methodTag, "The start url is " + mAuthorizationRequestUrl);
+
+                mAADWebViewClient.setRequestHeaders(mRequestHeaders);
                 mWebView.loadUrl(mAuthorizationRequestUrl, mRequestHeaders);
 
                 // The first page load could take time, and we do not want to just show a blank page.

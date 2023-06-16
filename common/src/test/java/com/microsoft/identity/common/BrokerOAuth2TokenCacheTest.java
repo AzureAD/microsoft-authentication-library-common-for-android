@@ -23,7 +23,7 @@
 package com.microsoft.identity.common;
 
 import static com.microsoft.identity.common.MicrosoftStsAccountCredentialAdapterTest.MOCK_ID_TOKEN_WITH_CLAIMS;
-import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.APPLICATION_IDENTIFIER;
+import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.APPLICATION_IDENTIFIER_SHA512;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.BEARER_AUTHENTICATION_SCHEME;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.CACHED_AT;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.CLIENT_ID;
@@ -161,7 +161,7 @@ public class BrokerOAuth2TokenCacheTest {
                 EXPIRES_ON,
                 SECRET,
                 CLIENT_ID,
-                APPLICATION_IDENTIFIER,
+                APPLICATION_IDENTIFIER_SHA512,
                 MAM_ENROLLMENT_IDENTIFIER,
                 SECRET,
                 MOCK_ID_TOKEN_WITH_CLAIMS,
@@ -182,7 +182,7 @@ public class BrokerOAuth2TokenCacheTest {
                 EXPIRES_ON,
                 SECRET,
                 CLIENT_ID,
-                APPLICATION_IDENTIFIER,
+                APPLICATION_IDENTIFIER_SHA512,
                 MAM_ENROLLMENT_IDENTIFIER,
                 SECRET,
                 MOCK_ID_TOKEN_WITH_CLAIMS,
@@ -207,7 +207,7 @@ public class BrokerOAuth2TokenCacheTest {
                             EXPIRES_ON,
                             SECRET,
                             UUID.randomUUID().toString(),
-                            APPLICATION_IDENTIFIER,
+                            APPLICATION_IDENTIFIER_SHA512,
                             MAM_ENROLLMENT_IDENTIFIER,
                             SECRET,
                             MOCK_ID_TOKEN_WITH_CLAIMS,
@@ -552,7 +552,7 @@ public class BrokerOAuth2TokenCacheTest {
     public void testCacheMiss() {
         final ICacheRecord cacheRecord = mBrokerOAuth2TokenCache.load(
                 CLIENT_ID,
-                APPLICATION_IDENTIFIER,
+                APPLICATION_IDENTIFIER_SHA512,
                 MAM_ENROLLMENT_IDENTIFIER,
                 TARGET,
                 mDefaultAppUidTestBundle.mGeneratedAccount,
@@ -578,7 +578,7 @@ public class BrokerOAuth2TokenCacheTest {
 
         final ICacheRecord cacheRecord = mBrokerOAuth2TokenCache.load(
                 CLIENT_ID,
-                APPLICATION_IDENTIFIER,
+                APPLICATION_IDENTIFIER_SHA512,
                 MAM_ENROLLMENT_IDENTIFIER,
                 TARGET,
                 mDefaultAppUidTestBundle.mGeneratedAccount,
@@ -604,7 +604,7 @@ public class BrokerOAuth2TokenCacheTest {
 
         final ICacheRecord cacheRecord = mBrokerOAuth2TokenCache.load(
                 CLIENT_ID,
-                APPLICATION_IDENTIFIER,
+                APPLICATION_IDENTIFIER_SHA512,
                 MAM_ENROLLMENT_IDENTIFIER,
                 TARGET,
                 mDefaultFociTestBundle.mGeneratedAccount,

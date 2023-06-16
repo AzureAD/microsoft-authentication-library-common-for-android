@@ -58,6 +58,14 @@ class BrokerDiscoveryClientFactory {
         }
 
         /**
+         * Returns true if the new Broker discovery mechanism is enabled.
+         **/
+        @JvmStatic
+        fun isNewBrokerDiscoveryEnabled(): Boolean {
+            return IS_NEW_DISCOVERY_ENABLED;
+        }
+
+        /**
          * Initializes a new [IBrokerDiscoveryClient] object.
          **/
         @JvmStatic
