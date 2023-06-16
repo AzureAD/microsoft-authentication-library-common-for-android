@@ -20,42 +20,26 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java.challengehandlers;
+package com.microsoft.identity.common.internal.cache
 
-import com.microsoft.identity.common.java.exception.ClientException;
-
-import java.security.cert.X509Certificate;
-import java.util.List;
-
-import lombok.NonNull;
+import com.microsoft.identity.common.internal.activebrokerdiscovery.BrokerDiscoveryClient
 
 /**
- * Work place join related certificate is required to respond device challenge.
- */
-public interface IDeviceCertificate {
+ * An extension of [IActiveBrokerCache].
+ * This will allow [BrokerDiscoveryClient] to fall back to AccountManager immediately if it's aware that the broker side
+ * Does not support account manager (as opposed to trying to make unnecessary IPC call every time).
+ * */
+interface IClientActiveBrokerCache: IActiveBrokerCache {
 
     /**
-     * Checks valid issuer for cert authorities.
-     *
-     * @param certAuthorities list of cert authorities
-     * @return status if valid issue
-     */
-    boolean isValidIssuer(final List<String> certAuthorities);
+     * Returns true if [BrokerDiscoveryClient] should still use AccountManager.
+     **/
+    fun shouldUseAccountManager(): Boolean
 
     /**
-     * Gets certificate.
+     * Set the time span when [BrokerDiscoveryClient] should just rely on AccountManager.
      *
-     * @return {@link X509Certificate}
-     */
-    @NonNull
-    X509Certificate getX509();
-
-    /**
-     * Signs a piece of data with the (private key associated to the) certificate.
-     *
-     * @param algorithm         algorithm for signing the data.
-     * @param dataToBeSigned    the data to be signed.
-     */
-    byte[] sign(@NonNull final String algorithm, final byte[] dataToBeSigned) throws ClientException;
+     * @param timeInMillis Time in milliseconds (from now)
+     **/
+    fun setShouldUseAccountManagerForTheNextMilliseconds(timeInMillis: Long)
 }
-

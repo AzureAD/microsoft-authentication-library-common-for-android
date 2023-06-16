@@ -67,6 +67,103 @@ data class BrokerData(val packageName : String,
          */
         val sShouldTrustDebugBrokers = BuildConfig.DEBUG
 
+        @JvmStatic
+        val debugMicrosoftAuthenticator = BrokerData(
+            AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME,
+            AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_DEBUG_SIGNATURE_SHA512
+        )
+
+        @JvmStatic
+        val prodMicrosoftAuthenticator = BrokerData(
+            AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME,
+            AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_RELEASE_SIGNATURE_SHA512
+        )
+
+        @JvmStatic
+        val prodCompanyPortal = BrokerData(
+            AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME,
+            AuthenticationConstants.Broker.COMPANY_PORTAL_APP_RELEASE_SIGNATURE_SHA512
+        )
+
+        @JvmStatic
+        val debugBrokerHost = BrokerData(
+            AuthenticationConstants.Broker.BROKER_HOST_APP_PACKAGE_NAME,
+            AuthenticationConstants.Broker.BROKER_HOST_APP_SIGNATURE_SHA512
+        )
+
+        @JvmStatic
+        val debugMockCp = BrokerData(
+            AuthenticationConstants.Broker.MOCK_CP_PACKAGE_NAME,
+            AuthenticationConstants.Broker.MOCK_CP_SIGNATURE_SHA512
+        )
+
+        @JvmStatic
+        val debugMockAuthApp = BrokerData(
+            AuthenticationConstants.Broker.MOCK_AUTH_APP_PACKAGE_NAME,
+            AuthenticationConstants.Broker.MOCK_AUTH_APP_SIGNATURE_SHA512
+        )
+
+        @JvmStatic
+        val debugMockLtw = BrokerData(
+            AuthenticationConstants.Broker.MOCK_LTW_PACKAGE_NAME,
+            AuthenticationConstants.Broker.MOCK_LTW_SIGNATURE_SHA512
+        )
+
+        @JvmStatic
+        val prodLTW = BrokerData(
+            AuthenticationConstants.Broker.LTW_APP_PACKAGE_NAME,
+            AuthenticationConstants.Broker.LTW_APP_SHA512_RELEASE_SIGNATURE
+        )
+
+        @JvmStatic
+        val debugLTW = BrokerData(
+            AuthenticationConstants.Broker.LTW_APP_PACKAGE_NAME,
+            AuthenticationConstants.Broker.LTW_APP_SHA512_DEBUG_SIGNATURE
+        )
+
+        @JvmStatic
+        val accountManagerBrokers: Set<String> =
+            Collections.unmodifiableSet(object : HashSet<String>() {
+                init {
+                    add(AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME)
+                    add(AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME)
+                    add(AuthenticationConstants.Broker.BROKER_HOST_APP_PACKAGE_NAME)
+                    add(AuthenticationConstants.Broker.MOCK_AUTH_APP_PACKAGE_NAME)
+                    add(AuthenticationConstants.Broker.MOCK_CP_PACKAGE_NAME)
+                }
+            })
+
+        @JvmStatic
+        val debugBrokers: Set<BrokerData> =
+            Collections.unmodifiableSet(object : HashSet<BrokerData>() {
+                init {
+                    add(debugMicrosoftAuthenticator)
+                    add(debugLTW)
+                    add(debugBrokerHost)
+                    add(debugMockCp)
+                    add(debugMockAuthApp)
+                    add(debugMockLtw)
+                }
+            })
+
+        @JvmStatic
+        val prodBrokers: Set<BrokerData> =
+            Collections.unmodifiableSet(object : HashSet<BrokerData>() {
+                init {
+                    add(prodMicrosoftAuthenticator)
+                    add(prodCompanyPortal)
+                }
+            })
+
+        @JvmStatic
+        val allBrokers: Set<BrokerData> =
+            Collections.unmodifiableSet(object : HashSet<BrokerData>() {
+                init {
+                    addAll(debugBrokers)
+                    addAll(prodBrokers)
+                }
+            })
+
         /**
          * Returns the list of known broker apps (which SDK should make requests to).
          * see [sShouldTrustDebugBrokers] for more info regarding testing.
@@ -106,55 +203,13 @@ data class BrokerData(val packageName : String,
             }
         }
 
+        /**
+         * Returns true if the owner of the [Context] is a broker app
+         * which relies on AccountManager as a broker discovery mechanism.
+         * */
         @JvmStatic
-        val debugMicrosoftAuthenticator = BrokerData(
-            AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME,
-            AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_DEBUG_SIGNATURE
-        )
-
-        @JvmStatic
-        val prodMicrosoftAuthenticator = BrokerData(
-            AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME,
-            AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_RELEASE_SIGNATURE
-        )
-
-        @JvmStatic
-        val prodCompanyPortal = BrokerData(
-            AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME,
-            AuthenticationConstants.Broker.COMPANY_PORTAL_APP_RELEASE_SIGNATURE
-        )
-
-        @JvmStatic
-        val debugBrokerHost = BrokerData(
-            AuthenticationConstants.Broker.BROKER_HOST_APP_PACKAGE_NAME,
-            AuthenticationConstants.Broker.BROKER_HOST_APP_SIGNATURE
-        )
-
-        @JvmStatic
-        val debugBrokers: Set<BrokerData> =
-            Collections.unmodifiableSet(object : HashSet<BrokerData>() {
-                init {
-                    add(debugMicrosoftAuthenticator)
-                    add(debugBrokerHost)
-                }
-            })
-
-        @JvmStatic
-        val prodBrokers: Set<BrokerData> =
-            Collections.unmodifiableSet(object : HashSet<BrokerData>() {
-                init {
-                    add(prodMicrosoftAuthenticator)
-                    add(prodCompanyPortal)
-                }
-            })
-
-        @JvmStatic
-        val allBrokers: Set<BrokerData> =
-            Collections.unmodifiableSet(object : HashSet<BrokerData>() {
-                init {
-                    addAll(debugBrokers)
-                    addAll(prodBrokers)
-                }
-            })
+        fun isAccountManagerSupported(packageName: String): Boolean {
+            return accountManagerBrokers.contains(packageName)
+        }
     }
 }

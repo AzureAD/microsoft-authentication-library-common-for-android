@@ -26,6 +26,10 @@ import androidx.annotation.NonNull;
 import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObjectNotFoundException;
 
+import com.microsoft.identity.client.ui.automation.interaction.PromptHandlerParameters;
+import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.AadPromptHandler;
+import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.AdfsPromptHandler;
+import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.MicrosoftStsPromptHandler;
 import com.microsoft.identity.client.ui.automation.utils.CommonUtils;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 import com.microsoft.identity.common.java.util.ThreadUtils;
@@ -43,13 +47,14 @@ import lombok.Getter;
  */
 abstract class AbstractBrokerHost {
     private static final String TAG = AbstractBrokerHost.class.getSimpleName();
-
+    protected final static String CERT_INSTALLER_PACKAGE_NAME = "com.android.certinstaller";
     public final static String BROKER_HOST_APP_PACKAGE_NAME = "com.microsoft.identity.testuserapp";
     public final static String BROKER_HOST_APP_NAME = "Broker Host App";
     private final static long APP_LAUNCH_TIMEOUT = TimeUnit.SECONDS.toMillis(5);
     // Resource id's
     private final static String HEADER_RESOURCE_ID = "text_header";
     protected final static String USERNAME_EDIT_TEXT = "edit_text_username";
+    protected final static String TENANT_EDIT_TEXT = "edit_text_tenant_id_mwpj";
     protected final static String DIALOG_BOX_RESOURCE_ID = "android:id/message";
     protected final static String DIALOG_BOX_OK_BUTTON_RESOURCE_ID = "android:id/button1";
 
@@ -126,7 +131,7 @@ abstract class AbstractBrokerHost {
         try {
             final String dialogBoxText = dialogBox.getText();
             final String[] dialogBoxSplit = dialogBoxText.split(":");
-            return dialogBoxSplit.length > 1 ? dialogBoxSplit[1] : dialogBoxText;
+            return dialogBoxSplit.length == 2 ? dialogBoxSplit[1] : dialogBoxText;
         } catch (final UiObjectNotFoundException e) {
             throw new AssertionError(e);
         } finally {
@@ -140,7 +145,7 @@ abstract class AbstractBrokerHost {
      *
      * @param expectedText the text that is expected to be contained in the dialog box
      */
-    static protected void dismissDialogBoxAndAssertContainsText(@NonNull final String expectedText) {
+    static public void dismissDialogBoxAndAssertContainsText(@NonNull final String expectedText) {
         Assert.assertTrue(
                 "Could not find the string '" + expectedText + "' in the msg displayed in the dialog",
                 dismissDialogBoxAndGetText().contains(expectedText)
@@ -186,6 +191,25 @@ abstract class AbstractBrokerHost {
             menuItem.click();
         } catch (final UiObjectNotFoundException e) {
             throw new AssertionError(e);
+        }
+    }
+
+    /**
+     * Get the prompt handler based on the user type.
+     *
+     * @param isFederatedUser         true if the user is a federated user, false otherwise.
+     * @param promptHandlerParameters the prompt handler parameters.
+     * @return the prompt handler.
+     */
+    public MicrosoftStsPromptHandler getPromptHandler(
+            final boolean isFederatedUser,
+            @lombok.NonNull final PromptHandlerParameters promptHandlerParameters) {
+        if (isFederatedUser) {
+            // handle ADFS login page
+            return new AdfsPromptHandler(promptHandlerParameters);
+        } else {
+            // handle AAD login page
+            return new AadPromptHandler(promptHandlerParameters);
         }
     }
 }

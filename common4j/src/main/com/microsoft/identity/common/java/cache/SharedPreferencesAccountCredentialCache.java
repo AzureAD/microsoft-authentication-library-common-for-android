@@ -82,10 +82,6 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
     public static final String DESERIALIZATION_FAILED = "Deserialization failed. Skipping ";
     public static final String ACCOUNT_RECORD_DESERIALIZATION_FAILED = DESERIALIZATION_FAILED + AccountRecord.class.getSimpleName();
     public static final String CREDENTIAL_DESERIALIZATION_FAILED = DESERIALIZATION_FAILED + Credential.class.getSimpleName();
-
-    // SharedPreferences used to store Accounts and Credentials
-    private final INameValueStorage<String> mSharedPreferencesFileManager;
-
     private final ICacheKeyValueDelegate mCacheValueDelegate;
 
     /**
@@ -97,9 +93,10 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
     public SharedPreferencesAccountCredentialCache(
             @NonNull final ICacheKeyValueDelegate accountCacheValueDelegate,
             @NonNull final INameValueStorage<String> sharedPreferencesFileManager) {
+        super(sharedPreferencesFileManager);
         Logger.verbose(TAG, "Init: " + TAG);
-        mSharedPreferencesFileManager = sharedPreferencesFileManager;
         mCacheValueDelegate = accountCacheValueDelegate;
+        new Thread(this::removeSha1ApplicationIdentifierAccessTokensIfNeeded).start();
     }
 
     @Override
@@ -435,7 +432,7 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
             @Nullable final String target,
             @Nullable final String authScheme,
             @Nullable final String requestedClaims,
-            @Nullable final List<Credential> inputCredentials) {
+            @NonNull final List<Credential> inputCredentials) {
         final String methodTag = TAG + ":getCredentialsFilteredBy";
         Logger.verbose(methodTag, "getCredentialsFilteredBy()");
 
@@ -497,7 +494,7 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
 
     @Override
     public List<Credential> getCredentialsFilteredBy(
-            @Nullable List<Credential> inputCredentials,
+            @NonNull List<Credential> inputCredentials,
             @Nullable final String homeAccountId,
             @Nullable final String environment,
             @Nullable final CredentialType credentialType,
@@ -670,5 +667,4 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
         Logger.verbose(methodTag, "isCredential? [" + isCredential + "]");
         return isCredential;
     }
-
 }

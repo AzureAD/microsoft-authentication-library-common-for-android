@@ -54,6 +54,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import static com.microsoft.identity.common.java.cache.AbstractAccountCredentialCache.SHA1_APPLICATION_IDENTIFIER_ACCESS_TOKEN_CLEARED;
 import static com.microsoft.identity.common.java.cache.CacheKeyValueDelegate.CACHE_VALUE_SEPARATOR;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -68,7 +69,8 @@ public class SharedPreferencesAccountCredentialCacheTest {
     static final String HOME_ACCOUNT_ID = "29f3807a-4fb0-42f2-a44a-236aa0cb3f97.0287f963-2d72-4363-9e3a-5705c5b0f031";
     static final String ENVIRONMENT = "login.microsoftonline.com";
     static final String CLIENT_ID = "0287f963-2d72-4363-9e3a-5705c5b0f031";
-    static final String APPLICATION_IDENTIFIER = "UNSET/UNSET";
+    static final String APPLICATION_IDENTIFIER_SHA1 = "some.package/AbCdEfGhIjKlMnOpQrStUvWxYz/=";
+    static final String APPLICATION_IDENTIFIER_SHA512 = "some.package/AbCdEfGhIjKlMnOpQrStUvWxYz/+0123456789AbCdEfGhIjKlMnOpQrStUvWxYz/+0123456789AbCdEfGhIj==";
     static final String MAM_ENROLLMENT_IDENTIFIER = "UNSET";
     static final String TARGET = "user.read user.write https://graph.windows.net";
     // In the case of AAD, the realm is the tenantId
@@ -663,7 +665,7 @@ public class SharedPreferencesAccountCredentialCacheTest {
         accessToken.setRealm("Foo");
         accessToken.setEnvironment(ENVIRONMENT);
         accessToken.setClientId(CLIENT_ID);
-        accessToken.setApplicationIdentifier(APPLICATION_IDENTIFIER);
+        accessToken.setApplicationIdentifier(APPLICATION_IDENTIFIER_SHA512);
         accessToken.setMamEnrollmentIdentifier(MAM_ENROLLMENT_IDENTIFIER);
         accessToken.setTarget(TARGET);
         accessToken.setCachedAt(CACHED_AT);
@@ -712,7 +714,7 @@ public class SharedPreferencesAccountCredentialCacheTest {
                 null, // * wildcard
                 CredentialType.RefreshToken,
                 CLIENT_ID,
-                APPLICATION_IDENTIFIER,
+                APPLICATION_IDENTIFIER_SHA512,
                 MAM_ENROLLMENT_IDENTIFIER,
                 REALM,
                 TARGET,
@@ -730,7 +732,7 @@ public class SharedPreferencesAccountCredentialCacheTest {
         accessToken.setRealm("Foo");
         accessToken.setEnvironment(ENVIRONMENT);
         accessToken.setClientId(CLIENT_ID);
-        accessToken.setApplicationIdentifier(APPLICATION_IDENTIFIER);
+        accessToken.setApplicationIdentifier(APPLICATION_IDENTIFIER_SHA512);
         accessToken.setMamEnrollmentIdentifier(MAM_ENROLLMENT_IDENTIFIER);
         accessToken.setTarget(TARGET);
         accessToken.setCachedAt(CACHED_AT);
@@ -753,7 +755,7 @@ public class SharedPreferencesAccountCredentialCacheTest {
                 ENVIRONMENT,
                 null,
                 CLIENT_ID,
-                APPLICATION_IDENTIFIER,
+                APPLICATION_IDENTIFIER_SHA512,
                 MAM_ENROLLMENT_IDENTIFIER,
                 null,
                 TARGET,
@@ -775,7 +777,7 @@ public class SharedPreferencesAccountCredentialCacheTest {
         accessToken.setRealm(REALM);
         accessToken.setEnvironment(ENVIRONMENT);
         accessToken.setClientId(CLIENT_ID);
-        accessToken.setApplicationIdentifier(APPLICATION_IDENTIFIER);
+        accessToken.setApplicationIdentifier(APPLICATION_IDENTIFIER_SHA512);
         accessToken.setMamEnrollmentIdentifier(MAM_ENROLLMENT_IDENTIFIER);
         accessToken.setTarget(TARGET);
         accessToken.setCachedAt(CACHED_AT);
@@ -798,7 +800,7 @@ public class SharedPreferencesAccountCredentialCacheTest {
                 ENVIRONMENT,
                 null,
                 null,
-                APPLICATION_IDENTIFIER,
+                APPLICATION_IDENTIFIER_SHA512,
                 MAM_ENROLLMENT_IDENTIFIER,
                 REALM,
                 TARGET,
@@ -827,7 +829,7 @@ public class SharedPreferencesAccountCredentialCacheTest {
         accessToken.setRealm(REALM);
         accessToken.setEnvironment(ENVIRONMENT);
         accessToken.setClientId(CLIENT_ID);
-        accessToken.setApplicationIdentifier(APPLICATION_IDENTIFIER);
+        accessToken.setApplicationIdentifier(APPLICATION_IDENTIFIER_SHA512);
         accessToken.setMamEnrollmentIdentifier(MAM_ENROLLMENT_IDENTIFIER);
         accessToken.setTarget(TARGET);
         accessToken.setCachedAt(CACHED_AT);
@@ -843,7 +845,7 @@ public class SharedPreferencesAccountCredentialCacheTest {
                 ENVIRONMENT,
                 CredentialType.RefreshToken,
                 CLIENT_ID,
-                APPLICATION_IDENTIFIER,
+                APPLICATION_IDENTIFIER_SHA512,
                 MAM_ENROLLMENT_IDENTIFIER,
                 REALM,
                 TARGET,
@@ -877,7 +879,7 @@ public class SharedPreferencesAccountCredentialCacheTest {
         accessToken.setRealm(REALM);
         accessToken.setEnvironment(ENVIRONMENT);
         accessToken.setClientId(CLIENT_ID);
-        accessToken.setApplicationIdentifier(APPLICATION_IDENTIFIER);
+        accessToken.setApplicationIdentifier(APPLICATION_IDENTIFIER_SHA512);
         accessToken.setMamEnrollmentIdentifier(MAM_ENROLLMENT_IDENTIFIER);
         accessToken.setTarget(TARGET);
         accessToken.setCachedAt(CACHED_AT);
@@ -893,7 +895,7 @@ public class SharedPreferencesAccountCredentialCacheTest {
                 ENVIRONMENT,
                 CredentialType.RefreshToken,
                 CLIENT_ID,
-                APPLICATION_IDENTIFIER,
+                APPLICATION_IDENTIFIER_SHA512,
                 MAM_ENROLLMENT_IDENTIFIER,
                 REALM,
                 searchTarget,
@@ -932,7 +934,7 @@ public class SharedPreferencesAccountCredentialCacheTest {
         accessToken.setRealm(REALM);
         accessToken.setEnvironment(ENVIRONMENT);
         accessToken.setClientId(CLIENT_ID);
-        accessToken.setApplicationIdentifier(APPLICATION_IDENTIFIER);
+        accessToken.setApplicationIdentifier(APPLICATION_IDENTIFIER_SHA512);
         accessToken.setMamEnrollmentIdentifier(MAM_ENROLLMENT_IDENTIFIER);
         accessToken.setTarget(TARGET);
         accessToken.setCachedAt(CACHED_AT);
@@ -948,7 +950,7 @@ public class SharedPreferencesAccountCredentialCacheTest {
                 ENVIRONMENT,
                 CredentialType.RefreshToken,
                 CLIENT_ID,
-                APPLICATION_IDENTIFIER,
+                APPLICATION_IDENTIFIER_SHA512,
                 MAM_ENROLLMENT_IDENTIFIER,
                 REALM,
                 searchTarget,
@@ -989,7 +991,7 @@ public class SharedPreferencesAccountCredentialCacheTest {
         accessToken.setRealm(REALM);
         accessToken.setEnvironment(ENVIRONMENT);
         accessToken.setClientId(CLIENT_ID);
-        accessToken.setApplicationIdentifier(APPLICATION_IDENTIFIER);
+        accessToken.setApplicationIdentifier(APPLICATION_IDENTIFIER_SHA512);
         accessToken.setMamEnrollmentIdentifier(MAM_ENROLLMENT_IDENTIFIER);
         accessToken.setTarget(TARGET);
         accessToken.setCachedAt(CACHED_AT);
@@ -1005,7 +1007,7 @@ public class SharedPreferencesAccountCredentialCacheTest {
                 ENVIRONMENT,
                 CredentialType.RefreshToken,
                 CLIENT_ID,
-                APPLICATION_IDENTIFIER,
+                APPLICATION_IDENTIFIER_SHA512,
                 MAM_ENROLLMENT_IDENTIFIER,
                 REALM,
                 searchTarget,
@@ -1039,7 +1041,7 @@ public class SharedPreferencesAccountCredentialCacheTest {
         accessToken.setEnvironment(ENVIRONMENT);
         accessToken.setCredentialType(CredentialType.AccessToken.name());
         accessToken.setClientId(CLIENT_ID);
-        accessToken.setApplicationIdentifier(APPLICATION_IDENTIFIER);
+        accessToken.setApplicationIdentifier(APPLICATION_IDENTIFIER_SHA512);
         accessToken.setMamEnrollmentIdentifier(MAM_ENROLLMENT_IDENTIFIER);
         accessToken.setTarget(TARGET);
 
@@ -1052,7 +1054,7 @@ public class SharedPreferencesAccountCredentialCacheTest {
                 ENVIRONMENT,
                 CredentialType.RefreshToken,
                 CLIENT_ID,
-                APPLICATION_IDENTIFIER,
+                APPLICATION_IDENTIFIER_SHA512,
                 MAM_ENROLLMENT_IDENTIFIER,
                 REALM,
                 TARGET,
@@ -1080,7 +1082,7 @@ public class SharedPreferencesAccountCredentialCacheTest {
         accessToken.setEnvironment(ENVIRONMENT);
         accessToken.setCredentialType(CredentialType.AccessToken.name());
         accessToken.setClientId(CLIENT_ID);
-        accessToken.setApplicationIdentifier(APPLICATION_IDENTIFIER);
+        accessToken.setApplicationIdentifier(APPLICATION_IDENTIFIER_SHA512);
         accessToken.setMamEnrollmentIdentifier(MAM_ENROLLMENT_IDENTIFIER);
         accessToken.setTarget(TARGET);
 
@@ -1093,7 +1095,7 @@ public class SharedPreferencesAccountCredentialCacheTest {
         accessToken2.setEnvironment(ENVIRONMENT);
         accessToken2.setCredentialType(CredentialType.AccessToken.name());
         accessToken2.setClientId(CLIENT_ID);
-        accessToken2.setApplicationIdentifier(APPLICATION_IDENTIFIER);
+        accessToken2.setApplicationIdentifier(APPLICATION_IDENTIFIER_SHA512);
         accessToken2.setMamEnrollmentIdentifier(MAM_ENROLLMENT_IDENTIFIER);
         accessToken2.setTarget(TARGET);
 
@@ -1107,7 +1109,7 @@ public class SharedPreferencesAccountCredentialCacheTest {
                 ENVIRONMENT,
                 CredentialType.AccessToken,
                 CLIENT_ID,
-                APPLICATION_IDENTIFIER,
+                APPLICATION_IDENTIFIER_SHA512,
                 MAM_ENROLLMENT_IDENTIFIER,
                 null,
                 TARGET,
@@ -1135,7 +1137,7 @@ public class SharedPreferencesAccountCredentialCacheTest {
         accessToken.setEnvironment(ENVIRONMENT);
         accessToken.setCredentialType(CredentialType.AccessToken.name());
         accessToken.setClientId(CLIENT_ID);
-        accessToken.setApplicationIdentifier(APPLICATION_IDENTIFIER);
+        accessToken.setApplicationIdentifier(APPLICATION_IDENTIFIER_SHA512);
         accessToken.setMamEnrollmentIdentifier(MAM_ENROLLMENT_IDENTIFIER);
         accessToken.setTarget(TARGET);
 
@@ -1148,7 +1150,7 @@ public class SharedPreferencesAccountCredentialCacheTest {
         accessToken2.setEnvironment(ENVIRONMENT);
         accessToken2.setCredentialType(CredentialType.AccessToken.name());
         accessToken2.setClientId(CLIENT_ID);
-        accessToken2.setApplicationIdentifier(APPLICATION_IDENTIFIER);
+        accessToken2.setApplicationIdentifier(APPLICATION_IDENTIFIER_SHA512);
         accessToken2.setMamEnrollmentIdentifier(MAM_ENROLLMENT_IDENTIFIER);
         accessToken2.setTarget("qux");
 
@@ -1162,7 +1164,7 @@ public class SharedPreferencesAccountCredentialCacheTest {
                 ENVIRONMENT,
                 CredentialType.AccessToken,
                 CLIENT_ID,
-                APPLICATION_IDENTIFIER,
+                APPLICATION_IDENTIFIER_SHA512,
                 MAM_ENROLLMENT_IDENTIFIER,
                 null,
                 null,
@@ -1190,7 +1192,7 @@ public class SharedPreferencesAccountCredentialCacheTest {
         accessToken.setEnvironment(ENVIRONMENT);
         accessToken.setCredentialType(CredentialType.AccessToken.name());
         accessToken.setClientId(CLIENT_ID);
-        accessToken.setApplicationIdentifier(APPLICATION_IDENTIFIER);
+        accessToken.setApplicationIdentifier(APPLICATION_IDENTIFIER_SHA512);
         accessToken.setMamEnrollmentIdentifier(MAM_ENROLLMENT_IDENTIFIER);
         accessToken.setTarget(TARGET);
 
@@ -1203,7 +1205,7 @@ public class SharedPreferencesAccountCredentialCacheTest {
         accessToken2.setEnvironment(ENVIRONMENT);
         accessToken2.setCredentialType(CredentialType.AccessToken.name());
         accessToken2.setClientId(CLIENT_ID);
-        accessToken2.setApplicationIdentifier(APPLICATION_IDENTIFIER);
+        accessToken2.setApplicationIdentifier(APPLICATION_IDENTIFIER_SHA512);
         accessToken2.setMamEnrollmentIdentifier(MAM_ENROLLMENT_IDENTIFIER);
         accessToken2.setTarget("qux");
 
@@ -1217,7 +1219,7 @@ public class SharedPreferencesAccountCredentialCacheTest {
                 ENVIRONMENT,
                 CredentialType.AccessToken,
                 CLIENT_ID,
-                APPLICATION_IDENTIFIER,
+                APPLICATION_IDENTIFIER_SHA512,
                 MAM_ENROLLMENT_IDENTIFIER,
                 REALM,
                 null,
@@ -1245,7 +1247,7 @@ public class SharedPreferencesAccountCredentialCacheTest {
         accessToken.setEnvironment(ENVIRONMENT);
         accessToken.setCredentialType(CredentialType.AccessToken.name());
         accessToken.setClientId(CLIENT_ID);
-        accessToken.setApplicationIdentifier(APPLICATION_IDENTIFIER);
+        accessToken.setApplicationIdentifier(APPLICATION_IDENTIFIER_SHA512);
         accessToken.setMamEnrollmentIdentifier(MAM_ENROLLMENT_IDENTIFIER);
         accessToken.setTarget(TARGET);
 
@@ -1258,7 +1260,7 @@ public class SharedPreferencesAccountCredentialCacheTest {
         accessToken2.setEnvironment(ENVIRONMENT);
         accessToken2.setCredentialType(CredentialType.AccessToken.name());
         accessToken2.setClientId(CLIENT_ID);
-        accessToken2.setApplicationIdentifier(APPLICATION_IDENTIFIER);
+        accessToken2.setApplicationIdentifier(APPLICATION_IDENTIFIER_SHA512);
         accessToken2.setMamEnrollmentIdentifier(MAM_ENROLLMENT_IDENTIFIER);
         accessToken2.setTarget(TARGET);
         accessToken2.setRequestedClaims("{\"access_token\":{\"deviceid\":{\"essential\":true}}}");
@@ -1273,7 +1275,7 @@ public class SharedPreferencesAccountCredentialCacheTest {
                 ENVIRONMENT,
                 CredentialType.AccessToken,
                 CLIENT_ID,
-                APPLICATION_IDENTIFIER,
+                APPLICATION_IDENTIFIER_SHA512,
                 MAM_ENROLLMENT_IDENTIFIER,
                 REALM,
                 null,
@@ -1301,7 +1303,7 @@ public class SharedPreferencesAccountCredentialCacheTest {
         accessToken.setEnvironment(ENVIRONMENT);
         accessToken.setCredentialType(CredentialType.AccessToken.name());
         accessToken.setClientId(CLIENT_ID);
-        accessToken.setApplicationIdentifier(APPLICATION_IDENTIFIER);
+        accessToken.setApplicationIdentifier(APPLICATION_IDENTIFIER_SHA512);
         accessToken.setMamEnrollmentIdentifier(MAM_ENROLLMENT_IDENTIFIER);
         accessToken.setTarget(TARGET);
 
@@ -1314,7 +1316,7 @@ public class SharedPreferencesAccountCredentialCacheTest {
         accessToken2.setEnvironment(ENVIRONMENT);
         accessToken2.setCredentialType(CredentialType.AccessToken.name());
         accessToken2.setClientId(CLIENT_ID);
-        accessToken2.setApplicationIdentifier(APPLICATION_IDENTIFIER);
+        accessToken2.setApplicationIdentifier(APPLICATION_IDENTIFIER_SHA512);
         accessToken2.setMamEnrollmentIdentifier(MAM_ENROLLMENT_IDENTIFIER);
         accessToken2.setTarget(TARGET);
         accessToken2.setRequestedClaims("{\"access_token\":{\"deviceid\":{\"essential\":true}}}");
@@ -1329,7 +1331,7 @@ public class SharedPreferencesAccountCredentialCacheTest {
                 ENVIRONMENT,
                 CredentialType.AccessToken,
                 CLIENT_ID,
-                APPLICATION_IDENTIFIER,
+                APPLICATION_IDENTIFIER_SHA512,
                 MAM_ENROLLMENT_IDENTIFIER,
                 REALM,
                 null,
@@ -1359,7 +1361,7 @@ public class SharedPreferencesAccountCredentialCacheTest {
         accessToken.setEnvironment(ENVIRONMENT);
         accessToken.setCredentialType(CredentialType.AccessToken.name());
         accessToken.setClientId(CLIENT_ID);
-        accessToken.setApplicationIdentifier(APPLICATION_IDENTIFIER);
+        accessToken.setApplicationIdentifier(APPLICATION_IDENTIFIER_SHA512);
         accessToken.setMamEnrollmentIdentifier(MAM_ENROLLMENT_IDENTIFIER);
         accessToken.setTarget(TARGET);
         accessToken.setRequestedClaims("{\"access_token\":{\"deviceid\":{\"essential\":false}}}");
@@ -1373,7 +1375,7 @@ public class SharedPreferencesAccountCredentialCacheTest {
         accessToken2.setEnvironment(ENVIRONMENT);
         accessToken2.setCredentialType(CredentialType.AccessToken.name());
         accessToken2.setClientId(CLIENT_ID);
-        accessToken2.setApplicationIdentifier(APPLICATION_IDENTIFIER);
+        accessToken2.setApplicationIdentifier(APPLICATION_IDENTIFIER_SHA512);
         accessToken2.setMamEnrollmentIdentifier(MAM_ENROLLMENT_IDENTIFIER);
         accessToken2.setTarget(TARGET);
         accessToken2.setRequestedClaims("{\"access_token\":{\"deviceid\":{\"essential\":true}}}");
@@ -1388,7 +1390,7 @@ public class SharedPreferencesAccountCredentialCacheTest {
                 ENVIRONMENT,
                 CredentialType.AccessToken,
                 CLIENT_ID,
-                APPLICATION_IDENTIFIER,
+                APPLICATION_IDENTIFIER_SHA512,
                 MAM_ENROLLMENT_IDENTIFIER,
                 REALM,
                 null,
@@ -1419,7 +1421,7 @@ public class SharedPreferencesAccountCredentialCacheTest {
         accessToken.setEnvironment(ENVIRONMENT);
         accessToken.setCredentialType(CredentialType.AccessToken.name());
         accessToken.setClientId(CLIENT_ID);
-        accessToken.setApplicationIdentifier(APPLICATION_IDENTIFIER);
+        accessToken.setApplicationIdentifier(APPLICATION_IDENTIFIER_SHA512);
         accessToken.setMamEnrollmentIdentifier(MAM_ENROLLMENT_IDENTIFIER);
         accessToken.setTarget(TARGET);
 
@@ -1432,7 +1434,7 @@ public class SharedPreferencesAccountCredentialCacheTest {
         accessToken2.setEnvironment(ENVIRONMENT);
         accessToken2.setCredentialType(CredentialType.AccessToken.name());
         accessToken2.setClientId(CLIENT_ID);
-        accessToken2.setApplicationIdentifier(APPLICATION_IDENTIFIER);
+        accessToken2.setApplicationIdentifier(APPLICATION_IDENTIFIER_SHA512);
         accessToken2.setMamEnrollmentIdentifier(MAM_ENROLLMENT_IDENTIFIER);
         accessToken2.setTarget(TARGET);
 
@@ -1446,7 +1448,7 @@ public class SharedPreferencesAccountCredentialCacheTest {
                 ENVIRONMENT,
                 CredentialType.AccessToken,
                 CLIENT_ID,
-                APPLICATION_IDENTIFIER,
+                APPLICATION_IDENTIFIER_SHA512,
                 MAM_ENROLLMENT_IDENTIFIER,
                 null,
                 TARGET,
@@ -1471,7 +1473,7 @@ public class SharedPreferencesAccountCredentialCacheTest {
         accessToken.setRealm("Foo");
         accessToken.setEnvironment(ENVIRONMENT);
         accessToken.setClientId(CLIENT_ID);
-        accessToken.setApplicationIdentifier(APPLICATION_IDENTIFIER);
+        accessToken.setApplicationIdentifier(APPLICATION_IDENTIFIER_SHA512);
         accessToken.setMamEnrollmentIdentifier(MAM_ENROLLMENT_IDENTIFIER);
         accessToken.setTarget(TARGET);
         accessToken.setCachedAt(CACHED_AT);
@@ -1484,7 +1486,7 @@ public class SharedPreferencesAccountCredentialCacheTest {
         accessToken2.setRealm("Bar");
         accessToken2.setEnvironment(ENVIRONMENT);
         accessToken2.setClientId(CLIENT_ID);
-        accessToken2.setApplicationIdentifier(APPLICATION_IDENTIFIER);
+        accessToken2.setApplicationIdentifier(APPLICATION_IDENTIFIER_SHA512);
         accessToken2.setMamEnrollmentIdentifier(MAM_ENROLLMENT_IDENTIFIER);
         accessToken2.setTarget("qux");
         accessToken2.setCachedAt(CACHED_AT);
@@ -1501,7 +1503,7 @@ public class SharedPreferencesAccountCredentialCacheTest {
                 ENVIRONMENT,
                 CredentialType.AccessToken,
                 CLIENT_ID,
-                APPLICATION_IDENTIFIER,
+                APPLICATION_IDENTIFIER_SHA512,
                 MAM_ENROLLMENT_IDENTIFIER,
                 null,
                 null,
@@ -1529,7 +1531,7 @@ public class SharedPreferencesAccountCredentialCacheTest {
         accessToken.setEnvironment(ENVIRONMENT);
         accessToken.setCredentialType(CredentialType.AccessToken.name());
         accessToken.setClientId(CLIENT_ID);
-        accessToken.setApplicationIdentifier(APPLICATION_IDENTIFIER);
+        accessToken.setApplicationIdentifier(APPLICATION_IDENTIFIER_SHA512);
         accessToken.setMamEnrollmentIdentifier(MAM_ENROLLMENT_IDENTIFIER);
         accessToken.setTarget(TARGET);
 
@@ -1542,7 +1544,7 @@ public class SharedPreferencesAccountCredentialCacheTest {
         accessToken2.setEnvironment(ENVIRONMENT);
         accessToken2.setCredentialType(CredentialType.AccessToken.name());
         accessToken2.setClientId(CLIENT_ID);
-        accessToken2.setApplicationIdentifier(APPLICATION_IDENTIFIER);
+        accessToken2.setApplicationIdentifier(APPLICATION_IDENTIFIER_SHA512);
         accessToken2.setMamEnrollmentIdentifier(MAM_ENROLLMENT_IDENTIFIER);
         accessToken2.setTarget(TARGET);
 
@@ -1556,7 +1558,7 @@ public class SharedPreferencesAccountCredentialCacheTest {
                 ENVIRONMENT,
                 CredentialType.AccessToken,
                 CLIENT_ID,
-                APPLICATION_IDENTIFIER,
+                APPLICATION_IDENTIFIER_SHA512,
                 MAM_ENROLLMENT_IDENTIFIER,
                 REALM,
                 null,
@@ -1581,7 +1583,7 @@ public class SharedPreferencesAccountCredentialCacheTest {
                 ENVIRONMENT,
                 CredentialType.PrimaryRefreshToken,
                 null, /* client id */
-                APPLICATION_IDENTIFIER,
+                APPLICATION_IDENTIFIER_SHA512,
                 MAM_ENROLLMENT_IDENTIFIER,
                 null,
                 null,
@@ -1606,7 +1608,7 @@ public class SharedPreferencesAccountCredentialCacheTest {
                 ENVIRONMENT,
                 CredentialType.PrimaryRefreshToken,
                 CLIENT_ID,
-                APPLICATION_IDENTIFIER,
+                APPLICATION_IDENTIFIER_SHA512,
                 MAM_ENROLLMENT_IDENTIFIER,
                 null,
                 null,
@@ -2373,5 +2375,71 @@ public class SharedPreferencesAccountCredentialCacheTest {
         final Credential restoredIdToken = mSharedPreferencesAccountCredentialCache.getCredential(credentialCacheKey);
         assertTrue(refreshTokenFirst.equals(restoredIdToken));
         assertEquals(additionalValue2, restoredIdToken.getAdditionalFields().get(additionalKey).getAsString());
+    }
+
+    @Test
+    public void removeSha1ApplicationIdentifierAccessTokensIfNeeded() {
+        //Mimics the scenario where the cache has access tokens with a SHA-1 app identifier,
+        // and then the user updates their app to a version where access tokens should now have a SHA-512 app identifier.
+
+        // Save an Account into the cache
+        final AccountRecord account = new AccountRecord();
+        account.setHomeAccountId(HOME_ACCOUNT_ID);
+        account.setEnvironment(ENVIRONMENT);
+        account.setRealm(REALM);
+        account.setLocalAccountId(LOCAL_ACCOUNT_ID);
+        account.setUsername(USERNAME);
+        account.setAuthorityType(AUTHORITY_TYPE);
+        mSharedPreferencesAccountCredentialCache.saveAccount(account);
+
+        // Save an AccessToken with SHA-1 application identifier into the cache
+        final AccessTokenRecord accessToken = new AccessTokenRecord();
+        accessToken.setCredentialType(CredentialType.AccessToken.name());
+        accessToken.setHomeAccountId(HOME_ACCOUNT_ID);
+        accessToken.setRealm("Foo");
+        accessToken.setEnvironment(ENVIRONMENT);
+        accessToken.setClientId(CLIENT_ID);
+        accessToken.setApplicationIdentifier(APPLICATION_IDENTIFIER_SHA1);
+        accessToken.setMamEnrollmentIdentifier(MAM_ENROLLMENT_IDENTIFIER);
+        accessToken.setTarget(TARGET);
+        accessToken.setCachedAt(CACHED_AT);
+        accessToken.setExpiresOn(EXPIRES_ON);
+        accessToken.setSecret(SECRET);
+        mSharedPreferencesAccountCredentialCache.saveCredential(accessToken);
+
+        // Save a RefreshToken into the cache
+        final RefreshTokenRecord refreshToken = new RefreshTokenRecord();
+        refreshToken.setCredentialType(CredentialType.RefreshToken.name());
+        refreshToken.setEnvironment(ENVIRONMENT);
+        refreshToken.setHomeAccountId(HOME_ACCOUNT_ID);
+        refreshToken.setClientId(CLIENT_ID);
+        refreshToken.setSecret(SECRET);
+        refreshToken.setTarget(TARGET);
+        mSharedPreferencesAccountCredentialCache.saveCredential(refreshToken);
+
+        //Remove the flag entry, as initialization of the cache calls removeSha1ApplicationIdentifierAccessTokensIfNeeded on a different thread.
+        //Thread should have run by now... but if not, it's harmless, as it should only take out SHA1 identifier access tokens.
+        mSharedPreferencesFileManager.remove(SHA1_APPLICATION_IDENTIFIER_ACCESS_TOKEN_CLEARED);
+        mSharedPreferencesAccountCredentialCache.removeSha1ApplicationIdentifierAccessTokensIfNeeded();
+        assertEquals(1, mSharedPreferencesAccountCredentialCache.getCredentials().size());
+
+        // Now Save an AccessToken with SHA-512 application identifier into the cache
+        final AccessTokenRecord accessToken2 = new AccessTokenRecord();
+        accessToken2.setCredentialType(CredentialType.AccessToken.name());
+        accessToken2.setHomeAccountId(HOME_ACCOUNT_ID);
+        accessToken2.setRealm("Foo");
+        accessToken2.setEnvironment(ENVIRONMENT);
+        accessToken2.setClientId(CLIENT_ID);
+        accessToken2.setApplicationIdentifier(APPLICATION_IDENTIFIER_SHA512);
+        accessToken2.setMamEnrollmentIdentifier(MAM_ENROLLMENT_IDENTIFIER);
+        accessToken2.setTarget(TARGET);
+        accessToken2.setCachedAt(CACHED_AT);
+        accessToken2.setExpiresOn(EXPIRES_ON);
+        accessToken2.setSecret(SECRET);
+        mSharedPreferencesAccountCredentialCache.saveCredential(accessToken2);
+
+        mSharedPreferencesFileManager.remove(SHA1_APPLICATION_IDENTIFIER_ACCESS_TOKEN_CLEARED);
+        mSharedPreferencesAccountCredentialCache.removeSha1ApplicationIdentifierAccessTokensIfNeeded();
+        assertEquals(2, mSharedPreferencesAccountCredentialCache.getCredentials().size());
     }
 }

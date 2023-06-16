@@ -71,7 +71,8 @@ public class BrokerOperationBundle {
         MSAL_FETCH_DCF_AUTH_RESULT(API.FETCH_DCF_AUTH_RESULT, null),
         MSAL_ACQUIRE_TOKEN_DCF(API.ACQUIRE_TOKEN_DCF, null),
         BROKER_DISCOVERY_METADATA_RETRIEVAL(API.BROKER_DISCOVERY_METADATA_RETRIEVAL, null),
-        BROKER_DISCOVERY_FROM_SDK(API.BROKER_DISCOVERY_FROM_SDK, null);
+        BROKER_DISCOVERY_FROM_SDK(API.BROKER_DISCOVERY_FROM_SDK, null),
+        BROKER_DISCOVERY_SET_ACTIVE_BROKER(API.BROKER_DISCOVERY_SET_ACTIVE_BROKER, null);
       
         final API mContentApi;
         final String mAccountManagerOperation;
@@ -98,6 +99,39 @@ public class BrokerOperationBundle {
         this.bundle = bundle;
     }
 
+
+    /**
+     * Packs the response bundle with the account manager key.
+     */
+    public Bundle getAccountManagerBundle()
+            throws BrokerCommunicationException {
+        Bundle requestBundle = bundle;
+        if (requestBundle == null) {
+            requestBundle = new Bundle();
+        }
+
+        requestBundle.putString(
+                AuthenticationConstants.Broker.BROKER_ACCOUNT_MANAGER_OPERATION_KEY,
+                getAccountManagerAddAccountOperationKey());
+
+        return requestBundle;
+    }
+
+    private String getAccountManagerAddAccountOperationKey() throws BrokerCommunicationException{
+        final String methodTag = TAG + ":getAccountManagerAddAccountOperationKey";
+
+        String accountManagerKey = operation.getAccountManagerOperation();
+        if (accountManagerKey == null) {
+            final String errorMessage = "Operation " + operation.name() + " is not supported by AccountManager addAccount().";
+            Logger.warn(methodTag, errorMessage);
+            throw new BrokerCommunicationException(
+                    OPERATION_NOT_SUPPORTED_ON_CLIENT_SIDE,
+                    ACCOUNT_MANAGER_ADD_ACCOUNT,
+                    errorMessage,
+                    null);
+        }
+        return accountManagerKey;
+    }
 
     public String getContentProviderPath() throws BrokerCommunicationException {
         final String methodTag = TAG + ":getContentProviderUriPath";

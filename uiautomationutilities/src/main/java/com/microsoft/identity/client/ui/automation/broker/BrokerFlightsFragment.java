@@ -33,6 +33,8 @@ public class BrokerFlightsFragment extends AbstractBrokerHost {
     private static final String GET_FLIGHTS_BUTTON_ID = "button_get_flights";
     private static final String SET_LOCAL_FLIGHT_BUTTON_ID = "button_set_flights";
     private static final String CLEAR_LOCAL_FLIGHTS_BUTTON_ID = "button_clear_flights";
+    private static final String LOCAL_STORAGE_RADIO_BUTTON_ID = "flight_provider_local_storage";
+    private static final String ECS_STORAGE_RADIO_BUTTON_ID = "flight_provider_ecs";
     // Resource Id for the edit text
     private static final String KEY_FLIGHT_EDIT_TEXT_ID = "edit_text_flight_key";
     private static final String VALUE_FLIGHT_EDIT_TEXT_ID = "edit_text_flight_value";
@@ -74,5 +76,19 @@ public class BrokerFlightsFragment extends AbstractBrokerHost {
     @Override
     public void launch() {
         launch(BrokerHostNavigationMenuItem.FLIGHTS_API);
+    }
+
+    /**
+     * Set the local flights provider.
+     */
+    public void selectLocalProvider() {
+        clickButton(LOCAL_STORAGE_RADIO_BUTTON_ID);
+    }
+
+    /**
+     * Set the ECS flights provider.
+     */
+    public void selectECSProvider() {
+        clickButton(ECS_STORAGE_RADIO_BUTTON_ID);
     }
 }
