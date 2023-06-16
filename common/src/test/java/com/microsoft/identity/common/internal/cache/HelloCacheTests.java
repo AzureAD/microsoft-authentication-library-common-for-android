@@ -20,8 +20,7 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.internal.ipc;
-
+package com.microsoft.identity.common.internal.cache;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.HELLO_ERROR_CODE;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.HELLO_ERROR_MESSAGE;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY;
@@ -39,7 +38,6 @@ import com.microsoft.identity.common.components.AndroidPlatformComponentsFactory
 import com.microsoft.identity.common.exception.BrokerCommunicationException;
 import com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle;
 import com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy;
-import com.microsoft.identity.common.internal.cache.HelloCache;
 import com.microsoft.identity.common.internal.controllers.BrokerMsalController;
 import com.microsoft.identity.common.internal.util.StringUtil;
 import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
@@ -86,7 +84,7 @@ public class HelloCacheTests {
         final String negotiatedVer = "2.0";
 
         cacheWrite.saveNegotiatedProtocolVersion(minimumVer, maximumVer, negotiatedVer);
-        final HelloCache.HelloCacheResult result = cacheRead.getHelloCacheResult(minimumVer, maximumVer);
+        final HelloCacheResult result = cacheRead.getHelloCacheResult(minimumVer, maximumVer);
         Assert.assertNotNull(result);
         Assert.assertEquals(negotiatedVer, result.getNegotiatedProtocolVersion());
     }
@@ -100,7 +98,7 @@ public class HelloCacheTests {
         final String maximumVer = "2.5";
         final String negotiatedVer = "2.0";
         cacheWrite.saveNegotiatedProtocolVersion(minimumVer, maximumVer, negotiatedVer);
-        final HelloCache.HelloCacheResult result = cacheRead.getHelloCacheResult(minimumVer, maximumVer);
+        final HelloCacheResult result = cacheRead.getHelloCacheResult(minimumVer, maximumVer);
         Assert.assertNotNull(result);
         Assert.assertEquals(negotiatedVer, result.getNegotiatedProtocolVersion());
     }
@@ -151,12 +149,12 @@ public class HelloCacheTests {
         cacheProtocolA.saveNegotiatedProtocolVersion(minimumVerProtocolA, maximumVerProtocolA, negotiatedVerProtocolA);
         cacheProtocolB.saveNegotiatedProtocolVersion(minimumVerProtocolB, maximumVerProtocolB, negotiatedVerProtocolB);
 
-        final HelloCache.HelloCacheResult resultA = cacheProtocolA.getHelloCacheResult(minimumVerProtocolA, maximumVerProtocolA);
+        final HelloCacheResult resultA = cacheProtocolA.getHelloCacheResult(minimumVerProtocolA, maximumVerProtocolA);
         Assert.assertNotNull(resultA);
         Assert.assertEquals(negotiatedVerProtocolA, resultA.getNegotiatedProtocolVersion());
         Assert.assertNull(cacheProtocolA.getHelloCacheResult(minimumVerProtocolB, maximumVerProtocolB));
 
-        final HelloCache.HelloCacheResult resultB = cacheProtocolB.getHelloCacheResult(minimumVerProtocolB, maximumVerProtocolB);
+        final HelloCacheResult resultB = cacheProtocolB.getHelloCacheResult(minimumVerProtocolB, maximumVerProtocolB);
         Assert.assertNotNull(resultB);
         Assert.assertEquals(negotiatedVerProtocolB, resultB.getNegotiatedProtocolVersion());
         Assert.assertNull(cacheProtocolB.getHelloCacheResult(minimumVerProtocolA, maximumVerProtocolA));
@@ -252,7 +250,7 @@ public class HelloCacheTests {
         final String negotiatedVer = "2.0";
 
         cacheWrite.saveNegotiatedProtocolVersion(minimumVer, maximumVer, negotiatedVer);
-        final HelloCache.HelloCacheResult result = cacheRead.getHelloCacheResult(minimumVer, maximumVer);
+        final HelloCacheResult result = cacheRead.getHelloCacheResult(minimumVer, maximumVer);
         Assert.assertNotNull(result);
         Assert.assertEquals(result.getNegotiatedProtocolVersion(), negotiatedVer);
         Thread.sleep(TimeUnit.SECONDS.toMillis(2));
@@ -268,7 +266,7 @@ public class HelloCacheTests {
         final String maximumVer = "2.5";
 
         cacheWrite.saveHandShakeError(minimumVer, maximumVer);
-        final HelloCache.HelloCacheResult result = cacheRead.getHelloCacheResult(minimumVer, maximumVer);
+        final HelloCacheResult result = cacheRead.getHelloCacheResult(minimumVer, maximumVer);
         Assert.assertNotNull(result);
         Assert.assertTrue(result.isHandShakeError());
     }
@@ -283,7 +281,7 @@ public class HelloCacheTests {
         final String maximumVer = "2.5";
 
         cacheWrite.saveHandShakeError(minimumVer, maximumVer);
-        final HelloCache.HelloCacheResult result = cacheRead.getHelloCacheResult(minimumVer, maximumVer);
+        final HelloCacheResult result = cacheRead.getHelloCacheResult(minimumVer, maximumVer);
         Assert.assertNotNull(result);
         Assert.assertTrue(result.isHandShakeError());
         Thread.sleep(TimeUnit.SECONDS.toMillis(2));
@@ -364,10 +362,10 @@ public class HelloCacheTests {
         this.setupValueInSharedHelloCacheSharedCacheStore(protocolA, minimumVer, maximumVer, negotiatedVer, brokerAppName, appVersion);
 
         // read after MSAL update
-        final HelloCache.HelloCacheResult result = cacheRead.getHelloCacheResult(minimumVer, maximumVer);
+        final HelloCacheResult result = cacheRead.getHelloCacheResult(minimumVer, maximumVer);
         Assert.assertNull(result);
         cacheWrite.saveNegotiatedProtocolVersion(minimumVer, maximumVer, negotiatedVer);
-        final HelloCache.HelloCacheResult newResult = cacheRead.getHelloCacheResult(minimumVer, maximumVer);
+        final HelloCacheResult newResult = cacheRead.getHelloCacheResult(minimumVer, maximumVer);
         Assert.assertNotNull(newResult);
         Assert.assertEquals(negotiatedVer, newResult.getNegotiatedProtocolVersion());
     }

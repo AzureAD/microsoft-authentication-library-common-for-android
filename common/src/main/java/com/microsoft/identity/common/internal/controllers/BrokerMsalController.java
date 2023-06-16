@@ -63,6 +63,7 @@ import com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle;
 import com.microsoft.identity.common.internal.broker.ipc.ContentProviderStrategy;
 import com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy;
 import com.microsoft.identity.common.internal.cache.HelloCache;
+import com.microsoft.identity.common.internal.cache.HelloCacheResult;
 import com.microsoft.identity.common.internal.commands.parameters.AndroidActivityInteractiveTokenCommandParameters;
 import com.microsoft.identity.common.internal.request.MsalBrokerRequestAdapter;
 import com.microsoft.identity.common.internal.result.MsalBrokerResultAdapter;
@@ -123,7 +124,7 @@ public class BrokerMsalController extends BaseController {
 
     private static final String TAG = BrokerMsalController.class.getSimpleName();
     private static final long WAIT_BETWEEN_DCF_POLLING_MILLISECONDS = TimeUnit.SECONDS.toMillis(5);
-    private static final long HANDSHAKE_TIMEOUT = TimeUnit.HOURS.toMillis(4);
+    private static final long HELLO_CACHE_ENTRY_TIMEOUT = TimeUnit.HOURS.toMillis(4);
     protected final MsalBrokerRequestAdapter mRequestAdapter = new MsalBrokerRequestAdapter();
     protected final MsalBrokerResultAdapter mResultAdapter = new MsalBrokerResultAdapter();
 
@@ -161,7 +162,7 @@ public class BrokerMsalController extends BaseController {
                 MSAL_TO_BROKER_PROTOCOL_NAME,
                 mActiveBrokerPackageName,
                 mComponents,
-                HANDSHAKE_TIMEOUT
+                HELLO_CACHE_ENTRY_TIMEOUT
         );
     }
 
@@ -284,13 +285,15 @@ public class BrokerMsalController extends BaseController {
      * Tries reading negotiated protocol version from hello cache and returns it.
      * @throws UnsupportedBrokerException when there's handshake error present in hello cache.
      */
+    @edu.umd.cs.findbugs.annotations.Nullable
     private String tryGetNegotiatedProtocolVersionFromHelloCache(
             final @Nullable String minRequestedVersion,
             final @NonNull String clientMaxProtocolVersion
     ) throws UnsupportedBrokerException {
         final String methodTag = TAG + ":tryGetNegotiatedProtocolVersionFromHelloCache";
-        final HelloCache.HelloCacheResult helloCacheResult = mHelloCache.getHelloCacheResult(
+        final HelloCacheResult helloCacheResult = mHelloCache.getHelloCacheResult(
                 minRequestedVersion, clientMaxProtocolVersion);
+
         if (helloCacheResult == null) {
             Logger.info(methodTag, "No valid entry found in cache");
             return null;
