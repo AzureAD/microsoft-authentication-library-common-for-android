@@ -5,6 +5,7 @@ V.NEXT
 - [MINOR] Send client id as part of request bundle for getSsoToken Api (#2064)
 - [PATCH] Wire new Broker Discovery Client into MSAL - still disabled by default (#2057)
 - [MINOR] Move ATS span start/end to MicrosoftAuthServiceOperation (#2068)
+- [MINOR] Move AT interactive span start/end to Account Chooser (#2069)
 
 V.13.0.1
 ----------
