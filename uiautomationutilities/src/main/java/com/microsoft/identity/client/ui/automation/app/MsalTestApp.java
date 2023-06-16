@@ -116,9 +116,7 @@ public class MsalTestApp extends App {
     }
 
     @Override
-    protected void initialiseAppImpl() {
-
-    }
+    protected void initialiseAppImpl() {}
 
     @Override
     public void handleFirstRun() {
