@@ -72,9 +72,8 @@ public class SilentTokenCommand extends TokenCommand {
         AcquireTokenResult result = null;
         final String methodName = ":execute";
 
-        final Span span = OTelUtility.createSpanFromParent(
-                SpanName.AcquireTokenSilent.name(), getParameters().getSpanContext()
-        );
+        final Span span = SpanExtension.current();
+
         span.setAttribute(AttributeName.application_name.name(), getParameters().getApplicationName());
         span.setAttribute(AttributeName.public_api_id.name(), getPublicApiId());
 
@@ -145,8 +144,6 @@ public class SilentTokenCommand extends TokenCommand {
             span.setStatus(StatusCode.ERROR);
             span.recordException(throwable);
             throw throwable;
-        } finally {
-            span.end();
         }
     }
 
