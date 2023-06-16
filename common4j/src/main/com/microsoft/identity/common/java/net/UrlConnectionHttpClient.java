@@ -369,7 +369,7 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
             if (response.getHeaders() != null && response.getHeaders().size() > 0) {
                 span.setAttribute(
                         AttributeName.response_content_type.name(),
-                        response.getHeaders().get(CONTENT_TYPE).get(0)
+                        response.getHeaderValue(CONTENT_TYPE, 0)
                 );
 
                 span.setAttribute(
