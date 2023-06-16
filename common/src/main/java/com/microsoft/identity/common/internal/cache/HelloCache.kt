@@ -244,9 +244,15 @@ open class HelloCache (
      */
     class HelloCacheResult (
         val negotiatedProtocolVersion: String?,
-        val isHandShakeError: Boolean,
+        internal val error: String?,
         internal val timeStamp: Long
     ) {
+        init {
+            if (!(negotiatedProtocolVersion.isNullOrEmpty() xor error.isNullOrEmpty())) {
+                throw IllegalStateException("Either both parameters provided or none provide.")
+            }
+        }
+
         companion object {
             private val TAG = HelloCacheResult::class.java.simpleName
             private const val SEPARATOR = ","
@@ -295,17 +301,21 @@ open class HelloCache (
             }
 
             private fun createFromNegotiatedProtocolVersion(negotiatedProtocolVersion: String, timeStamp: Long): HelloCacheResult {
-                return HelloCacheResult(negotiatedProtocolVersion, false, timeStamp)
+                return HelloCacheResult(negotiatedProtocolVersion, null, timeStamp)
             }
 
             private fun createHandshakeError(timeStamp: Long): HelloCacheResult {
-                return HelloCacheResult(null, true, timeStamp)
+                return HelloCacheResult(null, HANDSHAKE_ERROR, timeStamp)
             }
         }
 
+        fun isHandShakeError() : Boolean {
+            return !error.isNullOrEmpty() && error == HANDSHAKE_ERROR
+        }
+
         internal fun serialize(): String {
-            return if (isHandShakeError) {
-                String.format("%s%s%d", HANDSHAKE_ERROR, SEPARATOR, timeStamp)
+            return if (!error.isNullOrEmpty()) {
+                String.format("%s%s%d", error, SEPARATOR, timeStamp)
             } else {
                 String.format("%s%s%d", negotiatedProtocolVersion, SEPARATOR, timeStamp)
             }
