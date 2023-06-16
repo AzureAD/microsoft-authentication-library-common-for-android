@@ -114,4 +114,14 @@ internal constructor(private val storage: INameValueStorage<String>,
             }
         }
     }
+
+    override fun clearCachedActiveBroker() {
+        return runBlocking {
+            lock.withLock {
+                clearCachedActiveBrokerWithoutLock()
+                storage.remove(SHOULD_USE_ACCOUNT_MANAGER_UNTIL_EPOCH_MILLISECONDS_KEY)
+                cachedTimeStamp = null
+            }
+        }
+    }
 }

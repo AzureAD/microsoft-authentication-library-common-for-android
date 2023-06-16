@@ -118,10 +118,14 @@ open class ActiveBrokerCache
     override fun clearCachedActiveBroker() {
         return runBlocking {
             lock.withLock {
-                storage.remove(ACTIVE_BROKER_CACHE_PACKAGE_NAME_KEY)
-                storage.remove(ACTIVE_BROKER_CACHE_SIGHASH_KEY)
-                inMemoryCachedValue = null
+                clearCachedActiveBrokerWithoutLock()
             }
         }
+    }
+
+    protected fun clearCachedActiveBrokerWithoutLock(){
+        storage.remove(ACTIVE_BROKER_CACHE_PACKAGE_NAME_KEY)
+        storage.remove(ACTIVE_BROKER_CACHE_SIGHASH_KEY)
+        inMemoryCachedValue = null
     }
 }
