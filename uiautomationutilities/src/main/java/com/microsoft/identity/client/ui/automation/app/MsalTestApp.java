@@ -38,7 +38,7 @@ import java.util.List;
 /**
  * A model for interacting with the Msal Test App for MSAL Android during UI Test.
  */
-public class MsalTestApp extends App{
+public class MsalTestApp extends App {
 
     private final static String TAG = MsalTestApp.class.getSimpleName();
     private static final String MSAL_TEST_APP_PACKAGE_NAME = "com.msft.identity.client.sample.local";
@@ -71,7 +71,7 @@ public class MsalTestApp extends App{
             UiAutomatorUtils.handleInput("com.msft.identity.client.sample.local:id/loginHint", username);
         }
 
-        UiObject acquireTokenButton = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/btn_acquiretoken");
+        final UiObject acquireTokenButton = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/btn_acquiretoken");
         scrollToElement(acquireTokenButton);
         acquireTokenButton.click();
 
@@ -89,7 +89,7 @@ public class MsalTestApp extends App{
 
     // click on button acquire token silent
     public String acquireTokenSilent() throws UiObjectNotFoundException {
-        UiObject acquireTokenSilentButton = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/btn_acquiretokensilent");
+        final UiObject acquireTokenSilentButton = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/btn_acquiretokensilent");
         scrollToElement(acquireTokenSilentButton);
         acquireTokenSilentButton.click();
         final UiObject result = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/txt_result");
@@ -101,10 +101,10 @@ public class MsalTestApp extends App{
         UiAutomatorUtils.handleButtonClick("com.msft.identity.client.sample.local:id/btn_getUsers");
 
         // get each user information in the user list
-        List<String> users = new ArrayList<>();
+        final List<String> users = new ArrayList<>();
         final UiObject userList = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/user_list");
         for (int i = 0; i < userList.getChildCount(); i++) {
-            UiObject user = userList.getChild(new UiSelector().index(i));
+            final UiObject user = userList.getChild(new UiSelector().index(i));
             users.add(user.getText());
         }
         return users;
