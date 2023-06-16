@@ -1,8 +1,11 @@
 V.NEXT
 ----------
+- [MINOR] Fix issue for MSA only where headers are not propagated on web requests with different domain redirects on newer versions of WebView (88+) (#2072)
 - [PATCH] Add method to return list of broker that supports account manager (#2073)
 - [MINOR] Send client id as part of request bundle for getSsoToken Api (#2064)
 - [PATCH] Wire new Broker Discovery Client into MSAL - still disabled by default (#2057)
+- [MINOR] Move ATS span start/end to MicrosoftAuthServiceOperation (#2068)
+- [MINOR] Move AT interactive span start/end to Account Chooser (#2069)
 - [MINOR] Cache handshake failure and add expiry time support in Hello Cache (#2074)
 
 V.13.0.1
