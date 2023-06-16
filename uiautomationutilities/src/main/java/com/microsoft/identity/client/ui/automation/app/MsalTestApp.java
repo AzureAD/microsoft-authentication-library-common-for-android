@@ -64,10 +64,11 @@ public class MsalTestApp extends App {
 
     // click on button acquire token interactive
     public String acquireToken(@NonNull final String username,
-                                        @NonNull final String password,
-                                        final PromptHandlerParameters promptHandlerParameters) throws UiObjectNotFoundException {
+                               @NonNull final String password,
+                               @NonNull final PromptHandlerParameters promptHandlerParameters,
+                               @NonNull final boolean shouldHandlePrompt) throws UiObjectNotFoundException {
         // handle loginHint input if needed
-        if (promptHandlerParameters != null) {
+        if (shouldHandlePrompt) {
             UiAutomatorUtils.handleInput("com.msft.identity.client.sample.local:id/loginHint", username);
         }
 
@@ -76,7 +77,7 @@ public class MsalTestApp extends App {
         acquireTokenButton.click();
 
         // handle prompt if needed
-        if (promptHandlerParameters != null) {
+        if (shouldHandlePrompt) {
             final MicrosoftStsPromptHandler microsoftStsPromptHandler = new MicrosoftStsPromptHandler((MicrosoftStsPromptHandlerParameters) promptHandlerParameters);
             microsoftStsPromptHandler.handlePrompt(username, password);
         }
