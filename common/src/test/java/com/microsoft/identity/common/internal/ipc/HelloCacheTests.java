@@ -88,7 +88,7 @@ public class HelloCacheTests {
         cacheWrite.saveNegotiatedProtocolVersion(minimumVer, maximumVer, negotiatedVer);
         final HelloCache.HelloCacheResult result = cacheRead.getHelloCacheResult(minimumVer, maximumVer);
         Assert.assertNotNull(result);
-        Assert.assertEquals(result.getNegotiatedProtocolVersion(), negotiatedVer);
+        Assert.assertEquals(negotiatedVer, result.getNegotiatedProtocolVersion());
     }
 
     @Test
@@ -102,7 +102,7 @@ public class HelloCacheTests {
         cacheWrite.saveNegotiatedProtocolVersion(minimumVer, maximumVer, negotiatedVer);
         final HelloCache.HelloCacheResult result = cacheRead.getHelloCacheResult(minimumVer, maximumVer);
         Assert.assertNotNull(result);
-        Assert.assertEquals(result.getNegotiatedProtocolVersion(), negotiatedVer);
+        Assert.assertEquals(negotiatedVer, result.getNegotiatedProtocolVersion());
     }
 
     @Test
@@ -153,12 +153,12 @@ public class HelloCacheTests {
 
         final HelloCache.HelloCacheResult resultA = cacheProtocolA.getHelloCacheResult(minimumVerProtocolA, maximumVerProtocolA);
         Assert.assertNotNull(resultA);
-        Assert.assertEquals(resultA.getNegotiatedProtocolVersion(), negotiatedVerProtocolA);
+        Assert.assertEquals(negotiatedVerProtocolA, resultA.getNegotiatedProtocolVersion());
         Assert.assertNull(cacheProtocolA.getHelloCacheResult(minimumVerProtocolB, maximumVerProtocolB));
 
         final HelloCache.HelloCacheResult resultB = cacheProtocolB.getHelloCacheResult(minimumVerProtocolB, maximumVerProtocolB);
         Assert.assertNotNull(resultB);
-        Assert.assertEquals(resultB.getNegotiatedProtocolVersion(), negotiatedVerProtocolB);
+        Assert.assertEquals(negotiatedVerProtocolB, resultB.getNegotiatedProtocolVersion());
         Assert.assertNull(cacheProtocolB.getHelloCacheResult(minimumVerProtocolA, maximumVerProtocolA));
     }
 
@@ -281,9 +281,8 @@ public class HelloCacheTests {
 
         final String minimumVer = "1.0";
         final String maximumVer = "2.5";
-        final String negotiatedVer = "handshake_error";
 
-        cacheWrite.saveNegotiatedProtocolVersion(minimumVer, maximumVer, negotiatedVer);
+        cacheWrite.saveHandShakeError(minimumVer, maximumVer);
         final HelloCache.HelloCacheResult result = cacheRead.getHelloCacheResult(minimumVer, maximumVer);
         Assert.assertNotNull(result);
         Assert.assertTrue(result.isHandShakeError());

@@ -244,7 +244,7 @@ open class HelloCache (
      */
     class HelloCacheResult (
         val negotiatedProtocolVersion: String?,
-        internal val error: String?,
+        val error: String?,
         internal val timeStamp: Long
     ) {
         init {
@@ -256,6 +256,10 @@ open class HelloCache (
         companion object {
             private val TAG = HelloCacheResult::class.java.simpleName
             private const val SEPARATOR = ","
+            private const val ERROR_PREFIX = "E"
+            private const val SUCCESS_PREFIX = "S"
+            private const val SUCCESS_CACHE_VALUE_FORMAT = "$SUCCESS_PREFIX$SEPARATOR%s$SEPARATOR%d"
+            private const val ERROR_CACHE_VALUE_FORMAT = "$ERROR_PREFIX$SEPARATOR%s$SEPARATOR%d"
             private const val HANDSHAKE_ERROR = "handshake_error"
 
             /**
@@ -267,17 +271,17 @@ open class HelloCache (
                 val methodTag = "$TAG:deserialize"
                 val values = value.split(SEPARATOR)
                 // valid value is <String>,<TimeStamp>
-                if (values.size != 2) {
+                if (values.size != 3) {
                     Logger.warn(methodTag, "Legacy or Invalid cache entry. $value")
                     return null
                 }
 
                 return try {
-                    val timeStamp = values[1].toLong()
-                    if (values[0] == HANDSHAKE_ERROR) {
-                        createHandshakeError(timeStamp)
+                    val timeStamp = values[2].toLong()
+                    if (values[0] == ERROR_PREFIX) {
+                        createError(values[1], timeStamp)
                     } else {
-                        createFromNegotiatedProtocolVersion(values[0], timeStamp)
+                        createFromNegotiatedProtocolVersion(values[1], timeStamp)
                     }
                 } catch (e: NumberFormatException) {
                     Logger.error(methodTag, "Invalid cache entry. $value", e)
@@ -297,27 +301,51 @@ open class HelloCache (
              * Constructs new HelloCacheResult with handshake error using timeStamp as current time.
              */
             internal fun createHandshakeError(): HelloCacheResult {
-                return createHandshakeError(System.currentTimeMillis())
+                return createError(HANDSHAKE_ERROR, System.currentTimeMillis())
             }
 
             private fun createFromNegotiatedProtocolVersion(negotiatedProtocolVersion: String, timeStamp: Long): HelloCacheResult {
                 return HelloCacheResult(negotiatedProtocolVersion, null, timeStamp)
             }
 
-            private fun createHandshakeError(timeStamp: Long): HelloCacheResult {
-                return HelloCacheResult(null, HANDSHAKE_ERROR, timeStamp)
+            private fun createError(error: String, timeStamp: Long): HelloCacheResult {
+                return HelloCacheResult(null, error, timeStamp)
             }
         }
 
+        /**
+         * Returns true if entry contains handshake_failure.
+         */
         fun isHandShakeError() : Boolean {
-            return !error.isNullOrEmpty() && error == HANDSHAKE_ERROR
+            return isError() && error == HANDSHAKE_ERROR
         }
 
+        /**
+         * Returns true if the result contains negotiated protocol version value.
+         */
+        fun isSuccess() : Boolean {
+            return !negotiatedProtocolVersion.isNullOrEmpty()
+        }
+
+        /**
+         * Returns true if entry contains an error.
+         */
+        fun isError() : Boolean {
+            return !error.isNullOrEmpty()
+        }
+
+        /**
+         * Value will be serialized as below
+         * For successful negotiated protocol value (NBP): S,<NBP>,<timestamp> e.g S,13.0,16000700
+         * For caching any error: S,<error>,<timestamp> e.g S,handshake_failure,16000700
+         * This code should work for all error and success in general but currently the only
+         * error supported is handshake_failure.
+         */
         internal fun serialize(): String {
             return if (!error.isNullOrEmpty()) {
-                String.format("%s%s%d", error, SEPARATOR, timeStamp)
+                String.format(ERROR_CACHE_VALUE_FORMAT, error, timeStamp)
             } else {
-                String.format("%s%s%d", negotiatedProtocolVersion, SEPARATOR, timeStamp)
+                String.format(SUCCESS_CACHE_VALUE_FORMAT, negotiatedProtocolVersion, timeStamp)
             }
         }
     }
