@@ -1,6 +1,7 @@
 V.NEXT
 ----------
 - [PATCH] also clear cached timestamp in ActiveClientBrokerCache (#2075)
+- [PATCH] Fix NPE when Content-Type header is missing in HTTP response (#2079)
 - [MINOR] Fix issue for MSA only where headers are not propagated on web requests with different domain redirects on newer versions of WebView (88+) (#2072)
 - [PATCH] Add method to return list of broker that supports account manager (#2073)
 - [MINOR] Send client id as part of request bundle for getSsoToken Api (#2064)
