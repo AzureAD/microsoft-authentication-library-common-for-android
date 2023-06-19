@@ -105,6 +105,7 @@ public abstract class App implements IApp {
         this.updateAppInstaller = updateAppInstaller;
     }
 
+    // Use installOldApk method where available for installing old apk.
     @Override
     public void install() {
         // TODO: make it build time configurable to specify the installer that should be used.

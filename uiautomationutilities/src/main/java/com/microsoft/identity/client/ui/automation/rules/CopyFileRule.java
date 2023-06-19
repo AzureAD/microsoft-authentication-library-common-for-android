@@ -70,6 +70,7 @@ public class CopyFileRule implements TestRule {
             BrokerLTW.BROKER_LTW_APK,
             BrokerLTW.OLD_BROKER_LTW_APK,
             OneAuthTestApp.ONEAUTH_TESTAPP_APK,
+            OneAuthTestApp.OLD_ONEAUTH_TESTAPP_APK,
             MsalTestApp.MSAL_TEST_APP_APK,
             MsalTestApp.OLD_MSAL_TEST_APP_APK
     };
