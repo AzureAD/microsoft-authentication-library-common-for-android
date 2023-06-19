@@ -23,6 +23,7 @@ V.13.0.1
 - [MINOR] Add android 14 check for skipping strong box isolation in pop token (#2053)
 - [PATCH] Fix min broker protocol version value for MSA accounts in broker (#2062)
 - [MINOR] Clear cache of access tokens with an old application identifier field (#2058)
+- [MINOR] Instrument PRTv3 flows (#2023)
 
 V.12.0.0
 ----------
@@ -35,7 +36,6 @@ V.12.0.0
 - [MINOR] Add method to clear receiver concurrentHashMap in LocalBroadcaster (#1993)
 - [PATCH] Mapping ECDSA to EC in ClientCertRequest's keyTypes array (#2015)
 - [PATCH] Fix NPE in OTEL code (#2018)
-- [MINOR] Instrument PRTv3 flows (#2023)
 - [MINOR] Updating different smartcards error message; updated string res files (#2021)
 - [PATCH] Moving ClearCertPref call to clean up method (#2025)
 - [PATCH] Fix target in token records to fix cache keys (#2027)
