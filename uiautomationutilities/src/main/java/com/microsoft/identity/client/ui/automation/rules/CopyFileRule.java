@@ -25,6 +25,7 @@ package com.microsoft.identity.client.ui.automation.rules;
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.client.ui.automation.app.AzureSampleApp;
+import com.microsoft.identity.client.ui.automation.app.MsalTestApp;
 import com.microsoft.identity.client.ui.automation.app.OutlookApp;
 import com.microsoft.identity.client.ui.automation.app.TeamsApp;
 import com.microsoft.identity.client.ui.automation.app.WordApp;
@@ -66,7 +67,9 @@ public class CopyFileRule implements TestRule {
             WordApp.WORD_APK,
             BrowserEdge.EDGE_APK,
             BrokerLTW.BROKER_LTW_APK,
-            BrokerLTW.OLD_BROKER_LTW_APK
+            BrokerLTW.OLD_BROKER_LTW_APK,
+            MsalTestApp.MSAL_TEST_APP_APK,
+            MsalTestApp.OLD_MSAL_TEST_APP_APK
     };
 
     public CopyFileRule() {
