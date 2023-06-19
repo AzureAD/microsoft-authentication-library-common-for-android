@@ -32,11 +32,10 @@ sealed interface SignInSubmitPasswordCommandResult
 
 interface SignInCommandResult {
     data class Complete(val authenticationResult: ILocalAuthenticationResult) :
-        SignInStartCommandResult, SignInWithSLTCommandResult, SignInSubmitCodeCommandResult, SignInSubmitPasswordCommandResult
+        SignInStartCommandResult, SignInWithSLTCommandResult, SignInSubmitCodeCommandResult,
+        SignInSubmitPasswordCommandResult
 
-    object InvalidAuthenticationType
-        :
-        SignInStartCommandResult
+    object InvalidAuthenticationType : SignInStartCommandResult
 
     data class PasswordRequired(val credentialToken: String) :
         SignInStartCommandResult, SignInWithSLTCommandResult
@@ -47,7 +46,7 @@ interface SignInCommandResult {
         val challengeChannel: String,
         val codeLength: Int
     ) :
-        SignInStartCommandResult, SignInWithSLTCommandResult, SignInResendCodeCommandResult, SignInSubmitPasswordCommandResult
+        SignInStartCommandResult, SignInWithSLTCommandResult, SignInResendCodeCommandResult
 
     data class UserNotFound(val errorCode: String, val errorDescription: String) :
         SignInStartCommandResult

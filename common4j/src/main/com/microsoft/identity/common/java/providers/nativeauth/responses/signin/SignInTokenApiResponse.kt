@@ -8,6 +8,7 @@ import com.microsoft.identity.common.java.providers.nativeauth.IApiResponse
 import com.microsoft.identity.common.java.providers.nativeauth.interactors.InnerError
 import com.microsoft.identity.common.java.util.ObjectMapper
 import com.microsoft.identity.common.java.util.isCredentialRequired
+import com.microsoft.identity.common.java.util.isInvalidAuthenticationMethod
 import com.microsoft.identity.common.java.util.isInvalidGrant
 import com.microsoft.identity.common.java.util.isOtpCodeIncorrect
 import com.microsoft.identity.common.java.util.isPasswordIncorrect
@@ -37,7 +38,6 @@ data class SignInTokenApiResponse(
                 if (credentialToken.isNullOrBlank()) {
                     throw ClientException("credential_token is null or empty")
                 }
-                return SignInTokenApiResult.CredentialRequired(credentialToken = credentialToken)
             } else if (error.isInvalidGrant()) {
                 if (errorCodes.isNullOrEmpty()) {
                     SignInTokenApiResult.UnknownError(error, errorDescription)
@@ -47,6 +47,8 @@ data class SignInTokenApiResponse(
                     return SignInTokenApiResult.PasswordIncorrect(error = error.orEmpty(), errorDescription = errorDescription.orEmpty())
                 } else if (errorCodes[0].isOtpCodeIncorrect()) {
                     return SignInTokenApiResult.CodeIncorrect(error = error.orEmpty(), errorDescription = errorDescription.orEmpty())
+                }  else if (errorCodes[0].isInvalidAuthenticationMethod()) {
+                    return SignInTokenApiResult.InvalidAuthenticationMethod(error = error.orEmpty(), errorDescription = errorDescription.orEmpty())
                 } else {
                     return SignInTokenApiResult.UnknownError(error, errorDescription)
                 }
@@ -71,7 +73,7 @@ data class SignInTokenApiResponse(
                 )
                 // TODO until mock API returns it
                 tokenResponse.idToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6ImJXOFpjTWpCQ25KWlMtaWJYNVVRRE5TdHZ4NCJ9.eyJ2ZXIiOiIyLjAiLCJpc3MiOiJodHRwczovL2xvZ2luLm1pY3Jvc29mdG9ubGluZS5jb20vOTE4ODA0MGQtNmM2Ny00YzViLWIxMTItMzZhMzA0YjY2ZGFkL3YyLjAiLCJzdWIiOiJBQUFBQUFBQUFBQUFBQUFBQUFBQUFQV0t1dkFxNDdlZmxzSjdNd2dpbWtVIiwiYXVkIjoiMDk4NGE3YjYtYmMxMy00MTQxLThiMGQtOGY3NjdlMTM2YmI3IiwiZXhwIjoxNjgxNDYzMDIzLCJpYXQiOjE2ODEzNzYzMjMsIm5iZiI6MTY4MTM3NjMyMywibmFtZSI6IlNhbW15IE9kZW5ob3ZlbiIsInByZWZlcnJlZF91c2VybmFtZSI6InNhbW15Lm9kZW5ob3ZlbkBnbWFpbC5jb20iLCJvaWQiOiIwMDAwMDAwMC0wMDAwLTAwMDAtNDQ3Yi0yNzNlZWMwMGRkNTciLCJ0aWQiOiI5MTg4MDQwZC02YzY3LTRjNWItYjExMi0zNmEzMDRiNjZkYWQiLCJhaW8iOiJEVGhGY3dSdFgwT0tqNXBTSEdOZUdVR1NVNGhaNFJoNU83TmhnUjYzMnpldEM5WmgzM3dWRypXeUJqIVFPM0twU0dXRVRla25sMDA1WE8qQWg0bXhRamVuR2VRZXIqakx3Nypkcmh1cDdTc0NJRThraUlsempYMDZuaWNWNFFFTGZxR3BoYkRuemI0RWtOZEZXTHBOTmhJJCJ9.WRe3tNCsvIuYfw8bIY1D8spFJXg-ZrGm2MiDYkUlfNR-bbW_7niJg372U-wG65OfRA99NauR511IKWcg6i5FRzx3Xcx4AfGCJhOCGagD4fRDaU4I1pE-C3lJlGY6bIodTSXIlS0VUPw_YmvzQ-X9lyJP-l-89hxQNtvCSbdm2zlSJPvdynJmRH58s4PTJSGuv7zn5Jq-Uc0s2DZx0nLfBfLee8bQpaUQamaxQ6Noz7zAjz7-TkCRriqZyvJLE9dBvRd6uSzYR_qm4VDpsH5wnGsMRvW7F_hcjjZo2gZyxI6BWy0kONF8juL6H1ar1EMi3Xn9jIU1Tde3yafjTpkmyw"
-                tokenResponse.clientInfo = "eyJ2ZXIiOiIxLjAiLCJzdWIiOiJBQUFBQUFBQUFBQUFBQUFBQUFBQUFQV0t1dkFxNDdlZmxzSjdNd2dpbWtVIiwibmFtZSI6IlNhbW15IE9kZW5ob3ZlbiIsInByZWZlcnJlZF91c2VybmFtZSI6InNhbW15Lm9kZW5ob3ZlbkBnbWFpbC5jb20iLCJvaWQiOiIwMDAwMDAwMC0wMDAwLTAwMDAtNDQ3Yi0yNzNlZWMwMGRkNTciLCJ0aWQiOiI5MTg4MDQwZC02YzY3LTRjNWItYjExMi0zNmEzMDRiNjZkYWQiLCJob21lX29pZCI6IjAwMDAwMDAwLTAwMDAtMDAwMC00NDdiLTI3M2VlYzAwZGQ1NyIsInVpZCI6IjAwMDAwMDAwLTAwMDAtMDAwMC00NDdiLTI3M2VlYzAwZGQ1NyIsInV0aWQiOiI5MTg4MDQwZC02YzY3LTRjNWItYjExMi0zNmEzMDRiNjZkYWQifQ"
+                tokenResponse.clientInfo = "eyJ2ZXIiOiIxLjAiLCJzdWIiOiJBQUFBQUFBQUFBQUFBQUFBQUFBQUFBcEhXMjhma09DSE9xNlJZX2l2V0tZIiwibmFtZSI6IlNpbHZpdSBQZXRyZXNjdSIsInByZWZlcnJlZF91c2VybmFtZSI6InNwZXRyZXNjdW1zQG91dGxvb2suY29tIiwib2lkIjoiMDAwMDAwMDAtMDAwMC0wMDAwLTc5MzYtYWEzMjBhMmNmN2JiIiwidGlkIjoiOTE4ODA0MGQtNmM2Ny00YzViLWIxMTItMzZhMzA0YjY2ZGFkIiwiaG9tZV9vaWQiOiIwMDAwMDAwMC0wMDAwLTAwMDAtNzkzNi1hYTMyMGEyY2Y3YmIiLCJ1aWQiOiIwMDAwMDAwMC0wMDAwLTAwMDAtNzkzNi1hYTMyMGEyY2Y3YmIiLCJ1dGlkIjoiOTE4ODA0MGQtNmM2Ny00YzViLWIxMTItMzZhMzA0YjY2ZGFkIn0"
                 return SignInTokenApiResult.Success(tokenResponse = tokenResponse)
             }
         }

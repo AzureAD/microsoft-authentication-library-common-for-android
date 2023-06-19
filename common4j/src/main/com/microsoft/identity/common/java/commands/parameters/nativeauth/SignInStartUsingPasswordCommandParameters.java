@@ -8,7 +8,7 @@ import lombok.experimental.SuperBuilder;
 @Getter
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder(toBuilder = true)
-public class SignInStartUsingPasswordCommandParameters extends BaseSignInStartCommandParameters {
+public class SignInStartUsingPasswordCommandParameters extends SignInStartCommandParameters {
     private static final String TAG = SignInStartUsingPasswordCommandParameters.class.getSimpleName();
 
     @NonNull

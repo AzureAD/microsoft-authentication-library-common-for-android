@@ -124,6 +124,7 @@ class NativeAuthResponseHandlerTest {
     private val expiresIn = 500
     private val idToken = "9012"
     private val accessToken = "1234"
+    private val invalidAuthenticationType = 400002
     private val attributeValidationFailedErrorCode = "attribute_validation_failed"
     private val invalidOOBValueErrorCode = "invalid_oob_value"
 
@@ -1421,7 +1422,7 @@ class NativeAuthResponseHandlerTest {
 
     @Test
     fun testSignInTokenApiResponseInvalidGrantMissingErrorCodes() {
-        val signInInitiateApiResponse = SignInTokenApiResponse(
+        val signInTokenApiResponse = SignInTokenApiResponse(
             statusCode = errorStatusCode,
             credentialToken = null,
             error = invalidGrantError,
@@ -1438,7 +1439,7 @@ class NativeAuthResponseHandlerTest {
             idToken = null
         )
 
-        val apiResult = signInInitiateApiResponse.toResult()
+        val apiResult = signInTokenApiResponse.toResult()
         assertTrue(apiResult is SignInTokenApiResult.UnknownError)
         assertEquals(invalidGrantError, (apiResult as SignInTokenApiResult.UnknownError).error)
         assertEquals(tenantMisconfiguration, apiResult.errorDescription)
@@ -1446,7 +1447,7 @@ class NativeAuthResponseHandlerTest {
 
     @Test
     fun testSignInTokenApiResponseUserDoesNotExist() {
-        val signInInitiateApiResponse = SignInTokenApiResponse(
+        val signInTokenApiResponse = SignInTokenApiResponse(
             statusCode = 400,
             credentialToken = null,
             error = invalidGrantError,
@@ -1463,7 +1464,7 @@ class NativeAuthResponseHandlerTest {
             idToken = null
         )
 
-        val apiResult = signInInitiateApiResponse.toResult()
+        val apiResult = signInTokenApiResponse.toResult()
         assertTrue(apiResult is SignInTokenApiResult.UserNotFound)
         assertEquals(invalidGrantError, (apiResult as SignInTokenApiResult.UserNotFound).error)
         assertEquals(userDoesNotExistErrorDescription, apiResult.errorDescription)
@@ -1471,7 +1472,7 @@ class NativeAuthResponseHandlerTest {
 
     @Test
     fun testSignInTokenApiResponsePasswordIncorrect() {
-        val signInInitiateApiResponse = SignInTokenApiResponse(
+        val signInTokenApiResponse = SignInTokenApiResponse(
             statusCode = errorStatusCode,
             credentialToken = null,
             error = invalidGrantError,
@@ -1488,7 +1489,7 @@ class NativeAuthResponseHandlerTest {
             idToken = null
         )
 
-        val apiResult = signInInitiateApiResponse.toResult()
+        val apiResult = signInTokenApiResponse.toResult()
         assertTrue(apiResult is SignInTokenApiResult.PasswordIncorrect)
         assertEquals(invalidGrantError, (apiResult as SignInTokenApiResult.PasswordIncorrect).error)
         assertEquals(incorrectPasswordDescription, apiResult.errorDescription)
@@ -1496,7 +1497,7 @@ class NativeAuthResponseHandlerTest {
 
     @Test
     fun testSignInTokenApiResponseOtpCodeIncorrect() {
-        val signInInitiateApiResponse = SignInTokenApiResponse(
+        val signInTokenApiResponse = SignInTokenApiResponse(
             statusCode = errorStatusCode,
             credentialToken = null,
             error = invalidGrantError,
@@ -1513,7 +1514,7 @@ class NativeAuthResponseHandlerTest {
             idToken = null
         )
 
-        val apiResult = signInInitiateApiResponse.toResult()
+        val apiResult = signInTokenApiResponse.toResult()
         assertTrue(apiResult is SignInTokenApiResult.CodeIncorrect)
         assertEquals(invalidGrantError, (apiResult as SignInTokenApiResult.CodeIncorrect).error)
         assertEquals(incorrectOtpDescription, apiResult.errorDescription)
@@ -1521,7 +1522,7 @@ class NativeAuthResponseHandlerTest {
 
     @Test
     fun testSignInTokenApiResponseMultipleErrorCodes() {
-        val signInInitiateApiResponse = SignInTokenApiResponse(
+        val signInTokenApiResponse = SignInTokenApiResponse(
             statusCode = errorStatusCode,
             credentialToken = null,
             error = invalidGrantError,
@@ -1538,62 +1539,15 @@ class NativeAuthResponseHandlerTest {
             idToken = null
         )
 
-        val apiResult = signInInitiateApiResponse.toResult()
+        val apiResult = signInTokenApiResponse.toResult()
         assertTrue(apiResult is SignInTokenApiResult.UnknownError)
         assertEquals(invalidGrantError, (apiResult as SignInTokenApiResult.UnknownError).error)
         assertEquals(incorrectOtpDescription, apiResult.errorDescription)
     }
 
     @Test
-    fun testSignInTokenApiResponseCredentialRequiredSuccess() {
-        val signInInitiateApiResponse = SignInTokenApiResponse(
-            statusCode = errorStatusCode,
-            credentialToken = credentialToken,
-            error = credentialRequiredError,
-            errorCodes = listOf(unknownErrorCode),
-            errorDescription = credentialRequiredTokenErrorDescription,
-            errorUri = null,
-            innerErrors = null,
-            tokenType = null,
-            scope = null,
-            expiresIn = null,
-            extExpiresIn = null,
-            accessToken = null,
-            refreshToken = null,
-            idToken = null
-        )
-
-        val apiResult = signInInitiateApiResponse.toResult()
-        assertTrue(apiResult is SignInTokenApiResult.CredentialRequired)
-        assertEquals(credentialToken, (apiResult as SignInTokenApiResult.CredentialRequired).credentialToken)
-    }
-
-    @Test(expected = ClientException::class)
-    fun testSignInTokenApiResponseCredentialRequiredMissingCredentialToken() {
-        val signInInitiateApiResponse = SignInTokenApiResponse(
-            statusCode = errorStatusCode,
-            credentialToken = null,
-            error = credentialRequiredError,
-            errorCodes = listOf(unknownErrorCode),
-            errorDescription = credentialRequiredTokenErrorDescription,
-            errorUri = null,
-            innerErrors = null,
-            tokenType = null,
-            scope = null,
-            expiresIn = null,
-            extExpiresIn = null,
-            accessToken = null,
-            refreshToken = null,
-            idToken = null
-        )
-
-        val apiResult = signInInitiateApiResponse.toResult()
-        assertTrue(apiResult is SignInTokenApiResult.CredentialRequired)
-    }
-
-    @Test
     fun testSignInTokenApiResponseSuccess() {
-        val signInInitiateApiResponse = SignInTokenApiResponse(
+        val signInTokenApiResponse = SignInTokenApiResponse(
             statusCode = successStatusCode,
             credentialToken = null,
             error = null,
@@ -1610,14 +1564,14 @@ class NativeAuthResponseHandlerTest {
             idToken = idToken
         )
 
-        val apiResult = signInInitiateApiResponse.toResult()
+        val apiResult = signInTokenApiResponse.toResult()
         assertTrue(apiResult is SignInTokenApiResult.Success)
         // TODO token validation
     }
 
     @Test(expected = ClientException::class)
     fun testSignInTokenApiResponseMissingAccessToken() {
-        val signInInitiateApiResponse = SignInTokenApiResponse(
+        val signInTokenApiResponse = SignInTokenApiResponse(
             statusCode = successStatusCode,
             credentialToken = null,
             error = null,
@@ -1634,12 +1588,12 @@ class NativeAuthResponseHandlerTest {
             idToken = idToken
         )
 
-        signInInitiateApiResponse.toResult()
+        signInTokenApiResponse.toResult()
     }
 
     @Test(expected = ClientException::class)
     fun testSignInTokenApiResponseMissingRefreshToken() {
-        val signInInitiateApiResponse = SignInTokenApiResponse(
+        val signInTokenApiResponse = SignInTokenApiResponse(
             statusCode = successStatusCode,
             credentialToken = null,
             error = null,
@@ -1656,12 +1610,12 @@ class NativeAuthResponseHandlerTest {
             idToken = idToken
         )
 
-        signInInitiateApiResponse.toResult()
+        signInTokenApiResponse.toResult()
     }
 
     @Test(expected = ClientException::class)
     fun testSignInTokenApiResponseMissingIdToken() {
-        val signInInitiateApiResponse = SignInTokenApiResponse(
+        val signInTokenApiResponse = SignInTokenApiResponse(
             statusCode = successStatusCode,
             credentialToken = null,
             error = null,
@@ -1678,12 +1632,12 @@ class NativeAuthResponseHandlerTest {
             idToken = null
         )
 
-        signInInitiateApiResponse.toResult()
+        signInTokenApiResponse.toResult()
     }
 
     @Test
     fun testSignInTokenApiResponseWithUnknownError() {
-        val signInInitiateApiResponse = SignInTokenApiResponse(
+        val signInTokenApiResponse = SignInTokenApiResponse(
             statusCode = errorStatusCode,
             credentialToken = null,
             error = unknownError,
@@ -1700,9 +1654,32 @@ class NativeAuthResponseHandlerTest {
             idToken = null
         )
 
-        val apiResult = signInInitiateApiResponse.toResult()
+        val apiResult = signInTokenApiResponse.toResult()
         assertTrue(apiResult is SignInTokenApiResult.UnknownError)
         assertEquals(unknownError, (apiResult as SignInTokenApiResult.UnknownError).error)
         assertEquals(unknownErrorDescription, apiResult.errorDescription)
+    }
+
+    @Test
+    fun testSignInWithPasswordApiResponseWithInvalidAuthenticationTypeError() {
+        val signInTokenApiResponse = SignInTokenApiResponse(
+            statusCode = errorStatusCode,
+            credentialToken = null,
+            error = invalidGrantError,
+            errorCodes = listOf(invalidAuthenticationType),
+            errorDescription = unknownErrorDescription,
+            errorUri = null,
+            innerErrors = null,
+            tokenType = null,
+            scope = null,
+            expiresIn = null,
+            extExpiresIn = null,
+            accessToken = null,
+            refreshToken = null,
+            idToken = null
+        )
+
+        val apiResult = signInTokenApiResponse.toResult()
+        assertTrue(apiResult is SignInTokenApiResult.InvalidAuthenticationMethod)
     }
 }

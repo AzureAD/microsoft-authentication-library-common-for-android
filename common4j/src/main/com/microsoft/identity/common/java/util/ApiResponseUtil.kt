@@ -121,3 +121,7 @@ fun String?.isAuthNotSupported(): Boolean {
 fun String?.isInvalidOOBValue(): Boolean {
     return this.contentEquals(other = "invalid_oob_value", ignoreCase = true)
 }
+
+fun Int?.isInvalidAuthenticationMethod(): Boolean {
+    return this == 400002
+}

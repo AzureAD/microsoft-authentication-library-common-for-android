@@ -377,6 +377,52 @@ class NativeAuthControllerTest {
         assert(result is CommandResult.UnknownError)
         assert((result as CommandResult.UnknownError).errorCode == "unexpected_api_result")
     }
+
+    @Test
+    fun testSignInStartWithPasswordInvalidAuthenticationMethod() {
+        val correlationId = UUID.randomUUID().toString()
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpointType.SignInToken,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.INVALID_AUTHENTICATION_METHOD
+        )
+
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpointType.SignInInitiate,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.INITIATE_SUCCESS
+        )
+
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpointType.SignInChallenge,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.CHALLENGE_TYPE_OOB
+        )
+
+        val parameters = createSignInStartWithPasswordCommandParameters()
+        val result = controller.signInStart(parameters)
+        assert(result is SignInCommandResult.InvalidAuthenticationType)
+    }
+
+    @Test
+    fun testSignInStartWithPasswordBrowserRequired() {
+        val correlationId = UUID.randomUUID().toString()
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpointType.SignInToken,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.INVALID_AUTHENTICATION_METHOD
+        )
+
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpointType.SignInInitiate,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.CHALLENGE_TYPE_REDIRECT
+        )
+
+        val parameters = createSignInStartWithPasswordCommandParameters()
+        val result = controller.signInStart(parameters)
+        assert(result is CommandResult.Redirect)
+    }
     //endregion
 
     // region Sign out

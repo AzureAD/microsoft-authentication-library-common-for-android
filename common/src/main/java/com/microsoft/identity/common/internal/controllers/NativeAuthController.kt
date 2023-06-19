@@ -153,18 +153,6 @@ class NativeAuthController : BaseNativeAuthController() {
                 )
             }
 
-            is SignInTokenApiResult.UnknownError -> {
-                LogSession.log(
-                    tag = TAG,
-                    logLevel = Logger.LogLevel.WARN,
-                    message = "Unexpected result: $tokenApiResult"
-                )
-                CommandResult.UnknownError(
-                    errorCode = tokenApiResult.error,
-                    errorDescription = tokenApiResult.errorDescription
-                )
-            }
-
             is SignInTokenApiResult.PasswordIncorrect -> {
                 SignInCommandResult.PasswordIncorrect(
                     errorCode = tokenApiResult.error,
@@ -178,8 +166,16 @@ class NativeAuthController : BaseNativeAuthController() {
                     errorDescription = tokenApiResult.errorDescription
                 )
             }
+
+            is SignInTokenApiResult.InvalidAuthenticationMethod -> {
+                signInStartAfterInvalidAuthenticationMethod(
+                    signInStartCommandParameters = parameters,
+                    oAuth2Strategy = oAuth2Strategy
+                )
+            }
+
             is SignInTokenApiResult.CodeIncorrect,
-            is SignInTokenApiResult.CredentialRequired -> {
+            is SignInTokenApiResult.UnknownError -> {
                 LogSession.log(
                     tag = TAG,
                     logLevel = Logger.LogLevel.WARN,
@@ -209,37 +205,10 @@ class NativeAuthController : BaseNativeAuthController() {
             oAuth2Strategy = oAuth2Strategy,
             parameters = parametersWithScopes
         )
-        return when (initiateApiResult) {
-            SignInInitiateApiResult.Redirect -> {
-                CommandResult.Redirect
-            }
-
-            is SignInInitiateApiResult.Success -> {
-                performSignInChallengeCall(
-                    oAuth2Strategy = oAuth2Strategy,
-                    credentialToken = initiateApiResult.credentialToken
-                ).toSignInStartCommandResult()
-            }
-
-            is SignInInitiateApiResult.UnknownError -> {
-                LogSession.log(
-                    tag = TAG,
-                    logLevel = Logger.LogLevel.WARN,
-                    message = "Unexpected result: $initiateApiResult"
-                )
-                CommandResult.UnknownError(
-                    errorCode = initiateApiResult.error,
-                    errorDescription = initiateApiResult.errorDescription
-                )
-            }
-
-            is SignInInitiateApiResult.UserNotFound -> {
-                SignInCommandResult.UserNotFound(
-                    errorCode = initiateApiResult.error,
-                    errorDescription = initiateApiResult.errorDescription
-                )
-            }
-        }
+        return processSignInInitiateApiResult(
+            initiateApiResult = initiateApiResult,
+            oAuth2Strategy = oAuth2Strategy
+        )
     }
 
     fun signInWithSLT(parameters: SignInWithSLTCommandParameters): SignInWithSLTCommandResult {
@@ -273,13 +242,18 @@ class NativeAuthController : BaseNativeAuthController() {
                         tokenApiResult = tokenApiResult
                     )
                 }
+
                 is SignInTokenApiResult.UnknownError -> {
                     return CommandResult.UnknownError(
                         errorCode = tokenApiResult.error,
                         errorDescription = tokenApiResult.errorDescription
                     )
                 }
-                is SignInTokenApiResult.CredentialRequired, is SignInTokenApiResult.CodeIncorrect, is SignInTokenApiResult.UserNotFound, is SignInTokenApiResult.PasswordIncorrect -> {
+
+                is SignInTokenApiResult.CodeIncorrect,
+                is SignInTokenApiResult.UserNotFound,
+                is SignInTokenApiResult.InvalidAuthenticationMethod,
+                is SignInTokenApiResult.PasswordIncorrect -> {
                     // This shouldn't be possible in SLT, throw unknown error
                     LogSession.log(
                         tag = TAG,
@@ -351,8 +325,9 @@ class NativeAuthController : BaseNativeAuthController() {
                     )
                 }
 
-                is SignInTokenApiResult.CredentialRequired, is SignInTokenApiResult.PasswordIncorrect,
-                is SignInTokenApiResult.UserNotFound -> {
+                is SignInTokenApiResult.PasswordIncorrect,
+                is SignInTokenApiResult.UserNotFound,
+                is SignInTokenApiResult.InvalidAuthenticationMethod -> {
                     // TODO add correlation ID https://identitydivision.visualstudio.com/Engineering/_workitems/edit/2503124
                     LogSession.log(
                         tag = TAG,
@@ -472,6 +447,7 @@ class NativeAuthController : BaseNativeAuthController() {
                         tokenApiResult = result
                     )
                 }
+
                 is SignInTokenApiResult.UnknownError -> {
                     LogSession.log(
                         tag = TAG,
@@ -484,14 +460,8 @@ class NativeAuthController : BaseNativeAuthController() {
                     )
                 }
 
-                is SignInTokenApiResult.CredentialRequired -> {
-                    performSignInChallengeCall(
-                        oAuth2Strategy = oAuth2Strategy,
-                        credentialToken = result.credentialToken
-                    ).toSignInSubmitPasswordCommandResult()
-                }
-
-                is SignInTokenApiResult.CodeIncorrect, is SignInTokenApiResult.UserNotFound -> {
+                is SignInTokenApiResult.CodeIncorrect, is SignInTokenApiResult.UserNotFound,
+                is SignInTokenApiResult.InvalidAuthenticationMethod -> {
                     // TODO add correlation ID
                     LogSession.log(
                         tag = TAG,
@@ -1023,51 +993,6 @@ class NativeAuthController : BaseNativeAuthController() {
         }
     }
 
-    private fun SignInChallengeApiResult.toSignInSubmitPasswordCommandResult(): SignInSubmitPasswordCommandResult {
-        LogSession.logMethodCall(tag = TAG)
-        return when (this) {
-            SignInChallengeApiResult.Redirect -> {
-                CommandResult.Redirect
-            }
-
-            is SignInChallengeApiResult.PasswordRequired -> {
-                // TODO add correlation ID
-                LogSession.log(
-                    tag = TAG,
-                    logLevel = Logger.LogLevel.WARN,
-                    message = "Unexpected result: $this"
-                )
-                CommandResult.UnknownError(
-                    errorCode = "unexpected_api_result",
-                    errorDescription = "API returned unexpected result: $this"
-                )
-            }
-
-            is SignInChallengeApiResult.UnknownError -> {
-                LogSession.log(
-                    tag = TAG,
-                    logLevel = Logger.LogLevel.WARN,
-                    message = "Unexpected result: $this"
-                )
-                CommandResult.UnknownError(
-                    errorCode = this.error,
-                    errorDescription = this.errorDescription
-                )
-            }
-            is SignInChallengeApiResult.OOBRequired -> {
-                LogSession.log(
-                    tag = TAG,
-                    logLevel = Logger.LogLevel.WARN,
-                    message = "Unexpected result: $this"
-                )
-                CommandResult.UnknownError(
-                    errorCode = "unexpected_api_result",
-                    errorDescription = "API returned unexpected result: $this"
-                )
-            }
-        }
-    }
-
     private fun ResetPasswordChallengeApiResult.toResetPasswordStartCommandResult(): ResetPasswordStartCommandResult {
         LogSession.logMethodCall(tag = TAG)
         return when (this) {
@@ -1567,6 +1492,95 @@ class NativeAuthController : BaseNativeAuthController() {
                 CommandResult.UnknownError(
                     errorCode = "unexpected_api_result",
                     errorDescription = "API returned unexpected result: $this",
+                )
+            }
+        }
+    }
+
+    private fun signInStartAfterInvalidAuthenticationMethod(
+        signInStartCommandParameters: SignInStartUsingPasswordCommandParameters,
+        oAuth2Strategy: NativeAuthOAuth2Strategy
+    ): SignInStartCommandResult {
+        LogSession.logMethodCall(tag = TAG)
+
+        val initiateApiResult = performSignInInitiateCall(
+            oAuth2Strategy = oAuth2Strategy,
+            parameters = signInStartCommandParameters as SignInStartCommandParameters
+        )
+        return processSignInInitiateApiResult(
+            initiateApiResult = initiateApiResult,
+            oAuth2Strategy = oAuth2Strategy,
+            isInvalidAuthenticationMethod = true
+        )
+    }
+
+    private fun SignInChallengeApiResult.toSignInStartCommandResultAfterInvalidAuthenticationMethod():
+        SignInStartCommandResult {
+        LogSession.logMethodCall(tag = TAG)
+        return when (this) {
+            is SignInChallengeApiResult.OOBRequired -> {
+                SignInCommandResult.InvalidAuthenticationType
+            }
+
+            is SignInChallengeApiResult.UnknownError,
+            is SignInChallengeApiResult.PasswordRequired -> {
+                LogSession.log(
+                    tag = TAG,
+                    logLevel = Logger.LogLevel.WARN,
+                    message = "Unexpected result: $this"
+                )
+                CommandResult.UnknownError(
+                    errorCode = null,
+                    errorDescription = "Unexpected result: $this"
+                )
+            }
+
+            SignInChallengeApiResult.Redirect -> {
+                CommandResult.Redirect
+            }
+        }
+    }
+
+    private fun processSignInInitiateApiResult(
+        initiateApiResult: SignInInitiateApiResult,
+        oAuth2Strategy: NativeAuthOAuth2Strategy,
+        isInvalidAuthenticationMethod: Boolean = false
+    ): SignInStartCommandResult {
+        return when (initiateApiResult) {
+            SignInInitiateApiResult.Redirect -> {
+                CommandResult.Redirect
+            }
+
+            is SignInInitiateApiResult.Success -> {
+                if (isInvalidAuthenticationMethod) {
+                    performSignInChallengeCall(
+                        oAuth2Strategy = oAuth2Strategy,
+                        credentialToken = initiateApiResult.credentialToken
+                    ).toSignInStartCommandResultAfterInvalidAuthenticationMethod()
+                } else {
+                    performSignInChallengeCall(
+                        oAuth2Strategy = oAuth2Strategy,
+                        credentialToken = initiateApiResult.credentialToken
+                    ).toSignInStartCommandResult()
+                }
+            }
+
+            is SignInInitiateApiResult.UnknownError -> {
+                LogSession.log(
+                    tag = TAG,
+                    logLevel = Logger.LogLevel.WARN,
+                    message = "Unexpected result: $initiateApiResult"
+                )
+                CommandResult.UnknownError(
+                    errorCode = initiateApiResult.error,
+                    errorDescription = initiateApiResult.errorDescription
+                )
+            }
+
+            is SignInInitiateApiResult.UserNotFound -> {
+                SignInCommandResult.UserNotFound(
+                    errorCode = initiateApiResult.error,
+                    errorDescription = initiateApiResult.errorDescription
                 )
             }
         }

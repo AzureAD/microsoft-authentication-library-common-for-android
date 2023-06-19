@@ -298,27 +298,6 @@ class SignInOAuthStrategyTest {
     }
 
     @Test
-    fun testPerformSignInRopcWithCredentialRequiredError() {
-        MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SignInToken,
-            correlationId = UUID.randomUUID().toString(),
-            responseType = MockApiResponseType.CREDENTIAL_REQUIRED
-        )
-
-        val parameters = SignInStartUsingPasswordCommandParameters.builder()
-            .platformComponents(mock<PlatformComponents>())
-            .username(username)
-            .password(password)
-            .build()
-
-        val result = nativeAuthOAuth2Strategy.performROPCTokenRequest(
-            parameters = parameters
-        )
-
-        Assert.assertTrue(result is SignInTokenApiResult.CredentialRequired)
-    }
-
-    @Test
     fun testPerformSignInRopcWithInvalidGrantError() {
         MockApiUtils.configureMockApi(
             endpointType = MockApiEndpointType.SignInToken,
@@ -379,27 +358,6 @@ class SignInOAuthStrategyTest {
     }
 
     @Test
-    fun testPerformPasswordTokenRequestCredentialRequired() {
-        MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SignInToken,
-            correlationId = UUID.randomUUID().toString(),
-            responseType = MockApiResponseType.CREDENTIAL_REQUIRED
-        )
-
-        val parameters = SignInStartUsingPasswordCommandParameters.builder()
-            .platformComponents(mock<PlatformComponents>())
-            .username(username)
-            .password(password)
-            .build()
-
-        val result = nativeAuthOAuth2Strategy.performROPCTokenRequest(
-            parameters = parameters
-        )
-
-        Assert.assertTrue(result is SignInTokenApiResult.CredentialRequired)
-    }
-
-    @Test
     fun testPerformSignInTokenWithInvalidGrantError() {
         MockApiUtils.configureMockApi(
             endpointType = MockApiEndpointType.SignInToken,
@@ -440,6 +398,26 @@ class SignInOAuthStrategyTest {
     }
 
     @Test
+    fun testPerformSignInTokenWithPasswordInvalidAuthenticationMethod() {
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpointType.SignInToken,
+            correlationId = UUID.randomUUID().toString(),
+            responseType = MockApiResponseType.INVALID_AUTHENTICATION_METHOD
+        )
+
+        val signInStartUsingPasswordCommandParameters = SignInStartUsingPasswordCommandParameters.builder()
+            .platformComponents(mock<PlatformComponents>())
+            .username(username)
+            .password(password)
+            .build()
+
+        val result = nativeAuthOAuth2Strategy.performROPCTokenRequest(
+            parameters = signInStartUsingPasswordCommandParameters
+        )
+        Assert.assertTrue(result is SignInTokenApiResult.InvalidAuthenticationMethod)
+    }
+
+    @Test
     fun testPerformSLTTokenRequest() {
         val correlationId = UUID.randomUUID().toString()
         MockApiUtils.configureMockApi(
@@ -457,26 +435,6 @@ class SignInOAuthStrategyTest {
             parameters = parameters
         )
         Assert.assertTrue(result is SignInTokenApiResult.Success)
-    }
-
-    @Test
-    fun testPerformSLTTokenRequestCredentialRequired() {
-        val correlationId = UUID.randomUUID().toString()
-        MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpointType.SignInToken,
-            correlationId = correlationId,
-            responseType = MockApiResponseType.CREDENTIAL_REQUIRED
-        )
-
-        val parameters = SignInWithSLTCommandParameters.builder()
-            .platformComponents(mock<PlatformComponents>())
-            .signInSLT(signInSLT)
-            .build()
-
-        val result = nativeAuthOAuth2Strategy.performSLTTokenRequest(
-            parameters = parameters
-        )
-        Assert.assertTrue(result is SignInTokenApiResult.CredentialRequired)
     }
 
     @Test
