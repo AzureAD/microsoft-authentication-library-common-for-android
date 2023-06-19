@@ -123,5 +123,4 @@ public class MsalTestApp extends App {
     public void handleFirstRun() {
         UiAutomatorUtils.handleButtonClick("com.msft.identity.client.sample.local:id/btnStartTask");
     }
-
 }
