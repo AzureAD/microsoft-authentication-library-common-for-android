@@ -45,6 +45,8 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.util.HashMap;
+
 
 @RunWith(RobolectricTestRunner.class)
 public class AzureActiveDirectoryWebViewClientTest {
@@ -74,6 +76,8 @@ public class AzureActiveDirectoryWebViewClientTest {
     private static final String TEST_PKEY_AUTH_URL = "urn:http-auth:PKeyAuth/xyz";
     private static final String TEST_WEB_CP_URL = "companyportal://abc/123";
     private static final String TEST_INVALID_URL = "https://play.google.com/store/apps/details?id=com.azure.authenticator";
+    private static final String TEST_MSA_HEADER_FORWARDING_POSITIVE_URL = "https://login.live.com/oauth20_authorize.srf";
+    private static final String TEST_MSA_HEADER_FORWARDING_NEGATIVE_URL = "https://login.blah.com/oauth20_authorize.srf";
 
     @Before
     public void setup() {
@@ -100,6 +104,9 @@ public class AzureActiveDirectoryWebViewClientTest {
                     }
                 },
                 TEST_REDIRECT_URI);
+        HashMap<String, String> dummyHeaders = new HashMap<>();
+        dummyHeaders.put("key", "value");
+        mWebViewClient.setRequestHeaders(dummyHeaders);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -169,6 +176,12 @@ public class AzureActiveDirectoryWebViewClientTest {
     @Test
     public void testUrlOverrideHandlesInvalidUrl() {
         assertFalse(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_INVALID_URL));
+    }
+
+    @Test
+    public void testUrlOverrideHandlesHeaderForwardingRequiredUrl() {
+        assertTrue(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_MSA_HEADER_FORWARDING_POSITIVE_URL));
+        assertFalse(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_MSA_HEADER_FORWARDING_NEGATIVE_URL));
     }
 
 
