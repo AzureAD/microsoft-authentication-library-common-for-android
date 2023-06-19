@@ -52,7 +52,8 @@ public class RemoveFirstPartyAppsTestRule implements TestRule {
                 new TeamsApp().uninstall();
                 new WordApp().uninstall();
                 new BrowserEdge().uninstall();
-                new MsalTestApp().uninstall();
+                // Commenting this until new msalAutomationApp name is added               
+                // new MsalTestApp().uninstall();
 
                 base.evaluate();
             }
