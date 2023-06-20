@@ -50,7 +50,7 @@ import java.util.List;
  */
 public class ContentProviderStrategy extends AbstractIpcStrategyWithServiceValidation {
 
-    private static final String TAG = ContentProviderStrategy.class.getName();
+    private static final String TAG = ContentProviderStrategy.class.getSimpleName();
     private final Context mContext;
 
     public ContentProviderStrategy(final Context context) {
