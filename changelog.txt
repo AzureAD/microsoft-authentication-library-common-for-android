@@ -1,3 +1,7 @@
+V.13.0.3
+----------
+- [PATCH] Make common depend on common4j 10.0.2 (#2087)
+
 V.13.0.2
 ----------
 - [PATCH] Fix NPE when Content-Type header is missing in HTTP response (#2079)
