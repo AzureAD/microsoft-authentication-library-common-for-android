@@ -113,10 +113,10 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 .sdkType(parameters.getSdkType())
                 .environment(AzureActiveDirectory.getEnvironment().name())
                 .multipleCloudsSupported(getMultipleCloudsSupported(parameters))
-                .authorizationAgent(
-                        parameters.isBrokerBrowserSupportEnabled() ?
+                .authorizationAgent(parameters.getAuthorizationAgent() != null ? parameters.getAuthorizationAgent().name() :
+                        (parameters.isBrokerBrowserSupportEnabled() ?
                                 AuthorizationAgent.BROWSER.name() :
-                                AuthorizationAgent.WEBVIEW.name()
+                                AuthorizationAgent.WEBVIEW.name())
                 ).authenticationScheme(parameters.getAuthenticationScheme())
                 .powerOptCheckEnabled(parameters.isPowerOptCheckEnabled())
                 .spanContext(SerializableSpanContext.builder()
