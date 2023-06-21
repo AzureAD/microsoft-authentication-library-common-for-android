@@ -163,7 +163,7 @@ open class HelloCache (
      * @param clientMinimumProtocolVersion minimum version of the protocol that the client supports.
      * @param clientMaximumProtocolVersion maximum version of the protocol that to be advertised by the client.
      */
-    fun saveHandShakeError(
+    fun saveHandshakeError(
         clientMinimumProtocolVersion: String?,
         clientMaximumProtocolVersion: String
     ) {

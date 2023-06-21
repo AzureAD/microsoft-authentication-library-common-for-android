@@ -234,7 +234,7 @@ public class BrokerMsalController extends BaseController {
                 clientMaxProtocolVersion
         );
 
-        if (cachedProtocolVersion != null) {
+        if (!StringUtil.isEmpty(cachedProtocolVersion)) {
             return cachedProtocolVersion;
         }
 
@@ -273,7 +273,7 @@ public class BrokerMsalController extends BaseController {
 
             return negotiatedProtocolVersion;
         } catch (final UnsupportedBrokerException e) {
-            mHelloCache.saveHandShakeError(
+            mHelloCache.saveHandshakeError(
                     minRequestedVersion,
                     clientMaxProtocolVersion
             );

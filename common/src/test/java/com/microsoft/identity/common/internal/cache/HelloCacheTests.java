@@ -265,7 +265,7 @@ public class HelloCacheTests {
         final String minimumVer = "1.0";
         final String maximumVer = "2.5";
 
-        cacheWrite.saveHandShakeError(minimumVer, maximumVer);
+        cacheWrite.saveHandshakeError(minimumVer, maximumVer);
         final HelloCacheResult result = cacheRead.getHelloCacheResult(minimumVer, maximumVer);
         Assert.assertNotNull(result);
         Assert.assertTrue(result.isHandShakeError());
@@ -280,7 +280,7 @@ public class HelloCacheTests {
         final String minimumVer = "1.0";
         final String maximumVer = "2.5";
 
-        cacheWrite.saveHandShakeError(minimumVer, maximumVer);
+        cacheWrite.saveHandshakeError(minimumVer, maximumVer);
         final HelloCacheResult result = cacheRead.getHelloCacheResult(minimumVer, maximumVer);
         Assert.assertNotNull(result);
         Assert.assertTrue(result.isHandShakeError());
