@@ -50,16 +50,17 @@ public class MsalTestApp extends App {
     public MsalTestApp() {
         super(MSAL_TEST_APP_PACKAGE_NAME, MSAL_TEST_APP_NAME, new LocalApkInstaller());
         localApkFileName = MSAL_TEST_APP_APK;
+        localUpdateApkFileName = MSAL_TEST_APP_APK;
     }
 
-    public MsalTestApp(final boolean installOldApk) {
-        super(MSAL_TEST_APP_PACKAGE_NAME, MSAL_TEST_APP_NAME, new LocalApkInstaller());
-        if (installOldApk) {
-            localApkFileName = OLD_MSAL_TEST_APP_APK;
-        } else {
-            localApkFileName = MSAL_TEST_APP_APK;
-        }
-        localUpdateApkFileName = MSAL_TEST_APP_APK;
+    /**
+     * Use this install method,
+     * While testing for update scenario, or need to install only old Apk.
+     * Otherwise use regular install method for installing latest apk.
+     */
+    public void installOldApk() {
+        localApkFileName = OLD_MSAL_TEST_APP_APK;
+        install();
     }
 
     // click on button acquire token interactive
