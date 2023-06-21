@@ -63,6 +63,7 @@ import com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle;
 import com.microsoft.identity.common.internal.broker.ipc.ContentProviderStrategy;
 import com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy;
 import com.microsoft.identity.common.internal.cache.HelloCache;
+import com.microsoft.identity.common.internal.cache.HelloCacheResult;
 import com.microsoft.identity.common.internal.commands.parameters.AndroidActivityInteractiveTokenCommandParameters;
 import com.microsoft.identity.common.internal.request.MsalBrokerRequestAdapter;
 import com.microsoft.identity.common.internal.result.MsalBrokerResultAdapter;
@@ -92,6 +93,7 @@ import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.exception.ServiceException;
+import com.microsoft.identity.common.java.exception.UnsupportedBrokerException;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftRefreshToken;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.ClientInfo;
@@ -122,7 +124,7 @@ public class BrokerMsalController extends BaseController {
 
     private static final String TAG = BrokerMsalController.class.getSimpleName();
     private static final long WAIT_BETWEEN_DCF_POLLING_MILLISECONDS = TimeUnit.SECONDS.toMillis(5);
-
+    private static final long HELLO_CACHE_ENTRY_TIMEOUT = TimeUnit.HOURS.toMillis(4);
     protected final MsalBrokerRequestAdapter mRequestAdapter = new MsalBrokerRequestAdapter();
     protected final MsalBrokerResultAdapter mResultAdapter = new MsalBrokerResultAdapter();
 
@@ -155,8 +157,13 @@ public class BrokerMsalController extends BaseController {
 
     @VisibleForTesting
     public HelloCache getHelloCache() {
-        return new HelloCache(mApplicationContext, MSAL_TO_BROKER_PROTOCOL_NAME, mActiveBrokerPackageName,
-                mComponents);
+        return new HelloCache(
+                mApplicationContext,
+                MSAL_TO_BROKER_PROTOCOL_NAME,
+                mActiveBrokerPackageName,
+                mComponents,
+                HELLO_CACHE_ENTRY_TIMEOUT
+        );
     }
 
     /**
@@ -220,14 +227,21 @@ public class BrokerMsalController extends BaseController {
     String hello(final @NonNull IIpcStrategy strategy,
                  final @Nullable String minRequestedVersion,
                  final @NonNull String clientMaxProtocolVersion) throws BaseException {
+        final String methodTag = TAG + ":hello";
 
-        final String cachedProtocolVersion = mHelloCache.tryGetNegotiatedProtocolVersion(
-                minRequestedVersion, clientMaxProtocolVersion);
+        final String cachedProtocolVersion = tryGetNegotiatedProtocolVersionFromHelloCache(
+                minRequestedVersion,
+                clientMaxProtocolVersion
+        );
 
         if (!StringUtil.isEmpty(cachedProtocolVersion)) {
             return cachedProtocolVersion;
         }
 
+        Logger.info(methodTag,
+                String.format("Calling broker for to establish negotiated protocol version for: MinRequestVersion=%s, ClientMaxProtocolVersion=%s, ActiveBroker=%s",
+                        minRequestedVersion, clientMaxProtocolVersion, mActiveBrokerPackageName)
+        );
         final Bundle bundle = new Bundle();
         bundle.putString(
                 CLIENT_ADVERTISED_MAXIMUM_BP_VERSION_KEY,
@@ -246,17 +260,56 @@ public class BrokerMsalController extends BaseController {
                 mActiveBrokerPackageName,
                 bundle);
 
-        final String negotiatedProtocolVersion = mResultAdapter.verifyHelloFromResultBundle(
-                mActiveBrokerPackageName,
-                strategy.communicateToBroker(helloBundle)
-        );
+        try {
+            final String negotiatedProtocolVersion = mResultAdapter.verifyHelloFromResultBundle(
+                    mActiveBrokerPackageName,
+                    strategy.communicateToBroker(helloBundle)
+            );
 
-        mHelloCache.saveNegotiatedProtocolVersion(
-                minRequestedVersion,
-                clientMaxProtocolVersion,
-                negotiatedProtocolVersion);
+            mHelloCache.saveNegotiatedProtocolVersion(
+                    minRequestedVersion,
+                    clientMaxProtocolVersion,
+                    negotiatedProtocolVersion);
 
-        return negotiatedProtocolVersion;
+            return negotiatedProtocolVersion;
+        } catch (final UnsupportedBrokerException e) {
+            mHelloCache.saveHandshakeError(
+                    minRequestedVersion,
+                    clientMaxProtocolVersion
+            );
+            throw e;
+        }
+    }
+
+    /**
+     * Tries reading negotiated protocol version from hello cache and returns it.
+     * @throws UnsupportedBrokerException when there's handshake error present in hello cache.
+     */
+    @edu.umd.cs.findbugs.annotations.Nullable
+    private String tryGetNegotiatedProtocolVersionFromHelloCache(
+            final @Nullable String minRequestedVersion,
+            final @NonNull String clientMaxProtocolVersion
+    ) throws UnsupportedBrokerException {
+        final String methodTag = TAG + ":tryGetNegotiatedProtocolVersionFromHelloCache";
+        final HelloCacheResult helloCacheResult = mHelloCache.getHelloCacheResult(
+                minRequestedVersion, clientMaxProtocolVersion);
+
+        if (helloCacheResult == null) {
+            Logger.info(methodTag, "No valid entry found in cache");
+            return null;
+        }
+
+        if (helloCacheResult.isHandShakeError()) {
+            Logger.info(methodTag, "Handshake error from cache.");
+            throw new UnsupportedBrokerException(mActiveBrokerPackageName);
+        }
+        final String cachedProtocolVersion = helloCacheResult.getNegotiatedProtocolVersion();
+        if (!StringUtil.isEmpty(cachedProtocolVersion)){
+            return cachedProtocolVersion;
+        } else {
+            Logger.warn(methodTag, "Unexpected: cachedProtocolVersion is empty. Continue with hello IPC protocol.");
+            return null;
+        }
     }
 
     /**
