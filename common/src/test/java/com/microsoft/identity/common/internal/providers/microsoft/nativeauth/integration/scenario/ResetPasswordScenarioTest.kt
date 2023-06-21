@@ -72,6 +72,7 @@ class ResetPasswordScenarioTest {
     private val tokenEndpoint = URL("https://contoso.com/1234/token")
     private val challengeType = "oob redirect"
     private val oobCode = "123456"
+    private val passwordTooWeak = "password_too_weak"
 
     private val mockConfig = mock<NativeAuthOAuth2Configuration>()
     private val mockStrategyParams = mock<OAuth2StrategyParameters>()
@@ -287,8 +288,8 @@ class ResetPasswordScenarioTest {
         Assert.assertFalse(ssprSubmitResult is ResetPasswordSubmitApiResult.SubmitSuccess)
         Assert.assertTrue(ssprSubmitResult is ResetPasswordSubmitApiResult.PasswordInvalid)
         Assert.assertEquals(
-            (ssprSubmitResult as ResetPasswordSubmitApiResult.PasswordInvalid).errorCode,
-            "password_too_weak"
+            (ssprSubmitResult as ResetPasswordSubmitApiResult.PasswordInvalid).error,
+            passwordTooWeak
         )
 
         // Call /poll_completion

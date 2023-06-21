@@ -46,22 +46,18 @@ fun String?.isPasswordTooWeak(): Boolean {
     return this.contentEquals(other = "password_too_weak", ignoreCase = true)
 }
 
-// TODO replace with error code matching
 fun String?.isPasswordTooShort(): Boolean {
     return this.contentEquals(other = "password_too_short", ignoreCase = true)
 }
 
-// TODO replace with error code matching
 fun String?.isPasswordTooLong(): Boolean {
     return this.contentEquals(other = "password_too_long", ignoreCase = true)
 }
 
-// TODO replace with error code matching
 fun String?.isPasswordRecentlyUsed(): Boolean {
     return this.contentEquals(other = "password_recently_used", ignoreCase = true)
 }
 
-// TODO replace with error code matching
 fun String?.isPasswordBanned(): Boolean {
     return this.contentEquals(other = "password_banned", ignoreCase = true)
 }
@@ -78,16 +74,28 @@ fun String?.isExplicitUserNotFound(): Boolean {
     return this.contentEquals(other = "user_not_found", ignoreCase = true)
 }
 
-fun Int?.isUserAccountDoesNotExist(): Boolean {
+fun String?.isUnsupportedChallengeType(): Boolean {
+    return this.contentEquals(other = "unsupported_challenge_type", ignoreCase = true)
+}
+
+fun String?.isExpiredToken(): Boolean {
+    return this.contentEquals(other = "expired_token", ignoreCase = true)
+}
+
+fun Int?.isUserNotFound(): Boolean {
     return this == 50034
 }
 
-fun Int?.isPasswordIncorrect(): Boolean {
+fun Int?.isInvalidCredentials(): Boolean {
     return this == 50126
 }
 
 fun Int?.isOtpCodeIncorrect(): Boolean {
     return this == 50181
+}
+
+fun Int?.isInvalidAuthenticationType(): Boolean {
+    return this == 400002
 }
 
 fun String?.isVerificationRequired(): Boolean {

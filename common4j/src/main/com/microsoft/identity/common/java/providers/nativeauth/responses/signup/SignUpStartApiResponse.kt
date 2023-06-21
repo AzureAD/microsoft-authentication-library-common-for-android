@@ -24,7 +24,7 @@ package com.microsoft.identity.common.java.providers.nativeauth.responses.signup
 
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
-import com.microsoft.identity.common.java.exception.ClientException
+import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.providers.nativeauth.IApiResponse
 import com.microsoft.identity.common.java.util.isAttributeValidationFailed
 import com.microsoft.identity.common.java.util.isAuthNotSupported
@@ -34,6 +34,7 @@ import com.microsoft.identity.common.java.util.isPasswordTooLong
 import com.microsoft.identity.common.java.util.isPasswordTooShort
 import com.microsoft.identity.common.java.util.isPasswordTooWeak
 import com.microsoft.identity.common.java.util.isRedirect
+import com.microsoft.identity.common.java.util.isUnsupportedChallengeType
 import com.microsoft.identity.common.java.util.isUserAlreadyExists
 import com.microsoft.identity.common.java.util.isVerificationRequired
 import java.net.HttpURLConnection
@@ -41,7 +42,6 @@ import java.net.HttpURLConnection
 data class SignUpStartApiResponse(
     @Expose override var statusCode: Int,
     @Expose @SerializedName("error") val error: String?,
-    @Expose @SerializedName("error_codes") val errorCodes: List<Int>?,
     @Expose @SerializedName("error_description") val errorDescription: String?,
     @SerializedName("signup_token") val signupToken: String?,
     @Expose @SerializedName("unverified_attributes") val unverifiedAttributes: List<Map<String, String>>?,
@@ -49,63 +49,106 @@ data class SignUpStartApiResponse(
     @Expose @SerializedName("details") val details: List<Map<String, String>>?,
     @Expose @SerializedName("challenge_type") val challengeType: String?
 ) : IApiResponse(statusCode) {
+
+    companion object {
+        private val TAG = SignUpStartApiResponse::class.java.simpleName
+    }
+
     fun toResult(): SignUpStartApiResult {
-        return if (statusCode >= HttpURLConnection.HTTP_BAD_REQUEST) {
-            if (error.isUserAlreadyExists()) {
-                // TODO advanced error handling
-                SignUpStartApiResult.UserNameAlreadyExists(
-                    error = error.orEmpty(),
-                    errorDescription = errorDescription.orEmpty(),
-                    details = details)
-            } else if (error.isAuthNotSupported()) {
-                // TODO advanced error handling
-                SignUpStartApiResult.AuthNotSupported(
-                    error = error.orEmpty(),
-                    errorDescription = errorDescription.orEmpty()
-                )
-            } else if (error.isAttributeValidationFailed()) {
-                // TODO advanced error handling
-                SignUpStartApiResult.InvalidAttributes(
-                    error = error.orEmpty(),
-                    errorDescription = errorDescription.orEmpty(),
-                    invalidAttributes = invalidAttributes ?: listOf()
-                )
-            } else if (error.isPasswordTooWeak()
-                || error.isPasswordTooLong() || error.isPasswordTooShort()
-                || error.isPasswordTooWeak() || error.isPasswordBanned()
-                || error.isPasswordRecentlyUsed()
-            ) {
-                // TODO advanced error handling
-                SignUpStartApiResult.InvalidPassword(
-                    error = error.orEmpty(),
-                    errorDescription = errorDescription.orEmpty(),
-                )
-            } else if (signupToken.isNullOrBlank()) {
-                throw ClientException("signup_token is null or blank")
-            } else if (error.isVerificationRequired()) {
-                // TODO advanced error handling
-                SignUpStartApiResult.VerificationRequired(
-                    signupToken = signupToken,
-                    error = error.orEmpty(),
-                    errorDescription = errorDescription.orEmpty(),
-                    unverifiedAttributes = unverifiedAttributes
-                        ?: throw ClientException("verification_required attributes can't be null or empty")
-                )
-            } else {
-                // TODO log the API response, in a PII-safe way
+        LogSession.logMethodCall(TAG)
+
+        return when (statusCode) {
+
+            // Handle 400 errors
+            HttpURLConnection.HTTP_BAD_REQUEST -> {
+                when {
+                    error.isUserAlreadyExists() -> {
+                        SignUpStartApiResult.UsernameAlreadyExists(
+                            errorCode = error.orEmpty(),
+                            errorDescription = errorDescription.orEmpty()
+                        )
+                    }
+                    error.isAuthNotSupported() -> {
+                        SignUpStartApiResult.AuthNotSupported(
+                            errorCode = error.orEmpty(),
+                            errorDescription = errorDescription.orEmpty()
+                        )
+                    }
+                    error.isAttributeValidationFailed() -> {
+                        SignUpStartApiResult.InvalidAttributes(
+                            error = error.orEmpty(),
+                            errorDescription = errorDescription.orEmpty(),
+                            invalidAttributes = invalidAttributes
+                                ?: return SignUpStartApiResult.UnknownError(
+                                    error = "invalid_state",
+                                    errorDescription = "SignUp /start did not return a invalid_attributes with validation_failed error",
+                                    details = details
+                                )
+                        )
+                    }
+                    error.isUnsupportedChallengeType() -> {
+                        SignUpStartApiResult.UnsupportedChallengeType(
+                            error = error.orEmpty(),
+                            errorDescription = errorDescription.orEmpty()
+                        )
+                    }
+                    error.isPasswordTooWeak() || error.isPasswordTooLong() || error.isPasswordTooShort()
+                            || error.isPasswordBanned() || error.isPasswordRecentlyUsed() -> {
+                        SignUpStartApiResult.InvalidPassword(
+                            error = error.orEmpty(),
+                            errorDescription = errorDescription.orEmpty(),
+                        )
+                    }
+                    error.isVerificationRequired() -> {
+                        SignUpStartApiResult.VerificationRequired(
+                            signupToken = signupToken
+                                ?: return SignUpStartApiResult.UnknownError(
+                                    error = "invalid_state",
+                                    errorDescription = "SignUp /start did not return a flow token with verification_required error",
+                                    details = details
+                                ),
+                            error = error.orEmpty(),
+                            errorDescription = errorDescription.orEmpty(),
+                            unverifiedAttributes = unverifiedAttributes
+                                ?: return SignUpStartApiResult.UnknownError(
+                                    error = "invalid_state",
+                                    errorDescription = "SignUp /start did not return a unverified_attributes with verification_required error",
+                                    details = details
+                                )
+                        )
+                    }
+                    else -> {
+                        SignUpStartApiResult.UnknownError(
+                            error = error.orEmpty(),
+                            errorDescription = errorDescription.orEmpty(),
+                            details = details
+                        )
+                    }
+                }
+            }
+
+            // Handle success and redirect
+            HttpURLConnection.HTTP_OK -> {
+                if (challengeType.isRedirect()) {
+                    SignUpStartApiResult.Redirect
+                }
+                else {
+                    SignUpStartApiResult.UnknownError(
+                        error = error.orEmpty(),
+                        errorDescription = errorDescription.orEmpty(),
+                        details = details
+                    )
+                }
+            }
+
+            // Catch uncommon status codes
+            else -> {
                 SignUpStartApiResult.UnknownError(
                     error = error.orEmpty(),
                     errorDescription = errorDescription.orEmpty(),
+                    details = details
                 )
             }
-        } else if (challengeType.isRedirect()) {
-            SignUpStartApiResult.Redirect
-        } else {
-            // TODO log the API response, in a PII-safe way
-            SignUpStartApiResult.UnknownError(
-                error = error.orEmpty(),
-                errorDescription = errorDescription.orEmpty(),
-            )
         }
     }
 }

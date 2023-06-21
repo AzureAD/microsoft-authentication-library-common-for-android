@@ -2,20 +2,20 @@ package com.microsoft.identity.common.java.providers.nativeauth.responses.signin
 
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
-import com.microsoft.identity.common.java.exception.ClientException
+import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse
 import com.microsoft.identity.common.java.providers.nativeauth.IApiResponse
 import com.microsoft.identity.common.java.providers.nativeauth.interactors.InnerError
 import com.microsoft.identity.common.java.util.ObjectMapper
 import com.microsoft.identity.common.java.util.isCredentialRequired
+import com.microsoft.identity.common.java.util.isInvalidAuthenticationType
 import com.microsoft.identity.common.java.util.isInvalidAuthenticationMethod
 import com.microsoft.identity.common.java.util.isInvalidGrant
 import com.microsoft.identity.common.java.util.isOtpCodeIncorrect
-import com.microsoft.identity.common.java.util.isPasswordIncorrect
-import com.microsoft.identity.common.java.util.isUserAccountDoesNotExist
+import com.microsoft.identity.common.java.util.isInvalidCredentials
+import com.microsoft.identity.common.java.util.isUserNotFound
 import java.net.HttpURLConnection
 
-// TODO are these fields considered PII?
 data class SignInTokenApiResponse(
     @Expose override var statusCode: Int,
     @Expose @SerializedName("token_type") val tokenType: String?,
@@ -28,53 +28,117 @@ data class SignInTokenApiResponse(
     @Expose @SerializedName("error") val error: String?,
     @Expose @SerializedName("error_description") val errorDescription: String?,
     @Expose @SerializedName("error_uri") val errorUri: String?,
+    @Expose @SerializedName("details") val details: List<Map<String, String>>?,
     @Expose @SerializedName("error_codes") val errorCodes: List<Int>?,
     @Expose @SerializedName("inner_errors") val innerErrors: List<InnerError>?,
     @Expose @SerializedName("credential_token") val credentialToken: String?,
 ): IApiResponse(statusCode) {
-    fun toResult(): SignInTokenApiResult {
-        if (statusCode >= HttpURLConnection.HTTP_BAD_REQUEST) {
-            if (error.isCredentialRequired()) {
-                if (credentialToken.isNullOrBlank()) {
-                    throw ClientException("credential_token is null or empty")
-                }
-            } else if (error.isInvalidGrant()) {
-                if (errorCodes.isNullOrEmpty()) {
-                    SignInTokenApiResult.UnknownError(error, errorDescription)
-                } else if (errorCodes[0].isUserAccountDoesNotExist()) {
-                    return SignInTokenApiResult.UserNotFound(error = error.orEmpty(), errorDescription = errorDescription.orEmpty())
-                } else if (errorCodes[0].isPasswordIncorrect()){
-                    return SignInTokenApiResult.PasswordIncorrect(error = error.orEmpty(), errorDescription = errorDescription.orEmpty())
-                } else if (errorCodes[0].isOtpCodeIncorrect()) {
-                    return SignInTokenApiResult.CodeIncorrect(error = error.orEmpty(), errorDescription = errorDescription.orEmpty())
-                }  else if (errorCodes[0].isInvalidAuthenticationMethod()) {
-                    return SignInTokenApiResult.InvalidAuthenticationMethod(error = error.orEmpty(), errorDescription = errorDescription.orEmpty())
-                } else {
-                    return SignInTokenApiResult.UnknownError(error, errorDescription)
-                }
-            }
-            // TODO log the API response, in a PII-safe way
-            return SignInTokenApiResult.UnknownError(error, errorDescription)
 
-        } else {
-            if (accessToken.isNullOrBlank()) {
-                throw ClientException("access_token is null or empty")
+    companion object {
+        private val TAG = SignInTokenApiResponse::class.java.simpleName
+    }
+
+    fun toResult(): SignInTokenApiResult {
+        LogSession.logMethodCall(TAG)
+
+        return when (statusCode) {
+
+            // Handle 400 errors
+            HttpURLConnection.HTTP_BAD_REQUEST -> {
+                if (error.isInvalidGrant()) {
+                    return when {
+                        errorCodes.isNullOrEmpty() -> {
+                            SignInTokenApiResult.UnknownError(
+                                error = error,
+                                errorDescription = errorDescription,
+                                details = details,
+                                errorCodes = errorCodes
+                            )
+                        }
+                        errorCodes[0].isUserNotFound() -> {
+                            SignInTokenApiResult.UserNotFound(
+                                error = error.orEmpty(),
+                                errorDescription = errorDescription.orEmpty(),
+                                errorCodes = errorCodes
+                            )
+                        }
+                        errorCodes[0].isInvalidCredentials() -> {
+                            SignInTokenApiResult.InvalidCredentials(
+                                error = error.orEmpty(),
+                                errorDescription = errorDescription.orEmpty(),
+                                errorCodes = errorCodes
+                            )
+                        }
+                        errorCodes[0].isOtpCodeIncorrect() -> {
+                            SignInTokenApiResult.CodeIncorrect(
+                                error = error.orEmpty(),
+                                errorDescription = errorDescription.orEmpty(),
+                                errorCodes = errorCodes
+                            )
+                        }
+                        errorCodes[0].isInvalidAuthenticationType() -> {
+                            SignInTokenApiResult.InvalidAuthenticationType(
+                                error = error.orEmpty(),
+                                errorDescription = errorDescription.orEmpty(),
+                                errorCodes = errorCodes
+                            )
+                        }
+                        else -> {
+                            SignInTokenApiResult.UnknownError(
+                                error = error,
+                                errorDescription = errorDescription,
+                                details = details,
+                                errorCodes = errorCodes
+                            )
+                        }
+                    }
+                }
+                else {
+                    SignInTokenApiResult.UnknownError(
+                        error = error,
+                        errorDescription = errorDescription,
+                        details = details,
+                        errorCodes = errorCodes
+                    )
+                }
             }
-            if (refreshToken.isNullOrBlank()) {
-                throw ClientException("refresh_token is null or empty")
+
+            // Handle success and redirect
+            HttpURLConnection.HTTP_OK -> {
+                if (accessToken.isNullOrBlank()) {
+                    SignInTokenApiResult.UnknownError(
+                        error = "invalid_state",
+                        errorDescription = "SignIn /token did not return an access_token with success",
+                        details = details,
+                        errorCodes = errorCodes
+                    )
+                }
+                // Seems that id_token and refresh_token are nullable in some scenarios, so I
+                // removed the error handling for them
+                else {
+                    // TODO: Do we still need this?
+                    val originalJson = ObjectMapper.serializeObjectToJsonString(this)
+                    val tokenResponse = ObjectMapper.deserializeJsonStringToObject(
+                        originalJson,
+                        MicrosoftStsTokenResponse::class.java
+                    )
+                    // TODO until mock API returns it
+                    tokenResponse.idToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6ImJXOFpjTWpCQ25KWlMtaWJYNVVRRE5TdHZ4NCJ9.eyJ2ZXIiOiIyLjAiLCJpc3MiOiJodHRwczovL2xvZ2luLm1pY3Jvc29mdG9ubGluZS5jb20vOTE4ODA0MGQtNmM2Ny00YzViLWIxMTItMzZhMzA0YjY2ZGFkL3YyLjAiLCJzdWIiOiJBQUFBQUFBQUFBQUFBQUFBQUFBQUFQV0t1dkFxNDdlZmxzSjdNd2dpbWtVIiwiYXVkIjoiMDk4NGE3YjYtYmMxMy00MTQxLThiMGQtOGY3NjdlMTM2YmI3IiwiZXhwIjoxNjgxNDYzMDIzLCJpYXQiOjE2ODEzNzYzMjMsIm5iZiI6MTY4MTM3NjMyMywibmFtZSI6IlNhbW15IE9kZW5ob3ZlbiIsInByZWZlcnJlZF91c2VybmFtZSI6InNhbW15Lm9kZW5ob3ZlbkBnbWFpbC5jb20iLCJvaWQiOiIwMDAwMDAwMC0wMDAwLTAwMDAtNDQ3Yi0yNzNlZWMwMGRkNTciLCJ0aWQiOiI5MTg4MDQwZC02YzY3LTRjNWItYjExMi0zNmEzMDRiNjZkYWQiLCJhaW8iOiJEVGhGY3dSdFgwT0tqNXBTSEdOZUdVR1NVNGhaNFJoNU83TmhnUjYzMnpldEM5WmgzM3dWRypXeUJqIVFPM0twU0dXRVRla25sMDA1WE8qQWg0bXhRamVuR2VRZXIqakx3Nypkcmh1cDdTc0NJRThraUlsempYMDZuaWNWNFFFTGZxR3BoYkRuemI0RWtOZEZXTHBOTmhJJCJ9.WRe3tNCsvIuYfw8bIY1D8spFJXg-ZrGm2MiDYkUlfNR-bbW_7niJg372U-wG65OfRA99NauR511IKWcg6i5FRzx3Xcx4AfGCJhOCGagD4fRDaU4I1pE-C3lJlGY6bIodTSXIlS0VUPw_YmvzQ-X9lyJP-l-89hxQNtvCSbdm2zlSJPvdynJmRH58s4PTJSGuv7zn5Jq-Uc0s2DZx0nLfBfLee8bQpaUQamaxQ6Noz7zAjz7-TkCRriqZyvJLE9dBvRd6uSzYR_qm4VDpsH5wnGsMRvW7F_hcjjZo2gZyxI6BWy0kONF8juL6H1ar1EMi3Xn9jIU1Tde3yafjTpkmyw"
+                    tokenResponse.clientInfo = "eyJ2ZXIiOiIxLjAiLCJzdWIiOiJBQUFBQUFBQUFBQUFBQUFBQUFBQUFQV0t1dkFxNDdlZmxzSjdNd2dpbWtVIiwibmFtZSI6IlNhbW15IE9kZW5ob3ZlbiIsInByZWZlcnJlZF91c2VybmFtZSI6InNhbW15Lm9kZW5ob3ZlbkBnbWFpbC5jb20iLCJvaWQiOiIwMDAwMDAwMC0wMDAwLTAwMDAtNDQ3Yi0yNzNlZWMwMGRkNTciLCJ0aWQiOiI5MTg4MDQwZC02YzY3LTRjNWItYjExMi0zNmEzMDRiNjZkYWQiLCJob21lX29pZCI6IjAwMDAwMDAwLTAwMDAtMDAwMC00NDdiLTI3M2VlYzAwZGQ1NyIsInVpZCI6IjAwMDAwMDAwLTAwMDAtMDAwMC00NDdiLTI3M2VlYzAwZGQ1NyIsInV0aWQiOiI5MTg4MDQwZC02YzY3LTRjNWItYjExMi0zNmEzMDRiNjZkYWQifQ"
+                    return SignInTokenApiResult.Success(
+                        tokenResponse = tokenResponse
+                    )
+                }
             }
-            if (idToken.isNullOrBlank()) {
-                throw ClientException("id_token is null or empty")
-            } else {
-                val originalJson = ObjectMapper.serializeObjectToJsonString(this)
-                val tokenResponse = ObjectMapper.deserializeJsonStringToObject(
-                    originalJson,
-                    MicrosoftStsTokenResponse::class.java
+
+            // Catch uncommon status codes
+            else -> {
+                SignInTokenApiResult.UnknownError(
+                    error = error.orEmpty(),
+                    errorDescription = errorDescription.orEmpty(),
+                    details = details,
+                    errorCodes = errorCodes
                 )
-                // TODO until mock API returns it
-                tokenResponse.idToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6ImJXOFpjTWpCQ25KWlMtaWJYNVVRRE5TdHZ4NCJ9.eyJ2ZXIiOiIyLjAiLCJpc3MiOiJodHRwczovL2xvZ2luLm1pY3Jvc29mdG9ubGluZS5jb20vOTE4ODA0MGQtNmM2Ny00YzViLWIxMTItMzZhMzA0YjY2ZGFkL3YyLjAiLCJzdWIiOiJBQUFBQUFBQUFBQUFBQUFBQUFBQUFQV0t1dkFxNDdlZmxzSjdNd2dpbWtVIiwiYXVkIjoiMDk4NGE3YjYtYmMxMy00MTQxLThiMGQtOGY3NjdlMTM2YmI3IiwiZXhwIjoxNjgxNDYzMDIzLCJpYXQiOjE2ODEzNzYzMjMsIm5iZiI6MTY4MTM3NjMyMywibmFtZSI6IlNhbW15IE9kZW5ob3ZlbiIsInByZWZlcnJlZF91c2VybmFtZSI6InNhbW15Lm9kZW5ob3ZlbkBnbWFpbC5jb20iLCJvaWQiOiIwMDAwMDAwMC0wMDAwLTAwMDAtNDQ3Yi0yNzNlZWMwMGRkNTciLCJ0aWQiOiI5MTg4MDQwZC02YzY3LTRjNWItYjExMi0zNmEzMDRiNjZkYWQiLCJhaW8iOiJEVGhGY3dSdFgwT0tqNXBTSEdOZUdVR1NVNGhaNFJoNU83TmhnUjYzMnpldEM5WmgzM3dWRypXeUJqIVFPM0twU0dXRVRla25sMDA1WE8qQWg0bXhRamVuR2VRZXIqakx3Nypkcmh1cDdTc0NJRThraUlsempYMDZuaWNWNFFFTGZxR3BoYkRuemI0RWtOZEZXTHBOTmhJJCJ9.WRe3tNCsvIuYfw8bIY1D8spFJXg-ZrGm2MiDYkUlfNR-bbW_7niJg372U-wG65OfRA99NauR511IKWcg6i5FRzx3Xcx4AfGCJhOCGagD4fRDaU4I1pE-C3lJlGY6bIodTSXIlS0VUPw_YmvzQ-X9lyJP-l-89hxQNtvCSbdm2zlSJPvdynJmRH58s4PTJSGuv7zn5Jq-Uc0s2DZx0nLfBfLee8bQpaUQamaxQ6Noz7zAjz7-TkCRriqZyvJLE9dBvRd6uSzYR_qm4VDpsH5wnGsMRvW7F_hcjjZo2gZyxI6BWy0kONF8juL6H1ar1EMi3Xn9jIU1Tde3yafjTpkmyw"
-                tokenResponse.clientInfo = "eyJ2ZXIiOiIxLjAiLCJzdWIiOiJBQUFBQUFBQUFBQUFBQUFBQUFBQUFBcEhXMjhma09DSE9xNlJZX2l2V0tZIiwibmFtZSI6IlNpbHZpdSBQZXRyZXNjdSIsInByZWZlcnJlZF91c2VybmFtZSI6InNwZXRyZXNjdW1zQG91dGxvb2suY29tIiwib2lkIjoiMDAwMDAwMDAtMDAwMC0wMDAwLTc5MzYtYWEzMjBhMmNmN2JiIiwidGlkIjoiOTE4ODA0MGQtNmM2Ny00YzViLWIxMTItMzZhMzA0YjY2ZGFkIiwiaG9tZV9vaWQiOiIwMDAwMDAwMC0wMDAwLTAwMDAtNzkzNi1hYTMyMGEyY2Y3YmIiLCJ1aWQiOiIwMDAwMDAwMC0wMDAwLTAwMDAtNzkzNi1hYTMyMGEyY2Y3YmIiLCJ1dGlkIjoiOTE4ODA0MGQtNmM2Ny00YzViLWIxMTItMzZhMzA0YjY2ZGFkIn0"
-                return SignInTokenApiResult.Success(tokenResponse = tokenResponse)
             }
         }
     }

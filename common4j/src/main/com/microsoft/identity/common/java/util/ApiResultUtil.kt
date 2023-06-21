@@ -34,15 +34,17 @@ object ApiResultUtil {
      * @param tag    The log tag to use.
      * @param response The result object to log.
      */
+    // TODO: Do we consider response fields PII?
     fun logResponse(
         tag: String,
         response: IApiResponse
     ) {
         val TAG = tag + ":" + response.javaClass.simpleName
-        if (response.statusCode >= HttpURLConnection.HTTP_BAD_REQUEST) {
+        if (response.statusCode < HttpURLConnection.HTTP_BAD_REQUEST) {
             LogSession.log(tag = TAG, logLevel = Logger.LogLevel.INFO, message = "Success Result")
         } else {
-            LogSession.log(tag = TAG, logLevel = Logger.LogLevel.WARN, message = "Failure Result")
+            val code = response.statusCode
+            LogSession.log(tag = TAG, logLevel = Logger.LogLevel.WARN, message = "Failure Result (Status Code: $code)")
         }
         logExposedFieldsOfObject(TAG, response)
     }

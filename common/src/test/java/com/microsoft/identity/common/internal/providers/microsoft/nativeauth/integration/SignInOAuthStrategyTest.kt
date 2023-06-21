@@ -354,7 +354,7 @@ class SignInOAuthStrategyTest {
         val result = nativeAuthOAuth2Strategy.performPasswordTokenRequest(
             parameters = parameters
         )
-        Assert.assertTrue(result is SignInTokenApiResult.PasswordIncorrect)
+        Assert.assertTrue(result is SignInTokenApiResult.InvalidCredentials)
     }
 
     @Test
@@ -414,7 +414,7 @@ class SignInOAuthStrategyTest {
         val result = nativeAuthOAuth2Strategy.performROPCTokenRequest(
             parameters = signInStartUsingPasswordCommandParameters
         )
-        Assert.assertTrue(result is SignInTokenApiResult.InvalidAuthenticationMethod)
+        Assert.assertTrue(result is SignInTokenApiResult.InvalidAuthenticationType)
     }
 
     @Test

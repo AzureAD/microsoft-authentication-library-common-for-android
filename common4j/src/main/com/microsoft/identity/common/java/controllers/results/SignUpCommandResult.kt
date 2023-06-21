@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.controllers.results
 
+import com.microsoft.identity.common.java.util.CommonUtils
+
 sealed interface SignUpSubmitCodeCommandResult
 sealed interface SignUpSubmitUserAttributesCommandResult
 sealed interface SignUpSubmitPasswordCommandResult
@@ -30,10 +32,11 @@ sealed interface SignUpStartCommandResult
 
 interface SignUpCommandResult {
     data class UsernameAlreadyExists(
-        val errorCode: String,
+        val error: String,
         val errorDescription: String,
-        val details: List<Map<String, String>>?
-    ) : SignUpStartCommandResult
+        val correlationId: String = CommonUtils.getCurrentThreadCorrelationId()
+    ) : SignUpStartCommandResult, SignUpSubmitCodeCommandResult,
+        SignUpSubmitUserAttributesCommandResult, SignUpSubmitPasswordCommandResult
 
     data class Complete (
         val signInSLT: String?,
@@ -57,33 +60,36 @@ interface SignUpCommandResult {
 
     data class AttributesRequired(
         val signupToken: String,
-        val errorCode: String,
+        val error: String,
         val errorDescription: String,
-        val requiredAttributes: List<Map<String, String>>
+        val requiredAttributes: List<Map<String, String>>,
+        val correlationId: String = CommonUtils.getCurrentThreadCorrelationId()
     ) : SignUpStartCommandResult, SignUpSubmitPasswordCommandResult,
         SignUpSubmitUserAttributesCommandResult,
         SignUpSubmitCodeCommandResult
 
     data class InvalidPassword(
-        val errorCode: String,
-        val errorDescription: String
+        val error: String,
+        val errorDescription: String,
+        val correlationId: String = CommonUtils.getCurrentThreadCorrelationId()
     ) : SignUpStartCommandResult, SignUpSubmitPasswordCommandResult
 
     data class InvalidCode(
-        val errorCode: String,
+        val error: String,
         val errorDescription: String,
-        val details: List<Map<String, String>>?
+        val correlationId: String = CommonUtils.getCurrentThreadCorrelationId()
     ) : SignUpSubmitCodeCommandResult
 
     data class InvalidAttributes(
-        val errorCode: String,
+        val error: String,
         val errorDescription: String,
-        val invalidAttributes: List<Map<String, String>>
-    ) : SignUpStartCommandResult,
-        SignUpSubmitUserAttributesCommandResult
+        val invalidAttributes: List<Map<String, String>>,
+        val correlationId: String = CommonUtils.getCurrentThreadCorrelationId()
+    ) : SignUpStartCommandResult, SignUpSubmitUserAttributesCommandResult
 
     data class AuthNotSupported(
-        val errorCode: String,
-        val errorDescription: String
+        val error: String,
+        val errorDescription: String,
+        val correlationId: String = CommonUtils.getCurrentThreadCorrelationId()
     ) : SignUpStartCommandResult
 }

@@ -153,28 +153,6 @@ class NativeAuthController : BaseNativeAuthController() {
                 )
             }
 
-            is SignInTokenApiResult.PasswordIncorrect -> {
-                SignInCommandResult.PasswordIncorrect(
-                    errorCode = tokenApiResult.error,
-                    errorDescription = tokenApiResult.errorDescription
-                )
-            }
-
-            is SignInTokenApiResult.UserNotFound -> {
-                SignInCommandResult.UserNotFound(
-                    errorCode = tokenApiResult.error,
-                    errorDescription = tokenApiResult.errorDescription
-                )
-            }
-
-            is SignInTokenApiResult.InvalidAuthenticationMethod -> {
-                signInStartAfterInvalidAuthenticationMethod(
-                    signInStartCommandParameters = parameters,
-                    oAuth2Strategy = oAuth2Strategy
-                )
-            }
-
-            is SignInTokenApiResult.CodeIncorrect,
             is SignInTokenApiResult.UnknownError -> {
                 LogSession.log(
                     tag = TAG,
@@ -182,8 +160,46 @@ class NativeAuthController : BaseNativeAuthController() {
                     message = "Unexpected result: $tokenApiResult"
                 )
                 CommandResult.UnknownError(
-                    errorCode = "unexpected_api_result",
-                    errorDescription = "API returned unexpected result: $tokenApiResult"
+                    error = tokenApiResult.error,
+                    errorDescription = tokenApiResult.errorDescription,
+                    details = tokenApiResult.details,
+                    errorCodes = tokenApiResult.errorCodes
+                )
+            }
+
+            is SignInTokenApiResult.InvalidCredentials -> {
+                SignInCommandResult.InvalidCredentials(
+                    error = tokenApiResult.error,
+                    errorDescription = tokenApiResult.errorDescription,
+                    errorCodes = tokenApiResult.errorCodes
+                )
+            }
+
+            is SignInTokenApiResult.UserNotFound -> {
+                SignInCommandResult.UserNotFound(
+                    error = tokenApiResult.error,
+                    errorDescription = tokenApiResult.errorDescription,
+                    errorCodes = tokenApiResult.errorCodes
+                )
+            }
+
+            is SignInTokenApiResult.InvalidAuthenticationType -> {
+                signInStartAfterInvalidAuthenticationMethod(
+                    signInStartCommandParameters = parameters,
+                    oAuth2Strategy = oAuth2Strategy
+                )
+            }
+
+            is SignInTokenApiResult.CodeIncorrect -> {
+                LogSession.log(
+                    tag = TAG,
+                    logLevel = Logger.LogLevel.WARN,
+                    message = "Unexpected result: $tokenApiResult"
+                )
+                CommandResult.UnknownError(
+                    error = "unexpected_api_result",
+                    errorDescription = "API returned unexpected result: $tokenApiResult",
+                    errorCodes = tokenApiResult.errorCodes
                 )
             }
         }
@@ -205,6 +221,7 @@ class NativeAuthController : BaseNativeAuthController() {
             oAuth2Strategy = oAuth2Strategy,
             parameters = parametersWithScopes
         )
+
         return processSignInInitiateApiResult(
             initiateApiResult = initiateApiResult,
             oAuth2Strategy = oAuth2Strategy
@@ -245,15 +262,22 @@ class NativeAuthController : BaseNativeAuthController() {
 
                 is SignInTokenApiResult.UnknownError -> {
                     return CommandResult.UnknownError(
-                        errorCode = tokenApiResult.error,
-                        errorDescription = tokenApiResult.errorDescription
+                        error = tokenApiResult.error,
+                        errorDescription = tokenApiResult.errorDescription,
+                        details = tokenApiResult.details,
+                        errorCodes = tokenApiResult.errorCodes
                     )
                 }
 
-                is SignInTokenApiResult.CodeIncorrect,
-                is SignInTokenApiResult.UserNotFound,
-                is SignInTokenApiResult.InvalidAuthenticationMethod,
-                is SignInTokenApiResult.PasswordIncorrect -> {
+                is SignInTokenApiResult.InvalidAuthenticationType -> {
+                    return SignInCommandResult.InvalidAuthenticationType(
+                        error = tokenApiResult.error,
+                        errorDescription = tokenApiResult.errorDescription,
+                        errorCodes = tokenApiResult.errorCodes
+                    )
+                }
+
+                is SignInTokenApiResult.CodeIncorrect -> {
                     // This shouldn't be possible in SLT, throw unknown error
                     LogSession.log(
                         tag = TAG,
@@ -261,8 +285,35 @@ class NativeAuthController : BaseNativeAuthController() {
                         message = "Unexpected result: $tokenApiResult"
                     )
                     return CommandResult.UnknownError(
-                        errorCode = "unexpected_api_result",
-                        errorDescription = "API returned unexpected result: $tokenApiResult"
+                        error = "unexpected_api_result",
+                        errorDescription = "API returned unexpected result: $tokenApiResult",
+                        errorCodes = tokenApiResult.errorCodes
+                    )
+                }
+                is SignInTokenApiResult.UserNotFound -> {
+                    // This shouldn't be possible in SLT, throw unknown error
+                    LogSession.log(
+                        tag = TAG,
+                        logLevel = Logger.LogLevel.WARN,
+                        message = "Unexpected result: $tokenApiResult"
+                    )
+                    return CommandResult.UnknownError(
+                        error = "unexpected_api_result",
+                        errorDescription = "API returned unexpected result: $tokenApiResult",
+                        errorCodes = tokenApiResult.errorCodes
+                    )
+                }
+                is SignInTokenApiResult.InvalidCredentials -> {
+                    // This shouldn't be possible in SLT, throw unknown error
+                    LogSession.log(
+                        tag = TAG,
+                        logLevel = Logger.LogLevel.WARN,
+                        message = "Unexpected result: $tokenApiResult"
+                    )
+                    return CommandResult.UnknownError(
+                        error = "unexpected_api_result",
+                        errorDescription = "API returned unexpected result: $tokenApiResult",
+                        errorCodes = tokenApiResult.errorCodes
                     )
                 }
             }
@@ -308,8 +359,9 @@ class NativeAuthController : BaseNativeAuthController() {
 
                 is SignInTokenApiResult.CodeIncorrect -> {
                     SignInCommandResult.IncorrectCode(
-                        errorCode = tokenApiResult.error,
-                        errorDescription = tokenApiResult.errorDescription
+                        error = tokenApiResult.error,
+                        errorDescription = tokenApiResult.errorDescription,
+                        errorCodes = tokenApiResult.errorCodes
                     )
                 }
 
@@ -320,23 +372,48 @@ class NativeAuthController : BaseNativeAuthController() {
                         message = "Unexpected result: $tokenApiResult"
                     )
                     CommandResult.UnknownError(
-                        errorCode = tokenApiResult.error,
-                        errorDescription = tokenApiResult.errorDescription
+                        error = tokenApiResult.error,
+                        errorDescription = tokenApiResult.errorDescription,
+                        details = tokenApiResult.details,
+                        errorCodes = tokenApiResult.errorCodes
                     )
                 }
 
-                is SignInTokenApiResult.PasswordIncorrect,
-                is SignInTokenApiResult.UserNotFound,
-                is SignInTokenApiResult.InvalidAuthenticationMethod -> {
-                    // TODO add correlation ID https://identitydivision.visualstudio.com/Engineering/_workitems/edit/2503124
+                is SignInTokenApiResult.InvalidAuthenticationType -> {
                     LogSession.log(
                         tag = TAG,
                         logLevel = Logger.LogLevel.WARN,
                         message = "Unexpected result: $tokenApiResult"
                     )
                     CommandResult.UnknownError(
-                        errorCode = "unexpected_api_result",
-                        errorDescription = "API returned unexpected result: $tokenApiResult"
+                        error = tokenApiResult.error,
+                        errorDescription = tokenApiResult.errorDescription,
+                        errorCodes = tokenApiResult.errorCodes
+                    )
+                }
+
+                is SignInTokenApiResult.InvalidCredentials -> {
+                    LogSession.log(
+                        tag = TAG,
+                        logLevel = Logger.LogLevel.WARN,
+                        message = "Unexpected result: $tokenApiResult"
+                    )
+                    CommandResult.UnknownError(
+                        error = "unexpected_api_result",
+                        errorDescription = "API returned unexpected result: $tokenApiResult",
+                        errorCodes = tokenApiResult.errorCodes
+                    )
+                }
+                is SignInTokenApiResult.UserNotFound -> {
+                    LogSession.log(
+                        tag = TAG,
+                        logLevel = Logger.LogLevel.WARN,
+                        message = "Unexpected result: $tokenApiResult"
+                    )
+                    CommandResult.UnknownError(
+                        error = "unexpected_api_result",
+                        errorDescription = "API returned unexpected result: $tokenApiResult",
+                        errorCodes = tokenApiResult.errorCodes
                     )
                 }
             }
@@ -374,20 +451,19 @@ class NativeAuthController : BaseNativeAuthController() {
                 }
 
                 is SignInChallengeApiResult.PasswordRequired -> {
-                    // TODO add correlation ID https://identitydivision.visualstudio.com/Engineering/_workitems/edit/2503124
                     LogSession.log(
                         tag = TAG,
                         logLevel = Logger.LogLevel.WARN,
                         message = "Unexpected result: $result"
                     )
                     CommandResult.UnknownError(
-                        errorCode = "unexpected_api_result",
+                        error = "unexpected_api_result",
                         errorDescription = "API returned unexpected result: $result"
                     )
                 }
 
                 SignInChallengeApiResult.Redirect -> {
-                    CommandResult.Redirect
+                    CommandResult.Redirect()
                 }
 
                 is SignInChallengeApiResult.UnknownError -> {
@@ -397,8 +473,10 @@ class NativeAuthController : BaseNativeAuthController() {
                         message = "Unexpected result: $result"
                     )
                     CommandResult.UnknownError(
-                        errorCode = result.error,
-                        errorDescription = result.errorDescription
+                        error = result.error,
+                        errorDescription = result.errorDescription,
+                        details = result.details,
+                        errorCodes = result.errorCodes
                     )
                 }
             }
@@ -433,10 +511,11 @@ class NativeAuthController : BaseNativeAuthController() {
                 parameters = parametersWithScopes
             )
             return when (result) {
-                is SignInTokenApiResult.PasswordIncorrect -> {
-                    SignInCommandResult.PasswordIncorrect(
-                        errorCode = result.error,
-                        errorDescription = result.errorDescription
+                is SignInTokenApiResult.InvalidCredentials -> {
+                    SignInCommandResult.InvalidCredentials(
+                        error = result.error,
+                        errorDescription = result.errorDescription,
+                        errorCodes = result.errorCodes
                     )
                 }
 
@@ -455,22 +534,49 @@ class NativeAuthController : BaseNativeAuthController() {
                         message = "Unexpected result: $result"
                     )
                     CommandResult.UnknownError(
-                        errorCode = result.error,
-                        errorDescription = result.errorDescription
+                        error = result.error,
+                        errorDescription = result.errorDescription,
+                        details = result.details,
+                        errorCodes = result.errorCodes
                     )
                 }
 
-                is SignInTokenApiResult.CodeIncorrect, is SignInTokenApiResult.UserNotFound,
-                is SignInTokenApiResult.InvalidAuthenticationMethod -> {
-                    // TODO add correlation ID
+                is SignInTokenApiResult.InvalidAuthenticationType -> {
                     LogSession.log(
                         tag = TAG,
                         logLevel = Logger.LogLevel.WARN,
                         message = "Unexpected result: $result"
                     )
                     CommandResult.UnknownError(
-                        errorCode = "unexpected_api_result",
-                        errorDescription = "API returned unexpected result: $result"
+                        error = result.error,
+                        errorDescription = result.errorDescription,
+                        errorCodes = result.errorCodes
+                    )
+                }
+
+                is SignInTokenApiResult.CodeIncorrect -> {
+                    LogSession.log(
+                        tag = TAG,
+                        logLevel = Logger.LogLevel.WARN,
+                        message = "Unexpected result: $result"
+                    )
+                    CommandResult.UnknownError(
+                        error = "unexpected_api_result",
+                        errorDescription = "API returned unexpected result: $result",
+                        errorCodes = result.errorCodes
+                    )
+                }
+
+                is SignInTokenApiResult.UserNotFound -> {
+                    LogSession.log(
+                        tag = TAG,
+                        logLevel = Logger.LogLevel.WARN,
+                        message = "Unexpected result: $result"
+                    )
+                    CommandResult.UnknownError(
+                        error = "unexpected_api_result",
+                        errorDescription = "API returned unexpected result: $result",
+                        errorCodes = result.errorCodes
                     )
                 }
             }
@@ -500,7 +606,7 @@ class NativeAuthController : BaseNativeAuthController() {
 
             return when (startApiResult) {
                 ResetPasswordStartApiResult.Redirect -> {
-                    CommandResult.Redirect
+                    CommandResult.Redirect()
                 }
 
                 is ResetPasswordStartApiResult.Success -> {
@@ -512,7 +618,19 @@ class NativeAuthController : BaseNativeAuthController() {
 
                 is ResetPasswordStartApiResult.UserNotFound -> {
                     ResetPasswordCommandResult.UserNotFound(
-                        errorCode = startApiResult.errorCode,
+                        error = startApiResult.error,
+                        errorDescription = startApiResult.errorDescription
+                    )
+                }
+
+                is ResetPasswordStartApiResult.UnsupportedChallengeType -> {
+                    LogSession.log(
+                        tag = TAG,
+                        logLevel = Logger.LogLevel.WARN,
+                        message = "Unexpected result: $startApiResult"
+                    )
+                    CommandResult.UnknownError(
+                        error = startApiResult.error,
                         errorDescription = startApiResult.errorDescription
                     )
                 }
@@ -524,8 +642,9 @@ class NativeAuthController : BaseNativeAuthController() {
                         message = "Unexpected result: $startApiResult"
                     )
                     CommandResult.UnknownError(
-                        errorCode = startApiResult.errorCode,
-                        errorDescription = startApiResult.errorDescription
+                        error = startApiResult.error,
+                        errorDescription = startApiResult.errorDescription,
+                        details = startApiResult.details
                     )
                 }
             }
@@ -554,16 +673,30 @@ class NativeAuthController : BaseNativeAuthController() {
 
             return when (continueApiResult) {
                 ResetPasswordContinueApiResult.Redirect -> {
-                    CommandResult.Redirect
+                    CommandResult.Redirect()
                 }
 
                 is ResetPasswordContinueApiResult.PasswordRequired -> {
-                    ResetPasswordCommandResult.PasswordRequired(passwordSubmitToken = continueApiResult.passwordSubmitToken)
+                    ResetPasswordCommandResult.PasswordRequired(
+                        passwordSubmitToken = continueApiResult.passwordSubmitToken
+                    )
                 }
 
                 is ResetPasswordContinueApiResult.CodeIncorrect -> {
                     ResetPasswordCommandResult.IncorrectCode(
-                        errorCode = continueApiResult.errorCode,
+                        error = continueApiResult.error,
+                        errorDescription = continueApiResult.errorDescription
+                    )
+                }
+
+                is ResetPasswordContinueApiResult.ExpiredToken -> {
+                    LogSession.log(
+                        tag = TAG,
+                        logLevel = Logger.LogLevel.WARN,
+                        message = "Expire token result: $this"
+                    )
+                    CommandResult.UnknownError(
+                        error = continueApiResult.error,
                         errorDescription = continueApiResult.errorDescription
                     )
                 }
@@ -576,8 +709,9 @@ class NativeAuthController : BaseNativeAuthController() {
                     )
 
                     CommandResult.UnknownError(
-                        errorCode = continueApiResult.errorCode,
-                        errorDescription = continueApiResult.errorDescription
+                        error = continueApiResult.error,
+                        errorDescription = continueApiResult.errorDescription,
+                        details = continueApiResult.details
                     )
                 }
             }
@@ -615,7 +749,31 @@ class NativeAuthController : BaseNativeAuthController() {
                 }
 
                 ResetPasswordChallengeApiResult.Redirect -> {
-                    CommandResult.Redirect
+                    CommandResult.Redirect()
+                }
+
+                is ResetPasswordChallengeApiResult.ExpiredToken -> {
+                    LogSession.log(
+                        tag = TAG,
+                        logLevel = Logger.LogLevel.WARN,
+                        message = "Expire token result: $this"
+                    )
+                    CommandResult.UnknownError(
+                        error = resetPasswordChallengeApiResult.error,
+                        errorDescription = resetPasswordChallengeApiResult.errorDescription
+                    )
+                }
+
+                is ResetPasswordChallengeApiResult.UnsupportedChallengeType -> {
+                    LogSession.log(
+                        tag = TAG,
+                        logLevel = Logger.LogLevel.WARN,
+                        message = "Unexpected result: $resetPasswordChallengeApiResult"
+                    )
+                    CommandResult.UnknownError(
+                        error = resetPasswordChallengeApiResult.error,
+                        errorDescription = resetPasswordChallengeApiResult.errorDescription
+                    )
                 }
 
                 is ResetPasswordChallengeApiResult.UnknownError -> {
@@ -625,8 +783,9 @@ class NativeAuthController : BaseNativeAuthController() {
                         message = "Unexpected result: $resetPasswordChallengeApiResult"
                     )
                     CommandResult.UnknownError(
-                        errorCode = resetPasswordChallengeApiResult.errorCode,
-                        errorDescription = resetPasswordChallengeApiResult.errorDescription
+                        error = resetPasswordChallengeApiResult.error,
+                        errorDescription = resetPasswordChallengeApiResult.errorDescription,
+                        details = resetPasswordChallengeApiResult.details
                     )
                 }
             }
@@ -664,7 +823,19 @@ class NativeAuthController : BaseNativeAuthController() {
 
                 is ResetPasswordSubmitApiResult.PasswordInvalid -> {
                     ResetPasswordCommandResult.PasswordNotAccepted(
-                        errorCode = submitApiResult.errorCode,
+                        error = submitApiResult.error,
+                        errorDescription = submitApiResult.errorDescription
+                    )
+                }
+
+                is ResetPasswordSubmitApiResult.ExpiredToken -> {
+                    LogSession.log(
+                        tag = TAG,
+                        logLevel = Logger.LogLevel.WARN,
+                        message = "Expire token result: $this"
+                    )
+                    CommandResult.UnknownError(
+                        error = submitApiResult.error,
                         errorDescription = submitApiResult.errorDescription
                     )
                 }
@@ -677,8 +848,9 @@ class NativeAuthController : BaseNativeAuthController() {
                     )
 
                     CommandResult.UnknownError(
-                        errorCode = submitApiResult.errorCode,
-                        errorDescription = submitApiResult.errorDescription
+                        error = submitApiResult.error,
+                        errorDescription = submitApiResult.errorDescription,
+                        details = submitApiResult.details
                     )
                 }
             }
@@ -735,7 +907,7 @@ class NativeAuthController : BaseNativeAuthController() {
                         message = "Reset password completion timed out."
                     )
                     return ResetPasswordCommandResult.PasswordResetFailed(
-                        errorCode = ResetPasswordSubmitNewPasswordCommand.POLL_COMPLETION_TIMEOUT_ERROR_CODE,
+                        error = ResetPasswordSubmitNewPasswordCommand.POLL_COMPLETION_TIMEOUT_ERROR_CODE,
                         errorDescription = ResetPasswordSubmitNewPasswordCommand.POLL_COMPLETION_TIMEOUT_ERROR_DESCRIPTION
                     )
                 }
@@ -751,7 +923,7 @@ class NativeAuthController : BaseNativeAuthController() {
             return when (pollCompletionApiResult) {
                 is ResetPasswordPollCompletionApiResult.PollingFailed -> {
                     ResetPasswordCommandResult.PasswordResetFailed(
-                        errorCode = pollCompletionApiResult.errorCode,
+                        error = pollCompletionApiResult.error,
                         errorDescription = pollCompletionApiResult.errorDescription
                     )
                 }
@@ -767,10 +939,49 @@ class NativeAuthController : BaseNativeAuthController() {
                         message = "in_progress received after polling, illegal state"
                     )
                     // This should never be reached, theoretically
-                    // TODO feel free to change this errorCode if it's not appropriate
                     CommandResult.UnknownError(
-                        errorCode = "illegal_state",
-                        errorDescription = "in_progress received after polling, illegal state"
+                        error = "illegal_state",
+                        errorDescription = "in_progress received after polling concluded, illegal state"
+                    )
+                }
+
+                is ResetPasswordPollCompletionApiResult.ExpiredToken -> {
+                    LogSession.log(
+                        tag = TAG,
+                        logLevel = Logger.LogLevel.WARN,
+                        message = "Expire token result: $this"
+                    )
+                    CommandResult.UnknownError(
+                        error = pollCompletionApiResult.error,
+                        errorDescription = pollCompletionApiResult.errorDescription
+                    )
+                }
+
+                is ResetPasswordPollCompletionApiResult.UserNotFound -> {
+                    // This should be caught earlier in the flow
+                    LogSession.log(
+                        tag = TAG,
+                        logLevel = Logger.LogLevel.WARN,
+                        message = "Unexpected result: $pollCompletionApiResult"
+                    )
+
+                    CommandResult.UnknownError(
+                        error = pollCompletionApiResult.error,
+                        errorDescription = pollCompletionApiResult.errorDescription
+                    )
+                }
+
+                is ResetPasswordPollCompletionApiResult.PasswordInvalid -> {
+                    // This should be caught in /submit
+                    LogSession.log(
+                        tag = TAG,
+                        logLevel = Logger.LogLevel.WARN,
+                        message = "Unexpected result: $pollCompletionApiResult"
+                    )
+
+                    CommandResult.UnknownError(
+                        error = pollCompletionApiResult.error,
+                        errorDescription = pollCompletionApiResult.errorDescription
                     )
                 }
 
@@ -782,8 +993,9 @@ class NativeAuthController : BaseNativeAuthController() {
                     )
 
                     CommandResult.UnknownError(
-                        errorCode = pollCompletionApiResult.errorCode,
-                        errorDescription = pollCompletionApiResult.errorDescription
+                        error = pollCompletionApiResult.error,
+                        errorDescription = pollCompletionApiResult.errorDescription,
+                        details = pollCompletionApiResult.details
                     )
                 }
             }
@@ -976,7 +1188,7 @@ class NativeAuthController : BaseNativeAuthController() {
             }
 
             SignInChallengeApiResult.Redirect -> {
-                CommandResult.Redirect
+                CommandResult.Redirect()
             }
 
             is SignInChallengeApiResult.UnknownError -> {
@@ -986,8 +1198,56 @@ class NativeAuthController : BaseNativeAuthController() {
                     message = "Unexpected result: $this"
                 )
                 CommandResult.UnknownError(
-                    errorCode = this.error,
-                    errorDescription = this.errorDescription
+                    error = this.error,
+                    errorDescription = this.errorDescription,
+                    details = this.details,
+                    errorCodes = this.errorCodes
+                )
+            }
+        }
+    }
+
+    private fun SignInChallengeApiResult.toSignInSubmitPasswordCommandResult(): SignInSubmitPasswordCommandResult {
+        LogSession.logMethodCall(tag = TAG)
+        return when (this) {
+            SignInChallengeApiResult.Redirect -> {
+                CommandResult.Redirect()
+            }
+
+            is SignInChallengeApiResult.PasswordRequired -> {
+                LogSession.log(
+                    tag = TAG,
+                    logLevel = Logger.LogLevel.WARN,
+                    message = "Unexpected result: $this"
+                )
+                CommandResult.UnknownError(
+                    error = "unexpected_api_result",
+                    errorDescription = "API returned unexpected result: $this"
+                )
+            }
+
+            is SignInChallengeApiResult.UnknownError -> {
+                LogSession.log(
+                    tag = TAG,
+                    logLevel = Logger.LogLevel.WARN,
+                    message = "Unexpected result: $this"
+                )
+                CommandResult.UnknownError(
+                    error = this.error,
+                    errorDescription = this.errorDescription,
+                    details = this.details,
+                    errorCodes = this.errorCodes
+                )
+            }
+            is SignInChallengeApiResult.OOBRequired -> {
+                LogSession.log(
+                    tag = TAG,
+                    logLevel = Logger.LogLevel.WARN,
+                    message = "Unexpected result: $this"
+                )
+                CommandResult.UnknownError(
+                    error = "unexpected_api_result",
+                    errorDescription = "API returned unexpected result: $this"
                 )
             }
         }
@@ -1006,7 +1266,31 @@ class NativeAuthController : BaseNativeAuthController() {
             }
 
             ResetPasswordChallengeApiResult.Redirect -> {
-                CommandResult.Redirect
+                CommandResult.Redirect()
+            }
+
+            is ResetPasswordChallengeApiResult.ExpiredToken -> {
+                LogSession.log(
+                    tag = TAG,
+                    logLevel = Logger.LogLevel.WARN,
+                    message = "Expire token result: $this"
+                )
+                CommandResult.UnknownError(
+                    error = this.error,
+                    errorDescription = this.errorDescription
+                )
+            }
+
+            is ResetPasswordChallengeApiResult.UnsupportedChallengeType -> {
+                LogSession.log(
+                    tag = TAG,
+                    logLevel = Logger.LogLevel.WARN,
+                    message = "Unexpected result: $this"
+                )
+                CommandResult.UnknownError(
+                    error = this.error,
+                    errorDescription = this.errorDescription
+                )
             }
 
             is ResetPasswordChallengeApiResult.UnknownError -> {
@@ -1016,8 +1300,9 @@ class NativeAuthController : BaseNativeAuthController() {
                     message = "Unexpected result: $this"
                 )
                 CommandResult.UnknownError(
-                    errorCode = this.errorCode,
-                    errorDescription = this.errorDescription
+                    error = this.error,
+                    errorDescription = this.errorDescription,
+                    details = this.details
                 )
             }
         }
@@ -1056,23 +1341,35 @@ class NativeAuthController : BaseNativeAuthController() {
                     processSignUpChallengeApiResult(challengeApiResult)
                 }
 
+                is SignUpStartApiResult.UnsupportedChallengeType -> {
+                    LogSession.log(
+                        tag = TAG,
+                        logLevel = Logger.LogLevel.WARN,
+                        message = "Unexpected result: $signUpStartApiResult"
+                    )
+                    CommandResult.UnknownError(
+                        error = signUpStartApiResult.error,
+                        errorDescription = signUpStartApiResult.errorDescription
+                    )
+                }
+
                 is SignUpStartApiResult.InvalidPassword -> {
                     SignUpCommandResult.InvalidPassword(
-                        errorCode = signUpStartApiResult.error,
+                        error = signUpStartApiResult.error,
                         errorDescription = signUpStartApiResult.errorDescription
                     )
                 }
 
                 is SignUpStartApiResult.InvalidAttributes -> {
                     SignUpCommandResult.InvalidAttributes(
-                        errorCode = signUpStartApiResult.error,
+                        error = signUpStartApiResult.error,
                         errorDescription = signUpStartApiResult.errorDescription,
                         invalidAttributes = signUpStartApiResult.invalidAttributes
                     )
                 }
 
                 is SignUpStartApiResult.Redirect -> {
-                    CommandResult.Redirect
+                    CommandResult.Redirect()
                 }
 
                 is SignUpStartApiResult.UnknownError -> {
@@ -1082,22 +1379,22 @@ class NativeAuthController : BaseNativeAuthController() {
                         message = "Unexpected result: $signUpStartApiResult"
                     )
                     CommandResult.UnknownError(
-                        errorCode = signUpStartApiResult.error,
-                        errorDescription = signUpStartApiResult.errorDescription,
-                    )
-                }
-
-                is SignUpStartApiResult.UserNameAlreadyExists -> {
-                    SignUpCommandResult.UsernameAlreadyExists(
-                        errorCode = signUpStartApiResult.error,
+                        error = signUpStartApiResult.error,
                         errorDescription = signUpStartApiResult.errorDescription,
                         details = signUpStartApiResult.details
                     )
                 }
 
+                is SignUpStartApiResult.UsernameAlreadyExists -> {
+                    SignUpCommandResult.UsernameAlreadyExists(
+                        error = signUpStartApiResult.errorCode,
+                        errorDescription = signUpStartApiResult.errorDescription
+                    )
+                }
+
                 is SignUpStartApiResult.AuthNotSupported -> {
                     SignUpCommandResult.AuthNotSupported(
-                        errorCode = signUpStartApiResult.error,
+                        error = signUpStartApiResult.errorCode,
                         errorDescription = signUpStartApiResult.errorDescription
                     )
                 }
@@ -1276,8 +1573,32 @@ class NativeAuthController : BaseNativeAuthController() {
                 )
             }
 
+            is SignUpChallengeApiResult.ExpiredToken -> {
+                LogSession.log(
+                    tag = TAG,
+                    logLevel = Logger.LogLevel.WARN,
+                    message = "Expire token result: $this"
+                )
+                CommandResult.UnknownError(
+                    error = signUpChallengeApiResult.error,
+                    errorDescription = signUpChallengeApiResult.errorDescription
+                )
+            }
+
+            is SignUpChallengeApiResult.UnsupportedChallengeType -> {
+                LogSession.log(
+                    tag = TAG,
+                    logLevel = Logger.LogLevel.WARN,
+                    message = "Unexpected result: $signUpChallengeApiResult"
+                )
+                CommandResult.UnknownError(
+                    error = signUpChallengeApiResult.errorCode,
+                    errorDescription = signUpChallengeApiResult.errorDescription
+                )
+            }
+
             SignUpChallengeApiResult.Redirect -> {
-                CommandResult.Redirect
+                CommandResult.Redirect()
             }
 
             is SignUpChallengeApiResult.UnknownError -> {
@@ -1287,8 +1608,9 @@ class NativeAuthController : BaseNativeAuthController() {
                     message = "Unexpected result: $signUpChallengeApiResult"
                 )
                 CommandResult.UnknownError(
-                    errorCode = signUpChallengeApiResult.error,
+                    error = signUpChallengeApiResult.error,
                     errorDescription = signUpChallengeApiResult.errorDescription,
+                    details = signUpChallengeApiResult.details
                 )
             }
         }
@@ -1305,10 +1627,29 @@ class NativeAuthController : BaseNativeAuthController() {
                 )
             }
 
+            is SignUpContinueApiResult.ExpiredToken -> {
+                LogSession.log(
+                    tag = TAG,
+                    logLevel = Logger.LogLevel.WARN,
+                    message = "Expire token result: $this"
+                )
+                CommandResult.UnknownError(
+                    error = this.error,
+                    errorDescription = this.errorDescription
+                )
+            }
+
+            is SignUpContinueApiResult.UsernameAlreadyExists -> {
+                SignUpCommandResult.UsernameAlreadyExists(
+                    error = this.error,
+                    errorDescription = this.errorDescription
+                )
+            }
+
             is SignUpContinueApiResult.AttributesRequired -> {
                 SignUpCommandResult.AttributesRequired(
                     signupToken = this.signupToken,
-                    errorCode = this.error,
+                    error = this.error,
                     errorDescription = this.errorDescription,
                     requiredAttributes = this.requiredAttributes
                 )
@@ -1325,14 +1666,13 @@ class NativeAuthController : BaseNativeAuthController() {
 
             is SignUpContinueApiResult.InvalidOOBValue -> {
                 SignUpCommandResult.InvalidCode(
-                    errorCode = this.error,
-                    errorDescription = this.errorDescription,
-                    details = this.details
+                    error = this.error,
+                    errorDescription = this.errorDescription
                 )
             }
 
             is SignUpContinueApiResult.Redirect -> {
-                CommandResult.Redirect
+                CommandResult.Redirect()
             }
 
             is SignUpContinueApiResult.UnknownError -> {
@@ -1342,21 +1682,21 @@ class NativeAuthController : BaseNativeAuthController() {
                     message = "Unexpected result: $this"
                 )
                 CommandResult.UnknownError(
-                    errorCode = this.error,
+                    error = this.error,
                     errorDescription = this.errorDescription,
+                    details = this.details
                 )
             }
 
             is SignUpContinueApiResult.InvalidAttributes, is SignUpContinueApiResult.InvalidPassword -> {
-                // TODO add correlation ID https://identitydivision.visualstudio.com/Engineering/_workitems/edit/2503124
                 LogSession.log(
                     tag = TAG,
                     logLevel = Logger.LogLevel.WARN,
                     message = "Unexpected result: $this"
                 )
                 CommandResult.UnknownError(
-                    errorCode = "unexpected_api_result",
-                    errorDescription = "API returned unexpected result: $this",
+                    error = "unexpected_api_result",
+                    errorDescription = "API returned unexpected result: $this"
                 )
             }
         }
@@ -1373,10 +1713,29 @@ class NativeAuthController : BaseNativeAuthController() {
                 )
             }
 
+            is SignUpContinueApiResult.ExpiredToken -> {
+                LogSession.log(
+                    tag = TAG,
+                    logLevel = Logger.LogLevel.WARN,
+                    message = "Expire token result: $this"
+                )
+                CommandResult.UnknownError(
+                    error = this.error,
+                    errorDescription = this.errorDescription
+                )
+            }
+
+            is SignUpContinueApiResult.UsernameAlreadyExists -> {
+                SignUpCommandResult.UsernameAlreadyExists(
+                    error = this.error,
+                    errorDescription = this.errorDescription
+                )
+            }
+
             is SignUpContinueApiResult.AttributesRequired -> {
                 SignUpCommandResult.AttributesRequired(
                     signupToken = this.signupToken,
-                    errorCode = this.error,
+                    error = this.error,
                     errorDescription = this.errorDescription,
                     requiredAttributes = this.requiredAttributes
                 )
@@ -1392,7 +1751,7 @@ class NativeAuthController : BaseNativeAuthController() {
             }
 
             is SignUpContinueApiResult.Redirect -> {
-                CommandResult.Redirect
+                CommandResult.Redirect()
             }
 
             is SignUpContinueApiResult.UnknownError -> {
@@ -1402,29 +1761,29 @@ class NativeAuthController : BaseNativeAuthController() {
                     message = "Unexpected result: $this"
                 )
                 CommandResult.UnknownError(
-                    errorCode = this.error,
+                    error = this.error,
                     errorDescription = this.errorDescription,
+                    details = this.details
                 )
             }
 
             is SignUpContinueApiResult.InvalidAttributes -> {
                 SignUpCommandResult.InvalidAttributes(
-                    errorCode = this.error,
+                    error = this.error,
                     errorDescription = this.errorDescription,
                     invalidAttributes = this.invalidAttributes
                 )
             }
 
             is SignUpContinueApiResult.InvalidOOBValue, is SignUpContinueApiResult.InvalidPassword -> {
-                // TODO add correlation ID https://identitydivision.visualstudio.com/Engineering/_workitems/edit/2503124
                 LogSession.log(
                     tag = TAG,
                     logLevel = Logger.LogLevel.WARN,
                     message = "Unexpected result: $this"
                 )
                 CommandResult.UnknownError(
-                    errorCode = "unexpected_api_result",
-                    errorDescription = "API returned unexpected result: $this",
+                    error = "unexpected_api_result",
+                    errorDescription = "API returned unexpected result: $this"
                 )
             }
         }
@@ -1441,10 +1800,29 @@ class NativeAuthController : BaseNativeAuthController() {
                 )
             }
 
+            is SignUpContinueApiResult.ExpiredToken -> {
+                LogSession.log(
+                    tag = TAG,
+                    logLevel = Logger.LogLevel.WARN,
+                    message = "Expire token result: $this"
+                )
+                CommandResult.UnknownError(
+                    error = this.error,
+                    errorDescription = this.errorDescription
+                )
+            }
+
+            is SignUpContinueApiResult.UsernameAlreadyExists -> {
+                SignUpCommandResult.UsernameAlreadyExists(
+                    error = this.error,
+                    errorDescription = this.errorDescription
+                )
+            }
+
             is SignUpContinueApiResult.AttributesRequired -> {
                 SignUpCommandResult.AttributesRequired(
                     signupToken = this.signupToken,
-                    errorCode = this.error,
+                    error = this.error,
                     errorDescription = this.errorDescription,
                     requiredAttributes = this.requiredAttributes
                 )
@@ -1460,7 +1838,7 @@ class NativeAuthController : BaseNativeAuthController() {
             }
 
             is SignUpContinueApiResult.Redirect -> {
-                CommandResult.Redirect
+                CommandResult.Redirect()
             }
 
             is SignUpContinueApiResult.UnknownError -> {
@@ -1470,28 +1848,28 @@ class NativeAuthController : BaseNativeAuthController() {
                     message = "Unexpected result: $this"
                 )
                 CommandResult.UnknownError(
-                    errorCode = this.error,
+                    error = this.error,
                     errorDescription = this.errorDescription,
+                    details = details
                 )
             }
 
             is SignUpContinueApiResult.InvalidPassword -> {
                 SignUpCommandResult.InvalidPassword(
-                    errorCode = this.error,
+                    error = this.error,
                     errorDescription = this.errorDescription
                 )
             }
 
             is SignUpContinueApiResult.InvalidOOBValue, is SignUpContinueApiResult.InvalidAttributes -> {
-                // TODO add correlation ID https://identitydivision.visualstudio.com/Engineering/_workitems/edit/2503124
                 LogSession.log(
                     tag = TAG,
                     logLevel = Logger.LogLevel.WARN,
                     message = "Unexpected result: $this"
                 )
                 CommandResult.UnknownError(
-                    errorCode = "unexpected_api_result",
-                    errorDescription = "API returned unexpected result: $this",
+                    error = "unexpected_api_result",
+                    errorDescription = "API returned unexpected result: $this"
                 )
             }
         }
@@ -1519,7 +1897,11 @@ class NativeAuthController : BaseNativeAuthController() {
         LogSession.logMethodCall(tag = TAG)
         return when (this) {
             is SignInChallengeApiResult.OOBRequired -> {
-                SignInCommandResult.InvalidAuthenticationType
+                SignInCommandResult.InvalidAuthenticationType(
+                    error = "invalid_grant",
+                    errorDescription = "Cannot utilize code required flow in Sign In With Password at this time.",
+                    errorCodes = listOf(400002),
+                )
             }
 
             is SignInChallengeApiResult.UnknownError,
@@ -1530,13 +1912,13 @@ class NativeAuthController : BaseNativeAuthController() {
                     message = "Unexpected result: $this"
                 )
                 CommandResult.UnknownError(
-                    errorCode = null,
+                    error = "unexpected_api_result",
                     errorDescription = "Unexpected result: $this"
                 )
             }
 
             SignInChallengeApiResult.Redirect -> {
-                CommandResult.Redirect
+                CommandResult.Redirect()
             }
         }
     }
@@ -1548,7 +1930,7 @@ class NativeAuthController : BaseNativeAuthController() {
     ): SignInStartCommandResult {
         return when (initiateApiResult) {
             SignInInitiateApiResult.Redirect -> {
-                CommandResult.Redirect
+                CommandResult.Redirect()
             }
 
             is SignInInitiateApiResult.Success -> {
@@ -1572,15 +1954,17 @@ class NativeAuthController : BaseNativeAuthController() {
                     message = "Unexpected result: $initiateApiResult"
                 )
                 CommandResult.UnknownError(
-                    errorCode = initiateApiResult.error,
-                    errorDescription = initiateApiResult.errorDescription
+                    error = initiateApiResult.error,
+                    errorDescription = initiateApiResult.errorDescription,
+                    errorCodes = initiateApiResult.errorCodes
                 )
             }
 
             is SignInInitiateApiResult.UserNotFound -> {
                 SignInCommandResult.UserNotFound(
-                    errorCode = initiateApiResult.error,
-                    errorDescription = initiateApiResult.errorDescription
+                    error = initiateApiResult.error,
+                    errorDescription = initiateApiResult.errorDescription,
+                    errorCodes = initiateApiResult.errorCodes
                 )
             }
         }

@@ -45,18 +45,22 @@ sealed interface SignUpStartApiResult {
     data class UnknownError(
         val error: String,
         val errorDescription: String,
-    ) :
-        SignUpStartApiResult
-
-    data class UserNameAlreadyExists(
-        val error: String,
-        val errorDescription: String,
         val details: List<Map<String, String>>?
     ) :
         SignUpStartApiResult
 
-    data class AuthNotSupported(
+    data class UnsupportedChallengeType(
         val error: String,
+        val errorDescription: String
+    ) : SignUpStartApiResult
+
+    data class UsernameAlreadyExists(
+        val errorCode: String,
+        val errorDescription: String
+    ) : SignUpStartApiResult
+
+    data class AuthNotSupported(
+        val errorCode: String,
         val errorDescription: String,
     ) :
         SignUpStartApiResult

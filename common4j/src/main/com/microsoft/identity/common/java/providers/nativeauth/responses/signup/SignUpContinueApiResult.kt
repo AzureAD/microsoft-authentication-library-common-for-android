@@ -43,10 +43,19 @@ sealed interface SignUpContinueApiResult {
         val errorDescription: String
     ) : SignUpContinueApiResult
 
+    data class ExpiredToken(
+        val error: String,
+        val errorDescription: String
+    ) : SignUpContinueApiResult
+
+    data class UsernameAlreadyExists(
+        val error: String,
+        val errorDescription: String,
+    ) : SignUpContinueApiResult
+
     data class InvalidOOBValue(
         val error: String,
         val errorDescription: String,
-        val details: List<Map<String, String>>
     ) : SignUpContinueApiResult
 
     data class InvalidAttributes(

@@ -24,12 +24,13 @@ package com.microsoft.identity.common.java.providers.nativeauth.responses.resetp
 
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
-import com.microsoft.identity.common.java.exception.ClientException
+import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.providers.nativeauth.IApiResponse
 import com.microsoft.identity.common.java.providers.nativeauth.interactors.InnerError
-import com.microsoft.identity.common.java.util.isInvalidGrant
+import com.microsoft.identity.common.java.util.isExpiredToken
 import com.microsoft.identity.common.java.util.isOOB
 import com.microsoft.identity.common.java.util.isRedirect
+import com.microsoft.identity.common.java.util.isUnsupportedChallengeType
 import java.net.HttpURLConnection
 
 class ResetPasswordChallengeApiResponse(
@@ -42,48 +43,108 @@ class ResetPasswordChallengeApiResponse(
     @Expose @SerializedName("code_length") val codeLength: Int?,
     @Expose @SerializedName("interval") val interval: Int?,
     @Expose @SerializedName("error") val error: String?,
+    @Expose @SerializedName("details") val details: List<Map<String, String>>?,
     @Expose @SerializedName("error_description") val errorDescription: String?,
     @Expose @SerializedName("error_uri") val errorUri: String?,
-    @Expose @SerializedName("error_codes") val errorCodes: List<Int>?,
     @Expose @SerializedName("inner_errors") val innerErrors: List<InnerError>?
 ): IApiResponse(statusCode) {
 
+    companion object {
+        private val TAG = ResetPasswordChallengeApiResponse::class.java.simpleName
+    }
+
     fun toResult(): ResetPasswordChallengeApiResult {
-        if (statusCode >= HttpURLConnection.HTTP_BAD_REQUEST) {
-            if (error.isInvalidGrant()) {
-                // TODO advanced error handling
-                return ResetPasswordChallengeApiResult.UnknownError(error, errorDescription)
-            } else {
-                // TODO log the API response, in a PII-safe way
-                return ResetPasswordChallengeApiResult.UnknownError(error, errorDescription)
+        LogSession.logMethodCall(TAG)
+
+        return when (statusCode) {
+
+            // Handle 400 errors
+            HttpURLConnection.HTTP_BAD_REQUEST -> {
+                return when {
+                    error.isExpiredToken() -> {
+                        ResetPasswordChallengeApiResult.ExpiredToken(
+                            error = error.orEmpty(),
+                            errorDescription = errorDescription.orEmpty()
+                        )
+                    }
+                    error.isUnsupportedChallengeType() -> {
+                        ResetPasswordChallengeApiResult.UnsupportedChallengeType(
+                            error = error.orEmpty(),
+                            errorDescription = errorDescription.orEmpty()
+                        )
+                    }
+                    else -> {
+                        ResetPasswordChallengeApiResult.UnknownError(
+                            error = error,
+                            errorDescription = errorDescription,
+                            details = details
+                        )
+                    }
+                }
             }
-        } else {
-            if (challengeType.isRedirect()) {
-                return ResetPasswordChallengeApiResult.Redirect
+
+            // Handle success and redirect
+            HttpURLConnection.HTTP_OK -> {
+                return when {
+                    challengeType.isRedirect() -> {
+                        ResetPasswordChallengeApiResult.Redirect
+                    }
+                    challengeType.isOOB() -> {
+                        return when {
+                            challengeTargetLabel.isNullOrBlank() -> {
+                                ResetPasswordChallengeApiResult.UnknownError(
+                                    error = "invalid_state",
+                                    errorDescription = "ResetPassword /challenge did not return a challenge_target_label with oob challenge type",
+                                    details = details
+                                )
+                            }
+                            challengeChannel.isNullOrBlank() -> {
+                                ResetPasswordChallengeApiResult.UnknownError(
+                                    error = "invalid_state",
+                                    errorDescription = "ResetPassword /challenge did not return a challenge_channel with oob challenge type",
+                                    details = details
+                                )
+                            }
+                            codeLength == null -> {
+                                ResetPasswordChallengeApiResult.UnknownError(
+                                    error = "invalid_state",
+                                    errorDescription = "ResetPassword /challenge did not return a code_length with oob challenge type",
+                                    details = details
+                                )
+                            }
+                            else -> {
+                                ResetPasswordChallengeApiResult.CodeRequired(
+                                    passwordResetToken = passwordResetToken
+                                        ?: return ResetPasswordChallengeApiResult.UnknownError(
+                                            error = "invalid_state",
+                                            errorDescription = "ResetPassword /challenge successful, but did not return a flow token",
+                                            details = details
+                                        ),
+                                    challengeTargetLabel = challengeTargetLabel,
+                                    codeLength = codeLength,
+                                    challengeChannel = challengeChannel
+                                )
+                            }
+                        }
+                    }
+                    else -> {
+                        ResetPasswordChallengeApiResult.UnknownError(
+                            error = error,
+                            errorDescription = errorDescription,
+                            details = details
+                        )
+                    }
+                }
             }
-            else if (challengeType.isOOB()) {
-                if (challengeTargetLabel.isNullOrBlank()) {
-                    throw ClientException("ResetPasswordChallengeApiResult challengeTargetLabel can't be null or empty in oob state")
-                }
-                if (challengeChannel.isNullOrBlank()) {
-                    throw ClientException("ResetPasswordChallengeApiResult challengeChannel can't be null or empty in oob state")
-                }
-                if (codeLength == null) {
-                    throw ClientException("ResetPasswordChallengeApiResult codeLength can't be null or empty in oob state")
-                }
-                if (passwordResetToken.isNullOrBlank()) {
-                    throw ClientException("ResetPasswordChallengeApiResult passwordResetToken can't be null or empty in oob state")
-                }
-                return ResetPasswordChallengeApiResult.CodeRequired(
-                    passwordResetToken = passwordResetToken,
-                    challengeTargetLabel = challengeTargetLabel,
-                    codeLength = codeLength,
-                    challengeChannel = challengeChannel
+
+            // Catch uncommon status codes
+            else -> {
+                ResetPasswordChallengeApiResult.UnknownError(
+                    error = error.orEmpty(),
+                    errorDescription = errorDescription.orEmpty(),
+                    details = details
                 )
-            } else {
-                return ResetPasswordChallengeApiResult.UnknownError(error, errorDescription)
             }
         }
     }
-
 }

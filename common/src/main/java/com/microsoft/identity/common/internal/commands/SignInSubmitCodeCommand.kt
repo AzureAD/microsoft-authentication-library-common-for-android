@@ -25,6 +25,8 @@ package com.microsoft.identity.common.internal.commands
 import com.microsoft.identity.common.internal.controllers.NativeAuthController
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.controllers.results.SignInSubmitCodeCommandResult
+import com.microsoft.identity.common.java.logging.LogSession
+import com.microsoft.identity.common.java.logging.Logger
 
 class SignInSubmitCodeCommand(
     private val parameters: SignInSubmitCodeCommandParameters,
@@ -35,9 +37,22 @@ class SignInSubmitCodeCommand(
     controller,
     publicApiId
 ) {
+
+    companion object {
+        private val TAG = SignInSubmitCodeCommand::class.java.simpleName
+    }
+
     override fun execute(): SignInSubmitCodeCommandResult {
-        return controller.signInSubmitCode(
+        LogSession.logMethodCall(TAG)
+        val result = controller.signInSubmitCode(
             parameters = parameters
         )
+
+        LogSession.log(
+            TAG,
+            Logger.LogLevel.INFO,
+            "Returning result: $result"
+        )
+        return result
     }
 }

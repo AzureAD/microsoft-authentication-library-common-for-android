@@ -25,6 +25,8 @@ package com.microsoft.identity.common.internal.commands
 import com.microsoft.identity.common.internal.controllers.NativeAuthController
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.BaseSignInStartCommandParameters
 import com.microsoft.identity.common.java.controllers.results.SignInStartCommandResult
+import com.microsoft.identity.common.java.logging.LogSession
+import com.microsoft.identity.common.java.logging.Logger
 
 class SignInStartCommand(
     private val parameters: BaseSignInStartCommandParameters,
@@ -36,9 +38,21 @@ class SignInStartCommand(
     publicApiId
 ) {
 
+    companion object {
+        private val TAG = SignInStartCommand::class.java.simpleName
+    }
+
     override fun execute(): SignInStartCommandResult {
-        return controller.signInStart(
+        LogSession.logMethodCall(TAG)
+        val result = controller.signInStart(
             parameters = parameters
         )
+
+        LogSession.log(
+            TAG,
+            Logger.LogLevel.INFO,
+            "Returning result: $result"
+        )
+        return result
     }
 }

@@ -25,7 +25,9 @@ package com.microsoft.identity.common.java.providers.nativeauth.responses.resetp
 sealed interface ResetPasswordContinueApiResult {
     object Redirect : ResetPasswordContinueApiResult
     data class PasswordRequired(val passwordSubmitToken: String, val expiresIn: Int?) : ResetPasswordContinueApiResult
-    data class CodeIncorrect(val errorCode: String, val errorDescription: String) : ResetPasswordContinueApiResult
-    data class UnknownError(val errorCode: String?, val errorDescription: String?) :
+    data class CodeIncorrect(val error: String, val errorDescription: String) : ResetPasswordContinueApiResult
+    data class ExpiredToken(val error: String, val errorDescription: String) :
+        ResetPasswordContinueApiResult
+    data class UnknownError(val error: String?, val errorDescription: String?, val details: List<Map<String, String>>?) :
         ResetPasswordContinueApiResult
 }

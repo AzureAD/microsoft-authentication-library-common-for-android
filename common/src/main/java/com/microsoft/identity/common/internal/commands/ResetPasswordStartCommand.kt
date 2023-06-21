@@ -25,6 +25,8 @@ package com.microsoft.identity.common.internal.commands
 import com.microsoft.identity.common.internal.controllers.NativeAuthController
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.ResetPasswordStartCommandParameters
 import com.microsoft.identity.common.java.controllers.results.ResetPasswordStartCommandResult
+import com.microsoft.identity.common.java.logging.LogSession
+import com.microsoft.identity.common.java.logging.Logger
 
 class ResetPasswordStartCommand(
     private val parameters: ResetPasswordStartCommandParameters,
@@ -35,9 +37,22 @@ class ResetPasswordStartCommand(
     controller,
     publicApiId
 ) {
+
+    companion object {
+        private val TAG = ResetPasswordStartCommand::class.java.simpleName
+    }
+
     override fun execute(): ResetPasswordStartCommandResult {
-        return controller.resetPasswordStart(
+        LogSession.logMethodCall(TAG)
+        val result = controller.resetPasswordStart(
             parameters = parameters
         )
+
+        LogSession.log(
+            TAG,
+            Logger.LogLevel.INFO,
+            "Returning result: $result"
+        )
+        return result
     }
 }

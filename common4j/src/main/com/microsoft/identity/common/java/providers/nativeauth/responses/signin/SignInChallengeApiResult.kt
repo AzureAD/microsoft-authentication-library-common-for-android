@@ -8,6 +8,6 @@ sealed interface SignInChallengeApiResult {
         val challengeChannel: String,
         val codeLength: Int) : SignInChallengeApiResult
     data class PasswordRequired(val credentialToken: String) : SignInChallengeApiResult
-    data class UnknownError(val error: String?, val errorDescription: String?) :
+    data class UnknownError(val error: String?, val errorDescription: String?, val details: List<Map<String, String>>?, val errorCodes: List<Int>?) :
         SignInChallengeApiResult
 }

@@ -24,11 +24,13 @@ package com.microsoft.identity.common.java.providers.nativeauth.responses.signup
 
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
-import com.microsoft.identity.common.java.exception.ClientException
+import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.providers.nativeauth.IApiResponse
+import com.microsoft.identity.common.java.util.isExpiredToken
 import com.microsoft.identity.common.java.util.isOOB
 import com.microsoft.identity.common.java.util.isPassword
 import com.microsoft.identity.common.java.util.isRedirect
+import com.microsoft.identity.common.java.util.isUnsupportedChallengeType
 import java.net.HttpURLConnection
 
 data class SignUpChallengeApiResponse(
@@ -40,53 +42,115 @@ data class SignUpChallengeApiResponse(
     @Expose @SerializedName("challenge_channel") val challengeChannel: String?,
     @SerializedName("signup_token") val signupToken: String?,
     @Expose @SerializedName("error") val error: String?,
-    @Expose @SerializedName("error_codes") val errorCodes: List<Int>?,
     @Expose @SerializedName("error_description") val errorDescription: String?,
     @Expose @SerializedName("details") val details: List<Map<String, String>>?,
     @SerializedName("code_length") val codeLength: Int?
 ) : IApiResponse(statusCode) {
 
-    private val TAG = SignUpChallengeApiResponse::class.java.simpleName
+    companion object {
+        private val TAG = SignUpChallengeApiResponse::class.java.simpleName
+    }
 
     fun toResult(): SignUpChallengeApiResult {
-        return if (statusCode >= HttpURLConnection.HTTP_BAD_REQUEST) {
-            SignUpChallengeApiResult.UnknownError(
-                error = error.orEmpty(),
-                errorDescription = errorDescription.orEmpty(),
-                details
-            )
-        } else {
-            if (challengeType.isRedirect()) {
-                SignUpChallengeApiResult.Redirect
-            } else if (challengeType.isOOB()) {
-                if (challengeTargetLabel.isNullOrBlank()) {
-                    throw ClientException("$TAG challengeTargetLabel can't be null or empty in oob state")
+        LogSession.logMethodCall(TAG)
+
+        return when (statusCode) {
+
+            // Handle 400 errors
+            HttpURLConnection.HTTP_BAD_REQUEST -> {
+                return when {
+                    error.isUnsupportedChallengeType() -> {
+                        SignUpChallengeApiResult.UnsupportedChallengeType(
+                            errorCode = error.orEmpty(),
+                            errorDescription = errorDescription.orEmpty()
+                        )
+                    }
+                    error.isExpiredToken() -> {
+                        SignUpChallengeApiResult.ExpiredToken(
+                            error = error.orEmpty(),
+                            errorDescription = errorDescription.orEmpty()
+                        )
+                    }
+                    else -> {
+                        SignUpChallengeApiResult.UnknownError(
+                            error = error.orEmpty(),
+                            errorDescription = errorDescription.orEmpty(),
+                            details
+                        )
+                    }
                 }
-                if (challengeChannel.isNullOrBlank()) {
-                    throw ClientException("$TAG challengeChannel can't be null or empty in oob state")
+            }
+
+            // Handle challenge types
+            HttpURLConnection.HTTP_OK -> {
+                return when {
+                    challengeType.isRedirect() -> {
+                        SignUpChallengeApiResult.Redirect
+                    }
+                    challengeType.isOOB() -> {
+                        return when {
+                            challengeTargetLabel.isNullOrBlank() -> {
+                                SignUpChallengeApiResult.UnknownError(
+                                    error = "invalid_state",
+                                    errorDescription = "SignUp /challenge did not return a challenge_target_label with oob challenge type",
+                                    details = details
+                                )
+                            }
+                            challengeChannel.isNullOrBlank() -> {
+                                SignUpChallengeApiResult.UnknownError(
+                                    error = "invalid_state",
+                                    errorDescription = "SignUp /challenge did not return a challenge_channel with oob challenge type",
+                                    details = details
+                                )
+                            }
+                            codeLength == null -> {
+                                SignUpChallengeApiResult.UnknownError(
+                                    error = "invalid_state",
+                                    errorDescription = "SignUp /challenge did not return a code_length with oob challenge type",
+                                    details = details
+                                )
+                            }
+                            else -> {
+                                SignUpChallengeApiResult.OOBRequired(
+                                    signupToken = signupToken
+                                        ?: return SignUpChallengeApiResult.UnknownError(
+                                            error = "invalid_state",
+                                            errorDescription = "SignUp /challenge did not return a flow token with oob challenge type",
+                                            details = details
+                                        ),
+                                    challengeTargetLabel = challengeTargetLabel,
+                                    challengeChannel = challengeChannel,
+                                    codeLength = codeLength
+                                )
+                            }
+                        }
+                    }
+                    challengeType.isPassword() -> {
+                        SignUpChallengeApiResult.PasswordRequired(
+                            signupToken = signupToken
+                                ?: return SignUpChallengeApiResult.UnknownError(
+                                    error = "invalid_state",
+                                    errorDescription = "SignUp /challenge did not return a flow token with password challenge type",
+                                    details = details
+                                )
+                        )
+                    }
+                    else -> {
+                        SignUpChallengeApiResult.UnknownError(
+                            error = error.orEmpty(),
+                            errorDescription = errorDescription.orEmpty(),
+                            details
+                        )
+                    }
                 }
-                if (codeLength == null) {
-                    throw ClientException("$TAG codeLength can't be null or empty in oob state")
-                }
-                if (signupToken.isNullOrBlank()) {
-                    throw ClientException("$TAG signupToken can't be null or empty in oob state")
-                }
-                SignUpChallengeApiResult.OOBRequired(
-                    signupToken = signupToken,
-                    challengeTargetLabel = challengeTargetLabel,
-                    challengeChannel = challengeChannel,
-                    codeLength = codeLength
-                )
-            } else if (challengeType.isPassword()) {
-                if (signupToken.isNullOrBlank()) {
-                    throw ClientException("$TAG signupToken can't be null or empty in password state")
-                }
-                SignUpChallengeApiResult.PasswordRequired(signupToken = signupToken)
-            } else {
+            }
+
+            // Catch uncommon status codes
+            else -> {
                 SignUpChallengeApiResult.UnknownError(
                     error = error.orEmpty(),
                     errorDescription = errorDescription.orEmpty(),
-                    details
+                    details = details
                 )
             }
         }

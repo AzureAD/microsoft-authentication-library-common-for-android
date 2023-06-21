@@ -24,9 +24,16 @@ package com.microsoft.identity.common.java.providers.nativeauth.responses.resetp
 
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
+import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.providers.nativeauth.IApiResponse
 import com.microsoft.identity.common.java.providers.nativeauth.interactors.InnerError
-import com.microsoft.identity.common.java.util.isInvalidGrant
+import com.microsoft.identity.common.java.util.isExpiredToken
+import com.microsoft.identity.common.java.util.isExplicitUserNotFound
+import com.microsoft.identity.common.java.util.isPasswordBanned
+import com.microsoft.identity.common.java.util.isPasswordRecentlyUsed
+import com.microsoft.identity.common.java.util.isPasswordTooLong
+import com.microsoft.identity.common.java.util.isPasswordTooShort
+import com.microsoft.identity.common.java.util.isPasswordTooWeak
 import com.microsoft.identity.common.java.util.isPollInProgress
 import com.microsoft.identity.common.java.util.isPollSucceeded
 import java.net.HttpURLConnection
@@ -38,26 +45,76 @@ class ResetPasswordPollCompletionApiResponse(
     @Expose @SerializedName("error") val error: String?,
     @Expose @SerializedName("error_description") val errorDescription: String?,
     @Expose @SerializedName("error_uri") val errorUri: String?,
-    @Expose @SerializedName("error_codes") val errorCodes: List<Int>?,
+    @Expose @SerializedName("details") val details: List<Map<String, String>>?,
     @Expose @SerializedName("inner_errors") val innerErrors: List<InnerError>?
 ): IApiResponse(statusCode) {
 
+    companion object {
+        private val TAG = ResetPasswordPollCompletionApiResponse::class.java.simpleName
+    }
+
     fun toResult(): ResetPasswordPollCompletionApiResult {
-        if (statusCode >= HttpURLConnection.HTTP_BAD_REQUEST) {
-            return if (error.isInvalidGrant()) {
-                // TODO advanced error handling
-                ResetPasswordPollCompletionApiResult.UnknownError(error, errorDescription)
-            } else {
-                // TODO log the API response, in a PII-safe way
-                ResetPasswordPollCompletionApiResult.UnknownError(error, errorDescription)
+        LogSession.logMethodCall(TAG)
+
+        return when (statusCode) {
+
+            // Handle 400 errors
+            HttpURLConnection.HTTP_BAD_REQUEST -> {
+                return when {
+                    error.isPasswordBanned() || error.isPasswordTooShort() || error.isPasswordTooLong() || error.isPasswordRecentlyUsed() ||
+                        error.isPasswordTooWeak() -> {
+                        ResetPasswordPollCompletionApiResult.PasswordInvalid(
+                            error = error.orEmpty(),
+                            errorDescription = errorDescription.orEmpty()
+                        )
+                    }
+                    error.isExpiredToken() -> {
+                        ResetPasswordPollCompletionApiResult.ExpiredToken(
+                            error = error.orEmpty(),
+                            errorDescription = errorDescription.orEmpty()
+                        )
+                    }
+                    error.isExplicitUserNotFound() -> {
+                        ResetPasswordPollCompletionApiResult.UserNotFound(
+                            error = error.orEmpty(),
+                            errorDescription = errorDescription.orEmpty()
+                        )
+                    }
+                    else -> {
+                        ResetPasswordPollCompletionApiResult.UnknownError(
+                            error = error,
+                            errorDescription = errorDescription,
+                            details = details
+                        )
+                    }
+                }
             }
-        } else {
-            return if (status.isPollInProgress()) {
-                ResetPasswordPollCompletionApiResult.InProgress
-            } else if (status.isPollSucceeded()) {
-                ResetPasswordPollCompletionApiResult.PollingSucceeded
-            } else {
-                ResetPasswordPollCompletionApiResult.PollingFailed(error.orEmpty(), errorDescription.orEmpty())
+
+            // Handle success and redirect
+            HttpURLConnection.HTTP_OK -> {
+                return when {
+                    status.isPollInProgress() -> {
+                        ResetPasswordPollCompletionApiResult.InProgress
+                    }
+                    status.isPollSucceeded() -> {
+                        ResetPasswordPollCompletionApiResult.PollingSucceeded
+                    }
+                    else -> {
+                        ResetPasswordPollCompletionApiResult.PollingFailed(
+                            error = error.orEmpty(),
+                            errorDescription = errorDescription.orEmpty(),
+                        )
+                    }
+                }
+            }
+
+            // Catch uncommon status codes
+            else -> {
+                ResetPasswordPollCompletionApiResult.UnknownError(
+                    error = error.orEmpty(),
+                    errorDescription = errorDescription.orEmpty(),
+                    details = details
+                )
             }
         }
     }

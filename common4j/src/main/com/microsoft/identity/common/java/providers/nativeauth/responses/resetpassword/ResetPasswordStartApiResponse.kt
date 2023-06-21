@@ -24,11 +24,12 @@ package com.microsoft.identity.common.java.providers.nativeauth.responses.resetp
 
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
-import com.microsoft.identity.common.java.exception.ClientException
+import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.providers.nativeauth.IApiResponse
 import com.microsoft.identity.common.java.providers.nativeauth.interactors.InnerError
 import com.microsoft.identity.common.java.util.isExplicitUserNotFound
 import com.microsoft.identity.common.java.util.isRedirect
+import com.microsoft.identity.common.java.util.isUnsupportedChallengeType
 import java.net.HttpURLConnection
 
 class ResetPasswordStartApiResponse(
@@ -38,25 +39,69 @@ class ResetPasswordStartApiResponse(
     @Expose @SerializedName("error") val error: String?,
     @Expose @SerializedName("error_description") val errorDescription: String?,
     @Expose @SerializedName("error_uri") val errorUri: String?,
-    @Expose @SerializedName("error_codes") val errorCodes: List<Int>?,
+    @Expose @SerializedName("details") val details: List<Map<String, String>>?,
     @Expose @SerializedName("inner_errors") val innerErrors: List<InnerError>?
 ): IApiResponse(statusCode) {
 
+    companion object {
+        private val TAG = ResetPasswordStartApiResponse::class.java.simpleName
+    }
+
     fun toResult(): ResetPasswordStartApiResult {
-        if (statusCode >= HttpURLConnection.HTTP_BAD_REQUEST) {
-            if (error.isExplicitUserNotFound()) {
-                return ResetPasswordStartApiResult.UserNotFound(errorCode = error.orEmpty(), errorDescription = errorDescription.orEmpty())
+        LogSession.logMethodCall(TAG)
+
+        return when (statusCode) {
+
+            // Handle 400 errors
+            HttpURLConnection.HTTP_BAD_REQUEST -> {
+                return when {
+                    error.isExplicitUserNotFound() -> {
+                        ResetPasswordStartApiResult.UserNotFound(
+                            error = error.orEmpty(),
+                            errorDescription = errorDescription.orEmpty()
+                        )
+                    }
+                    error.isUnsupportedChallengeType() -> {
+                        ResetPasswordStartApiResult.UnsupportedChallengeType(
+                            error = error.orEmpty(),
+                            errorDescription = errorDescription.orEmpty()
+                        )
+                    }
+                    else -> {
+                        ResetPasswordStartApiResult.UnknownError(
+                            error = error,
+                            errorDescription = errorDescription,
+                            details = details
+                        )
+                    }
+                }
             }
-            return ResetPasswordStartApiResult.UnknownError(error, errorDescription)
-        } else {
-            return if (challengeType.isRedirect()) {
-                ResetPasswordStartApiResult.Redirect
-            } else if (passwordResetToken.isNullOrBlank()) {
-                throw ClientException("password_reset_token is null or blank")
-            } else {
-                ResetPasswordStartApiResult.Success(passwordResetToken)
+
+            // Handle success and redirect
+            HttpURLConnection.HTTP_OK -> {
+                if (challengeType.isRedirect()) {
+                    ResetPasswordStartApiResult.Redirect
+                }
+                else {
+                    ResetPasswordStartApiResult.Success(
+                        passwordResetToken
+                            ?: return ResetPasswordStartApiResult.UnknownError(
+                                error = "invalid_state",
+                                errorDescription = "ResetPassword /start returned redirect challenge, but did not return a flow token",
+                                details = details
+                            )
+                    )
+                }
+            }
+
+            // Catch uncommon status codes
+            else -> {
+                ResetPasswordStartApiResult.UnknownError(
+                    error = error.orEmpty(),
+                    errorDescription = errorDescription.orEmpty(),
+                    details = details
+                )
             }
         }
     }
-
 }

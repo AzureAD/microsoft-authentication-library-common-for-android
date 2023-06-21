@@ -25,6 +25,8 @@ package com.microsoft.identity.common.internal.commands
 import com.microsoft.identity.common.internal.controllers.NativeAuthController
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInResendCodeCommandParameters
 import com.microsoft.identity.common.java.controllers.results.SignInResendCodeCommandResult
+import com.microsoft.identity.common.java.logging.LogSession
+import com.microsoft.identity.common.java.logging.Logger
 
 class SignInResendCodeCommand(
     private val parameters: SignInResendCodeCommandParameters,
@@ -35,9 +37,22 @@ class SignInResendCodeCommand(
     controller,
     publicApiId
 ) {
+
+    companion object {
+        private val TAG = SignInResendCodeCommand::class.java.simpleName
+    }
+
     override fun execute(): SignInResendCodeCommandResult {
-        return controller.signInResendCode(
+        LogSession.logMethodCall(TAG)
+        val result = controller.signInResendCode(
             parameters = parameters
         )
+
+        LogSession.log(
+            TAG,
+            Logger.LogLevel.INFO,
+            "Returning result: $result"
+        )
+        return result
     }
 }

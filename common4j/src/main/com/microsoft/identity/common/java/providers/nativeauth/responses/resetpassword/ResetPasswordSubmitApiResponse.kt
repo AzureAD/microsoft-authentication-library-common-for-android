@@ -24,7 +24,7 @@ package com.microsoft.identity.common.java.providers.nativeauth.responses.resetp
 
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
-import com.microsoft.identity.common.java.exception.ClientException
+import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.providers.nativeauth.IApiResponse
 import com.microsoft.identity.common.java.providers.nativeauth.interactors.InnerError
 import com.microsoft.identity.common.java.util.*
@@ -37,29 +37,65 @@ class ResetPasswordSubmitApiResponse(
     @Expose @SerializedName("error") val error: String?,
     @Expose @SerializedName("error_description") val errorDescription: String?,
     @Expose @SerializedName("error_uri") val errorUri: String?,
-    @Expose @SerializedName("error_codes") val errorCodes: List<Int>?,
+    @Expose @SerializedName("details") val details: List<Map<String, String>>?,
     @Expose @SerializedName("inner_errors") val innerErrors: List<InnerError>?
 ): IApiResponse(statusCode) {
 
+    companion object {
+        private val TAG = ResetPasswordSubmitApiResponse::class.java.simpleName
+    }
+
     fun toResult(): ResetPasswordSubmitApiResult {
-        if (statusCode >= HttpURLConnection.HTTP_BAD_REQUEST) {
-            // TODO we should switch to checking numarical error codes once they become available
-            //  https://identitydivision.visualstudio.com/Engineering/_workitems/edit/2503124
-            return if (error.isPasswordTooWeak()
-                || error.isPasswordTooShort()
-                || error.isPasswordTooLong()
-                || error.isPasswordRecentlyUsed()
-                || error.isPasswordBanned()) {
-                ResetPasswordSubmitApiResult.PasswordInvalid(error.orEmpty(), errorDescription.orEmpty())
-            } else {
-                // TODO log the API response, in a PII-safe way
-                ResetPasswordSubmitApiResult.UnknownError(error, errorDescription)
+        LogSession.logMethodCall(TAG)
+
+        return when (statusCode) {
+
+            // Handle 400 errors
+            HttpURLConnection.HTTP_BAD_REQUEST -> {
+                return when {
+                    error.isPasswordBanned() || error.isPasswordTooShort() || error.isPasswordTooLong() || error.isPasswordRecentlyUsed() ||
+                            error.isPasswordTooWeak() -> {
+                        ResetPasswordSubmitApiResult.PasswordInvalid(
+                            error = error.orEmpty(),
+                            errorDescription = errorDescription.orEmpty()
+                        )
+                    }
+                    error.isExpiredToken() -> {
+                        ResetPasswordSubmitApiResult.ExpiredToken(
+                            error = error.orEmpty(),
+                            errorDescription = errorDescription.orEmpty()
+                        )
+                    }
+                    else -> {
+                        ResetPasswordSubmitApiResult.UnknownError(
+                            error = error,
+                            errorDescription = errorDescription,
+                            details = details
+                        )
+                    }
+                }
             }
-        } else {
-            if (passwordResetToken.isNullOrBlank()) {
-                throw ClientException("passwordResetToken cannot be null or blank in success response from /Submit")
-            } else {
-                return ResetPasswordSubmitApiResult.SubmitSuccess(passwordResetToken, pollInterval)
+
+            // Handle success and redirect
+            HttpURLConnection.HTTP_OK -> {
+                ResetPasswordSubmitApiResult.SubmitSuccess(
+                    passwordResetToken = passwordResetToken
+                        ?: return ResetPasswordSubmitApiResult.UnknownError(
+                            error = "invalid_state",
+                            errorDescription = "ResetPassword /submit successful, but did not return a flow token",
+                            details = details
+                        ),
+                    pollInterval = pollInterval
+                )
+            }
+
+            // Catch uncommon status codes
+            else -> {
+                ResetPasswordSubmitApiResult.UnknownError(
+                    error = error.orEmpty(),
+                    errorDescription = errorDescription.orEmpty(),
+                    details = details
+                )
             }
         }
     }

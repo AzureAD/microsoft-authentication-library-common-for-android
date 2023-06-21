@@ -25,6 +25,8 @@ package com.microsoft.identity.common.internal.commands
 import com.microsoft.identity.common.internal.controllers.NativeAuthController
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.ResetPasswordResendCodeCommandParameters
 import com.microsoft.identity.common.java.controllers.results.ResetPasswordResendCodeCommandResult
+import com.microsoft.identity.common.java.logging.LogSession
+import com.microsoft.identity.common.java.logging.Logger
 
 class ResetPasswordResendCodeCommand(
     private val parameters: ResetPasswordResendCodeCommandParameters,
@@ -35,9 +37,22 @@ class ResetPasswordResendCodeCommand(
     controller,
     publicApiId
 ) {
+
+    companion object {
+        private val TAG = ResetPasswordResendCodeCommand::class.java.simpleName
+    }
+
     override fun execute(): ResetPasswordResendCodeCommandResult {
-        return controller.resetPasswordResendCode(
+        LogSession.logMethodCall(TAG)
+        val result = controller.resetPasswordResendCode(
             parameters = parameters
         )
+
+        LogSession.log(
+            TAG,
+            Logger.LogLevel.INFO,
+            "Returning result: $result"
+        )
+        return result
     }
 }

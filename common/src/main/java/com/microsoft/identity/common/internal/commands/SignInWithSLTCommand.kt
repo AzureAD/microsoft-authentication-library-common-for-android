@@ -25,6 +25,8 @@ package com.microsoft.identity.common.internal.commands
 import com.microsoft.identity.common.internal.controllers.NativeAuthController
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInWithSLTCommandParameters
 import com.microsoft.identity.common.java.controllers.results.SignInWithSLTCommandResult
+import com.microsoft.identity.common.java.logging.LogSession
+import com.microsoft.identity.common.java.logging.Logger
 
 class SignInWithSLTCommand(
     private val parameters: SignInWithSLTCommandParameters,
@@ -35,9 +37,23 @@ class SignInWithSLTCommand(
     controller,
     publicApiId
 ) {
+
+    companion object {
+        private val TAG = SignInWithSLTCommand::class.java.simpleName
+    }
+
     override fun execute(): SignInWithSLTCommandResult {
-        return controller.signInWithSLT(
+        LogSession.logMethodCall(TAG)
+
+        val result = controller.signInWithSLT(
             parameters = parameters
         )
+
+        LogSession.log(
+            TAG,
+            Logger.LogLevel.INFO,
+            "Returning result: $result"
+        )
+        return result
     }
 }

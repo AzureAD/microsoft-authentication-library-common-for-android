@@ -24,17 +24,19 @@ package com.microsoft.identity.common.java.providers.nativeauth.responses.signup
 
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
-import com.microsoft.identity.common.java.exception.ClientException
+import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.providers.nativeauth.IApiResponse
 import com.microsoft.identity.common.java.util.isAttributeValidationFailed
 import com.microsoft.identity.common.java.util.isAttributesRequired
 import com.microsoft.identity.common.java.util.isCredentialRequired
+import com.microsoft.identity.common.java.util.isExpiredToken
 import com.microsoft.identity.common.java.util.isInvalidOOBValue
 import com.microsoft.identity.common.java.util.isPasswordBanned
 import com.microsoft.identity.common.java.util.isPasswordRecentlyUsed
 import com.microsoft.identity.common.java.util.isPasswordTooLong
 import com.microsoft.identity.common.java.util.isPasswordTooShort
 import com.microsoft.identity.common.java.util.isPasswordTooWeak
+import com.microsoft.identity.common.java.util.isUserAlreadyExists
 import com.microsoft.identity.common.java.util.isVerificationRequired
 import java.net.HttpURLConnection
 
@@ -43,7 +45,6 @@ data class SignUpContinueApiResponse(
     @Expose @SerializedName("signin_slt") val signInSLT: String?,
     @Expose @SerializedName("expires_in") val expiresIn: Int?,
     @Expose @SerializedName("error") val error: String?,
-    @Expose @SerializedName("error_codes") val errorCodes: List<Int>?,
     @Expose @SerializedName("error_description") val errorDescription: String?,
     @SerializedName("signup_token") val signupToken: String?,
     @Expose @SerializedName("unverified_attributes") val unverifiedAttributes: List<Map<String, String>>?,
@@ -52,66 +53,118 @@ data class SignUpContinueApiResponse(
     @Expose @SerializedName("details") val details: List<Map<String, String>>?
 ) : IApiResponse(statusCode) {
 
-    private val TAG = SignUpContinueApiResponse::class.java.simpleName
+    companion object {
+        private val TAG = SignUpContinueApiResponse::class.java.simpleName
+    }
 
     fun toResult(): SignUpContinueApiResult {
-        return if (statusCode >= HttpURLConnection.HTTP_BAD_REQUEST) {
-            if (error.isPasswordTooWeak()
-                || error.isPasswordTooLong() || error.isPasswordTooShort()
-                || error.isPasswordTooWeak() || error.isPasswordBanned()
-                || error.isPasswordRecentlyUsed()) {
-                SignUpContinueApiResult.InvalidPassword(
-                    error = error.orEmpty(),
-                    errorDescription = errorDescription.orEmpty()
+        LogSession.logMethodCall(TAG)
+
+        return when (statusCode) {
+
+            // Handle 400 errors
+            HttpURLConnection.HTTP_BAD_REQUEST -> {
+                return when {
+                    error.isPasswordTooWeak() || error.isPasswordTooLong() || error.isPasswordTooShort() || error.isPasswordBanned() ||
+                            error.isPasswordRecentlyUsed() -> {
+                        SignUpContinueApiResult.InvalidPassword(
+                            error = error.orEmpty(),
+                            errorDescription = errorDescription.orEmpty()
+                        )
+                    }
+                    error.isUserAlreadyExists() -> {
+                        SignUpContinueApiResult.UsernameAlreadyExists(
+                            error = error.orEmpty(),
+                            errorDescription = errorDescription.orEmpty()
+                        )
+                    }
+                    error.isAttributeValidationFailed() -> {
+                        SignUpContinueApiResult.InvalidAttributes(
+                            error = error.orEmpty(),
+                            errorDescription = errorDescription.orEmpty(),
+                            invalidAttributes = invalidAttributes
+                                ?: return SignUpContinueApiResult.UnknownError(
+                                    error = "invalid_state",
+                                    errorDescription = "SignUp /continue did not return a invalid_attributes with validation_failed error",
+                                    details = details
+                                )
+                        )
+                    }
+                    error.isExpiredToken() -> {
+                        SignUpContinueApiResult.ExpiredToken(
+                            error = error.orEmpty(),
+                            errorDescription = errorDescription.orEmpty()
+                        )
+                    }
+                    error.isInvalidOOBValue() -> {
+                        SignUpContinueApiResult.InvalidOOBValue(
+                            error = error.orEmpty(),
+                            errorDescription = errorDescription.orEmpty()
+                        )
+                    }
+                    error.isAttributesRequired() -> {
+                        SignUpContinueApiResult.AttributesRequired(
+                            signupToken = signupToken
+                                ?: return SignUpContinueApiResult.UnknownError(
+                                    error = "invalid_state",
+                                    errorDescription = "SignUp /continue did not return a flow token with attributes_required error",
+                                    details = details
+                                ),
+                            error = error.orEmpty(),
+                            errorDescription = errorDescription.orEmpty(),
+                            requiredAttributes = requiredAttributes
+                                ?: return SignUpContinueApiResult.UnknownError(
+                                    error = "invalid_state",
+                                    errorDescription = "SignUp /continue did not return required_attributes with attributes_required error",
+                                    details = details
+                                )
+                        )
+                    }
+                    error.isCredentialRequired() -> {
+                        SignUpContinueApiResult.CredentialRequired(
+                            signupToken = signupToken
+                                ?: return SignUpContinueApiResult.UnknownError(
+                                    error = "invalid_state",
+                                    errorDescription = "SignUp /continue did not return a flow token with credential_required",
+                                    details = details
+                                ),
+                            error = error.orEmpty(),
+                            errorDescription = errorDescription.orEmpty()
+                        )
+                    }
+                    error.isVerificationRequired() -> {
+                        SignUpContinueApiResult.UnknownError(
+                            error = error.orEmpty(),
+                            errorDescription = errorDescription.orEmpty(),
+                            details = details
+                        )
+                    }
+                    else -> {
+                        SignUpContinueApiResult.UnknownError(
+                            error = error.orEmpty(),
+                            errorDescription = errorDescription.orEmpty(),
+                            details = details
+                        )
+                    }
+                }
+            }
+
+            // Handle success
+            HttpURLConnection.HTTP_OK -> {
+                SignUpContinueApiResult.Success(
+                    signInSLT = signInSLT,
+                    expiresIn = expiresIn
                 )
-            } else if (error.isAttributeValidationFailed()) {
-                SignUpContinueApiResult.InvalidAttributes(
-                    error = error.orEmpty(),
-                    errorDescription = errorDescription.orEmpty(),
-                    invalidAttributes = invalidAttributes ?: listOf()
-                )
-            } else if (error.isInvalidOOBValue()) {
-                SignUpContinueApiResult.InvalidOOBValue(
-                    error = error.orEmpty(),
-                    errorDescription = errorDescription.orEmpty(),
-                    details = details ?: listOf()
-                )
-            } else if (signupToken.isNullOrBlank()) {
-                throw ClientException("$TAG signupToken can't be null or empty")
-            } else if (error.isAttributesRequired()) {
-                SignUpContinueApiResult.AttributesRequired(
-                    signupToken = signupToken,
-                    error = error.orEmpty(),
-                    errorDescription = errorDescription.orEmpty(),
-                    requiredAttributes = requiredAttributes
-                        ?: throw ClientException("attributes_required can't be null or empty")
-                )
-            } else if (error.isCredentialRequired()) {
-                SignUpContinueApiResult.CredentialRequired(
-                    signupToken = signupToken,
-                    error = error.orEmpty(),
-                    errorDescription = errorDescription.orEmpty()
-                )
-            } else if (error.isVerificationRequired()) {
-                // TODO add logging - this API response is unexpected
-                SignUpContinueApiResult.UnknownError(
-                    error = error.orEmpty(),
-                    errorDescription = errorDescription.orEmpty(),
-                    details = details
-                )
-            } else {
-                // TODO log the API response, in a PII-safe way
+            }
+
+            // Catch uncommon status codes
+            else -> {
                 SignUpContinueApiResult.UnknownError(
                     error = error.orEmpty(),
                     errorDescription = errorDescription.orEmpty(),
                     details = details
                 )
             }
-        } else {
-            SignUpContinueApiResult.Success(
-                signInSLT = signInSLT,
-                expiresIn = expiresIn
-            )
         }
     }
 }

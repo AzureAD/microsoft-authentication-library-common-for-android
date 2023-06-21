@@ -24,8 +24,13 @@ package com.microsoft.identity.common.java.providers.nativeauth.responses.resetp
 
 sealed interface ResetPasswordPollCompletionApiResult {
     object InProgress : ResetPasswordPollCompletionApiResult
-    data class PollingFailed(val errorCode: String, val errorDescription: String) : ResetPasswordPollCompletionApiResult
+    data class PollingFailed(val error: String, val errorDescription: String) : ResetPasswordPollCompletionApiResult
+    data class PasswordInvalid(val error: String, val errorDescription: String) : ResetPasswordPollCompletionApiResult
     object PollingSucceeded : ResetPasswordPollCompletionApiResult
-    data class UnknownError(val errorCode: String?, val errorDescription: String?) :
+    data class UserNotFound(val error: String, val errorDescription: String) :
+        ResetPasswordPollCompletionApiResult
+    data class ExpiredToken(val error: String, val errorDescription: String) :
+        ResetPasswordPollCompletionApiResult
+    data class UnknownError(val error: String?, val errorDescription: String?, val details: List<Map<String, String>>?) :
         ResetPasswordPollCompletionApiResult
 }

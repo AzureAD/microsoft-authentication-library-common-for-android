@@ -36,6 +36,16 @@ sealed interface SignUpChallengeApiResult {
         val signupToken: String
     ) : SignUpChallengeApiResult
 
+    data class UnsupportedChallengeType(
+        val errorCode: String,
+        val errorDescription: String
+    ) : SignUpChallengeApiResult
+
+    data class ExpiredToken(
+        val error: String,
+        val errorDescription: String
+    ) : SignUpChallengeApiResult
+
     data class UnknownError(
         val error: String,
         val errorDescription: String,

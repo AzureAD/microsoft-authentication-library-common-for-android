@@ -20,15 +20,16 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.java.providers.nativeauth.responses.resetpassword
+package com.microsoft.identity.common.java.util
 
-sealed interface ResetPasswordStartApiResult {
-    object Redirect : ResetPasswordStartApiResult
-    data class Success(val passwordResetToken: String) : ResetPasswordStartApiResult
-    data class UserNotFound(val error: String, val errorDescription: String) :
-            ResetPasswordStartApiResult
-    data class UnsupportedChallengeType(val error: String, val errorDescription: String) :
-            ResetPasswordStartApiResult
-    data class UnknownError(val error: String?, val errorDescription: String?, val details: List<Map<String, String>>?) :
-            ResetPasswordStartApiResult
+import com.microsoft.identity.common.java.logging.DiagnosticContext
+
+object CommonUtils {
+    /**
+     * Utility method to get the current thread's correlation ID
+     */
+    fun getCurrentThreadCorrelationId() : String {
+        return DiagnosticContext.INSTANCE.requestContext[DiagnosticContext.CORRELATION_ID]
+            ?: "UNSET"
+    }
 }

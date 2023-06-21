@@ -29,6 +29,10 @@ sealed interface ResetPasswordChallengeApiResult {
         val challengeTargetLabel: String,
         val challengeChannel: String,
         val codeLength: Int) : ResetPasswordChallengeApiResult
-    data class UnknownError(val errorCode: String?, val errorDescription: String?) :
+    data class UnsupportedChallengeType(val error: String, val errorDescription: String) :
+        ResetPasswordChallengeApiResult
+    data class ExpiredToken(val error: String, val errorDescription: String) :
+        ResetPasswordChallengeApiResult
+    data class UnknownError(val error: String?, val errorDescription: String?, val details: List<Map<String, String>>?) :
         ResetPasswordChallengeApiResult
 }

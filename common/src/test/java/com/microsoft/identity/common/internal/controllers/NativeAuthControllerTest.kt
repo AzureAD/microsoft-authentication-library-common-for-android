@@ -58,6 +58,7 @@ import com.microsoft.identity.common.java.interfaces.IPlatformComponents
 import com.microsoft.identity.common.java.request.SdkType
 import com.microsoft.identity.common.java.util.BrokerProtocolVersionUtil
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -121,7 +122,7 @@ class NativeAuthControllerTest {
 
         val parameters = createSignInStartWithPasswordCommandParameters()
         val result = controller.signInStart(parameters)
-        assert(result is SignInCommandResult.PasswordIncorrect)
+        assert(result is SignInCommandResult.InvalidCredentials)
     }
 
     @Test
@@ -223,7 +224,7 @@ class NativeAuthControllerTest {
 
         val parameters = createSignInSubmitPasswordCommandParameters()
         val result = controller.signInSubmitPassword(parameters)
-        assert(result is SignInCommandResult.PasswordIncorrect)
+        assert(result is SignInCommandResult.InvalidCredentials)
     }
 
     @Test
@@ -345,7 +346,7 @@ class NativeAuthControllerTest {
         val parameters = createSignInWithSLTCommandParameters()
         val result = controller.signInWithSLT(parameters)
         assert(result is CommandResult.UnknownError)
-        assert((result as CommandResult.UnknownError).errorCode == "unexpected_api_result")
+        assert((result as CommandResult.UnknownError).error == "unexpected_api_result")
     }
 
     @Test
@@ -360,7 +361,7 @@ class NativeAuthControllerTest {
         val parameters = createSignInWithSLTCommandParameters()
         val result = controller.signInWithSLT(parameters)
         assert(result is CommandResult.UnknownError)
-        assert((result as CommandResult.UnknownError).errorCode == "unexpected_api_result")
+        assert((result as CommandResult.UnknownError).error == "unexpected_api_result")
     }
 
     @Test
@@ -375,7 +376,7 @@ class NativeAuthControllerTest {
         val parameters = createSignInWithSLTCommandParameters()
         val result = controller.signInWithSLT(parameters)
         assert(result is CommandResult.UnknownError)
-        assert((result as CommandResult.UnknownError).errorCode == "unexpected_api_result")
+        assert((result as CommandResult.UnknownError).error == "unexpected_api_result")
     }
 
     @Test
@@ -907,8 +908,9 @@ class NativeAuthControllerTest {
         assert(result is SignUpCommandResult.InvalidCode)
     }
 
+    @Ignore("response doesn't have invalid_attributes, waiting on confirmation from api team")
     @Test
-    fun testSignUpInvalidUserAttributes() {
+    fun testSignUpSubmitUserAttributesWithInvalidUserAttributes() {
         val correlationId = UUID.randomUUID().toString()
 
         MockApiUtils.configureMockApi(
@@ -922,6 +924,7 @@ class NativeAuthControllerTest {
         assert(result is SignUpCommandResult.InvalidAttributes)
     }
 
+    @Ignore("response doesn't have invalid_attributes, waiting on confirmation from api team")
     @Test
     fun testSignUpStartWithInvalidUserAttributes() {
         val correlationId = UUID.randomUUID().toString()

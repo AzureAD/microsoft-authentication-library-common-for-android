@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.java.controllers.results
 
 import com.microsoft.identity.common.java.result.ILocalAuthenticationResult
+import com.microsoft.identity.common.java.util.CommonUtils
 
 sealed interface SignInStartCommandResult
 sealed interface SignInWithSLTCommandResult
@@ -35,7 +36,8 @@ interface SignInCommandResult {
         SignInStartCommandResult, SignInWithSLTCommandResult, SignInSubmitCodeCommandResult,
         SignInSubmitPasswordCommandResult
 
-    object InvalidAuthenticationType : SignInStartCommandResult
+    data class InvalidAuthenticationType(val error: String, val errorDescription: String, val correlationId: String = CommonUtils.getCurrentThreadCorrelationId(), val errorCodes: List<Int>) :
+        SignInStartCommandResult, SignInWithSLTCommandResult
 
     data class PasswordRequired(val credentialToken: String) :
         SignInStartCommandResult, SignInWithSLTCommandResult
@@ -46,14 +48,14 @@ interface SignInCommandResult {
         val challengeChannel: String,
         val codeLength: Int
     ) :
-        SignInStartCommandResult, SignInWithSLTCommandResult, SignInResendCodeCommandResult
+        SignInStartCommandResult, SignInWithSLTCommandResult, SignInResendCodeCommandResult, SignInSubmitPasswordCommandResult
 
-    data class UserNotFound(val errorCode: String, val errorDescription: String) :
+    data class UserNotFound(val error: String, val errorDescription: String, val correlationId: String = CommonUtils.getCurrentThreadCorrelationId(), val errorCodes: List<Int>) :
         SignInStartCommandResult
 
-    data class PasswordIncorrect(val errorCode: String, val errorDescription: String) :
+    data class InvalidCredentials(val error: String, val errorDescription: String, val correlationId: String = CommonUtils.getCurrentThreadCorrelationId(), val errorCodes: List<Int>) :
         SignInStartCommandResult, SignInSubmitPasswordCommandResult
 
-    data class IncorrectCode(val errorCode: String, val errorDescription: String) :
+    data class IncorrectCode(val error: String, val errorDescription: String, val correlationId: String = CommonUtils.getCurrentThreadCorrelationId(), val errorCodes: List<Int>) :
         SignInSubmitCodeCommandResult
 }

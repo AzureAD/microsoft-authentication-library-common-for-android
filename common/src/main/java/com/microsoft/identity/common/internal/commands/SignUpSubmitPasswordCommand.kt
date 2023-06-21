@@ -3,6 +3,8 @@ package com.microsoft.identity.common.internal.commands
 import com.microsoft.identity.common.internal.controllers.NativeAuthController
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpSubmitPasswordCommandParameters
 import com.microsoft.identity.common.java.controllers.results.SignUpSubmitPasswordCommandResult
+import com.microsoft.identity.common.java.logging.LogSession
+import com.microsoft.identity.common.java.logging.Logger
 
 class SignUpSubmitPasswordCommand(
     private val parameters: SignUpSubmitPasswordCommandParameters,
@@ -13,9 +15,23 @@ class SignUpSubmitPasswordCommand(
     controller,
     publicApiId
 ) {
+
+    companion object {
+        private val TAG = SignUpSubmitPasswordCommand::class.java.simpleName
+    }
+
     override fun execute(): SignUpSubmitPasswordCommandResult {
-        return controller.signUpSubmitPassword(
+        LogSession.logMethodCall(TAG)
+
+        val result = controller.signUpSubmitPassword(
             parameters = parameters
         )
+
+        LogSession.log(
+            TAG,
+            Logger.LogLevel.INFO,
+            "Returning result: $result"
+        )
+        return result
     }
 }

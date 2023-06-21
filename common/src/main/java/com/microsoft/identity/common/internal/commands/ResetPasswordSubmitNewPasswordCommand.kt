@@ -25,6 +25,8 @@ package com.microsoft.identity.common.internal.commands
 import com.microsoft.identity.common.internal.controllers.NativeAuthController
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.ResetPasswordSubmitNewPasswordCommandParameters
 import com.microsoft.identity.common.java.controllers.results.ResetPasswordSubmitNewPasswordCommandResult
+import com.microsoft.identity.common.java.logging.LogSession
+import com.microsoft.identity.common.java.logging.Logger
 
 class ResetPasswordSubmitNewPasswordCommand(
     private val parameters: ResetPasswordSubmitNewPasswordCommandParameters,
@@ -37,6 +39,7 @@ class ResetPasswordSubmitNewPasswordCommand(
 ) {
 
     companion object {
+        private val TAG = ResetPasswordSubmitNewPasswordCommand::class.java.simpleName
         const val DEFAULT_POLL_COMPLETION_INTERVAL_IN_MILISECONDS = 5000
         const val POLL_COMPLETION_TIMEOUT_IN_MILISECONDS = 300000 // 5 minutes
         const val POLL_COMPLETION_TIMEOUT_ERROR_CODE = "timeout"
@@ -44,8 +47,16 @@ class ResetPasswordSubmitNewPasswordCommand(
     }
 
     override fun execute(): ResetPasswordSubmitNewPasswordCommandResult {
-        return controller.resetPasswordSubmitNewPassword(
+        LogSession.logMethodCall(TAG)
+        val result = controller.resetPasswordSubmitNewPassword(
             parameters = parameters
         )
+
+        LogSession.log(
+            TAG,
+            Logger.LogLevel.INFO,
+            "Returning result: $result"
+        )
+        return result
     }
 }
