@@ -82,7 +82,7 @@ import static com.microsoft.identity.common.java.net.HttpConstants.HeaderField.X
 @AllArgsConstructor
 @ThreadSafe
 public class UrlConnectionHttpClient extends AbstractHttpClient {
-    private static final Object TAG = UrlConnectionHttpClient.class.getName();
+    private static final String TAG = UrlConnectionHttpClient.class.getSimpleName();
 
     protected static final int RETRY_TIME_WAITING_PERIOD_MSEC = 1000;
     protected static final int DEFAULT_CONNECT_TIME_OUT_MS = 30000;
