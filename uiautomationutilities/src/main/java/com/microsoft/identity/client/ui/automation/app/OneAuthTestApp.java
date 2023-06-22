@@ -55,8 +55,8 @@ public class OneAuthTestApp extends App implements IFirstPartyApp {
     private final static String TAG = "OneAuthTestApp";
     public final static String ONEAUTH_TESTAPP_PACKAGE_NAME = "com.microsoft.oneauth.testapp";
     public final static String ONEAUTH_TESTAPP_NAME = "OneAuth Testapp";
-    public final static String ONEAUTH_TESTAPP_APK = "OneAuth.apk";
-    public final static String OLD_ONEAUTH_TESTAPP_APK = "OldOneAuth.apk";
+    public final static String ONEAUTH_TESTAPP_APK = "OneAuthTestApp.apk";
+    public final static String OLD_ONEAUTH_TESTAPP_APK = "OldOneAuthTestApp.apk";
 
     public OneAuthTestApp() {
         super(ONEAUTH_TESTAPP_PACKAGE_NAME, ONEAUTH_TESTAPP_NAME, new LocalApkInstaller());
