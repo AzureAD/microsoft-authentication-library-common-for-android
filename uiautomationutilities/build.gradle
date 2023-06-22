@@ -41,6 +41,7 @@ android {
     boolean usePreInstalledApks = project.hasProperty("preferPreInstalledApks")
 
     boolean preInstallLtw = project.hasProperty("preInstallLtw")
+    boolean sendPowerLiftLogs = project.hasProperty("sendPowerLiftLogs")
 
     def final appSourcePlayStore = "PlayStore"
     def final appSourceLocalApk = "LocalApk"
@@ -105,6 +106,7 @@ android {
         buildConfigField("String", "UPDATE_SOURCE_LOCAL_APK", "\"$appSourceLocalApk\"")
         buildConfigField("boolean", "PREFER_PRE_INSTALLED_APKS", "$usePreInstalledApks")
         buildConfigField("boolean", "PRE_INSTALL_LTW", "$preInstallLtw")
+        buildConfigField("boolean", "SEND_POWERLIFT_FAILURES", "$sendPowerLiftLogs")
 
         // Specifies a sorted list of flavors that the plugin should try to use from
         // a given dimension. The following tells the plugin that, when encountering
