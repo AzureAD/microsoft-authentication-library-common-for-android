@@ -47,7 +47,7 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode
 public class IDToken {
 
-    private static final String TAG = IDToken.class.getName();
+    private static final String TAG = IDToken.class.getSimpleName();
 
     /**
      * Subject - Identifier for the End-User at the Issuer.

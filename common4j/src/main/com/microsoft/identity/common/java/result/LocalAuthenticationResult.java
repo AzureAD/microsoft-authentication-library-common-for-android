@@ -59,7 +59,7 @@ public class LocalAuthenticationResult implements ILocalAuthenticationResult, IT
     private String mCorrelationId;
     private final List<Map<String, String>> mTelemetry = new ArrayList<>();
 
-    private static final String TAG = LocalAuthenticationResult.class.getName();
+    private static final String TAG = LocalAuthenticationResult.class.getSimpleName();
 
     public LocalAuthenticationResult(@NonNull final ICacheRecord lastAuthorized,
                                      @NonNull final List<ICacheRecord> completeResultFromCache,
