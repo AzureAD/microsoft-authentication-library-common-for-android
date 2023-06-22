@@ -37,7 +37,9 @@ data class SignInTokenRequest private constructor(
                     clientId = clientId,
                     grantType = NativeAuthConstants.GrantType.PASSWORD,
                     challengeType = challengeType,
-                    scope = scopes?.joinToString(" ")
+                    scope = scopes?.joinToString(" "),
+                    nca = 1,
+                    clientInfo = true
                 ),
                 requestUrl = URL(requestUrl),
                 headers = headers,
@@ -142,6 +144,8 @@ data class SignInTokenRequest private constructor(
         val username: String? = null,
         val password: String? = null,
         val oob: String? = null,
+        @SerializedName("nca") val nca: Int? = null,
+        @SerializedName("client_info") val clientInfo: Boolean? = null,
         @SerializedName("client_id") override val clientId: String,
         @SerializedName("grant_type") val grantType: String,
         @SerializedName("credential_token") val credentialToken: String? = null,

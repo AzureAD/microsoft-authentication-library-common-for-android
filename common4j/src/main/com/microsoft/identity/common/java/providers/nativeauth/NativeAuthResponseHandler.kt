@@ -22,9 +22,11 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.providers.nativeauth
 
+import androidx.annotation.VisibleForTesting
 import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.net.HttpResponse
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse
 import com.microsoft.identity.common.java.providers.nativeauth.responses.resetpassword.ResetPasswordChallengeApiResponse
 import com.microsoft.identity.common.java.providers.nativeauth.responses.resetpassword.ResetPasswordContinueApiResponse
 import com.microsoft.identity.common.java.providers.nativeauth.responses.resetpassword.ResetPasswordPollCompletionApiResponse
@@ -33,11 +35,13 @@ import com.microsoft.identity.common.java.providers.nativeauth.responses.resetpa
 import com.microsoft.identity.common.java.providers.nativeauth.responses.signin.SignInChallengeApiResponse
 import com.microsoft.identity.common.java.providers.nativeauth.responses.signin.SignInInitiateApiResponse
 import com.microsoft.identity.common.java.providers.nativeauth.responses.signin.SignInTokenApiResponse
+import com.microsoft.identity.common.java.providers.nativeauth.responses.signin.SignInTokenApiResult
 import com.microsoft.identity.common.java.providers.nativeauth.responses.signup.SignUpChallengeApiResponse
 import com.microsoft.identity.common.java.providers.nativeauth.responses.signup.SignUpContinueApiResponse
 import com.microsoft.identity.common.java.providers.nativeauth.responses.signup.SignUpStartApiResponse
 import com.microsoft.identity.common.java.util.ApiResultUtil
 import com.microsoft.identity.common.java.util.ObjectMapper
+import java.net.HttpURLConnection
 
 class NativeAuthResponseHandler {
     private val TAG = NativeAuthResponseHandler::class.java.simpleName
@@ -138,20 +142,31 @@ class NativeAuthResponseHandler {
 
     //region /oauth/v2.0/token
     @Throws(ClientException::class)
-    internal fun getSignInTokenResultFromHttpResponse(
+    @VisibleForTesting
+    fun getSignInTokenApiResultFromHttpResponse(
         response: HttpResponse
-    ): SignInTokenApiResponse {
+    ): SignInTokenApiResult {
         LogSession.logMethodCall(tag = TAG)
 
-        val result = ObjectMapper.deserializeJsonStringToObject(
-            response.body,
-            SignInTokenApiResponse::class.java
-        )
-        result.statusCode = response.statusCode
+        // Use native-auth specific class in case of API error response,
+        // or standard MicrosoftStsTokenResponse in case of success response
+        if (response.statusCode >= HttpURLConnection.HTTP_BAD_REQUEST) {
+            val apiResponse = ObjectMapper.deserializeJsonStringToObject(
+                response.body,
+                SignInTokenApiResponse::class.java
+            )
+            ApiResultUtil.logResponse(TAG, apiResponse)
+            return apiResponse.toErrorResult()
+        } else {
+            val apiResponse = ObjectMapper.deserializeJsonStringToObject(
+                response.body,
+                MicrosoftStsTokenResponse::class.java
+            )
 
-        ApiResultUtil.logResponse(TAG, result)
+            // TODO logging
 
-        return result
+            return SignInTokenApiResult.Success(tokenResponse = apiResponse)
+        }
     }
     //endregion
 

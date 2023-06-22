@@ -22,10 +22,15 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.controllers
 
+import com.microsoft.identity.common.internal.commands.RefreshOnCommand
 import com.microsoft.identity.common.internal.commands.ResetPasswordSubmitNewPasswordCommand
+import com.microsoft.identity.common.internal.telemetry.Telemetry
+import com.microsoft.identity.common.internal.telemetry.events.ApiEndEvent
 import com.microsoft.identity.common.internal.util.CommandUtil
 import com.microsoft.identity.common.java.AuthenticationConstants
 import com.microsoft.identity.common.java.cache.ICacheRecord
+import com.microsoft.identity.common.java.commands.parameters.SilentTokenCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.AcquireTokenNoFixedScopesCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.BaseNativeAuthCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.BaseSignInStartCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.BaseSignInTokenCommandParameters
@@ -46,6 +51,8 @@ import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpS
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpSubmitPasswordCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpSubmitUserAttributesCommandParameters
+import com.microsoft.identity.common.java.configuration.LibraryConfiguration
+import com.microsoft.identity.common.java.controllers.CommandDispatcher
 import com.microsoft.identity.common.java.controllers.results.CommandResult
 import com.microsoft.identity.common.java.controllers.results.ResetPasswordCommandResult
 import com.microsoft.identity.common.java.controllers.results.ResetPasswordResendCodeCommandResult
@@ -64,6 +71,13 @@ import com.microsoft.identity.common.java.controllers.results.SignUpStartCommand
 import com.microsoft.identity.common.java.controllers.results.SignUpSubmitCodeCommandResult
 import com.microsoft.identity.common.java.controllers.results.SignUpSubmitPasswordCommandResult
 import com.microsoft.identity.common.java.controllers.results.SignUpSubmitUserAttributesCommandResult
+import com.microsoft.identity.common.java.dto.AccountRecord
+import com.microsoft.identity.common.java.eststelemetry.PublicApiId
+import com.microsoft.identity.common.java.exception.ArgumentException
+import com.microsoft.identity.common.java.exception.ClientException
+import com.microsoft.identity.common.java.exception.ErrorStrings
+import com.microsoft.identity.common.java.exception.RefreshTokenNotFoundException
+import com.microsoft.identity.common.java.exception.ServiceException
 import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.logging.Logger
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest
@@ -80,12 +94,17 @@ import com.microsoft.identity.common.java.providers.nativeauth.responses.signin.
 import com.microsoft.identity.common.java.providers.nativeauth.responses.signup.SignUpChallengeApiResult
 import com.microsoft.identity.common.java.providers.nativeauth.responses.signup.SignUpContinueApiResult
 import com.microsoft.identity.common.java.providers.nativeauth.responses.signup.SignUpStartApiResult
+import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters
+import com.microsoft.identity.common.java.providers.oauth2.OAuth2TokenCache
 import com.microsoft.identity.common.java.request.SdkType
+import com.microsoft.identity.common.java.result.AcquireTokenResult
 import com.microsoft.identity.common.java.result.LocalAuthenticationResult
+import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings
 import com.microsoft.identity.common.java.util.StringUtil
 import com.microsoft.identity.common.java.util.ThreadUtils
 import lombok.EqualsAndHashCode
+import java.io.IOException
 import java.net.URL
 
 /**
@@ -1124,7 +1143,8 @@ class NativeAuthController : BaseNativeAuthController() {
             createAuthorizationRequest(
                 strategy = oAuth2Strategy,
                 scopes = parametersWithScopes.scopes,
-                clientId = parametersWithScopes.clientId
+                clientId = parametersWithScopes.clientId,
+                applicationIdentifier = parametersWithScopes.applicationIdentifier
             ),
             tokenApiResult.tokenResponse,
             parametersWithScopes.oAuth2TokenCache
@@ -1150,13 +1170,15 @@ class NativeAuthController : BaseNativeAuthController() {
     private fun createAuthorizationRequest(
         strategy: NativeAuthOAuth2Strategy,
         scopes: List<String>,
-        clientId: String
+        clientId: String,
+        applicationIdentifier: String
     ): MicrosoftStsAuthorizationRequest {
         LogSession.logMethodCall(tag = TAG)
         val builder = MicrosoftStsAuthorizationRequest.Builder()
         builder.setAuthority(URL(strategy.getAuthority()))
         builder.setClientId(clientId)
         builder.setScope(StringUtil.join(" ", scopes))
+        builder.setApplicationIdentifier(applicationIdentifier)
         return builder.build()
     }
 
@@ -1518,6 +1540,212 @@ class NativeAuthController : BaseNativeAuthController() {
             )
             throw e
         }
+    }
+
+    /**
+     * Native-auth specific implementation of fetching a token from the cache, and/or refreshing it.
+     * Main differences with standard implementation in [LocalMSALController] are:
+     * - No scopes are passed in as part of the (developer provided) parameters. The scopes from the
+     * AT are used to make the refresh token call.
+     * - When the RT is expired or the refresh token call fails, a different exception is thrown.
+     */
+    @Throws(
+        IOException::class,
+        ClientException::class,
+        ArgumentException::class,
+        ServiceException::class
+    )
+    fun acquireTokenSilent(
+        parameters: AcquireTokenNoFixedScopesCommandParameters
+    ): AcquireTokenResult {
+        LogSession.logMethodCall(tag = TAG)
+
+        val acquireTokenSilentResult = AcquireTokenResult()
+
+        // Validate original AcquireTokenNoScopesCommandParameters parameters
+        parameters.validate()
+
+        // Convert AcquireTokenNoScopesCommandParameters into SilentTokenCommandParameters
+        // so we can re-use existing MSAL logic
+        val silentTokenCommandParameters =
+            CommandUtil.convertAcquireTokenNoFixedScopesCommandParameters(
+                parameters
+            )
+        // Not adding any (default) scopes, because we want to retrieve all tokens (regardless of scope).
+        // Scopes will be added later in the flow, if necessary.
+        val targetAccount: AccountRecord = getCachedAccountRecord(silentTokenCommandParameters)
+
+        // Build up params for Strategy construction
+        val authScheme = silentTokenCommandParameters.authenticationScheme
+        val strategyParameters = OAuth2StrategyParameters.builder()
+            .platformComponents(parameters.platformComponents)
+            .authenticationScheme(authScheme)
+            .build()
+        val strategy = silentTokenCommandParameters.authority.createOAuth2Strategy(strategyParameters)
+
+        val tokenCache = silentTokenCommandParameters.oAuth2TokenCache
+        val cacheRecords = tokenCache.loadWithAggregatedAccountData(
+            silentTokenCommandParameters.clientId,
+            parameters.applicationIdentifier,
+            parameters.mamEnrollmentId,
+            null, // TODO see where else this is needed
+            targetAccount,
+            authScheme
+        ) as List<ICacheRecord>
+
+        // The first element is the 'fully-loaded' CacheRecord which may contain the AccountRecord,
+        // AccessTokenRecord, RefreshTokenRecord, and IdTokenRecord... (if all of those artifacts exist)
+        // subsequent CacheRecords represent other profiles (projections) of this principal in
+        // other tenants. Those tokens will be 'sparse', meaning that their AT/RT will not be loaded
+        val fullCacheRecord = cacheRecords[0]
+
+        if (LibraryConfiguration.getInstance().isRefreshInEnabled &&
+            fullCacheRecord.accessToken != null && fullCacheRecord.accessToken.refreshOnIsActive()
+        ) {
+            LogSession.log(
+                tag = TAG,
+                logLevel = Logger.LogLevel.INFO,
+                message = "RefreshOn is active. This will extend your token usage in the rare case servers are not available."
+            )
+        }
+        if (LibraryConfiguration.getInstance().isRefreshInEnabled &&
+            fullCacheRecord.accessToken != null && fullCacheRecord.accessToken.shouldRefresh()
+        ) {
+            if (!fullCacheRecord.accessToken.isExpired) {
+                setAcquireTokenResult(acquireTokenSilentResult, silentTokenCommandParameters, cacheRecords)
+                val refreshOnCommand =
+                    RefreshOnCommand(parameters, this, PublicApiId.MSAL_REFRESH_ON)
+                CommandDispatcher.submitAndForget(refreshOnCommand)
+            } else {
+                LogSession.log(
+                    tag = TAG,
+                    logLevel = Logger.LogLevel.WARN,
+                    message = "Access token is expired. Removing from cache..."
+
+                )
+                // Remove the expired token
+                tokenCache.removeCredential(fullCacheRecord.accessToken)
+                renewAT(
+                    silentTokenCommandParameters,
+                    acquireTokenSilentResult,
+                    tokenCache,
+                    strategy,
+                    fullCacheRecord
+                )
+            }
+        } else if (accessTokenIsNull(fullCacheRecord) ||
+            refreshTokenIsNull(fullCacheRecord) ||
+            silentTokenCommandParameters.isForceRefresh ||
+            !isRequestAuthorityRealmSameAsATRealm(
+                    silentTokenCommandParameters.authority,
+                    fullCacheRecord.accessToken
+                ) ||
+            !strategy.validateCachedResult(authScheme, fullCacheRecord)
+        ) {
+            if (!refreshTokenIsNull(fullCacheRecord)) {
+                // No AT found, but the RT checks out, so we'll use it
+                renewAT(
+                    silentTokenCommandParameters,
+                    acquireTokenSilentResult,
+                    tokenCache,
+                    strategy,
+                    fullCacheRecord
+                )
+            } else {
+                val exception = RefreshTokenNotFoundException(
+                    ErrorStrings.NO_TOKENS_FOUND,
+                    "No refresh token was found."
+                )
+                Telemetry.emit(
+                    ApiEndEvent()
+                        .putException(exception)
+                        .putApiId(TelemetryEventStrings.Api.LOCAL_ACQUIRE_TOKEN_SILENT)
+                )
+                throw exception
+            }
+        } else if (fullCacheRecord.accessToken.isExpired) {
+            LogSession.log(
+                tag = TAG,
+                logLevel = Logger.LogLevel.WARN,
+                message = "Access token is expired. Removing from cache..."
+
+            )
+            // Remove the expired token
+            tokenCache.removeCredential(fullCacheRecord.accessToken)
+            renewAT(
+                silentTokenCommandParameters,
+                acquireTokenSilentResult,
+                tokenCache,
+                strategy,
+                fullCacheRecord
+            )
+        } else {
+            LogSession.log(
+                tag = TAG,
+                logLevel = Logger.LogLevel.VERBOSE,
+                message = "Returning silent result"
+            )
+            setAcquireTokenResult(acquireTokenSilentResult, silentTokenCommandParameters, cacheRecords)
+        }
+        Telemetry.emit(
+            ApiEndEvent()
+                .putResult(acquireTokenSilentResult)
+                .putApiId(TelemetryEventStrings.Api.LOCAL_ACQUIRE_TOKEN_SILENT)
+        )
+        return acquireTokenSilentResult
+    }
+
+    @Throws(ClientException::class)
+    private fun setAcquireTokenResult(
+        acquireTokenSilentResult: AcquireTokenResult,
+        parametersWithScopes: SilentTokenCommandParameters,
+        cacheRecords: List<ICacheRecord>
+    ) {
+        val fullCacheRecord = cacheRecords[0]
+        acquireTokenSilentResult.localAuthenticationResult = LocalAuthenticationResult(
+            finalizeCacheRecordForResult(
+                fullCacheRecord,
+                parametersWithScopes.authenticationScheme
+            ),
+            cacheRecords,
+            SdkType.MSAL,
+            true
+        )
+    }
+
+    @Throws(
+        IOException::class,
+        ClientException::class,
+        ServiceException::class
+    )
+    private fun renewAT(
+        parameters: SilentTokenCommandParameters,
+        acquireTokenSilentResult: AcquireTokenResult,
+        tokenCache: OAuth2TokenCache<*, *, *>,
+        strategy: OAuth2Strategy<*, *, *, *, *, *, *, *, *, *, *, *, *>,
+        cacheRecord: ICacheRecord
+    ) {
+        LogSession.log(
+            tag = TAG,
+            logLevel = Logger.LogLevel.VERBOSE,
+            message = "Renewing access token..."
+        )
+        // Add the AT's scopes to the parameters so that they can be used to perform the refresh
+        // token call.
+        val accessTokenScopes = cacheRecord.accessToken
+            .target?.split(" ".toRegex())?.dropLastWhile { it.isEmpty() }?.toSet()
+
+        val parametersWithScopes = parameters.toBuilder()
+            .scopes(accessTokenScopes)
+            .build()
+
+        renewAccessToken(
+            parametersWithScopes,
+            acquireTokenSilentResult,
+            tokenCache,
+            strategy,
+            cacheRecord
+        )
     }
 
     private fun performSignUpStartRequest(
@@ -1899,7 +2127,7 @@ class NativeAuthController : BaseNativeAuthController() {
             is SignInChallengeApiResult.OOBRequired -> {
                 SignInCommandResult.InvalidAuthenticationType(
                     error = "invalid_grant",
-                    errorDescription = "Cannot utilize code required flow in Sign In With Password at this time.",
+                    errorDescription = "The user is not configured for this authentication method. Please repeat the request using a different method.",
                     errorCodes = listOf(400002),
                 )
             }

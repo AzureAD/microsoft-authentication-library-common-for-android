@@ -52,10 +52,8 @@ abstract class BaseNativeAuthCommand<T>(
         }
 
         override fun onError(error: BaseException) {
-            throw IllegalStateException(
-                "error while processing callback",
-                error
-            )
+            // Do nothing. This class should be used in combination with CommandDispatcher.submitSilentReturningFuture
+            // meaning the task result will be a future, and handled at call site.
         }
     },
     publicApiId

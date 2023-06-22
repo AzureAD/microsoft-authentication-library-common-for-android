@@ -22,7 +22,6 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.controllers
 
-import com.microsoft.identity.common.java.authorities.Authority
 import com.microsoft.identity.common.java.cache.ICacheRecord
 import com.microsoft.identity.common.java.commands.parameters.CommandParameters
 import com.microsoft.identity.common.java.commands.parameters.DeviceCodeFlowCommandParameters
@@ -31,11 +30,8 @@ import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCo
 import com.microsoft.identity.common.java.commands.parameters.RemoveAccountCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.RopcTokenCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.SilentTokenCommandParameters
-import com.microsoft.identity.common.java.commands.parameters.TokenCommandParameters
 import com.microsoft.identity.common.java.controllers.BaseController
-import com.microsoft.identity.common.java.dto.AccessTokenRecord
 import com.microsoft.identity.common.java.dto.AccountRecord
-import com.microsoft.identity.common.java.dto.RefreshTokenRecord
 import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenResponse
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest
@@ -76,6 +72,15 @@ abstract class BaseNativeAuthController : BaseController() {
     @Throws(Exception::class)
     @Deprecated(
         level = DeprecationLevel.HIDDEN,
+        message = "acquireTokenSilent() not supported in NativeAuthController"
+    )
+    override fun acquireTokenSilent(parameters: SilentTokenCommandParameters?): AcquireTokenResult {
+        throw ClientException("acquireTokenSilent() not supported in NativeAuthController")
+    }
+
+    @Throws(Exception::class)
+    @Deprecated(
+        level = DeprecationLevel.HIDDEN,
         message = "onFinishAuthorizationSession() not supported in NativeAuthController"
     )
     override fun onFinishAuthorizationSession(
@@ -84,15 +89,6 @@ abstract class BaseNativeAuthController : BaseController() {
         data: PropertyBag
     ) {
         throw ClientException("onFinishAuthorizationSession() not supported in NativeAuthController")
-    }
-
-    @Throws(Exception::class)
-    @Deprecated(
-        level = DeprecationLevel.HIDDEN,
-        message = "acquireTokenSilent() not supported in NativeAuthController"
-    )
-    override fun acquireTokenSilent(parameters: SilentTokenCommandParameters?): AcquireTokenResult {
-        throw ClientException("acquireTokenSilent() not supported in NativeAuthController")
     }
 
     @Throws(Exception::class)
@@ -223,18 +219,6 @@ abstract class BaseNativeAuthController : BaseController() {
     @Throws(Exception::class)
     @Deprecated(
         level = DeprecationLevel.HIDDEN,
-        message = "getAuthorizationRequest() not supported in NativeAuthController"
-    )
-    override fun getAuthorizationRequest(
-        strategy: OAuth2Strategy<*, *, out AuthorizationRequest<*>, out AuthorizationRequest.Builder<*>, out IAuthorizationStrategy<*, *>, *, *, *, *, *, *, *, out AuthorizationResult<*, *>>,
-        parameters: TokenCommandParameters
-    ): AuthorizationRequest<*> {
-        throw ClientException("getAuthorizationRequest() not supported in NativeAuthController")
-    }
-
-    @Throws(Exception::class)
-    @Deprecated(
-        level = DeprecationLevel.HIDDEN,
         message = "performTokenRequest() not supported in NativeAuthController"
     )
     override fun performTokenRequest(
@@ -249,61 +233,6 @@ abstract class BaseNativeAuthController : BaseController() {
     @Throws(Exception::class)
     @Deprecated(
         level = DeprecationLevel.HIDDEN,
-        message = "renewAccessToken() not supported in NativeAuthController"
-    )
-    override fun renewAccessToken(
-        parameters: SilentTokenCommandParameters,
-        acquireTokenSilentResult: AcquireTokenResult,
-        tokenCache: OAuth2TokenCache<out OAuth2Strategy<*, *, *, *, *, *, *, *, *, *, *, *, *>, out AuthorizationRequest<*>, *>,
-        strategy: OAuth2Strategy<*, *, out AuthorizationRequest<*>, out AuthorizationRequest.Builder<*>, out IAuthorizationStrategy<*, *>, *, *, *, *, *, *, *, out AuthorizationResult<*, *>>,
-        cacheRecord: ICacheRecord
-    ) {
-        throw ClientException("renewAccessToken() not supported in NativeAuthController")
-    }
-
-    @Throws(Exception::class)
-    @Deprecated(
-        level = DeprecationLevel.HIDDEN,
-        message = "logParameters() not supported in NativeAuthController"
-    )
-    override fun logParameters(tag: String?, parameters: Any?) {
-        throw ClientException("logParameters() not supported in NativeAuthController")
-    }
-
-    @Throws(Exception::class)
-    @Deprecated(
-        level = DeprecationLevel.HIDDEN,
-        message = "performSilentTokenRequest() not supported in NativeAuthController"
-    )
-    override fun performSilentTokenRequest(
-        strategy: OAuth2Strategy<*, *, out AuthorizationRequest<*>, out AuthorizationRequest.Builder<*>, out IAuthorizationStrategy<*, *>, *, *, *, *, *, *, *, out AuthorizationResult<*, *>>,
-        refreshToken: RefreshTokenRecord,
-        parameters: SilentTokenCommandParameters
-    ): TokenResult {
-        throw ClientException("performSilentTokenRequest() not supported in NativeAuthController")
-    }
-
-    @Throws(Exception::class)
-    @Deprecated(
-        level = DeprecationLevel.HIDDEN,
-        message = "refreshTokenIsNull() not supported in NativeAuthController"
-    )
-    override fun refreshTokenIsNull(cacheRecord: ICacheRecord): Boolean {
-        throw ClientException("refreshTokenIsNull() not supported in NativeAuthController")
-    }
-
-    @Throws(Exception::class)
-    @Deprecated(
-        level = DeprecationLevel.HIDDEN,
-        message = "accessTokenIsNull() not supported in NativeAuthController"
-    )
-    override fun accessTokenIsNull(cacheRecord: ICacheRecord): Boolean {
-        throw ClientException("accessTokenIsNull() not supported in NativeAuthController")
-    }
-
-    @Throws(Exception::class)
-    @Deprecated(
-        level = DeprecationLevel.HIDDEN,
         message = "idTokenIsNull() not supported in NativeAuthController"
     )
     override fun idTokenIsNull(cacheRecord: ICacheRecord, sdkType: SdkType): Boolean {
@@ -313,31 +242,10 @@ abstract class BaseNativeAuthController : BaseController() {
     @Throws(Exception::class)
     @Deprecated(
         level = DeprecationLevel.HIDDEN,
-        message = "getCachedAccountRecord() not supported in NativeAuthController"
-    )
-    override fun getCachedAccountRecord(parameters: SilentTokenCommandParameters): AccountRecord {
-        throw ClientException("getCachedAccountRecord() not supported in NativeAuthController")
-    }
-
-    @Throws(Exception::class)
-    @Deprecated(
-        level = DeprecationLevel.HIDDEN,
         message = "getCachedAccountRecordFromAllCaches() not supported in NativeAuthController"
     )
     override fun getCachedAccountRecordFromAllCaches(parameters: SilentTokenCommandParameters): AccountRecord? {
         throw ClientException("getCachedAccountRecordFromAllCaches() not supported in NativeAuthController")
-    }
-
-    @Throws(Exception::class)
-    @Deprecated(
-        level = DeprecationLevel.HIDDEN,
-        message = "isRequestAuthorityRealmSameAsATRealm() not supported in NativeAuthController"
-    )
-    override fun isRequestAuthorityRealmSameAsATRealm(
-        requestAuthority: Authority,
-        accessTokenRecord: AccessTokenRecord
-    ): Boolean {
-        throw ClientException("isRequestAuthorityRealmSameAsATRealm() not supported in NativeAuthController")
     }
 
     @Throws(Exception::class)

@@ -134,10 +134,9 @@ class SignInInteractor(
             headers,
             encodedRequest.toByteArray(charset(ObjectMapper.ENCODING_SCHEME))
         )
-        val result = nativeAuthResponseHandler.getSignInTokenResultFromHttpResponse(
+        return nativeAuthResponseHandler.getSignInTokenApiResultFromHttpResponse(
             response = response
         )
-        return result.toResult()
     }
     //endregion
 }

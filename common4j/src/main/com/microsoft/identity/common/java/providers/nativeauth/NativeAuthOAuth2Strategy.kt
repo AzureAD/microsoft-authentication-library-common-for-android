@@ -71,7 +71,11 @@ class NativeAuthOAuth2Strategy(
     // with the environment retrieved from the (authority) endpoints.
     // TODO fix after mock APIs
     override fun getIssuerCacheIdentifierFromTokenEndpoint(): String {
-        return "login.windows.net"
+        if (config.useRealAuthority) {
+            return super.getIssuerCacheIdentifierFromTokenEndpoint()
+        } else {
+            return "login.windows.net"
+        }
     }
 
     // TODO unit tests & compare with getAuthorityFromTokenEndpoint()

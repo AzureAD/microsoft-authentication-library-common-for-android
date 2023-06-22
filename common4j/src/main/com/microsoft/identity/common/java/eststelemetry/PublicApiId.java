@@ -148,7 +148,6 @@ public final class PublicApiId {
     public static final String NATIVE_AUTH_RESET_PASSWORD_SUBMIT_CODE = "221";
     public static final String NATIVE_AUTH_RESET_PASSWORD_RESEND_CODE = "222";
     public static final String NATIVE_AUTH_RESET_PASSWORD_SUBMIT_NEW_PASSWORD = "223";
-    public static final String NATIVE_AUTH_ACCOUNT_SIGN_OUT = "224";
     public static final String NATIVE_AUTH_SIGN_UP_WITH_CODE = "230";
     public static final String NATIVE_AUTH_SIGN_UP_START = "231";
     public static final String NATIVE_AUTH_SIGN_UP_START_WITH_PASSWORD = "232";
@@ -156,5 +155,7 @@ public final class PublicApiId {
     public static final String NATIVE_AUTH_SIGN_UP_SUBMIT_PASSWORD = "234";
     public static final String NATIVE_AUTH_SIGN_UP_SUBMIT_ATTRIBUTES = "234";
     public static final String NATIVE_AUTH_SIGN_UP_SUBMIT_CODE = "235";
+    public static final String NATIVE_AUTH_ACCOUNT_SIGN_OUT = "236";
+    public static final String NATIVE_AUTH_ACCOUNT_GET_ACCESS_TOKEN = "237";
     //endregion
 }

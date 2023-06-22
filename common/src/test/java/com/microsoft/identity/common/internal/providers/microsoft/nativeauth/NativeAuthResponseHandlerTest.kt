@@ -22,6 +22,7 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft.nativeauth
 
+import com.microsoft.identity.common.java.net.HttpResponse
 import com.microsoft.identity.common.java.providers.nativeauth.NativeAuthOAuth2Configuration
 import com.microsoft.identity.common.java.providers.nativeauth.NativeAuthResponseHandler
 import com.microsoft.identity.common.java.providers.nativeauth.responses.resetpassword.ResetPasswordChallengeApiResponse
@@ -52,6 +53,8 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 import java.net.URL
 
 class NativeAuthResponseHandlerTest {
@@ -2358,11 +2361,12 @@ class NativeAuthResponseHandlerTest {
             extExpiresIn = null,
             accessToken = null,
             refreshToken = null,
+            clientInfo = null,
             idToken = null,
             details = null
         )
 
-        val apiResult = signInTokenApiResponse.toResult()
+        val apiResult = signInTokenApiResponse.toErrorResult()
         assertTrue(apiResult is SignInTokenApiResult.UnknownError)
         assertEquals(invalidGrantError, (apiResult as SignInTokenApiResult.UnknownError).error)
         assertEquals(tenantMisconfiguration, apiResult.errorDescription)
@@ -2385,10 +2389,11 @@ class NativeAuthResponseHandlerTest {
             accessToken = null,
             refreshToken = null,
             idToken = null,
-            details = null
+            details = null,
+            clientInfo = null
         )
 
-        val apiResult = signInTokenApiResponse.toResult()
+        val apiResult = signInTokenApiResponse.toErrorResult()
         assertTrue(apiResult is SignInTokenApiResult.UserNotFound)
         assertEquals(invalidGrantError, (apiResult as SignInTokenApiResult.UserNotFound).error)
         assertEquals(userDoesNotExistErrorDescription, apiResult.errorDescription)
@@ -2411,10 +2416,11 @@ class NativeAuthResponseHandlerTest {
             accessToken = null,
             refreshToken = null,
             idToken = null,
+            clientInfo = null,
             details = null
         )
 
-        val apiResult = signInTokenApiResponse.toResult()
+        val apiResult = signInTokenApiResponse.toErrorResult()
         assertTrue(apiResult is SignInTokenApiResult.InvalidCredentials)
         assertEquals(invalidGrantError, (apiResult as SignInTokenApiResult.InvalidCredentials).error)
         assertEquals(incorrectPasswordDescription, apiResult.errorDescription)
@@ -2437,10 +2443,11 @@ class NativeAuthResponseHandlerTest {
             accessToken = null,
             refreshToken = null,
             idToken = null,
+            clientInfo = null,
             details = null
         )
 
-        val apiResult = signInTokenApiResponse.toResult()
+        val apiResult = signInTokenApiResponse.toErrorResult()
         assertTrue(apiResult is SignInTokenApiResult.CodeIncorrect)
         assertEquals(invalidGrantError, (apiResult as SignInTokenApiResult.CodeIncorrect).error)
         assertEquals(incorrectOtpDescription, apiResult.errorDescription)
@@ -2463,10 +2470,11 @@ class NativeAuthResponseHandlerTest {
             accessToken = null,
             refreshToken = null,
             idToken = null,
-            details = null
+            details = null,
+            clientInfo = null
         )
 
-        val apiResult = signInTokenApiResponse.toResult()
+        val apiResult = signInTokenApiResponse.toErrorResult()
         assertTrue(apiResult is SignInTokenApiResult.InvalidAuthenticationType)
         assertEquals(invalidGrantError, (apiResult as SignInTokenApiResult.InvalidAuthenticationType).error)
         assertEquals(incorrectOtpDescription, apiResult.errorDescription)
@@ -2489,10 +2497,11 @@ class NativeAuthResponseHandlerTest {
             accessToken = null,
             refreshToken = null,
             idToken = null,
+            clientInfo = null,
             details = null
         )
 
-        val apiResult = signInTokenApiResponse.toResult()
+        val apiResult = signInTokenApiResponse.toErrorResult()
         assertTrue(apiResult is SignInTokenApiResult.UnknownError)
         assertEquals(invalidGrantError, (apiResult as SignInTokenApiResult.UnknownError).error)
         assertEquals(incorrectOtpDescription, apiResult.errorDescription)
@@ -2500,101 +2509,15 @@ class NativeAuthResponseHandlerTest {
 
     @Test
     fun testSignInTokenApiResponseSuccess() {
-        val signInTokenApiResponse = SignInTokenApiResponse(
-            statusCode = successStatusCode,
-            credentialToken = null,
-            error = null,
-            errorCodes = null,
-            errorDescription = null,
-            errorUri = null,
-            innerErrors = null,
-            tokenType = tokenType,
-            scope = scope,
-            expiresIn = 3600,
-            extExpiresIn = 3600,
-            accessToken = accessToken,
-            refreshToken = refreshToken,
-            idToken = idToken,
-            details = null
+        val response = mock<HttpResponse>()
+        whenever(response.statusCode).thenReturn(200)
+        val body = "{\"token_type\":\"Bearer\",\"scope\":\"openid offline_access\",\"expires_in\":3600,\"ext_expires_in\":3600,\"access_token\":\"EwBwA8l6BAAUAOyDv0l6PcCVu89kmzvqZmkWABkAAQ27/JswzTr5JApngbbLvCRL6dxztu4d+m7p9E0LpFsRZMOsH1w7EUmFynerA2s0HGpM8aMeja90GALzXj8ZQ1L0rJ39q4UzEe1nodBHz5cSvI0SzDDi1FuD2o3zKYIDV/zELm8GnayljTShXI6ml2u7WEahlKtXVrwDe1Ek/IJepNc9EirZaxL51A/OqETGsyiYKz6/D55+OIgWcSf6oApxg6iCQpIAAzoiF91Ab2xptHKkc7lp5z/ucB09dc8Y2SWiJLLSH4pkGf3h15m3OHo3hA1C1aOTUuc/bk7hA7CEVbMX/UGF5XrKwbJtG0SO97b2+xgKdY53JzWB6zp6kggDZgAACL6Ttxs6Lc1sQAI20md0RrEgIZN2EvvGimyQrRIK3j3DDiq3fuSTWrDPrfNnK14CW+JpSuQapG+n3349kdt9OFPUd57pYcHrj5kf9kf8srdOm1D8EqKAXExlpjPFWZ32JpDFpvPFCVPil+inkAH9iSjj5d3ScWJg9mznRlZKM1NpRSAOfEXuXWE3EWXygS5Ka5PnY9uTce52FvifZ+QGU/j27ostv48XQx1rVR0elvkT+yG9VErKZiypHOp9MvK2JyzsYdgkM+v1NwEVnW2ZBSbF1zYkLPUL8MqkmwYnXm0TRGxUV0mfDi/2R4/WrzVZRCAs/+sE/QrmAK1qIrbCc4uAjTzjU2Aqb1z6twuLUFuVZuXxO/S4iucOk4kUFzSIBtA9/bIooR3uXwJLKMbw0Ghhi9xrJatOFKj8MBMohsgQSCMGjRcli3oNm++vs8XTynupjVJJON5nLb4JVfV2CMhXCQ07IIxW0CsA4W+eJj2gPan6mIn91iPQcQrtD4rNcwBH8Kcj14j+8UtnpNAYy1h8oOtmxFbckzEo01fGZ3KEYBTE4+bvW05k/ujj1Ot+k8lj6GUBFY23aD0qB5fv6fsWxiyPvRYyzXBZaHs7dq1xvR8zGHQ6eBp4gqlrZTQSCF/v1D//WAtlAJX+XToAETfD2P/lVhNunpXn/bKV3pBoKaRkVlHHk0/nJGboCPGv1VhrPzmXSBq6bm/mOntxpRHr8QUwHH1vtwFXnS0bhwjF1P+wi6c8GmW/v+2tFmGDofYYRqUgWnUGgE6LAg==\",\"refresh_token\":\"M.C106_BL2.-CWTREwEuljWTTz!UQXU!SujJppWGaLzL*qBnGRB!ldp3lvNQcImJG8Y8P5YlpsWxF56F4GU5NE5efKpZ0leEC2H2pvOqK4OLj2cc81JVE*O8IbHJYyPLPVX9HQg5TLW*MFFSxVnLMJvux6umg9NdLqdkIgUzAyhi*qBJTNC!0*I4jRsPbCJkMr6EVThw8GlP*MGX0bJZeJWcNEGxJBMyzzGXnS!PGVCNOyM9HL8xVaM4WX*NjcA!gFee1PCnAauNrYtYv!PnvorihhyCvRMw8q5cIvvPrlyWxaaoLN0!mX!cWnfhyJRsA1lR8vw3EOAaOKEs*2vaCN!tSwk*AUQVybLw7kEVAuiCFgY28C!8cIFk\",\"id_token\":\"eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6ImJXOFpjTWpCQ25KWlMtaWJYNVVRRE5TdHZ4NCJ9.eyJ2ZXIiOiIyLjAiLCJpc3MiOiJodHRwczovL2xvZ2luLm1pY3Jvc29mdG9ubGluZS5jb20vOTE4ODA0MGQtNmM2Ny00YzViLWIxMTItMzZhMzA0YjY2ZGFkL3YyLjAiLCJzdWIiOiJBQUFBQUFBQUFBQUFBQUFBQUFBQUFQV0t1dkFxNDdlZmxzSjdNd2dpbWtVIiwiYXVkIjoiMDk4NGE3YjYtYmMxMy00MTQxLThiMGQtOGY3NjdlMTM2YmI3IiwiZXhwIjoxNjgxNDYzMDIzLCJpYXQiOjE2ODEzNzYzMjMsIm5iZiI6MTY4MTM3NjMyMywibmFtZSI6IlNhbW15IE9kZW5ob3ZlbiIsInByZWZlcnJlZF91c2VybmFtZSI6InNhbW15Lm9kZW5ob3ZlbkBnbWFpbC5jb20iLCJvaWQiOiIwMDAwMDAwMC0wMDAwLTAwMDAtNDQ3Yi0yNzNlZWMwMGRkNTciLCJ0aWQiOiI5MTg4MDQwZC02YzY3LTRjNWItYjExMi0zNmEzMDRiNjZkYWQiLCJhaW8iOiJEVGhGY3dSdFgwT0tqNXBTSEdOZUdVR1NVNGhaNFJoNU83TmhnUjYzMnpldEM5WmgzM3dWRypXeUJqIVFPM0twU0dXRVRla25sMDA1WE8qQWg0bXhRamVuR2VRZXIqakx3Nypkcmh1cDdTc0NJRThraUlsempYMDZuaWNWNFFFTGZxR3BoYkRuemI0RWtOZEZXTHBOTmhJJCJ9.WRe3tNCsvIuYfw8bIY1D8spFJXg-ZrGm2MiDYkUlfNR-bbW_7niJg372U-wG65OfRA99NauR511IKWcg6i5FRzx3Xcx4AfGCJhOCGagD4fRDaU4I1pE-C3lJlGY6bIodTSXIlS0VUPw_YmvzQ-X9lyJP-l-89hxQNtvCSbdm2zlSJPvdynJmRH58s4PTJSGuv7zn5Jq-Uc0s2DZx0nLfBfLee8bQpaUQamaxQ6Noz7zAjz7-TkCRriqZyvJLE9dBvRd6uSzYR_qm4VDpsH5wnGsMRvW7F_hcjjZo2gZyxI6BWy0kONF8juL6H1ar1EMi3Xn9jIU1Tde3yafjTpkmyw\",\"client_info\":\"eyJ2ZXIiOiIxLjAiLCJzdWIiOiJBQUFBQUFBQUFBQUFBQUFBQUFBQUFBcEhXMjhma09DSE9xNlJZX2l2V0tZIiwibmFtZSI6IlNpbHZpdSBQZXRyZXNjdSIsInByZWZlcnJlZF91c2VybmFtZSI6InNwZXRyZXNjdW1zQG91dGxvb2suY29tIiwib2lkIjoiMDAwMDAwMDAtMDAwMC0wMDAwLTc5MzYtYWEzMjBhMmNmN2JiIiwidGlkIjoiOTE4ODA0MGQtNmM2Ny00YzViLWIxMTItMzZhMzA0YjY2ZGFkIiwiaG9tZV9vaWQiOiIwMDAwMDAwMC0wMDAwLTAwMDAtNzkzNi1hYTMyMGEyY2Y3YmIiLCJ1aWQiOiIwMDAwMDAwMC0wMDAwLTAwMDAtNzkzNi1hYTMyMGEyY2Y3YmIiLCJ1dGlkIjoiOTE4ODA0MGQtNmM2Ny00YzViLWIxMTItMzZhMzA0YjY2ZGFkIn0\"}"
+        whenever(response.body).thenReturn(body)
+
+        val result = nativeAuthResponseHandler.getSignInTokenApiResultFromHttpResponse(
+            response
         )
-
-        val apiResult = signInTokenApiResponse.toResult()
-        assertTrue(apiResult is SignInTokenApiResult.Success)
-        // TODO token validation
-    }
-
-    @Test
-    fun testSignInTokenApiResponseMissingAccessToken() {
-        val signInTokenApiResponse = SignInTokenApiResponse(
-            statusCode = successStatusCode,
-            credentialToken = null,
-            error = null,
-            errorCodes = null,
-            errorDescription = null,
-            errorUri = null,
-            innerErrors = null,
-            tokenType = "Bearer",
-            scope = "openid profile",
-            expiresIn = expiresIn3600,
-            extExpiresIn = expiresIn3600,
-            accessToken = null,
-            refreshToken = refreshToken,
-            idToken = idToken,
-            details = null
-        )
-
-        val apiResult = signInTokenApiResponse.toResult()
-        assertTrue(apiResult is SignInTokenApiResult.UnknownError)
-    }
-
-    @Test
-    fun testSignInTokenApiResponseMissingRefreshToken() {
-        val signInTokenApiResponse = SignInTokenApiResponse(
-            statusCode = successStatusCode,
-            credentialToken = null,
-            error = null,
-            errorCodes = null,
-            errorDescription = null,
-            errorUri = null,
-            innerErrors = null,
-            tokenType = tokenType,
-            scope = scope,
-            expiresIn = expiresIn3600,
-            extExpiresIn = expiresIn3600,
-            accessToken = accessToken,
-            refreshToken = null,
-            idToken = idToken,
-            details = null
-        )
-
-        val apiResult = signInTokenApiResponse.toResult()
-        // We no longer return error if this is missing
-        assertTrue(apiResult is SignInTokenApiResult.Success)
-    }
-
-    @Test
-    fun testSignInTokenApiResponseMissingIdToken() {
-        val signInTokenApiResponse = SignInTokenApiResponse(
-            statusCode = successStatusCode,
-            credentialToken = null,
-            error = null,
-            errorCodes = null,
-            errorDescription = null,
-            errorUri = null,
-            innerErrors = null,
-            tokenType = tokenType,
-            scope = scope,
-            expiresIn = expiresIn3600,
-            extExpiresIn = expiresIn3600,
-            accessToken = accessToken,
-            refreshToken = refreshToken,
-            idToken = null,
-            details = null
-        )
-
-        val apiResult = signInTokenApiResponse.toResult()
-        // We no longer return error if this is missing
-        assertTrue(apiResult is SignInTokenApiResult.Success)
+        assertTrue(result is SignInTokenApiResult.Success)
     }
 
     @Test
@@ -2614,10 +2537,11 @@ class NativeAuthResponseHandlerTest {
             accessToken = null,
             refreshToken = null,
             idToken = null,
+            clientInfo = null,
             details = null
         )
 
-        val apiResult = signInTokenApiResponse.toResult()
+        val apiResult = signInTokenApiResponse.toErrorResult()
         assertTrue(apiResult is SignInTokenApiResult.UnknownError)
         assertEquals(unknownError, (apiResult as SignInTokenApiResult.UnknownError).error)
         assertEquals(unknownErrorDescription, apiResult.errorDescription)
@@ -2640,10 +2564,11 @@ class NativeAuthResponseHandlerTest {
             accessToken = null,
             refreshToken = null,
             idToken = null,
+            clientInfo = null,
             details = null
         )
 
-        val apiResult = signInTokenApiResponse.toResult()
+        val apiResult = signInTokenApiResponse.toErrorResult()
         assertTrue(apiResult is SignInTokenApiResult.UnknownError)
     }
     // endregion

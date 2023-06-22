@@ -24,7 +24,6 @@
 package com.microsoft.identity.common.java.providers.nativeauth
 
 import com.microsoft.identity.common.java.logging.LogSession
-import com.microsoft.identity.common.java.logging.Logger
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration
 import com.microsoft.identity.common.java.util.UrlUtil
 import java.net.MalformedURLException

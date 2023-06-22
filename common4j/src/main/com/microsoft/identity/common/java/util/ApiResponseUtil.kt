@@ -22,114 +22,102 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.util
 
-fun String?.isRedirect(): Boolean {
+internal fun String?.isRedirect(): Boolean {
     return this.contentEquals(other = "redirect", ignoreCase = true)
 }
 
-fun String?.isOOB(): Boolean {
+internal fun String?.isOOB(): Boolean {
     return this.contentEquals(other = "oob", ignoreCase = true)
 }
 
-fun String?.isPassword(): Boolean {
+internal fun String?.isPassword(): Boolean {
     return this.contentEquals(other = "password", ignoreCase = true)
 }
 
-fun String?.isCredentialRequired(): Boolean {
+internal fun String?.isCredentialRequired(): Boolean {
     return this.contentEquals(other = "credential_required", ignoreCase = true)
 }
 
-fun String?.isInvalidGrant(): Boolean {
+internal fun String?.isInvalidGrant(): Boolean {
     return this.contentEquals(other = "invalid_grant", ignoreCase = true)
 }
 
-fun String?.isPasswordTooWeak(): Boolean {
+internal fun String?.isPasswordTooWeak(): Boolean {
     return this.contentEquals(other = "password_too_weak", ignoreCase = true)
 }
 
-fun String?.isPasswordTooShort(): Boolean {
+internal fun String?.isPasswordTooShort(): Boolean {
     return this.contentEquals(other = "password_too_short", ignoreCase = true)
 }
 
-fun String?.isPasswordTooLong(): Boolean {
+internal fun String?.isPasswordTooLong(): Boolean {
     return this.contentEquals(other = "password_too_long", ignoreCase = true)
 }
 
-fun String?.isPasswordRecentlyUsed(): Boolean {
+internal fun String?.isPasswordRecentlyUsed(): Boolean {
     return this.contentEquals(other = "password_recently_used", ignoreCase = true)
 }
 
-fun String?.isPasswordBanned(): Boolean {
+internal fun String?.isPasswordBanned(): Boolean {
     return this.contentEquals(other = "password_banned", ignoreCase = true)
 }
 
-fun String?.isPollInProgress(): Boolean {
+internal fun String?.isPollInProgress(): Boolean {
     return this.contentEquals(other = "in_progress", ignoreCase = true)
 }
 
-fun String?.isPollSucceeded(): Boolean {
+internal fun String?.isPollSucceeded(): Boolean {
     return this.contentEquals(other = "succeeded", ignoreCase = true)
 }
 
-fun String?.isExplicitUserNotFound(): Boolean {
+internal fun String?.isExplicitUserNotFound(): Boolean {
     return this.contentEquals(other = "user_not_found", ignoreCase = true)
 }
 
-fun String?.isUnsupportedChallengeType(): Boolean {
+internal fun String?.isUnsupportedChallengeType(): Boolean {
     return this.contentEquals(other = "unsupported_challenge_type", ignoreCase = true)
 }
 
-fun String?.isExpiredToken(): Boolean {
+internal fun String?.isExpiredToken(): Boolean {
     return this.contentEquals(other = "expired_token", ignoreCase = true)
 }
 
-fun Int?.isUserNotFound(): Boolean {
+internal fun Int?.isUserNotFound(): Boolean {
     return this == 50034
 }
 
-fun Int?.isInvalidCredentials(): Boolean {
+internal fun Int?.isInvalidCredentials(): Boolean {
     return this == 50126
 }
 
-fun Int?.isOtpCodeIncorrect(): Boolean {
+internal fun Int?.isOtpCodeIncorrect(): Boolean {
     return this == 50181
 }
 
-fun Int?.isInvalidAuthenticationType(): Boolean {
+internal fun Int?.isInvalidAuthenticationType(): Boolean {
     return this == 400002
 }
 
-fun String?.isVerificationRequired(): Boolean {
+internal fun String?.isVerificationRequired(): Boolean {
     return this.contentEquals(other = "verification_required", ignoreCase = true)
 }
 
-fun String?.isAttributeValidationFailed(): Boolean {
+internal fun String?.isAttributeValidationFailed(): Boolean {
     return this.contentEquals(other = "attribute_validation_failed", ignoreCase = true)
 }
 
-fun String?.isAttributesRequired(): Boolean {
+internal fun String?.isAttributesRequired(): Boolean {
     return this.contentEquals(other = "attributes_required", ignoreCase = true)
 }
 
-fun String?.isAuthenticationRequired(): Boolean {
-    return this.contentEquals(other = "authentication_required", ignoreCase = true)
-}
-
-fun String?.isInvalidRequest(): Boolean {
-    return this.contentEquals(other = "invalid_request", ignoreCase = true)
-}
-
-fun String?.isUserAlreadyExists(): Boolean {
+internal fun String?.isUserAlreadyExists(): Boolean {
     return this.contentEquals(other = "user_already_exists", ignoreCase = true)
 }
 
-fun String?.isAuthNotSupported(): Boolean {
+internal fun String?.isAuthNotSupported(): Boolean {
     return this.contentEquals(other = "auth_not_supported", ignoreCase = true)
 }
 
-fun String?.isInvalidOOBValue(): Boolean {
+internal fun String?.isInvalidOOBValue(): Boolean {
     return this.contentEquals(other = "invalid_oob_value", ignoreCase = true)
-}
-
-fun Int?.isInvalidAuthenticationMethod(): Boolean {
-    return this == 400002
 }
