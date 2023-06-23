@@ -98,6 +98,10 @@ internal fun Int?.isInvalidAuthenticationType(): Boolean {
     return this == 400002
 }
 
+fun Int?.isMFARequired(): Boolean {
+    return this == 50076
+}
+
 internal fun String?.isVerificationRequired(): Boolean {
     return this.contentEquals(other = "verification_required", ignoreCase = true)
 }

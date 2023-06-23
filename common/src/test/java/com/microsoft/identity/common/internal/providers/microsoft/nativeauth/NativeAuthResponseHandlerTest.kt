@@ -2548,6 +2548,59 @@ class NativeAuthResponseHandlerTest {
     }
 
     @Test
+    fun testSignInTokenApiResponseCredentialRequiredExplicitError() {
+        val signInTokenApiResponse = SignInTokenApiResponse(
+            statusCode = uncommonErrorStatusCode,
+            credentialToken = null,
+            error = credentialRequiredError,
+            errorCodes = null,
+            errorDescription = unknownErrorDescription,
+            errorUri = null,
+            innerErrors = null,
+            tokenType = null,
+            scope = null,
+            expiresIn = null,
+            extExpiresIn = null,
+            accessToken = null,
+            refreshToken = null,
+            idToken = null,
+            details = null,
+            clientInfo = null
+        )
+
+        val apiResult = signInTokenApiResponse.toErrorResult()
+        assertTrue(apiResult is SignInTokenApiResult.UnknownError)
+    }
+
+    @Test
+    fun testSignInTokenApiResponseMFARequired() {
+        val signInTokenApiResponse = SignInTokenApiResponse(
+            statusCode = errorStatusCode,
+            credentialToken = null,
+            error = invalidGrantError,
+            errorCodes = listOf(mfaRequiredErrorCode),
+            errorDescription = mfaRequiredTokenErrorDescription,
+            errorUri = null,
+            innerErrors = null,
+            tokenType = null,
+            scope = null,
+            expiresIn = null,
+            extExpiresIn = null,
+            accessToken = null,
+            refreshToken = null,
+            idToken = null,
+            details = null,
+            clientInfo = null
+        )
+
+        val apiResult = signInTokenApiResponse.toErrorResult()
+        assertTrue(apiResult is SignInTokenApiResult.MFARequired)
+        assertEquals(invalidGrantError, (apiResult as SignInTokenApiResult.MFARequired).error)
+        assertEquals(mfaRequiredTokenErrorDescription, apiResult.errorDescription)
+        assertEquals(listOf(mfaRequiredErrorCode), apiResult.errorCodes)
+    }
+
+    @Test
     fun testSignInTokenApiResponseUnknownError() {
         val signInTokenApiResponse = SignInTokenApiResponse(
             statusCode = uncommonErrorStatusCode,

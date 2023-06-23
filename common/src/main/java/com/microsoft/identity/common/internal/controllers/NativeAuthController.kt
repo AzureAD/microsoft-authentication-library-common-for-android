@@ -194,6 +194,15 @@ class NativeAuthController : BaseNativeAuthController() {
                 )
             }
 
+            is SignInTokenApiResult.MFARequired -> {
+                LogSession.log(
+                    tag = TAG,
+                    logLevel = Logger.LogLevel.INFO,
+                    message = "Returning Redirect: $tokenApiResult"
+                )
+                CommandResult.Redirect()
+            }
+
             is SignInTokenApiResult.UserNotFound -> {
                 SignInCommandResult.UserNotFound(
                     error = tokenApiResult.error,
@@ -296,6 +305,19 @@ class NativeAuthController : BaseNativeAuthController() {
                     )
                 }
 
+                is SignInTokenApiResult.MFARequired -> {
+                    LogSession.log(
+                        tag = TAG,
+                        logLevel = Logger.LogLevel.WARN,
+                        message = "Unexpected result: $tokenApiResult"
+                    )
+                    return CommandResult.UnknownError(
+                        error = tokenApiResult.error,
+                        errorDescription = "API returned unexpected result: $tokenApiResult",
+                        errorCodes = tokenApiResult.errorCodes
+                    )
+                }
+
                 is SignInTokenApiResult.CodeIncorrect -> {
                     // This shouldn't be possible in SLT, throw unknown error
                     LogSession.log(
@@ -309,6 +331,7 @@ class NativeAuthController : BaseNativeAuthController() {
                         errorCodes = tokenApiResult.errorCodes
                     )
                 }
+
                 is SignInTokenApiResult.UserNotFound -> {
                     // This shouldn't be possible in SLT, throw unknown error
                     LogSession.log(
@@ -407,6 +430,19 @@ class NativeAuthController : BaseNativeAuthController() {
                     CommandResult.UnknownError(
                         error = tokenApiResult.error,
                         errorDescription = tokenApiResult.errorDescription,
+                        errorCodes = tokenApiResult.errorCodes
+                    )
+                }
+
+                is SignInTokenApiResult.MFARequired -> {
+                    LogSession.log(
+                        tag = TAG,
+                        logLevel = Logger.LogLevel.WARN,
+                        message = "Unexpected result: $tokenApiResult"
+                    )
+                    CommandResult.UnknownError(
+                        error = tokenApiResult.error,
+                        errorDescription = "API returned unexpected result: $tokenApiResult",
                         errorCodes = tokenApiResult.errorCodes
                     )
                 }
@@ -569,6 +605,19 @@ class NativeAuthController : BaseNativeAuthController() {
                     CommandResult.UnknownError(
                         error = result.error,
                         errorDescription = result.errorDescription,
+                        errorCodes = result.errorCodes
+                    )
+                }
+
+                is SignInTokenApiResult.MFARequired -> {
+                    LogSession.log(
+                        tag = TAG,
+                        logLevel = Logger.LogLevel.WARN,
+                        message = "Unexpected result: $result"
+                    )
+                    CommandResult.UnknownError(
+                        error = result.error,
+                        errorDescription = "API returned unexpected result: $result",
                         errorCodes = result.errorCodes
                     )
                 }

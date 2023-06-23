@@ -140,6 +140,36 @@ class NativeAuthControllerTest {
     }
 
     @Test
+    fun testSignInStartWithRopcCredentialRequired() {
+        val correlationId = UUID.randomUUID().toString()
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpointType.SignInToken,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.CREDENTIAL_REQUIRED
+        )
+
+        val parameters = createSignInStartWithPasswordCommandParameters()
+        val result = controller.signInStart(parameters)
+        assert(result is CommandResult.UnknownError)
+    }
+
+    @Ignore("Ignoring until Mfa required is integrated into lab API")
+    @Test
+    fun testSignInStartWithRopcMFARequired() {
+        val correlationId = UUID.randomUUID().toString()
+        // TODO: Change this to MFA_REQUIRED, or something similar
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpointType.SignInToken,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.CREDENTIAL_REQUIRED
+        )
+
+        val parameters = createSignInStartWithPasswordCommandParameters()
+        val result = controller.signInStart(parameters)
+        assert(result is CommandResult.Redirect)
+    }
+
+    @Test
     fun testSignInStartWithEmailUserNotFound() {
         val correlationId = UUID.randomUUID().toString()
         MockApiUtils.configureMockApi(

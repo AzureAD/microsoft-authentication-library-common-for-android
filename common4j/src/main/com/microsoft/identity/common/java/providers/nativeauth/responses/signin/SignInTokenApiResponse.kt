@@ -5,10 +5,12 @@ import com.google.gson.annotations.SerializedName
 import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.providers.nativeauth.IApiResponse
 import com.microsoft.identity.common.java.providers.nativeauth.interactors.InnerError
+import com.microsoft.identity.common.java.util.ObjectMapper
 import com.microsoft.identity.common.java.util.isInvalidAuthenticationType
 import com.microsoft.identity.common.java.util.isInvalidGrant
 import com.microsoft.identity.common.java.util.isOtpCodeIncorrect
 import com.microsoft.identity.common.java.util.isInvalidCredentials
+import com.microsoft.identity.common.java.util.isMFARequired
 import com.microsoft.identity.common.java.util.isUserNotFound
 import java.net.HttpURLConnection
 
@@ -56,6 +58,13 @@ data class SignInTokenApiResponse(
                 }
                 errorCodes[0].isInvalidCredentials() -> {
                     SignInTokenApiResult.InvalidCredentials(
+                        error = error.orEmpty(),
+                        errorDescription = errorDescription.orEmpty(),
+                        errorCodes = errorCodes
+                    )
+                }
+                errorCodes[0].isMFARequired() -> {
+                    SignInTokenApiResult.MFARequired(
                         error = error.orEmpty(),
                         errorDescription = errorDescription.orEmpty(),
                         errorCodes = errorCodes
