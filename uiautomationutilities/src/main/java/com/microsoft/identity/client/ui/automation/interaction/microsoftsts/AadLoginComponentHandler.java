@@ -31,6 +31,7 @@ import androidx.test.uiautomator.UiSelector;
 
 import com.microsoft.identity.client.ui.automation.interaction.UiResponse;
 import com.microsoft.identity.client.ui.automation.logging.Logger;
+import com.microsoft.identity.client.ui.automation.utils.CommonUtils;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
 import org.junit.Assert;
@@ -48,6 +49,16 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
     private final static String TAG = AadLoginComponentHandler.class.getSimpleName();
 
     public final static String ACCOUNT_PICKER_DID_NOT_APPEAR_ERROR = "Account picker screen did not show up";
+
+    private final long mFindLoginUiElementTimeout;
+
+    public AadLoginComponentHandler() {
+        mFindLoginUiElementTimeout = CommonUtils.FIND_UI_ELEMENT_TIMEOUT;
+    }
+
+    public AadLoginComponentHandler(final long findLoginUiElementTimeout) {
+        mFindLoginUiElementTimeout = findLoginUiElementTimeout;
+    }
 
     @Override
     public void handleEmailField(@NonNull final String username) {

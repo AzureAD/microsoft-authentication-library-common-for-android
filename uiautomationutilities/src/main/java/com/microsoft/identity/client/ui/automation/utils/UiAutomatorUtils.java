@@ -257,6 +257,28 @@ public class UiAutomatorUtils {
     }
 
     /**
+     * Fills the supplied text into the input element associated to the supplied resource id.
+     *
+     * @param resourceId the resource id of the input element
+     * @param inputText  the text to enter
+     * @param inputTimeout time to wait for successful input.
+     */
+    public static void handleInput(@NonNull final String resourceId,
+                                   @NonNull final String inputText,
+                                   final long inputTimeout
+    ) {
+        Logger.i(TAG, "Handling input for resource id: " + resourceId);
+        final UiObject inputField = obtainUiObjectWithResourceId(resourceId, inputTimeout);
+
+        try {
+            inputField.setText(inputText);
+            closeKeyboardIfNeeded();
+        } catch (final UiObjectNotFoundException e) {
+            throw new AssertionError(e);
+        }
+    }
+
+    /**
      * Clicks the button element associated to the supplied resource id.
      *
      * @param resourceId the resource id of the button to click
