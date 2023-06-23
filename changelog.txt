@@ -1,6 +1,7 @@
 V.NEXT
 ----------
 - [PATCH] Read private key before public key to avoid OS bug (#2091)
+- [PATCH] Add new CryptoFactoryName and ClientException error code (#2094)
 - [PATCH] also clear cached timestamp in ActiveClientBrokerCache (#2075)
 - [PATCH] Fix NPE when Content-Type header is missing in HTTP response (#2079)
 - [MINOR] Fix issue for MSA only where headers are not propagated on web requests with different domain redirects on newer versions of WebView (88+) (#2072)
