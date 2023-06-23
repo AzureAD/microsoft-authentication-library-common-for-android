@@ -1,5 +1,6 @@
 V.NEXT
 ----------
+- [PATCH] Read private key before public key to avoid OS bug (#2091)
 - [PATCH] Add new CryptoFactoryName and ClientException error code (#2094)
 - [PATCH] also clear cached timestamp in ActiveClientBrokerCache (#2075)
 - [PATCH] Fix NPE when Content-Type header is missing in HTTP response (#2079)
@@ -11,7 +12,6 @@ V.NEXT
 - [MINOR] Move ATS span start/end to MicrosoftAuthServiceOperation (#2068)
 - [MINOR] Move AT interactive span start/end to Account Chooser (#2069)
 - [PATCH] Fix AbstractMethodError in makeCurrentSpan for otel (#2083)
-- [MINOR] Cache handshake failure and add expiry time support in Hello Cache (#2074)
 
 V.13.0.1
 ----------
