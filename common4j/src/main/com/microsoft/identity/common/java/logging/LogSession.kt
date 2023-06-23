@@ -1,55 +1,94 @@
 package com.microsoft.identity.common.java.logging
 
-private const val PARENT_METHOD_INDEX = 1
+import com.microsoft.identity.common.java.logging.Logger.LogLevel
+import java.util.Collections.replaceAll
+
+private const val PARENT_METHOD_INDEX = 2
 
 class LogSession {
     companion object {
-        private val logger: ILoggerCallback = ILoggerCallback { _, _, _, _ -> }
 
         fun log(
             tag: String,
-            logLevel: Logger.LogLevel,
+            logLevel: LogLevel,
             message: String,
-            containsPII: Boolean = false
+            containsPII: Boolean = false,
+            throwable: Throwable? = null
         ) {
-            val methodName = try {
-                Throwable().stackTrace[PARENT_METHOD_INDEX].methodName
-            } catch (exception: ArrayIndexOutOfBoundsException) {
-                "<Unidentified method>"
+            when (logLevel) {
+                LogLevel.INFO -> {
+                    if (containsPII) {
+                        Logger.infoPII(tag, message)
+                    } else {
+                        Logger.info(tag, message)
+                    }
+                }
+                LogLevel.WARN -> {
+                    if (containsPII) {
+                        Logger.warnPII(tag, message)
+                    } else {
+                        Logger.warn(tag, message)
+                    }
+                }
+                LogLevel.UNDEFINED, LogLevel.VERBOSE -> {
+                    if (containsPII) {
+                        Logger.verbosePII(tag, message)
+                    } else {
+                        Logger.verbose(tag, message)
+                    }
+                }
+                LogLevel.ERROR -> {
+                    if (throwable != null) {
+                        if (containsPII) {
+                            Logger.errorPII(
+                                tag, "Exception was thrown." +
+                                        "| Type: $throwable" +
+                                        "| Reason: ${throwable.message}", throwable
+                            )
+                        } else {
+                            Logger.error(
+                                tag, "Exception was thrown." +
+                                        "| Type: $throwable" +
+                                        "| Reason: ${throwable.message}", throwable
+                            )
+                        }
+                    } else {
+                        Logger.error(tag, message, throwable)
+                    }
+                }
             }
-            logger.log(
-                tag,
-                logLevel,
-                "In $methodName, $message",
-                containsPII
-            )
         }
 
         fun logMethodCall(tag: String, containsPII: Boolean = false) {
             val methodNameMessage = try {
                 val throwable = Throwable()
-                "${throwable.stackTrace[PARENT_METHOD_INDEX].methodName} method was called at line " +
-                        "${throwable.stackTrace[PARENT_METHOD_INDEX].lineNumber}"
+                "${throwable.stackTrace[PARENT_METHOD_INDEX].methodName.replace(Regex("\\$\\w+"), "")} method was called"
             } catch (exception: ArrayIndexOutOfBoundsException) {
                 "<Unidentified method>"
             }
 
-            logger.log(
+            log(
                 tag,
-                Logger.LogLevel.INFO,
+                LogLevel.INFO,
                 methodNameMessage,
                 containsPII
             )
         }
 
         fun logException(tag: String, containsPII: Boolean = false, throwable: Throwable) {
-            logger.log(
-                tag, Logger.LogLevel.ERROR,
-                "Public Exception was thrown." +
-                        "| Type: $throwable" +
-                        "| Reason: ${throwable.message}",
-                containsPII
-            )
+            if (containsPII) {
+                Logger.errorPII(
+                    tag, "Exception was thrown." +
+                            "| Type: $throwable" +
+                            "| Reason: ${throwable.message}", throwable
+                )
+            } else {
+                Logger.error(
+                    tag, "Exception was thrown." +
+                            "| Type: $throwable" +
+                            "| Reason: ${throwable.message}", throwable
+                )
+            }
         }
     }
 }
