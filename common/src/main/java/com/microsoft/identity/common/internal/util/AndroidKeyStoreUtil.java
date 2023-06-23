@@ -203,6 +203,11 @@ public class AndroidKeyStoreUtil {
         try {
             final KeyStore keyStore = getKeyStore();
 
+            if (!keyStore.containsAlias(keyAlias)) {
+                Logger.verbose(methodTag, "Alias doesn't exist.");
+                return null;
+            }
+
             // We intentionally check the private key first, due to crash stacks hit in the wild
             // when checking for the public certificate when it does not exist.
             // `KeyStore exception android.os.ServiceSpecificException: (code 7)`
