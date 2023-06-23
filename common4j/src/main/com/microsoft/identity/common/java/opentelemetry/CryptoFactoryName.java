@@ -28,5 +28,6 @@ package com.microsoft.identity.common.java.opentelemetry;
 public enum CryptoFactoryName {
     DefaultCryptoFactory,
     NonFipsBrokerCryptoFactory,
-    AndroidBrokerFipsCryptoFactory
+    AndroidBrokerFipsCryptoFactory,
+    AndroidKeyStoreCryptoFactory
 }
