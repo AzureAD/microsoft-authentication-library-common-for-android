@@ -56,31 +56,34 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
         mFindLoginUiElementTimeout = CommonUtils.FIND_UI_ELEMENT_TIMEOUT;
     }
 
+    /**
+     * Custom timeout to wait for an UI element on aad login component. All UI interaction would use this value.
+     */
     public AadLoginComponentHandler(final long findLoginUiElementTimeout) {
         mFindLoginUiElementTimeout = findLoginUiElementTimeout;
     }
 
     @Override
     public void handleEmailField(@NonNull final String username) {
-        UiAutomatorUtils.handleInput("i0116", username);
+        UiAutomatorUtils.handleInput("i0116", username, mFindLoginUiElementTimeout);
         handleNextButton();
     }
 
     @Override
     public void handlePasswordField(@NonNull final String password) {
         Logger.i(TAG, "Handle Aad Login Password UI..");
-        UiAutomatorUtils.handleInput("i0118", password);
+        UiAutomatorUtils.handleInput("i0118", password, mFindLoginUiElementTimeout);
         handleNextButton();
     }
 
     @Override
     public void handleBackButton() {
-        UiAutomatorUtils.handleButtonClick("idBtn_Back");
+        UiAutomatorUtils.handleButtonClick("idBtn_Back", mFindLoginUiElementTimeout);
     }
 
     @Override
     public void handleNextButton() {
-        UiAutomatorUtils.handleButtonClick("idSIButton9");
+        UiAutomatorUtils.handleButtonClick("idSIButton9", mFindLoginUiElementTimeout);
     }
 
     @Override
@@ -90,7 +93,7 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
                 UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
         // Confirm On Account Picker
-        final UiObject accountPicker = UiAutomatorUtils.obtainUiObjectWithResourceId("tilesHolder");
+        final UiObject accountPicker = UiAutomatorUtils.obtainUiObjectWithResourceId("tilesHolder", mFindLoginUiElementTimeout);
 
         if (!accountPicker.waitForExists(FIND_UI_ELEMENT_TIMEOUT)) {
             fail(ACCOUNT_PICKER_DID_NOT_APPEAR_ERROR);
@@ -110,7 +113,7 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
     }
 
     private UiObject getConsentScreen() {
-        return UiAutomatorUtils.obtainUiObjectWithResourceId("appDomainLinkToAppInfo");
+        return UiAutomatorUtils.obtainUiObjectWithResourceId("appDomainLinkToAppInfo", mFindLoginUiElementTimeout);
     }
 
     @Override
@@ -143,7 +146,7 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
     public void handleSpeedBump() {
         Logger.i(TAG, "Handle Speed Bump UI..");
         // Confirm On Speed Bump Screen
-        final UiObject speedBump = UiAutomatorUtils.obtainUiObjectWithResourceId("appConfirmTitle");
+        final UiObject speedBump = UiAutomatorUtils.obtainUiObjectWithResourceId("appConfirmTitle", mFindLoginUiElementTimeout);
 
         if (!speedBump.exists()) {
             fail("Speed Bump screen did not show up");
@@ -154,7 +157,7 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
 
     @Override
     public void confirmEnrollPageReceived() {
-        final UiObject enrollmentHeader = UiAutomatorUtils.obtainUiObjectWithText("Set up your device to get access");
+        final UiObject enrollmentHeader = UiAutomatorUtils.obtainUiObjectWithText("Set up your device to get access", mFindLoginUiElementTimeout);
         Assert.assertTrue("Enroll Page appears.", enrollmentHeader.exists());
     }
 
@@ -173,7 +176,7 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
     @Override
     public void handleRegistration() {
         Logger.i(TAG, "Handle Registration Page Received..");
-        final UiObject registerBtn = UiAutomatorUtils.obtainUiObjectWithText("Register");
+        final UiObject registerBtn = UiAutomatorUtils.obtainUiObjectWithText("Register", mFindLoginUiElementTimeout);
         Assert.assertTrue("Register page appears.", registerBtn.exists());
 
         handleNextButton();
@@ -181,7 +184,7 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
 
     @Override
     public void handleStaySignedIn(final UiResponse staySignedInResponse) {
-        final UiObject staySignedInView = UiAutomatorUtils.obtainUiObjectWithText("Stay signed in?");
+        final UiObject staySignedInView = UiAutomatorUtils.obtainUiObjectWithText("Stay signed in?", mFindLoginUiElementTimeout);
 
         if (!staySignedInView.exists()) {
             fail("Stay signed in page did not show up");
@@ -198,7 +201,7 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
     public void handleVerifyYourIdentity() {
         Logger.i(TAG, "Handle Verify Your Identity Page..");
 
-        final UiObject verifyYourIdentity = UiAutomatorUtils.obtainUiObjectWithResourceId("idDiv_SAOTCS_Title");
+        final UiObject verifyYourIdentity = UiAutomatorUtils.obtainUiObjectWithResourceId("idDiv_SAOTCS_Title", mFindLoginUiElementTimeout);
         if (!verifyYourIdentity.exists()) {
             fail("Verify your identity page did not show up");
         }
@@ -209,6 +212,6 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
     public void handleHowWouldYouLikeToSignIn() {
         // Looks like we sometimes see this UI prompt asking "How would like to sign in?"
         // We press button1, which is "Ok" to confirm the default selection of using device certificate.
-        UiAutomatorUtils.handleButtonClick("android:id/button1");
+        UiAutomatorUtils.handleButtonClick("android:id/button1", mFindLoginUiElementTimeout);
     }
 }
