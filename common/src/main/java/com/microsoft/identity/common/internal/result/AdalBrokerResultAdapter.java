@@ -55,7 +55,7 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 
 public class AdalBrokerResultAdapter implements IBrokerResultAdapter {
 
-    private static final String TAG = AdalBrokerResultAdapter.class.getName();
+    private static final String TAG = AdalBrokerResultAdapter.class.getSimpleName();
 
     @Override
     public @NonNull Bundle bundleFromAuthenticationResult(@NonNull final ILocalAuthenticationResult authenticationResult,

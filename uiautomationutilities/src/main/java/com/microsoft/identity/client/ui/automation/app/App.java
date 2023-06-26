@@ -107,6 +107,7 @@ public abstract class App implements IApp {
 
     @Override
     public void install() {
+        // Use installOldApk method where available for installing old apk.
         // TODO: make it build time configurable to specify the installer that should be used.
         // Ideally we can specify different installers on app basis
         if (appInstaller instanceof LocalApkInstaller && !TextUtils.isEmpty(localApkFileName)) {
