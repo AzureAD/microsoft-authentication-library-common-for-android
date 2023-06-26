@@ -181,12 +181,26 @@ open class HelloCache (
      *
      * @param clientMinimumProtocolVersion minimum version of the protocol that the client supports.
      * @param clientMaximumProtocolVersion maximum version of the protocol that to be advertised by the client.
+     */
+    fun clearHandshakeResult(
+        clientMinimumProtocolVersion: String?,
+        clientMaximumProtocolVersion: String
+    ) {
+        val methodTag = "$TAG:clearHandshakeResult"
+        saveNegotiatedValue(clientMinimumProtocolVersion, clientMaximumProtocolVersion, null, methodTag)
+    }
+
+    /**
+     * Store the given negotiated protocol version into the cache.
+     *
+     * @param clientMinimumProtocolVersion minimum version of the protocol that the client supports.
+     * @param clientMaximumProtocolVersion maximum version of the protocol that to be advertised by the client.
      * @param negotiationValue    the negotiated protocol version as returned from hello().
      */
     private fun saveNegotiatedValue(
         clientMinimumProtocolVersion: String?,
         clientMaximumProtocolVersion: String,
-        result: HelloCacheResult,
+        result: HelloCacheResult?,
         callerMethodTag: String
     ) {
         val methodTag = "$TAG$callerMethodTag:saveNegotiatedProtocolVersion"
@@ -203,7 +217,11 @@ open class HelloCache (
             Logger.error(methodTag, "Failed to retrieve key", e)
             return
         }
-        fileManager.put(key, result.serialize())
+        if (result == null) {
+            fileManager.remove(key)
+        } else {
+            fileManager.put(key, result.serialize())
+        }
     }
 
     /**
