@@ -223,6 +223,11 @@ public class ClientException extends BaseException {
     public static final String KEYSTORE_NOT_INITIALIZED = "keystore_not_initialized";
 
     /**
+     * Emitted when failure occurs accessing the key from supplied Key managers for SSLContext.
+     */
+    public static final String KEY_MANAGEMENT_FAILURE = "key_management_failure";
+
+    /**
      * Emitted if any of the certificates in the keystore fail to load.
      */
     public static final String CERTIFICATE_LOAD_FAILURE = "certificate_load_failure";

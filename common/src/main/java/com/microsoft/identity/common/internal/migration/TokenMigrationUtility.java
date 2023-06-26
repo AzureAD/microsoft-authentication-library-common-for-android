@@ -34,7 +34,7 @@ import java.util.concurrent.Executors;
 
 public class TokenMigrationUtility<T extends BaseAccount, U extends RefreshToken> {
 
-    private static final String TAG = TokenMigrationUtility.class.getName();
+    private static final String TAG = TokenMigrationUtility.class.getSimpleName();
 
     /**
      * ExecutorService to handle background computation.

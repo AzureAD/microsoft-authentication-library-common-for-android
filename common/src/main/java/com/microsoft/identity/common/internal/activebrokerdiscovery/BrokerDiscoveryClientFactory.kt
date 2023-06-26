@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.activebrokerdiscovery
 
 import android.content.Context
+import com.microsoft.identity.common.BuildConfig
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
@@ -62,7 +63,7 @@ class BrokerDiscoveryClientFactory {
          **/
         @JvmStatic
         fun isNewBrokerDiscoveryEnabled(): Boolean {
-            return IS_NEW_DISCOVERY_ENABLED;
+            return BuildConfig.newBrokerDiscoveryEnabledFlag || IS_NEW_DISCOVERY_ENABLED;
         }
 
         /**
@@ -75,7 +76,7 @@ class BrokerDiscoveryClientFactory {
                 runBlocking {
                     lock.withLock {
                         if (instance == null) {
-                            instance = if (IS_NEW_DISCOVERY_ENABLED) {
+                            instance = if (isNewBrokerDiscoveryEnabled()) {
                                 BrokerDiscoveryClient(context, platformComponents)
                             } else {
                                 LegacyBrokerDiscoveryClient(context)
