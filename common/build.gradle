@@ -36,6 +36,8 @@ if (project.hasProperty("distCommon4jVersion") && project.distCommon4jVersion !=
     common4jVersion = project.distCommon4jVersion
 }
 
+boolean newBrokerDiscoveryEnabledFlag = project.hasProperty("newBrokerDiscoveryEnabledFlag")
+
 android {
 
     compileSdkVersion rootProject.ext.compileSdkVersion
@@ -54,6 +56,7 @@ android {
                 "eu", "fi", "fr", "gl", "he", "hi", "hr", "hu", "in", "it", "iw", "ja",
                 "kk", "ko", "lt", "lv", "ms", "nb", "nl", "pl", "pt-rBR", "pt-rPT", "ro",
                 "ru", "sk", "sl", "sr", "sv", "th", "tr", "uk", "vi", "zh-rCN", "zh-rTW"
+        buildConfigField("boolean", "newBrokerDiscoveryEnabledFlag", "$newBrokerDiscoveryEnabledFlag")
     }
 
     buildTypes {
