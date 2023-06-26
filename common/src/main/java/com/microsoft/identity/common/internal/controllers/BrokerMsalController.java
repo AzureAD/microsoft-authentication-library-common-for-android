@@ -104,7 +104,9 @@ import com.microsoft.identity.common.java.result.AcquireTokenResult;
 import com.microsoft.identity.common.java.result.GenerateShrResult;
 import com.microsoft.identity.common.java.util.BrokerProtocolVersionUtil;
 import com.microsoft.identity.common.java.util.ResultFuture;
+import com.microsoft.identity.common.java.util.Supplier;
 import com.microsoft.identity.common.java.util.ThreadUtils;
+import com.microsoft.identity.common.java.util.ported.Function;
 import com.microsoft.identity.common.java.util.ported.LocalBroadcaster;
 import com.microsoft.identity.common.java.util.ported.PropertyBag;
 import com.microsoft.identity.common.logging.Logger;
@@ -404,7 +406,14 @@ public class BrokerMsalController extends BaseController {
                 saveMsaAccountToCache(resultBundle, (MsalOAuth2TokenCache) parameters.getOAuth2TokenCache());
             }
 
-            result = new MsalBrokerResultAdapter().getAcquireTokenResultFromResultBundle(resultBundle);
+            try {
+                result = new MsalBrokerResultAdapter().getAcquireTokenResultFromResultBundle(resultBundle);
+            } catch (final BaseException e) {
+                if (ErrorStrings.INVALID_REQUEST.equals(e.getErrorCode())) {
+                    mHelloCache.clearHandshakeResult(parameters.getRequiredBrokerProtocolVersion(), CLIENT_MAX_PROTOCOL_VERSION);
+                }
+                throw e;
+            }
         } catch (final BaseException | ExecutionException e) {
             Telemetry.emit(
                     new ApiEndEvent()
@@ -649,7 +658,15 @@ public class BrokerMsalController extends BaseController {
                         if (resultBundle == null) {
                             throw mResultAdapter.getExceptionForEmptyResultBundle();
                         }
-                        return mResultAdapter.getAcquireTokenResultFromResultBundle(resultBundle);
+
+                        try {
+                            return mResultAdapter.getAcquireTokenResultFromResultBundle(resultBundle);
+                        } catch (final BaseException e) {
+                            if (ErrorStrings.INVALID_REQUEST.equals(e.getErrorCode())) {
+                                mHelloCache.clearHandshakeResult(parameters.getRequiredBrokerProtocolVersion(), CLIENT_MAX_PROTOCOL_VERSION);
+                            }
+                            throw e;
+                        }
                     }
 
                     @Override
