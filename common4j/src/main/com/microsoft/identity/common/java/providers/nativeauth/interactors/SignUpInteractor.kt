@@ -7,6 +7,7 @@ import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpS
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpStartUsingPasswordCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpSubmitUserAttributesCommandParameters
+import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.net.UrlConnectionHttpClient
 import com.microsoft.identity.common.java.providers.nativeauth.NativeAuthRequestProvider
@@ -100,38 +101,27 @@ class SignUpInteractor(
     //endregion
 
     //region /signup/continue
-    fun performSignUpContinue(
-        signUpToken: String,
-        commandParameters: BaseNativeAuthCommandParameters
-    ): SignUpContinueApiResult {
-        LogSession.logMethodCall(tag = TAG)
+    fun performSignUpSubmitCode(commandParameters: SignUpSubmitCodeCommandParameters): SignUpContinueApiResult {
+        val request = nativeAuthRequestProvider.createSignUpSubmitCodeRequest(
+            commandParameters = commandParameters
+        )
 
-        val request = when (commandParameters) {
-            is SignUpSubmitCodeCommandParameters -> {
-                nativeAuthRequestProvider.createSignUpSubmitCodeRequest(
-                    signUpToken = signUpToken,
-                    commandParameters = commandParameters
-                )
-            }
-            is SignUpSubmitPasswordCommandParameters1 -> {
-                nativeAuthRequestProvider.createSignUpSubmitPasswordRequest(
-                    signUpToken = signUpToken,
-                    commandParameters = commandParameters
-                )
-            }
-            is SignUpSubmitUserAttributesCommandParameters -> {
-                nativeAuthRequestProvider.createSignUpSubmitUserAttributesRequest(
-                    signUpToken = signUpToken,
-                    commandParameters = commandParameters
-                )
-            }
-            else -> {
-                nativeAuthRequestProvider.createSignUpContinueRequest(
-                    signUpToken = signUpToken,
-                    commandParameters = commandParameters as SignUpContinueCommandParameters
-                )
-            }
-        }
+        return performSignUpContinue(request)
+    }
+
+    fun performSignUpSubmitPassword(commandParameters: SignUpSubmitPasswordCommandParameters1): SignUpContinueApiResult {
+        val request = nativeAuthRequestProvider.createSignUpSubmitPasswordRequest(
+            commandParameters = commandParameters
+        )
+
+        return performSignUpContinue(request)
+    }
+
+    fun performSignUpSubmitUserAttributes(commandParameters: SignUpSubmitUserAttributesCommandParameters): SignUpContinueApiResult {
+        val request = nativeAuthRequestProvider.createSignUpSubmitUserAttributesRequest(
+            commandParameters = commandParameters
+        )
+
         return performSignUpContinue(request)
     }
 

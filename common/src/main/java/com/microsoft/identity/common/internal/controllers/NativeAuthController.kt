@@ -31,7 +31,6 @@ import com.microsoft.identity.common.java.AuthenticationConstants
 import com.microsoft.identity.common.java.cache.ICacheRecord
 import com.microsoft.identity.common.java.commands.parameters.SilentTokenCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.AcquireTokenNoFixedScopesCommandParameters
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.BaseNativeAuthCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.BaseSignInStartCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.BaseSignInTokenCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.BaseSignUpStartCommandParameters
@@ -1492,9 +1491,8 @@ class NativeAuthController : BaseNativeAuthController() {
                 .authority
                 .createOAuth2Strategy(strategyParameters)
 
-            val signUpContinueApiResult = performSignUpContinueCall(
+            val signUpContinueApiResult = performSignUpSubmitCode(
                 oAuth2Strategy = oAuth2Strategy,
-                signupToken = parameters.signupToken,
                 parameters = parameters
             )
             return signUpContinueApiResult.toSignUpSubmitCodeCommandResult(oAuth2Strategy)
@@ -1547,9 +1545,8 @@ class NativeAuthController : BaseNativeAuthController() {
                 .authority
                 .createOAuth2Strategy(strategyParameters)
 
-            val signUpContinueApiResult = performSignUpContinueCall(
+            val signUpContinueApiResult = performSignUpSubmitUserAttributes(
                 oAuth2Strategy = oAuth2Strategy,
-                signupToken = parameters.signupToken,
                 parameters = parameters
             )
             return signUpContinueApiResult.toSignUpSubmitUserAttributesCommandResult(oAuth2Strategy)
@@ -1575,9 +1572,8 @@ class NativeAuthController : BaseNativeAuthController() {
                 .authority
                 .createOAuth2Strategy(strategyParameters)
 
-            val signUpContinueApiResult = performSignUpContinueCall(
+            val signUpContinueApiResult = performSignUpSubmitPassword(
                 oAuth2Strategy = oAuth2Strategy,
-                signupToken = parameters.signupToken,
                 parameters = parameters
             )
             return signUpContinueApiResult.toSignUpSubmitPasswordCommandResult(oAuth2Strategy)
@@ -1822,15 +1818,24 @@ class NativeAuthController : BaseNativeAuthController() {
         return oAuth2Strategy.performSignUpChallenge(signUpToken = signupToken)
     }
 
-    private fun performSignUpContinueCall(
+    private fun performSignUpSubmitCode(
         oAuth2Strategy: NativeAuthOAuth2Strategy,
-        signupToken: String,
-        parameters: BaseNativeAuthCommandParameters
+        parameters: SignUpSubmitCodeCommandParameters
     ): SignUpContinueApiResult {
-        return oAuth2Strategy.performSignUpContinue(
-            signUpToken = signupToken,
-            commandParameters = parameters
-        )
+        return oAuth2Strategy.performSignUpSubmitCode(commandParameters = parameters)
+    }
+    private fun performSignUpSubmitPassword(
+        oAuth2Strategy: NativeAuthOAuth2Strategy,
+        parameters: SignUpSubmitPasswordCommandParameters
+    ): SignUpContinueApiResult {
+        return oAuth2Strategy.performSignUpSubmitPassword(commandParameters = parameters)
+    }
+
+    private fun performSignUpSubmitUserAttributes(
+        oAuth2Strategy: NativeAuthOAuth2Strategy,
+        parameters: SignUpSubmitUserAttributesCommandParameters
+    ): SignUpContinueApiResult {
+        return oAuth2Strategy.performSignUpSubmitUserAttributes(commandParameters = parameters)
     }
 
     private fun processSignUpChallengeApiResult(signUpChallengeApiResult: SignUpChallengeApiResult): SignUpStartCommandResult {

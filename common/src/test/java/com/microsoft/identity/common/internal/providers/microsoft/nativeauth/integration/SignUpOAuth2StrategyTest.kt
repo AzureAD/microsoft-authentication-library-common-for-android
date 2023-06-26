@@ -252,8 +252,7 @@ class SignUpOAuth2StrategyTest {
             .signupToken(signUpToken)
             .build()
 
-        val signupResult = nativeAuthOAuth2Strategy.performSignUpContinue(
-            signUpToken = signUpToken,
+        val signupResult = nativeAuthOAuth2Strategy.performSignUpSubmitPassword(
             signUpSubmitPasswordCommandParameters
         )
         assertTrue(signupResult is SignUpContinueApiResult.Success)
@@ -273,8 +272,7 @@ class SignUpOAuth2StrategyTest {
             .signupToken(signUpToken)
             .build()
 
-        val signupResult = nativeAuthOAuth2Strategy.performSignUpContinue(
-            signUpToken = signUpToken,
+        val signupResult = nativeAuthOAuth2Strategy.performSignUpSubmitCode(
             signUpSubmitCodeCommandParameters
         )
         assertTrue(signupResult is SignUpContinueApiResult.Success)
@@ -295,8 +293,7 @@ class SignUpOAuth2StrategyTest {
                 .signupToken(signUpToken)
                 .build()
 
-        val signupResult = nativeAuthOAuth2Strategy.performSignUpContinue(
-            signUpToken = signUpToken,
+        val signupResult = nativeAuthOAuth2Strategy.performSignUpSubmitUserAttributes(
             signUpSubmitUserAttributesCommandParameters
         )
         assertTrue(signupResult is SignUpContinueApiResult.Success)
@@ -316,8 +313,7 @@ class SignUpOAuth2StrategyTest {
             .signupToken(signUpToken)
             .build()
 
-        val signupResult = nativeAuthOAuth2Strategy.performSignUpContinue(
-            signUpToken = signUpToken,
+        val signupResult = nativeAuthOAuth2Strategy.performSignUpSubmitPassword(
             signUpSubmitPasswordCommandParameters
         )
         assertTrue(signupResult is SignUpContinueApiResult.AttributesRequired)
@@ -365,8 +361,7 @@ class SignUpOAuth2StrategyTest {
             .signupToken(signUpToken)
             .build()
 
-        val signupResult = nativeAuthOAuth2Strategy.performSignUpContinue(
-            signUpToken = signUpToken,
+        val signupResult = nativeAuthOAuth2Strategy.performSignUpSubmitCode(
             signUpSubmitCodeCommandParameters
         )
         assertTrue(signupResult is SignUpContinueApiResult.InvalidOOBValue)
@@ -386,8 +381,7 @@ class SignUpOAuth2StrategyTest {
             .signupToken(signUpToken)
             .build()
 
-        val signupResult = nativeAuthOAuth2Strategy.performSignUpContinue(
-            signUpToken = signUpToken,
+        val signupResult = nativeAuthOAuth2Strategy.performSignUpSubmitPassword(
             signUpSubmitPasswordCommandParameters
         )
         assertTrue(signupResult is SignUpContinueApiResult.InvalidPassword)
@@ -409,8 +403,7 @@ class SignUpOAuth2StrategyTest {
                 .signupToken(signUpToken)
                 .build()
 
-        val signupResult = nativeAuthOAuth2Strategy.performSignUpContinue(
-            signUpToken = signUpToken,
+        val signupResult = nativeAuthOAuth2Strategy.performSignUpSubmitUserAttributes(
             signUpSubmitUserAttributesCommandParameters
         )
         assertTrue(signupResult is SignUpContinueApiResult.InvalidAttributes)

@@ -12,8 +12,7 @@ import lombok.experimental.SuperBuilder;
 public class SignUpSubmitUserAttributesCommandParameters extends SignUpContinueCommandParameters {
     private static final String TAG = SignUpSubmitUserAttributesCommandParameters.class.getSimpleName();
 
-    @NonNull
-    public final String signupToken;
+    // TODO @EqualsAndHashCode.Exclude?
     @NonNull
     public final Map<String, String> userAttributes;
 }

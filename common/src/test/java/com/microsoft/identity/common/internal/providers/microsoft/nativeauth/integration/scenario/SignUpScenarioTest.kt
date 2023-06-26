@@ -26,9 +26,9 @@ package com.microsoft.identity.common.internal.providers.microsoft.nativeauth.in
 import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.MockApiEndpointType
 import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.MockApiResponseType
 import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.MockApiUtils.Companion.configureMockApi
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpContinueCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpStartCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpStartUsingPasswordCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.interfaces.PlatformComponents
 import com.microsoft.identity.common.java.net.UrlConnectionHttpClient
 import com.microsoft.identity.common.java.providers.nativeauth.NativeAuthOAuth2Configuration
@@ -42,8 +42,6 @@ import com.microsoft.identity.common.java.providers.nativeauth.responses.signup.
 import com.microsoft.identity.common.java.providers.nativeauth.responses.signup.SignUpContinueApiResult
 import com.microsoft.identity.common.java.providers.nativeauth.responses.signup.SignUpStartApiResult
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters
-import io.mockk.every
-import io.mockk.mockk
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -167,11 +165,13 @@ class SignUpScenarioTest {
             responseType = MockApiResponseType.SIGNUP_CONTINUE_SUCCESS
         )
 
-        val mockSignUpContinueCommandParameters = mockk<SignUpContinueCommandParameters>()
-        every { mockSignUpContinueCommandParameters.getOob() } returns oobCode
+        val mockSignUpContinueCommandParameters = SignUpSubmitCodeCommandParameters.builder()
+            .platformComponents(mock<PlatformComponents>())
+            .signupToken(signUpToken)
+            .code(oobCode)
+            .build()
 
-        val signupContinueResult = nativeAuthOAuth2Strategy.performSignUpContinue(
-            signUpToken = signUpToken,
+        val signupContinueResult = nativeAuthOAuth2Strategy.performSignUpSubmitCode(
             mockSignUpContinueCommandParameters
         )
         assertTrue(signupContinueResult is SignUpContinueApiResult.Success)
@@ -222,11 +222,13 @@ class SignUpScenarioTest {
             responseType = MockApiResponseType.SIGNUP_CONTINUE_SUCCESS
         )
 
-        val mockSignUpContinueCommandParameters = mockk<SignUpContinueCommandParameters>()
-        every { mockSignUpContinueCommandParameters.getOob() } returns oobCode
+        val mockSignUpContinueCommandParameters = SignUpSubmitCodeCommandParameters.builder()
+            .platformComponents(mock<PlatformComponents>())
+            .signupToken(signUpToken)
+            .code(oobCode)
+            .build()
 
-        val signupContinueResult = nativeAuthOAuth2Strategy.performSignUpContinue(
-            signUpToken = signUpToken,
+        val signupContinueResult = nativeAuthOAuth2Strategy.performSignUpSubmitCode(
             mockSignUpContinueCommandParameters
         )
         assertTrue(signupContinueResult is SignUpContinueApiResult.Success)

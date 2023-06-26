@@ -24,17 +24,7 @@
 package com.microsoft.identity.common.java.providers.nativeauth
 
 import androidx.annotation.VisibleForTesting
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.BaseNativeAuthCommandParameters
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.ResetPasswordStartCommandParameters
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.ResetPasswordSubmitCodeCommandParameters
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.ResetPasswordSubmitNewPasswordCommandParameters
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartCommandParameters
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartUsingPasswordCommandParameters
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitCodeCommandParameters
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInWithSLTCommandParameters
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitPasswordCommandParameters
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpStartCommandParameters
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpStartUsingPasswordCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.*
 import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy
 import com.microsoft.identity.common.java.providers.nativeauth.interactors.ResetPasswordInteractor
@@ -106,13 +96,29 @@ class NativeAuthOAuth2Strategy(
         )
     }
 
-    fun performSignUpContinue(
-        signUpToken: String,
-        commandParameters: BaseNativeAuthCommandParameters
+    fun performSignUpSubmitCode(
+        commandParameters: SignUpSubmitCodeCommandParameters
     ): SignUpContinueApiResult {
         LogSession.logMethodCall(tag = TAG)
-        return signUpInteractor.performSignUpContinue(
-            signUpToken = signUpToken,
+        return signUpInteractor.performSignUpSubmitCode(
+            commandParameters = commandParameters
+        )
+    }
+
+    fun performSignUpSubmitPassword(
+        commandParameters: SignUpSubmitPasswordCommandParameters
+    ): SignUpContinueApiResult {
+        LogSession.logMethodCall(tag = TAG)
+        return signUpInteractor.performSignUpSubmitPassword(
+            commandParameters = commandParameters
+        )
+    }
+
+    fun performSignUpSubmitUserAttributes(
+        commandParameters: SignUpSubmitUserAttributesCommandParameters
+    ): SignUpContinueApiResult {
+        LogSession.logMethodCall(tag = TAG)
+        return signUpInteractor.performSignUpSubmitUserAttributes(
             commandParameters = commandParameters
         )
     }

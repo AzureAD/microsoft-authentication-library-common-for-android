@@ -22,9 +22,9 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.commands.parameters.nativeauth;
 
-import java.util.Map;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
 
 @Getter
@@ -33,9 +33,7 @@ import lombok.experimental.SuperBuilder;
 public class SignUpContinueCommandParameters extends BaseNativeAuthCommandParameters {
 	private static final String TAG = SignUpContinueCommandParameters.class.getSimpleName();
 
-	public final String password;
-	public final String oob;
-	// TODO @EqualsAndHashCode.Exclude?
-	public final Map<String, String> userAttributes;
+	@NonNull
+	public final String signupToken;
 }
 

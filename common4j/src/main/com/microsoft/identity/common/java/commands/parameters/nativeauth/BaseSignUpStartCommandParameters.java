@@ -19,6 +19,4 @@ public class BaseSignUpStartCommandParameters extends BaseNativeAuthCommandParam
     @EqualsAndHashCode.Exclude
     @Nullable
     public final Map<String, String> userAttributes;
-    @NonNull
-    public final String clientId;
 }

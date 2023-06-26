@@ -220,91 +220,46 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
     //endregion
 
     //region /signup/continue
-    fun createSignUpContinueRequest(
-        signUpToken: String,
-        commandParameters: SignUpContinueCommandParameters
-    ): SignUpContinueRequest {
-        LogSession.logMethodCall(tag = TAG)
-
-        var grantType = ""
-        if (!commandParameters.password.isNullOrBlank()) {
-            grantType = NativeAuthGrantType.PASSWORD.jsonValue
-        } else if (!commandParameters.oob.isNullOrEmpty()) {
-            grantType = NativeAuthGrantType.PASSWORDLESS_OTP.jsonValue
-        } else if (commandParameters.userAttributes != null) {
-            grantType = NativeAuthGrantType.ATTRIBUTES.jsonValue
-        }
-
-        return SignUpContinueRequest.create(
-            password = commandParameters.password,
-            attributes = commandParameters.userAttributes,
-            oob = commandParameters.oob,
-            clientId = config.clientId,
-            signUpToken = signUpToken,
-            grantType = grantType,
-            requestUrl = signUpContinueEndpoint,
-            headers = getRequestHeaders()
-        )
-    }
-
     fun createSignUpSubmitCodeRequest(
-        signUpToken: String,
         commandParameters: SignUpSubmitCodeCommandParameters
     ): SignUpContinueRequest {
         LogSession.logMethodCall(tag = TAG)
 
-        var grantType = ""
-        if (commandParameters.code.isNotBlank()) {
-            grantType = NativeAuthGrantType.PASSWORDLESS_OTP.jsonValue
-        }
-
         return SignUpContinueRequest.create(
             oob = commandParameters.code,
             clientId = config.clientId,
-            signUpToken = signUpToken,
-            grantType = grantType,
+            signUpToken = commandParameters.signupToken,
+            grantType = NativeAuthGrantType.PASSWORDLESS_OTP.jsonValue,
             requestUrl = signUpContinueEndpoint,
             headers = getRequestHeaders()
         )
     }
 
     fun createSignUpSubmitPasswordRequest(
-        signUpToken: String,
         commandParameters: SignUpSubmitPasswordCommandParameters
     ): SignUpContinueRequest {
         LogSession.logMethodCall(tag = TAG)
 
-        var grantType = ""
-        if (commandParameters.password.isNotBlank()) {
-            grantType = NativeAuthGrantType.PASSWORD.jsonValue
-        }
-
         return SignUpContinueRequest.create(
             password = commandParameters.password,
             clientId = config.clientId,
-            signUpToken = signUpToken,
-            grantType = grantType,
+            signUpToken = commandParameters.signupToken,
+            grantType = NativeAuthGrantType.PASSWORD.jsonValue,
             requestUrl = signUpContinueEndpoint,
             headers = getRequestHeaders()
         )
     }
 
     fun createSignUpSubmitUserAttributesRequest(
-        signUpToken: String,
         commandParameters: SignUpSubmitUserAttributesCommandParameters
     ): SignUpContinueRequest {
         LogSession.logMethodCall(tag = TAG)
 
-        var grantType = ""
-        if (commandParameters.userAttributes.isNotEmpty()) {
-            grantType = NativeAuthGrantType.ATTRIBUTES.jsonValue
-        }
-
         return SignUpContinueRequest.create(
             attributes = commandParameters.userAttributes,
             clientId = config.clientId,
-            signUpToken = signUpToken,
-            grantType = grantType,
+            signUpToken = commandParameters.signupToken,
+            grantType = NativeAuthGrantType.ATTRIBUTES.jsonValue,
             requestUrl = signUpContinueEndpoint,
             headers = getRequestHeaders()
         )

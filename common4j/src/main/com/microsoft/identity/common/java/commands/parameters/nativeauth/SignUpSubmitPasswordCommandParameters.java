@@ -13,7 +13,5 @@ public class SignUpSubmitPasswordCommandParameters extends SignUpContinueCommand
     private static final String TAG = SignUpSubmitPasswordCommandParameters.class.getSimpleName();
 
     @NonNull
-    public final String signupToken;
-    @NonNull
     public final String password;
 }

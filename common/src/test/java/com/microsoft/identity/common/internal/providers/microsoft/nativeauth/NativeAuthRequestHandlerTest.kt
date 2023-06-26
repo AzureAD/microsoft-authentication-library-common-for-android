@@ -30,7 +30,6 @@ import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInS
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitPasswordCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInWithSLTCommandParameters
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpContinueCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpStartCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpStartUsingPasswordCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpSubmitCodeCommandParameters
@@ -210,7 +209,6 @@ class NativeAuthRequestHandlerTest {
             .build()
 
         val result = nativeAuthRequestProvider.createSignUpSubmitCodeRequest(
-            signUpToken = signupToken,
             commandParameters = commandParameters
         )
 
@@ -230,7 +228,6 @@ class NativeAuthRequestHandlerTest {
             .build()
 
         val result = nativeAuthRequestProvider.createSignUpSubmitPasswordRequest(
-            signUpToken = signupToken,
             commandParameters = commandParameters
         )
 
@@ -250,7 +247,6 @@ class NativeAuthRequestHandlerTest {
             .build()
 
         val result = nativeAuthRequestProvider.createSignUpSubmitUserAttributesRequest(
-            signUpToken = signupToken,
             commandParameters = commandParameters
         )
 
@@ -269,7 +265,6 @@ class NativeAuthRequestHandlerTest {
             .build()
 
         nativeAuthRequestProvider.createSignUpSubmitUserAttributesRequest(
-            signUpToken = signupToken,
             commandParameters = commandParameters
         )
     }
@@ -284,7 +279,6 @@ class NativeAuthRequestHandlerTest {
             .build()
 
         nativeAuthRequestProvider.createSignUpSubmitPasswordRequest(
-            signUpToken = signupToken,
             commandParameters = commandParameters
         )
     }
@@ -299,7 +293,6 @@ class NativeAuthRequestHandlerTest {
             .build()
 
         nativeAuthRequestProvider.createSignUpSubmitCodeRequest(
-            signUpToken = signupToken,
             commandParameters = commandParameters
         )
     }
@@ -586,13 +579,13 @@ class NativeAuthRequestHandlerTest {
 
     @Test(expected = ClientException::class)
     fun testSignUpContinueWithEmptySignUpTokenThrowException() {
-        val commandParameters = SignUpContinueCommandParameters.builder()
+        val commandParameters = SignUpSubmitCodeCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
-            .oob(oobCode)
+            .signupToken(emptyString)
+            .code(oobCode)
             .build()
 
-        nativeAuthRequestProvider.createSignUpContinueRequest(
-            signUpToken = emptyString,
+        nativeAuthRequestProvider.createSignUpSubmitCodeRequest(
             commandParameters = commandParameters
         )
     }
@@ -601,36 +594,15 @@ class NativeAuthRequestHandlerTest {
     fun testSignUpContinueWithEmptyClientIdShouldThrowException() {
         every { mockConfig.clientId } returns emptyString
 
-        val commandParameters = SignUpContinueCommandParameters.builder()
+        val commandParameters = SignUpSubmitCodeCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
-            .oob(oobCode)
+            .signupToken(signupToken)
+            .code(oobCode)
             .build()
 
-        nativeAuthRequestProvider.createSignUpContinueRequest(
-            signUpToken = "1234",
+        nativeAuthRequestProvider.createSignUpSubmitCodeRequest(
             commandParameters = commandParameters
         )
-    }
-
-    // signup continue tests
-    @Test
-    fun testSignUpContinueSuccess() {
-        val commandParameters = SignUpContinueCommandParameters.builder()
-            .platformComponents(mock<PlatformComponents>())
-            .oob(oobCode)
-            .userAttributes(userAttributes)
-            .build()
-
-        val result = nativeAuthRequestProvider.createSignUpContinueRequest(
-            signUpToken = "1234",
-            commandParameters = commandParameters
-        )
-
-        assertEquals(oobCode, result.parameters.oob)
-        assertEquals(clientId, result.parameters.clientId)
-        assertEquals(grantType, result.parameters.grantType)
-        assertEquals(signUpContinueRequestUrl, result.requestUrl)
-        assertEquals(userAttributes.toJsonString(userAttributes), result.parameters.attributes)
     }
 
     // sspr start tests
