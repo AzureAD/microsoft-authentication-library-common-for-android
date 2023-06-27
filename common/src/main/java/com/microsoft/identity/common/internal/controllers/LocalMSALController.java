@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.controllers;
 
 import android.text.TextUtils;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.WorkerThread;
@@ -456,7 +457,7 @@ public class LocalMSALController extends BaseController {
                         .putProperties(parameters)
                         .putApiId(TelemetryEventStrings.Api.LOCAL_GET_ACCOUNTS)
         );
-
+        Log.d(TAG, "getCurrentAccount in LocalMsalController!!!!!!!!!");
         @SuppressWarnings(WarningType.unchecked_warning) final List<ICacheRecord> accountsInCache =
                 parameters
                         .getOAuth2TokenCache()

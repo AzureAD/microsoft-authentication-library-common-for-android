@@ -35,12 +35,14 @@ import android.security.keystore.KeyInfo;
 import android.security.keystore.KeyPermanentlyInvalidatedException;
 import android.security.keystore.KeyProperties;
 import android.security.keystore.StrongBoxUnavailableException;
+import android.util.Log;
 
 import androidx.annotation.RequiresApi;
 
 import com.microsoft.identity.common.java.crypto.IKeyStoreKeyManager;
 import com.microsoft.identity.common.java.crypto.SecureHardwareState;
 import com.microsoft.identity.common.java.platform.AbstractDevicePopManager;
+import com.microsoft.identity.common.java.util.ThrowableUtil;
 import com.microsoft.identity.common.logging.Logger;
 import com.nimbusds.jose.crypto.impl.RSAKeyUtils;
 
@@ -184,6 +186,9 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
             boolean generated = false;
             while (!generated) {
                 try {
+                    final String message = String.format("Key pair try (StrongBox [%b], Import [%b], Attestation Challenge [%b])",
+                            tryStrongBox, tryImport, trySetAttestationChallenge);
+                    Log.d(TAG, message);
                     kp = generateNewKeyPair(context, tryStrongBox, tryImport, trySetAttestationChallenge);
                     generated = true;
 
@@ -204,12 +209,23 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
                     } else if (tryImport && e.getClass().getSimpleName().equals("SecureKeyImportUnavailableException")) {
                         Logger.error(TAG, "Import unsupported. Skipping import flag then retry.", e);
                         tryImport = false;
-
+                        Log.d(TAG, "build version " + Build.VERSION.RELEASE_OR_CODENAME);
+                        Log.d(TAG, "error cause b" + ThrowableUtil.getStackTraceAsString(e));
+                        Log.d(TAG, "isNegativeInternalError" + isNegativeInternalError(e));
                         if (tryStrongBox && null != e.getCause() && isStrongBoxUnavailableException(e.getCause())) {
                             // On some devices (notably, Huawei Mate 9 Pro), StrongBox errors are
                             // the cause of the surfaced SecureKeyImportUnavailableException.
                             tryStrongBox = false;
                         }
+
+//                        else if (tryStrongBox && Build.VERSION.RELEASE_OR_CODENAME.equals("14") && isNegativeInternalError(e)) {
+//                            // Android 14 specific error where strong box is failing, most likely because of IAR requirement in android 14
+//                            // https://android.googlesource.com/platform/compatibility/cdd/+/e2fee2f/9_security-model/9_11_keys-and-credentials.md
+//                            // Had to check code name, as android 14 device in beta seems to still show 33 as SDK int
+//                            // TO-DO : https://identitydivision.visualstudio.com/Engineering/_workitems/edit/2574078
+//                            Logger.error(TAG, "Android 14 Internal Key store error with StrongBox. Skipping strongbox then retry.", e);
+//                            tryStrongBox = false;
+//                        }
 
                         continue;
                     } else if (trySetAttestationChallenge && FAILED_TO_GENERATE_ATTESTATION_CERTIFICATE_CHAIN.equalsIgnoreCase(e.getMessage())) {
@@ -217,7 +233,7 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
                         trySetAttestationChallenge = false;
 
                         continue;
-                    } else if (tryStrongBox && Build.VERSION.RELEASE_OR_CODENAME.equals("UpsideDownCake") && isNegativeInternalError(e.getCause())) {
+                    } else if (tryStrongBox && Build.VERSION.RELEASE_OR_CODENAME.equals("14") && isNegativeInternalError(e)) {
                         // Android 14 specific error where strong box is failing, most likely because of IAR requirement in android 14
                         // https://android.googlesource.com/platform/compatibility/cdd/+/e2fee2f/9_security-model/9_11_keys-and-credentials.md
                         // Had to check code name, as android 14 device in beta seems to still show 33 as SDK int
@@ -268,8 +284,8 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
     }
 
     private static boolean isNegativeInternalError(@androidx.annotation.NonNull final Throwable t) {
-        final boolean isNegativeInternalError = t.getMessage().contains(NEGATIVE_THOUSAND_INTERNAL_ERROR);
-
+        final boolean isNegativeInternalError = t.getMessage().contains(NEGATIVE_THOUSAND_INTERNAL_ERROR) || ThrowableUtil.getStackTraceAsString(t).contains(NEGATIVE_THOUSAND_INTERNAL_ERROR);
+        Log.d(TAG, "checking for neg internal error "+ isNegativeInternalError);
         if (isNegativeInternalError) {
             Logger.error(TAG, "StrongBox not supported. internal Keystore code: -1000", t);
         }
@@ -448,13 +464,17 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
                               final boolean useStrongbox,
                               final boolean enableImport,
                               final boolean trySetAttestationChallenge) throws InvalidAlgorithmParameterException {
+        Logger.verbose(
+                TAG,
+                "Attempting to initialize28."
+        );
         int purposes = KeyProperties.PURPOSE_SIGN
                 | KeyProperties.PURPOSE_VERIFY
                 | KeyProperties.PURPOSE_ENCRYPT
                 | KeyProperties.PURPOSE_DECRYPT;
-        if (enableImport && Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            purposes |= KeyProperties.PURPOSE_WRAP_KEY;
-        }
+//        if (enableImport && Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+//            purposes |= KeyProperties.PURPOSE_WRAP_KEY;
+//        }
         KeyGenParameterSpec.Builder builder = new KeyGenParameterSpec.Builder(
                 mKeyManager.getKeyAlias(), purposes)
                 .setKeySize(keySize)

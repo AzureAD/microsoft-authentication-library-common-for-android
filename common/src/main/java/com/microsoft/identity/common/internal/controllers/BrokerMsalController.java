@@ -47,6 +47,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -859,7 +860,7 @@ public class BrokerMsalController extends BaseController {
             Logger.verbose(TAG + methodName, "Not a shared device, invoke getAccounts() instead of getCurrentAccount()");
             return getAccounts(parameters);
         }
-
+        Log.d(TAG, "getCurrentAccount!!!!!!!!!");
         return mBrokerOperationExecutor.execute(parameters,
                 new BrokerOperation<List<ICacheRecord>>() {
                     private String negotiatedBrokerProtocolVersion;
