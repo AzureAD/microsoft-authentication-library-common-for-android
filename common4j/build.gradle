@@ -245,3 +245,9 @@ afterEvaluate {
     // above in the plugins block.
     compileJava.dependsOn generateBuildConfig, generateTestBuildConfig
 }
+
+tasks.whenTaskAdded { task ->
+    if (task.name.contains('assemble')) {
+        task.dependsOn 'lint'
+    }
+}
