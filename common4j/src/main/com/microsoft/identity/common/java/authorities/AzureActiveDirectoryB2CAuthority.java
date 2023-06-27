@@ -38,7 +38,7 @@ import lombok.NonNull;
 
 public class AzureActiveDirectoryB2CAuthority extends Authority {
 
-    private static final String TAG = AzureActiveDirectoryB2CAuthority.class.getName();
+    private static final String TAG = AzureActiveDirectoryB2CAuthority.class.getSimpleName();
 
     public AzureActiveDirectoryB2CAuthority(String authorityUrl) {
         mAuthorityTypeString = "B2C";

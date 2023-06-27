@@ -44,7 +44,7 @@ import static com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy.Typ
 
 
 public class BrokerOperationBundle {
-    private static final String TAG = BrokerOperationBundle.class.getName();
+    private static final String TAG = BrokerOperationBundle.class.getSimpleName();
 
     @Getter
     @Accessors(prefix = "m")

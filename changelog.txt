@@ -1,8 +1,17 @@
 V.NEXT
 ----------
+- [PATCH] Read private key before public key to avoid OS bug (#2091)
+- [PATCH] Add new CryptoFactoryName and ClientException error code (#2094)
+- [PATCH] also clear cached timestamp in ActiveClientBrokerCache (#2075)
+- [PATCH] Fix NPE when Content-Type header is missing in HTTP response (#2079)
+- [MINOR] Fix issue for MSA only where headers are not propagated on web requests with different domain redirects on newer versions of WebView (88+) (#2072)
 - [PATCH] Add method to return list of broker that supports account manager (#2073)
 - [MINOR] Send client id as part of request bundle for getSsoToken Api (#2064)
 - [PATCH] Wire new Broker Discovery Client into MSAL - still disabled by default (#2057)
+- [MINOR] Add support to run UI automation on MsalTestApp  (#2056)
+- [MINOR] Move ATS span start/end to MicrosoftAuthServiceOperation (#2068)
+- [MINOR] Move AT interactive span start/end to Account Chooser (#2069)
+- [PATCH] Fix AbstractMethodError in makeCurrentSpan for otel (#2083)
 
 V.13.0.1
 ----------
@@ -17,6 +26,7 @@ V.13.0.1
 - [MINOR] Add android 14 check for skipping strong box isolation in pop token (#2053)
 - [PATCH] Fix min broker protocol version value for MSA accounts in broker (#2062)
 - [MINOR] Clear cache of access tokens with an old application identifier field (#2058)
+- [MINOR] Instrument PRTv3 flows (#2023)
 
 V.12.0.0
 ----------
@@ -29,7 +39,6 @@ V.12.0.0
 - [MINOR] Add method to clear receiver concurrentHashMap in LocalBroadcaster (#1993)
 - [PATCH] Mapping ECDSA to EC in ClientCertRequest's keyTypes array (#2015)
 - [PATCH] Fix NPE in OTEL code (#2018)
-- [MINOR] Instrument PRTv3 flows (#2023)
 - [MINOR] Updating different smartcards error message; updated string res files (#2021)
 - [PATCH] Moving ClearCertPref call to clean up method (#2025)
 - [PATCH] Fix target in token records to fix cache keys (#2027)

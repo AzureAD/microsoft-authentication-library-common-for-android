@@ -30,7 +30,7 @@ jobs:
     displayName: Set MVN AccessToken in Environment
     inputs:
       filename: echo
-      arguments: '##vso[task.setvariable variable=${{ parameters.envVstsMvnAndroidAccessTokenVar }}]$(mvnAccessToken)'
+      arguments: '##vso[task.setvariable variable=${{ parameters.envVstsMvnAndroidAccessTokenVar }}]$(System.AccessToken)'
   - task: Gradle@1
     name: Gradle1
     displayName: Assemble Release
