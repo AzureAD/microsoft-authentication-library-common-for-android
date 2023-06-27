@@ -33,39 +33,30 @@ public class PowerLiftIncidentRule implements TestRule {
                 try {
                     base.evaluate();
                 } catch (final Throwable originalThrowable) {
-                    if (BuildConfig.SEND_POWERLIFT_FAILURES) {
-                        String powerLiftIncidentDetails = null;
-                        try {
-                            Logger.e(
-                                    TAG,
-                                    "Encountered error during test....creating PowerLift incident.",
-                                    originalThrowable
-                            );
-                            powerLiftIncidentDetails = powerLiftIntegratedApp.createPowerLiftIncident();
-                        } catch (final Throwable powerLiftError) {
-                            Logger.e(
-                                    TAG,
-                                    "Oops...something went wrong...unable to create PowerLift incident.",
-                                    powerLiftError
-                            );
-                        }
-                        if (TextUtils.isEmpty(powerLiftIncidentDetails)) {
-                            throw originalThrowable;
-                        } else {
-                            assert powerLiftIncidentDetails != null;
-                            throw new ThrowableWithPowerLiftIncident(
-                                    powerLiftIntegratedApp,
-                                    powerLiftIncidentDetails,
-                                    originalThrowable
-                            );
-                        }
-                    }
-                    else {
-                        Logger.i(
+                    String powerLiftIncidentDetails = null;
+                    try {
+                        Logger.e(
                                 TAG,
-                                "Skipping PowerLift Incident creation."
+                                "Encountered error during test....creating PowerLift incident.",
+                                originalThrowable
                         );
+                        powerLiftIncidentDetails = powerLiftIntegratedApp.createPowerLiftIncident();
+                    } catch (final Throwable powerLiftError) {
+                        Logger.e(
+                                TAG,
+                                "Oops...something went wrong...unable to create PowerLift incident.",
+                                powerLiftError
+                        );
+                    }
+                    if (TextUtils.isEmpty(powerLiftIncidentDetails)) {
                         throw originalThrowable;
+                    } else {
+                        assert powerLiftIncidentDetails != null;
+                        throw new ThrowableWithPowerLiftIncident(
+                                powerLiftIntegratedApp,
+                                powerLiftIncidentDetails,
+                                originalThrowable
+                        );
                     }
                 }
             }
