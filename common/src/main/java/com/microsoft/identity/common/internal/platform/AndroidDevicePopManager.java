@@ -472,9 +472,9 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
                 | KeyProperties.PURPOSE_VERIFY
                 | KeyProperties.PURPOSE_ENCRYPT
                 | KeyProperties.PURPOSE_DECRYPT;
-//        if (enableImport && Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-//            purposes |= KeyProperties.PURPOSE_WRAP_KEY;
-//        }
+        if (enableImport && Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            purposes |= KeyProperties.PURPOSE_WRAP_KEY;
+        }
         KeyGenParameterSpec.Builder builder = new KeyGenParameterSpec.Builder(
                 mKeyManager.getKeyAlias(), purposes)
                 .setKeySize(keySize)
