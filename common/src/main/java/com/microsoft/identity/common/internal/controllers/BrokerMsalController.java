@@ -404,7 +404,7 @@ public class BrokerMsalController extends BaseController {
                 saveMsaAccountToCache(resultBundle, (MsalOAuth2TokenCache) parameters.getOAuth2TokenCache());
             }
 
-            result = new MsalBrokerResultAdapter().getAcquireTokenResultFromResultBundle(resultBundle);
+            result = this.getAcquireTokenResultFromResultBundle(resultBundle, parameters.getRequiredBrokerProtocolVersion());
         } catch (final BaseException | ExecutionException e) {
             Telemetry.emit(
                     new ApiEndEvent()
@@ -649,7 +649,8 @@ public class BrokerMsalController extends BaseController {
                         if (resultBundle == null) {
                             throw mResultAdapter.getExceptionForEmptyResultBundle();
                         }
-                        return mResultAdapter.getAcquireTokenResultFromResultBundle(resultBundle);
+
+                        return getAcquireTokenResultFromResultBundle(resultBundle, parameters.getRequiredBrokerProtocolVersion());
                     }
 
                     @Override
@@ -1153,6 +1154,21 @@ public class BrokerMsalController extends BaseController {
             throw new ClientException(ClientException.AUTH_SCHEME_NOT_SUPPORTED,
                     "The min broker protocol version for PopAuthenticationSchemeWithClientKey should be equal or more than 11.0."
                             + " Current required version is set to: " + parameters.getRequiredBrokerProtocolVersion());
+        }
+    }
+
+    private AcquireTokenResult getAcquireTokenResultFromResultBundle(
+            @NonNull final Bundle resultBundle,
+            @Nullable final String requiredBrokerProtocolVersion
+    ) throws BaseException {
+        try {
+            return mResultAdapter.getAcquireTokenResultFromResultBundle(resultBundle);
+        } catch (final BaseException e) {
+            if (ErrorStrings.UNSUPPORTED_BROKER_VERSION_ERROR_CODE.equals(e.getErrorCode())) {
+                mHelloCache.saveHandshakeError(requiredBrokerProtocolVersion, CLIENT_MAX_PROTOCOL_VERSION);
+                throw new UnsupportedBrokerException(mActiveBrokerPackageName);
+            }
+            throw e;
         }
     }
 }

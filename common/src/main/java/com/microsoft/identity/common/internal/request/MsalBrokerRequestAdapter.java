@@ -376,6 +376,13 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
             );
         }
         requestBundle.putString(NEGOTIATED_BP_VERSION_KEY, negotiatedBrokerProtocolVersion);
+        if (!StringUtil.isNullOrEmpty(requiredBrokerProtocolVersion)) {
+            requestBundle.putString(
+                    CLIENT_CONFIGURED_MINIMUM_BP_VERSION_KEY,
+                    requiredBrokerProtocolVersion
+            );
+        }
+
         requestBundle.putBoolean(
                 SHOULD_SEND_PKEYAUTH_HEADER_TO_THE_TOKEN_ENDPOINT,
                 BrokerProtocolVersionUtil.canSendPKeyAuthHeaderToTheTokenEndpoint(requiredBrokerProtocolVersion)
