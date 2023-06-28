@@ -348,6 +348,6 @@ tasks.whenTaskAdded { task ->
     }
 
     if (task.name == 'assembleLocal') {
-        task.dependsOn 'lintDebug', 'pmd'
+        task.dependsOn 'lintLocalDebug', 'pmd'
     }
 }
