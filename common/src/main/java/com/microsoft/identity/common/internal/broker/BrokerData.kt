@@ -65,7 +65,7 @@ data class BrokerData(val packageName : String,
          * Determines if the debug brokers should be trusted or not.
          * This should only be set to true only during testing.
          */
-        val sShouldTrustDebugBrokers = true
+        val sShouldTrustDebugBrokers = BuildConfig.DEBUG
 
         @JvmStatic
         val debugMicrosoftAuthenticator = BrokerData(
