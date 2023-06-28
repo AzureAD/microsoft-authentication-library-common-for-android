@@ -152,6 +152,7 @@ data class BrokerData(val packageName : String,
                 init {
                     add(prodMicrosoftAuthenticator)
                     add(prodCompanyPortal)
+                    add(prodLTW)
                 }
             })
 
