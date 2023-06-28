@@ -23,9 +23,7 @@
 package com.microsoft.identity.common.internal.broker
 
 import android.content.Context
-import com.microsoft.identity.common.BuildConfig
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants
-import com.microsoft.identity.common.internal.activebrokerdiscovery.AccountManagerBrokerDiscoveryUtil
 import com.microsoft.identity.common.internal.util.PackageUtils
 import com.microsoft.identity.common.java.logging.Logger
 import java.security.cert.X509Certificate
@@ -60,12 +58,6 @@ data class BrokerData(val packageName : String,
 
     companion object {
         val TAG = BrokerData::class.simpleName
-
-        /**
-         * Determines if the debug brokers should be trusted or not.
-         * This should only be set to true only during testing.
-         */
-        val sShouldTrustDebugBrokers = BuildConfig.DEBUG
 
         @JvmStatic
         val debugMicrosoftAuthenticator = BrokerData(
@@ -167,10 +159,10 @@ data class BrokerData(val packageName : String,
 
         /**
          * Returns the list of known broker apps (which SDK should make requests to).
-         * see [sShouldTrustDebugBrokers] for more info regarding testing.
+         * see [BrokerValidator.getShouldTrustDebugBrokers] for more info regarding testing.
          **/
         fun getKnownBrokerApps() : Set<BrokerData> {
-            return if (sShouldTrustDebugBrokers) allBrokers else prodBrokers
+            return if (BrokerValidator.getShouldTrustDebugBrokers()) allBrokers else prodBrokers
         }
 
         /**
