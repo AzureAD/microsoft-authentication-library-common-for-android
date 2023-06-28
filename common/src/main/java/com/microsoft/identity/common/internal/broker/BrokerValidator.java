@@ -67,10 +67,6 @@ public class BrokerValidator {
         BrokerValidator.sShouldTrustDebugBrokers = shouldTrustDebugBrokers;
     }
 
-    /**
-     * Determines if the debug brokers should be trusted or not.
-     * This should only be set to true only during testing.
-     */
     public static boolean getShouldTrustDebugBrokers() {
         return sShouldTrustDebugBrokers;
     }
