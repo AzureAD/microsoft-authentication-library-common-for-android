@@ -142,5 +142,10 @@ public enum AttributeName {
     /**
      * The http status code of the operation.
      */
-    http_status_code;
+    http_status_code,
+
+    /**
+     * The size of the silent command executor queue when starting to process an ATS request.
+     */
+    num_concurrent_silent_requests;
 }

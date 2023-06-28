@@ -12,6 +12,7 @@ V.NEXT
 - [MINOR] Move ATS span start/end to MicrosoftAuthServiceOperation (#2068)
 - [MINOR] Move AT interactive span start/end to Account Chooser (#2069)
 - [PATCH] Fix AbstractMethodError in makeCurrentSpan for otel (#2083)
+- [MINOR] Emit number of concurrent silent requests in telemetry (#2093)
 
 V.13.0.1
 ----------
