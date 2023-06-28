@@ -45,7 +45,7 @@ android {
     defaultConfig {
         multiDexEnabled true
         minSdkVersion rootProject.ext.minSdkVersion
-        targetSdkVersion rootProject.ext.targetSdkVersion
+        targetSdkVersion 34
         versionCode getAppVersionCode()
         versionName getAppVersionName()
         project.archivesBaseName = "common"
