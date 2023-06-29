@@ -28,9 +28,14 @@ jobs:
     submodules: recursive
     persistCredentials: True
   - template: ../templates/steps/automation-cert.yml
+  - task: CmdLine@1
+    displayName: Set Office MVN Access Token in Environment
+    inputs:
+      filename: echo
+      arguments: '##vso[task.setvariable variable=ENV_VSTS_MVN_ANDROIDADAL_ACCESSTOKEN]$(System.AccessToken)'
   - task: Gradle@3
     name: Gradle3   
-    displayName: Assemble Release
+    displayName: Assemble Local
     inputs:
       javaHomeSelection: JDKVersion
       jdkVersionOption: "1.11"
@@ -38,6 +43,16 @@ jobs:
       publishJUnitResults: false
       jdkArchitecture: x64
       sqAnalysisEnabled: false
+  - task: Gradle@1
+    displayName: Lint Local debug
+    inputs:
+      tasks: clean adal:lintLocalDebug
+  - task: Semmle@1
+    inputs:
+      sourceCodeDirectory: '$(Build.SourcesDirectory)'
+      language: 'java'
+      querySuite: 'Recommended'
+      timeout: '1800'
   - template: ../templates/steps/spotbugs.yml
     parameters:
       project: common

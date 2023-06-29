@@ -346,8 +346,4 @@ tasks.whenTaskAdded { task ->
     if (task.name == 'assembleDebug' || task.name == 'assembleRelease') {
         task.dependsOn 'lint', 'sourcesJar', 'pmd'
     }
-
-    if (task.name == 'assembleLocal') {
-        task.dependsOn 'lintLocalDebug', 'pmd'
-    }
 }
