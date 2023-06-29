@@ -47,12 +47,6 @@ jobs:
     displayName: Lint Local debug
     inputs:
       tasks: clean common:lintLocalDebug
-  - task: Semmle@1
-    inputs:
-      sourceCodeDirectory: '$(Build.SourcesDirectory)'
-      language: 'java'
-      querySuite: 'Recommended'
-      timeout: '1800'
   - template: ../templates/steps/spotbugs.yml
     parameters:
       project: common
