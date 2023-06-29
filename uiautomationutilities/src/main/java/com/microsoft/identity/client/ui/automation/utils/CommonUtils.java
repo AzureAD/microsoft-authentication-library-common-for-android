@@ -48,8 +48,8 @@ import java.util.concurrent.TimeUnit;
 public class CommonUtils {
 
     private final static String TAG = CommonUtils.class.getSimpleName();
-    public final static long FIND_UI_ELEMENT_TIMEOUT = TimeUnit.SECONDS.toMillis(20);
-    public final static long FIND_UI_ELEMENT_TIMEOUT_LONG = TimeUnit.SECONDS.toMillis(40);
+    public final static long FIND_UI_ELEMENT_TIMEOUT = TimeUnit.SECONDS.toMillis(15);
+    public final static long FIND_UI_ELEMENT_TIMEOUT_LONG = TimeUnit.SECONDS.toMillis(30);
 
     private final static String SD_CARD = "/sdcard";
 
