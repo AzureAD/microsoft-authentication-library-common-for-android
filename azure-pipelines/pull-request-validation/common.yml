@@ -32,7 +32,7 @@ jobs:
     displayName: Set Office MVN Access Token in Environment
     inputs:
       filename: echo
-      arguments: '##vso[task.setvariable variable=ENV_VSTS_MVN_ANDROIDADAL_ACCESSTOKEN]$(System.AccessToken)'
+      arguments: '##vso[task.setvariable variable=ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN]$(System.AccessToken)'
   - task: Gradle@3
     name: Gradle3   
     displayName: Assemble Local
@@ -46,7 +46,7 @@ jobs:
   - task: Gradle@1
     displayName: Lint Local debug
     inputs:
-      tasks: clean adal:lintLocalDebug
+      tasks: clean common:lintLocalDebug
   - task: Semmle@1
     inputs:
       sourceCodeDirectory: '$(Build.SourcesDirectory)'
