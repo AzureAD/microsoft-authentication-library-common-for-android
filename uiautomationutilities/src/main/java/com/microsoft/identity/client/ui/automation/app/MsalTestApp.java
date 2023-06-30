@@ -22,6 +22,9 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.app;
 
+import android.util.Log;
+import android.widget.Toast;
+
 import androidx.annotation.NonNull;
 import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObjectNotFoundException;
@@ -90,21 +93,23 @@ public class MsalTestApp extends App {
 
 
     // click on button acquire token silent
-    public String acquireTokenSilent() throws UiObjectNotFoundException {
+    public String acquireTokenSilent() throws UiObjectNotFoundException, InterruptedException {
         final UiObject acquireTokenSilentButton = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/btn_acquiretokensilent");
         scrollToElement(acquireTokenSilentButton);
+        Thread.sleep(2000);
         acquireTokenSilentButton.click();
         final UiObject result = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/txt_result");
         return result.getText();
     }
 
     // click on button getUsers
-    public List<String> getUsers() throws UiObjectNotFoundException {
+    public List<String> getUsers() throws UiObjectNotFoundException, InterruptedException {
         UiAutomatorUtils.handleButtonClick("com.msft.identity.client.sample.local:id/btn_getUsers");
 
         // get each user information in the user list
         final List<String> users = new ArrayList<>();
         final UiObject userList = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/user_list");
+        Thread.sleep(2000);
         for (int i = 0; i < userList.getChildCount(); i++) {
             final UiObject user = userList.getChild(new UiSelector().index(i));
             users.add(user.getText());
@@ -112,9 +117,38 @@ public class MsalTestApp extends App {
         return users;
     }
 
+    public void selectFromAuthScheme(String text) throws UiObjectNotFoundException {
+        final UiObject anthSchemeSpinner = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/authentication_scheme");
+        anthSchemeSpinner.click();
+        final UiObject authScheme = UiAutomatorUtils.obtainUiObjectWithText(text);
+        authScheme.click();
+    }
+
+    public String generateSHR() throws UiObjectNotFoundException, InterruptedException {
+        final UiObject generateSHRButton = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/btn_generate_shr");
+        scrollToElement(generateSHRButton);
+        Thread.sleep(2000);
+        generateSHRButton.click();
+        final UiObject result = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/txt_result");
+        return result.getText();
+    }
+
+    public UiObject removeUser(String msg) throws UiObjectNotFoundException, InterruptedException {
+        final UiObject removeUserButton = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/btn_clearCache");
+        scrollToElement(removeUserButton);
+        Thread.sleep(2000);
+        removeUserButton.click();
+        final UiObject toast = UiAutomatorUtils.obtainUiObjectWithText(msg);
+        return toast;
+    }
+
     private void scrollToElement(UiObject obj) throws UiObjectNotFoundException {
         UiScrollable scrollable = new UiScrollable(new UiSelector().scrollable(true));
         scrollable.scrollIntoView(obj);
+    }
+
+    public void handleBackButton() {
+        UiAutomatorUtils.pressBack();
     }
 
     @Override
