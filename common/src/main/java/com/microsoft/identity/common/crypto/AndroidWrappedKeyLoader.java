@@ -70,11 +70,6 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
     public static boolean sSkipKeyInvalidationCheck = false;
 
     /**
-     * Alias for this type of key.
-     */
-    /* package */ static final String KEYSTORE_KEY_ALIAS = "KEYSTORE_KEY";
-
-    /**
      * Algorithm for key wrapping.
      */
     private static final String WRAP_ALGORITHM = "RSA/ECB/PKCS1Padding";
@@ -140,7 +135,7 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
     @Override
     @NonNull
     public String getAlias() {
-        return KEYSTORE_KEY_ALIAS;
+        return mAlias;
     }
 
     @Override

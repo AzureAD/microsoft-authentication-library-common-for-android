@@ -1,5 +1,6 @@
 V.NEXT
 ----------
+- [PATCH] Make AndroidWrappedKeyLoader return the right alias (#2102)
 - [PATCH] Read private key before public key to avoid OS bug (#2091)
 - [PATCH] Add new CryptoFactoryName and ClientException error code (#2094)
 - [PATCH] also clear cached timestamp in ActiveClientBrokerCache (#2075)
@@ -13,6 +14,7 @@ V.NEXT
 - [MINOR] Move AT interactive span start/end to Account Chooser (#2069)
 - [PATCH] Fix AbstractMethodError in makeCurrentSpan for otel (#2083)
 - [MINOR] Emit number of concurrent silent requests in telemetry (#2093)
+- [PATCH] Fix missing visibility of the LTW app (#2097)
 - [MINOR] Invalid required broker protocol version check in Acquire Token/Acquire Token Silent (#2101)
 
 V.13.0.1
