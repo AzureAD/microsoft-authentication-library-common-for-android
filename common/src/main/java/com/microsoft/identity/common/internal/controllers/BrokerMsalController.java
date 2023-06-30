@@ -404,7 +404,8 @@ public class BrokerMsalController extends BaseController {
                 saveMsaAccountToCache(resultBundle, (MsalOAuth2TokenCache) parameters.getOAuth2TokenCache());
             }
 
-            result = this.getAcquireTokenResultFromResultBundle(resultBundle, parameters.getRequiredBrokerProtocolVersion());
+            verifyBrokerVersionIsSupported(resultBundle, parameters.getRequiredBrokerProtocolVersion());
+            result = mResultAdapter.getAcquireTokenResultFromResultBundle(resultBundle);
         } catch (final BaseException | ExecutionException e) {
             Telemetry.emit(
                     new ApiEndEvent()
@@ -522,7 +523,7 @@ public class BrokerMsalController extends BaseController {
                         if (resultBundle == null) {
                             throw mResultAdapter.getExceptionForEmptyResultBundle();
                         }
-
+                        verifyBrokerVersionIsSupported(resultBundle, parameters.getRequiredBrokerProtocolVersion());
                         return mResultAdapter.getDeviceCodeFlowAuthResultFromResultBundle(resultBundle);
                     }
 
@@ -579,6 +580,8 @@ public class BrokerMsalController extends BaseController {
                         if (resultBundle == null) {
                             throw mResultAdapter.getExceptionForEmptyResultBundle();
                         }
+
+                        verifyBrokerVersionIsSupported(resultBundle, parameters.getRequiredBrokerProtocolVersion());
 
                         AcquireTokenResult acquireTokenResult = mResultAdapter.getDeviceCodeFlowTokenResultFromResultBundle(resultBundle);
                         // If authorization_pending continue polling for token
@@ -650,7 +653,8 @@ public class BrokerMsalController extends BaseController {
                             throw mResultAdapter.getExceptionForEmptyResultBundle();
                         }
 
-                        return getAcquireTokenResultFromResultBundle(resultBundle, parameters.getRequiredBrokerProtocolVersion());
+                        verifyBrokerVersionIsSupported(resultBundle, parameters.getRequiredBrokerProtocolVersion());
+                        return mResultAdapter.getAcquireTokenResultFromResultBundle(resultBundle);
                     }
 
                     @Override
@@ -709,6 +713,8 @@ public class BrokerMsalController extends BaseController {
                         if (resultBundle == null) {
                             throw mResultAdapter.getExceptionForEmptyResultBundle();
                         }
+
+                        verifyBrokerVersionIsSupported(resultBundle, parameters.getRequiredBrokerProtocolVersion());
                         return mResultAdapter.getAccountsFromResultBundle(resultBundle);
                     }
 
@@ -763,6 +769,7 @@ public class BrokerMsalController extends BaseController {
                     @Override
                     public @NonNull
                     Boolean extractResultBundle(final @Nullable Bundle resultBundle) throws BaseException {
+                        verifyBrokerVersionIsSupported(resultBundle, parameters.getRequiredBrokerProtocolVersion());
                         mResultAdapter.verifyRemoveAccountResultFromBundle(resultBundle);
                         return true;
                     }
@@ -880,6 +887,7 @@ public class BrokerMsalController extends BaseController {
                         if (resultBundle == null) {
                             throw mResultAdapter.getExceptionForEmptyResultBundle();
                         }
+                        verifyBrokerVersionIsSupported(resultBundle, parameters.getRequiredBrokerProtocolVersion());
                         return mResultAdapter.getAccountsFromResultBundle(resultBundle);
                     }
 
@@ -952,6 +960,7 @@ public class BrokerMsalController extends BaseController {
                     @Override
                     public @NonNull
                     Boolean extractResultBundle(final @Nullable Bundle resultBundle) throws BaseException {
+                        verifyBrokerVersionIsSupported(resultBundle, parameters.getRequiredBrokerProtocolVersion());
                         mResultAdapter.verifyRemoveAccountResultFromBundle(resultBundle);
                         return true;
                     }
@@ -980,7 +989,7 @@ public class BrokerMsalController extends BaseController {
     }
 
     @Override
-    public GenerateShrResult generateSignedHttpRequest(@NonNull final GenerateShrCommandParameters parameters) throws Exception {
+    public GenerateShrResult generateSignedHttpRequest(@NonNull final GenerateShrCommandParameters parameters) throws BaseException {
         return mBrokerOperationExecutor.execute(parameters, new BrokerOperation<GenerateShrResult>() {
 
             private String negotiatedBrokerProtocolVersion;
@@ -1009,7 +1018,7 @@ public class BrokerMsalController extends BaseController {
                 if (null == resultBundle) {
                     throw mResultAdapter.getExceptionForEmptyResultBundle();
                 }
-
+                verifyBrokerVersionIsSupported(resultBundle, parameters.getRequiredBrokerProtocolVersion());
                 return mResultAdapter.getGenerateShrResultFromResultBundle(resultBundle);
             }
 
@@ -1064,6 +1073,7 @@ public class BrokerMsalController extends BaseController {
                     throw mResultAdapter.getExceptionForEmptyResultBundle();
                 }
 
+                verifyBrokerVersionIsSupported(resultBundle, parameters.getRequiredBrokerProtocolVersion());
                 return mResultAdapter.getAcquirePrtSsoTokenResultFromBundle(resultBundle);
             }
 
@@ -1157,18 +1167,29 @@ public class BrokerMsalController extends BaseController {
         }
     }
 
-    private AcquireTokenResult getAcquireTokenResultFromResultBundle(
-            @NonNull final Bundle resultBundle,
-            @Nullable final String requiredBrokerProtocolVersion
-    ) throws BaseException {
+    /**
+     * Check if have received broker version not supported error.
+     * @param resultBundle Result bundle from a broker operation.
+     * @param requiredBrokerProtocolVersion Required broker protocol version sent in request.
+     * @throws UnsupportedBrokerException if result contains broker not supported error.
+     */
+    private void verifyBrokerVersionIsSupported(@Nullable final Bundle resultBundle, @Nullable final String requiredBrokerProtocolVersion) throws UnsupportedBrokerException {
+        final String methodTag = TAG + ":verifyBrokerVersionIsSupported";
+        if (resultBundle == null) {
+            Logger.info(methodTag, "result bundle is null");
+            return;
+        }
+
+        // check if result bundle contains unsupported broker version exception
         try {
-            return mResultAdapter.getAcquireTokenResultFromResultBundle(resultBundle);
-        } catch (final BaseException e) {
-            if (ErrorStrings.UNSUPPORTED_BROKER_VERSION_ERROR_CODE.equals(e.getErrorCode())) {
+            final BrokerResult brokerResult = mResultAdapter.brokerResultFromBundle(resultBundle);
+            if (!brokerResult.isSuccess()
+                    && ErrorStrings.UNSUPPORTED_BROKER_VERSION_ERROR_CODE.equals(brokerResult.getErrorCode())) {
                 mHelloCache.saveHandshakeError(requiredBrokerProtocolVersion, CLIENT_MAX_PROTOCOL_VERSION);
                 throw new UnsupportedBrokerException(mActiveBrokerPackageName);
             }
-            throw e;
+        } catch (final ClientException e) {
+            Logger.error(methodTag, "Unable to read broker result from result bundle", e);
         }
     }
 }

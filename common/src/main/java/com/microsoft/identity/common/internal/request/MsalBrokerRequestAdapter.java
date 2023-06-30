@@ -216,6 +216,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY,
                 negotiatedBrokerProtocolVersion
         );
+        addRequiredBrokerProtocolVersionToRequestBundle(requestBundle, parameters.getRequiredBrokerProtocolVersion());
         requestBundle.putString(ACCOUNT_CORRELATIONID, parameters.getCorrelationId());
         return requestBundle;
     }
@@ -233,13 +234,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 CLIENT_MAX_PROTOCOL_VERSION
         );
 
-        if (!StringUtil.isNullOrEmpty(parameters.getRequiredBrokerProtocolVersion())) {
-            requestBundle.putString(
-                    CLIENT_CONFIGURED_MINIMUM_BP_VERSION_KEY,
-                    parameters.getRequiredBrokerProtocolVersion()
-            );
-        }
-
+        addRequiredBrokerProtocolVersionToRequestBundle(requestBundle, parameters.getRequiredBrokerProtocolVersion());
         return requestBundle;
     }
 
@@ -376,12 +371,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
             );
         }
         requestBundle.putString(NEGOTIATED_BP_VERSION_KEY, negotiatedBrokerProtocolVersion);
-        if (!StringUtil.isNullOrEmpty(requiredBrokerProtocolVersion)) {
-            requestBundle.putString(
-                    CLIENT_CONFIGURED_MINIMUM_BP_VERSION_KEY,
-                    requiredBrokerProtocolVersion
-            );
-        }
+        addRequiredBrokerProtocolVersionToRequestBundle(requestBundle, requiredBrokerProtocolVersion);
 
         requestBundle.putBoolean(
                 SHOULD_SEND_PKEYAUTH_HEADER_TO_THE_TOKEN_ENDPOINT,
@@ -407,6 +397,8 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 CAN_FOCI_APPS_CONSTRUCT_ACCOUNTS_FROM_PRT_ID_TOKEN_KEY,
                 BrokerProtocolVersionUtil.canFociAppsConstructAccountsFromPrtIdTokens(parameters.getRequiredBrokerProtocolVersion())
         );
+        addRequiredBrokerProtocolVersionToRequestBundle(requestBundle, parameters.getRequiredBrokerProtocolVersion());
+
         //Disable the environment and tenantID. Just return all accounts belong to this clientID.
         return requestBundle;
     }
@@ -426,8 +418,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
             requestBundle.putString(ENVIRONMENT, parameters.getAccount().getEnvironment());
             requestBundle.putString(ACCOUNT_HOME_ACCOUNT_ID, parameters.getAccount().getHomeAccountId());
         }
-        requestBundle.putString(NEGOTIATED_BP_VERSION_KEY, negotiatedBrokerProtocolVersion);
-
+        addRequiredBrokerProtocolVersionToRequestBundle(requestBundle, parameters.getRequiredBrokerProtocolVersion());
         return requestBundle;
     }
 
@@ -442,7 +433,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                                                                    @Nullable final String negotiatedBrokerProtocolVersion) {
         final Bundle requestBundle = new Bundle();
         requestBundle.putString(NEGOTIATED_BP_VERSION_KEY, negotiatedBrokerProtocolVersion);
-
+        addRequiredBrokerProtocolVersionToRequestBundle(requestBundle, parameters.getRequiredBrokerProtocolVersion());
         return requestBundle;
     }
 
@@ -454,7 +445,8 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
      * @return The result Bundle from the Broker.
      */
     public Bundle getRequestBundleForGenerateShr(@NonNull final GenerateShrCommandParameters parameters,
-                                                 @NonNull final String negotiatedBrokerProtocolVersion) throws ClientException {
+                                                 @NonNull final String negotiatedBrokerProtocolVersion
+    ) throws ClientException {
         final String clientId = parameters.getClientId();
         final String homeAccountId = parameters.getHomeAccountId();
 
@@ -475,7 +467,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         requestBundle.putString(ACCOUNT_HOME_ACCOUNT_ID, homeAccountId);
         requestBundle.putString(AUTH_SCHEME_PARAMS_POP, popParamsJson);
         requestBundle.putString(NEGOTIATED_BP_VERSION_KEY, negotiatedBrokerProtocolVersion);
-
+        addRequiredBrokerProtocolVersionToRequestBundle(requestBundle, parameters.getRequiredBrokerProtocolVersion());
         return requestBundle;
     }
 
@@ -508,4 +500,20 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
         return browserDescriptors;
     }
+
+    /**
+     * adds required broker protocol version key in request bundle if not null.
+     */
+    private void addRequiredBrokerProtocolVersionToRequestBundle(
+            @NonNull final Bundle requestBundle,
+            @Nullable final String requiredBrokerProtocolVersion
+    ) {
+        if (!StringUtil.isNullOrEmpty(requiredBrokerProtocolVersion)) {
+            requestBundle.putString(
+                    CLIENT_CONFIGURED_MINIMUM_BP_VERSION_KEY,
+                    requiredBrokerProtocolVersion
+            );
+        }
+    }
+
 }
