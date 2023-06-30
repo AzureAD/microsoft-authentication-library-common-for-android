@@ -47,7 +47,7 @@ public class FidoChallengeHandlerFactory {
                                                                    IAuthorizationCompletionCallback completionCallback,
                                                                    List<String> keyTypes) {
         //Once we get security key support, this is where we will prompt a user with a dialog to choose which type of credentials they want to sign in with.
-        //But for now, this will always return a PasskeyFidoChallengeHandler.
-        return new PasskeyFidoChallengeHandler(manager, webView, completionCallback);
+        //But for now, this will always return a PassKeyFidoChallengeHandler.
+        return new PassKeyFidoChallengeHandler(manager, webView, completionCallback);
     }
 }

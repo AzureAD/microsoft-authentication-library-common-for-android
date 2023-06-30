@@ -1161,6 +1161,21 @@ public final class AuthenticationConstants {
         public static final String CHALLENGE_TLS_INCAPABLE_VERSION = ONE_POINT_ZERO;
 
         /**
+         * The value for PassKey protocol redirect.
+         */
+        public static final String PASSKEY_REDIRECT = "urn:http-auth:PassKey";
+
+        /**
+         * Value of PassKey sent in header.
+         */
+        public static final String CHALLENGE_WEBAUTHN_INCAPABLE = "x-ms-PassKeyAuth";
+
+        /**
+         * Value of supported PassKey version.
+         */
+        public static final String CHALLENGE_WEBAUTHN_INCAPABLE_VERSION = ONE_POINT_ZERO;
+
+        /**
          * Broker redirect prefix.
          */
         public static final String REDIRECT_PREFIX = "msauth";

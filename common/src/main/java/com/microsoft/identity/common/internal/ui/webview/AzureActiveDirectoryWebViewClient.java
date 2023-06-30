@@ -43,6 +43,13 @@ import com.microsoft.identity.common.internal.broker.PackageHelper;
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.AbstractSmartcardCertBasedAuthChallengeHandler;
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.AbstractCertBasedAuthChallengeHandler;
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.CertBasedAuthFactory;
+import com.microsoft.identity.common.internal.ui.webview.fido.AbstractFidoChallenge;
+import com.microsoft.identity.common.internal.ui.webview.fido.AbstractFidoChallengeHandler;
+import com.microsoft.identity.common.internal.ui.webview.fido.CredManApiFidoManager;
+import com.microsoft.identity.common.internal.ui.webview.fido.FidoChallengeFactory;
+import com.microsoft.identity.common.internal.ui.webview.fido.FidoChallengeHandlerFactory;
+import com.microsoft.identity.common.internal.ui.webview.fido.FidoManagerFactory;
+import com.microsoft.identity.common.internal.ui.webview.fido.IFidoManager;
 import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallenge;
 import com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallengeFactory;
@@ -160,7 +167,18 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 final PKeyAuthChallenge pKeyAuthChallenge = factory.getPKeyAuthChallengeFromWebViewRedirect(url);
                 final PKeyAuthChallengeHandler pKeyAuthChallengeHandler = new PKeyAuthChallengeHandler(view, getCompletionCallback());
                 pKeyAuthChallengeHandler.processChallenge(pKeyAuthChallenge);
-            } else if (isRedirectUrl(formattedURL)) {
+            } else if (isPassKeyUrl(formattedURL)) {
+                Logger.info(methodTag, "WebView detected request for PassKey challenge.");
+                final AbstractFidoChallenge fidoChallenge = new FidoChallengeFactory().createFidoChallengeFromRedirect(url);
+                final IFidoManager fidoManager = new FidoManagerFactory().createFidoManager();
+                final AbstractFidoChallengeHandler fidoChallengeHandler = new FidoChallengeHandlerFactory().createFidoChallengeHandler(
+                                                                                fidoManager,
+                                                                                view,
+                                                                                getCompletionCallback(),
+                                                                                fidoChallenge.getKeyTypes()
+                                                                            );
+                fidoChallengeHandler.processChallenge(fidoChallenge);
+            }else if (isRedirectUrl(formattedURL)) {
                 Logger.info(methodTag,"Navigation starts with the redirect uri.");
                 processRedirectUrl(view, url);
             } else if (isWebsiteRequestUrl(formattedURL)) {
@@ -226,6 +244,10 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
     private boolean isPkeyAuthUrl(@NonNull final String url) {
         return url.startsWith(AuthenticationConstants.Broker.PKEYAUTH_REDIRECT.toLowerCase(Locale.ROOT));
+    }
+
+    private boolean isPassKeyUrl(@NonNull final String url) {
+        return url.startsWith(AuthenticationConstants.Broker.PASSKEY_REDIRECT.toLowerCase(Locale.ROOT));
     }
 
     private boolean isRedirectUrl(@NonNull final String url) {

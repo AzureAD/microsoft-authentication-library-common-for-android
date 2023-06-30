@@ -29,18 +29,18 @@ import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizatio
 /**
  * Handles a FidoChallenge by either creating or authenticating with a passkey.
  */
-public class PasskeyFidoChallengeHandler extends AbstractFidoChallengeHandler {
+public class PassKeyFidoChallengeHandler extends AbstractFidoChallengeHandler {
 
     private final IFidoManager mFidoManager;
     private final IAuthorizationCompletionCallback mChallengeCallback;
 
     /**
-     * Creates a PasskeyFidoChallengeHandler instance.
+     * Creates a PassKeyFidoChallengeHandler instance.
      * @param fidoManager IFidoManager instance.
      * @param webView Current WebView.
      * @param challengeCallback callback to invoke after challenge is handled.
      */
-    public PasskeyFidoChallengeHandler(IFidoManager fidoManager, WebView webView, IAuthorizationCompletionCallback challengeCallback) {
+    public PassKeyFidoChallengeHandler(IFidoManager fidoManager, WebView webView, IAuthorizationCompletionCallback challengeCallback) {
         super(webView);
         mFidoManager = fidoManager;
         mChallengeCallback = challengeCallback;
