@@ -418,6 +418,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
             requestBundle.putString(ENVIRONMENT, parameters.getAccount().getEnvironment());
             requestBundle.putString(ACCOUNT_HOME_ACCOUNT_ID, parameters.getAccount().getHomeAccountId());
         }
+        requestBundle.putString(NEGOTIATED_BP_VERSION_KEY, negotiatedBrokerProtocolVersion);
         addRequiredBrokerProtocolVersionToRequestBundle(requestBundle, parameters.getRequiredBrokerProtocolVersion());
         return requestBundle;
     }
