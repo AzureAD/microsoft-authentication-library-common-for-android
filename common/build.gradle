@@ -37,6 +37,7 @@ if (project.hasProperty("distCommon4jVersion") && project.distCommon4jVersion !=
 }
 
 boolean newBrokerDiscoveryEnabledFlag = project.hasProperty("newBrokerDiscoveryEnabledFlag")
+println("************* "+ newBrokerDiscoveryEnabledFlag)
 
 android {
 
