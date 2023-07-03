@@ -20,34 +20,23 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.ui.webview.fido;
-
-import java.util.Map;
+package com.microsoft.identity.common.internal.ui.webview.fido
 
 /**
- * Makes calls to the Android Credential Manager API in order to return an attestation.
+ * Representation of a manager that handles interactions with a passkey provider (usually through an API).
  */
-public class CredManApiFidoManager implements IFidoManager {
-
+interface IFidoManager {
     /**
      * Interacts with the FIDO credential provider and puts the authentication result in a header format.
-     *
      * @param challenge AuthFidoChallenge received from the server.
      * @return header fields for response.
      */
-    @Override
-    public Map<String, String> getAuthResponseHeader(AuthFidoChallenge challenge) {
-        return null;
-    }
+    suspend fun getAuthResponse(challenge: AuthFidoChallenge): Map<String, String>
 
     /**
      * Interacts with the FIDO credential provider and puts the registration result in a header format.
-     *
      * @param challenge RegFidoChallenge received from the server.
      * @return header fields for response.
      */
-    @Override
-    public Map<String, String> getRegResponseHeader(RegFidoChallenge challenge) {
-        return null;
-    }
+    suspend fun getRegResponse(challenge: RegFidoChallenge): Map<String, String>
 }

@@ -163,6 +163,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         try {
             if (isPkeyAuthUrl(formattedURL)) {
                 Logger.info(methodTag,"WebView detected request for pkeyauth challenge.");
+                //Instantiate telemetry helper here.
                 final PKeyAuthChallengeFactory factory = new PKeyAuthChallengeFactory();
                 final PKeyAuthChallenge pKeyAuthChallenge = factory.getPKeyAuthChallengeFromWebViewRedirect(url);
                 final PKeyAuthChallengeHandler pKeyAuthChallengeHandler = new PKeyAuthChallengeHandler(view, getCompletionCallback());
@@ -170,7 +171,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             } else if (isPassKeyUrl(formattedURL)) {
                 Logger.info(methodTag, "WebView detected request for PassKey challenge.");
                 final AbstractFidoChallenge fidoChallenge = new FidoChallengeFactory().createFidoChallengeFromRedirect(url);
-                final IFidoManager fidoManager = new FidoManagerFactory().createFidoManager();
+                final IFidoManager fidoManager = new FidoManagerFactory().createFidoManager(getActivity());
                 final AbstractFidoChallengeHandler fidoChallengeHandler = new FidoChallengeHandlerFactory().createFidoChallengeHandler(
                                                                                 fidoManager,
                                                                                 view,

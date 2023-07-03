@@ -22,13 +22,15 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.ui.webview.fido;
 
+import android.content.Context;
+
 /**
  * Instantiates IFidoManager objects.
  */
 public class FidoManagerFactory {
 
-    public IFidoManager createFidoManager() {
+    public IFidoManager createFidoManager(Context context) {
         //Since we're only using the Credential Manager API, just return the manager for that one.
-        return
+        return new CredManApiFidoManager(context);
     }
 }

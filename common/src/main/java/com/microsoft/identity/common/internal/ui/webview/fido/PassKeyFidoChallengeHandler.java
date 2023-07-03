@@ -53,6 +53,7 @@ public class PassKeyFidoChallengeHandler extends AbstractFidoChallengeHandler {
         //Pass the challenge to the manager's methods based on that
         //These two methods should return the same object... maybe header
         //Take this header, and pass this plus the url to the respondToChallenge method.
+        //When an exception occurs, let's pass the empty header to the server to prevent repeat requests.
         return null;
     }
 }
