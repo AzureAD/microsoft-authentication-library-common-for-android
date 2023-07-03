@@ -22,9 +22,6 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.app;
 
-import android.util.Log;
-import android.widget.Toast;
-
 import androidx.annotation.NonNull;
 import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObjectNotFoundException;
