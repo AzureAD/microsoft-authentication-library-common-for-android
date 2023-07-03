@@ -1,4 +1,4 @@
-V.NEXT
+V.13.1.0
 ----------
 - [PATCH] Make AndroidWrappedKeyLoader return the right alias (#2102)
 - [PATCH] Read private key before public key to avoid OS bug (#2091)
