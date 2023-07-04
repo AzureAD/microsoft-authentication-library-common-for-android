@@ -1,5 +1,6 @@
 V.NEXT
 ----------
+- [PATCH] Adding null checks for CancelHelper (CBA) (#2105)
 - [PATCH] Make AndroidWrappedKeyLoader return the right alias (#2102)
 - [PATCH] Read private key before public key to avoid OS bug (#2091)
 - [PATCH] Add new CryptoFactoryName and ClientException error code (#2094)
