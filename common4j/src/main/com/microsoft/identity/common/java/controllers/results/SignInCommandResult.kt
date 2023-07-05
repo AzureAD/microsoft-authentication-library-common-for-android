@@ -45,7 +45,7 @@ interface SignInCommandResult {
         val challengeChannel: String,
         val codeLength: Int
     ) :
-        SignInStartCommandResult, SignInWithSLTCommandResult, SignInResendCodeCommandResult, SignInSubmitPasswordCommandResult
+        SignInStartCommandResult, SignInWithSLTCommandResult, SignInResendCodeCommandResult
 
     data class UserNotFound(val error: String, val errorDescription: String, val correlationId: String = CommonUtils.getCurrentThreadCorrelationId(), val errorCodes: List<Int>) :
         SignInStartCommandResult
