@@ -41,17 +41,17 @@ data class SignInChallengeApiResponse(
                 if (error == "invalid_grant") {
                     SignInChallengeApiResult.UnknownError(
                         error = error,
-                        errorDescription = errorDescription,
+                        errorDescription = errorDescription.orEmpty(),
                         details = details,
-                        errorCodes = errorCodes
+                        errorCodes = errorCodes.orEmpty()
                     )
                 }
                 else {
                     SignInChallengeApiResult.UnknownError(
-                        error = error,
-                        errorDescription = errorDescription,
+                        error = error.orEmpty(),
+                        errorDescription = errorDescription.orEmpty(),
                         details = details,
-                        errorCodes = errorCodes
+                        errorCodes = errorCodes.orEmpty()
                     )
                 }
             }
@@ -69,7 +69,7 @@ data class SignInChallengeApiResponse(
                                     error = "invalid_state",
                                     errorDescription = "SignIn /challenge did not return a challenge_target_label with oob challenge type",
                                     details = details,
-                                    errorCodes = errorCodes
+                                    errorCodes = errorCodes.orEmpty()
                                 )
                             }
                             challengeChannel.isNullOrBlank() -> {
@@ -77,7 +77,7 @@ data class SignInChallengeApiResponse(
                                     error = "invalid_state",
                                     errorDescription = "SignIn /challenge did not return a challenge_channel with oob challenge type",
                                     details = details,
-                                    errorCodes = errorCodes
+                                    errorCodes = errorCodes.orEmpty()
                                 )
                             }
                             codeLength == null -> {
@@ -85,7 +85,7 @@ data class SignInChallengeApiResponse(
                                     error = "invalid_state",
                                     errorDescription = "SignIn /challenge did not return a code_length with oob challenge type",
                                     details = details,
-                                    errorCodes = errorCodes
+                                    errorCodes = errorCodes.orEmpty()
                                 )
                             }
                             else -> {
@@ -95,7 +95,7 @@ data class SignInChallengeApiResponse(
                                             error = "invalid_state",
                                             errorDescription = "SignIn /challenge did not return a flow token with oob challenge type",
                                             details = details,
-                                            errorCodes = errorCodes
+                                            errorCodes = errorCodes.orEmpty()
                                         ),
                                     challengeTargetLabel = challengeTargetLabel,
                                     codeLength = codeLength,
@@ -111,16 +111,16 @@ data class SignInChallengeApiResponse(
                                     error = "invalid_state",
                                     errorDescription = "SignIn /challenge did not return a flow token with password challenge type",
                                     details = details,
-                                    errorCodes = errorCodes
+                                    errorCodes = errorCodes.orEmpty()
                                 )
                         )
                     }
                     else -> {
                         SignInChallengeApiResult.UnknownError(
-                            error = error,
-                            errorDescription = errorDescription,
+                            error = error.orEmpty(),
+                            errorDescription = errorDescription.orEmpty(),
                             details = details,
-                            errorCodes = errorCodes
+                            errorCodes = errorCodes.orEmpty()
                         )
                     }
                 }
@@ -132,7 +132,7 @@ data class SignInChallengeApiResponse(
                     error = error.orEmpty(),
                     errorDescription = errorDescription.orEmpty(),
                     details = details,
-                    errorCodes = errorCodes
+                    errorCodes = errorCodes.orEmpty()
                 )
             }
         }

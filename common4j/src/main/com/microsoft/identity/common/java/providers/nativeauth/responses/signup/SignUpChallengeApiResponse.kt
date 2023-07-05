@@ -61,21 +61,23 @@ data class SignUpChallengeApiResponse(
                 return when {
                     error.isUnsupportedChallengeType() -> {
                         SignUpChallengeApiResult.UnsupportedChallengeType(
-                            errorCode = error.orEmpty(),
-                            errorDescription = errorDescription.orEmpty()
+                            error = error.orEmpty(),
+                            errorDescription = errorDescription.orEmpty(),
+                            details = details,
                         )
                     }
                     error.isExpiredToken() -> {
                         SignUpChallengeApiResult.ExpiredToken(
                             error = error.orEmpty(),
-                            errorDescription = errorDescription.orEmpty()
+                            errorDescription = errorDescription.orEmpty(),
+                            details = details,
                         )
                     }
                     else -> {
                         SignUpChallengeApiResult.UnknownError(
                             error = error.orEmpty(),
                             errorDescription = errorDescription.orEmpty(),
-                            details
+                            details = details,
                         )
                     }
                 }
@@ -139,7 +141,7 @@ data class SignUpChallengeApiResponse(
                         SignUpChallengeApiResult.UnknownError(
                             error = error.orEmpty(),
                             errorDescription = errorDescription.orEmpty(),
-                            details
+                            details = details,
                         )
                     }
                 }

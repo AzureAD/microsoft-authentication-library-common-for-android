@@ -22,12 +22,39 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.providers.nativeauth.responses.resetpassword
 
+import com.microsoft.identity.common.java.providers.nativeauth.responses.ApiErrorResult
+
 sealed interface ResetPasswordContinueApiResult {
     object Redirect : ResetPasswordContinueApiResult
-    data class PasswordRequired(val passwordSubmitToken: String, val expiresIn: Int?) : ResetPasswordContinueApiResult
-    data class CodeIncorrect(val error: String, val errorDescription: String) : ResetPasswordContinueApiResult
-    data class ExpiredToken(val error: String, val errorDescription: String) :
-        ResetPasswordContinueApiResult
-    data class UnknownError(val error: String?, val errorDescription: String?, val details: List<Map<String, String>>?) :
-        ResetPasswordContinueApiResult
+
+    data class PasswordRequired(
+        val passwordSubmitToken: String,
+        val expiresIn: Int?
+    ) : ResetPasswordContinueApiResult
+
+    data class CodeIncorrect(
+        override val error: String,
+        override val errorDescription: String
+    ) : ApiErrorResult(
+        error = error,
+        errorDescription = errorDescription,
+    ), ResetPasswordContinueApiResult
+
+    data class ExpiredToken(
+        override val error: String,
+        override val errorDescription: String
+    ) : ApiErrorResult(
+        error = error,
+        errorDescription = errorDescription,
+    ), ResetPasswordContinueApiResult
+
+    data class UnknownError(
+        override val error: String,
+        override val errorDescription: String,
+        override val details: List<Map<String, String>>?
+    ) : ApiErrorResult(
+        error = error,
+        errorDescription = errorDescription,
+        details = details
+    ), ResetPasswordContinueApiResult
 }

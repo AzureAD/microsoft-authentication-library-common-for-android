@@ -23,13 +23,13 @@
 package com.microsoft.identity.common.internal.commands
 
 import com.microsoft.identity.common.internal.controllers.NativeAuthController
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.BaseSignInStartCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartCommandParameters
 import com.microsoft.identity.common.java.controllers.results.SignInStartCommandResult
 import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.logging.Logger
 
 class SignInStartCommand(
-    private val parameters: BaseSignInStartCommandParameters,
+    private val parameters: SignInStartCommandParameters,
     private val controller: NativeAuthController,
     publicApiId: String
 ) : BaseNativeAuthCommand<SignInStartCommandResult>(

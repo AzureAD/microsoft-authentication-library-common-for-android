@@ -22,13 +22,36 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.providers.nativeauth.responses.resetpassword
 
+import com.microsoft.identity.common.java.providers.nativeauth.responses.ApiErrorResult
+
 sealed interface ResetPasswordStartApiResult {
     object Redirect : ResetPasswordStartApiResult
+
     data class Success(val passwordResetToken: String) : ResetPasswordStartApiResult
-    data class UserNotFound(val error: String, val errorDescription: String) :
-            ResetPasswordStartApiResult
-    data class UnsupportedChallengeType(val error: String, val errorDescription: String) :
-            ResetPasswordStartApiResult
-    data class UnknownError(val error: String?, val errorDescription: String?, val details: List<Map<String, String>>?) :
-            ResetPasswordStartApiResult
+
+    data class UserNotFound(
+        override val error: String,
+        override val errorDescription: String
+    ) : ApiErrorResult(
+        error = error,
+        errorDescription = errorDescription,
+    ), ResetPasswordStartApiResult
+
+    data class UnsupportedChallengeType(
+        override val error: String,
+        override val errorDescription: String
+    ) : ApiErrorResult(
+        error = error,
+        errorDescription = errorDescription,
+    ), ResetPasswordStartApiResult
+
+    data class UnknownError(
+        override val error: String,
+        override val errorDescription: String,
+        override val details: List<Map<String, String>>?
+    ) : ApiErrorResult(
+        error = error,
+        errorDescription = errorDescription,
+        details = details
+    ), ResetPasswordStartApiResult
 }

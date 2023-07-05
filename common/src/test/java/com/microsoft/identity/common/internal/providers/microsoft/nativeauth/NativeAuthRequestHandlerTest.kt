@@ -22,6 +22,17 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft.nativeauth
 
+import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.ApiConstants.Companion.signInChallengeRequestUrl
+import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.ApiConstants.Companion.signInInitiateRequestUrl
+import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.ApiConstants.Companion.signInTokenRequestUrl
+import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.ApiConstants.Companion.signUpChallengeRequestUrl
+import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.ApiConstants.Companion.signUpContinueRequestUrl
+import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.ApiConstants.Companion.signUpStartRequestUrl
+import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.ApiConstants.Companion.ssprChallengeRequestUrl
+import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.ApiConstants.Companion.ssprContinueRequestUrl
+import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.ApiConstants.Companion.ssprPollCompletionRequestUrl
+import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.ApiConstants.Companion.ssprStartRequestUrl
+import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.ApiConstants.Companion.ssprSubmitRequestUrl
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.ResetPasswordStartCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.ResetPasswordSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.ResetPasswordSubmitNewPasswordCommandParameters
@@ -53,17 +64,6 @@ class NativeAuthRequestHandlerTest {
     private val password = "verySafePassword"
     private val clientId = "1234"
     private val tenant = "samtoso.onmicrosoft.com"
-    private val signUpStartRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/signup/start")
-    private val signUpChallengeRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/signup/challenge")
-    private val signUpContinueRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/signup/continue")
-    private val signInInitiateRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/oauth/v2.0/initiate")
-    private val signInChallengeRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/oauth/v2.0/challenge")
-    private val signInTokenRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/oauth/v2.0/token")
-    private val ssprStartRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/resetpassword/start")
-    private val ssprChallengeRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/resetpassword/challenge")
-    private val ssprContinueRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/resetpassword/continue")
-    private val ssprSubmitRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/resetpassword/submit")
-    private val ssprPollCompletionRequestUrl = URL("https://native-ux-mock-api.azurewebsites.net/1234/resetpassword/poll_completion")
     private val tokenEndpoint = URL("https://contoso.com/1234/token")
     private val challengeType = "oob redirect"
     private val userAttributes = mapOf("city" to "Dublin")
@@ -433,7 +433,7 @@ class NativeAuthRequestHandlerTest {
     }
 
     @Test(expected = ClientException::class)
-    fun testRopcTokenRequestWithEmptyClientIdShouldThrowException() {
+    fun testSignInInitiateWithPasswordCommandParametersWithEmptyClientIdShouldThrowException() {
         every { mockConfig.clientId } returns emptyString
 
         val commandParameters = SignInStartUsingPasswordCommandParameters.builder()
@@ -442,13 +442,13 @@ class NativeAuthRequestHandlerTest {
             .password(password)
             .build()
 
-        nativeAuthRequestProvider.createROPCTokenRequest(
+        nativeAuthRequestProvider.createSignInInitiateRequest(
             parameters = commandParameters
         )
     }
 
     @Test(expected = ClientException::class)
-    fun testSignInTokenWithEmptyChallengeTypeShouldThrowException() {
+    fun testSignInInitiateWithPasswordCommandParametersWithEmptyChallengeTypeShouldThrowException() {
         every { mockConfig.challengeType } returns emptyString
 
         val commandParameters = SignInStartUsingPasswordCommandParameters.builder()
@@ -457,33 +457,35 @@ class NativeAuthRequestHandlerTest {
             .password(password)
             .build()
 
-        nativeAuthRequestProvider.createROPCTokenRequest(
+        nativeAuthRequestProvider.createSignInInitiateRequest(
             parameters = commandParameters
         )
     }
 
     @Test(expected = ClientException::class)
-    fun testSignInTokenWithEmptyUsernameShouldThrowException() {
+    fun testSignInInitiateWithPasswordCommandParametersWithEmptyUsernameShouldThrowException() {
         val commandParameters = SignInStartUsingPasswordCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .username(emptyString)
             .password(password)
             .build()
 
-        nativeAuthRequestProvider.createROPCTokenRequest(
+        nativeAuthRequestProvider.createSignInInitiateRequest(
             parameters = commandParameters
         )
     }
 
-    @Test(expected = ClientException::class)
-    fun testSignInTokenWithEmptyPasswordShouldThrowException() {
+    // The password is not sent to /initiate (but to /token), so no password check (and fail) has
+    // to be done here.
+    @Test
+    fun testSignInInitiateWithPasswordCommandParametersWithEmptyPasswordShouldNotThrowException() {
         val commandParameters = SignInStartUsingPasswordCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .username(username)
             .password(emptyString)
             .build()
 
-        nativeAuthRequestProvider.createROPCTokenRequest(
+        nativeAuthRequestProvider.createSignInInitiateRequest(
             parameters = commandParameters
         )
     }

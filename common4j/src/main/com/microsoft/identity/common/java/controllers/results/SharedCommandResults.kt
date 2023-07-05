@@ -11,12 +11,12 @@ interface CommandResult {
         ResetPasswordStartCommandResult, ResetPasswordSubmitCodeCommandResult, ResetPasswordResendCodeCommandResult
 
     data class UnknownError(
-        val error: String?,
-        val errorDescription: String?,
-        val details: List<Map<String, String>>? = null,
-        val correlationId: String = CommonUtils.getCurrentThreadCorrelationId(),
-        val errorCodes: List<Int>? = null
-    ) :
+        override val error: String?,
+        override val errorDescription: String?,
+        override val details: List<Map<String, String>>? = null,
+        override val correlationId: String = CommonUtils.getCurrentThreadCorrelationId(),
+        override val errorCodes: List<Int>? = null
+    ): Error(error, errorDescription, details, correlationId, errorCodes),
         SignInStartCommandResult, SignInWithSLTCommandResult, SignInSubmitCodeCommandResult, SignInResendCodeCommandResult,
         SignInSubmitPasswordCommandResult, SignUpStartCommandResult,
         SignUpSubmitUserAttributesCommandResult,
@@ -24,4 +24,12 @@ interface CommandResult {
         SignUpSubmitPasswordCommandResult,
         ResetPasswordStartCommandResult, ResetPasswordSubmitCodeCommandResult,
         ResetPasswordResendCodeCommandResult, ResetPasswordSubmitNewPasswordCommandResult
+
+    open class Error(
+        open val error: String?,
+        open val errorDescription: String?,
+        open val details: List<Map<String, String>>? = null,
+        open val correlationId: String = CommonUtils.getCurrentThreadCorrelationId(),
+        open val errorCodes: List<Int>? = null
+    )
 }

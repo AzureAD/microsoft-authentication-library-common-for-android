@@ -43,14 +43,14 @@ class NativeAuthOAuth2Configuration(
     private val TAG = NativeAuthOAuth2Configuration::class.java.simpleName
 
     companion object {
-        private const val SIGNUP_START_ENDPOINT_SUFFIX = "/signup/start"
-        private const val SIGNUP_CHALLENGE_ENDPOINT_SUFFIX = "/signup/challenge"
-        private const val SIGNUP_CONTINUE_ENDPOINT_SUFFIX = "/signup/continue"
-        private const val RESET_PASSWORD_START_ENDPOINT_SUFFIX = "/resetpassword/start"
-        private const val RESET_PASSWORD_CHALLENGE_ENDPOINT_SUFFIX = "/resetpassword/challenge"
-        private const val RESET_PASSWORD_CONTINUE_ENDPOINT_SUFFIX = "/resetpassword/continue"
-        private const val RESET_PASSWORD_SUBMIT_ENDPOINT_SUFFIX = "/resetpassword/submit"
-        private const val RESET_PASSWORD_COMPLETE_ENDPOINT_SUFFIX = "/resetpassword/poll_completion"
+        private const val SIGNUP_START_ENDPOINT_SUFFIX = "/signup/v1.0/start"
+        private const val SIGNUP_CHALLENGE_ENDPOINT_SUFFIX = "/signup/v1.0/challenge"
+        private const val SIGNUP_CONTINUE_ENDPOINT_SUFFIX = "/signup/v1.0/continue"
+        private const val RESET_PASSWORD_START_ENDPOINT_SUFFIX = "/resetpassword/v1.0/start"
+        private const val RESET_PASSWORD_CHALLENGE_ENDPOINT_SUFFIX = "/resetpassword/v1.0/challenge"
+        private const val RESET_PASSWORD_CONTINUE_ENDPOINT_SUFFIX = "/resetpassword/v1.0/continue"
+        private const val RESET_PASSWORD_SUBMIT_ENDPOINT_SUFFIX = "/resetpassword/v1.0/submit"
+        private const val RESET_PASSWORD_COMPLETE_ENDPOINT_SUFFIX = "/resetpassword/v1.0/poll_completion"
         private const val SIGN_IN_INITIATE_ENDPOINT_SUFFIX = "/oauth2/v2.0/initiate"
         private const val SIGN_IN_CHALLENGE_ENDPOINT_SUFFIX = "/oauth2/v2.0/challenge"
         private const val SIGN_IN_TOKEN_ENDPOINT_SUFFIX = "/oauth2/v2.0/token"

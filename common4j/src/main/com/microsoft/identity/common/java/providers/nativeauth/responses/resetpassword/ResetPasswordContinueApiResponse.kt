@@ -71,8 +71,8 @@ class ResetPasswordContinueApiResponse(
                     }
                     else -> {
                         ResetPasswordContinueApiResult.UnknownError(
-                            error = error,
-                            errorDescription = errorDescription,
+                            error = error.orEmpty(),
+                            errorDescription = errorDescription.orEmpty(),
                             details = details
                         )
                     }

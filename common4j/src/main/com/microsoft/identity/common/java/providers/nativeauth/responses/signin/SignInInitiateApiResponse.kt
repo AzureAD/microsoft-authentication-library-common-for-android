@@ -37,10 +37,10 @@ data class SignInInitiateApiResponse(
                     return when {
                         errorCodes.isNullOrEmpty() -> {
                             SignInInitiateApiResult.UnknownError(
-                                error = error,
-                                errorDescription = errorDescription,
+                                error = error.orEmpty(),
+                                errorDescription = errorDescription.orEmpty(),
                                 details = details,
-                                errorCodes = errorCodes
+                                errorCodes = errorCodes.orEmpty()
                             )
                         }
                         errorCodes[0].isUserNotFound() -> {
@@ -52,8 +52,8 @@ data class SignInInitiateApiResponse(
                         }
                         else -> {
                             SignInInitiateApiResult.UnknownError(
-                                error = error,
-                                errorDescription = errorDescription,
+                                error = error.orEmpty(),
+                                errorDescription = errorDescription.orEmpty(),
                                 details = details,
                                 errorCodes = errorCodes
                             )
@@ -62,10 +62,10 @@ data class SignInInitiateApiResponse(
                 }
                 else {
                     SignInInitiateApiResult.UnknownError(
-                        error = error,
-                        errorDescription = errorDescription,
+                        error = error.orEmpty(),
+                        errorDescription = errorDescription.orEmpty(),
                         details = details,
-                        errorCodes = errorCodes
+                        errorCodes = errorCodes.orEmpty()
                     )
                 }
             }
@@ -82,7 +82,7 @@ data class SignInInitiateApiResponse(
                             error = "invalid_state",
                             errorDescription = "SignIn /initiate did not return a flow token",
                             details = details,
-                            errorCodes = errorCodes
+                            errorCodes = errorCodes.orEmpty()
                         )
                     )
                 }
@@ -94,7 +94,7 @@ data class SignInInitiateApiResponse(
                     error = error.orEmpty(),
                     errorDescription = errorDescription.orEmpty(),
                     details = details,
-                    errorCodes = errorCodes
+                    errorCodes = errorCodes.orEmpty()
                 )
             }
         }

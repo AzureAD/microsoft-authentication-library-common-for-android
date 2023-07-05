@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.providers.nativeauth.responses.signup
 
+import com.microsoft.identity.common.java.providers.nativeauth.responses.ApiErrorResult
+
 sealed interface SignUpContinueApiResult {
     object Redirect : SignUpContinueApiResult
 
@@ -32,46 +34,70 @@ sealed interface SignUpContinueApiResult {
 
     data class AttributesRequired(
         val signupToken: String,
-        val error: String,
-        val errorDescription: String,
+        override val error: String,
+        override val errorDescription: String,
         val requiredAttributes: List<Map<String, String>>
-    ) : SignUpContinueApiResult
+    ): ApiErrorResult(
+        error = error,
+        errorDescription = errorDescription,
+    ), SignUpContinueApiResult
 
     data class CredentialRequired(
         val signupToken: String,
-        val error: String,
-        val errorDescription: String
-    ) : SignUpContinueApiResult
+        override val error: String,
+        override val errorDescription: String
+    ): ApiErrorResult(
+        error = error,
+        errorDescription = errorDescription,
+    ), SignUpContinueApiResult
 
     data class ExpiredToken(
-        val error: String,
-        val errorDescription: String
-    ) : SignUpContinueApiResult
+        override val error: String,
+        override val errorDescription: String
+    ): ApiErrorResult(
+        error = error,
+        errorDescription = errorDescription,
+    ), SignUpContinueApiResult
 
     data class UsernameAlreadyExists(
-        val error: String,
-        val errorDescription: String,
-    ) : SignUpContinueApiResult
+        override val error: String,
+        override val errorDescription: String,
+    ): ApiErrorResult(
+        error = error,
+        errorDescription = errorDescription,
+    ), SignUpContinueApiResult
 
     data class InvalidOOBValue(
-        val error: String,
-        val errorDescription: String,
-    ) : SignUpContinueApiResult
+        override val error: String,
+        override val errorDescription: String,
+    ): ApiErrorResult(
+        error = error,
+        errorDescription = errorDescription,
+    ), SignUpContinueApiResult
 
     data class InvalidAttributes(
-        val error: String,
-        val errorDescription: String,
+        override val error: String,
+        override val errorDescription: String,
         val invalidAttributes: List<Map<String, String>>
-    ) : SignUpContinueApiResult
+    ): ApiErrorResult(
+        error = error,
+        errorDescription = errorDescription,
+    ), SignUpContinueApiResult
 
     data class UnknownError(
-        val error: String,
-        val errorDescription: String,
-        val details: List<Map<String, String>>?
-    ) : SignUpContinueApiResult
+        override val error: String,
+        override val errorDescription: String,
+        override val details: List<Map<String, String>>?
+    ): ApiErrorResult(
+        error = error,
+        errorDescription = errorDescription,
+    ), SignUpContinueApiResult
 
     data class InvalidPassword(
-        val error: String,
-        val errorDescription: String
-    ) : SignUpContinueApiResult
+        override val error: String,
+        override val errorDescription: String,
+    ): ApiErrorResult(
+        error = error,
+        errorDescription = errorDescription,
+    ), SignUpContinueApiResult
 }

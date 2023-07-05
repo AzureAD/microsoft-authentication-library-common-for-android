@@ -36,9 +36,6 @@ interface SignInCommandResult {
         SignInStartCommandResult, SignInWithSLTCommandResult, SignInSubmitCodeCommandResult,
         SignInSubmitPasswordCommandResult
 
-    data class InvalidAuthenticationType(val error: String, val errorDescription: String, val correlationId: String = CommonUtils.getCurrentThreadCorrelationId(), val errorCodes: List<Int>) :
-        SignInStartCommandResult, SignInWithSLTCommandResult
-
     data class PasswordRequired(val credentialToken: String) :
         SignInStartCommandResult, SignInWithSLTCommandResult
 

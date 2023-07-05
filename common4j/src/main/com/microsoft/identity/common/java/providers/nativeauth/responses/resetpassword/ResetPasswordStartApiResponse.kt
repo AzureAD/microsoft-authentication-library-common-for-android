@@ -69,8 +69,8 @@ class ResetPasswordStartApiResponse(
                     }
                     else -> {
                         ResetPasswordStartApiResult.UnknownError(
-                            error = error,
-                            errorDescription = errorDescription,
+                            error = error.orEmpty(),
+                            errorDescription = errorDescription.orEmpty(),
                             details = details
                         )
                     }

@@ -22,15 +22,52 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.providers.nativeauth.responses.resetpassword
 
+import com.microsoft.identity.common.java.providers.nativeauth.responses.ApiErrorResult
+
 sealed interface ResetPasswordPollCompletionApiResult {
     object InProgress : ResetPasswordPollCompletionApiResult
-    data class PollingFailed(val error: String, val errorDescription: String) : ResetPasswordPollCompletionApiResult
-    data class PasswordInvalid(val error: String, val errorDescription: String) : ResetPasswordPollCompletionApiResult
+
+    data class PollingFailed(
+        override val error: String,
+        override val errorDescription: String
+    ) : ApiErrorResult(
+        error = error,
+        errorDescription = errorDescription,
+    ), ResetPasswordPollCompletionApiResult
+
+    data class PasswordInvalid(
+        override val error: String,
+        override val errorDescription: String
+    ) : ApiErrorResult(
+        error = error,
+        errorDescription = errorDescription,
+    ), ResetPasswordPollCompletionApiResult
+
     object PollingSucceeded : ResetPasswordPollCompletionApiResult
-    data class UserNotFound(val error: String, val errorDescription: String) :
-        ResetPasswordPollCompletionApiResult
-    data class ExpiredToken(val error: String, val errorDescription: String) :
-        ResetPasswordPollCompletionApiResult
-    data class UnknownError(val error: String?, val errorDescription: String?, val details: List<Map<String, String>>?) :
-        ResetPasswordPollCompletionApiResult
+
+    data class UserNotFound(
+        override val error: String,
+        override val errorDescription: String
+    ) : ApiErrorResult(
+        error = error,
+        errorDescription = errorDescription,
+    ), ResetPasswordPollCompletionApiResult
+
+    data class ExpiredToken(
+        override val error: String,
+        override val errorDescription: String
+    ) : ApiErrorResult(
+        error = error,
+        errorDescription = errorDescription,
+    ), ResetPasswordPollCompletionApiResult
+
+    data class UnknownError(
+        override val error: String,
+        override val errorDescription: String,
+        override val details: List<Map<String, String>>?
+    ) : ApiErrorResult(
+        error = error,
+        errorDescription = errorDescription,
+        details = details
+    ), ResetPasswordPollCompletionApiResult
 }

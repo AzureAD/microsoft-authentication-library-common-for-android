@@ -22,8 +22,11 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.providers.nativeauth.responses.signup
 
+import com.microsoft.identity.common.java.providers.nativeauth.responses.ApiErrorResult
+
 sealed interface SignUpChallengeApiResult {
     object Redirect : SignUpChallengeApiResult
+
     data class OOBRequired(
         val signupToken: String,
         val challengeTargetLabel: String,
@@ -37,19 +40,32 @@ sealed interface SignUpChallengeApiResult {
     ) : SignUpChallengeApiResult
 
     data class UnsupportedChallengeType(
-        val errorCode: String,
-        val errorDescription: String
-    ) : SignUpChallengeApiResult
+        override val error: String,
+        override val errorDescription: String,
+        override val details: List<Map<String, String>>?
+    ) : ApiErrorResult(
+        error = error,
+        errorDescription = errorDescription,
+        details = details
+    ), SignUpChallengeApiResult
 
     data class ExpiredToken(
-        val error: String,
-        val errorDescription: String
-    ) : SignUpChallengeApiResult
+        override val error: String,
+        override val errorDescription: String,
+        override val details: List<Map<String, String>>?
+    ) : ApiErrorResult(
+        error = error,
+        errorDescription = errorDescription,
+        details = details
+    ), SignUpChallengeApiResult
 
     data class UnknownError(
-        val error: String,
-        val errorDescription: String,
-        val details: List<Map<String, String>>?
-    ) :
-        SignUpChallengeApiResult
+        override val error: String,
+        override val errorDescription: String,
+        override val details: List<Map<String, String>>?
+    ) : ApiErrorResult(
+        error = error,
+        errorDescription = errorDescription,
+        details = details
+    ), SignUpChallengeApiResult
 }

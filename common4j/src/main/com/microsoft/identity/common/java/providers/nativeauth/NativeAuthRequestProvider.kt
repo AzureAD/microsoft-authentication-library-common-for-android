@@ -27,11 +27,9 @@ import com.microsoft.identity.common.java.commands.parameters.nativeauth.ResetPa
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.ResetPasswordSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.ResetPasswordSubmitNewPasswordCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartCommandParameters
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartUsingPasswordCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitPasswordCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInWithSLTCommandParameters
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpContinueCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpStartCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpStartUsingPasswordCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpSubmitCodeCommandParameters
@@ -155,22 +153,6 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
     //endregion
 
     //region /oauth/v2.0/token
-    fun createROPCTokenRequest(
-        parameters: SignInStartUsingPasswordCommandParameters
-    ): SignInTokenRequest {
-        LogSession.logMethodCall(tag = TAG)
-
-        return SignInTokenRequest.createROPCTokenRequest(
-            username = parameters.username,
-            password = parameters.password,
-            scopes = parameters.scopes,
-            clientId = config.clientId,
-            challengeType = config.challengeType,
-            requestUrl = signInTokenEndpoint,
-            headers = getRequestHeaders()
-        )
-    }
-
     fun createOOBTokenRequest(
         parameters: SignInSubmitCodeCommandParameters
     ): SignInTokenRequest {
@@ -350,8 +332,6 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
         val headers: MutableMap<String, String?> = TreeMap()
         headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID] =
             DiagnosticContext.INSTANCE.requestContext[DiagnosticContext.CORRELATION_ID]
-        // TODO remove this
-//        headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID] = "12345abcd"
         headers[HttpConstants.HeaderField.CONTENT_TYPE] = "application/x-www-form-urlencoded"
         return headers
     }

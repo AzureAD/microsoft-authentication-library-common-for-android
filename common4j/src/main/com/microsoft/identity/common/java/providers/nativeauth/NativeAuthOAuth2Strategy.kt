@@ -24,7 +24,18 @@
 package com.microsoft.identity.common.java.providers.nativeauth
 
 import androidx.annotation.VisibleForTesting
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.*
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.ResetPasswordStartCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.ResetPasswordSubmitCodeCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.ResetPasswordSubmitNewPasswordCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitCodeCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitPasswordCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInWithSLTCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpStartCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpStartUsingPasswordCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpSubmitCodeCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpSubmitPasswordCommandParameters
+import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpSubmitUserAttributesCommandParameters
 import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy
 import com.microsoft.identity.common.java.providers.nativeauth.interactors.ResetPasswordInteractor
@@ -136,15 +147,6 @@ class NativeAuthOAuth2Strategy(
         LogSession.logMethodCall(tag = TAG)
         return signInInteractor.performSignInChallenge(
             credentialToken = credentialToken,
-        )
-    }
-
-    fun performROPCTokenRequest(
-        parameters: SignInStartUsingPasswordCommandParameters
-    ): SignInTokenApiResult {
-        LogSession.logMethodCall(tag = TAG)
-        return signInInteractor.performROPCTokenRequest(
-            parameters = parameters
         )
     }
 

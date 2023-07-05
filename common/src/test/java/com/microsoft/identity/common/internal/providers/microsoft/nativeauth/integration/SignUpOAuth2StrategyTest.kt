@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.providers.microsoft.nativeauth.integration
 
 import android.os.Build
+import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.ApiConstants
 import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.MockApiEndpointType
 import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.MockApiResponseType
 import com.microsoft.identity.common.internal.providers.microsoft.nativeauth.utils.MockApiUtils.Companion.configureMockApi
@@ -55,7 +56,6 @@ import org.powermock.core.classloader.annotations.PowerMockIgnore
 import org.powermock.core.classloader.annotations.PrepareForTest
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
-import java.net.URL
 import java.util.UUID
 
 /**
@@ -75,29 +75,6 @@ class SignUpOAuth2StrategyTest {
     private val password = "verySafePassword"
     private val tenant = "samtoso.onmicrosoft.com"
     private val clientId = "079af063-4ea7-4dcd-91ff-2b24f54621ea"
-    private val signUpStartRequestUrl =
-        URL("https://native-ux-mock-api.azurewebsites.net/1234/signup/start")
-    private val signUpChallengeRequestUrl =
-        URL("https://native-ux-mock-api.azurewebsites.net/1234/signup/challenge")
-    private val signUpContinueRequestUrl =
-        URL("https://native-ux-mock-api.azurewebsites.net/1234/signup/continue")
-    private val signInInitiateRequestUrl =
-        URL("https://native-ux-mock-api.azurewebsites.net/1234/oauth/v2.0/initiate")
-    private val signInChallengeRequestUrl =
-        URL("https://native-ux-mock-api.azurewebsites.net/1234/oauth/v2.0/challenge")
-    private val signInTokenRequestUrl =
-        URL("https://native-ux-mock-api.azurewebsites.net/1234/oauth/v2.0/token")
-    private val ssprStartRequestUrl =
-        URL("https://native-ux-mock-api.azurewebsites.net/1234/resetpassword/start")
-    private val ssprChallengeRequestUrl =
-        URL("https://native-ux-mock-api.azurewebsites.net/1234/resetpassword/challenge")
-    private val ssprContinueRequestUrl =
-        URL("https://native-ux-mock-api.azurewebsites.net/1234/resetpassword/continue")
-    private val ssprSubmitRequestUrl =
-        URL("https://native-ux-mock-api.azurewebsites.net/1234/resetpassword/submit")
-    private val ssprPollCompletionRequestUrl =
-        URL("https://native-ux-mock-api.azurewebsites.net/1234/resetpassword/poll_completion")
-    private val tokenEndpoint = URL("https://contoso.com/1234/token")
     private val challengeTypes = "oob password redirect"
     private val userAttributes = mapOf("city" to "Dublin")
     private val oobCode = "123456"
@@ -111,18 +88,18 @@ class SignUpOAuth2StrategyTest {
     @Before
     fun setup() {
         whenever(mockConfig.clientId).thenReturn(clientId)
-        whenever(mockConfig.tokenEndpoint).thenReturn(tokenEndpoint)
-        whenever(mockConfig.getSignUpStartEndpoint()).thenReturn(signUpStartRequestUrl)
-        whenever(mockConfig.getSignUpChallengeEndpoint()).thenReturn(signUpChallengeRequestUrl)
-        whenever(mockConfig.getSignUpContinueEndpoint()).thenReturn(signUpContinueRequestUrl)
-        whenever(mockConfig.getSignInInitiateEndpoint()).thenReturn(signInInitiateRequestUrl)
-        whenever(mockConfig.getSignInChallengeEndpoint()).thenReturn(signInChallengeRequestUrl)
-        whenever(mockConfig.getSignInTokenEndpoint()).thenReturn(signInTokenRequestUrl)
-        whenever(mockConfig.getResetPasswordStartEndpoint()).thenReturn(ssprStartRequestUrl)
-        whenever(mockConfig.getResetPasswordChallengeEndpoint()).thenReturn(ssprChallengeRequestUrl)
-        whenever(mockConfig.getResetPasswordContinueEndpoint()).thenReturn(ssprContinueRequestUrl)
-        whenever(mockConfig.getResetPasswordSubmitEndpoint()).thenReturn(ssprSubmitRequestUrl)
-        whenever(mockConfig.getResetPasswordPollCompletionEndpoint()).thenReturn(ssprPollCompletionRequestUrl)
+        whenever(mockConfig.tokenEndpoint).thenReturn(ApiConstants.tokenEndpoint)
+        whenever(mockConfig.getSignUpStartEndpoint()).thenReturn(ApiConstants.signUpStartRequestUrl)
+        whenever(mockConfig.getSignUpChallengeEndpoint()).thenReturn(ApiConstants.signUpChallengeRequestUrl)
+        whenever(mockConfig.getSignUpContinueEndpoint()).thenReturn(ApiConstants.signUpContinueRequestUrl)
+        whenever(mockConfig.getSignInInitiateEndpoint()).thenReturn(ApiConstants.signInInitiateRequestUrl)
+        whenever(mockConfig.getSignInChallengeEndpoint()).thenReturn(ApiConstants.signInChallengeRequestUrl)
+        whenever(mockConfig.getSignInTokenEndpoint()).thenReturn(ApiConstants.signInTokenRequestUrl)
+        whenever(mockConfig.getResetPasswordStartEndpoint()).thenReturn(ApiConstants.ssprStartRequestUrl)
+        whenever(mockConfig.getResetPasswordChallengeEndpoint()).thenReturn(ApiConstants.ssprChallengeRequestUrl)
+        whenever(mockConfig.getResetPasswordContinueEndpoint()).thenReturn(ApiConstants.ssprContinueRequestUrl)
+        whenever(mockConfig.getResetPasswordSubmitEndpoint()).thenReturn(ApiConstants.ssprSubmitRequestUrl)
+        whenever(mockConfig.getResetPasswordPollCompletionEndpoint()).thenReturn(ApiConstants.ssprPollCompletionRequestUrl)
         whenever(mockConfig.challengeType).thenReturn(challengeTypes)
 
         nativeAuthOAuth2Strategy = NativeAuthOAuth2Strategy(

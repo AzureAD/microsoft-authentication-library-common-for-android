@@ -5,14 +5,12 @@ import com.google.gson.annotations.SerializedName
 import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.providers.nativeauth.IApiResponse
 import com.microsoft.identity.common.java.providers.nativeauth.interactors.InnerError
-import com.microsoft.identity.common.java.util.ObjectMapper
 import com.microsoft.identity.common.java.util.isInvalidAuthenticationType
-import com.microsoft.identity.common.java.util.isInvalidGrant
-import com.microsoft.identity.common.java.util.isOtpCodeIncorrect
 import com.microsoft.identity.common.java.util.isInvalidCredentials
+import com.microsoft.identity.common.java.util.isInvalidGrant
 import com.microsoft.identity.common.java.util.isMFARequired
+import com.microsoft.identity.common.java.util.isOtpCodeIncorrect
 import com.microsoft.identity.common.java.util.isUserNotFound
-import java.net.HttpURLConnection
 
 data class SignInTokenApiResponse(
     @Expose override var statusCode: Int,
@@ -43,10 +41,10 @@ data class SignInTokenApiResponse(
             return when {
                 errorCodes.isNullOrEmpty() -> {
                     SignInTokenApiResult.UnknownError(
-                        error = error,
-                        errorDescription = errorDescription,
+                        error = error.orEmpty(),
+                        errorDescription = errorDescription.orEmpty(),
                         details = details,
-                        errorCodes = errorCodes
+                        errorCodes = errorCodes.orEmpty()
                     )
                 }
                 errorCodes[0].isUserNotFound() -> {
@@ -86,8 +84,8 @@ data class SignInTokenApiResponse(
                 }
                 else -> {
                     SignInTokenApiResult.UnknownError(
-                        error = error,
-                        errorDescription = errorDescription,
+                        error = error.orEmpty(),
+                        errorDescription = errorDescription.orEmpty(),
                         details = details,
                         errorCodes = errorCodes
                     )
@@ -96,10 +94,10 @@ data class SignInTokenApiResponse(
         }
         else {
             SignInTokenApiResult.UnknownError(
-                error = error,
-                errorDescription = errorDescription,
+                error = error.orEmpty(),
+                errorDescription = errorDescription.orEmpty(),
                 details = details,
-                errorCodes = errorCodes
+                errorCodes = errorCodes.orEmpty()
             )
         }
     }

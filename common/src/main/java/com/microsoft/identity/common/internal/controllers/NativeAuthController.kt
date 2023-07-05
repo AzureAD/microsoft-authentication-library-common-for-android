@@ -22,6 +22,7 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.controllers
 
+import androidx.annotation.VisibleForTesting
 import com.microsoft.identity.common.internal.commands.RefreshOnCommand
 import com.microsoft.identity.common.internal.commands.ResetPasswordSubmitNewPasswordCommand
 import com.microsoft.identity.common.internal.telemetry.Telemetry
@@ -31,7 +32,6 @@ import com.microsoft.identity.common.java.AuthenticationConstants
 import com.microsoft.identity.common.java.cache.ICacheRecord
 import com.microsoft.identity.common.java.commands.parameters.SilentTokenCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.AcquireTokenNoFixedScopesCommandParameters
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.BaseSignInStartCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.BaseSignInTokenCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.BaseSignUpStartCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.ResetPasswordResendCodeCommandParameters
@@ -82,6 +82,7 @@ import com.microsoft.identity.common.java.logging.Logger
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy
 import com.microsoft.identity.common.java.providers.nativeauth.NativeAuthOAuth2Strategy
+import com.microsoft.identity.common.java.providers.nativeauth.responses.ApiErrorResult
 import com.microsoft.identity.common.java.providers.nativeauth.responses.resetpassword.ResetPasswordChallengeApiResult
 import com.microsoft.identity.common.java.providers.nativeauth.responses.resetpassword.ResetPasswordContinueApiResult
 import com.microsoft.identity.common.java.providers.nativeauth.responses.resetpassword.ResetPasswordPollCompletionApiResult
@@ -116,7 +117,7 @@ class NativeAuthController : BaseNativeAuthController() {
         private val TAG = NativeAuthController::class.java.simpleName
     }
 
-    fun signInStart(parameters: BaseSignInStartCommandParameters): SignInStartCommandResult {
+    fun signInStart(parameters: SignInStartCommandParameters): SignInStartCommandResult {
         LogSession.logMethodCall(tag = TAG)
 
         try {
@@ -129,130 +130,32 @@ class NativeAuthController : BaseNativeAuthController() {
                 .authority
                 .createOAuth2Strategy(strategyParameters)
 
-            val isROPCCall = parameters is SignInStartUsingPasswordCommandParameters
+            val usePassword = parameters is SignInStartUsingPasswordCommandParameters
 
-            return if (isROPCCall) {
-                signInStartROPC(
+            var parametersWithScopes: SignInStartUsingPasswordCommandParameters? = null
+            if (usePassword) {
+                val mergedScopes = addDefaultScopes(parameters.scopes)
+                parametersWithScopes = CommandUtil.createSignInStartCommandParametersWithScopes(
                     parameters as SignInStartUsingPasswordCommandParameters,
-                    oAuth2Strategy
+                    mergedScopes
                 )
-            } else {
-                signInStartNonROPC(parameters as SignInStartCommandParameters, oAuth2Strategy)
             }
+
+            val initiateApiResult = performSignInInitiateCall(
+                oAuth2Strategy = oAuth2Strategy,
+                parameters = parameters // Downcast, because we don't need the password in this API call
+            )
+
+            return processSignInInitiateApiResult(
+                initiateApiResult = initiateApiResult,
+                oAuth2Strategy = oAuth2Strategy,
+                parametersWithScopes = parametersWithScopes, // Include the scopes, to send to /token endpoint in case of password flow
+                usePassword = usePassword
+            )
         } catch (e: Exception) {
             LogSession.logException(tag = TAG, throwable = e)
             throw e
         }
-    }
-
-    private fun signInStartROPC(
-        parameters: SignInStartUsingPasswordCommandParameters,
-        oAuth2Strategy: NativeAuthOAuth2Strategy,
-    ): SignInStartCommandResult {
-        LogSession.logMethodCall(tag = TAG)
-
-        val mergedScopes = addDefaultScopes(parameters.scopes)
-        val parametersWithScopes =
-            CommandUtil.createSignInStartUsingPasswordCommandParametersWithScopes(
-                parameters,
-                mergedScopes
-            )
-
-        val tokenApiResult = performROPCTokenRequest(
-            oAuth2Strategy = oAuth2Strategy,
-            parameters = parametersWithScopes
-        )
-        return when (tokenApiResult) {
-            is SignInTokenApiResult.Success -> {
-                saveAndReturnTokens(
-                    oAuth2Strategy = oAuth2Strategy,
-                    parametersWithScopes = parametersWithScopes,
-                    tokenApiResult = tokenApiResult
-                )
-            }
-
-            is SignInTokenApiResult.UnknownError -> {
-                LogSession.log(
-                    tag = TAG,
-                    logLevel = Logger.LogLevel.WARN,
-                    message = "Unexpected result: $tokenApiResult"
-                )
-                CommandResult.UnknownError(
-                    error = tokenApiResult.error,
-                    errorDescription = tokenApiResult.errorDescription,
-                    details = tokenApiResult.details,
-                    errorCodes = tokenApiResult.errorCodes
-                )
-            }
-
-            is SignInTokenApiResult.InvalidCredentials -> {
-                SignInCommandResult.InvalidCredentials(
-                    error = tokenApiResult.error,
-                    errorDescription = tokenApiResult.errorDescription,
-                    errorCodes = tokenApiResult.errorCodes
-                )
-            }
-
-            is SignInTokenApiResult.MFARequired -> {
-                LogSession.log(
-                    tag = TAG,
-                    logLevel = Logger.LogLevel.INFO,
-                    message = "Returning Redirect: $tokenApiResult"
-                )
-                CommandResult.Redirect()
-            }
-
-            is SignInTokenApiResult.UserNotFound -> {
-                SignInCommandResult.UserNotFound(
-                    error = tokenApiResult.error,
-                    errorDescription = tokenApiResult.errorDescription,
-                    errorCodes = tokenApiResult.errorCodes
-                )
-            }
-
-            is SignInTokenApiResult.InvalidAuthenticationType -> {
-                signInStartAfterInvalidAuthenticationMethod(
-                    signInStartCommandParameters = parameters,
-                    oAuth2Strategy = oAuth2Strategy
-                )
-            }
-
-            is SignInTokenApiResult.CodeIncorrect -> {
-                LogSession.log(
-                    tag = TAG,
-                    logLevel = Logger.LogLevel.WARN,
-                    message = "Unexpected result: $tokenApiResult"
-                )
-                CommandResult.UnknownError(
-                    error = "unexpected_api_result",
-                    errorDescription = "API returned unexpected result: $tokenApiResult",
-                    errorCodes = tokenApiResult.errorCodes
-                )
-            }
-        }
-    }
-
-    private fun signInStartNonROPC(
-        parameters: SignInStartCommandParameters,
-        oAuth2Strategy: NativeAuthOAuth2Strategy
-    ): SignInStartCommandResult {
-        LogSession.logMethodCall(tag = TAG)
-
-        val mergedScopes = addDefaultScopes(parameters.scopes)
-        val parametersWithScopes = CommandUtil.createSignInStartCommandParametersWithScopes(
-            parameters,
-            mergedScopes
-        )
-
-        val initiateApiResult = performSignInInitiateCall(
-            oAuth2Strategy = oAuth2Strategy,
-            parameters = parametersWithScopes
-        )
-
-        return processSignInInitiateApiResult(
-            initiateApiResult = initiateApiResult,
-            oAuth2Strategy = oAuth2Strategy
-        )
     }
 
     fun signInWithSLT(parameters: SignInWithSLTCommandParameters): SignInWithSLTCommandResult {
@@ -286,73 +189,19 @@ class NativeAuthController : BaseNativeAuthController() {
                         tokenApiResult = tokenApiResult
                     )
                 }
-
+                is SignInTokenApiResult.InvalidAuthenticationType,
+                is SignInTokenApiResult.MFARequired, is SignInTokenApiResult.CodeIncorrect,
+                is SignInTokenApiResult.UserNotFound, is SignInTokenApiResult.InvalidCredentials,
                 is SignInTokenApiResult.UnknownError -> {
+                    LogSession.log(
+                        tag = TAG,
+                        logLevel = Logger.LogLevel.WARN,
+                        message = "Unexpected result: $tokenApiResult"
+                    )
+                    tokenApiResult as ApiErrorResult
+
                     return CommandResult.UnknownError(
                         error = tokenApiResult.error,
-                        errorDescription = tokenApiResult.errorDescription,
-                        details = tokenApiResult.details,
-                        errorCodes = tokenApiResult.errorCodes
-                    )
-                }
-
-                is SignInTokenApiResult.InvalidAuthenticationType -> {
-                    return SignInCommandResult.InvalidAuthenticationType(
-                        error = tokenApiResult.error,
-                        errorDescription = tokenApiResult.errorDescription,
-                        errorCodes = tokenApiResult.errorCodes
-                    )
-                }
-
-                is SignInTokenApiResult.MFARequired -> {
-                    LogSession.log(
-                        tag = TAG,
-                        logLevel = Logger.LogLevel.WARN,
-                        message = "Unexpected result: $tokenApiResult"
-                    )
-                    return CommandResult.UnknownError(
-                        error = tokenApiResult.error,
-                        errorDescription = "API returned unexpected result: $tokenApiResult",
-                        errorCodes = tokenApiResult.errorCodes
-                    )
-                }
-
-                is SignInTokenApiResult.CodeIncorrect -> {
-                    // This shouldn't be possible in SLT, throw unknown error
-                    LogSession.log(
-                        tag = TAG,
-                        logLevel = Logger.LogLevel.WARN,
-                        message = "Unexpected result: $tokenApiResult"
-                    )
-                    return CommandResult.UnknownError(
-                        error = "unexpected_api_result",
-                        errorDescription = "API returned unexpected result: $tokenApiResult",
-                        errorCodes = tokenApiResult.errorCodes
-                    )
-                }
-
-                is SignInTokenApiResult.UserNotFound -> {
-                    // This shouldn't be possible in SLT, throw unknown error
-                    LogSession.log(
-                        tag = TAG,
-                        logLevel = Logger.LogLevel.WARN,
-                        message = "Unexpected result: $tokenApiResult"
-                    )
-                    return CommandResult.UnknownError(
-                        error = "unexpected_api_result",
-                        errorDescription = "API returned unexpected result: $tokenApiResult",
-                        errorCodes = tokenApiResult.errorCodes
-                    )
-                }
-                is SignInTokenApiResult.InvalidCredentials -> {
-                    // This shouldn't be possible in SLT, throw unknown error
-                    LogSession.log(
-                        tag = TAG,
-                        logLevel = Logger.LogLevel.WARN,
-                        message = "Unexpected result: $tokenApiResult"
-                    )
-                    return CommandResult.UnknownError(
-                        error = "unexpected_api_result",
                         errorDescription = "API returned unexpected result: $tokenApiResult",
                         errorCodes = tokenApiResult.errorCodes
                     )
@@ -397,7 +246,6 @@ class NativeAuthController : BaseNativeAuthController() {
                         tokenApiResult = tokenApiResult
                     )
                 }
-
                 is SignInTokenApiResult.CodeIncorrect -> {
                     SignInCommandResult.IncorrectCode(
                         error = tokenApiResult.error,
@@ -406,67 +254,19 @@ class NativeAuthController : BaseNativeAuthController() {
                     )
                 }
 
-                is SignInTokenApiResult.UnknownError -> {
-                    LogSession.log(
-                        tag = TAG,
-                        logLevel = Logger.LogLevel.WARN,
-                        message = "Unexpected result: $tokenApiResult"
-                    )
-                    CommandResult.UnknownError(
-                        error = tokenApiResult.error,
-                        errorDescription = tokenApiResult.errorDescription,
-                        details = tokenApiResult.details,
-                        errorCodes = tokenApiResult.errorCodes
-                    )
-                }
-
-                is SignInTokenApiResult.InvalidAuthenticationType -> {
-                    LogSession.log(
-                        tag = TAG,
-                        logLevel = Logger.LogLevel.WARN,
-                        message = "Unexpected result: $tokenApiResult"
-                    )
-                    CommandResult.UnknownError(
-                        error = tokenApiResult.error,
-                        errorDescription = tokenApiResult.errorDescription,
-                        errorCodes = tokenApiResult.errorCodes
-                    )
-                }
-
-                is SignInTokenApiResult.MFARequired -> {
-                    LogSession.log(
-                        tag = TAG,
-                        logLevel = Logger.LogLevel.WARN,
-                        message = "Unexpected result: $tokenApiResult"
-                    )
-                    CommandResult.UnknownError(
-                        error = tokenApiResult.error,
-                        errorDescription = "API returned unexpected result: $tokenApiResult",
-                        errorCodes = tokenApiResult.errorCodes
-                    )
-                }
-
-                is SignInTokenApiResult.InvalidCredentials -> {
-                    LogSession.log(
-                        tag = TAG,
-                        logLevel = Logger.LogLevel.WARN,
-                        message = "Unexpected result: $tokenApiResult"
-                    )
-                    CommandResult.UnknownError(
-                        error = "unexpected_api_result",
-                        errorDescription = "API returned unexpected result: $tokenApiResult",
-                        errorCodes = tokenApiResult.errorCodes
-                    )
-                }
+                is SignInTokenApiResult.UnknownError, is SignInTokenApiResult.InvalidAuthenticationType,
+                is SignInTokenApiResult.MFARequired, is SignInTokenApiResult.InvalidCredentials,
                 is SignInTokenApiResult.UserNotFound -> {
                     LogSession.log(
                         tag = TAG,
                         logLevel = Logger.LogLevel.WARN,
                         message = "Unexpected result: $tokenApiResult"
                     )
+                    tokenApiResult as ApiErrorResult
                     CommandResult.UnknownError(
-                        error = "unexpected_api_result",
-                        errorDescription = "API returned unexpected result: $tokenApiResult",
+                        error = tokenApiResult.error,
+                        errorDescription = tokenApiResult.errorDescription,
+                        details = tokenApiResult.details,
                         errorCodes = tokenApiResult.errorCodes
                     )
                 }
@@ -503,7 +303,6 @@ class NativeAuthController : BaseNativeAuthController() {
                         challengeChannel = result.challengeChannel,
                     )
                 }
-
                 is SignInChallengeApiResult.PasswordRequired -> {
                     LogSession.log(
                         tag = TAG,
@@ -515,11 +314,9 @@ class NativeAuthController : BaseNativeAuthController() {
                         errorDescription = "API returned unexpected result: $result"
                     )
                 }
-
                 SignInChallengeApiResult.Redirect -> {
                     CommandResult.Redirect()
                 }
-
                 is SignInChallengeApiResult.UnknownError -> {
                     LogSession.log(
                         tag = TAG,
@@ -560,821 +357,16 @@ class NativeAuthController : BaseNativeAuthController() {
                     mergedScopes
                 )
 
-            val result = performPasswordTokenCall(
+            return performPasswordTokenCall(
                 oAuth2Strategy = oAuth2Strategy,
                 parameters = parametersWithScopes
-            )
-            return when (result) {
-                is SignInTokenApiResult.InvalidCredentials -> {
-                    SignInCommandResult.InvalidCredentials(
-                        error = result.error,
-                        errorDescription = result.errorDescription,
-                        errorCodes = result.errorCodes
-                    )
-                }
-
-                is SignInTokenApiResult.Success -> {
-                    saveAndReturnTokens(
-                        oAuth2Strategy = oAuth2Strategy,
-                        parametersWithScopes = parametersWithScopes,
-                        tokenApiResult = result
-                    )
-                }
-
-                is SignInTokenApiResult.UnknownError -> {
-                    LogSession.log(
-                        tag = TAG,
-                        logLevel = Logger.LogLevel.WARN,
-                        message = "Unexpected result: $result"
-                    )
-                    CommandResult.UnknownError(
-                        error = result.error,
-                        errorDescription = result.errorDescription,
-                        details = result.details,
-                        errorCodes = result.errorCodes
-                    )
-                }
-
-                is SignInTokenApiResult.InvalidAuthenticationType -> {
-                    LogSession.log(
-                        tag = TAG,
-                        logLevel = Logger.LogLevel.WARN,
-                        message = "Unexpected result: $result"
-                    )
-                    CommandResult.UnknownError(
-                        error = result.error,
-                        errorDescription = result.errorDescription,
-                        errorCodes = result.errorCodes
-                    )
-                }
-
-                is SignInTokenApiResult.MFARequired -> {
-                    LogSession.log(
-                        tag = TAG,
-                        logLevel = Logger.LogLevel.WARN,
-                        message = "Unexpected result: $result"
-                    )
-                    CommandResult.UnknownError(
-                        error = result.error,
-                        errorDescription = "API returned unexpected result: $result",
-                        errorCodes = result.errorCodes
-                    )
-                }
-
-                is SignInTokenApiResult.CodeIncorrect -> {
-                    LogSession.log(
-                        tag = TAG,
-                        logLevel = Logger.LogLevel.WARN,
-                        message = "Unexpected result: $result"
-                    )
-                    CommandResult.UnknownError(
-                        error = "unexpected_api_result",
-                        errorDescription = "API returned unexpected result: $result",
-                        errorCodes = result.errorCodes
-                    )
-                }
-
-                is SignInTokenApiResult.UserNotFound -> {
-                    LogSession.log(
-                        tag = TAG,
-                        logLevel = Logger.LogLevel.WARN,
-                        message = "Unexpected result: $result"
-                    )
-                    CommandResult.UnknownError(
-                        error = "unexpected_api_result",
-                        errorDescription = "API returned unexpected result: $result",
-                        errorCodes = result.errorCodes
-                    )
-                }
-            }
-        } catch (e: Exception) {
-            LogSession.logException(tag = TAG, throwable = e)
-            throw e
-        }
-    }
-
-    fun resetPasswordStart(parameters: ResetPasswordStartCommandParameters): ResetPasswordStartCommandResult {
-        LogSession.logMethodCall(tag = TAG)
-
-        try {
-            val strategyParameters = OAuth2StrategyParameters.builder()
-                .platformComponents(parameters.platformComponents)
-                .challengeTypes(parameters.challengeType)
-                .build()
-
-            val oAuth2Strategy = parameters
-                .authority
-                .createOAuth2Strategy(strategyParameters)
-
-            val startApiResult = performResetPasswordStartCall(
+            ).toSignInSubmitPasswordCommandResult(
                 oAuth2Strategy = oAuth2Strategy,
-                parameters = parameters
+                parametersWithScopes = parametersWithScopes
             )
-
-            return when (startApiResult) {
-                ResetPasswordStartApiResult.Redirect -> {
-                    CommandResult.Redirect()
-                }
-
-                is ResetPasswordStartApiResult.Success -> {
-                    performResetPasswordChallengeCall(
-                        oAuth2Strategy = oAuth2Strategy,
-                        passwordResetToken = startApiResult.passwordResetToken
-                    ).toResetPasswordStartCommandResult()
-                }
-
-                is ResetPasswordStartApiResult.UserNotFound -> {
-                    ResetPasswordCommandResult.UserNotFound(
-                        error = startApiResult.error,
-                        errorDescription = startApiResult.errorDescription
-                    )
-                }
-
-                is ResetPasswordStartApiResult.UnsupportedChallengeType -> {
-                    LogSession.log(
-                        tag = TAG,
-                        logLevel = Logger.LogLevel.WARN,
-                        message = "Unexpected result: $startApiResult"
-                    )
-                    CommandResult.UnknownError(
-                        error = startApiResult.error,
-                        errorDescription = startApiResult.errorDescription
-                    )
-                }
-
-                is ResetPasswordStartApiResult.UnknownError -> {
-                    LogSession.log(
-                        tag = TAG,
-                        logLevel = Logger.LogLevel.WARN,
-                        message = "Unexpected result: $startApiResult"
-                    )
-                    CommandResult.UnknownError(
-                        error = startApiResult.error,
-                        errorDescription = startApiResult.errorDescription,
-                        details = startApiResult.details
-                    )
-                }
-            }
         } catch (e: Exception) {
             LogSession.logException(tag = TAG, throwable = e)
             throw e
-        }
-    }
-
-    fun resetPasswordSubmitCode(parameters: ResetPasswordSubmitCodeCommandParameters): ResetPasswordSubmitCodeCommandResult {
-        LogSession.logMethodCall(tag = TAG)
-
-        try {
-            val strategyParameters = OAuth2StrategyParameters.builder()
-                .platformComponents(parameters.platformComponents)
-                .build()
-
-            val oAuth2Strategy = parameters
-                .authority
-                .createOAuth2Strategy(strategyParameters)
-
-            val continueApiResult = performResetPasswordContinueCall(
-                oAuth2Strategy = oAuth2Strategy,
-                parameters = parameters
-            )
-
-            return when (continueApiResult) {
-                ResetPasswordContinueApiResult.Redirect -> {
-                    CommandResult.Redirect()
-                }
-
-                is ResetPasswordContinueApiResult.PasswordRequired -> {
-                    ResetPasswordCommandResult.PasswordRequired(
-                        passwordSubmitToken = continueApiResult.passwordSubmitToken
-                    )
-                }
-
-                is ResetPasswordContinueApiResult.CodeIncorrect -> {
-                    ResetPasswordCommandResult.IncorrectCode(
-                        error = continueApiResult.error,
-                        errorDescription = continueApiResult.errorDescription
-                    )
-                }
-
-                is ResetPasswordContinueApiResult.ExpiredToken -> {
-                    LogSession.log(
-                        tag = TAG,
-                        logLevel = Logger.LogLevel.WARN,
-                        message = "Expire token result: $this"
-                    )
-                    CommandResult.UnknownError(
-                        error = continueApiResult.error,
-                        errorDescription = continueApiResult.errorDescription
-                    )
-                }
-
-                is ResetPasswordContinueApiResult.UnknownError -> {
-                    LogSession.log(
-                        tag = TAG,
-                        logLevel = Logger.LogLevel.WARN,
-                        message = "Unexpected result: $continueApiResult"
-                    )
-
-                    CommandResult.UnknownError(
-                        error = continueApiResult.error,
-                        errorDescription = continueApiResult.errorDescription,
-                        details = continueApiResult.details
-                    )
-                }
-            }
-        } catch (e: Exception) {
-            LogSession.logException(tag = TAG, throwable = e)
-            throw e
-        }
-    }
-
-    fun resetPasswordResendCode(parameters: ResetPasswordResendCodeCommandParameters): ResetPasswordResendCodeCommandResult {
-        LogSession.logMethodCall(tag = TAG)
-
-        try {
-            val strategyParameters = OAuth2StrategyParameters.builder()
-                .platformComponents(parameters.platformComponents)
-                .build()
-
-            val oAuth2Strategy = parameters
-                .authority
-                .createOAuth2Strategy(strategyParameters)
-
-            val resetPasswordChallengeApiResult = performResetPasswordChallengeCall(
-                oAuth2Strategy = oAuth2Strategy,
-                passwordResetToken = parameters.passwordResetToken
-            )
-
-            return when (resetPasswordChallengeApiResult) {
-                is ResetPasswordChallengeApiResult.CodeRequired -> {
-                    ResetPasswordCommandResult.CodeRequired(
-                        passwordResetToken = resetPasswordChallengeApiResult.passwordResetToken,
-                        codeLength = resetPasswordChallengeApiResult.codeLength,
-                        challengeTargetLabel = resetPasswordChallengeApiResult.challengeTargetLabel,
-                        challengeChannel = resetPasswordChallengeApiResult.challengeChannel
-                    )
-                }
-
-                ResetPasswordChallengeApiResult.Redirect -> {
-                    CommandResult.Redirect()
-                }
-
-                is ResetPasswordChallengeApiResult.ExpiredToken -> {
-                    LogSession.log(
-                        tag = TAG,
-                        logLevel = Logger.LogLevel.WARN,
-                        message = "Expire token result: $this"
-                    )
-                    CommandResult.UnknownError(
-                        error = resetPasswordChallengeApiResult.error,
-                        errorDescription = resetPasswordChallengeApiResult.errorDescription
-                    )
-                }
-
-                is ResetPasswordChallengeApiResult.UnsupportedChallengeType -> {
-                    LogSession.log(
-                        tag = TAG,
-                        logLevel = Logger.LogLevel.WARN,
-                        message = "Unexpected result: $resetPasswordChallengeApiResult"
-                    )
-                    CommandResult.UnknownError(
-                        error = resetPasswordChallengeApiResult.error,
-                        errorDescription = resetPasswordChallengeApiResult.errorDescription
-                    )
-                }
-
-                is ResetPasswordChallengeApiResult.UnknownError -> {
-                    LogSession.log(
-                        tag = TAG,
-                        logLevel = Logger.LogLevel.WARN,
-                        message = "Unexpected result: $resetPasswordChallengeApiResult"
-                    )
-                    CommandResult.UnknownError(
-                        error = resetPasswordChallengeApiResult.error,
-                        errorDescription = resetPasswordChallengeApiResult.errorDescription,
-                        details = resetPasswordChallengeApiResult.details
-                    )
-                }
-            }
-        } catch (e: Exception) {
-            LogSession.logException(tag = TAG, throwable = e)
-            throw e
-        }
-    }
-
-    fun resetPasswordSubmitNewPassword(parameters: ResetPasswordSubmitNewPasswordCommandParameters): ResetPasswordSubmitNewPasswordCommandResult {
-        LogSession.logMethodCall(tag = TAG)
-
-        try {
-            val strategyParameters = OAuth2StrategyParameters.builder()
-                .platformComponents(parameters.platformComponents)
-                .build()
-
-            val oAuth2Strategy = parameters
-                .authority
-                .createOAuth2Strategy(strategyParameters)
-
-            val submitApiResult = performResetPasswordSubmitCall(
-                oAuth2Strategy = oAuth2Strategy,
-                parameters = parameters
-            )
-
-            return when (submitApiResult) {
-                is ResetPasswordSubmitApiResult.SubmitSuccess -> {
-                    resetPasswordPollCompletion(
-                        oAuth2Strategy = oAuth2Strategy,
-                        passwordResetToken = submitApiResult.passwordResetToken,
-                        pollIntervalInSeconds = submitApiResult.pollInterval
-                    )
-                }
-
-                is ResetPasswordSubmitApiResult.PasswordInvalid -> {
-                    ResetPasswordCommandResult.PasswordNotAccepted(
-                        error = submitApiResult.error,
-                        errorDescription = submitApiResult.errorDescription
-                    )
-                }
-
-                is ResetPasswordSubmitApiResult.ExpiredToken -> {
-                    LogSession.log(
-                        tag = TAG,
-                        logLevel = Logger.LogLevel.WARN,
-                        message = "Expire token result: $this"
-                    )
-                    CommandResult.UnknownError(
-                        error = submitApiResult.error,
-                        errorDescription = submitApiResult.errorDescription
-                    )
-                }
-
-                is ResetPasswordSubmitApiResult.UnknownError -> {
-                    LogSession.log(
-                        tag = TAG,
-                        logLevel = Logger.LogLevel.WARN,
-                        message = "Unexpected result: $submitApiResult"
-                    )
-
-                    CommandResult.UnknownError(
-                        error = submitApiResult.error,
-                        errorDescription = submitApiResult.errorDescription,
-                        details = submitApiResult.details
-                    )
-                }
-            }
-        } catch (e: Exception) {
-            LogSession.logException(tag = TAG, throwable = e)
-            throw e
-        }
-    }
-
-    private fun resetPasswordPollCompletion(
-        oAuth2Strategy: NativeAuthOAuth2Strategy,
-        passwordResetToken: String,
-        pollIntervalInSeconds: Int?
-    ): ResetPasswordSubmitNewPasswordCommandResult {
-        fun pollCompletionTimedOut(startTime: Long): Boolean {
-            val currentTime = System.currentTimeMillis()
-            return currentTime - startTime > ResetPasswordSubmitNewPasswordCommand.POLL_COMPLETION_TIMEOUT_IN_MILISECONDS
-        }
-
-        fun pollIntervalIsAppropriate(pollIntervalInSeconds: Int?): Boolean {
-            return pollIntervalInSeconds != null && pollIntervalInSeconds <= 15 && pollIntervalInSeconds >= 1
-        }
-
-        val methodTag = "$TAG:resetPasswordPollCompletion"
-
-        LogSession.logMethodCall(tag = TAG)
-
-        try {
-            val pollWaitInterval: Int = if (!pollIntervalIsAppropriate(pollIntervalInSeconds)) {
-                ResetPasswordSubmitNewPasswordCommand.DEFAULT_POLL_COMPLETION_INTERVAL_IN_MILISECONDS
-            } else {
-                pollIntervalInSeconds!! * 1000
-            }
-
-            var pollCompletionApiResult = performResetPasswordPollCompletionCall(
-                oAuth2Strategy = oAuth2Strategy,
-                passwordResetToken = passwordResetToken
-            )
-
-            val startTime = System.currentTimeMillis()
-
-            while (pollCompletionApiResult is ResetPasswordPollCompletionApiResult.InProgress) {
-                // TODO: This will use coroutines, most likely shouldn't use thread sleep here
-                ThreadUtils.sleepSafely(
-                    pollWaitInterval,
-                    methodTag,
-                    "Waiting between reset password polls"
-                )
-
-                if (pollCompletionTimedOut(startTime)) {
-                    LogSession.log(
-                        tag = TAG,
-                        logLevel = Logger.LogLevel.WARN,
-                        message = "Reset password completion timed out."
-                    )
-                    return ResetPasswordCommandResult.PasswordResetFailed(
-                        error = ResetPasswordSubmitNewPasswordCommand.POLL_COMPLETION_TIMEOUT_ERROR_CODE,
-                        errorDescription = ResetPasswordSubmitNewPasswordCommand.POLL_COMPLETION_TIMEOUT_ERROR_DESCRIPTION
-                    )
-                }
-
-                LogSession.logMethodCall(tag = TAG)
-
-                pollCompletionApiResult = performResetPasswordPollCompletionCall(
-                    oAuth2Strategy = oAuth2Strategy,
-                    passwordResetToken = passwordResetToken
-                )
-            }
-
-            return when (pollCompletionApiResult) {
-                is ResetPasswordPollCompletionApiResult.PollingFailed -> {
-                    ResetPasswordCommandResult.PasswordResetFailed(
-                        error = pollCompletionApiResult.error,
-                        errorDescription = pollCompletionApiResult.errorDescription
-                    )
-                }
-
-                is ResetPasswordPollCompletionApiResult.PollingSucceeded -> {
-                    ResetPasswordCommandResult.Complete
-                }
-
-                is ResetPasswordPollCompletionApiResult.InProgress -> {
-                    LogSession.log(
-                        tag = TAG,
-                        logLevel = Logger.LogLevel.WARN,
-                        message = "in_progress received after polling, illegal state"
-                    )
-                    // This should never be reached, theoretically
-                    CommandResult.UnknownError(
-                        error = "illegal_state",
-                        errorDescription = "in_progress received after polling concluded, illegal state"
-                    )
-                }
-
-                is ResetPasswordPollCompletionApiResult.ExpiredToken -> {
-                    LogSession.log(
-                        tag = TAG,
-                        logLevel = Logger.LogLevel.WARN,
-                        message = "Expire token result: $this"
-                    )
-                    CommandResult.UnknownError(
-                        error = pollCompletionApiResult.error,
-                        errorDescription = pollCompletionApiResult.errorDescription
-                    )
-                }
-
-                is ResetPasswordPollCompletionApiResult.UserNotFound -> {
-                    // This should be caught earlier in the flow
-                    LogSession.log(
-                        tag = TAG,
-                        logLevel = Logger.LogLevel.WARN,
-                        message = "Unexpected result: $pollCompletionApiResult"
-                    )
-
-                    CommandResult.UnknownError(
-                        error = pollCompletionApiResult.error,
-                        errorDescription = pollCompletionApiResult.errorDescription
-                    )
-                }
-
-                is ResetPasswordPollCompletionApiResult.PasswordInvalid -> {
-                    // This should be caught in /submit
-                    LogSession.log(
-                        tag = TAG,
-                        logLevel = Logger.LogLevel.WARN,
-                        message = "Unexpected result: $pollCompletionApiResult"
-                    )
-
-                    CommandResult.UnknownError(
-                        error = pollCompletionApiResult.error,
-                        errorDescription = pollCompletionApiResult.errorDescription
-                    )
-                }
-
-                is ResetPasswordPollCompletionApiResult.UnknownError -> {
-                    LogSession.log(
-                        tag = TAG,
-                        logLevel = Logger.LogLevel.WARN,
-                        message = "Unexpected result: $pollCompletionApiResult"
-                    )
-
-                    CommandResult.UnknownError(
-                        error = pollCompletionApiResult.error,
-                        errorDescription = pollCompletionApiResult.errorDescription,
-                        details = pollCompletionApiResult.details
-                    )
-                }
-            }
-        } catch (e: Exception) {
-            LogSession.logException(tag = TAG, throwable = e)
-            throw e
-        }
-    }
-
-    private fun performROPCTokenRequest(
-        oAuth2Strategy: NativeAuthOAuth2Strategy,
-        parameters: SignInStartUsingPasswordCommandParameters
-    ): SignInTokenApiResult {
-        LogSession.logMethodCall(tag = TAG)
-        return oAuth2Strategy.performROPCTokenRequest(
-            parameters = parameters
-        )
-    }
-
-    private fun performSLTTokenRequest(
-        oAuth2Strategy: NativeAuthOAuth2Strategy,
-        parameters: SignInWithSLTCommandParameters
-    ): SignInTokenApiResult {
-        LogSession.logMethodCall(tag = TAG)
-        return oAuth2Strategy.performSLTTokenRequest(
-            parameters = parameters
-        )
-    }
-
-    private fun performOOBTokenRequest(
-        oAuth2Strategy: NativeAuthOAuth2Strategy,
-        parameters: SignInSubmitCodeCommandParameters
-    ): SignInTokenApiResult {
-        LogSession.logMethodCall(tag = TAG)
-        return oAuth2Strategy.performOOBTokenRequest(
-            parameters = parameters
-        )
-    }
-
-    private fun performPasswordTokenCall(
-        oAuth2Strategy: NativeAuthOAuth2Strategy,
-        parameters: SignInSubmitPasswordCommandParameters
-    ): SignInTokenApiResult {
-        LogSession.logMethodCall(tag = TAG)
-        return oAuth2Strategy.performPasswordTokenRequest(
-            parameters = parameters
-        )
-    }
-
-    private fun performSignInInitiateCall(
-        oAuth2Strategy: NativeAuthOAuth2Strategy,
-        parameters: SignInStartCommandParameters,
-    ): SignInInitiateApiResult {
-        LogSession.logMethodCall(tag = TAG)
-        return oAuth2Strategy.performSignInInitiate(
-            parameters = parameters
-        )
-    }
-
-    private fun performSignInChallengeCall(
-        oAuth2Strategy: NativeAuthOAuth2Strategy,
-        credentialToken: String
-    ): SignInChallengeApiResult {
-        LogSession.logMethodCall(tag = TAG)
-        return oAuth2Strategy.performSignInChallenge(credentialToken = credentialToken)
-    }
-
-    private fun performResetPasswordStartCall(
-        oAuth2Strategy: NativeAuthOAuth2Strategy,
-        parameters: ResetPasswordStartCommandParameters,
-    ): ResetPasswordStartApiResult {
-        LogSession.logMethodCall(tag = TAG)
-        return oAuth2Strategy.performResetPasswordStart(
-            parameters = parameters
-        )
-    }
-
-    private fun performResetPasswordChallengeCall(
-        oAuth2Strategy: NativeAuthOAuth2Strategy,
-        passwordResetToken: String
-    ): ResetPasswordChallengeApiResult {
-        LogSession.logMethodCall(tag = TAG)
-        return oAuth2Strategy.performResetPasswordChallenge(
-            passwordResetToken = passwordResetToken
-        )
-    }
-
-    private fun performResetPasswordContinueCall(
-        oAuth2Strategy: NativeAuthOAuth2Strategy,
-        parameters: ResetPasswordSubmitCodeCommandParameters,
-    ): ResetPasswordContinueApiResult {
-        LogSession.logMethodCall(tag = TAG)
-        return oAuth2Strategy.performResetPasswordContinue(
-            parameters = parameters
-        )
-    }
-
-    private fun performResetPasswordSubmitCall(
-        oAuth2Strategy: NativeAuthOAuth2Strategy,
-        parameters: ResetPasswordSubmitNewPasswordCommandParameters,
-    ): ResetPasswordSubmitApiResult {
-        LogSession.logMethodCall(tag = TAG)
-        return oAuth2Strategy.performResetPasswordSubmit(
-            parameters = parameters,
-        )
-    }
-
-    private fun performResetPasswordPollCompletionCall(
-        oAuth2Strategy: NativeAuthOAuth2Strategy,
-        passwordResetToken: String,
-    ): ResetPasswordPollCompletionApiResult {
-        LogSession.logMethodCall(tag = TAG)
-        return oAuth2Strategy.performResetPasswordPollCompletion(
-            passwordResetToken = passwordResetToken
-        )
-    }
-
-    private fun saveAndReturnTokens(
-        oAuth2Strategy: NativeAuthOAuth2Strategy,
-        parametersWithScopes: BaseSignInTokenCommandParameters,
-        tokenApiResult: SignInTokenApiResult.Success
-    ): SignInCommandResult.Complete {
-        LogSession.logMethodCall(tag = TAG)
-        val records: List<ICacheRecord> = saveTokens(
-            oAuth2Strategy as MicrosoftStsOAuth2Strategy,
-            createAuthorizationRequest(
-                strategy = oAuth2Strategy,
-                scopes = parametersWithScopes.scopes,
-                clientId = parametersWithScopes.clientId,
-                applicationIdentifier = parametersWithScopes.applicationIdentifier
-            ),
-            tokenApiResult.tokenResponse,
-            parametersWithScopes.oAuth2TokenCache
-        )
-
-        // The first element in the returned list is the item we *just* saved, the rest of
-        // the elements are necessary to construct the full IAccount + TenantProfile
-        val newestRecord = records[0]
-
-        return SignInCommandResult.Complete(
-            authenticationResult = LocalAuthenticationResult(
-                finalizeCacheRecordForResult(
-                    newestRecord,
-                    parametersWithScopes.authenticationScheme
-                ),
-                records,
-                SdkType.MSAL,
-                false
-            )
-        )
-    }
-
-    private fun createAuthorizationRequest(
-        strategy: NativeAuthOAuth2Strategy,
-        scopes: List<String>,
-        clientId: String,
-        applicationIdentifier: String
-    ): MicrosoftStsAuthorizationRequest {
-        LogSession.logMethodCall(tag = TAG)
-        val builder = MicrosoftStsAuthorizationRequest.Builder()
-        builder.setAuthority(URL(strategy.getAuthority()))
-        builder.setClientId(clientId)
-        builder.setScope(StringUtil.join(" ", scopes))
-        builder.setApplicationIdentifier(applicationIdentifier)
-        return builder.build()
-    }
-
-    private fun addDefaultScopes(scopes: List<String>?): List<String> {
-        LogSession.logMethodCall(tag = TAG)
-        val requestScopes = scopes?.toMutableList() ?: mutableListOf()
-        requestScopes.addAll(AuthenticationConstants.DEFAULT_SCOPES)
-        // sanitize empty and null scopes
-        requestScopes.removeAll(listOf("", null))
-        return requestScopes.toList()
-    }
-
-    private fun SignInChallengeApiResult.toSignInStartCommandResult(): SignInStartCommandResult {
-        LogSession.logMethodCall(tag = TAG)
-        return when (this) {
-            is SignInChallengeApiResult.OOBRequired -> {
-                SignInCommandResult.CodeRequired(
-                    credentialToken = this.credentialToken,
-                    codeLength = this.codeLength,
-                    challengeTargetLabel = this.challengeTargetLabel,
-                    challengeChannel = this.challengeChannel
-                )
-            }
-
-            is SignInChallengeApiResult.PasswordRequired -> {
-                SignInCommandResult.PasswordRequired(
-                    credentialToken = this.credentialToken
-                )
-            }
-
-            SignInChallengeApiResult.Redirect -> {
-                CommandResult.Redirect()
-            }
-
-            is SignInChallengeApiResult.UnknownError -> {
-                LogSession.log(
-                    tag = TAG,
-                    logLevel = Logger.LogLevel.WARN,
-                    message = "Unexpected result: $this"
-                )
-                CommandResult.UnknownError(
-                    error = this.error,
-                    errorDescription = this.errorDescription,
-                    details = this.details,
-                    errorCodes = this.errorCodes
-                )
-            }
-        }
-    }
-
-    private fun SignInChallengeApiResult.toSignInSubmitPasswordCommandResult(): SignInSubmitPasswordCommandResult {
-        LogSession.logMethodCall(tag = TAG)
-        return when (this) {
-            SignInChallengeApiResult.Redirect -> {
-                CommandResult.Redirect()
-            }
-
-            is SignInChallengeApiResult.PasswordRequired -> {
-                LogSession.log(
-                    tag = TAG,
-                    logLevel = Logger.LogLevel.WARN,
-                    message = "Unexpected result: $this"
-                )
-                CommandResult.UnknownError(
-                    error = "unexpected_api_result",
-                    errorDescription = "API returned unexpected result: $this"
-                )
-            }
-
-            is SignInChallengeApiResult.UnknownError -> {
-                LogSession.log(
-                    tag = TAG,
-                    logLevel = Logger.LogLevel.WARN,
-                    message = "Unexpected result: $this"
-                )
-                CommandResult.UnknownError(
-                    error = this.error,
-                    errorDescription = this.errorDescription,
-                    details = this.details,
-                    errorCodes = this.errorCodes
-                )
-            }
-            is SignInChallengeApiResult.OOBRequired -> {
-                LogSession.log(
-                    tag = TAG,
-                    logLevel = Logger.LogLevel.WARN,
-                    message = "Unexpected result: $this"
-                )
-                CommandResult.UnknownError(
-                    error = "unexpected_api_result",
-                    errorDescription = "API returned unexpected result: $this"
-                )
-            }
-        }
-    }
-
-    private fun ResetPasswordChallengeApiResult.toResetPasswordStartCommandResult(): ResetPasswordStartCommandResult {
-        LogSession.logMethodCall(tag = TAG)
-        return when (this) {
-            is ResetPasswordChallengeApiResult.CodeRequired -> {
-                ResetPasswordCommandResult.CodeRequired(
-                    passwordResetToken = this.passwordResetToken,
-                    codeLength = this.codeLength,
-                    challengeTargetLabel = this.challengeTargetLabel,
-                    challengeChannel = this.challengeChannel
-                )
-            }
-
-            ResetPasswordChallengeApiResult.Redirect -> {
-                CommandResult.Redirect()
-            }
-
-            is ResetPasswordChallengeApiResult.ExpiredToken -> {
-                LogSession.log(
-                    tag = TAG,
-                    logLevel = Logger.LogLevel.WARN,
-                    message = "Expire token result: $this"
-                )
-                CommandResult.UnknownError(
-                    error = this.error,
-                    errorDescription = this.errorDescription
-                )
-            }
-
-            is ResetPasswordChallengeApiResult.UnsupportedChallengeType -> {
-                LogSession.log(
-                    tag = TAG,
-                    logLevel = Logger.LogLevel.WARN,
-                    message = "Unexpected result: $this"
-                )
-                CommandResult.UnknownError(
-                    error = this.error,
-                    errorDescription = this.errorDescription
-                )
-            }
-
-            is ResetPasswordChallengeApiResult.UnknownError -> {
-                LogSession.log(
-                    tag = TAG,
-                    logLevel = Logger.LogLevel.WARN,
-                    message = "Unexpected result: $this"
-                )
-                CommandResult.UnknownError(
-                    error = this.error,
-                    errorDescription = this.errorDescription,
-                    details = this.details
-                )
-            }
         }
     }
 
@@ -1389,9 +381,9 @@ class NativeAuthController : BaseNativeAuthController() {
                 .authority
                 .createOAuth2Strategy(strategyParameters)
 
-            val isWithPassword = parameters is SignUpStartUsingPasswordCommandParameters
+            val usePassword = parameters is SignUpStartUsingPasswordCommandParameters
 
-            val signUpStartApiResult = if (isWithPassword) {
+            val signUpStartApiResult = if (usePassword) {
                 performSignUpStartUsingPasswordRequest(
                     oAuth2Strategy = oAuth2Strategy,
                     parameters = (parameters as SignUpStartUsingPasswordCommandParameters)
@@ -1404,32 +396,17 @@ class NativeAuthController : BaseNativeAuthController() {
             }
             return when (signUpStartApiResult) {
                 is SignUpStartApiResult.VerificationRequired -> {
-                    val challengeApiResult = performSignUpChallengeCall(
+                    performSignUpChallengeCall(
                         oAuth2Strategy = oAuth2Strategy,
                         signupToken = signUpStartApiResult.signupToken
-                    )
-                    processSignUpChallengeApiResult(challengeApiResult)
+                    ).toSignUpStartCommandResult()
                 }
-
-                is SignUpStartApiResult.UnsupportedChallengeType -> {
-                    LogSession.log(
-                        tag = TAG,
-                        logLevel = Logger.LogLevel.WARN,
-                        message = "Unexpected result: $signUpStartApiResult"
-                    )
-                    CommandResult.UnknownError(
-                        error = signUpStartApiResult.error,
-                        errorDescription = signUpStartApiResult.errorDescription
-                    )
-                }
-
                 is SignUpStartApiResult.InvalidPassword -> {
                     SignUpCommandResult.InvalidPassword(
                         error = signUpStartApiResult.error,
                         errorDescription = signUpStartApiResult.errorDescription
                     )
                 }
-
                 is SignUpStartApiResult.InvalidAttributes -> {
                     SignUpCommandResult.InvalidAttributes(
                         error = signUpStartApiResult.error,
@@ -1437,12 +414,24 @@ class NativeAuthController : BaseNativeAuthController() {
                         invalidAttributes = signUpStartApiResult.invalidAttributes
                     )
                 }
+                is SignUpStartApiResult.UsernameAlreadyExists -> {
+                    SignUpCommandResult.UsernameAlreadyExists(
+                        error = signUpStartApiResult.error,
+                        errorDescription = signUpStartApiResult.errorDescription
+                    )
+                }
 
+                is SignUpStartApiResult.AuthNotSupported -> {
+                    SignUpCommandResult.AuthNotSupported(
+                        error = signUpStartApiResult.error,
+                        errorDescription = signUpStartApiResult.errorDescription
+                    )
+                }
                 is SignUpStartApiResult.Redirect -> {
                     CommandResult.Redirect()
                 }
-
-                is SignUpStartApiResult.UnknownError -> {
+                is SignUpStartApiResult.UnsupportedChallengeType, is SignUpStartApiResult.UnknownError -> {
+                    signUpStartApiResult as ApiErrorResult
                     LogSession.log(
                         tag = TAG,
                         logLevel = Logger.LogLevel.WARN,
@@ -1450,21 +439,6 @@ class NativeAuthController : BaseNativeAuthController() {
                     )
                     CommandResult.UnknownError(
                         error = signUpStartApiResult.error,
-                        errorDescription = signUpStartApiResult.errorDescription,
-                        details = signUpStartApiResult.details
-                    )
-                }
-
-                is SignUpStartApiResult.UsernameAlreadyExists -> {
-                    SignUpCommandResult.UsernameAlreadyExists(
-                        error = signUpStartApiResult.errorCode,
-                        errorDescription = signUpStartApiResult.errorDescription
-                    )
-                }
-
-                is SignUpStartApiResult.AuthNotSupported -> {
-                    SignUpCommandResult.AuthNotSupported(
-                        error = signUpStartApiResult.errorCode,
                         errorDescription = signUpStartApiResult.errorDescription
                     )
                 }
@@ -1518,11 +492,10 @@ class NativeAuthController : BaseNativeAuthController() {
                 .authority
                 .createOAuth2Strategy(strategyParameters)
 
-            val signUpChallengeApiResult = performSignUpChallengeCall(
+            return performSignUpChallengeCall(
                 oAuth2Strategy = oAuth2Strategy,
                 signupToken = parameters.signupToken
-            )
-            return processSignUpChallengeApiResult(signUpChallengeApiResult) as SignUpResendCodeCommandResult
+            ).toSignUpStartCommandResult() as SignUpResendCodeCommandResult
         } catch (e: Exception) {
             LogSession.log(
                 tag = TAG,
@@ -1572,11 +545,10 @@ class NativeAuthController : BaseNativeAuthController() {
                 .authority
                 .createOAuth2Strategy(strategyParameters)
 
-            val signUpContinueApiResult = performSignUpSubmitPassword(
+            return performSignUpSubmitPassword(
                 oAuth2Strategy = oAuth2Strategy,
                 parameters = parameters
-            )
-            return signUpContinueApiResult.toSignUpSubmitPasswordCommandResult(oAuth2Strategy)
+            ).toSignUpSubmitPasswordCommandResult(oAuth2Strategy)
         } catch (e: Exception) {
             LogSession.log(
                 tag = TAG,
@@ -1758,6 +730,533 @@ class NativeAuthController : BaseNativeAuthController() {
         )
     }
 
+    fun resetPasswordStart(parameters: ResetPasswordStartCommandParameters): ResetPasswordStartCommandResult {
+        LogSession.logMethodCall(tag = TAG)
+
+        try {
+            val strategyParameters = OAuth2StrategyParameters.builder()
+                .platformComponents(parameters.platformComponents)
+                .challengeTypes(parameters.challengeType)
+                .build()
+
+            val oAuth2Strategy = parameters
+                .authority
+                .createOAuth2Strategy(strategyParameters)
+
+            val resetPasswordStartApiResult = performResetPasswordStartCall(
+                oAuth2Strategy = oAuth2Strategy,
+                parameters = parameters
+            )
+
+            return when (resetPasswordStartApiResult) {
+                is ResetPasswordStartApiResult.Success -> {
+                    performResetPasswordChallengeCall(
+                        oAuth2Strategy = oAuth2Strategy,
+                        passwordResetToken = resetPasswordStartApiResult.passwordResetToken
+                    ).toResetPasswordStartCommandResult()
+                }
+                ResetPasswordStartApiResult.Redirect -> {
+                    CommandResult.Redirect()
+                }
+                is ResetPasswordStartApiResult.UserNotFound -> {
+                    ResetPasswordCommandResult.UserNotFound(
+                        error = resetPasswordStartApiResult.error,
+                        errorDescription = resetPasswordStartApiResult.errorDescription
+                    )
+                }
+                is ResetPasswordStartApiResult.UnsupportedChallengeType, is ResetPasswordStartApiResult.UnknownError -> {
+                    LogSession.log(
+                        tag = TAG,
+                        logLevel = Logger.LogLevel.WARN,
+                        message = "Unexpected result: $resetPasswordStartApiResult"
+                    )
+                    resetPasswordStartApiResult as ApiErrorResult
+                    CommandResult.UnknownError(
+                        error = resetPasswordStartApiResult.error,
+                        errorDescription = resetPasswordStartApiResult.errorDescription,
+                        details = resetPasswordStartApiResult.details
+                    )
+                }
+            }
+        } catch (e: Exception) {
+            LogSession.logException(tag = TAG, throwable = e)
+            throw e
+        }
+    }
+
+    fun resetPasswordSubmitCode(parameters: ResetPasswordSubmitCodeCommandParameters): ResetPasswordSubmitCodeCommandResult {
+        LogSession.logMethodCall(tag = TAG)
+
+        try {
+            val strategyParameters = OAuth2StrategyParameters.builder()
+                .platformComponents(parameters.platformComponents)
+                .build()
+
+            val oAuth2Strategy = parameters
+                .authority
+                .createOAuth2Strategy(strategyParameters)
+
+            val resetPasswordContinueApiResult = performResetPasswordContinueCall(
+                oAuth2Strategy = oAuth2Strategy,
+                parameters = parameters
+            )
+
+            return when (resetPasswordContinueApiResult) {
+                is ResetPasswordContinueApiResult.PasswordRequired -> {
+                    ResetPasswordCommandResult.PasswordRequired(
+                        passwordSubmitToken = resetPasswordContinueApiResult.passwordSubmitToken
+                    )
+                }
+                is ResetPasswordContinueApiResult.CodeIncorrect -> {
+                    ResetPasswordCommandResult.IncorrectCode(
+                        error = resetPasswordContinueApiResult.error,
+                        errorDescription = resetPasswordContinueApiResult.errorDescription
+                    )
+                }
+                ResetPasswordContinueApiResult.Redirect -> {
+                    CommandResult.Redirect()
+                }
+                is ResetPasswordContinueApiResult.ExpiredToken, is ResetPasswordContinueApiResult.UnknownError -> {
+                    LogSession.log(
+                        tag = TAG,
+                        logLevel = Logger.LogLevel.WARN,
+                        message = "Unexpected result: $resetPasswordContinueApiResult"
+                    )
+                    resetPasswordContinueApiResult as ApiErrorResult
+                    CommandResult.UnknownError(
+                        error = resetPasswordContinueApiResult.error,
+                        errorDescription = resetPasswordContinueApiResult.errorDescription,
+                        details = resetPasswordContinueApiResult.details
+                    )
+                }
+            }
+        } catch (e: Exception) {
+            LogSession.logException(tag = TAG, throwable = e)
+            throw e
+        }
+    }
+
+    fun resetPasswordResendCode(parameters: ResetPasswordResendCodeCommandParameters): ResetPasswordResendCodeCommandResult {
+        LogSession.logMethodCall(tag = TAG)
+
+        try {
+            val strategyParameters = OAuth2StrategyParameters.builder()
+                .platformComponents(parameters.platformComponents)
+                .build()
+
+            val oAuth2Strategy = parameters
+                .authority
+                .createOAuth2Strategy(strategyParameters)
+
+            val resetPasswordChallengeApiResult = performResetPasswordChallengeCall(
+                oAuth2Strategy = oAuth2Strategy,
+                passwordResetToken = parameters.passwordResetToken
+            )
+
+            return when (resetPasswordChallengeApiResult) {
+                is ResetPasswordChallengeApiResult.CodeRequired -> {
+                    ResetPasswordCommandResult.CodeRequired(
+                        passwordResetToken = resetPasswordChallengeApiResult.passwordResetToken,
+                        codeLength = resetPasswordChallengeApiResult.codeLength,
+                        challengeTargetLabel = resetPasswordChallengeApiResult.challengeTargetLabel,
+                        challengeChannel = resetPasswordChallengeApiResult.challengeChannel
+                    )
+                }
+                ResetPasswordChallengeApiResult.Redirect -> {
+                    CommandResult.Redirect()
+                }
+                is ResetPasswordChallengeApiResult.ExpiredToken,
+                is ResetPasswordChallengeApiResult.UnsupportedChallengeType,
+                is ResetPasswordChallengeApiResult.UnknownError -> {
+                    LogSession.log(
+                        tag = TAG,
+                        logLevel = Logger.LogLevel.WARN,
+                        message = "Unexpected result: $resetPasswordChallengeApiResult"
+                    )
+                    resetPasswordChallengeApiResult as ApiErrorResult
+                    CommandResult.UnknownError(
+                        error = resetPasswordChallengeApiResult.error,
+                        errorDescription = resetPasswordChallengeApiResult.errorDescription,
+                        details = resetPasswordChallengeApiResult.details
+                    )
+                }
+            }
+        } catch (e: Exception) {
+            LogSession.logException(tag = TAG, throwable = e)
+            throw e
+        }
+    }
+
+    fun resetPasswordSubmitNewPassword(parameters: ResetPasswordSubmitNewPasswordCommandParameters): ResetPasswordSubmitNewPasswordCommandResult {
+        LogSession.logMethodCall(tag = TAG)
+
+        try {
+            val strategyParameters = OAuth2StrategyParameters.builder()
+                .platformComponents(parameters.platformComponents)
+                .build()
+
+            val oAuth2Strategy = parameters
+                .authority
+                .createOAuth2Strategy(strategyParameters)
+
+            val resetPasswordSubmitApiResult = performResetPasswordSubmitCall(
+                oAuth2Strategy = oAuth2Strategy,
+                parameters = parameters
+            )
+
+            return when (resetPasswordSubmitApiResult) {
+                is ResetPasswordSubmitApiResult.SubmitSuccess -> {
+                    resetPasswordPollCompletion(
+                        oAuth2Strategy = oAuth2Strategy,
+                        passwordResetToken = resetPasswordSubmitApiResult.passwordResetToken,
+                        pollIntervalInSeconds = resetPasswordSubmitApiResult.pollInterval
+                    )
+                }
+                is ResetPasswordSubmitApiResult.PasswordInvalid -> {
+                    ResetPasswordCommandResult.PasswordNotAccepted(
+                        error = resetPasswordSubmitApiResult.error,
+                        errorDescription = resetPasswordSubmitApiResult.errorDescription
+                    )
+                }
+
+                is ResetPasswordSubmitApiResult.ExpiredToken,
+                is ResetPasswordSubmitApiResult.UnknownError -> {
+                    LogSession.log(
+                        tag = TAG,
+                        logLevel = Logger.LogLevel.WARN,
+                        message = "Unexpected result: $resetPasswordSubmitApiResult"
+                    )
+                    resetPasswordSubmitApiResult as ApiErrorResult
+                    CommandResult.UnknownError(
+                        error = resetPasswordSubmitApiResult.error,
+                        errorDescription = resetPasswordSubmitApiResult.errorDescription,
+                        details = resetPasswordSubmitApiResult.details
+                    )
+                }
+            }
+        } catch (e: Exception) {
+            LogSession.logException(tag = TAG, throwable = e)
+            throw e
+        }
+    }
+
+    private fun resetPasswordPollCompletion(
+        oAuth2Strategy: NativeAuthOAuth2Strategy,
+        passwordResetToken: String,
+        pollIntervalInSeconds: Int?
+    ): ResetPasswordSubmitNewPasswordCommandResult {
+        fun pollCompletionTimedOut(startTime: Long): Boolean {
+            val currentTime = System.currentTimeMillis()
+            return currentTime - startTime > ResetPasswordSubmitNewPasswordCommand.POLL_COMPLETION_TIMEOUT_IN_MILISECONDS
+        }
+
+        fun pollIntervalIsAppropriate(pollIntervalInSeconds: Int?): Boolean {
+            return pollIntervalInSeconds != null && pollIntervalInSeconds <= 15 && pollIntervalInSeconds >= 1
+        }
+
+        val methodTag = "$TAG:resetPasswordPollCompletion"
+
+        LogSession.logMethodCall(tag = TAG)
+
+        try {
+            val pollWaitInterval: Int = if (!pollIntervalIsAppropriate(pollIntervalInSeconds)) {
+                ResetPasswordSubmitNewPasswordCommand.DEFAULT_POLL_COMPLETION_INTERVAL_IN_MILISECONDS
+            } else {
+                pollIntervalInSeconds!! * 1000
+            }
+
+            var pollCompletionApiResult = performResetPasswordPollCompletionCall(
+                oAuth2Strategy = oAuth2Strategy,
+                passwordResetToken = passwordResetToken
+            )
+
+            val startTime = System.currentTimeMillis()
+
+            while (pollCompletionApiResult is ResetPasswordPollCompletionApiResult.InProgress) {
+                // TODO: This will use coroutines, most likely shouldn't use thread sleep here
+                ThreadUtils.sleepSafely(
+                    pollWaitInterval,
+                    methodTag,
+                    "Waiting between reset password polls"
+                )
+
+                if (pollCompletionTimedOut(startTime)) {
+                    LogSession.log(
+                        tag = TAG,
+                        logLevel = Logger.LogLevel.WARN,
+                        message = "Reset password completion timed out."
+                    )
+                    return ResetPasswordCommandResult.PasswordResetFailed(
+                        error = ResetPasswordSubmitNewPasswordCommand.POLL_COMPLETION_TIMEOUT_ERROR_CODE,
+                        errorDescription = ResetPasswordSubmitNewPasswordCommand.POLL_COMPLETION_TIMEOUT_ERROR_DESCRIPTION
+                    )
+                }
+
+                LogSession.logMethodCall(tag = TAG)
+
+                pollCompletionApiResult = performResetPasswordPollCompletionCall(
+                    oAuth2Strategy = oAuth2Strategy,
+                    passwordResetToken = passwordResetToken
+                )
+            }
+
+            return when (pollCompletionApiResult) {
+                is ResetPasswordPollCompletionApiResult.PollingFailed -> {
+                    ResetPasswordCommandResult.PasswordResetFailed(
+                        error = pollCompletionApiResult.error,
+                        errorDescription = pollCompletionApiResult.errorDescription
+                    )
+                }
+
+                is ResetPasswordPollCompletionApiResult.PollingSucceeded -> {
+                    ResetPasswordCommandResult.Complete
+                }
+
+                is ResetPasswordPollCompletionApiResult.InProgress -> {
+                    LogSession.log(
+                        tag = TAG,
+                        logLevel = Logger.LogLevel.WARN,
+                        message = "in_progress received after polling, illegal state"
+                    )
+                    // This should never be reached, theoretically
+                    CommandResult.UnknownError(
+                        error = "illegal_state",
+                        errorDescription = "in_progress received after polling concluded, illegal state"
+                    )
+                }
+                is ResetPasswordPollCompletionApiResult.ExpiredToken,
+                is ResetPasswordPollCompletionApiResult.UserNotFound,
+                is ResetPasswordPollCompletionApiResult.PasswordInvalid,
+                is ResetPasswordPollCompletionApiResult.UnknownError -> {
+                    LogSession.log(
+                        tag = TAG,
+                        logLevel = Logger.LogLevel.WARN,
+                        message = "Unexpected result: $pollCompletionApiResult"
+                    )
+                    pollCompletionApiResult as ApiErrorResult
+                    CommandResult.UnknownError(
+                        error = pollCompletionApiResult.error,
+                        errorDescription = pollCompletionApiResult.errorDescription,
+                        details = pollCompletionApiResult.details
+                    )
+                }
+            }
+        } catch (e: Exception) {
+            LogSession.logException(tag = TAG, throwable = e)
+            throw e
+        }
+    }
+
+    @VisibleForTesting
+    fun performSLTTokenRequest(
+        oAuth2Strategy: NativeAuthOAuth2Strategy,
+        parameters: SignInWithSLTCommandParameters
+    ): SignInTokenApiResult {
+        LogSession.logMethodCall(tag = TAG)
+        return oAuth2Strategy.performSLTTokenRequest(
+            parameters = parameters
+        )
+    }
+
+    private fun performOOBTokenRequest(
+        oAuth2Strategy: NativeAuthOAuth2Strategy,
+        parameters: SignInSubmitCodeCommandParameters
+    ): SignInTokenApiResult {
+        LogSession.logMethodCall(tag = TAG)
+        return oAuth2Strategy.performOOBTokenRequest(
+            parameters = parameters
+        )
+    }
+
+    @VisibleForTesting
+    fun performPasswordTokenCall(
+        oAuth2Strategy: NativeAuthOAuth2Strategy,
+        parameters: SignInSubmitPasswordCommandParameters
+    ): SignInTokenApiResult {
+        LogSession.logMethodCall(tag = TAG)
+        return oAuth2Strategy.performPasswordTokenRequest(
+            parameters = parameters
+        )
+    }
+
+    private fun performSignInInitiateCall(
+        oAuth2Strategy: NativeAuthOAuth2Strategy,
+        parameters: SignInStartCommandParameters,
+    ): SignInInitiateApiResult {
+        LogSession.logMethodCall(tag = TAG)
+        return oAuth2Strategy.performSignInInitiate(
+            parameters = parameters
+        )
+    }
+
+    private fun performSignInChallengeCall(
+        oAuth2Strategy: NativeAuthOAuth2Strategy,
+        credentialToken: String
+    ): SignInChallengeApiResult {
+        LogSession.logMethodCall(tag = TAG)
+        return oAuth2Strategy.performSignInChallenge(credentialToken = credentialToken)
+    }
+
+    private fun performResetPasswordStartCall(
+        oAuth2Strategy: NativeAuthOAuth2Strategy,
+        parameters: ResetPasswordStartCommandParameters,
+    ): ResetPasswordStartApiResult {
+        LogSession.logMethodCall(tag = TAG)
+        return oAuth2Strategy.performResetPasswordStart(
+            parameters = parameters
+        )
+    }
+
+    private fun performResetPasswordChallengeCall(
+        oAuth2Strategy: NativeAuthOAuth2Strategy,
+        passwordResetToken: String
+    ): ResetPasswordChallengeApiResult {
+        LogSession.logMethodCall(tag = TAG)
+        return oAuth2Strategy.performResetPasswordChallenge(
+            passwordResetToken = passwordResetToken
+        )
+    }
+
+    private fun performResetPasswordContinueCall(
+        oAuth2Strategy: NativeAuthOAuth2Strategy,
+        parameters: ResetPasswordSubmitCodeCommandParameters,
+    ): ResetPasswordContinueApiResult {
+        LogSession.logMethodCall(tag = TAG)
+        return oAuth2Strategy.performResetPasswordContinue(
+            parameters = parameters
+        )
+    }
+
+    private fun performResetPasswordSubmitCall(
+        oAuth2Strategy: NativeAuthOAuth2Strategy,
+        parameters: ResetPasswordSubmitNewPasswordCommandParameters,
+    ): ResetPasswordSubmitApiResult {
+        LogSession.logMethodCall(tag = TAG)
+        return oAuth2Strategy.performResetPasswordSubmit(
+            parameters = parameters,
+        )
+    }
+
+    private fun performResetPasswordPollCompletionCall(
+        oAuth2Strategy: NativeAuthOAuth2Strategy,
+        passwordResetToken: String,
+    ): ResetPasswordPollCompletionApiResult {
+        LogSession.logMethodCall(tag = TAG)
+        return oAuth2Strategy.performResetPasswordPollCompletion(
+            passwordResetToken = passwordResetToken
+        )
+    }
+
+    private fun saveAndReturnTokens(
+        oAuth2Strategy: NativeAuthOAuth2Strategy,
+        parametersWithScopes: BaseSignInTokenCommandParameters,
+        tokenApiResult: SignInTokenApiResult.Success
+    ): SignInCommandResult.Complete {
+        LogSession.logMethodCall(tag = TAG)
+        val records: List<ICacheRecord> = saveTokens(
+            oAuth2Strategy as MicrosoftStsOAuth2Strategy,
+            createAuthorizationRequest(
+                strategy = oAuth2Strategy,
+                scopes = parametersWithScopes.scopes,
+                clientId = parametersWithScopes.clientId,
+                applicationIdentifier = parametersWithScopes.applicationIdentifier
+            ),
+            tokenApiResult.tokenResponse,
+            parametersWithScopes.oAuth2TokenCache
+        )
+
+        // The first element in the returned list is the item we *just* saved, the rest of
+        // the elements are necessary to construct the full IAccount + TenantProfile
+        val newestRecord = records[0]
+
+        return SignInCommandResult.Complete(
+            authenticationResult = LocalAuthenticationResult(
+                finalizeCacheRecordForResult(
+                    newestRecord,
+                    parametersWithScopes.authenticationScheme
+                ),
+                records,
+                SdkType.MSAL,
+                false
+            )
+        )
+    }
+
+    private fun createAuthorizationRequest(
+        strategy: NativeAuthOAuth2Strategy,
+        scopes: List<String>,
+        clientId: String,
+        applicationIdentifier: String
+    ): MicrosoftStsAuthorizationRequest {
+        LogSession.logMethodCall(tag = TAG)
+        val builder = MicrosoftStsAuthorizationRequest.Builder()
+        builder.setAuthority(URL(strategy.getAuthority()))
+        builder.setClientId(clientId)
+        builder.setScope(StringUtil.join(" ", scopes))
+        builder.setApplicationIdentifier(applicationIdentifier)
+        return builder.build()
+    }
+
+    private fun addDefaultScopes(scopes: List<String>?): List<String> {
+        LogSession.logMethodCall(tag = TAG)
+        val requestScopes = scopes?.toMutableList() ?: mutableListOf()
+        requestScopes.addAll(AuthenticationConstants.DEFAULT_SCOPES)
+        // sanitize empty and null scopes
+        requestScopes.removeAll(listOf("", null))
+        return requestScopes.toList()
+    }
+
+    private fun ResetPasswordChallengeApiResult.toResetPasswordStartCommandResult(): ResetPasswordStartCommandResult {
+        LogSession.logMethodCall(tag = TAG)
+        return when (this) {
+            is ResetPasswordChallengeApiResult.CodeRequired -> {
+                ResetPasswordCommandResult.CodeRequired(
+                    passwordResetToken = this.passwordResetToken,
+                    codeLength = this.codeLength,
+                    challengeTargetLabel = this.challengeTargetLabel,
+                    challengeChannel = this.challengeChannel
+                )
+            }
+            ResetPasswordChallengeApiResult.Redirect -> {
+                CommandResult.Redirect()
+            }
+            is ResetPasswordChallengeApiResult.ExpiredToken -> {
+                LogSession.log(
+                    tag = TAG,
+                    logLevel = Logger.LogLevel.WARN,
+                    message = "Expire token result: $this"
+                )
+                CommandResult.UnknownError(
+                    error = this.error,
+                    errorDescription = this.errorDescription
+                )
+            }
+            is ResetPasswordChallengeApiResult.UnsupportedChallengeType -> {
+                LogSession.log(
+                    tag = TAG,
+                    logLevel = Logger.LogLevel.WARN,
+                    message = "Unexpected result: $this"
+                )
+                CommandResult.UnknownError(
+                    error = this.error,
+                    errorDescription = this.errorDescription
+                )
+            }
+            is ResetPasswordChallengeApiResult.UnknownError -> {
+                LogSession.log(
+                    tag = TAG,
+                    logLevel = Logger.LogLevel.WARN,
+                    message = "Unexpected result: $this"
+                )
+                CommandResult.UnknownError(
+                    error = this.error,
+                    errorDescription = this.errorDescription,
+                    details = this.details
+                )
+            }
+        }
+    }
+
     @Throws(
         IOException::class,
         ClientException::class,
@@ -1793,7 +1292,8 @@ class NativeAuthController : BaseNativeAuthController() {
         )
     }
 
-    private fun performSignUpStartRequest(
+    @VisibleForTesting
+    fun performSignUpStartRequest(
         oAuth2Strategy: NativeAuthOAuth2Strategy,
         parameters: SignUpStartCommandParameters
     ): SignUpStartApiResult {
@@ -1802,7 +1302,8 @@ class NativeAuthController : BaseNativeAuthController() {
         )
     }
 
-    private fun performSignUpStartUsingPasswordRequest(
+    @VisibleForTesting
+    fun performSignUpStartUsingPasswordRequest(
         oAuth2Strategy: NativeAuthOAuth2Strategy,
         parameters: SignUpStartUsingPasswordCommandParameters
     ): SignUpStartApiResult {
@@ -1831,68 +1332,44 @@ class NativeAuthController : BaseNativeAuthController() {
         return oAuth2Strategy.performSignUpSubmitPassword(commandParameters = parameters)
     }
 
-    private fun performSignUpSubmitUserAttributes(
+    @VisibleForTesting
+    fun performSignUpSubmitUserAttributes(
         oAuth2Strategy: NativeAuthOAuth2Strategy,
         parameters: SignUpSubmitUserAttributesCommandParameters
     ): SignUpContinueApiResult {
         return oAuth2Strategy.performSignUpSubmitUserAttributes(commandParameters = parameters)
     }
 
-    private fun processSignUpChallengeApiResult(signUpChallengeApiResult: SignUpChallengeApiResult): SignUpStartCommandResult {
-        return when (signUpChallengeApiResult) {
+    private fun SignUpChallengeApiResult.toSignUpStartCommandResult(): SignUpStartCommandResult {
+        return when (this) {
             is SignUpChallengeApiResult.OOBRequired -> {
                 SignUpCommandResult.CodeRequired(
-                    signupToken = signUpChallengeApiResult.signupToken,
-                    codeLength = signUpChallengeApiResult.codeLength,
-                    challengeTargetLabel = signUpChallengeApiResult.challengeTargetLabel,
-                    challengeChannel = signUpChallengeApiResult.challengeChannel
+                    signupToken = this.signupToken,
+                    codeLength = this.codeLength,
+                    challengeTargetLabel = this.challengeTargetLabel,
+                    challengeChannel = this.challengeChannel
                 )
             }
-
             is SignUpChallengeApiResult.PasswordRequired -> {
                 SignUpCommandResult.PasswordRequired(
-                    signupToken = signUpChallengeApiResult.signupToken
+                    signupToken = this.signupToken
                 )
             }
-
-            is SignUpChallengeApiResult.ExpiredToken -> {
-                LogSession.log(
-                    tag = TAG,
-                    logLevel = Logger.LogLevel.WARN,
-                    message = "Expire token result: $this"
-                )
-                CommandResult.UnknownError(
-                    error = signUpChallengeApiResult.error,
-                    errorDescription = signUpChallengeApiResult.errorDescription
-                )
-            }
-
-            is SignUpChallengeApiResult.UnsupportedChallengeType -> {
-                LogSession.log(
-                    tag = TAG,
-                    logLevel = Logger.LogLevel.WARN,
-                    message = "Unexpected result: $signUpChallengeApiResult"
-                )
-                CommandResult.UnknownError(
-                    error = signUpChallengeApiResult.errorCode,
-                    errorDescription = signUpChallengeApiResult.errorDescription
-                )
-            }
-
             SignUpChallengeApiResult.Redirect -> {
                 CommandResult.Redirect()
             }
-
+            is SignUpChallengeApiResult.ExpiredToken, is SignUpChallengeApiResult.UnsupportedChallengeType,
             is SignUpChallengeApiResult.UnknownError -> {
                 LogSession.log(
                     tag = TAG,
                     logLevel = Logger.LogLevel.WARN,
-                    message = "Unexpected result: $signUpChallengeApiResult"
+                    message = "Unexpected result: $this"
                 )
+                this as ApiErrorResult
                 CommandResult.UnknownError(
-                    error = signUpChallengeApiResult.error,
-                    errorDescription = signUpChallengeApiResult.errorDescription,
-                    details = signUpChallengeApiResult.details
+                    error = this.error,
+                    errorDescription = this.errorDescription,
+                    details = this.details
                 )
             }
         }
@@ -1908,7 +1385,6 @@ class NativeAuthController : BaseNativeAuthController() {
                     expiresIn = this.expiresIn
                 )
             }
-
             is SignUpContinueApiResult.ExpiredToken -> {
                 LogSession.log(
                     tag = TAG,
@@ -1920,14 +1396,12 @@ class NativeAuthController : BaseNativeAuthController() {
                     errorDescription = this.errorDescription
                 )
             }
-
             is SignUpContinueApiResult.UsernameAlreadyExists -> {
                 SignUpCommandResult.UsernameAlreadyExists(
                     error = this.error,
                     errorDescription = this.errorDescription
                 )
             }
-
             is SignUpContinueApiResult.AttributesRequired -> {
                 SignUpCommandResult.AttributesRequired(
                     signupToken = this.signupToken,
@@ -1936,14 +1410,11 @@ class NativeAuthController : BaseNativeAuthController() {
                     requiredAttributes = this.requiredAttributes
                 )
             }
-
             is SignUpContinueApiResult.CredentialRequired -> {
-                return processSignUpChallengeApiResult(
-                    performSignUpChallengeCall(
-                        oAuth2Strategy = oAuth2Strategy,
-                        signupToken = this.signupToken
-                    )
-                ) as SignUpSubmitCodeCommandResult
+                return performSignUpChallengeCall(
+                    oAuth2Strategy = oAuth2Strategy,
+                    signupToken = this.signupToken
+                ).toSignUpStartCommandResult() as SignUpSubmitCodeCommandResult
             }
 
             is SignUpContinueApiResult.InvalidOOBValue -> {
@@ -1952,11 +1423,9 @@ class NativeAuthController : BaseNativeAuthController() {
                     errorDescription = this.errorDescription
                 )
             }
-
             is SignUpContinueApiResult.Redirect -> {
                 CommandResult.Redirect()
             }
-
             is SignUpContinueApiResult.UnknownError -> {
                 LogSession.log(
                     tag = TAG,
@@ -1994,26 +1463,12 @@ class NativeAuthController : BaseNativeAuthController() {
                     expiresIn = this.expiresIn
                 )
             }
-
-            is SignUpContinueApiResult.ExpiredToken -> {
-                LogSession.log(
-                    tag = TAG,
-                    logLevel = Logger.LogLevel.WARN,
-                    message = "Expire token result: $this"
-                )
-                CommandResult.UnknownError(
-                    error = this.error,
-                    errorDescription = this.errorDescription
-                )
-            }
-
             is SignUpContinueApiResult.UsernameAlreadyExists -> {
                 SignUpCommandResult.UsernameAlreadyExists(
                     error = this.error,
                     errorDescription = this.errorDescription
                 )
             }
-
             is SignUpContinueApiResult.AttributesRequired -> {
                 SignUpCommandResult.AttributesRequired(
                     signupToken = this.signupToken,
@@ -2022,33 +1477,15 @@ class NativeAuthController : BaseNativeAuthController() {
                     requiredAttributes = this.requiredAttributes
                 )
             }
-
             is SignUpContinueApiResult.CredentialRequired -> {
-                processSignUpChallengeApiResult(
-                    performSignUpChallengeCall(
-                        oAuth2Strategy = oAuth2Strategy,
-                        signupToken = this.signupToken
-                    )
-                ) as SignUpSubmitUserAttributesCommandResult // TODO can we find something more graceful than a runtime cast?
+                return performSignUpChallengeCall(
+                    oAuth2Strategy = oAuth2Strategy,
+                    signupToken = this.signupToken
+                ).toSignUpStartCommandResult() as SignUpSubmitUserAttributesCommandResult // TODO can we find something more graceful than a runtime cast?
             }
-
             is SignUpContinueApiResult.Redirect -> {
                 CommandResult.Redirect()
             }
-
-            is SignUpContinueApiResult.UnknownError -> {
-                LogSession.log(
-                    tag = TAG,
-                    logLevel = Logger.LogLevel.WARN,
-                    message = "Unexpected result: $this"
-                )
-                CommandResult.UnknownError(
-                    error = this.error,
-                    errorDescription = this.errorDescription,
-                    details = this.details
-                )
-            }
-
             is SignUpContinueApiResult.InvalidAttributes -> {
                 SignUpCommandResult.InvalidAttributes(
                     error = this.error,
@@ -2057,15 +1494,17 @@ class NativeAuthController : BaseNativeAuthController() {
                 )
             }
 
-            is SignUpContinueApiResult.InvalidOOBValue, is SignUpContinueApiResult.InvalidPassword -> {
+            is SignUpContinueApiResult.InvalidOOBValue, is SignUpContinueApiResult.InvalidPassword,
+            is SignUpContinueApiResult.ExpiredToken, is SignUpContinueApiResult.UnknownError -> {
                 LogSession.log(
                     tag = TAG,
                     logLevel = Logger.LogLevel.WARN,
-                    message = "Unexpected result: $this"
+                    message = "Expire token result: $this"
                 )
+                this as ApiErrorResult
                 CommandResult.UnknownError(
-                    error = "unexpected_api_result",
-                    errorDescription = "API returned unexpected result: $this"
+                    error = this.error,
+                    errorDescription = this.errorDescription
                 )
             }
         }
@@ -2082,25 +1521,12 @@ class NativeAuthController : BaseNativeAuthController() {
                 )
             }
 
-            is SignUpContinueApiResult.ExpiredToken -> {
-                LogSession.log(
-                    tag = TAG,
-                    logLevel = Logger.LogLevel.WARN,
-                    message = "Expire token result: $this"
-                )
-                CommandResult.UnknownError(
-                    error = this.error,
-                    errorDescription = this.errorDescription
-                )
-            }
-
             is SignUpContinueApiResult.UsernameAlreadyExists -> {
                 SignUpCommandResult.UsernameAlreadyExists(
                     error = this.error,
                     errorDescription = this.errorDescription
                 )
             }
-
             is SignUpContinueApiResult.AttributesRequired -> {
                 SignUpCommandResult.AttributesRequired(
                     signupToken = this.signupToken,
@@ -2109,126 +1535,144 @@ class NativeAuthController : BaseNativeAuthController() {
                     requiredAttributes = this.requiredAttributes
                 )
             }
-
             is SignUpContinueApiResult.CredentialRequired -> {
-                processSignUpChallengeApiResult(
-                    performSignUpChallengeCall(
-                        oAuth2Strategy = oAuth2Strategy,
-                        signupToken = this.signupToken
-                    )
-                ) as SignUpSubmitPasswordCommandResult
+                return performSignUpChallengeCall(
+                    oAuth2Strategy = oAuth2Strategy,
+                    signupToken = this.signupToken
+                ).toSignUpStartCommandResult() as SignUpSubmitPasswordCommandResult
             }
-
-            is SignUpContinueApiResult.Redirect -> {
-                CommandResult.Redirect()
-            }
-
-            is SignUpContinueApiResult.UnknownError -> {
-                LogSession.log(
-                    tag = TAG,
-                    logLevel = Logger.LogLevel.WARN,
-                    message = "Unexpected result: $this"
-                )
-                CommandResult.UnknownError(
-                    error = this.error,
-                    errorDescription = this.errorDescription,
-                    details = details
-                )
-            }
-
             is SignUpContinueApiResult.InvalidPassword -> {
                 SignUpCommandResult.InvalidPassword(
                     error = this.error,
                     errorDescription = this.errorDescription
                 )
             }
-
-            is SignUpContinueApiResult.InvalidOOBValue, is SignUpContinueApiResult.InvalidAttributes -> {
-                LogSession.log(
-                    tag = TAG,
-                    logLevel = Logger.LogLevel.WARN,
-                    message = "Unexpected result: $this"
-                )
-                CommandResult.UnknownError(
-                    error = "unexpected_api_result",
-                    errorDescription = "API returned unexpected result: $this"
-                )
-            }
-        }
-    }
-
-    private fun signInStartAfterInvalidAuthenticationMethod(
-        signInStartCommandParameters: SignInStartUsingPasswordCommandParameters,
-        oAuth2Strategy: NativeAuthOAuth2Strategy
-    ): SignInStartCommandResult {
-        LogSession.logMethodCall(tag = TAG)
-
-        val initiateApiResult = performSignInInitiateCall(
-            oAuth2Strategy = oAuth2Strategy,
-            parameters = signInStartCommandParameters as SignInStartCommandParameters
-        )
-        return processSignInInitiateApiResult(
-            initiateApiResult = initiateApiResult,
-            oAuth2Strategy = oAuth2Strategy,
-            isInvalidAuthenticationMethod = true
-        )
-    }
-
-    private fun SignInChallengeApiResult.toSignInStartCommandResultAfterInvalidAuthenticationMethod():
-        SignInStartCommandResult {
-        LogSession.logMethodCall(tag = TAG)
-        return when (this) {
-            is SignInChallengeApiResult.OOBRequired -> {
-                SignInCommandResult.InvalidAuthenticationType(
-                    error = "invalid_grant",
-                    errorDescription = "The user is not configured for this authentication method. Please repeat the request using a different method.",
-                    errorCodes = listOf(400002),
-                )
-            }
-
-            is SignInChallengeApiResult.UnknownError,
-            is SignInChallengeApiResult.PasswordRequired -> {
-                LogSession.log(
-                    tag = TAG,
-                    logLevel = Logger.LogLevel.WARN,
-                    message = "Unexpected result: $this"
-                )
-                CommandResult.UnknownError(
-                    error = "unexpected_api_result",
-                    errorDescription = "Unexpected result: $this"
-                )
-            }
-
-            SignInChallengeApiResult.Redirect -> {
+            is SignUpContinueApiResult.Redirect -> {
                 CommandResult.Redirect()
             }
+            is SignUpContinueApiResult.ExpiredToken, is SignUpContinueApiResult.InvalidOOBValue,
+            is SignUpContinueApiResult.InvalidAttributes, is SignUpContinueApiResult.UnknownError -> {
+                LogSession.log(
+                    tag = TAG,
+                    logLevel = Logger.LogLevel.WARN,
+                    message = "Expire token result: $this"
+                )
+                this as ApiErrorResult
+                CommandResult.UnknownError(
+                    error = this.error,
+                    errorDescription = this.errorDescription
+                )
+            }
         }
     }
 
-    private fun processSignInInitiateApiResult(
-        initiateApiResult: SignInInitiateApiResult,
+    private fun SignInTokenApiResult.toSignInStartCommandResult(
         oAuth2Strategy: NativeAuthOAuth2Strategy,
-        isInvalidAuthenticationMethod: Boolean = false
+        parametersWithScopes: SignInStartUsingPasswordCommandParameters,
+    ): SignInStartCommandResult {
+        LogSession.logMethodCall(tag = TAG)
+        return when (this) {
+            is SignInTokenApiResult.InvalidCredentials -> {
+                SignInCommandResult.InvalidCredentials(
+                    error = this.error,
+                    errorDescription = this.errorDescription,
+                    errorCodes = this.errorCodes
+                )
+            }
+            is SignInTokenApiResult.Success -> {
+                saveAndReturnTokens(
+                    oAuth2Strategy = oAuth2Strategy,
+                    parametersWithScopes = parametersWithScopes,
+                    tokenApiResult = this
+                )
+            }
+            is SignInTokenApiResult.CodeIncorrect, is SignInTokenApiResult.MFARequired,
+            is SignInTokenApiResult.InvalidAuthenticationType, is SignInTokenApiResult.UserNotFound,
+            is SignInTokenApiResult.UnknownError -> {
+                LogSession.log(
+                    tag = TAG,
+                    logLevel = Logger.LogLevel.WARN,
+                    message = "Unexpected result: $this"
+                )
+                this as ApiErrorResult
+                CommandResult.UnknownError(
+                    error = "unexpected_api_result",
+                    errorDescription = "API returned unexpected result: $this",
+                    errorCodes = this.errorCodes
+                )
+            }
+        }
+    }
+
+    private fun SignInTokenApiResult.toSignInSubmitPasswordCommandResult(
+        oAuth2Strategy: NativeAuthOAuth2Strategy,
+        parametersWithScopes: SignInSubmitPasswordCommandParameters,
+    ): SignInSubmitPasswordCommandResult {
+        LogSession.logMethodCall(tag = TAG)
+
+        return when (this) {
+            is SignInTokenApiResult.InvalidCredentials -> {
+                SignInCommandResult.InvalidCredentials(
+                    error = this.error,
+                    errorDescription = this.errorDescription,
+                    errorCodes = this.errorCodes
+                )
+            }
+            is SignInTokenApiResult.Success -> {
+                saveAndReturnTokens(
+                    oAuth2Strategy = oAuth2Strategy,
+                    parametersWithScopes = parametersWithScopes,
+                    tokenApiResult = this
+                )
+            }
+            is SignInTokenApiResult.UserNotFound, is SignInTokenApiResult.CodeIncorrect,
+            is SignInTokenApiResult.MFARequired, is SignInTokenApiResult.InvalidAuthenticationType,
+            is SignInTokenApiResult.UnknownError -> {
+                LogSession.log(
+                    tag = TAG,
+                    logLevel = Logger.LogLevel.WARN,
+                    message = "Unexpected result: $this"
+                )
+                this as ApiErrorResult
+                CommandResult.UnknownError(
+                    error = "unexpected_api_result",
+                    errorDescription = "API returned unexpected result: $this",
+                    errorCodes = this.errorCodes
+                )
+            }
+        }
+    }
+
+    @VisibleForTesting
+    fun processSignInInitiateApiResult(
+        initiateApiResult: SignInInitiateApiResult,
+        parametersWithScopes: SignInStartUsingPasswordCommandParameters?,
+        oAuth2Strategy: NativeAuthOAuth2Strategy,
+        usePassword: Boolean
     ): SignInStartCommandResult {
         return when (initiateApiResult) {
             SignInInitiateApiResult.Redirect -> {
                 CommandResult.Redirect()
             }
-
             is SignInInitiateApiResult.Success -> {
-                if (isInvalidAuthenticationMethod) {
-                    performSignInChallengeCall(
-                        oAuth2Strategy = oAuth2Strategy,
-                        credentialToken = initiateApiResult.credentialToken
-                    ).toSignInStartCommandResultAfterInvalidAuthenticationMethod()
-                } else {
-                    performSignInChallengeCall(
-                        oAuth2Strategy = oAuth2Strategy,
-                        credentialToken = initiateApiResult.credentialToken
-                    ).toSignInStartCommandResult()
-                }
+                val signInChallengeResult = performSignInChallengeCall(
+                    oAuth2Strategy = oAuth2Strategy,
+                    credentialToken = initiateApiResult.credentialToken
+                )
+                return processSignInChallengeCall(
+                    result = signInChallengeResult,
+                    oAuth2Strategy = oAuth2Strategy,
+                    parametersWithScopes = parametersWithScopes,
+                    usePassword = usePassword
+                )
             }
-
+            is SignInInitiateApiResult.UserNotFound -> {
+                SignInCommandResult.UserNotFound(
+                    error = initiateApiResult.error,
+                    errorDescription = initiateApiResult.errorDescription,
+                    errorCodes = initiateApiResult.errorCodes
+                )
+            }
             is SignInInitiateApiResult.UnknownError -> {
                 LogSession.log(
                     tag = TAG,
@@ -2241,12 +1685,65 @@ class NativeAuthController : BaseNativeAuthController() {
                     errorCodes = initiateApiResult.errorCodes
                 )
             }
+        }
+    }
 
-            is SignInInitiateApiResult.UserNotFound -> {
-                SignInCommandResult.UserNotFound(
-                    error = initiateApiResult.error,
-                    errorDescription = initiateApiResult.errorDescription,
-                    errorCodes = initiateApiResult.errorCodes
+    private fun processSignInChallengeCall(
+        oAuth2Strategy: NativeAuthOAuth2Strategy,
+        parametersWithScopes: SignInStartUsingPasswordCommandParameters?,
+        result: SignInChallengeApiResult,
+        usePassword: Boolean
+    ): SignInStartCommandResult {
+        return when (result) {
+            is SignInChallengeApiResult.OOBRequired -> {
+                SignInCommandResult.CodeRequired(
+                    credentialToken = result.credentialToken,
+                    codeLength = result.codeLength,
+                    challengeTargetLabel = result.challengeTargetLabel,
+                    challengeChannel = result.challengeChannel
+                )
+            }
+            is SignInChallengeApiResult.PasswordRequired -> {
+                if (usePassword) {
+                    if (parametersWithScopes == null) {
+                        // In password flows, we will be sending the password and scopes to the token
+                        // endpoint. So we need this parameter to be set.
+                        throw IllegalArgumentException("Parameters must be provided in password flow")
+                    }
+
+                    val signInSubmitPasswordCommandParameters =
+                        CommandUtil.createSignInSubmitPasswordCommandParameters(
+                            parametersWithScopes,
+                            result.credentialToken
+                        )
+                    performPasswordTokenCall(
+                        oAuth2Strategy = oAuth2Strategy,
+                        parameters = signInSubmitPasswordCommandParameters
+                    ).toSignInStartCommandResult(
+                        oAuth2Strategy = oAuth2Strategy,
+                        parametersWithScopes = parametersWithScopes
+                    )
+                } else {
+                    SignInCommandResult.PasswordRequired(
+                        credentialToken = result.credentialToken
+                    )
+                }
+            }
+            SignInChallengeApiResult.Redirect -> {
+                CommandResult.Redirect()
+            }
+
+            is SignInChallengeApiResult.UnknownError -> {
+                LogSession.log(
+                    tag = TAG,
+                    logLevel = Logger.LogLevel.WARN,
+                    message = "Unexpected result: $result"
+                )
+                CommandResult.UnknownError(
+                    error = result.error,
+                    errorDescription = result.errorDescription,
+                    details = result.details,
+                    errorCodes = result.errorCodes
                 )
             }
         }

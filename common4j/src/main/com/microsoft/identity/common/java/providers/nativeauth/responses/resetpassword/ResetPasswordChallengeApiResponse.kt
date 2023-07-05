@@ -75,8 +75,8 @@ class ResetPasswordChallengeApiResponse(
                     }
                     else -> {
                         ResetPasswordChallengeApiResult.UnknownError(
-                            error = error,
-                            errorDescription = errorDescription,
+                            error = error.orEmpty(),
+                            errorDescription = errorDescription.orEmpty(),
                             details = details
                         )
                     }
@@ -129,8 +129,8 @@ class ResetPasswordChallengeApiResponse(
                     }
                     else -> {
                         ResetPasswordChallengeApiResult.UnknownError(
-                            error = error,
-                            errorDescription = errorDescription,
+                            error = error.orEmpty(),
+                            errorDescription = errorDescription.orEmpty(),
                             details = details
                         )
                     }

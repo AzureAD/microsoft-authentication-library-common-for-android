@@ -22,46 +22,67 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.providers.nativeauth.responses.signup
 
+import com.microsoft.identity.common.java.providers.nativeauth.responses.ApiErrorResult
+
 sealed interface SignUpStartApiResult {
     object Redirect : SignUpStartApiResult
     data class VerificationRequired(
         val signupToken: String,
-        val error: String,
-        val errorDescription: String,
+        override val error: String,
+        override val errorDescription: String,
         val unverifiedAttributes: List<Map<String, String>>
-    ) : SignUpStartApiResult
+    ): ApiErrorResult(
+        error = error,
+        errorDescription = errorDescription,
+    ), SignUpStartApiResult
 
     data class InvalidPassword(
-        val error: String,
-        val errorDescription: String
-    ) : SignUpStartApiResult
+        override val error: String,
+        override val errorDescription: String
+    ): ApiErrorResult(
+        error = error,
+        errorDescription = errorDescription,
+    ), SignUpStartApiResult
 
     data class InvalidAttributes(
-        val error: String,
-        val errorDescription: String,
+        override val error: String,
+        override val errorDescription: String,
         val invalidAttributes: List<Map<String, String>>
-    ) : SignUpStartApiResult
+    ): ApiErrorResult(
+        error = error,
+        errorDescription = errorDescription,
+    ), SignUpStartApiResult
 
     data class UnknownError(
-        val error: String,
-        val errorDescription: String,
-        val details: List<Map<String, String>>?
-    ) :
-        SignUpStartApiResult
+        override val error: String,
+        override val errorDescription: String,
+        override val details: List<Map<String, String>>?
+    ): ApiErrorResult(
+        error = error,
+        errorDescription = errorDescription,
+    ), SignUpStartApiResult
 
     data class UnsupportedChallengeType(
-        val error: String,
-        val errorDescription: String
-    ) : SignUpStartApiResult
+        override val error: String,
+        override val errorDescription: String
+    ): ApiErrorResult(
+        error = error,
+        errorDescription = errorDescription,
+    ), SignUpStartApiResult
 
     data class UsernameAlreadyExists(
-        val errorCode: String,
-        val errorDescription: String
-    ) : SignUpStartApiResult
+        override val error: String,
+        override val errorDescription: String
+    ): ApiErrorResult(
+        error = error,
+        errorDescription = errorDescription,
+    ), SignUpStartApiResult
 
     data class AuthNotSupported(
-        val errorCode: String,
-        val errorDescription: String,
-    ) :
-        SignUpStartApiResult
+        override val error: String,
+        override val errorDescription: String,
+    ): ApiErrorResult(
+        error = error,
+        errorDescription = errorDescription,
+    ), SignUpStartApiResult
 }

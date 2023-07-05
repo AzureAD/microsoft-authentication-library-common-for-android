@@ -64,13 +64,13 @@ data class SignUpStartApiResponse(
                 when {
                     error.isUserAlreadyExists() -> {
                         SignUpStartApiResult.UsernameAlreadyExists(
-                            errorCode = error.orEmpty(),
+                            error = error.orEmpty(),
                             errorDescription = errorDescription.orEmpty()
                         )
                     }
                     error.isAuthNotSupported() -> {
                         SignUpStartApiResult.AuthNotSupported(
-                            errorCode = error.orEmpty(),
+                            error = error.orEmpty(),
                             errorDescription = errorDescription.orEmpty()
                         )
                     }

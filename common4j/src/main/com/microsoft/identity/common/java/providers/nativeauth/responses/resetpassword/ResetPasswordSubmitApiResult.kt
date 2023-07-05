@@ -22,11 +22,37 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.providers.nativeauth.responses.resetpassword
 
+import com.microsoft.identity.common.java.providers.nativeauth.responses.ApiErrorResult
+
 sealed interface ResetPasswordSubmitApiResult {
-    data class SubmitSuccess(val passwordResetToken: String, val pollInterval: Int?) : ResetPasswordSubmitApiResult
-    data class PasswordInvalid(val error: String, val errorDescription: String) : ResetPasswordSubmitApiResult
-    data class ExpiredToken(val error: String, val errorDescription: String) :
-        ResetPasswordSubmitApiResult
-    data class UnknownError(val error: String?, val errorDescription: String?, val details: List<Map<String, String>>?) :
-        ResetPasswordSubmitApiResult
+    data class SubmitSuccess(
+        val passwordResetToken: String,
+        val pollInterval: Int?
+    ) : ResetPasswordSubmitApiResult
+
+    data class PasswordInvalid(
+        override val error: String,
+        override val errorDescription: String
+    ) : ApiErrorResult(
+        error = error,
+        errorDescription = errorDescription,
+    ), ResetPasswordSubmitApiResult
+
+    data class ExpiredToken(
+        override val error: String,
+        override val errorDescription: String
+    ) : ApiErrorResult(
+        error = error,
+        errorDescription = errorDescription,
+    ), ResetPasswordSubmitApiResult
+
+    data class UnknownError(
+        override val error: String,
+        override val errorDescription: String,
+        override val details: List<Map<String, String>>?
+    ) : ApiErrorResult(
+        error = error,
+        errorDescription = errorDescription,
+        details = details
+    ), ResetPasswordSubmitApiResult
 }

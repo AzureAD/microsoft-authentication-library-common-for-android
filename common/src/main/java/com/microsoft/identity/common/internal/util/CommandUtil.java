@@ -2,7 +2,6 @@ package com.microsoft.identity.common.internal.util;
 
 import com.microsoft.identity.common.java.commands.parameters.SilentTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.AcquireTokenNoFixedScopesCommandParameters;
-import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInStartUsingPasswordCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitCodeCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignInSubmitPasswordCommandParameters;
@@ -16,17 +15,8 @@ import java.util.List;
  * fully compatible with Kotlin).
  */
 public class CommandUtil {
-    public static SignInStartUsingPasswordCommandParameters createSignInStartUsingPasswordCommandParametersWithScopes(
-            SignInStartUsingPasswordCommandParameters parameters,
-            List<String> defaultScopes
-    ) {
-        return parameters.toBuilder()
-                .scopes(defaultScopes)
-                .build();
-    }
-
-    public static SignInStartCommandParameters createSignInStartCommandParametersWithScopes(
-            SignInStartCommandParameters parameters,
+    public static SignInStartUsingPasswordCommandParameters createSignInStartCommandParametersWithScopes(
+		    SignInStartUsingPasswordCommandParameters parameters,
             List<String> defaultScopes
     ) {
         return parameters.toBuilder()
@@ -59,6 +49,33 @@ public class CommandUtil {
 		return parameters.toBuilder()
 				.scopes(defaultScopes)
 				.build();
+	}
+
+	public static SignInSubmitPasswordCommandParameters createSignInSubmitPasswordCommandParameters(
+			SignInStartUsingPasswordCommandParameters parameters,
+			String credentialToken
+	) {
+		final SignInSubmitPasswordCommandParameters commandParameters =
+				SignInSubmitPasswordCommandParameters.builder()
+						.platformComponents(parameters.getPlatformComponents())
+						.applicationName(parameters.getApplicationName())
+						.applicationVersion(parameters.getApplicationVersion())
+						.clientId(parameters.getClientId())
+						.isSharedDevice(parameters.isSharedDevice())
+						.redirectUri(parameters.getRedirectUri())
+						.oAuth2TokenCache(parameters.getOAuth2TokenCache())
+						.requiredBrokerProtocolVersion(parameters.getRequiredBrokerProtocolVersion())
+						.sdkType(SdkType.MSAL)
+						.sdkVersion(parameters.getSdkVersion())
+						.powerOptCheckEnabled(parameters.isPowerOptCheckEnabled())
+						.authority(parameters.getAuthority())
+						.credentialToken(credentialToken)
+						.password(parameters.getPassword())
+						.scopes(parameters.getScopes())
+						.challengeType(parameters.getChallengeType())
+						.build();
+
+		return commandParameters;
 	}
 
 	public static SilentTokenCommandParameters convertAcquireTokenNoFixedScopesCommandParameters(

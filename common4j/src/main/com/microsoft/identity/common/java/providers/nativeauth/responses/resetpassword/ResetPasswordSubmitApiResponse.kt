@@ -68,8 +68,8 @@ class ResetPasswordSubmitApiResponse(
                     }
                     else -> {
                         ResetPasswordSubmitApiResult.UnknownError(
-                            error = error,
-                            errorDescription = errorDescription,
+                            error = error.orEmpty(),
+                            errorDescription = errorDescription.orEmpty(),
                             details = details
                         )
                     }
