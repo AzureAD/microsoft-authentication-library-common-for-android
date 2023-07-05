@@ -39,6 +39,7 @@
         <package android:name="com.microsoft.mockauthapp" />
         <package android:name="com.microsoft.mockcp" />
         <package android:name="com.microsoft.mockltw" />
+        <package android:name="com.microsoft.appmanager" />
         <!-- Required for API Level 30 to make sure we can detect browsers
         (that don't support custom tabs) -->
         <intent>
