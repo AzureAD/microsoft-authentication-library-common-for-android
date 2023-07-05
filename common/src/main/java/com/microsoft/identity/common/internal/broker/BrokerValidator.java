@@ -34,6 +34,7 @@ import android.accounts.AuthenticatorDescription;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -53,7 +54,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-public class BrokerValidator {
+public class BrokerValidator implements IBrokerValidator {
 
     private static final String TAG = "BrokerValidator";
 
@@ -288,5 +289,14 @@ public class BrokerValidator {
         final String signatureDigest = info.getSha1SignatureForPackage(packageName);
         return PackageHelper.getBrokerRedirectUrl(packageName,
                 signatureDigest);
+    }
+
+    @Override
+    public boolean isValidBrokerApp(@NonNull final int uid) {
+        final String packageName = mContext.getPackageManager().getNameForUid(uid);
+        if (StringUtil.isNullOrEmpty(packageName)) {
+            return false;
+        }
+        return isValidBrokerPackage(packageName);
     }
 }
