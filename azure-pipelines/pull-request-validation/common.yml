@@ -15,7 +15,6 @@ resources:
   - repository: self
     type: git
     ref: dev
-    endpoint: ANDROID_GITHUB
 
 jobs:
 - job: build_test
