@@ -12,10 +12,9 @@ trigger:
 
 resources:
   repositories:
-  - repository: android-complete
-    type: github
-    name: AzureAD/android-complete
-    ref: master
+  - repository: self
+    type: git
+    ref: dev
     endpoint: ANDROID_GITHUB
 
 jobs:
@@ -60,7 +59,7 @@ jobs:
     clean: true
     submodules: recursive
     persistCredentials: True
-  - template: azure-pipelines/templates/spotbugs.yml@android-complete
+  - template: azure-pipelines/templates/spotbugs.yml
     parameters:
       project: common
 - job: lint
