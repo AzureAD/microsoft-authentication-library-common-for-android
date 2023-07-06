@@ -58,7 +58,7 @@ jobs:
     clean: true
     submodules: recursive
     persistCredentials: True
-  - template: azure-pipelines/templates/spotbugs.yml
+  - template: ../templates/steps/spotbugs.yml
     parameters:
       project: common
 - job: lint
