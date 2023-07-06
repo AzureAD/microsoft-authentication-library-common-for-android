@@ -16,12 +16,13 @@ resources:
     type: git
     ref: dev
 
+pool:
+  name: Hosted Windows 2019 with VS2019
+
 jobs:
 - job: build_test
   displayName: Build & Test
   cancelTimeoutInMinutes: 1
-  pool:
-    name: Hosted Windows 2019 with VS2019
   steps:
   - checkout: self
     clean: true
