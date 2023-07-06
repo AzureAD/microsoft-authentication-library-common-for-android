@@ -12,9 +12,11 @@ trigger:
 
 resources:
   repositories:
-  - repository: self
-    type: git
-    ref: dev
+  - repository: android-complete
+    type: github
+    name: AzureAD/android-complete
+    ref: master
+    endpoint: ANDROID_GITHUB
 
 jobs:
 - job: build_test
@@ -43,17 +45,70 @@ jobs:
       publishJUnitResults: false
       jdkArchitecture: x64
       sqAnalysisEnabled: false
-  - task: Gradle@1
-    displayName: Lint Local debug
-    inputs:
-      tasks: clean common:lintLocalDebug
-  - template: ../templates/steps/spotbugs.yml
-    parameters:
-      project: common
   - task: Gradle@2
     displayName: Run Unit tests
     inputs:
       javaHomeSelection: JDKVersion
       jdkVersionOption: "1.11"
       tasks: common:testLocalDebugUnitTest
+
+- job: spotbugs
+  displayName: SpotBugs
+  cancelTimeoutInMinutes: 1
+  steps:
+  - checkout: self
+    clean: true
+    submodules: recursive
+    persistCredentials: True
+  - template: azure-pipelines/templates/spotbugs.yml@android-complete
+    parameters:
+      project: common
+- job: lint
+  displayName: Lint
+  cancelTimeoutInMinutes: 1
+  steps:
+  - checkout: self
+    clean: true
+    submodules: recursive
+    persistCredentials: True
+  - task: CmdLine@1
+    displayName: Set Office MVN Access Token in Environment
+    inputs:
+      filename: echo
+      arguments: '##vso[task.setvariable variable=ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN]$(System.AccessToken)'
+  - task: Gradle@3
+    displayName: Lint
+    inputs:
+      tasks: clean common:lintLocalDebug
+      publishJUnitResults: false
+- job: codeql
+  displayName: CodeQL
+  cancelTimeoutInMinutes: 1
+  variables:
+    Semmle.UploadSnapshot: true
+  steps:
+  - checkout: self
+    clean: true
+    submodules: recursive
+    persistCredentials: True
+  - task: CmdLine@1
+    displayName: Set Office MVN Access Token in Environment
+    inputs:
+      filename: echo
+      arguments: '##vso[task.setvariable variable=ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN]$(System.AccessToken)'
+  - task: Semmle@1
+    env:
+      SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+    inputs:
+      sourceCodeDirectory: '$(Build.SourcesDirectory)'
+      language: 'java'
+      buildCommandsString: 'gradlew.bat clean common:assembleLocal'
+      querySuite: 'Recommended'
+      timeout: '1800'
+  - task: PublishPipelineArtifact@1
+    displayName: 'Publish code analysis artifacts'
+    inputs:
+      targetPath: '$(Build.SourcesDirectory)\build\outputs\'
+      ArtifactName: 'outputs'
+    condition: failed()
 ...
