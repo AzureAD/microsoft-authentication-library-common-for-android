@@ -85,11 +85,6 @@ open class BrokerValidator(
         return isSignedByKnownKeys(brokerData = matchingApp)
     }
 
-    /**
-     * Returns true if the provided [BrokerData] is
-     * 1. Installed
-     * 2. Has a signing certificate hash that matches with what provided in the allow list.
-     **/
     override fun isSignedByKnownKeys(brokerData: BrokerData): Boolean{
         val methodTag = "$TAG:isSignedByKnownKeys"
         return try {
