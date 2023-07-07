@@ -18,6 +18,7 @@ V.NEXT
 - [PATCH] Fix missing visibility of the LTW app (#2097)
 - [MINOR] Add span names for storage and encryption spans (#2104)
 - [MINOR] Invalid required broker protocol version check in Acquire Token/Acquire Token Silent (#2101)
+- [PATCH] Add UI elemnent wait timeout in AadLoginComponentHandler (#2095)
 
 V.13.0.1
 ----------
