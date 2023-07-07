@@ -74,7 +74,7 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
         val dispatcher = Dispatchers.IO.limitedParallelism(10)
 
         const val ACTIVE_BROKER_PACKAGE_NAME_BUNDLE_KEY = "ACTIVE_BROKER_PACKAGE_NAME_BUNDLE_KEY"
-        const val ACTIVE_BROKER_SIGNATURE_HASH_BUNDLE_KEY = "ACTIVE_BROKER_SIGNATURE_HASH_BUNDLE_KEY"
+        const val ACTIVE_BROKER_SIGNING_CERTIFICATE_THUMBPRINT_BUNDLE_KEY = "ACTIVE_BROKER_SIGNING_CERTIFICATE_THUMBPRINT_BUNDLE_KEY"
         const val ERROR_BUNDLE_KEY = "ERROR_BUNDLE_KEY"
 
         /**
@@ -160,8 +160,8 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
             val pkgName = bundle.getString(ACTIVE_BROKER_PACKAGE_NAME_BUNDLE_KEY)?:
                 throw NoSuchElementException("ACTIVE_BROKER_PACKAGE_NAME_BUNDLE_KEY must not be null")
 
-            val signatureHash = bundle.getString(ACTIVE_BROKER_SIGNATURE_HASH_BUNDLE_KEY)?:
-                throw NoSuchElementException("ACTIVE_BROKER_SIGNATURE_HASH_BUNDLE_KEY must not be null")
+            val signatureHash = bundle.getString(ACTIVE_BROKER_SIGNING_CERTIFICATE_THUMBPRINT_BUNDLE_KEY)?:
+                throw NoSuchElementException("ACTIVE_BROKER_SIGNING_CERTIFICATE_THUMBPRINT_BUNDLE_KEY must not be null")
 
             return BrokerData(pkgName, signatureHash)
         }

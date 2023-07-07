@@ -106,7 +106,7 @@ open class ActiveBrokerCache
         return runBlocking {
             lock.withLock {
                 storage.put(ACTIVE_BROKER_CACHE_PACKAGE_NAME_KEY, brokerData.packageName)
-                storage.put(ACTIVE_BROKER_CACHE_SIGHASH_KEY, brokerData.signingCertificateHash)
+                storage.put(ACTIVE_BROKER_CACHE_SIGHASH_KEY, brokerData.signingCertificateThumbprint)
                 inMemoryCachedValue = brokerData.copy()
             }
         }

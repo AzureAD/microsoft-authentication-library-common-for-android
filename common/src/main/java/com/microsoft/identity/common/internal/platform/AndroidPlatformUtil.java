@@ -141,8 +141,8 @@ public class AndroidPlatformUtil implements IPlatformUtil {
             final PackageHelper info = new PackageHelper(mContext.getPackageManager());
             //For merely verifying that the app is AuthApp, use a 512 hash.
             final String signatureDigest = info.getSha512SignatureForPackage(packageName);
-            if (BrokerData.getProdMicrosoftAuthenticator().getSigningCertificateHash().equals(signatureDigest)
-                    || BrokerData.getDebugMicrosoftAuthenticator().getSigningCertificateHash().equals(signatureDigest)) {
+            if (BrokerData.getProdMicrosoftAuthenticator().getSigningCertificateThumbprint().equals(signatureDigest)
+                    || BrokerData.getDebugMicrosoftAuthenticator().getSigningCertificateThumbprint().equals(signatureDigest)) {
                 // If the caller is the Authenticator, check if the redirect uri matches with either
                 // the one generated with package name and signature or broker redirect uri.
                 isValidBrokerRedirect |= StringUtil.equalsIgnoreCase(redirectUri, AuthenticationConstants.Broker.BROKER_REDIRECT_URI);

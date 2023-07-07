@@ -89,7 +89,7 @@ open class BrokerValidator(
         val methodTag = "$TAG:isSignedByKnownKeys"
         return try {
             val signingCertificate = getSigningCertificateForApp(brokerData.packageName)
-            validateSigningCertificate(brokerData.signingCertificateHash, signingCertificate)
+            validateSigningCertificate(brokerData.signingCertificateThumbprint, signingCertificate)
             Logger.info(methodTag, "${brokerData.packageName} is installed, and is a valid broker.")
             true
         } catch (t: Throwable) {

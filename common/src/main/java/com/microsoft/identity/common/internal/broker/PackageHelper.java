@@ -74,15 +74,15 @@ public class PackageHelper {
     }
 
     /**
-     * Reads first signature in the list for given package name and hashes with SHA-1.
+     * Reads first {@link Signature} in the list for given package name and generate a thumbprint with SHA-1.
      *
-     * @param packageName name of the package for which signature should be returned
-     * @return SHA-1 signature hash for package
+     * @param packageName name of the package for which thumbprint should be returned
+     * @return SHA-1 signing certificate thumbprint for the package
      */
     public String getSha1SignatureForPackage(final String packageName) {
         final String methodTag = TAG + ":getSha1SignatureForPackage";
         try {
-            return getCurrentSignatureForPackage(getPackageInfo(mPackageManager, packageName), false);
+            return getSigningCertificateThumbprintForPackage(getPackageInfo(mPackageManager, packageName), false);
         } catch (NameNotFoundException e) {
             Logger.error(methodTag, "Calling App's package does not exist in PackageManager. ", "", e);
         }
@@ -90,15 +90,15 @@ public class PackageHelper {
     }
 
     /**
-     * Reads first signature in the list for given package name and hashes with SHA-512.
+     * Reads first {@link Signature} in the list for given package name and generate a thumbprint with SHA-512.
      *
-     * @param packageName name of the package for which signature should be returned
-     * @return SHA-512 signature hash for package
+     * @param packageName name of the package for which thumbprint should be returned
+     * @return SHA-512 signing certificate thumbprint for the package
      */
     public String getSha512SignatureForPackage(final String packageName) {
         final String methodTag = TAG + ":getSha512SignatureForPackage";
         try {
-            return getCurrentSignatureForPackage(getPackageInfo(mPackageManager, packageName), true);
+            return getSigningCertificateThumbprintForPackage(getPackageInfo(mPackageManager, packageName), true);
         } catch (NameNotFoundException e) {
             Logger.error(methodTag, "Calling App's package does not exist in PackageManager. ", "", e);
         }
@@ -106,15 +106,16 @@ public class PackageHelper {
     }
 
     /**
-     * Reads first signature in the list for given package name.
+     * Reads first {@link Signature} in the list for given package name.
      *
-     * @param packageInfo package for which signature should be returned
-     * @param useSha512 if true, uses SHA-512 to generate signature hash (should be used for verification purposes); if false, uses default SHA (redirect URI purposes)
+     * @param packageInfo package for which signing certificate should be returned
+     * @param useSha512 if true, uses SHA-512 to generate signing certificate thumbprint (should be used for verification purposes);
+     *                  if false, uses default SHA (redirect URI purposes)
      * @return signature for package
      */
-    private static String getCurrentSignatureForPackage(final PackageInfo packageInfo,
-                                                       final boolean useSha512) {
-        final String methodTag = TAG + ":getCurrentSignatureForPackage";
+    private static String getSigningCertificateThumbprintForPackage(final PackageInfo packageInfo,
+                                                                    final boolean useSha512) {
+        final String methodTag = TAG + ":getSigningCertificateThumbprintForPackage";
         try {
             final Signature[] signatures = getSignatures(packageInfo);
             if (signatures != null && signatures.length > 0) {
