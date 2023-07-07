@@ -2,6 +2,9 @@
 # Description: Assemble and run unit test
 name: $(date:yyyyMMdd)$(rev:.r)
 
+variables:
+  Semmle.UploadSnapshot: true
+
 trigger:
   branches:
     include:
@@ -83,8 +86,6 @@ jobs:
 - job: codeql
   displayName: CodeQL
   cancelTimeoutInMinutes: 1
-  variables:
-    Semmle.UploadSnapshot: true
   steps:
   - checkout: self
     clean: true
