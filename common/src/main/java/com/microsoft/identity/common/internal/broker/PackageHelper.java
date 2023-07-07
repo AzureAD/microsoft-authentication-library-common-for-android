@@ -172,6 +172,20 @@ public class PackageHelper {
     }
 
     /**
+     * Helper method to get Broker Redirect Uri
+     *
+     * @param context
+     * @param packageName
+     * @return String Broker Redirect Uri
+     */
+    public static String getBrokerRedirectUri(final Context context, final String packageName) {
+        final PackageHelper info = new PackageHelper(context.getPackageManager());
+        final String signatureDigest = info.getSha1SignatureForPackage(packageName);
+        return PackageHelper.getBrokerRedirectUrl(packageName,
+                signatureDigest);
+    }
+
+    /**
      * Gets redirect uri for broker.
      *
      * @param packageName     application package name

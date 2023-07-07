@@ -26,6 +26,7 @@ import android.content.Context
 import android.os.Bundle
 import com.microsoft.identity.common.exception.BrokerCommunicationException
 import com.microsoft.identity.common.internal.broker.BrokerData
+import com.microsoft.identity.common.internal.broker.BrokerValidator
 import com.microsoft.identity.common.internal.broker.PackageHelper
 import com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle
 import com.microsoft.identity.common.internal.broker.ipc.ContentProviderStrategy
@@ -178,14 +179,7 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
                 isPackageInstalledAndEnabled(brokerData.packageName)
         },
         isValidBroker = { brokerData ->
-            val methodTag = "$TAG:isValidBroker"
-            val installedHash = PackageHelper(context).getSha512SignatureForPackage(brokerData.packageName)
-            val isHashMatch = installedHash == brokerData.signatureHash
-            if (!isHashMatch) {
-                Logger.warn(methodTag, "Hash does not match for app ${brokerData.packageName}. " +
-                        "Expected: ${brokerData.signatureHash} but got: $installedHash")
-            }
-            isHashMatch
+            BrokerValidator(context).isSignedByKnownKeys(brokerData)
         })
 
     override fun getActiveBroker(shouldSkipCache: Boolean): BrokerData? {
