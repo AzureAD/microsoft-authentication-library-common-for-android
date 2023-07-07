@@ -2,8 +2,6 @@
 # Description: Assemble and run unit test
 name: $(date:yyyyMMdd)$(rev:.r)
 
-variables:
-  Semmle.UploadSnapshot: true
 
 trigger:
   branches:
@@ -96,6 +94,7 @@ jobs:
     inputs:
       filename: echo
       arguments: '##vso[task.setvariable variable=ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN]$(System.AccessToken)'
+  # https://semmleportal.azurewebsites.net/codeql/guardian
   - task: Semmle@1
     env:
       SYSTEM_ACCESSTOKEN: $(System.AccessToken)
