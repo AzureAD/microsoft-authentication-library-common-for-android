@@ -36,7 +36,7 @@ open class BrokerValidator(
     private val getSigningCertificateForApp: (packageName: String) -> List<X509Certificate>,
     private val validateSigningCertificate: (expectedSigningCertificateSignature: String,
                                              signingCertificates: List<X509Certificate>) -> Unit,
-) {
+): IBrokerValidator {
 
     companion object {
         private val TAG = BrokerValidator::class.simpleName
@@ -71,13 +71,7 @@ open class BrokerValidator(
         return isValidBrokerPackage(packageName)
     }
 
-    /**
-     * Returns true if the provided package name is
-     * 1. In the allow list.
-     * 2. Installed
-     * 2. Has a signing certificate hash that matches with what provided in the allow list.
-     * */
-    fun isValidBrokerPackage(packageName: String): Boolean{
+    override fun isValidBrokerPackage(packageName: String): Boolean {
         val methodTag = "$TAG:isValidBrokerPackage"
         val matchingApp = allowedBrokerApps.firstOrNull {
             it.packageName == packageName
@@ -90,12 +84,13 @@ open class BrokerValidator(
 
         return isSignedByKnownKeys(brokerData = matchingApp)
     }
+
     /**
      * Returns true if the provided [BrokerData] is
      * 1. Installed
      * 2. Has a signing certificate hash that matches with what provided in the allow list.
      **/
-    fun isSignedByKnownKeys(brokerData: BrokerData): Boolean{
+    override fun isSignedByKnownKeys(brokerData: BrokerData): Boolean{
         val methodTag = "$TAG:isSignedByKnownKeys"
         return try {
             val signingCertificate = getSigningCertificateForApp(brokerData.packageName)
