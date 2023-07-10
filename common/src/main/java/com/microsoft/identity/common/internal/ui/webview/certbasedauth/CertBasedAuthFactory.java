@@ -75,8 +75,8 @@ public class CertBasedAuthFactory {
      */
     @VisibleForTesting
     protected CertBasedAuthFactory(@NonNull final Activity activity,
-                                   @NonNull final AbstractUsbSmartcardCertBasedAuthManager usbManager,
-                                   @NonNull final AbstractNfcSmartcardCertBasedAuthManager nfcManager,
+                                   final AbstractUsbSmartcardCertBasedAuthManager usbManager,
+                                   final AbstractNfcSmartcardCertBasedAuthManager nfcManager,
                                    @NonNull final IDialogHolder dialogHolder) {
         mActivity = activity;
         mUsbSmartcardCertBasedAuthManager = usbManager;
@@ -143,8 +143,12 @@ public class CertBasedAuthFactory {
                                 @NonNull final ICertBasedAuthTelemetryHelper telemetryHelper) {
         mDialogHolder.dismissDialog();
         telemetryHelper.setResultFailure(USER_CANCEL_MESSAGE);
-        mNfcSmartcardCertBasedAuthManager.clearConnectionCallback();
-        mUsbSmartcardCertBasedAuthManager.clearConnectionCallback();
+        if (mNfcSmartcardCertBasedAuthManager != null) {
+            mNfcSmartcardCertBasedAuthManager.clearConnectionCallback();
+        }
+        if (mUsbSmartcardCertBasedAuthManager != null) {
+            mUsbSmartcardCertBasedAuthManager.clearConnectionCallback();
+        }
         callback.onReceived(null);
     }
 
@@ -252,9 +256,13 @@ public class CertBasedAuthFactory {
      * Clears all connection and disconnection callbacks for smartcard managers.
      */
     public void clearAllSmartcardConnectionAndDisconnectionCallbacks() {
-        mUsbSmartcardCertBasedAuthManager.clearConnectionCallback();
-        mUsbSmartcardCertBasedAuthManager.clearDisconnectionCallback();
-        mNfcSmartcardCertBasedAuthManager.clearConnectionCallback();
+        if (mUsbSmartcardCertBasedAuthManager != null) {
+            mUsbSmartcardCertBasedAuthManager.clearConnectionCallback();
+            mUsbSmartcardCertBasedAuthManager.clearDisconnectionCallback();
+        }
+        if (mNfcSmartcardCertBasedAuthManager != null) {
+            mNfcSmartcardCertBasedAuthManager.clearConnectionCallback();
+        }
     }
 
     /**
