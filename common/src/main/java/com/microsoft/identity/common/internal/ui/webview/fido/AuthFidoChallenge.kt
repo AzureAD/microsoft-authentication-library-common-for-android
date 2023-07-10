@@ -20,19 +20,30 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.ui.webview.fido;
-
-import java.util.List;
-
-import lombok.Builder;
+package com.microsoft.identity.common.internal.ui.webview.fido
 
 /**
  * An object representing an AuthFidoChallenge.
  */
-@Builder
-public class AuthFidoChallenge extends AbstractFidoChallenge {
+class AuthFidoChallenge
+    (
+    challenge: String,
+    relyingPartyIdentifier: String,
+    userVerificationPolicy: String,
+    version: String,
+    submitUrl: String,
+    keyTypes: List<String>,
+    context: String,
     /**
      * List of credential IDs the client will use for filtering.
      */
-    private final List<String> mAllowedCredentials;
-}
+    val allowedCredentials: List<String>
+) : AbstractFidoChallenge(
+    challenge = challenge,
+    relyingPartyIdentifier = relyingPartyIdentifier,
+    userVerificationPolicy = userVerificationPolicy,
+    version = version,
+    submitUrl = submitUrl,
+    keyTypes = keyTypes,
+    context = context
+)

@@ -20,34 +20,34 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.ui.webview.fido;
+package com.microsoft.identity.common.internal.ui.webview.fido
 
-import android.webkit.WebView;
-
-import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
-
-import java.util.List;
+import android.webkit.WebView
+import com.microsoft.identity.common.java.opentelemetry.IFidoTelemetryHelper
+import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback
 
 /**
  * Instantiates AbstractFidoChallengeHandler objects.
  */
-public class FidoChallengeHandlerFactory {
-    private static final String TAG = FidoChallengeHandlerFactory.class.getSimpleName();
-
+class FidoChallengeHandlerFactory {
     /**
      * Creates a FidoChallengeHandler.
      * @param manager IFidoManager instance.
      * @param webView current WebView.
      * @param completionCallback callback to be called upon completion.
+     * @param telemetryHelper IFidoTelemetryHelper instance.
      * @param keyTypes list of acceptable key types.
      * @return an AbstractFidoChallengeHandler.
      */
-    public AbstractFidoChallengeHandler createFidoChallengeHandler(IFidoManager manager,
-                                                                   WebView webView,
-                                                                   IAuthorizationCompletionCallback completionCallback,
-                                                                   List<String> keyTypes) {
+    fun createFidoChallengeHandler(
+        manager: IFidoManager,
+        webView: WebView,
+        completionCallback: IAuthorizationCompletionCallback,
+        telemetryHelper: IFidoTelemetryHelper,
+        keyTypes: List<String>
+    ): AbstractFidoChallengeHandler {
         //Once we get security key support, this is where we will prompt a user with a dialog to choose which type of credentials they want to sign in with.
         //But for now, this will always return a PassKeyFidoChallengeHandler.
-        return new PassKeyFidoChallengeHandler(manager, webView, completionCallback);
+        return PassKeyFidoChallengeHandler(manager, webView, completionCallback, telemetryHelper)
     }
 }

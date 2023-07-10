@@ -20,16 +20,17 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.ui.webview.fido;
+package com.microsoft.identity.common.internal.ui.webview.fido
 
 /**
- * Fields for a passkey protocol response.
+ * Represents FIDO request fields shared among registration and authentication requests.
  */
-public enum FidoResponseField {
-    Id,
-    AuthenticatorData,
-    ClientDataJson,
-    Signature,
-    UserHandle,
+enum class FidoRequestField {
+    Challenge,
+    RelyingPartyIdentifier,
+    UserVerificationPolicy,
+    Version,
+    SubmitUrl,
+    KeyTypes,
     Context
 }

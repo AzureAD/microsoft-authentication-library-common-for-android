@@ -20,35 +20,16 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.ui.webview.fido;
-
-import android.webkit.WebView;
-
-import com.microsoft.identity.common.internal.ui.webview.challengehandlers.IChallengeHandler;
-
-import java.util.Map;
+package com.microsoft.identity.common.internal.ui.webview.fido
 
 /**
- * Abstract class that handles a FidoChallenge.
+ * Request fields specific to a registration FIDO request.
  */
-public abstract class AbstractFidoChallengeHandler implements IChallengeHandler<AbstractFidoChallenge, Void> {
-
-    private final WebView mWebView;
-
-    /**
-     * Constructs an AbstractFidoChallengeHandler.
-     * @param webView current WebView.
-     */
-    protected AbstractFidoChallengeHandler(WebView webView) {
-        this.mWebView = webView;
-    }
-
-    /**
-     * Makes a post request in the WebView with the submitUrl and headers.
-     * @param submitUrl The url to which the client submits the response to the server's challenge.
-     * @param headers Response header values.
-     */
-    public void respondToChallenge(String submitUrl, Map<String, String> headers) {
-        //Submit url here.
-    }
+enum class RegFidoRequestField {
+    UserId,
+    UserName,
+    CredentialName,
+    AttestationKind,
+    PubKeyCredParam,
+    ExcludedCredentials
 }

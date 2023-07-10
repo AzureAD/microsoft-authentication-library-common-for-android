@@ -23,20 +23,8 @@
 package com.microsoft.identity.common.internal.ui.webview.fido
 
 /**
- * Representation of a manager that handles interactions with a passkey provider (usually through an API).
+ * Request fields specific to an Auth FIDO request.
  */
-interface IFidoManager {
-    /**
-     * Interacts with the FIDO credential provider and puts the authentication result in a header format.
-     * @param challenge AuthFidoChallenge received from the server.
-     * @return header fields for response.
-     */
-    suspend fun authenticate(challenge: AuthFidoChallenge): Map<String, String>
-
-    /**
-     * Interacts with the FIDO credential provider and puts the registration result in a header format.
-     * @param challenge RegFidoChallenge received from the server.
-     * @return header fields for response.
-     */
-    suspend fun register(challenge: RegFidoChallenge): Map<String, String>
+enum class AuthFidoRequestField {
+    AllowedCredentials
 }

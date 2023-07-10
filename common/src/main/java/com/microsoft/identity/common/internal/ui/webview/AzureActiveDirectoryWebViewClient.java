@@ -50,6 +50,7 @@ import com.microsoft.identity.common.internal.ui.webview.fido.FidoChallengeFacto
 import com.microsoft.identity.common.internal.ui.webview.fido.FidoChallengeHandlerFactory;
 import com.microsoft.identity.common.internal.ui.webview.fido.FidoManagerFactory;
 import com.microsoft.identity.common.internal.ui.webview.fido.IFidoManager;
+import com.microsoft.identity.common.java.opentelemetry.IFidoTelemetryHelper;
 import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallenge;
 import com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallengeFactory;
@@ -163,7 +164,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         try {
             if (isPkeyAuthUrl(formattedURL)) {
                 Logger.info(methodTag,"WebView detected request for pkeyauth challenge.");
-                //Instantiate telemetry helper here.
                 final PKeyAuthChallengeFactory factory = new PKeyAuthChallengeFactory();
                 final PKeyAuthChallenge pKeyAuthChallenge = factory.getPKeyAuthChallengeFromWebViewRedirect(url);
                 final PKeyAuthChallengeHandler pKeyAuthChallengeHandler = new PKeyAuthChallengeHandler(view, getCompletionCallback());
@@ -172,10 +172,12 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 Logger.info(methodTag, "WebView detected request for PassKey challenge.");
                 final AbstractFidoChallenge fidoChallenge = new FidoChallengeFactory().createFidoChallengeFromRedirect(url);
                 final IFidoManager fidoManager = new FidoManagerFactory().createFidoManager(getActivity());
+                final IFidoTelemetryHelper telemetryHelper = new FidoTelemetryHelper();
                 final AbstractFidoChallengeHandler fidoChallengeHandler = new FidoChallengeHandlerFactory().createFidoChallengeHandler(
                                                                                 fidoManager,
                                                                                 view,
                                                                                 getCompletionCallback(),
+                                                                                telemetryHelper
                                                                                 fidoChallenge.getKeyTypes()
                                                                             );
                 fidoChallengeHandler.processChallenge(fidoChallenge);

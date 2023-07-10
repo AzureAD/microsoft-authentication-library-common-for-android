@@ -20,11 +20,21 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.ui.webview.fido;
+package com.microsoft.identity.common.internal.ui.webview.fido
+
+import android.webkit.WebView
+import com.microsoft.identity.common.internal.ui.webview.challengehandlers.IChallengeHandler
+import com.microsoft.identity.common.java.opentelemetry.IFidoTelemetryHelper
 
 /**
- * Request fields specific to an Auth FIDO request.
+ * Abstract class that handles a FidoChallenge.
  */
-public enum AuthFidoRequestField {
-    AllowedCredentials
-}
+abstract class AbstractFidoChallengeHandler
+/**
+ * Constructs an AbstractFidoChallengeHandler.
+ * @param webView current WebView.
+ * @param telemetryHelper IFidoTelemetryHelper instance.
+ */ protected constructor(
+    private val mWebView: WebView,
+    private val telemetryHelper: IFidoTelemetryHelper
+) : IChallengeHandler<AbstractFidoChallenge, Void>

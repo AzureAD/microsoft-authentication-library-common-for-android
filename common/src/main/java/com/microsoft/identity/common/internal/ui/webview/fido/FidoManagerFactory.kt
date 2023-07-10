@@ -20,15 +20,21 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.ui.webview.fido;
+package com.microsoft.identity.common.internal.ui.webview.fido
+
+import android.content.Context
+
 /**
- * Request fields specific to a registration FIDO request.
+ * Instantiates IFidoManager objects.
  */
-public enum RegFidoRequestField {
-    UserId,
-    UserName,
-    CredentialName,
-    AttestationKind,
-    PubKeyCredParam,
-    ExcludedCredentials
+class FidoManagerFactory {
+    /**
+     * Create a FidoManager instance.
+     * @param context current context.
+     * @return an implementation of IFidoManager
+     */
+    fun createFidoManager(context: Context): IFidoManager {
+        //Since we're only using the Credential Manager API, just return the manager for that one.
+        return CredManApiFidoManager(context)
+    }
 }

@@ -20,40 +20,43 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.ui.webview.fido;
+package com.microsoft.identity.common.internal.ui.webview.fido
 
-import android.webkit.WebView;
-
-import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
+import android.webkit.WebView
+import com.microsoft.identity.common.java.opentelemetry.IFidoTelemetryHelper
+import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback
 
 /**
  * Handles a FidoChallenge by either creating or authenticating with a passkey.
  */
-public class PassKeyFidoChallengeHandler extends AbstractFidoChallengeHandler {
-
-    private final IFidoManager mFidoManager;
-    private final IAuthorizationCompletionCallback mChallengeCallback;
-
-    /**
-     * Creates a PassKeyFidoChallengeHandler instance.
-     * @param fidoManager IFidoManager instance.
-     * @param webView Current WebView.
-     * @param challengeCallback callback to invoke after challenge is handled.
-     */
-    public PassKeyFidoChallengeHandler(IFidoManager fidoManager, WebView webView, IAuthorizationCompletionCallback challengeCallback) {
-        super(webView);
-        mFidoManager = fidoManager;
-        mChallengeCallback = challengeCallback;
-
-    }
-
-    @Override
-    public Void processChallenge(AbstractFidoChallenge abstractFidoChallenge) {
+class PassKeyFidoChallengeHandler
+/**
+ * Creates a PassKeyFidoChallengeHandler instance.
+ * @param fidoManager IFidoManager instance.
+ * @param webView Current WebView.
+ * @param challengeCallback callback to invoke after challenge is handled.
+ * @param telemetryHelper IFidoTelemetryHelper instance.
+ */(
+    private val fidoManager: IFidoManager,
+    webView: WebView,
+    private val challengeCallback: IAuthorizationCompletionCallback,
+    telemetryHelper: IFidoTelemetryHelper
+) : AbstractFidoChallengeHandler(webView, telemetryHelper) {
+    override fun processChallenge(abstractFidoChallenge: AbstractFidoChallenge): Void? {
         //First, is this a registration or an authorization challenge?
         //Pass the challenge to the manager's methods based on that
         //These two methods should return the same object... maybe header
         //Take this header, and pass this plus the url to the respondToChallenge method.
         //When an exception occurs, let's pass the empty header to the server to prevent repeat requests.
-        return null;
+        return null
+    }
+
+    /**
+     * Makes a post request in the WebView with the submitUrl and headers.
+     * @param submitUrl The url to which the client submits the response to the server's challenge.
+     * @param headers Response header values.
+     */
+    private fun respondToChallenge(submitUrl: String, headers: Map<String, String>) {
+        //Submit url here.
     }
 }

@@ -20,27 +20,25 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.ui.webview.fido;
+package com.microsoft.identity.common.internal.ui.webview.fido
 
-import com.microsoft.identity.common.java.exception.ClientException;
-
-import java.util.Map;
-
-import lombok.NonNull;
+import com.microsoft.identity.common.java.exception.ClientException
 
 /**
  * Instantiates FidoChallenge objects.
  */
-public class FidoChallengeFactory {
-    private static final String TAG = FidoChallengeFactory.class.getSimpleName();
-
+class FidoChallengeFactory {
     /**
      * Creates a FidoChallenge from a WebView passkey redirect url.
      * @param redirectUri passkey protocol redirect url.
+     * @throws ClientException if a required parameter is missing.
      */
-    public AbstractFidoChallenge createFidoChallengeFromRedirect(@NonNull final String redirectUri) {
-        //Create parameters using UrlUtil
+    @Throws(ClientException::class)
+    fun createFidoChallengeFromRedirect(redirectUri: String): AbstractFidoChallenge {
+        //Get a map of parameters from redirectUri using UrlUtil
         //Check size of Map. If there are more than 8 entries, then it's a reg request. Otherwise, check for an auth request.
+        //(This is assuming that the server will always return the same number of parameters... if this isn't the case, we'll instead have to go by the presence of certain fields.)
+        //Return <create Reg/AuthFidoChallenge>
     }
 
     /**
@@ -49,10 +47,12 @@ public class FidoChallengeFactory {
      * @return RegFidoChallenge
      * @throws ClientException if a required parameter is missing.
      */
-    @NonNull
-    RegFidoChallenge createRegFidoChallenge(@NonNull Map<String, String> parameters) throws ClientException {
-        validateMainParameters(parameters);
+    @Throws(ClientException::class)
+    private fun createRegFidoChallenge(parameters: Map<String, String>): RegFidoChallenge {
+        validateMainParameters(parameters)
         //Build challenge. Start with the "main" parameters, then validate and add the other ones.
+        //Make use of RegFidoRequestField here.
+        //Throw a ClientException if one of the required parameters is missing.
     }
 
     /**
@@ -61,10 +61,12 @@ public class FidoChallengeFactory {
      * @return AuthFidoChallenge
      * @throws ClientException if a required parameter is missing.
      */
-    @NonNull
-    AuthFidoChallenge createAuthFidoChallenge(@NonNull Map<String, String> parameters) throws ClientException {
-        validateMainParameters(parameters);
+    @Throws(ClientException::class)
+    private fun createAuthFidoChallenge(parameters: Map<String, String>): AuthFidoChallenge {
+        validateMainParameters(parameters)
         //Build challenge. Start with the "main" parameters, then validate and add the other ones.
+        //Make use of AuthFidoRequestField here.
+        //Throw a ClientException if one of the required parameters is missing.
     }
 
     /**
@@ -72,5 +74,9 @@ public class FidoChallengeFactory {
      * @param parameters fields from redirect url.
      * @throws ClientException if a required parameter is missing.
      */
-    void validateMainParameters(Map<String, String> parameters) throws ClientException {}
+    @Throws(ClientException::class)
+    private fun validateMainParameters(parameters: Map<String, String>) {
+        //Make use of FidoRequestField here.
+        //Throw a ClientException if one of the required parameters is missing.
+    }
 }

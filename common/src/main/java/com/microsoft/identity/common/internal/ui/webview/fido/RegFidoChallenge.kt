@@ -1,4 +1,4 @@
-package com.microsoft.identity.common.internal.ui.webview.fido;
+package com.microsoft.identity.common.internal.ui.webview.fido
 
 // Copyright (c) Microsoft Corporation.
 // All rights reserved.
@@ -22,40 +22,47 @@ package com.microsoft.identity.common.internal.ui.webview.fido;
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-import java.util.List;
-
-import lombok.Builder;
-
 /**
  * An object representing a RegFidoChallenge.
  */
-@Builder
-public class RegFidoChallenge extends AbstractFidoChallenge {
-
+class RegFidoChallenge constructor(
+    challenge: String,
+    relyingPartyIdentifier: String,
+    userVerificationPolicy: String,
+    version: String,
+    submitUrl: String,
+    keyTypes: List<String>,
+    context: String,
     /**
      * The authenticator uses this ID to associate a credential with the user.
      */
-    private final String mUserId;
+    private val userId: String,
     /**
      * Usually the upn of the user.
      */
-    private final String mUserName;
+    private val userName: String,
     /**
      * A user-visible credential name.
      */
-    private final String mCredentialName;
+    private val credentialName: String,
     /**
      * Kind of attestation that the server wants to witness.
      */
-    private final String mAttestationKind;
+    private val attestationKind: String,
     /**
      * Array of strings indicating the public key types that are acceptable.
      */
-    private final List<String> mPubKeyCredParams;
+    private val pubKeyCredParams: List<String>,
     /**
      * Array of credentials that should be... excluded.
      */
-    private final List<String> mExcludedCredentials;
-
-
-}
+    private val excludedCredentials: List<String>,
+): AbstractFidoChallenge(
+    challenge = challenge,
+    relyingPartyIdentifier = relyingPartyIdentifier,
+    userVerificationPolicy = userVerificationPolicy,
+    version = version,
+    submitUrl = submitUrl,
+    keyTypes = keyTypes,
+    context = context
+)
