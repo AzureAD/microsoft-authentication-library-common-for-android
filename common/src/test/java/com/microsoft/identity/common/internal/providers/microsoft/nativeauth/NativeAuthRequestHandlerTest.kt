@@ -93,6 +93,7 @@ class NativeAuthRequestHandlerTest {
         every { getResetPasswordPollCompletionEndpoint() } returns ssprPollCompletionRequestUrl
         every { challengeType } returns this@NativeAuthRequestHandlerTest.challengeType
         every { clientId } returns this@NativeAuthRequestHandlerTest.clientId
+        every { useRealAuthority } returns false
     }
 
     private val nativeAuthRequestProvider =

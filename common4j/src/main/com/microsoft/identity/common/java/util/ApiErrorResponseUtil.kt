@@ -125,3 +125,14 @@ internal fun String?.isAuthNotSupported(): Boolean {
 internal fun String?.isInvalidOOBValue(): Boolean {
     return this.contentEquals(other = "invalid_oob_value", ignoreCase = true)
 }
+
+internal fun List<Map<String, String>>.toAttributeList(): List<String> {
+    val result = mutableListOf<String>()
+    this.forEach { iterable ->
+        iterable["name"]?.let { value ->
+            result.add(value)
+        }
+    }
+    return result.toList()
+}
+

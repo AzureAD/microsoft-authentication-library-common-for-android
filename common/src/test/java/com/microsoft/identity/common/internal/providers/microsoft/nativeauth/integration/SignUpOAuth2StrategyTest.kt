@@ -47,7 +47,6 @@ import com.microsoft.identity.common.java.providers.nativeauth.responses.signup.
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters
 import junit.framework.TestCase.assertTrue
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.kotlin.mock
@@ -364,7 +363,6 @@ class SignUpOAuth2StrategyTest {
         assertTrue(signupResult is SignUpContinueApiResult.InvalidPassword)
     }
 
-    @Ignore("response doesn't have invalid_attributes, waiting on confirmation from api team")
     @Test
     fun testPerformSignUpWithSubmitAttributesWithInvalidAttributes() {
         configureMockApi(
@@ -386,7 +384,6 @@ class SignUpOAuth2StrategyTest {
         assertTrue(signupResult is SignUpContinueApiResult.InvalidAttributes)
     }
 
-    @Ignore("response doesn't have invalid_attributes, waiting on confirmation from api team")
     @Test
     fun testPerformSignUpStartWithAttributesWithInvalidAttributes() {
         configureMockApi(

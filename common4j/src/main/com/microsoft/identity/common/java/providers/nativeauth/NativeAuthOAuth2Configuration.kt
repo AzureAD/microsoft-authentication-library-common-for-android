@@ -211,7 +211,8 @@ class NativeAuthOAuth2Configuration(
     private fun getEndpointUrlFromRootAndTenantAndSuffix(root: URL, endpointSuffix: String): URL {
         LogSession.logMethodCall(tag = TAG)
         return try {
-            UrlUtil.appendPathToURL(root, endpointSuffix)
+            // TODO remove query param post TEST SLICE
+            UrlUtil.appendPathToURL(root, endpointSuffix, "dc=ESTS-PUB-WUS3-AZ1-FD000-TEST1")
         } catch (e: URISyntaxException) {
             LogSession.logException(tag = TAG, throwable = e)
             throw e

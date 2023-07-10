@@ -73,7 +73,7 @@ public class MicrosoftStsOAuth2Configuration extends AzureActiveDirectoryOAuth2C
     private URL getEndpointUrlFromRootAndSuffix(@NonNull URL root, @NonNull String endpointSuffix) {
         final String methodName = ":getEndpointUrlFromRootAndSuffix";
         try {
-            return UrlUtil.appendPathToURL(root, endpointSuffix);
+            return UrlUtil.appendPathToURL(root, endpointSuffix, null);
         } catch (final URISyntaxException | MalformedURLException e) {
             Logger.error(
                     TAG + methodName,

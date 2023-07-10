@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.controllers.results
 
+import com.microsoft.identity.common.java.providers.nativeauth.responses.RequiredUserAttributeApiResult
 import com.microsoft.identity.common.java.util.CommonUtils
 
 sealed interface SignUpSubmitCodeCommandResult
@@ -62,7 +63,7 @@ interface SignUpCommandResult {
         val signupToken: String,
         val error: String,
         val errorDescription: String,
-        val requiredAttributes: List<Map<String, String>>,
+        val requiredAttributes: List<RequiredUserAttributeApiResult>,
         val correlationId: String = CommonUtils.getCurrentThreadCorrelationId()
     ) : SignUpStartCommandResult, SignUpSubmitPasswordCommandResult,
         SignUpSubmitUserAttributesCommandResult,
@@ -83,7 +84,7 @@ interface SignUpCommandResult {
     data class InvalidAttributes(
         val error: String,
         val errorDescription: String,
-        val invalidAttributes: List<Map<String, String>>,
+        val invalidAttributes: List<String>,
         val correlationId: String = CommonUtils.getCurrentThreadCorrelationId()
     ) : SignUpStartCommandResult, SignUpSubmitUserAttributesCommandResult
 

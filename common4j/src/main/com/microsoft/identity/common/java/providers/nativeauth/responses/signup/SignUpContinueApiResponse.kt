@@ -26,6 +26,7 @@ import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
 import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.providers.nativeauth.IApiResponse
+import com.microsoft.identity.common.java.providers.nativeauth.responses.RequiredUserAttributeApiResult
 import com.microsoft.identity.common.java.util.isAttributeValidationFailed
 import com.microsoft.identity.common.java.util.isAttributesRequired
 import com.microsoft.identity.common.java.util.isCredentialRequired
@@ -38,6 +39,7 @@ import com.microsoft.identity.common.java.util.isPasswordTooShort
 import com.microsoft.identity.common.java.util.isPasswordTooWeak
 import com.microsoft.identity.common.java.util.isUserAlreadyExists
 import com.microsoft.identity.common.java.util.isVerificationRequired
+import com.microsoft.identity.common.java.util.toAttributeList
 import java.net.HttpURLConnection
 
 data class SignUpContinueApiResponse(
@@ -49,7 +51,7 @@ data class SignUpContinueApiResponse(
     @SerializedName("signup_token") val signupToken: String?,
     @Expose @SerializedName("unverified_attributes") val unverifiedAttributes: List<Map<String, String>>?,
     @Expose @SerializedName("invalid_attributes") val invalidAttributes: List<Map<String, String>>?,
-    @Expose @SerializedName("required_attributes") val requiredAttributes: List<Map<String, String>>?,
+    @Expose @SerializedName("required_attributes") val requiredAttributes: List<RequiredUserAttributeApiResult>?,
     @Expose @SerializedName("details") val details: List<Map<String, String>>?
 ) : IApiResponse(statusCode) {
 
@@ -82,7 +84,7 @@ data class SignUpContinueApiResponse(
                         SignUpContinueApiResult.InvalidAttributes(
                             error = error.orEmpty(),
                             errorDescription = errorDescription.orEmpty(),
-                            invalidAttributes = invalidAttributes
+                            invalidAttributes = invalidAttributes?.toAttributeList()
                                 ?: return SignUpContinueApiResult.UnknownError(
                                     error = "invalid_state",
                                     errorDescription = "SignUp /continue did not return a invalid_attributes with validation_failed error",

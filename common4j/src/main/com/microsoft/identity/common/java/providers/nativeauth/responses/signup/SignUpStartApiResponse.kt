@@ -37,6 +37,7 @@ import com.microsoft.identity.common.java.util.isRedirect
 import com.microsoft.identity.common.java.util.isUnsupportedChallengeType
 import com.microsoft.identity.common.java.util.isUserAlreadyExists
 import com.microsoft.identity.common.java.util.isVerificationRequired
+import com.microsoft.identity.common.java.util.toAttributeList
 import java.net.HttpURLConnection
 
 data class SignUpStartApiResponse(
@@ -78,7 +79,7 @@ data class SignUpStartApiResponse(
                         SignUpStartApiResult.InvalidAttributes(
                             error = error.orEmpty(),
                             errorDescription = errorDescription.orEmpty(),
-                            invalidAttributes = invalidAttributes
+                            invalidAttributes = invalidAttributes?.toAttributeList()
                                 ?: return SignUpStartApiResult.UnknownError(
                                     error = "invalid_state",
                                     errorDescription = "SignUp /start did not return a invalid_attributes with validation_failed error",

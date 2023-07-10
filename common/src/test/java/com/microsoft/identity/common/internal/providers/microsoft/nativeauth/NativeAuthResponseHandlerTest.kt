@@ -25,6 +25,8 @@ package com.microsoft.identity.common.internal.providers.microsoft.nativeauth
 import com.microsoft.identity.common.java.net.HttpResponse
 import com.microsoft.identity.common.java.providers.nativeauth.NativeAuthOAuth2Configuration
 import com.microsoft.identity.common.java.providers.nativeauth.NativeAuthResponseHandler
+import com.microsoft.identity.common.java.providers.nativeauth.responses.RequiredUserAttributeApiResult
+import com.microsoft.identity.common.java.providers.nativeauth.responses.RequiredUserAttributeOptionsApiResult
 import com.microsoft.identity.common.java.providers.nativeauth.responses.resetpassword.ResetPasswordChallengeApiResponse
 import com.microsoft.identity.common.java.providers.nativeauth.responses.resetpassword.ResetPasswordChallengeApiResult
 import com.microsoft.identity.common.java.providers.nativeauth.responses.resetpassword.ResetPasswordContinueApiResponse
@@ -66,10 +68,27 @@ class NativeAuthResponseHandlerTest {
     private val invalidChallengeType = "invalid_challenge_type"
     private val emptyString = ""
     private val userAttributes = listOf(mapOf("city" to "Dublin"))
-    private val invalidAttributes = listOf(mapOf("name" to "city"))
+    private val invalidAttributes = listOf(mapOf("name" to "city"), mapOf("name" to "username"))
     private val unverifiedAttributes = listOf(mapOf("name" to "phone"))
     private val requiredAttributes =
-        listOf(mapOf("name" to "city"), mapOf("type" to "string"), mapOf("required" to "true"))
+        listOf(
+            RequiredUserAttributeApiResult(
+                "city",
+                "string",
+                true,
+                listOf(
+                    RequiredUserAttributeOptionsApiResult(
+                        "someregex"
+                    )
+                )
+            ),
+            RequiredUserAttributeApiResult(
+                "surname",
+                "string",
+                true,
+                null
+            )
+        )
     private val credentialToken = "uY29tL2F1dGhlbnRpY"
     private val signupToken = "token123"
     private val passwordResetToken = "1234"
@@ -104,6 +123,7 @@ class NativeAuthResponseHandlerTest {
     private val emailChallengeChannel = "email"
     private val bindingMethod = "prompt"
     private val nullString = "null"
+    private val attributeValidationFailed = "attribute_validation_failed"
     private val attributesRequiredError = "attributes_required"
     private val passwordTooWeakError = "password_too_weak"
     private val passwordTooLongError = "password_too_long"
@@ -119,6 +139,7 @@ class NativeAuthResponseHandlerTest {
     private val tenantMisconfiguration = "Tenant misconfiguration"
     private val unknownErrorDescription = "An unknown error happened"
     private val userAttributesRequiredErrorDescription = "User attributes required"
+    private val invalidAttributesErrorDescription = "Invalid user attributes"
     private val credentialRequiredErrorDescription = "Credential required."
     private val userDoesNotExistErrorDescription = "User does not exist"
     private val incorrectPasswordDescription = "Incorrect password"
@@ -140,6 +161,7 @@ class NativeAuthResponseHandlerTest {
         every { getSignUpStartEndpoint() } returns requestUrl
         every { challengeType } returns this@NativeAuthResponseHandlerTest.challengeType
         every { clientId } returns this@NativeAuthResponseHandlerTest.clientId
+        every { useRealAuthority } returns false
     }
 
     private val nativeAuthResponseHandler = NativeAuthResponseHandler()
@@ -893,11 +915,30 @@ class NativeAuthResponseHandlerTest {
     }
 
     @Test
+    fun testSignUpContinueApiUserInvalidAttributesResponse() {
+        val signUpContinueApiResponse = SignUpContinueApiResponse(
+            statusCode = errorStatusCode,
+            signupToken = signupToken,
+            error = attributeValidationFailed,
+            signInSLT = null,
+            errorDescription = invalidAttributesErrorDescription,
+            unverifiedAttributes = null,
+            invalidAttributes = invalidAttributes,
+            expiresIn = null,
+            requiredAttributes = null,
+            details = null
+        )
+        val apiResult = signUpContinueApiResponse.toResult()
+        assertTrue(apiResult is SignUpContinueApiResult.InvalidAttributes)
+        assertTrue((apiResult as SignUpContinueApiResult.InvalidAttributes).invalidAttributes.containsAll(listOf("username", "city")))
+    }
+
+    @Test
     fun testSignUpContinueApiUserAttributesRequiredResponseNoFlowToken() {
         val signUpContinueApiResponse = SignUpContinueApiResponse(
             statusCode = errorStatusCode,
             signupToken = null,
-            error = attributesRequiredError,
+            error = attributeValidationFailed,
             signInSLT = null,
             errorDescription = userAttributesRequiredErrorDescription,
             unverifiedAttributes = null,

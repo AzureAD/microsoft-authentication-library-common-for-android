@@ -51,7 +51,8 @@ public class UrlUtil {
      * @return appended URL
      */
     public static URL appendPathToURL(@NonNull final URL urlToAppend,
-                                      @Nullable final String pathString)
+                                      @Nullable final String pathString,
+                                      @Nullable final String queryParam) // TODO remove post test slice
             throws URISyntaxException, MalformedURLException {
 
         if (StringUtil.isNullOrEmpty(pathString)) {
@@ -84,6 +85,9 @@ public class UrlUtil {
         }
 
         builder.setPathSegments(combinedPathSegments);
+        if (queryParam != null && !queryParam.isEmpty()) {
+            builder.setQuery(queryParam);
+        }
         return builder.build().toURL();
     }
 

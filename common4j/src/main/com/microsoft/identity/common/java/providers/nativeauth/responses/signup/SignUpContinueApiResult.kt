@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.java.providers.nativeauth.responses.signup
 
 import com.microsoft.identity.common.java.providers.nativeauth.responses.ApiErrorResult
+import com.microsoft.identity.common.java.providers.nativeauth.responses.RequiredUserAttributeApiResult
 
 sealed interface SignUpContinueApiResult {
     object Redirect : SignUpContinueApiResult
@@ -36,7 +37,7 @@ sealed interface SignUpContinueApiResult {
         val signupToken: String,
         override val error: String,
         override val errorDescription: String,
-        val requiredAttributes: List<Map<String, String>>
+        val requiredAttributes: List<RequiredUserAttributeApiResult>
     ): ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
@@ -78,7 +79,7 @@ sealed interface SignUpContinueApiResult {
     data class InvalidAttributes(
         override val error: String,
         override val errorDescription: String,
-        val invalidAttributes: List<Map<String, String>>
+        val invalidAttributes: List<String>
     ): ApiErrorResult(
         error = error,
         errorDescription = errorDescription,

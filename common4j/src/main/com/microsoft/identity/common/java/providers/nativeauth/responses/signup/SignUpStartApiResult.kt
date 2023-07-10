@@ -47,7 +47,7 @@ sealed interface SignUpStartApiResult {
     data class InvalidAttributes(
         override val error: String,
         override val errorDescription: String,
-        val invalidAttributes: List<Map<String, String>>
+        val invalidAttributes: List<String>
     ): ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
