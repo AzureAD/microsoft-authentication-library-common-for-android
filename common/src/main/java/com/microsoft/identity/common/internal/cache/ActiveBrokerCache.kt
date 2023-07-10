@@ -29,9 +29,6 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import net.jcip.annotations.ThreadSafe
-import java.util.concurrent.locks.ReentrantReadWriteLock
-import kotlin.concurrent.read
-import kotlin.concurrent.write
 
 /**
  * A cache for storing the active broker as known by the caller.
@@ -109,7 +106,7 @@ open class ActiveBrokerCache
         return runBlocking {
             lock.withLock {
                 storage.put(ACTIVE_BROKER_CACHE_PACKAGE_NAME_KEY, brokerData.packageName)
-                storage.put(ACTIVE_BROKER_CACHE_SIGHASH_KEY, brokerData.signatureHash)
+                storage.put(ACTIVE_BROKER_CACHE_SIGHASH_KEY, brokerData.signingCertificateThumbprint)
                 inMemoryCachedValue = brokerData.copy()
             }
         }
