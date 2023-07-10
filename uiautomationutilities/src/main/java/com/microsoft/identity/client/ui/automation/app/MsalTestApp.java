@@ -139,6 +139,15 @@ public class MsalTestApp extends App {
         return toast;
     }
 
+    public UiObject getPackageName(String packageName) throws UiObjectNotFoundException, InterruptedException {
+        final UiObject getPackageNameButton = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/btnGetActiveBroker");
+        scrollToElement(getPackageNameButton);
+        Thread.sleep(2000);
+        getPackageNameButton.click();
+        final UiObject toast = UiAutomatorUtils.obtainUiObjectWithText(packageName);
+        return toast;
+    }
+
     private void scrollToElement(UiObject obj) throws UiObjectNotFoundException {
         UiScrollable scrollable = new UiScrollable(new UiSelector().scrollable(true));
         scrollable.scrollIntoView(obj);
