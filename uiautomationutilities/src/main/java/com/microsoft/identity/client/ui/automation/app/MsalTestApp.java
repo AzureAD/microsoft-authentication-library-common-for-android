@@ -101,8 +101,10 @@ public class MsalTestApp extends App {
 
     // click on button getUsers
     public List<String> getUsers() throws UiObjectNotFoundException, InterruptedException {
-        UiAutomatorUtils.handleButtonClick("com.msft.identity.client.sample.local:id/btn_getUsers");
-
+        final UiObject getUsersButton = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/btn_getUsers");
+        scrollToElement(getUsersButton);
+        Thread.sleep(2000);
+        getUsersButton.click();
         // get each user information in the user list
         final List<String> users = new ArrayList<>();
         final UiObject userList = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/user_list");
