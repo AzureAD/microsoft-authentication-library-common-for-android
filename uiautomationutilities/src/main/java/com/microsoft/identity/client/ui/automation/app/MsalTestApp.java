@@ -116,9 +116,9 @@ public class MsalTestApp extends App {
         return users;
     }
 
-    public void selectFromAuthScheme(String text) throws UiObjectNotFoundException {
-        final UiObject anthSchemeSpinner = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/authentication_scheme");
-        anthSchemeSpinner.click();
+    public void selectFromAuthScheme(@NonNull String text) throws UiObjectNotFoundException {
+        final UiObject authSchemeSpinner = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/authentication_scheme");
+        authSchemeSpinner.click();
         final UiObject authScheme = UiAutomatorUtils.obtainUiObjectWithText(text);
         authScheme.click();
     }
@@ -132,7 +132,7 @@ public class MsalTestApp extends App {
         return result.getText();
     }
 
-    public UiObject removeUser(String msg) throws UiObjectNotFoundException, InterruptedException {
+    public UiObject removeUser(@NonNull String msg) throws UiObjectNotFoundException, InterruptedException {
         final UiObject removeUserButton = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/btn_clearCache");
         scrollToElement(removeUserButton);
         Thread.sleep(2000);
@@ -141,7 +141,7 @@ public class MsalTestApp extends App {
         return toast;
     }
 
-    public UiObject getPackageName(String packageName) throws UiObjectNotFoundException, InterruptedException {
+    public UiObject getPackageName(@NonNull String packageName) throws UiObjectNotFoundException, InterruptedException {
         final UiObject getPackageNameButton = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/btnGetActiveBroker");
         scrollToElement(getPackageNameButton);
         Thread.sleep(2000);
