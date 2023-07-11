@@ -1,5 +1,7 @@
 V.NEXT
 ----------
+- [MAJOR] Tidy up BrokerValidator (#2107)
+- [PATCH] Adding null checks for CancelHelper (CBA) (#2105)
 - [PATCH] Make AndroidWrappedKeyLoader return the right alias (#2102)
 - [PATCH] Read private key before public key to avoid OS bug (#2091)
 - [PATCH] Add new CryptoFactoryName and ClientException error code (#2094)
@@ -17,6 +19,7 @@ V.NEXT
 - [PATCH] Fix missing visibility of the LTW app (#2097)
 - [MINOR] Add span names for storage and encryption spans (#2104)
 - [MINOR] Invalid required broker protocol version check in Acquire Token/Acquire Token Silent (#2101)
+- [PATCH] Add UI elemnent wait timeout in AadLoginComponentHandler (#2095)
 
 V.13.0.1
 ----------

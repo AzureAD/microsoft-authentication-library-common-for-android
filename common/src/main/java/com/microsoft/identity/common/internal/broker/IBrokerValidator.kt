@@ -22,9 +22,23 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.broker
 
+/**
+ * An interface for validating if a given app is a valid broker app.
+ * */
 interface IBrokerValidator {
+
     /**
-     * Checks if the provided uid is a valid broker app.
-     */
-    fun isValidBrokerApp(uid: Int): Boolean
+     * Returns true if the provided package name is
+     * 1. In the allow list.
+     * 2. Installed
+     * 2. Has a signing certificate hash that matches with what provided in the allow list.
+     * */
+    fun isValidBrokerPackage(packageName: String): Boolean
+
+    /**
+     * Returns true if the provided [BrokerData] is
+     * 1. Installed
+     * 2. Has a signing certificate hash that matches with what provided in the allow list.
+     **/
+    fun isSignedByKnownKeys(brokerData: BrokerData): Boolean
 }

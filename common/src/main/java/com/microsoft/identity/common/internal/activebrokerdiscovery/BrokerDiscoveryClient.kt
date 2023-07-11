@@ -26,6 +26,7 @@ import android.content.Context
 import android.os.Bundle
 import com.microsoft.identity.common.exception.BrokerCommunicationException
 import com.microsoft.identity.common.internal.broker.BrokerData
+import com.microsoft.identity.common.internal.broker.BrokerValidator
 import com.microsoft.identity.common.internal.broker.PackageHelper
 import com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle
 import com.microsoft.identity.common.internal.broker.ipc.ContentProviderStrategy
@@ -73,7 +74,7 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
         val dispatcher = Dispatchers.IO.limitedParallelism(10)
 
         const val ACTIVE_BROKER_PACKAGE_NAME_BUNDLE_KEY = "ACTIVE_BROKER_PACKAGE_NAME_BUNDLE_KEY"
-        const val ACTIVE_BROKER_SIGNATURE_HASH_BUNDLE_KEY = "ACTIVE_BROKER_SIGNATURE_HASH_BUNDLE_KEY"
+        const val ACTIVE_BROKER_SIGNING_CERTIFICATE_THUMBPRINT_BUNDLE_KEY = "ACTIVE_BROKER_SIGNING_CERTIFICATE_THUMBPRINT_BUNDLE_KEY"
         const val ERROR_BUNDLE_KEY = "ERROR_BUNDLE_KEY"
 
         /**
@@ -159,8 +160,8 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
             val pkgName = bundle.getString(ACTIVE_BROKER_PACKAGE_NAME_BUNDLE_KEY)?:
                 throw NoSuchElementException("ACTIVE_BROKER_PACKAGE_NAME_BUNDLE_KEY must not be null")
 
-            val signatureHash = bundle.getString(ACTIVE_BROKER_SIGNATURE_HASH_BUNDLE_KEY)?:
-                throw NoSuchElementException("ACTIVE_BROKER_SIGNATURE_HASH_BUNDLE_KEY must not be null")
+            val signatureHash = bundle.getString(ACTIVE_BROKER_SIGNING_CERTIFICATE_THUMBPRINT_BUNDLE_KEY)?:
+                throw NoSuchElementException("ACTIVE_BROKER_SIGNING_CERTIFICATE_THUMBPRINT_BUNDLE_KEY must not be null")
 
             return BrokerData(pkgName, signatureHash)
         }
@@ -178,14 +179,7 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
                 isPackageInstalledAndEnabled(brokerData.packageName)
         },
         isValidBroker = { brokerData ->
-            val methodTag = "$TAG:isValidBroker"
-            val installedHash = PackageHelper(context).getSha512SignatureForPackage(brokerData.packageName)
-            val isHashMatch = installedHash == brokerData.signatureHash
-            if (!isHashMatch) {
-                Logger.warn(methodTag, "Hash does not match for app ${brokerData.packageName}. " +
-                        "Expected: ${brokerData.signatureHash} but got: $installedHash")
-            }
-            isHashMatch
+            BrokerValidator(context).isSignedByKnownKeys(brokerData)
         })
 
     override fun getActiveBroker(shouldSkipCache: Boolean): BrokerData? {
