@@ -6,7 +6,7 @@ ext {
     brokerProjectMinSdkVersion = 24
     automationAppMinSDKVersion = 21
     targetSdkVersion = 34
-    compileSdkVersion = 30
+    compileSdkVersion = 34
     buildToolsVersion = "28.0.3"
 
     // Plugins
