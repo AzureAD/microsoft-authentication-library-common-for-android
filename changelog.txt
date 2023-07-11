@@ -1,4 +1,4 @@
-V.NEXT
+V.14.0.0
 ----------
 - [PATCH] Make AndroidWrappedKeyLoader return the right alias (#2102)
 - [PATCH] Read private key before public key to avoid OS bug (#2091)
@@ -8,7 +8,7 @@ V.NEXT
 - [MINOR] Fix issue for MSA only where headers are not propagated on web requests with different domain redirects on newer versions of WebView (88+) (#2072)
 - [PATCH] Add method to return list of broker that supports account manager (#2073)
 - [MINOR] Send client id as part of request bundle for getSsoToken Api (#2064)
-- [PATCH] Wire new Broker Discovery Client into MSAL - still disabled by default (#2057)
+- [MAJOR] Wire new Broker Discovery Client into MSAL - still disabled by default (#2057)
 - [MINOR] Add support to run UI automation on MsalTestApp  (#2056)
 - [MINOR] Move ATS span start/end to MicrosoftAuthServiceOperation (#2068)
 - [MINOR] Move AT interactive span start/end to Account Chooser (#2069)
