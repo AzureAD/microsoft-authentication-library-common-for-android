@@ -111,6 +111,20 @@ public class UiAutomatorUtils {
     /**
      * Obtain an instance of the UiObject for the given text.
      *
+     * @param text the text of the element to obtain.
+     * @param existsTimeout time to wait until ui object with text exists.
+     * @return the UiObject associated to the supplied text
+     */
+    public static UiObject obtainUiObjectWithText(@NonNull final String text, final long existsTimeout) {
+        Logger.i(TAG, "Obtain an instance of the UiObject with text:" + text);
+        return obtainUiObjectWithUiSelector(new UiSelector().textContains(text),
+                existsTimeout
+        );
+    }
+
+    /**
+     * Obtain an instance of the UiObject for the given text.
+     *
      * @param description the description of the element to obtain
      * @return the UiObject associated to the supplied text
      */
@@ -247,6 +261,28 @@ public class UiAutomatorUtils {
                                    @NonNull final String inputText) {
         Logger.i(TAG, "Handling input for resource id: " + resourceId);
         final UiObject inputField = obtainUiObjectWithResourceId(resourceId);
+
+        try {
+            inputField.setText(inputText);
+            closeKeyboardIfNeeded();
+        } catch (final UiObjectNotFoundException e) {
+            throw new AssertionError(e);
+        }
+    }
+
+    /**
+     * Fills the supplied text into the input element associated to the supplied resource id.
+     *
+     * @param resourceId the resource id of the input element
+     * @param inputText  the text to enter
+     * @param inputTimeout time to wait for successful input.
+     */
+    public static void handleInput(@NonNull final String resourceId,
+                                   @NonNull final String inputText,
+                                   final long inputTimeout
+    ) {
+        Logger.i(TAG, "Handling input for resource id: " + resourceId);
+        final UiObject inputField = obtainUiObjectWithResourceId(resourceId, inputTimeout);
 
         try {
             inputField.setText(inputText);
