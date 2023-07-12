@@ -46,7 +46,7 @@ jobs:
   - task: Gradle@1
     displayName: Lint Local debug
     inputs:
-       tasks: clean common:lintLocalDebug
+      tasks: clean common:lintLocalDebug
   - template: ../templates/steps/spotbugs.yml
     parameters:
       project: common
