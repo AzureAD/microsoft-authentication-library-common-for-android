@@ -105,16 +105,8 @@ public final class PackageUtils {
 
         final List<X509Certificate> certificates = new ArrayList<>(signatures.length);
         for (final Signature signature : signatures) {
-            final byte[] rawCert = signature.toByteArray();
-            final InputStream certStream = new ByteArrayInputStream(rawCert);
-
-            final CertificateFactory certificateFactory;
-            final X509Certificate x509Certificate;
             try {
-                certificateFactory = CertificateFactory.getInstance("X509");
-                x509Certificate = (X509Certificate) certificateFactory.generateCertificate(
-                        certStream);
-                certificates.add(x509Certificate);
+                certificates.add(createCertificateFromByteArray(signature.toByteArray()));
             } catch (final CertificateException e) {
                 //This exception is odd given the name of this function...
                 throw new ClientException(BROKER_APP_VERIFICATION_FAILED);
@@ -122,6 +114,12 @@ public final class PackageUtils {
         }
 
         return certificates;
+    }
+
+    public static X509Certificate createCertificateFromByteArray(byte[] rawCert) throws CertificateException {
+        final InputStream certStream = new ByteArrayInputStream(rawCert);
+        return (X509Certificate) CertificateFactory.getInstance("X509")
+                .generateCertificate(certStream);
     }
 
     /**

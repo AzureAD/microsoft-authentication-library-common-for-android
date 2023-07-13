@@ -1,5 +1,9 @@
 V.NEXT
 ----------
+
+V.14.0.0
+----------
+- [MAJOR] Tidy up BrokerValidator (#2107)
 - [PATCH] Adding null checks for CancelHelper (CBA) (#2105)
 - [PATCH] Make AndroidWrappedKeyLoader return the right alias (#2102)
 - [PATCH] Read private key before public key to avoid OS bug (#2091)
@@ -9,7 +13,7 @@ V.NEXT
 - [MINOR] Fix issue for MSA only where headers are not propagated on web requests with different domain redirects on newer versions of WebView (88+) (#2072)
 - [PATCH] Add method to return list of broker that supports account manager (#2073)
 - [MINOR] Send client id as part of request bundle for getSsoToken Api (#2064)
-- [PATCH] Wire new Broker Discovery Client into MSAL - still disabled by default (#2057)
+- [MAJOR] Wire new Broker Discovery Client into MSAL - still disabled by default (#2057)
 - [MINOR] Add support to run UI automation on MsalTestApp  (#2056)
 - [MINOR] Move ATS span start/end to MicrosoftAuthServiceOperation (#2068)
 - [MINOR] Move AT interactive span start/end to Account Chooser (#2069)
@@ -18,6 +22,7 @@ V.NEXT
 - [PATCH] Fix missing visibility of the LTW app (#2097)
 - [MINOR] Add span names for storage and encryption spans (#2104)
 - [MINOR] Invalid required broker protocol version check in Acquire Token/Acquire Token Silent (#2101)
+- [PATCH] Add UI elemnent wait timeout in AadLoginComponentHandler (#2095)
 
 V.13.0.1
 ----------

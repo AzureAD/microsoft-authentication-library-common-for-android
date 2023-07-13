@@ -69,8 +69,8 @@ class BrokerDiscoveryClientTests {
                             prodMicrosoftAuthenticator.packageName
                         )
                         returnBundle.putString(
-                            BrokerDiscoveryClient.ACTIVE_BROKER_SIGNATURE_HASH_BUNDLE_KEY,
-                            prodMicrosoftAuthenticator.signatureHash
+                            BrokerDiscoveryClient.ACTIVE_BROKER_SIGNING_CERTIFICATE_THUMBPRINT_BUNDLE_KEY,
+                            prodMicrosoftAuthenticator.signingCertificateThumbprint
                         )
                         return returnBundle
                     }
@@ -387,8 +387,8 @@ class BrokerDiscoveryClientTests {
                             prodCompanyPortal.packageName
                         )
                         returnBundle.putString(
-                            BrokerDiscoveryClient.ACTIVE_BROKER_SIGNATURE_HASH_BUNDLE_KEY,
-                            prodCompanyPortal.signatureHash
+                            BrokerDiscoveryClient.ACTIVE_BROKER_SIGNING_CERTIFICATE_THUMBPRINT_BUNDLE_KEY,
+                            prodCompanyPortal.signingCertificateThumbprint
                         )
                         return returnBundle
                     }
@@ -515,8 +515,8 @@ class BrokerDiscoveryClientTests {
                             prodCompanyPortal.packageName
                         )
                         returnBundle.putString(
-                            BrokerDiscoveryClient.ACTIVE_BROKER_SIGNATURE_HASH_BUNDLE_KEY,
-                            prodCompanyPortal.signatureHash
+                            BrokerDiscoveryClient.ACTIVE_BROKER_SIGNING_CERTIFICATE_THUMBPRINT_BUNDLE_KEY,
+                            prodCompanyPortal.signingCertificateThumbprint
                         )
                         return returnBundle
                     }

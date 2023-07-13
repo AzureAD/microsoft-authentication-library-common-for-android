@@ -51,8 +51,7 @@ public class ProcessUtil {
     public static boolean isBrokerProcess(@NonNull final Context context) {
         final String processName = getProcessName(context);
 
-        final BrokerValidator brokerValidator = new BrokerValidator(context);
-        final Set<BrokerData> validBrokers = brokerValidator.getValidBrokers();
+        final Set<BrokerData> validBrokers = BrokerData.getKnownBrokerApps();
 
         for (final BrokerData brokerData : validBrokers) {
             final String authProcess = brokerData.getPackageName() + ":auth";
