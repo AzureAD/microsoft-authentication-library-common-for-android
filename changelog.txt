@@ -1,5 +1,6 @@
 V.NEXT
 ----------
+- [MINOR] Update YubiKit version to 2.3.0 (#2112)
 
 V.14.0.0
 ----------
