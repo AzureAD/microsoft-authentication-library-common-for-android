@@ -28,7 +28,6 @@ import android.os.Build;
 
 import androidx.annotation.Nullable;
 
-import com.microsoft.identity.common.BuildConfig;
 import com.microsoft.identity.common.java.broker.IBrokerAccount;
 import com.microsoft.identity.common.logging.Logger;
 
@@ -41,17 +40,17 @@ import lombok.experimental.Accessors;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ACCOUNT_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_HOST_APP_PACKAGE_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.MOCK_AUTH_APP_PACKAGE_NAME;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.MOCK_CP_PACKAGE_NAME;
 
+/**
+ * An instance of {@link IBrokerAccount} which contains an Android's {@link AccountManager} account.
+ **/
 @Getter
 @Accessors(prefix = "m")
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @EqualsAndHashCode
-public class AndroidBrokerAccount implements IBrokerAccount {
-    private static final String TAG = AndroidBrokerAccount.class.getSimpleName();
+public class AccountManagerBrokerAccount implements IBrokerAccount {
+    private static final String TAG = AccountManagerBrokerAccount.class.getSimpleName();
 
     /**
      * Android's {@link AccountManager} account.
@@ -72,29 +71,28 @@ public class AndroidBrokerAccount implements IBrokerAccount {
     }
 
     /**
-     * Logs and throw {@link ClassCastException} if it fails to parse.
+     * Cast an {@link IBrokerAccount} into {@link AccountManagerBrokerAccount}.
      */
     @NonNull
-    public static AndroidBrokerAccount cast(@NonNull final IBrokerAccount account) {
-        final String methodTag = TAG + ":cast";
-        try {
-            return (AndroidBrokerAccount) account;
-        } catch (final ClassCastException e) {
-            Logger.error(methodTag,
-                    "Expected an AndroidBrokerAccount, but got " + e.getClass().getSimpleName(), e);
-            throw e;
+    public static AccountManagerBrokerAccount cast(@NonNull final AccountManager accountManager,
+                                                   @NonNull final IBrokerAccount account) {
+        if (account instanceof AccountManagerBrokerAccount){
+            return (AccountManagerBrokerAccount) account;
         }
+
+        // Cannot cast, load/create Account Manager Account and wrap it with AndroidManagerBrokerAccount.
+        return create(accountManager, account.getUsername(), account.getType());
     }
 
     @NonNull
-    public static AndroidBrokerAccount adapt(@NonNull final Account account) {
-        return new AndroidBrokerAccount(account);
+    public static AccountManagerBrokerAccount adapt(@NonNull final Account account) {
+        return new AccountManagerBrokerAccount(account);
     }
 
     @NonNull
-    public static AndroidBrokerAccount create(@NonNull final AccountManager accountManager,
-                                              @NonNull final String accountName,
-                                              @NonNull final String accountType) {
+    public static AccountManagerBrokerAccount create(@NonNull final AccountManager accountManager,
+                                                     @NonNull final String accountName,
+                                                     @NonNull final String accountType) {
         final String methodTag = TAG + ":create";
 
         Account account = getAccount(accountManager, accountName, accountType);
@@ -127,14 +125,10 @@ public class AndroidBrokerAccount implements IBrokerAccount {
     }
 
     @Nullable
-    public static Account getAccount(@NonNull final AccountManager accountManager,
-                                      @Nullable final String accountName,
+    private static Account getAccount(@NonNull final AccountManager accountManager,
+                                      @NonNull final String accountName,
                                       @NonNull final String accountType) {
         final String methodTag = TAG + ":getAccount";
-        if (accountName == null) {
-            return null;
-        }
-
         final Account[] accountList = accountManager.getAccountsByType(accountType);
 
         if (accountList != null) {
