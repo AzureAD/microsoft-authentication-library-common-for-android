@@ -46,9 +46,6 @@ public enum SpanName {
     PrtUpgrade,
     AcquireTokenDcf,
     AcquireTokenDcfAuthRequest,
-    AcquireTokenDcfFetchToken,
-    AccountStorageWithBackup,
-    EncryptionManager,
     Passthrough,
-    BrokerOperationRequestDispatcher,
+    BrokerOperationRequestDispatcher;
 }
