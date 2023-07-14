@@ -1,10 +1,11 @@
 V.NEXT
 ----------
+- [MAJOR] AccountManagerStorageHelper should not force cast IBrokerAccount into AndroidBrokerAccount (#2110) (Breaking change to Broker only)
+- [MAJOR] Tidy up BrokerValidator (#2107)
+- [PATCH] Adding null checks for CancelHelper (CBA) (#2105)
 
 V.14.0.0
 ----------
-- [MAJOR] Tidy up BrokerValidator (#2107)
-- [PATCH] Adding null checks for CancelHelper (CBA) (#2105)
 - [PATCH] Make AndroidWrappedKeyLoader return the right alias (#2102)
 - [PATCH] Read private key before public key to avoid OS bug (#2091)
 - [PATCH] Add new CryptoFactoryName and ClientException error code (#2094)
