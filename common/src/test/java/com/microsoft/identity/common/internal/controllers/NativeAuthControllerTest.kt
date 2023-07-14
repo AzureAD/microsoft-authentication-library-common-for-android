@@ -51,7 +51,7 @@ import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpS
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpSubmitPasswordCommandParameters
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpSubmitUserAttributesCommandParameters
-import com.microsoft.identity.common.java.controllers.results.CommandResult
+import com.microsoft.identity.common.java.controllers.results.ICommandResult
 import com.microsoft.identity.common.java.controllers.results.ResetPasswordCommandResult
 import com.microsoft.identity.common.java.controllers.results.SignInCommandResult
 import com.microsoft.identity.common.java.controllers.results.SignUpCommandResult
@@ -265,7 +265,7 @@ class NativeAuthControllerTest {
 
         val parameters = createSignInStartWithPasswordCommandParameters()
         val result = controller.signInStart(parameters)
-        assert(result is CommandResult.Redirect)
+        assert(result is ICommandResult.Redirect)
     }
 
     @Test
@@ -444,8 +444,8 @@ class NativeAuthControllerTest {
 
         val parameters = createSignInWithSLTCommandParameters()
         val result = controller.signInWithSLT(parameters)
-        assert(result is CommandResult.UnknownError)
-        assert((result as CommandResult.UnknownError).error == invalidGrantError)
+        assert(result is ICommandResult.UnknownError)
+        assert((result as ICommandResult.UnknownError).error == invalidGrantError)
     }
 
     @Test
@@ -459,8 +459,8 @@ class NativeAuthControllerTest {
 
         val parameters = createSignInWithSLTCommandParameters()
         val result = controller.signInWithSLT(parameters)
-        assert(result is CommandResult.UnknownError)
-        assert((result as CommandResult.UnknownError).error == invalidGrantError)
+        assert(result is ICommandResult.UnknownError)
+        assert((result as ICommandResult.UnknownError).error == invalidGrantError)
     }
 
     @Test
@@ -474,8 +474,8 @@ class NativeAuthControllerTest {
 
         val parameters = createSignInWithSLTCommandParameters()
         val result = controller.signInWithSLT(parameters)
-        assert(result is CommandResult.UnknownError)
-        assert((result as CommandResult.UnknownError).error == invalidGrantError)
+        assert(result is ICommandResult.UnknownError)
+        assert((result as ICommandResult.UnknownError).error == invalidGrantError)
     }
 
     @Test
@@ -489,8 +489,8 @@ class NativeAuthControllerTest {
 
         val parameters = createSignInWithSLTCommandParameters()
         val result = controller.signInWithSLT(parameters)
-        assert(result is CommandResult.UnknownError)
-        assert((result as CommandResult.UnknownError).error == invalidGrantError)
+        assert(result is ICommandResult.UnknownError)
+        assert((result as ICommandResult.UnknownError).error == invalidGrantError)
     }
 
     @Test
@@ -504,7 +504,7 @@ class NativeAuthControllerTest {
 
         val parameters = createSignInStartWithPasswordCommandParameters()
         val result = controller.signInStart(parameters)
-        assert(result is CommandResult.Redirect)
+        assert(result is ICommandResult.Redirect)
     }
     //endregion
 
@@ -567,7 +567,7 @@ class NativeAuthControllerTest {
 
         val parameters = createSsprStartCommandParameters()
         val result = controller.resetPasswordStart(parameters)
-        assert(result is CommandResult.Redirect)
+        assert(result is ICommandResult.Redirect)
     }
 
     @Test
@@ -998,7 +998,7 @@ class NativeAuthControllerTest {
 
         val parameters = createSignUpStartCommandParameters()
         val result = controller.signUpStart(parameters)
-        assert(result is CommandResult.Redirect)
+        assert(result is ICommandResult.Redirect)
     }
 
     @Test
@@ -1013,7 +1013,7 @@ class NativeAuthControllerTest {
 
         val parameters = createSignUpStartWithPasswordCommandParameters()
         val result = controller.signUpStart(parameters)
-        assert(result is CommandResult.Redirect)
+        assert(result is ICommandResult.Redirect)
     }
 
     @Test
@@ -1034,7 +1034,7 @@ class NativeAuthControllerTest {
 
         val parameters = createSignUpStartWithPasswordCommandParameters()
         val result = controller.signUpStart(parameters)
-        assert(result is CommandResult.Redirect)
+        assert(result is ICommandResult.Redirect)
     }
 
     @Test

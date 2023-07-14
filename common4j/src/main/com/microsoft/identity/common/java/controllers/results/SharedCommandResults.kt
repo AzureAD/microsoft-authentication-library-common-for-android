@@ -2,7 +2,7 @@ package com.microsoft.identity.common.java.controllers.results
 
 import com.microsoft.identity.common.java.util.CommonUtils
 
-interface CommandResult {
+interface ICommandResult {
     data class Redirect(val correlationId: String = CommonUtils.getCurrentThreadCorrelationId()) :
         SignInStartCommandResult, SignInWithSLTCommandResult, SignInSubmitCodeCommandResult, SignInResendCodeCommandResult,
         SignInSubmitPasswordCommandResult, SignUpStartCommandResult, SignUpSubmitCodeCommandResult,
@@ -15,8 +15,9 @@ interface CommandResult {
         override val errorDescription: String?,
         override val details: List<Map<String, String>>? = null,
         override val correlationId: String = CommonUtils.getCurrentThreadCorrelationId(),
-        override val errorCodes: List<Int>? = null
-    ): Error(error, errorDescription, details, correlationId, errorCodes),
+        override val errorCodes: List<Int>? = null,
+        val exception: Exception? = null
+    ): Error(error, errorDescription, details, correlationId, errorCodes), ICommandResult,
         SignInStartCommandResult, SignInWithSLTCommandResult, SignInSubmitCodeCommandResult, SignInResendCodeCommandResult,
         SignInSubmitPasswordCommandResult, SignUpStartCommandResult,
         SignUpSubmitUserAttributesCommandResult,

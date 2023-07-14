@@ -167,6 +167,8 @@ dependencies {
     testImplementation "junit:junit:$rootProject.ext.junitVersion"
     testImplementation "org.mockito:mockito-core:$rootProject.ext.mockitoCoreVersion"
     testImplementation "io.mockk:mockk:1.11.0"
+    testImplementation "io.mockk:mockk-agent-jvm:1.12.0"
+    testImplementation group: 'org.jetbrains.kotlin', name: 'kotlin-reflect', version: '1.5.30'
     testImplementation "org.mockito:mockito-inline:$rootProject.ext.mockitoCoreVersion"
     testImplementation("org.mockito.kotlin:mockito-kotlin:$rootProject.ext.mockitoKotlinVersion") {
         exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib'

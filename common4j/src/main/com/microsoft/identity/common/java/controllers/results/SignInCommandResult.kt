@@ -25,11 +25,11 @@ package com.microsoft.identity.common.java.controllers.results
 import com.microsoft.identity.common.java.result.ILocalAuthenticationResult
 import com.microsoft.identity.common.java.util.CommonUtils
 
-sealed interface SignInStartCommandResult
-sealed interface SignInWithSLTCommandResult
-sealed interface SignInSubmitCodeCommandResult
-sealed interface SignInResendCodeCommandResult
-sealed interface SignInSubmitPasswordCommandResult
+sealed interface SignInStartCommandResult: ICommandResult
+sealed interface SignInWithSLTCommandResult: ICommandResult
+sealed interface SignInSubmitCodeCommandResult: ICommandResult
+sealed interface SignInResendCodeCommandResult: ICommandResult
+sealed interface SignInSubmitPasswordCommandResult: ICommandResult
 
 interface SignInCommandResult {
     data class Complete(val authenticationResult: ILocalAuthenticationResult) :

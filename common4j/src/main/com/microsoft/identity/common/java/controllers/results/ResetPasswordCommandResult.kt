@@ -24,10 +24,10 @@ package com.microsoft.identity.common.java.controllers.results
 
 import com.microsoft.identity.common.java.util.CommonUtils
 
-sealed interface ResetPasswordStartCommandResult
-sealed interface ResetPasswordSubmitCodeCommandResult
-sealed interface ResetPasswordResendCodeCommandResult
-sealed interface ResetPasswordSubmitNewPasswordCommandResult
+sealed interface ResetPasswordStartCommandResult: ICommandResult
+sealed interface ResetPasswordSubmitCodeCommandResult: ICommandResult
+sealed interface ResetPasswordResendCodeCommandResult: ICommandResult
+sealed interface ResetPasswordSubmitNewPasswordCommandResult: ICommandResult
 
 interface ResetPasswordCommandResult {
     data class CodeRequired(

@@ -36,7 +36,7 @@ class NativeAuthOAuth2Configuration(
     val challengeType: String,
     // Need this to decide whether or not to return mock api authority or actual authority supplied in configuration
     // Turn this on if you plan to use web auth and/or open id configuration
-    // TODO remove this post-mock API
+    // TODO make this configurable: https://identitydivision.visualstudio.com/Engineering/_workitems/edit/2629229
     val useRealAuthority: Boolean = false
 ) : MicrosoftStsOAuth2Configuration() {
 
@@ -211,8 +211,9 @@ class NativeAuthOAuth2Configuration(
     private fun getEndpointUrlFromRootAndTenantAndSuffix(root: URL, endpointSuffix: String): URL {
         LogSession.logMethodCall(tag = TAG)
         return try {
-            // TODO remove query param post TEST SLICE
-            UrlUtil.appendPathToURL(root, endpointSuffix, "dc=ESTS-PUB-WUS3-AZ1-FD000-TEST1")
+            // TODO make this configurable: https://identitydivision.visualstudio.com/Engineering/_workitems/edit/2629229
+//            UrlUtil.appendPathToURL(root, endpointSuffix, "dc=ESTS-PUB-WUS3-AZ1-FD000-TEST1")
+            UrlUtil.appendPathToURL(root, endpointSuffix, null)
         } catch (e: URISyntaxException) {
             LogSession.logException(tag = TAG, throwable = e)
             throw e

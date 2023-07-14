@@ -25,11 +25,11 @@ package com.microsoft.identity.common.java.controllers.results
 import com.microsoft.identity.common.java.providers.nativeauth.responses.RequiredUserAttributeApiResult
 import com.microsoft.identity.common.java.util.CommonUtils
 
-sealed interface SignUpSubmitCodeCommandResult
-sealed interface SignUpSubmitUserAttributesCommandResult
-sealed interface SignUpSubmitPasswordCommandResult
-sealed interface SignUpResendCodeCommandResult
-sealed interface SignUpStartCommandResult
+sealed interface SignUpSubmitCodeCommandResult: ICommandResult
+sealed interface SignUpSubmitUserAttributesCommandResult: ICommandResult
+sealed interface SignUpSubmitPasswordCommandResult: ICommandResult
+sealed interface SignUpResendCodeCommandResult: ICommandResult
+sealed interface SignUpStartCommandResult: ICommandResult
 
 interface SignUpCommandResult {
     data class UsernameAlreadyExists(

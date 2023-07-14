@@ -52,7 +52,7 @@ import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpS
 import com.microsoft.identity.common.java.commands.parameters.nativeauth.SignUpSubmitUserAttributesCommandParameters
 import com.microsoft.identity.common.java.configuration.LibraryConfiguration
 import com.microsoft.identity.common.java.controllers.CommandDispatcher
-import com.microsoft.identity.common.java.controllers.results.CommandResult
+import com.microsoft.identity.common.java.controllers.results.ICommandResult
 import com.microsoft.identity.common.java.controllers.results.ResetPasswordCommandResult
 import com.microsoft.identity.common.java.controllers.results.ResetPasswordResendCodeCommandResult
 import com.microsoft.identity.common.java.controllers.results.ResetPasswordStartCommandResult
@@ -200,7 +200,7 @@ class NativeAuthController : BaseNativeAuthController() {
                     )
                     tokenApiResult as ApiErrorResult
 
-                    return CommandResult.UnknownError(
+                    return ICommandResult.UnknownError(
                         error = tokenApiResult.error,
                         errorDescription = "API returned unexpected result: $tokenApiResult",
                         errorCodes = tokenApiResult.errorCodes
@@ -263,7 +263,7 @@ class NativeAuthController : BaseNativeAuthController() {
                         message = "Unexpected result: $tokenApiResult"
                     )
                     tokenApiResult as ApiErrorResult
-                    CommandResult.UnknownError(
+                    ICommandResult.UnknownError(
                         error = tokenApiResult.error,
                         errorDescription = tokenApiResult.errorDescription,
                         details = tokenApiResult.details,
@@ -309,13 +309,13 @@ class NativeAuthController : BaseNativeAuthController() {
                         logLevel = Logger.LogLevel.WARN,
                         message = "Unexpected result: $result"
                     )
-                    CommandResult.UnknownError(
+                    ICommandResult.UnknownError(
                         error = "unexpected_api_result",
                         errorDescription = "API returned unexpected result: $result"
                     )
                 }
                 SignInChallengeApiResult.Redirect -> {
-                    CommandResult.Redirect()
+                    ICommandResult.Redirect()
                 }
                 is SignInChallengeApiResult.UnknownError -> {
                     LogSession.log(
@@ -323,7 +323,7 @@ class NativeAuthController : BaseNativeAuthController() {
                         logLevel = Logger.LogLevel.WARN,
                         message = "Unexpected result: $result"
                     )
-                    CommandResult.UnknownError(
+                    ICommandResult.UnknownError(
                         error = result.error,
                         errorDescription = result.errorDescription,
                         details = result.details,
@@ -428,7 +428,7 @@ class NativeAuthController : BaseNativeAuthController() {
                     )
                 }
                 is SignUpStartApiResult.Redirect -> {
-                    CommandResult.Redirect()
+                    ICommandResult.Redirect()
                 }
                 is SignUpStartApiResult.UnsupportedChallengeType, is SignUpStartApiResult.UnknownError -> {
                     signUpStartApiResult as ApiErrorResult
@@ -437,7 +437,7 @@ class NativeAuthController : BaseNativeAuthController() {
                         logLevel = Logger.LogLevel.WARN,
                         message = "Unexpected result: $signUpStartApiResult"
                     )
-                    CommandResult.UnknownError(
+                    ICommandResult.UnknownError(
                         error = signUpStartApiResult.error,
                         errorDescription = signUpStartApiResult.errorDescription
                     )
@@ -756,7 +756,7 @@ class NativeAuthController : BaseNativeAuthController() {
                     ).toResetPasswordStartCommandResult()
                 }
                 ResetPasswordStartApiResult.Redirect -> {
-                    CommandResult.Redirect()
+                    ICommandResult.Redirect()
                 }
                 is ResetPasswordStartApiResult.UserNotFound -> {
                     ResetPasswordCommandResult.UserNotFound(
@@ -771,7 +771,7 @@ class NativeAuthController : BaseNativeAuthController() {
                         message = "Unexpected result: $resetPasswordStartApiResult"
                     )
                     resetPasswordStartApiResult as ApiErrorResult
-                    CommandResult.UnknownError(
+                    ICommandResult.UnknownError(
                         error = resetPasswordStartApiResult.error,
                         errorDescription = resetPasswordStartApiResult.errorDescription,
                         details = resetPasswordStartApiResult.details
@@ -814,7 +814,7 @@ class NativeAuthController : BaseNativeAuthController() {
                     )
                 }
                 ResetPasswordContinueApiResult.Redirect -> {
-                    CommandResult.Redirect()
+                    ICommandResult.Redirect()
                 }
                 is ResetPasswordContinueApiResult.ExpiredToken, is ResetPasswordContinueApiResult.UnknownError -> {
                     LogSession.log(
@@ -823,7 +823,7 @@ class NativeAuthController : BaseNativeAuthController() {
                         message = "Unexpected result: $resetPasswordContinueApiResult"
                     )
                     resetPasswordContinueApiResult as ApiErrorResult
-                    CommandResult.UnknownError(
+                    ICommandResult.UnknownError(
                         error = resetPasswordContinueApiResult.error,
                         errorDescription = resetPasswordContinueApiResult.errorDescription,
                         details = resetPasswordContinueApiResult.details
@@ -863,7 +863,7 @@ class NativeAuthController : BaseNativeAuthController() {
                     )
                 }
                 ResetPasswordChallengeApiResult.Redirect -> {
-                    CommandResult.Redirect()
+                    ICommandResult.Redirect()
                 }
                 is ResetPasswordChallengeApiResult.ExpiredToken,
                 is ResetPasswordChallengeApiResult.UnsupportedChallengeType,
@@ -874,7 +874,7 @@ class NativeAuthController : BaseNativeAuthController() {
                         message = "Unexpected result: $resetPasswordChallengeApiResult"
                     )
                     resetPasswordChallengeApiResult as ApiErrorResult
-                    CommandResult.UnknownError(
+                    ICommandResult.UnknownError(
                         error = resetPasswordChallengeApiResult.error,
                         errorDescription = resetPasswordChallengeApiResult.errorDescription,
                         details = resetPasswordChallengeApiResult.details
@@ -927,7 +927,7 @@ class NativeAuthController : BaseNativeAuthController() {
                         message = "Unexpected result: $resetPasswordSubmitApiResult"
                     )
                     resetPasswordSubmitApiResult as ApiErrorResult
-                    CommandResult.UnknownError(
+                    ICommandResult.UnknownError(
                         error = resetPasswordSubmitApiResult.error,
                         errorDescription = resetPasswordSubmitApiResult.errorDescription,
                         details = resetPasswordSubmitApiResult.details
@@ -1019,7 +1019,7 @@ class NativeAuthController : BaseNativeAuthController() {
                         message = "in_progress received after polling, illegal state"
                     )
                     // This should never be reached, theoretically
-                    CommandResult.UnknownError(
+                    ICommandResult.UnknownError(
                         error = "illegal_state",
                         errorDescription = "in_progress received after polling concluded, illegal state"
                     )
@@ -1034,7 +1034,7 @@ class NativeAuthController : BaseNativeAuthController() {
                         message = "Unexpected result: $pollCompletionApiResult"
                     )
                     pollCompletionApiResult as ApiErrorResult
-                    CommandResult.UnknownError(
+                    ICommandResult.UnknownError(
                         error = pollCompletionApiResult.error,
                         errorDescription = pollCompletionApiResult.errorDescription,
                         details = pollCompletionApiResult.details
@@ -1218,7 +1218,7 @@ class NativeAuthController : BaseNativeAuthController() {
                 )
             }
             ResetPasswordChallengeApiResult.Redirect -> {
-                CommandResult.Redirect()
+                ICommandResult.Redirect()
             }
             is ResetPasswordChallengeApiResult.ExpiredToken -> {
                 LogSession.log(
@@ -1226,7 +1226,7 @@ class NativeAuthController : BaseNativeAuthController() {
                     logLevel = Logger.LogLevel.WARN,
                     message = "Expire token result: $this"
                 )
-                CommandResult.UnknownError(
+                ICommandResult.UnknownError(
                     error = this.error,
                     errorDescription = this.errorDescription
                 )
@@ -1237,7 +1237,7 @@ class NativeAuthController : BaseNativeAuthController() {
                     logLevel = Logger.LogLevel.WARN,
                     message = "Unexpected result: $this"
                 )
-                CommandResult.UnknownError(
+                ICommandResult.UnknownError(
                     error = this.error,
                     errorDescription = this.errorDescription
                 )
@@ -1248,7 +1248,7 @@ class NativeAuthController : BaseNativeAuthController() {
                     logLevel = Logger.LogLevel.WARN,
                     message = "Unexpected result: $this"
                 )
-                CommandResult.UnknownError(
+                ICommandResult.UnknownError(
                     error = this.error,
                     errorDescription = this.errorDescription,
                     details = this.details
@@ -1356,7 +1356,7 @@ class NativeAuthController : BaseNativeAuthController() {
                 )
             }
             SignUpChallengeApiResult.Redirect -> {
-                CommandResult.Redirect()
+                ICommandResult.Redirect()
             }
             is SignUpChallengeApiResult.ExpiredToken, is SignUpChallengeApiResult.UnsupportedChallengeType,
             is SignUpChallengeApiResult.UnknownError -> {
@@ -1366,7 +1366,7 @@ class NativeAuthController : BaseNativeAuthController() {
                     message = "Unexpected result: $this"
                 )
                 this as ApiErrorResult
-                CommandResult.UnknownError(
+                ICommandResult.UnknownError(
                     error = this.error,
                     errorDescription = this.errorDescription,
                     details = this.details
@@ -1391,7 +1391,7 @@ class NativeAuthController : BaseNativeAuthController() {
                     logLevel = Logger.LogLevel.WARN,
                     message = "Expire token result: $this"
                 )
-                CommandResult.UnknownError(
+                ICommandResult.UnknownError(
                     error = this.error,
                     errorDescription = this.errorDescription
                 )
@@ -1424,7 +1424,7 @@ class NativeAuthController : BaseNativeAuthController() {
                 )
             }
             is SignUpContinueApiResult.Redirect -> {
-                CommandResult.Redirect()
+                ICommandResult.Redirect()
             }
             is SignUpContinueApiResult.UnknownError -> {
                 LogSession.log(
@@ -1432,7 +1432,7 @@ class NativeAuthController : BaseNativeAuthController() {
                     logLevel = Logger.LogLevel.WARN,
                     message = "Unexpected result: $this"
                 )
-                CommandResult.UnknownError(
+                ICommandResult.UnknownError(
                     error = this.error,
                     errorDescription = this.errorDescription,
                     details = this.details
@@ -1445,7 +1445,7 @@ class NativeAuthController : BaseNativeAuthController() {
                     logLevel = Logger.LogLevel.WARN,
                     message = "Unexpected result: $this"
                 )
-                CommandResult.UnknownError(
+                ICommandResult.UnknownError(
                     error = "unexpected_api_result",
                     errorDescription = "API returned unexpected result: $this"
                 )
@@ -1484,7 +1484,7 @@ class NativeAuthController : BaseNativeAuthController() {
                 ).toSignUpStartCommandResult() as SignUpSubmitUserAttributesCommandResult // TODO can we find something more graceful than a runtime cast?
             }
             is SignUpContinueApiResult.Redirect -> {
-                CommandResult.Redirect()
+                ICommandResult.Redirect()
             }
             is SignUpContinueApiResult.InvalidAttributes -> {
                 SignUpCommandResult.InvalidAttributes(
@@ -1502,7 +1502,7 @@ class NativeAuthController : BaseNativeAuthController() {
                     message = "Expire token result: $this"
                 )
                 this as ApiErrorResult
-                CommandResult.UnknownError(
+                ICommandResult.UnknownError(
                     error = this.error,
                     errorDescription = this.errorDescription
                 )
@@ -1548,7 +1548,7 @@ class NativeAuthController : BaseNativeAuthController() {
                 )
             }
             is SignUpContinueApiResult.Redirect -> {
-                CommandResult.Redirect()
+                ICommandResult.Redirect()
             }
             is SignUpContinueApiResult.ExpiredToken, is SignUpContinueApiResult.InvalidOOBValue,
             is SignUpContinueApiResult.InvalidAttributes, is SignUpContinueApiResult.UnknownError -> {
@@ -1558,7 +1558,7 @@ class NativeAuthController : BaseNativeAuthController() {
                     message = "Expire token result: $this"
                 )
                 this as ApiErrorResult
-                CommandResult.UnknownError(
+                ICommandResult.UnknownError(
                     error = this.error,
                     errorDescription = this.errorDescription
                 )
@@ -1595,7 +1595,7 @@ class NativeAuthController : BaseNativeAuthController() {
                     message = "Unexpected result: $this"
                 )
                 this as ApiErrorResult
-                CommandResult.UnknownError(
+                ICommandResult.UnknownError(
                     error = "unexpected_api_result",
                     errorDescription = "API returned unexpected result: $this",
                     errorCodes = this.errorCodes
@@ -1634,7 +1634,7 @@ class NativeAuthController : BaseNativeAuthController() {
                     message = "Unexpected result: $this"
                 )
                 this as ApiErrorResult
-                CommandResult.UnknownError(
+                ICommandResult.UnknownError(
                     error = "unexpected_api_result",
                     errorDescription = "API returned unexpected result: $this",
                     errorCodes = this.errorCodes
@@ -1652,7 +1652,7 @@ class NativeAuthController : BaseNativeAuthController() {
     ): SignInStartCommandResult {
         return when (initiateApiResult) {
             SignInInitiateApiResult.Redirect -> {
-                CommandResult.Redirect()
+                ICommandResult.Redirect()
             }
             is SignInInitiateApiResult.Success -> {
                 val signInChallengeResult = performSignInChallengeCall(
@@ -1679,7 +1679,7 @@ class NativeAuthController : BaseNativeAuthController() {
                     logLevel = Logger.LogLevel.WARN,
                     message = "Unexpected result: $initiateApiResult"
                 )
-                CommandResult.UnknownError(
+                ICommandResult.UnknownError(
                     error = initiateApiResult.error,
                     errorDescription = initiateApiResult.errorDescription,
                     errorCodes = initiateApiResult.errorCodes
@@ -1730,7 +1730,7 @@ class NativeAuthController : BaseNativeAuthController() {
                 }
             }
             SignInChallengeApiResult.Redirect -> {
-                CommandResult.Redirect()
+                ICommandResult.Redirect()
             }
 
             is SignInChallengeApiResult.UnknownError -> {
@@ -1739,7 +1739,7 @@ class NativeAuthController : BaseNativeAuthController() {
                     logLevel = Logger.LogLevel.WARN,
                     message = "Unexpected result: $result"
                 )
-                CommandResult.UnknownError(
+                ICommandResult.UnknownError(
                     error = result.error,
                     errorDescription = result.errorDescription,
                     details = result.details,
