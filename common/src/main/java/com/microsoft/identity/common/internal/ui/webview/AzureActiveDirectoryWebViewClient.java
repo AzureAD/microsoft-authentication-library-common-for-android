@@ -28,6 +28,7 @@ import android.content.ComponentName;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
+import android.os.CancellationSignal;
 import android.os.Handler;
 import android.webkit.ClientCertRequest;
 import android.webkit.WebResourceRequest;
@@ -36,6 +37,11 @@ import android.webkit.WebView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
+import androidx.credentials.CredentialManager;
+import androidx.credentials.GetCredentialRequest;
+import androidx.credentials.GetPublicKeyCredentialOption;
+import androidx.lifecycle.Lifecycle;
+import androidx.lifecycle.ViewTreeLifecycleOwner;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
@@ -502,6 +508,10 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                     final String message = "Cancelling the TLS request, not responding to TLS challenge triggered by device authentication.";
                     Logger.info(methodTag, message);
                     clientCertRequest.cancel();
+                    //testing something here
+                    new CredManTestFile(getActivity()).callCredManRegister(ViewTreeLifecycleOwner.get(view).getLifecycle());
+                    new CredManTestFile(getActivity()).callCredManSignIn(ViewTreeLifecycleOwner.get(view).getLifecycle());
+
                     return;
                 }
             }

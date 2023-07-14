@@ -63,4 +63,11 @@
     <string name="smartcard_removal_prompt_dialog_title">You can now remove your smart card</string>
     <string name="smartcard_removal_prompt_dialog_positive_button">Got it</string>
 
+    <!-- For passkeys work -->
+    <string name="asset_statements" translatable="false">
+        [{
+            \"include\": \"https://smoggy-candle-rhinoceros.glitch.me/.well-known/assetlinks.json\"
+        }]
+    </string>
+
 </resources>

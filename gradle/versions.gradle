@@ -6,7 +6,7 @@ ext {
     brokerProjectMinSdkVersion = 24
     automationAppMinSDKVersion = 21
     targetSdkVersion = 30
-    compileSdkVersion = 30
+    compileSdkVersion = 33
     buildToolsVersion = "28.0.3"
 
     // Plugins
@@ -69,6 +69,8 @@ ext {
     yubikitAndroidVersion = "2.2.0"
     yubikitPivVersion = "2.2.0"
     powerliftAndroidVersion="1.0.0"
+    AndroidCredentialsVersion="1.0.0-alpha09"
+    AndroidCredentialsPlayServicesAuthVersion="1.0.0-alpha09"
 
     // microsoft-diagnostics-uploader app versions
     powerliftVersion = "0.14.7"
