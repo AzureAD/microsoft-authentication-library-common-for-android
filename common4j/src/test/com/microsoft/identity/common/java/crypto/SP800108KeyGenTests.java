@@ -44,18 +44,18 @@ public class SP800108KeyGenTests {
     public void test_generateDerivedKey() throws IOException, NoSuchAlgorithmException, ClientException, InvalidKeyException {
         final SP800108KeyGen keygen = new SP800108KeyGen(new DefaultCryptoFactory());
         final SecretKeySpec keyDerivationKey1 = new SecretKeySpec("keyDerivationKey".getBytes(), "HmacSHA256");
-        byte[] label1 = "label1".getBytes();
-        
-        byte[] ctx1 = "ctx1".getBytes();
-        String expectedDerivedKey1 = "MhPZ41HpPJ4tirU62ciRCaeKLDpDj+KY8Xv+6B6YxeU=";
-        byte[]  derivedKey1 = keygen.generateDerivedKey(keyDerivationKey1, label1, ctx1);
+        final byte[] label1 = "label1".getBytes();
+
+        final byte[] ctx1 = "ctx1".getBytes();
+        final String expectedDerivedKey1 = "MhPZ41HpPJ4tirU62ciRCaeKLDpDj+KY8Xv+6B6YxeU=";
+        final byte[]  derivedKey1 = keygen.generateDerivedKey(keyDerivationKey1, label1, ctx1);
         Assert.assertEquals(expectedDerivedKey1, Base64.getEncoder().encodeToString(derivedKey1));
 
         final byte[] keyDerivationKey2 = "keyDerivationKey".getBytes();
-        byte[] label2 = "label2".getBytes();
-        byte[] ctx2 = "ctx2".getBytes();
-        String expectedDerivedKey2 = "Vj5vebnHvixm9SZ4YC3AoStaaOFS6uVRCYxQaIcMZFw=";
-        byte[]  derivedKey2 = keygen.generateDerivedKey(keyDerivationKey2, label2, ctx2);
+        final byte[] label2 = "label2".getBytes();
+        final byte[] ctx2 = "ctx2".getBytes();
+        final String expectedDerivedKey2 = "Vj5vebnHvixm9SZ4YC3AoStaaOFS6uVRCYxQaIcMZFw=";
+        final byte[]  derivedKey2 = keygen.generateDerivedKey(keyDerivationKey2, label2, ctx2);
         Assert.assertEquals(expectedDerivedKey2, Base64.getEncoder().encodeToString(derivedKey2));
     }
 }
