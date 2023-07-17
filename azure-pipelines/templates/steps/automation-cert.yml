@@ -9,7 +9,7 @@ steps:
   displayName: Set MVN Access Token in Environment
   inputs:
     filename: echo
-    arguments: '##vso[task.setvariable variable=${{ parameters.envVstsMvnAt }}]$(mvnAccessToken)'
+    arguments: '##vso[task.setvariable variable=${{ parameters.envVstsMvnAt }}]$(System.AccessToken)'
 - task: AzureKeyVault@1
   displayName: 'Azure Key Vault: Download Cert for Automation'
   inputs:

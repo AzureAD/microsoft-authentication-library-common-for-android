@@ -164,6 +164,37 @@ stages:
       displayName: Run broker Unit tests
       inputs:
         tasks: AADAuthenticator:testLocalDebugUnitTest -Plabtest -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}}
+  # Linux broker
+  - job: linuxBrokerValidation
+    displayName: Linux Broker
+    dependsOn: setupBranch
+    variables:
+      commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
+    steps:
+      - template: ../templates/steps/automation-cert.yml
+      - checkout: broker
+        displayName: Checkout broker repository
+        clean: true
+        submodules: recursive
+        persistCredentials: True
+      - task: CmdLine@2
+        displayName: Checkout common submodule $(commonBranch)
+        inputs:
+          script: |
+            git fetch
+            git checkout $(commonBranch)
+            git pull
+            git status
+            git rev-parse HEAD
+          workingDirectory: $(Agent.BuildDirectory)/s/common
+      - task: Gradle@2
+        displayName: Assemble broker
+        inputs:
+          tasks: clean LinuxBroker:assembleLocal
+      - task: Gradle@2
+        displayName: Run broker Unit tests
+        inputs:
+          tasks: LinuxBroker:testLocalDebugUnitTest -Plabtest -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}}
   # adal
   - job: adalValidation
     displayName: ADAL
