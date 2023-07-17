@@ -190,7 +190,7 @@ stages:
       - task: Gradle@2
         displayName: Assemble broker
         inputs:
-          tasks: clean LinuxBroker:assembleLocal
+          tasks: clean LinuxBroker:assemble
       - task: Gradle@2
         displayName: Run broker Unit tests
         inputs:
