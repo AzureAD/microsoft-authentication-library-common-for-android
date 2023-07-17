@@ -209,8 +209,6 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
 
         handleFirstRun(); // handle CP first run
 
-        // Company portal password page is somewhat inconsistent, found out turning off battery optimization helps in UI testing
-        turnOffBatteryOptimization();
         signInThroughFrontPage(username, password, isFederated);
 
         // click the activate device admin btn

@@ -35,9 +35,11 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.SystemClock;
 
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.net.DefaultConnectionService;
-import com.microsoft.identity.common.internal.broker.BrokerValidator;
+import com.microsoft.identity.common.internal.broker.BrokerData;
 import com.microsoft.identity.common.internal.broker.IntuneMAMEnrollmentIdGateway;
+import com.microsoft.identity.common.internal.broker.PackageHelper;
 import com.microsoft.identity.common.internal.ui.webview.WebViewUtil;
 import com.microsoft.identity.common.java.commands.ICommand;
 import com.microsoft.identity.common.java.commands.InteractiveTokenCommand;
@@ -47,6 +49,7 @@ import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.ui.BrowserDescriptor;
 import com.microsoft.identity.common.java.util.IPlatformUtil;
+import com.microsoft.identity.common.java.util.StringUtil;
 
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -131,7 +134,34 @@ public class AndroidPlatformUtil implements IPlatformUtil {
 
     @Override
     public boolean isValidCallingApp(@NonNull String redirectUri, @NonNull String packageName) {
-        return BrokerValidator.isValidBrokerRedirect(redirectUri, mContext, packageName);
+        final String methodTag = TAG + ":isValidCallingApp";
+        final String expectedBrokerRedirectUri = PackageHelper.getBrokerRedirectUri(mContext, packageName);
+        boolean isValidBrokerRedirect = StringUtil.equalsIgnoreCase(redirectUri, expectedBrokerRedirectUri);
+        if (packageName.equals(AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME)) {
+            final PackageHelper info = new PackageHelper(mContext.getPackageManager());
+            //For merely verifying that the app is AuthApp, use a 512 hash.
+            final String signatureDigest = info.getSha512SignatureForPackage(packageName);
+            if (BrokerData.getProdMicrosoftAuthenticator().getSigningCertificateThumbprint().equals(signatureDigest)
+                    || BrokerData.getDebugMicrosoftAuthenticator().getSigningCertificateThumbprint().equals(signatureDigest)) {
+                // If the caller is the Authenticator, check if the redirect uri matches with either
+                // the one generated with package name and signature or broker redirect uri.
+                isValidBrokerRedirect |= StringUtil.equalsIgnoreCase(redirectUri, AuthenticationConstants.Broker.BROKER_REDIRECT_URI);
+            }
+        }
+
+        if (!isValidBrokerRedirect) {
+            com.microsoft.identity.common.logging.Logger.error(
+                    methodTag,
+                    "Broker redirect uri is invalid. Expected: "
+                            + expectedBrokerRedirectUri
+                            + " Actual: "
+                            + redirectUri
+                    ,
+                    null
+            );
+        }
+
+        return isValidBrokerRedirect;
     }
 
     @Override

@@ -62,7 +62,9 @@ import com.microsoft.identity.common.java.logging.DiagnosticContext;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.logging.RequestContext;
 import com.microsoft.identity.common.java.marker.CodeMarkerManager;
+import com.microsoft.identity.common.java.opentelemetry.AttributeName;
 import com.microsoft.identity.common.java.opentelemetry.OtelContextExtension;
+import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.java.request.SdkType;
 import com.microsoft.identity.common.java.result.AcquireTokenResult;
@@ -87,6 +89,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -329,6 +332,11 @@ public class CommandDispatcher {
                 finalFuture = new FinalizableResultFuture<>();
                 finalFuture.whenComplete(getCommandResultConsumer(command));
             }
+
+            SpanExtension.current().setAttribute(
+                    AttributeName.num_concurrent_silent_requests.name(),
+                    sExecutingCommandMap.size()
+            );
 
             commandExecutor.execute(OtelContextExtension.wrap(new Runnable() {
                 @Override
