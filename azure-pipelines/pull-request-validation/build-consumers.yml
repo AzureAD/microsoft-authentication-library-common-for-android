@@ -163,7 +163,7 @@ stages:
     - task: Gradle@2
       displayName: Run broker Unit tests
       inputs:
-        tasks: AADAuthenticator:testLocalDebugUnitTest -Plabtest -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}}
+        tasks: AADAuthenticator:testLocalDebugUnitTest -Plabtest -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}} -PpowerLiftApiKey=$(powerliftApiKey)
   # Linux broker
   - job: linuxBrokerValidation
     displayName: Linux Broker
@@ -188,9 +188,25 @@ stages:
             git rev-parse HEAD
           workingDirectory: $(Agent.BuildDirectory)/s/common
       - task: Gradle@2
-        displayName: Assemble broker
+        displayName: Assemble Linux broker
         inputs:
-          tasks: clean LinuxBroker:assemble
+          tasks: LinuxBroker:clean LinuxBroker:assemble
+      - task: Bash@3
+        retryCountOnTaskFailure: 3
+        displayName: Execute tests
+        inputs:
+          workingDirectory: $(Build.SourcesDirectory)/broker-java-root
+          targetType: 'inline'
+          script: |
+            sudo apt-get install -y dbus-x11
+            sudo apt-get install -y dos2unix
+            dos2unix gradlew
+            chmod +x gradlew
+            export DISPLAY=:0.0
+            eval $(dbus-launch --sh-syntax)
+            sudo apt install gnome-keyring
+            /usr/bin/gnome-keyring-daemon --start --components=secrets
+            ./gradlew LinuxBroker:testLocalDebugUnitTest -Plabtest -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}}
       - task: Gradle@2
         displayName: Run broker Unit tests
         inputs:
