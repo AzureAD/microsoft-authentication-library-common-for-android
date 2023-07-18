@@ -183,25 +183,26 @@ stages:
     variables:
       commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
     steps:
-      - template: ../templates/steps/automation-cert.yml
       - checkout: broker
         displayName: Checkout broker repository
         clean: true
         submodules: recursive
         persistCredentials: True
-      - task: CmdLine@2
-        displayName: Checkout common submodule $(commonBranch)
+      - bash: lsb_release -d
+        displayName: ubuntu version
+      - task: CmdLine@1
+        displayName: Set MVN Access Token in Environment
         inputs:
-          script: |
-            git fetch
-            git checkout $(commonBranch)
-            git pull
-            git status
-            git rev-parse HEAD
-          workingDirectory: $(Agent.BuildDirectory)/s/common
+          filename: echo
+          arguments: '##vso[task.setvariable variable=ENV_VSTS_MVN_ANDROIDADACCOUNTS_ACCESSTOKEN]$(System.AccessToken)'
+      - task: CmdLine@1
+        displayName: Set Office MVN Access Token in Environment
+        inputs:
+          filename: echo
+          arguments: '##vso[task.setvariable variable=ENV_VSTS_MVN_OFFICE_ACCESSTOKEN]$(System.AccessToken)'
       - task: Gradle@1
         name: Gradle1
-        displayName: Assemble
+        displayName: Assemble Linux Broker
         inputs:
           cwd: $(Build.SourcesDirectory)/broker-java-root
           tasks: LinuxBroker:clean LinuxBroker:assemble --build-cache --info
