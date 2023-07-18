@@ -8,9 +8,21 @@ name: $(date:yyyyMMdd)$(rev:.r)
 
 trigger: none
 
+parameters:
+  - name: shouldSkipLongRunningTest
+    displayName: Should skip long running test?
+    type: boolean
+    default: true
+
 variables:
+- name: shouldSkipLongRunningTest
+  ${{ if parameters.shouldSkipLongRunningTest }}:
+    value: "-PshouldSkipLongRunningTest"
+  ${{ else }}:
+    value: ""
 - name: robolectricSdkVersion
   value: 28
+- group: AndroidAuthClientVariables
 
 resources:
   repositories:
@@ -163,7 +175,7 @@ stages:
     - task: Gradle@2
       displayName: Run broker Unit tests
       inputs:
-        tasks: AADAuthenticator:testLocalDebugUnitTest -Plabtest -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}} -PpowerLiftApiKey=$(powerliftApiKey)
+        tasks: AADAuthenticator:testLocalDebugUnitTest -Plabtest -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}} -PpowerLiftApiKey=$(powerliftApiKey) ${{variables.shouldSkipLongRunningTest}}
   # Linux broker
   - job: linuxBrokerValidation
     displayName: Linux Broker
@@ -187,10 +199,15 @@ stages:
             git status
             git rev-parse HEAD
           workingDirectory: $(Agent.BuildDirectory)/s/common
-      - task: Gradle@2
-        displayName: Assemble Linux broker
+      - task: Gradle@1
+        name: Gradle1
+        displayName: Assemble
         inputs:
-          tasks: LinuxBroker:clean LinuxBroker:assemble
+          cwd: $(Build.SourcesDirectory)/broker-java-root
+          tasks: LinuxBroker:clean LinuxBroker:assemble --build-cache --info
+          publishJUnitResults: false
+          jdkArchitecture: x86
+          sqAnalysisBreakBuildIfQualityGateFailed: false
       - task: Bash@3
         retryCountOnTaskFailure: 3
         displayName: Execute tests
