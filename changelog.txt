@@ -1,5 +1,6 @@
 V.NEXT
 ----------
+- [PATCH] Add key derivation method that takes SecretKey object as argument (#2113)
 - [MAJOR] AccountManagerStorageHelper should not force cast IBrokerAccount into AndroidBrokerAccount (#2110) (Breaking change to Broker only)
 - [MAJOR] Tidy up BrokerValidator (#2107)
 - [PATCH] Adding null checks for CancelHelper (CBA) (#2105)
