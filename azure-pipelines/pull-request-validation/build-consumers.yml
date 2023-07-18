@@ -13,6 +13,8 @@ parameters:
     displayName: Should skip long running test?
     type: boolean
     default: true
+pool:
+  vmImage: 'ubuntu-latest'
 
 variables:
 - name: shouldSkipLongRunningTest
@@ -188,8 +190,6 @@ stages:
         clean: true
         submodules: recursive
         persistCredentials: True
-      - bash: lsb_release -d
-        displayName: ubuntu version
       - task: CmdLine@1
         displayName: Set MVN Access Token in Environment
         inputs:
