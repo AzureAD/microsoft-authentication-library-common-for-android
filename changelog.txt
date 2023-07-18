@@ -1,5 +1,6 @@
 V.NEXT
 ----------
+- [MINOR] Add span names for the BrokerOperationRequestDispatcher and PassthroughExecutor (#2100)
 - [MAJOR] AccountManagerStorageHelper should not force cast IBrokerAccount into AndroidBrokerAccount (#2110) (Breaking change to Broker only)
 - [MAJOR] Tidy up BrokerValidator (#2107)
 - [PATCH] Adding null checks for CancelHelper (CBA) (#2105)
