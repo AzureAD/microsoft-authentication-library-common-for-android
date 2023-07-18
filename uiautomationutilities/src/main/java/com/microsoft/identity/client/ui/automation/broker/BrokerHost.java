@@ -59,6 +59,8 @@ public class BrokerHost extends AbstractTestBroker {
 
     // flight to enable/disable the multiple wpj feature
     private final static String FLIGHT_FOR_WORKPLACE_JOIN_CONTROLLER = "ENABLE_MULTIPLE_WORKPLACE_JOIN_PP";
+    private final static String FLIGHT_PRT_V3 = "EnablePrtV3";
+
     // name for broker host APKs
     public final static String BROKER_HOST_APK = "BrokerHost.apk";
     public final static String OLD_BROKER_HOST_APK = "OldBrokerHost.apk";
@@ -319,6 +321,21 @@ public class BrokerHost extends AbstractTestBroker {
         ThreadUtils.sleepSafely(500, TAG, "Wait before force stop.");
         forceStop();
         ThreadUtils.sleepSafely(500, TAG, "Wait before launch.");
+        launch();
+    }
+
+    /**
+     * Changes flight provider to local flights provider and sets
+     * PRTv3 flight flag to true.
+     */
+    public void enablePrtV3() {
+        Logger.i(TAG, "Enable PRTv3");
+        brokerFlightsFragment.launch();
+        brokerFlightsFragment.selectLocalProvider();
+        brokerFlightsFragment.setLocalFlight(FLIGHT_PRT_V3, Boolean.toString(true));
+        ThreadUtils.sleepSafely(500, TAG, "Wait before force stop.");
+        forceStop();
+        ThreadUtils.sleepSafely(500, "TAG", "Wait before launch.");
         launch();
     }
 }
