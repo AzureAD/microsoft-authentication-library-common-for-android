@@ -1176,11 +1176,9 @@ public final class UrlConnectionHttpClientTest {
                 .sslContext(context)
                 .build();
 
-        // Microsoft.com supports TLS 1.3
-        // https://www.ssllabs.com/ssltest/analyze.html?d=www.microsoft.com&s=2600%3a1406%3a1400%3a69d%3a0%3a0%3a0%3a356e&hideResults=on&ignoreMismatch=on
         final HttpResponse response = client.method(
                 HttpClient.HttpMethod.GET,
-                new URL("https://www.microsoft.com/"),
+                new URL("https://tls13.akamai.io/"),
                 new LinkedHashMap<String, String>(),
                 null
         );
@@ -1195,11 +1193,9 @@ public final class UrlConnectionHttpClientTest {
 
     @Test
     public void testPickHighestTLS() throws IOException {
-        // Microsoft.com supports TLS 1.3
-        // https://www.ssllabs.com/ssltest/analyze.html?d=www.microsoft.com&s=2600%3a1406%3a1400%3a69d%3a0%3a0%3a0%3a356e&hideResults=on&ignoreMismatch=on
         final HttpResponse response = sNoRetryClient.method(
                 HttpClient.HttpMethod.GET,
-                new URL("https://www.microsoft.com/"),
+                new URL("https://tls13.akamai.io/"),
                 new LinkedHashMap<String, String>(),
                 null
         );
@@ -1230,11 +1226,9 @@ public final class UrlConnectionHttpClientTest {
                 .supportedSslProtocols(Arrays.asList("TLSv1.2"))
                 .build();
 
-        // Microsoft.com supports TLS 1.3
-        // https://www.ssllabs.com/ssltest/analyze.html?d=www.microsoft.com&s=2600%3a1406%3a1400%3a69d%3a0%3a0%3a0%3a356e&hideResults=on&ignoreMismatch=on
         final HttpResponse response = client.method(
                 HttpClient.HttpMethod.GET,
-                new URL("https://www.microsoft.com/"),
+                new URL("https://tls13.akamai.io/"),
                 new LinkedHashMap<String, String>(),
                 null
         );
