@@ -13,8 +13,6 @@ parameters:
     displayName: Should skip long running test?
     type: boolean
     default: true
-pool:
-  vmImage: 'ubuntu-latest'
 
 variables:
 - name: shouldSkipLongRunningTest
@@ -124,6 +122,8 @@ stages:
     dependsOn: setupBranch
     variables:
       commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
+    pool:
+      vmImage: 'ubuntu-latest'
     steps:
     - template: ../templates/steps/automation-cert.yml
     - checkout: broker
@@ -184,6 +184,8 @@ stages:
     dependsOn: setupBranch
     variables:
       commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
+    pool:
+      vmImage: 'ubuntu-latest'
     steps:
       - checkout: broker
         displayName: Checkout broker repository
