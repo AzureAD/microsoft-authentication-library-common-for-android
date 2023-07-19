@@ -48,5 +48,7 @@ public enum SpanName {
     AcquireTokenDcfAuthRequest,
     AcquireTokenDcfFetchToken,
     AccountStorageWithBackup,
-    EncryptionManager
+    EncryptionManager,
+    Passthrough,
+    BrokerOperationRequestDispatcher;
 }
