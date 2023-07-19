@@ -122,8 +122,6 @@ stages:
     dependsOn: setupBranch
     variables:
       commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
-    pool:
-      vmImage: 'ubuntu-latest'
     steps:
     - template: ../templates/steps/automation-cert.yml
     - checkout: broker
