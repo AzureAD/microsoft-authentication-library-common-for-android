@@ -510,7 +510,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                     clientCertRequest.cancel();
                     //testing something here
                     new CredManTestFile(getActivity()).callCredManRegister(ViewTreeLifecycleOwner.get(view).getLifecycle());
-                    new CredManTestFile(getActivity()).callCredManSignIn(ViewTreeLifecycleOwner.get(view).getLifecycle());
 
                     return;
                 }

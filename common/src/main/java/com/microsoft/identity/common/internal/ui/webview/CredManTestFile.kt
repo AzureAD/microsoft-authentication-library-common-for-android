@@ -1,16 +1,11 @@
 package com.microsoft.identity.common.internal.ui.webview
 
 import android.app.Activity
-import android.os.CancellationSignal
 import android.util.Base64
-import android.view.View
-import androidx.credentials.CreatePublicKeyCredentialRequest
-import androidx.credentials.CredentialManager
-import androidx.credentials.GetCredentialRequest
-import androidx.credentials.GetPublicKeyCredentialOption
+import android.util.Log
+import androidx.credentials.*
 import androidx.credentials.exceptions.GetCredentialException
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.lifecycle.coroutineScope
 import kotlinx.coroutines.*
 import java.security.SecureRandom
@@ -18,16 +13,22 @@ import java.security.SecureRandom
 class CredManTestFile(val activity: Activity) {
 
     fun callCredManRegister(lifecycle: Lifecycle) {
-        val jsonRequest = """{"challenge":"<challenge>","rp":{"name":"Microsoft","id":"login.microsoft.com"},"user":{"id":"2HzoHm_hY0CjuEESY9tY6-3SdjmNHOoNqaPDcZGzsr0","name":"hello","displayName":"hello"},"pubKeyCredParams":[{"type":"public-key","alg":-7},{"type":"public-key","alg":-257}],"timeout":1800000,"excludeCredentials":[],"authenticatorSelection":{"authenticatorAttachment":"platform","residentKey":"required"}}""".trimIndent().replace("<challenge>", getEncodedChallenge())
+        val jsonRequest = """{"challenge":"<challenge>","rp":{"name":"Microsoft","id":"login.partner.microsoftonline.cn"},"user":{"id":"2HzoHm_hY0CjuEESY9tY6-3SdjmNHOoNqaPDcZGzsr0","name":"cn_user","displayName":"cn_user"},"pubKeyCredParams":[{"type":"public-key","alg":-7},{"type":"public-key","alg":-257}],"timeout":1800000,"excludeCredentials":[],"authenticatorSelection":{"authenticatorAttachment":"platform","residentKey":"required"}}""".trimIndent().replace("<challenge>", getEncodedChallenge())
         val credentialManager = CredentialManager.create(activity)
         val createPublicKeyCredentialRequest = CreatePublicKeyCredentialRequest(requestJson = jsonRequest)
 
         lifecycle.coroutineScope.launch {
             try {
-                credentialManager.createCredential(
+                val result = credentialManager.createCredential(
                     request = createPublicKeyCredentialRequest,
                     activity = activity,
-                )
+                ) as CreatePublicKeyCredentialResponse
+
+                val id = result.registrationResponseJson
+
+                id?.let {
+                    Log.v("CredentialTag: ", id)
+                }
             } catch (e: GetCredentialException) {
 
             }

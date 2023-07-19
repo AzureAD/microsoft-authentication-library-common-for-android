@@ -29,7 +29,6 @@
             android:theme="@style/Theme.AppCompat.Light"
             android:configChanges="orientation|keyboardHidden|screenSize|screenLayout|keyboard" />
 
-        <meta-data android:name="asset_statements" android:resource="@string/asset_statements" />
 
     </application>
 
