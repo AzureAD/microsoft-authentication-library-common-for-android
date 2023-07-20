@@ -181,13 +181,13 @@ public abstract class BaseController {
                 .getPlatformUtil()
                 .throwIfNetworkNotAvailable(parametersWithScopes.isPowerOptCheckEnabled());
 
-        final Authority.KnownAuthorityResult authorityResult = Authority.getKnownAuthorityResult(parametersWithScopes.getAuthority());
-
-        //0.1 If not known throw resulting exception
-        if (!authorityResult.getKnown()) {
-            Logger.error(TAG + methodName, "Authority is not known.", authorityResult.getClientException());
-            throw authorityResult.getClientException();
-        }
+//        final Authority.KnownAuthorityResult authorityResult = Authority.getKnownAuthorityResult(parametersWithScopes.getAuthority());
+//
+//        //0.1 If not known throw resulting exception
+//        if (!authorityResult.getKnown()) {
+//            Logger.error(TAG + methodName, "Authority is not known.", authorityResult.getClientException());
+//            throw authorityResult.getClientException();
+//        }
 
         // Build up params for Strategy construction
         final OAuth2StrategyParameters strategyParameters = OAuth2StrategyParameters.builder()
@@ -725,12 +725,12 @@ public abstract class BaseController {
                 .throwIfNetworkNotAvailable(parameters.isPowerOptCheckEnabled());
 
         // Check that the authority is known
-        final Authority.KnownAuthorityResult authorityResult =
-                Authority.getKnownAuthorityResult(parameters.getAuthority());
-
-        if (!authorityResult.getKnown()) {
-            throw authorityResult.getClientException();
-        }
+//        final Authority.KnownAuthorityResult authorityResult =
+//                Authority.getKnownAuthorityResult(parameters.getAuthority());
+//
+//        if (!authorityResult.getKnown()) {
+//            throw authorityResult.getClientException();
+//        }
 
         final TokenRequest refreshTokenRequest = strategy.createRefreshTokenRequest(parameters.getAuthenticationScheme());
         refreshTokenRequest.setClientId(parameters.getClientId());

@@ -133,18 +133,18 @@ public class LocalMSALController extends BaseController {
                 .getPlatformUtil()
                 .throwIfNetworkNotAvailable(parametersWithScopes.isPowerOptCheckEnabled());
 
-        Authority.KnownAuthorityResult authorityResult = Authority.getKnownAuthorityResult(parametersWithScopes.getAuthority());
-
-        //0.1 If not known throw resulting exception
-        if (!authorityResult.getKnown()) {
-            Telemetry.emit(
-                    new ApiEndEvent()
-                            .putException(authorityResult.getClientException())
-                            .putApiId(TelemetryEventStrings.Api.LOCAL_ACQUIRE_TOKEN_INTERACTIVE)
-            );
-
-            throw authorityResult.getClientException();
-        }
+//        Authority.KnownAuthorityResult authorityResult = Authority.getKnownAuthorityResult(parametersWithScopes.getAuthority());
+//
+//        //0.1 If not known throw resulting exception
+//        if (!authorityResult.getKnown()) {
+//            Telemetry.emit(
+//                    new ApiEndEvent()
+//                            .putException(authorityResult.getClientException())
+//                            .putApiId(TelemetryEventStrings.Api.LOCAL_ACQUIRE_TOKEN_INTERACTIVE)
+//            );
+//
+//            throw authorityResult.getClientException();
+//        }
 
         // Build up params for Strategy construction
         final OAuth2StrategyParameters strategyParameters = OAuth2StrategyParameters.builder()
@@ -558,18 +558,18 @@ public class LocalMSALController extends BaseController {
                         .putApiId(TelemetryEventStrings.Api.LOCAL_DEVICE_CODE_FLOW_ACQUIRE_URL_AND_CODE)
         );
 
-        final Authority.KnownAuthorityResult authorityResult = Authority.getKnownAuthorityResult(parametersWithScopes.getAuthority());
-
-        // If not known throw resulting exception
-        if (!authorityResult.getKnown()) {
-            Telemetry.emit(
-                    new ApiEndEvent()
-                            .putException(authorityResult.getClientException())
-                            .putApiId(TelemetryEventStrings.Api.LOCAL_DEVICE_CODE_FLOW_ACQUIRE_URL_AND_CODE)
-            );
-
-            throw authorityResult.getClientException();
-        }
+//        final Authority.KnownAuthorityResult authorityResult = Authority.getKnownAuthorityResult(parametersWithScopes.getAuthority());
+//
+//        // If not known throw resulting exception
+//        if (!authorityResult.getKnown()) {
+//            Telemetry.emit(
+//                    new ApiEndEvent()
+//                            .putException(authorityResult.getClientException())
+//                            .putApiId(TelemetryEventStrings.Api.LOCAL_DEVICE_CODE_FLOW_ACQUIRE_URL_AND_CODE)
+//            );
+//
+//            throw authorityResult.getClientException();
+//        }
 
         final AuthorizationResult authorizationResult;
 
