@@ -119,6 +119,8 @@ stages:
   # broker
   - job: brokerValidation
     displayName: Broker
+    cancelTimeoutInMinutes: 1
+    timeoutInMinutes: 120
     dependsOn: setupBranch
     variables:
       commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
