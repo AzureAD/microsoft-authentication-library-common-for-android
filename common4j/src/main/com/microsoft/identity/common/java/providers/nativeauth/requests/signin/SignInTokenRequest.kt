@@ -13,39 +13,6 @@ data class SignInTokenRequest private constructor(
 ) : NativeAuthRequest() {
 
     companion object {
-        fun createROPCTokenRequest(
-            username: String,
-            password: String,
-            clientId: String,
-            scopes: List<String>? = null,
-            challengeType: String? = null,
-            requestUrl: String,
-            headers: Map<String, String?>
-        ): SignInTokenRequest {
-            // Check for empty Strings and empty Maps
-            ArgUtils.validateNonNullArg(username, "username")
-            ArgUtils.validateNonNullArg(password, "password")
-            ArgUtils.validateNonNullArg(clientId, "clientId")
-            ArgUtils.validateNonNullArg(challengeType, "challengeType")
-            ArgUtils.validateNonNullArg(requestUrl, "requestUrl")
-            ArgUtils.validateNonNullArg(headers, "headers")
-
-            return SignInTokenRequest(
-                parameters = NativeAuthRequestSignInTokenParameters(
-                    username = username,
-                    password = password,
-                    clientId = clientId,
-                    grantType = NativeAuthConstants.GrantType.PASSWORD,
-                    challengeType = challengeType,
-                    scope = scopes?.joinToString(" "),
-                    nca = 1,
-                    clientInfo = true
-                ),
-                requestUrl = URL(requestUrl),
-                headers = headers,
-            )
-        }
-
         fun createOOBTokenRequest(
             oob: String,
             credentialToken: String,
@@ -125,7 +92,6 @@ data class SignInTokenRequest private constructor(
             ArgUtils.validateNonNullArg(requestUrl, "requestUrl")
             ArgUtils.validateNonNullArg(headers, "headers")
 
-
             return SignInTokenRequest(
                 parameters = NativeAuthRequestSignInTokenParameters(
                     signInSlt = signInSlt,
@@ -145,7 +111,7 @@ data class SignInTokenRequest private constructor(
         val password: String? = null,
         val oob: String? = null,
         @SerializedName("nca") val nca: Int? = null,
-        @SerializedName("client_info") val clientInfo: Boolean? = null,
+        @SerializedName("client_info") private val clientInfo: Boolean = true,
         @SerializedName("client_id") override val clientId: String,
         @SerializedName("grant_type") val grantType: String,
         @SerializedName("credential_token") val credentialToken: String? = null,
