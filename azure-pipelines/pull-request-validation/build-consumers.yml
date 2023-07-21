@@ -124,6 +124,8 @@ stages:
     dependsOn: setupBranch
     variables:
       commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
+    pool:
+      name: 1ES-AndroidPool-EOC-Test
     steps:
     - template: ../templates/steps/automation-cert.yml
     - checkout: broker
@@ -141,35 +143,6 @@ stages:
           git status
           git rev-parse HEAD
         workingDirectory: $(Agent.BuildDirectory)/s/common
-    - task: PowerShell@2
-      displayName: Install Flatbuffers Compiler
-      enabled: False
-      inputs:
-        targetType: inline
-        script: >-
-          Write-Output "Downloading flatbuffers"
-
-          $downloadLink = "https://github.com/google/flatbuffers/releases/download/v1.12.0/flatc_windows.zip"
-
-          Write-Output "Using download link: $downloadLink"
-
-          $dest = "$env:Temp\FlatBufferInstaller.zip"
-
-          (New-Object Net.WebClient).DownloadFile($downloadLink, $dest)
-
-          Write-Output "Extracting flatbuffers archive on machine...."
-
-          Expand-Archive -Path $dest -DestinationPath .\flatc-extracted
-
-          Write-Output "Finished extracting flatbuffers archive on machine...."
-
-          Write-Output "Run flatc"
-
-          .\flatc-extracted\flatc
-
-          echo '##vso[task.setvariable variable=path]$(PATH):$(CWD)\flatc-extracted\'
-
-          flatc
     - task: Gradle@2
       displayName: Assemble broker
       inputs:
