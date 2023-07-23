@@ -22,6 +22,7 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.app;
 
+import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT;
 import androidx.annotation.NonNull;
 import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObjectNotFoundException;
@@ -67,7 +68,7 @@ public class MsalTestApp extends App {
     public String acquireToken(@NonNull final String username,
                                @NonNull final String password,
                                @NonNull final PromptHandlerParameters promptHandlerParameters,
-                               @NonNull final boolean shouldHandlePrompt) throws UiObjectNotFoundException {
+                               @NonNull final boolean shouldHandlePrompt) throws UiObjectNotFoundException, InterruptedException {
         // handle loginHint input if needed
         if (shouldHandlePrompt) {
             UiAutomatorUtils.handleInput("com.msft.identity.client.sample.local:id/loginHint", username);
@@ -93,7 +94,6 @@ public class MsalTestApp extends App {
     public String acquireTokenSilent() throws UiObjectNotFoundException, InterruptedException {
         final UiObject acquireTokenSilentButton = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/btn_acquiretokensilent");
         scrollToElement(acquireTokenSilentButton);
-        Thread.sleep(2000);
         acquireTokenSilentButton.click();
         final UiObject result = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/txt_result");
         return result.getText();
@@ -103,12 +103,12 @@ public class MsalTestApp extends App {
     public List<String> getUsers() throws UiObjectNotFoundException, InterruptedException {
         final UiObject getUsersButton = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/btn_getUsers");
         scrollToElement(getUsersButton);
-        Thread.sleep(2000);
         getUsersButton.click();
+        // wait for ui to update
+        Thread.sleep(2000);
         // get each user information in the user list
         final List<String> users = new ArrayList<>();
         final UiObject userList = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/user_list");
-        Thread.sleep(2000);
         for (int i = 0; i < userList.getChildCount(); i++) {
             final UiObject user = userList.getChild(new UiSelector().index(i));
             users.add(user.getText());
@@ -123,19 +123,17 @@ public class MsalTestApp extends App {
         authScheme.click();
     }
 
-    public String generateSHR() throws UiObjectNotFoundException, InterruptedException {
+    public String generateSHR() throws UiObjectNotFoundException {
         final UiObject generateSHRButton = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/btn_generate_shr");
         scrollToElement(generateSHRButton);
-        Thread.sleep(2000);
         generateSHRButton.click();
         final UiObject result = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/txt_result");
         return result.getText();
     }
 
-    public UiObject removeUser(@NonNull String msg) throws UiObjectNotFoundException, InterruptedException {
+    public UiObject removeUser(@NonNull String msg) throws UiObjectNotFoundException {
         final UiObject removeUserButton = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/btn_clearCache");
         scrollToElement(removeUserButton);
-        Thread.sleep(2000);
         removeUserButton.click();
         final UiObject toast = UiAutomatorUtils.obtainUiObjectWithText(msg);
         return toast;
@@ -144,7 +142,6 @@ public class MsalTestApp extends App {
     public UiObject getPackageName(@NonNull String packageName) throws UiObjectNotFoundException, InterruptedException {
         final UiObject getPackageNameButton = UiAutomatorUtils.obtainUiObjectWithResourceId("com.msft.identity.client.sample.local:id/btnGetActiveBroker");
         scrollToElement(getPackageNameButton);
-        Thread.sleep(2000);
         getPackageNameButton.click();
         final UiObject toast = UiAutomatorUtils.obtainUiObjectWithText(packageName);
         return toast;
@@ -153,6 +150,7 @@ public class MsalTestApp extends App {
     private void scrollToElement(UiObject obj) throws UiObjectNotFoundException {
         UiScrollable scrollable = new UiScrollable(new UiSelector().scrollable(true));
         scrollable.scrollIntoView(obj);
+        obj.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
     }
 
     public void handleBackButton() {
