@@ -26,6 +26,7 @@ import android.accounts.AccountManager
 import android.accounts.AuthenticatorDescription
 import android.content.Context
 import com.microsoft.identity.common.internal.broker.BrokerData
+import com.microsoft.identity.common.internal.broker.BrokerValidator
 import com.microsoft.identity.common.java.AuthenticationConstants
 import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.logging.Logger
@@ -38,9 +39,10 @@ import com.microsoft.identity.common.java.logging.Logger
  *                              signed by known keys.
  * @param getAccountManagerApps a method for returning apps which owns [AccountManager] accounts.
  **/
-class AccountManagerBrokerDiscoveryUtil(private val knownBrokerApps: Set<BrokerData>,
-                                        private val isSignedByKnownKeys: (BrokerData) -> Boolean,
-                                        private val getAccountManagerApps: () -> Array<AuthenticatorDescription>
+class AccountManagerBrokerDiscoveryUtil(
+    private val knownBrokerApps: Set<BrokerData>,
+    private val isSignedByKnownKeys: (BrokerData) -> Boolean,
+    private val getAccountManagerApps: () -> Array<AuthenticatorDescription>,
 ) {
 
     companion object {
@@ -50,7 +52,7 @@ class AccountManagerBrokerDiscoveryUtil(private val knownBrokerApps: Set<BrokerD
     constructor(context: Context): this(
         knownBrokerApps = BrokerData.getKnownBrokerApps(),
         isSignedByKnownKeys = { brokerData ->
-            BrokerData.isSignedByKnownKeys(brokerData, context)
+            BrokerValidator(context).isSignedByKnownKeys(brokerData)
         },
         getAccountManagerApps = {
             AccountManager.get(context).authenticatorTypes
@@ -73,6 +75,10 @@ class AccountManagerBrokerDiscoveryUtil(private val knownBrokerApps: Set<BrokerD
         Logger.info(methodTag, "${authenticators.size} Authenticators registered.")
 
         authenticators.forEach { authenticator ->
+            if (authenticator.packageName == null || authenticator.type == null){
+                return@forEach
+            }
+
             val packageName = authenticator.packageName.trim()
             val accountType = authenticator.type.trim()
             Logger.info(methodTag, "Authenticator: $packageName type: $accountType")
