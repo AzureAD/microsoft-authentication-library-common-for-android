@@ -1,16 +1,32 @@
 V.NEXT
 ----------
+- [MINOR] Add span names for the BrokerOperationRequestDispatcher and PassthroughExecutor (#2100)
+- [PATCH] Add key derivation method that takes SecretKey object as argument (#2113)
+- [MAJOR] AccountManagerStorageHelper should not force cast IBrokerAccount into AndroidBrokerAccount (#2110) (Breaking change to Broker only)
+- [MAJOR] Tidy up BrokerValidator (#2107)
+- [PATCH] Adding null checks for CancelHelper (CBA) (#2105)
+- [MINOR] Update YubiKit version to 2.3.0 (#2112)
+
+V.14.0.0
+----------
+- [PATCH] Make AndroidWrappedKeyLoader return the right alias (#2102)
+- [PATCH] Read private key before public key to avoid OS bug (#2091)
+- [PATCH] Add new CryptoFactoryName and ClientException error code (#2094)
 - [PATCH] also clear cached timestamp in ActiveClientBrokerCache (#2075)
 - [PATCH] Fix NPE when Content-Type header is missing in HTTP response (#2079)
 - [MINOR] Fix issue for MSA only where headers are not propagated on web requests with different domain redirects on newer versions of WebView (88+) (#2072)
 - [PATCH] Add method to return list of broker that supports account manager (#2073)
 - [MINOR] Send client id as part of request bundle for getSsoToken Api (#2064)
-- [PATCH] Wire new Broker Discovery Client into MSAL - still disabled by default (#2057)
+- [MAJOR] Wire new Broker Discovery Client into MSAL - still disabled by default (#2057)
 - [MINOR] Add support to run UI automation on MsalTestApp  (#2056)
 - [MINOR] Move ATS span start/end to MicrosoftAuthServiceOperation (#2068)
 - [MINOR] Move AT interactive span start/end to Account Chooser (#2069)
 - [PATCH] Fix AbstractMethodError in makeCurrentSpan for otel (#2083)
-- [MINOR] Cache handshake failure and add expiry time support in Hello Cache (#2074)
+- [MINOR] Emit number of concurrent silent requests in telemetry (#2093)
+- [PATCH] Fix missing visibility of the LTW app (#2097)
+- [MINOR] Add span names for storage and encryption spans (#2104)
+- [MINOR] Invalid required broker protocol version check in Acquire Token/Acquire Token Silent (#2101)
+- [PATCH] Add UI elemnent wait timeout in AadLoginComponentHandler (#2095)
 
 V.13.0.1
 ----------

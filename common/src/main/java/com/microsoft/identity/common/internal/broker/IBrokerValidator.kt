@@ -1,4 +1,3 @@
-package com.microsoft.identity.common.java.opentelemetry;
 // Copyright (c) Microsoft Corporation.
 // All rights reserved.
 //
@@ -21,39 +20,25 @@ package com.microsoft.identity.common.java.opentelemetry;
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
+package com.microsoft.identity.common.internal.broker
 
-public enum SpanName {
-    AcquirePrtUsingBrt,
-    RefreshPrt,
-    AcquireAtUsingPrt,
-    AcquireTokenInteractive,
-    AcquireTokenSilent,
-    CryptoFactoryEvent,
-    SetScopeForDMAgentForFoci,
-    GetAccounts,
-    RemoveAccount,
-    WorkplaceJoin,
-    DoDiscovery,
-    WorkplaceLeave,
-    DeviceState,
-    CertBasedAuth,
-    UploadBrokerLogs,
-    InitializePowerLift,
-    MSAL_PerformIpcStrategy,
-    DeviceRegistrationApi,
-    WorkplaceJoinApi,
-    AcquirePrtInteractively,
-    PrtUpgrade,
-    AcquireTokenDcf,
-    AcquireTokenDcfAuthRequest,
-    AcquireTokenDcfFetchToken,
-    AccountStorageWithBackup,
-    EncryptionManager,
-    Passthrough,
-    BrokerOperationRequestDispatcher,
-    BrokerDiscoveryManagerGetActiveBroker,
-    BrokerDiscoveryManagerPerformDiscoveryProcess,
-    BrokerDiscoveryMetadataAggregator,
-    BrokerSelectionProtocolManager,
-    BrokerDiscoveryV1ProtocolBroadcastResult
+/**
+ * An interface for validating if a given app is a valid broker app.
+ * */
+interface IBrokerValidator {
+
+    /**
+     * Returns true if the provided package name is
+     * 1. In the allow list.
+     * 2. Installed
+     * 2. Has a signing certificate hash that matches with what provided in the allow list.
+     * */
+    fun isValidBrokerPackage(packageName: String): Boolean
+
+    /**
+     * Returns true if the provided [BrokerData] is
+     * 1. Installed
+     * 2. Has a signing certificate hash that matches with what provided in the allow list.
+     **/
+    fun isSignedByKnownKeys(brokerData: BrokerData): Boolean
 }
