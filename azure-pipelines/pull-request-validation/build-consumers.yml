@@ -162,7 +162,6 @@ stages:
       commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
     pool:
       vmImage: 'ubuntu-latest'
-    retryCountOnTaskFailure: 2
     steps:
       - checkout: broker
         displayName: Checkout broker repository
