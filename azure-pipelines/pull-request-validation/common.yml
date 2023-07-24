@@ -43,10 +43,10 @@ jobs:
       publishJUnitResults: false
       jdkArchitecture: x64
       sqAnalysisEnabled: false
-   - task: Gradle@1
-     displayName: Lint Local debug
-     inputs:
-       tasks: clean common:lintLocalDebug
+  - task: Gradle@1
+    displayName: Lint Local debug
+    inputs:
+      tasks: clean common:lintLocalDebug
   - template: ../templates/steps/spotbugs.yml
     parameters:
       project: common
