@@ -96,7 +96,6 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
         super(sharedPreferencesFileManager);
         Logger.verbose(TAG, "Init: " + TAG);
         mCacheValueDelegate = accountCacheValueDelegate;
-        new Thread(this::removeSha1ApplicationIdentifierAccessTokensIfNeeded).start();
     }
 
     @Override
