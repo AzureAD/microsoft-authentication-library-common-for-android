@@ -7,6 +7,10 @@ V.NEXT
 - [PATCH] Adding null checks for CancelHelper (CBA) (#2105)
 - [MINOR] Update YubiKit version to 2.3.0 (#2112)
 
+V.14.0.1
+----------
+- [PATCH] Reverting token removal logic (#2117)
+
 V.14.0.0
 ----------
 - [PATCH] Make AndroidWrappedKeyLoader return the right alias (#2102)
