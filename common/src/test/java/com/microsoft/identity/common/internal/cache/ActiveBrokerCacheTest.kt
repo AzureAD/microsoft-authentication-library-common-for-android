@@ -31,7 +31,7 @@ import org.junit.Assert
 import org.junit.Test
 import java.util.concurrent.TimeUnit
 
-class ActiveBrokerCacheTest {
+class BaseActiveBrokerCacheTest {
 
     companion object {
         private const val MOCK_HASH = "MOCK_HASH"
@@ -266,45 +266,5 @@ class ActiveBrokerCacheTest {
         cache.clearCachedActiveBroker()
         Assert.assertNull(cache.getCachedActiveBroker())
         Assert.assertNull(cache.inMemoryCachedValue)
-    }
-
-    @Test
-    fun testSetSkipToAccountManager(){
-        val cache = ClientActiveBrokerCache(InMemoryStorage(), Mutex())
-        Assert.assertNull(cache.getCachedActiveBroker())
-
-        Assert.assertFalse(cache.shouldUseAccountManager())
-        Assert.assertNull(cache.cachedTimeStamp)
-
-        cache.setShouldUseAccountManagerForTheNextMilliseconds(
-            TimeUnit.SECONDS.toMillis(2)
-        )
-        Assert.assertTrue(cache.shouldUseAccountManager())
-        Assert.assertNotNull(cache.cachedTimeStamp)
-
-        Thread.sleep(TimeUnit.SECONDS.toMillis(2))
-
-        Assert.assertFalse(cache.shouldUseAccountManager())
-        Assert.assertNull(cache.cachedTimeStamp)
-    }
-
-    @Test
-    fun testSetSkipToAccountManager_ClearValue(){
-        val cache = ClientActiveBrokerCache(InMemoryStorage(), Mutex())
-        Assert.assertNull(cache.getCachedActiveBroker())
-
-        Assert.assertFalse(cache.shouldUseAccountManager())
-        Assert.assertNull(cache.cachedTimeStamp)
-
-        cache.setShouldUseAccountManagerForTheNextMilliseconds(
-            TimeUnit.SECONDS.toMillis(2)
-        )
-        Assert.assertTrue(cache.shouldUseAccountManager())
-        Assert.assertNotNull(cache.cachedTimeStamp)
-
-        cache.clearCachedActiveBroker()
-
-        Assert.assertFalse(cache.shouldUseAccountManager())
-        Assert.assertNull(cache.cachedTimeStamp)
     }
 }
