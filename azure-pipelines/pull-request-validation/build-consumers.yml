@@ -204,10 +204,10 @@ stages:
             /usr/bin/gnome-keyring-daemon --start --components=secrets
             ./gradlew LinuxBroker:linuxBrokerUnitTestCoverageReport -Plabtest -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}} -PcodeCoverageEnabled=true -Psystemd_mode_enabled=false
       - task: PublishTestResults@2
-          inputs:
-            testResultsFormat: 'JUnit'
-            testResultsFiles: '**/TEST-*.xml'
-            searchFolder: 'LinuxBroker'
+        inputs:
+          testResultsFormat: 'JUnit'
+          testResultsFiles: '**/TEST-*.xml'
+          searchFolder: 'LinuxBroker'
   # adal
   - job: adalValidation
     displayName: ADAL
