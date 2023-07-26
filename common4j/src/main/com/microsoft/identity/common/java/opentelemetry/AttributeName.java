@@ -232,5 +232,20 @@ public enum AttributeName {
     /**
      * The time (in milliseconds) spent in executing the getAllClientIds method in OAuth2TokenCache.
      */
-    elapsed_time_cache_get_all_client_ids;
+    elapsed_time_cache_get_all_client_ids,
+
+    /**
+     * The time (in milliseconds) spent on network when acquiring PRT.
+     */
+    elapsed_time_network_acquire_prt,
+
+    /**
+     * The time (in milliseconds) spent on network when acquiring nonce.
+     */
+    elapsed_time_network_acquire_nonce,
+
+    /**
+     * The time (in milliseconds) spent on network when acquiring AT.
+     */
+    elapsed_time_network_acquire_at;
 }
