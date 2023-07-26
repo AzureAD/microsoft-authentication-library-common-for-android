@@ -1,5 +1,6 @@
 V.NEXT
 ----------
+- [MAJOR] Move Broker side active broker cache to broker repo (#2123)
 - [MINOR] Add span names for the BrokerOperationRequestDispatcher and PassthroughExecutor (#2100)
 - [PATCH] Add key derivation method that takes SecretKey object as argument (#2113)
 - [MAJOR] AccountManagerStorageHelper should not force cast IBrokerAccount into AndroidBrokerAccount (#2110) (Breaking change to Broker only)
@@ -7,6 +8,10 @@ V.NEXT
 - [PATCH] Adding null checks for CancelHelper (CBA) (#2105)
 - [MINOR] Update YubiKit version to 2.3.0 (#2112)
 - [MINOR] Capture perf telemetry for cache & network operations (#2124)
+
+V.14.0.1
+----------
+- [PATCH] Reverting token removal logic (#2117)
 
 V.14.0.0
 ----------
