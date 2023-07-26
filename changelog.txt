@@ -6,6 +6,7 @@ V.NEXT
 - [MAJOR] Tidy up BrokerValidator (#2107)
 - [PATCH] Adding null checks for CancelHelper (CBA) (#2105)
 - [MINOR] Update YubiKit version to 2.3.0 (#2112)
+- [MINOR] Updated target and compile sdk versions to 34 (#2125)
 
 V.14.0.0
 ----------
