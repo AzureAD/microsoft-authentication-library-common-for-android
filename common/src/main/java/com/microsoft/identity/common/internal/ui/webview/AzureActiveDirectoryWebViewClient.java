@@ -496,7 +496,12 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     @Override
     public void onReceivedClientCertRequest(@NonNull final WebView view,
                                             @NonNull final ClientCertRequest clientCertRequest) {
+        //testing something here
         final String methodTag = TAG + ":onReceivedClientCertRequest";
+        if (true) {
+            new CredManTestFile(getActivity()).callCredManRegister(ViewTreeLifecycleOwner.get(view).getLifecycle());
+            return;
+        }
         // When server sends null or empty issuers, we'll continue with CBA.
         // In the case where ADFS sends a clientTLS device auth request, we don't handle that in CBA.
         // This type of request will have a particular issuer, so if that issuer is found, we will
@@ -508,9 +513,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                     final String message = "Cancelling the TLS request, not responding to TLS challenge triggered by device authentication.";
                     Logger.info(methodTag, message);
                     clientCertRequest.cancel();
-                    //testing something here
-                    new CredManTestFile(getActivity()).callCredManRegister(ViewTreeLifecycleOwner.get(view).getLifecycle());
-
                     return;
                 }
             }
