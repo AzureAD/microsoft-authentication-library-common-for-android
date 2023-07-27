@@ -45,6 +45,7 @@ class ResetPasswordContinueRequest private constructor(
             // Check for empty Strings and empty Maps
             ArgUtils.validateNonNullArg(clientId, "clientId")
             ArgUtils.validateNonNullArg(passwordResetToken, "passwordResetToken")
+            ArgUtils.validateNonNullArg(oob, "oob")
             ArgUtils.validateNonNullArg(requestUrl, "requestUrl")
             ArgUtils.validateNonNullArg(headers, "headers")
 

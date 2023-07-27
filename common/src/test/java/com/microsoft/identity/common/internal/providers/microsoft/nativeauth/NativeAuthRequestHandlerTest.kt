@@ -714,8 +714,8 @@ class NativeAuthRequestHandlerTest {
         )
     }
 
-    @Test
-    fun testResetPasswordContinueWithEmptyOobCodeShouldNotThrowException() {
+    @Test(expected = ClientException::class)
+    fun testResetPasswordContinueWithEmptyOobCodeShouldThrowException() {
         val commandParameters = ResetPasswordSubmitCodeCommandParameters.builder()
             .platformComponents(mock<PlatformComponents>())
             .code(emptyString)
