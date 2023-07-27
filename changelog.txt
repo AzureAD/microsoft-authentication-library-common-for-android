@@ -7,6 +7,7 @@ V.NEXT
 - [MAJOR] Tidy up BrokerValidator (#2107)
 - [PATCH] Adding null checks for CancelHelper (CBA) (#2105)
 - [MINOR] Update YubiKit version to 2.3.0 (#2112) Note: This version of YubiKit contains new logging libraries. Projects using the SLF4j and/or logback-android dependencies must bump their versions to at least 2.0.7 and 3.0.0, respectively.
+- [MINOR] Capture perf telemetry for cache & network operations (#2124)
 
 V.14.0.1
 ----------
